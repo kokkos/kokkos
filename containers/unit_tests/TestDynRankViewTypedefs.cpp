@@ -167,7 +167,7 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::data_handle_type, typename ViewType::pointer_type>);
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
   return true;
-};
+}
 
 // Helper function to unpack data type and other args from the View, and pass them on
 template<class T, class ... ViewArgs>
@@ -182,7 +182,7 @@ constexpr bool test_view_typedefs(ViewParams<T, ViewArgs...>) {
 
 constexpr bool is_host_exec = std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::DefaultHostExecutionSpace>;
 
-#if defined(KOKKOS_ENABLE_CUDA_UVM) || defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
+#if defined(KOKKOS_ENABLE_CUDA_UVM) || defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
 constexpr bool has_unified_mem_space = true;
 #else
 constexpr bool has_unified_mem_space = false;

@@ -23,6 +23,7 @@
 #include "../__p0009_bits/layout_left.hpp"
 #include "../__p0009_bits/layout_right.hpp"
 #include "../__p0009_bits/layout_stride.hpp"
+#include "../__p0009_bits/utility.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 namespace MDSPAN_IMPL_PROPOSED_NAMESPACE {
@@ -205,7 +206,7 @@ private:
 
 public:
 #if !MDSPAN_HAS_CXX_20 || defined(__NVCC__)
-  MDSPAN_INLINE_FUNCTION_DEFAULTED
+  MDSPAN_INLINE_FUNCTION
   constexpr mapping()
       : mapping(extents_type{})
   {}
@@ -357,7 +358,7 @@ public:
     return exts;
   }
 
-  MDSPAN_INLINE_FUNCTION constexpr std::array<index_type, extents_type::rank()>
+  constexpr std::array<index_type, extents_type::rank()>
   strides() const noexcept {
     if constexpr (extents_type::rank() == 0) {
       return {};
@@ -568,7 +569,7 @@ public:
 
 public:
 #if !MDSPAN_HAS_CXX_20 || defined(__NVCC__)
-  MDSPAN_INLINE_FUNCTION_DEFAULTED
+  MDSPAN_INLINE_FUNCTION
       constexpr mapping()
       : mapping(extents_type{})
   {}
@@ -717,7 +718,7 @@ public:
     return exts;
   }
 
-  MDSPAN_INLINE_FUNCTION constexpr std::array<index_type, extents_type::rank()>
+  constexpr std::array<index_type, extents_type::rank()>
   strides() const noexcept {
     if constexpr (extents_type::rank() == 0) {
       return {};

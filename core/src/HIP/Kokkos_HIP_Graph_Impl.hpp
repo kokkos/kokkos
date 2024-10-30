@@ -79,6 +79,9 @@ class GraphImpl<Kokkos::HIP> {
     KOKKOS_ENSURES(m_graph_exec);
   }
 
+  hipGraph_t hip_graph() { return m_graph; }
+  hipGraphExec_t hip_graph_exec() { return m_graph_exec; }
+
  private:
   Kokkos::HIP m_execution_space;
   hipGraph_t m_graph          = nullptr;

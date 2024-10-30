@@ -1,0 +1,29 @@
+NVIDIA-GH200:
+  stage: test
+  tags: [nvidia-gh200]
+  image: masterleinad/kokkos-nvcc:12.6.1
+  script:
+    - cmake
+      -B build
+      -DCMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper
+      -DCMAKE_CXX_FLAGS="-Werror=all-warnings -Werror"
+      -DKokkos_ARCH_HOPPER90=ON
+      -DKokkos_ENABLE_CUDA=ON
+      -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+      -DKokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON
+      -DKokkos_ENABLE_TESTS=ON
+    - cmake --build build -j48
+    - cd build
+    - ctest -V
+
+INTEL-DATA-CENTER-MAX-1100:
+  stage: test
+  tags: [intel-data-center-max-1100]
+  image: intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
+  script:
+    - sycl-ls
+    - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
+    - cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=icpx -DKokkos_ENABLE_SYCL=ON -DKokkos_ARCH_INTEL_PVC=ON -DKokkos_ENABLE_TESTS=ON -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -fp-model=precise"
+    - cmake --build build -j48
+    - cd build
+    - ctest -V

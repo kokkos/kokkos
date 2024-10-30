@@ -77,7 +77,7 @@ struct sum3D {
 };
 
 template <class ExecutionSpace, typename KeyType>
-void test_3D_sort_impl(unsigned int n) {
+void test_3D_sort_impl(size_t n) {
   using KeyViewType = Kokkos::View<KeyType* [3], ExecutionSpace>;
 
   KeyViewType keys("Keys", n * n * n);
@@ -219,6 +219,10 @@ void test_sort_integer_overflow() {
 }  // namespace BinSortSetA
 
 TEST(TEST_CATEGORY, BinSortGenericTests) {
+  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
+#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
+#endif
   using ExecutionSpace = TEST_EXECSPACE;
   using key_type       = unsigned;
   constexpr int N      = 171;

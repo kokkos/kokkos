@@ -16,10 +16,7 @@ if(KOKKOS_ENABLE_TESTS)
 
   kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 
-  if(NOT Kokkos_ENABLE_OPENMPTARGET)
-    # FIXME OPENMPTARGET needs tasking
-    kokkos_add_executable_and_test(PerformanceTest_TaskDag SOURCES test_taskdag.cpp CATEGORIES PERFORMANCE)
-  endif()
+  kokkos_add_executable_and_test(PerformanceTest_TaskDag SOURCES test_taskdag.cpp CATEGORIES PERFORMANCE)
 endif()
 
 if(NOT Kokkos_ENABLE_BENCHMARKS)
@@ -128,9 +125,7 @@ endif()
 
 kokkos_add_benchmark(PerformanceTest_Benchmark SOURCES ${BENCHMARK_SOURCES})
 
-if(NOT KOKKOS_ENABLE_CUDA OR KOKKOS_ENABLE_CUDA_LAMBDA)
-  kokkos_add_benchmark(Benchmark_Atomic_MinMax SOURCES test_atomic_minmax_simple.cpp)
-endif()
+kokkos_add_benchmark(Benchmark_Atomic_MinMax SOURCES test_atomic_minmax_simple.cpp)
 
 # FIXME_NVHPC
 if(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)

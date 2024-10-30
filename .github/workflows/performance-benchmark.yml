@@ -3,10 +3,7 @@ on:
   push:
     branches:
       - develop
-  pull_request:
-    paths-ignore:
-      - '**/*.md'
-    types: [ opened, reopened, synchronize ]
+  workflow_call:
 
 permissions: read-all
 
@@ -26,7 +23,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}

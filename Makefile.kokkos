@@ -33,7 +33,7 @@ KOKKOS_STANDALONE_CMAKE ?= "no"
 # Options: force_uvm,use_ldg,rdc,enable_lambda,enable_constexpr,enable_malloc_async
 KOKKOS_CUDA_OPTIONS ?= ""
 
-# Options: rdc
+# Options: rdc,enable_malloc_async
 KOKKOS_HIP_OPTIONS ?= ""
 
 # Default settings specific options.
@@ -96,6 +96,7 @@ KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE := $(call kokkos_has_string,$(KOKKOS_OPT
 KOKKOS_INTERNAL_ENABLE_DEPRECATION_WARNINGS := $(call kokkos_has_string,$(KOKKOS_OPTIONS),enable_deprecation_warnings)
 
 KOKKOS_INTERNAL_HIP_USE_RELOC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),rdc)
+KOKKOS_INTERNAL_HIP_ENABLE_MALLOC_ASYNC := $(call kokkos_has_string,$(KOKKOS_HIP_OPTIONS),enable_malloc_async)
 KOKKOS_INTERNAL_OPENACC_FORCE_HOST_AS_DEVICE := $(call kokkos_has_string,$(KOKKOS_OPENACC_OPTIONS),force_host_as_device)
 
 # Check for Kokkos Host Execution Spaces one of which must be on.
@@ -1172,42 +1173,42 @@ endif
 # Figure out the architecture flag for ROCm.
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX906), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX906")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx906\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx906
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX908), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX908")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx908\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx908
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX90A")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx90A\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx90a
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX940")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx940\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx940
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX942")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx942\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx942
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1030")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1030\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1030
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1100), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1100")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1100\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1100
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1103), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1103")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1103\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1103
 endif
 
@@ -1227,6 +1228,12 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
   else
     KOKKOS_CXXFLAGS+=-fno-gpu-rdc
     KOKKOS_LDFLAGS+=-fno-gpu-rdc
+  endif
+
+  ifeq ($(KOKKOS_INTERNAL_HIP_ENABLE_MALLOC_ASYNC), 1)
+    tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC")
+  else
+    tmp := $(call kokkos_append_header,"/* $H""undef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC */")
   endif
 endif
 
@@ -1620,6 +1627,12 @@ KokkosCore_config.h:
 $(DESUL_CONFIG_HEADER):
 
 KOKKOS_CPP_DEPENDS := $(DESUL_CONFIG_HEADER) KokkosCore_config.h $(KOKKOS_HEADERS)
+
+# Tasking is deprecated
+ifeq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+  TMP_KOKKOS_SRC := $(KOKKOS_SRC)
+  KOKKOS_SRC = $(patsubst %Task.cpp,, $(TMP_KOKKOS_SRC))
+endif
 
 KOKKOS_OBJ = $(KOKKOS_SRC:.cpp=.o)
 KOKKOS_OBJ_LINK = $(notdir $(KOKKOS_OBJ))

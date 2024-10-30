@@ -225,7 +225,7 @@ class ThreadsInternal {
     //  to inactive triggers another thread to exit a spinwait
     //  and read the 'reduce_memory'.
     //  Must 'memory_fence()' to guarantee that storing the update to
-    //  'reduce_memory()' will complete before storing the the update to
+    //  'reduce_memory()' will complete before storing the update to
     //  'm_pool_state'.
 
     memory_fence();
@@ -403,7 +403,7 @@ class ThreadsInternal {
   static void start(void (*)(ThreadsInternal &, const void *), const void *);
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED static int in_parallel();
+  static int in_parallel();
 #endif
   static void fence();
   static void fence(const std::string &);

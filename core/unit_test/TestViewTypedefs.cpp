@@ -181,7 +181,7 @@ constexpr bool test_view_typedefs(ViewParams<T, ViewArgs...>) {
 
 constexpr bool is_host_exec = std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::DefaultHostExecutionSpace>;
 
-#if defined(KOKKOS_ENABLE_CUDA_UVM) || defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY) || defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+#if defined(KOKKOS_ENABLE_CUDA_UVM) || defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY) || defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
 constexpr bool has_unified_mem_space = true;
 #else
 constexpr bool has_unified_mem_space = false;

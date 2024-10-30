@@ -556,13 +556,16 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // If compiling with CUDA, we must use relocatable device code to enable the
 // task policy.
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #if defined(KOKKOS_ENABLE_CUDA)
 #if defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 #define KOKKOS_ENABLE_TASKDAG
 #endif
 // FIXME_SYCL Tasks not implemented
-#elif !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL)
+#elif !defined(KOKKOS_ENABLE_HIP) && !defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define KOKKOS_ENABLE_TASKDAG
+#endif
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
@@ -601,9 +604,11 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // clang-format off
 #if defined(__NVCOMPILER)
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
-    _Pragma("diag_suppress 1216")
+    _Pragma("diag_suppress 1216") \
+    _Pragma("diag_suppress deprecated_entity_with_custom_message")
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
-    _Pragma("diag_default 1216")
+    _Pragma("diag_default 1216") \
+    _Pragma("diag_suppress deprecated_entity_with_custom_message")
 #elif defined(__EDG__)
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
     _Pragma("warning push")                              \

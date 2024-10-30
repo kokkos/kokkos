@@ -76,6 +76,9 @@ class GraphImpl<Kokkos::SYCL> {
     m_graph_exec = m_graph.finalize();
   }
 
+  auto& sycl_graph() { return m_graph; }
+  auto& sycl_graph_exec() { return m_graph_exec; }
+
  private:
   Kokkos::SYCL m_execution_space;
   sycl::ext::oneapi::experimental::command_graph<
