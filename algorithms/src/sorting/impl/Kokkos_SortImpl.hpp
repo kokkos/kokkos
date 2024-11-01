@@ -221,30 +221,18 @@ void sort_onedpl(const Kokkos::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
-  static_assert(
-      (ViewType::rank == 1) &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
-      "SYCL sort only supports contiguous rank-1 Views with LayoutLeft, "
-      "LayoutRight or LayoutStride"
-      "For the latter, this means the View must have stride(0) = 1, enforced "
-      "at runtime.");
-
-  if (view.stride(0) != 1) {
-    Kokkos::abort("SYCL sort only supports rank-1 Views with stride(0) = 1.");
-  }
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort currently only supports rank-1 Views.");
 
   if (view.extent(0) <= 1) {
     return;
   }
 
-  // Can't use Experimental::begin/end here since the oneDPL then assumes that
-  // the data is on the host.
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
   const int n = view.extent(0);
-  oneapi::dpl::sort(policy, view.data(), view.data() + n,
+  oneapi::dpl::sort(policy, ::Kokkos::Experimental::begin(view),
+                    ::Kokkos::Experimental::end(view),
                     std::forward<MaybeComparator>(maybeComparator)...);
 }
 #endif
@@ -322,11 +310,7 @@ void sort_device_view_without_comparator(
       "sort_device_view_without_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-  if (view.stride(0) == 1) {
-    sort_onedpl(exec, view);
-  } else {
-    copy_to_host_run_stdsort_copy_back(exec, view);
-  }
+  sort_onedpl(exec, view);
 }
 #endif
 
@@ -377,11 +361,7 @@ void sort_device_view_with_comparator(
       "sort_device_view_with_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-  if (view.stride(0) == 1) {
-    sort_onedpl(exec, view, comparator);
-  } else {
-    copy_to_host_run_stdsort_copy_back(exec, view, comparator);
-  }
+  sort_onedpl(exec, view, comparator);
 }
 #endif
 

@@ -142,9 +142,7 @@ void sort_by_key_rocthrust(
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 template <class Layout>
-inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> =
-    std::is_same_v<Layout, Kokkos::LayoutLeft> ||
-    std::is_same_v<Layout, Kokkos::LayoutRight>;
+inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> = true;
 
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
@@ -154,17 +152,11 @@ void sort_by_key_onedpl(
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     MaybeComparator&&... maybeComparator) {
-  if (keys.stride(0) != 1 && values.stride(0) != 1) {
-    Kokkos::abort(
-        "SYCL sort_by_key only supports rank-1 Views with stride(0) = 1.");
-  }
-
-  // Can't use Experimental::begin/end here since the oneDPL then assumes that
-  // the data is on the host.
   auto queue  = exec.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
-  const int n = keys.extent(0);
-  oneapi::dpl::sort_by_key(policy, keys.data(), keys.data() + n, values.data(),
+  oneapi::dpl::sort_by_key(policy, ::Kokkos::Experimental::begin(keys),
+                           ::Kokkos::Experimental::end(keys),
+                           ::Kokkos::Experimental::begin(values),
                            std::forward<MaybeComparator>(maybeComparator)...);
 }
 #endif
@@ -337,11 +329,9 @@ void sort_by_key_device_view_without_comparator(
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
-  if (keys.stride(0) == 1 && values.stride(0) == 1)
-    sort_by_key_onedpl(exec, keys, values);
-  else
+  sort_by_key_onedpl(exec, keys, values);
 #endif
-    sort_by_key_via_sort(exec, keys, values);
+  sort_by_key_via_sort(exec, keys, values);
 }
 #endif
 
@@ -395,11 +385,9 @@ void sort_by_key_device_view_with_comparator(
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
-  if (keys.stride(0) == 1 && values.stride(0) == 1)
-    sort_by_key_onedpl(exec, keys, values, comparator);
-  else
+  sort_by_key_onedpl(exec, keys, values, comparator);
 #endif
-    sort_by_key_via_sort(exec, keys, values, comparator);
+  sort_by_key_via_sort(exec, keys, values, comparator);
 }
 #endif
 
