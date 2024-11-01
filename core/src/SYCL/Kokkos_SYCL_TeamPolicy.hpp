@@ -126,7 +126,12 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
  public:
   static int scratch_size_max(int level) {
     const auto& sycl_instance = *SYCL{}.impl_internal_space_instance();
+          // FIXME_SYCL Avoid requesting too many registers on NVIDIA GPUs.
+    #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+      const size_t max_possible_team_size = 256;
+#else
     const size_t max_possible_team_size = sycl_instance.m_maxWorkgroupSize;
+#endif
     const size_t max_reserved_shared_mem_per_team =
         (max_possible_team_size + 2) * sizeof(double);
     // arbitrarily setting level 1 scratch limit to 20MB
