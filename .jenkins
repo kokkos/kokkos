@@ -62,11 +62,11 @@ pipeline {
                                 -DKokkos_ENABLE_LIBQUADMATH=ON \
                                 -DKokkos_ENABLE_SERIAL=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
+                              make -j8 && ctest --output-junit test_gcc-8.4.0.xml --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                     post {
                         always {
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'test_gcc-8.4.0.xml'
                         }
                     }
                 }
@@ -96,12 +96,12 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --output-junit test_rocm-5.6.xml --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test_rocm-5.6.xml'
                         }
                     }
                 }
@@ -157,7 +157,7 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose && \
+                              make -j8 && ctest --output-junit test_cuda-11.0-rdc.xml --verbose && \
                               cd ../example/build_cmake_installed && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
@@ -174,7 +174,7 @@ pipeline {
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build-tests/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build-tests/test_cuda-11.0-rdc.xml'
                         }
                     }
                 }
@@ -206,11 +206,11 @@ pipeline {
                                 -DKokkos_ENABLE_OPENACC=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --output-junit test-openacc-nvhpc-12.2.xml --verbose'''
                     }
                     post {
                         always {
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test-openacc-nvhpc-12.2.xml'
                         }
                     }
 
@@ -247,14 +247,13 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --output-junit test_cuda-12.2-nvhpc.xml --verbose'''
                     }
                     post {
                         always {
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test_cuda-12.2-nvhpc.xml'
                         }
                     }
-
                 }
                 stage('SYCL-OneAPI') {
                     agent {
@@ -287,12 +286,12 @@ pipeline {
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --output-junit test_sycl-cuda.xml --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test_sycl-cuda.xml'
                         }
                     }
                 }
@@ -331,12 +330,12 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --output-junit test_hip-rocm-5.2.xml --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test_hip-rocm-5.2.xml'
                         }
                     }
                 }
@@ -377,13 +376,13 @@ pipeline {
                                 -DKokkos_ARCH_AMD_GFX906=ON \
                               && \
                               cmake --build build --parallel ${BUILD_JOBS} && \
-                              cd build && ctest --no-compress-output -T Test --output-on-failure
+                              cd build && ctest --output-junit test_openmptarget-rocm-5.2.xml --output-on-failure
                         '''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test_openmptarget-rocm-5.2.xml'
                         }
                     }
                 }
@@ -414,12 +413,12 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --output-junit test-openmptarget-clang.xml --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test-openmptarget-clang.xml'
                         }
                     }
                 }
@@ -451,12 +450,12 @@ pipeline {
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --output-junit test_cuda-11.0.3.xml --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test_cuda-11.0.3.xml'
                         }
                     }
                 }
@@ -493,7 +492,7 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose && \
+                              make -j8 && ctest --output-junit test_cuda-11.6-nvcc-debug.xml --verbose && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
@@ -501,7 +500,7 @@ pipeline {
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            junit 'build/test_cuda-11.6-nvcc-debug.xml'
                         }
                     }
                 }
