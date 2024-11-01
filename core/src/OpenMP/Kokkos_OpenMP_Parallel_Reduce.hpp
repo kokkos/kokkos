@@ -20,6 +20,7 @@
 #include <omp.h>
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <KokkosExp_MDRangePolicy.hpp>
+#include <sstream>
 
 namespace Kokkos {
 namespace Impl {
