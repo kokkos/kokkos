@@ -66,7 +66,8 @@ pipeline {
                     }
                     post {
                         always {
-                            junit 'test_gcc-8.4.0.xml'
+                            sh 'pwd && ls build'
+                            junit 'build/test_gcc-8.4.0.xml'
                         }
                     }
                 }
@@ -101,6 +102,7 @@ pipeline {
                     post {
                         always {
                             sh 'ccache --show-stats'
+                            sh 'pwd && ls build'
                             junit 'build/test_rocm-5.6.xml'
                         }
                     }
@@ -174,6 +176,7 @@ pipeline {
                     post {
                         always {
                             sh 'ccache --show-stats'
+                            sh 'pwd && ls build-tests'
                             junit 'build-tests/test_cuda-11.0-rdc.xml'
                         }
                     }
