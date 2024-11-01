@@ -35,7 +35,7 @@ void test_bug_pr_3103() {
       Kokkos::TeamPolicy<ExecutionSpace, Kokkos::LaunchBounds<32, 1>>;
   int const league_size = 1;
   int const team_size   = std::min(
-      32, Policy(league_size, 1)
+      32, Policy(league_size, Kokkos::AUTO)
               .team_size_max(PoorMansLambda{}, Kokkos::ParallelForTag{}));
   int const vector_length = 1;
 
