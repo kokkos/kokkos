@@ -82,7 +82,7 @@ pipeline {
                           wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
                           chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
 
-                          mkdir -p build && cd build && \
+                          rm -rf build && mkdir -p build && cd build && \
                           cmake \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_CXX_STANDARD=26 \
