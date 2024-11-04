@@ -52,7 +52,7 @@ Note: empty for now, delete section if none.
 #### OpenMP
 
 * Fix run time behavior when compiling with `-fvisibility-hidden` [\#7284](https://github.com/kokkos/kokkos/pull/7284)
-* Fix linking with CrayClang compiler [\#7341](https://github.com/kokkos/kokkos/pull/7341)
+* Fix linking with Cray Clang compiler [\#7341](https://github.com/kokkos/kokkos/pull/7341)
 
 #### Serial
 
