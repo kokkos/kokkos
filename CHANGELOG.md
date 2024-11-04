@@ -2,7 +2,7 @@
 
 ## 4.5.00
 
-[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.5.0.)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.4.01...4.5.00)
 
 ### Features
 
