@@ -7,7 +7,7 @@
 ### Features
 
 * Introduce new `SequentialHostInit` view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229) (backported in 4.4.01)
-* Support building with Run-Time Type Information (RTTI) disabled (missing PR)
+* Support building with Run-Time Type Information (RTTI) disabled
 * Add `KOKKOS_RELOCATABLE_FUNCTION` [\#5993](https://github.com/kokkos/kokkos/pull/5993)
 
 ### Backend and Architecture Enhancements
