@@ -94,9 +94,9 @@ Note: empty for now, delete section if none.
 * Skip `RangePolicy` bounds conversion checks if roundtrip convertibility is not provided [\#7172](https://github.com/kokkos/kokkos/pull/7172)
 * Allow extracting host and device views from `DualView` with `const` value type [\#7242](https://github.com/kokkos/kokkos/pull/7242) 
 * Fix `TeamPolicy` array reduction for CUDA and HIP [\#6296](https://github.com/kokkos/kokkos/pull/6296) 
-* Fix implicit copy assignment operators in few AVX2 masks being deleted [#7296](https://github.com/kokkos/kokkos/pull/7296)
+* Fix implicit copy assignment operators in few AVX2 masks being deleted [\#7296](https://github.com/kokkos/kokkos/pull/7296)
 * Fix configuring without architecture flags for SYCL [\#7303](https://github.com/kokkos/kokkos/pull/7303)
-* Set an initial value index during join of `MinLoc`, `MaxLoc` or `MinMaxLoc` [#7330](https://github.com/kokkos/kokkos/pull/7330)
+* Set an initial value index during join of `MinLoc`, `MaxLoc` or `MinMaxLoc` [\#7330](https://github.com/kokkos/kokkos/pull/7330)
 * Fix storage lifetime of driver for global launch of graph nodes for CUDA and HIP [\#7365](https://github.com/kokkos/kokkos/pull/7365)
 
 ## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
@@ -112,7 +112,7 @@ Note: empty for now, delete section if none.
 
 ### Bug Fixes
 * OpenMP: Fix issue related to the visibility of an internal symbol with shared libraries that affected `ScatterView` in particular [\#7284](https://github.com/kokkos/kokkos/pull/7284)
-* Fix implicit copy assignment operators in few AVX2 masks being deleted [#7296](https://github.com/kokkos/kokkos/pull/7296)
+* Fix implicit copy assignment operators in few AVX2 masks being deleted [\#7296](https://github.com/kokkos/kokkos/pull/7296)
 
 ## [4.4.00](https://github.com/kokkos/kokkos/tree/4.4.00)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.3.01...4.4.00)
