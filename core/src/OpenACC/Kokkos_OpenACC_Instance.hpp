@@ -35,6 +35,7 @@ class OpenACCInternal {
 
  public:
   static int m_acc_device_num;
+  static int m_concurrency;
   int m_async_arg = acc_async_noval;
 
   OpenACCInternal() = default;

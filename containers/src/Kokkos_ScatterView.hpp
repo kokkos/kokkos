@@ -532,31 +532,55 @@ void args_to_array(size_t* array, int pos, T dim0, Dims... dims) {
    subview where the index specified is the largest-stride one. */
 template <typename Layout, int rank, typename V, typename... Args>
 struct Slice {
-  using next       = Slice<Layout, rank - 1, V, Kokkos::ALL_t, Args...>;
-  using value_type = typename next::value_type;
-
-  static value_type get(V const& src, const size_t i, Args... args) {
+  using next = Slice<Layout, rank - 1, V, Kokkos::ALL_t, Args...>;
+  static auto get(V const& src, const size_t i, Args... args) {
     return next::get(src, i, Kokkos::ALL, args...);
   }
 };
 
 template <typename V, typename... Args>
 struct Slice<Kokkos::LayoutRight, 1, V, Args...> {
-  using value_type =
-      typename Kokkos::Impl::ViewMapping<void, V, const size_t, Args...>::type;
-  static value_type get(V const& src, const size_t i, Args... args) {
+  static auto get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, i, args...);
   }
 };
 
 template <typename V, typename... Args>
 struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
-  using value_type =
-      typename Kokkos::Impl::ViewMapping<void, V, Args..., const size_t>::type;
-  static value_type get(V const& src, const size_t i, Args... args) {
+  static auto get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, args..., i);
   }
 };
+
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+template <typename V, typename... Args>
+struct Slice<Kokkos::layout_right, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, i, args...);
+  }
+};
+
+template <typename V, typename... Args>
+struct Slice<Kokkos::layout_left, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, args..., i);
+  }
+};
+
+template <size_t Pad, typename V, typename... Args>
+struct Slice<Kokkos::Experimental::layout_right_padded<Pad>, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, i, args...);
+  }
+};
+
+template <size_t Pad, typename V, typename... Args>
+struct Slice<Kokkos::Experimental::layout_left_padded<Pad>, 1, V, Args...> {
+  static auto get(V const& src, const size_t i, Args... args) {
+    return Kokkos::subview(src, args..., i);
+  }
+};
+#endif
 
 template <typename ExecSpace, typename ValueType, typename Op>
 struct ReduceDuplicates;
@@ -905,7 +929,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterNonDuplicated,
 
   template <typename Arg>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      view_type::original_view_type::rank == 1 && std::is_integral<Arg>::value,
+      std::is_integral_v<Arg> && view_type::original_view_type::rank == 1,
       value_type>
   operator[](Arg arg) const {
     return view.at(arg);
@@ -1028,10 +1052,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
         *this);
   }
 
-  typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutRight,
-                                             internal_view_type::rank,
-                                             internal_view_type>::value_type
-  subview() const {
+  auto subview() const {
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutRight, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
@@ -1310,10 +1331,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
         *this);
   }
 
-  typename Kokkos::Impl::Experimental::Slice<Kokkos::LayoutLeft,
-                                             internal_view_type::rank,
-                                             internal_view_type>::value_type
-  subview() const {
+  auto subview() const {
     return Kokkos::Impl::Experimental::Slice<
         Kokkos::LayoutLeft, internal_view_type::rank,
         internal_view_type>::get(internal_view, 0);
@@ -1460,7 +1478,7 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
 
   template <typename Arg>
   KOKKOS_FORCEINLINE_FUNCTION std::enable_if_t<
-      view_type::original_view_type::rank == 1 && std::is_integral<Arg>::value,
+      std::is_integral_v<Arg> && view_type::original_view_type::rank == 1,
       value_type>
   operator[](Arg arg) const {
     return view.at(thread_id, arg);
@@ -1497,16 +1515,16 @@ ScatterView<
     RT, typename ViewTraits<RT, RP...>::array_layout,
     typename ViewTraits<RT, RP...>::device_type, Op,
     std::conditional_t<
-        std::is_void<Duplication>::value,
+        std::is_void_v<Duplication>,
         typename Kokkos::Impl::Experimental::DefaultDuplication<
             typename ViewTraits<RT, RP...>::execution_space>::type,
         Duplication>,
     std::conditional_t<
-        std::is_void<Contribution>::value,
+        std::is_void_v<Contribution>,
         typename Kokkos::Impl::Experimental::DefaultContribution<
             typename ViewTraits<RT, RP...>::execution_space,
             typename std::conditional_t<
-                std::is_void<Duplication>::value,
+                std::is_void_v<Duplication>,
                 typename Kokkos::Impl::Experimental::DefaultDuplication<
                     typename ViewTraits<RT, RP...>::execution_space>::type,
                 Duplication>>::type,

@@ -30,6 +30,7 @@
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wsuggest-override"
 
 #if defined(KOKKOS_COMPILER_CLANG)
 // Some versions of Clang fail to compile Thrust, failing with errors like
@@ -77,12 +78,9 @@ namespace Kokkos::Impl {
 template <typename T>
 constexpr inline bool is_admissible_to_kokkos_sort_by_key =
     ::Kokkos::is_view<T>::value && T::rank() == 1 &&
-    (std::is_same<typename T::traits::array_layout,
-                  Kokkos::LayoutLeft>::value ||
-     std::is_same<typename T::traits::array_layout,
-                  Kokkos::LayoutRight>::value ||
-     std::is_same<typename T::traits::array_layout,
-                  Kokkos::LayoutStride>::value);
+    (std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutLeft> ||
+     std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutRight> ||
+     std::is_same_v<typename T::traits::array_layout, Kokkos::LayoutStride>);
 
 template <class ViewType>
 KOKKOS_INLINE_FUNCTION constexpr void
@@ -176,7 +174,7 @@ template <typename ExecutionSpace, typename PermutationView, typename ViewType>
 void applyPermutation(const ExecutionSpace& space,
                       const PermutationView& permutation,
                       const ViewType& view) {
-  static_assert(std::is_integral<typename PermutationView::value_type>::value);
+  static_assert(std::is_integral_v<typename PermutationView::value_type>);
 
   auto view_copy = Kokkos::create_mirror(
       Kokkos::view_alloc(space, typename ExecutionSpace::memory_space{},

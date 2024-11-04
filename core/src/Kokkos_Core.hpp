@@ -63,7 +63,9 @@
 #include <Kokkos_hwloc.hpp>
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_Tuners.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_TaskScheduler.hpp>
+#endif
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_CopyViews.hpp>
 #include <impl/Kokkos_TeamMDPolicy.hpp>
@@ -281,7 +283,7 @@ std::vector<ExecSpace> partition_space(ExecSpace const& space,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");
   static_assert(
-      std::is_arithmetic<T>::value,
+      std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   std::vector<ExecSpace> instances(weights.size());

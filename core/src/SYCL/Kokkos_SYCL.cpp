@@ -99,6 +99,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED : undefined\n";
 #endif
+#ifdef KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE
+  os << "macro  KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE : defined\n";
+#else
+  os << "macro  KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE : undefined\n";
+#endif
 #ifdef SYCL_EXT_ONEAPI_DEVICE_GLOBAL
   os << "macro  SYCL_EXT_ONEAPI_DEVICE_GLOBAL : defined\n";
 #else
@@ -259,8 +264,6 @@ std::ostream& SYCL::impl_sycl_info(std::ostream& os,
             << device.get_info<device::image3d_max_depth>()
             << "\nImage Max Buffer Size: "
             << device.get_info<device::image_max_buffer_size>()
-            << "\nImage Max Array Size: "
-            << device.get_info<device::image_max_array_size>()
             << "\nMax Samplers: " << device.get_info<device::max_samplers>()
             << "\nMax Parameter Size: "
             << device.get_info<device::max_parameter_size>()

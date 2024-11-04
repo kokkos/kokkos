@@ -27,7 +27,10 @@ static_assert(false,
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
 #include <Kokkos_Concepts.hpp>
+#include <Kokkos_TypeInfo.hpp>
+#ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
 #include <typeinfo>
+#endif
 #include <limits>
 
 //----------------------------------------------------------------------------
@@ -247,46 +250,49 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
 
   // To be replaced with std::in_range (c++20)
   template <typename IndexType>
-  static void check_conversion_safety(const IndexType bound) {
+  static void check_conversion_safety([[maybe_unused]] const IndexType bound) {
+    // Checking that the round-trip conversion preserves input index value
+    if constexpr (std::is_convertible_v<member_type, IndexType>) {
 #if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
     defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 
-    std::string msg =
-        "Kokkos::RangePolicy bound type error: an unsafe implicit conversion "
-        "is performed on a bound (" +
-        std::to_string(bound) +
-        "), which may "
-        "not preserve its original value.\n";
-    bool warn = false;
+      std::string msg =
+          "Kokkos::RangePolicy bound type error: an unsafe implicit conversion "
+          "is performed on a bound (" +
+          std::to_string(bound) +
+          "), which may "
+          "not preserve its original value.\n";
+      bool warn = false;
 
-    if constexpr (std::is_signed_v<IndexType> !=
-                  std::is_signed_v<member_type>) {
-      // check signed to unsigned
-      if constexpr (std::is_signed_v<IndexType>)
-        warn |= (bound < static_cast<IndexType>(
-                             std::numeric_limits<member_type>::min()));
+      if constexpr (std::is_arithmetic_v<member_type> &&
+                    (std::is_signed_v<IndexType> !=
+                     std::is_signed_v<member_type>)) {
+        // check signed to unsigned
+        if constexpr (std::is_signed_v<IndexType>)
+          warn |= (bound < static_cast<IndexType>(
+                               std::numeric_limits<member_type>::min()));
 
-      // check unsigned to signed
-      if constexpr (std::is_signed_v<member_type>)
-        warn |= (bound > static_cast<IndexType>(
-                             std::numeric_limits<member_type>::max()));
-    }
+        // check unsigned to signed
+        if constexpr (std::is_signed_v<member_type>)
+          warn |= (bound > static_cast<IndexType>(
+                               std::numeric_limits<member_type>::max()));
+      }
 
-    // check narrowing
-    warn |= (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);
+      // check narrowing
+      warn |=
+          (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);
 
-    if (warn) {
+      if (warn) {
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
-      Kokkos::abort(msg.c_str());
+        Kokkos::abort(msg.c_str());
 #endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-      Kokkos::Impl::log_warning(msg);
+        Kokkos::Impl::log_warning(msg);
+#endif
+      }
 #endif
     }
-#else
-    (void)bound;
-#endif
   }
 
  public:
@@ -514,24 +520,24 @@ struct PerThreadValue {
 template <class iType, class... Args>
 struct ExtractVectorLength {
   static inline iType value(
-      std::enable_if_t<std::is_integral<iType>::value, iType> val, Args...) {
+      std::enable_if_t<std::is_integral_v<iType>, iType> val, Args...) {
     return val;
   }
-  static inline std::enable_if_t<!std::is_integral<iType>::value, int> value(
-      std::enable_if_t<!std::is_integral<iType>::value, iType>, Args...) {
+  static inline std::enable_if_t<!std::is_integral_v<iType>, int> value(
+      std::enable_if_t<!std::is_integral_v<iType>, iType>, Args...) {
     return 1;
   }
 };
 
 template <class iType, class... Args>
-inline std::enable_if_t<std::is_integral<iType>::value, iType>
-extract_vector_length(iType val, Args...) {
+inline std::enable_if_t<std::is_integral_v<iType>, iType> extract_vector_length(
+    iType val, Args...) {
   return val;
 }
 
 template <class iType, class... Args>
-inline std::enable_if_t<!std::is_integral<iType>::value, int>
-extract_vector_length(iType, Args...) {
+inline std::enable_if_t<!std::is_integral_v<iType>, int> extract_vector_length(
+    iType, Args...) {
   return 1;
 }
 
@@ -576,7 +582,7 @@ struct ScratchRequest {
   }
 };
 
-// Throws a runtime exception if level is not `0` or `1`
+// Causes abnormal program termination if level is not `0` or `1`
 void team_policy_check_valid_storage_level_argument(int level);
 
 /** \brief  Execution policy for parallel work over a league of teams of
@@ -1215,15 +1221,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 namespace Impl {
 
 template <typename FunctorType, typename TagType,
-          bool HasTag = !std::is_void<TagType>::value>
+          bool HasTag = !std::is_void_v<TagType>>
 struct ParallelConstructName;
 
 template <typename FunctorType, typename TagType>
 struct ParallelConstructName<FunctorType, TagType, true> {
   ParallelConstructName(std::string const& label) : label_ref(label) {
     if (label.empty()) {
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
+      default_name =
+          std::string(TypeInfo<std::remove_const_t<FunctorType>>::name()) +
+          "/" + std::string(TypeInfo<TagType>::name());
+#else
       default_name = std::string(typeid(FunctorType).name()) + "/" +
                      typeid(TagType).name();
+#endif
     }
   }
   std::string const& get() {
@@ -1237,7 +1249,11 @@ template <typename FunctorType, typename TagType>
 struct ParallelConstructName<FunctorType, TagType, false> {
   ParallelConstructName(std::string const& label) : label_ref(label) {
     if (label.empty()) {
-      default_name = std::string(typeid(FunctorType).name());
+#ifdef KOKKOS_ENABLE_IMPL_TYPEINFO
+      default_name = TypeInfo<std::remove_const_t<FunctorType>>::name();
+#else
+      default_name = typeid(FunctorType).name();
+#endif
     }
   }
   std::string const& get() {

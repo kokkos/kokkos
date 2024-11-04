@@ -197,7 +197,7 @@ if [ "$MACHINE" = "sems" ]; then
 
   # On unnamed sems machines, assume more restricted rhel7 environment
   # On rhel7 sems machines gcc/7.3.0, clang/4.0.1, and intel/16.0.3 are missing
-  # Remove kokkkos-env module use
+  # Remove kokkos-env module use
 
   BASE_MODULE_LIST="sems-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>"
   CUDA9_MODULE_LIST="sems-env,sems-<COMPILER_NAME>/<COMPILER_VERSION>,sems-gcc/7.2.0"

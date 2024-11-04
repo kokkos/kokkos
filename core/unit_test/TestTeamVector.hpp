@@ -782,7 +782,6 @@ namespace Test {
 // Computes y^T*A*x
 // ( modified from kokkos-tutorials/GTC2016/Exercises/ThreeLevelPar )
 
-#if (!defined(KOKKOS_ENABLE_CUDA)) || defined(KOKKOS_ENABLE_CUDA_LAMBDA)
 template <typename ScalarType, class DeviceType>
 class TestTripleNestedReduce {
  public:
@@ -882,21 +881,6 @@ class TestTripleNestedReduce {
   }
 };
 
-#else  // #if ( ! defined( KOKKOS_ENABLE_CUDA ) ) || defined(
-       // KOKKOS_ENABLE_CUDA_LAMBDA )
-
-template <typename ScalarType, class DeviceType>
-class TestTripleNestedReduce {
- public:
-  using execution_space = DeviceType;
-  using size_type       = typename execution_space::size_type;
-
-  TestTripleNestedReduce(const size_type &, const size_type, const size_type &,
-                         const size_type) {}
-};
-
-#endif
-
 namespace VectorScanReducer {
 enum class ScanType : bool { Inclusive, Exclusive };
 
@@ -980,7 +964,7 @@ struct checkScan {
     const std::string label =
         (scan_type == ScanType::Inclusive ? std::string("inclusive")
                                           : std::string("exclusive")) +
-        "Scan" + typeid(Reducer).name();
+        "Scan" + std::string(Kokkos::Impl::TypeInfo<Reducer>::name());
     Kokkos::parallel_for(label, policy, *this);
     Kokkos::fence();
 

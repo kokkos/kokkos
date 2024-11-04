@@ -31,7 +31,7 @@ struct SharedAllocDestroy {
   SharedAllocDestroy() = default;
   SharedAllocDestroy(int* arg) : count(arg) {}
 
-  void destroy_shared_allocation() { Kokkos::atomic_increment(count); }
+  void destroy_shared_allocation() { Kokkos::atomic_inc(count); }
 };
 
 template <class MemorySpace, class ExecutionSpace>

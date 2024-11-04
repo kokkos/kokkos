@@ -138,7 +138,7 @@ struct ChaseLevDeque {
  public:
   template <class _ignore = void,
             class         = std::enable_if_t<
-                std::is_default_constructible<CircularBufferT>::value>>
+                std::is_default_constructible_v<CircularBufferT>>>
   ChaseLevDeque() : m_array() {}
 
   explicit ChaseLevDeque(CircularBufferT buffer) : m_array(std::move(buffer)) {}
@@ -165,7 +165,7 @@ struct ChaseLevDeque {
 #ifdef _WIN32
         Kokkos::memory_fence();
         bool const success =
-            Kokkos::atomic_compare_exchange_strong(&m_top, t, t + 1);
+            (t == Kokkos::atomic_compare_exchange(&m_top, t, t + 1));
         Kokkos::memory_fence();
         if (!success) {
           return_value = nullptr;
@@ -226,7 +226,7 @@ struct ChaseLevDeque {
 #ifdef _WIN32
       Kokkos::memory_fence();
       bool const success =
-          Kokkos::atomic_compare_exchange_strong(&m_top, t, t + 1);
+          (t == Kokkos::atomic_compare_exchange(&m_top, t, t + 1));
       Kokkos::memory_fence();
       if (!success) {
         return_value = nullptr;

@@ -266,7 +266,7 @@ class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
   /**\brief  Deallocate tracked memory in the space */
   static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
   static auto get_record(void* alloc_ptr) -> derived_t*;
-  std::string get_label() const;
+  std::string get_label() const override;
   static void print_records(std::ostream& s, MemorySpace const&,
                             bool detail = false);
 };
@@ -330,7 +330,7 @@ class HostInaccessibleSharedAllocationRecordCommon
   static void print_records(std::ostream& s, MemorySpace const&,
                             bool detail = false);
   static auto get_record(void* alloc_ptr) -> derived_t*;
-  std::string get_label() const;
+  std::string get_label() const override;
 };
 
 #ifdef KOKKOS_ENABLE_DEBUG

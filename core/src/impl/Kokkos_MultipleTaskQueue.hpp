@@ -40,6 +40,11 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
+
 namespace Kokkos {
 namespace Impl {
 
@@ -94,8 +99,8 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION OptionalRef<task_base_type> _pop_failed_insertion(
       int priority, TaskType type,
-      std::enable_if_t<task_queue_traits::ready_queue_insertion_may_fail &&
-                           std::is_void<_always_void>::value,
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           task_queue_traits::ready_queue_insertion_may_fail,
                        void*> = nullptr) {
     auto* rv_ptr = m_failed_heads[priority][(int)type];
     if (rv_ptr) {
@@ -112,8 +117,8 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION OptionalRef<task_base_type> _pop_failed_insertion(
       int /*priority*/, TaskType /*type*/,
-      std::enable_if_t<!task_queue_traits::ready_queue_insertion_may_fail &&
-                           std::is_void<_always_void>::value,
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           !task_queue_traits::ready_queue_insertion_may_fail,
                        void*> = nullptr) {
     return OptionalRef<task_base_type>{nullptr};
   }
@@ -170,8 +175,8 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void do_handle_failed_insertion(
       runnable_task_base_type&& task,
-      std::enable_if_t<task_queue_traits::ready_queue_insertion_may_fail &&
-                           std::is_void<_always_void>::value,
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           task_queue_traits::ready_queue_insertion_may_fail,
                        void*> = nullptr) {
     // failed insertions, if they happen, must be from the only thread that
     // is allowed to push to m_ready_queues, so this linked-list insertion is
@@ -185,8 +190,8 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void do_handle_failed_insertion(
       runnable_task_base_type&& /*task*/,
-      std::enable_if_t<!task_queue_traits::ready_queue_insertion_may_fail &&
-                           std::is_void<_always_void>::value,
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           !task_queue_traits::ready_queue_insertion_may_fail,
                        void*> = nullptr) {
     Kokkos::abort("should be unreachable!");
   }
@@ -194,11 +199,9 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void flush_failed_insertions(
       int priority, int task_type,
-      std::enable_if_t<
-          task_queue_traits::ready_queue_insertion_may_fail &&
-              std::is_void<_always_void>::value,  // just to make this dependent
-                                                  // on template parameter
-          int> = 0) {
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           task_queue_traits::ready_queue_insertion_may_fail,
+                       int> = 0) {
     // TODO @tasking @minor DSH this somethimes gets some things out of LIFO
     // order, which may be undesirable (but not a bug)
 
@@ -223,11 +226,9 @@ struct MultipleTaskQueueTeamEntry {
   template <class _always_void = void>
   KOKKOS_INLINE_FUNCTION void flush_failed_insertions(
       int, int,
-      std::enable_if_t<
-          !task_queue_traits::ready_queue_insertion_may_fail &&
-              std::is_void<_always_void>::value,  // just to make this dependent
-                                                  // on template parameter
-          int> = 0) {}
+      std::enable_if_t<std::is_void_v<_always_void> &&
+                           !task_queue_traits::ready_queue_insertion_may_fail,
+                       int> = 0) {}
 
   KOKKOS_INLINE_FUNCTION
   void flush_all_failed_insertions() {
@@ -493,6 +494,10 @@ class MultipleTaskQueue final
 
 } /* namespace Impl */
 } /* namespace Kokkos */
+
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
