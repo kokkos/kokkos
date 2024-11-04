@@ -39,6 +39,7 @@ Note: empty for now, delete section if none.
 #### OpenACC
 
 * Update CMake/make files to compile the OpenACC backend using Clacc [\#7198](https://github.com/kokkos/kokkos/pull/7198)
+* Fix OpenACC `MDRangePolicy` errors with `BasicView` [\#7425](https://github.com/kokkos/kokkos/pull/7425)
 
 #### HPX
 
@@ -71,6 +72,7 @@ Note: empty for now, delete section if none.
 * Avoid making copies of string rvalue reference arguments to `view_alloc()` [\#7364](https://github.com/kokkos/kokkos/pull/7364)
 * Add `atomic_{mod,xor,nand,lshift,rshift}` [\#7458](https://github.com/kokkos/kokkos/pull/7458)
 * Allow using `SequentialHostInit` with `Kokkos::DualView` [\#7456](https://github.com/kokkos/kokkos/pull/7456)
+* Enable compile-time diagnostic of illegal reduction target for graphs [\#7460](https://github.com/kokkos/kokkos/pull/7460)
 
 ### Build System Changes
 
@@ -98,6 +100,7 @@ Note: empty for now, delete section if none.
 * Fix configuring without architecture flags for SYCL [\#7303](https://github.com/kokkos/kokkos/pull/7303)
 * Set an initial value index during join of `MinLoc`, `MaxLoc` or `MinMaxLoc` [\#7330](https://github.com/kokkos/kokkos/pull/7330)
 * Fix storage lifetime of driver for global launch of graph nodes for CUDA and HIP [\#7365](https://github.com/kokkos/kokkos/pull/7365)
+* Make `value_type` for `RandomAccessIterator` non-`const` [\#7485](https://github.com/kokkos/kokkos/pull/7485)
 
 ## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.4.00...4.4.01)
