@@ -763,8 +763,49 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 1> {
   }
 };
 
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
+template <class DstType, class SrcType, std::size_t... I>
+auto create_common_subview_first_and_last_match(const DstType& dst,
+                                                const SrcType& src,
+                                                std::index_sequence<I...>) {
+  using p_type = Kokkos::pair<int64_t, int64_t>;
+  CommonSubview common_subview(
+      dst, src, Kokkos::ALL,
+      (p_type(0, std::min(dst.extent(I + 1), src.extent(I + 1))))...,
+      Kokkos::ALL);
+  return common_subview;
+}
+
+template <class DstType, class SrcType, std::size_t... I>
+auto create_common_subview_first_match(const DstType& dst, const SrcType& src,
+                                       std::index_sequence<I...>) {
+  using p_type = Kokkos::pair<int64_t, int64_t>;
+  CommonSubview common_subview(
+      dst, src, Kokkos::ALL,
+      (p_type(0, std::min(dst.extent(I + 1), src.extent(I + 1))))...);
+  return common_subview;
+}
+
+template <class DstType, class SrcType, std::size_t... I>
+auto create_common_subview_last_match(const DstType& dst, const SrcType& src,
+                                      std::index_sequence<I...>) {
+  using p_type = Kokkos::pair<int64_t, int64_t>;
+  CommonSubview common_subview(
+      dst, src, (p_type(0, std::min(dst.extent(I), src.extent(I))))...,
+      Kokkos::ALL);
+  return common_subview;
+}
+
+template <class DstType, class SrcType, std::size_t... I>
+auto create_common_subview_no_match(const DstType& dst, const SrcType& src,
+                                    std::index_sequence<I...>) {
+  using p_type = Kokkos::pair<int64_t, int64_t>;
+  CommonSubview common_subview(
+      dst, src, (p_type(0, std::min(dst.extent(I), src.extent(I))))...);
+  return common_subview;
+}
+
+template <class DstType, class SrcType, class ExecSpace, int Rank>
+struct ViewRemap {
   using p_type = Kokkos::pair<int64_t, int64_t>;
 
   template <typename... OptExecSpace>
@@ -775,359 +816,30 @@ struct ViewRemap<DstType, SrcType, ExecSpace, 2> {
         "OptExecSpace must be either empty or be an execution space!");
 
     if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(1) == src.extent(1)) {
-        view_copy(exec_space..., dst, src);
+      if (dst.extent(Rank) == src.extent(Rank)) {
+        if constexpr (Rank < 3)
+          view_copy(exec_space..., dst, src);
+        else {
+          auto common_subview = create_common_subview_first_and_last_match(
+              dst, src, std::make_index_sequence<Rank - 2>{});
+          view_copy(exec_space..., common_subview.dst_sub,
+                    common_subview.src_sub);
+        }
       } else {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1);
+        auto common_subview = create_common_subview_first_match(
+            dst, src, std::make_index_sequence<Rank - 1>{});
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
       }
     } else {
-      if (dst.extent(1) == src.extent(1)) {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        CommonSubview common_subview(dst, src, ext0, Kokkos::ALL);
+      if (dst.extent(Rank - 1) == src.extent(Rank - 1)) {
+        auto common_subview = create_common_subview_last_match(
+            dst, src, std::make_index_sequence<Rank - 1>{});
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
       } else {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        CommonSubview common_subview(dst, src, ext0, ext1);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    }
-  }
-};
-
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 3> {
-  using p_type = Kokkos::pair<int64_t, int64_t>;
-
-  template <typename... OptExecSpace>
-  ViewRemap(const DstType& dst, const SrcType& src,
-            const OptExecSpace&... exec_space) {
-    static_assert(
-        sizeof...(OptExecSpace) <= 1,
-        "OptExecSpace must be either empty or be an execution space!");
-
-    if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(2) == src.extent(2)) {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    } else {
-      if (dst.extent(2) == src.extent(2)) {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        CommonSubview common_subview(dst, src, ext0, ext1, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    }
-  }
-};
-
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 4> {
-  using p_type = Kokkos::pair<int64_t, int64_t>;
-
-  template <typename... OptExecSpace>
-  ViewRemap(const DstType& dst, const SrcType& src,
-            const OptExecSpace&... exec_space) {
-    static_assert(
-        sizeof...(OptExecSpace) <= 1,
-        "OptExecSpace must be either empty or be an execution space!");
-
-    if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(3) == src.extent(3)) {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2,
-                                     Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    } else {
-      if (dst.extent(7) == src.extent(7)) {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    }
-  }
-};
-
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 5> {
-  using p_type = Kokkos::pair<int64_t, int64_t>;
-
-  template <typename... OptExecSpace>
-  ViewRemap(const DstType& dst, const SrcType& src,
-            const OptExecSpace&... exec_space) {
-    static_assert(
-        sizeof...(OptExecSpace) <= 1,
-        "OptExecSpace must be either empty or be an execution space!");
-
-    if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(4) == src.extent(4)) {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     ext4);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    } else {
-      if (dst.extent(4) == src.extent(4)) {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3,
-                                     Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3, ext4);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    }
-  }
-};
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 6> {
-  using p_type = Kokkos::pair<int64_t, int64_t>;
-
-  template <typename... OptExecSpace>
-  ViewRemap(const DstType& dst, const SrcType& src,
-            const OptExecSpace&... exec_space) {
-    static_assert(
-        sizeof...(OptExecSpace) <= 1,
-        "OptExecSpace must be either empty or be an execution space!");
-
-    if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(5) == src.extent(5)) {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     ext4, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     ext4, ext5);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    } else {
-      if (dst.extent(5) == src.extent(5)) {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
-                                     Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
-                                     ext5);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    }
-  }
-};
-
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 7> {
-  using p_type = Kokkos::pair<int64_t, int64_t>;
-
-  template <typename... OptExecSpace>
-  ViewRemap(const DstType& dst, const SrcType& src,
-            const OptExecSpace&... exec_space) {
-    static_assert(
-        sizeof...(OptExecSpace) <= 1,
-        "OptExecSpace must be either empty or be an execution space!");
-
-    if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(6) == src.extent(6)) {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     ext4, ext5, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     ext4, ext5, ext6);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    } else {
-      if (dst.extent(6) == src.extent(6)) {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
-                                     ext5, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
-                                     ext5, ext6);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    }
-  }
-};
-
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 8> {
-  using p_type = Kokkos::pair<int64_t, int64_t>;
-
-  template <typename... OptExecSpace>
-  ViewRemap(const DstType& dst, const SrcType& src,
-            const OptExecSpace&... exec_space) {
-    static_assert(
-        sizeof...(OptExecSpace) <= 1,
-        "OptExecSpace must be either empty or be an execution space!");
-
-    if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(7) == src.extent(7)) {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     ext4, ext5, ext6, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
-        p_type ext7(0, std::min(dst.extent(7), src.extent(7)));
-        CommonSubview common_subview(dst, src, Kokkos::ALL, ext1, ext2, ext3,
-                                     ext4, ext5, ext6, ext7);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      }
-    } else {
-      if (dst.extent(7) == src.extent(7)) {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
-                                     ext5, ext6, Kokkos::ALL);
-        view_copy(exec_space..., common_subview.dst_sub,
-                  common_subview.src_sub);
-      } else {
-        p_type ext0(0, std::min(dst.extent(0), src.extent(0)));
-        p_type ext1(0, std::min(dst.extent(1), src.extent(1)));
-        p_type ext2(0, std::min(dst.extent(2), src.extent(2)));
-        p_type ext3(0, std::min(dst.extent(3), src.extent(3)));
-        p_type ext4(0, std::min(dst.extent(4), src.extent(4)));
-        p_type ext5(0, std::min(dst.extent(5), src.extent(5)));
-        p_type ext6(0, std::min(dst.extent(6), src.extent(6)));
-        p_type ext7(0, std::min(dst.extent(7), src.extent(7)));
-        CommonSubview common_subview(dst, src, ext0, ext1, ext2, ext3, ext4,
-                                     ext5, ext6, ext7);
+        auto common_subview = create_common_subview_no_match(
+            dst, src, std::make_index_sequence<Rank>{});
         view_copy(exec_space..., common_subview.dst_sub,
                   common_subview.src_sub);
       }
