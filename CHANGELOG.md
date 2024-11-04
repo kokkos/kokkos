@@ -29,9 +29,6 @@
 * Introduce KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE as CMake option [\#5993](https://github.com/kokkos/kokkos/pull/5993) 
 
 #### OpenMPTarget:
-* Refactor the code to centralize tag evaluation [\#7200](https://github.com/kokkos/kokkos/pull/7200) [\#7211](https://github.com/kokkos/kokkos/pull/7211)
-* Refactor the code to separate DeepCopy implementation [\#7192](https://github.com/kokkos/kokkos/pull/7192)
-* Block tests that fail with the CrayClang compiler [\#7355](https://github.com/kokkos/kokkos/pull/7355)
 #### OpenACC:
 * Update cmake/make 1) to compile the OpenACC backend using Clacc and  2) for the OpenACC backend to use CUDA/HIP runtime to calculate the concurrency [\#7198](https://github.com/kokkos/kokkos/pull/7198)
 
@@ -40,21 +37,21 @@
 
 #### Threads:
 * Fix compilation for `parallel_reduce` `MDRange` with `Kokkos::Dynamic` [\#7478](https://github.com/kokkos/kokkos/7478)
-* Fix Threads backend on ARM architecture where it was unusable [\#7498](https://github.com/kokkos/kokkos/pull/7498)
+* Fix race conditions for Threads backend on ARM architectures [\#7498](https://github.com/kokkos/kokkos/pull/7498)
 
 #### OpenMP:
-* Fix issue related to the visibility of an internal symbol with shared libraries that affected `ScatterView` in particular [\#7284](https://github.com/kokkos/kokkos/pull/7284)
-* Add `fopenmp` flag at linktime when CrayClang compiler is involved [\#7341](https://github.com/kokkos/kokkos/pull/7341). 
+* Fix run time behavior when compiling with `-fvisibility-hidden` [\#7284](https://github.com/kokkos/kokkos/pull/7284)
+* Fix linking with CrayClang compiler [\#7341](https://github.com/kokkos/kokkos/pull/7341). 
 
 #### Serial:
-* Remediate performance regression from 4.4 [\#7369](https://github.com/kokkos/kokkos/pull/7369)
+* Allow Kokkos_ENABLE_ATOMICS_BYPASS to skip mutexes to remediate performance regression from 4.4 [\#7369](https://github.com/kokkos/kokkos/pull/7369)
 
 ### General Enhancements
 * Improve `View` initialization/destruction for non-scalar trivial and trivially-destructible types [\#7219](https://github.com/kokkos/kokkos/pull/7219) [\#7225](https://github.com/kokkos/kokkos/pull/7225)
 * Add getters for default tile sizes used in `MDRangePolicy` [\#6839](https://github.com/kokkos/kokkos/pull/6839)
 * Add `Graph::instantiate()` [\#7240](https://github.com/kokkos/kokkos/pull/7240)
-* Allow an arbitrary execution space instance to be used on `Kokkos::Graph::submit(...)` [\#7249](https://github.com/kokkos/kokkos/pull/7249)
-* Use raw pointers for std::sort if possible [\#7264](https://github.com/kokkos/kokkos/pull/7264)
+* Allow an arbitrary execution space instance to be used in `Kokkos::Graph::submit(...)` [\#7249](https://github.com/kokkos/kokkos/pull/7249)
+* Improve performance of Kokkos::sort when std::sort is used [\#7264](https://github.com/kokkos/kokkos/pull/7264)
 * Add support for SpacemiT K60 (RISC-V) [\#7160](https://github.com/kokkos/kokkos/pull/7160)
 * Add range-based for loop support for `Array<T, N>` [\#7293](https://github.com/kokkos/kokkos/pull/7293)
 * Allow functors as reducers for nested team parallel reduce [\#6921](https://github.com/kokkos/kokkos/pull/6921)
@@ -64,7 +61,7 @@
 
 ### Build System Changes
 * Make sure backend-specific options such as `IMPL_CUDA_MALLOC_ASYNC` only show when that backend is actually enabled [\#7228](https://github.com/kokkos/kokkos/pull/7228)
-* Major refactoring [\#6164](https://github.com/kokkos/kokkos/pull/6164)
+* Major refactoring removing `TriBITS` paths [\#6164](https://github.com/kokkos/kokkos/pull/6164)
 
 ### Incompatibilities (i.e. breaking changes)
 
