@@ -873,7 +873,7 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
 namespace Impl {
 template <class Arg0, class... DP, class... SP>
 struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>,
-                     Kokkos::Experimental::DynamicView<SP...>, 1, Arg0> {
+                     Kokkos::Experimental::DynamicView<SP...>, Arg0> {
   using DstType          = Kokkos::Experimental::DynamicView<DP...>;
   using SrcType          = Kokkos::Experimental::DynamicView<SP...>;
   using dst_subview_type = DstType;
@@ -885,8 +885,7 @@ struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>,
 };
 
 template <class... DP, class SrcType, class Arg0>
-struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>, SrcType, 1,
-                     Arg0> {
+struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>, SrcType, Arg0> {
   using DstType          = Kokkos::Experimental::DynamicView<DP...>;
   using dst_subview_type = DstType;
   using src_subview_type = typename Kokkos::Subview<SrcType, Arg0>;
@@ -897,8 +896,7 @@ struct CommonSubview<Kokkos::Experimental::DynamicView<DP...>, SrcType, 1,
 };
 
 template <class DstType, class... SP, class Arg0>
-struct CommonSubview<DstType, Kokkos::Experimental::DynamicView<SP...>, 1,
-                     Arg0> {
+struct CommonSubview<DstType, Kokkos::Experimental::DynamicView<SP...>, Arg0> {
   using SrcType          = Kokkos::Experimental::DynamicView<SP...>;
   using dst_subview_type = typename Kokkos::Subview<DstType, Arg0>;
   using src_subview_type = SrcType;
