@@ -1,5 +1,89 @@
 # CHANGELOG
 
+## 4.5.00
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.5.0.)
+
+### Features:
+* Introduce new `SequentialHostInit` view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229)
+* Support building with Run-Time Type Information (RTTI) disabled
+* Add `KOKKOS_RELOCATABLE_FUNCTION` [\#5993](https://github.com/kokkos/kokkos/pull/5993)
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+* Adding occupancy tuning for CUDA architectures [\#6788](https://github.com/kokkos/kokks/pull/6788) 
+* Add support for CUDA unified memory architectures, e.g.,  Grace Hopper [\#6823](https://github.com/kokkos/kokks/pull/6823)
+* By default disable `cudaMallocAsync`, i.e., reverts the change made in version 4.2 [\#7353](https://github.com/kokkos/kokkos/pull/7353)
+
+#### HIP:
+* Add support for AMD Phoenix APUs with Radeon 740M/760M/780M/880M/890M [\#7162](https://github.com/kokkos/kokkos/pull/7162)
+* Update maximum waves per CU values for consumer card [\#7347](https://github.com/kokkos/kokkos/pull/7347)
+* Fix compilation of global launch for graph nodes [\#7365](https://github.com/kokkos/kokkos/pull/7365)
+* Check that Kokkos is running on the architecture it was compiled for [\#7379](https://github.com/kokkos/kokkos/pull/7379)
+* Add opt-in option to use `hipMallocAsync` instead of `hipMalloc` [\#7324](https://github.com/kokkos/kokkos/pull/7324)
+* Introduce new architecture flag `AMD_GFX942_APU` for MI300A [\#7462](https://github.com/kokkos/kokkos/pull/7462)
+
+#### SYCL:
+* Move the `SYCL` backend out of the `Experimental` namespace [\#7171](https://github.com/kokkos/kokkos/pull/7171)
+* Introduce KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE as CMake option [\#5993](https://github.com/kokkos/kokkos/pull/5993) 
+
+#### OpenMPTarget:
+* Refactor the code to centralize tag evaluation [\#7200](https://github.com/kokkos/kokkos/pull/7200) [\#7211](https://github.com/kokkos/kokkos/pull/7211)
+* Refactor the code to separate DeepCopy implementation [\#7192](https://github.com/kokkos/kokkos/pull/7192)
+* Block tests that fail with the CrayClang compiler [\#7355](https://github.com/kokkos/kokkos/pull/7355)
+#### OpenACC:
+* Update cmake/make 1) to compile the OpenACC backend using Clacc and  2) for the OpenACC backend to use CUDA/HIP runtime to calculate the concurrency [\#7198](https://github.com/kokkos/kokkos/pull/7198)
+
+#### HPX:
+* Implement partition_space [\#7287](https://github.com/kokkos/kokkos/pull/7287) 
+
+#### Threads:
+* Fix compilation for `parallel_reduce` `MDRange` with `Kokkos::Dynamic` [\#7478](https://github.com/kokkos/kokkos/7478)
+* Fix Threads backend on ARM architecture where it was unusable [\#7498](https://github.com/kokkos/kokkos/pull/7498)
+
+#### OpenMP:
+* Fix issue related to the visibility of an internal symbol with shared libraries that affected `ScatterView` in particular [\#7284](https://github.com/kokkos/kokkos/pull/7284)
+* Add `fopenmp` flag at linktime when CrayClang compiler is involved [\#7341](https://github.com/kokkos/kokkos/pull/7341). 
+
+#### Serial:
+* Remediate performance regression from 4.4 [\#7369](https://github.com/kokkos/kokkos/pull/7369)
+
+### General Enhancements
+* Improve `View` initialization/destruction for non-scalar trivial and trivially-destructible types [\#7219](https://github.com/kokkos/kokkos/pull/7219) [\#7225](https://github.com/kokkos/kokkos/pull/7225)
+* Add getters for default tile sizes used in `MDRangePolicy` [\#6839](https://github.com/kokkos/kokkos/pull/6839)
+* Add `Graph::instantiate()` [\#7240](https://github.com/kokkos/kokkos/pull/7240)
+* Allow an arbitrary execution space instance to be used on `Kokkos::Graph::submit(...)` [\#7249](https://github.com/kokkos/kokkos/pull/7249)
+* Use raw pointers for std::sort if possible [\#7264](https://github.com/kokkos/kokkos/pull/7264)
+* Add support for SpacemiT K60 (RISC-V) [\#7160](https://github.com/kokkos/kokkos/pull/7160)
+* Add range-based for loop support for `Array<T, N>` [\#7293](https://github.com/kokkos/kokkos/pull/7293)
+* Allow functors as reducers for nested team parallel reduce [\#6921](https://github.com/kokkos/kokkos/pull/6921)
+* Avoid making copies of string rvalue reference arguments to `view_alloc()` [\#7364](https://github.com/kokkos/kokkos/pull/7364)
+* Add `atomic_{mod,xor,nand,lshift,rshift}` [\#7458](https://github.com/kokkos/kokkos/pull/7458)
+* Allow using SequentialHostInit with Kokkos::DualView [\#7456](https://github.com/kokkos/kokkos/pull/7456)
+
+### Build System Changes
+* Make sure backend-specific options such as `IMPL_CUDA_MALLOC_ASYNC` only show when that backend is actually enabled [\#7228](https://github.com/kokkos/kokkos/pull/7228)
+* Major refactoring [\#6164](https://github.com/kokkos/kokkos/pull/6164)
+
+### Incompatibilities (i.e. breaking changes)
+
+### Deprecations
+* Deprecate Tasking interface [\#7393](https://github.com/kokkos/kokkos/pull/7393)
+* Deprecate `atomic_query_version`, `atomic_assign`, `atomic_compare_exchange_strong`, `atomic_{inc, dec}rement` [\#7458](https://github.com/kokkos/kokkos/pull/7458)
+
+### Bug Fixes
+* Fix undefined behavior in `BinSort` when sorting within bins on host [\#7223](https://github.com/kokkos/kokkos/pull/7223)
+* Using CUDA limits to set extents for blocks,grids [\#7235](https://github.com/kokkos/kokkos/pull/7235)
+* Fix `Deep_copy (serial_exec, dst, src)` with multiple host backends [\#7245](https://github.com/kokkos/kokkos/pull/7245)
+* Skip RangePolicy bounds conversion checks if roundtrip convertibility is not provided [\#7172](https://github.com/kokkos/kokkos/pull/7172)
+* Allow extracting host and device views from DualView with const value type [\#7242](https://github.com/kokkos/kokkos/pull/7242) 
+* Fix TeamPolicy array reduction for Cuda and HIP [\#6296](https://github.com/kokkos/kokkos/pull/6296) 
+* Fix implicit copy assignment operators in few AVX2 masks being deleted [#7296](https://github.com/kokkos/kokkos/pull/7296)
+*  SYCL: Fix configuring without architecture flags [\#7303](https://github.com/kokkos/kokkos/pull/72303)
+* Set an initial value index during join of MinLoc, MaxLoc or MinMaxLoc [#7330](https://github.com/kokkos/kokkos/pull/7330)
+* `Cuda`/`HIP`: Fix storage lifetime of driver for global launch of graph nodes [\#7365](https://github.com/kokkos/kokkos/pull/7365)
+
 ## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.4.01)
 
