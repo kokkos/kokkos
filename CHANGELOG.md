@@ -100,7 +100,7 @@ Note: empty for now, delete section if none.
 * Fix storage lifetime of driver for global launch of graph nodes for CUDA and HIP [\#7365](https://github.com/kokkos/kokkos/pull/7365)
 
 ## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
-[Full Changelog](https://github.com/kokkos/kokkos/compare/4.0.00...4.4.01)
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.4.00...4.4.01)
 
 ### Features:
 * Introduce new SequentialHostInit view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229)
