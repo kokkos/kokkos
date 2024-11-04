@@ -135,9 +135,9 @@ class Bitset {
 
     if (m_last_block_mask) {
       // clear the unused bits in the last block
-      Kokkos::Impl::DeepCopy<typename Device::memory_space, Kokkos::HostSpace>(
-          m_blocks.data() + (m_blocks.extent(0) - 1u), &m_last_block_mask,
-          sizeof(unsigned));
+      auto last_block = Kokkos::subview(m_blocks, m_blocks.extent(0) - 1u);
+      Kokkos::deep_copy(typename Device::execution_space{}, last_block,
+                        m_last_block_mask);
       Kokkos::fence(
           "Bitset::set: fence after clearing unused bits copying from "
           "HostSpace");
@@ -402,10 +402,7 @@ void deep_copy(Bitset<DstDevice>& dst, Bitset<SrcDevice> const& src) {
   }
 
   Kokkos::fence("Bitset::deep_copy: fence before copy operation");
-  Kokkos::Impl::DeepCopy<typename DstDevice::memory_space,
-                         typename SrcDevice::memory_space>(
-      dst.m_blocks.data(), src.m_blocks.data(),
-      sizeof(unsigned) * src.m_blocks.extent(0));
+  Kokkos::deep_copy(dst.m_blocks, src.m_blocks);
   Kokkos::fence("Bitset::deep_copy: fence after copy operation");
 }
 
@@ -417,10 +414,7 @@ void deep_copy(Bitset<DstDevice>& dst, ConstBitset<SrcDevice> const& src) {
   }
 
   Kokkos::fence("Bitset::deep_copy: fence before copy operation");
-  Kokkos::Impl::DeepCopy<typename DstDevice::memory_space,
-                         typename SrcDevice::memory_space>(
-      dst.m_blocks.data(), src.m_blocks.data(),
-      sizeof(unsigned) * src.m_blocks.extent(0));
+  Kokkos::deep_copy(dst.m_blocks, src.m_blocks);
   Kokkos::fence("Bitset::deep_copy: fence after copy operation");
 }
 
@@ -432,10 +426,7 @@ void deep_copy(ConstBitset<DstDevice>& dst, ConstBitset<SrcDevice> const& src) {
   }
 
   Kokkos::fence("Bitset::deep_copy: fence before copy operation");
-  Kokkos::Impl::DeepCopy<typename DstDevice::memory_space,
-                         typename SrcDevice::memory_space>(
-      dst.m_blocks.data(), src.m_blocks.data(),
-      sizeof(unsigned) * src.m_blocks.extent(0));
+  Kokkos::deep_copy(dst.m_blocks, src.m_blocks);
   Kokkos::fence("Bitset::deep_copy: fence after copy operation");
 }
 
