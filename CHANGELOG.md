@@ -7,16 +7,16 @@
 ### Features
 
 * Introduce new `SequentialHostInit` view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229) (backported in 4.4.01)
-* Support building with Run-Time Type Information (RTTI) disabled
+* Support building with Run-Time Type Information (RTTI) disabled (missing PR)
 * Add `KOKKOS_RELOCATABLE_FUNCTION` [\#5993](https://github.com/kokkos/kokkos/pull/5993)
 
 ### Backend and Architecture Enhancements
 
-#### CUDA:
+#### CUDA
 
-* Adding occupancy tuning for CUDA architectures [\#6788](https://github.com/kokkos/kokks/pull/6788) 
-* Add support for CUDA unified memory architectures, e.g.,  Grace Hopper [\#6823](https://github.com/kokkos/kokks/pull/6823)
-* By default disable `cudaMallocAsync` (i.e., reverts the change made in version 4.2) [\#7353](https://github.com/kokkos/kokkos/pull/7353)
+* Adding occupancy tuning for CUDA architectures [\#6788](https://github.com/kokkos/kokkos/pull/6788)
+* Add support for CUDA unified memory architectures, e.g.,  Grace Hopper [\#6823](https://github.com/kokkos/kokkos/pull/6823)
+* By default disable `cudaMallocAsync` (i.e., revert the change made in version 4.2) [\#7353](https://github.com/kokkos/kokkos/pull/7353)
 
 #### HIP
 
@@ -30,7 +30,7 @@
 #### SYCL
 
 * Move the `SYCL` backend out of the `Experimental` namespace [\#7171](https://github.com/kokkos/kokkos/pull/7171)
-* Introduce `KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE` as CMake option [\#5993](https://github.com/kokkos/kokkos/pull/5993) 
+* Introduce `KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE` as CMake option [\#5993](https://github.com/kokkos/kokkos/pull/5993)
 
 #### OpenMPTarget
 
@@ -46,7 +46,7 @@ Note: empty for now, delete section if none.
 
 #### Threads
 
-* Fix compilation for `parallel_reduce` `MDRange` with `Kokkos::Dynamic` [\#7478](https://github.com/kokkos/kokkos/7478)
+* Fix compilation for `parallel_reduce` `MDRange` with `Kokkos::Dynamic` [\#7478](https://github.com/kokkos/kokkos/pull/7478)
 * Fix race conditions for Threads backend on ARM architectures [\#7498](https://github.com/kokkos/kokkos/pull/7498)
 
 #### OpenMP
@@ -95,7 +95,7 @@ Note: empty for now, delete section if none.
 * Allow extracting host and device views from `DualView` with `const` value type [\#7242](https://github.com/kokkos/kokkos/pull/7242) 
 * Fix `TeamPolicy` array reduction for CUDA and HIP [\#6296](https://github.com/kokkos/kokkos/pull/6296) 
 * Fix implicit copy assignment operators in few AVX2 masks being deleted [#7296](https://github.com/kokkos/kokkos/pull/7296)
-* Fix configuring without architecture flags for SYCL [\#7303](https://github.com/kokkos/kokkos/pull/72303)
+* Fix configuring without architecture flags for SYCL [\#7303](https://github.com/kokkos/kokkos/pull/7303)
 * Set an initial value index during join of `MinLoc`, `MaxLoc` or `MinMaxLoc` [#7330](https://github.com/kokkos/kokkos/pull/7330)
 * Fix storage lifetime of driver for global launch of graph nodes for CUDA and HIP [\#7365](https://github.com/kokkos/kokkos/pull/7365)
 
