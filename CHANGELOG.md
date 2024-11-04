@@ -42,7 +42,7 @@ Note: empty for now, delete section if none.
 
 #### HPX
 
-* Implement `Experimental::partition_space` [\#7287](https://github.com/kokkos/kokkos/pull/7287) 
+* Implement `Experimental::partition_space` [\#7287](https://github.com/kokkos/kokkos/pull/7287)
 
 #### Threads
 
@@ -92,8 +92,8 @@ Note: empty for now, delete section if none.
 * Using CUDA limits to set extents for blocks, grids [\#7235](https://github.com/kokkos/kokkos/pull/7235)
 * Fix `deep_copy (serial_exec, dst, src)` with multiple host backends [\#7245](https://github.com/kokkos/kokkos/pull/7245)
 * Skip `RangePolicy` bounds conversion checks if roundtrip convertibility is not provided [\#7172](https://github.com/kokkos/kokkos/pull/7172)
-* Allow extracting host and device views from `DualView` with `const` value type [\#7242](https://github.com/kokkos/kokkos/pull/7242) 
-* Fix `TeamPolicy` array reduction for CUDA and HIP [\#6296](https://github.com/kokkos/kokkos/pull/6296) 
+* Allow extracting host and device views from `DualView` with `const` value type [\#7242](https://github.com/kokkos/kokkos/pull/7242)
+* Fix `TeamPolicy` array reduction for CUDA and HIP [\#6296](https://github.com/kokkos/kokkos/pull/6296)
 * Fix implicit copy assignment operators in few AVX2 masks being deleted [\#7296](https://github.com/kokkos/kokkos/pull/7296)
 * Fix configuring without architecture flags for SYCL [\#7303](https://github.com/kokkos/kokkos/pull/7303)
 * Set an initial value index during join of `MinLoc`, `MaxLoc` or `MinMaxLoc` [\#7330](https://github.com/kokkos/kokkos/pull/7330)
