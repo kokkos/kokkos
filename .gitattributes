@@ -5,3 +5,4 @@
 .appveyor.yml export-ignore
 .*gitlab-ci.yml export-ignore
 scripts/ export-ignore
+LICENSE_FILE_HEADER export-ignore
