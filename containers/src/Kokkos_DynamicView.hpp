@@ -790,10 +790,8 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
       Kokkos::SpaceAccessibility<src_execution_space,
                                  dst_memory_space>::accessible;
 
-  if (DstExecCanAccessSrc)
-    Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
-  else if (SrcExecCanAccessDst)
-    Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
+  if (DstExecCanAccessSrc || SrcExecCanAccessDst)
+    Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(dst, src);
   else
     src.impl_get_chunks().deep_copy_to(dst_execution_space{},
                                        dst.impl_get_chunks());
@@ -820,10 +818,8 @@ inline void deep_copy(const ExecutionSpace& exec,
                                  dst_memory_space>::accessible;
 
   // FIXME use execution space
-  if (DstExecCanAccessSrc)
-    Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
-  else if (SrcExecCanAccessDst)
-    Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
+  if (DstExecCanAccessSrc || SrcExecCanAccessDst)
+    Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(dst, src);
   else
     src.impl_get_chunks().deep_copy_to(exec, dst.impl_get_chunks());
 }
@@ -846,7 +842,8 @@ inline void deep_copy(const View<T, DP...>& dst,
 
   // Copying data between views in accessible memory spaces and either
   // non-contiguous or incompatible shape.
-  Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
+  Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(
+      dst, src);
   Kokkos::fence("Kokkos::deep_copy(DynamicView)");
 }
 
@@ -868,7 +865,8 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
 
   // Copying data between views in accessible memory spaces and either
   // non-contiguous or incompatible shape.
-  Kokkos::Impl::ViewRemap<dst_type, src_type>(dst, src);
+  Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(
+      dst, src);
   Kokkos::fence("Kokkos::deep_copy(DynamicView)");
 }
 
@@ -910,7 +908,8 @@ struct CommonSubview<DstType, Kokkos::Experimental::DynamicView<SP...>, Arg0> {
 
 template <class... DP, class ViewTypeB, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>, ViewTypeB, Layout,
+struct ViewCopy</* SequentialHostInit */ false,
+                Kokkos::Experimental::DynamicView<DP...>, ViewTypeB, Layout,
                 ExecSpace, 1, iType> {
   Kokkos::Experimental::DynamicView<DP...> a;
   ViewTypeB b;
@@ -930,9 +929,9 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>, ViewTypeB, Layout,
 
 template <class... DP, class... SP, class Layout, class ExecSpace,
           typename iType>
-struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
-                Kokkos::Experimental::DynamicView<SP...>, Layout, ExecSpace, 1,
-                iType> {
+struct ViewCopy<
+    /* SequentialHostInit */ false, Kokkos::Experimental::DynamicView<DP...>,
+    Kokkos::Experimental::DynamicView<SP...>, Layout, ExecSpace, 1, iType> {
   Kokkos::Experimental::DynamicView<DP...> a;
   Kokkos::Experimental::DynamicView<SP...> b;
 
