@@ -1009,10 +1009,7 @@ if(KOKKOS_ENABLE_OPENACC)
   else()
     # Automatic fallback mode; try to offload any available GPU, and fall back
     # to the host CPU if no available GPU is found.
-    COMPILER_SPECIFIC_FLAGS(
-      NVHPC -acc=gpu,multicore
-      Clang --offload-arch=native
-    )
+    compiler_specific_flags(NVHPC -acc=gpu,multicore Clang --offload-arch=native)
   endif()
 endif()
 
