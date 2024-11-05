@@ -538,6 +538,32 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
 namespace Kokkos {
 namespace Impl {
 
+template <class DstType>
+Kokkos::Iterate get_iteration_order(const DstType& dst) {
+  int64_t strides[DstType::rank + 1];
+  dst.stride(strides);
+  Kokkos::Iterate iterate;
+  if (std::is_same_v<typename DstType::array_layout, Kokkos::LayoutRight>) {
+    iterate = Kokkos::Iterate::Right;
+  } else if (std::is_same_v<typename DstType::array_layout,
+                            Kokkos::LayoutLeft>) {
+    iterate = Kokkos::Iterate::Left;
+  } else if (std::is_same_v<typename DstType::array_layout,
+                            Kokkos::LayoutStride>) {
+    if (strides[0] > strides[DstType::rank - 1])
+      iterate = Kokkos::Iterate::Right;
+    else
+      iterate = Kokkos::Iterate::Left;
+  } else {
+    if (std::is_same_v<typename DstType::execution_space::array_layout,
+                       Kokkos::LayoutRight>)
+      iterate = Kokkos::Iterate::Right;
+    else
+      iterate = Kokkos::Iterate::Left;
+  }
+  return iterate;
+}
+
 template <class ExecutionSpace, class DstType, class SrcType>
 void view_copy(const ExecutionSpace& space, const DstType& dst,
                const SrcType& src) {
@@ -554,27 +580,7 @@ void view_copy(const ExecutionSpace& space, const DstType& dst,
         "Kokkos::Impl::view_copy called with invalid execution space");
   } else {
     // Figure out iteration order in case we need it
-    int64_t strides[DstType::rank + 1];
-    dst.stride(strides);
-    Kokkos::Iterate iterate;
-    if (std::is_same_v<typename DstType::array_layout, Kokkos::LayoutRight>) {
-      iterate = Kokkos::Iterate::Right;
-    } else if (std::is_same_v<typename DstType::array_layout,
-                              Kokkos::LayoutLeft>) {
-      iterate = Kokkos::Iterate::Left;
-    } else if (std::is_same_v<typename DstType::array_layout,
-                              Kokkos::LayoutStride>) {
-      if (strides[0] > strides[DstType::rank - 1])
-        iterate = Kokkos::Iterate::Right;
-      else
-        iterate = Kokkos::Iterate::Left;
-    } else {
-      if (std::is_same_v<typename DstType::execution_space::array_layout,
-                         Kokkos::LayoutRight>)
-        iterate = Kokkos::Iterate::Right;
-      else
-        iterate = Kokkos::Iterate::Left;
-    }
+    Kokkos::Iterate iterate = get_iteration_order(dst);
 
     if ((dst.span() >= size_t(std::numeric_limits<int>::max())) ||
         (src.span() >= size_t(std::numeric_limits<int>::max()))) {
@@ -641,27 +647,7 @@ void view_copy(const DstType& dst, const SrcType& src) {
                          src_execution_space>;
 
   // Figure out iteration order in case we need it
-  int64_t strides[DstType::rank + 1];
-  dst.stride(strides);
-  Kokkos::Iterate iterate;
-  if (std::is_same_v<typename DstType::array_layout, Kokkos::LayoutRight>) {
-    iterate = Kokkos::Iterate::Right;
-  } else if (std::is_same_v<typename DstType::array_layout,
-                            Kokkos::LayoutLeft>) {
-    iterate = Kokkos::Iterate::Left;
-  } else if (std::is_same_v<typename DstType::array_layout,
-                            Kokkos::LayoutStride>) {
-    if (strides[0] > strides[DstType::rank - 1])
-      iterate = Kokkos::Iterate::Right;
-    else
-      iterate = Kokkos::Iterate::Left;
-  } else {
-    if (std::is_same_v<typename DstType::execution_space::array_layout,
-                       Kokkos::LayoutRight>)
-      iterate = Kokkos::Iterate::Right;
-    else
-      iterate = Kokkos::Iterate::Left;
-  }
+  Kokkos::Iterate iterate = get_iteration_order(dst);
 
   if ((dst.span() >= size_t(std::numeric_limits<int>::max())) ||
       (src.span() >= size_t(std::numeric_limits<int>::max()))) {
