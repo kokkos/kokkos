@@ -53,7 +53,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     for (int i = 0; i < league_size * team_size * vector_length; i++) {
       int league_rank = i / (team_size * vector_length);
 #if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
-      int team_rank   = i % (team_size * vector_length);
+      int team_rank = i % (team_size * vector_length);
       typename Policy::member_type team(league_rank, league_size, team_rank,
                                         team_size, vector_length);
 #else
