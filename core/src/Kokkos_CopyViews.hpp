@@ -644,6 +644,10 @@ void view_copy(const DstType& dst, const SrcType& src) {
     Kokkos::Impl::throw_runtime_exception(ss.str());
   }
 
+  using ExecutionSpace =
+      std::conditional_t<DstExecCanAccessSrc, dst_execution_space,
+                         src_execution_space>;
+
   // Figure out iteration order in case we need it
   int64_t strides[DstType::rank + 1];
   dst.stride(strides);
@@ -669,61 +673,28 @@ void view_copy(const DstType& dst, const SrcType& src) {
 
   if ((dst.span() >= size_t(std::numeric_limits<int>::max())) ||
       (src.span() >= size_t(std::numeric_limits<int>::max()))) {
-    if (DstExecCanAccessSrc) {
-      if (iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutRight, dst_execution_space, DstType::rank, int64_t>(
-            dst, src);
-      else
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutLeft, dst_execution_space, DstType::rank, int64_t>(
-            dst, src);
-    } else {
-      if (iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutRight, src_execution_space, DstType::rank, int64_t>(
-            dst, src);
-      else
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutLeft, src_execution_space, DstType::rank, int64_t>(
-            dst, src);
-    }
+    if (iterate == Kokkos::Iterate::Right)
+      Kokkos::Impl::ViewCopy<
+          typename DstType::uniform_runtime_nomemspace_type,
+          typename SrcType::uniform_runtime_const_nomemspace_type,
+          Kokkos::LayoutRight, ExecutionSpace, DstType::rank, int64_t>(dst,
+                                                                       src);
+    else
+      Kokkos::Impl::ViewCopy<
+          typename DstType::uniform_runtime_nomemspace_type,
+          typename SrcType::uniform_runtime_const_nomemspace_type,
+          Kokkos::LayoutLeft, ExecutionSpace, DstType::rank, int64_t>(dst, src);
   } else {
-    if (DstExecCanAccessSrc) {
-      if (iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutRight, dst_execution_space, DstType::rank, int>(dst,
-                                                                          src);
-      else
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutLeft, dst_execution_space, DstType::rank, int>(dst,
-                                                                         src);
-    } else {
-      if (iterate == Kokkos::Iterate::Right)
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutRight, src_execution_space, DstType::rank, int>(dst,
-                                                                          src);
-      else
-        Kokkos::Impl::ViewCopy<
-            typename DstType::uniform_runtime_nomemspace_type,
-            typename SrcType::uniform_runtime_const_nomemspace_type,
-            Kokkos::LayoutLeft, src_execution_space, DstType::rank, int>(dst,
-                                                                         src);
-    }
+    if (iterate == Kokkos::Iterate::Right)
+      Kokkos::Impl::ViewCopy<
+          typename DstType::uniform_runtime_nomemspace_type,
+          typename SrcType::uniform_runtime_const_nomemspace_type,
+          Kokkos::LayoutRight, ExecutionSpace, DstType::rank, int>(dst, src);
+    else
+      Kokkos::Impl::ViewCopy<
+          typename DstType::uniform_runtime_nomemspace_type,
+          typename SrcType::uniform_runtime_const_nomemspace_type,
+          Kokkos::LayoutLeft, ExecutionSpace, DstType::rank, int>(dst, src);
   }
 }
 
@@ -1209,18 +1180,6 @@ inline void deep_copy(
     }
     return;
   }
-
-  enum {
-    DstExecCanAccessSrc =
-        Kokkos::SpaceAccessibility<dst_execution_space,
-                                   src_memory_space>::accessible
-  };
-
-  enum {
-    SrcExecCanAccessDst =
-        Kokkos::SpaceAccessibility<src_execution_space,
-                                   dst_memory_space>::accessible
-  };
 
   // Checking for Overlapping Views.
   dst_value_type* dst_start = dst.data();
@@ -2370,23 +2329,6 @@ inline void deep_copy(
     return;
   }
 
-  enum {
-    ExecCanAccessSrcDst =
-        Kokkos::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible &&
-        Kokkos::SpaceAccessibility<ExecSpace, src_memory_space>::accessible
-  };
-  enum {
-    DstExecCanAccessSrc =
-        Kokkos::SpaceAccessibility<dst_execution_space,
-                                   src_memory_space>::accessible
-  };
-
-  enum {
-    SrcExecCanAccessDst =
-        Kokkos::SpaceAccessibility<src_execution_space,
-                                   dst_memory_space>::accessible
-  };
-
   // Error out for non-identical overlapping views.
   if ((((std::ptrdiff_t)dst_start < (std::ptrdiff_t)src_end) &&
        ((std::ptrdiff_t)dst_end > (std::ptrdiff_t)src_start)) &&
@@ -2459,7 +2401,26 @@ inline void deep_copy(
   } else {
     // Copying data between views in accessible memory spaces and either
     // non-contiguous or incompatible shape.
-    if (ExecCanAccessSrcDst) {
+
+    enum {
+      ExecCanAccessSrcDst =
+          Kokkos::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible &&
+          Kokkos::SpaceAccessibility<ExecSpace, src_memory_space>::accessible
+    };
+
+    enum {
+      DstExecCanAccessSrc =
+          Kokkos::SpaceAccessibility<dst_execution_space,
+                                     src_memory_space>::accessible
+    };
+
+    enum {
+      SrcExecCanAccessDst =
+          Kokkos::SpaceAccessibility<src_execution_space,
+                                     dst_memory_space>::accessible
+    };
+
+    if constexpr (ExecCanAccessSrcDst) {
       Impl::view_copy(exec_space, dst, src);
     } else if (DstExecCanAccessSrc || SrcExecCanAccessDst) {
       using cpy_exec_space =
