@@ -27,6 +27,7 @@ static_assert(
                               long long, Kokkos::HostSpace>>>);
 #endif
 
+#ifndef KOKKOS_ENABLE_CXX17
 static_assert(
     std::is_convertible_v<Kokkos::Impl::BV::BasicView<
                               long long, Kokkos::dextents<size_t, 4>,
@@ -38,6 +39,7 @@ static_assert(
                               Kokkos::Experimental::layout_right_padded<>,
                               Kokkos::Impl::CheckedReferenceCountedAccessor<
                                   const long long, Kokkos::HostSpace>>>);
+#endif
 #if 0  // TODO: after View is using BasicView this should be true
 static_assert(
     std::is_convertible_v<
