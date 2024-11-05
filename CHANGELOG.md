@@ -63,8 +63,6 @@ Note: empty for now, delete section if none.
 
 * Improve `View` initialization/destruction for non-scalar trivial and trivially-destructible types [\#7219](https://github.com/kokkos/kokkos/pull/7219) [\#7225](https://github.com/kokkos/kokkos/pull/7225)
 * Add getters for default tile sizes used in `MDRangePolicy` [\#6839](https://github.com/kokkos/kokkos/pull/6839)
-* Add `Graph::instantiate()` [\#7240](https://github.com/kokkos/kokkos/pull/7240)
-* Allow an arbitrary execution space instance to be used in `Kokkos::Graph::submit(...)` [\#7249](https://github.com/kokkos/kokkos/pull/7249)
 * Improve performance of `Kokkos::sort` when `std::sort` is used [\#7264](https://github.com/kokkos/kokkos/pull/7264)
 * Add support for SpacemiT K60 (RISC-V) [\#7160](https://github.com/kokkos/kokkos/pull/7160)
 * Add range-based for loop support for `Array<T, N>` [\#7293](https://github.com/kokkos/kokkos/pull/7293)
@@ -72,6 +70,11 @@ Note: empty for now, delete section if none.
 * Avoid making copies of string rvalue reference arguments to `view_alloc()` [\#7364](https://github.com/kokkos/kokkos/pull/7364)
 * Add `atomic_{mod,xor,nand,lshift,rshift}` [\#7458](https://github.com/kokkos/kokkos/pull/7458)
 * Allow using `SequentialHostInit` with `Kokkos::DualView` [\#7456](https://github.com/kokkos/kokkos/pull/7456)
+
+### Graphs
+
+* Add `Graph::instantiate()` [\#7240](https://github.com/kokkos/kokkos/pull/7240)
+* Allow an arbitrary execution space instance to be used in `Kokkos::Graph::submit(...)` [\#7249](https://github.com/kokkos/kokkos/pull/7249)
 * Enable compile-time diagnostic of illegal reduction target for graphs [\#7460](https://github.com/kokkos/kokkos/pull/7460)
 
 ### Build System Changes
