@@ -544,14 +544,10 @@ void view_copy(const ExecutionSpace& space, const DstType& dst,
   using dst_memory_space = typename DstType::memory_space;
   using src_memory_space = typename SrcType::memory_space;
 
-  enum {
-    ExecCanAccessSrc =
-        Kokkos::SpaceAccessibility<ExecutionSpace, src_memory_space>::accessible
-  };
-  enum {
-    ExecCanAccessDst =
-        Kokkos::SpaceAccessibility<ExecutionSpace, dst_memory_space>::accessible
-  };
+  constexpr bool ExecCanAccessSrc =
+      Kokkos::SpaceAccessibility<ExecutionSpace, src_memory_space>::accessible;
+  constexpr bool ExecCanAccessDst =
+      Kokkos::SpaceAccessibility<ExecutionSpace, dst_memory_space>::accessible;
 
   if (!(ExecCanAccessSrc && ExecCanAccessDst)) {
     Kokkos::Impl::throw_runtime_exception(
@@ -618,17 +614,13 @@ void view_copy(const DstType& dst, const SrcType& src) {
   using dst_memory_space    = typename DstType::memory_space;
   using src_memory_space    = typename SrcType::memory_space;
 
-  enum {
-    DstExecCanAccessSrc =
-        Kokkos::SpaceAccessibility<dst_execution_space,
-                                   src_memory_space>::accessible
-  };
+  constexpr bool DstExecCanAccessSrc =
+      Kokkos::SpaceAccessibility<dst_execution_space,
+                                 src_memory_space>::accessible;
 
-  enum {
-    SrcExecCanAccessDst =
-        Kokkos::SpaceAccessibility<src_execution_space,
-                                   dst_memory_space>::accessible
-  };
+  constexpr bool SrcExecCanAccessDst =
+      Kokkos::SpaceAccessibility<src_execution_space,
+                                 dst_memory_space>::accessible;
 
   if (!DstExecCanAccessSrc && !SrcExecCanAccessDst) {
     std::ostringstream ss;
@@ -2402,23 +2394,15 @@ inline void deep_copy(
     // Copying data between views in accessible memory spaces and either
     // non-contiguous or incompatible shape.
 
-    enum {
-      ExecCanAccessSrcDst =
-          Kokkos::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible &&
-          Kokkos::SpaceAccessibility<ExecSpace, src_memory_space>::accessible
-    };
-
-    enum {
-      DstExecCanAccessSrc =
-          Kokkos::SpaceAccessibility<dst_execution_space,
-                                     src_memory_space>::accessible
-    };
-
-    enum {
-      SrcExecCanAccessDst =
-          Kokkos::SpaceAccessibility<src_execution_space,
-                                     dst_memory_space>::accessible
-    };
+    constexpr bool ExecCanAccessSrcDst =
+        Kokkos::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible &&
+        Kokkos::SpaceAccessibility<ExecSpace, src_memory_space>::accessible;
+    constexpr bool DstExecCanAccessSrc =
+        Kokkos::SpaceAccessibility<dst_execution_space,
+                                   src_memory_space>::accessible;
+    constexpr bool SrcExecCanAccessDst =
+        Kokkos::SpaceAccessibility<src_execution_space,
+                                   dst_memory_space>::accessible;
 
     if constexpr (ExecCanAccessSrcDst) {
       Impl::view_copy(exec_space, dst, src);
@@ -2909,10 +2893,8 @@ struct MirrorViewType {
   // The memory space for the mirror view
   using memory_space = typename Space::memory_space;
   // Check whether it is the same memory space
-  enum {
-    is_same_memspace =
-        std::is_same_v<memory_space, typename src_view_type::memory_space>
-  };
+  static constexpr bool is_same_memspace =
+      std::is_same_v<memory_space, typename src_view_type::memory_space>;
   // The array_layout
   using array_layout = typename src_view_type::array_layout;
   // The data type (we probably want it non-const since otherwise we can't even
