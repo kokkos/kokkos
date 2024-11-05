@@ -31,6 +31,19 @@ class S {
   KOKKOS_DEFAULTED_FUNCTION S() = default;
 };
 
+// User-defined types with a View data member that allocates in the default
+// constructor
+template <class V>
+class DA {
+  V v_ = V("v", 5);
+
+ public:
+  template <class... Extents>
+  DA(std::string label, Extents... extents)
+      : v_(std::move(label), extents...) {}
+  DA() = default;
+};
+
 template <class V>
 class N {  // not default constructible
   V v_;
@@ -92,13 +105,34 @@ template <class V>
 void test_view_of_views_sequential_host_init() {
   // inner views value-initialized sequentially on the host, and also
   // sequentially destructed on the host, without the need to cleanup
-  using VoV = Kokkos::View<V**, Kokkos::HostSpace>;
-  VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 3);
-  V a("a");
-  V b("b");
-  vov(0, 0) = a;
-  vov(1, 0) = a;
-  vov(0, 1) = b;
+  {
+    using VoV = Kokkos::View<V*, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 3);
+    {
+      V a("a");
+      V b("b");
+      vov(0) = a;
+      vov(1) = b;
+    }
+
+    Kokkos::resize(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1);
+    ASSERT_EQ(vov.extent(0), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V**, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 3);
+    {
+      V a("a");
+      V b("b");
+      vov(0, 0) = a;
+      vov(1, 0) = a;
+      vov(0, 1) = b;
+    }
+
+    Kokkos::resize(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1);
+    ASSERT_EQ(vov.extent(0), 1u);
+    ASSERT_EQ(vov.extent(1), 1u);
+  }
 }
 
 TEST(TEST_CATEGORY, view_of_views_default) {
@@ -122,6 +156,8 @@ TEST(TEST_CATEGORY, test_view_of_views_sequential_host_init) {
   test_view_of_views_sequential_host_init<Kokkos::View<int, TEST_EXECSPACE>>();
   test_view_of_views_sequential_host_init<
       S<Kokkos::View<float, TEST_EXECSPACE>>>();
+  test_view_of_views_sequential_host_init<
+      DA<Kokkos::View<double, TEST_EXECSPACE>>>();
   test_view_of_views_sequential_host_init<
       H<Kokkos::View<int, TEST_EXECSPACE>>>();
 }
