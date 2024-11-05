@@ -310,7 +310,7 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 1,
       uint64_t kpID        = 0;
       const auto& response = Kokkos::Tools::Impl::begin_parallel_for(
           policy, *this, "Kokkos::ViewCopy-1D", kpID);
-      for (iType i = 0; i < a.extent(0); ++i) operator()(i);
+      for (iType i = 0; i < static_cast<iType>(a.extent(0)); ++i) operator()(i);
       Kokkos::Tools::Impl::end_parallel_for(response.policy, *this,
                                             "Kokkos::ViewCopy-1D", kpID);
     } else
