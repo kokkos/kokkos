@@ -51,13 +51,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 #pragma acc parallel loop gang vector num_gangs(league_size) \
     vector_length(team_size* vector_length) copyin(a_functor) async(async_arg)
     for (int i = 0; i < league_size * team_size * vector_length; i++) {
-#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
       int league_rank = i / (team_size * vector_length);
+#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
       int team_rank   = i % (team_size * vector_length);
       typename Policy::member_type team(league_rank, league_size, team_rank,
                                         team_size, vector_length);
 #else
-      int league_rank = i / (team_size * vector_length);
       typename Policy::member_type team(league_rank, league_size, team_size,
                                         vector_length);
 #endif
