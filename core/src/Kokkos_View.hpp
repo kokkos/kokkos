@@ -863,39 +863,6 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                   "overload taking a layout object instead.");
   }
 
-  //----------------------------------------
-  // MDSpan converting constructors
-  template <typename U = typename Impl::MDSpanViewTraits<traits>::mdspan_type>
-  KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_ENABLE_CXX17
-      explicit(traits::is_managed)
-#endif
-          View(const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
-               std::enable_if_t<
-                   !std::is_same_v<Impl::UnsupportedKokkosArrayLayout, U> >* =
-                   nullptr)
-      : base_t(mds) {
-  }
-
-  template <class ElementType, class ExtentsType, class LayoutType,
-            class AccessorType>
-  KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_ENABLE_CXX17
-      explicit(!std::is_convertible_v<
-               Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
-                              AccessorType>,
-               typename Impl::MDSpanViewTraits<traits>::mdspan_type>)
-#endif
-          View(const Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
-                                    AccessorType>& mds,
-               std::enable_if_t<
-                   std::is_constructible_v<
-                       base_t, Kokkos::mdspan<ElementType, ExtentsType,
-                                              LayoutType, AccessorType> >,
-                   void*> = nullptr)
-      : base_t(mds) {
-  }
-
  public:
   //----------------------------------------
   // Allocation tracking properties
