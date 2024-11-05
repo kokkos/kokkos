@@ -273,6 +273,10 @@ class BasicView {
       !std::is_convertible_v<const typename OtherL::template mapping<OtherE> &,
                              mapping_type> ||
       !std::is_convertible_v<const OtherA &, accessor_type>)
+#else
+  // FIXME[CUDA11]: this is needed to avoid nvcc 11.2 from incorrectly viewing incompatible
+  // types of conversion (i.e. from double** to int**)
+  explicit
 #endif
       KOKKOS_INLINE_FUNCTION
       BasicView(const BasicView<OtherT, OtherE, OtherL, OtherA> &other)
