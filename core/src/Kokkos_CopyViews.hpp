@@ -765,7 +765,7 @@ struct ViewRemap {
         "OptExecSpace must be either empty or be an execution space!");
 
     if (dst.extent(0) == src.extent(0)) {
-      if (dst.extent(Rank) == src.extent(Rank)) {
+      if (dst.extent(Rank - 1) == src.extent(Rank - 1)) {
         if constexpr (Rank < 3)
           view_copy(exec_space..., dst, src);
         else {
