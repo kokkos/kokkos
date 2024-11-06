@@ -70,8 +70,7 @@ class ScratchMemorySpace {
       "Use layout_type instead.") = typename ExecSpace::array_layout;
 #endif
   using layout_type = typename ExecSpace::layout_type;
-
-  using size_type = typename ExecSpace::size_type;
+  using size_type   = typename ExecSpace::size_type;
 
   static constexpr const char* name() { return "ScratchMemorySpace"; }
 
