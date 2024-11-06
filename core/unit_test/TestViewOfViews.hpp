@@ -61,17 +61,10 @@ void test_view_of_views_default() {
   vov(0, 0) = a;
   vov(1, 0) = a;
   vov(0, 1) = b;
-
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
   vov(0, 0) = V();
   vov(1, 0) = V();
   vov(0, 1) = V();
-#endif
-
-  Kokkos::realloc(vov, 1, 1);
-  vov(0, 0) = a;
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
-  vov(0, 0) = V();
 #endif
 }
 
@@ -86,21 +79,12 @@ void test_view_of_views_without_initializing() {
   new (&vov(0, 0)) V(a);
   new (&vov(1, 0)) V(a);
   new (&vov(0, 1)) V(b);
-
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
   vov(0, 0).~V();
   vov(1, 0).~V();
   vov(0, 1).~V();
 #else
   // leaks memory
-#endif
-
-  Kokkos::realloc(Kokkos::view_alloc(Kokkos::WithoutInitializing), vov, 1, 1);
-  new (&vov(0, 0)) V(a);
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
-  vov(0, 0).~V();
-#else
-// leaks memory
 #endif
 }
 
@@ -115,9 +99,6 @@ void test_view_of_views_sequential_host_init() {
   vov(0, 0) = a;
   vov(1, 0) = a;
   vov(0, 1) = b;
-
-  Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1);
-  vov(0, 0) = a;
 }
 
 TEST(TEST_CATEGORY, view_of_views_default) {
@@ -142,6 +123,109 @@ TEST(TEST_CATEGORY, test_view_of_views_sequential_host_init) {
   test_view_of_views_sequential_host_init<
       S<Kokkos::View<float, TEST_EXECSPACE>>>();
   test_view_of_views_sequential_host_init<
+      H<Kokkos::View<int, TEST_EXECSPACE>>>();
+}
+
+template <class V>
+void test_view_of_views_realloc_sequential_host_init() {
+  {
+    using VoV = Kokkos::View<V*, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2);
+    {
+      V a("a");
+      vov(0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V**, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 2);
+    {
+      V a("a");
+      vov(0, 0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V***, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 2, 2);
+    {
+      V a("a");
+      vov(0, 0, 0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1,
+                    1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V****, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 2, 2, 2);
+    {
+      V a("a");
+      vov(0, 0, 0, 0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1,
+                    1, 1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V*****, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 2, 2, 2,
+            2);
+    {
+      V a("a");
+      vov(0, 0, 0, 0, 0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1,
+                    1, 1, 1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V******, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 2, 2, 2,
+            2, 2);
+    {
+      V a("a");
+      vov(0, 0, 0, 0, 0, 0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1,
+                    1, 1, 1, 1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V*******, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 2, 2, 2,
+            2, 2, 2);
+    {
+      V a("a");
+      vov(0, 0, 0, 0, 0, 0, 0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1,
+                    1, 1, 1, 1, 1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+  {
+    using VoV = Kokkos::View<V********, Kokkos::HostSpace>;
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit), 2, 2, 2, 2,
+            2, 2, 2, 2);
+    {
+      V a("a");
+      vov(0, 0, 0, 0, 0, 0, 0, 0) = a;
+    }
+    Kokkos::realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov, 1, 1,
+                    1, 1, 1, 1, 1, 1);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+}
+
+TEST(TEST_CATEGORY, test_view_of_views_realloc_sequential_host_init) {
+  test_view_of_views_realloc_sequential_host_init<
+      Kokkos::View<int, TEST_EXECSPACE>>();
+  test_view_of_views_realloc_sequential_host_init<
+      S<Kokkos::View<float, TEST_EXECSPACE>>>();
+  test_view_of_views_realloc_sequential_host_init<
       H<Kokkos::View<int, TEST_EXECSPACE>>>();
 }
 
