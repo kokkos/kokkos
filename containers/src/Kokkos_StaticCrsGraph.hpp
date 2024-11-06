@@ -21,6 +21,26 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STATICCRSGRAPH
 #endif
 
+#include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+namespace {
+[[deprecated("Deprecated <Kokkos_StaticCrsGraph.hpp> header is included")]] int
+emit_warning_kokkos_static_crs_graph_deprecated() {
+  return 0;
+}
+static auto do_not_include = emit_warning_kokkos_static_crs_graph_deprecated();
+}  // namespace
+#endif
+#else
+#error "Deprecated <Kokkos_StaticCrsGraph.hpp> header is included"
+#endif
+
+#define KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD \
+  KOKKOS_DEPRECATED_WITH_COMMENT(                        \
+      "Moved to KokkosKernels into KokkosSparse namespace")
+
 #include <string>
 #include <vector>
 
@@ -144,7 +164,7 @@ struct StaticCrsGraphBalancerFunctor {
 /// is used by CrsMatrix), but may be greater than one for other
 /// sparse matrix storage formats (e.g., ELLPACK or jagged diagonal).
 template <class GraphType>
-struct GraphRowViewConst {
+struct KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD GraphRowViewConst {
   //! The type of the column indices in the row.
   using ordinal_type = const typename GraphType::data_type;
 
@@ -257,7 +277,7 @@ template <class DataType, class Arg1Type, class Arg2Type = void,
           class Arg3Type    = void,
           typename SizeType = typename ViewTraits<DataType*, Arg1Type, Arg2Type,
                                                   Arg3Type>::size_type>
-class StaticCrsGraph {
+class KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD StaticCrsGraph {
  private:
   using traits = ViewTraits<DataType*, Arg1Type, Arg2Type, Arg3Type>;
 
@@ -391,29 +411,35 @@ class StaticCrsGraph {
 //----------------------------------------------------------------------------
 
 template <class StaticCrsGraphType, class InputSizeType>
-typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
-    const std::string& label, const std::vector<InputSizeType>& input);
+KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD
+    typename StaticCrsGraphType::staticcrsgraph_type
+    create_staticcrsgraph(const std::string& label,
+                          const std::vector<InputSizeType>& input);
 
 template <class StaticCrsGraphType, class InputSizeType>
-typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
-    const std::string& label,
-    const std::vector<std::vector<InputSizeType> >& input);
+KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD
+    typename StaticCrsGraphType::staticcrsgraph_type
+    create_staticcrsgraph(
+        const std::string& label,
+        const std::vector<std::vector<InputSizeType> >& input);
 
 //----------------------------------------------------------------------------
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                        SizeType>::HostMirror
-create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                                        SizeType>& input);
+KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD
+    typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
+                            SizeType>::HostMirror
+    create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
+                                            Arg3Type, SizeType>& input);
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                        SizeType>::HostMirror
-create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                                   SizeType>& input);
+KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD
+    typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
+                            SizeType>::HostMirror
+    create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
+                                       SizeType>& input);
 
 }  // namespace Kokkos
 
@@ -455,8 +481,9 @@ struct StaticCrsGraphMaximumEntry {
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-DataType maximum_entry(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
-                                            Arg3Type, SizeType>& graph) {
+KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD DataType maximum_entry(
+    const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>&
+        graph) {
   using GraphType =
       StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>;
   using FunctorType = Impl::StaticCrsGraphMaximumEntry<GraphType>;
@@ -471,6 +498,8 @@ DataType maximum_entry(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#undef KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STATICCRSGRAPH
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
