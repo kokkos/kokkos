@@ -70,8 +70,10 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::const_value_type, const ValueType>);
   static_assert(std::is_same_v<typename ViewType::non_const_value_type, std::remove_const_t<ValueType>>);
 
+  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // FIXME: should maybe be deprecated
   static_assert(std::is_same_v<typename ViewType::array_layout, Layout>);
+  #endif
 
   // FIXME: should be deprecated and is some complicated impl type
   // static_assert(!std::is_void_v<typename ViewType::dimension>);
@@ -94,20 +96,28 @@ constexpr bool test_view_typedefs_impl() {
 
   // FIXME: in contrast to View, hooks_policy is not propagated
   static_assert(std::is_same_v<typename ViewType::traits, ViewTraitsType>);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   static_assert(std::is_same_v<typename ViewType::array_type,
-                               Kokkos::DynRankView<typename ViewType::data_type, typename ViewType::array_layout,
+                               Kokkos::DynRankView<typename ViewType::scalar_array_type, typename ViewType::array_layout,
+                                            typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
+                                            typename ViewType::memory_traits>>);
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+  static_assert(std::is_same_v<typename ViewType::type,
+                               Kokkos::DynRankView<typename ViewType::data_type, typename ViewType::layout_type,
                                             typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
   static_assert(std::is_same_v<typename ViewType::const_type,
-                               Kokkos::DynRankView<typename ViewType::const_data_type, typename ViewType::array_layout,
+                               Kokkos::DynRankView<typename ViewType::const_data_type, typename ViewType::layout_type,
                                             typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
   static_assert(std::is_same_v<typename ViewType::non_const_type,
-                               Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::array_layout,
+                               Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::layout_type,
                                             typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
   static_assert(std::is_same_v<typename ViewType::HostMirror,
-                               Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::array_layout,
+                               Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::layout_type,
                                                    HostMirrorSpace
                                                    /*, typename ViewTraitsType::hooks_policy*/>>);
 
@@ -193,7 +203,7 @@ constexpr bool has_unified_mem_space = false;
 
 // Kokkos::View<int>
 namespace TestInt {
-  using layout_type = Kokkos::DefaultExecutionSpace::array_layout;
+  using layout_type = Kokkos::DefaultExecutionSpace::layout_type;
   using space = Kokkos::DefaultExecutionSpace;
   using memory_traits = Kokkos::MemoryTraits<0>;
   // HostMirrorSpace is a mess so: if the default exec is a host exec, that is it
@@ -202,13 +212,19 @@ namespace TestInt {
                                std::conditional_t<!has_unified_mem_space, Kokkos::HostSpace,
   // otherwise its the following Device type
                                Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+  static_assert(test_view_typedefs<Kokkos::DefaultExecutionSpace::array_layout, space, memory_traits, host_mirror_space, int, int&>(
+                     ViewParams<int>{}));
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int, int&>(
                      ViewParams<int>{}));
 }
 
 // Kokkos::View<int, DefaultExecutionSpace>
 namespace TestIntDefaultExecutionSpace {
-  using layout_type = Kokkos::DefaultExecutionSpace::array_layout;
+  using layout_type = Kokkos::DefaultExecutionSpace::layout_type;
   using space = Kokkos::DefaultExecutionSpace;
   using memory_traits = Kokkos::MemoryTraits<0>;
   // HostMirrorSpace is a mess so: if the default exec is a host exec, it is HostSpace (note difference from View<int> ...)
@@ -217,6 +233,13 @@ namespace TestIntDefaultExecutionSpace {
                                std::conditional_t<!has_unified_mem_space, Kokkos::HostSpace,
   // otherwise its the following memory space ...
                                Kokkos::DefaultExecutionSpace::memory_space>>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+  static_assert(test_view_typedefs<Kokkos::DefaultExecutionSpace::array_layout, space, memory_traits, host_mirror_space, int, int&>(
+                     ViewParams<int, Kokkos::DefaultExecutionSpace>{}));
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int, int&>(
                      ViewParams<int, Kokkos::DefaultExecutionSpace>{}));
 }
@@ -243,7 +266,7 @@ namespace TestFloatPPDeviceDefaultHostExecHostSpace {
 
 // Kokkos::View<int, Kokkos::MemoryTraits<Kokkos::Atomic>>
 namespace TestIntAtomic {
-  using layout_type = Kokkos::DefaultExecutionSpace::array_layout;
+  using layout_type = Kokkos::DefaultExecutionSpace::layout_type;
   using space = Kokkos::DefaultExecutionSpace;
   using memory_traits = Kokkos::MemoryTraits<Kokkos::Atomic>;
   // HostMirrorSpace is a mess so: if the default exec is a host exec, that is it
@@ -252,6 +275,13 @@ namespace TestIntAtomic {
                                std::conditional_t<!has_unified_mem_space, Kokkos::HostSpace,
   // otherwise its the following Device type
                                Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+  static_assert(test_view_typedefs<Kokkos::DefaultExecutionSpace::array_layout, space, memory_traits, host_mirror_space, int,
+                                   Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int*******, Kokkos::MemoryTraits<Kokkos::Atomic>>>>(
+                     ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int,
                                    Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int*******, Kokkos::MemoryTraits<Kokkos::Atomic>>>>(
                      ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));

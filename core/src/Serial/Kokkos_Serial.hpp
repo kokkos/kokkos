@@ -106,7 +106,11 @@ class Serial {
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
   //! This device's preferred array layout.
-  using array_layout = LayoutRight;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = LayoutRight;
+#endif
+  using layout_type = LayoutRight;
 
   /// \brief  Scratch memory space
   using scratch_memory_space = ScratchMemorySpace<Kokkos::Serial>;
