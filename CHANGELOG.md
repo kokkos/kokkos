@@ -6,40 +6,35 @@
 
 ### Features
 
+* SYCL backend graduated to production ready
 * Introduce new `SequentialHostInit` view allocation property [\#7229](https://github.com/kokkos/kokkos/pull/7229) (backported in 4.4.01)
 * Support building with Run-Time Type Information (RTTI) disabled
-* Add `KOKKOS_RELOCATABLE_FUNCTION` [\#5993](https://github.com/kokkos/kokkos/pull/5993)
+* Add new `KOKKOS_RELOCATABLE_FUNCTION` function annotation macro [\#5993](https://github.com/kokkos/kokkos/pull/5993)
 
 ### Backend and Architecture Enhancements
 
 #### CUDA
 
 * Adding occupancy tuning for CUDA architectures [\#6788](https://github.com/kokkos/kokkos/pull/6788)
-* Add support for CUDA unified memory architectures, e.g.,  Grace Hopper [\#6823](https://github.com/kokkos/kokkos/pull/6823)
 * By default disable `cudaMallocAsync` (i.e., revert the change made in version 4.2) [\#7353](https://github.com/kokkos/kokkos/pull/7353)
 
 #### HIP
 
 * Add support for AMD Phoenix APUs with Radeon 740M/760M/780M/880M/890M [\#7162](https://github.com/kokkos/kokkos/pull/7162)
 * Update maximum waves per CU values for consumer card [\#7347](https://github.com/kokkos/kokkos/pull/7347)
-* Fix compilation of global launch for graph nodes [\#7365](https://github.com/kokkos/kokkos/pull/7365)
 * Check that Kokkos is running on the architecture it was compiled for [\#7379](https://github.com/kokkos/kokkos/pull/7379)
 * Add opt-in option to use `hipMallocAsync` instead of `hipMalloc` [\#7324](https://github.com/kokkos/kokkos/pull/7324)
-* Introduce new architecture flag `AMD_GFX942_APU` for MI300A [\#7462](https://github.com/kokkos/kokkos/pull/7462)
+* Introduce new architecture option `AMD_GFX942_APU` for MI300A [\#7462](https://github.com/kokkos/kokkos/pull/7462)
 
 #### SYCL
 
 * Move the `SYCL` backend out of the `Experimental` namespace [\#7171](https://github.com/kokkos/kokkos/pull/7171)
 * Introduce `KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE` as CMake option [\#5993](https://github.com/kokkos/kokkos/pull/5993)
 
-#### OpenMPTarget
-
-Note: empty for now, delete section if none.
-
 #### OpenACC
 
-* Update CMake/make files to compile the OpenACC backend using Clacc [\#7198](https://github.com/kokkos/kokkos/pull/7198)
-* Fix OpenACC `MDRangePolicy` errors with `BasicView` [\#7425](https://github.com/kokkos/kokkos/pull/7425)
+* Add support for building with the Clacc compiler [\#7198](https://github.com/kokkos/kokkos/pull/7198)
+* Workaround NVHPC collapse clause bug for `MDRangePolicy` [\#7425](https://github.com/kokkos/kokkos/pull/7425)
 
 #### HPX
 
@@ -48,7 +43,7 @@ Note: empty for now, delete section if none.
 #### Threads
 
 * Fix compilation for `parallel_reduce` `MDRange` with `Dynamic` scheduling [\#7478](https://github.com/kokkos/kokkos/pull/7478)
-* Fix race conditions for Threads backend on ARM architectures [\#7498](https://github.com/kokkos/kokkos/pull/7498)
+* Fix race conditions on ARM architectures [\#7498](https://github.com/kokkos/kokkos/pull/7498)
 
 #### OpenMP
 
@@ -57,7 +52,7 @@ Note: empty for now, delete section if none.
 
 #### Serial
 
-* Allow `Kokkos_ENABLE_ATOMICS_BYPASS` to skip mutexes to remediate performance regression from 4.4 [\#7369](https://github.com/kokkos/kokkos/pull/7369)
+* Allow `Kokkos_ENABLE_ATOMICS_BYPASS` to skip mutexes to remediate performance regression in 4.4 [\#7369](https://github.com/kokkos/kokkos/pull/7369)
 
 ### General Enhancements
 
@@ -69,11 +64,8 @@ Note: empty for now, delete section if none.
 * Avoid making copies of string rvalue reference arguments to `view_alloc()` [\#7364](https://github.com/kokkos/kokkos/pull/7364)
 * Add `atomic_{mod,xor,nand,lshift,rshift}` [\#7458](https://github.com/kokkos/kokkos/pull/7458)
 * Allow using `SequentialHostInit` with `Kokkos::DualView` [\#7456](https://github.com/kokkos/kokkos/pull/7456)
-
-### Graphs
-
 * Add `Graph::instantiate()` [\#7240](https://github.com/kokkos/kokkos/pull/7240)
-* Allow an arbitrary execution space instance to be used in `Kokkos::Graph::submit(...)` [\#7249](https://github.com/kokkos/kokkos/pull/7249)
+* Allow an arbitrary execution space instance to be used in `Kokkos::Graph::submit()` [\#7249](https://github.com/kokkos/kokkos/pull/7249)
 * Enable compile-time diagnostic of illegal reduction target for graphs [\#7460](https://github.com/kokkos/kokkos/pull/7460)
 
 ### Build System Changes
@@ -82,14 +74,11 @@ Note: empty for now, delete section if none.
 * Major refactoring removing `TriBITS` paths [\#6164](https://github.com/kokkos/kokkos/pull/6164)
 * Add support for SpacemiT K60 (RISC-V) [\#7160](https://github.com/kokkos/kokkos/pull/7160)
 
-### Incompatibilities (i.e. breaking changes)
-
-Note: empty for now, delete section if none.
-
 ### Deprecations
 
 * Deprecate Tasking interface [\#7393](https://github.com/kokkos/kokkos/pull/7393)
 * Deprecate `atomic_query_version`, `atomic_assign`, `atomic_compare_exchange_strong`, `atomic_{inc, dec}rement` [\#7458](https://github.com/kokkos/kokkos/pull/7458)
+* Deprecate `{OpenMP,HPX}::is_asynchronous()` [\#7322](https://github.com/kokkos/kokkos/pull/7322)
 
 ### Bug Fixes
 
