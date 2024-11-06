@@ -54,6 +54,8 @@ struct ViewFillLayoutSelector<Kokkos::LayoutRight> {
 namespace Kokkos {
 namespace Impl {
 
+struct SequentialHostTag {};
+
 template <typename MDRangePolicy, typename Functor>
 void execute_mdrange_parallel_for_sequentially(
     const std::string& str, const MDRangePolicy& mdrange_policy,
@@ -66,8 +68,8 @@ void execute_mdrange_parallel_for_sequentially(
   const auto& inner_policy = response.policy;
 
   using Policy = typename MDRangePolicy::impl_range_policy;
-  const HostIterateTile<MDRangePolicy, Functor> host_iterate(inner_policy,
-                                                             functor);
+  const HostIterateTile<MDRangePolicy, Functor, SequentialHostTag> host_iterate(
+      inner_policy, functor);
 
   const typename Policy::member_type e = host_iterate.m_rp.m_num_tiles;
   for (typename Policy::member_type i = 0; i < e; ++i) {
@@ -310,17 +312,22 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 1,
       uint64_t kpID        = 0;
       const auto& response = Kokkos::Tools::Impl::begin_parallel_for(
           policy, *this, "Kokkos::ViewCopy-1D", kpID);
-      for (iType i = 0; i < static_cast<iType>(a.extent(0)); ++i) operator()(i);
+      for (iType i = 0; i < static_cast<iType>(a.extent(0)); ++i)
+        operator()(SequentialHostTag{}, i);
       Kokkos::Tools::Impl::end_parallel_for(response.policy, *this,
                                             "Kokkos::ViewCopy-1D", kpID);
     } else
       Kokkos::parallel_for("Kokkos::ViewCopy-1D", policy, *this);
   }
 
+  void operator()(SequentialHostTag, const iType& i0) const {
+    a(i0) = static_cast<value_type>(b(i0));
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0) const {
     a(i0) = static_cast<value_type>(b(i0));
-  };
+  }
 };
 
 template <bool SequentialHostInit, class ViewTypeA, class ViewTypeB,
@@ -352,10 +359,14 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 2,
       Kokkos::parallel_for("Kokkos::ViewCopy-2D", policy, *this);
   }
 
+  void operator()(SequentialHostTag, const iType& i0, const iType& i1) const {
+    a(i0, i1) = static_cast<value_type>(b(i0, i1));
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1) const {
     a(i0, i1) = static_cast<value_type>(b(i0, i1));
-  };
+  }
 };
 
 template <bool SequentialHostInit, class ViewTypeA, class ViewTypeB,
@@ -389,10 +400,15 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 3,
       Kokkos::parallel_for("Kokkos::ViewCopy-3D", policy, *this);
   }
 
+  void operator()(SequentialHostTag, const iType& i0, const iType& i1,
+                  const iType& i2) const {
+    a(i0, i1, i2) = static_cast<value_type>(b(i0, i1, i2));
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2) const {
     a(i0, i1, i2) = static_cast<value_type>(b(i0, i1, i2));
-  };
+  }
 };
 
 template <bool SequentialHostInit, class ViewTypeA, class ViewTypeB,
@@ -426,10 +442,16 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 4,
   }
 
   KOKKOS_INLINE_FUNCTION
+  void operator()(SequentialHostTag, const iType& i0, const iType& i1,
+                  const iType& i2, const iType& i3) const {
+    a(i0, i1, i2, i3) = b(i0, i1, i2, i3);
+  }
+
+  KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3) const {
     a(i0, i1, i2, i3) = b(i0, i1, i2, i3);
-  };
+  }
 };
 
 template <bool SequentialHostInit, class ViewTypeA, class ViewTypeB,
@@ -463,11 +485,16 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 5,
       Kokkos::parallel_for("Kokkos::ViewCopy-5D", policy, *this);
   }
 
+  void operator()(SequentialHostTag, const iType& i0, const iType& i1,
+                  const iType& i2, const iType& i3, const iType& i4) const {
+    a(i0, i1, i2, i3, i4) = b(i0, i1, i2, i3, i4);
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4) const {
     a(i0, i1, i2, i3, i4) = b(i0, i1, i2, i3, i4);
-  };
+  }
 };
 
 template <bool SequentialHostInit, class ViewTypeA, class ViewTypeB,
@@ -501,11 +528,17 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 6,
       Kokkos::parallel_for("Kokkos::ViewCopy-6D", policy, *this);
   }
 
+  void operator()(SequentialHostTag, const iType& i0, const iType& i1,
+                  const iType& i2, const iType& i3, const iType& i4,
+                  const iType& i5) const {
+    a(i0, i1, i2, i3, i4, i5) = b(i0, i1, i2, i3, i4, i5);
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4, const iType& i5) const {
     a(i0, i1, i2, i3, i4, i5) = b(i0, i1, i2, i3, i4, i5);
-  };
+  }
 };
 
 template <bool SequentialHostInit, class ViewTypeA, class ViewTypeB,
@@ -541,12 +574,19 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 7,
       Kokkos::parallel_for("Kokkos::ViewCopy-7D", policy, *this);
   }
 
+  void operator()(SequentialHostTag, const iType& i0, const iType& i1,
+                  const iType& i3, const iType& i4, const iType& i5,
+                  const iType& i6) const {
+    for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
+      a(i0, i1, i2, i3, i4, i5, i6) = b(i0, i1, i2, i3, i4, i5, i6);
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i3,
                   const iType& i4, const iType& i5, const iType& i6) const {
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
       a(i0, i1, i2, i3, i4, i5, i6) = b(i0, i1, i2, i3, i4, i5, i6);
-  };
+  }
 };
 
 template <bool SequentialHostInit, class ViewTypeA, class ViewTypeB,
@@ -582,13 +622,21 @@ struct ViewCopy<SequentialHostInit, ViewTypeA, ViewTypeB, Layout, ExecSpace, 8,
       Kokkos::parallel_for("Kokkos::ViewCopy-8D", policy, *this);
   }
 
+  void operator()(SequentialHostTag, const iType& i0, const iType& i1,
+                  const iType& i3, const iType& i5, const iType& i6,
+                  const iType& i7) const {
+    for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
+      for (iType i4 = 0; i4 < iType(a.extent(4)); i4++)
+        a(i0, i1, i2, i3, i4, i5, i6, i7) = b(i0, i1, i2, i3, i4, i5, i6, i7);
+  }
+
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i3,
                   const iType& i5, const iType& i6, const iType& i7) const {
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
       for (iType i4 = 0; i4 < iType(a.extent(4)); i4++)
         a(i0, i1, i2, i3, i4, i5, i6, i7) = b(i0, i1, i2, i3, i4, i5, i6, i7);
-  };
+  }
 };
 
 }  // namespace Impl
