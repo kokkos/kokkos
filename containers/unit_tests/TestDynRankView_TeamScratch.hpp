@@ -50,7 +50,7 @@ void test_dyn_rank_view_team_scratch() {
         Kokkos::parallel_for(Kokkos::TeamThreadMDRange(team, N0, N1, N2),
                              [=](int i, int j, int k) {
                                if (scr(i, j, k) != i * 100 + j * 10 + k)
-                                 errors() &= 16u;
+                                 errors() |= 16u;
                              });
         errors() |= 256u;
       });
