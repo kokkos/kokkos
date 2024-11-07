@@ -164,6 +164,10 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
     return it;
   }
 
+  friend iterator_type operator+(difference_type n, iterator_type other) {
+    return other + n;
+  }
+
   KOKKOS_FUNCTION
   iterator_type operator-(difference_type n) const {
     auto it = *this;
