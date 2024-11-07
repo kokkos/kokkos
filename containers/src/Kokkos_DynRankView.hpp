@@ -846,6 +846,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   //----------------------------------------
   // Shared scratch memory constructor
 
+  // Note: We must pass 7 valid args since view_type is rank 7
   static inline size_t shmem_size(
       const size_t arg_N0 = 1, const size_t arg_N1 = 1, const size_t arg_N2 = 1,
       const size_t arg_N3 = 1, const size_t arg_N4 = 1, const size_t arg_N5 = 1,
