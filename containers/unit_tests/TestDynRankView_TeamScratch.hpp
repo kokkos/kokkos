@@ -22,8 +22,8 @@ namespace {
 
 void test_dyn_rank_view_team_scratch() {
   using execution_space = TEST_EXECSPACE;
-  using memspace_type   = execution_space::scratch_memory_space;
-  using drv_type        = Kokkos::DynRankView<int, memspace_type>;
+  using memory_space    = execution_space::scratch_memory_space;
+  using drv_type        = Kokkos::DynRankView<int, memory_space>;
   using policy_type     = Kokkos::TeamPolicy<execution_space>;
   using team_type       = policy_type::member_type;
 
