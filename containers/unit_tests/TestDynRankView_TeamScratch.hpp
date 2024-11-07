@@ -16,7 +16,7 @@
 
 #include <Kokkos_DynRankView.hpp>
 
-namespace Test {
+namespace {
 
 void test_dyn_rank_view_team_scratch() {
   using execution_space = TEST_EXECSPACE;
@@ -67,4 +67,4 @@ TEST(TEST_CATEGORY, dyn_rank_view_team_scratch) {
   test_dyn_rank_view_team_scratch();
 }
 
-}  // namespace Test
+}  // namespace
