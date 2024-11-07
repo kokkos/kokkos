@@ -14,6 +14,8 @@
 //
 //@HEADER
 
+#include <gtest/gtest.h>
+
 #include <Kokkos_DynRankView.hpp>
 
 namespace {
