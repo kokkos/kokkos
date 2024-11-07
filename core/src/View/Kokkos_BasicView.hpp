@@ -256,7 +256,10 @@ class BasicView {
                                       const accessor_type &a)
       : m_ptr(std::move(p)), m_map(m), m_acc(a) {}
 
-  template <class OtherT, class OtherE, class OtherL, class OtherA>
+  template <class OtherT, class OtherE, class OtherL, class OtherA,
+            typename = std::enable_if_t<std::is_constructible_v<
+                mdspan_type, typename BasicView<OtherT, OtherE, OtherL,
+                                                OtherA>::mdspan_type>>>
 //    requires(std::is_constructible_v<mdspan_type,
 //                                     typename BasicView<OtherT, OtherE,
 //                                     OtherL,
@@ -266,18 +269,9 @@ class BasicView {
       !std::is_convertible_v<const typename OtherL::template mapping<OtherE> &,
                              mapping_type> ||
       !std::is_convertible_v<const OtherA &, accessor_type>)
-#else
-  // FIXME[CUDA11]: this is needed to avoid nvcc 11.2 from incorrectly viewing
-  // incompatible types of conversion (i.e. from double** to int**)
-  explicit
 #endif
       KOKKOS_INLINE_FUNCTION
-      BasicView(const BasicView<OtherT, OtherE, OtherL, OtherA> &other,
-                std::enable_if_t<
-                    std::is_constructible_v<
-                        mdspan_type, typename BasicView<OtherT, OtherE, OtherL,
-                                                        OtherA>::mdspan_type>,
-                    void *> = nullptr)
+      BasicView(const BasicView<OtherT, OtherE, OtherL, OtherA> &other)
       : m_ptr(other.m_ptr), m_map(other.m_map), m_acc(other.m_acc) {
     // Kokkos View precondition checks happen in release builds
     check_basic_view_constructibility(other.mapping());
