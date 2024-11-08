@@ -63,6 +63,10 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
   using pointer           = typename view_type::pointer_type;
   using reference         = typename view_type::reference_type;
 
+#ifdef KOKKOS_ENABLE_SYCL
+  using is_passed_directly = std::true_type;
+#endif
+
   static_assert(view_type::rank == 1 &&
                 is_always_strided<::Kokkos::View<DataType, Args...>>::value);
 
@@ -237,5 +241,11 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
 }  // namespace Impl
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#ifdef KOKKOS_ENABLE_SYCL
+template <class T>
+struct sycl::is_device_copyable<
+    Kokkos::Experimental::Impl::RandomAccessIterator<T>> : std::true_type {};
+#endif
 
 #endif
