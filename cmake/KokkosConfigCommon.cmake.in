@@ -323,3 +323,21 @@ FUNCTION(kokkos_set_source_language LANG_SOURCE)
       ENDIF()
 
 ENDFUNCTION()
+
+# this function is provided to easily set the language specific properties of a target to the ones exported by kokkos:
+#
+#       TARGET      --> specific TARGET
+#
+FUNCTION(kokkos_set_target_properties PROP_TARGET)
+
+      IF(NOT ${Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE})
+        MESSAGE(ERROR "Using language features requires Kokkos to be build with Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE")
+      ENDIF()
+
+      IF(PROP_TARGET)
+        MESSAGE(DEBUG "KOKKOS: Setting architecture to ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES} and std to ${Kokkos_CXX_STANDARD} for TARGET ${PROP_TARGET}")
+        SET_PROPERTY(TARGET ${PROP_TARGET} PROPERTY ${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES})
+        SET_PROPERTY(TARGET ${PROP_TARGET} PROPERTY ${Kokkos_COMPILE_LANGUAGE}_STANDARD ${Kokkos_CXX_STANDARD})
+      ENDIF()
+
+ENDFUNCTION()
