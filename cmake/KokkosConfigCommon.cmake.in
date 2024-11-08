@@ -306,3 +306,20 @@ FUNCTION(kokkos_compilation)
         ENDFOREACH()
     ENDIF()
 ENDFUNCTION()
+
+# this function is provided to easily set which files use the same programming language as Kokkos:
+#
+#       SOURCE      --> specific source files
+#
+FUNCTION(kokkos_set_source_language LANG_SOURCE)
+
+      IF(NOT ${Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE})
+        MESSAGE(ERROR "Using language features requires Kokkos to be build with Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE")
+      ENDIF()
+
+      IF(LANG_SOURCE)
+        MESSAGE(DEBUG "KOKKOS: Setting language to ${Kokkos_COMPILE_LANGUAGE} for SOURCE ${LANG_SOURCE}")
+        SET_PROPERTY(SOURCE ${LANG_SOURCE} PROPERTY LANGUAGE ${Kokkos_COMPILE_LANGUAGE})
+      ENDIF()
+
+ENDFUNCTION()
