@@ -846,34 +846,20 @@ class DynRankView : private View<DataType*******, Properties...> {
   //----------------------------------------
   // Shared scratch memory constructor
 
-  static inline size_t shmem_size(const size_t arg_N0 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N1 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N2 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N3 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N4 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    return size_t(1) * (arg_N0 != KOKKOS_INVALID_INDEX ? arg_N0 : 1) *
-           (arg_N1 != KOKKOS_INVALID_INDEX ? arg_N1 : 1) *
-           (arg_N2 != KOKKOS_INVALID_INDEX ? arg_N2 : 1) *
-           (arg_N3 != KOKKOS_INVALID_INDEX ? arg_N3 : 1) *
-           (arg_N4 != KOKKOS_INVALID_INDEX ? arg_N4 : 1) *
-           (arg_N5 != KOKKOS_INVALID_INDEX ? arg_N5 : 1) *
-           (arg_N6 != KOKKOS_INVALID_INDEX ? arg_N6 : 1) *
-           (arg_N7 != KOKKOS_INVALID_INDEX ? arg_N7 : 1);
+  // Note: We must pass 7 valid args since view_type is rank 7
+  static inline size_t shmem_size(
+      const size_t arg_N0 = 1, const size_t arg_N1 = 1, const size_t arg_N2 = 1,
+      const size_t arg_N3 = 1, const size_t arg_N4 = 1, const size_t arg_N5 = 1,
+      const size_t arg_N6 = 1, const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
+    return view_type::shmem_size(arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
+                                 arg_N6, arg_N7);
   }
 
   explicit KOKKOS_FUNCTION DynRankView(
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const typename traits::array_layout& arg_layout)
-      : DynRankView(
-            Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
-                reinterpret_cast<typename view_type::pointer_type>(
-                    arg_space.get_shmem(view_type::required_allocation_size(
-                        Impl::DynRankDimTraits<typename traits::specialize>::
-                            createLayout(arg_layout))))),
-            arg_layout) {}
+      : view_type(arg_space, drdtraits::createLayout(arg_layout)),
+        m_rank(drdtraits::computeRank(arg_layout)) {}
 
   explicit KOKKOS_FUNCTION DynRankView(
       const typename traits::execution_space::scratch_memory_space& arg_space,
@@ -886,16 +872,9 @@ class DynRankView : private View<DataType*******, Properties...> {
       const size_t arg_N6 = KOKKOS_INVALID_INDEX,
       const size_t arg_N7 = KOKKOS_INVALID_INDEX)
 
-      : DynRankView(
-            Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
-                reinterpret_cast<typename view_type::pointer_type>(
-                    arg_space.get_shmem(view_type::required_allocation_size(
-                        Impl::DynRankDimTraits<typename traits::specialize>::
-                            createLayout(typename traits::array_layout(
-                                arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
-                                arg_N6, arg_N7)))))),
-            typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
+      : DynRankView(arg_space, typename traits::array_layout(
+                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
+                                   arg_N5, arg_N6, arg_N7)) {}
 
   KOKKOS_FUNCTION constexpr auto layout() const {
     switch (rank()) {
