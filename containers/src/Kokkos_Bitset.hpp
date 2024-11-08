@@ -400,10 +400,7 @@ void deep_copy(Bitset<DstDevice>& dst, Bitset<SrcDevice> const& src) {
     Kokkos::Impl::throw_runtime_exception(
         "Error: Cannot deep_copy bitsets of different sizes!");
   }
-
-  Kokkos::fence("Bitset::deep_copy: fence before copy operation");
   Kokkos::deep_copy(dst.m_blocks, src.m_blocks);
-  Kokkos::fence("Bitset::deep_copy: fence after copy operation");
 }
 
 template <typename DstDevice, typename SrcDevice>
@@ -412,10 +409,7 @@ void deep_copy(Bitset<DstDevice>& dst, ConstBitset<SrcDevice> const& src) {
     Kokkos::Impl::throw_runtime_exception(
         "Error: Cannot deep_copy bitsets of different sizes!");
   }
-
-  Kokkos::fence("Bitset::deep_copy: fence before copy operation");
   Kokkos::deep_copy(dst.m_blocks, src.m_blocks);
-  Kokkos::fence("Bitset::deep_copy: fence after copy operation");
 }
 
 template <typename DstDevice, typename SrcDevice>
@@ -424,10 +418,7 @@ void deep_copy(ConstBitset<DstDevice>& dst, ConstBitset<SrcDevice> const& src) {
     Kokkos::Impl::throw_runtime_exception(
         "Error: Cannot deep_copy bitsets of different sizes!");
   }
-
-  Kokkos::fence("Bitset::deep_copy: fence before copy operation");
   Kokkos::deep_copy(dst.m_blocks, src.m_blocks);
-  Kokkos::fence("Bitset::deep_copy: fence after copy operation");
 }
 
 }  // namespace Kokkos
