@@ -93,6 +93,7 @@
 * Set an initial value index during join of `MinLoc`, `MaxLoc` or `MinMaxLoc` [\#7330](https://github.com/kokkos/kokkos/pull/7330)
 * Fix storage lifetime of driver for global launch of graph nodes for CUDA and HIP [\#7365](https://github.com/kokkos/kokkos/pull/7365)
 * Make `value_type` for `RandomAccessIterator` non-`const` [\#7485](https://github.com/kokkos/kokkos/pull/7485)
+* Fix `shmem_size` computation and constructor taking scratch space for `DynRankView` [\#7517](https://github.com/kokkos/kokkos/pull/7517)
 
 ## [4.4.01](https://github.com/kokkos/kokkos/tree/4.4.01)
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.4.00...4.4.01)
