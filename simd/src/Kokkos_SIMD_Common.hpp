@@ -302,17 +302,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION simd<T, Abi>& operator<<=(
 // implement mask reductions for type bool to allow generic code to accept
 // both simd<double, Abi> and just double
 
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(bool a) {
-  return a;
-}
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(bool a) { return a; }
 
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(bool a) {
-  return a;
-}
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(bool a) { return a; }
 
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(bool a) {
-  return !a;
-}
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(bool a) { return !a; }
 
 // fallback implementations of reductions across simd_mask:
 
@@ -350,20 +344,20 @@ template <typename T>
 
 // common implementations of host only simd reductions:
 template <class T, class Abi, class BinaryOperation = std::plus<>>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T reduce(
-    const simd<T, Abi>& x, BinaryOperation binary_op = {}) {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce(const simd<T, Abi>& x, BinaryOperation binary_op = {}) {
   return reduce(x, simd<T, Abi>::mask_type(true), T(0), binary_op);
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T reduce_min(
-    const simd<T, Abi>& x) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce_min(const simd<T, Abi>& x) noexcept {
   return reduce_min(x, simd<T, Abi>::mask_type(true));
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T reduce_max(
-    const simd<T, Abi>& x) noexcept {
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+reduce_max(const simd<T, Abi>& x) noexcept {
   auto v = where(true, x);
   return reduce_max(x, simd<T, Abi>::mask_type(true));
 }
