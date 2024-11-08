@@ -407,12 +407,10 @@ class StaticCrsGraph {
 //----------------------------------------------------------------------------
 
 template <class StaticCrsGraphType, class InputSizeType>
-
 typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
     const std::string& label, const std::vector<InputSizeType>& input);
 
 template <class StaticCrsGraphType, class InputSizeType>
-
 typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
     const std::string& label,
     const std::vector<std::vector<InputSizeType> >& input);
@@ -421,7 +419,6 @@ typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                         SizeType>::HostMirror
 create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
@@ -429,7 +426,6 @@ create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                         SizeType>::HostMirror
 create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
@@ -491,8 +487,6 @@ DataType maximum_entry(const StaticCrsGraph<DataType, Arg1Type, Arg2Type,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
-#undef
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_STATICCRSGRAPH
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
