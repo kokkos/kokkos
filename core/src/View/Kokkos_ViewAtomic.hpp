@@ -44,10 +44,10 @@ class AtomicDataElement {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void inc() const { Kokkos::atomic_increment(ptr); }
+  void inc() const { Kokkos::atomic_inc(ptr); }
 
   KOKKOS_INLINE_FUNCTION
-  void dec() const { Kokkos::atomic_decrement(ptr); }
+  void dec() const { Kokkos::atomic_dec(ptr); }
 
   KOKKOS_INLINE_FUNCTION
   const_value_type operator++() const {

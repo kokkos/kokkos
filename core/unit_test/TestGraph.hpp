@@ -329,11 +329,26 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
   //----------------------------------------
 }
 
-// This test is disabled because we don't currently support copying to host,
+// This test requires that the graph execution space can access
+// the host memoy space because we don't currently support copying to host,
 // even asynchronously. We _may_ want to do that eventually?
-TEST_F(TEST_CATEGORY_FIXTURE(graph), DISABLED_repeat_chain) {
-  auto graph = Kokkos::Experimental::create_graph(
-      ex, [&, count_host = count_host](auto root) {
+TEST_F(TEST_CATEGORY_FIXTURE(graph), repeat_chain) {
+  constexpr bool result_not_accessible_by_exec = !Kokkos::SpaceAccessibility<
+      TEST_EXECSPACE, decltype(bugs_host)::memory_space>::accessible;
+
+  if constexpr (result_not_accessible_by_exec) {
+    GTEST_SKIP() << "The graph requires the reduction targets like 'bugs_host' "
+                    "to be accessible by the execution space.";
+  } else {
+    auto graph = Kokkos::Experimental::create_graph(ex, [&, count_host =
+                                                                count_host](
+                                                            auto root) {
+      // FIXME_CLANG Recent clang versions would still trigger a similar
+      // static_assert without the additional if constexpr
+      constexpr bool result_not_accessible_by_exec_copy =
+          !Kokkos::SpaceAccessibility<
+              TEST_EXECSPACE, decltype(bugs_host)::memory_space>::accessible;
+      if constexpr (!result_not_accessible_by_exec_copy) {
         //----------------------------------------
         root.then_parallel_for(1, set_functor{count, 0})
             .then_parallel_for(1, count_functor{count, bugs, 0, 0})
@@ -343,18 +358,20 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), DISABLED_repeat_chain) {
                 1, set_result_functor{bugs},
                 Kokkos::Sum<int, Kokkos::HostSpace>{bugs_host});
         //----------------------------------------
-      });
+      }
+    });
 
-  //----------------------------------------
-  constexpr int repeats = 10;
+    //----------------------------------------
+    constexpr int repeats = 10;
 
-  for (int i = 0; i < repeats; ++i) {
-    graph.submit();
-    ex.fence();
-    EXPECT_EQ(2, count_host());
-    EXPECT_EQ(0, bugs_host());
+    for (int i = 0; i < repeats; ++i) {
+      graph.submit();
+      ex.fence();
+      EXPECT_EQ(2, count_host());
+      EXPECT_EQ(0, bugs_host());
+    }
+    //----------------------------------------
   }
-  //----------------------------------------
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
@@ -498,7 +515,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
   ASSERT_TRUE(contains(ex, data, functor_t::count));
 
   ASSERT_TRUE(validate_event_set(
-      [&]() { graph.~optional(); },
+      [&]() { graph.reset(); },
       [&](DeallocateDataEvent dealloc) {
         if (dealloc.name == alloc_label && dealloc.ptr == ptr &&
             dealloc.size == ptr_size)

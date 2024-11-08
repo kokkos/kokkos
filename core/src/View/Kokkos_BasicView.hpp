@@ -34,10 +34,10 @@ static_assert(false,
 #include <optional>
 #include <type_traits>
 
+// FIXME: we need to make this work for not using our mdspan impl
 #define KOKKOS_IMPL_NO_UNIQUE_ADDRESS _MDSPAN_NO_UNIQUE_ADDRESS
-namespace Kokkos {
+namespace Kokkos::Impl {
 
-namespace Impl {
 constexpr inline struct SubViewCtorTag {
   explicit SubViewCtorTag() = default;
 } subview_ctor_tag{};
@@ -83,8 +83,6 @@ struct is_layout_left_padded : public std::false_type {};
 template <size_t Pad>
 struct is_layout_left_padded<Kokkos::Experimental::layout_left_padded<Pad>>
     : public std::true_type {};
-
-}  // namespace Impl
 
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
@@ -649,6 +647,6 @@ class BasicView {
   template <class, class, class, class>
   friend class BasicView;
 };
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif

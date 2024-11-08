@@ -65,7 +65,7 @@ class HIPSpace {
   ~HIPSpace()                              = default;
 
   /**\brief  Allocate untracked memory in the hip space */
-#ifdef KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY
+#ifdef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {
     return allocate(arg_alloc_size);
@@ -276,7 +276,7 @@ static_assert(Kokkos::Impl::MemorySpaceAccess<HIPSpace, HIPSpace>::assignable);
 template <>
 struct MemorySpaceAccess<HostSpace, HIPSpace> {
   enum : bool { assignable = false };
-#if !defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
   enum : bool{accessible = false};
 #else
   enum : bool { accessible = true };

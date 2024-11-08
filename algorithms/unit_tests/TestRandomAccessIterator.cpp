@@ -37,12 +37,18 @@ struct random_access_iterator_test : std_algorithms_test {
 
 TEST_F(random_access_iterator_test, constructor) {
   // just tests that constructor works
-  auto it1 = KE::Impl::RandomAccessIterator<static_view_t>(m_static_view);
-  auto it2 = KE::Impl::RandomAccessIterator<dyn_view_t>(m_dynamic_view);
-  auto it3 = KE::Impl::RandomAccessIterator<strided_view_t>(m_strided_view);
-  auto it4 = KE::Impl::RandomAccessIterator<static_view_t>(m_static_view, 3);
-  auto it5 = KE::Impl::RandomAccessIterator<dyn_view_t>(m_dynamic_view, 3);
-  auto it6 = KE::Impl::RandomAccessIterator<strided_view_t>(m_strided_view, 3);
+  [[maybe_unused]] auto it1 =
+      KE::Impl::RandomAccessIterator<static_view_t>(m_static_view);
+  [[maybe_unused]] auto it2 =
+      KE::Impl::RandomAccessIterator<dyn_view_t>(m_dynamic_view);
+  [[maybe_unused]] auto it3 =
+      KE::Impl::RandomAccessIterator<strided_view_t>(m_strided_view);
+  [[maybe_unused]] auto it4 =
+      KE::Impl::RandomAccessIterator<static_view_t>(m_static_view, 3);
+  [[maybe_unused]] auto it5 =
+      KE::Impl::RandomAccessIterator<dyn_view_t>(m_dynamic_view, 3);
+  [[maybe_unused]] auto it6 =
+      KE::Impl::RandomAccessIterator<strided_view_t>(m_strided_view, 3);
   EXPECT_TRUE(true);
 }
 
@@ -264,6 +270,37 @@ TEST_F(random_access_iterator_test, traits_helpers) {
   static_assert(KE::Impl::are_iterators_v<T1_t, T2_t, T3_t>);
   static_assert(KE::Impl::are_random_access_iterators_v<T1_t, T2_t, T3_t>);
   static_assert(!KE::Impl::are_iterators_v<int, T2_t, T3_t>);
+
+  static_assert(std::is_same_v<decltype(KE::begin(m_static_view))::value_type,
+                               value_type>);
+  static_assert(std::is_same_v<decltype(KE::begin(m_dynamic_view))::value_type,
+                               value_type>);
+  static_assert(std::is_same_v<decltype(KE::begin(m_strided_view))::value_type,
+                               value_type>);
+
+  static_assert(
+      std::is_same_v<decltype(KE::end(m_static_view))::value_type, value_type>);
+  static_assert(std::is_same_v<decltype(KE::end(m_dynamic_view))::value_type,
+                               value_type>);
+  static_assert(std::is_same_v<decltype(KE::end(m_strided_view))::value_type,
+                               value_type>);
+
+  static_assert(
+      std::is_same_v<decltype(KE::begin(m_static_view))::value_type,
+                     decltype(KE::cbegin(m_static_view))::value_type>);
+  static_assert(
+      std::is_same_v<decltype(KE::begin(m_dynamic_view))::value_type,
+                     decltype(KE::cbegin(m_dynamic_view))::value_type>);
+  static_assert(
+      std::is_same_v<decltype(KE::begin(m_strided_view))::value_type,
+                     decltype(KE::cbegin(m_strided_view))::value_type>);
+
+  static_assert(std::is_same_v<decltype(KE::end(m_static_view))::value_type,
+                               decltype(KE::cend(m_static_view))::value_type>);
+  static_assert(std::is_same_v<decltype(KE::end(m_dynamic_view))::value_type,
+                               decltype(KE::cend(m_dynamic_view))::value_type>);
+  static_assert(std::is_same_v<decltype(KE::end(m_strided_view))::value_type,
+                               decltype(KE::cend(m_strided_view))::value_type>);
 }
 
 }  // namespace stdalgos

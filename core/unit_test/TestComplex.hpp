@@ -14,10 +14,11 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
-#include <sstream>
+#include <Kokkos_Macros.hpp>
 
 // Suppress "'long double' is treated as 'double' in device code"
+// The suppression needs to happen before Kokkos_Complex.hpp is included to be
+// effective
 #ifdef KOKKOS_COMPILER_NVCC
 #ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
 #pragma nv_diagnostic push
@@ -25,10 +26,13 @@
 #else
 #ifdef __CUDA_ARCH__
 #pragma diagnostic push
-#pragma diag_suppress 20208
+#pragma diag_suppress 3245
 #endif
 #endif
 #endif
+
+#include <Kokkos_Core.hpp>
+#include <sstream>
 
 namespace {
 template <typename... Ts>

@@ -96,7 +96,7 @@ set(COMPILE_ONLY_SOURCES
     view/TestExtentsDatatypeConversion.cpp
 )
 
-if(NOT Kokkos_ENABLE_IMPL_MDSPAN)
+if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
 endif()
 
@@ -358,6 +358,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         configure_file(${dir}/dummy.cpp ${file})
         list(APPEND ${Tag}_VIEWSUPPORT ${file})
       endforeach()
+      if(KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
+        list(REMOVE_ITEM ${Tag}_VIEWSUPPORT ${dir}/Test${Tag}_View_BasicView.cpp)
+      endif()
       kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
   endif()
@@ -778,9 +781,6 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  if(Kokkos_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
-    set(HIP_UNIFIED_MEMORY_SOURCES hip/TestHIP_UnifiedMemory_ZeroMemset.cpp)
-  endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_HIP
     SOURCES
@@ -792,7 +792,7 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamScratchStreams.cpp
     hip/TestHIP_AsyncLauncher.cpp
     hip/TestHIP_BlocksizeDeduction.cpp
-    ${HIP_UNIFIED_MEMORY_SOURCES}
+    hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
   )
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(

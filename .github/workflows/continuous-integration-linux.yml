@@ -75,7 +75,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
           repository: desul/desul
-          ref: 779d0441a778c7088a36d38c4cbf8df3cfa182cc
+          ref: 22931326247c9333cc909628004d75ee5de99fa2
           path: desul
       - name: Install desul
         working-directory: desul
@@ -88,7 +88,7 @@ jobs:
           sudo cmake --build . --target install --parallel 2
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
