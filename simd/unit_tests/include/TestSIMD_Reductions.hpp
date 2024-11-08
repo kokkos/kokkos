@@ -35,6 +35,14 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
+    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+    // load simd values into simd vectors until values are directly accessed.
+    // Placing in an harmless intermediate check to ensure that values are
+    // properly laoded into simd vectors.
+    for (std::size_t v = 0; v < nlanes; ++v) {
+      EXPECT_EQ(args[i + v], arg[v]);
+    }
+
     mask_type mask(false);
     T identity    = 12;
     auto expected = reduce_op.on_host_serial(arg, identity, mask);

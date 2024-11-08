@@ -195,6 +195,11 @@ class simd_device_where_expr_functor {
 };
 
 TEST(simd, host_where_expressions) {
+// Skipping for gcc non-debug builds as both mask and simd values aren't
+// properly loaded if cxxflag of -O2 or above is used with -g
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+  GTEST_SKIP();
+#endif
   host_check_where_expr_all_abis(Kokkos::Experimental::Impl::host_abi_set());
 }
 
