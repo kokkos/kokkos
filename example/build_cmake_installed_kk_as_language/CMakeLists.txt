@@ -8,10 +8,11 @@ project(Example CXX Fortran CUDA)
 
 # Look for an installed Kokkos
 find_package(Kokkos COMPONENTS separable_compilation)
-set_source_files_properties(cmake_example.cpp PROPERTIES LANGUAGE CUDA)
+
+kokkos_set_source_language(cmake_example.cpp)
 add_executable(example cmake_example.cpp bar.cpp foo.f)
 
-# This is the only thing required to set up compiler/linker flags
+kokkos_set_target_properties(example)
 target_link_libraries(example Kokkos::kokkos)
 
 enable_testing()
