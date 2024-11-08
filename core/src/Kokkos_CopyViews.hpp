@@ -1097,14 +1097,12 @@ inline void deep_copy(
          std::is_void_v<typename ViewTraits<ST, SP...>::specialize> &&
          (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
           unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
-  using dst_type            = View<DT, DP...>;
-  using src_type            = View<ST, SP...>;
-  using dst_execution_space = typename dst_type::execution_space;
-  using src_execution_space = typename src_type::execution_space;
-  using dst_memory_space    = typename dst_type::memory_space;
-  using src_memory_space    = typename src_type::memory_space;
-  using dst_value_type      = typename dst_type::value_type;
-  using src_value_type      = typename src_type::value_type;
+  using dst_type         = View<DT, DP...>;
+  using src_type         = View<ST, SP...>;
+  using dst_memory_space = typename dst_type::memory_space;
+  using src_memory_space = typename src_type::memory_space;
+  using dst_value_type   = typename dst_type::value_type;
+  using src_value_type   = typename src_type::value_type;
 
   static_assert(std::is_same_v<typename dst_type::value_type,
                                typename dst_type::non_const_value_type>,
