@@ -222,10 +222,6 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     loader.device_load(first_args + i, nlanes, first_arg);
     simd_type const computed_result =
         binary_op.on_device(first_arg, second_arg);
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load simd values into simd vectors until values are directly accessed.
-    // Placing in an harmless intermediate check to ensure that values are
-    // properly laoded into simd vectors.
     device_check_equality(expected_result, computed_result, nlanes);
   }
 }
@@ -250,10 +246,6 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
     for (std::size_t lane = 0; lane < nlanes; ++lane) {
       expected_result[lane] = unary_op.on_device_serial(arg[lane]);
     }
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load simd values into simd vectors until values are directly accessed.
-    // Placing in an harmless intermediate check to ensure that values are
-    // properly laoded into simd vectors.
     device_check_equality(expected_result, computed_result, nlanes);
   }
 }

@@ -49,10 +49,6 @@ inline void host_check_equality(
     std::size_t nlanes) {
   gtest_checker checker;
   for (std::size_t i = 0; i < nlanes; ++i) {
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load simd values into simd vectors until values are directly accessed.
-    // Placing in an harmless intermediate check to ensure that values are
-    // properly laoded into simd vectors.
     checker.equality(expected_result[i], computed_result[i]);
   }
   using mask_type = typename Kokkos::Experimental::simd<T, Abi>::mask_type;
