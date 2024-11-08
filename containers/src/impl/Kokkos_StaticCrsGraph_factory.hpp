@@ -26,8 +26,8 @@ namespace Kokkos {
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD inline typename StaticCrsGraph<
-    DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>::HostMirror
+inline typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
+                               SizeType>::HostMirror
 create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                         SizeType>& view,
                    std::enable_if_t<ViewTraits<DataType, Arg1Type, Arg2Type,
@@ -37,11 +37,10 @@ create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD inline
-    typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                            SizeType>::HostMirror
-    create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                                       SizeType>& view) {
+inline typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
+                               SizeType>::HostMirror
+create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
+                                   SizeType>& view) {
   // Force copy:
   // using alloc = Impl::ViewAssignment<Impl::ViewDefault>; // unused
   using staticcrsgraph_type =
@@ -69,8 +68,8 @@ KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD inline
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
-KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD inline typename StaticCrsGraph<
-    DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>::HostMirror
+inline typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
+                               SizeType>::HostMirror
 create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                         SizeType>& view,
                    std::enable_if_t<!ViewTraits<DataType, Arg1Type, Arg2Type,
@@ -85,10 +84,8 @@ create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
 namespace Kokkos {
 
 template <class StaticCrsGraphType, class InputSizeType>
-KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD inline
-    typename StaticCrsGraphType::staticcrsgraph_type
-    create_staticcrsgraph(const std::string& label,
-                          const std::vector<InputSizeType>& input) {
+inline typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
+    const std::string& label, const std::vector<InputSizeType>& input) {
   using output_type  = StaticCrsGraphType;
   using entries_type = typename output_type::entries_type;
   using work_type    = View<
@@ -124,11 +121,9 @@ KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD inline
 //----------------------------------------------------------------------------
 
 template <class StaticCrsGraphType, class InputSizeType>
-KOKKOS_IMPL_DEPRECATED_USE_KOKKOS_SPARSE_INSTEAD inline
-    typename StaticCrsGraphType::staticcrsgraph_type
-    create_staticcrsgraph(
-        const std::string& label,
-        const std::vector<std::vector<InputSizeType> >& input) {
+inline typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
+    const std::string& label,
+    const std::vector<std::vector<InputSizeType> >& input) {
   using output_type  = StaticCrsGraphType;
   using entries_type = typename output_type::entries_type;
 

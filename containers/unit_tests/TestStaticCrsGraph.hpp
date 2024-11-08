@@ -18,11 +18,6 @@
 
 #include <vector>
 
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
-
 #include <Kokkos_StaticCrsGraph.hpp>
 #include <Kokkos_Core.hpp>
 
