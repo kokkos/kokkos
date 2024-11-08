@@ -348,28 +348,28 @@ KOKKOS_FORCEINLINE_FUNCTION simd<T, simd_abi::scalar> condition(
 }
 
 template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce(
-    Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const& mask,
-    T identity, BinaryOperation) noexcept {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+       Experimental::simd_mask<T, Experimental::simd_abi::scalar> const& mask,
+       T identity, BinaryOperation) noexcept {
   if (!mask) return identity;
   return x[0];
 }
 
 template <class T, class BinaryOperation>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce(
-    Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-    BinaryOperation binary_op) noexcept {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+       BinaryOperation binary_op) noexcept {
   return reduce(
       x, Experimental::simd<T, Experimental::simd_abi::scalar>::mask_type(true),
       T(0), binary_op);
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_min(
-    Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
-        mask) noexcept {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce_min(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+           Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
+               mask) noexcept {
   if (!mask) return Kokkos::reduction_identity<T>::min();
   return x[0];
 }
@@ -383,10 +383,10 @@ template <class T>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T reduce_max(
-    Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
-    Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
-        mask) noexcept {
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
+reduce_max(Experimental::simd<T, Experimental::simd_abi::scalar> const& x,
+           Experimental::simd_mask<T, Experimental::simd_abi::scalar> const&
+               mask) noexcept {
   if (!mask) return Kokkos::reduction_identity<T>::max();
   return x[0];
 }
