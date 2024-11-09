@@ -23,7 +23,7 @@ UNSET(Kokkos_CMAKE_DIR)
 IF("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS AND
     "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
     MESSAGE(STATUS "'launch_compiler' implies global redirection of targets depending on Kokkos to appropriate compiler.")
-    MESSAGE(STATUS "'separable_compilation' implies explicitly defining where redirection occurs via 'kokkos_compilation(PROJECT|TARGET|SOURCE|DIRECTORY ...)'")
+    MESSAGE(STATUS "'separable_compilation' implies explicitly defining where redirection occurs via 'kokkos_set_source_language(...)' and 'kokkos_set_target_properties(...)'")
     MESSAGE(FATAL_ERROR "Conflicting COMPONENTS: 'launch_compiler' and 'separable_compilation'")
 ENDIF()
 
