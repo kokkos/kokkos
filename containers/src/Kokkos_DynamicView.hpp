@@ -195,11 +195,13 @@ struct ChunkedArrayManager {
   void deep_copy_to(
       const ExecutionSpace& exec_space,
       ChunkedArrayManager<OtherMemorySpace, ValueType> const& other) const {
-    if (other.m_chunks != m_chunks) {
-      Kokkos::Impl::DeepCopy<OtherMemorySpace, MemorySpace, ExecutionSpace>(
-          exec_space, other.m_chunks, m_chunks,
-          sizeof(pointer_type) * (m_chunk_max + 2));
-    }
+    // use of ad-hoc unmanaged views
+    Kokkos::deep_copy(
+        exec_space,
+        Kokkos::View<uintptr_t*, OtherMemorySpace>(
+            reinterpret_cast<uintptr_t*>(other.m_chunks), m_chunk_max + 2),
+        Kokkos::View<uintptr_t*, MemorySpace>(
+            reinterpret_cast<uintptr_t*>(m_chunks), m_chunk_max + 2));
   }
 
   KOKKOS_INLINE_FUNCTION
