@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.19)
 
 # Projects can safely mix languages - must have C++ support
 # Kokkos flags will only apply to C++ files
-project(Example CXX Fortran CUDA)
+project(Example CXX Fortran)
 
 # Look for an installed Kokkos
 find_package(Kokkos COMPONENTS separable_compilation)
