@@ -1,9 +1,9 @@
 kokkos_cfg_depends(CXX_STD COMPILER_ID)
 
 function(kokkos_set_cxx_standard_feature standard)
-  set(EXTENSION_NAME CMAKE_CXX${standard}_EXTENSION_COMPILE_OPTION)
-  set(STANDARD_NAME CMAKE_CXX${standard}_STANDARD_COMPILE_OPTION)
-  set(FEATURE_NAME cxx_std_${standard})
+  set(EXTENSION_NAME ${CMAKE_CXX${standard}_EXTENSION_COMPILE_OPTION})
+  set(STANDARD_NAME ${CMAKE_CXX${standard}_STANDARD_COMPILE_OPTION})
+  set(FEATURE_NAME ${cxx_std_${standard}})
   #CMake's way of telling us that the standard (or extension)
   #flags are supported is the extension/standard variables
   if(NOT DEFINED CMAKE_CXX_EXTENSIONS)
