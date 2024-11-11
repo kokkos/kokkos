@@ -8,6 +8,8 @@ project(Example CXX Fortran)
 
 # Look for an installed Kokkos
 find_package(Kokkos COMPONENTS separable_compilation)
+# Enable languages used by Kokkos
+kokkos_enable_language()
 
 # Mark source files to be compiled in the language that is enabled in Kokkos (if cmake supports that language)
 kokkos_set_source_language(cmake_example.cpp)
