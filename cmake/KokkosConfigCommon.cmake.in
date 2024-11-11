@@ -323,7 +323,7 @@ FUNCTION(kokkos_set_source_language LANG_SOURCE)
         MESSAGE(DEBUG "KOKKOS: Setting language to ${Kokkos_COMPILE_LANGUAGE} for SOURCE ${LANG_SOURCE}")
         SET_PROPERTY(SOURCE ${LANG_SOURCE} PROPERTY LANGUAGE ${Kokkos_COMPILE_LANGUAGE})
       ELSE()
-        MESSAGE(WARNING "KOKKOS: SOURCE `${LANG_SOURCE}` could not be found - Source langage could not be set")
+        MESSAGE(WARNING "KOKKOS: SOURCE `${LANG_SOURCE}` could not be found - Source language could not be set")
       ENDIF()
 
 ENDFUNCTION()
