@@ -251,8 +251,7 @@ class GraphNodeRef {
     using policy_t = Kokkos::Impl::remove_cvref_t<Policy>;
     // constraint check: same execution space type (or defaulted, maybe?)
     static_assert(
-        std::is_same<typename policy_t::execution_space,
-                     execution_space>::value,
+        std::is_same_v<typename policy_t::execution_space, execution_space>,
         // TODO @graph make defaulted execution space work
         //|| policy_t::execution_space_is_defaulted,
         "Execution Space mismatch between execution policy and graph");
@@ -328,8 +327,7 @@ class GraphNodeRef {
 
     using policy_t = std::remove_cv_t<std::remove_reference_t<Policy>>;
     static_assert(
-        std::is_same<typename policy_t::execution_space,
-                     execution_space>::value,
+        std::is_same_v<typename policy_t::execution_space, execution_space>,
         // TODO @graph make defaulted execution space work
         // || policy_t::execution_space_is_defaulted,
         "Execution Space mismatch between execution policy and graph");
@@ -394,9 +392,9 @@ class GraphNodeRef {
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
 
-    using reducer_selector = Kokkos::Impl::if_c<
-        std::is_same<InvalidType, passed_reducer_type>::value, functor_type,
-        passed_reducer_type>;
+    using reducer_selector =
+        Kokkos::Impl::if_c<std::is_same_v<InvalidType, passed_reducer_type>,
+                           functor_type, passed_reducer_type>;
     using analysis = Kokkos::Impl::FunctorAnalysis<
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
         typename reducer_selector::type,

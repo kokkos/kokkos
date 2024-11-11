@@ -289,10 +289,10 @@ class SimpleTaskScheduler
                                       scheduler_type>
   spawn(Impl::TaskPolicyWithPredecessor<TaskEnum, DepFutureType>&& arg_policy,
         FunctorType&& arg_functor) {
-    static_assert(std::is_same<typename DepFutureType::scheduler_type,
-                               scheduler_type>::value,
-                  "Can't create a task policy from a scheduler and a future "
-                  "from a different scheduler");
+    static_assert(
+        std::is_same_v<typename DepFutureType::scheduler_type, scheduler_type>,
+        "Can't create a task policy from a scheduler and a future "
+        "from a different scheduler");
 
     using task_type = runnable_task_type<FunctorType>;
     typename task_type::function_type const ptr = task_type::apply;
@@ -417,8 +417,8 @@ class SimpleTaskScheduler
                   "when_all function must return a Kokkos future (an instance "
                   "of Kokkos::BasicFuture)");
     static_assert(
-        std::is_base_of<scheduler_type,
-                        typename generated_type::scheduler_type>::value,
+        std::is_base_of_v<scheduler_type,
+                          typename generated_type::scheduler_type>,
         "when_all function must return a Kokkos::BasicFuture of a compatible "
         "scheduler type");
 

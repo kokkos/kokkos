@@ -58,7 +58,7 @@ struct TestTeamPolicy {
 
     m_flags(member.team_rank(), member.league_rank()) = tid;
     static_assert(
-        (std::is_same<typename team_member::execution_space, ExecSpace>::value),
+        (std::is_same_v<typename team_member::execution_space, ExecSpace>),
         "TeamMember::execution_space is not the same as "
         "TeamPolicy<>::execution_space");
   }

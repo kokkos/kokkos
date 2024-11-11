@@ -178,9 +178,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::OpenMP, QueueType>> {
 
 template <class Scheduler>
 class TaskQueueSpecializationConstrained<
-    Scheduler,
-    std::enable_if_t<std::is_same<typename Scheduler::execution_space,
-                                  Kokkos::OpenMP>::value>> {
+    Scheduler, std::enable_if_t<std::is_same_v<
+                   typename Scheduler::execution_space, Kokkos::OpenMP>>> {
  public:
   using execution_space = Kokkos::OpenMP;
   using scheduler_type  = Scheduler;
