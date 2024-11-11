@@ -426,9 +426,10 @@ class ThreadsExecTeamMember {
         m_instance->set_work_range(m_league_rank, m_league_end, m_chunk_size);
         m_instance->reset_steal_target(m_team_size);
       }
-      if (std::is_same<typename TeamPolicyInternal<
-                           Kokkos::Threads, Properties...>::schedule_type::type,
-                       Kokkos::Dynamic>::value) {
+      if (std::is_same_v<
+              typename TeamPolicyInternal<Kokkos::Threads,
+                                          Properties...>::schedule_type::type,
+              Kokkos::Dynamic>) {
         m_instance->barrier();
       }
     } else {

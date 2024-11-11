@@ -307,9 +307,8 @@ class TaskQueueCommonMixin {
     using task_scheduling_info_type =
         typename Derived::task_scheduling_info_type;
     using team_scheduler_info_type = typename Derived::team_scheduler_info_type;
-    static_assert(
-        std::is_same<TeamSchedulerInfo, team_scheduler_info_type>::value,
-        "SchedulingInfo type mismatch!");
+    static_assert(std::is_same_v<TeamSchedulerInfo, team_scheduler_info_type>,
+                  "SchedulingInfo type mismatch!");
 
     bool incomplete_dependence_found = false;
 
