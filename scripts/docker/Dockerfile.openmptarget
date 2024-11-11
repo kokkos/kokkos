@@ -1,4 +1,4 @@
-ARG BASE=nvcr.io/nvidia/cuda:12.3.2-devel-ubuntu22.04
+ARG BASE=nvcr.io/nvidia/cuda:12.3.2-devel-ubuntu22.04@sha256:b3acdfb50afe62e6c367eba59ecf2d1768f9f174a62e005d282f843779721cb0
 FROM $BASE
 
 RUN apt-get update && apt-get install -y \
@@ -55,6 +55,7 @@ RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
       -DCMAKE_CXX_COMPILER=g++ \
       -DLLVM_ENABLE_PROJECTS="clang" \
       -DLLVM_ENABLE_RUNTIMES="openmp" \
+      -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
       -DLIBOMPTARGET_DEVICE_ARCHITECTURES=sm_70 \
     ../llvm && \
     make -j${NPROC} && \
