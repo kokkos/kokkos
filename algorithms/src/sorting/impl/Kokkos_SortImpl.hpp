@@ -72,6 +72,20 @@
 #if defined(KOKKOS_ENABLE_ONEDPL)
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
+
+namespace Kokkos::Impl {
+template <typename Comparator, typename ValueType>
+struct ComparatorWrapper {
+  Comparator comparator;
+  KOKKOS_FUNCTION bool operator()(ValueType i, ValueType j) const {
+    return comparator(i, j);
+  }
+};
+}  // namespace Kokkos::Impl
+
+template <typename Comparator, typename ValueType>
+struct sycl::is_device_copyable<
+    Kokkos::Impl::ComparatorWrapper<Comparator, ValueType>> : std::true_type {};
 #endif
 
 namespace Kokkos {
@@ -244,8 +258,17 @@ void sort_onedpl(const Kokkos::SYCL& space,
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
   const int n = view.extent(0);
-  oneapi::dpl::sort(policy, view.data(), view.data() + n,
-                    std::forward<MaybeComparator>(maybeComparator)...);
+  if constexpr (sizeof...(MaybeComparator) == 0)
+    oneapi::dpl::sort(policy, view.data(), view.data() + n);
+  else {
+    using value_type =
+        typename Kokkos::View<DataType, Properties...>::value_type;
+    auto comparator =
+        std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+    oneapi::dpl::sort(
+        policy, view.data(), view.data() + n,
+        ComparatorWrapper<decltype(comparator), value_type>{comparator});
+  }
 }
 #endif
 

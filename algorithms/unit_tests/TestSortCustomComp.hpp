@@ -62,6 +62,10 @@ auto create_random_view_and_host_clone(
 
 template <class T>
 struct MyComp {
+  // Make sure that the comparator isn't device copyable, this caused problems
+  // with SYCL/oneDPL
+  Kokkos::View<T*> dummy;
+
   KOKKOS_FUNCTION
   bool operator()(T a, T b) const {
     // we return a>b on purpose here, rather than doing a<b

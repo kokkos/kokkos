@@ -164,8 +164,19 @@ void sort_by_key_onedpl(
   auto queue  = exec.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
   const int n = keys.extent(0);
-  oneapi::dpl::sort_by_key(policy, keys.data(), keys.data() + n, values.data(),
-                           std::forward<MaybeComparator>(maybeComparator)...);
+  if constexpr (sizeof...(MaybeComparator) == 0)
+    oneapi::dpl::sort_by_key(policy, keys.data(), keys.data() + n,
+                             values.data());
+  else {
+    using keys_value_type =
+        typename Kokkos::View<KeysDataType, KeysProperties...>::value_type;
+    auto keys_comparator =
+        std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+    oneapi::dpl::sort_by_key(
+        policy, keys.data(), keys.data() + n, values.data(),
+        ComparatorWrapper<decltype(keys_comparator), keys_value_type>{
+            keys_comparator});
+  }
 }
 #endif
 #endif
@@ -193,25 +204,6 @@ template <typename Permute>
 struct IotaFunctor {
   Permute _permute;
   KOKKOS_FUNCTION void operator()(int i) const { _permute(i) = i; }
-};
-template <typename Keys>
-struct LessFunctor {
-  Keys _keys;
-  KOKKOS_FUNCTION bool operator()(int i, int j) const {
-    return _keys(i) < _keys(j);
-  }
-};
-
-// FIXME_NVCC+MSVC: We can't use a lambda instead of a functor which gave us
-// "For this host platform/dialect, an extended lambda cannot be defined inside
-// the 'if' or 'else' block of a constexpr if statement"
-template <typename Keys, typename Comparator>
-struct KeyComparisonFunctor {
-  Keys m_keys;
-  Comparator m_comparator;
-  KOKKOS_FUNCTION bool operator()(int i, int j) const {
-    return m_comparator(m_keys(i), m_keys(j));
-  }
 };
 
 template <class ExecutionSpace, class KeysDataType, class... KeysProperties,
@@ -252,20 +244,24 @@ void sort_by_key_via_sort(
     Kokkos::DefaultHostExecutionSpace host_exec;
 
     if constexpr (sizeof...(MaybeComparator) == 0) {
-      Kokkos::sort(host_exec, host_permute,
-                   LessFunctor<decltype(host_keys)>{host_keys});
+      auto comparator_lambda = KOKKOS_LAMBDA(int i, int j) {
+        return host_keys(i) < host_keys(j);
+      };
+      Kokkos::sort(host_exec, host_permute, comparator_lambda);
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
-      Kokkos::sort(
-          host_exec, host_permute,
-          KeyComparisonFunctor<decltype(host_keys), decltype(keys_comparator)>{
-              host_keys, keys_comparator});
+      auto key_comparison_lambda = KOKKOS_LAMBDA(int i, int j) {
+        return keys_comparator(host_keys(i), host_keys(j));
+      };
+      Kokkos::sort(host_exec, host_permute, key_comparison_lambda);
     }
     host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
     Kokkos::deep_copy(exec, permute, host_permute);
   } else {
-#ifdef KOKKOS_ENABLE_SYCL
+#if defined(KOKKOS_ONEDPL_HAS_SORT_BY_KEY) && \
+    !(ONEDPL_VERSION_MAJOR > 2022 ||          \
+      (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7))
     auto* raw_keys_in_comparator = keys.data();
     auto stride                  = keys.stride(0);
     if constexpr (sizeof...(MaybeComparator) == 0) {
@@ -285,14 +281,17 @@ void sort_by_key_via_sort(
     }
 #else
     if constexpr (sizeof...(MaybeComparator) == 0) {
-      Kokkos::sort(exec, permute, LessFunctor<decltype(keys)>{keys});
+      auto comparator_lambda = KOKKOS_LAMBDA(int i, int j) {
+        return keys(i) < keys(j);
+      };
+      Kokkos::sort(exec, permute, comparator_lambda);
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
-      Kokkos::sort(
-          exec, permute,
-          KeyComparisonFunctor<decltype(keys), decltype(keys_comparator)>{
-              keys, keys_comparator});
+      auto key_comparison_lambda = KOKKOS_LAMBDA(int i, int j) {
+        return keys_comparator(keys(i), keys(j));
+      };
+      Kokkos::sort(exec, permute, key_comparison_lambda);
     }
 #endif
   }
