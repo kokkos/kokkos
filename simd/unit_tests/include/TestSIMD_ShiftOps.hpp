@@ -83,7 +83,7 @@ inline void host_check_shift_by_lanes_on_one_loader(
   // Placing a memory fence to ensure that simd values are fully loaded
   // before executing simd instructions.
 #if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
-    __sync_synchronize();
+  __sync_synchronize();
 #endif
 
   simd_type expected_result(zero_init<simd_type>());
@@ -101,7 +101,7 @@ inline void host_check_shift_by_lanes_on_one_loader(
   // Placing a memory fence to ensure that simd values are fully loaded
   // before executing simd instructions.
 #if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
-    __sync_synchronize();
+  __sync_synchronize();
 #endif
 
   host_check_equality(expected_result, computed_result, width);

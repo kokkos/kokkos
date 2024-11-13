@@ -66,12 +66,12 @@ inline void host_check_where_expr_scatter_to() {
       simd_type dst_simd(zero_init<simd_type>());
       dst_simd.copy_from(dst, Kokkos::Experimental::simd_flag_default);
 
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load values into simd vectors until simd values are directly accessed.
-    // Placing a memory fence to ensure that simd values are fully loaded
-    // before executing simd instructions.
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
 #if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
-    __sync_synchronize();
+      __sync_synchronize();
 #endif
 
       host_check_equality(expected_result, dst_simd, nlanes);
@@ -103,21 +103,21 @@ inline void host_check_where_expr_gather_from() {
         expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
       }
 
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load values into simd vectors until simd values are directly accessed.
-    // Placing a memory fence to ensure that simd values are fully loaded
-    // before executing simd instructions.
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
 #if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
-    __sync_synchronize();
+      __sync_synchronize();
 #endif
       where(mask, dst).gather_from(src, index);
 
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load values into simd vectors until simd values are directly accessed.
-    // Placing a memory fence to ensure that simd values are fully loaded
-    // before executing simd instructions.
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
 #if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
-    __sync_synchronize();
+      __sync_synchronize();
 #endif
 
       host_check_equality(expected_result, dst, nlanes);

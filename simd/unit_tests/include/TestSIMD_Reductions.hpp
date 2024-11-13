@@ -35,10 +35,10 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load values into simd vectors until simd values are directly accessed.
-    // Placing a memory fence to ensure that simd values are fully loaded
-    // before executing simd instructions.
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
 #if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
     __sync_synchronize();
 #endif
