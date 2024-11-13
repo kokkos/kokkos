@@ -36,12 +36,12 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
     }
 
     // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load simd values into simd vectors until values are directly accessed.
-    // Placing in an harmless intermediate check to ensure that values are
-    // properly laoded into simd vectors.
-    for (std::size_t v = 0; v < width; ++v) {
-      EXPECT_EQ(test_vals[v], simd_vals[v]);
-    }
+    // load values into simd vectors until simd values are directly accessed.
+    // Placing a memory fence to ensure that simd values are fully loaded
+    // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
 
     simd_type expected_result(zero_init<simd_type>());
 
@@ -55,13 +55,12 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
         shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
 
     // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load simd values into simd vectors until values are directly accessed.
-    // Placing in an harmless intermediate check to ensure that values are
-    // properly laoded into simd vectors.
-    for (std::size_t v = 0; v < width; ++v) {
-      EXPECT_EQ(expected_result[v], expected_result[v]);
-      EXPECT_EQ(computed_result[v], computed_result[v]);
-    }
+    // load values into simd vectors until simd values are directly accessed.
+    // Placing a memory fence to ensure that simd values are fully loaded
+    // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
 
     host_check_equality(expected_result, computed_result, width);
   }
@@ -80,12 +79,12 @@ inline void host_check_shift_by_lanes_on_one_loader(
   ASSERT_TRUE(loaded_arg);
 
   // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-  // load simd values into simd vectors until values are directly accessed.
-  // Placing in an harmless intermediate check to ensure that values are
-  // properly laoded into simd vectors.
-  for (std::size_t v = 0; v < width; ++v) {
-    EXPECT_EQ(test_vals[v], simd_vals[v]);
-  }
+  // load values into simd vectors until simd values are directly accessed.
+  // Placing a memory fence to ensure that simd values are fully loaded
+  // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
 
   simd_type expected_result(zero_init<simd_type>());
 
@@ -98,13 +97,12 @@ inline void host_check_shift_by_lanes_on_one_loader(
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
 
   // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-  // load simd values into simd vectors until values are directly accessed.
-  // Placing in an harmless intermediate check to ensure that values are
-  // properly laoded into simd vectors.
-  for (std::size_t v = 0; v < width; v++) {
-    EXPECT_EQ(expected_result[v], expected_result[v]);
-    EXPECT_EQ(computed_result[v], computed_result[v]);
-  }
+  // load values into simd vectors until simd values are directly accessed.
+  // Placing a memory fence to ensure that simd values are fully loaded
+  // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
 
   host_check_equality(expected_result, computed_result, width);
 }

@@ -42,13 +42,12 @@ void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
     simd_type expected_result(zero_init<simd_type>());
 
     // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load simd values into simd vectors until values are directly accessed.
-    // Placing in an harmless intermediate check to ensure that values are
-    // properly laoded into simd vectors.
-    for (std::size_t v = 0; v < nlanes; ++v) {
-      EXPECT_EQ(first_args[i + v], first_arg[v]);
-      EXPECT_EQ(second_args[i + v], second_arg[v]);
-    }
+    // load values into simd vectors until simd values are directly accessed.
+    // Placing a memory fence to ensure that simd values are fully loaded
+    // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
 
     // gcc 8.4.0 warns if using nlanes as upper bound about first_arg and/or
     // second_arg being uninitialized
@@ -80,12 +79,12 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
     unary_op_result_type expected_result(zero_init<unary_op_result_type>());
 
     // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load simd values into simd vectors until values are directly accessed.
-    // Placing in an harmless intermediate check to ensure that values are
-    // properly laoded into simd vectors.
-    for (std::size_t v = 0; v < nlanes; ++v) {
-      EXPECT_EQ(args[i + v], arg[v]);
-    }
+    // load values into simd vectors until simd values are directly accessed.
+    // Placing a memory fence to ensure that simd values are fully loaded
+    // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
 
     for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
       if (lane < nlanes) {
