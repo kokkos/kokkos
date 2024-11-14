@@ -799,14 +799,10 @@ if(Kokkos_ENABLE_HIP)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpGraph SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_Graph.cpp
   )
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC AND
-     KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5.6)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5.6)
     # MultiGPU only works for rocm 5.6+
-    KOKKOS_ADD_EXECUTABLE_AND_TEST(
-      CoreUnitTest_HIPInterOpStreamsMultiGPU
-      SOURCES
-        UnitTestMainInit.cpp
-        hip/TestHIP_InterOp_StreamsMultiGPU.cpp
+    kokkos_add_executable_and_test(
+      CoreUnitTest_HIPInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_StreamsMultiGPU.cpp
     )
   endif()
 endif()
