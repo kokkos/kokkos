@@ -32,9 +32,10 @@ template <>
 class GraphImpl<Kokkos::HIP> {
  public:
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::HIP>;
-  using root_node_impl_t =
+  using erased_node_impl_t =
       GraphNodeImpl<Kokkos::HIP, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
+  using root_node_impl_t        = erased_node_impl_t;
   using aggregate_kernel_impl_t = HIPGraphNodeAggregateKernel;
   using aggregate_node_impl_t =
       GraphNodeImpl<Kokkos::HIP, aggregate_kernel_impl_t,
@@ -57,6 +58,11 @@ class GraphImpl<Kokkos::HIP> {
   template <class NodeImpl>
   std::enable_if_t<
       Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
+
+  template <class NodeImpl>
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
   add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
 
   template <class NodeImplPtr, class PredecessorRef>
@@ -93,6 +99,12 @@ class GraphImpl<Kokkos::HIP> {
   // This is required as lifetime of drivers must be bounded to this instance's
   // lifetime.
   std::vector<std::shared_ptr<void>> m_driver_storage;
+
+  // Store 'then' nodes. This is required because we don't enforce the user to
+  // keep a reference to 'then' nodes, so we need to guarantee that someone (us)
+  // stores the functor used for the capture, that might be keeping some objects
+  // alive.
+  std::vector<std::shared_ptr<erased_node_impl_t>> m_then_nodes;
 };
 
 inline GraphImpl<Kokkos::HIP>::~GraphImpl() {
@@ -137,6 +149,23 @@ GraphImpl<Kokkos::HIP>::add_node(
   KOKKOS_ENSURES(node);
   if (std::shared_ptr<void> tmp = kernel.get_driver_storage())
     m_driver_storage.push_back(std::move(tmp));
+}
+
+template <class NodeImpl>
+inline std::enable_if_t<
+    Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
+GraphImpl<Kokkos::HIP>::add_node(
+    std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+  static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+  KOKKOS_EXPECTS(bool(arg_node_ptr));
+
+  auto& kernel = arg_node_ptr->get_kernel();
+
+  kernel.capture(m_execution_space, m_graph);
+
+  static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
+
+  m_then_nodes.push_back(arg_node_ptr);
 }
 
 // Requires PredecessorRef is a specialization of GraphNodeRef that has

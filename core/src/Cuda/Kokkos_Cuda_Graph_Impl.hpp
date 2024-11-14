@@ -51,10 +51,20 @@ struct GraphImpl<Kokkos::Cuda> {
 
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::Cuda>;
 
+  using erased_node_impl_t =
+      GraphNodeImpl<Kokkos::Cuda, Kokkos::Experimental::TypeErasedTag,
+                    Kokkos::Experimental::TypeErasedTag>;
+
   // Store drivers for the kernel nodes that launch in global memory.
   // This is required as lifetime of drivers must be bounded to this instance's
   // lifetime.
   std::vector<std::shared_ptr<void>> m_driver_storage;
+
+  // Store 'then' nodes. This is required because we don't enforce the user to
+  // keep a reference to 'then' nodes, so we need to guarantee that someone (us)
+  // stores the functor used for the capture, that might be keeping some objects
+  // alive.
+  std::vector<std::shared_ptr<erased_node_impl_t>> m_then_nodes;
 
  public:
   void instantiate() {
@@ -71,9 +81,7 @@ struct GraphImpl<Kokkos::Cuda> {
     // TODO @graphs print out errors
   }
 
-  using root_node_impl_t =
-      GraphNodeImpl<Kokkos::Cuda, Kokkos::Experimental::TypeErasedTag,
-                    Kokkos::Experimental::TypeErasedTag>;
+  using root_node_impl_t        = erased_node_impl_t;
   using aggregate_kernel_impl_t = CudaGraphNodeAggregateKernel;
   using aggregate_node_impl_t =
       GraphNodeImpl<Kokkos::Cuda, aggregate_kernel_impl_t,
@@ -139,6 +147,23 @@ struct GraphImpl<Kokkos::Cuda> {
     KOKKOS_ENSURES(bool(cuda_node));
     if (std::shared_ptr<void> tmp = kernel.get_driver_storage())
       m_driver_storage.push_back(std::move(tmp));
+  }
+
+  template <class NodeImpl>
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+    static_assert(
+        Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+    KOKKOS_EXPECTS(bool(arg_node_ptr));
+
+    auto& kernel = arg_node_ptr->get_kernel();
+
+    kernel.capture(m_execution_space, m_graph);
+
+    static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
+
+    m_then_nodes.push_back(arg_node_ptr);
   }
 
   template <class NodeImplPtr, class PredecessorRef>

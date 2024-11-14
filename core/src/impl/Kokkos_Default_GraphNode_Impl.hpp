@@ -37,6 +37,7 @@ struct GraphNodeBackendSpecificDetails {
  private:
   using execution_space_instance_storage_t =
       ExecutionSpaceInstanceStorage<ExecutionSpace>;
+  using default_then_impl_t   = GraphNodeThenDefaultImpl<ExecutionSpace>;
   using default_kernel_impl_t = GraphNodeKernelDefaultImpl<ExecutionSpace>;
   using default_aggregate_kernel_impl_t =
       GraphNodeAggregateKernelDefaultImpl<ExecutionSpace>;
@@ -82,6 +83,11 @@ struct GraphNodeBackendSpecificDetails {
 
  public:
   void set_kernel(default_kernel_impl_t& arg_kernel) {
+    KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
+    m_kernel_ptr = &arg_kernel;
+  }
+
+  void set_kernel(default_then_impl_t& arg_kernel) {
     KOKKOS_EXPECTS(m_kernel_ptr == nullptr)
     m_kernel_ptr = &arg_kernel;
   }
