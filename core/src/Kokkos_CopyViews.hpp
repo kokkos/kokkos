@@ -2388,7 +2388,7 @@ inline void deep_copy(
 
     if constexpr (ExecCanAccessSrcDst) {
       Impl::view_copy(exec_space, dst, src);
-    } else if (DstExecCanAccessSrc || SrcExecCanAccessDst) {
+    } else if constexpr (DstExecCanAccessSrc || SrcExecCanAccessDst) {
       using cpy_exec_space =
           std::conditional_t<DstExecCanAccessSrc, dst_execution_space,
                              src_execution_space>;
