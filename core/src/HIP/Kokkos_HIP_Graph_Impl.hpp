@@ -32,10 +32,12 @@ template <>
 class GraphImpl<Kokkos::HIP> {
  public:
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::HIP>;
-  using root_node_impl_t =
+  using erased_node_impl_t =
       GraphNodeImpl<Kokkos::HIP, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
   using aggregate_impl_t = HIPGraphNodeAggregate;
+  using root_node_impl_t        = erased_node_impl_t;
+  using aggregate_kernel_impl_t = HIPGraphNodeAggregateKernel;
   using aggregate_node_impl_t =
       GraphNodeImpl<Kokkos::HIP, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
@@ -57,6 +59,11 @@ class GraphImpl<Kokkos::HIP> {
   template <class NodeImpl>
   std::enable_if_t<
       Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
+
+  template <class NodeImpl>
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
   add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
 
   template <class NodeImplPtr, class PredecessorRef>
@@ -133,6 +140,25 @@ GraphImpl<Kokkos::HIP>::add_node(
   kernel.execute();
   KOKKOS_ENSURES(node);
   m_nodes.push_back(arg_node_ptr);
+}
+
+template <class NodeImpl>
+inline std::enable_if_t<
+    Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
+GraphImpl<Kokkos::HIP>::add_node(
+    std::shared_ptr<NodeImpl> arg_node_ptr) {
+  static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+  KOKKOS_EXPECTS(bool(arg_node_ptr));
+
+  auto& kernel = arg_node_ptr->get_kernel();
+
+  kernel.capture(m_execution_space, m_graph);
+
+  auto detail = std::static_pointer_cast<node_details_t>(arg_node_ptr);
+
+  detail->node = kernel.m_node;
+
+  m_nodes.push_back(std::move(arg_node_ptr));
 }
 
 // Requires PredecessorRef is a specialization of GraphNodeRef that has
