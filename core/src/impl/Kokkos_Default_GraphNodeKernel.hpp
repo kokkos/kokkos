@@ -95,6 +95,17 @@ struct GraphNodeAggregateKernelDefaultImpl
   void execute_kernel() override final {}
 };
 
+template <typename ExecutionSpace, typename Functor>
+struct GraphNodeThenImpl : GraphNodeKernelDefaultImpl<ExecutionSpace> {
+  Functor m_functor;
+
+  template <typename T>
+  explicit GraphNodeThenImpl(T &&functor)
+      : m_functor(std::forward<T>(functor)) {}
+
+  void execute_kernel() override final { m_functor(this->m_execution_space); }
+};
+
 }  // end namespace Impl
 }  // end namespace Kokkos
 

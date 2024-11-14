@@ -61,6 +61,11 @@ class GraphImpl<Kokkos::SYCL> {
       Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
   add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
 
+  template <class NodeImpl>
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
+
   template <class NodeImplPtr, class PredecessorRef>
   void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref);
 
@@ -122,6 +127,20 @@ GraphImpl<Kokkos::SYCL>::add_node(
   kernel.set_sycl_graph_node_ptr(&node);
   kernel.execute();
   KOKKOS_ENSURES(node);
+}
+
+template <class NodeImpl>
+std::enable_if_t<Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
+GraphImpl<Kokkos::SYCL>::add_node(
+    std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+  static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+  KOKKOS_EXPECTS(arg_node_ptr);
+
+  auto& kernel = arg_node_ptr->get_kernel();
+
+  kernel.capture(m_execution_space, m_graph);
+
+  static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
 }
 
 // Requires PredecessorRef is a specialization of GraphNodeRef that has
