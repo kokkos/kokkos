@@ -686,13 +686,11 @@ struct CommonSubview {
       : dst_sub(dst, args...), src_sub(src, args...) {}
 };
 
-template <class DstType, class SrcType,
-          class ExecSpace = typename DstType::execution_space,
-          int Rank        = DstType::rank>
+template <class DstType, class SrcType, int Rank = DstType::rank>
 struct ViewRemap;
 
-template <class DstType, class SrcType, class ExecSpace>
-struct ViewRemap<DstType, SrcType, ExecSpace, 1> {
+template <class DstType, class SrcType>
+struct ViewRemap<DstType, SrcType, 1> {
   using p_type = Kokkos::pair<int64_t, int64_t>;
 
   template <typename... OptExecSpace>
@@ -753,7 +751,7 @@ auto create_common_subview_no_match(const DstType& dst, const SrcType& src,
   return common_subview;
 }
 
-template <class DstType, class SrcType, class ExecSpace, int Rank>
+template <class DstType, class SrcType, int Rank>
 struct ViewRemap {
   using p_type = Kokkos::pair<int64_t, int64_t>;
 
