@@ -58,7 +58,7 @@ class GraphNodeRef {
 
   static_assert(std::is_same_v<Predecessor, TypeErasedTag> ||
                     Kokkos::Impl::is_graph_kernel<Kernel>::value ||
-                    Kokkos::Impl::is_graph_then<Kernel>::value,
+                    Kokkos::Impl::is_graph_capture<Kernel>::value,
                 "Invalid kernel template parameter given to GraphNodeRef");
 
   static_assert(!Kokkos::Impl::is_more_type_erased<Kernel, Predecessor>::value,
@@ -229,35 +229,59 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_for"> {{{2
 
-  //! @todo Support label.
-  template <class Functor>
-  auto then(Functor&& functor) const {
-    using then_t =
-        Kokkos::Impl::GraphNodeThenImpl<ExecutionSpace,
-                                        Kokkos::Impl::remove_cvref_t<Functor>>;
-    using return_t = GraphNodeRef<ExecutionSpace, then_t, GraphNodeRef>;
-
-    auto graph_ptr = m_graph_impl.lock();
-    KOKKOS_EXPECTS(bool(graph_ptr))
-
-    auto rv = Kokkos::Impl::GraphAccess::make_graph_node_ref(
-        m_graph_impl,
-        Kokkos::Impl::GraphAccess::make_node_shared_ptr<
-            typename return_t::node_impl_t>(
-            m_node_impl->execution_space_instance(),
-            Kokkos::Impl::_graph_node_then_ctor_tag{},
-            std::forward<Functor>(functor),
-            Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
-
-    // Add the node itself to the backend's graph data structure, now that
-    // everything is set up.
-    graph_ptr->add_node(rv.m_node_impl);
-    // Add the predecessaor we stored in the constructor above in the backend's
-    // data structure, now that everything is set up.
-    graph_ptr->add_predecessor(rv.m_node_impl, *this);
-    KOKKOS_ENSURES(bool(rv.m_node_impl))
-    return rv;
+  /// @todo We should do better than a p-for (that uses registers, heavier).
+  ///       This should "just" launch the function on device with our driver.
+  template <typename Label, typename Functor>
+  auto then(Label&& label, Functor&& functor) const {
+    return this->then_parallel_for(std::forward<Label>(label),
+                                   Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+                                   std::forward<Functor>(functor));
   }
+
+#if defined(KOKKOS_ENABLE_CUDA) ||                                           \
+    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)) || \
+    (defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH))
+  /// The parameter @p exec can be used for multi-GPU graphs.
+  /// The captured nodes will be assigned to the device associated with @p exec.
+  /// @todo Support label.
+  template <class Functor>
+#if defined(KOKKOS_ENABLE_CUDA)
+  auto cuda_capture(const ExecutionSpace& exec, Functor&& functor) const {
+    if constexpr (std::is_same_v<ExecutionSpace, Kokkos::Cuda>) {
+#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+  auto hip_capture(const ExecutionSpace& exec, Functor&& functor) const {
+    if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+  auto sycl_capture(const ExecutionSpace& exec, Functor&& functor) const {
+    if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
+#endif
+      using capture_t = Kokkos::Impl::GraphNodeCaptureImpl<
+          ExecutionSpace, Kokkos::Impl::remove_cvref_t<Functor>>;
+      using return_t = GraphNodeRef<ExecutionSpace, capture_t, GraphNodeRef>;
+
+      auto graph_ptr = m_graph_impl.lock();
+      KOKKOS_EXPECTS(bool(graph_ptr))
+
+      auto rv = Kokkos::Impl::GraphAccess::make_graph_node_ref(
+          m_graph_impl,
+          Kokkos::Impl::GraphAccess::make_node_shared_ptr<
+              typename return_t::node_impl_t>(
+              m_node_impl->execution_space_instance(),
+              Kokkos::Impl::_graph_node_capture_ctor_tag{},
+              std::forward<Functor>(functor),
+              Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
+
+      // Add the node itself to the backend's graph data structure, now that
+      // everything is set up.
+      graph_ptr->add_node(exec, rv.m_node_impl);
+      // Add the predecessaor we stored in the constructor above in the
+      //  backend's data structure, now that everything is set up.
+      graph_ptr->add_predecessor(rv.m_node_impl, *this);
+      KOKKOS_ENSURES(bool(rv.m_node_impl))
+      return rv;
+    }
+  }
+#endif
 
   template <
       class Policy, class Functor,

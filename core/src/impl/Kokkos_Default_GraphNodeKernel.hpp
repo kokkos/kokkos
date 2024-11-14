@@ -95,11 +95,11 @@ struct GraphNodeAggregateDefaultImpl
 };
 
 template <typename ExecutionSpace, typename Functor>
-struct GraphNodeThenImpl : GraphNodeKernelDefaultImpl<ExecutionSpace> {
+struct GraphNodeCaptureImpl : GraphNodeKernelDefaultImpl<ExecutionSpace> {
   Functor m_functor;
 
   template <typename T>
-  explicit GraphNodeThenImpl(T &&functor)
+  explicit GraphNodeCaptureImpl(T &&functor)
       : m_functor(std::forward<T>(functor)) {}
 
   void execute_kernel() override final { m_functor(this->m_execution_space); }

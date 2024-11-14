@@ -31,9 +31,9 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename Functor>
-struct GraphNodeThenImpl<Kokkos::HIP, Functor> {
+struct GraphNodeCaptureImpl<Kokkos::HIP, Functor> {
   Functor m_functor;
-  hipGraphNode_t m_node;
+  hipGraphNode_t m_node = nullptr;
 
   void capture(const Kokkos::HIP& exec, hipGraph_t& graph) {
     KOKKOS_IMPL_HIP_SAFE_CALL(

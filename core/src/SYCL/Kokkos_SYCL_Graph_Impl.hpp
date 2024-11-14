@@ -59,12 +59,13 @@ class GraphImpl<Kokkos::SYCL> {
   template <class NodeImpl>
   std::enable_if_t<
       Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
-  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
+  add_node(std::shared_ptr<NodeImpl> arg_node_ptr);
 
   template <class NodeImpl>
   std::enable_if_t<
-      Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
-  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
+      Kokkos::Impl::is_graph_capture_v<typename NodeImpl::kernel_type>>
+  add_node(const Kokkos::SYCL& exec,
+           std::shared_ptr<NodeImpl> arg_node_ptr);
 
   template <class NodeImplPtr, class PredecessorRef>
   void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref);
@@ -117,7 +118,7 @@ template <class NodeImpl>
 inline std::enable_if_t<
     Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
 GraphImpl<Kokkos::SYCL>::add_node(
-    std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+    std::shared_ptr<NodeImpl> arg_node_ptr) {
   static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
   KOKKOS_EXPECTS(arg_node_ptr);
   // The Kernel launch from the execute() method has been shimmed to insert
@@ -129,21 +130,22 @@ GraphImpl<Kokkos::SYCL>::add_node(
   kernel.set_sycl_graph_node_ptr(&node);
   kernel.execute();
   KOKKOS_ENSURES(node);
-  m_nodes.push_back(arg_node_ptr);
+  m_nodes.push_back(std::move(arg_node_ptr));
 }
 
 template <class NodeImpl>
-std::enable_if_t<Kokkos::Impl::is_graph_then_v<typename NodeImpl::kernel_type>>
+std::enable_if_t<
+    Kokkos::Impl::is_graph_capture_v<typename NodeImpl::kernel_type>>
 GraphImpl<Kokkos::SYCL>::add_node(
-    std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+    const Kokkos::SYCL& exec, std::shared_ptr<NodeImpl> arg_node_ptr) {
   static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
   KOKKOS_EXPECTS(arg_node_ptr);
 
   auto& kernel = arg_node_ptr->get_kernel();
-
-  kernel.capture(m_execution_space, m_graph);
-
+  kernel.capture(exec, m_graph);
   static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
+
+  m_capture_nodes.push_back(std::move(detail));
 }
 
 // Requires PredecessorRef is a specialization of GraphNodeRef that has
