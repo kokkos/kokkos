@@ -1093,7 +1093,7 @@ struct ClassNoShmemSizeFunction {
           *this);
       Kokkos::fence();
 
-      typename Kokkos::View<int, ExecSpace>::HostMirror h_errors =
+      typename Kokkos::View<int, ExecSpace>::host_mirror_type h_errors =
           Kokkos::create_mirror_view(d_errors);
       Kokkos::deep_copy(h_errors, d_errors);
       ASSERT_EQ(h_errors(), 0);
@@ -1165,7 +1165,7 @@ struct ClassWithShmemSizeFunction {
           *this);
       Kokkos::fence();
 
-      typename Kokkos::View<int, ExecSpace>::HostMirror h_errors =
+      typename Kokkos::View<int, ExecSpace>::host_mirror_type h_errors =
           Kokkos::create_mirror_view(d_errors);
       Kokkos::deep_copy(h_errors, d_errors);
       ASSERT_EQ(h_errors(), 0);
@@ -1244,7 +1244,7 @@ void test_team_mulit_level_scratch_test_lambda() {
       });
   Kokkos::fence();
 
-  typename Kokkos::View<int, ExecSpace>::HostMirror h_errors =
+  typename Kokkos::View<int, ExecSpace>::host_mirror_type h_errors =
       Kokkos::create_mirror_view(errors);
   Kokkos::deep_copy(h_errors, d_errors);
   ASSERT_EQ(h_errors(), 0);
