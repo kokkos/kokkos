@@ -241,7 +241,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       dim3 block(1, block_size, 1);
       // use a slightly less constrained, but still well bounded limit for
       // scratch
-      int nblocks = (nwork + block.y - 1) / block.y;
+      index_type nblocks = (nwork + block.y - 1) / block.y;
       // Heuristic deciding the value of nblocks.
       // The general idea here is we want to:
       //    1. Not undersubscribe the device (i.e., we want at least
@@ -265,7 +265,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         if (items_per_thread < 4) {
           int ratio = std::min(
               (nblocks + preferred_block_min - 1) / preferred_block_min,
-              (4 + items_per_thread - 1) / items_per_thread);
+              static_cast<index_type>(4 + items_per_thread - 1) /
+                  items_per_thread);
           nblocks /= ratio;
         }
       }
