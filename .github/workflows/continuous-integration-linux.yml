@@ -19,6 +19,7 @@ jobs:
         cxx_extra_flags: ['']
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
+        clang-tidy: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
         stdcxx: [17]
         include:
           - distro: 'ubuntu:intel'
@@ -26,12 +27,14 @@ jobs:
             cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            clang-tidy: ''
             stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpc'
             cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            clang-tidy: ''
             stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpx'
@@ -39,12 +42,14 @@ jobs:
             extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
+            clang-tidy: ''
             stdcxx: '17'
           - distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
+            clang-tidy: ''
             stdcxx: '20'
           - distro: 'ubuntu:latest'
             cxx: 'clang++'
@@ -107,7 +112,7 @@ jobs:
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
-            -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
+            ${{ matrix.clang-tidy }} \
             -DBUILD_SHARED_LIBS=ON \
             -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
