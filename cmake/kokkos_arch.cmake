@@ -172,7 +172,7 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
   endif()
 
-  set(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers" ${COMMON_WARNINGS})
+  set(GNU_WARNINGS "-Wempty-body" "-Wignored-qualifiers" ${COMMON_WARNINGS})
   if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU)
     list(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
   endif()
