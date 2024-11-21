@@ -1010,10 +1010,10 @@ function(kokkos_compilation)
   if(COMP_GLOBAL)
     # if global, don't bother setting others
     set_property(
-      GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}"
+      GLOBAL PROPERTY CXX_COMPILER_LAUNCHER ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}
     )
     set_property(
-      GLOBAL PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}"
+      GLOBAL PROPERTY CXX_LINKER_LAUNCHER ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}
     )
   else()
     foreach(_TYPE PROJECT DIRECTORY TARGET SOURCE)
@@ -1026,12 +1026,12 @@ function(kokkos_compilation)
       if(COMP_${_TYPE})
         # MESSAGE(STATUS "Using nvcc_wrapper :: ${_TYPE} :: ${COMP_${_TYPE}}")
         set_property(
-          ${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE
-                                             "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}"
+          ${_TYPE} ${COMP_${_TYPE}} PROPERTY CXX_COMPILER_LAUNCHER ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER}
+                                             ${CMAKE_CXX_COMPILER}
         )
         set_property(
-          ${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK
-                                             "${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER} ${CMAKE_CXX_COMPILER}"
+          ${_TYPE} ${COMP_${_TYPE}} PROPERTY CXX_LINKER_LAUNCHER ${Kokkos_COMPILE_LAUNCHER} ${Kokkos_NVCC_WRAPPER}
+                                             ${CMAKE_CXX_COMPILER}
         )
       endif()
     endforeach()
