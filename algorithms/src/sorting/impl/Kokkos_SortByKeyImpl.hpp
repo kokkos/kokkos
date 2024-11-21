@@ -261,8 +261,8 @@ void sort_by_key_via_sort(
   } else {
 #if defined(KOKKOS_ONEDPL_HAS_SORT_BY_KEY) && \
     !(ONEDPL_VERSION_MAJOR > 2022 ||          \
-      (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7))
-    auto* raw_keys_in_comparator = keys.data();
+      (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7 || (ONEDPL_VERSION_MINOR ==7 && ONEDPL_VERSION_PATCH >=1)))
+	  auto* raw_keys_in_comparator = keys.data();
     auto stride                  = keys.stride(0);
     if constexpr (sizeof...(MaybeComparator) == 0) {
       Kokkos::sort(
