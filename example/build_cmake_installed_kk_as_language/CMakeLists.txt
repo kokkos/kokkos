@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.19)
 project(Example CXX Fortran)
 
 # Look for an installed Kokkos
-find_package(Kokkos COMPONENTS)
+find_package(Kokkos)
 enable_language(${Kokkos_COMPILE_LANGUAGE})
 
 #the language has to be set on the files
