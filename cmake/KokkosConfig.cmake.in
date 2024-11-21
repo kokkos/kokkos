@@ -30,7 +30,7 @@ ENDIF()
 IF("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS)
     #
     # if find_package(Kokkos COMPONENTS launch_compiler) then rely on the
-    # RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK to always redirect to the
+    # CXX_COMPILER_LAUNCHER and CXX_LINKER_LAUNCHER to always redirect to the
     # appropriate compiler for Kokkos
     #
 
@@ -44,7 +44,7 @@ ELSEIF(@Kokkos_ENABLE_CUDA@
     AND NOT "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
     #
     # if CUDA was enabled, the compilation language was not set to CUDA, and separable compilation was not
-    # specified, then set the RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK globally and
+    # specified, then set the CXX_COMPILER_LAUNCHER and CXX_LINKER_LAUNCHER globally and
     # kokkos_launch_compiler will re-direct to the compiler used to compile CUDA code during installation.
     # kokkos_launch_compiler will re-direct if ${CMAKE_CXX_COMPILER} and -DKOKKOS_DEPENDENCE is present,
     # otherwise, the original command will be executed
