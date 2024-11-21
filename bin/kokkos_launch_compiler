@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
 #   This script allows CMAKE_CXX_COMPILER to be a standard
-#   C++ compiler and Kokkos sets RULE_LAUNCH_COMPILE and
-#   RULE_LAUNCH_LINK in CMake so that all compiler and link
+#   C++ compiler and Kokkos sets CXX_COMPILER_LAUNCHER and
+#   CXX_LINKER_LAUNCHER in CMake so that all compiler and link
 #   commands are prefixed with this script followed by the
 #   C++ compiler. Thus if $1 == $2 then we know the command
 #   was intended for the C++ compiler and we discard both
@@ -40,7 +40,7 @@ done
 if [ -z "${1}" ]; then
     echo -e "\n${BASH_SOURCE[0]} was invoked without the Kokkos compiler as the first argument."
     echo "This script is not indended to be directly invoked by any mechanism other"
-    echo -e "than through a RULE_LAUNCH_COMPILE or RULE_LAUNCH_LINK property set in CMake.\n"
+    echo -e "than through a CXX_COMPILER_LAUNCHER or CXX_LINKER_LAUNCHER property set in CMake.\n"
     exit 1
 fi
 
@@ -48,7 +48,7 @@ fi
 if [ -z "${2}" ]; then
     echo -e "\n${BASH_SOURCE[0]} was invoked without the C++ compiler as the second argument."
     echo "This script is not indended to be directly invoked by any mechanism other"
-    echo -e "than through a RULE_LAUNCH_COMPILE or RULE_LAUNCH_LINK property set in CMake.\n"
+    echo -e "than through a CXX_COMPILER_LAUNCHER or CXX_LINKER_LAUNCHER property set in CMake.\n"
     exit 1
 fi
 
