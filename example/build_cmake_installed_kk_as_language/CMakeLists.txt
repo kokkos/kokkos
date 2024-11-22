@@ -15,10 +15,10 @@ set_source_files_properties(cmake_example.cpp PROPERTIES LANGUAGE ${Kokkos_COMPI
 add_executable(example cmake_example.cpp bar.cpp foo.f)
 
 # The architectures and std have to be set on the target
-set_target_properties(
-  example PROPERTIES ${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES}
+set_property(
+  TARGET example PROPERTY ${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES}
 )
-set_target_properties(example PROPERTIES ${Kokkos_COMPILE_LANGUAGE}_STANDARD ${Kokkos_CXX_STANDARD})
+set_property(TARGET example PROPERTY ${Kokkos_COMPILE_LANGUAGE}_STANDARD ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_STANDARD})
 target_link_libraries(example Kokkos::kokkos)
 
 enable_testing()
