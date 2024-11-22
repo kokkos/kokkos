@@ -323,7 +323,7 @@ class ArrayReduceTeamFunctor {
     const int thread_size = team.team_size() * team.league_size();
     const int chunk       = (nwork + thread_size - 1) / thread_size;
 
-    size_type iwork           = chunk * thread_rank;
+    size_type iwork           = static_cast<size_type>(chunk) * thread_rank;
     const size_type iwork_end = iwork + chunk < nwork ? iwork + chunk : nwork;
 
     for (; iwork < iwork_end; ++iwork) {
