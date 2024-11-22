@@ -1020,11 +1020,11 @@ struct CheckSubviewCorrectness_2D_3D {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ii, int& e) const {
-    const int i1 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i1 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? ii % b.extent(0)
                        : ii / b.extent(1);
 
-    const int i2 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i2 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? ii / b.extent(0)
                        : ii % b.extent(1);
 
@@ -1055,15 +1055,15 @@ struct CheckSubviewCorrectness_3D_3D {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ii, int& e) const {
-    const int i0 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i0 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? ii % b.extent(0)
                        : ii / (b.extent(1) * b.extent(2));
 
-    const int i1 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i1 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? (ii / b.extent(0)) % b.extent(1)
                        : (ii / b.extent(2)) % b.extent(1);
 
-    const int i2 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i2 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? ii / (b.extent(0) * b.extent(1))
                        : ii % b.extent(2);
 
@@ -1094,21 +1094,21 @@ struct CheckSubviewCorrectness_3D_4D {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ii, int& e) const {
-    const int i = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i = std::is_same_v<layout, Kokkos::LayoutLeft>
                       ? ii % b.extent(0)
                       : ii / (b.extent(1) * b.extent(2));
 
-    const int j = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int j = std::is_same_v<layout, Kokkos::LayoutLeft>
                       ? (ii / b.extent(0)) % b.extent(1)
                       : (ii / b.extent(2)) % b.extent(1);
 
-    const int k = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int k = std::is_same_v<layout, Kokkos::LayoutLeft>
                       ? ii / (b.extent(0) * b.extent(1))
                       : ii % b.extent(2);
 
     int i0, i1, i2, i3;
 
-    if (std::is_same<layout, Kokkos::LayoutLeft>::value) {
+    if (std::is_same_v<layout, Kokkos::LayoutLeft>) {
       i0 = i + offset_0;
       i1 = j;
       i2 = k + offset_2;
@@ -1152,15 +1152,15 @@ struct CheckSubviewCorrectness_3D_5D {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int& ii, int& e) const {
-    const int i2 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i2 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? ii % b.extent(0)
                        : ii / (b.extent(1) * b.extent(2));
 
-    const int i3 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i3 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? (ii / b.extent(0)) % b.extent(1)
                        : (ii / b.extent(2)) % b.extent(1);
 
-    const int i4 = std::is_same<layout, Kokkos::LayoutLeft>::value
+    const int i4 = std::is_same_v<layout, Kokkos::LayoutLeft>
                        ? ii / (b.extent(0) * b.extent(1))
                        : ii % b.extent(2);
 

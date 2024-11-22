@@ -802,7 +802,7 @@ class TestTripleNestedReduce {
 
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
-    if (!std::is_same<execution_space, Kokkos::Experimental::HPX>::value) {
+    if (!std::is_same_v<execution_space, Kokkos::Experimental::HPX>) {
       team_size = 1;
     }
 #endif
