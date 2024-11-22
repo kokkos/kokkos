@@ -80,9 +80,9 @@ struct GraphImpl : private ExecutionSpaceInstanceStorage<ExecutionSpace> {
   // <editor-fold desc="required customizations"> {{{2
 
   template <class NodeImpl>
-  //  requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
   void add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
-    static_assert(NodeImpl::kernel_type::Policy::is_graph_kernel::value);
+    static_assert(
+        Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
     // Since this is always called before any calls to add_predecessor involving
     // it, we can treat this node as a sink until we discover otherwise.
     arg_node_ptr->node_details_t::set_kernel(arg_node_ptr->get_kernel());
