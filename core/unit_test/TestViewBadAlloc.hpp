@@ -74,12 +74,12 @@ TEST(TEST_CATEGORY, view_bad_alloc) {
                       Kokkos::DefaultHostExecutionSpace>;
 
   if constexpr (execution_space_is_device) {
-    if constexpr (Kokkos::has_shared_space) {
-      test_view_bad_alloc<Kokkos::SharedSpace>();
-    }
-    if constexpr (Kokkos::has_shared_host_pinned_space) {
-      test_view_bad_alloc<Kokkos::SharedHostPinnedSpace>();
-    }
+#ifdef KOKKOS_HAS_SHARED_SPACE
+    test_view_bad_alloc<Kokkos::SharedSpace>();
+#endif
+#ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
+    test_view_bad_alloc<Kokkos::SharedHostPinnedSpace>();
+#endif
   }
 }
 
