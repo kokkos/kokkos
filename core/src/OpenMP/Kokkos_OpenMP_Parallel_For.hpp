@@ -59,18 +59,12 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::OpenMP> {
     }
   }
 
-  template <class Enable = WorkTag>
-  inline static std::enable_if_t<std::is_void_v<WorkTag> &&
-                                 std::is_same_v<Enable, WorkTag>>
-  exec_work(const FunctorType& functor, const Member iwork) {
-    functor(iwork);
-  }
-
-  template <class Enable = WorkTag>
-  inline static std::enable_if_t<!std::is_void_v<WorkTag> &&
-                                 std::is_same_v<Enable, WorkTag>>
-  exec_work(const FunctorType& functor, const Member iwork) {
-    functor(WorkTag{}, iwork);
+  inline static void exec_work(const FunctorType& functor, const Member iwork) {
+    if constexpr (std::is_void_v<WorkTag>) {
+      functor(iwork);
+    } else {
+      functor(WorkTag{}, iwork);
+    }
   }
 
   template <class Policy>
