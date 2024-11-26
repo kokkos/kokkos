@@ -57,6 +57,7 @@ AMD-MI300A:
       -DKokkos_ENABLE_ROCTHRUST=OFF
       -DKokkos_ENABLE_TESTS=ON
       -DCMAKE_CXX_FLAGS='-Werror'
+      -DKokkos_ENABLE_COMPILER_WARNINGS=ON
     - cmake --build build -j48 --verbose
     - cd build
     - ctest -V --output-junit result_mi300a.xml
