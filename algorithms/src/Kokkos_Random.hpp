@@ -588,10 +588,10 @@ struct Random_XorShift1024_State<false> {
       : state_(&v(state_idx, 0)), stride_(v.stride_1()) {}
 
   KOKKOS_FUNCTION
-  uint64_t operator[](const int i) const { return state_[i * stride_]; }
+  uint64_t operator[](size_t i) const { return state_[i * stride_]; }
 
   KOKKOS_FUNCTION
-  uint64_t& operator[](const int i) { return state_[i * stride_]; }
+  uint64_t& operator[](size_t i) { return state_[i * stride_]; }
 };
 
 template <class ExecutionSpace>
