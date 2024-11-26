@@ -874,8 +874,8 @@ struct is_array_type<T[]> : std::true_type {
 
 template <typename T>
 using value_type_storage_t =
-    typename std::conditional_t<is_array_type<T>::value, std::decay<T>,
-                                std::add_lvalue_reference<T>>::type;
+    std::conditional_t<is_array_type<T>::value, std::decay_t<T>,
+                       std::add_lvalue_reference_t<T>>;
 
 // ParallelReduce iteration pattern
 // Scalar reductions
