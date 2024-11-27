@@ -54,7 +54,7 @@ AMD-MI300A:
       -DKokkos_ENABLE_HIP=ON
       -DKokkos_ARCH_AMD_GFX942_APU=ON
       -DKokkos_ARCH_NATIVE=ON
-      -DKokkos_ENABLE_ROCTHRUST=OFF
+      -Drocthrust_ROOT=/opt/rocm-6.2.4
       -DKokkos_ENABLE_TESTS=ON
       -DCMAKE_CXX_FLAGS='-Werror'
       -DKokkos_ENABLE_COMPILER_WARNINGS=ON
