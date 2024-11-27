@@ -203,14 +203,12 @@ constexpr bool is_type_v<T, decltype(void(sizeof(T)))> = true;
 // does not seem to suppress gcc's warnings.
 
 template <class SIMDType, size_t... Args>
-KOKKOS_INLINE_FUNCTION SIMDType zero_init(std::index_sequence<Args...>) {
-  SIMDType a;
-  ((a[Args] = 0) && ...);
-  return a;
+SIMDType zero_init(std::index_sequence<Args...>) {
+  KOKKOS_IF_ON_HOST((SIMDType a; ((a[Args] = 0) && ...); return a;))
 }
 
 template <class SIMDType>
-KOKKOS_INLINE_FUNCTION SIMDType zero_init() {
+SIMDType zero_init() {
   return zero_init<SIMDType>(std::make_index_sequence<SIMDType::size()>());
 }
 

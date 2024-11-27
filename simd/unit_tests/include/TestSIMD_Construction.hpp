@@ -85,8 +85,8 @@ template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_test_simd_traits() {
   using simd_type = Kokkos::Experimental::simd<DataType, Abi>;
 
-  simd_type default_simd(zero_init<simd_type>());
-  simd_type result(zero_init<simd_type>());
+  simd_type default_simd;
+  simd_type result;
   simd_type test_simd(KOKKOS_LAMBDA(std::size_t i) { return (i % 2 == 0); });
   simd_type copy_simd(test_simd);
   simd_type move_simd(std::move(copy_simd));

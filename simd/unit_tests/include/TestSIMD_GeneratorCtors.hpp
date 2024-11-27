@@ -100,7 +100,7 @@ KOKKOS_INLINE_FUNCTION void device_check_gen_ctor() {
     }
 
     simd_type basic(KOKKOS_LAMBDA(std::size_t i) { return init[i]; });
-    simd_type rhs(zero_init<simd_type>());
+    simd_type rhs;
     rhs.copy_from(init, Kokkos::Experimental::simd_flag_default);
     device_check_equality(basic, rhs, lanes);
 
@@ -108,7 +108,7 @@ KOKKOS_INLINE_FUNCTION void device_check_gen_ctor() {
     simd_type result(
         KOKKOS_LAMBDA(std::size_t i) { return (mask[i]) ? lhs[i] : rhs[i]; });
 
-    simd_type blend(zero_init<simd_type>());
+    simd_type blend;
     blend.copy_from(expected, Kokkos::Experimental::simd_flag_default);
     device_check_equality(result, blend, lanes);
   }
