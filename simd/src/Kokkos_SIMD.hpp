@@ -207,20 +207,22 @@ using native_abi = typename ForSpace<Space>::template simd_abi<N>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class Space>
-using ForSpace KOKKOS_DEPRECATED =
-    typename Impl::ForSpace<typename Space::execution_space>::type;
+using ForSpace = typename Impl::ForSpace<typename Space::execution_space>::type;
 
 template <class T>
-using native KOKKOS_DEPRECATED = ForSpace<Kokkos::DefaultExecutionSpace>;
+using native = ForSpace<Kokkos::DefaultExecutionSpace>;
 #endif
 
 }  // namespace simd_abi
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T>
-using native_simd KOKKOS_DEPRECATED = basic_simd<T, simd_abi::native<T>>;
+using native_simd KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Temporarily use Impl::simd<T> instead") =
+    basic_simd<T, simd_abi::native<T>>;
 template <class T>
-using native_simd_mask KOKKOS_DEPRECATED =
+using native_simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Temporarily use Impl::simd_mask<T> instead") =
     basic_simd_mask<T, simd_abi::native<T>>;
 
 template <class T, class Abi>
