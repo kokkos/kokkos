@@ -418,9 +418,9 @@ if(KOKKOS_ARCH_ZEN4)
     COMPILER_ID
     KOKKOS_CXX_HOST_COMPILER_ID
     Intel
-    -mavx2
+    -xCORE-AVX512
     MSVC
-    /arch:AVX2
+    /arch:AVX512
     NVHPC
     -tp=zen4
     DEFAULT
@@ -428,7 +428,7 @@ if(KOKKOS_ARCH_ZEN4)
     -mtune=znver4
   )
   set(KOKKOS_ARCH_AMD_ZEN4 ON)
-  set(KOKKOS_ARCH_AVX2 ON)
+  set(KOKKOS_ARCH_AVX512XEON ON)
 endif()
 
 if(KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
