@@ -39,3 +39,31 @@ INTEL-DATA-CENTER-MAX-1100:
       - build/result_pvc1100.xml
     reports:
       junit: build/result_pvc1100.xml
+
+AMD-MI300A:
+  stage: test
+  tags: [uo-gpu, odyssey, amd-mi300]
+  image: rocm/dev-ubuntu-24.04:6.2.4-complete
+  script:
+    - sudo apt-get update && sudo apt-get install -y cmake
+    - export GTEST_FILTER=-hip.unified_memory_zero_memset
+    - cmake
+      -B build
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_COMPILER=hipcc
+      -DKokkos_ENABLE_HIP=ON
+      -DKokkos_ARCH_AMD_GFX942_APU=ON
+      -DKokkos_ARCH_NATIVE=ON
+      -Drocthrust_ROOT=/opt/rocm-6.2.4
+      -DKokkos_ENABLE_TESTS=ON
+      -DCMAKE_CXX_FLAGS='-Werror'
+      -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+    - cmake --build build -j48 --verbose
+    - cd build
+    - ctest -V --output-junit result_mi300a.xml
+  artifacts:
+    when: always
+    paths:
+      - build/result_mi300a.xml
+    reports:
+      junit: build/result_mi300a.xml
