@@ -39,13 +39,13 @@ struct EmulateCUDADim3 {
 #endif
 
 template <class Tag, class Functor, class... Args>
-KOKKOS_IMPL_FORCEINLINE_FUNCTION std::enable_if_t<std::is_void<Tag>::value>
+KOKKOS_IMPL_FORCEINLINE_FUNCTION std::enable_if_t<std::is_void_v<Tag>>
 _tag_invoke(Functor const& f, Args&&... args) {
   f((Args&&)args...);
 }
 
 template <class Tag, class Functor, class... Args>
-KOKKOS_IMPL_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_void<Tag>::value>
+KOKKOS_IMPL_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_void_v<Tag>>
 _tag_invoke(Functor const& f, Args&&... args) {
   f(Tag{}, (Args&&)args...);
 }
@@ -874,8 +874,8 @@ struct is_array_type<T[]> : std::true_type {
 
 template <typename T>
 using value_type_storage_t =
-    typename std::conditional_t<is_array_type<T>::value, std::decay<T>,
-                                std::add_lvalue_reference<T> >::type;
+    std::conditional_t<is_array_type<T>::value, std::decay_t<T>,
+                       std::add_lvalue_reference_t<T>>;
 
 // ParallelReduce iteration pattern
 // Scalar reductions

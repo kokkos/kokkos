@@ -29,7 +29,16 @@ INTEL-DATA-CENTER-MAX-1100:
   script:
     - sycl-ls
     - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
-    - cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=icpx -DKokkos_ENABLE_SYCL=ON -DKokkos_ARCH_INTEL_PVC=ON -DKokkos_ENABLE_TESTS=ON -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -fp-model=precise"
+    - export CLANG_TIDY_EXE=$(dirname $(which icpx))/compiler/clang-tidy
+    - cmake
+      -B build
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_CLANG_TIDY="${CLANG_TIDY_EXE};-warnings-as-errors=*"
+      -DCMAKE_CXX_COMPILER=icpx
+      -DKokkos_ENABLE_SYCL=ON
+      -DKokkos_ARCH_INTEL_PVC=ON
+      -DKokkos_ENABLE_TESTS=ON
+      -DCMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'
     - cmake --build build -j48
     - cd build
     - ctest -V --output-junit result_pvc1100.xml

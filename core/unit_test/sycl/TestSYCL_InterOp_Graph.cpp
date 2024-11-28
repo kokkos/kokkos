@@ -14,15 +14,19 @@
 //
 //@HEADER
 
-#include <filesystem>
-#include <fstream>
-#include <regex>
-
 #include <TestSYCL_Category.hpp>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
 
 #include <gtest/gtest.h>
+
+#include <fstream>
+#include <regex>
+
+#if !(defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9) && \
+    !(defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 110000)
+#include <filesystem>
+#endif
 
 namespace {
 
