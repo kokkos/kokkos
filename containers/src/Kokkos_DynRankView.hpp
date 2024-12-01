@@ -846,34 +846,20 @@ class DynRankView : private View<DataType*******, Properties...> {
   //----------------------------------------
   // Shared scratch memory constructor
 
-  static inline size_t shmem_size(const size_t arg_N0 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N1 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N2 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N3 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N4 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-                                  const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    return size_t(1) * (arg_N0 != KOKKOS_INVALID_INDEX ? arg_N0 : 1) *
-           (arg_N1 != KOKKOS_INVALID_INDEX ? arg_N1 : 1) *
-           (arg_N2 != KOKKOS_INVALID_INDEX ? arg_N2 : 1) *
-           (arg_N3 != KOKKOS_INVALID_INDEX ? arg_N3 : 1) *
-           (arg_N4 != KOKKOS_INVALID_INDEX ? arg_N4 : 1) *
-           (arg_N5 != KOKKOS_INVALID_INDEX ? arg_N5 : 1) *
-           (arg_N6 != KOKKOS_INVALID_INDEX ? arg_N6 : 1) *
-           (arg_N7 != KOKKOS_INVALID_INDEX ? arg_N7 : 1);
+  // Note: We must pass 7 valid args since view_type is rank 7
+  static inline size_t shmem_size(
+      const size_t arg_N0 = 1, const size_t arg_N1 = 1, const size_t arg_N2 = 1,
+      const size_t arg_N3 = 1, const size_t arg_N4 = 1, const size_t arg_N5 = 1,
+      const size_t arg_N6 = 1, const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
+    return view_type::shmem_size(arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
+                                 arg_N6, arg_N7);
   }
 
   explicit KOKKOS_FUNCTION DynRankView(
       const typename traits::execution_space::scratch_memory_space& arg_space,
       const typename traits::array_layout& arg_layout)
-      : DynRankView(
-            Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
-                reinterpret_cast<typename view_type::pointer_type>(
-                    arg_space.get_shmem(view_type::required_allocation_size(
-                        Impl::DynRankDimTraits<typename traits::specialize>::
-                            createLayout(arg_layout))))),
-            arg_layout) {}
+      : view_type(arg_space, drdtraits::createLayout(arg_layout)),
+        m_rank(drdtraits::computeRank(arg_layout)) {}
 
   explicit KOKKOS_FUNCTION DynRankView(
       const typename traits::execution_space::scratch_memory_space& arg_space,
@@ -886,16 +872,9 @@ class DynRankView : private View<DataType*******, Properties...> {
       const size_t arg_N6 = KOKKOS_INVALID_INDEX,
       const size_t arg_N7 = KOKKOS_INVALID_INDEX)
 
-      : DynRankView(
-            Kokkos::Impl::ViewCtorProp<typename view_type::pointer_type>(
-                reinterpret_cast<typename view_type::pointer_type>(
-                    arg_space.get_shmem(view_type::required_allocation_size(
-                        Impl::DynRankDimTraits<typename traits::specialize>::
-                            createLayout(typename traits::array_layout(
-                                arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
-                                arg_N6, arg_N7)))))),
-            typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                          arg_N4, arg_N5, arg_N6, arg_N7)) {}
+      : DynRankView(arg_space, typename traits::array_layout(
+                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
+                                   arg_N5, arg_N6, arg_N7)) {}
 
   KOKKOS_FUNCTION constexpr auto layout() const {
     switch (rank()) {
@@ -1019,57 +998,6 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const DynRankView<LT, LP...>& lhs,
 //----------------------------------------------------------------------------
 namespace Kokkos {
 namespace Impl {
-
-template <class OutputView, class Enable = void>
-struct DynRankViewFill {
-  using const_value_type = typename OutputView::traits::const_value_type;
-
-  const OutputView output;
-  const_value_type input;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i0) const {
-    const size_t n1 = output.extent(1);
-    const size_t n2 = output.extent(2);
-    const size_t n3 = output.extent(3);
-    const size_t n4 = output.extent(4);
-    const size_t n5 = output.extent(5);
-    const size_t n6 = output.extent(6);
-
-    for (size_t i1 = 0; i1 < n1; ++i1) {
-      for (size_t i2 = 0; i2 < n2; ++i2) {
-        for (size_t i3 = 0; i3 < n3; ++i3) {
-          for (size_t i4 = 0; i4 < n4; ++i4) {
-            for (size_t i5 = 0; i5 < n5; ++i5) {
-              for (size_t i6 = 0; i6 < n6; ++i6) {
-                output.access(i0, i1, i2, i3, i4, i5, i6) = input;
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-
-  DynRankViewFill(const OutputView& arg_out, const_value_type& arg_in)
-      : output(arg_out), input(arg_in) {
-    using execution_space = typename OutputView::execution_space;
-    using Policy          = Kokkos::RangePolicy<execution_space>;
-
-    Kokkos::parallel_for("Kokkos::DynRankViewFill", Policy(0, output.extent(0)),
-                         *this);
-  }
-};
-
-template <class OutputView>
-struct DynRankViewFill<OutputView, std::enable_if_t<OutputView::rank == 0>> {
-  DynRankViewFill(const OutputView& dst,
-                  const typename OutputView::const_value_type& src) {
-    Kokkos::Impl::DeepCopy<typename OutputView::memory_space,
-                           Kokkos::HostSpace>(
-        dst.data(), &src, sizeof(typename OutputView::const_value_type));
-  }
-};
 
 template <class OutputView, class InputView,
           class ExecSpace = typename OutputView::execution_space>

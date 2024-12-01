@@ -199,7 +199,7 @@ class ParallelScanSYCLBase {
         value_type local_value;
         reducer.init(&local_value);
         if (global_id < size) {
-          if constexpr (std::is_void<WorkTag>::value)
+          if constexpr (std::is_void_v<WorkTag>)
             functor(global_id + begin, local_value, false);
           else
             functor(WorkTag(), global_id + begin, local_value, false);
@@ -360,7 +360,7 @@ class ParallelScanSYCLBase {
 
           reducer.join(&update, &group_results[item.get_group_linear_id()]);
 
-          if constexpr (std::is_void<WorkTag>::value)
+          if constexpr (std::is_void_v<WorkTag>)
             functor(global_id + begin, update, true);
           else
             functor(WorkTag(), global_id + begin, update, true);

@@ -95,12 +95,6 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
 
 struct HIPGraphNodeAggregateKernel {
   using graph_kernel = HIPGraphNodeAggregateKernel;
-
-  // Aggregates don't need a policy, but for the purposes of checking the static
-  // assertions about graph kernels,
-  struct Policy {
-    using is_graph_kernel = std::true_type;
-  };
 };
 
 template <typename KernelType,

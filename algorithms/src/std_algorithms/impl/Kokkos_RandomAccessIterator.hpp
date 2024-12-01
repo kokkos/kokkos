@@ -137,6 +137,9 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
       return *(m_data + n);
     else
       return *(m_data + n * m_stride);
+#ifdef KOKKOS_COMPILER_INTEL
+    __builtin_unreachable();
+#endif
   }
 
   KOKKOS_FUNCTION
@@ -164,6 +167,10 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
     return it;
   }
 
+  friend iterator_type operator+(difference_type n, iterator_type other) {
+    return other + n;
+  }
+
   KOKKOS_FUNCTION
   iterator_type operator-(difference_type n) const {
     auto it = *this;
@@ -177,6 +184,9 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
       return m_data - it.m_data;
     else
       return (m_data - it.m_data) / m_stride;
+#ifdef KOKKOS_COMPILER_INTEL
+    __builtin_unreachable();
+#endif
   }
 
   KOKKOS_FUNCTION

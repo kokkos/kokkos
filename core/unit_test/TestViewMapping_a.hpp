@@ -1108,11 +1108,10 @@ struct TestViewMapOperator {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_t i, int64_t& error_count) const {
-    if (std::is_same<typename ViewType::array_layout,
-                     Kokkos::LayoutLeft>::value) {
+    if (std::is_same_v<typename ViewType::array_layout, Kokkos::LayoutLeft>) {
       test_left(i, error_count);
-    } else if (std::is_same<typename ViewType::array_layout,
-                            Kokkos::LayoutRight>::value) {
+    } else if (std::is_same_v<typename ViewType::array_layout,
+                              Kokkos::LayoutRight>) {
       test_right(i, error_count);
     }
   }

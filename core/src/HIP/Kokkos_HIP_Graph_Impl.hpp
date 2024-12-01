@@ -55,7 +55,9 @@ class GraphImpl<Kokkos::HIP> {
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr);
 
   template <class NodeImpl>
-  void add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
 
   template <class NodeImplPtr, class PredecessorRef>
   void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref);
@@ -117,12 +119,12 @@ inline void GraphImpl<Kokkos::HIP>::add_node(
                            /* numDependencies = */ 0));
 }
 
-// Requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
-// Also requires that the kernel has the graph node tag in its policy
 template <class NodeImpl>
-inline void GraphImpl<Kokkos::HIP>::add_node(
+inline std::enable_if_t<
+    Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
+GraphImpl<Kokkos::HIP>::add_node(
     std::shared_ptr<NodeImpl> const& arg_node_ptr) {
-  static_assert(NodeImpl::kernel_type::Policy::is_graph_kernel::value);
+  static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
   KOKKOS_EXPECTS(arg_node_ptr);
   // The Kernel launch from the execute() method has been shimmed to insert
   // the node into the graph

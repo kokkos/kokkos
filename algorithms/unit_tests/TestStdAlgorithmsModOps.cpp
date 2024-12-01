@@ -70,7 +70,7 @@ struct StdAlgoModSeqOpsTestMove {
   void operator()(const int index) const {
     typename ViewType::value_type a{11};
     using move_t = decltype(std::move(a));
-    static_assert(std::is_rvalue_reference<move_t>::value);
+    static_assert(std::is_rvalue_reference_v<move_t>);
     m_view(index) = std::move(a);
   }
 

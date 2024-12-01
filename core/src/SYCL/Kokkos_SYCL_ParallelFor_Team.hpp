@@ -76,7 +76,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
             global_scratch_ptr + item.get_group(1) * scratch_size[1],
             scratch_size[1], item, item.get_group_linear_id(),
             item.get_group_range(1));
-        if constexpr (std::is_void<work_tag>::value)
+        if constexpr (std::is_void_v<work_tag>)
           functor_wrapper.get_functor()(team_member);
         else
           functor_wrapper.get_functor()(work_tag(), team_member);
