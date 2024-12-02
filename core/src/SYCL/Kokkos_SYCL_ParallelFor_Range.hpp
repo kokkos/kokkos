@@ -95,7 +95,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 #endif
 
 #ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
-      auto get_properties = [&]() {
+      auto get_properties = []() {
         if constexpr (Policy::subgroup_size > 0)
           return sycl::ext::oneapi::experimental::properties{
               sycl::ext::oneapi::experimental::sub_group_size<

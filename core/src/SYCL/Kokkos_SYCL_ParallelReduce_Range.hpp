@@ -322,8 +322,8 @@ class Kokkos::Impl::ParallelReduce<
         auto reduction_lambda = reduction_lambda_factory(
             local_mem, num_teams_done, results_ptr, values_per_thread);
 
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230100
-        auto get_properties = [&]() {
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+        auto get_properties = []() {
           if constexpr (Policy::subgroup_size > 0)
             return sycl::ext::oneapi::experimental::properties{
                 sycl::ext::oneapi::experimental::sub_group_size<
