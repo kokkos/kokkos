@@ -13,7 +13,7 @@ if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4 OR Kokkos_ENABLE_DEPRECATION_WARNINGS)
   list(REMOVE_ITEM KOKKOS_CORE_HEADERS "Kokkos_Future.hpp" "Kokkos_TaskScheduler.hpp")
 endif()
 
-# Remove MemoryPool from the list as it uses execution spaces
+# FIXME circular dependencies and execution space type not complete
 list(REMOVE_ITEM KOKKOS_CORE_HEADERS "Kokkos_MemoryPool.hpp")
 
 foreach(_header ${KOKKOS_CORE_HEADERS} ${KOKKOS_CONTAINERS_HEADERS} ${KOKKOS_ALGORITHMS_HEADERS})
