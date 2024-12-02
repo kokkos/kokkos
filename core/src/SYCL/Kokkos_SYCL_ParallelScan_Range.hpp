@@ -258,17 +258,6 @@ class ParallelScanSYCLBase {
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
-#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
-    auto get_properties = []() {
-      if constexpr (Policy::subgroup_size > 0)
-        return sycl::ext::oneapi::experimental::properties{
-            sycl::ext::oneapi::experimental::sub_group_size<
-                Policy::subgroup_size>};
-      else
-        return sycl::ext::oneapi::experimental::properties{};
-    };
-#endif
-
     auto perform_work_group_scans = q.submit([&](sycl::handler& cgh) {
       sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
@@ -326,13 +315,11 @@ class ParallelScanSYCLBase {
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
 
+      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
 #ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
-      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-                       get_properties(), scan_lambda);
-#else
-      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-                       scan_lambda);
+                       get_sycl_launch_properties<Policy>(),
 #endif
+                       scan_lambda);
     });
 
     // Write results to global memory
@@ -369,13 +356,11 @@ class ParallelScanSYCLBase {
         }
       };
 
+      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
 #ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
-      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-                       get_properties(), lambda);
-#else
-      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-                       lambda);
+                       get_sycl_launch_properties<Policy>(),
 #endif
+                       lambda);
     });
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(
