@@ -204,7 +204,9 @@ constexpr bool is_type_v<T, decltype(void(sizeof(T)))> = true;
 
 template <class SIMDType, size_t... Args>
 SIMDType zero_init(std::index_sequence<Args...>) {
-  KOKKOS_IF_ON_HOST((SIMDType a; ((a[Args] = 0) && ...); return a;))
+  SIMDType a(0);
+  KOKKOS_IF_ON_HOST((((a[Args] = 0) && ...);))
+  return a;
 }
 
 template <class SIMDType>
