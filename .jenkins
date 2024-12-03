@@ -340,7 +340,7 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-6.0') {
+                stage('HIP-ROCm-6.0-amdclang') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
@@ -358,6 +358,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/amdclang++ \
                                 -DCMAKE_CXX_CLANG_TIDY="/opt/rocm/llvm/bin/clang-tidy;-warnings-as-errors=*" \
+                                -DCMAKE_PREFIX_PATH=/opt/rocm/lib \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
