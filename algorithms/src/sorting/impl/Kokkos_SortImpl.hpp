@@ -221,8 +221,10 @@ void sort_onedpl(const Kokkos::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort currently only supports rank-1 Views.");
 #else
@@ -248,8 +250,10 @@ void sort_onedpl(const Kokkos::SYCL& space,
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
 
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
   oneapi::dpl::sort(policy, ::Kokkos::Experimental::begin(view),
                     ::Kokkos::Experimental::end(view),
                     std::forward<MaybeComparator>(maybeComparator)...);
@@ -336,8 +340,10 @@ void sort_device_view_without_comparator(
       "sort_device_view_without_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
   sort_onedpl(exec, view);
 #else
   if (view.stride(0) == 1) {
@@ -396,8 +402,10 @@ void sort_device_view_with_comparator(
       "sort_device_view_with_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
   sort_onedpl(exec, view, comparator);
 #else
   if (view.stride(0) == 1) {

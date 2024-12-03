@@ -142,8 +142,10 @@ void sort_by_key_rocthrust(
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
 template <class Layout>
 inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> = true;
 #else
@@ -162,8 +164,10 @@ void sort_by_key_onedpl(
     MaybeComparator&&... maybeComparator) {
   auto queue  = exec.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
   oneapi::dpl::sort_by_key(policy, ::Kokkos::Experimental::begin(keys),
                            ::Kokkos::Experimental::end(keys),
                            ::Kokkos::Experimental::begin(values),
@@ -351,8 +355,10 @@ void sort_by_key_device_view_without_comparator(
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
   sort_by_key_onedpl(exec, keys, values);
 #else
   if (keys.stride(0) == 1 && values.stride(0) == 1)
@@ -416,8 +422,10 @@ void sort_by_key_device_view_with_comparator(
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
 #ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
-#if ONEDPL_VERSION_MAJOR > 2022 || \
-    (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7)
+#if ONEDPL_VERSION_MAJOR > 2022 ||   \
+    (ONEDPL_VERSION_MAJOR == 2022 && \
+     (ONEDPL_VERSION_MINOR > 7 ||    \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
   sort_by_key_onedpl(exec, keys, values, comparator);
 #else
   if (keys.stride(0) == 1 && values.stride(0) == 1)
