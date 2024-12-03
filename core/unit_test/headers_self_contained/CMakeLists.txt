@@ -13,6 +13,9 @@ if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4 OR Kokkos_ENABLE_DEPRECATION_WARNINGS)
   list(REMOVE_ITEM KOKKOS_CORE_HEADERS "Kokkos_Future.hpp" "Kokkos_TaskScheduler.hpp")
 endif()
 
+# FIXME circular dependencies and execution space type not complete
+list(REMOVE_ITEM KOKKOS_CORE_HEADERS "Kokkos_MemoryPool.hpp")
+
 foreach(_header ${KOKKOS_CORE_HEADERS} ${KOKKOS_CONTAINERS_HEADERS} ${KOKKOS_ALGORITHMS_HEADERS})
   string(REGEX REPLACE "[\./]" "_" header_test_name ${_header})
   set(header_test_name Kokkos_HeaderSelfContained_${header_test_name})

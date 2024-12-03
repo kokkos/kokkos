@@ -167,7 +167,8 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
-          sb_state_array, m_sb_state_array, alloc_size);
+          Kokkos::DefaultHostExecutionSpace{}, sb_state_array, m_sb_state_array,
+          alloc_size);
       Kokkos::fence(
           "MemoryPool::get_usage_statistics(): fence after copying state "
           "array to HostSpace");
@@ -219,7 +220,8 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
-          sb_state_array, m_sb_state_array, alloc_size);
+          Kokkos::DefaultHostExecutionSpace{}, sb_state_array, m_sb_state_array,
+          alloc_size);
       Kokkos::fence(
           "MemoryPool::print_state(): fence after copying state array to "
           "HostSpace");
@@ -431,7 +433,8 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<base_memory_space, Kokkos::HostSpace>(
-          m_sb_state_array, sb_state_array, header_size);
+          typename base_memory_space::execution_space{}, m_sb_state_array,
+          sb_state_array, header_size);
       Kokkos::fence(
           "MemoryPool::MemoryPool(): fence after copying state array from "
           "HostSpace");
