@@ -615,8 +615,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
         impl_report_host_sync();
       }
     }
-    if constexpr (std::is_same<typename t_host::memory_space,
-                               typename t_dev::memory_space>::value) {
+    if constexpr (std::is_same_v<typename t_host::memory_space,
+                                 typename t_dev::memory_space>) {
       typename t_dev::execution_space().fence(
           "Kokkos::DualView<>::sync: fence after syncing DualView");
       typename t_host::execution_space().fence(
@@ -687,8 +687,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
   // deliberately passing args by cref as they're used multiple times
   template <typename... Args>
   void sync_host_impl(Args const&... args) {
-    if (!std::is_same<typename traits::data_type,
-                      typename traits::non_const_data_type>::value)
+    if (!std::is_same_v<typename traits::data_type,
+                        typename traits::non_const_data_type>)
       Impl::throw_runtime_exception(
           "Calling sync_host on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;
@@ -718,8 +718,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
   // deliberately passing args by cref as they're used multiple times
   template <typename... Args>
   void sync_device_impl(Args const&... args) {
-    if (!std::is_same<typename traits::data_type,
-                      typename traits::non_const_data_type>::value)
+    if (!std::is_same_v<typename traits::data_type,
+                        typename traits::non_const_data_type>)
       Impl::throw_runtime_exception(
           "Calling sync_device on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;

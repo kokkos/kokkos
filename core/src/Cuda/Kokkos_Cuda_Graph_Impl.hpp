@@ -121,10 +121,11 @@ struct GraphImpl<Kokkos::Cuda> {
   }
 
   template <class NodeImpl>
-  //  requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
-  //  Also requires that the kernel has the graph node tag in its policy
-  void add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
-    static_assert(NodeImpl::kernel_type::Policy::is_graph_kernel::value);
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+    static_assert(
+        Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
     KOKKOS_EXPECTS(bool(arg_node_ptr));
     // The Kernel launch from the execute() method has been shimmed to insert
     // the node into the graph

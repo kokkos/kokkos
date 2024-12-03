@@ -802,7 +802,7 @@ class TestTripleNestedReduce {
 
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
-    if (!std::is_same<execution_space, Kokkos::Experimental::HPX>::value) {
+    if (!std::is_same_v<execution_space, Kokkos::Experimental::HPX>) {
       team_size = 1;
     }
 #endif
@@ -1020,14 +1020,14 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
 #if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
 #elif defined(KOKKOS_ENABLE_SYCL)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
 #endif
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 16);
   }
 #if defined(KOKKOS_ENABLE_SYCL)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
 #endif
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);

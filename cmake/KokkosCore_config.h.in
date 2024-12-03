@@ -116,6 +116,7 @@
 #cmakedefine KOKKOS_ARCH_AMD_ZEN
 #cmakedefine KOKKOS_ARCH_AMD_ZEN2
 #cmakedefine KOKKOS_ARCH_AMD_ZEN3
+#cmakedefine KOKKOS_ARCH_AMD_ZEN4
 #cmakedefine KOKKOS_ARCH_AMD_GFX906
 #cmakedefine KOKKOS_ARCH_AMD_GFX908
 #cmakedefine KOKKOS_ARCH_AMD_GFX90A
