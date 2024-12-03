@@ -95,9 +95,9 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipHostMalloc(reinterpret_cast<void**>(&Impl::HIPInternal::constantMemHostStaging),
-                    Impl::HIPTraits::ConstantMemoryUsage));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipHostMalloc(
+      reinterpret_cast<void**>(&Impl::HIPInternal::constantMemHostStaging),
+      Impl::HIPTraits::ConstantMemoryUsage));
 
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipEventCreate(&Impl::HIPInternal::constantMemReusable));
