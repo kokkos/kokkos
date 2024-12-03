@@ -4,7 +4,7 @@ find_package(Git QUIET)
 
 set(CURRENT_LIST_DIR ${CMAKE_CURRENT_LIST_DIR})
 set(pre_configure_dir ${CMAKE_CURRENT_LIST_DIR})
-set(post_configure_dir ${CMAKE_BINARY_DIR}/generated)
+set(post_configure_dir ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
 set(pre_configure_file ${pre_configure_dir}/Kokkos_Version_Info.cpp.in)
 set(post_configure_file ${post_configure_dir}/Kokkos_Version_Info.cpp)
@@ -105,7 +105,7 @@ function(check_git_setup)
                            ${CURRENT_LIST_DIR}/build_env_info.cmake BYPRODUCTS ${post_configure_file}
   )
 
-  add_library(impl_git_version ${CMAKE_BINARY_DIR}/generated/Kokkos_Version_Info.cpp)
+  add_library(impl_git_version ${CMAKE_CURRENT_BINARY_DIR}/generated/Kokkos_Version_Info.cpp)
   target_include_directories(impl_git_version PUBLIC ${CMAKE_BINARY_DIR}/generated)
   target_compile_features(impl_git_version PRIVATE cxx_raw_string_literals)
   add_dependencies(impl_git_version AlwaysCheckGit)
