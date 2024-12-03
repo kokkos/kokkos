@@ -340,6 +340,41 @@ pipeline {
                         }
                     }
                 }
+                stage('HIP-ROCm-6.0') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.hipcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.0-complete@sha256:29582288ec330d1c915091eb2be7857327fe71a73a174c4173b0bb4794dce7c8'
+                            label 'rocm-docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DBUILD_SHARED_LIBS=ON \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/amdclang++ \
+                                -DCMAKE_CXX_CLANG_TIDY="/opt/rocm/llvm/bin/clang-tidy;-warnings-as-errors=*" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_HIP=ON \
+                              .. && \
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }
 /*
                 stage('OPENMPTARGET-ROCm-5.2') {
                     agent {
