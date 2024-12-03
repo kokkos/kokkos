@@ -24,7 +24,8 @@
 #include <Kokkos_Macros.hpp>
 
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && \
+    !defined(KOKKOS_IMPL_DO_NOT_WARN_INCLUDE_STATIC_CRS_GRAPH)
 namespace {
 [[deprecated("Deprecated <Kokkos_StaticCrsGraph.hpp> header is included")]] int
 emit_warning_kokkos_static_crs_graph_deprecated() {
