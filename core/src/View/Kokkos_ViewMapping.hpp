@@ -2506,11 +2506,7 @@ namespace Kokkos {
 namespace Impl {
 
 template <class, class...>
-class ViewMapping /* {
-  public:
-   enum : bool { is_assignable_data_type = false };
-   enum : bool { is_assignable = false };
--}*/;
+class ViewMapping;
 
 //----------------------------------------------------------------------------
 /** \brief  View mapping for non-specialized data type and standard layout */

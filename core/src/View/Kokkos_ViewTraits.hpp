@@ -77,14 +77,6 @@ template <class DataType, class ArrayLayout,
               typename ViewArrayAnalysis<DataType>::non_const_value_type>
 struct ViewDataAnalysis;
 
-/*
-template <class, class...>
-class ViewMapping {
- public:
-  enum : bool { is_assignable_data_type = false };
-  enum : bool { is_assignable = false };
-};*/
-
 template <typename IntType>
 constexpr KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
     const IntType i0, const IntType i1, const IntType i2, const IntType i3,

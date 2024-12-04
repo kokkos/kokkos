@@ -156,8 +156,13 @@ class MemoryPool {
     size_t reserved_bytes;   ///<  Unallocated bytes in assigned superblocks
   };
 
+  // This function is templated to avoid needing a full definition of
+  // DefaultHostExecutionSpace at class instantiation
+  template <typename ExecutionSpace = Kokkos::DefaultHostExecutionSpace>
   void get_usage_statistics(usage_statistics &stats) const {
     Kokkos::HostSpace host;
+    static_assert(
+        std::is_same_v<ExecutionSpace, Kokkos::DefaultHostExecutionSpace>);
 
     const size_t alloc_size = m_hint_offset * sizeof(uint32_t);
 
@@ -166,8 +171,7 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
-          Kokkos::DefaultHostExecutionSpace{}, sb_state_array, m_sb_state_array,
-          alloc_size);
+          ExecutionSpace{}, sb_state_array, m_sb_state_array, alloc_size);
       Kokkos::fence(
           "MemoryPool::get_usage_statistics(): fence after copying state "
           "array to HostSpace");
@@ -209,8 +213,13 @@ class MemoryPool {
     }
   }
 
+  // This function is templated to avoid needing a full definition of
+  // DefaultHostExecutionSpace at class instantiation
+  template <typename ExecutionSpace = Kokkos::DefaultHostExecutionSpace>
   void print_state(std::ostream &s) const {
     Kokkos::HostSpace host;
+    static_assert(
+        std::is_same_v<ExecutionSpace, Kokkos::DefaultHostExecutionSpace>);
 
     const size_t alloc_size = m_hint_offset * sizeof(uint32_t);
 
@@ -219,8 +228,7 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
-          Kokkos::DefaultHostExecutionSpace{}, sb_state_array, m_sb_state_array,
-          alloc_size);
+          ExecutionSpace{}, sb_state_array, m_sb_state_array, alloc_size);
       Kokkos::fence(
           "MemoryPool::print_state(): fence after copying state array to "
           "HostSpace");
