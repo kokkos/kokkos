@@ -59,13 +59,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>, HIP> {
   size_t m_num_scratch_locks;
 
   template <typename TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_team(
       const member_type& member) const {
     m_functor(member);
   }
 
   template <typename TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_team(
       const member_type& member) const {
     m_functor(TagType(), member);
   }
