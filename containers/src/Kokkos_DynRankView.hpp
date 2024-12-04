@@ -848,6 +848,24 @@ class DynRankView : private View<DataType*******, Properties...> {
   // rank deduction can properly take place
   // We need two variants to avoid calling host function from host device
   // function warnings
+
+  // With NVCC 11.0 and 11.2 (and others likely) using GCC 8.5 a DynRankView
+  // test fails at runtime where construction from layout drops some extents.
+  // The bug goes away with O1.
+  // FIXME: NVCC GCC8 optimization bug DynRankView
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_GNU)
+#if KOKKOS_COMPILER_GNU < 900
+#define KOKKOS_IMPL_SKIP_OPTIMIZATION
+#endif
+#endif
+
+#ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
+// Also need to suppress warning about unrecognized GCC optimize pragma
+#pragma push
+#pragma diag_suppress = unrecognized_gcc_pragma
+#pragma GCC push_options
+#pragma GCC optimize("O1")
+#endif
   template <class... P>
   explicit KOKKOS_FUNCTION DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
@@ -867,6 +885,10 @@ class DynRankView : private View<DataType*******, Properties...> {
       : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
         m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {}
+#ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
+#pragma GCC pop_options
+#pragma pop
+#endif
 
   //----------------------------------------
   // Constructor(s)
