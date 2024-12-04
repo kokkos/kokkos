@@ -791,7 +791,8 @@ inline void deep_copy(const Kokkos::Experimental::DynamicView<T, DP...>& dst,
                                  dst_memory_space>::accessible;
 
   if (DstExecCanAccessSrc || SrcExecCanAccessDst)
-    Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(dst, src);
+    Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(
+        dst, src);
   else
     src.impl_get_chunks().deep_copy_to(dst_execution_space{},
                                        dst.impl_get_chunks());
@@ -819,7 +820,8 @@ inline void deep_copy(const ExecutionSpace& exec,
 
   // FIXME use execution space
   if (DstExecCanAccessSrc || SrcExecCanAccessDst)
-    Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(dst, src);
+    Kokkos::Impl::ViewRemap</* SequentialHostInit */ false, dst_type, src_type>(
+        dst, src);
   else
     src.impl_get_chunks().deep_copy_to(exec, dst.impl_get_chunks());
 }
