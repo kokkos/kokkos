@@ -19,7 +19,7 @@
 
 namespace Test {
 
-// On MI300a with ROCM <= 6.2.0, hipMemsetAsync was failing with an error when
+// On MI300a with ROCM <= 6.2.1, hipMemsetAsync was failing with an error when
 // called on host-allocated buffers. The fix was in PR 7380 to use a
 // parallel_for to zero memory
 TEST(hip, unified_memory_zero_memset) {
@@ -30,7 +30,7 @@ TEST(hip, unified_memory_zero_memset) {
 
   constexpr size_t N = static_cast<size_t>(1024 * 1024);  // size doesn't matter
   std::vector<int> v(N, 1);  // initialize to non-zero
-  Kokkos::View<int*, Kokkos::HIPSpace> a(v.data(), N);
+  Kokkos::View<int*, Kokkos::SharedSpace> a(v.data(), N);
 
   // zero with deep_copy (this is where the error occurs)
   Kokkos::deep_copy(a, 0);
@@ -42,3 +42,4 @@ TEST(hip, unified_memory_zero_memset) {
   EXPECT_EQ(err, 0);
 }
 }  // namespace Test
+
