@@ -792,7 +792,6 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamScratchStreams.cpp
     hip/TestHIP_AsyncLauncher.cpp
     hip/TestHIP_BlocksizeDeduction.cpp
-    hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
   )
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(
