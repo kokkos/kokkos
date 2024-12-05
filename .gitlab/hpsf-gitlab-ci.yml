@@ -99,7 +99,6 @@ AMD-MI300A:
   script:
     - apt-get update && apt-get install -y cmake git
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
-    - export GTEST_FILTER=-hip.unified_memory_zero_memset
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=hipcc"
