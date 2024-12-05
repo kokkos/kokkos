@@ -20,7 +20,7 @@ Checks: >
   -bugprone-suspicious-memory-comparison,
   -bugprone-suspicious-string-compare,
   -bugprone-switch-missing-default-case,
-  -bugprone-unchecked-optional-access
+  -bugprone-unchecked-optional-access,
   -bugprone-unhandled-self-assignment,
   -bugprone-unused-raii,
   -bugprone-use-after-move,
