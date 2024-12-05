@@ -55,7 +55,6 @@ AMD-MI300A:
   image: rocm/dev-ubuntu-24.04:6.2.4-complete
   script:
     - sudo apt-get update && sudo apt-get install -y cmake
-    - export GTEST_FILTER=-hip.unified_memory_zero_memset
     - cmake
       -B build
       -DCMAKE_BUILD_TYPE=Release
