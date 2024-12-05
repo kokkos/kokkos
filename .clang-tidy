@@ -1,4 +1,5 @@
-Checks: '-*,
+Checks: >
+  -*,
   bugprone-*,
   -bugprone-assignment-in-if-condition,
   -bugprone-branch-clone,
@@ -28,6 +29,6 @@ Checks: '-*,
   modernize-use-nullptr,
   modernize-use-using,
   kokkos-*,
-'
+
 FormatStyle: file
 HeaderFilterRegex: '(algorithms|benchmarks|containers|core|example|simd).*\.hpp'
