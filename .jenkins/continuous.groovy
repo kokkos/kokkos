@@ -62,7 +62,7 @@ pipeline {
                                 -DKokkos_ENABLE_LIBQUADMATH=ON \
                                 -DKokkos_ENABLE_SERIAL=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
+                              make -j4 && ctest --no-compress-output -T Test --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                     post {
                         always {
