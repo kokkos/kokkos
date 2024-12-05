@@ -66,6 +66,12 @@ TEST(TEST_CATEGORY, view_bad_alloc) {
   }
 #endif
 
+#if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
+  if (std::is_same_v<ExecutionSpace, Kokkos::Cuda>) {
+    GTEST_SKIP() << "MSVC/CUDA segfaults when allocating too much memory";
+  }
+#endif
+
   test_view_bad_alloc<MemorySpace>();
 
   constexpr bool execution_space_is_device =
