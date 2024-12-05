@@ -587,11 +587,13 @@ struct Random_XorShift1024_State<false> {
                                             int state_idx)
       : state_(&v(state_idx, 0)), stride_(v.stride_1()) {}
 
+  // NOLINTBEGIN(bugprone-implicit-widening-of-multiplication-result)
   KOKKOS_FUNCTION
   uint64_t operator[](const int i) const { return state_[i * stride_]; }
 
   KOKKOS_FUNCTION
   uint64_t& operator[](const int i) { return state_[i * stride_]; }
+  // NOLINTEND(bugprone-implicit-widening-of-multiplication-result)
 };
 
 template <class ExecutionSpace>

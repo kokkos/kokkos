@@ -335,7 +335,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 sizeof(value_type) * std::max(value_count, 1u) * init_size));
 
         size_t max_work_groups =
-            2 *
+            static_cast<size_t>(2) *
             q.get_device().get_info<sycl::info::device::max_compute_units>();
         int values_per_thread = 1;
         size_t n_wgroups      = m_league_size;

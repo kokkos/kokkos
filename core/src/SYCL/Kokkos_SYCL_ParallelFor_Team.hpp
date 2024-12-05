@@ -106,7 +106,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 #endif
       cgh.parallel_for(
           sycl::nd_range<2>(
-              sycl::range<2>(m_team_size, m_league_size * final_vector_size),
+              sycl::range<2>(m_team_size, static_cast<size_t>(m_league_size) *
+                                              final_vector_size),
               sycl::range<2>(m_team_size, final_vector_size)),
           lambda);
     };

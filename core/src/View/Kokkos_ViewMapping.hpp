@@ -1027,8 +1027,8 @@ struct ViewOffset<
     KOKKOS_INLINE_FUNCTION
     static constexpr size_t stride(size_t const N) {
       return ((align != 0) &&
-              ((static_cast<int>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
-                static_cast<int>(align)) < N) &&
+              ((static_cast<size_t>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
+                align) < N) &&
               ((N % div_ok) != 0))
                  ? N + align - (N % div_ok)
                  : N;
@@ -1713,8 +1713,8 @@ struct ViewOffset<
     KOKKOS_INLINE_FUNCTION
     static constexpr size_t stride(size_t const N) {
       return ((align != 0) &&
-              ((static_cast<int>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
-                static_cast<int>(align)) < N) &&
+              ((static_cast<size_t>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
+                align) < N) &&
               ((N % div_ok) != 0))
                  ? N + align - (N % div_ok)
                  : N;

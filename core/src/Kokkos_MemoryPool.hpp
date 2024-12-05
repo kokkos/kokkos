@@ -29,6 +29,7 @@ static_assert(false,
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
+// NOLINTBEGIN(bugprone-implicit-widening-of-multiplication-result)
 namespace Kokkos {
 namespace Impl {
 /* Report violation of size constraints:
@@ -794,5 +795,6 @@ class MemoryPool {
 };
 
 }  // namespace Kokkos
+   // NOLINTEND(bugprone-implicit-widening-of-multiplication-result)
 
 #endif /* #ifndef KOKKOS_MEMORYPOOL_HPP */

@@ -164,7 +164,8 @@ class TeamPolicyInternal<HIP, Properties...>
         (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t);
     // arbitrarily setting level 1 scratch limit to 20MB, for a
     // MI250 that would give us about 4.4GB for 2 teams per CU
-    constexpr size_t max_l1_scratch_size = 20 * 1024 * 1024;
+    constexpr size_t max_l1_scratch_size =
+        static_cast<size_t>(20 * 1024 * 1024);
 
     size_t max_shmem = HIP().hip_device_prop().sharedMemPerBlock;
     return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team
@@ -388,15 +389,16 @@ __device__ inline int64_t hip_get_scratch_index(HIP::size_type league_size,
   if (threadIdx.x == 0 && threadIdx.y == 0) {
     int64_t const wraparound_len =
         Kokkos::min(int64_t(league_size),
-                    int64_t(num_scratch_locks) / (blockDim.x * blockDim.y));
+                    int64_t(num_scratch_locks) /
+                        static_cast<int64_t>(blockDim.x * blockDim.y));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
-    threadid *= blockDim.x * blockDim.y;
+    threadid *= static_cast<int64_t>(blockDim.x * blockDim.y);
     int done = 0;
     while (!done) {
       done = (0 == atomicCAS(&scratch_locks[threadid], 0, 1));
       if (!done) {
-        threadid += blockDim.x * blockDim.y;
-        if (int64_t(threadid + blockDim.x * blockDim.y) >=
+        threadid += static_cast<int64_t>(blockDim.x * blockDim.y);
+        if (int64_t(threadid + static_cast<int64_t>(blockDim.x * blockDim.y)) >=
             wraparound_len * blockDim.x * blockDim.y)
           threadid = 0;
       }

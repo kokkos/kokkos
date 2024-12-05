@@ -295,7 +295,7 @@ class Kokkos::Impl::ParallelReduce<
         // maximum number of work groups, also see
         // https://github.com/intel/llvm/blob/756ba2616111235bba073e481b7f1c8004b34ee6/sycl/source/detail/reduction.cpp#L51-L62
         size_t max_work_groups =
-            2 *
+            static_cast<size_t>(2) *
             q.get_device().get_info<sycl::info::device::max_compute_units>();
         int values_per_thread = 1;
         size_t n_wgroups      = (size + wgroup_size - 1) / wgroup_size;
