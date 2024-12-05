@@ -1,8 +1,8 @@
-name: Weekly CEA builds
+name: Nightly CEA builds
 
 on:
   schedule:
-    - cron: "0 2 * * 6" # every Saturday at 2am UTC
+    - cron: "0 2 * * 1-5" # every weekday at 2am UTC
   workflow_dispatch:
 
 jobs:
