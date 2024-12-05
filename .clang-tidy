@@ -1,3 +1,10 @@
-Checks: '-*,kokkos-*,modernize-type-traits,modernize-use-using,modernize-use-nullptr,cppcoreguidelines-pro-type-cstyle-cast,bugprone-implicit-widening-of-multiplication-result'
+Checks: '-*,
+  bugprone-implicit-widening-of-multiplication-result,
+  cppcoreguidelines-pro-type-cstyle-cast,
+  modernize-type-traits,
+  modernize-use-nullptr,
+  modernize-use-using,
+  kokkos-*,
+'
 FormatStyle: file
 HeaderFilterRegex: '(algorithms|benchmarks|containers|core|example|simd).*\.hpp'
