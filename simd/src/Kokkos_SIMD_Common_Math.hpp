@@ -38,8 +38,10 @@ class const_where_expression;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <typename T, typename Abi>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT(
+    "hmin has been deprecated. Please use reduce_min instead")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+    hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   auto const& v = x.impl_get_value();
   auto const& m = x.impl_get_mask();
   auto result   = Kokkos::reduction_identity<T>::min();
@@ -50,8 +52,10 @@ hmin(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT(
+    "hmax has been deprecated. Please use reduce_max instead")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+    hmax(const_where_expression<simd_mask<T, Abi>, simd<T, Abi>> const& x) {
   auto const& v = x.impl_get_value();
   auto const& m = x.impl_get_mask();
   auto result   = Kokkos::reduction_identity<T>::max();
