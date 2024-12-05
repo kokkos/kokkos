@@ -306,3 +306,49 @@ FUNCTION(kokkos_compilation)
         ENDFOREACH()
     ENDIF()
 ENDFUNCTION()
+
+# this macro enables the cmake language used by  Kokkos:
+#
+#
+MACRO(kokkos_enable_language)
+  enable_language(${Kokkos_COMPILE_LANGUAGE})
+ENDMACRO()
+
+# this function is provided to easily set which files use the same programming language as Kokkos:
+#
+#       SOURCE      --> specific source files
+#
+FUNCTION(kokkos_set_source_language LANG_SOURCE)
+
+      IF(NOT DEFINED Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+        MESSAGE(FATAL_ERROR "Using language features requires Kokkos to be built with Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON")
+      ENDIF()
+      
+      IF(EXISTS ${LANG_SOURCE})
+        MESSAGE(DEBUG "KOKKOS: Setting language to ${Kokkos_COMPILE_LANGUAGE} for SOURCE ${LANG_SOURCE}")
+        SET_PROPERTY(SOURCE ${LANG_SOURCE} PROPERTY LANGUAGE ${Kokkos_COMPILE_LANGUAGE})
+      ELSE()
+        MESSAGE(WARNING "KOKKOS: SOURCE `${LANG_SOURCE}` could not be found - Source language could not be set")
+      ENDIF()
+
+ENDFUNCTION()
+
+# this function is provided to easily set the language specific properties of a target to the ones exported by kokkos:
+#
+#       TARGET      --> specific TARGET
+#
+FUNCTION(kokkos_set_target_properties PROP_TARGET)
+
+      IF(NOT DEFINED Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+        MESSAGE(FATAL_ERROR "Using language features requires Kokkos to be built with Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON")
+      ENDIF()
+
+      IF(TARGET ${PROP_TARGET})
+        MESSAGE(DEBUG "KOKKOS: Setting architecture to ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES} and CMAKE_CXX_STANDARD to ${Kokkos_CXX_STANDARD} for TARGET ${PROP_TARGET}")
+        SET_PROPERTY(TARGET ${PROP_TARGET} PROPERTY ${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES ${Kokkos_${Kokkos_COMPILE_LANGUAGE}_ARCHITECTURES})
+        SET_PROPERTY(TARGET ${PROP_TARGET} PROPERTY ${Kokkos_COMPILE_LANGUAGE}_STANDARD ${Kokkos_CXX_STANDARD})
+      ELSE()
+        MESSAGE(WARNING "KOKKOS: TARGET `${PROP_TARGET}` could not be found - Target properties could not be set")
+      ENDIF()
+
+ENDFUNCTION()
