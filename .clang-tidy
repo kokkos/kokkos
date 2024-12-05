@@ -3,6 +3,7 @@ Checks: >
   bugprone-*,
   -bugprone-assignment-in-if-condition,
   -bugprone-branch-clone,
+  -bugprone-crtp-constructor-accessibility,
   -bugprone-easily-swappable-parameters,
   -bugprone-empty-catch,
   -bugprone-exception-escape,
