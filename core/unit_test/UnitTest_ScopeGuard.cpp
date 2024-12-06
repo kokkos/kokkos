@@ -145,11 +145,11 @@ TEST_F(scope_guard_DeathTest, destroy_after_finalize) {
  */
 
 // Test scope guard is not copyable.
-static_assert(!std::is_copy_assignable<Kokkos::ScopeGuard>());
-static_assert(!std::is_copy_constructible<Kokkos::ScopeGuard>());
+static_assert(!std::is_copy_assignable_v<Kokkos::ScopeGuard>);
+static_assert(!std::is_copy_constructible_v<Kokkos::ScopeGuard>);
 
 // Test scope guard is not movable.
-static_assert(!std::is_move_assignable<Kokkos::ScopeGuard>());
-static_assert(!std::is_move_constructible<Kokkos::ScopeGuard>());
+static_assert(!std::is_move_assignable_v<Kokkos::ScopeGuard>);
+static_assert(!std::is_move_constructible_v<Kokkos::ScopeGuard>);
 
 }  // namespace
