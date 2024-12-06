@@ -11,10 +11,11 @@ Checks: >
   -bugprone-integer-division,
   -bugprone-macro-parentheses,
   -bugprone-misplaced-widening-cast,
-  -bugprone-multi-level-implicit-pointer-conversion
+  -bugprone-multi-level-implicit-pointer-conversion,
   -bugprone-narrowing-conversions,
   -bugprone-non-zero-enum-to-bool-conversion,
   -bugprone-reserved-identifier,
+  -bugprone-return-const-ref-from-parameter,
   -bugprone-signed-char-misuse,
   -bugprone-sizeof-expression,
   -bugprone-suspicious-include,
@@ -29,7 +30,7 @@ Checks: >
   modernize-type-traits,
   modernize-use-nullptr,
   modernize-use-using,
-  kokkos-*,
+  kokkos-*
 
 FormatStyle: file
 HeaderFilterRegex: '(algorithms|benchmarks|containers|core|example|simd).*\.hpp'
