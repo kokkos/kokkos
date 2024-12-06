@@ -311,6 +311,7 @@ struct EventBase {
 template <class Derived>
 struct UniquelyIdentifiableEventType : public EventBase {
   uintptr_t kind() const override { return event_type_uid<Derived>(); }
+  UniquelyIdentifiableEventType() = default;  // NOLINT
 };
 
 /**
@@ -324,8 +325,6 @@ struct BeginOperation : public UniquelyIdentifiableEventType<Derived> {
   const std::string name;
   const uint32_t deviceID;
   uint64_t kID;
-  BeginOperation(const std::string& n, const uint32_t devID, uint64_t k)
-      : name(n), deviceID(devID), kID(k) {}
   std::string descriptor() const override {
     std::stringstream s;
     s << Derived::begin_op_name() << " { \"" << name << "\", ";
@@ -335,6 +334,11 @@ struct BeginOperation : public UniquelyIdentifiableEventType<Derived> {
     s << "}";
     return s.str();
   }
+
+ private:
+  BeginOperation(const std::string& n, const uint32_t devID, uint64_t k)
+      : name(n), deviceID(devID), kID(k) {}
+  friend Derived;
 };
 /**
  * @brief Analogous to BeginOperation, there are a lot of things in Kokkos
@@ -346,7 +350,6 @@ struct BeginOperation : public UniquelyIdentifiableEventType<Derived> {
 template <class Derived>
 struct EndOperation : public UniquelyIdentifiableEventType<Derived> {
   uint64_t kID;
-  EndOperation(uint64_t k) : kID(k) {}
 
   std::string descriptor() const override {
     std::stringstream s;
@@ -355,6 +358,10 @@ struct EndOperation : public UniquelyIdentifiableEventType<Derived> {
     s << "}";
     return s.str();
   }
+
+ private:
+  EndOperation(uint64_t k) : kID(k) {}
+  friend Derived;
 };
 
 /**
@@ -512,9 +519,12 @@ struct DataEvent : public UniquelyIdentifiableEventType<Derived> {
       << "}";
     return s.str();
   }
+
+ private:
   DataEvent(SpaceHandleType h, std::string n, EventBase::PtrHandle p,
             uint64_t s)
       : handle(h), name(n), ptr(p), size(s) {}
+  friend Derived;
 };
 
 struct AllocateDataEvent final : public DataEvent<AllocateDataEvent> {
@@ -550,7 +560,10 @@ struct ProfileSectionManipulationEvent
     s << Derived::event_name() << "{ " << id << "}";
     return s.str();
   }
+
+ private:
   ProfileSectionManipulationEvent(uint32_t d_i) : id(d_i){};
+  friend Derived;
 };
 
 struct StartProfileSectionEvent final
@@ -621,14 +634,17 @@ struct DualViewEvent : public UniquelyIdentifiableEventType<Derived> {
   std::string name;
   EventBase::PtrHandle ptr;
   bool is_device;
-  DualViewEvent(std::string n, EventBase::PtrHandle p, bool i_d)
-      : name(n), ptr(p), is_device(i_d) {}
   std::string descriptor() const override {
     std::stringstream s;
     s << Derived::event_name() << " { \"" << name << "\", " << std::hex << ptr
       << ", " << std::boolalpha << is_device << "}";
     return s.str();
   }
+
+ private:
+  DualViewEvent(std::string n, EventBase::PtrHandle p, bool i_d)
+      : name(n), ptr(p), is_device(i_d) {}
+  friend Derived;
 };
 struct DualViewModifyEvent final : public DualViewEvent<DualViewModifyEvent> {
   static std::string event_name() { return "DualViewModifyEvent"; }
@@ -687,9 +703,12 @@ struct TypeDeclarationEvent : public UniquelyIdentifiableEventType<Derived> {
     return Derived::event_name() + "{ \"" + name + "\"," +
            std::to_string(variable_id) + "}";
   }
+
+ private:
   TypeDeclarationEvent(std::string n, size_t v_i,
                        Kokkos::Tools::Experimental::VariableInfo i)
       : name(n), variable_id(v_i), info(i) {}
+  friend Derived;
 };
 struct DeclareOutputTypeEvent final
     : public TypeDeclarationEvent<DeclareOutputTypeEvent> {
