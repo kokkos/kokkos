@@ -418,6 +418,7 @@ T LoopVariant(int loop, int test) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     case 4: return DeprecatedCASLoop<T, DeviceType>(loop);
 #endif
+    default: Kokkos::abort("unreachable");
   }
 
   Kokkos::abort("unreachable");
@@ -433,6 +434,7 @@ T LoopVariantSerial(int loop, int test) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     case 4: return CASLoopSerial<T>(loop);
 #endif
+    default: Kokkos::abort("unreachable");
   }
 
   Kokkos::abort("unreachable");
