@@ -5,7 +5,6 @@ Checks: >
   -bugprone-branch-clone,
   -bugprone-crtp-constructor-accessibility,
   -bugprone-easily-swappable-parameters,
-  -bugprone-empty-catch,
   -bugprone-exception-escape,
   -bugprone-inc-dec-in-conditions,
   -bugprone-integer-division,
