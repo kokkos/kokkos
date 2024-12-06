@@ -140,8 +140,7 @@ unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
           tperb >= HIPTraits::ConservativeThreadsPerBlock) {
         min_block_size = block_size;
       } else if ((min_block_size == 0) && (tperb_shmem)) {
-        min_block_size = block_size;
-        break;
+        return block_size;
       }
     }
     block_size >>= 1;
