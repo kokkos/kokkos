@@ -79,6 +79,7 @@ KOKKOS_INLINE_FUNCTION constexpr char *strncpy(char *dest, const char *src,
   if (count != 0) {
     char *d = dest;
     do {
+      // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
       if ((*d++ = *src++) == '\0') {
         while (--count != 0) {
           *d++ = '\0';
@@ -108,6 +109,7 @@ KOKKOS_INLINE_FUNCTION constexpr char *strncat(char *dest, const char *src,
     for (; *d != '\0'; ++d) {
     }
     do {
+      // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
       if ((*d = *src++) == '\0') {
         break;
       }
