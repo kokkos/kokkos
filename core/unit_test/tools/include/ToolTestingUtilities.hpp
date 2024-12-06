@@ -311,7 +311,8 @@ struct EventBase {
 template <class Derived>
 struct UniquelyIdentifiableEventType : public EventBase {
   uintptr_t kind() const override { return event_type_uid<Derived>(); }
-  UniquelyIdentifiableEventType() = default;  // NOLINT
+  // NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility)
+  UniquelyIdentifiableEventType() = default;
 };
 
 /**
