@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 ARG NPROC=8
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
