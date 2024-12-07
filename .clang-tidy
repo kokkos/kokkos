@@ -8,6 +8,7 @@ Checks: >
   -bugprone-easily-swappable-parameters,
   -bugprone-empty-catch,
   -bugprone-exception-escape,
+  -bugprone-forwarding-reference-overload,
   -bugprone-inc-dec-in-conditions,
   -bugprone-integer-division,
   -bugprone-macro-parentheses,
