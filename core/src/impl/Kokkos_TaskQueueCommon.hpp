@@ -58,7 +58,6 @@ class TaskQueueCommonMixin {
   KOKKOS_INLINE_FUNCTION
   Derived& _self() { return *static_cast<Derived*>(this); }
 
- public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
@@ -67,7 +66,9 @@ class TaskQueueCommonMixin {
     // TODO @tasking @memory_order DSH figure out if I need this store to be
     // atomic
   }
+  friend Derived;
 
+ public:
   ~TaskQueueCommonMixin() {
     KOKKOS_EXPECTS((Kokkos::memory_fence(), m_ready_count < 1));
     KOKKOS_EXPECTS(m_ready_count == 0);
