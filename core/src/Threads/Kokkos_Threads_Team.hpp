@@ -549,7 +549,8 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     m_league_size = league_size_request;
 
     if (team_size_request > team_max)
-      Kokkos::abort("Kokkos::abort: Requested Team Size is too large!");
+      Kokkos::Impl::throw_runtime_exception(
+          "Kokkos::abort: Requested Team Size is too large!");
 
     m_team_size = team_size_request < team_max ? team_size_request : team_max;
 
