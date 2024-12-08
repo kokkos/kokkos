@@ -14,7 +14,7 @@ NVIDIA-GH200:
       -DKokkos_ENABLE_TESTS=ON
     - cmake --build build -j48
     - cd build
-    - ctest -V --output-junit result_gh200.xml
+    - ctest -V -D OUTPUT_JUNIT_FILE=result_gh200.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="NVIDIA-GH200"
   artifacts:
     when: always
     paths:
@@ -41,7 +41,7 @@ INTEL-DATA-CENTER-MAX-1100:
       -DCMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'
     - cmake --build build -j48
     - cd build
-    - ctest -V --output-junit result_pvc1100.xml
+    - ctest -V -D OUTPUT_JUNIT_FILE=result_pvc1100.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
   artifacts:
     when: always
     paths:
@@ -69,7 +69,7 @@ AMD-MI300A:
       -DKokkos_ENABLE_COMPILER_WARNINGS=ON
     - cmake --build build -j48 --verbose
     - cd build
-    - ctest -V --output-junit result_mi300a.xml
+    - ctest -V -D OUTPUT_JUNIT_FILE=result_mi300a.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="AMD-MI300A"
   artifacts:
     when: always
     paths:
