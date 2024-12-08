@@ -324,6 +324,9 @@ class Kokkos::Impl::ParallelReduce<
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+            get_sycl_launch_properties<Policy>(),
+#endif
             reduction_lambda);
       };
 
