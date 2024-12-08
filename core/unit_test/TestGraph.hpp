@@ -175,6 +175,7 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   {
     bool checked_assertions = false;
+    // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
     KOKKOS_ASSERT(checked_assertions = true);
     if (!checked_assertions) {
       GTEST_SKIP() << "Preconditions are not checked.";
