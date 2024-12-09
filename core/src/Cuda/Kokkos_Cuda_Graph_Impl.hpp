@@ -74,7 +74,7 @@ struct GraphImpl<Kokkos::Cuda> {
   using aggregate_impl_t = CudaGraphNodeAggregate;
   using root_node_impl_t        = GraphNodeImpl<Kokkos::Cuda, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;;
-  using aggregate_kernel_impl_t = CudaGraphNodeAggregateKernel;
+  using aggregate_impl_t = CudaGraphNodeAggregateKernel;
   using aggregate_node_impl_t =
       GraphNodeImpl<Kokkos::Cuda, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;

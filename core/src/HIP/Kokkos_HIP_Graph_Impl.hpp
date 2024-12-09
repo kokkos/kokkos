@@ -37,7 +37,7 @@ class GraphImpl<Kokkos::HIP> {
                     Kokkos::Experimental::TypeErasedTag>;
   using aggregate_impl_t = HIPGraphNodeAggregate;
   using root_node_impl_t        = erased_node_impl_t;
-  using aggregate_kernel_impl_t = HIPGraphNodeAggregateKernel;
+  using aggregate_impl_t = HIPGraphNodeAggregateKernel;
   using aggregate_node_impl_t =
       GraphNodeImpl<Kokkos::HIP, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
