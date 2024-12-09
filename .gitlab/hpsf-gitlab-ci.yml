@@ -3,6 +3,7 @@ NVIDIA-GH200:
   tags: [nvidia-gh200]
   image: masterleinad/kokkos-nvcc:12.6.1
   script:
+    - apt-get update && apt-get install -y git
     - cmake
       -B build
       -DCMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper
@@ -14,6 +15,7 @@ NVIDIA-GH200:
       -DKokkos_ENABLE_TESTS=ON
     - cmake --build build -j48
     - cd build
+    - git rev-list -n 1 HEAD --
     - ctest -V -D OUTPUT_JUNIT_FILE=result_gh200.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="NVIDIA-GH200"
   artifacts:
     when: always
@@ -27,6 +29,7 @@ INTEL-DATA-CENTER-MAX-1100:
   tags: [intel-data-center-max-1100]
   image: intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
   script:
+    - apt-get update && apt-get install -y git
     - sycl-ls
     - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
     - export CLANG_TIDY_EXE=$(dirname $(which icpx))/compiler/clang-tidy
@@ -41,6 +44,7 @@ INTEL-DATA-CENTER-MAX-1100:
       -DCMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'
     - cmake --build build -j48
     - cd build
+    - git rev-list -n 1 HEAD --
     - ctest -V -D OUTPUT_JUNIT_FILE=result_pvc1100.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
   artifacts:
     when: always
@@ -54,7 +58,7 @@ AMD-MI300A:
   tags: [uo-gpu, odyssey, amd-mi300]
   image: rocm/dev-ubuntu-24.04:6.2.4-complete
   script:
-    - sudo apt-get update && sudo apt-get install -y cmake
+    - apt-get update && apt-get install -y cmake git
     - export GTEST_FILTER=-hip.unified_memory_zero_memset
     - cmake
       -B build
@@ -69,6 +73,7 @@ AMD-MI300A:
       -DKokkos_ENABLE_COMPILER_WARNINGS=ON
     - cmake --build build -j48 --verbose
     - cd build
+    - git rev-list -n 1 HEAD --
     - ctest -V -D OUTPUT_JUNIT_FILE=result_mi300a.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="AMD-MI300A"
   artifacts:
     when: always
