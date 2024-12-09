@@ -137,7 +137,13 @@ class SYCLInternal {
       if constexpr (sycl::usm::alloc::device == Kind) {
         std::memcpy(static_cast<void*>(m_staging.get()), std::addressof(t),
                     sizeof(T));
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+        sycl::ext::oneapi::experimental::memcpy(*m_q, m_data, m_staging.get(),
+                                                sizeof(T));
+#else
         m_copy_event = m_q->memcpy(m_data, m_staging.get(), sizeof(T));
+#endif
       } else
         std::memcpy(m_data, std::addressof(t), sizeof(T));
       return *reinterpret_cast<T*>(m_data);
