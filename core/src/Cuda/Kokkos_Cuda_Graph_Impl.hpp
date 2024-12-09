@@ -74,9 +74,9 @@ struct GraphImpl<Kokkos::Cuda> {
   using root_node_impl_t =
       GraphNodeImpl<Kokkos::Cuda, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
-  using aggregate_kernel_impl_t = CudaGraphNodeAggregateKernel;
+  using aggregate_impl_t = CudaGraphNodeAggregate;
   using aggregate_node_impl_t =
-      GraphNodeImpl<Kokkos::Cuda, aggregate_kernel_impl_t,
+      GraphNodeImpl<Kokkos::Cuda, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
@@ -204,8 +204,7 @@ struct GraphImpl<Kokkos::Cuda> {
     // each predecessor ref, so all we need to do here is create the (trivial)
     // aggregate node.
     return std::make_shared<aggregate_node_impl_t>(
-        m_execution_space, _graph_node_kernel_ctor_tag{},
-        aggregate_kernel_impl_t{});
+        m_execution_space, _graph_node_kernel_ctor_tag{}, aggregate_impl_t{});
   }
 
   cudaGraph_t cuda_graph() { return m_graph; }

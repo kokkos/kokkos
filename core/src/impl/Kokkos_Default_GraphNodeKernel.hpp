@@ -89,9 +89,8 @@ class GraphNodeKernelImpl
 //==============================================================================
 
 template <class ExecutionSpace>
-struct GraphNodeAggregateKernelDefaultImpl
+struct GraphNodeAggregateDefaultImpl
     : GraphNodeKernelDefaultImpl<ExecutionSpace> {
-  using graph_kernel = GraphNodeAggregateKernelDefaultImpl;
   void execute_kernel() override final {}
 };
 
