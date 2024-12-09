@@ -161,10 +161,7 @@ void cuda_stream_synchronize(const cudaStream_t stream, const CudaInternal *ptr,
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           ptr->impl_get_instance_id()},
-      [&]() {
-        KOKKOS_IMPL_CUDA_SAFE_CALL(
-            (ptr->cuda_stream_synchronize_wrapper(stream)));
-      });
+      [stream] { KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(stream)); });
 }
 
 void cuda_internal_error_throw(cudaError e, const char *name, const char *file,
