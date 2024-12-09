@@ -387,7 +387,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       space.fence(
           "Kokkos::Impl::ParallelReduce<SYCL, TeamPolicy>::execute: result not "
           "device-accessible");
-      std::memcpy(m_result_ptr, host_result_ptr,
+      std::memcpy(static_cast<void*>(m_result_ptr),
+                  static_cast<const void*>(host_result_ptr),
                   sizeof(*m_result_ptr) * value_count);
     }
 
