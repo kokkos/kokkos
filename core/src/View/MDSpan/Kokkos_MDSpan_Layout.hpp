@@ -233,23 +233,22 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
 #endif
 }
 
-template <unsigned ScalarSize>
+template <size_t ScalarSize>
 struct Padding {
-  static constexpr unsigned div =
-      ScalarSize == 0 ? 0 : MEMORY_ALIGNMENT / ScalarSize;
-  static constexpr unsigned mod =
-      ScalarSize == 0 ? 0 : Kokkos::Impl::MEMORY_ALIGNMENT % ScalarSize;
+  static constexpr size_t div =
+      ScalarSize == 0 ? 0 : static_cast<size_t>(MEMORY_ALIGNMENT) / ScalarSize;
+  static constexpr size_t mod =
+      ScalarSize == 0 ? 0 : static_cast<size_t>(MEMORY_ALIGNMENT) % ScalarSize;
 
   // If memory alignment is a multiple of the trivial scalar size then attempt
   // to align.
-  static constexpr unsigned align  = ScalarSize != 0 && mod == 0 ? div : 0;
-  static constexpr unsigned div_ok = (div != 0) ? div : 1;
+  static constexpr size_t align  = ScalarSize != 0 && mod == 0 ? div : 0;
+  static constexpr size_t div_ok = (div != 0) ? div : 1;
 
   KOKKOS_INLINE_FUNCTION
   static constexpr size_t stride(size_t const N) {
     return ((align != 0) &&
-            ((static_cast<int>(Kokkos::Impl::MEMORY_ALIGNMENT_THRESHOLD) *
-              static_cast<int>(align)) < N) &&
+            ((static_cast<size_t>(MEMORY_ALIGNMENT_THRESHOLD) * align) < N) &&
             ((N % div_ok) != 0))
                ? N + align - (N % div_ok)
                : N;
