@@ -124,6 +124,11 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  SYCL_EXT_ONEAPI_BFLOAT16 : undefined\n";
 #endif
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+  os << "macro  SYCL_EXT_ONEAPI_KERNEL_PROPERTIES : defined\n";
+#else
+  os << "macro  SYCL_EXT_ONEAPI_KERNEL_PROPERTIES : undefined\n";
+#endif
 #ifdef SYCL_EXT_ONEAPI_AUTO_LOCAL_RANGE
   os << "macro  SYCL_EXT_ONEAPI_AUTO_LOCAL_RANGE : defined\n";
 #else
