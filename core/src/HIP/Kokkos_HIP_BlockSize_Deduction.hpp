@@ -112,10 +112,10 @@ unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
   // translate LB from CUDA to HIP
   const unsigned min_waves_per_eu =
       LaunchBounds::minBperSM ? LaunchBounds::minBperSM : 1;
-  const unsigned min_threads_per_sm = min_waves_per_eu * HIPTraits::WarpSize;
   const unsigned shmem_per_sm =
       hip_instance->m_deviceProp.maxSharedMemoryPerMultiProcessor;
-  unsigned block_size = tperb_reg;
+  unsigned block_size     = tperb_reg;
+  unsigned min_block_size = 0;
   do {
     unsigned total_shmem = f(block_size);
     // find how many threads we can fit with this blocksize based on LDS usage
@@ -126,37 +126,27 @@ unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
       // just wait until we get a case where we can fit the LDS per SM
       if (tperb_shmem) return block_size;
     } else {
-      if (block_size == tperb_reg && tperb_shmem >= tperb_reg) {
-        // fast path for exit on first iteration if registers are more limiting
-        // than LDS usage, just use the register limited size
-        return tperb_reg;
-      }
-      // otherwise we need to apply a heuristic to choose the blocksize
-      // the current launchbound selection scheme is:
-      //      1. If no spills, choose 1024 [MaxThreadsPerBlock]
-      //      2. Otherwise, choose 256 [ConservativeThreadsPerBlock]
-      //
-      // For blocksizes between 256 and 1024, we'll be forced to use the 1024 LB
-      // and we'll already have pretty decent occupancy, thus dropping to 256
-      // *probably* isn't a concern
-      const unsigned blocks_per_cu_shmem = shmem_per_sm / total_shmem;
+      // If total_shmem is zero, we set blocks_per_cu_shmem to a number greater
+      // than min_waves_per_eu.
+      const unsigned blocks_per_cu_shmem =
+          total_shmem == 0 ? min_waves_per_eu + 1 : shmem_per_sm / total_shmem;
       const unsigned tperb = tperb_shmem < tperb_reg ? tperb_shmem : tperb_reg;
 
-      // for anything with > 4 WF's & can fit multiple blocks
-      // we're probably not occupancy limited so just return that
-      if (blocks_per_cu_shmem > 1 &&
-          tperb > HIPTraits::ConservativeThreadsPerBlock) {
+      // The logic prefers smaller blocks sizes over larger ones to give more
+      // flexibility to the scheduler and to decrease the number of threads
+      // launched when using Kokkos::AUTO in TeamPolicy. If the block size is
+      // smaller than 256, fall back to BlockType::Max condition.
+      if (blocks_per_cu_shmem > min_waves_per_eu &&
+          tperb >= HIPTraits::ConservativeThreadsPerBlock) {
+        min_block_size = block_size;
+      } else if ((min_block_size == 0) && (tperb_shmem)) {
         return block_size;
       }
-
-      // otherwise, it's probably better to drop to the first valid size that
-      // fits in the ConservativeThreadsPerBlock
-      if (tperb >= min_threads_per_sm) return block_size;
     }
     block_size >>= 1;
   } while (block_size >= HIPTraits::WarpSize);
-  // TODO: return a negative, add an error to kernel launch
-  return 0;
+
+  return min_block_size;
 }
 
 // Standardized blocksize deduction for parallel constructs with no LDS usage
