@@ -118,6 +118,7 @@ jobs:
             -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_${{ matrix.backend }}=ON \
+            -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
