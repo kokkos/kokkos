@@ -5,6 +5,7 @@ pipeline {
         CCACHE_DIR = '/tmp/ccache'
         CCACHE_MAXSIZE = '5G'
         CCACHE_CPP2 = 'true'
+        GTEST_SHUFFLE = 1
     }
 
     options {
