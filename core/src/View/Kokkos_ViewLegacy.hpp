@@ -41,6 +41,8 @@ static_assert(false,
 #include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
 #include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
 #endif
+#include <View/Kokkos_ViewMapping.hpp>
+
 #include <Kokkos_MinMax.hpp>
 
 #include <View/Kokkos_ViewTraits.hpp>
@@ -198,8 +200,6 @@ constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-
-#include <View/Kokkos_ViewMapping.hpp>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

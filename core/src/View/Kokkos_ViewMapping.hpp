@@ -2504,6 +2504,10 @@ struct ViewDataHandle<
 
 namespace Kokkos {
 namespace Impl {
+
+template <class, class...>
+class ViewMapping;
+
 //----------------------------------------------------------------------------
 /** \brief  View mapping for non-specialized data type and standard layout */
 template <class Traits>
