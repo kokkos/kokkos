@@ -739,10 +739,38 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
             value_A + 2 * value_B + value_C + value_D + value_E + value_F);
 }
 
+template <typename Exec>
+struct GraphNodeTypes
+{
+  //! Type of a kernel node built using a Kokkos parallel construct.
+  using kernel_t = Kokkos::Impl::GraphNodeKernelImpl<
+      Exec,
+      Kokkos::RangePolicy<Exec>,
+      CountTestFunctor<Exec>,
+      Kokkos::ParallelForTag>;
+
+  //! Type of a then node.
+  using then_t = Kokkos::Impl::GraphNodeThenImpl<
+    Exec, CountTestFunctor<Exec>>;
+
+  //! Type of an aggregate node.
+  using aggregate_t = typename Kokkos::Impl::GraphImpl<Exec>::aggregate_impl_t;
+};
+
+TEST(TEST_CATEGORY, is_graph_kernel_v) {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+
+  static_assert(Kokkos::Impl::is_graph_kernel_v<types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<types::then_t>);
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<types::aggregate_t>);
+}
+
 TEST(TEST_CATEGORY, is_graph_then_v) {
-  static_assert(!Kokkos::Impl::is_graph_then_v<int>);
-  static_assert(Kokkos::Impl::is_graph_then_v<Kokkos::Impl::GraphNodeThenImpl<
-                    TEST_EXECSPACE, CountTestFunctor<TEST_EXECSPACE>>>);
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+
+  static_assert(!Kokkos::Impl::is_graph_then_v<types::kernel_t>);
+  static_assert(Kokkos::Impl::is_graph_then_v<types::then_t>);
+  static_assert(!Kokkos::Impl::is_graph_then_v<types::aggregate_t>);
 }
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)

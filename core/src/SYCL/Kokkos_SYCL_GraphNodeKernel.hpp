@@ -103,9 +103,7 @@ class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
       m_graph_node_ptr = nullptr;
 };
 
-struct SYCLGraphNodeAggregateKernel {
-  using graph_kernel = SYCLGraphNodeAggregateKernel;
-};
+struct SYCLGraphNodeAggregateKernel {};
 
 template <typename KernelType,
           typename Tag =

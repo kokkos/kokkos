@@ -36,9 +36,9 @@ class GraphImpl<Kokkos::HIP> {
       GraphNodeImpl<Kokkos::HIP, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
   using root_node_impl_t        = erased_node_impl_t;
-  using aggregate_kernel_impl_t = HIPGraphNodeAggregateKernel;
+  using aggregate_impl_t = HIPGraphNodeAggregateKernel;
   using aggregate_node_impl_t =
-      GraphNodeImpl<Kokkos::HIP, aggregate_kernel_impl_t,
+      GraphNodeImpl<Kokkos::HIP, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
@@ -223,7 +223,7 @@ inline auto GraphImpl<Kokkos::HIP>::create_aggregate_ptr(PredecessorRefs&&...) {
   // aggregate node.
   return std::make_shared<aggregate_node_impl_t>(m_execution_space,
                                                  _graph_node_kernel_ctor_tag{},
-                                                 aggregate_kernel_impl_t{});
+                                                 aggregate_impl_t{});
 }
 }  // namespace Impl
 }  // namespace Kokkos
