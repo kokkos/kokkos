@@ -23,7 +23,12 @@ IF(NOT DEFINED Kokkos_GLOBAL_COMPILATION)
   set(Kokkos_GLOBAL_COMPILATION true)
 ENDIF()
 
+IF(NOT DEFINED Kokkos_FORCE_COMPILER_LAUNCHER)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER true)
+ENDIF()
+
 IF(Kokkos_GLOBAL_COMPILATION)
+  # If nvcc is not the CXX_COMPILER we go through the launcher
   IF(@Kokkos_ENABLE_CUDA@
     AND NOT @KOKKOS_COMPILE_LANGUAGE@ STREQUAL CUDA)
     kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
@@ -32,6 +37,12 @@ IF(Kokkos_GLOBAL_COMPILATION)
       kokkos_compilation(GLOBAL)
     ENDIF()
   ENDIF()
+
+  # If users request the compiler launcher we use it globally
+  IF(Kokkos_FORCE_COMPILER_LAUNCHER)
+      MESSAGE(STATUS "kokkos_launch_compiler is enabled globally. C++ compiler commands with -DKOKKOS_DEPENDENCE will be redirected to the appropriate compiler for Kokkos")
+      kokkos_compilation(GLOBAL)
+    ENDIF()
 ENDIF()
 
 set(Kokkos_COMPILE_LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
