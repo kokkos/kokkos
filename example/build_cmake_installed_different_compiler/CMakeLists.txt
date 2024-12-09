@@ -17,7 +17,7 @@ set(Kokkos_FORCE_COMPILER_LAUNCHER true)
 
 add_executable(example_no_kokkos bar.cpp)
 add_executable(example_with_kokkos foo.cpp)
-# e.g. if kokkos was built with g++ and the 
+# e.g. if kokkos was built with g++ and the
 # CMAKE_CXX_COMPILER=clang++ then example_with_kokkos
 # will be compiled and linked with g++ whereas example_no_kokkos
 # will be compiled and linked with clang++
