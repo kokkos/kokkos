@@ -30,6 +30,22 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename Functor>
+struct GraphNodeThenImpl<Kokkos::SYCL, Functor> {
+  Functor m_functor;
+
+  void capture(
+      const Kokkos::SYCL& exec,
+      sycl::ext::oneapi::experimental::command_graph<
+          sycl::ext::oneapi::experimental::graph_state::modifiable>& graph) {
+    graph.begin_recording(exec.sycl_queue());
+
+    m_functor(exec);
+
+    graph.end_recording(exec.sycl_queue());
+  }
+};
+
 template <typename PolicyType, typename Functor, typename PatternTag,
           typename... Args>
 class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
@@ -87,9 +103,7 @@ class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
       m_graph_node_ptr = nullptr;
 };
 
-struct SYCLGraphNodeAggregateKernel {
-  using graph_kernel = SYCLGraphNodeAggregateKernel;
-};
+struct SYCLGraphNodeAggregateKernel {};
 
 template <typename KernelType,
           typename Tag =
