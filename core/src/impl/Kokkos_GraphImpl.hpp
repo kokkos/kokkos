@@ -31,6 +31,10 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename T>
+struct is_graph_then<T, std::enable_if_t<Kokkos::Impl::is_specialization_of_v<
+                            T, GraphNodeThenImpl>>> : public std::true_type {};
+
 struct GraphAccess {
   template <class ExecutionSpace>
   static Kokkos::Experimental::Graph<ExecutionSpace> construct_graph(
@@ -40,6 +44,17 @@ struct GraphAccess {
         std::make_shared<GraphImpl<ExecutionSpace>>(std::move(ex))};
     //----------------------------------------//
   }
+
+  template <class ExecutionSpace, typename T>
+  static Kokkos::Experimental::Graph<ExecutionSpace> construct_graph_from_native(
+    ExecutionSpace ex,
+    T&& native_graph
+  )
+  {
+    return Kokkos::Experimental::Graph<ExecutionSpace>{
+        std::make_shared<GraphImpl<ExecutionSpace>>(std::move(ex), std::forward<T>(native_graph))};
+  }
+
   template <class ExecutionSpace>
   static auto create_root_ref(
       Kokkos::Experimental::Graph<ExecutionSpace>& arg_graph) {

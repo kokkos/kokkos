@@ -740,4 +740,148 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
             value_A + 2 * value_B + value_C + value_D + value_E + value_F);
 }
 
+template <typename Exec>
+struct GraphNodeTypes
+{
+  //! Type of a kernel node built using a Kokkos parallel construct.
+  using kernel_t = Kokkos::Impl::GraphNodeKernelImpl<
+      Exec,
+      Kokkos::RangePolicy<Exec>,
+      CountTestFunctor<Exec>,
+      Kokkos::ParallelForTag>;
+
+  //! Type of a then node.
+  using then_t = Kokkos::Impl::GraphNodeThenImpl<
+    Exec, CountTestFunctor<Exec>>;
+
+  //! Type of an aggregate node.
+  using aggregate_t = typename Kokkos::Impl::GraphImpl<Exec>::aggregate_impl_t;
+};
+
+TEST(TEST_CATEGORY, is_graph_kernel_v) {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+
+  static_assert(Kokkos::Impl::is_graph_kernel_v<types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<types::then_t>);
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<types::aggregate_t>);
+}
+
+TEST(TEST_CATEGORY, is_graph_then_v) {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+
+  static_assert(!Kokkos::Impl::is_graph_then_v<types::kernel_t>);
+  static_assert(Kokkos::Impl::is_graph_then_v<types::then_t>);
+  static_assert(!Kokkos::Impl::is_graph_then_v<types::aggregate_t>);
+}
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+template <typename T>
+__global__ void increment(T* const data) {
+  ++data[threadIdx.y];
+}
+#endif
+
+template <typename ViewType>
+struct ThenImpl {
+  static_assert(ViewType::rank() == 0);
+
+#if defined(KOKKOS_ENABLE_SERIAL)
+  static void compute(const Kokkos::Serial&, const ViewType& data) { ++data(); }
+#endif
+#if defined(KOKKOS_ENABLE_CUDA)
+  static void compute(const Kokkos::Cuda& exec, const ViewType& data) {
+    increment<<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.cuda_stream()>>>(
+        data.data());
+  }
+#endif
+#if defined(KOKKOS_ENABLE_HIP)
+  static void compute(const Kokkos::HIP& exec, const ViewType& data) {
+    increment<<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.hip_stream()>>>(
+        data.data());
+  }
+#endif
+#if defined(KOKKOS_ENABLE_OPENMP)
+  static void compute(const Kokkos::OpenMP&, const ViewType& data) {
+#pragma omp parallel for
+    for (size_t ielem = 0; ielem < data.size(); ++ielem) ++data();
+  }
+#endif
+#if defined(KOKKOS_ENABLE_SYCL)
+  static void compute(const Kokkos::SYCL& exec, const ViewType& data) {
+    exec.sycl_queue().parallel_for(sycl::range<1>(data.size()),
+                                   [=](const int) { ++data(); });
+  }
+#endif
+
+  template <typename Exec>
+  static void compute(const Exec& exec, const ViewType& data) {
+    Kokkos::parallel_for(
+        "ThenImpl - defaulted", Kokkos::RangePolicy(exec, 0, data.size()),
+        KOKKOS_LAMBDA(const int) { ++data(); });
+  }
+};
+
+TEST(TEST_CATEGORY, graph_then) {
+  using view_t = Kokkos::View<int, TEST_EXECSPACE>;
+
+  const TEST_EXECSPACE exec{};
+
+  view_t data(Kokkos::view_alloc(exec, "data"));
+
+  auto graph = Kokkos::Experimental::create_graph(exec, [&](const auto& root) {
+    auto node = root.then([data = data](const TEST_EXECSPACE& exec_) {
+      ThenImpl<view_t>::compute(exec_, data);
+    });
+  });
+
+  // Determine if we used a regular parallel-for construct or a then.
+  constexpr bool external = []() -> bool {
+#if defined(KOKKOS_ENABLE_SERIAL)
+    if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Serial>) return true;
+#endif
+#if defined(KOKKOS_ENABLE_CUDA)
+    if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) return true;
+#endif
+#if defined(KOKKOS_ENABLE_HIP)
+    if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) return true;
+#endif
+#if defined(KOKKOS_ENABLE_OPENMP)
+    if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) return true;
+#endif
+#if defined(KOKKOS_ENABLE_SYCL)
+    if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) return true;
+#endif
+    return false;
+  }();
+
+  // At this stage, no kernel was launched yet.
+  // For backends that capture, kernels were recorded.
+  // For the others, functors were simply stored.
+  ASSERT_TRUE(contains(exec, data, 0));
+
+  // For all backends, the functor is stored. Since the functor
+  // always captures 'data', its use count is 2.
+  ASSERT_EQ(data.use_count(), 2);
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableKernels());
+
+  if constexpr (external)
+    ASSERT_TRUE(validate_event_set([&]() { graph.submit(exec); }));
+  else
+    ASSERT_TRUE(validate_event_set(
+        [&]() { graph.submit(exec); },
+        [&](BeginParallelForEvent event) {
+          if (event.name != "ThenImpl - defaulted")
+            return MatchDiagnostic{false, {"Unexpected label."}};
+          else
+            return MatchDiagnostic{true};
+        },
+        [&](EndParallelForEvent) { return MatchDiagnostic{true}; }));
+
+  listen_tool_events(Config::DisableAll());
+
+  ASSERT_TRUE(contains(exec, data, 1));
+}
+
 }  // end namespace Test
