@@ -423,8 +423,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type = View<DataType*******, Properties...>;
 
  private:
-  using drdtraits = Impl::DynRankDimTraits<typename view_type::specialize>;
-
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using drdtraits = Impl::DynRankDimTraits<void>;
+#else
+  using drdtraits  = Impl::DynRankDimTraits<typename view_type::specialize>;
+#endif
  public:
   // typedefs from ViewTraits, overriden
   using data_type           = typename drvtraits::data_type;
@@ -452,7 +455,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using scalar_array_type           = value_type;
   using const_scalar_array_type     = const_value_type;
   using non_const_scalar_array_type = non_const_value_type;
-  using specialize                  = typename view_type::specialize;
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using specialize KOKKOS_DEPRECATED = void;
+#else
+  using specialize = typename view_type::specialize;
+#endif
 
   // typedefs in View for mdspan compatibility
   // cause issues with MSVC+CUDA
@@ -641,8 +648,7 @@ class DynRankView : private View<DataType*******, Properties...> {
     return *this;
   }
 
-#if 0  // TODO: this will later be swapped in depending on whether the new View
-       // impl is active
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
  private:
   template <class Ext>
   KOKKOS_FUNCTION typename view_type::extents_type create_rank7_extents(
@@ -720,6 +726,24 @@ class DynRankView : private View<DataType*******, Properties...> {
   // rank deduction can properly take place
   // We need two variants to avoid calling host function from host device
   // function warnings
+
+  // With NVCC 11.0 and 11.2 (and others likely) using GCC 8.5 a DynRankView
+  // test fails at runtime where construction from layout drops some extents.
+  // The bug goes away with O1.
+  // FIXME: NVCC GCC8 optimization bug DynRankView
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_GNU)
+#if KOKKOS_COMPILER_GNU < 900
+#define KOKKOS_IMPL_SKIP_OPTIMIZATION
+#endif
+#endif
+
+#ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
+// Also need to suppress warning about unrecognized GCC optimize pragma
+#pragma push
+#pragma diag_suppress = unrecognized_gcc_pragma
+#pragma GCC push_options
+#pragma GCC optimize("O1")
+#endif
   template <class... P>
   explicit KOKKOS_FUNCTION DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
@@ -739,6 +763,10 @@ class DynRankView : private View<DataType*******, Properties...> {
       : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
         m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {}
+#ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
+#pragma GCC pop_options
+#pragma pop
+#endif
 
   //----------------------------------------
   // Constructor(s)
