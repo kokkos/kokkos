@@ -164,8 +164,19 @@ void sort_by_key_onedpl(
   auto queue  = exec.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
   const int n = keys.extent(0);
-  oneapi::dpl::sort_by_key(policy, keys.data(), keys.data() + n, values.data(),
-                           std::forward<MaybeComparator>(maybeComparator)...);
+  if constexpr (sizeof...(MaybeComparator) == 0)
+    oneapi::dpl::sort_by_key(policy, keys.data(), keys.data() + n,
+                             values.data());
+  else {
+    using keys_value_type =
+        typename Kokkos::View<KeysDataType, KeysProperties...>::value_type;
+    auto keys_comparator =
+        std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+    oneapi::dpl::sort_by_key(
+        policy, keys.data(), keys.data() + n, values.data(),
+        ComparatorWrapper<decltype(keys_comparator), keys_value_type>{
+            keys_comparator});
+  }
 }
 #endif
 #endif
@@ -252,20 +263,36 @@ void sort_by_key_via_sort(
     Kokkos::DefaultHostExecutionSpace host_exec;
 
     if constexpr (sizeof...(MaybeComparator) == 0) {
+#ifdef KOKKOS_ENABLE_ONEDPL
+      Kokkos::sort(
+          host_exec, host_permute,
+          KOKKOS_LAMBDA(int i, int j) { return host_keys(i) < host_keys(j); });
+#else
       Kokkos::sort(host_exec, host_permute,
                    LessFunctor<decltype(host_keys)>{host_keys});
+#endif
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+#ifdef KOKKOS_ENABLE_ONEDPL
+      Kokkos::sort(
+          host_exec, host_permute, KOKKOS_LAMBDA(int i, int j) {
+            return keys_comparator(host_keys(i), host_keys(j));
+          });
+#else
       Kokkos::sort(
           host_exec, host_permute,
           KeyComparisonFunctor<decltype(host_keys), decltype(keys_comparator)>{
               host_keys, keys_comparator});
+#endif
     }
     host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
     Kokkos::deep_copy(exec, permute, host_permute);
   } else {
-#ifdef KOKKOS_ENABLE_SYCL
+#if defined(KOKKOS_ONEDPL_HAS_SORT_BY_KEY) &&                      \
+    !(ONEDPL_VERSION_MAJOR > 2022 ||                               \
+      (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7 || \
+       (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
     auto* raw_keys_in_comparator = keys.data();
     auto stride                  = keys.stride(0);
     if constexpr (sizeof...(MaybeComparator) == 0) {
@@ -285,14 +312,27 @@ void sort_by_key_via_sort(
     }
 #else
     if constexpr (sizeof...(MaybeComparator) == 0) {
+#ifdef KOKKOS_ENABLE_ONEDPL
+      Kokkos::sort(
+          exec, permute,
+          KOKKOS_LAMBDA(int i, int j) { return keys(i) < keys(j); });
+#else
       Kokkos::sort(exec, permute, LessFunctor<decltype(keys)>{keys});
+#endif
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+#ifdef KOKKOS_ENABLE_ONEDPL
+      Kokkos::sort(
+          exec, permute, KOKKOS_LAMBDA(int i, int j) {
+            return keys_comparator(keys(i), keys(j));
+          });
+#else
       Kokkos::sort(
           exec, permute,
           KeyComparisonFunctor<decltype(keys), decltype(keys_comparator)>{
               keys, keys_comparator});
+#endif
     }
 #endif
   }
