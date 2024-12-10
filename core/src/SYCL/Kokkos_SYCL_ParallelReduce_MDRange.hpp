@@ -186,125 +186,128 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
         // REMEMBER swap local x<->y to be conforming with Cuda/HIP
         // implementation
-        cgh.parallel_for(
-            sycl::nd_range<1>{n_wgroups * wgroup_size, wgroup_size},
-            [=](sycl::nd_item<1> item) {
-              const int local_id = item.get_local_linear_id();
-              const CombinedFunctorReducerType& functor_reducer =
-                  functor_reducer_wrapper.get_functor();
-              const FunctorType& functor = functor_reducer.get_functor();
-              const ReducerType& reducer = functor_reducer.get_reducer();
+        auto lambda = [=](sycl::nd_item<1> item) {
+          const int local_id = item.get_local_linear_id();
+          const CombinedFunctorReducerType& functor_reducer =
+              functor_reducer_wrapper.get_functor();
+          const FunctorType& functor = functor_reducer.get_functor();
+          const ReducerType& reducer = functor_reducer.get_reducer();
 
-              // In the first iteration, we call functor to initialize the local
-              // memory. Otherwise, the local memory is initialized with the
-              // results from the previous iteration that are stored in global
-              // memory.
-              using index_type = typename Policy::index_type;
+          // In the first iteration, we call functor to initialize the local
+          // memory. Otherwise, the local memory is initialized with the
+          // results from the previous iteration that are stored in global
+          // memory.
+          using index_type = typename Policy::index_type;
 
-              // SWAPPED here to be conforming with CUDA implementation
-              const index_type local_x    = 0;
-              const index_type local_y    = item.get_local_id(0);
-              const index_type local_z    = 0;
-              const index_type global_y   = 0;
-              const index_type global_z   = 0;
-              const index_type n_global_x = n_tiles;
-              const index_type n_global_y = 1;
-              const index_type n_global_z = 1;
+          // SWAPPED here to be conforming with CUDA implementation
+          const index_type local_x    = 0;
+          const index_type local_y    = item.get_local_id(0);
+          const index_type local_z    = 0;
+          const index_type global_y   = 0;
+          const index_type global_z   = 0;
+          const index_type n_global_x = n_tiles;
+          const index_type n_global_y = 1;
+          const index_type n_global_z = 1;
 
-              if constexpr (!SYCLReduction::use_shuffle_based_algorithm<
-                                ReducerType>) {
-                reference_type update =
-                    reducer.init(&local_mem[local_id * value_count]);
+          if constexpr (!SYCLReduction::use_shuffle_based_algorithm<
+                            ReducerType>) {
+            reference_type update =
+                reducer.init(&local_mem[local_id * value_count]);
 
-                for (index_type global_x = item.get_group(0);
-                     global_x < n_tiles; global_x += item.get_group_range(0))
-                  Kokkos::Impl::Reduce::DeviceIterateTile<
-                      Policy::rank, BarePolicy, FunctorType,
-                      typename Policy::work_tag, reference_type>(
-                      bare_policy, functor, update,
-                      {n_global_x, n_global_y, n_global_z},
-                      {global_x, global_y, global_z},
-                      {local_x, local_y, local_z})
-                      .exec_range();
-                item.barrier(sycl::access::fence_space::local_space);
+            for (index_type global_x = item.get_group(0); global_x < n_tiles;
+                 global_x += item.get_group_range(0))
+              Kokkos::Impl::Reduce::DeviceIterateTile<
+                  Policy::rank, BarePolicy, FunctorType,
+                  typename Policy::work_tag, reference_type>(
+                  bare_policy, functor, update,
+                  {n_global_x, n_global_y, n_global_z},
+                  {global_x, global_y, global_z}, {local_x, local_y, local_z})
+                  .exec_range();
+            item.barrier(sycl::access::fence_space::local_space);
 
-                SYCLReduction::workgroup_reduction<>(
-                    item, local_mem, results_ptr, device_accessible_result_ptr,
-                    value_count, reducer, false, wgroup_size);
+            SYCLReduction::workgroup_reduction<>(
+                item, local_mem, results_ptr, device_accessible_result_ptr,
+                value_count, reducer, false, wgroup_size);
 
-                if (local_id == 0) {
-                  sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
-                                   sycl::memory_scope::device,
-                                   sycl::access::address_space::global_space>
-                      scratch_flags_ref(*scratch_flags);
-                  num_teams_done[0] = ++scratch_flags_ref;
-                }
-                item.barrier(sycl::access::fence_space::local_space);
-                if (num_teams_done[0] == n_wgroups) {
-                  if (local_id == 0) *scratch_flags = 0;
-                  if (local_id >= static_cast<int>(n_wgroups))
-                    reducer.init(&local_mem[local_id * value_count]);
-                  else {
-                    reducer.copy(&local_mem[local_id * value_count],
-                                 &results_ptr[local_id * value_count]);
-                    for (unsigned int id = local_id + wgroup_size;
-                         id < n_wgroups; id += wgroup_size) {
-                      reducer.join(&local_mem[local_id * value_count],
-                                   &results_ptr[id * value_count]);
-                    }
-                  }
-
-                  SYCLReduction::workgroup_reduction<>(
-                      item, local_mem, results_ptr,
-                      device_accessible_result_ptr, value_count, reducer, true,
-                      std::min<int>(n_wgroups, wgroup_size));
-                }
-              } else {
-                value_type local_value;
-                reference_type update = reducer.init(&local_value);
-
-                for (index_type global_x = item.get_group(0);
-                     global_x < n_tiles; global_x += item.get_group_range(0))
-                  Kokkos::Impl::Reduce::DeviceIterateTile<
-                      Policy::rank, BarePolicy, FunctorType,
-                      typename Policy::work_tag, reference_type>(
-                      bare_policy, functor, update,
-                      {n_global_x, n_global_y, n_global_z},
-                      {global_x, global_y, global_z},
-                      {local_x, local_y, local_z})
-                      .exec_range();
-
-                SYCLReduction::workgroup_reduction<>(
-                    item, local_mem, local_value, results_ptr,
-                    device_accessible_result_ptr, reducer, false, wgroup_size);
-
-                if (local_id == 0) {
-                  sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
-                                   sycl::memory_scope::device,
-                                   sycl::access::address_space::global_space>
-                      scratch_flags_ref(*scratch_flags);
-                  num_teams_done[0] = ++scratch_flags_ref;
-                }
-                item.barrier(sycl::access::fence_space::local_space);
-                if (num_teams_done[0] == n_wgroups) {
-                  if (local_id == 0) *scratch_flags = 0;
-                  if (local_id >= static_cast<int>(n_wgroups))
-                    reducer.init(&local_value);
-                  else {
-                    local_value = results_ptr[local_id];
-                    for (unsigned int id = local_id + wgroup_size;
-                         id < n_wgroups; id += wgroup_size) {
-                      reducer.join(&local_value, &results_ptr[id]);
-                    }
-                  }
-
-                  SYCLReduction::workgroup_reduction<>(
-                      item, local_mem, local_value, results_ptr,
-                      device_accessible_result_ptr, reducer, true,
-                      std::min<int>(n_wgroups, wgroup_size));
+            if (local_id == 0) {
+              sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
+                               sycl::memory_scope::device,
+                               sycl::access::address_space::global_space>
+                  scratch_flags_ref(*scratch_flags);
+              num_teams_done[0] = ++scratch_flags_ref;
+            }
+            item.barrier(sycl::access::fence_space::local_space);
+            if (num_teams_done[0] == n_wgroups) {
+              if (local_id == 0) *scratch_flags = 0;
+              if (local_id >= static_cast<int>(n_wgroups))
+                reducer.init(&local_mem[local_id * value_count]);
+              else {
+                reducer.copy(&local_mem[local_id * value_count],
+                             &results_ptr[local_id * value_count]);
+                for (unsigned int id = local_id + wgroup_size; id < n_wgroups;
+                     id += wgroup_size) {
+                  reducer.join(&local_mem[local_id * value_count],
+                               &results_ptr[id * value_count]);
                 }
               }
-            });
+
+              SYCLReduction::workgroup_reduction<>(
+                  item, local_mem, results_ptr, device_accessible_result_ptr,
+                  value_count, reducer, true,
+                  std::min<int>(n_wgroups, wgroup_size));
+            }
+          } else {
+            value_type local_value;
+            reference_type update = reducer.init(&local_value);
+
+            for (index_type global_x = item.get_group(0); global_x < n_tiles;
+                 global_x += item.get_group_range(0))
+              Kokkos::Impl::Reduce::DeviceIterateTile<
+                  Policy::rank, BarePolicy, FunctorType,
+                  typename Policy::work_tag, reference_type>(
+                  bare_policy, functor, update,
+                  {n_global_x, n_global_y, n_global_z},
+                  {global_x, global_y, global_z}, {local_x, local_y, local_z})
+                  .exec_range();
+
+            SYCLReduction::workgroup_reduction<>(
+                item, local_mem, local_value, results_ptr,
+                device_accessible_result_ptr, reducer, false, wgroup_size);
+
+            if (local_id == 0) {
+              sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
+                               sycl::memory_scope::device,
+                               sycl::access::address_space::global_space>
+                  scratch_flags_ref(*scratch_flags);
+              num_teams_done[0] = ++scratch_flags_ref;
+            }
+            item.barrier(sycl::access::fence_space::local_space);
+            if (num_teams_done[0] == n_wgroups) {
+              if (local_id == 0) *scratch_flags = 0;
+              if (local_id >= static_cast<int>(n_wgroups))
+                reducer.init(&local_value);
+              else {
+                local_value = results_ptr[local_id];
+                for (unsigned int id = local_id + wgroup_size; id < n_wgroups;
+                     id += wgroup_size) {
+                  reducer.join(&local_value, &results_ptr[id]);
+                }
+              }
+
+              SYCLReduction::workgroup_reduction<>(
+                  item, local_mem, local_value, results_ptr,
+                  device_accessible_result_ptr, reducer, true,
+                  std::min<int>(n_wgroups, wgroup_size));
+            }
+          }
+        };
+
+        cgh.parallel_for(
+            sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+            get_sycl_launch_properties<Policy>(),
+#endif
+            lambda);
       };
 #ifdef SYCL_EXT_ONEAPI_GRAPH
       if constexpr (Policy::is_graph_kernel::value) {
