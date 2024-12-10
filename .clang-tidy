@@ -26,7 +26,6 @@ Checks: >
   -bugprone-unhandled-exception-at-new,
   -bugprone-unhandled-self-assignment,
   -bugprone-unused-raii,
-  -bugprone-use-after-move,
   cppcoreguidelines-pro-type-cstyle-cast,
   modernize-type-traits,
   modernize-use-nullptr,
