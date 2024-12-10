@@ -73,7 +73,7 @@ TEST(TEST_CATEGORY, view_alloc_can_perfect_forward_label) {
 
   auto prop = Kokkos::view_alloc(std::move(label));
 
-  ASSERT_TRUE(label.empty());
+  ASSERT_TRUE(label.empty());  // NOLINT(bugprone-use-after-move)
   ASSERT_EQ(Kokkos::Impl::get_property<Kokkos::Impl::LabelTag>(prop),
             "our label");
 }
