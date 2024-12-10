@@ -4,19 +4,21 @@ NVIDIA-GH200:
   image: masterleinad/kokkos-nvcc:12.6.1
   script:
     - apt-get update && apt-get install -y git
-    - cmake
-      -B build
-      -DCMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper
-      -DCMAKE_CXX_FLAGS="-Werror=all-warnings -Werror"
-      -DKokkos_ARCH_HOPPER90=ON
-      -DKokkos_ENABLE_CUDA=ON
-      -DKokkos_ENABLE_COMPILER_WARNINGS=ON
-      -DKokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON
-      -DKokkos_ENABLE_TESTS=ON
-    - cmake --build build -j48
-    - cd build
-    - git rev-list -n 1 HEAD --
-    - ctest -V -D OUTPUT_JUNIT_FILE=result_gh200.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="NVIDIA-GH200"
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_HOPPER90=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - ctest -V
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_gh200.xml
+        -S CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="NVIDIA-GH200"
   artifacts:
     when: always
     paths:
@@ -33,19 +35,21 @@ INTEL-DATA-CENTER-MAX-1100:
     - sycl-ls
     - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
     - export CLANG_TIDY_EXE=$(dirname $(which icpx))/compiler/clang-tidy
-    - cmake
-      -B build
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_CLANG_TIDY="${CLANG_TIDY_EXE};-warnings-as-errors=*"
-      -DCMAKE_CXX_COMPILER=icpx
-      -DKokkos_ENABLE_SYCL=ON
-      -DKokkos_ARCH_INTEL_PVC=ON
-      -DKokkos_ENABLE_TESTS=ON
-      -DCMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'
-    - cmake --build build -j48
-    - cd build
-    - git rev-list -n 1 HEAD --
-    - ctest -V -D OUTPUT_JUNIT_FILE=result_pvc1100.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_CLANG_TIDY='${CLANG_TIDY_EXE}\;-warnings-as-errors=*'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=icpx"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_PVC=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - ctest -V
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_pvc1100.xml
+        -S CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
   artifacts:
     when: always
     paths:
@@ -59,22 +63,24 @@ AMD-MI300A:
   image: rocm/dev-ubuntu-24.04:6.2.4-complete
   script:
     - apt-get update && apt-get install -y cmake git
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export GTEST_FILTER=-hip.unified_memory_zero_memset
-    - cmake
-      -B build
-      -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_COMPILER=hipcc
-      -DKokkos_ENABLE_HIP=ON
-      -DKokkos_ARCH_AMD_GFX942_APU=ON
-      -DKokkos_ARCH_NATIVE=ON
-      -Drocthrust_ROOT=/opt/rocm-6.2.4
-      -DKokkos_ENABLE_TESTS=ON
-      -DCMAKE_CXX_FLAGS='-Werror'
-      -DKokkos_ENABLE_COMPILER_WARNINGS=ON
-    - cmake --build build -j48 --verbose
-    - cd build
-    - git rev-list -n 1 HEAD --
-    - ctest -V -D OUTPUT_JUNIT_FILE=result_mi300a.xml -S ../CTestRun.cmake -D CTEST_SITE="gitlab.spack.io" -D CTEST_BUILD_NAME="AMD-MI300A"
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=hipcc"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_HIP=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_AMD_GFX942_APU=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D rocthrust_ROOT=/opt/rocm-6.2.4"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - ctest -V
+      -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+      -D OUTPUT_JUNIT_FILE=result_mi300a.xml
+      -S CTestRun.cmake
+      -D CTEST_SITE="gitlab.spack.io"
+      -D CTEST_BUILD_NAME="AMD-MI300A"
   artifacts:
     when: always
     paths:
