@@ -589,7 +589,8 @@ struct CudaParallelLaunchKernelInvoker<
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long* staging =
         cuda_instance->constantMemHostStagingPerDevice[cuda_device];
-    memcpy(staging, &driver, sizeof(DriverType));
+    memcpy(static_cast<void*>(staging), static_cast<const void*>(&driver),
+           sizeof(DriverType));
 
     // Copy functor asynchronously from there to constant memory on the device
     KOKKOS_IMPL_CUDA_SAFE_CALL(
