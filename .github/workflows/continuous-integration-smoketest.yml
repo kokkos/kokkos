@@ -22,24 +22,19 @@ jobs:
 
       - name: configure kokkos
         run: |
-          mkdir -p kokkos/{build,install}
-          cd kokkos/build
-          cmake \
-            -DCMAKE_BUILD_TYPE=Debug \
-            -DCMAKE_INSTALL_PREFIX=$PWD/../install \
-            -DCMAKE_CXX_COMPILER=clang++ \
-            -DCMAKE_CXX_FLAGS="-Werror" \
-            -DKokkos_ENABLE_COMPILER_WARNINGS=OFF \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-            -DKokkos_ENABLE_EXAMPLES=ON \
-            -DKokkos_ENABLE_SERIAL=ON \
-            -DKokkos_ENABLE_TESTS=ON \
-            ..
-
-      - name: build_and_install_kokkos
-        working-directory: kokkos/build
-        run: make -j4 install
-
-      - name: test_kokkos
-        working-directory: kokkos/build
-        run: ctest --timeout 2000 -j2 --output-on-failure
+          export CMAKE_BUILD_PARALLEL_LEVEL=4
+          export ENV_CMAKE_OPTIONS=""
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Debug"
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=clang++"
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=OFF"
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_DEPRECATED_CODE_4=ON"
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_EXAMPLES=ON"
+          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SERIAL=ON"
+          ctest -V \
+            -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
+            -S CTestRun.cmake \
+            -D GITHUB_PR_ID=${{ github.event.number }} \
+            -D CTEST_SITE="GitHub" \
+            -D CTEST_BUILD_NAME="smoke test"
