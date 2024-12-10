@@ -21,6 +21,7 @@ jobs:
           path: kokkos
 
       - name: configure kokkos
+        working-directory: kokkos
         run: |
           export CMAKE_BUILD_PARALLEL_LEVEL=4
           export ENV_CMAKE_OPTIONS=""
