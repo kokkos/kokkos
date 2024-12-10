@@ -103,9 +103,7 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   auto get_driver_storage() const { return m_driver_storage; }
 };
 
-struct CudaGraphNodeAggregateKernel {
-  using graph_kernel = CudaGraphNodeAggregateKernel;
-};
+struct CudaGraphNodeAggregate {};
 
 template <class KernelType,
           class Tag =

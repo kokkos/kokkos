@@ -1,0 +1,25 @@
+hipcc:
+  stage: test
+  tags: [frontier, shell]
+  id_tokens:
+    OLCF_ID_TOKEN:
+      aud: https://code.olcf.ornl.gov
+  script:
+    - module load rocm/6.0
+    - cmake -B build_hip -DCMAKE_CXX_COMPILER=hipcc -DKokkos_ENABLE_HIP=ON -DKokkos_ENABLE_TESTS=ON
+    - cmake --build build_hip -j48
+    - cd build_hip
+    - ctest -E Kokkos_CoreUnitTest_DeviceAndThreads -V
+
+amdclang:
+  stage: test
+  tags: [frontier, shell]
+  id_tokens:
+    OLCF_ID_TOKEN:
+      aud: https://code.olcf.ornl.gov
+  script:
+    - module load rocm/6.2.4
+    - cmake -B build_amdclang -DCMAKE_CXX_COMPILER=amdclang++ -DCMAKE_CXX_CLANG_TIDY="/opt/rocm-6.2.4/llvm/bin/clang-tidy;-warnings-as-errors=*" -DKokkos_ENABLE_HIP=ON -DKokkos_ENABLE_TESTS=ON
+    - cmake --build build_amdclang -j48
+    - cd build_amdclang
+    - ctest -E Kokkos_CoreUnitTest_DeviceAndThreads -V

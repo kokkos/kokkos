@@ -434,7 +434,8 @@ class Kokkos::Impl::ParallelScanWithTotal<
             "Kokkos::Impl::ParallelReduce<SYCL, MDRangePolicy>::execute: "
             "result not device-accessible");
         const int size = Base::m_functor_reducer.get_reducer().value_size();
-        std::memcpy(Base::m_result_ptr, Base::m_scratch_host, size);
+        std::memcpy(static_cast<void*>(Base::m_result_ptr),
+                    static_cast<const void*>(Base::m_scratch_host), size);
       }
     });
   }

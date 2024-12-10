@@ -240,9 +240,9 @@ void OpenMPInternal::initialize(int thread_count) {
 
     // New, unified host thread team data:
     {
-      size_t pool_reduce_bytes  = 32 * thread_count;
-      size_t team_reduce_bytes  = 32 * thread_count;
-      size_t team_shared_bytes  = 1024 * thread_count;
+      size_t pool_reduce_bytes  = static_cast<size_t>(32) * thread_count;
+      size_t team_reduce_bytes  = static_cast<size_t>(32) * thread_count;
+      size_t team_shared_bytes  = static_cast<size_t>(1024) * thread_count;
       size_t thread_local_bytes = 1024;
 
       instance.resize_thread_data(pool_reduce_bytes, team_reduce_bytes,

@@ -404,7 +404,7 @@ if(KOKKOS_ARCH_ZEN3)
     MSVC
     /arch:AVX2
     NVHPC
-    -tp=zen2
+    -tp=zen3
     DEFAULT
     -march=znver3
     -mtune=znver3

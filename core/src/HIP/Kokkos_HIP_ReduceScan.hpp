@@ -370,7 +370,7 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
   }
 
   const integral_nonzero_constant<
-      size_type, std::is_pointer<typename FunctorType::reference_type>::value
+      size_type, std::is_pointer_v<typename FunctorType::reference_type>
                      ? 0
                      : sizeof(value_type) / sizeof(size_type)>
       word_count((sizeof(value_type) * functor.length()) / sizeof(size_type));
@@ -449,7 +449,7 @@ __device__ bool hip_single_inter_block_reduce_scan(
   // If we are doing a reduction and we don't do an array reduction, we use the
   // reduction-only path. Otherwise, we use the common path between reduction
   // and scan.
-  if (!DoScan && !std::is_pointer<typename FunctorType::reference_type>::value)
+  if (!DoScan && !std::is_pointer_v<typename FunctorType::reference_type>)
     // FIXME_HIP_PERFORMANCE I don't know where 16 comes from. This inequality
     // determines if we use shared memory (false) or shuffle (true)
     return Kokkos::Impl::HIPReductionsFunctor<

@@ -175,6 +175,7 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   {
     bool checked_assertions = false;
+    // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
     KOKKOS_ASSERT(checked_assertions = true);
     if (!checked_assertions) {
       GTEST_SKIP() << "Preconditions are not checked.";
@@ -737,6 +738,64 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
   ASSERT_EQ(data_host(index_E()), value_B + value_E);
   ASSERT_EQ(data_host(index_F()),
             value_A + 2 * value_B + value_C + value_D + value_E + value_F);
+}
+
+template <typename Exec>
+struct GraphNodeTypes {
+  // Type of a kernel node built using a Kokkos parallel construct.
+  using kernel_t =
+      Kokkos::Impl::GraphNodeKernelImpl<Exec, Kokkos::RangePolicy<Exec>,
+                                        CountTestFunctor<Exec>,
+                                        Kokkos::ParallelForTag>;
+
+  // Type of an aggregate node.
+  using aggregate_t = typename Kokkos::Impl::GraphImpl<Exec>::aggregate_impl_t;
+};
+
+constexpr bool test_is_graph_kernel() {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+  static_assert(Kokkos::Impl::is_graph_kernel_v<types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<types::aggregate_t>);
+  return true;
+}
+static_assert(test_is_graph_kernel());
+
+// This test checks the node types before/after a 'when_all'.
+TEST(TEST_CATEGORY, when_all_type) {
+  using kernel_functor_t = CountTestFunctor<TEST_EXECSPACE>;
+  using graph_t          = Kokkos::Experimental::Graph<TEST_EXECSPACE>;
+  using graph_impl_t     = Kokkos::Impl::GraphImpl<TEST_EXECSPACE>;
+  using node_ref_root_t =
+      Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE,
+                                         Kokkos::Experimental::TypeErasedTag,
+                                         Kokkos::Experimental::TypeErasedTag>;
+  using node_kernel_impl_t = Kokkos::Impl::GraphNodeKernelImpl<
+      TEST_EXECSPACE,
+      Kokkos::RangePolicy<TEST_EXECSPACE, Kokkos::Impl::IsGraphKernelTag>,
+      kernel_functor_t, Kokkos::ParallelForTag>;
+  using node_ref_first_layer_t =
+      Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE, node_kernel_impl_t,
+                                         node_ref_root_t>;
+  using node_ref_agg_t = Kokkos::Experimental::GraphNodeRef<
+      TEST_EXECSPACE, typename graph_impl_t::aggregate_impl_t,
+      Kokkos::Experimental::TypeErasedTag>;
+  using node_ref_tail_t =
+      Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE, node_kernel_impl_t,
+                                         node_ref_agg_t>;
+
+  auto graph  = Kokkos::Experimental::create_graph(TEST_EXECSPACE{});
+  auto root   = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+  auto node_A = root.then_parallel_for(1, kernel_functor_t{});
+  auto node_B = root.then_parallel_for(1, kernel_functor_t{});
+  auto agg    = Kokkos::Experimental::when_all(node_A, node_B);
+  auto tail   = agg.then_parallel_for(1, kernel_functor_t{});
+
+  static_assert(std::is_same_v<decltype(graph), graph_t>);
+  static_assert(std::is_same_v<decltype(root), node_ref_root_t>);
+  static_assert(std::is_same_v<decltype(node_A), node_ref_first_layer_t>);
+  static_assert(std::is_same_v<decltype(node_B), node_ref_first_layer_t>);
+  static_assert(std::is_same_v<decltype(agg), node_ref_agg_t>);
+  static_assert(std::is_same_v<decltype(tail), node_ref_tail_t>);
 }
 
 }  // end namespace Test
