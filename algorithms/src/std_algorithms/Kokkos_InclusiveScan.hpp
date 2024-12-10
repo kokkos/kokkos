@@ -71,7 +71,7 @@ auto inclusive_scan(
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_default_op_exespace_impl(
       "Kokkos::inclusive_scan_default_functors_view_api", ex,
-      KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest));
+      KE::begin(view_from), KE::end(view_from), KE::begin(view_dest));
 }
 
 template <
@@ -86,7 +86,7 @@ auto inclusive_scan(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_default_op_exespace_impl(
-      label, ex, KE::cbegin(view_from), KE::cend(view_from),
+      label, ex, KE::begin(view_from), KE::end(view_from),
       KE::begin(view_dest));
 }
 
@@ -133,7 +133,7 @@ auto inclusive_scan(const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_exespace_impl(
       "Kokkos::inclusive_scan_custom_functors_view_api", ex,
-      KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest),
+      KE::begin(view_from), KE::end(view_from), KE::begin(view_dest),
       binary_op);
 }
 
@@ -149,7 +149,7 @@ auto inclusive_scan(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_exespace_impl(
-      label, ex, KE::cbegin(view_from), KE::cend(view_from),
+      label, ex, KE::begin(view_from), KE::end(view_from),
       KE::begin(view_dest), binary_op);
 }
 
@@ -209,7 +209,7 @@ auto inclusive_scan(const ExecutionSpace& ex,
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_exespace_impl(
       "Kokkos::inclusive_scan_custom_functors_view_api", ex,
-      KE::cbegin(view_from), KE::cend(view_from), KE::begin(view_dest),
+      KE::begin(view_from), KE::end(view_from), KE::begin(view_dest),
       binary_op, std::move(init_value));
 }
 
@@ -229,7 +229,7 @@ auto inclusive_scan(const std::string& label, const ExecutionSpace& ex,
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::inclusive_scan_custom_binary_op_exespace_impl(
-      label, ex, KE::cbegin(view_from), KE::cend(view_from),
+      label, ex, KE::begin(view_from), KE::end(view_from),
       KE::begin(view_dest), binary_op, std::move(init_value));
 }
 

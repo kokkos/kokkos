@@ -24,6 +24,49 @@
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
+#if defined(KOKKOS_ENABLE_CUDA)
+
+// Workaround for `Instruction 'shfl' without '.sync' is not supported on
+// .target sm_70 and higher from PTX ISA version 6.4`.
+// Also see https://github.com/NVIDIA/cub/pull/170.
+#if !defined(CUB_USE_COOPERATIVE_GROUPS)
+#define CUB_USE_COOPERATIVE_GROUPS
+#endif
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wsuggest-override"
+
+#if defined(KOKKOS_COMPILER_CLANG)
+// Some versions of Clang fail to compile Thrust, failing with errors like
+// this:
+//    <snip>/thrust/system/cuda/detail/core/agent_launcher.h:557:11:
+//    error: use of undeclared identifier 'va_printf'
+// The exact combination of versions for Clang and Thrust (or CUDA) for this
+// failure was not investigated, however even very recent version combination
+// (Clang 10.0.0 and Cuda 10.0) demonstrated failure.
+//
+// Defining _CubLog here locally allows us to avoid that code path, however
+// disabling some debugging diagnostics
+#pragma push_macro("_CubLog")
+#ifdef _CubLog
+#undef _CubLog
+#endif
+#define _CubLog
+#include <thrust/device_ptr.h>
+#include <thrust/distance.h>
+#include <thrust/scan.h>
+#pragma pop_macro("_CubLog")
+#else
+#include <thrust/device_ptr.h>
+#include <thrust/distance.h>
+#include <thrust/scan.h>
+#endif
+
+#pragma GCC diagnostic pop
+
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 namespace Impl {
@@ -101,9 +144,26 @@ struct InclusiveScanDefaultFunctor {
   }
 };
 
-//
-// exespace impl
-//
+// -------------------------------------------------------------
+// inclusive_scan_default_op_exespace_impl
+// -------------------------------------------------------------
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class InputIteratorType, class OutputIteratorType>
+OutputIteratorType inclusive_scan_default_op_exespace_impl(
+    const std::string& label, const Cuda& ex,
+    InputIteratorType first_from, InputIteratorType last_from,
+    OutputIteratorType first_dest) {
+  const auto thrust_ex = thrust::cuda::par.on(ex.cuda_stream());
+
+  thrust::inclusive_scan(thrust_ex, first_from, last_from, first_dest);
+
+  const auto num_elements = thrust::distance(first_from, last_from);
+
+  return first_dest + num_elements;
+}
+#endif
+
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType>
 OutputIteratorType inclusive_scan_default_op_exespace_impl(
@@ -144,6 +204,25 @@ OutputIteratorType inclusive_scan_default_op_exespace_impl(
 // -------------------------------------------------------------
 // inclusive_scan_custom_binary_op_impl
 // -------------------------------------------------------------
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class InputIteratorType, class OutputIteratorType,
+	  class BinaryOpType>
+OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
+    const std::string& label, const Cuda& ex,
+    InputIteratorType first_from, InputIteratorType last_from,
+    OutputIteratorType first_dest, BinaryOpType binary_op) {
+  const auto thrust_ex = thrust::cuda::par.on(ex.cuda_stream());
+
+  thrust::inclusive_scan(thrust_ex, first_from, last_from,
+		         first_dest, binary_op);
+ 
+  const auto num_elements = thrust::distance(first_from, last_from);
+
+  return first_dest + num_elements;
+}
+#endif
+
 template <class ExecutionSpace, class InputIteratorType,
           class OutputIteratorType, class BinaryOpType>
 OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
