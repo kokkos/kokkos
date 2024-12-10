@@ -22,7 +22,6 @@ Checks: >
   -bugprone-suspicious-string-compare,
   -bugprone-switch-missing-default-case,
   -bugprone-unchecked-optional-access,
-  -bugprone-undefined-memory-manipulation,
   -bugprone-unhandled-exception-at-new,
   -bugprone-unhandled-self-assignment,
   -bugprone-unused-raii,
