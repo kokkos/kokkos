@@ -200,109 +200,171 @@ int main()
     SET(${_VAR} ${_RET} PARENT_SCOPE)
 ENDFUNCTION()
 
-# this function is provided to easily select which files use the same compiler as Kokkos
-# when it was installed (or nvcc_wrapper):
+# this function sets the source and target properties that Kokkos requires
 #
-#       GLOBAL      --> all files
-#       TARGET      --> all files in a target
-#       SOURCE      --> specific source files
-#       DIRECTORY   --> all files in directory
-#       PROJECT     --> all files/targets in a project/subproject
+#       PROJECT           --> all cpp,cxx files for targets that link to kokkos in the project
+#       DIRECTORY         --> all cpp,cxx files for targets that link to kokkos in given directories
+#       TARGET            --> on the given targets
+#       SOURCE            --> on the given source files
+#       Kokkos_FOUND_DIR  --> hint on where Kokkos was installed (important for CMake contexts that don't know this but depend on Kokkos)
 #
-# Use the COMPILER argument to specify a compiler, if needed. By default, it will
-# set the values to ${Kokkos_CXX_COMPILER} unless Kokkos_ENABLE_CUDA=ON and
-# Kokkos_CXX_COMPILER_ID is NVIDIA, then it will set it to nvcc_wrapper
+function(kokkos_set_source_and_target_properties)
+  CMAKE_PARSE_ARGUMENTS(INP
+        "PROJECT"
+        "Kokkos_FOUND_DIR"
+        "USE_LAUNCHER;DIRECTORY;TARGET;SOURCE"
+        ${ARGN})
+
+  #resolve projects to directories
+  IF(INP_PROJECT)
+    message(DEBUG "Kokkos marking directory ${PROJECT_SOURCE_DIR} to contain kokkos targets")
+    LIST(APPEND INP_DIRECTORY ${PROJECT_SOURCE_DIR})
+    UNSET(INP_PROJECT)
+  ENDIF()
+
+  #if nvcc use kokkos_launch_compiler to launch nvcc_wrapper
+  IF(@Kokkos_ENABLE_CUDA@ AND @KOKKOS_CXX_COMPILER_ID@ STREQUAL NVIDIA AND NOT @Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+    IF(NOT Kokkos_COMPILE_LAUNCHER)
+      # find kokkos_launch_compiler
+      FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
+          NAMES           kokkos_launch_compiler
+          HINTS           ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATHS           ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATH_SUFFIXES   bin)
+    ENDIF()
+
+    IF(NOT Kokkos_COMPILE_LAUNCHER)
+        MESSAGE(FATAL_ERROR "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher' or '-DKokkos_ROOT=/path/to/install'")
+    ENDIF()
+
+    IF(NOT Kokkos_NVCC_WRAPPER)
+      # find nvcc_wrapper
+      FIND_PROGRAM(Kokkos_NVCC_WRAPPER
+          NAMES           nvcc_wrapper
+          HINTS           ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATHS           ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATH_SUFFIXES   bin)
+    ENDIF()
+    # fatal if we can't nvcc_wrapper
+    IF(NOT Kokkos_NVCC_WRAPPER)
+        MESSAGE(FATAL_ERROR "Kokkos could not find nvcc_wrapper. Please set '-DKokkos_NVCC_WRAPPER=/path/to/nvcc_wrapper' or '-DKokkos_ROOT=/path/to/install'")
+    ENDIF()
+
+    kokkos_compilation(DIRECTORY ${INP_DIRECTORY} TARGET ${INP_TARGET} SOURCE ${INP_SOURCE} USE_LAUNCHER ${INP_USE_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER})
+
+  ELSE() # all but nvcc 
+    kokkos_compilation(DIRECTORY ${INP_DIRECTORY} TARGET ${INP_TARGET} SOURCE ${INP_SOURCE} USE_LAUNCHER ${INP_USE_LAUNCHER})
+  ENDIF()
+endfunction()
+
+
+# this function searches a given directory recursively finding all targets that link to kokkos
 #
-# Use CHECK_CUDA_COMPILES to run a check when CUDA is enabled
+#       FOUND_TARGETS    --> output: all found targets that link to kokkos
+#       SEARCH_DIR       --> input: the root dir to start the recursion from 
+#
+function(kokkos_get_directory_targets FOUND_TARGETS SEARCH_DIR)
+
+  # recursively visit subdirs
+  get_property(subdirs DIRECTORY ${SEARCH_DIR} PROPERTY SUBDIRECTORIES)
+  foreach(subdir ${subdirs})
+      kokkos_get_directory_targets(subdir_targets ${subdir})
+      list(APPEND targets ${subdir_targets})
+  endforeach()
+
+  #check if target links to Kokkos::kokkos
+  get_property(parent_targets DIRECTORY ${SEARCH_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+  FOREACH(target IN LISTS parent_targets)
+    #check if target links to kokkos
+    get_target_property(target_libs ${target} INTERFACE_LINK_LIBRARIES)
+    get_target_property(target_type ${target} TYPE)
+    if(target_type STREQUAL "EXECUTABLE") # if executable cmake does not list the libs transitively so we visit all linked libs ourselves
+      FOREACH(executable_linked_lib IN LISTS target_libs)
+        get_target_property(dependent_libs ${executable_linked_lib} INTERFACE_LINK_LIBRARIES)
+        if(Kokkos::kokkos IN_LIST dependent_libs)
+          LIST(APPEND target_libs Kokkos::kokkos)
+        endif()
+      ENDFOREACH()
+    endif()
+
+    #if target links to kokkos, add it to targets and get the sources
+    if(Kokkos::kokkos IN_LIST target_libs)
+      message(DEBUG "Kokkos found target ${target} that links to Kokkos::kokkos in directory ${SEARCH_DIR}")
+      LIST(APPEND targets ${target})
+    endif()
+  ENDFOREACH()
+
+  # push results out of recursive function
+  set(${FOUND_TARGETS} ${targets} PARENT_SCOPE)
+endfunction()
+
+# this function is provided to set the compiler and flags on dir/target/source that use Kokkos
+#
+#       USE_LAUNCHER  --> specify an optional compiler launcher
+#       DIRECTORY     --> all cpp,cxx files for targets that link to kokkos in given directories
+#       TARGET        --> on the given targets
+#       SOURCE        --> on the given source files
 #
 FUNCTION(kokkos_compilation)
     CMAKE_PARSE_ARGUMENTS(COMP
-        "GLOBAL;PROJECT;CHECK_CUDA_COMPILES"
-        "COMPILER"
-        "DIRECTORY;TARGET;SOURCE;COMMAND_PREFIX"
+        ""
+        ""
+        "USE_LAUNCHER;DIRECTORY;TARGET;SOURCE"
         ${ARGN})
 
-    # if built w/o CUDA support, we want to basically make this a no-op
-    SET(_Kokkos_ENABLE_CUDA @Kokkos_ENABLE_CUDA@)
-
-
-    IF(CMAKE_VERSION VERSION_GREATER_EQUAL 3.17)
-      SET(MAYBE_CURRENT_INSTALLATION_ROOT "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../../..")
+    IF(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+      if(NOT DEFINED CMAKE_@KOKKOS_COMPILE_LANGUAGE@_COMPILER_LOADED)
+        message(FATAL_ERROR "The used Kokkos needs @KOKKOS_COMPILE_LANGUAGE@ to be enabled to use the Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE feature")
+      endif()
     ENDIF()
 
-    # search relative first and then absolute
-    SET(_HINTS "${MAYBE_CURRENT_INSTALLATION_ROOT}" "@CMAKE_INSTALL_PREFIX@")
+    #set properties on directories
+    FOREACH(directory IN LISTS COMP_DIRECTORY)
+      kokkos_get_directory_targets(FOUND_DIRECTORY_TARGETS ${directory})
+      list(APPEND COMP_TARGET ${FOUND_DIRECTORY_TARGETS})
 
-    # find kokkos_launch_compiler
-    FIND_PROGRAM(Kokkos_COMPILE_LAUNCHER
-        NAMES           kokkos_launch_compiler
-        HINTS           ${_HINTS}
-        PATHS           ${_HINTS}
-        PATH_SUFFIXES   bin)
+      # set all cpp,cxx sources in the found targets to the correct language
+      IF(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+        foreach(target IN LISTS FOUND_DIRECTORY_TARGETS)
+          get_target_property(target_sources ${target} SOURCES)
+          get_target_property(target_dir ${target} SOURCE_DIR)
+          list(FILTER target_sources INCLUDE REGEX "\\.cpp$|\\.cxx$")
+          message(DEBUG "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for sources ${target_dir}/{${target_sources}}")
+          foreach(source IN LISTS target_sources)
+            set_property(SOURCE ${target_dir}/${source} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
+          endforeach()
+        endforeach()
+      ENDIF()
 
-    IF(NOT Kokkos_COMPILE_LAUNCHER)
-        MESSAGE(FATAL_ERROR "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher'")
-    ENDIF()
+    ENDFOREACH()
 
-    # if COMPILER was not specified, assume Kokkos_CXX_COMPILER
-    IF(NOT COMP_COMPILER)
-        SET(COMP_COMPILER ${Kokkos_CXX_COMPILER})
-        IF(_Kokkos_ENABLE_CUDA AND Kokkos_CXX_COMPILER_ID STREQUAL NVIDIA)
-            # find nvcc_wrapper
-            FIND_PROGRAM(Kokkos_NVCC_WRAPPER
-                NAMES           nvcc_wrapper
-                HINTS           ${_HINTS}
-                PATHS           ${_HINTS}
-                PATH_SUFFIXES   bin)
-            # fatal if we can't nvcc_wrapper
-            IF(NOT Kokkos_NVCC_WRAPPER)
-                MESSAGE(FATAL_ERROR "Kokkos could not find nvcc_wrapper. Please set '-DKokkos_NVCC_WRAPPER=/path/to/nvcc_wrapper'")
-            ENDIF()
-            SET(COMP_COMPILER ${Kokkos_NVCC_WRAPPER})
+    #set properties on sources
+    foreach(source IN LISTS COMP_SOURCE)
+      message(DEBUG "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ for source ${source}")
+      set_property(SOURCE ${source} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
+    endforeach()
+
+    #set properties on targets
+    foreach(target IN LISTS COMP_TARGET)
+      # use the language feature on targets
+      IF(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+        message(DEBUG "Kokkos setting @KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES and @KOKKOS_COMPILE_LANGUAGE@_STANDARD on target ${target}")
+        IF(@Kokkos_ENABLE_CUDA@)
+          set_property(TARGET ${target} PROPERTY CUDA_ARCHITECTURES @KOKKOS_CUDA_ARCHITECTURES@)
+          set_property(TARGET ${target} PROPERTY CUDA_STANDARD @KOKKOS_CXX_STANDARD@)
+        ELSEIF(@Kokkos_ENABLE_HIP@)
+          set_property(TARGET ${target} PROPERTY HIP_ARCHITECTURES @KOKKOS_HIP_ARCHITECTURES@)
+          set_property(TARGET ${target} PROPERTY HIP_STANDARD @KOKKOS_CXX_STANDARD@)
         ENDIF()
-    ENDIF()
+      ENDIF()
 
-    # check that the original compiler still exists!
-    IF(NOT EXISTS ${COMP_COMPILER})
-        MESSAGE(FATAL_ERROR "Kokkos could not find original compiler: '${COMP_COMPILER}'")
-    ENDIF()
+      # use kokkos_launch_compiler on targets
+      IF(COMP_USE_LAUNCHER)
+        message(DEBUG "Kokkos setting compiler/linker launcher ${COMP_USE_LAUNCHER} on target ${target}")
+        set_property(TARGET ${target} PROPERTY @KOKKOS_COMPILE_LANGUAGE@_COMPILER_LAUNCHER ${COMP_USE_LAUNCHER})
+        set_property(TARGET ${target} PROPERTY @KOKKOS_COMPILE_LANGUAGE@_LINKER_LAUNCHER ${COMP_USE_LAUNCHER})
+      ENDIF()
 
-    # try to ensure that compiling cuda code works!
-    IF(_Kokkos_ENABLE_CUDA AND COMP_CHECK_CUDA_COMPILES)
-
-        # this may fail if kokkos_compiler launcher was used during install
-        kokkos_cxx_compiler_cuda_test(_COMPILES_CUDA
-            ${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER})
-
-        # if above failed, throw an error
-        IF(NOT _COMPILES_CUDA)
-            MESSAGE(FATAL_ERROR "kokkos_cxx_compiler_cuda_test failed! Test commands:\n${_COMPILES_CUDA_COMMANDS}")
-        ENDIF()
-    ENDIF()
-
-    IF(COMP_COMMAND_PREFIX)
-        SET(_PREFIX "${COMP_COMMAND_PREFIX}")
-        STRING(REPLACE ";" " " _PREFIX "${COMP_COMMAND_PREFIX}")
-        SET(Kokkos_COMPILER_LAUNCHER "${_PREFIX} ${Kokkos_COMPILE_LAUNCHER}")
-    ENDIF()
-
-    IF(COMP_GLOBAL)
-        # if global, don't bother setting others
-        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}")
-        SET_PROPERTY(GLOBAL PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}")
-    ELSE()
-        FOREACH(_TYPE PROJECT DIRECTORY TARGET SOURCE)
-            # make project/subproject scoping easy, e.g. KokkosCompilation(PROJECT) after project(...)
-            IF("${_TYPE}" STREQUAL "PROJECT" AND COMP_${_TYPE})
-                LIST(APPEND COMP_DIRECTORY ${PROJECT_SOURCE_DIR})
-                UNSET(COMP_${_TYPE})
-            ENDIF()
-            # set the properties if defined
-            IF(COMP_${_TYPE})
-                # MESSAGE(STATUS "Using ${COMP_COMPILER} :: ${_TYPE} :: ${COMP_${_TYPE}}")
-                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}")
-                SET_PROPERTY(${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}")
-            ENDIF()
-        ENDFOREACH()
-    ENDIF()
+      # do nothing if the CXX compiler is capable of consuming kokkos directly
+     endforeach()
 ENDFUNCTION()
