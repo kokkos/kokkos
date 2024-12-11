@@ -125,9 +125,21 @@ int main(int argc, char* argv[]) {
   Kokkos::parallel_reduce(n, collision(), sum1);
 
   // With LaunchBounds, we can reduce the register usage to 32
+  const int min_blocks =
+#if defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_ADA89) || \
+    defined(KOKKOS_ARCH_AMPERE86)
+      // The architectures above have a lower maximum number of resident
+      // threads, so
+      // we only use 2 blocks to stay below 1024 threads per SM:
+      2;
+#else
+      // We have a maximum of 2048 resident threads per SM:
+      4;
+#endif
+
   Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<Kokkos::LaunchBounds<512, 4>>(0, n), collision(),
-      sum2);
+      Kokkos::RangePolicy<Kokkos::LaunchBounds<512, min_blocks>>(0, n),
+      collision(), sum2);
 
   printf(
       "Number of collisions, "
