@@ -45,24 +45,30 @@ pipeline {
                         OMP_NESTED = 'true'
                         OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PROC_BIND = 'true'
+                        PR_ID = "${CHANGE_ID}"
                     }
                     steps {
-                        sh '''rm -rf build && mkdir -p build && cd build && \
-                              cmake \
-                                -DCMAKE_BUILD_TYPE=Release \
-                                -DCMAKE_CXX_STANDARD=17 \
-                                -DCMAKE_CXX_FLAGS=-Werror \
-                                -DKokkos_ARCH_NATIVE=ON \
-                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_BENCHMARKS=ON \
-                                -DKokkos_ENABLE_OPENMP=ON \
-                                -DKokkos_ENABLE_LIBDL=OFF \
-                                -DKokkos_ENABLE_LIBQUADMATH=ON \
-                                -DKokkos_ENABLE_SERIAL=ON \
-                              .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
+                        sh '''export CMAKE_BUILD_PARALLEL_LEVEL=8 && \
+                              export ENV_CMAKE_OPTIONS="" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=Release" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=17" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS=-Werror" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_DEPRECATED_CODE_4=ON" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_BENCHMARKS=ON" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMP=ON" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_LIBDL=OFF" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_LIBQUADMATH=ON" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_SERIAL=ON" && \
+                              ctest -V \
+                                -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
+                                -S CTestRun.cmake \
+                                -D GITHUB_PR_ID=${PR_ID} \
+                                -D CTEST_SITE="jenkins" \
+                                -D CTEST_BUILD_NAME="GCC-8.4.0" && \
+                              gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                     post {
                         always {
