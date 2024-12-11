@@ -24,7 +24,7 @@ void test_half_conversion_type() {
   T base                         = static_cast<T>(3.3);
   Kokkos::Experimental::half_t a = Kokkos::Experimental::cast_to_half(base);
   T b                            = Kokkos::Experimental::cast_from_half<T>(a);
-  ASSERT_LT((double(b - base) / double(base)), epsilon);
+  ASSERT_LT(abs(double(b - base) / double(base)), epsilon);
 
   Kokkos::View<T> b_v("b_v");
   Kokkos::parallel_for(
@@ -35,7 +35,7 @@ void test_half_conversion_type() {
       });
 
   Kokkos::deep_copy(b, b_v);
-  ASSERT_LT((double(b - base) / double(base)), epsilon);
+  ASSERT_LT(abs(double(b - base) / double(base)), epsilon);
 }
 
 template <class T>
@@ -44,7 +44,7 @@ void test_bhalf_conversion_type() {
   T base         = static_cast<T>(3.3);
   Kokkos::Experimental::bhalf_t a = Kokkos::Experimental::cast_to_bhalf(base);
   T b                             = Kokkos::Experimental::cast_from_bhalf<T>(a);
-  ASSERT_LT((double(b - base) / double(base)), epsilon);
+  ASSERT_LT(abs(double(b - base) / double(base)), epsilon);
 
   Kokkos::View<T> b_v("b_v");
   Kokkos::parallel_for(
@@ -55,7 +55,7 @@ void test_bhalf_conversion_type() {
       });
 
   Kokkos::deep_copy(b, b_v);
-  ASSERT_LT((double(b - base) / double(base)), epsilon);
+  ASSERT_LT(abs(double(b - base) / double(base)), epsilon);
 }
 
 void test_half_conversion() {
