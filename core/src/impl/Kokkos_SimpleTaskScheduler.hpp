@@ -298,8 +298,9 @@ class SimpleTaskScheduler
     typename task_type::function_type const ptr = task_type::apply;
     typename task_type::destroy_type const dtor = task_type::destroy;
 
+    auto const priority = arg_policy.priority();
     return _spawn_impl<TaskEnum>(std::move(arg_policy).predecessor().m_task,
-                                 arg_policy.priority(), ptr, dtor,
+                                 priority, ptr, dtor,
                                  std::forward<FunctorType>(arg_functor));
   }
 
