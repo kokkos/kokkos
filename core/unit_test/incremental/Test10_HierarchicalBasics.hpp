@@ -30,8 +30,10 @@ struct HierarchicalBasics {
   using team_t   = typename policy_t::member_type;
 
   void run(const int nP, int nT) {
-    int const concurrency = ExecSpace().concurrency();
-    if (nT > concurrency) nT = concurrency;
+    int const max_team_size = policy_t(1, Kokkos::AUTO)
+                                  .team_size_max(KOKKOS_LAMBDA(const team_t){},
+                                                 Kokkos::ParallelForTag{});
+    if (nT > max_team_size) nT = max_team_size;
 
     policy_t pol(nP, nT);
 
