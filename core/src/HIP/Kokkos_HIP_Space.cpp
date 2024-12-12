@@ -324,15 +324,17 @@ void check_memory_space(hipMemoryType deduced_memory_type) {
                    std::string(RequestedMemorySpace::name())).c_str());
             return;
     case hipMemoryTypeManaged: 
-            if (!Kokkos::SpaceAccessibility<RequestedMemorySpace, Kokkos::HIPUVMSpace>::assignable)
-                    Kokkos::abort(("Detected HIPUVMSpace but requested incompatible " +
+            if (!Kokkos::SpaceAccessibility<RequestedMemorySpace, Kokkos::HIPManagedSpace>::assignable)
+                    Kokkos::abort(("Detected HIPManagedSpace but requested incompatible " +
                    std::string(RequestedMemorySpace::name())).c_str());
             return;
+	    #if HIP_VERSION_MAJOR >= 6
     case hipMemoryTypeUnregistered: 
             if (!Kokkos::SpaceAccessibility<RequestedMemorySpace, Kokkos::HostSpace>::assignable)
                     Kokkos::abort(("Detected HostSpace but requested incompatible " +
                    std::string(RequestedMemorySpace::name())).c_str());
             return;
+#endif
     default:
       Kokkos::abort("bug: unknown HIP memory type");
   }
@@ -344,13 +346,24 @@ template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
     const void* ptr, const Kokkos::HIPHostPinnedSpace&) {
   hipPointerAttribute_t attributes;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipPointerGetAttributes(&attributes, ptr));
-#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
-  auto type = attributes.memoryType;
-#else
-  auto type = attributes.type;
-#endif
+  hipError_t error = hipPointerGetAttributes(&attributes, ptr);
+#if HIP_VERSION_MAJOR >= 6
+  KOKKOS_IMPL_HIP_SAFE_CALL(error);
   check_memory_space<Kokkos::HIPHostPinnedSpace>(attributes.type);
+#else
+  if (error == hipErrorInvalidValue) {
+           if (!Kokkos::SpaceAccessibility<Kokkos::HIPHostPinnedSpace, Kokkos::HostSpace>::assignable)
+                    Kokkos::abort(("Detected HostSpace but requested incompatible " +
+                   std::string(Kokkos::HIPHostPinnedSpace::name())).c_str());
+  } else {
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
+    auto type = attributes.memoryType;
+#else
+    auto type = attributes.type;
+#endif
+    check_memory_space<Kokkos::HIPHostPinnedSpace>(attributes.type);
+  }
+#endif
 }
 
 #if !(HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 3)
@@ -364,13 +377,24 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
   if (!hasPageableMemory) return;
 
   hipPointerAttribute_t attributes;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipPointerGetAttributes(&attributes, ptr));
-#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
-  auto type = attributes.memoryType;
-#else
-  auto type = attributes.type;
-#endif
+  hipError_t error = hipPointerGetAttributes(&attributes, ptr);
+#if HIP_VERSION_MAJOR >= 6
+  KOKKOS_IMPL_HIP_SAFE_CALL(error);
   check_memory_space<Kokkos::HIPManagedSpace>(attributes.type);
+#else
+  if (error == hipErrorInvalidValue) {
+           if (!Kokkos::SpaceAccessibility<Kokkos::HIPManagedSpace, Kokkos::HostSpace>::assignable)
+                    Kokkos::abort(("Detected HostSpace but requested incompatible " +
+                   std::string(Kokkos::HIPManagedSpace::name())).c_str());
+  } else {
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
+    auto type = attributes.memoryType;
+#else
+    auto type = attributes.type;
+#endif
+    check_memory_space<Kokkos::HIPManagedSpace>(attributes.type);
+  }
+#endif
 }
 #endif
 
@@ -378,13 +402,24 @@ template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
     const void* ptr, const Kokkos::HIPSpace&) {
   hipPointerAttribute_t attributes;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipPointerGetAttributes(&attributes, ptr));
-#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
-  auto type = attributes.memoryType;
-#else
-  auto type = attributes.type;
-#endif
+  hipError_t error = hipPointerGetAttributes(&attributes, ptr);
+#if HIP_VERSION_MAJOR >= 6
+  KOKKOS_IMPL_HIP_SAFE_CALL(error);
   check_memory_space<Kokkos::HIPSpace>(attributes.type);
+#else
+  if (error == hipErrorInvalidValue) {
+	   if (!Kokkos::SpaceAccessibility<Kokkos::HIPSpace, Kokkos::HostSpace>::assignable)
+                    Kokkos::abort(("Detected HostSpace but requested incompatible " +
+                   std::string(Kokkos::HIPSpace::name())).c_str());
+  } else {
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
+    auto type = attributes.memoryType;
+#else
+    auto type = attributes.type;
+#endif
+    check_memory_space<Kokkos::HIPSpace>(attributes.type);
+  }
+#endif
 }
 
 template <>
@@ -396,9 +431,13 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
   KOKKOS_IMPL_HIP_SAFE_CALL(error);
   check_memory_space<Kokkos::HostSpace>(attributes.type);
 #else
-  if (error != hipErrorInvalidValue)
-    Kokkos::abort(
-        "Requested HostSpace but pointer isn't allocated in "
-        "that space!");
+  if (error != hipErrorInvalidValue) {
+#if HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 5
+    auto type = attributes.memoryType;
+#else
+    auto type = attributes.type;
+#endif
+    check_memory_space<Kokkos::HostSpace>(attributes.type);
+  }
 #endif
 }
