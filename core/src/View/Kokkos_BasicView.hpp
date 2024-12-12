@@ -25,7 +25,7 @@ static_assert(false,
 #include <impl/Kokkos_Utilities.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <View/Kokkos_ViewAlloc.hpp>
-#include <View/Kokkos_ViewChecking.hpp>
+#include <View/Kokkos_ViewAccessPreconditionsCheck.hpp>
 #include <View/Kokkos_ViewCtor.hpp>
 #include <View/Kokkos_ViewTraits.hpp>
 #include <View/MDSpan/Kokkos_MDSpan_Header.hpp>
