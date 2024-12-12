@@ -21,7 +21,7 @@ namespace Test {
 template <class T>
 void test_half_conversion_type() {
   // When truncating mantissa to 10bits (like f16), 3.3 becomes 3.298828125
-  // 3.3 - 3.298828125 < 1.1719-3, so conversion error should be smaller
+  // 3.3 - 3.298828125 < 1.1719e-3, so conversion error should be smaller
   double epsilon                 = KOKKOS_HALF_T_IS_FLOAT ? 3e-7 : 1.1719e-3;
   T base                         = static_cast<T>(3.3);
   Kokkos::Experimental::half_t a = Kokkos::Experimental::cast_to_half(base);
@@ -43,7 +43,7 @@ void test_half_conversion_type() {
 template <class T>
 void test_bhalf_conversion_type() {
   // When truncating mantissa to 7bits (like b16), 3.3 becomes 3.296875
-  // 3.3 - 3.296875 < 3.125E-3, so conversion error should be smaller
+  // 3.3 - 3.296875 < 3.125e-3, so conversion error should be smaller
   double epsilon                  = KOKKOS_BHALF_T_IS_FLOAT ? 3e-7 : 3.125e-3;
   T base                          = static_cast<T>(3.3);
   Kokkos::Experimental::bhalf_t a = Kokkos::Experimental::cast_to_bhalf(base);
