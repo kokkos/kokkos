@@ -224,17 +224,7 @@ template <class T>
 using native_simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
     "Temporarily use Impl::simd_mask<T> instead") =
     basic_simd_mask<T, simd_abi::native<T>>;
-
-template <class T, class Abi>
-using simd KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Temporarily use Impl::simd<T> instead") = basic_simd<T, Abi>;
-
-template <class T, class Abi>
-using simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Temporarily use Impl::simd_mask<T> instead") = basic_simd_mask<T, Abi>;
 #endif
-
-namespace Impl {
 
 template <class T, int N = 0>
 using simd =
@@ -246,6 +236,8 @@ template <class T, int N = 0>
 using simd_mask = basic_simd_mask<
     T, std::conditional_t<(N == 0), simd_abi::Impl::native_fixed_abi<>,
                           simd_abi::Impl::native_abi<N>>>;
+
+namespace Impl {
 
 template <class... Abis>
 class abi_set {};
