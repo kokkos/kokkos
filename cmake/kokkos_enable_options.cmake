@@ -96,13 +96,14 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLAT
 
 if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
   set(MDSPAN_DEFAULT OFF)
+  message(STATUS "Note: Experimental MDSpan support will not be able to be enabled with the Intel Classic compiler.")
 else()
   set(MDSPAN_DEFAULT ON)
 endif()
 kokkos_enable_option(IMPL_MDSPAN ${MDSPAN_DEFAULT} "Whether to enable experimental mdspan support")
 kokkos_enable_option(MDSPAN_EXTERNAL OFF "Whether to use an external version of mdspan")
 kokkos_enable_option(
-  IMPL_SKIP_COMPILER_MDSPAN ON "Whether to use an internal version of mdspan even if the compiler supports mdspan"
+  IMPL_SKIP_COMPILER_MDSPAN ON "Whether to use an internal version of mdspan even if the compiler provides mdspan"
 )
 kokkos_enable_option(
   IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
@@ -114,7 +115,7 @@ mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
 if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel AND Kokkos_ENABLE_IMPL_MDSPAN)
-  message(FATAL_ERROR "Kokkos MDSpan does not support the Intel Classic compiler")
+  message(FATAL_ERROR "MDSpan not compatible with the Intel Classic compiler")
 endif()
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
@@ -125,7 +126,7 @@ endif()
 kokkos_enable_option(IMPL_VIEW_LEGACY ${VIEW_LEGACY_DEFAULT} "Whether to use the legacy implementation of View")
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
 if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
-  message(FATAL_ERROR "MDSpan must be enabled to use the new View implementation")
+  message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
 endif()
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
