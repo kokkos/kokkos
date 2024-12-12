@@ -414,12 +414,6 @@ class CudaInternal {
     return cudaStreamDestroy(stream);
   }
 
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_stream_synchronize_wrapper(cudaStream_t stream) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaStreamSynchronize(stream);
-  }
-
   // C++ API routines
   template <typename T, bool setCudaDevice = true>
   cudaError_t cuda_func_get_attributes_wrapper(cudaFuncAttributes* attr,
