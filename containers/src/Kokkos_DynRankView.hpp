@@ -423,10 +423,10 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type = View<DataType*******, Properties...>;
 
  private:
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  using drdtraits = Impl::DynRankDimTraits<void>;
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using drdtraits = Impl::DynRankDimTraits<typename view_type::specialize>;
 #else
-  using drdtraits  = Impl::DynRankDimTraits<typename view_type::specialize>;
+  using drdtraits  = Impl::DynRankDimTraits<void>;
 #endif
  public:
   // typedefs from ViewTraits, overriden
