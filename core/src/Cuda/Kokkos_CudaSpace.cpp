@@ -471,33 +471,40 @@ namespace {
 template <typename RequestedMemorySpace>
 void check_memory_space(cudaMemoryType deduced_memory_type) {
   switch (deduced_memory_type) {
-    case cudaMemoryTypeHost: 
-            if (!Kokkos::SpaceAccessibility<RequestedMemorySpace, Kokkos::CudaHostPinnedSpace>::assignable)
-                    Kokkos::abort(("Detected CudaHostPinnedSpace but requested incompatible " +
-                   std::string(RequestedMemorySpace::name())).c_str());
-            return;
-    case cudaMemoryTypeDevice: 
-            if (!Kokkos::SpaceAccessibility<RequestedMemorySpace, Kokkos::CudaSpace>::assignable)
-                    Kokkos::abort(("Detected CudaSpace but requested incompatible " +
-                   std::string(RequestedMemorySpace::name())).c_str());
-            return;
-    case cudaMemoryTypeManaged: 
-            if (!Kokkos::SpaceAccessibility<RequestedMemorySpace, Kokkos::CudaUVMSpace>::assignable)
-                    Kokkos::abort(("Detected CudaUVMSpace but requested incompatible " +
-                   std::string(RequestedMemorySpace::name())).c_str());
-            return;
-    case cudaMemoryTypeUnregistered: 
-            if (!Kokkos::SpaceAccessibility<RequestedMemorySpace, Kokkos::HostSpace>::assignable)
-                    Kokkos::abort(("Detected HostSpace but requested incompatible " +
-                   std::string(RequestedMemorySpace::name())).c_str());
-            return;
-    default:
-      Kokkos::abort("bug: unknown Cuda memory type");
+    case cudaMemoryTypeHost:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::CudaHostPinnedSpace>::assignable)
+        Kokkos::abort(
+            ("Detected CudaHostPinnedSpace but requested incompatible " +
+             std::string(RequestedMemorySpace::name()))
+                .c_str());
+      return;
+    case cudaMemoryTypeDevice:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::CudaSpace>::assignable)
+        Kokkos::abort(("Detected CudaSpace but requested incompatible " +
+                       std::string(RequestedMemorySpace::name()))
+                          .c_str());
+      return;
+    case cudaMemoryTypeManaged:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::CudaUVMSpace>::assignable)
+        Kokkos::abort(("Detected CudaUVMSpace but requested incompatible " +
+                       std::string(RequestedMemorySpace::name()))
+                          .c_str());
+      return;
+    case cudaMemoryTypeUnregistered:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::HostSpace>::assignable)
+        Kokkos::abort(("Detected HostSpace but requested incompatible " +
+                       std::string(RequestedMemorySpace::name()))
+                          .c_str());
+      return;
+    default: Kokkos::abort("bug: unknown Cuda memory type");
   }
 }
 
-}
-
+}  // namespace
 
 template <>
 void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaHostPinnedSpace>(
