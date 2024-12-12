@@ -7,6 +7,9 @@ on:
 
 jobs:
   build_and_test:
+    # only run on original repo
+    if: ${{ github.repository == "kokkos/kokkos" }}
+
     env:
       build_jobs: 40
 
