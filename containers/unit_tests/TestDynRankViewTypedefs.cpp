@@ -261,7 +261,7 @@ namespace TestIntAtomic {
 static_assert(test_view_typedefs<layout_type, space, memory_traits,
                                  host_mirror_space, int, expected_ref_type>(
     ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
-// clang-format off
-}
-// clang-format on
+
+}  // namespace TestIntAtomic
+
 }  // namespace

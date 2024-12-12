@@ -250,14 +250,14 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
         base_t::mapping());
   }
 
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_0() const { return stride(0); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_1() const { return stride(1); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_2() const { return stride(2); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_3() const { return stride(3); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_4() const { return stride(4); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_5() const { return stride(5); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_6() const { return stride(6); }
-  KOKKOS_INLINE_FUNCTION constexpr size_t stride_7() const { return stride(7); }
+  KOKKOS_FUNCTION constexpr size_t stride_0() const { return stride(0); }
+  KOKKOS_FUNCTION constexpr size_t stride_1() const { return stride(1); }
+  KOKKOS_FUNCTION constexpr size_t stride_2() const { return stride(2); }
+  KOKKOS_FUNCTION constexpr size_t stride_3() const { return stride(3); }
+  KOKKOS_FUNCTION constexpr size_t stride_4() const { return stride(4); }
+  KOKKOS_FUNCTION constexpr size_t stride_5() const { return stride(5); }
+  KOKKOS_FUNCTION constexpr size_t stride_6() const { return stride(6); }
+  KOKKOS_FUNCTION constexpr size_t stride_7() const { return stride(7); }
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
@@ -481,7 +481,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   View(const View& other) : base_t(other) {}
 
   KOKKOS_FUNCTION
-  View(View&& other) : base_t(other) {}
+  View(View&& other) : base_t(std::move(other)) {}
 
   KOKKOS_FUNCTION
   View& operator=(const View& other) {
@@ -491,7 +491,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   View& operator=(View&& other) {
-    base_t::operator=(other);
+    base_t::operator=(std::move(other));
     return *this;
   }
 
@@ -530,12 +530,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                               Args... args)
       : base_t(Impl::subview_ctor_tag, src_view, arg0, args...) {}
 
- public:
   //----------------------------------------
   // Allocation according to allocation properties and array layout
 
   template <class... P>
-  explicit inline View(const Impl::ViewCtorProp<P...>& arg_prop,
+  explicit View(const Impl::ViewCtorProp<P...>& arg_prop,
                        std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
                                         const typename traits::array_layout&>
                            arg_layout)
@@ -545,7 +544,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   template <class... P>
-  KOKKOS_FUNCTION explicit inline View(
+  KOKKOS_FUNCTION explicit View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
                        const typename traits::array_layout&>
@@ -556,7 +555,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   template <class... P>
-  KOKKOS_FUNCTION explicit inline View(
+  KOKKOS_FUNCTION explicit View(
       const typename base_t::data_handle_type& handle,
       typename traits::array_layout const& arg_layout)
       : base_t(
@@ -566,7 +565,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
 #ifdef KOKKOS_ENABLE_CXX17
   template <class Layout>
-  KOKKOS_FUNCTION explicit inline View(
+  KOKKOS_FUNCTION explicit View(
       const typename base_t::data_handle_type& handle, const Layout& arg_layout,
       std::enable_if_t<
           (std::is_same_v<Layout, LayoutStride> &&
@@ -592,7 +591,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // LayoutRight -> layout_right, layout_right_padded
   // LayoutStride -> layout_stride
   KOKKOS_FUNCTION
-  explicit inline View(const base_t::data_handle_type& handle,
+  explicit View(const base_t::data_handle_type& handle,
                        const LayoutStride& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_stride>)
       : base_t(
@@ -601,7 +600,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit inline View(const base_t::data_handle_type& handle,
+  explicit View(const base_t::data_handle_type& handle,
                        const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
                             Experimental::layout_left_padded<> >)
@@ -611,7 +610,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit inline View(const base_t::data_handle_type& handle,
+  explicit View(const base_t::data_handle_type& handle,
                        const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
                             Experimental::layout_right_padded<> >)
@@ -621,7 +620,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit inline View(const base_t::data_handle_type& handle,
+  explicit View(const base_t::data_handle_type& handle,
                        const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_left>)
       : base_t(
@@ -630,7 +629,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit inline View(const base_t::data_handle_type& handle,
+  explicit View(const base_t::data_handle_type& handle,
                        const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_right>)
       : base_t(
@@ -690,7 +689,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   // FIXME: Constructor which allows always 8 sizes should be deprecated
   template <class... P>
-  explicit inline View(
+  explicit View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer, const size_t>
           arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -712,7 +711,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   template <class... P>
-  KOKKOS_FUNCTION explicit inline View(
+  KOKKOS_FUNCTION explicit View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer, const size_t>
           arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -735,14 +734,14 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   // Allocate with label and layout
   template <typename Label>
-  explicit inline View(
+  explicit View(
       const Label& arg_label,
       std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
                        typename traits::array_layout> const& arg_layout)
       : View(Impl::ViewCtorProp<std::string>(arg_label), arg_layout) {}
 
   // Allocate label and layout, must disambiguate from subview constructor.
-  explicit inline View(const std::string& arg_label,
+  explicit View(const std::string& arg_label,
                        const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                        const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
