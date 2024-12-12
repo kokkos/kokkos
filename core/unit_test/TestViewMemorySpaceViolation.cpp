@@ -105,7 +105,7 @@ TEST(defaultdevicetype_DeathTest, view_memory_space_violation) {
         "shared_space_view", 1);
 
     ASSERT_DEATH(create_host_view(shared_space_view), "");
-    ASSERT_DEATH(create_default_view(shared_space_view), "");
+    create_default_view(shared_space_view);
     create_shared_view(shared_space_view);
 #ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
     ASSERT_DEATH(create_hostpinned_view(shared_space_view), "");
@@ -118,7 +118,7 @@ TEST(defaultdevicetype_DeathTest, view_memory_space_violation) {
     Kokkos::View<int*, Kokkos::SharedHostPinnedSpace> hostpinned_space_view(
         "host_pinned_space_view", 1);
 
-    ASSERT_DEATH(create_host_view(hostpinned_space_view), "");
+    create_host_view(hostpinned_space_view);
     ASSERT_DEATH(create_default_view(hostpinned_space_view), "");
 #ifdef KOKKOS_TEST_HAS_SHARED_SPACE
     if (has_real_shared_space)
