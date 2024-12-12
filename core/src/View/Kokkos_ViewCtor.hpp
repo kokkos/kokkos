@@ -147,6 +147,26 @@ struct ViewCtorProp<void, T *> {
   type value;
 };
 
+// For some reason I don't understand I needed this specialization explicitly
+// for NVCC/MSVC
+template <typename T>
+struct ViewCtorProp<T *> : public ViewCtorProp<void, T *> {
+  static constexpr bool has_memory_space     = false;
+  static constexpr bool has_execution_space  = false;
+  static constexpr bool has_pointer          = true;
+  static constexpr bool has_label            = false;
+  static constexpr bool allow_padding        = false;
+  static constexpr bool initialize           = true;
+  static constexpr bool sequential_host_init = false;
+
+  using memory_space    = void;
+  using execution_space = void;
+  using pointer_type    = T *;
+
+  KOKKOS_FUNCTION ViewCtorProp(const pointer_type arg)
+      : ViewCtorProp<void, pointer_type>(arg) {}
+};
+
 // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` directly
 // in the parameter lists and base class initializers, respectively, as far as
 // we can tell MSVC 16.5.5+CUDA 10.2 thinks that `ViewCtorProp` refers to the
