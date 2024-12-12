@@ -89,6 +89,8 @@ uint32_t MurmurHash3_x86_32(const void* key, int len, uint32_t seed) {
       k1 = rotl32(k1, 15);
       k1 *= c2;
       h1 ^= k1;
+      break;
+    default: break;
   };
 
   //----------

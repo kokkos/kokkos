@@ -20,7 +20,6 @@ Checks: >
   -bugprone-suspicious-include,
   -bugprone-suspicious-memory-comparison,
   -bugprone-suspicious-string-compare,
-  -bugprone-switch-missing-default-case,
   -bugprone-unchecked-optional-access,
   -bugprone-unhandled-exception-at-new,
   -bugprone-unhandled-self-assignment,
