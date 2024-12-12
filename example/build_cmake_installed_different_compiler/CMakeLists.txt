@@ -6,7 +6,6 @@ cmake_minimum_required(VERSION 3.16)
 # Kokkos flags will only apply to C++ files
 project(Example CXX Fortran)
 
-
 find_package(Kokkos REQUIRED)
 # Look for an installed Kokkos but force using the compiler launcher
 # to ensure that targets depending on Kokkos use the same compiler
