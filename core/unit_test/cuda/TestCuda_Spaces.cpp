@@ -315,8 +315,8 @@ struct TestViewCudaTexture {
     EXPECT_FALSE(T::reference_type_is_lvalue_reference);  // Texture fetch
                                                           // returns by value.
 #else
-    EXPECT_TRUE(
-        T::reference_type_is_lvalue_reference);  // FIXME: Returns by value for now.
+    EXPECT_TRUE(T::reference_type_is_lvalue_reference);  // FIXME: Returns by
+                                                         // value for now.
 #endif
 
     TestViewCudaTexture self;

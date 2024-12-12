@@ -46,8 +46,8 @@ using std::mdspan;
 #else
 // Opt in for Kokkos::pair to submdspan/subview
 // submdspan does only take index_pair_like which is derived from tuple_like
-// tuple_like is an enumerated list: 
-// tuple, pair, array, complex, ranges::subrange 
+// tuple_like is an enumerated list:
+// tuple, pair, array, complex, ranges::subrange
 // Needs to be defined before including mdspan header
 
 #include <Kokkos_Pair.hpp>

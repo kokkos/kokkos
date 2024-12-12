@@ -537,9 +537,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   template <class... P>
   explicit View(const Impl::ViewCtorProp<P...>& arg_prop,
-                       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
-                                        const typename traits::array_layout&>
-                           arg_layout)
+                std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+                                 const typename traits::array_layout&>
+                    arg_layout)
       : base_t(
             arg_prop,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
@@ -557,9 +557,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   template <class... P>
-  KOKKOS_FUNCTION explicit View(
-      const typename base_t::data_handle_type& handle,
-      typename traits::array_layout const& arg_layout)
+  KOKKOS_FUNCTION explicit View(const typename base_t::data_handle_type& handle,
+                                typename traits::array_layout const& arg_layout)
       : base_t(
             handle,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
@@ -594,7 +593,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // LayoutStride -> layout_stride
   KOKKOS_FUNCTION
   explicit View(const base_t::data_handle_type& handle,
-                       const LayoutStride& arg_layout)
+                const LayoutStride& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_stride>)
       : base_t(
             handle,
@@ -603,7 +602,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   explicit View(const base_t::data_handle_type& handle,
-                       const LayoutLeft& arg_layout)
+                const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
                             Experimental::layout_left_padded<> >)
       : base_t(
@@ -613,7 +612,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   explicit View(const base_t::data_handle_type& handle,
-                       const LayoutRight& arg_layout)
+                const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
                             Experimental::layout_right_padded<> >)
       : base_t(
@@ -623,7 +622,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   explicit View(const base_t::data_handle_type& handle,
-                       const LayoutLeft& arg_layout)
+                const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_left>)
       : base_t(
             handle,
@@ -632,7 +631,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   explicit View(const base_t::data_handle_type& handle,
-                       const LayoutRight& arg_layout)
+                const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_right>)
       : base_t(
             handle,
@@ -744,14 +743,14 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   // Allocate label and layout, must disambiguate from subview constructor.
   explicit View(const std::string& arg_label,
-                       const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+                const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+                const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<std::string>(arg_label),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
                                            arg_N4, arg_N5, arg_N6, arg_N7)) {
