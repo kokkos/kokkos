@@ -31,7 +31,7 @@ namespace Impl {
 struct HIPTraits {
 #if defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
     defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX940) || \
-    defined(KOKKOS_ARCH_AMD_GFX942)
+    defined(KOKKOS_ARCH_AMD_GFX942) || defined(KOKKOS_ARCH_AMD_GFX942_APU)
   static constexpr int WarpSize       = 64;
   static constexpr int WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
   static constexpr int WarpIndexShift = 6;      /* WarpSize == 1 << WarpShift*/
@@ -164,7 +164,7 @@ std::vector<HIP> partition_space(const HIP &, Args...) {
 template <class T>
 std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
   static_assert(
-      std::is_arithmetic<T>::value,
+      std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   // We only care about the number of instances to create and ignore weights

@@ -622,6 +622,50 @@ TEST(TEST_CATEGORY,
             const_dv.view<Kokkos::DefaultExecutionSpace>());
 }
 
+// User-defined types with a View data member, only host-constructible
+template <class V>
+class S {
+  V v_;
+
+ public:
+  template <class... Extents>
+  S(std::string label, Extents... extents) : v_(std::move(label), extents...) {}
+  S() : v_("v", 10) {}
+};
+
+template <typename V>
+auto initialize_view_of_views() {
+  Kokkos::DualView<V*, TEST_EXECSPACE> dv_v(
+      Kokkos::view_alloc("myView", Kokkos::SequentialHostInit), 3u);
+
+  V v("v", 2);
+  V w("w", 2);
+  dv_v.h_view(0) = v;
+  dv_v.h_view(1) = w;
+
+  dv_v.modify_host();
+  dv_v.sync_device();
+
+  return dv_v;
+}
+
+TEST(TEST_CATEGORY, dualview_sequential_host_init) {
+  auto dv_v = initialize_view_of_views<Kokkos::View<double*, TEST_EXECSPACE>>();
+  dv_v.resize(Kokkos::view_alloc(Kokkos::SequentialHostInit), 2u);
+  ASSERT_EQ(dv_v.d_view.size(), 2u);
+  ASSERT_EQ(dv_v.h_view.size(), 2u);
+
+  initialize_view_of_views<S<Kokkos::View<double*, TEST_EXECSPACE>>>();
+
+  Kokkos::DualView<double*> dv(
+      Kokkos::view_alloc("myView", Kokkos::SequentialHostInit), 1u);
+  dv.resize(Kokkos::view_alloc(Kokkos::SequentialHostInit), 2u);
+  ASSERT_EQ(dv.d_view.size(), 2u);
+  ASSERT_EQ(dv.h_view.size(), 2u);
+  dv.realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), 3u);
+  ASSERT_EQ(dv.d_view.size(), 3u);
+  ASSERT_EQ(dv.h_view.size(), 3u);
+}
 }  // anonymous namespace
 }  // namespace Test
 

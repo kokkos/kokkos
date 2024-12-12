@@ -34,7 +34,7 @@ jobs:
           repository: STELLAR-GROUP/hpx
           ref: v1.9.0
           path: hpx
-      - uses: actions/cache@3624ceb22c1c5a301c8db4169662070a689d9ea8 # v4.1.1
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         id:   cache-hpx
         with:
           path:         ./hpx/install
@@ -60,6 +60,8 @@ jobs:
         if: steps.cache-hpx.outputs.cache-hit != 'true'
         working-directory: hpx/build
         run: ninja -j2 install
+      - name: install clang-tidy
+        run: sudo apt-get install -y clang-tidy
 
       - name: configure kokkos
         run: |
@@ -69,6 +71,7 @@ jobs:
             -GNinja \
             -DCMAKE_BUILD_TYPE=Debug \
             -DCMAKE_INSTALL_PREFIX=$PWD/../install \
+            -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS="-Werror" \
             -DHPX_ROOT=$PWD/../../hpx/install \

@@ -1359,12 +1359,11 @@ class TestViewAPI {
     ASSERT_EQ(original.use_count(), 1);
 
     // test_refcount_poison_copy_functor throws during copy construction
-    try {
-      Kokkos::parallel_for(
-          Kokkos::RangePolicy<typename DeviceType::execution_space>(0, N0),
-          test_refcount_poison_copy_functor(original));
-    } catch (const std::bad_alloc &) {
-    }
+    ASSERT_THROW(
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<typename DeviceType::execution_space>(0, N0),
+            test_refcount_poison_copy_functor(original));
+        , std::bad_alloc);
 
     // Ensure refcounting is enabled, we should increment here
     auto copy = original;

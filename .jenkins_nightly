@@ -82,7 +82,7 @@ pipeline {
                           wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
                           chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
 
-                          mkdir -p build && cd build && \
+                          rm -rf build && mkdir -p build && cd build && \
                           cmake \
                             -DCMAKE_BUILD_TYPE=Release \
                             -DCMAKE_CXX_STANDARD=26 \
@@ -95,16 +95,21 @@ pipeline {
                             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                             -DKokkos_ENABLE_SERIAL=ON \
                           .. && \
-                          make -j8 && ctest --verbose
+                          make -j8 && ctest --no-compress-output -T Test --verbose
                           '''
                     }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
                 }
-                stage('HIP-ROCM-6.2') {
+                stage('HIP-ROCM-6.3') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.2-complete'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.3-complete'
                             label 'rocm-docker && AMD_Radeon_Instinct_MI210'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -128,11 +133,12 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --verbose'''
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
                             sh 'ccache --show-stats'
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
                         }
                     }
                 }

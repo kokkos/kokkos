@@ -781,9 +781,6 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  if(Kokkos_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
-    set(HIP_UNIFIED_MEMORY_SOURCES hip/TestHIP_UnifiedMemory_ZeroMemset.cpp)
-  endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_HIP
     SOURCES
@@ -795,7 +792,7 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamScratchStreams.cpp
     hip/TestHIP_AsyncLauncher.cpp
     hip/TestHIP_BlocksizeDeduction.cpp
-    ${HIP_UNIFIED_MEMORY_SOURCES}
+    hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
   )
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(

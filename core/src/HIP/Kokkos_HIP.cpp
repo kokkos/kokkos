@@ -66,6 +66,22 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
     }
   }
 
+  // Print a warning if the user did not select the right GFX942 architecture
+#ifdef KOKKOS_ARCH_AMD_GFX942
+  if ((Kokkos::show_warnings()) &&
+      (Impl::HIPInternal::m_deviceProp.integrated == 1)) {
+    std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300X "
+                 "(discrete GPU) on a MI300A (APU).\n";
+  }
+#endif
+#ifdef KOKKOS_ARCH_AMD_GFX942_APU
+  if ((Kokkos::show_warnings()) &&
+      (Impl::HIPInternal::m_deviceProp.integrated == 0)) {
+    std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
+                 "(APU) on a MI300X (discrete GPU).\n";
+  }
+#endif
+
   // theoretically on GFX 9XX GPUs, we can get 40 WF's / CU, but only can
   // sustain 32 see
   // https://github.com/ROCm/clr/blob/4d0b815d06751735e6a50fa46e913fdf85f751f0/hipamd/src/hip_platform.cpp#L362-L366
@@ -79,9 +95,9 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipHostMalloc((void**)&Impl::HIPInternal::constantMemHostStaging,
-                    Impl::HIPTraits::ConstantMemoryUsage));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipHostMalloc(
+      reinterpret_cast<void**>(&Impl::HIPInternal::constantMemHostStaging),
+      Impl::HIPTraits::ConstantMemoryUsage));
 
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipEventCreate(&Impl::HIPInternal::constantMemReusable));
@@ -141,10 +157,6 @@ void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "yes\n";
 #else
   os << "no\n";
-#endif
-#ifdef KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY
-  os << "  KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY: ";
-  os << "yes\n";
 #endif
 
   os << "\nRuntime Configuration:\n";

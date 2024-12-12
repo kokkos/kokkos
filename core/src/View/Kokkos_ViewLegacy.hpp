@@ -1031,8 +1031,8 @@ class View : public ViewTraits<DataType, Properties...> {
       const std::string& alloc_name =
           Impl::get_property<Impl::LabelTag>(prop_copy);
       Impl::runtime_check_rank(
-          *this, std::is_same<typename traits::specialize, void>::value, i0, i1,
-          i2, i3, i4, i5, i6, i7, alloc_name.c_str());
+          *this, std::is_same_v<typename traits::specialize, void>, i0, i1, i2,
+          i3, i4, i5, i6, i7, alloc_name.c_str());
     }
 #endif
 
@@ -1059,8 +1059,8 @@ class View : public ViewTraits<DataType, Properties...> {
         ,
         m_map(arg_prop, arg_layout) {
     static_assert(
-        std::is_same<pointer_type,
-                     typename Impl::ViewCtorProp<P...>::pointer_type>::value,
+        std::is_same_v<pointer_type,
+                       typename Impl::ViewCtorProp<P...>::pointer_type>,
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
 
@@ -1091,8 +1091,8 @@ class View : public ViewTraits<DataType, Properties...> {
       size_t i7 = arg_layout.dimension[7];
 
       Impl::runtime_check_rank(
-          *this, std::is_same<typename traits::specialize, void>::value, i0, i1,
-          i2, i3, i4, i5, i6, i7, "UNMANAGED");
+          *this, std::is_same_v<typename traits::specialize, void>, i0, i1, i2,
+          i3, i4, i5, i6, i7, "UNMANAGED");
     }
 #endif
   }

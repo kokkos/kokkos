@@ -67,6 +67,7 @@ declare_and_check_host_arch(POWER9 "IBM POWER9 CPUs")
 declare_and_check_host_arch(ZEN "AMD Zen architecture")
 declare_and_check_host_arch(ZEN2 "AMD Zen2 architecture")
 declare_and_check_host_arch(ZEN3 "AMD Zen3 architecture")
+declare_and_check_host_arch(ZEN4 "AMD Zen4 architecture")
 declare_and_check_host_arch(RISCV_SG2042 "SG2042 (RISC-V) CPUs")
 declare_and_check_host_arch(RISCV_RVA22V "RVA22V (RISC-V) CPUs")
 
@@ -104,9 +105,9 @@ if(Kokkos_ENABLE_HIP
 endif()
 
 # AMD archs ordered in decreasing priority of autodetection
-list(APPEND SUPPORTED_AMD_GPUS MI300 MI300)
-list(APPEND SUPPORTED_AMD_ARCHS AMD_GFX942 AMD_GFX940)
-list(APPEND CORRESPONDING_AMD_FLAGS gfx942 gfx940)
+list(APPEND SUPPORTED_AMD_GPUS MI300 MI300A MI300)
+list(APPEND SUPPORTED_AMD_ARCHS AMD_GFX942 AMD_GFX942_APU AMD_GFX940)
+list(APPEND CORRESPONDING_AMD_FLAGS gfx942 gfx942 gfx940)
 list(APPEND SUPPORTED_AMD_GPUS MI200 MI200 MI100 MI100)
 list(APPEND SUPPORTED_AMD_ARCHS VEGA90A AMD_GFX90A VEGA908 AMD_GFX908)
 list(APPEND CORRESPONDING_AMD_FLAGS gfx90a gfx90a gfx908 gfx908)
@@ -172,7 +173,7 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
   endif()
 
-  set(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers" ${COMMON_WARNINGS})
+  set(GNU_WARNINGS "-Wempty-body" "-Wignored-qualifiers" ${COMMON_WARNINGS})
   if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU)
     list(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
   endif()
@@ -403,13 +404,31 @@ if(KOKKOS_ARCH_ZEN3)
     MSVC
     /arch:AVX2
     NVHPC
-    -tp=zen2
+    -tp=zen3
     DEFAULT
     -march=znver3
     -mtune=znver3
   )
   set(KOKKOS_ARCH_AMD_ZEN3 ON)
   set(KOKKOS_ARCH_AVX2 ON)
+endif()
+
+if(KOKKOS_ARCH_ZEN4)
+  compiler_specific_flags(
+    COMPILER_ID
+    KOKKOS_CXX_HOST_COMPILER_ID
+    Intel
+    -xCORE-AVX512
+    MSVC
+    /arch:AVX512
+    NVHPC
+    -tp=zen4
+    DEFAULT
+    -march=znver4
+    -mtune=znver4
+  )
+  set(KOKKOS_ARCH_AMD_ZEN4 ON)
+  set(KOKKOS_ARCH_AVX512XEON ON)
 endif()
 
 if(KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
@@ -1163,6 +1182,26 @@ if(KOKKOS_ARCH_HOPPER90)
   set(KOKKOS_ARCH_HOPPER ON)
 endif()
 
+function(CHECK_AMD_APU ARCH)
+  set(BINARY_TEST_DIR ${CMAKE_CURRENT_BINARY_DIR}/cmake/compile_tests/AmdApuWorkdir)
+  file(REMOVE_RECURSE ${BINARY_TEST_DIR})
+  file(MAKE_DIRECTORY ${BINARY_TEST_DIR})
+
+  try_run(RESULT COMPILE_RESULT ${BINARY_TEST_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compile_tests/amd_apu.cc
+          RUN_OUTPUT_VARIABLE AMD_APU
+  )
+
+  if(NOT COMPILE_RESULT OR NOT RESULT EQUAL 0)
+    message(SEND_ERROR "Autodetection of AMD APU failed."
+                       "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'."
+    )
+  endif()
+
+  if(AMD_APU)
+    set(${ARCH} AMD_GFX942_APU PARENT_SCOPE)
+  endif()
+endfunction()
+
 #HIP detection of gpu arch
 if(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED AND NOT KOKKOS_IMPL_AMDGPU_FLAGS)
   find_program(ROCM_ENUMERATOR rocm_agent_enumerator)
@@ -1187,6 +1226,10 @@ if(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED AND NOT KOKKOS_IMPL_A
         list(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
         string(REGEX MATCH "(${FLAG})" DETECTED_GPU_ARCH ${GPU_ARCHS})
         if("${DETECTED_GPU_ARCH}" STREQUAL "${FLAG}")
+          # If we detected gfx942, we need to discriminate between APU and discrete GPU
+          if(FLAG STREQUAL "gfx942")
+            check_amd_apu(ARCH)
+          endif()
           set_and_check_amd_arch(${ARCH} ${FLAG})
           set(AMD_ARCH_DETECTED ${ARCH})
           break()

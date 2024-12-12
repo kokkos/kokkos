@@ -35,9 +35,9 @@ class GraphImpl<Kokkos::HIP> {
   using root_node_impl_t =
       GraphNodeImpl<Kokkos::HIP, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
-  using aggregate_kernel_impl_t = HIPGraphNodeAggregateKernel;
+  using aggregate_impl_t = HIPGraphNodeAggregate;
   using aggregate_node_impl_t =
-      GraphNodeImpl<Kokkos::HIP, aggregate_kernel_impl_t,
+      GraphNodeImpl<Kokkos::HIP, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
@@ -55,7 +55,9 @@ class GraphImpl<Kokkos::HIP> {
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr);
 
   template <class NodeImpl>
-  void add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr);
 
   template <class NodeImplPtr, class PredecessorRef>
   void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref);
@@ -117,12 +119,12 @@ inline void GraphImpl<Kokkos::HIP>::add_node(
                            /* numDependencies = */ 0));
 }
 
-// Requires NodeImplPtr is a shared_ptr to specialization of GraphNodeImpl
-// Also requires that the kernel has the graph node tag in its policy
 template <class NodeImpl>
-inline void GraphImpl<Kokkos::HIP>::add_node(
+inline std::enable_if_t<
+    Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
+GraphImpl<Kokkos::HIP>::add_node(
     std::shared_ptr<NodeImpl> const& arg_node_ptr) {
-  static_assert(NodeImpl::kernel_type::Policy::is_graph_kernel::value);
+  static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
   KOKKOS_EXPECTS(arg_node_ptr);
   // The Kernel launch from the execute() method has been shimmed to insert
   // the node into the graph
@@ -188,9 +190,8 @@ inline auto GraphImpl<Kokkos::HIP>::create_aggregate_ptr(PredecessorRefs&&...) {
   // in the generic layer, which calls through to add_predecessor for
   // each predecessor ref, so all we need to do here is create the (trivial)
   // aggregate node.
-  return std::make_shared<aggregate_node_impl_t>(m_execution_space,
-                                                 _graph_node_kernel_ctor_tag{},
-                                                 aggregate_kernel_impl_t{});
+  return std::make_shared<aggregate_node_impl_t>(
+      m_execution_space, _graph_node_kernel_ctor_tag{}, aggregate_impl_t{});
 }
 }  // namespace Impl
 }  // namespace Kokkos

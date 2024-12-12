@@ -14,21 +14,25 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
-#define KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
+#include <iostream>
+#include <hip/hip_runtime_api.h>
 
-#include <Kokkos_Macros.hpp>
+int main() {
+  hipDeviceProp_t hipProp;
+  hipError_t error = hipGetDeviceProperties(&hipProp, 0);
 
-namespace Kokkos {
-namespace Impl {
+  if (error != hipSuccess) {
+    std::cout << hipGetErrorString(error) << '\n';
+    return error;
+  }
 
-template <class ExecutionSpace>
-struct GraphNodeKernelDefaultImpl;
+  if (hipProp.integrated == 1) {
+    // We detected an APU
+    std::cout << "ON";
+  } else {
+    // We detected a discrete GPU
+    std::cout << "OFF";
+  }
 
-template <class ExecutionSpace>
-struct GraphNodeAggregateDefaultImpl;
-
-}  // end namespace Impl
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_HOST_GRAPH_FWD_HPP
+  return 0;
+}

@@ -101,6 +101,9 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
   ASSERT_EQ(num_nodes, 2u);
 
+  // hipGraphDebugDotPrint was introduced in ROCm 5.5
+#if (HIP_VERSION_MAJOR > 5) || \
+    ((HIP_VERSION_MAJOR > 5) && (HIP_VERSION_MINOR >= 5))
   const auto dot = std::filesystem::temp_directory_path() / "hip_graph.dot";
 
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphDebugDotPrint(
@@ -121,6 +124,7 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
   ASSERT_TRUE(std::regex_search(buffer.str(), std::regex(expected)))
       << "Could not find expected signature regex " << std::quoted(expected)
       << " in " << dot;
+#endif
 #endif
 }
 

@@ -1,7 +1,7 @@
 ARG BASE=nvcr.io/nvidia/nvhpc:23.7-devel-cuda12.2-ubuntu20.04
 FROM $BASE
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \

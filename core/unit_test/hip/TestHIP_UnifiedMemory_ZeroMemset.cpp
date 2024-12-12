@@ -23,12 +23,13 @@ namespace Test {
 // called on host-allocated buffers. The fix was in PR 7380 to use a
 // parallel_for to zero memory
 TEST(hip, unified_memory_zero_memset) {
-#if !defined(KOKKOS_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
-#error this test should only be run with HIP unified memory enabled
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+  GTEST_SKIP()
+      << "this test should only be run with HIP unified memory enabled";
 #endif
 
-  constexpr size_t N = 1024 * 1024;  // size doesn't matter
-  std::vector<int> v(N, 1);          // initialize to non-zero
+  constexpr size_t N = static_cast<size_t>(1024 * 1024);  // size doesn't matter
+  std::vector<int> v(N, 1);  // initialize to non-zero
   Kokkos::View<int*, Kokkos::HIPSpace> a(v.data(), N);
 
   // zero with deep_copy (this is where the error occurs)

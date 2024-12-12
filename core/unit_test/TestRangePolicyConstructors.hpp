@@ -238,6 +238,8 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
     return str.insert(str.find("(") + 1, std::to_string(val).c_str());
   };
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
   {
     int test_val = -1;
