@@ -507,23 +507,24 @@ void check_memory_space(cudaMemoryType deduced_memory_type) {
 }  // namespace
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaHostPinnedSpace>(
-    const void *ptr, const Kokkos::CudaHostPinnedSpace &) {
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::CudaHostPinnedSpace>(const void *ptr,
+                                 const Kokkos::CudaHostPinnedSpace &) {
   cudaPointerAttributes attributes;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));
   check_memory_space<Kokkos::CudaHostPinnedSpace>(attributes.type);
 }
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaUVMSpace>(
-    const void *ptr, const Kokkos::CudaUVMSpace &) {
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::CudaUVMSpace>(const void *ptr, const Kokkos::CudaUVMSpace &) {
   cudaPointerAttributes attributes;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));
   check_memory_space<Kokkos::CudaUVMSpace>(attributes.type);
 }
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::CudaSpace>(
     const void *ptr, const Kokkos::CudaSpace &) {
   cudaPointerAttributes attributes;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));
@@ -531,7 +532,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaSpace>(
 }
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
     const void *ptr, const Kokkos::HostSpace &) {
   cudaPointerAttributes attributes;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));

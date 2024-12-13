@@ -376,27 +376,29 @@ struct MemorySpaceAccess<HIPManagedSpace, HIPHostPinnedSpace> {
 };
 
 template <typename MemorySpace>
-void runtime_check_memory_space(const void* ptr, const MemorySpace&);
+void runtime_check_memory_space_assignability(const void* ptr,
+                                              const MemorySpace&);
 
 }  // namespace Impl
 }  // namespace Kokkos
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
-    const void* ptr, const Kokkos::HIPHostPinnedSpace&);
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::HIPHostPinnedSpace>(const void* ptr,
+                                const Kokkos::HIPHostPinnedSpace&);
 
 #if !(HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 3)
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
-    const void* ptr, const Kokkos::HIPManagedSpace&);
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::HIPManagedSpace>(const void* ptr, const Kokkos::HIPManagedSpace&);
 #endif
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HIPSpace>(
     const void* ptr, const Kokkos::HIPSpace&);
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
     const void* ptr, const Kokkos::HostSpace&);
 
 #endif /* #define KOKKOS_HIPSPACE_HPP */

@@ -574,23 +574,25 @@ struct DeepCopy<HostSpace, MemSpace, ExecutionSpace,
 
 namespace Kokkos::Impl {
 template <class MemorySpace>
-void runtime_check_memory_space(const void* ptr, const MemorySpace&);
+void runtime_check_memory_space_assignability(const void* ptr,
+                                              const MemorySpace&);
 }
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaHostPinnedSpace>(
-    const void* ptr, const Kokkos::CudaHostPinnedSpace&);
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::CudaHostPinnedSpace>(const void* ptr,
+                                 const Kokkos::CudaHostPinnedSpace&);
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaUVMSpace>(
-    const void* ptr, const Kokkos::CudaUVMSpace&);
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::CudaUVMSpace>(const void* ptr, const Kokkos::CudaUVMSpace&);
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::CudaSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::CudaSpace>(
     const void* ptr, const Kokkos::CudaSpace&);
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
     const void* ptr, const Kokkos::HostSpace&);
 
 //----------------------------------------------------------------------------

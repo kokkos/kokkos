@@ -299,23 +299,27 @@ struct MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
 
 namespace Kokkos::Impl {
 template <class MemorySpace>
-void runtime_check_memory_space(const void* ptr, const MemorySpace& space);
+void runtime_check_memory_space_assignability(const void* ptr,
+                                              const MemorySpace& space);
 }
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::SYCLHostUSMSpace>(
-    const void* ptr, const Kokkos::SYCLHostUSMSpace& space);
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLHostUSMSpace>(const void* ptr,
+                              const Kokkos::SYCLHostUSMSpace& space);
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::SYCLSharedUSMSpace>(
-    const void* ptr, const Kokkos::SYCLSharedUSMSpace& space);
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLSharedUSMSpace>(const void* ptr,
+                                const Kokkos::SYCLSharedUSMSpace& space);
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::SYCLDeviceUSMSpace>(
-    const void* ptr, const Kokkos::SYCLDeviceUSMSpace& space);
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLDeviceUSMSpace>(const void* ptr,
+                                const Kokkos::SYCLDeviceUSMSpace& space);
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
     const void* ptr, const Kokkos::HostSpace& space);
 
 KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_SPECIALIZATION(

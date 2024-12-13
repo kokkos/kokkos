@@ -353,8 +353,9 @@ void check_memory_space(hipMemoryType deduced_memory_type) {
 }  // namespace
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
-    const void* ptr, const Kokkos::HIPHostPinnedSpace&) {
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::HIPHostPinnedSpace>(const void* ptr,
+                                const Kokkos::HIPHostPinnedSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
 #if HIP_VERSION_MAJOR >= 6
@@ -380,8 +381,8 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPHostPinnedSpace>(
 
 #if !(HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR < 3)
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
-    const void* ptr, const Kokkos::HIPManagedSpace&) {
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::HIPManagedSpace>(const void* ptr, const Kokkos::HIPManagedSpace&) {
   int hasPageableMemory = 0;  // false by default
   KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
       &hasPageableMemory, hipDeviceAttributePageableMemoryAccess,
@@ -413,7 +414,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPManagedSpace>(
 #endif
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HIPSpace>(
     const void* ptr, const Kokkos::HIPSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);
@@ -439,7 +440,7 @@ void Kokkos::Impl::runtime_check_memory_space<Kokkos::HIPSpace>(
 }
 
 template <>
-void Kokkos::Impl::runtime_check_memory_space<Kokkos::HostSpace>(
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
     const void* ptr, const Kokkos::HostSpace&) {
   hipPointerAttribute_t attributes;
   hipError_t error = hipPointerGetAttributes(&attributes, ptr);

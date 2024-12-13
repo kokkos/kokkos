@@ -1068,7 +1068,7 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST((if (span() > 0) {
       auto prop_copy = Impl::with_properties_if_unset(
           arg_prop, typename traits::memory_space{});
-      Impl::runtime_check_memory_space(
+      Impl::runtime_check_memory_space_assignability(
           Impl::get_property<Impl::PointerTag>(prop_copy),
           Impl::get_property<Impl::MemorySpaceTag>(prop_copy));
     }))
@@ -1141,7 +1141,7 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST((if (span() > 0) {
       auto prop_copy = Impl::with_properties_if_unset(
           arg_prop, typename traits::memory_space{});
-      Impl::runtime_check_memory_space(
+      Impl::runtime_check_memory_space_assignability(
           Impl::get_property<Impl::PointerTag>(prop_copy),
           Impl::get_property<Impl::MemorySpaceTag>(prop_copy));
     }))
