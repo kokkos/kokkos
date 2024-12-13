@@ -27,7 +27,6 @@
 #include <impl/Kokkos_Error.hpp>
 #include <complex>
 #include <type_traits>
-#include <iosfwd>
 #include <tuple>
 
 namespace Kokkos {
@@ -755,6 +754,66 @@ KOKKOS_INLINE_FUNCTION complex<T> polar(const T& r, const T& theta = T()) {
 template <class RealType>
 KOKKOS_INLINE_FUNCTION RealType abs(const complex<RealType>& x) {
   return hypot(x.real(), x.imag());
+}
+
+//! The phase angle of a complex number.
+template <typename RealType>
+KOKKOS_FUNCTION constexpr RealType arg(const complex<RealType>& x) noexcept {
+  return atan2(x.imag(), x.real());
+}
+
+template <typename RealType,
+          typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
+KOKKOS_FUNCTION constexpr RealType arg(RealType f) noexcept {
+  return atan2(static_cast<RealType>(0), f);
+}
+
+template <typename IntegerType,
+          typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
+KOKKOS_FUNCTION constexpr double arg(IntegerType i) noexcept {
+  return atan2(0., static_cast<double>(i));
+}
+
+//! The squared magnitude of a complex number.
+template <typename RealType>
+KOKKOS_FUNCTION constexpr RealType norm(const complex<RealType>& x) noexcept {
+  return x.real() * x.real() + x.imag() * x.imag();
+}
+
+template <typename RealType,
+          typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
+KOKKOS_FUNCTION constexpr RealType norm(RealType f) noexcept {
+  return f * f;
+}
+
+template <typename IntegerType,
+          typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
+KOKKOS_FUNCTION constexpr double norm(IntegerType i) noexcept {
+  return static_cast<double>(i) * static_cast<double>(i);
+}
+
+//! The projection onto the Riemann sphere
+// based on libc++ implementation
+template <typename RealType>
+KOKKOS_FUNCTION constexpr complex<RealType> proj(
+    const complex<RealType>& x) noexcept {
+  return Kokkos::isinf(x.real()) || Kokkos::isinf(x.imag())
+             ? complex<RealType>(
+                   INFINITY,
+                   Kokkos::copysign(static_cast<RealType>(0), x.imag()))
+             : x;
+}
+
+template <typename RealType,
+          typename = std::enable_if_t<std::is_floating_point_v<RealType>>>
+KOKKOS_FUNCTION constexpr complex<RealType> proj(RealType f) noexcept {
+  return complex<RealType>(Kokkos::isinf(f) ? Kokkos::abs(f) : f);
+}
+
+template <typename IntegerType,
+          typename = std::enable_if_t<std::is_integral_v<IntegerType>>>
+KOKKOS_FUNCTION constexpr complex<double> proj(IntegerType i) noexcept {
+  return complex<double>(static_cast<double>(i));
 }
 
 //! Power of a complex number
