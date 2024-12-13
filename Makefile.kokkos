@@ -13,7 +13,7 @@ KOKKOS_DEVICES ?= "Threads"
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,Volta70,Volta72,Turing75,Ampere80,Ampere86,Ada89,Hopper90
 # ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2,A64FX,ARMv9-Grace
 # IBM:      Power8,Power9
-# AMD-GPUS: AMD_GFX906,AMD_GFX908,AMD_GFX90A,AMD_GFX940,AMD_GFX942,AMD_GFX1030,AMD_GFX1100,AMD_GFX1103
+# AMD-GPUS: AMD_GFX906,AMD_GFX908,AMD_GFX90A,AMD_GFX940,AMD_GFX942,AMD_GFX942_APU,AMD_GFX1030,AMD_GFX1100,AMD_GFX1103
 # AMD-CPUS: AMDAVX,Zen,Zen2,Zen3
 # Intel-GPUs: Intel_Gen,Intel_Gen9,Intel_Gen11,Intel_Gen12LP,Intel_DG1,Intel_XeHP,Intel_PVC
 KOKKOS_ARCH ?= ""
@@ -454,6 +454,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A), 0)
 endif
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940 := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX940)
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942 := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX942)
+KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942_APU := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX942_APU)
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030 := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX1030)
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030), 0)
   KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030 := $(call kokkos_has_string,$(KOKKOS_ARCH),NAVI1030)
@@ -468,6 +469,7 @@ KOKKOS_INTERNAL_USE_ARCH_AMD := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX9
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A)  \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940)  \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942) \
+                                              + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942_APU) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1100) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1103))
@@ -1193,6 +1195,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940), 1)
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX942")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx942\"")
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx942
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942_APU), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX942_APU")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx942\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx942
 endif
