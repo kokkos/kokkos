@@ -92,4 +92,13 @@ TEST(TEST_CATEGORY, vcp_label_copy_constructor) {
             "our label");
 }
 
+TEST(TEST_CATEGORY, vcp_pointer_add_property) {
+  double dummy        = 1.;
+  auto properties     = Kokkos::view_wrap(&dummy);
+  auto new_properties = Kokkos::Impl::with_properties_if_unset(
+      properties, std::string("our label"));
+  ASSERT_EQ(Kokkos::Impl::get_property<Kokkos::Impl::LabelTag>(new_properties),
+            "our label");
+}
+
 }  // namespace
