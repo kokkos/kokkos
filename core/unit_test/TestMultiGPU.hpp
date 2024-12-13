@@ -181,4 +181,15 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   ASSERT_EQ(error0, 0);
   ASSERT_EQ(error1, 0);
 }
+
+template <int N>
+__global__ void accumulate_kernel(int *value) {
+  for (int i = 0; i < N; ++i) {
+    Kokkos::atomic_inc(value);
+  }
+}
+
+__global__ void set_equal_kernel(int *check, const int *value) {
+  check[0] = value[0];
+}
 }  // namespace
