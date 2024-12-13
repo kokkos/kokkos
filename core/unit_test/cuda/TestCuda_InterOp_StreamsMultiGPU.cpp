@@ -106,15 +106,12 @@ TEST(cuda_multi_gpu, scratch_space) {
   }
 }
 
-// Test that stream synchronization behavoir for CudaAPI matches the assumptions
-// made in Kokkos for multi gpu support, namely, that any stream (no matter
-// which device it is created on) can be synced from any device.
 TEST(cuda_multi_gpu, stream_sync_semantics) {
   StreamsAndDevices streams_and_devices;
   {
-    auto streams = streams_and_devices.streams;
+    std::array<TEST_EXECSPACE, 2> execs =
+        get_execution_spaces(streams_and_devices);
 
-    // Allocate data.
     int *value;
     int *check;
     KOKKOS_IMPL_CUDA_SAFE_CALL(
@@ -122,20 +119,10 @@ TEST(cuda_multi_gpu, stream_sync_semantics) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMallocHost(reinterpret_cast<void **>(&check), 1 * sizeof(int)));
 
-    // Launch "long" kernel on device 0.
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(0));
-    constexpr size_t size = 1000;
-    accumulate_kernel<size><<<1, 1, 0, streams[0]>>>(value);
+    test_stream_sync(execs[0], execs[1], value, check, [&execs]() {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[1].cuda_device()));
+    });
 
-    // Wait for the kernel running on device 0 while we are on device 1, then
-    // check the value.
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(1));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(streams[0]));
-    set_equal_kernel<<<1, 1, 0, streams[1]>>>(check, value);
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(streams[1]));
-    ASSERT_EQ(check[0], size);
-
-    // Cleanup.
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(value));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(check));
   }
