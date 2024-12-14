@@ -59,10 +59,37 @@ inline void host_test_mask_traits() {
 }
 
 template <typename Abi, typename DataType>
+inline void host_test_simd_alias() {
+  using basic_simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using native_fixed_abi =
+      Kokkos::Experimental::simd_abi::Impl::native_fixed_abi<>;
+  using native_abi =
+      Kokkos::Experimental::simd_abi::Impl::native_abi<basic_simd_type::size()>;
+
+  if constexpr (std::is_same_v<Abi, native_fixed_abi>) {
+    using simd_type      = Kokkos::Experimental::simd<DataType>;
+    using simd_mask_type = Kokkos::Experimental::simd_mask<DataType>;
+    static_assert(std::is_same_v<basic_simd_type, simd_type>);
+    static_assert(
+        std::is_same_v<typename basic_simd_type::mask_type, simd_mask_type>);
+  }
+  if constexpr (std::is_same_v<Abi, native_abi>) {
+    using simd_type =
+        Kokkos::Experimental::simd<DataType, basic_simd_type::size()>;
+    using simd_mask_type =
+        Kokkos::Experimental::simd_mask<DataType, basic_simd_type::size()>;
+    static_assert(std::is_same_v<basic_simd_type, simd_type>);
+    static_assert(
+        std::is_same_v<typename basic_simd_type::mask_type, simd_mask_type>);
+  }
+}
+
+template <typename Abi, typename DataType>
 inline void host_check_construction() {
   if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     host_test_simd_traits<Abi, DataType>();
     host_test_mask_traits<Abi, DataType>();
+    host_test_simd_alias<Abi, DataType>();
   }
 }
 

@@ -218,11 +218,11 @@ using native = ForSpace<Kokkos::DefaultExecutionSpace>;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T>
 using native_simd KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Temporarily use Impl::simd<T> instead") =
+    "native_simd is deprecated. Use simd<T> instead") =
     basic_simd<T, simd_abi::native<T>>;
 template <class T>
 using native_simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Temporarily use Impl::simd_mask<T> instead") =
+    "native_simd_mask is deprecated. Use simd_mask<T> instead") =
     basic_simd_mask<T, simd_abi::native<T>>;
 #endif
 
