@@ -614,6 +614,9 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
+#ifdef KOKKOS_COMPILER_INTEL
+    __builtin_unreachable();
+#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0,
