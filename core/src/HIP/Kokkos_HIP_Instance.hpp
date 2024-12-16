@@ -142,6 +142,9 @@ class HIPInternal {
   // execution space or HIPInternal object is provided to ensure all
   // computation is done on the correct device.
 
+  // FIXME: Not all HIP API calls require us to set device. Potential
+  // performance gain by selectively setting device.
+
   // Set the device in to the device stored by this instance for HIP API calls.
   void set_hip_device() const {
     verify_is_initialized("set_hip_device");
