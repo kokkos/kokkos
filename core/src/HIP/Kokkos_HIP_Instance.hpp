@@ -138,20 +138,14 @@ class HIPInternal {
   // HIPInternal::m_hipDev set in HIP::impl_initialize(). In the case
   // where multiple HIP instances are used, or threads are launched
   // using non-default HIP execution space after initialization, all HIP
-  // API calls and uses of hipStream_t variables must follow a call to
-  // hipSetDevice(device_id) when an execution space or HIPInternal
-  // object is provided to ensure all computation is done on the correct device.
+  // API calls must follow a call to hipSetDevice(device_id) when an
+  // execution space or HIPInternal object is provided to ensure all
+  // computation is done on the correct device.
 
   // Set the device in to the device stored by this instance for HIP API calls.
   void set_hip_device() const {
     verify_is_initialized("set_hip_device");
     KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
-  }
-
-  // Return this instances stream after setting the correct device
-  hipStream_t get_stream() const {
-    set_hip_device();
-    return m_stream;
   }
 
   // HIP API wrappers where we set the correct device id before calling the HIP

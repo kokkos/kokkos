@@ -382,8 +382,9 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
   static void invoke_kernel(DriverType const &driver, dim3 const &grid,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
+    // Set hip device before launching kernel
+    hip_instance->set_hip_device();
+    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
         driver);
   }
 
@@ -443,8 +444,10 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     DriverType *driver_ptr = reinterpret_cast<DriverType *>(
         hip_instance->stage_functor_for_execution(
             reinterpret_cast<void const *>(&driver), sizeof(DriverType)));
-    (base_t::
-         get_kernel_func())<<<grid, block, shmem, hip_instance->get_stream()>>>(
+
+    // Set hip device before launching kernel
+    hip_instance->set_hip_device();
+    (base_t::get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>(
         driver_ptr);
   }
 
@@ -460,7 +463,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     if (!Impl::is_empty_launch(grid, block)) {
       auto *driver_ptr = Impl::allocate_driver_storage_for_kernel(
-          HIP(hip_instance->get_stream(), ManageStream::no), driver);
+          HIP(hip_instance->m_stream, ManageStream::no), driver);
 
       // Unlike in the non-graph case, we can get away with doing an async copy
       // here because the `DriverType` instance is held in the GraphNodeImpl
@@ -530,9 +533,12 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
         HIP_SYMBOL(kokkos_impl_hip_constant_memory_buffer), staging,
         sizeof(DriverType), 0, hipMemcpyHostToDevice));
 
+    // Set hip device before launching kernel
+    hip_instance->set_hip_device();
+
     // Invoke the driver function on the device
-    (base_t::get_kernel_func())<<<grid, block, shmem,
-                                  hip_instance->get_stream()>>>();
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>();
 
     // Record an event that says when the constant buffer can be reused
     KOKKOS_IMPL_HIP_SAFE_CALL((hip_instance->hip_event_record_wrapper(
