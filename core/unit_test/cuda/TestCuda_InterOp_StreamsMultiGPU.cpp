@@ -45,6 +45,13 @@ struct StreamsAndDevices {
 
 std::array<TEST_EXECSPACE, 2> get_execution_spaces(
     const StreamsAndDevices &streams_and_devices) {
+  // Must return void to use GTEST_SKIP
+  [&]() {
+    if (streams_and_devices.devices[0] == streams_and_devices.devices[1])
+      GTEST_SKIP() << "Skipping Cuda multi-gpu testing since current machine "
+                      "only contains a single GPU.\n";
+  }();
+
   TEST_EXECSPACE exec0(streams_and_devices.streams[0]);
   TEST_EXECSPACE exec1(streams_and_devices.streams[1]);
 
