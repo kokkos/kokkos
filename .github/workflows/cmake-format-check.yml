@@ -14,6 +14,6 @@ jobs:
       uses: puneetmatharu/cmake-format-lint-action@2ac346e79e7ceac958bc637c1391285fb335ed7c # v1.0.5
       with:
         args: --config-files .cmake-format.py --in-place
-        file_regex: '(.*\.cmake$|.*\.cmake\.in$|CMakeLists.txt$)'
+        file-regex: '(.*\.cmake$|.*\.cmake\.in$|CMakeLists.txt$)'
     - name: check
       run: git diff --exit-code
