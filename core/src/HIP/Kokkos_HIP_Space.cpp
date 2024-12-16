@@ -24,11 +24,11 @@
 #include <HIP/Kokkos_HIP_Space.hpp>
 
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
+#include <HIP/Kokkos_IsXnack.hpp>
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
-#include <impl/Kokkos_IsXnack.hpp>
 
 #include <hip/hip_runtime_api.h>
 
