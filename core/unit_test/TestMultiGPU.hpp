@@ -203,7 +203,7 @@ struct StreamSyncFunctor {
 };
 
 void test_stream_sync(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1,
-                      const std::function<void()> &set_to_device_1) {
+                      const std::function<void(TEST_EXECSPACE &)> &set_device) {
   // Create data in host pinned space
   Kokkos::View<int, Kokkos::SharedHostPinnedSpace> value("value"),
       check("check");
@@ -217,7 +217,7 @@ void test_stream_sync(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1,
       Kokkos::RangePolicy<TEST_EXECSPACE, AccumulateTag>(exec0, 0, 1), f);
 
   // Force set internal device to dev1
-  set_to_device_1();
+  set_device(exec1);
 
   // Sync dev0
   exec0.fence();
