@@ -62,7 +62,7 @@ pipeline {
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_LIBDL=OFF" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_LIBQUADMATH=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_SERIAL=ON" && \
-                              ctest -V \
+                              ctest -VV \
                                 -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
                                 -S CTestRun.cmake \
                                 -D GITHUB_PR_ID=${PR_ID} \

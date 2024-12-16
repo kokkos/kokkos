@@ -33,7 +33,7 @@ jobs:
           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_DEPRECATED_CODE_4=ON"
           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_EXAMPLES=ON"
           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SERIAL=ON"
-          ctest -V \
+          ctest -VV \
             -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
             -S CTestRun.cmake \
             -D GITHUB_PR_ID=${{ github.event.number }} \
