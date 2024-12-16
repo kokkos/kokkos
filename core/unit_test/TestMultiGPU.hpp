@@ -193,8 +193,6 @@ struct StreamSyncFunctor {
   int *value;
   int *check;
 
-  StreamSyncFunctor(int *value_, int *check_) : value(value_), check(check_) {}
-
   KOKKOS_FUNCTION
   void operator()(const AccumulateTag &, const int) const {
     for (int i = 0; i < N; ++i) Kokkos::atomic_inc(value);
@@ -204,11 +202,14 @@ struct StreamSyncFunctor {
   void operator()(const CheckTag &, const int) const { check[0] = value[0]; }
 };
 
-void test_stream_sync(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1, int *value,
-                      int *check,
+void test_stream_sync(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1,
                       const std::function<void()> &set_to_device_1) {
-  constexpr int N = 1000;
-  StreamSyncFunctor<N> f(value, check);
+  // Create data in host pinned space
+  Kokkos::View<int, Kokkos::SharedHostPinnedSpace> value("value"),
+      check("check");
+
+  constexpr int N        = 1000;
+  StreamSyncFunctor<N> f = {value.data(), check.data()};
 
   // Launch "long" kernel on dev0.
   Kokkos::parallel_for(
@@ -228,6 +229,6 @@ void test_stream_sync(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1, int *value,
   exec1.fence();
 
   // Check the value observed on dev1 matches the complete computation on dev0
-  ASSERT_EQ(check[0], N);
+  ASSERT_EQ(check(), N);
 }
 }  // namespace

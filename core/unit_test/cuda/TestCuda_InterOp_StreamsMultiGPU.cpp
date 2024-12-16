@@ -112,19 +112,9 @@ TEST(cuda_multi_gpu, stream_sync_semantics) {
     std::array<TEST_EXECSPACE, 2> execs =
         get_execution_spaces(streams_and_devices);
 
-    int *value;
-    int *check;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMallocHost(reinterpret_cast<void **>(&value), 1 * sizeof(int)));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMallocHost(reinterpret_cast<void **>(&check), 1 * sizeof(int)));
-
-    test_stream_sync(execs[0], execs[1], value, check, [&execs]() {
+    test_stream_sync(execs[0], execs[1], [&execs]() {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[1].cuda_device()));
     });
-
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(value));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(check));
   }
 }
 
