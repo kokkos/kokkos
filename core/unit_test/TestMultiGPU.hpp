@@ -182,7 +182,7 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   ASSERT_EQ(error1, 0);
 }
 
-// Test that stream synchronization behavoir for various GPU APIs matches the
+// Test that stream synchronization behavior for various GPU APIs matches the
 // assumptions made in Kokkos for multi gpu support, namely, that any stream (no
 // matter which device it is created on) can be synced from any device.
 struct AccumulateTag {};
