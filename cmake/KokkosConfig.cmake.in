@@ -65,6 +65,7 @@ if(Kokkos_GLOBAL_COMPILATION)
       )
       kokkos_compilation(GLOBAL)
     endif()
+    unset(IS_NVCC)
   endif()
 
   # If users request the compiler launcher we use it globally
