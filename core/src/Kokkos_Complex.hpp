@@ -106,15 +106,17 @@ class
 
   /// \brief Constructor that takes just the real part, and sets the
   ///   imaginary part to zero.
-  KOKKOS_INLINE_FUNCTION complex(const RealType& val) noexcept
+  KOKKOS_INLINE_FUNCTION constexpr complex(const RealType& val) noexcept
       : re_(val), im_(static_cast<RealType>(0)) {}
 
   //! Constructor that takes the real and imaginary parts.
   KOKKOS_INLINE_FUNCTION
-  complex(const RealType& re, const RealType& im) noexcept : re_(re), im_(im) {}
+  constexpr complex(const RealType& re, const RealType& im) noexcept
+      : re_(re), im_(im) {}
 
   //! Assignment operator (from a real number).
-  KOKKOS_INLINE_FUNCTION complex& operator=(const RealType& val) noexcept {
+  KOKKOS_INLINE_FUNCTION constexpr complex& operator=(
+      const RealType& val) noexcept {
     re_ = val;
     im_ = RealType(0);
     return *this;
