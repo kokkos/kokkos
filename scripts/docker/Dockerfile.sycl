@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
@@ -46,7 +46,7 @@ RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCT
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget https://cloud.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
+RUN wget https://cloud1.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
     echo "3416721faf83e5858e65795231bae47bb51ff91d4e8738613d498674f1636f72  oneapi-for-nvidia-gpus-2023.0.0-linux.sh" | sha256sum --check && \
     chmod +x oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
     ./oneapi-for-nvidia-gpus-2023.0.0-linux.sh -y && \

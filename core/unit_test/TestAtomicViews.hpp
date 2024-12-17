@@ -1065,13 +1065,9 @@ T AndEqualAtomicViewCheck(const int64_t input_length) {
   const int64_t N = input_length;
   T result[2]     = {1};
   for (int64_t i = 0; i < N; ++i) {
-    if (N % 2 == 0) {
-      result[0] &= (T)i;
-    } else {
-      result[1] &= (T)i;
-    }
+    int64_t idx = N % 2;
+    result[idx] &= (T)i;
   }
-
   return (result[0]);
 }
 
