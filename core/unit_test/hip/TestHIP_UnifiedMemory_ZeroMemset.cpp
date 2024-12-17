@@ -42,4 +42,3 @@ TEST(hip, unified_memory_zero_memset) {
   EXPECT_EQ(err, 0);
 }
 }  // namespace Test
-
