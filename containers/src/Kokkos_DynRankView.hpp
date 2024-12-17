@@ -789,7 +789,7 @@ class DynRankView : private View<DataType*******, Properties...> {
                                      size_t new_rank)
       : view_type(rhs.data_handle(), drdtraits::createLayout(rhs.layout())),
         m_rank(new_rank) {
-    if (new_rank > rhs.rank())
+    if (new_rank > View<RT, RP...>::rank())
       Kokkos::abort(
           "Attempting to construct DynRankView from View and new rank, with "
           "the new rank being too large.");
