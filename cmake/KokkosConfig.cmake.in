@@ -19,6 +19,27 @@ include("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 include("${Kokkos_CMAKE_DIR}/KokkosConfigCommon.cmake")
 unset(Kokkos_CMAKE_DIR)
 
+# components deprecation
+if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS)
+  message(WARNING "'launch_compiler' is deprecated and will be removed in the future. Use the 'Kokkos_FORCE_COMPILER_LAUNCHER' option instead.")
+  set(Kokkos_GLOBAL_COMPILATION true)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER true)
+elseif("separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
+  message(WARNING "'separable_compilation' is deprecated and will be removed in the future. Use the 'Kokkos_GLOBAL_COMPILATION' option instead.")
+  set(Kokkos_GLOBAL_COMPILATION false)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER false)
+endif()
+
+if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS AND "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
+  message(STATUS "'launch_compiler' implies global redirection of targets depending on Kokkos to appropriate compiler.")
+  message(
+    STATUS
+      "'separable_compilation' implies explicitly defining where redirection occurs via 'kokkos_compilation(PROJECT|TARGET|SOURCE|DIRECTORY ...)'"
+  )
+  message(FATAL_ERROR "Conflicting COMPONENTS: 'launch_compiler' and 'separable_compilation'")
+endif()
+# end of components deprecation
+
 if(NOT DEFINED Kokkos_GLOBAL_COMPILATION)
   set(Kokkos_GLOBAL_COMPILATION true)
 endif()
