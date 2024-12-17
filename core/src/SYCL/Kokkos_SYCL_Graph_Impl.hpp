@@ -89,6 +89,8 @@ class GraphImpl<Kokkos::SYCL> {
   std::optional<sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::executable>>
       m_graph_exec;
+
+  std::vector<std::shared_ptr<node_details_t>> m_nodes;
 };
 
 inline GraphImpl<Kokkos::SYCL>::~GraphImpl() {
@@ -122,6 +124,7 @@ GraphImpl<Kokkos::SYCL>::add_node(
   kernel.set_sycl_graph_node_ptr(&node);
   kernel.execute();
   KOKKOS_ENSURES(node);
+  m_nodes.push_back(arg_node_ptr);
 }
 
 // Requires PredecessorRef is a specialization of GraphNodeRef that has
