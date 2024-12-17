@@ -25,15 +25,15 @@ if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS)
     WARNING
       "'launch_compiler' is deprecated and will be removed in the future. Use the 'Kokkos_FORCE_COMPILER_LAUNCHER' option instead."
   )
-  set(Kokkos_GLOBAL_COMPILATION true)
-  set(Kokkos_FORCE_COMPILER_LAUNCHER true)
+  set(Kokkos_GLOBAL_COMPILATION ON)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER ON)
 elseif("separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
   message(
     WARNING
       "'separable_compilation' is deprecated and will be removed in the future. Use the 'Kokkos_GLOBAL_COMPILATION' option instead."
   )
-  set(Kokkos_GLOBAL_COMPILATION false)
-  set(Kokkos_FORCE_COMPILER_LAUNCHER false)
+  set(Kokkos_GLOBAL_COMPILATION OFF)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER OFF)
 endif()
 
 if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS AND "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
@@ -47,11 +47,11 @@ endif()
 # end of components deprecation
 
 if(NOT DEFINED Kokkos_GLOBAL_COMPILATION)
-  set(Kokkos_GLOBAL_COMPILATION true)
+  set(Kokkos_GLOBAL_COMPILATION ON)
 endif()
 
 if(NOT DEFINED Kokkos_FORCE_COMPILER_LAUNCHER)
-  set(Kokkos_FORCE_COMPILER_LAUNCHER false)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER OFF)
 endif()
 
 if(Kokkos_GLOBAL_COMPILATION)
