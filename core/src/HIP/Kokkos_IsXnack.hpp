@@ -27,7 +27,7 @@ namespace Kokkos::Impl {
 
 // return true if HSA_XNACK is set in the environment
 inline bool is_xnack_enabled_from_env() {
-  static std::optional<bool> result;
+  static std::optional<bool> result;  // read environment once and cache
   if (!result.has_value()) {
     const char* hsa_xnack = std::getenv("HSA_XNACK");
     if (!hsa_xnack) {
@@ -43,7 +43,7 @@ inline bool is_xnack_enabled_from_env() {
 
 // return true if /proc/cmdline is readable and contains "amdgpu.noretry=0"
 inline bool is_xnack_enabled_from_cmdline() {
-  static std::optional<bool> result;
+  static std::optional<bool> result;  // hit filesystem once and cache
   if (!result.has_value()) {
     std::ifstream cmdline("/proc/cmdline");
 
