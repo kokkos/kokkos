@@ -19,10 +19,9 @@
 
 #include <cstdlib>  //getenv
 #include <string>
+#include <string_view>
 #include <fstream>
 #include <optional>
-
-#include <impl/Kokkos_StringManipulation.hpp>
 
 namespace Kokkos::Impl {
 
@@ -33,7 +32,7 @@ inline bool is_xnack_enabled_from_env() {
     const char* hsa_xnack = std::getenv("HSA_XNACK");
     if (!hsa_xnack) {
       result = false;
-    } else if (Kokkos::Impl::strcmp(hsa_xnack, "1") != 0) {
+    } else if (std::string_view(hsa_xnack) != "1"sv) {
       result = false;
     } else {
       result = true;
