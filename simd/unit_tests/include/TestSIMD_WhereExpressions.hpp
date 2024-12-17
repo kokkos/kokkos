@@ -30,25 +30,49 @@ inline void host_check_where_expr_scatter_to() {
     std::size_t nlanes = simd_type::size();
     DataType init[]    = {11, 13, 17, 19, 23, 29, 31, 37,
                           53, 71, 79, 83, 89, 93, 97, 103};
-    simd_type src;
+    simd_type src(zero_init<simd_type>());
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
+
+    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+    // load values into simd vectors until simd values are directly accessed.
+    // Placing a memory fence to ensure that simd values are fully loaded
+    // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
 
     for (std::size_t idx = 0; idx < nlanes; ++idx) {
       mask_type mask(true);
       mask[idx] = false;
 
       DataType dst[simd_type::size()] = {0};
-      index_type index;
-      simd_type expected_result;
+      index_type index(zero_init<index_type>());
+      simd_type expected_result(zero_init<simd_type>());
       for (std::size_t i = 0; i < nlanes; ++i) {
         dst[i]             = (2 + (i * 2));
         index[i]           = i;
         expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
       }
+
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+      __sync_synchronize();
+#endif
       where(mask, src).scatter_to(dst, index);
 
-      simd_type dst_simd;
+      simd_type dst_simd(zero_init<simd_type>());
       dst_simd.copy_from(dst, Kokkos::Experimental::simd_flag_default);
+
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+      __sync_synchronize();
+#endif
 
       host_check_equality(expected_result, dst_simd, nlanes);
     }
@@ -70,15 +94,31 @@ inline void host_check_where_expr_gather_from() {
       mask_type mask(true);
       mask[idx] = false;
 
-      simd_type dst;
-      index_type index;
-      simd_type expected_result;
+      simd_type dst(zero_init<simd_type>());
+      index_type index(zero_init<index_type>());
+      simd_type expected_result(zero_init<simd_type>());
       for (std::size_t i = 0; i < nlanes; ++i) {
         dst[i]             = (2 + (i * 2));
         index[i]           = i;
         expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
       }
+
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+      __sync_synchronize();
+#endif
       where(mask, dst).gather_from(src, index);
+
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+      __sync_synchronize();
+#endif
 
       host_check_equality(expected_result, dst, nlanes);
     }

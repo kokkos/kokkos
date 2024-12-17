@@ -37,10 +37,10 @@ inline void host_check_gen_ctor() {
       expected[i] = (init_mask[i]) ? init[i] * 9 : init[i];
     }
 
-    simd_type rhs;
+    simd_type rhs(zero_init<simd_type>());
     rhs.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
-    simd_type blend;
+    simd_type blend(zero_init<simd_type>());
     blend.copy_from(expected, Kokkos::Experimental::simd_flag_default);
 
 #if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))

@@ -31,17 +31,29 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
-    simd_type arg;
+    simd_type arg(zero_init<simd_type>());
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
+      // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
+      // load values into simd vectors until simd values are directly accessed.
+      // Placing a memory fence to ensure that simd values are fully loaded
+      // before executing simd instructions.
+#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
+    __sync_synchronize();
+#endif
+
     mask_type mask(false);
+    T identity    = 12;
+    auto expected = reduce_op.on_host_serial(arg, identity, mask);
+    auto computed = reduce_op.on_host(arg, identity, mask);
+    gtest_checker().equality(expected, computed);
+
     for (std::size_t j = 0; j < n; ++j) {
       mask[j] = true;
     }
-    auto value    = where(mask, arg);
-    auto expected = reduce_op.on_host_serial(value);
-    auto computed = reduce_op.on_host(value);
+    expected = reduce_op.on_host_serial(arg, identity, mask);
+    computed = reduce_op.on_host(arg, identity, mask);
 
     gtest_checker().equality(expected, computed);
   }
@@ -58,9 +70,10 @@ inline void host_check_reduction_all_loaders(ReductionOp reduce_op,
 
 template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_reductions(const DataType (&args)[n]) {
-  host_check_reduction_all_loaders<Abi>(hmin(), n, args);
-  host_check_reduction_all_loaders<Abi>(hmax(), n, args);
-  host_check_reduction_all_loaders<Abi>(reduce(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce_min(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);
+  host_check_reduction_all_loaders<Abi>(reduce<std::multiplies<>>(), n, args);
 }
 
 template <typename Abi, typename DataType>
@@ -109,12 +122,16 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     if (!loaded_arg) continue;
 
     mask_type mask(false);
+    T identity    = 12;
+    auto expected = reduce_op.on_device_serial(arg, identity, mask);
+    auto computed = reduce_op.on_device(arg, identity, mask);
+    kokkos_checker().equality(expected, computed);
+
     for (std::size_t j = 0; j < n; ++j) {
       mask[j] = true;
     }
-    auto value    = where(mask, arg);
-    auto expected = reduce_op.on_device_serial(value);
-    auto computed = reduce_op.on_device(value);
+    expected = reduce_op.on_device_serial(arg, identity, mask);
+    computed = reduce_op.on_device(arg, identity, mask);
 
     kokkos_checker().equality(expected, computed);
   }
@@ -132,9 +149,10 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_all_loaders(
 template <typename Abi, typename DataType, size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
     const DataType (&args)[n]) {
-  device_check_reduction_all_loaders<Abi>(hmin(), n, args);
-  device_check_reduction_all_loaders<Abi>(hmax(), n, args);
-  device_check_reduction_all_loaders<Abi>(reduce(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce_min(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);
+  device_check_reduction_all_loaders<Abi>(reduce<std::multiplies<>>(), n, args);
 }
 
 template <typename Abi, typename DataType>
