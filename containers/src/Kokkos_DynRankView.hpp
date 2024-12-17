@@ -614,6 +614,11 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
+#if defined KOKKOS_COMPILER_INTEL ||                                  \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
+    __builtin_unreachable();
+#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0,
@@ -636,6 +641,11 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, i1, 0, 0, 0, 0, 0);
+#if defined KOKKOS_COMPILER_INTEL ||                                  \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
+    __builtin_unreachable();
+#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
@@ -662,6 +672,11 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, i1, i2, 0, 0, 0, 0);
+#if defined KOKKOS_COMPILER_INTEL ||                                  \
+    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+     !defined(KOKKOS_COMPILER_MSVC))
+    __builtin_unreachable();
+#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
