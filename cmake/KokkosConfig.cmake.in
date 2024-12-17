@@ -21,11 +21,17 @@ unset(Kokkos_CMAKE_DIR)
 
 # components deprecation
 if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS)
-  message(WARNING "'launch_compiler' is deprecated and will be removed in the future. Use the 'Kokkos_FORCE_COMPILER_LAUNCHER' option instead.")
+  message(
+    WARNING
+      "'launch_compiler' is deprecated and will be removed in the future. Use the 'Kokkos_FORCE_COMPILER_LAUNCHER' option instead."
+  )
   set(Kokkos_GLOBAL_COMPILATION true)
   set(Kokkos_FORCE_COMPILER_LAUNCHER true)
 elseif("separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
-  message(WARNING "'separable_compilation' is deprecated and will be removed in the future. Use the 'Kokkos_GLOBAL_COMPILATION' option instead.")
+  message(
+    WARNING
+      "'separable_compilation' is deprecated and will be removed in the future. Use the 'Kokkos_GLOBAL_COMPILATION' option instead."
+  )
   set(Kokkos_GLOBAL_COMPILATION false)
   set(Kokkos_FORCE_COMPILER_LAUNCHER false)
 endif()
