@@ -51,7 +51,11 @@ struct ViewUniformLayout<Kokkos::LayoutRight, 1> {
 
 template <class ViewType, int Traits>
 struct ViewUniformType {
-  static constexpr size_t rank = ViewType::rank();
+  // FIXME: should use rank() but MSVC has some issues
+  // Working around it by using the explicit value since it is
+  // an integral constant
+  // error C2064: term does not evaluate to a function taking 0 arguments
+  static constexpr size_t rank = ViewType::rank::value;
 
   using data_type       = typename ViewType::data_type;
   using const_data_type = typename ViewType::const_data_type;
