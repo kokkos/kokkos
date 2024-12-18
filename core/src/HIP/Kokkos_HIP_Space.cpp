@@ -24,7 +24,6 @@
 #include <HIP/Kokkos_HIP_Space.hpp>
 
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
-#include <HIP/Kokkos_IsXnack.hpp>
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
@@ -177,7 +176,7 @@ Kokkos::HIP::allocation WARNING: The combination of device and system configurat
         }
 
         // check for correct runtime environment
-        if (!Kokkos::Impl::is_xnack())
+        if (!Kokkos::Impl::HIPInternal::singleton().is_xnack_enabled())
           std::cerr << R"warning(
 Kokkos::HIP::runtime WARNING: Kokkos was not able to verify that xnack is enabled. 
                               Without xnack enabled, Kokkos::HIPManaged might not behave
