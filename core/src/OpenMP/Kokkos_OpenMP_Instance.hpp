@@ -62,7 +62,9 @@ class OpenMPInternal {
     }
   }
 
-  ~OpenMPInternal() { clear_thread_data(); }
+  OpenMPInternal()                                 = delete;
+  OpenMPInternal(const OpenMPInternal&)            = delete;
+  OpenMPInternal& operator=(const OpenMPInternal&) = delete;
 
   static int get_current_max_threads() noexcept;
 
