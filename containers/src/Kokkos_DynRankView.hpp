@@ -577,6 +577,14 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type::stride_7;            // FIXME: not tested
   using view_type::use_count;
 
+#ifdef KOKKOS_ENABLE_CUDA
+  KOKKOS_FUNCTION reference_type
+  operator()(index_type i0 = 0, index_type i1 = 0, index_type i2 = 0,
+             index_type i3 = 0, index_type i4 = 0, index_type i5 = 0,
+             index_type i6 = 0) const {
+    return view_type::operator()(i0, i1, i2, i3, i4, i5, i6);
+  }
+#else
   // Adding shortcut operators for rank-0 to rank-3 for default layouts
   // and access modalities.
   // This removes performance overhead for always using rank-7 mapping.
@@ -588,7 +596,8 @@ class DynRankView : private View<DataType*******, Properties...> {
 #ifdef KOKKOS_ENABLE_DEBUG
     if (rank() != 0u)
       Kokkos::abort(
-          "DynRankView operator() called with invalid number of arguments.");
+          "DynRankView rank 0 operator() called with invalid number of "
+          "arguments.");
 #endif
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (is_default_access) {
@@ -600,9 +609,12 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0) const {
 #ifdef KOKKOS_ENABLE_DEBUG
-    if (rank() != 1u)
+    // FIXME: Should be equal, only access(...) allows mismatch of rank and
+    // index args
+    if (rank() > 1u)
       Kokkos::abort(
-          "DynRankView operator() called with invalid number of arguments.");
+          "DynRankView rank 1 operator() called with invalid number of "
+          "arguments.");
 #endif
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (is_default_access) {
@@ -624,9 +636,12 @@ class DynRankView : private View<DataType*******, Properties...> {
   KOKKOS_FUNCTION reference_type operator()(index_type i0,
                                             index_type i1) const {
 #ifdef KOKKOS_ENABLE_DEBUG
-    if (rank() != 2u)
+    // FIXME: Should be equal, only access(...) allows mismatch of rank and
+    // index args
+    if (rank() > 2u)
       Kokkos::abort(
-          "DynRankView operator() called with invalid number of arguments.");
+          "DynRankView rank 2 operator() called with invalid number of "
+          "arguments.");
 #endif
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (is_default_access) {
@@ -651,9 +666,12 @@ class DynRankView : private View<DataType*******, Properties...> {
   KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
                                             index_type i2) const {
 #ifdef KOKKOS_ENABLE_DEBUG
-    if (rank() != 3u)
+    // FIXME: Should be equal, only access(...) allows mismatch of rank and
+    // index args
+    if (rank() > 3u)
       Kokkos::abort(
-          "DynRankView operator() called with invalid number of arguments.");
+          "DynRankView rank 3 operator() called with invalid number of "
+          "arguments.");
 #endif
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (is_default_access) {
@@ -686,6 +704,7 @@ class DynRankView : private View<DataType*******, Properties...> {
                                             index_type i6 = 0) const {
     return view_type::operator()(i0, i1, i2, i3, i4, i5, i6);
   }
+#endif
 
 // This is an accomodation for Phalanx, that is usint the operator[] to access
 // all elements in a linear fashion even when the rank is not 1
