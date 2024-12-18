@@ -6,13 +6,15 @@ cmake_minimum_required(VERSION 3.16)
 # Kokkos flags will only apply to C++ files
 project(Example CXX Fortran)
 
-find_package(Kokkos REQUIRED)
 # Look for an installed Kokkos but force using the compiler launcher
 # to ensure that targets depending on Kokkos use the same compiler
 # as when kokkos was installed.
-set(Kokkos_FORCE_COMPILER_LAUNCHER true)
+# To do this the following variable has to be set before
+# find_package(Kokkos) is called
+set(Kokkos_FORCE_COMPILER_LAUNCHER ON)
 # Alternatively, this can be input at configure time with:
 # -DKokkos_FORCE_COMPILER_LAUNCHER=ON
+find_package(Kokkos REQUIRED)
 
 add_executable(example_no_kokkos bar.cpp)
 add_executable(example_with_kokkos foo.cpp)
