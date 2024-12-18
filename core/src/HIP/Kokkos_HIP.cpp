@@ -76,7 +76,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   }
 #endif
 #ifdef KOKKOS_ARCH_AMD_GFX942_APU
-  if (!Impl::is_xnack()) {
+  if (!Impl::HIPInternal::singleton().is_xnack_enabled()) {
     Kokkos::abort(
         "Could not determine that xnack is enabled. Kokkos requires xnack to "
         "be enabled for ARCH_AMD_GFX942_APU (MI300A). Set HSA_XNACK=1 in your "

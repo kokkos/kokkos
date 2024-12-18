@@ -27,6 +27,7 @@ namespace Kokkos::Impl {
 
 // return true if HSA_XNACK is set in the environment
 inline bool is_xnack_enabled_from_env() {
+  using namespace std::literals;
   static std::optional<bool> result;  // read environment once and cache
   if (!result.has_value()) {
     const char* hsa_xnack = std::getenv("HSA_XNACK");

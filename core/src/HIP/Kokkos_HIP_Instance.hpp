@@ -24,6 +24,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <string_view>
 
 namespace Kokkos {
 namespace Impl {
@@ -114,6 +115,11 @@ class HIPInternal {
 
   int is_initialized() const {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
+  }
+
+  int is_xnack_enabled() const {
+    const std::string_view gcnArchName = m_deviceProp.gcnArchName;
+    return gcnArchName.find("xnack+") != std::string_view::npos;
   }
 
   void initialize(hipStream_t stream);
