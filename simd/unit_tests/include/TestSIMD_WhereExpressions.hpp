@@ -34,17 +34,15 @@ inline void host_check_where_expr_scatter_to() {
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
     for (std::size_t idx = 0; idx < nlanes; ++idx) {
-      mask_type mask(true);
-      mask[idx] = false;
+      mask_type mask([=](std::size_t i) { return i != idx; });
 
       DataType dst[simd_type::size()] = {0};
-      index_type index;
-      simd_type expected_result;
       for (std::size_t i = 0; i < nlanes; ++i) {
-        dst[i]             = (2 + (i * 2));
-        index[i]           = i;
-        expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
+        dst[i] = (2 + (i * 2));
       }
+      index_type index([=](std::size_t i) { return i; });
+      simd_type expected_result(
+          [=](std::size_t i) { return (mask[i]) ? src[index[i]] : dst[i]; });
       where(mask, src).scatter_to(dst, index);
 
       simd_type dst_simd;
@@ -67,17 +65,12 @@ inline void host_check_where_expr_gather_from() {
                           53, 71, 79, 83, 89, 93, 97, 103};
 
     for (std::size_t idx = 0; idx < nlanes; ++idx) {
-      mask_type mask(true);
-      mask[idx] = false;
+      mask_type mask([=](std::size_t i) { return i != idx; });
 
-      simd_type dst;
-      index_type index;
-      simd_type expected_result;
-      for (std::size_t i = 0; i < nlanes; ++i) {
-        dst[i]             = (2 + (i * 2));
-        index[i]           = i;
-        expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
-      }
+      simd_type dst([=](std::size_t i) { return (2 + (i * 2)); });
+      index_type index([=](std::size_t i) { return i; });
+      simd_type expected_result(
+          [=](std::size_t i) { return (mask[i]) ? src[index[i]] : dst[i]; });
       where(mask, dst).gather_from(src, index);
 
       host_check_equality(expected_result, dst, nlanes);
@@ -118,17 +111,16 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_scatter_to() {
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
     for (std::size_t idx = 0; idx < nlanes; ++idx) {
-      mask_type mask(true);
-      mask[idx] = false;
+      mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i != idx; });
 
       DataType dst[simd_type::size()] = {0};
-      index_type index;
-      simd_type expected_result;
       for (std::size_t i = 0; i < nlanes; ++i) {
-        dst[i]             = (2 + (i * 2));
-        index[i]           = i;
-        expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
+        dst[i] = (2 + (i * 2));
       }
+      index_type index([=](std::size_t i) { return i; });
+      simd_type expected_result(KOKKOS_LAMBDA(std::size_t i) {
+        return (mask[i]) ? src[index[i]] : dst[i];
+      });
       where(mask, src).scatter_to(dst, index);
 
       simd_type dst_simd;
@@ -150,17 +142,13 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_gather_from() {
                         53, 71, 79, 83, 89, 93, 97, 103};
 
   for (std::size_t idx = 0; idx < nlanes; ++idx) {
-    mask_type mask(true);
-    mask[idx] = false;
+    mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i != idx; });
 
-    simd_type dst;
-    index_type index;
-    simd_type expected_result;
-    for (std::size_t i = 0; i < nlanes; ++i) {
-      dst[i]             = (2 + (i * 2));
-      index[i]           = i;
-      expected_result[i] = (mask[i]) ? src[index[i]] : dst[i];
-    }
+    simd_type dst([=](std::size_t i) { return (2 + (i * 2)); });
+    index_type index([=](std::size_t i) { return i; });
+    simd_type expected_result(KOKKOS_LAMBDA(std::size_t i) {
+      return (mask[i]) ? src[index[i]] : dst[i];
+    });
     where(mask, dst).gather_from(src, index);
 
     device_check_equality(expected_result, dst, nlanes);
