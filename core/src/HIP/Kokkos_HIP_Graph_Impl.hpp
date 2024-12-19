@@ -89,10 +89,7 @@ class GraphImpl<Kokkos::HIP> {
   hipGraph_t m_graph          = nullptr;
   hipGraphExec_t m_graph_exec = nullptr;
 
-  // Store drivers for the kernel nodes that launch in global memory.
-  // This is required as lifetime of drivers must be bounded to this instance's
-  // lifetime.
-  std::vector<std::shared_ptr<void>> m_driver_storage;
+  std::vector<std::shared_ptr<node_details_t>> m_nodes;
 };
 
 inline GraphImpl<Kokkos::HIP>::~GraphImpl() {
@@ -135,8 +132,7 @@ GraphImpl<Kokkos::HIP>::add_node(
   kernel.set_hip_graph_node_ptr(&node);
   kernel.execute();
   KOKKOS_ENSURES(node);
-  if (std::shared_ptr<void> tmp = kernel.get_driver_storage())
-    m_driver_storage.push_back(std::move(tmp));
+  m_nodes.push_back(arg_node_ptr);
 }
 
 // Requires PredecessorRef is a specialization of GraphNodeRef that has

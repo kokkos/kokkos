@@ -91,11 +91,11 @@ struct TEST_CATEGORY_FIXTURE(graph) : public ::testing::Test {
   using view_type          = Kokkos::View<int, TEST_EXECSPACE>;
   using atomic_view_type   = typename count_functor::template atomic_view<int>;
   using view_host          = Kokkos::View<int, Kokkos::HostSpace>;
-  atomic_view_type count{"count"};
-  atomic_view_type bugs{"bugs"};
+  TEST_EXECSPACE ex{};
+  atomic_view_type count{Kokkos::view_alloc("count", ex)};
+  atomic_view_type bugs{Kokkos::view_alloc("bugs", ex)};
   view_host count_host{"count_host"};
   view_host bugs_host{"bugs_host"};
-  TEST_EXECSPACE ex{};
 
  protected:
   void SetUp() override {
@@ -537,6 +537,48 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph_default_host_exec) {
   graph.instantiate();
   graph.submit();
   graph.get_execution_space().fence();
+}
+
+template <typename ViewType>
+struct IncrementAndCombineFunctor {
+  ViewType data;
+  ViewType buffer;
+
+  template <typename T>
+  KOKKOS_FUNCTION void operator()(const T index) const {
+    ++buffer(index);
+    ++data(index);
+    data(index) += buffer(index);
+  }
+};
+
+// Ensure that the graph always stores the node.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), node_lifetime) {
+  constexpr size_t size = 128;
+
+  using view_t    = Kokkos::View<int[size], TEST_EXECSPACE>;
+  using functor_t = IncrementAndCombineFunctor<view_t>;
+
+  view_t data(Kokkos::view_alloc("data", ex));
+
+  std::optional<Kokkos::Experimental::Graph<TEST_EXECSPACE>> graph =
+      Kokkos::Experimental::create_graph(ex, [&](const auto& root) {
+        // If the node lifetime is not bound to the graph's lifetime, the
+        // internal buffer view will get out of scope before graph submission.
+        const auto node = root.then_parallel_for(
+            size,
+            functor_t{data, view_t(Kokkos::view_alloc("internal buffer", ex))});
+      });
+
+  ASSERT_EQ(data.use_count(), 2) << "The node should be holding one count.";
+
+  graph->submit(ex);
+
+  ASSERT_TRUE(contains(ex, Kokkos::subview(data, size - 1), 2));
+
+  graph.reset();
+
+  ASSERT_EQ(data.use_count(), 1);
 }
 
 template <typename ViewType, size_t TargetIndex, size_t NumIndices = 0>
