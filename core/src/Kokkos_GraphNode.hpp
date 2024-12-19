@@ -228,6 +228,28 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_for"> {{{2
 
+  // Helper for the 'then', such that the user can indeed pass a callable that
+  // takes no argument.
+  template <typename Functor>
+  struct Wrapper {
+    Functor functor;
+    template <typename T>
+    KOKKOS_FUNCTION void operator()(const T) const {
+      functor();
+    }
+  };
+
+  // TODO We should do better than a p-for (that uses registers, heavier).
+  //      This should "just" launch the function on device with our driver.
+  template <typename Label, typename Functor,
+            typename = std::enable_if_t<std::is_invocable_r_v<
+                void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
+  auto then(Label&& label, Functor&& functor) const {
+    return this->then_parallel_for(
+        std::forward<Label>(label), Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+        Wrapper<Functor>{std::forward<Functor>(functor)});
+  }
+
   template <
       class Policy, class Functor,
       std::enable_if_t<
