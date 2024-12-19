@@ -144,6 +144,11 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
                 KernelDeduced&& arg_kernel)
       : base_t(ex), m_kernel((KernelDeduced&&)arg_kernel) {}
 
+  template <class KernelDeduced>
+  GraphNodeImpl(ExecutionSpace const& ex, _graph_node_capture_ctor_tag,
+                KernelDeduced&& arg_kernel)
+      : base_t(ex), m_kernel{(KernelDeduced&&)arg_kernel} {}
+
   template <class... Args>
   GraphNodeImpl(ExecutionSpace const& ex, _graph_node_is_root_ctor_tag,
                 Args&&... args)
@@ -232,6 +237,35 @@ struct GraphNodeImpl
   GraphNodeImpl& operator=(GraphNodeImpl const&) = delete;
   GraphNodeImpl& operator=(GraphNodeImpl&&)      = delete;
   ~GraphNodeImpl() override                      = default;
+
+  /// Capture-and-predecessor constructor
+  /// @todo How to avoid repeating this all the time ?
+  template <class KernelDeduced, class PredecessorPtrDeduced>
+  GraphNodeImpl(ExecutionSpace const& ex, _graph_node_capture_ctor_tag,
+                KernelDeduced&& arg_kernel, _graph_node_predecessor_ctor_tag,
+                PredecessorPtrDeduced&& arg_predecessor)
+      : base_t(ex, _graph_node_capture_ctor_tag{}, (KernelDeduced&&)arg_kernel),
+        // The backend gets the ability to store (weak, non-owning) references
+        // to the kernel in it's final resting place here if it wants. The
+        // predecessor is already a pointer, so it doesn't matter that it isn't
+        // already at its final address
+        backend_details_base_t(ex, this->base_t::get_kernel(), arg_predecessor,
+                               *this),
+        m_predecessor_ref((PredecessorPtrDeduced&&)arg_predecessor) {}
+
+  // Then-and-predecessor constructor
+  template <class KernelDeduced, class PredecessorPtrDeduced>
+  GraphNodeImpl(ExecutionSpace const& ex, _graph_node_then_ctor_tag,
+                KernelDeduced&& arg_kernel, _graph_node_predecessor_ctor_tag,
+                PredecessorPtrDeduced&& arg_predecessor)
+      : base_t(ex, _graph_node_then_ctor_tag{}, (KernelDeduced&&)arg_kernel),
+        // The backend gets the ability to store (weak, non-owning) references
+        // to the kernel in it's final resting place here if it wants. The
+        // predecessor is already a pointer, so it doesn't matter that it isn't
+        // already at its final address
+        backend_details_base_t(ex, this->base_t::get_kernel(), arg_predecessor,
+                               *this),
+        m_predecessor_ref((PredecessorPtrDeduced&&)arg_predecessor) {}
 
   // Normal kernel-and-predecessor constructor
   template <class KernelDeduced, class PredecessorPtrDeduced>

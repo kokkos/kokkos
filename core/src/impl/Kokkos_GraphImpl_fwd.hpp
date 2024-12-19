@@ -28,11 +28,22 @@ struct GraphNodeImpl;
 template <class ExecutionSpace>
 struct GraphImpl;
 
+template <typename ExecutionSpace, typename Functor>
+struct GraphNodeCaptureImpl;
+
+template <typename T, class Enable = void>
+struct is_graph_capture : public std::false_type {};
+
+template <typename T>
+inline constexpr bool is_graph_capture_v = is_graph_capture<T>::value;
+
 template <class ExecutionSpace, class Policy, class Functor,
           class KernelTypeTag, class... Args>
 class GraphNodeKernelImpl;
 
 struct _graph_node_kernel_ctor_tag {};
+struct _graph_node_capture_ctor_tag {};
+struct _graph_node_then_ctor_tag {};
 struct _graph_node_predecessor_ctor_tag {};
 struct _graph_node_is_root_ctor_tag {};
 

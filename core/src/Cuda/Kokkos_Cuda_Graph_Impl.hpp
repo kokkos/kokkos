@@ -47,6 +47,8 @@ struct GraphImpl<Kokkos::Cuda> {
   cudaGraph_t m_graph          = nullptr;
   cudaGraphExec_t m_graph_exec = nullptr;
 
+  bool m_graph_owning = true;
+
   using cuda_graph_flags_t = unsigned int;
 
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::Cuda>;
@@ -94,9 +96,11 @@ struct GraphImpl<Kokkos::Cuda> {
           (m_execution_space.impl_internal_space_instance()
                ->cuda_graph_exec_destroy_wrapper(m_graph_exec)));
     }
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (m_execution_space.impl_internal_space_instance()
-             ->cuda_graph_destroy_wrapper(m_graph)));
+    if (m_graph_owning) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(
+          (m_execution_space.impl_internal_space_instance()
+               ->cuda_graph_destroy_wrapper(m_graph)));
+    }
   };
 
   explicit GraphImpl(Kokkos::Cuda arg_instance)
@@ -105,6 +109,11 @@ struct GraphImpl<Kokkos::Cuda> {
         (m_execution_space.impl_internal_space_instance()
              ->cuda_graph_create_wrapper(&m_graph, cuda_graph_flags_t{0})));
   }
+
+  explicit GraphImpl(Kokkos::Cuda arg_instance, cudaGraph_t graph)
+      : m_execution_space(std::move(arg_instance)),
+        m_graph(graph),  // Kokkos::Impl::HostSharedPtr<Impl::CudaInternal> ?
+        m_graph_owning(false) {}
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
     // All of the predecessors are just added as normal, so all we need to
@@ -120,7 +129,7 @@ struct GraphImpl<Kokkos::Cuda> {
   template <class NodeImpl>
   std::enable_if_t<
       Kokkos::Impl::is_graph_kernel_v<typename NodeImpl::kernel_type>>
-  add_node(std::shared_ptr<NodeImpl> const& arg_node_ptr) {
+  add_node(std::shared_ptr<NodeImpl> arg_node_ptr) {
     static_assert(
         Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
     KOKKOS_EXPECTS(bool(arg_node_ptr));
@@ -134,7 +143,22 @@ struct GraphImpl<Kokkos::Cuda> {
     kernel.set_cuda_graph_node_ptr(&cuda_node);
     kernel.execute();
     KOKKOS_ENSURES(bool(cuda_node));
-    m_nodes.push_back(arg_node_ptr);
+    m_nodes.push_back(std::move(arg_node_ptr));
+  }
+
+  template <class NodeImpl>
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_capture_v<typename NodeImpl::kernel_type>>
+  add_node(const Kokkos::Cuda& exec, std::shared_ptr<NodeImpl> arg_node_ptr) {
+    static_assert(
+        Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+    KOKKOS_EXPECTS(bool(arg_node_ptr));
+
+    auto& kernel = arg_node_ptr->get_kernel();
+    kernel.capture(exec, m_graph);
+    static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
+
+    m_nodes.push_back(std::move(arg_node_ptr));
   }
 
   template <class NodeImplPtr, class PredecessorRef>
