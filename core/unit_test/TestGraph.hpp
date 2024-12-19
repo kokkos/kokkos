@@ -783,7 +783,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
 }
 
 template <typename Exec>
-struct GraphNodeTypes {
+struct GraphHelpers {
   // Type of a kernel node built using a Kokkos parallel construct.
   using kernel_t =
       Kokkos::Impl::GraphNodeKernelImpl<Exec, Kokkos::RangePolicy<Exec>,
@@ -795,7 +795,7 @@ struct GraphNodeTypes {
 };
 
 constexpr bool test_is_graph_kernel() {
-  using types = GraphNodeTypes<TEST_EXECSPACE>;
+  using types = GraphHelpers<TEST_EXECSPACE>;
   static_assert(Kokkos::Impl::is_graph_kernel_v<types::kernel_t>);
   static_assert(!Kokkos::Impl::is_graph_kernel_v<types::aggregate_t>);
   return true;
@@ -838,6 +838,49 @@ TEST(TEST_CATEGORY, when_all_type) {
   static_assert(std::is_same_v<decltype(node_B), node_ref_first_layer_t>);
   static_assert(std::is_same_v<decltype(agg), node_ref_agg_t>);
   static_assert(std::is_same_v<decltype(tail), node_ref_tail_t>);
+}
+
+// Helper for testing the 'then' node.
+template <typename ViewType>
+struct ThenFunctor {
+  static_assert(ViewType::rank() == 0);
+
+  ViewType data;
+  typename ViewType::value_type value;
+
+  KOKKOS_FUNCTION void operator()() const { data() += value; }
+};
+
+TEST(TEST_CATEGORY, graph_then) {
+  using view_t = Kokkos::View<int, TEST_EXECSPACE>;
+  using then_t = ThenFunctor<view_t>;
+
+  constexpr int value_memset = 123;
+  constexpr int value_then   = 456;
+
+  const TEST_EXECSPACE exec{};
+
+  const view_t data(Kokkos::view_alloc(exec, "data used in 'then'"));
+
+  auto graph = Kokkos::Experimental::create_graph(exec, [&](const auto& root) {
+    const auto memset = root.then_parallel_for(
+        Kokkos::RangePolicy<TEST_EXECSPACE>(0, data.size()),
+        SetViewToValueFunctor<TEST_EXECSPACE, int>{data, value_memset});
+    memset.then("my nice node - with a 'then'", then_t{data, value_then});
+  });
+
+  // At this stage, no kernel was launched yet.
+  ASSERT_TRUE(contains(exec, data, 0));
+
+  // The 'data' view is shared by:
+  //  - this scope
+  //  - the memset node
+  //  - the then node
+  ASSERT_EQ(data.use_count(), 3);
+
+  graph.submit(exec);
+
+  ASSERT_TRUE(contains(exec, data, value_memset + value_then));
 }
 
 }  // end namespace Test
