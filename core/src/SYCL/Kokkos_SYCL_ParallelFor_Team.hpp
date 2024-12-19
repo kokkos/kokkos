@@ -183,13 +183,19 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     const auto& instance = *m_policy.space().impl_internal_space_instance();
     if (static_cast<int>(instance.m_maxShmemPerBlock) <
-        m_shmem_size - m_shmem_begin) {
+        m_shmem_size + m_shmem_begin) {
       std::stringstream out;
       out << "Kokkos::Impl::ParallelFor<SYCL> insufficient shared memory! "
              "Requested "
-          << m_shmem_size - m_shmem_begin << " bytes but maximum is "
+          << m_shmem_size + m_shmem_begin << " bytes but maximum is "
           << instance.m_maxShmemPerBlock << '\n';
       Kokkos::Impl::throw_runtime_exception(out.str());
+    }
+
+    if (m_scratch_size[1] > static_cast<size_t>(m_policy.scratch_size_max(1))) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelFor<SYCL> insufficient level 1 "
+                      "scratch memory"));
     }
 
     const auto max_team_size =

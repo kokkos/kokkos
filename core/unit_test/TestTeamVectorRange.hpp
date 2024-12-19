@@ -413,8 +413,12 @@ bool Test(int test) {
 #else
   int team_size = 33;
 #endif
-  int const concurrency = ExecutionSpace().concurrency();
-  if (team_size > concurrency) team_size = concurrency;
+  int const max_team_size =
+      Kokkos::TeamPolicy<ExecutionSpace>(1, 1).team_size_max(
+          KOKKOS_LAMBDA(
+              typename Kokkos::TeamPolicy<ExecutionSpace>::member_type){},
+          Kokkos::ParallelForTag{});
+  if (team_size > max_team_size) team_size = max_team_size;
   passed = passed && test_scalar<int, ExecutionSpace>(317, team_size, test);
   passed = passed &&
            test_scalar<long long int, ExecutionSpace>(317, team_size, test);
