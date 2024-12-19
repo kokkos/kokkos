@@ -28,6 +28,15 @@ namespace Test {
 namespace SortImpl {
 
 struct Less {
+#if !defined(ONEDPL_VERSION_MAJOR) ||                             \
+    (ONEDPL_VERSION_MAJOR > 2022 ||                               \
+     (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7 || \
+      (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
+  // Make sure that the comparator isn't device copyable, this caused problems
+  // with SYCL/oneDPL
+  Kokkos::View<int *> dummy;
+#endif
+
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION bool operator()(const ValueType &lhs,
                                          const ValueType &rhs) const {
@@ -36,6 +45,16 @@ struct Less {
 };
 
 struct Greater {
+#if !defined(ONEDPL_VERSION_MAJOR) || \
+    (ONEDPL_VERSION_MAJOR > 2022 ||   \
+     (ONEDPL_VERSION_MAJOR == 2022 && \
+      (ONEDPL_VERSION_MINOR > 7 ||    \
+       (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1))))
+  // Make sure that the comparator isn't device copyable, this caused problems
+  // with SYCL/oneDPL
+  Kokkos::View<int *> dummy;
+#endif
+
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION bool operator()(const ValueType &lhs,
                                          const ValueType &rhs) const {
