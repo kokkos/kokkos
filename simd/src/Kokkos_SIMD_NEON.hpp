@@ -50,38 +50,6 @@ class neon_mask<Derived, 64, 2> {
   uint64x2_t m_value;
 
  public:
-  class reference {
-    uint64x2_t& m_mask;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(uint64x2_t& mask_arg,
-                                                    int lane_arg)
-        : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(bool value) const {
-      // this switch statement is needed because the lane argument has to be a
-      // constant
-      switch (m_lane) {
-        case 0:
-          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 0);
-          break;
-        case 1:
-          m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 1);
-          break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_u64(m_mask, 0) != 0;
-        case 1: return vgetq_lane_u64(m_mask, 1) != 0;
-        default: Kokkos::abort("unreachable");
-      }
-      return false;
-    }
-  };
   using value_type          = bool;
   using abi_type            = simd_abi::neon_fixed_size<2>;
   using implementation_type = uint64x2_t;
@@ -124,13 +92,13 @@ class neon_mask<Derived, 64, 2> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return static_cast<value_type>(
-        reference(const_cast<uint64x2_t&>(m_value), int(i)));
+    switch (i) {
+      case 0: return vgetq_lane_u64(m_value, 0) != 0;
+      case 1: return vgetq_lane_u64(m_value, 1) != 0;
+    }
+    return false;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived
   operator||(neon_mask const& other) const {
@@ -165,36 +133,6 @@ class neon_mask<Derived, 32, 2> {
   uint32x2_t m_value;
 
  public:
-  class reference {
-    uint32x2_t& m_mask;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(uint32x2_t& mask_arg,
-                                                    int lane_arg)
-        : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(bool value) const {
-      switch (m_lane) {
-        case 0:
-          m_mask = vset_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 0);
-          break;
-        case 1:
-          m_mask = vset_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 1);
-          break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      switch (m_lane) {
-        case 0: return vget_lane_u32(m_mask, 0) != 0;
-        case 1: return vget_lane_u32(m_mask, 1) != 0;
-        default: Kokkos::abort("unreachable");
-      }
-      return false;
-    }
-  };
   using value_type          = bool;
   using abi_type            = simd_abi::neon_fixed_size<2>;
   using implementation_type = uint32x2_t;
@@ -233,13 +171,13 @@ class neon_mask<Derived, 32, 2> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return static_cast<value_type>(
-        reference(const_cast<uint32x2_t&>(m_value), int(i)));
+    switch (i) {
+      case 0: return vget_lane_u32(m_value, 0) != 0;
+      case 1: return vget_lane_u32(m_value, 1) != 0;
+    }
+    return false;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived
   operator||(neon_mask const& other) const {
@@ -272,44 +210,6 @@ class neon_mask<Derived, 32, 4> {
   uint32x4_t m_value;
 
  public:
-  class reference {
-    uint32x4_t& m_mask;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(uint32x4_t& mask_arg,
-                                                    int lane_arg)
-        : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(bool value) const {
-      switch (m_lane) {
-        case 0:
-          m_mask = vsetq_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 0);
-          break;
-        case 1:
-          m_mask = vsetq_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 1);
-          break;
-        case 2:
-          m_mask = vsetq_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 2);
-          break;
-        case 3:
-          m_mask = vsetq_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 3);
-          break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_u32(m_mask, 0) != 0;
-        case 1: return vgetq_lane_u32(m_mask, 1) != 0;
-        case 2: return vgetq_lane_u32(m_mask, 2) != 0;
-        case 3: return vgetq_lane_u32(m_mask, 3) != 0;
-        default: Kokkos::abort("unreachable");
-      }
-      return false;
-    }
-  };
   using value_type          = bool;
   using abi_type            = simd_abi::neon_fixed_size<4>;
   using implementation_type = uint32x4_t;
@@ -346,13 +246,15 @@ class neon_mask<Derived, 32, 4> {
       const {
     return m_value;
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return static_cast<value_type>(
-        reference(const_cast<uint32x4_t&>(m_value), int(i)));
+    switch (i) {
+      case 0: return vgetq_lane_u32(m_value, 0) != 0;
+      case 1: return vgetq_lane_u32(m_value, 1) != 0;
+      case 2: return vgetq_lane_u32(m_value, 2) != 0;
+      case 3: return vgetq_lane_u32(m_value, 3) != 0;
+    }
+    return false;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Derived
   operator||(neon_mask const& other) const {
@@ -450,32 +352,6 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
   using value_type = double;
   using abi_type   = simd_abi::neon_fixed_size<2>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  class reference {
-    float64x2_t& m_value;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(float64x2_t& mask_arg,
-                                                    int lane_arg)
-        : m_value(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(double value) const {
-      switch (m_lane) {
-        case 0: m_value = vsetq_lane_f64(value, m_value, 0); break;
-        case 1: m_value = vsetq_lane_f64(value, m_value, 1); break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator double() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_f64(m_value, 0);
-        case 1: return vgetq_lane_f64(m_value, 1);
-        default: Kokkos::abort("unreachable");
-      }
-      return 0;
-    }
-  };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -507,12 +383,16 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       float64x2_t const& value_in)
       : m_value(value_in) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reference(const_cast<basic_simd*>(this)->m_value, int(i));
+    switch (i) {
+      case 0: return vgetq_lane_f64(m_value, 0);
+      case 1: return vgetq_lane_f64(m_value, 1);
+      default:
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Index out of bound"));
+        break;
+    }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -719,32 +599,6 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
   using value_type = float;
   using abi_type   = simd_abi::neon_fixed_size<2>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  class reference {
-    float32x2_t& m_value;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(float32x2_t& value_arg,
-                                                    int lane_arg)
-        : m_value(value_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(float value) const {
-      switch (m_lane) {
-        case 0: m_value = vset_lane_f32(value, m_value, 0); break;
-        case 1: m_value = vset_lane_f32(value, m_value, 1); break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator float() const {
-      switch (m_lane) {
-        case 0: return vget_lane_f32(m_value, 0);
-        case 1: return vget_lane_f32(m_value, 1);
-        default: Kokkos::abort("unreachable");
-      }
-      return 0;
-    }
-  };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -773,12 +627,16 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       float32x2_t const& value_in)
       : m_value(value_in) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reference(const_cast<basic_simd*>(this)->m_value, int(i));
+    switch (i) {
+      case 0: return vget_lane_f32(m_value, 0);
+      case 1: return vget_lane_f32(m_value, 1);
+      default:
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Index out of bound"));
+        break;
+    }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -974,36 +832,6 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
   using value_type = float;
   using abi_type   = simd_abi::neon_fixed_size<4>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  class reference {
-    float32x4_t& m_value;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(float32x4_t& value_arg,
-                                                    int lane_arg)
-        : m_value(value_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(float value) const {
-      switch (m_lane) {
-        case 0: m_value = vsetq_lane_f32(value, m_value, 0); break;
-        case 1: m_value = vsetq_lane_f32(value, m_value, 1); break;
-        case 2: m_value = vsetq_lane_f32(value, m_value, 2); break;
-        case 3: m_value = vsetq_lane_f32(value, m_value, 3); break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator float() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_f32(m_value, 0);
-        case 1: return vgetq_lane_f32(m_value, 1);
-        case 2: return vgetq_lane_f32(m_value, 2);
-        case 3: return vgetq_lane_f32(m_value, 3);
-        default: Kokkos::abort("unreachable");
-      }
-      return 0;
-    }
-  };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1036,12 +864,19 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       float32x4_t const& value_in)
       : m_value(value_in) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reference(const_cast<basic_simd*>(this)->m_value, int(i));
+    switch (i) {
+      case 0: return vgetq_lane_f32(m_value, 0);
+      case 1: return vgetq_lane_f32(m_value, 1);
+      case 2: return vgetq_lane_f32(m_value, 2);
+      case 3: return vgetq_lane_f32(m_value, 3);
+      default:
+
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Index out of bound"));
+        break;
+    }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -1237,32 +1072,6 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
   using value_type = std::int32_t;
   using abi_type   = simd_abi::neon_fixed_size<2>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  class reference {
-    int32x2_t& m_value;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(int32x2_t& value_arg,
-                                                    int lane_arg)
-        : m_value(value_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(std::int32_t value) const {
-      switch (m_lane) {
-        case 0: m_value = vset_lane_s32(value, m_value, 0); break;
-        case 1: m_value = vset_lane_s32(value, m_value, 1); break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator std::int32_t() const {
-      switch (m_lane) {
-        case 0: return vget_lane_s32(m_value, 0);
-        case 1: return vget_lane_s32(m_value, 1);
-        default: Kokkos::abort("unreachable");
-      }
-      return 0;
-    }
-  };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1294,12 +1103,16 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const& other);
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reference(const_cast<basic_simd*>(this)->m_value, int(i));
+    switch (i) {
+      case 0: return vget_lane_s32(m_value, 0);
+      case 1: return vget_lane_s32(m_value, 1);
+      default:
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Index out of bound"));
+        break;
+    }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -1454,36 +1267,6 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
   using value_type = std::int32_t;
   using abi_type   = simd_abi::neon_fixed_size<4>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  class reference {
-    int32x4_t& m_value;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(int32x4_t& value_arg,
-                                                    int lane_arg)
-        : m_value(value_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(std::int32_t value) const {
-      switch (m_lane) {
-        case 0: m_value = vsetq_lane_s32(value, m_value, 0); break;
-        case 1: m_value = vsetq_lane_s32(value, m_value, 1); break;
-        case 2: m_value = vsetq_lane_s32(value, m_value, 2); break;
-        case 3: m_value = vsetq_lane_s32(value, m_value, 3); break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator std::int32_t() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_s32(m_value, 0);
-        case 1: return vgetq_lane_s32(m_value, 1);
-        case 2: return vgetq_lane_s32(m_value, 2);
-        case 3: return vgetq_lane_s32(m_value, 3);
-        default: Kokkos::abort("unreachable");
-      }
-      return 0;
-    }
-  };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1519,12 +1302,18 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const& other);
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reference(const_cast<basic_simd*>(this)->m_value, int(i));
+    switch (i) {
+      case 0: return vgetq_lane_s32(m_value, 0);
+      case 1: return vgetq_lane_s32(m_value, 1);
+      case 2: return vgetq_lane_s32(m_value, 2);
+      case 3: return vgetq_lane_s32(m_value, 3);
+      default:
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Index out of bound"));
+        break;
+    }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -1679,32 +1468,6 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
   using value_type = std::int64_t;
   using abi_type   = simd_abi::neon_fixed_size<2>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  class reference {
-    int64x2_t& m_value;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(int64x2_t& value_arg,
-                                                    int lane_arg)
-        : m_value(value_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(std::int64_t value) const {
-      switch (m_lane) {
-        case 0: m_value = vsetq_lane_s64(value, m_value, 0); break;
-        case 1: m_value = vsetq_lane_s64(value, m_value, 1); break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator std::int64_t() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_s64(m_value, 0);
-        case 1: return vgetq_lane_s64(m_value, 1);
-        default: Kokkos::abort("unreachable");
-      }
-      return 0;
-    }
-  };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1736,12 +1499,16 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
       : m_value(value_in) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const&);
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reference(const_cast<basic_simd*>(this)->m_value, int(i));
+    switch (i) {
+      case 0: return vgetq_lane_s64(m_value, 0);
+      case 1: return vgetq_lane_s64(m_value, 1);
+      default:
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Index out of bound"));
+        break;
+    }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -1895,32 +1662,6 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   using value_type = std::uint64_t;
   using abi_type   = simd_abi::neon_fixed_size<2>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  class reference {
-    uint64x2_t& m_value;
-    int m_lane;
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(uint64x2_t& value_arg,
-                                                    int lane_arg)
-        : m_value(value_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(std::uint64_t value) const {
-      switch (m_lane) {
-        case 0: m_value = vsetq_lane_u64(value, m_value, 0); break;
-        case 1: m_value = vsetq_lane_u64(value, m_value, 1); break;
-        default: Kokkos::abort("unreachable");
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator std::uint64_t() const {
-      switch (m_lane) {
-        case 0: return vgetq_lane_u64(m_value, 0);
-        case 1: return vgetq_lane_u64(m_value, 1);
-        default: Kokkos::abort("unreachable");
-      }
-      return 0;
-    }
-  };
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1954,12 +1695,16 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
       basic_simd<std::int32_t, abi_type> const& other)
       : m_value(
             vreinterpretq_u64_s64(vmovl_s32(static_cast<int32x2_t>(other)))) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reference(const_cast<basic_simd*>(this)->m_value, int(i));
+    switch (i) {
+      case 0: return vgetq_lane_u64(m_value, 0);
+      case 1: return vgetq_lane_u64(m_value, 1);
+      default:
+        Kokkos::Impl::throw_runtime_exception(
+            std::string("Index out of bound"));
+        break;
+    }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {

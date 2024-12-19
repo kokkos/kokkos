@@ -36,10 +36,8 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    mask_type mask(false);
-    for (std::size_t j = 0; j < nlanes; ++j) {
-      mask[j] = true;
-    }
+    mask_type mask(KOKKOS_LAMBDA(std::size_t) { return true; });
+
     auto value    = where(mask, arg);
     auto expected = reduce_op.on_host_serial(value);
     auto computed = reduce_op.on_host(value);
@@ -110,10 +108,8 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    mask_type mask(false);
-    for (std::size_t j = 0; j < nlanes; ++j) {
-      mask[j] = true;
-    }
+    mask_type mask(KOKKOS_LAMBDA(std::size_t) { return true; });
+
     auto value    = where(mask, arg);
     auto expected = reduce_op.on_device_serial(value);
     auto computed = reduce_op.on_device(value);
