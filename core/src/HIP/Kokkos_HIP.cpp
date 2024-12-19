@@ -75,6 +75,14 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   }
 #endif
 #ifdef KOKKOS_ARCH_AMD_GFX942_APU
+  if (!Impl::HIPInternal::singleton().is_xnack_enabled()) {
+    Kokkos::abort(
+        "Could not determine that xnack is enabled. Kokkos requires xnack to "
+        "be enabled for ARCH_AMD_GFX942_APU (MI300A). Set HSA_XNACK=1 in your "
+        "environment, or ensure \"amdgpu.noretry=0\" is on the Linux boot "
+        "command line and /proc/cmdline is readable.\n");
+  }
+
   if ((Kokkos::show_warnings()) &&
       (Impl::HIPInternal::m_deviceProp.integrated == 0)) {
     std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
