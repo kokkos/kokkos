@@ -36,6 +36,8 @@ void test_create_mirror_properties(const View& view) {
 
   // clang-format off
   
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+
   // create_mirror
   check_memory_space(create_mirror(WithoutInitializing,                          view), host_mirror_test_space(view));
   check_memory_space(create_mirror(                                              view), host_mirror_test_space(view));
@@ -84,6 +86,7 @@ void test_create_mirror_properties(const View& view) {
   check_memory_space(create_mirror_view_and_copy(view_alloc(HostSpace{},         DefaultHostExecutionSpace{}),   view), HostSpace{});
   check_memory_space(create_mirror_view_and_copy(view_alloc(DeviceMemorySpace{}, DefaultExecutionSpace{}),       view), DeviceMemorySpace{});
 
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   // clang-format on
 }
 
