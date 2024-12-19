@@ -131,6 +131,7 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
