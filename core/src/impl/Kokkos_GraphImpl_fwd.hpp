@@ -32,6 +32,15 @@ template <class ExecutionSpace, class Policy, class Functor,
           class KernelTypeTag, class... Args>
 class GraphNodeKernelImpl;
 
+template <class ExecutionSpace, class Functor>
+class GraphNodeThenImpl;
+
+template <typename T, class Enable = void>
+struct is_graph_then : public std::false_type {};
+
+template <typename T>
+inline constexpr bool is_graph_then_v = is_graph_then<T>::value;
+
 struct _graph_node_kernel_ctor_tag {};
 struct _graph_node_predecessor_ctor_tag {};
 struct _graph_node_is_root_ctor_tag {};

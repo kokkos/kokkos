@@ -108,6 +108,39 @@ struct _add_graph_kernel_tag<PolicyTemplate<PolicyTraits...>> {
   using type = PolicyTemplate<PolicyTraits..., IsGraphKernelTag>;
 };
 
+// Helper for the 'then', such that the user can indeed pass a callable that
+// takes no argument.
+template <typename Functor>
+struct ThenWrapper {
+  Functor functor;
+  template <typename T>
+  KOKKOS_FUNCTION void operator()(const T) const {
+    functor();
+  }
+};
+
+template <typename ExecutionSpace, typename Functor>
+struct GraphNodeThenImpl
+    : public GraphNodeKernelImpl<
+          ExecutionSpace, Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag>,
+          ThenWrapper<Functor>, ParallelForTag> {
+  using base_t =
+      GraphNodeKernelImpl<ExecutionSpace,
+                          Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag>,
+                          ThenWrapper<Functor>, ParallelForTag>;
+  using wrapper_t = ThenWrapper<Functor>;
+
+  template <typename Label, typename T>
+  GraphNodeThenImpl(Label&& label_, T&& functor)
+      : base_t(std::forward<Label>(label_), ExecutionSpace{},
+               wrapper_t{std::forward<T>(functor)},
+               Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag>(0, 1)) {}
+};
+
+template <typename T>
+struct is_graph_then<T, std::enable_if_t<Kokkos::Impl::is_specialization_of_v<
+                            T, GraphNodeThenImpl>>> : public std::true_type {};
+
 }  // end namespace Impl
 
 namespace Experimental {  // but not for users, so...
