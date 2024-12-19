@@ -52,13 +52,10 @@ struct StdUniqueFunctor {
     auto& val_i         = m_first_from[i];
     const auto& val_ip1 = m_first_from[i + 1];
 
-    if (final_pass) {
-      if (!m_pred(val_i, val_ip1)) {
+    if (!m_pred(val_i, val_ip1)) {
+      if (final_pass) {
         m_first_dest[update] = std::move(val_i);
       }
-    }
-
-    if (!m_pred(val_i, val_ip1)) {
       update += 1;
     }
   }
