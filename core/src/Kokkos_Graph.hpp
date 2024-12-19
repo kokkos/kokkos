@@ -216,6 +216,7 @@ decltype(auto) Graph<ExecutionSpace>::native_graph_exec() {
 #include <Kokkos_GraphNode.hpp>
 
 #include <impl/Kokkos_GraphNodeImpl.hpp>
+#include <impl/Kokkos_GraphNodeThenImpl.hpp>
 #include <impl/Kokkos_Default_Graph_Impl.hpp>
 #include <Cuda/Kokkos_Cuda_Graph_Impl.hpp>
 #if defined(KOKKOS_ENABLE_HIP)
