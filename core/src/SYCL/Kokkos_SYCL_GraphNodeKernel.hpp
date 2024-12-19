@@ -30,6 +30,23 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename Functor>
+struct GraphNodeCaptureImpl<Kokkos::SYCL, Functor> {
+  Functor m_functor;
+
+  void capture(
+      const Kokkos::SYCL& exec,
+      sycl::ext::oneapi::experimental::command_graph<
+          sycl::ext::oneapi::experimental::graph_state::modifiable>& graph) {
+    // This seems wrong if we already have nodes in the graph.
+    graph.begin_recording(exec.sycl_queue());
+
+    m_functor(exec);
+
+    graph.end_recording(exec.sycl_queue());
+  }
+};
+
 template <typename PolicyType, typename Functor, typename PatternTag,
           typename... Args>
 class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
