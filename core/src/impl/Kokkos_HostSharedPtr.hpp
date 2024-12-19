@@ -43,12 +43,16 @@ class HostSharedPtr {
     static_assert(std::is_invocable_v<Deleter, T*> &&
                   std::is_copy_constructible_v<Deleter>);
     if (element_ptr) {
+#ifdef KOKKOS_ENABLE_NO_EXCEPTIONS
+      m_control = new Control{deleter, 1};
+#else
       try {
         m_control = new Control{deleter, 1};
       } catch (...) {
         deleter(element_ptr);
         throw;
       }
+#endif
     }
   }
 
