@@ -45,6 +45,13 @@ struct StreamsAndDevices {
 
 std::array<TEST_EXECSPACE, 2> get_execution_spaces(
     const StreamsAndDevices &streams_and_devices) {
+  // Must return void to use GTEST_SKIP
+  [&]() {
+    if (streams_and_devices.devices[0] == streams_and_devices.devices[1])
+      GTEST_SKIP() << "Skipping Cuda multi-gpu testing since current machine "
+                      "only contains a single GPU.\n";
+  }();
+
   TEST_EXECSPACE exec0(streams_and_devices.streams[0]);
   TEST_EXECSPACE exec1(streams_and_devices.streams[1]);
 
@@ -105,4 +112,17 @@ TEST(cuda_multi_gpu, scratch_space) {
     test_scratch(execs[0], execs[1]);
   }
 }
+
+TEST(cuda_multi_gpu, stream_sync_semantics) {
+  StreamsAndDevices streams_and_devices;
+  {
+    std::array<TEST_EXECSPACE, 2> execs =
+        get_execution_spaces(streams_and_devices);
+
+    test_stream_sync(execs[0], execs[1], [](const Kokkos::Cuda &exec_space) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec_space.cuda_device()));
+    });
+  }
+}
+
 }  // namespace

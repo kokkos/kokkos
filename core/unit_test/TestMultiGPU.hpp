@@ -181,4 +181,54 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   ASSERT_EQ(error0, 0);
   ASSERT_EQ(error1, 0);
 }
+
+// Test that stream synchronization behavior for various GPU APIs matches the
+// assumptions made in Kokkos for multi gpu support, namely, that any stream (no
+// matter which device it is created on) can be synced from any device.
+struct AccumulateTag {};
+struct CheckTag {};
+
+template <int N>
+struct StreamSyncFunctor {
+  int *value;
+  int *check;
+
+  KOKKOS_FUNCTION
+  void operator()(const AccumulateTag &, const int) const {
+    for (int i = 0; i < N; ++i) Kokkos::atomic_inc(value);
+  }
+
+  KOKKOS_FUNCTION
+  void operator()(const CheckTag &, const int) const { check[0] = value[0]; }
+};
+
+void test_stream_sync(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1,
+                      const std::function<void(TEST_EXECSPACE &)> &set_device) {
+  // Create data in host pinned space
+  Kokkos::View<int, Kokkos::SharedHostPinnedSpace> value("value"),
+      check("check");
+
+  constexpr int N        = 1000;
+  StreamSyncFunctor<N> f = {value.data(), check.data()};
+
+  // Launch "long" kernel on dev0.
+  Kokkos::parallel_for(
+      "accumulate_value",
+      Kokkos::RangePolicy<TEST_EXECSPACE, AccumulateTag>(exec0, 0, 1), f);
+
+  // Force set internal device to dev1
+  set_device(exec1);
+
+  // Sync dev0
+  exec0.fence();
+
+  // From dev1, observe value of computation from dev0
+  Kokkos::parallel_for(
+      "check_value", Kokkos::RangePolicy<TEST_EXECSPACE, CheckTag>(exec1, 0, 1),
+      f);
+  exec1.fence();
+
+  // Check the value observed on dev1 matches the complete computation on dev0
+  ASSERT_EQ(check(), N);
+}
 }  // namespace
