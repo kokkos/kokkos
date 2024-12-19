@@ -224,8 +224,8 @@ void run_single_scenario(const InfoType& scenario_info,
   {
     fill_zero(view_dest);
     auto r =
-        KE::inclusive_scan(exespace(), KE::cbegin(view_from),
-                           KE::cend(view_from), KE::begin(view_dest), args...);
+        KE::inclusive_scan(exespace(), KE::begin(view_from),
+                           KE::end(view_from), KE::begin(view_dest), args...);
     ASSERT_EQ(r, KE::end(view_dest));
     VerifyData()(view_from, view_dest, args...);
   }
@@ -233,8 +233,8 @@ void run_single_scenario(const InfoType& scenario_info,
   {
     fill_zero(view_dest);
     auto r =
-        KE::inclusive_scan("label", exespace(), KE::cbegin(view_from),
-                           KE::cend(view_from), KE::begin(view_dest), args...);
+        KE::inclusive_scan("label", exespace(), KE::begin(view_from),
+                           KE::end(view_from), KE::begin(view_dest), args...);
     ASSERT_EQ(r, KE::end(view_dest));
     VerifyData()(view_from, view_dest, args...);
   }
@@ -279,7 +279,7 @@ void run_single_scenario_inplace(const InfoType& scenario_info,
 
   {
     fill_view(view2, name);
-    auto r = KE::inclusive_scan(exespace(), KE::cbegin(view2), KE::cend(view2),
+    auto r = KE::inclusive_scan(exespace(), KE::begin(view2), KE::end(view2),
                                 KE::begin(view2), args...);
     ASSERT_EQ(r, KE::end(view2));
     VerifyData()(view1, view2, args...);
@@ -287,8 +287,8 @@ void run_single_scenario_inplace(const InfoType& scenario_info,
 
   {
     fill_view(view2, name);
-    auto r = KE::inclusive_scan("label", exespace(), KE::cbegin(view2),
-                                KE::cend(view2), KE::begin(view2), args...);
+    auto r = KE::inclusive_scan("label", exespace(), KE::begin(view2),
+                                KE::end(view2), KE::begin(view2), args...);
     ASSERT_EQ(r, KE::end(view2));
     VerifyData()(view1, view2, args...);
   }
