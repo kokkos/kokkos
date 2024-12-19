@@ -24,8 +24,15 @@
 #include <cstring>
 #include <iostream>
 #include <regex>
+#include <unordered_set>
 #include <string>
 #include <sstream>
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
 
 namespace {
 
@@ -241,19 +248,55 @@ void Kokkos::Impl::warn_deprecated_command_line_argument(
 }
 
 namespace {
-std::vector<std::regex> do_not_warn_regular_expressions{
+
+std::vector<std::regex> do_not_warn_command_line_argument_regular_expressions{
     std::regex{"--kokkos-tool.*", std::regex::egrep},
 };
-}
+
+std::vector<std::regex> do_not_warn_environment_variable_regular_expressions{
+    std::regex{"KOKKOS_TOOLS.*", std::regex::egrep},
+    std::regex{"KOKKOS_DIR=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_HOME=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_ROOT=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_PATH=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_INCLUDE_DIRS=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_INCLUDE_DIRECTORIES=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_LIBRARY_DIRS=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_LIBRARY_DIRECTORIES=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_SOURCE=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_SRC=.*",
+               std::regex::egrep | std::regex_constants::icase},
+    std::regex{"KOKKOS_INSTALL=.*",
+               std::regex::egrep | std::regex_constants::icase},
+};
+
+}  // namespace
 
 void Kokkos::Impl::do_not_warn_not_recognized_command_line_argument(
     std::regex ignore) {
-  do_not_warn_regular_expressions.push_back(std::move(ignore));
+  do_not_warn_command_line_argument_regular_expressions.push_back(
+      std::move(ignore));
+}
+
+void Kokkos::Impl::do_not_warn_not_recognized_environment_variable(
+    std::regex ignore) {
+  do_not_warn_environment_variable_regular_expressions.push_back(
+      std::move(ignore));
 }
 
 void Kokkos::Impl::warn_not_recognized_command_line_argument(
     std::string not_recognized) {
-  for (auto const& ignore : do_not_warn_regular_expressions) {
+  for (auto const& ignore :
+       do_not_warn_command_line_argument_regular_expressions) {
     if (std::regex_match(not_recognized, ignore)) {
       return;
     }
@@ -261,4 +304,31 @@ void Kokkos::Impl::warn_not_recognized_command_line_argument(
   std::cerr << "Warning: command line argument '" << not_recognized
             << "' is not recognized."
             << " Raised by Kokkos::initialize()." << std::endl;
+}
+
+void Kokkos::Impl::warn_not_recognized_environment_variable(
+    std::string not_recognized) {
+  for (auto const& ignore :
+       do_not_warn_environment_variable_regular_expressions) {
+    if (std::regex_match(not_recognized, ignore)) {
+      return;
+    }
+  }
+  std::cerr << "Warning: environment variable '" << not_recognized
+            << "' is not recognized."
+            << " Raised by Kokkos::initialize()." << std::endl;
+}
+
+#ifndef _WIN32
+// On POSIX systems, the global variable `environ` points to a null-terminated
+// list of environment variables.
+extern char** environ;
+#endif
+
+char** Kokkos::Impl::get_envp() {
+#ifdef _WIN32
+  return *__p__environ();
+#else
+  return environ;
+#endif
 }
