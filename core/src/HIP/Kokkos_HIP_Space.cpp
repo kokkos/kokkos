@@ -176,23 +176,12 @@ Kokkos::HIP::allocation WARNING: The combination of device and system configurat
         }
 
         // check for correct runtime environment
-        const char* hsa_xnack = std::getenv("HSA_XNACK");
-        if (!hsa_xnack)
+        if (!Kokkos::Impl::HIPInternal::singleton().is_xnack_enabled())
           std::cerr << R"warning(
-Kokkos::HIP::runtime WARNING: Kokkos did not find an environment variable 'HSA_XNACK'
-                              for the current process.
-                              Nevertheless, xnack is enabled for all processes if
-                              amdgpu.noretry=0 was set in the Linux kernel boot line.
+Kokkos::HIP::runtime WARNING: Kokkos was not able to verify that xnack is enabled. 
                               Without xnack enabled, Kokkos::HIPManaged might not behave
-                              as expected.)warning"
+                              as expected. Set HSA_XNACK=1 in your environment to enable it.)warning"
                     << std::endl;
-        else if (Kokkos::Impl::strcmp(hsa_xnack, "1") != 0)
-          std::cerr
-              << "Kokkos::HIP::runtime WARNING: Kokkos detected the "
-                 "environement variable "
-              << "'HSA_XNACK'=" << hsa_xnack << "\n"
-              << "Kokkos advises to set it to '1' to enable it per process."
-              << std::endl;
       } while (false);
     }
     auto const error_code = hipMallocManaged(&ptr, arg_alloc_size);
