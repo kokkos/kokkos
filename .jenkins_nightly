@@ -143,7 +143,6 @@ pipeline {
                         }
                     }
                 }
-            }
                 stage('HIP-ROCM-6.3-MI210-CXX23') {
                     agent {
                         dockerfile {
