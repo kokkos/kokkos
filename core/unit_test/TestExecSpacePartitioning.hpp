@@ -129,6 +129,8 @@ void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
 }
 
 TEST(TEST_CATEGORY, partitioning_by_args) {
+  if (omp_get_max_threads() < 2)
+    GTEST_SKIP() << "insufficient number of supported concurrent threads";
   auto instances =
       Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
   ASSERT_EQ(int(instances.size()), 2);
@@ -136,6 +138,8 @@ TEST(TEST_CATEGORY, partitioning_by_args) {
 }
 
 TEST(TEST_CATEGORY, partitioning_by_vector) {
+  if (omp_get_max_threads() < 2)
+    GTEST_SKIP() << "insufficient number of supported concurrent threads";
   // Make sure we can use a temporary as argument for weights
   auto instances = Kokkos::Experimental::partition_space(
       TEST_EXECSPACE(), std::vector<int> /*weights*/ {1, 1});
