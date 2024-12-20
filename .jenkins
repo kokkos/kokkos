@@ -69,7 +69,7 @@ pipeline {
                                 -D GITHUB_PR_ID=${PR_ID} \
                                 -D CTEST_SITE="jenkins" \
                                 -D CTEST_BUILD_NAME="GCC-8.4.0" && \
-                              gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
+                              gcc -I$PWD/core/src/ $PWD/core/unit_test/tools/TestCInterface.c'''
                     }
                     post {
                         always {
