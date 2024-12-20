@@ -782,8 +782,26 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
             value_A + 2 * value_B + value_C + value_D + value_E + value_F);
 }
 
+// Supported graph node types.
+enum class GraphNodeType {
+  KERNEL    = 12,
+  AGGREGATE = 42,
+  THEN      = 66,
+  CAPTURE   = 666
+};
+
 template <typename Exec>
-struct GraphNodeTypes {
+struct GraphHelpers {
+#if defined(KOKKOS_ENABLE_CUDA)
+  static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::Cuda>;
+#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+    static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::HIP>;
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+  static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::SYCL>;
+#else
+  static constexpr bool support_capture = false;
+#endif
+
   // Type of a kernel node built using a Kokkos parallel construct.
   using kernel_t =
       Kokkos::Impl::GraphNodeKernelImpl<Exec, Kokkos::RangePolicy<Exec>,
@@ -792,15 +810,33 @@ struct GraphNodeTypes {
 
   // Type of an aggregate node.
   using aggregate_t = typename Kokkos::Impl::GraphImpl<Exec>::aggregate_impl_t;
+
+  // Type of a capture node.
+  using capture_t =
+      Kokkos::Impl::GraphNodeCaptureImpl<Exec, CountTestFunctor<Exec>>;
 };
 
+template <typename Exec>
 constexpr bool test_is_graph_kernel() {
-  using types = GraphNodeTypes<TEST_EXECSPACE>;
-  static_assert(Kokkos::Impl::is_graph_kernel_v<types::kernel_t>);
-  static_assert(!Kokkos::Impl::is_graph_kernel_v<types::aggregate_t>);
+  using types = GraphHelpers<Exec>;
+  static_assert(Kokkos::Impl::is_graph_kernel_v<typename types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::aggregate_t>);
+  if constexpr (types::support_capture)
+    static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::capture_t>);
   return true;
 }
-static_assert(test_is_graph_kernel());
+static_assert(test_is_graph_kernel<TEST_EXECSPACE>());
+
+template <typename Exec>
+constexpr bool test_is_graph_capture() {
+  using types = GraphHelpers<Exec>;
+  static_assert(!Kokkos::Impl::is_graph_capture_v<typename types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_capture_v<typename types::aggregate_t>);
+  if constexpr (types::support_capture)
+    static_assert(Kokkos::Impl::is_graph_capture_v<typename types::capture_t>);
+  return true;
+}
+static_assert(test_is_graph_capture<TEST_EXECSPACE>());
 
 // This test checks the node types before/after a 'when_all'.
 TEST(TEST_CATEGORY, when_all_type) {
@@ -838,6 +874,177 @@ TEST(TEST_CATEGORY, when_all_type) {
   static_assert(std::is_same_v<decltype(node_B), node_ref_first_layer_t>);
   static_assert(std::is_same_v<decltype(agg), node_ref_agg_t>);
   static_assert(std::is_same_v<decltype(tail), node_ref_tail_t>);
+}
+
+template <typename ViewType>
+struct ExternalThen {
+  static_assert(ViewType::rank() == 0);
+
+  ViewType data;
+
+  // for now it is a p-for so we have to accept a useless index...
+  template <typename T>
+  KOKKOS_FUNCTION void operator()(const T) const {
+    data() += static_cast<int>(GraphNodeType::THEN);
+  }
+
+  template <typename N, typename Exec, typename T>
+  static auto add(const N& node, const Exec&, const T& data_) {
+    return node.then("My extern call - with a 'then'", ExternalThen{data_});
+  }
+};
+
+TEST(TEST_CATEGORY, graph_then) {
+  using view_t = Kokkos::View<int, TEST_EXECSPACE>;
+
+  constexpr int offset = 123;
+
+  const TEST_EXECSPACE exec{};
+
+  view_t data(Kokkos::view_alloc(exec, "data used in 'then'"));
+
+  auto graph  = Kokkos::Experimental::create_graph(exec);
+  auto root   = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+  auto memset = root.then_parallel_for(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, data.size()),
+      SetViewToValueFunctor<TEST_EXECSPACE, int>{
+          data, offset});
+  auto external = ExternalThen<view_t>::add(memset, exec, data);
+
+  // At this stage, no kernel was launched yet.
+  ASSERT_TRUE(contains(exec, data, 0));
+
+  // The view is shared by:
+  //  - this scope
+  //  - the memset node
+  //  - the capture node
+  ASSERT_EQ(data.use_count(), 3);
+
+  graph.submit(exec);
+
+  ASSERT_TRUE(contains(exec, data, offset + static_cast<int>(GraphNodeType::THEN)));
+}
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+template <GraphNodeType value, typename T>
+__global__ void set_to(T* const data) {
+  data[threadIdx.y] += static_cast<T>(value);
+}
+#endif
+
+template <typename Exec, typename ViewType>
+struct ExternalCapture {
+  template <typename N, typename E, typename T>
+  static auto add(const N&, const E&, const T&) {
+    // This shouldn't be needed, but 'nvcc' really wants to see
+    // some implementation of this.
+    Kokkos::abort("unreachable");
+  }
+};
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <typename ViewType>
+struct ExternalCapture<Kokkos::Cuda, ViewType> {
+  static_assert(ViewType::rank() == 0);
+
+  static void compute(const Kokkos::Cuda& exec, const ViewType& data) {
+    set_to<GraphNodeType::CAPTURE>
+        <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.cuda_stream()>>>(data.data());
+  }
+
+  template <typename N, typename T>
+  static auto add(const N& node, const Kokkos::Cuda& exec, const T& data) {
+    return node.cuda_capture(exec, [data = data](const Kokkos::Cuda& exec_) {
+      ExternalCapture::compute(exec_, data);
+    });
+  }
+};
+#endif
+#if defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+template <typename ViewType>
+struct ExternalCapture<Kokkos::HIP, ViewType> {
+  static_assert(ViewType::rank() == 0);
+
+  static void compute(const Kokkos::HIP& exec, const ViewType& data) {
+    set_to<GraphNodeType::CAPTURE>
+        <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.hip_stream()>>>(data.data());
+  }
+
+  template <typename N, typename T>
+  static auto add(const N& node, const Kokkos::HIP& exec, const T& data) {
+    return node.hip_capture(exec, [data = data](const Kokkos::HIP& exec_) {
+      ExternalCapture::compute(exec_, data);
+    });
+  }
+};
+#endif
+#if defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+template <typename ViewType>
+struct ExternalCapture<Kokkos::SYCL, ViewType> {
+  static_assert(ViewType::rank() == 0);
+
+  static void compute(const Kokkos::SYCL& exec, const ViewType& data) {
+    exec.sycl_queue().parallel_for(sycl::range<1>(1),
+                                   [=](const Kokkos::SYCL::size_type) {
+                                     data() += GraphNodeType::CAPTURE;
+                                   });
+  }
+
+  template <typename N, typename T>
+  static auto add(const N& node, const Kokkos::SYCL& exec, const T& data) {
+    return node.sycl_capture(exec, [data = data](const Kokkos::SYCL& exec_) {
+      ExternalCapture::compute(exec_, data);
+    });
+  }
+};
+#endif
+
+TEST(TEST_CATEGORY, graph_capture) {
+  using helpers_t = GraphHelpers<TEST_EXECSPACE>;
+  using view_t    = Kokkos::View<int, TEST_EXECSPACE>;
+
+  if constexpr (!helpers_t::support_capture) {
+    GTEST_SKIP() << "This execution space does not support capture.";
+  } else {
+    constexpr int offset = 123;
+
+    const TEST_EXECSPACE exec{};
+
+    view_t data(Kokkos::view_alloc(exec, "data used in the captured kernel"));
+
+    auto graph = Kokkos::Experimental::create_graph(exec);
+    auto root  = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+
+    // To be sorted out before merging: ideally this node could be added in a
+    // deep-down library call and need to attach some state (e.g. views) to the
+    // node. But for now, once the kernel is dispatched, it is not kept by the
+    // graph and it's the user's duty to keep it alive.
+    // Since we must already keep the global launch and capture nodes
+    // internally, why not keep all of them actually ?
+    // This would save us from very nasty bugs.
+    auto memset = root.then_parallel_for(
+        Kokkos::RangePolicy<TEST_EXECSPACE>(0, data.size()),
+        SetViewToValueFunctor<TEST_EXECSPACE, int>{
+            data, offset});
+
+    // We don't keep a reference to the created external node, to mimic that
+    // someone did use capture in some deep-down library call (e.g. in
+    // Kokkos Kernels).
+    ExternalCapture<TEST_EXECSPACE, view_t>::add(memset, exec, data);
+
+    // At this stage, no kernel was launched yet.
+    ASSERT_TRUE(contains(exec, data, 0));
+
+    // The view is shared by:
+    //  - this scope
+    //  - the memset node
+    //  - the capture node
+    ASSERT_EQ(data.use_count(), 3);
+
+    graph.submit(exec);
+
+    ASSERT_TRUE(contains(exec, data, offset + static_cast<int>(GraphNodeType::CAPTURE)));
+  }
 }
 
 }  // end namespace Test

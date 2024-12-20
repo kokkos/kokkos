@@ -148,4 +148,20 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
 #endif
 }
 
+// Building a Kokkos::Graph from a native cudaGraph_t can be useful, e.g. with
+// conditional nodes.
+// See for instance
+// https://docs.nvidia.com/cuda/cuda-c-programming-guide/#conditional-while-nodes,
+// for which case the Kokkos::Graph would be built from the conditional node's
+// child graph.
+TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), construct_from_native) {
+  cudaGraph_t native_graph = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphCreate(&native_graph, 0));
+
+  auto graph = Kokkos::Impl::GraphAccess::construct_graph_from_native(
+      exec, native_graph);
+
+  ASSERT_EQ(native_graph, graph.native_graph());
+}
+
 }  // namespace
