@@ -19,7 +19,23 @@ include("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 include("${Kokkos_CMAKE_DIR}/KokkosConfigCommon.cmake")
 unset(Kokkos_CMAKE_DIR)
 
-# check for conflicts
+# components deprecation
+if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS)
+  message(
+    WARNING
+      "'launch_compiler' is deprecated and will be removed in the future. Use the 'Kokkos_FORCE_COMPILER_LAUNCHER' option instead."
+  )
+  set(Kokkos_GLOBAL_COMPILATION ON)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER ON)
+elseif("separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
+  message(
+    WARNING
+      "'separable_compilation' is deprecated and will be removed in the future. Use the 'Kokkos_GLOBAL_COMPILATION' option instead."
+  )
+  set(Kokkos_GLOBAL_COMPILATION OFF)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER OFF)
+endif()
+
 if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS AND "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
   message(STATUS "'launch_compiler' implies global redirection of targets depending on Kokkos to appropriate compiler.")
   message(
@@ -28,45 +44,38 @@ if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS AND "separable_compilation" 
   )
   message(FATAL_ERROR "Conflicting COMPONENTS: 'launch_compiler' and 'separable_compilation'")
 endif()
+# end of components deprecation
 
-if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS)
-  #
-  # if find_package(Kokkos COMPONENTS launch_compiler) then rely on the
-  # RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK to always redirect to the
-  # appropriate compiler for Kokkos
-  #
+if(NOT DEFINED Kokkos_GLOBAL_COMPILATION)
+  set(Kokkos_GLOBAL_COMPILATION ON)
+endif()
 
-  message(
-    STATUS
-      "kokkos_launch_compiler is enabled globally. C++ compiler commands with -DKOKKOS_DEPENDENCE will be redirected to the appropriate compiler for Kokkos"
-  )
-  kokkos_compilation(GLOBAL CHECK_CUDA_COMPILES)
+if(NOT DEFINED Kokkos_FORCE_COMPILER_LAUNCHER)
+  set(Kokkos_FORCE_COMPILER_LAUNCHER OFF)
+endif()
 
-elseif(@Kokkos_ENABLE_CUDA@ AND NOT @KOKKOS_COMPILE_LANGUAGE@ STREQUAL CUDA AND NOT "separable_compilation" IN_LIST
-                                                                                Kokkos_FIND_COMPONENTS
-)
-  #
-  # if CUDA was enabled, the compilation language was not set to CUDA, and separable compilation was not
-  # specified, then set the RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK globally and
-  # kokkos_launch_compiler will re-direct to the compiler used to compile CUDA code during installation.
-  # kokkos_launch_compiler will re-direct if ${CMAKE_CXX_COMPILER} and -DKOKKOS_DEPENDENCE is present,
-  # otherwise, the original command will be executed
-  #
+if(Kokkos_GLOBAL_COMPILATION)
+  # If nvcc is not the CXX_COMPILER we go through the launcher
+  if(@Kokkos_ENABLE_CUDA@ AND NOT @KOKKOS_COMPILE_LANGUAGE@ STREQUAL CUDA)
+    kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
+    if(NOT IS_NVCC)
+      message(
+        STATUS
+          "kokkos_launch_compiler is enabled globally. C++ compiler commands with -DKOKKOS_DEPENDENCE will be redirected to the appropriate compiler for Kokkos"
+      )
+      kokkos_compilation(GLOBAL)
+    endif()
+    unset(IS_NVCC)
+  endif()
 
-  # run test to see if CMAKE_CXX_COMPILER=nvcc_wrapper
-  kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
-
-  # if not nvcc_wrapper and Kokkos_LAUNCH_COMPILER was not set to OFF
-  if(NOT IS_NVCC AND (NOT DEFINED Kokkos_LAUNCH_COMPILER OR Kokkos_LAUNCH_COMPILER))
+  # If users request the compiler launcher we use it globally
+  if(Kokkos_FORCE_COMPILER_LAUNCHER)
     message(
       STATUS
         "kokkos_launch_compiler is enabled globally. C++ compiler commands with -DKOKKOS_DEPENDENCE will be redirected to the appropriate compiler for Kokkos"
     )
     kokkos_compilation(GLOBAL)
   endif()
-
-  # be mindful of the environment, pollution is bad
-  unset(IS_NVCC)
 endif()
 
 set(Kokkos_COMPILE_LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
