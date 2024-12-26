@@ -1971,6 +1971,13 @@ TEST(TEST_CATEGORY, mathspecialfunc_cbesselj1y1) {
     GTEST_SKIP() << "skipping since test is known to fail with OpenMPTarget on "
                     "Intel GPUs";  // FIXME_OPENMPTARGET
 #endif
+#if defined(KOKKOS_ENABLE_HIP) &&                         \
+    (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR == 3) && \
+    defined(KOKKOS_ARCH_AMD_GFX908)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>)
+    GTEST_SKIP()
+        << "skipping since test is known to fail on MI100 with ROCm 5.3";
+#endif
   TestComplexBesselJ1Y1Function<TEST_EXECSPACE> test;
   test.testit();
 }
