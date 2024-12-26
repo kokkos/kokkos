@@ -68,8 +68,6 @@ TEST_F(PushFinalizeHook_DeathTest, called_in_reverse_order) {
     return os.str();
   }());
 
-  std::string const regexEmptyStr = "^$";
-
   EXPECT_EXIT(
       {
         Kokkos::push_finalize_hook(hook1);  // plain old function
@@ -85,7 +83,7 @@ TEST_F(PushFinalizeHook_DeathTest, called_in_reverse_order) {
         std::exit(hookOutput.str() == expectedOutput ? EXIT_SUCCESS
                                                      : EXIT_FAILURE);
       },
-      ::testing::ExitedWithCode(EXIT_SUCCESS), regexEmptyStr);
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
 char const my_terminate_handler_msg[] = "my terminate handler was called\n";
