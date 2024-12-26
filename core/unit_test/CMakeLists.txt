@@ -843,8 +843,6 @@ endif()
 set(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
     TestCStyleMemoryManagement.cpp
-    TestInitializationSettings.cpp
-    TestParseCmdLineArgsAndEnvVars.cpp
     TestSharedSpace.cpp
     TestSharedHostPinnedSpace.cpp
     TestCompilerMacros.cpp
@@ -915,7 +913,10 @@ kokkos_add_executable_and_test(CoreUnitTest_LegionInitialization SOURCES UnitTes
 
 kokkos_add_executable_and_test(CoreUnitTest_PushFinalizeHook SOURCES UnitTest_PushFinalizeHook.cpp)
 
-kokkos_add_executable_and_test(CoreUnitTest_ScopeGuard SOURCES UnitTestMain.cpp UnitTest_ScopeGuard.cpp)
+kokkos_add_executable_and_test(
+  CoreUnitTest_InitializeFinalize SOURCES UnitTestMain.cpp TestInitializationSettings.cpp
+  TestParseCmdLineArgsAndEnvVars.cpp TestScopeGuard.cpp
+)
 
 # This test is intended for development and debugging by putting code
 # into TestDefaultDeviceDevelop.cpp. By default its empty.
