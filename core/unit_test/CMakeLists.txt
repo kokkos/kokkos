@@ -914,8 +914,13 @@ kokkos_add_executable_and_test(CoreUnitTest_LegionInitialization SOURCES UnitTes
 kokkos_add_executable_and_test(CoreUnitTest_PushFinalizeHook SOURCES UnitTest_PushFinalizeHook.cpp)
 
 kokkos_add_executable_and_test(
-  CoreUnitTest_InitializeFinalize SOURCES UnitTestMain.cpp TestInitializationSettings.cpp
-  TestParseCmdLineArgsAndEnvVars.cpp TestScopeGuard.cpp
+  CoreUnitTest_InitializeFinalize
+  SOURCES
+  UnitTestMain.cpp
+  TestInitializationSettings.cpp
+  TestParseCmdLineArgsAndEnvVars.cpp
+  TestPushFinalizeHook.cpp
+  TestScopeGuard.cpp
 )
 
 # This test is intended for development and debugging by putting code
