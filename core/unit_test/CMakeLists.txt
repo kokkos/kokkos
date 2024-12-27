@@ -909,14 +909,13 @@ endif()
 
 kokkos_add_executable_and_test(CoreUnitTest_Default SOURCES ${DEFAULT_DEVICE_SOURCES})
 
-kokkos_add_executable_and_test(CoreUnitTest_LegionInitialization SOURCES UnitTestMain.cpp TestLegionInitialization.cpp)
-
 kokkos_add_executable_and_test(
   CoreUnitTest_InitializeFinalize
   SOURCES
   UnitTestMain.cpp
   TestInitializationSettings.cpp
   TestInitializeFinalize.cpp
+  TestLegionInitialization.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
   TestPushFinalizeHook.cpp
   TestScopeGuard.cpp
