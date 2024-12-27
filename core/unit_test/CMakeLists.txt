@@ -915,6 +915,7 @@ kokkos_add_executable_and_test(
   CoreUnitTest_InitializeFinalize
   SOURCES
   UnitTestMain.cpp
+  TestExecutionEnvironmentNonInitializedOrFinalized.cpp
   TestInitializationSettings.cpp
   TestInitializeFinalize.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
