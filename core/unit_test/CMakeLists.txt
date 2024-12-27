@@ -284,6 +284,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
       list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewCopy_c)
     endif()
+    if(Kokkos_ENABLE_NO_EXCEPTIONS)
+      list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewBadAlloc)
+    endif()
     foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -911,7 +914,9 @@ kokkos_add_executable_and_test(CoreUnitTest_Default SOURCES ${DEFAULT_DEVICE_SOU
 
 kokkos_add_executable_and_test(CoreUnitTest_LegionInitialization SOURCES UnitTestMain.cpp TestLegionInitialization.cpp)
 
-kokkos_add_executable_and_test(CoreUnitTest_PushFinalizeHook SOURCES UnitTest_PushFinalizeHook.cpp)
+if(NOT Kokkos_ENABLE_NO_EXCEPTIONS)
+  kokkos_add_executable_and_test(CoreUnitTest_PushFinalizeHook SOURCES UnitTest_PushFinalizeHook.cpp)
+endif()
 
 kokkos_add_executable_and_test(
   CoreUnitTest_InitializeFinalize SOURCES UnitTestMain.cpp TestInitializationSettings.cpp
@@ -924,7 +929,7 @@ kokkos_add_executable_and_test(CoreUnitTest_Develop SOURCES UnitTestMainInit.cpp
 
 # With MSVC, the terminate handler is called and prints the message but the
 # program does not seem to exit and we get a timeout with ctest.
-if(NOT WIN32)
+if(NOT WIN32 AND NOT Kokkos_ENABLE_NO_EXCEPTIONS)
   # This test is special, because it passes exactly when it prints the
   # message "PASSED: I am the custom std::terminate handler.", AND calls
   # std::terminate.  This means that we can't use
