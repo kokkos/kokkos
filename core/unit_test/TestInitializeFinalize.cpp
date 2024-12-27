@@ -19,7 +19,6 @@
 #include <gtest/gtest.h>
 
 #include <cstdlib>
-#include <string>
 
 #include "KokkosExecutionEnvironmentNeverInitializedFixture.hpp"
 
