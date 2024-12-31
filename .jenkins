@@ -64,7 +64,6 @@ pipeline {
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_SERIAL=ON" && \
                               ctest -VV \
                                 -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
-                                -D OUTPUT_JUNIT_FILE=result_GCC-8.4.0_OpenMP.xml \
                                 -S CTestRun.cmake \
                                 -D GITHUB_PR_ID=${PR_ID} \
                                 -D CTEST_SITE="jenkins" \

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.21) #JUNIT_FILE support requires 3.21
+cmake_minimum_required(VERSION 3.16)
 
 set(CTEST_BINARY_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/build)
 set(CTEST_SOURCE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
@@ -18,5 +18,9 @@ ctest_start(Experimental)
 ctest_update()
 ctest_configure(OPTIONS "${CMAKE_OPTIONS}")
 ctest_build()
-ctest_test(OUTPUT_JUNIT "${OUTPUT_JUNIT_FILE}")
+if(OUTPUT_JUNIT_FILE)
+  ctest_test(OUTPUT_JUNIT "${OUTPUT_JUNIT_FILE}")
+else()
+  ctest_test()
+endif()
 ctest_submit()
