@@ -16,6 +16,11 @@ jobs:
     runs-on: windows-2022
 
     steps:
+    - name: Harden Runner
+      uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+      with:
+        egress-policy: audit
+
     - uses: Jimver/cuda-toolkit@4bd727d5619dc6fa323b1e76c3aa5dca94f5ec6d # v0.2.19
       id: cuda-toolkit
       with:

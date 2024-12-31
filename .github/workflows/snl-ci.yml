@@ -20,6 +20,11 @@ jobs:
     runs-on: [snl-kk-env-cuda-12.2.0-gcc-11.3.0-latest]
     
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@0080882f6c36860b6ba35c610c98ce87d4e2f26f # v2.10.2
+        with:
+          egress-policy: audit
+
       - name: checkout_kokkos
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
         with:
