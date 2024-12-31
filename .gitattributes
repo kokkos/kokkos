@@ -3,10 +3,9 @@
 .git-blame-ignore-revs export-ignore
 .gitattributes export-ignore
 .github/ISSUE_TEMPLATE/ export-ignore
-.github/dependabot.yml export-ignore
-.github/workflows/*.yml export-ignore
 # See https://github.com/ossf/scorecard/issues/2489
-# .github/workflows/scorecard.yaml
+#.github/dependabot.yml export-ignore
+#.github/workflows/*.yml export-ignore
 .gitlab/ export-ignore
 .jenkins* export-ignore
 .appveyor.yml export-ignore
