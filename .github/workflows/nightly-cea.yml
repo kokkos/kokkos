@@ -3,7 +3,8 @@ name: Nightly CEA builds
 on:
   schedule:
     - cron: "0 2 * * 1-5" # every weekday at 2am UTC
-  workflow_dispatch:
+
+permissions: read-all
 
 jobs:
   build_and_test:
