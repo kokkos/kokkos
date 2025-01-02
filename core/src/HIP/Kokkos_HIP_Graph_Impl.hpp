@@ -73,11 +73,8 @@ class GraphImpl<Kokkos::HIP> {
 
   void instantiate() {
     KOKKOS_EXPECTS(!m_graph_exec);
-    constexpr size_t error_log_size = 256;
-    hipGraphNode_t error_node       = nullptr;
-    char error_log[error_log_size];
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphInstantiate(
-        &m_graph_exec, m_graph, &error_node, error_log, error_log_size));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipGraphInstantiate(&m_graph_exec, m_graph, nullptr, nullptr, 0));
     KOKKOS_ENSURES(m_graph_exec);
   }
 
