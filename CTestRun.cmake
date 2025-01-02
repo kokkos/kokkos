@@ -14,6 +14,8 @@ set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
 
 set(CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=Kokkos)
 
+file(REMOVE_RECURSE "${CTEST_BINARY_DIRECTORY}")
+
 ctest_start(Experimental)
 ctest_update()
 ctest_configure(OPTIONS "${CMAKE_OPTIONS}")
