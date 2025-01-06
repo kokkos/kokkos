@@ -308,9 +308,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   auto impl_map() const {
     using map_type =
         Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
-    using offset_type = typename map_type::offset_type;
-    return map_type(
-        data(), offset_type(std::integral_constant<unsigned, 0>(), layout()));
+    return map_type(Kokkos::view_wrap(data()), layout());
   }
 
   KOKKOS_INLINE_FUNCTION
