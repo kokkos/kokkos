@@ -45,13 +45,6 @@ struct StreamsAndDevices {
 
 std::array<TEST_EXECSPACE, 2> get_execution_spaces(
     const StreamsAndDevices &streams_and_devices) {
-  // Must return void to use GTEST_SKIP
-  [&]() {
-    if (streams_and_devices.devices[0] == streams_and_devices.devices[1])
-      GTEST_SKIP() << "Skipping Cuda multi-gpu testing since current machine "
-                      "only contains a single GPU.\n";
-  }();
-
   TEST_EXECSPACE exec0(streams_and_devices.streams[0]);
   TEST_EXECSPACE exec1(streams_and_devices.streams[1]);
 
@@ -64,7 +57,17 @@ std::array<TEST_EXECSPACE, 2> get_execution_spaces(
   return {exec0, exec1};
 }
 
-TEST(cuda_multi_gpu, managed_views) {
+struct TEST_CATEGORY_FIXTURE(MultiGPU) : public ::testing::Test {
+  StreamsAndDevices streams_and_devices;
+
+  void SetUp() override {
+    if (streams_and_devices.devices[0] == streams_and_devices.devices[1])
+      GTEST_SKIP() << "Skipping Cuda multi-gpu testing since current machine "
+                      "only contains a single GPU.\n";
+  }
+};
+
+TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), managed_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -79,7 +82,7 @@ TEST(cuda_multi_gpu, managed_views) {
   }
 }
 
-TEST(cuda_multi_gpu, unmanaged_views) {
+TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), unmanaged_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -103,7 +106,7 @@ TEST(cuda_multi_gpu, unmanaged_views) {
   }
 }
 
-TEST(cuda_multi_gpu, scratch_space) {
+TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), scratch_space) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -113,7 +116,7 @@ TEST(cuda_multi_gpu, scratch_space) {
   }
 }
 
-TEST(cuda_multi_gpu, stream_sync_semantics) {
+TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), stream_sync_semantics) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
