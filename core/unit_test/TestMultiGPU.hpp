@@ -182,9 +182,6 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   ASSERT_EQ(error1, 0);
 }
 
-// Test that stream synchronization behavior for various GPU APIs matches the
-// assumptions made in Kokkos for multi gpu support, namely, that any stream (no
-// matter which device it is created on) can be synced from any device.
 struct AccumulateTag {};
 struct CheckTag {};
 
@@ -230,5 +227,16 @@ void test_stream_sync(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1,
 
   // Check the value observed on dev1 matches the complete computation on dev0
   ASSERT_EQ(check(), N);
+}
+
+template <int N>
+__global__ void accumulate_kernel(int *value) {
+  for (int i = 0; i < N; ++i) {
+    Kokkos::atomic_inc(value);
+  }
+}
+
+__global__ void set_equal_kernel(int *check, const int *value) {
+  check[0] = value[0];
 }
 }  // namespace
