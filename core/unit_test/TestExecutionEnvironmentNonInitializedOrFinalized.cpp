@@ -72,4 +72,52 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  EXPECT_EXIT(
+      {
+        {
+          Kokkos::View<int*> v;
+          Kokkos::initialize();
+          v = Kokkos::View<int*>("v", 10);
+          v = Kokkos::View<int*>();
+          Kokkos::finalize();
+        }
+        std::exit(EXIT_SUCCESS);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+  EXPECT_EXIT(
+      {
+        {
+          Kokkos::initialize();
+          Kokkos::View<int*> v("v", 10);
+          v = {};  // assign default constructed view
+          Kokkos::finalize();
+        }
+        std::exit(EXIT_SUCCESS);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::View<int*> v("v", 0);
+        Kokkos::finalize();
+      },
+      "Kokkos allocation \"v\" is being deallocated after Kokkos::finalize was "
+      "called");
+  EXPECT_DEATH(
+      { Kokkos::View<int*> v("v", 0); },
+      "Constructing View and initializing data with uninitialized execution "
+      "space");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        Kokkos::View<int*> v("v", 0);
+      },
+      "Constructing View and initializing data with uninitialized execution "
+      "space");
+}
+
 }  // namespace
