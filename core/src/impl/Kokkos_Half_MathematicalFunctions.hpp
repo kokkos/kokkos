@@ -20,6 +20,18 @@
 #include <Kokkos_MathematicalFunctions.hpp>  // For the float overloads
 #include <Kokkos_BitManipulation.hpp>        // bit_cast
 
+// Backends specific half implementation needs to be declared prior to the math
+// functions implementation so that specifics functions can be found if they
+// exist.
+// If this includes are removed, this mechanism will fail silently.
+#ifdef KOKKOS_ENABLE_CUDA
+#include <Cuda/Kokkos_Cuda_Half_MathematicalFunctions.hpp>
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+#include <SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp>
+#endif
+
 // clang-format off
 namespace Kokkos {
 // BEGIN macro definitions
@@ -41,9 +53,8 @@ namespace Kokkos {
   KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC)          \
   KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC)
 
-
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE(FUNC, HALF_TYPE)      \
-  template <bool specialized = true>                                    \
+  template <bool fallback = true>                                       \
   KOKKOS_INLINE_FUNCTION HALF_TYPE impl_##FUNC(HALF_TYPE x) {           \
     return static_cast<HALF_TYPE>(Kokkos::FUNC(static_cast<float>(x))); \
   }                                                                     \
@@ -52,14 +63,14 @@ namespace Kokkos {
   }
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, MIXED_TYPE) \
-  template <bool specialized = true>                                     \
+  template <bool fallback = true>                                        \
   KOKKOS_INLINE_FUNCTION double impl_##FUNC(HALF_TYPE x, MIXED_TYPE y) { \
     return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
   }                                                                      \
   KOKKOS_INLINE_FUNCTION double FUNC(HALF_TYPE x, MIXED_TYPE y) {        \
     return Kokkos::impl_##FUNC(x, y);                                    \
   }                                                                      \
-  template <bool specialized = true>                                     \
+  template <bool fallback = true>                                        \
   KOKKOS_INLINE_FUNCTION double impl_##FUNC(MIXED_TYPE x, HALF_TYPE y) { \
     return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
   }                                                                      \
@@ -68,7 +79,7 @@ namespace Kokkos {
   }
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF(FUNC, HALF_TYPE)                 \
-  template <bool specialized = true>                                           \
+  template <bool fallback = true>                                              \
   KOKKOS_INLINE_FUNCTION HALF_TYPE impl_##FUNC(HALF_TYPE x, HALF_TYPE y) {     \
     return static_cast<HALF_TYPE>(                                             \
         Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y)));           \
@@ -76,14 +87,14 @@ namespace Kokkos {
   KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x, HALF_TYPE y) {            \
     return Kokkos::impl_##FUNC(x, y);                                          \
   }                                                                            \
-  template <bool specialized = true>                                           \
+  template <bool fallback = true>                                              \
   KOKKOS_INLINE_FUNCTION float impl_##FUNC(float x, HALF_TYPE y) {             \
     return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y));         \
   }                                                                            \
   KOKKOS_INLINE_FUNCTION float FUNC(float x, HALF_TYPE y) {                    \
     return Kokkos::impl_##FUNC(x, y);                                          \
   }                                                                            \
-  template <bool specialized = true>                                           \
+  template <bool fallback = true>                                              \
   KOKKOS_INLINE_FUNCTION float impl_##FUNC(HALF_TYPE x, float y) {             \
     return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y));         \
   }                                                                            \
@@ -102,7 +113,7 @@ namespace Kokkos {
 
 
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF(FUNC, HALF_TYPE) \
-  template <bool specialized = true>                           \
+  template <bool fallback = true>                              \
   KOKKOS_INLINE_FUNCTION bool impl_##FUNC(HALF_TYPE x) {       \
     return Kokkos::FUNC(static_cast<float>(x));                \
   }                                                            \
