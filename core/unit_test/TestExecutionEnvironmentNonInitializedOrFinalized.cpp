@@ -41,18 +41,32 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
     Kokkos::View<int> v0;
     Kokkos::View<float*> v1;
     Kokkos::View<NonTrivial**> v2;
+    return std::make_tuple(v0, v1, v2);
   };
   EXPECT_EXIT(
       {
-        make_views();
+        { (void)make_views(); }
         std::exit(EXIT_SUCCESS);
       },
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
   EXPECT_EXIT(
       {
-        Kokkos::initialize();
-        Kokkos::finalize();
-        make_views();
+        {
+          Kokkos::initialize();
+          auto views =
+              make_views();  // views outlive the Kokkos execution environment
+          Kokkos::finalize();
+        }
+        std::exit(EXIT_SUCCESS);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+  EXPECT_EXIT(
+      {
+        {
+          Kokkos::initialize();
+          Kokkos::finalize();
+          (void)make_views();
+        }
         std::exit(EXIT_SUCCESS);
       },
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
