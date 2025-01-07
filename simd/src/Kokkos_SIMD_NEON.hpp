@@ -69,6 +69,7 @@ class neon_mask<Derived, 64, 2> {
         case 1:
           m_mask = vsetq_lane_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0, m_mask, 1);
           break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -76,6 +77,7 @@ class neon_mask<Derived, 64, 2> {
       switch (m_lane) {
         case 0: return vgetq_lane_u64(m_mask, 0) != 0;
         case 1: return vgetq_lane_u64(m_mask, 1) != 0;
+        default: Kokkos::abort("unreachable");
       }
       return false;
     }
@@ -180,6 +182,7 @@ class neon_mask<Derived, 32, 2> {
         case 1:
           m_mask = vset_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 1);
           break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -187,6 +190,7 @@ class neon_mask<Derived, 32, 2> {
       switch (m_lane) {
         case 0: return vget_lane_u32(m_mask, 0) != 0;
         case 1: return vget_lane_u32(m_mask, 1) != 0;
+        default: Kokkos::abort("unreachable");
       }
       return false;
     }
@@ -291,6 +295,7 @@ class neon_mask<Derived, 32, 4> {
         case 3:
           m_mask = vsetq_lane_u32(value ? 0xFFFFFFFFU : 0, m_mask, 3);
           break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -300,6 +305,7 @@ class neon_mask<Derived, 32, 4> {
         case 1: return vgetq_lane_u32(m_mask, 1) != 0;
         case 2: return vgetq_lane_u32(m_mask, 2) != 0;
         case 3: return vgetq_lane_u32(m_mask, 3) != 0;
+        default: Kokkos::abort("unreachable");
       }
       return false;
     }
@@ -457,6 +463,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: m_value = vsetq_lane_f64(value, m_value, 0); break;
         case 1: m_value = vsetq_lane_f64(value, m_value, 1); break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -464,6 +471,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: return vgetq_lane_f64(m_value, 0);
         case 1: return vgetq_lane_f64(m_value, 1);
+        default: Kokkos::abort("unreachable");
       }
       return 0;
     }
@@ -724,6 +732,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: m_value = vset_lane_f32(value, m_value, 0); break;
         case 1: m_value = vset_lane_f32(value, m_value, 1); break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -731,6 +740,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: return vget_lane_f32(m_value, 0);
         case 1: return vget_lane_f32(m_value, 1);
+        default: Kokkos::abort("unreachable");
       }
       return 0;
     }
@@ -979,6 +989,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
         case 1: m_value = vsetq_lane_f32(value, m_value, 1); break;
         case 2: m_value = vsetq_lane_f32(value, m_value, 2); break;
         case 3: m_value = vsetq_lane_f32(value, m_value, 3); break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -988,6 +999,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
         case 1: return vgetq_lane_f32(m_value, 1);
         case 2: return vgetq_lane_f32(m_value, 2);
         case 3: return vgetq_lane_f32(m_value, 3);
+        default: Kokkos::abort("unreachable");
       }
       return 0;
     }
@@ -1238,6 +1250,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: m_value = vset_lane_s32(value, m_value, 0); break;
         case 1: m_value = vset_lane_s32(value, m_value, 1); break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -1245,6 +1258,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: return vget_lane_s32(m_value, 0);
         case 1: return vget_lane_s32(m_value, 1);
+        default: Kokkos::abort("unreachable");
       }
       return 0;
     }
@@ -1455,6 +1469,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
         case 1: m_value = vsetq_lane_s32(value, m_value, 1); break;
         case 2: m_value = vsetq_lane_s32(value, m_value, 2); break;
         case 3: m_value = vsetq_lane_s32(value, m_value, 3); break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -1464,6 +1479,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
         case 1: return vgetq_lane_s32(m_value, 1);
         case 2: return vgetq_lane_s32(m_value, 2);
         case 3: return vgetq_lane_s32(m_value, 3);
+        default: Kokkos::abort("unreachable");
       }
       return 0;
     }
@@ -1676,6 +1692,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: m_value = vsetq_lane_s64(value, m_value, 0); break;
         case 1: m_value = vsetq_lane_s64(value, m_value, 1); break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -1683,6 +1700,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: return vgetq_lane_s64(m_value, 0);
         case 1: return vgetq_lane_s64(m_value, 1);
+        default: Kokkos::abort("unreachable");
       }
       return 0;
     }
@@ -1890,6 +1908,7 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: m_value = vsetq_lane_u64(value, m_value, 0); break;
         case 1: m_value = vsetq_lane_u64(value, m_value, 1); break;
+        default: Kokkos::abort("unreachable");
       }
       return *this;
     }
@@ -1897,6 +1916,7 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
       switch (m_lane) {
         case 0: return vgetq_lane_u64(m_value, 0);
         case 1: return vgetq_lane_u64(m_value, 1);
+        default: Kokkos::abort("unreachable");
       }
       return 0;
     }
