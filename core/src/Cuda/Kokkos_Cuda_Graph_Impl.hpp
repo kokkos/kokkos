@@ -56,14 +56,9 @@ struct GraphImpl<Kokkos::Cuda> {
  public:
   void instantiate() {
     KOKKOS_EXPECTS(!m_graph_exec);
-    constexpr size_t error_log_size = 256;
-    cudaGraphNode_t error_node      = nullptr;
-    char error_log[error_log_size];
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (m_execution_space.impl_internal_space_instance()
-             ->cuda_graph_instantiate_wrapper(&m_graph_exec, m_graph,
-                                              &error_node, error_log,
-                                              error_log_size)));
+             ->cuda_graph_instantiate_wrapper(&m_graph_exec, m_graph)));
     KOKKOS_ENSURES(m_graph_exec);
     // TODO @graphs print out errors
   }
