@@ -36,13 +36,23 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    mask_type mask(KOKKOS_LAMBDA(std::size_t) { return true; });
+    if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
+      mask_type mask(KOKKOS_LAMBDA(std::size_t) { return true; });
 
-    auto value    = where(mask, arg);
-    auto expected = reduce_op.on_host_serial(value);
-    auto computed = reduce_op.on_host(value);
+      auto value    = where(mask, arg);
+      auto expected = reduce_op.on_host_serial(value);
+      auto computed = reduce_op.on_host(value);
 
-    gtest_checker().equality(expected, computed);
+      gtest_checker().equality(expected, computed);
+    } else {
+      mask_type mask([=](std::size_t) { return true; });
+
+      auto value    = where(mask, arg);
+      auto expected = reduce_op.on_host_serial(value);
+      auto computed = reduce_op.on_host(value);
+
+      gtest_checker().equality(expected, computed);
+    }
   }
 }
 

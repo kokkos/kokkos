@@ -53,8 +53,13 @@ inline void host_check_equality(
   }
   using mask_type =
       typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-  mask_type mask([=](std::size_t i) { return (i < nlanes); });
-  checker.equality((expected_result == computed_result) && mask, mask);
+  if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
+    mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return (i < nlanes); });
+    checker.equality((expected_result == computed_result) && mask, mask);
+  } else {
+    mask_type mask([=](std::size_t i) { return (i < nlanes); });
+    checker.equality((expected_result == computed_result) && mask, mask);
+  }
 }
 
 template <class T, class Abi>

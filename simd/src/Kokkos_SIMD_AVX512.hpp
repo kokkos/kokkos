@@ -1343,8 +1343,8 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
 // _mm512_cvtsi512_si32 was not added in GCC until 11
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
     value_type tmp[size()];
-    _mm512_mask_store_epi32(tmp, static_cast<__mmask16>(mask_type(true)),
-                            m_value);
+    _mm512_mask_storeu_epi32(tmp, static_cast<__mmask16>(mask_type(true)),
+                             m_value);
     return tmp[i];
 #else
     auto index = _mm512_set1_epi32(i);
@@ -1781,8 +1781,8 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
 // _mm512_cvtsi512_si32 was not added in GCC until 11
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
     value_type tmp[size()];
-    _mm512_mask_store_epi32(tmp, static_cast<__mmask16>(mask_type(true)),
-                            m_value);
+    _mm512_mask_storeu_epi32(tmp, static_cast<__mmask16>(mask_type(true)),
+                             m_value);
     return tmp[i];
 #else
     auto index = _mm512_set1_epi32(i);

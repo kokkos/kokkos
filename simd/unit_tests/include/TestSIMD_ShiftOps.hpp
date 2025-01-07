@@ -35,9 +35,15 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
       continue;
     }
 
-    simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
-      return shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[i]));
-    });
+    DataType expected_val[width];
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      expected_val[lane] =
+          shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[i]));
+    }
+
+    simd_type expected_result;
+    expected_result.copy_from(expected_val,
+                              Kokkos::Experimental::simd_flag_default);
 
     simd_type const computed_result =
         shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
@@ -57,9 +63,15 @@ inline void host_check_shift_by_lanes_on_one_loader(
   bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
   ASSERT_TRUE(loaded_arg);
 
-  simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
-    return shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[lane]));
-  });
+  DataType expected_val[width];
+  for (std::size_t lane = 0; lane < width; ++lane) {
+    expected_val[lane] =
+        shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[lane]));
+  }
+
+  simd_type expected_result;
+  expected_result.copy_from(expected_val,
+                            Kokkos::Experimental::simd_flag_default);
 
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
   host_check_equality(expected_result, computed_result, width);
