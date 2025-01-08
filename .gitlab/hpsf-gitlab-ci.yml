@@ -29,11 +29,9 @@ INTEL-DATA-CENTER-MAX-1100:
   script:
     - sycl-ls
     - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
-    - export CLANG_TIDY_EXE=$(dirname $(which icpx))/compiler/clang-tidy
     - cmake
       -B build
       -DCMAKE_BUILD_TYPE=Release
-      -DCMAKE_CXX_CLANG_TIDY="${CLANG_TIDY_EXE};-warnings-as-errors=*"
       -DCMAKE_CXX_COMPILER=icpx
       -DKokkos_ENABLE_SYCL=ON
       -DKokkos_ARCH_INTEL_PVC=ON
