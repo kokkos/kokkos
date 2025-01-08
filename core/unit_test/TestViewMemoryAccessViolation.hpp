@@ -91,19 +91,16 @@ void test_view_memory_access_violations_from_host() {
   test_view_memory_access_violation(make_view<V6>(lbl), host_exec_space, prefix + ".*" + lbl);
   test_view_memory_access_violation(make_view<V7>(lbl), host_exec_space, prefix + ".*" + lbl);
   test_view_memory_access_violation(make_view<V8>(lbl), host_exec_space, prefix + ".*" + lbl);
-  // We check the memory space for unmanaged Views when configuring with Kokkos_ENABLE_DEBUG
-#ifndef KOKKOS_ENABLE_DEBUG
-  int* const ptr = nullptr;
-  test_view_memory_access_violation(make_view<V0>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V1>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V2>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V3>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V4>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V5>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V6>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V7>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-  test_view_memory_access_violation(make_view<V8>(ptr), host_exec_space, prefix + ".*UNMANAGED");
-#endif
+  V0 v0("v0");
+  test_view_memory_access_violation(make_view<V0>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V1>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V2>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V3>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V4>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V5>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V6>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V7>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
+  test_view_memory_access_violation(make_view<V8>(v0.data()), host_exec_space, prefix + ".*UNMANAGED");
   // clang-format on
 }
 
@@ -131,19 +128,16 @@ void test_view_memory_access_violations_from_device() {
   test_view_memory_access_violation(make_view<V6>(lbl), exec_space, prefix + ".*UNAVAILABLE");
   test_view_memory_access_violation(make_view<V7>(lbl), exec_space, prefix + ".*UNAVAILABLE");
   test_view_memory_access_violation(make_view<V8>(lbl), exec_space, prefix + ".*UNAVAILABLE");
- // We check the memory space for unmanaged Views when configuring with Kokkos_ENABLE_DEBUG
-#ifndef KOKKOS_ENABLE_DEBUG
-  int* const ptr = nullptr;
-  test_view_memory_access_violation(make_view<V0>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V1>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V2>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V3>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V4>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V5>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V6>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V7>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-  test_view_memory_access_violation(make_view<V8>(ptr), exec_space, prefix + ".*UNAVAILABLE");
-#endif
+  V0 v0("v0");
+  test_view_memory_access_violation(make_view<V0>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V1>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V2>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V3>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V4>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V5>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V6>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V7>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
+  test_view_memory_access_violation(make_view<V8>(v0.data()), exec_space, prefix + ".*UNAVAILABLE");
   // clang-format on
 }
 
