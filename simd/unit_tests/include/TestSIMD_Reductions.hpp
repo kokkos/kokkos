@@ -37,7 +37,7 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     if (!loaded_arg) continue;
 
     mask_type mask(false);
-    for (std::size_t j = 0; j < n; ++j) {
+    for (std::size_t j = 0; j < nlanes; ++j) {
       mask[j] = true;
     }
     auto value    = where(mask, arg);
@@ -111,7 +111,7 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     if (!loaded_arg) continue;
 
     mask_type mask(false);
-    for (std::size_t j = 0; j < n; ++j) {
+    for (std::size_t j = 0; j < nlanes; ++j) {
       mask[j] = true;
     }
     auto value    = where(mask, arg);
