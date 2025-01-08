@@ -694,7 +694,9 @@ void test_view_mapping() {
     static_assert(C::rank == size_t(1));
 
     if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
-                                   typename Space::memory_space>::accessible && Kokkos::SpaceAccessibility<typename Space::memory_space, Kokkos::HostSpace>::assignable) {
+                                   typename Space::memory_space>::accessible &&
+        Kokkos::SpaceAccessibility<typename Space::memory_space,
+                                   Kokkos::HostSpace>::assignable) {
       int data[N];
 
       T vr1(data, N);  // View of non-const.
