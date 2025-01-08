@@ -1,12 +1,6 @@
 .clang* export-ignore
 .cmake* export-ignore
-.git-blame-ignore-revs export-ignore
-.gitattributes export-ignore
-.github/ISSUE_TEMPLATE/ export-ignore
-# See https://github.com/ossf/scorecard/issues/2489
-#.github/dependabot.yml export-ignore
-#.github/workflows/*.yml export-ignore
-.gitlab/ export-ignore
+.git* export-ignore
 .jenkins* export-ignore
 .appveyor.yml export-ignore
 scripts/ export-ignore
