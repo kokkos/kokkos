@@ -245,9 +245,7 @@ struct HIPParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
       HIPParallelLaunchKernelFuncData<DriverType, Kokkos::LaunchBounds<0, 0>,
                                       HIPLaunchMechanism::LocalMemory>;
   static auto get_kernel_func() {
-    return HIPParallelLaunchKernelFunc<
-        DriverType, Kokkos::LaunchBounds<HIPTraits::MaxThreadsPerBlock, 1>,
-        HIPLaunchMechanism::LocalMemory>::get_kernel_func();
+    return hip_parallel_launch_local_memory<DriverType>;
   }
 
   static constexpr auto default_launchbounds() { return true; }
