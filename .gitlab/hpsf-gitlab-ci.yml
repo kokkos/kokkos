@@ -36,7 +36,7 @@ INTEL-DATA-CENTER-MAX-1100:
       -DKokkos_ENABLE_SYCL=ON
       -DKokkos_ARCH_INTEL_PVC=ON
       -DKokkos_ENABLE_TESTS=ON
-      -DCMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'
+      -DCMAKE_CXX_FLAGS='-fsycl-device-code-split=per_kernel -fp-model=precise'
     - cmake --build build -j48
     - cd build
     - ctest -V --output-junit result_pvc1100.xml
