@@ -25,7 +25,7 @@ NVIDIA-GH200:
 INTEL-DATA-CENTER-MAX-1100:
   stage: test
   tags: [intel-data-center-max-1100]
-  image: intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
+  image: intel/oneapi-basekit:2023.1.0-devel-ubuntu22.04
   script:
     - sycl-ls
     - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
