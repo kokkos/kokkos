@@ -647,25 +647,11 @@ void test_view_mapping() {
 
   //----------------------------------------
 
-  if (std::is_same_v<typename Space::memory_space, Kokkos::HostSpace>) {
+  {
     constexpr int N = 10;
 
     using T = Kokkos::View<int*, Space>;
     using C = Kokkos::View<const int*, Space>;
-
-    int data[N];
-
-    T vr1(data, N);  // View of non-const.
-    C cr1(vr1);      // View of const from view of non-const.
-    C cr2((const int*)data, N);
-
-    // Generate static_assert error:
-    // T tmp( cr1 );
-
-    ASSERT_EQ(vr1.span(), size_t(N));
-    ASSERT_EQ(cr1.span(), size_t(N));
-    ASSERT_EQ(vr1.data(), &data[0]);
-    ASSERT_EQ(cr1.data(), &data[0]);
 
     static_assert(std::is_same_v<typename T::data_type, int*>);
     static_assert(std::is_same_v<typename T::const_data_type, const int*>);
@@ -707,10 +693,24 @@ void test_view_mapping() {
 
     static_assert(C::rank == size_t(1));
 
-    ASSERT_EQ(vr1.extent(0), size_t(N));
-
     if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
-                                   typename Space::memory_space>::accessible) {
+                                   typename Space::memory_space>::accessible && Kokkos::SpaceAccessibility<typename Space::memory_space, Kokkos::HostSpace>::assignable) {
+      int data[N];
+
+      T vr1(data, N);  // View of non-const.
+      C cr1(vr1);      // View of const from view of non-const.
+      C cr2((const int*)data, N);
+
+      // Generate static_assert error:
+      // T tmp( cr1 );
+
+      ASSERT_EQ(vr1.span(), size_t(N));
+      ASSERT_EQ(cr1.span(), size_t(N));
+      ASSERT_EQ(vr1.data(), &data[0]);
+      ASSERT_EQ(cr1.data(), &data[0]);
+
+      ASSERT_EQ(vr1.extent(0), size_t(N));
+
       for (int i = 0; i < N; ++i) data[i] = i + 1;
       for (int i = 0; i < N; ++i) ASSERT_EQ(vr1[i], i + 1);
       for (int i = 0; i < N; ++i) ASSERT_EQ(cr1[i], i + 1);
