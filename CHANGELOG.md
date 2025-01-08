@@ -1,5 +1,16 @@
 # CHANGELOG
 
+## 4.5.01
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.5.00...4.5.01)
+
+### Bug Fixes
+
+* Fix re-builds after cleaning the binary tree when doing `add_subdirectory` on the Kokkos source [\#7557](https://github.com/kokkos/kokkos/pull/7557)
+* Update mdspan to include fix for submdspan and bracket operator with clang 15&16 [\#7559](https://github.com/kokkos/kokkos/pull/7559)
+* Fix DynRankView performance regression by re-introducing shortcut operator() impls [\#7606](https://github.com/kokkos/kokkos/pull/7606)
+* Add missing MI300A (`GFX942_APU`) option to Makefile build-system
+
 ## 4.5.00
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.4.01...4.5.00)
