@@ -390,10 +390,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
     switch (i) {
       case 0: return vgetq_lane_f64(m_value, 0);
       case 1: return vgetq_lane_f64(m_value, 1);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -634,10 +631,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
     switch (i) {
       case 0: return vget_lane_f32(m_value, 0);
       case 1: return vget_lane_f32(m_value, 1);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -873,11 +867,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
       case 1: return vgetq_lane_f32(m_value, 1);
       case 2: return vgetq_lane_f32(m_value, 2);
       case 3: return vgetq_lane_f32(m_value, 3);
-      default:
-
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -1110,10 +1100,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
     switch (i) {
       case 0: return vget_lane_s32(m_value, 0);
       case 1: return vget_lane_s32(m_value, 1);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -1311,10 +1298,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
       case 1: return vgetq_lane_s32(m_value, 1);
       case 2: return vgetq_lane_s32(m_value, 2);
       case 3: return vgetq_lane_s32(m_value, 3);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -1506,10 +1490,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
     switch (i) {
       case 0: return vgetq_lane_s64(m_value, 0);
       case 1: return vgetq_lane_s64(m_value, 1);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -1702,10 +1683,7 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
     switch (i) {
       case 0: return vgetq_lane_u64(m_value, 0);
       case 1: return vgetq_lane_u64(m_value, 1);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,

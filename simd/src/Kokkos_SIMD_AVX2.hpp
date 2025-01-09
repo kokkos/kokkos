@@ -1354,10 +1354,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
       case 1: return _mm_extract_epi32(m_value, 0x1);
       case 2: return _mm_extract_epi32(m_value, 0x2);
       case 3: return _mm_extract_epi32(m_value, 0x3);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -1785,10 +1782,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
       case 1: return _mm256_extract_epi64(m_value, 0x1);
       case 2: return _mm256_extract_epi64(m_value, 0x2);
       case 3: return _mm256_extract_epi64(m_value, 0x3);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
@@ -2017,10 +2011,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
       case 1: return _mm256_extract_epi64(m_value, 0x1);
       case 2: return _mm256_extract_epi64(m_value, 0x2);
       case 3: return _mm256_extract_epi64(m_value, 0x3);
-      default:
-        Kokkos::Impl::throw_runtime_exception(
-            std::string("Index out of bound"));
-        break;
+      default: Kokkos::abort("Index out of bound"); break;
     }
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
