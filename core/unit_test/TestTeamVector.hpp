@@ -975,8 +975,9 @@ struct checkScan {
 
     Kokkos::View<value_type[n], Kokkos::HostSpace> expected("expected");
     {
+      typename Reducer::result_view_type result("result");
+      Reducer reducer(result);
       value_type identity;
-      Reducer reducer = {identity};
       reducer.init(identity);
 
       for (int i = 0; i < expected.extent_int(0); ++i) {
