@@ -126,15 +126,16 @@ void test_view_out_of_bounds_access() {
   TestViewOutOfBoundAccess(make_view<V6>(lbl), exec_space, prefix + ".*" + lbl);
   TestViewOutOfBoundAccess(make_view<V7>(lbl), exec_space, prefix + ".*" + lbl);
   TestViewOutOfBoundAccess(make_view<V8>(lbl), exec_space, prefix + ".*" + lbl);
-  V0 v0("v0");
-  TestViewOutOfBoundAccess(make_view<V1>(v0.data()), exec_space, prefix + ".*UNMANAGED");
-  TestViewOutOfBoundAccess(make_view<V2>(v0.data()), exec_space, prefix + ".*UNMANAGED");
-  TestViewOutOfBoundAccess(make_view<V3>(v0.data()), exec_space, prefix + ".*UNMANAGED");
-  TestViewOutOfBoundAccess(make_view<V4>(v0.data()), exec_space, prefix + ".*UNMANAGED");
-  TestViewOutOfBoundAccess(make_view<V5>(v0.data()), exec_space, prefix + ".*UNMANAGED");
-  TestViewOutOfBoundAccess(make_view<V6>(v0.data()), exec_space, prefix + ".*UNMANAGED");
-  TestViewOutOfBoundAccess(make_view<V7>(v0.data()), exec_space, prefix + ".*UNMANAGED");
-  TestViewOutOfBoundAccess(make_view<V8>(v0.data()), exec_space, prefix + ".*UNMANAGED");
+  V0 v0("v0");  // obtain a valid pointer for an allocation in the right space
+  int* const ptr = v0.data();  
+  TestViewOutOfBoundAccess(make_view<V1>(ptr), exec_space, prefix + ".*UNMANAGED");
+  TestViewOutOfBoundAccess(make_view<V2>(ptr), exec_space, prefix + ".*UNMANAGED");
+  TestViewOutOfBoundAccess(make_view<V3>(ptr), exec_space, prefix + ".*UNMANAGED");
+  TestViewOutOfBoundAccess(make_view<V4>(ptr), exec_space, prefix + ".*UNMANAGED");
+  TestViewOutOfBoundAccess(make_view<V5>(ptr), exec_space, prefix + ".*UNMANAGED");
+  TestViewOutOfBoundAccess(make_view<V6>(ptr), exec_space, prefix + ".*UNMANAGED");
+  TestViewOutOfBoundAccess(make_view<V7>(ptr), exec_space, prefix + ".*UNMANAGED");
+  TestViewOutOfBoundAccess(make_view<V8>(ptr), exec_space, prefix + ".*UNMANAGED");
   // clang-format on
 }
 
