@@ -72,9 +72,14 @@ TEST(cuda, space_access) {
       Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
                                       Kokkos::CudaHostPinnedSpace>::accessible);
 
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+  static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
+                                                Kokkos::HostSpace>::assignable);
+#else
   static_assert(
       !Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
                                        Kokkos::HostSpace>::assignable);
+#endif
 
   static_assert(
       !Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
@@ -93,9 +98,14 @@ TEST(cuda, space_access) {
   static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaUVMSpace,
                                                 Kokkos::CudaSpace>::accessible);
 
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+  static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaUVMSpace,
+                                                Kokkos::HostSpace>::assignable);
+#else
   static_assert(
       !Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaUVMSpace,
                                        Kokkos::HostSpace>::assignable);
+#endif
 
   static_assert(
       !Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaUVMSpace,
@@ -114,9 +124,14 @@ TEST(cuda, space_access) {
       Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
                                       Kokkos::CudaHostPinnedSpace>::assignable);
 
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+  static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
+                                                Kokkos::HostSpace>::assignable);
+#else
   static_assert(
       !Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
                                        Kokkos::HostSpace>::assignable);
+#endif
 
   static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
                                                 Kokkos::HostSpace>::accessible);

@@ -378,7 +378,11 @@ struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::CudaHostPinnedSpace> {
 
 template <>
 struct MemorySpaceAccess<Kokkos::CudaSpace, Kokkos::HostSpace> {
+#if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
+  enum : bool{assignable = true};
+#else
   enum : bool { assignable = false };
+#endif
   enum : bool { accessible = false };
   enum : bool { deepcopy = true };
 };
@@ -405,7 +409,11 @@ struct MemorySpaceAccess<Kokkos::CudaSpace, Kokkos::CudaHostPinnedSpace> {
 
 template <>
 struct MemorySpaceAccess<Kokkos::CudaUVMSpace, Kokkos::HostSpace> {
+#if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
+  enum : bool{assignable = true};
+#else
   enum : bool { assignable = false };
+#endif
   enum : bool { accessible = false };  // Cuda cannot access HostSpace
   enum : bool { deepcopy = true };
 };
@@ -435,8 +443,12 @@ struct MemorySpaceAccess<Kokkos::CudaUVMSpace, Kokkos::CudaHostPinnedSpace> {
 
 template <>
 struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::HostSpace> {
-  enum : bool { assignable = false };  // Cannot access from Cuda
-  enum : bool { accessible = true };   // CudaHostPinnedSpace::execution_space
+#if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
+  enum : bool{assignable = true};
+#else
+  enum : bool { assignable = false };
+#endif
+  enum : bool { accessible = true };  // CudaHostPinnedSpace::execution_space
   enum : bool { deepcopy = true };
 };
 
