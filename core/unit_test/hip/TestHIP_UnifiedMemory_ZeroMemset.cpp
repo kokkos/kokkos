@@ -30,6 +30,9 @@ TEST(hip, unified_memory_zero_memset) {
 
   constexpr size_t N = static_cast<size_t>(1024 * 1024);  // size doesn't matter
   std::vector<int> v(N, 1);  // initialize to non-zero
+
+  // FIXME_HIP: this should also work with HIPSpace once SpaceAccessibility says
+  // it's okay.
   Kokkos::View<int*, Kokkos::SharedSpace> a(v.data(), N);
 
   // zero with deep_copy (this is where the error occurs)
