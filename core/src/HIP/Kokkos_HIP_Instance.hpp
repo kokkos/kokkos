@@ -118,29 +118,6 @@ class HIPInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  /* Based on AMD's ROCm 6.3.1 documentation:
-  https://github.com/ROCm/HIP/blob/2c240cacff16c2bb18ce9e5b4c1b937ab17a0199/docs/how-to/hip_runtime_api/memory_management/unified_memory.rst?plain=1#L141-L146
-
-      To ensure the proper functioning of system allocated unified memory on
-      supported GPUs, it is essential to configure the environment variable
-      ``XNACK=1`` (sic) and use a kernel that supports HMM. Without this
-      configuration, the behavior will be similar to that of systems without HMM
-      support.
-
-  This clearly states two things are required:
-  * HSA_XNACK=1 is set in the environment
-  * The kernel must support HMM
-
-  Across a couple Nvidia and AMD systems, we have observed that
-  CONFIG_HMM_MIRROR=y was set in /boot/config-$(uname -r). This test may need to
-  be modified if a better way is determined to check for HMM support in Linux.
-  Checking for CONFIG_HMM was considered, but it was not present on El Capitan,
-  so we infer its presence is not necessary.
-  */
-  int is_xnack_enabled() const {
-    return is_hsa_xnack_1() && is_boot_config_hmm_mirror_y();
-  }
-
   void initialize(hipStream_t stream);
   void finalize();
 
