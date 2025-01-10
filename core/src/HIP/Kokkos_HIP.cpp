@@ -79,8 +79,8 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
     Kokkos::abort(
         "Could not determine that xnack is enabled. Kokkos requires xnack to "
         "be enabled for ARCH_AMD_GFX942_APU (MI300A). Set HSA_XNACK=1 in your "
-        "environment, or ensure \"amdgpu.noretry=0\" is on the Linux boot "
-        "command line and /proc/cmdline is readable.\n");
+        "environment and ensure \"CONFIG_HMM_MIRROR=y\" is in the /boot/config "
+        "file and that file is readable\n");
   }
 
   if ((Kokkos::show_warnings()) &&
