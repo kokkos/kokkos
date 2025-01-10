@@ -20,6 +20,7 @@
 #define KOKKOS_HIP_ISXNACK_HPP
 
 #include <string>
+#include <string_view>
 #include <optional>
 #include <fstream>
 
@@ -29,11 +30,6 @@
 #endif
 
 namespace Kokkos::Impl {
-
-bool hsa_xnack_enabled_in_host_environment_impl() {
-  const char* envVar = std::getenv("HSA_XNACK");
-  return envVar != nullptr && std::string(envVar) == "1";
-}
 
 #ifdef __linux__
 // try to get `uname -r`. Returns an empty optional for any problem
@@ -77,7 +73,10 @@ bool config_hmm_mirror_in_boot_config_impl() {
 
 // returns true iff environment variable HSA_XNACK=1
 bool hsa_xnack_enabled_in_host_environment() {
-  static bool cache = hsa_xnack_enabled_in_host_environment_impl();
+  static bool cache = [] {
+    const char* var = std::getenv("HSA_XNACK");
+    return var && std::string_view{var} == "1";
+  }();
   return cache;
 }
 
