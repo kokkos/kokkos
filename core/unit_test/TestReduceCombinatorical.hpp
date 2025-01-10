@@ -414,6 +414,7 @@ struct TestReduceCombinatoricalInstantiation {
 #endif
   }
 
+  // FIXME_CUDA segfaults at runtime when using a lambda
   struct AddIndexToSum {
     KOKKOS_FUNCTION
     void operator()(const int i, double& lsum) const { lsum += i; }
