@@ -34,6 +34,7 @@ jobs:
           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_EXAMPLES=ON"
           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SERIAL=ON"
           ctest -VV \
+            -D CDASH_MODEL=Experimental \
             -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
             -S CTestRun.cmake \
             -D GITHUB_PR_ID=${{ github.event.number }} \

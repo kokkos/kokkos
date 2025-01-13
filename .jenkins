@@ -63,6 +63,7 @@ pipeline {
                                                         -DKokkos_ENABLE_SERIAL=ON"
                               export ENV_CMAKE_OPTIONS=$(echo ${ENV_CMAKE_OPTIONS} | sed -e "s/;[ ]*/;/g")
                               ctest -VV \
+                                -D CDASH_MODEL=Experimental \
                                 -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
                                 -S CTestRun.cmake \
                                 -D GITHUB_PR_ID=${PR_ID} \

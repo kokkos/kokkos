@@ -16,7 +16,7 @@ set(CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=Kokkos)
 
 file(REMOVE_RECURSE "${CTEST_BINARY_DIRECTORY}")
 
-ctest_start(Experimental)
+ctest_start(${CDASH_MODEL})
 ctest_update()
 ctest_configure(OPTIONS "${CMAKE_OPTIONS}")
 ctest_build()
