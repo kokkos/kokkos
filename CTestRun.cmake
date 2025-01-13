@@ -12,8 +12,6 @@ set(CTEST_UPDATE_COMMAND git)
 set(CTEST_UPDATE_VERSION_ONLY 1)
 set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
 
-set(CTEST_SUBMIT_URL https://my.cdash.org/submit.php?project=Kokkos)
-
 file(REMOVE_RECURSE "${CTEST_BINARY_DIRECTORY}")
 
 ctest_start(${CDASH_MODEL})
