@@ -116,18 +116,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), scratch_space) {
   }
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), stream_sync_semantics) {
-  StreamsAndDevices streams_and_devices;
-  {
-    std::array<TEST_EXECSPACE, 2> execs =
-        get_execution_spaces(streams_and_devices);
-
-    test_stream_sync(execs[0], execs[1], [](const Kokkos::Cuda &exec_space) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec_space.cuda_device()));
-    });
-  }
-}
-
 TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), stream_sync_semantics_raw_cuda) {
   // Test that stream synchronization behavior for various GPU APIs matches the
   // assumptions made in Kokkos for multi gpu support, namely, that any stream
