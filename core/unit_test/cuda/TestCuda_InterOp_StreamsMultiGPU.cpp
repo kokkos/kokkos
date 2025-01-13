@@ -143,7 +143,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), stream_sync_semantics_raw_cuda) {
     // check the value.
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(devices[1]));
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(streams[0]));
-    set_equal_kernel<<<1, 1, 0, streams[1]>>>(check, value);
+    copy_kernel<<<1, 1, 0, streams[1]>>>(check, value);
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(streams[1]));
     ASSERT_EQ(check[0], size);
 

@@ -189,7 +189,7 @@ __global__ void accumulate_kernel(int *value) {
   }
 }
 
-__global__ void set_equal_kernel(int *check, const int *value) {
+__global__ void copy_kernel(int *check, const int *value) {
   check[0] = value[0];
 }
 }  // namespace
