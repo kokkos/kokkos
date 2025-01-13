@@ -58,10 +58,10 @@ std::array<TEST_EXECSPACE, 2> get_execution_spaces(
 }
 
 struct TEST_CATEGORY_FIXTURE(MultiGPU) : public ::testing::Test {
-  StreamsAndDevices streams_and_devices;
+  StreamsAndDevices sd;
 
   void SetUp() override {
-    if (streams_and_devices.devices[0] == streams_and_devices.devices[1])
+    if (sd.devices[0] == sd.devices[1])
       GTEST_SKIP() << "Skipping Cuda multi-gpu testing since current machine "
                       "only contains a single GPU.\n";
   }
