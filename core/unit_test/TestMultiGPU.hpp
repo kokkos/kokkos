@@ -182,23 +182,6 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   ASSERT_EQ(error1, 0);
 }
 
-struct AccumulateTag {};
-struct CheckTag {};
-
-template <int N>
-struct StreamSyncFunctor {
-  int *value;
-  int *check;
-
-  KOKKOS_FUNCTION
-  void operator()(const AccumulateTag &, const int) const {
-    for (int i = 0; i < N; ++i) Kokkos::atomic_inc(value);
-  }
-
-  KOKKOS_FUNCTION
-  void operator()(const CheckTag &, const int) const { check[0] = value[0]; }
-};
-
 template <int N>
 __global__ void accumulate_kernel(int *value) {
   for (int i = 0; i < N; ++i) {
