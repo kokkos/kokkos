@@ -57,7 +57,7 @@ std::array<TEST_EXECSPACE, 2> get_execution_spaces(
   return {exec0, exec1};
 }
 
-struct TEST_CATEGORY_FIXTURE(MultiGPU) : public ::testing::Test {
+struct TEST_CATEGORY_FIXTURE(multi_gpu) : public ::testing::Test {
   StreamsAndDevices sd;
 
   void SetUp() override {
@@ -67,7 +67,7 @@ struct TEST_CATEGORY_FIXTURE(MultiGPU) : public ::testing::Test {
   }
 };
 
-TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), managed_views) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), managed_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -82,7 +82,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), managed_views) {
   }
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), unmanaged_views) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), unmanaged_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -106,7 +106,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), unmanaged_views) {
   }
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), scratch_space) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), scratch_space) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -116,7 +116,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), scratch_space) {
   }
 }
 
-TEST_F(TEST_CATEGORY_FIXTURE(MultiGPU), stream_sync_semantics_raw_cuda) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), stream_sync_semantics_raw_cuda) {
   // Test that stream synchronization behavior for various GPU APIs matches the
   // assumptions made in Kokkos for multi gpu support, namely, that any stream
   // (no matter which device it is created on) can be synced from any device.
