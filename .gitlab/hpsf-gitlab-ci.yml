@@ -2,6 +2,13 @@ NVIDIA-GH200:
   stage: test
   tags: [nvidia-gh200]
   image: masterleinad/kokkos-nvcc:12.6.1
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        CDASH_MODEL: "Nightly"
+    - when: on_success
+      variables:
+        CDASH_MODEL: "Experimental"
   script:
     - apt-get update && apt-get install -y git
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
@@ -15,7 +22,7 @@ NVIDIA-GH200:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-)
     - ctest -VV
-        -D CDASH_MODEL=Experimental
+        -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID=${GITHUB_PR_ID}
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_gh200.xml
@@ -33,6 +40,13 @@ INTEL-DATA-CENTER-MAX-1100:
   stage: test
   tags: [intel-data-center-max-1100]
   image: intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        CDASH_MODEL: "Nightly"
+    - when: on_success
+      variables:
+        CDASH_MODEL: "Experimental"
   script:
     - apt-get update && apt-get install -y git
     - sycl-ls
@@ -49,7 +63,7 @@ INTEL-DATA-CENTER-MAX-1100:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
     - export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-)
     - ctest -VV
-        -D CDASH_MODEL=Experimental
+        -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID=${GITHUB_PR_ID}
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_pvc1100.xml
@@ -67,6 +81,13 @@ AMD-MI300A:
   stage: test
   tags: [uo-gpu, odyssey, amd-mi300]
   image: rocm/dev-ubuntu-24.04:6.2.4-complete
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        CDASH_MODEL: "Nightly"
+    - when: on_success
+      variables:
+        CDASH_MODEL: "Experimental"
   script:
     - apt-get update && apt-get install -y cmake git
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
@@ -83,7 +104,7 @@ AMD-MI300A:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-)
     - ctest -VV
-      -D CDASH_MODEL=Experimental
+      -D CDASH_MODEL=${CDASH_MODEL}
       -D GITHUB_PR_ID=${GITHUB_PR_ID}
       -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
       -D OUTPUT_JUNIT_FILE=result_mi300a.xml
