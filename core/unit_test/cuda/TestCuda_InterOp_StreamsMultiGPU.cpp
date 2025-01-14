@@ -57,7 +57,17 @@ std::array<TEST_EXECSPACE, 2> get_execution_spaces(
   return {exec0, exec1};
 }
 
-TEST(cuda_multi_gpu, managed_views) {
+struct TEST_CATEGORY_FIXTURE(multi_gpu) : public ::testing::Test {
+  StreamsAndDevices sd;
+
+  void SetUp() override {
+    if (sd.devices[0] == sd.devices[1])
+      GTEST_SKIP() << "Skipping Cuda multi-gpu testing since current machine "
+                      "only contains a single GPU.\n";
+  }
+};
+
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), managed_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -72,7 +82,7 @@ TEST(cuda_multi_gpu, managed_views) {
   }
 }
 
-TEST(cuda_multi_gpu, unmanaged_views) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), unmanaged_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -96,7 +106,7 @@ TEST(cuda_multi_gpu, unmanaged_views) {
   }
 }
 
-TEST(cuda_multi_gpu, scratch_space) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), scratch_space) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -105,4 +115,42 @@ TEST(cuda_multi_gpu, scratch_space) {
     test_scratch(execs[0], execs[1]);
   }
 }
+
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), stream_sync_semantics_raw_cuda) {
+  // Test that stream synchronization behavior for various GPU APIs matches the
+  // assumptions made in Kokkos for multi gpu support, namely, that any stream
+  // (no matter which device it is created on) can be synced from any device.
+
+  StreamsAndDevices streams_and_devices;
+  {
+    auto streams = streams_and_devices.streams;
+    auto devices = streams_and_devices.devices;
+
+    // Allocate data.
+    int *value;
+    int *check;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaMallocHost(reinterpret_cast<void **>(&value), 1 * sizeof(int)));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaMallocHost(reinterpret_cast<void **>(&check), 1 * sizeof(int)));
+
+    // Launch "long" kernel on device 0.
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(devices[0]));
+    constexpr size_t size = 10000;
+    accumulate_kernel<size><<<1, 1, 0, streams[0]>>>(value);
+
+    // Wait for the kernel running on device 0 while we are on device 1, then
+    // check the value.
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(devices[1]));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(streams[0]));
+    copy_kernel<<<1, 1, 0, streams[1]>>>(check, value);
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamSynchronize(streams[1]));
+    ASSERT_EQ(check[0], size);
+
+    // Cleanup.
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(value));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(check));
+  }
+}
+
 }  // namespace
