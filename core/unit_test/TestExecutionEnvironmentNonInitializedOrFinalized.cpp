@@ -140,4 +140,34 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
       matcher2);
 }
 
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
+       c_style_memory_management) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  EXPECT_DEATH(
+      {
+        void* ptr = Kokkos::kokkos_malloc(1);
+        Kokkos::kokkos_free(ptr);  // FIXME just showing it does not die
+      },
+      "FIXME");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        void* ptr = Kokkos::kokkos_malloc(1);
+        Kokkos::kokkos_free(ptr);  // FIXME should fail at malloc...
+      },
+      "Kokkos allocation \"no-label\" is being deallocated after "
+      "Kokkos::finalize was called");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        void* ptr = Kokkos::kokkos_malloc(1);
+        Kokkos::finalize();
+        Kokkos::kokkos_free(ptr);
+      },
+      "Kokkos allocation \"no-label\" is being deallocated after "
+      "Kokkos::finalize was called");
+}
+
 }  // namespace
