@@ -402,23 +402,6 @@ Kokkos::HIP::size_type *hip_internal_scratch_flags(const HIP &instance,
 
 //----------------------------------------------------------------------------
 
-namespace Kokkos {
-namespace Impl {
-void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
-                              const int line) {
-  std::ostringstream out;
-  out << name << " error( " << hipGetErrorName(e)
-      << "): " << hipGetErrorString(e);
-  if (file) {
-    out << " " << file << ":" << line;
-  }
-  throw_runtime_exception(out.str());
-}
-}  // namespace Impl
-}  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-
 void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     hipStream_t stream;
