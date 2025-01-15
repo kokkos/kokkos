@@ -106,25 +106,28 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
       },
       "Kokkos allocation \"v\" is being deallocated after Kokkos::finalize was "
       "called");
-#ifndef KOKKOS_ENABLE_SYCL
-  std::string matcher2 =
+  [[maybe_unused]] std::string error_constructing_view_with_unitialized_exec =
       "Constructing View and initializing data with uninitialized execution "
       "space";
+  [[maybe_unused]] std::string error_constructing_exec_space_instance =
+      std::string("Kokkos::") +
+#ifdef KOKKOS_ENABLE_OPENACC
+      "Experimental::"
 #endif
+      Kokkos::DefaultExecutionSpace::name() +
+      "::" + Kokkos::DefaultExecutionSpace::name() +
+      " instance constructor : ERROR device not initialized";
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
-  std::string matcher1 = std::string("Kokkos::") +
-#ifdef KOKKOS_ENABLE_OPENACC
-                         "Experimental::"
-#endif
-                         Kokkos::DefaultExecutionSpace::name() +
-                         "::" + Kokkos::DefaultExecutionSpace::name() +
-                         " instance constructor : ERROR device not initialized";
+  std::string matcher1 = error_constructing_exec_space_instance;
 #else
-  std::string matcher1 = matcher2;
+  std::string matcher1 = error_constructing_view_with_unitialized_exec;
 #endif
 #ifdef KOKKOS_ENABLE_SYCL
-  std::string matcher2 = matcher1;
+  std::string matcher2 = error_constructing_exec_space_instance;
+#else
+  std::string matcher2 = error_constructing_view_with_unitialized_exec;
+
 #endif
   EXPECT_DEATH({ Kokkos::View<int*> v("v", 0); }, matcher1);
   EXPECT_DEATH(
