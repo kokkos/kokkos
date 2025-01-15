@@ -54,7 +54,17 @@ std::array<TEST_EXECSPACE, 2> get_execution_spaces(
   return {exec0, exec1};
 }
 
-TEST(hip_multi_gpu, managed_views) {
+struct TEST_CATEGORY_FIXTURE(multi_gpu) : public ::testing::Test {
+  StreamsAndDevices sd;
+
+  void SetUp() override {
+    if (sd.devices[0] == sd.devices[1])
+      GTEST_SKIP() << "Skipping HIP multi-gpu testing since current machine "
+                      "only contains a single GPU.\n";
+  }
+};
+
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), managed_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -69,7 +79,7 @@ TEST(hip_multi_gpu, managed_views) {
   }
 }
 
-TEST(hip_multi_gpu, unmanaged_views) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), unmanaged_views) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
@@ -93,7 +103,7 @@ TEST(hip_multi_gpu, unmanaged_views) {
   }
 }
 
-TEST(hip_multi_gpu, scratch_space) {
+TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), scratch_space) {
   StreamsAndDevices streams_and_devices;
   {
     std::array<TEST_EXECSPACE, 2> execs =
