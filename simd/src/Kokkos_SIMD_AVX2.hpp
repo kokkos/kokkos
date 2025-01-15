@@ -2238,13 +2238,23 @@ class where_expression<basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(double const* mem, element_aligned_tag) {
+#ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
+    __m256d tmp = _mm256_loadu_pd(mem);
+    m_value = value_type(_mm256_and_si256(tmp, static_cast<__m256d>(m_mask)));
+#else
     m_value = value_type(_mm256_maskload_pd(
         mem, _mm256_castpd_si256(static_cast<__m256d>(m_mask))));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(double const* mem, vector_aligned_tag) {
+#ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
+    __m256d tmp = _mm256_load_pd(mem);
+    m_value = value_type(_mm256_and_si256(tmp, static_cast<__m256d>(m_mask)));
+#else
     m_value = value_type(_mm256_maskload_pd(
         mem, _mm256_castpd_si256(static_cast<__m256d>(m_mask))));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
@@ -2329,13 +2339,23 @@ class where_expression<basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(float const* mem, element_aligned_tag) {
+#ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
+    __m128 tmp = _mm_loadu_ps(mem);
+    m_value    = value_type(_mm_and_ps(tmp, static_cast<__m128>(m_mask)));
+#else
     m_value = value_type(
         _mm_maskload_ps(mem, _mm_castps_si128(static_cast<__m128>(m_mask))));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(float const* mem, vector_aligned_tag) {
+#ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
+    __m128 tmp = _mm_load_ps(mem);
+    m_value    = value_type(_mm_and_ps(tmp, static_cast<__m128>(m_mask)));
+#else
     m_value = value_type(
         _mm_maskload_ps(mem, _mm_castps_si128(static_cast<__m128>(m_mask))));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
@@ -2420,12 +2440,22 @@ class where_expression<basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>,
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(float const* mem, element_aligned_tag) {
+#ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
+    __m256 tmp = _mm256_loadu_ps(mem);
+    m_value    = value_type(_mm256_and_ps(tmp, static_cast<__m256>(m_mask)));
+#else
     m_value = value_type(_mm256_maskload_ps(
         mem, _mm256_castps_si256(static_cast<__m256>(m_mask))));
+#endif
   }
   void copy_from(float const* mem, vector_aligned_tag) {
+#ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
+    __m256 tmp = _mm256_load_ps(mem);
+    m_value    = value_type(_mm256_and_ps(tmp, static_cast<__m256>(m_mask)));
+#else
     m_value = value_type(_mm256_maskload_ps(
         mem, _mm256_castps_si256(static_cast<__m256>(m_mask))));
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void gather_from(
