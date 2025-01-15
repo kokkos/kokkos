@@ -45,7 +45,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
   };
   EXPECT_EXIT(
       {
-        { (void)make_views(); }
+        { auto views = make_views(); }
         std::exit(EXIT_SUCCESS);
       },
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
@@ -65,7 +65,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
         {
           Kokkos::initialize();
           Kokkos::finalize();
-          (void)make_views();
+          auto views = make_views();
         }
         std::exit(EXIT_SUCCESS);
       },
