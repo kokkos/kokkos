@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "../mdspan"
+#include "mdspan/mdspan.hpp"
 #include <cassert>
 #include <vector>
 
