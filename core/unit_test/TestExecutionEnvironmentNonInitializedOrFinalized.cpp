@@ -114,6 +114,9 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
   std::string matcher1 = std::string("Kokkos::") +
+#ifdef KOKKOS_ENABLE_OPENACC
+                         "Experimental::"
+#endif
                          Kokkos::DefaultExecutionSpace::name() +
                          "::" + Kokkos::DefaultExecutionSpace::name() +
                          " instance constructor : ERROR device not initialized";
