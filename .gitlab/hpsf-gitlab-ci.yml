@@ -28,7 +28,7 @@ NVIDIA-GH200:
         -D OUTPUT_JUNIT_FILE=result_gh200.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
-        -D CTEST_BUILD_NAME="NVIDIA-GH200"
+        -D CTEST_BUILD_NAME="NVIDIA-GH200-PR${GITHUB_PR_ID}"
   artifacts:
     when: always
     paths:
@@ -69,7 +69,7 @@ INTEL-DATA-CENTER-MAX-1100:
         -D OUTPUT_JUNIT_FILE=result_pvc1100.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
-        -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
+        -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100-PR${GITHUB_PR_ID}"
   artifacts:
     when: always
     paths:
@@ -110,7 +110,7 @@ AMD-MI300A:
       -D OUTPUT_JUNIT_FILE=result_mi300a.xml
       -S CTestRun.cmake
       -D CTEST_SITE="gitlab.spack.io"
-      -D CTEST_BUILD_NAME="AMD-MI300A"
+      -D CTEST_BUILD_NAME="AMD-MI300A-PR${GITHUB_PR_ID}"
   artifacts:
     when: always
     paths:
