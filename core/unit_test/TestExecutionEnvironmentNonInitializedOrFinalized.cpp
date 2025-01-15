@@ -196,4 +196,63 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       "kokkos_free\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was called");
 }
 
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, parallel_for) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  EXPECT_DEATH({ Kokkos::parallel_for(0, KOKKOS_LAMBDA(int){}); }, "FIXME");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        Kokkos::parallel_for(0, KOKKOS_LAMBDA(int){});
+      },
+      "FIXME");
+}
+
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
+       parallel_reduce) {
+  EXPECT_DEATH(
+      {
+        float x;
+        Kokkos::parallel_reduce(0, KOKKOS_LAMBDA(int, float&){}, x);
+      },
+      "FIXME");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        float x;
+        Kokkos::parallel_reduce(0, KOKKOS_LAMBDA(int, float&){}, x);
+      },
+      "FIXME");
+}
+
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, parallel_scan) {
+  EXPECT_DEATH(
+      { Kokkos::parallel_scan(0, KOKKOS_LAMBDA(int, float&, bool){}); },
+      "FIXME");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        Kokkos::parallel_scan(0, KOKKOS_LAMBDA(int, float&, bool){});
+      },
+      "FIXME");
+
+  EXPECT_DEATH(
+      {
+        float x;
+        Kokkos::parallel_scan(0, KOKKOS_LAMBDA(int, float&, bool){}, x);
+      },
+      "FIXME");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        float x;
+        Kokkos::parallel_scan(0, KOKKOS_LAMBDA(int, float&, bool){}, x);
+      },
+      "FIXME");
+}
+
 }  // namespace
