@@ -45,7 +45,6 @@ class basic_simd_mask<T, simd_abi::scalar> {
   using value_type                            = bool;
   using simd_type                             = basic_simd<T, simd_abi::scalar>;
   using abi_type                              = simd_abi::scalar;
-  using reference                             = value_type&;
   KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() = default;
   KOKKOS_FORCEINLINE_FUNCTION static constexpr std::size_t size() { return 1; }
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(value_type value)
@@ -63,9 +62,6 @@ class basic_simd_mask<T, simd_abi::scalar> {
       basic_simd_mask<U, simd_abi::scalar> const& other)
       : m_value(static_cast<bool>(other)) {}
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator bool() const {
-    return m_value;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION reference operator[](std::size_t) {
     return m_value;
   }
   KOKKOS_FORCEINLINE_FUNCTION value_type operator[](std::size_t) const {
@@ -100,7 +96,6 @@ class basic_simd<T, simd_abi::scalar> {
   using value_type                       = T;
   using abi_type                         = simd_abi::scalar;
   using mask_type                        = basic_simd_mask<T, abi_type>;
-  using reference                        = value_type&;
   KOKKOS_DEFAULTED_FUNCTION basic_simd() = default;
   KOKKOS_DEFAULTED_FUNCTION basic_simd(basic_simd const&)            = default;
   KOKKOS_DEFAULTED_FUNCTION basic_simd(basic_simd&&)                 = default;
@@ -139,10 +134,6 @@ class basic_simd<T, simd_abi::scalar> {
   }
   KOKKOS_FORCEINLINE_FUNCTION void copy_to(T* ptr, vector_aligned_tag) const {
     *ptr = m_value;
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION reference operator[](std::size_t) {
-    return m_value;
   }
   KOKKOS_FORCEINLINE_FUNCTION value_type operator[](std::size_t) const {
     return m_value;

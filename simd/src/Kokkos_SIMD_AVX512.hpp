@@ -45,30 +45,6 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   __mmask8 m_value;
 
  public:
-  class reference {
-    __mmask8& m_mask;
-    int m_lane;
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION __mmask8 bit_mask() const {
-      return __mmask8(std::int16_t(1 << m_lane));
-    }
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(__mmask8& mask_arg,
-                                                    int lane_arg)
-        : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(bool value) const {
-      if (value) {
-        m_mask |= bit_mask();
-      } else {
-        m_mask &= ~bit_mask();
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      return (m_mask & bit_mask()) != 0;
-    }
-  };
   using value_type                                        = bool;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(
@@ -85,22 +61,30 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
                 bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(G&& gen)
       : m_value(false) {
-    reference(m_value, int(0)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 0>()));
-    reference(m_value, int(1)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 1>()));
-    reference(m_value, int(2)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 2>()));
-    reference(m_value, int(3)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 3>()));
-    reference(m_value, int(4)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 4>()));
-    reference(m_value, int(5)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 5>()));
-    reference(m_value, int(6)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 6>()));
-    reference(m_value, int(7)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 7>()));
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 0>())))
+                  ? m_value | 0x01
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 1>())))
+                  ? m_value | 0x02
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 2>())))
+                  ? m_value | 0x04
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 3>())))
+                  ? m_value | 0x08
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 4>())))
+                  ? m_value | 0x10
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 5>())))
+                  ? m_value | 0x20
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 6>())))
+                  ? m_value | 0x40
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 7>())))
+                  ? m_value | 0x80
+                  : m_value;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 8;
@@ -111,9 +95,6 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __mmask8()
       const {
     return m_value;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
@@ -148,30 +129,6 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<16>> {
   __mmask16 m_value;
 
  public:
-  class reference {
-    __mmask16& m_mask;
-    int m_lane;
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION __mmask16 bit_mask() const {
-      return __mmask16(std::int32_t(1 << m_lane));
-    }
-
-   public:
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference(__mmask16& mask_arg,
-                                                    int lane_arg)
-        : m_mask(mask_arg), m_lane(lane_arg) {}
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference
-    operator=(bool value) const {
-      if (value) {
-        m_mask |= bit_mask();
-      } else {
-        m_mask &= ~bit_mask();
-      }
-      return *this;
-    }
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION operator bool() const {
-      return (m_mask & bit_mask()) != 0;
-    }
-  };
   using value_type                                        = bool;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(
@@ -188,38 +145,60 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<16>> {
                 bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(G&& gen)
       : m_value(false) {
-    reference(m_value, int(0)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 0>()));
-    reference(m_value, int(1)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 1>()));
-    reference(m_value, int(2)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 2>()));
-    reference(m_value, int(3)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 3>()));
-    reference(m_value, int(4)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 4>()));
-    reference(m_value, int(5)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 5>()));
-    reference(m_value, int(6)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 6>()));
-    reference(m_value, int(7)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 7>()));
-    reference(m_value, int(8)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 8>()));
-    reference(m_value, int(9)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 9>()));
-    reference(m_value, int(10)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 10>()));
-    reference(m_value, int(11)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 11>()));
-    reference(m_value, int(12)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 12>()));
-    reference(m_value, int(13)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 13>()));
-    reference(m_value, int(14)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 14>()));
-    reference(m_value, int(15)) =
-        static_cast<bool>(gen(std::integral_constant<std::size_t, 15>()));
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 0>())))
+                  ? m_value | 0x0001
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 1>())))
+                  ? m_value | 0x0002
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 2>())))
+                  ? m_value | 0x0004
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 3>())))
+                  ? m_value | 0x0008
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 4>())))
+                  ? m_value | 0x0010
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 5>())))
+                  ? m_value | 0x0020
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 6>())))
+                  ? m_value | 0x0040
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 7>())))
+                  ? m_value | 0x0080
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 8>())))
+                  ? m_value | 0x0100
+                  : m_value;
+    m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 9>())))
+                  ? m_value | 0x0200
+                  : m_value;
+    m_value =
+        (static_cast<bool>(gen(std::integral_constant<std::size_t, 10>())))
+            ? m_value | 0x0400
+            : m_value;
+    m_value =
+        (static_cast<bool>(gen(std::integral_constant<std::size_t, 11>())))
+            ? m_value | 0x0800
+            : m_value;
+    m_value =
+        (static_cast<bool>(gen(std::integral_constant<std::size_t, 12>())))
+            ? m_value | 0x1000
+            : m_value;
+    m_value =
+        (static_cast<bool>(gen(std::integral_constant<std::size_t, 13>())))
+            ? m_value | 0x2000
+            : m_value;
+    m_value =
+        (static_cast<bool>(gen(std::integral_constant<std::size_t, 14>())))
+            ? m_value | 0x4000
+            : m_value;
+    m_value =
+        (static_cast<bool>(gen(std::integral_constant<std::size_t, 15>())))
+            ? m_value | 0x8000
+            : m_value;
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
     return 16;
@@ -230,9 +209,6 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<16>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit operator __mmask16()
       const {
     return m_value;
-  }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reference(m_value, int(i));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
@@ -270,7 +246,6 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
   using value_type = double;
   using abi_type   = simd_abi::avx512_fixed_size<8>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -306,12 +281,11 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
                                gen(std::integral_constant<std::size_t, 6>()),
                                gen(std::integral_constant<std::size_t, 7>()))) {
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+    auto index = _mm512_set1_epi32(i);
+    auto tmp   = _mm512_permutexvar_pd(index, m_value);
+    return _mm512_cvtsd_f64(tmp);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -564,7 +538,6 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
   using value_type = float;
   using abi_type   = simd_abi::avx512_fixed_size<8>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -597,12 +570,11 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
                                gen(std::integral_constant<std::size_t, 6>()),
                                gen(std::integral_constant<std::size_t, 7>()))) {
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+    auto index = _mm256_set1_epi32(i);
+    auto tmp   = _mm256_permutexvar_ps(index, m_value);
+    return _mm256_cvtss_f32(tmp);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -832,7 +804,6 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
   using value_type = float;
   using abi_type   = simd_abi::avx512_fixed_size<16>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -873,12 +844,11 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
                            gen(std::integral_constant<std::size_t, 13>()),
                            gen(std::integral_constant<std::size_t, 14>()),
                            gen(std::integral_constant<std::size_t, 15>()))) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+    auto index = _mm512_set1_epi32(i);
+    auto tmp   = _mm512_permutexvar_ps(index, m_value);
+    return _mm512_cvtss_f32(tmp);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -1107,7 +1077,6 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::int32_t;
   using abi_type   = simd_abi::avx512_fixed_size<8>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1145,12 +1114,19 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
                               gen(std::integral_constant<std::size_t, 5>()),
                               gen(std::integral_constant<std::size_t, 6>()),
                               gen(std::integral_constant<std::size_t, 7>()))) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+// _mm256_cvtsi256_si32 was not added in GCC until 11
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
+    value_type tmp[size()];
+    _mm256_mask_storeu_epi32(tmp, static_cast<__mmask8>(mask_type(true)),
+                             m_value);
+    return tmp[i];
+#else
+    auto index = _mm256_set1_epi32(i);
+    auto tmp   = _mm256_permutevar8x32_epi32(m_value, index);
+    return _mm256_cvtsi256_si32(tmp);
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -1317,7 +1293,6 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
   using value_type = std::int32_t;
   using abi_type   = simd_abi::avx512_fixed_size<16>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1363,12 +1338,19 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
             gen(std::integral_constant<std::size_t, 13>()),
             gen(std::integral_constant<std::size_t, 14>()),
             gen(std::integral_constant<std::size_t, 15>()))) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+// _mm512_cvtsi512_si32 was not added in GCC until 11
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
+    value_type tmp[size()];
+    _mm512_mask_storeu_epi32(tmp, static_cast<__mmask16>(mask_type(true)),
+                             m_value);
+    return tmp[i];
+#else
+    auto index = _mm512_set1_epi32(i);
+    auto tmp   = _mm512_permutexvar_epi32(index, m_value);
+    return _mm512_cvtsi512_si32(tmp);
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
@@ -1536,7 +1518,6 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::uint32_t;
   using abi_type   = simd_abi::avx512_fixed_size<8>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1576,12 +1557,19 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
                               gen(std::integral_constant<std::size_t, 5>()),
                               gen(std::integral_constant<std::size_t, 6>()),
                               gen(std::integral_constant<std::size_t, 7>()))) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+// _mm256_cvtsi256_si32 was not added in GCC until 11
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
+    value_type tmp[size()];
+    _mm256_mask_storeu_epi32(tmp, static_cast<__mmask8>(mask_type(true)),
+                             m_value);
+    return tmp[i];
+#else
+    auto index = _mm256_set1_epi32(i);
+    auto tmp   = _mm256_permutevar8x32_epi32(m_value, index);
+    return _mm256_cvtsi256_si32(tmp);
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
       value_type* ptr, element_aligned_tag) const {
@@ -1741,7 +1729,6 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
   using value_type = std::uint32_t;
   using abi_type   = simd_abi::avx512_fixed_size<16>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1789,12 +1776,19 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
             gen(std::integral_constant<std::size_t, 13>()),
             gen(std::integral_constant<std::size_t, 14>()),
             gen(std::integral_constant<std::size_t, 15>()))) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+// _mm512_cvtsi512_si32 was not added in GCC until 11
+#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
+    value_type tmp[size()];
+    _mm512_mask_storeu_epi32(tmp, static_cast<__mmask16>(mask_type(true)),
+                             m_value);
+    return tmp[i];
+#else
+    auto index = _mm512_set1_epi32(i);
+    auto tmp   = _mm512_permutexvar_epi32(index, m_value);
+    return _mm512_cvtsi512_si32(tmp);
+#endif
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -1954,7 +1948,6 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::int64_t;
   using abi_type   = simd_abi::avx512_fixed_size<8>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -1995,12 +1988,11 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr basic_simd(
       __m512i const& value_in)
       : m_value(value_in) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+    value_type tmp[size()];
+    _mm512_storeu_si512(tmp, m_value);
+    return tmp[i];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
@@ -2166,7 +2158,6 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   using value_type = std::uint64_t;
   using abi_type   = simd_abi::avx512_fixed_size<8>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
-  using reference  = value_type&;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd()                  = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd&&)      = default;
@@ -2209,12 +2200,11 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::int64_t, abi_type> const& other)
       : m_value(static_cast<__m512i>(other)) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION reference operator[](std::size_t i) {
-    return reinterpret_cast<value_type*>(&m_value)[i];
-  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
-    return reinterpret_cast<value_type const*>(&m_value)[i];
+    value_type tmp[size()];
+    _mm512_storeu_si512(tmp, m_value);
+    return tmp[i];
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
                                                        element_aligned_tag) {
