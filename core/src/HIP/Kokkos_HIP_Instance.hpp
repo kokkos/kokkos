@@ -268,11 +268,6 @@ class HIPInternal {
     return hipStreamCreate(pStream);
   }
 
-  hipError_t hip_stream_synchronize_wrapper() const {
-    set_hip_device();
-    return hipStreamSynchronize(m_stream);
-  }
-
   // Resizing of reduction related scratch spaces
   size_type *scratch_space(std::size_t const size);
   size_type *scratch_flags(std::size_t const size);

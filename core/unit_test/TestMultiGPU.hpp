@@ -182,7 +182,7 @@ void test_scratch(TEST_EXECSPACE exec0, TEST_EXECSPACE exec1) {
   ASSERT_EQ(error1, 0);
 }
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
 template <int N>
 __global__ void accumulate_kernel(int *value) {
   for (int i = 0; i < N; ++i) {

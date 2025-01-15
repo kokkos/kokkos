@@ -169,7 +169,7 @@ void HIPInternal::fence(const std::string &name) const {
       name,
       Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{
           impl_get_instance_id()},
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hip_stream_synchronize_wrapper()); });
+      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream)); });
 }
 
 void HIPInternal::initialize(hipStream_t stream) {
@@ -311,7 +311,7 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
   // Without this fix, all the atomic tests fail. It is not obvious that this
   // problem is limited to HSA_XNACK=1 even if all the tests pass when
   // HSA_XNACK=0. That's why we always copy the driver.
-  KOKKOS_IMPL_HIP_SAFE_CALL((hip_stream_synchronize_wrapper()));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
   std::memcpy(m_scratchFunctorHost, driver, size);
   KOKKOS_IMPL_HIP_SAFE_CALL((hip_memcpy_async_wrapper(
       m_scratchFunctor, m_scratchFunctorHost, size, hipMemcpyDefault)));
