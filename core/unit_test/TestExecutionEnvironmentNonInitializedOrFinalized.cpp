@@ -112,7 +112,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
   [[maybe_unused]] std::string error_constructing_exec_space_instance =
       std::string("Kokkos::") +
 #ifdef KOKKOS_ENABLE_OPENACC
-      "Experimental::"
+      "Experimental::" +
 #endif
       Kokkos::DefaultExecutionSpace::name() +
       "::" + Kokkos::DefaultExecutionSpace::name() +
