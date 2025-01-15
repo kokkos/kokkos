@@ -213,7 +213,11 @@ void CudaInternal::print_configuration(std::ostream &s) const {
       << prop.major << "." << prop.minor
       << ", Total Global Memory: " << human_memory_size(prop.totalGlobalMem)
       << ", Shared Memory per Block: "
-      << human_memory_size(prop.sharedMemPerBlock);
+      << human_memory_size(prop.sharedMemPerBlock)
+      << ", can access system allocated memory: "
+      << prop.cudaDevAttrPageableMemoryAccess
+      << ", Address Translation Service: "
+      << prop.cudaDevAttrPageableMemoryAccessUsesHostPageTables;
     if (m_cudaDev == i) s << " : Selected";
     s << '\n';
   }
