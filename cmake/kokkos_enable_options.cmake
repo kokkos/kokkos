@@ -138,8 +138,13 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
 if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
   message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
 endif()
-if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
-  message(FATAL_ERROR "Kokkos only supports legacy views with CUDA <= 11.4 (don't set Kokkos_ENABLE_IMPL_VIEW_LEGACY to FALSE)")
+if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION
+                                                                                     VERSION_LESS 11.4
+)
+  message(
+    FATAL_ERROR
+      "Kokkos only supports legacy views with CUDA <= 11.4 (don't set Kokkos_ENABLE_IMPL_VIEW_LEGACY to FALSE)"
+  )
 endif()
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
