@@ -119,7 +119,17 @@ if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel AND Kokkos_ENABLE_IMPL_MDSPAN)
 endif()
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
-  set(VIEW_LEGACY_DEFAULT OFF)
+  # CUDA 11.0-11.4 work with mdspan but *not* our mdspan-based view implementation due
+  # to various compiler bugs. So we will disable it here
+  # Similarly GCC 8 and 9 have excessive memory usage so we default to legacy view, though the
+  # user can enable the new implementation if they wish
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9)
+    set(VIEW_LEGACY_DEFAULT ON)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
+    set(VIEW_LEGACY_DEFAULT ON)
+  else()
+    set(VIEW_LEGACY_DEFAULT OFF)
+  endif()
 else()
   set(VIEW_LEGACY_DEFAULT ON)
 endif()
@@ -127,6 +137,9 @@ kokkos_enable_option(IMPL_VIEW_LEGACY ${VIEW_LEGACY_DEFAULT} "Whether to use the
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
 if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
   message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
+endif()
+if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
+  message(FATAL_ERROR "Kokkos only supports legacy views with CUDA <= 11.4 (don't set Kokkos_ENABLE_IMPL_VIEW_LEGACY to FALSE)")
 endif()
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
