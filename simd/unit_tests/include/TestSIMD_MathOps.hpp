@@ -65,12 +65,13 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
+    if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
+                  std::is_same_v<UnaryOp, exp_op> ||
+                  std::is_same_v<UnaryOp, log_op>)
+      arg = Kokkos::abs(arg);
+
     typename decltype(unary_op.on_host(arg))::value_type expected_val[width];
     for (std::size_t lane = 0; lane < width; ++lane) {
-      if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
-                    std::is_same_v<UnaryOp, exp_op> ||
-                    std::is_same_v<UnaryOp, log_op>)
-        arg[lane] = Kokkos::abs(arg[lane]);
       expected_val[lane] = unary_op.on_host_serial(T(arg[lane]));
     }
 

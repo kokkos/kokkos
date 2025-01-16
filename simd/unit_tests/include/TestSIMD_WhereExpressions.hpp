@@ -27,9 +27,9 @@ inline void host_check_where_expr_scatter_to() {
     using index_type = Kokkos::Experimental::basic_simd<std::int32_t, Abi>;
     using mask_type  = typename simd_type::mask_type;
 
-    std::size_t nlanes = simd_type::size();
-    DataType init[]    = {11, 13, 17, 19, 23, 29, 31, 37,
-                          53, 71, 79, 83, 89, 93, 97, 103};
+    constexpr std::size_t nlanes = simd_type::size();
+    DataType init[]              = {11, 13, 17, 19, 23, 29, 31, 37,
+                                    53, 71, 79, 83, 89, 93, 97, 103};
     simd_type src;
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
@@ -38,7 +38,7 @@ inline void host_check_where_expr_scatter_to() {
                                    Kokkos::Experimental::simd_abi::scalar>) {
         mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i != idx; });
 
-        DataType dst[simd_type::size()] = {0};
+        DataType dst[nlanes] = {0};
         for (std::size_t i = 0; i < nlanes; ++i) {
           dst[i] = (2 + (i * 2));
         }
@@ -55,7 +55,7 @@ inline void host_check_where_expr_scatter_to() {
       } else {
         mask_type mask([=](std::size_t i) { return i != idx; });
 
-        DataType dst[simd_type::size()] = {0};
+        DataType dst[nlanes] = {0};
         for (std::size_t i = 0; i < nlanes; ++i) {
           dst[i] = (2 + (i * 2));
         }
@@ -138,16 +138,16 @@ KOKKOS_INLINE_FUNCTION void device_check_where_expr_scatter_to() {
     using index_type = Kokkos::Experimental::basic_simd<std::int32_t, Abi>;
     using mask_type  = typename simd_type::mask_type;
 
-    std::size_t nlanes = simd_type::size();
-    DataType init[]    = {11, 13, 17, 19, 23, 29, 31, 37,
-                          53, 71, 79, 83, 89, 93, 97, 103};
+    constexpr std::size_t nlanes = simd_type::size();
+    DataType init[]              = {11, 13, 17, 19, 23, 29, 31, 37,
+                                    53, 71, 79, 83, 89, 93, 97, 103};
     simd_type src;
     src.copy_from(init, Kokkos::Experimental::simd_flag_default);
 
     for (std::size_t idx = 0; idx < nlanes; ++idx) {
       mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i != idx; });
 
-      DataType dst[simd_type::size()] = {0};
+      DataType dst[nlanes] = {0};
       for (std::size_t i = 0; i < nlanes; ++i) {
         dst[i] = (2 + (i * 2));
       }
