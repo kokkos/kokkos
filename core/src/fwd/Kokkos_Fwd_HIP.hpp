@@ -23,6 +23,16 @@ class HIPSpace;            ///< Memory space on HIP GPU
 class HIPHostPinnedSpace;  ///< Memory space on Host accessible to HIP GPU
 class HIPManagedSpace;     ///< Memory migratable between Host and HIP GPU
 class HIP;                 ///< Execution space for HIP GPU
+
+namespace Impl {
+template <class ExecSpace>
+void hip_prefetch_pointer(const ExecSpace& /*space*/, const void* /*ptr*/,
+                          size_t /*bytes*/, bool /*to_device*/) {}
+
+void hip_prefetch_pointer(const HIP& space, const void* ptr, size_t bytes,
+                          bool to_device);
+}  // namespace Impl
+
 }  // namespace Kokkos
 #endif
 #endif
