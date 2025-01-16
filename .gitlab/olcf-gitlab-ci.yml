@@ -31,7 +31,8 @@ crayclang:
     OLCF_ID_TOKEN:
       aud: https://code.olcf.ornl.gov
   script:
-    - module load rocm/6.2.4
+    - module load rocm/6.3.1
+    - module load cce/18.0.1
     - cmake -B build_crayclang -DCMAKE_CXX_COMPILER=CC -DKokkos_ENABLE_HIP=ON -DKokkos_ENABLE_TESTS=ON
     - cmake --build build_crayclang -j48
     - cd build_crayclang
