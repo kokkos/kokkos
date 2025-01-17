@@ -760,6 +760,13 @@ if(Kokkos_ENABLE_CUDA)
     ${Cuda_SOURCES_SHAREDSPACE}
   )
 
+  set(file ${CMAKE_CURRENT_BINARY_DIR}/cuda/TestCuda_GraphAtomicLocks.cpp)
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp "#include <TestCuda_Category.hpp>\n"
+                                                        "#include <TestGraphAtomicLocks.hpp>\n"
+  )
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp ${file})
+  kokkos_add_executable_and_test(CoreUnitTest_CudaGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
+
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaTimingBased SOURCES UnitTestMainInit.cpp cuda/TestCuda_DebugSerialExecution.cpp
     cuda/TestCuda_DebugPinUVMSpace.cpp
@@ -792,6 +799,14 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_BlocksizeDeduction.cpp
     hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
   )
+
+  set(file ${CMAKE_CURRENT_BINARY_DIR}/hip/TestHIP_GraphAtomicLocks.cpp)
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hip/dummy.cpp "#include <TestHIP_Category.hpp>\n"
+                                                       "#include <TestGraphAtomicLocks.hpp>\n"
+  )
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/hip/dummy.cpp ${file})
+  kokkos_add_executable_and_test(CoreUnitTest_HIPGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
+
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpStreams SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Streams.cpp
@@ -821,6 +836,13 @@ if(Kokkos_ENABLE_SYCL)
     CoreUnitTest_SYCL3 SOURCES UnitTestMainInit.cpp sycl/TestSYCL_TeamScratchStreams.cpp ${SYCL_SOURCES3}
     sycl/TestSYCL_Spaces.cpp
   )
+
+  set(file ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_GraphAtomicLocks.cpp)
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sycl/dummy.cpp "#include <TestSYCL_Category.hpp>\n"
+                                                        "#include <TestGraphAtomicLocks.hpp>\n"
+  )
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/sycl/dummy.cpp ${file})
+  kokkos_add_executable_and_test(CoreUnitTest_SYCLGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
 
   kokkos_add_executable_and_test(CoreUnitTest_SYCLInterOpInit SOURCES UnitTestMain.cpp sycl/TestSYCL_InterOp_Init.cpp)
   kokkos_add_executable_and_test(
