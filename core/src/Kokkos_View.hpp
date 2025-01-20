@@ -1014,6 +1014,7 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 
 } /* namespace Kokkos */
 
+#include <View/Kokkos_ViewCommonType.hpp>
 #include <View/Kokkos_ViewUniformType.hpp>
 #include <View/Kokkos_ViewAtomic.hpp>
 
