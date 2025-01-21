@@ -16,9 +16,6 @@
 
 /*--------------------------------------------------------------------------*/
 
-#ifndef KOKKOS_HIP_ISXNACK_HPP
-#define KOKKOS_HIP_ISXNACK_HPP
-
 #include <string>
 #include <string_view>
 #include <optional>
@@ -94,4 +91,3 @@ bool xnack_enabled() {
 
 }  // namespace Kokkos::Impl
 
-#endif  // KOKKOS_HIP_ISXNACK_HPP
