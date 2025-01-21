@@ -90,4 +90,3 @@ bool xnack_enabled() {
 }
 
 }  // namespace Kokkos::Impl
-
