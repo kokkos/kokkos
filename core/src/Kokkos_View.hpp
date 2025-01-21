@@ -659,10 +659,13 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 #else
   // FIXME: The std::is_null_pointer_v<P> condition is to workaround a GCC8 bug
   // in overload resolution
+  // FIXME: why does modernize-type-traits have a false positive here?
+  // NOLINTBEGIN(modernize-type-traits)
   template <class P, class... Args,
             std::enable_if_t<!std::is_null_pointer_v<P> &&
                                  std::is_convertible_v<P, pointer_type>,
                              size_t> = 0ul>
+  // NOLINTEND(modernize-type-traits)
   KOKKOS_FUNCTION View(P ptr_, Args... args)
       : View(Kokkos::view_wrap(static_cast<pointer_type>(ptr_)), args...) {}
 
@@ -672,10 +675,13 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // where the compiler performs substitution earlier when the class is
   // instantiated instead of at function instantiation and therefore errors out
   // on these enable_ifs
+  // FIXME: why does modernize-type-traits have a false positive here?
+  // NOLINTBEGIN(modernize-type-traits)
   template <class L, class... Args, typename P = pointer_type,
             std::enable_if_t<(std::is_same_v<P, char*> &&
                               std::is_same_v<const char*, L>),
                              size_t> = 0ul>
+  // NOLINTBEGIN(modernize-type-traits)
   explicit View(L label, Args... args)
       : View(Kokkos::view_alloc(std::string(label)), args...) {}
 
