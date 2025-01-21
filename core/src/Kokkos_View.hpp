@@ -681,7 +681,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             std::enable_if_t<(std::is_same_v<P, char*> &&
                               std::is_same_v<const char*, L>),
                              size_t> = 0ul>
-  // NOLINTBEGIN(modernize-type-traits)
+  // NOLINTEND(modernize-type-traits)
   explicit View(L label, Args... args)
       : View(Kokkos::view_alloc(std::string(label)), args...) {}
 
