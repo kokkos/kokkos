@@ -21,8 +21,8 @@
 
 namespace Kokkos::Impl {
 
-/* Returns true iff we think the AMD GPU can access allocations created with the
-system allocator.
+/* Returns true iff we think the AMD MI300A can access allocations created with
+the system allocator.
 
 Based on AMD's ROCm 6.3.1 documentation:
 https://github.com/ROCm/HIP/blob/2c240cacff16c2bb18ce9e5b4c1b937ab17a0199/docs/how-to/hip_runtime_api/memory_management/unified_memory.rst?plain=1#L141-L146
