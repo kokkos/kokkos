@@ -26,7 +26,13 @@ class gtest_checker {
   void truth(bool x) const { EXPECT_TRUE(x); }
   template <class T>
   void equality(T const& a, T const& b) const {
-    EXPECT_EQ(a, b);
+    if constexpr (std::is_same_v<T, double>) {
+      EXPECT_DOUBLE_EQ(a, b);
+    } else if constexpr (std::is_same_v<T, float>) {
+      EXPECT_FLOAT_EQ(a, b);
+    } else {
+      EXPECT_EQ(a, b);
+    }
   }
 };
 
@@ -53,12 +59,14 @@ inline void host_check_equality(
   }
   using mask_type =
       typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-  if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
-    mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return (i < nlanes); });
-    checker.equality((expected_result == computed_result) && mask, mask);
-  } else {
-    mask_type mask([=](std::size_t i) { return (i < nlanes); });
-    checker.equality((expected_result == computed_result) && mask, mask);
+  if constexpr (std::is_integral_v<T>) {
+    if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
+      mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return (i < nlanes); });
+      checker.equality((expected_result == computed_result) && mask, mask);
+    } else {
+      mask_type mask([=](std::size_t i) { return (i < nlanes); });
+      checker.equality((expected_result == computed_result) && mask, mask);
+    }
   }
 }
 
