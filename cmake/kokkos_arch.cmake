@@ -1212,9 +1212,8 @@ if(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED AND NOT KOKKOS_IMPL_A
     )
   else()
     execute_process(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
-    string(LENGTH "${GPU_ARCHS}" len_str)
-    # enumerator always output gfx000 as the first line
-    if(${len_str} LESS 8)
+    # Exits early if no GPU was detected
+    if("${GPU_ARCHS}" STREQUAL "")
       message(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
                          "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'."
       )
