@@ -90,14 +90,16 @@ TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), unmanaged_views) {
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[0].cuda_device()));
     int *p0;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMalloc(reinterpret_cast<void **>(&p0), sizeof(int) * 100));
+    void *p0_void_ptr = nullptr;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&p0_void_ptr, sizeof(int) * 100));
+    p0 = static_cast<int *>(p0_void_ptr);
     Kokkos::View<int *, TEST_EXECSPACE> view0(p0, 100);
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(execs[1].cuda_device()));
     int *p;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMalloc(reinterpret_cast<void **>(&p), sizeof(int) * 100));
+    void *p_void_ptr = nullptr;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&p_void_ptr, sizeof(int) * 100));
+    p = static_cast<int *>(p_void_ptr);
     Kokkos::View<int *, TEST_EXECSPACE> view(p, 100);
 
     test_policies(execs[0], view0, execs[1], view);
@@ -129,10 +131,14 @@ TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), stream_sync_semantics_raw_cuda) {
     // Allocate data.
     int *value;
     int *check;
+    void *value_void_ptr = nullptr;
+    void *check_void_ptr = nullptr;
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMallocHost(reinterpret_cast<void **>(&value), 1 * sizeof(int)));
+        cudaMallocHost(&value_void_ptr, 1 * sizeof(int)));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaMallocHost(reinterpret_cast<void **>(&check), 1 * sizeof(int)));
+        cudaMallocHost(&check_void_ptr, 1 * sizeof(int)));
+    value = static_cast<int *>(value_void_ptr);
+    check = static_cast<int *>(check_void_ptr);
 
     // Launch "long" kernel on device 0.
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(devices[0]));
