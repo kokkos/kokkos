@@ -20,7 +20,11 @@ NVIDIA-GH200:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON;"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
-    - if [ "${CI_PIPELINE_SOURCE}" = "schedule" ]; then export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-); fi
+    - export CTEST_BUILD_NAME="NVIDIA-GH200"
+    - if [ "${CI_PIPELINE_SOURCE}" != "schedule" ]; then
+        export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-)
+        export CTEST_BUILD_NAME="${CTEST_BUILD_NAME}-PR${GITHUB_PR_ID}"
+      fi
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
@@ -28,7 +32,7 @@ NVIDIA-GH200:
         -D OUTPUT_JUNIT_FILE=result_gh200.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
-        -D CTEST_BUILD_NAME="NVIDIA-GH200-PR${GITHUB_PR_ID}"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
     when: always
     paths:
@@ -61,7 +65,11 @@ INTEL-DATA-CENTER-MAX-1100:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_PVC=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
-    - if [ "${CI_PIPELINE_SOURCE}" = "schedule" ]; then export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-); fi
+    - export CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
+    - if [ "${CI_PIPELINE_SOURCE}" != "schedule" ]; then
+        export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-)
+        export CTEST_BUILD_NAME="${CTEST_BUILD_NAME}-PR${GITHUB_PR_ID}"
+      fi
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
@@ -69,7 +77,7 @@ INTEL-DATA-CENTER-MAX-1100:
         -D OUTPUT_JUNIT_FILE=result_pvc1100.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
-        -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100-PR${GITHUB_PR_ID}"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
     when: always
     paths:
@@ -102,7 +110,11 @@ AMD-MI300A:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
-    - if [ "${CI_PIPELINE_SOURCE}" = "schedule" ]; then export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-); fi
+    - export CTEST_BUILD_NAME="AMD-MI300A"
+    - if [ "${CI_PIPELINE_SOURCE}" != "schedule" ]; then
+        export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-)
+        export CTEST_BUILD_NAME="${CTEST_BUILD_NAME}-PR${GITHUB_PR_ID}"
+      fi
     - ctest -VV
       -D CDASH_MODEL=${CDASH_MODEL}
       -D GITHUB_PR_ID="${GITHUB_PR_ID}"
@@ -110,7 +122,7 @@ AMD-MI300A:
       -D OUTPUT_JUNIT_FILE=result_mi300a.xml
       -S CTestRun.cmake
       -D CTEST_SITE="gitlab.spack.io"
-      -D CTEST_BUILD_NAME="AMD-MI300A-PR${GITHUB_PR_ID}"
+      -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
     when: always
     paths:
