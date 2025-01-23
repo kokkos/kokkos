@@ -57,16 +57,19 @@ inline void host_check_equality(
   for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
+
+#ifdef __INTEL_COMPILER
+  if constexpr (!std::is_integral_v<T>) return;
+#endif
+
   using mask_type =
       typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-  if constexpr (std::is_integral_v<T>) {
-    if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
-      mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return (i < nlanes); });
-      checker.equality((expected_result == computed_result) && mask, mask);
-    } else {
-      mask_type mask([=](std::size_t i) { return (i < nlanes); });
-      checker.equality((expected_result == computed_result) && mask, mask);
-    }
+  if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
+    mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return (i < nlanes); });
+    checker.equality((expected_result == computed_result) && mask, mask);
+  } else {
+    mask_type mask([=](std::size_t i) { return (i < nlanes); });
+    checker.equality((expected_result == computed_result) && mask, mask);
   }
 }
 
