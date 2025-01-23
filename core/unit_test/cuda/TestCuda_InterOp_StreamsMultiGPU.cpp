@@ -130,14 +130,15 @@ TEST_F(TEST_CATEGORY_FIXTURE(multi_gpu), stream_sync_semantics_raw_cuda) {
 
     // Allocate data.
     int *value;
-    int *check;
     void *value_void_ptr = nullptr;
-    void *check_void_ptr = nullptr;
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMallocHost(&value_void_ptr, 1 * sizeof(int)));
+    value = static_cast<int *>(value_void_ptr);
+
+    int *check;
+    void *check_void_ptr = nullptr;
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaMallocHost(&check_void_ptr, 1 * sizeof(int)));
-    value = static_cast<int *>(value_void_ptr);
     check = static_cast<int *>(check_void_ptr);
 
     // Launch "long" kernel on device 0.
