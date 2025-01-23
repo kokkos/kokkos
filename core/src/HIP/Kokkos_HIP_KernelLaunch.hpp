@@ -396,9 +396,10 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       params.blockDim       = block;
       params.gridDim        = grid;
       params.sharedMemBytes = shmem;
-      params.func           = (void *)base_t::get_kernel_func();
-      params.kernelParams   = (void **)args;
-      params.extra          = nullptr;
+      // Casting a function pointer to a data pointer...
+      params.func         = reinterpret_cast<void *>(base_t::get_kernel_func());
+      params.kernelParams = const_cast<void **>(args);
+      params.extra        = nullptr;
 
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
           &graph_node, graph, /* dependencies = */ nullptr,
@@ -466,9 +467,10 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       params.blockDim       = block;
       params.gridDim        = grid;
       params.sharedMemBytes = shmem;
-      params.func           = (void *)base_t::get_kernel_func();
-      params.kernelParams   = (void **)args;
-      params.extra          = nullptr;
+      // Casting a function pointer to a data pointer...
+      params.func         = reinterpret_cast<void *>(base_t::get_kernel_func());
+      params.kernelParams = const_cast<void **>(args);
+      params.extra        = nullptr;
 
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddKernelNode(
           &graph_node, graph, /* dependencies = */ nullptr,

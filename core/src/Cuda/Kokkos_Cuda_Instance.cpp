@@ -102,8 +102,9 @@ int cuda_kernel_arch(int device_id) {
   int *d_arch = nullptr;
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device_id));
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaMalloc(reinterpret_cast<void **>(&d_arch), sizeof(int)));
+  void *d_arch_void_ptr = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMalloc(&d_arch_void_ptr, sizeof(int)));
+  d_arch = static_cast<int *>(d_arch_void_ptr);
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpy(d_arch, &arch, sizeof(int), cudaMemcpyDefault));
 
@@ -278,10 +279,13 @@ void CudaInternal::initialize(cudaStream_t stream) {
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
-  if (!constantMemHostStagingPerDevice[m_cudaDev])
+  if (!constantMemHostStagingPerDevice[m_cudaDev]) {
+    void *constant_memory_void_ptr = nullptr;
     KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_malloc_host_wrapper(
-        reinterpret_cast<void **>(&constantMemHostStagingPerDevice[m_cudaDev]),
-        CudaTraits::ConstantMemoryUsage)));
+        &constant_memory_void_ptr, CudaTraits::ConstantMemoryUsage)));
+    constantMemHostStagingPerDevice[m_cudaDev] =
+        static_cast<unsigned long *>(constant_memory_void_ptr);
+  }
 
   if (!constantMemReusablePerDevice[m_cudaDev])
     KOKKOS_IMPL_CUDA_SAFE_CALL(
@@ -311,10 +315,11 @@ void CudaInternal::initialize(cudaStream_t stream) {
     m_team_scratch_ptr[i]          = nullptr;
   }
 
-  m_num_scratch_locks = concurrency();
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (cuda_malloc_wrapper(reinterpret_cast<void **>(&m_scratch_locks),
-                           sizeof(int32_t) * m_num_scratch_locks)));
+  m_num_scratch_locks          = concurrency();
+  void *scratch_locks_void_ptr = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_malloc_wrapper(
+      &scratch_locks_void_ptr, sizeof(int32_t) * m_num_scratch_locks)));
+  m_scratch_locks = static_cast<int32_t *>(scratch_locks_void_ptr);
   KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_memset_wrapper(
       m_scratch_locks, 0, sizeof(int32_t) * m_num_scratch_locks)));
 }
