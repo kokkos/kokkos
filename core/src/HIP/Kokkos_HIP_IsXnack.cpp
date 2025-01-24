@@ -26,7 +26,7 @@
 #include <sys/utsname.h>
 #endif
 
-namespace Kokkos::Impl {
+namespace {
 
 #ifdef __linux__
 // try to get `uname -r`. Returns an empty optional for any problem
@@ -39,7 +39,15 @@ std::optional<std::string> uname_r() {
 }
 #endif
 
-bool config_hmm_mirror_in_boot_config_impl() {
+// returns true iff environment variable HSA_XNACK=1
+bool hsa_xnack_enabled_in_host_environment() {
+  const char* var = std::getenv("HSA_XNACK");
+  return var && std::string_view{var} == "1";
+}
+
+// return true iff `CONFIG_HMM_MIRROR=y` is definitely in /boot/config-$(uname
+// -r) returns false for non-linux platforms or any other problem
+bool config_hmm_mirror_in_boot_config() {
 #ifdef __linux__
   // figure out the boot config file name
   std::optional<std::string> unameR = uname_r();
@@ -62,31 +70,21 @@ bool config_hmm_mirror_in_boot_config_impl() {
     }
   }
   return false;
-
-#else
+#else   // __linux__
   return false;
-#endif
+#endif  // __linux__
 }
 
-// returns true iff environment variable HSA_XNACK=1
-bool hsa_xnack_enabled_in_host_environment() {
-  static bool cache = [] {
-    const char* var = std::getenv("HSA_XNACK");
-    return var && std::string_view{var} == "1";
-  }();
-  return cache;
-}
+}  // namespace
 
-// return true iff `CONFIG_HMM_MIRROR=y` is definitely in /boot/config-$(uname
-// -r) returns false for non-linux platforms or any other problem
-bool config_hmm_mirror_in_boot_config() {
-  static bool cache = config_hmm_mirror_in_boot_config_impl();
-  return cache;
-}
+namespace Kokkos::Impl {
 
 bool xnack_enabled() {
-  return config_hmm_mirror_in_boot_config() &&
-         hsa_xnack_enabled_in_host_environment();
+  static bool cache = [] {
+    return config_hmm_mirror_in_boot_config() &&
+           hsa_xnack_enabled_in_host_environment();
+  }();
+  return cache;
 }
 
 }  // namespace Kokkos::Impl
