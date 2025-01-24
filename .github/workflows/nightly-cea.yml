@@ -38,7 +38,7 @@ jobs:
             -m "${{ matrix.backend.modules }}" \
             ctest -VV \
               -DCDASH_MODEL="Experimental" \
-              -DCMAKE_OPTIONS="$(echo "${ENV_CMAKE_OPTIONS}" | sed -e 's/^[ ]*//' | tr '\n' ';')" \
+              -DCMAKE_OPTIONS=\"$(echo "${ENV_CMAKE_OPTIONS}" | sed -e 's/^[ ]*//' | tr '\n' ';')\" \
               -DCTEST_BUILD_NAME=cea-${{ matrix.backend.name }} \
               -DCTEST_SITE=cea-ruche \
               -S CTestRun.cmake
