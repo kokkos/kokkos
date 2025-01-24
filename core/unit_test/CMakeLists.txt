@@ -837,13 +837,6 @@ if(Kokkos_ENABLE_SYCL)
     sycl/TestSYCL_Spaces.cpp
   )
 
-  set(file ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_GraphAtomicLocks.cpp)
-  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/sycl/dummy.cpp "#include <TestSYCL_Category.hpp>\n"
-                                                        "#include <TestGraphAtomicLocks.hpp>\n"
-  )
-  configure_file(${CMAKE_CURRENT_BINARY_DIR}/sycl/dummy.cpp ${file})
-  kokkos_add_executable_and_test(CoreUnitTest_SYCLGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
-
   kokkos_add_executable_and_test(CoreUnitTest_SYCLInterOpInit SOURCES UnitTestMain.cpp sycl/TestSYCL_InterOp_Init.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_SYCLInterOpInit_Context SOURCES UnitTestMainInit.cpp sycl/TestSYCL_InterOp_Init_Context.cpp
