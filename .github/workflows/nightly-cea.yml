@@ -3,6 +3,7 @@ name: Nightly CEA builds
 on:
   schedule:
     - cron: "0 2 * * 1-5" # every weekday at 2am UTC
+  pull_request:
 
 permissions: read-all
 
@@ -36,7 +37,7 @@ jobs:
             -g ${{ matrix.backend.gpu }} \
             -m "${{ matrix.backend.modules }}" \
             ctest -VV \
-              -DCDASH_MODEL="Nightly" \
+              -DCDASH_MODEL="Experimental" \
               -DCMAKE_OPTIONS="$(echo "${ENV_CMAKE_OPTIONS}" | sed -e 's/^[ ]*//' | tr '\n' ';')" \
               -DCTEST_BUILD_NAME=cea-${{ matrix.backend.name }} \
               -DCTEST_SITE=cea-ruche \
