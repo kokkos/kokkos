@@ -25,7 +25,6 @@
 
 #include <atomic>
 #include <mutex>
-#include <string_view>
 
 namespace Kokkos {
 namespace Impl {
