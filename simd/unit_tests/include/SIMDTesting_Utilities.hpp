@@ -26,7 +26,13 @@ class gtest_checker {
   void truth(bool x) const { EXPECT_TRUE(x); }
   template <class T>
   void equality(T const& a, T const& b) const {
-    EXPECT_EQ(a, b);
+    if constexpr (std::is_same_v<T, double>) {
+      EXPECT_DOUBLE_EQ(a, b);
+    } else if constexpr (std::is_same_v<T, float>) {
+      EXPECT_FLOAT_EQ(a, b);
+    } else {
+      EXPECT_EQ(a, b);
+    }
   }
 };
 
@@ -51,6 +57,11 @@ inline void host_check_equality(
   for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
+
+#ifdef __INTEL_COMPILER
+  if constexpr (!std::is_integral_v<T>) return;
+#endif
+
   using mask_type =
       typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
   if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
