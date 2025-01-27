@@ -17,7 +17,10 @@ pipeline {
     }
 
     stages {
-        stage('Checkout') {
+        stage('Check-ci-ckip') {
+            agent {
+              none
+            }
             steps {
                 scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*|.*\\[skip ci\\].*')
             }
