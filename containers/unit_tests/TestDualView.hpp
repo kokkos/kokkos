@@ -90,7 +90,7 @@ struct test_dualview_copy_construction_and_assignment {
 
     // We can't test shallow equality of modified_flags because it's protected.
     // So we test it indirectly through sync state behavior.
-    if (!std::decay_t<SrcViewType>::impl_dualview_is_single_device::value) {
+    if (!std::decay_t<SrcViewType>::impl_dualview_stores_single_view) {
       a.clear_sync_state();
       a.modify_host();
       ASSERT_TRUE(a.need_sync_device());
@@ -501,6 +501,24 @@ TEST(TEST_CATEGORY, dualview_resize) {
   test_dualview_resize<int, TEST_EXECSPACE>();
   Impl::test_dualview_resize<NoDefaultConstructor, TEST_EXECSPACE,
                              /* Initialize */ false>();
+}
+
+TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
+  if constexpr (!Kokkos::SpaceAccessibility<
+                    Kokkos::DefaultHostExecutionSpace,
+                    TEST_EXECSPACE::memory_space>::accessible) {
+    GTEST_SKIP() << "test only relevant if HostSpace can access memory space";
+  } else {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+    Kokkos::View<int*, TEST_EXECSPACE> view1("view1", 10);
+    Kokkos::View<int*, TEST_EXECSPACE> view2("view2", 10);
+
+    Kokkos::DualView<int*, TEST_EXECSPACE> v_dual(view1, view1);
+    ASSERT_DEATH(
+        (Kokkos::DualView<int*, TEST_EXECSPACE>(view1, view2)),
+        "DualView storing one View constructed from two different Views");
+  }
 }
 
 namespace {
