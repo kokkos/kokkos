@@ -17,6 +17,12 @@ pipeline {
     }
 
     stages {
+        stage('Check-ci-skip') {
+            agent any
+            steps {
+                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*|.*\\[skip ci\\].*')
+            }
+        }
         stage('Clang-Format') {
             agent {
                 dockerfile {
