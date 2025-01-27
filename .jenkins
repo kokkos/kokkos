@@ -19,7 +19,7 @@ pipeline {
     stages {
         stage('Check-ci-ckip') {
             agent {
-              none
+              any
             }
             steps {
                 scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*|.*\\[skip ci\\].*')
@@ -48,7 +48,7 @@ pipeline {
                             label 'docker'
                         }
                     }
-                    environment {
+                    nvironment {
                         OMP_NUM_THREADS = 8
                         OMP_NESTED = 'true'
                         OMP_MAX_ACTIVE_LEVELS = 3
