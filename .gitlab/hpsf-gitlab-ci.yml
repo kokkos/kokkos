@@ -21,7 +21,7 @@ NVIDIA-GH200:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON;"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export CTEST_BUILD_NAME="NVIDIA-GH200"
-    - if [ "${CI_PIPELINE_SOURCE}" != "schedule" ]; then
+    - if [ "${CI_COMMIT_REF_NAME}" != "develop" ]; then
         export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-);
         export CTEST_BUILD_NAME="${CTEST_BUILD_NAME}-PR${GITHUB_PR_ID}";
       fi
@@ -66,7 +66,7 @@ INTEL-DATA-CENTER-MAX-1100:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
     - export CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
-    - if [ "${CI_PIPELINE_SOURCE}" != "schedule" ]; then
+    - if [ "${CI_COMMIT_REF_NAME}" != "develop" ]; then
         export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-);
         export CTEST_BUILD_NAME="${CTEST_BUILD_NAME}-PR${GITHUB_PR_ID}";
       fi
@@ -111,7 +111,7 @@ AMD-MI300A:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export CTEST_BUILD_NAME="AMD-MI300A"
-    - if [ "${CI_PIPELINE_SOURCE}" != "schedule" ]; then
+    - if [ "${CI_COMMIT_REF_NAME}" != "develop" ]; then
         export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-);
         export CTEST_BUILD_NAME="${CTEST_BUILD_NAME}-PR${GITHUB_PR_ID}";
       fi
