@@ -46,7 +46,7 @@ pipeline {
                             label 'docker'
                         }
                     }
-                    nvironment {
+                    environment {
                         OMP_NUM_THREADS = 8
                         OMP_NESTED = 'true'
                         OMP_MAX_ACTIVE_LEVELS = 3
