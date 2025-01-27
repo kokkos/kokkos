@@ -20,7 +20,7 @@ pipeline {
         stage('Check-ci-ckip') {
             agent any
             steps {
-                scmSkip(deleteBuild: true, skipPattern:'.*\\[ci skip\\].*|.*\\[skip ci\\].*')
+                scmSkip(deleteBuild: false, skipPattern:'.*\\[ci skip\\].*|.*\\[skip ci\\].*')
             }
         }
         stage('Clang-Format') {
