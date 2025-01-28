@@ -30,10 +30,8 @@ static_assert(false,
 // Only use standard library mdspan if we are not running Cuda or HIP.
 // Likely these implementations won't be supported on device, so we should use
 // our own device-compatible version for now.
-#if defined(KOKKOS_IMPL_USE_COMPILER_PROVIDED_MDSPAN) &&             \
-    (__cpp_lib_mdspan >= 202207L) && !defined(KOKKOS_ENABLE_CUDA) && \
-    !defined(KOKKOS_ENABLE_HIP)
-#include <mdspan>
+#ifdef KOKKOS_IMPL_COMPILER_PROVIDED_MDSPAN_HEADER
+#include KOKKOS_IMPL_COMPILER_PROVIDED_MDSPAN_HEADER
 namespace Kokkos {
 using std::default_accessor;
 using std::dextents;
@@ -46,6 +44,6 @@ using std::mdspan;
 }  // namespace Kokkos
 #else
 #include <mdspan/mdspan.hpp>
-#endif
+#endif  // defined(KOKKOS_IMPL_COMPILER_PROVIDED_MDSPAN_HEADER)
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_HPP
