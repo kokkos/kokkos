@@ -56,7 +56,7 @@ jobs:
             -m "${{ matrix.backend.modules }}" \
             CMAKE_BUILD_PARALLEL_LEVEL=40 \
             ctest \
-              -VV \
+              -V \
               -D ExperimentalStart \
               -D ExperimentalConfigure \
               -D ExperimentalBuild
@@ -68,14 +68,14 @@ jobs:
             -g ${{ matrix.backend.gpu }} \
             -m "${{ matrix.backend.modules }}" \
             ctest \
-              -VV \
-              -D ExperimentalTest
+              -D ExperimentalTest \
+              --output-on-failure
 
       - name: Submit
         run: |
           cd build
           run \
             -m "${{ matrix.backend.modules }}" \
+            -l \
             ctest \
-              -VV \
               -D ExperimentalSubmit
