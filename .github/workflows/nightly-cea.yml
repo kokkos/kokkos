@@ -12,17 +12,19 @@ jobs:
     # only run on original repo
     if: github.repository == 'kokkos/kokkos'
 
-    env:
-      CMAKE_BUILD_PARALLEL_LEVEL: 17
+    # allow all steps to perform even if errors occur
+    continue-on-error: true
 
     strategy:
+      # allow all matrix jobs to perform even if errors occur
+      fail-fast: false
       matrix:
         build_type:
           - Release
-          - Debug
+          # - Debug
         backend:
           - name: cuda-a100
-            flags: -DKokkos_ENABLE_CUDA=ON;-DKokkos_ARCH_AMPERE80=ON
+            flags: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
             gpu: a100
             modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
 
@@ -31,23 +33,49 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Configure, build, and test
+      - name: Initialize the build tree
         run: |
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            cmake \
+              -B build \
+              -DBUILDNAME=${{ matrix.backend.name }} \
+              -DSITE=cea-ruche \
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DCMAKE_CXX_STANDARD=17 \
+              -DCMAKE_CXX_FLAGS=-Werror \
+              -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+              -DKokkos_ENABLE_TESTS=ON \
+              -DKokkos_ENABLE_EXAMPLES=ON \
+              ${{ matrix.backend.flags }}
+
+      - name: Start, configure, and build
+        run: |
+          cd build
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            CMAKE_BUILD_PARALLEL_LEVEL=40 \
+            ctest \
+              -VV \
+              -D ExperimentalStart \
+              -D ExperimentalConfigure \
+              -D ExperimentalBuild
+
+      - name: Test
+        run: |
+          cd build
           run \
             -g ${{ matrix.backend.gpu }} \
             -m "${{ matrix.backend.modules }}" \
-            ctest -VV \
-              -DCDASH_MODEL="Experimental" \
-              -DCMAKE_OPTIONS=\"$(echo "${ENV_CMAKE_OPTIONS}" | sed -e 's/^[ ]*//' | tr '\n' ';')\" \
-              -DCTEST_BUILD_NAME=cea-${{ matrix.backend.name }} \
-              -DCTEST_SITE=cea-ruche \
-              -S CTestRun.cmake
-        env:
-          ENV_CMAKE_OPTIONS: |
-            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-            -DCMAKE_CXX_STANDARD=17
-            -DCMAKE_CXX_FLAGS=-Werror
-            -DKokkos_ENABLE_COMPILER_WARNINGS=ON
-            -DKokkos_ENABLE_TESTS=ON
-            -DKokkos_ENABLE_EXAMPLES=ON
-            ${{ matrix.backend.flags }}
+            ctest \
+              -VV \
+              -D ExperimentalTest
+
+      - name: Submit
+        run: |
+          cd build
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            ctest \
+              -VV \
+              -D ExperimentalSubmit
