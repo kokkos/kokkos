@@ -1,15 +1,12 @@
 .common-setup:
   stage: test
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      variables:
-        CDASH_MODEL: "Nightly"
-    - when: on_success
-      variables:
-        CDASH_MODEL: "Experimental"
   before_script:
-    - '[ ${CI_COMMIT_REF_NAME} == "develop" ] && export SKIP_SUBMIT=0 || export SKIP_SUBMIT=1'
-    - if [ "${CI_PIPELINE_SOURCE}" != "schedule" ]; then
+    - if [ ${CI_COMMIT_REF_NAME} == "schedule" ]; then
+        export CDASH_MODEL="Nightly";
+      elif [ ${CI_COMMIT_REF_NAME} == "develop" ]; then
+        export CDASH_MODEL="Continuous";
+      else
+        export CDASH_MODEL="Experimental";
         export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-);
         export CTEST_BUILD_NAME="${CTEST_BUILD_NAME}-PR${GITHUB_PR_ID}";
       fi
@@ -32,12 +29,12 @@ NVIDIA-GH200:
     - export CTEST_BUILD_NAME="NVIDIA-GH200"
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_gh200.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
-        -D SKIP_SUBMIT="${SKIP_SUBMIT}"
   artifacts:
     when: always
     paths:
@@ -66,12 +63,12 @@ INTEL-DATA-CENTER-MAX-1100:
     - export CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100"
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_pvc1100.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
-        -D SKIP_SUBMIT="${SKIP_SUBMIT}"
   artifacts:
     when: always
     paths:
@@ -100,12 +97,12 @@ AMD-MI300A:
     - export CTEST_BUILD_NAME="AMD-MI300A"
     - ctest -VV
       -D CDASH_MODEL=${CDASH_MODEL}
+      -D GITHUB_PR_ID="${GITHUB_PR_ID}"
       -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
       -D OUTPUT_JUNIT_FILE=result_mi300a.xml
       -S CTestRun.cmake
       -D CTEST_SITE="gitlab.spack.io"
       -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
-      -D SKIP_SUBMIT="${SKIP_SUBMIT}"
   artifacts:
     when: always
     paths:
