@@ -37,13 +37,14 @@ jobs:
         run: |
           run \
             -m "${{ matrix.backend.modules }}" \
+            -e local \
             cmake \
               -B build \
               -DBUILDNAME=${{ matrix.backend.name }} \
               -DSITE=cea-ruche \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
               -DCMAKE_CXX_STANDARD=17 \
-              -DCMAKE_CXX_FLAGS=-Werror \
+              -DCMAKE_COMPILE_WARNING_AS_ERROR=ON \
               -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
               -DKokkos_ENABLE_TESTS=ON \
               -DKokkos_ENABLE_EXAMPLES=ON \
@@ -54,6 +55,7 @@ jobs:
           cd build
           run \
             -m "${{ matrix.backend.modules }}" \
+            -e cpu \
             CMAKE_BUILD_PARALLEL_LEVEL=40 \
             ctest \
               -V \
@@ -65,8 +67,9 @@ jobs:
         run: |
           cd build
           run \
-            -g ${{ matrix.backend.gpu }} \
             -m "${{ matrix.backend.modules }}" \
+            -e gpu \
+            -g ${{ matrix.backend.gpu }} \
             ctest \
               -D ExperimentalTest \
               --output-on-failure
@@ -76,6 +79,6 @@ jobs:
           cd build
           run \
             -m "${{ matrix.backend.modules }}" \
-            -l \
+            -e local \
             ctest \
               -D ExperimentalSubmit
