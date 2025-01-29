@@ -12,16 +12,12 @@ jobs:
     # only run on original repo
     if: github.repository == 'kokkos/kokkos'
 
-    # allow all steps to perform even if errors occur
-    continue-on-error: true
-
     strategy:
       # allow all matrix jobs to perform even if errors occur
       fail-fast: false
       matrix:
         build_type:
           - Release
-          # - Debug
         backend:
           - name: cuda-a100
             flags: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
@@ -51,6 +47,7 @@ jobs:
               ${{ matrix.backend.flags }}
 
       - name: Start, update and configure
+        continue-on-error: true
         run: |
           cd build
           run \
@@ -64,6 +61,7 @@ jobs:
               -D ExperimentalConfigure
 
       - name: Build
+        continue-on-error: true
         run: |
           cd build
           run \
@@ -75,6 +73,7 @@ jobs:
               -D ExperimentalBuild
 
       - name: Test
+        continue-on-error: true
         run: |
           cd build
           run \
