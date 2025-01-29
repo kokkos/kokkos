@@ -1,7 +1,7 @@
 NVIDIA-GH200:
   stage: test
   tags: [nvidia-gh200]
-  image: masterleinad/kokkos-nvcc:12.6.1
+  image: nvidia/cuda:12.6.1-devel-ubuntu24.04
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       variables:
@@ -10,7 +10,7 @@ NVIDIA-GH200:
       variables:
         CDASH_MODEL: "Experimental"
   script:
-    - apt-get update && apt-get install -y git
+    - apt-get update && apt-get install -y cmake git python3
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
