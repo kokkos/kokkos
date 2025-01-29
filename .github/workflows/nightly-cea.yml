@@ -50,7 +50,20 @@ jobs:
               -DKokkos_ENABLE_EXAMPLES=ON \
               ${{ matrix.backend.flags }}
 
-      - name: Start, configure, and build
+      - name: Start, update and configure
+        run: |
+          cd build
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            -e local \
+            CMAKE_BUILD_PARALLEL_LEVEL=40 \
+            ctest \
+              -V \
+              -D ExperimentalStart \
+              -D ExperimentalUpdate \
+              -D ExperimentalConfigure
+
+      - name: Build
         run: |
           cd build
           run \
@@ -59,8 +72,6 @@ jobs:
             CMAKE_BUILD_PARALLEL_LEVEL=40 \
             ctest \
               -V \
-              -D ExperimentalStart \
-              -D ExperimentalConfigure \
               -D ExperimentalBuild
 
       - name: Test
