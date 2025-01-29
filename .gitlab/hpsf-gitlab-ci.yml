@@ -122,7 +122,7 @@ AMD-MI300A:
 NVIDIA-GRACE-GRACE:
   stage: test
   tags: [uo, aarch64, cpu, grace, neoverse_v2]
-  image: nvidia/cuda:12.6.1-devel-ubuntu24.04
+  image: tcclevenger/kokkos-ubuntu:24.04
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
       variables:
