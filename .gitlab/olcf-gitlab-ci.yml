@@ -15,7 +15,7 @@ hipcc:
         -E Kokkos_CoreUnitTest_DeviceAndThreads
         -D CDASH_MODEL="Nightly"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
-        -D CTestRun.cmake
+        -S CTestRun.cmake
         -D CTEST_SITE="frontier"
         -D CTEST_BUILD_NAME="hipcc-rocm/6.0"
 
@@ -37,7 +37,7 @@ amdclang:
         -E Kokkos_CoreUnitTest_DeviceAndThreads
         -D CDASH_MODEL="Nightly"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
-        -D CTestRun.cmake
+        -S CTestRun.cmake
         -D CTEST_SITE="frontier"
         -D CTEST_BUILD_NAME="amdclang-rocm/6.2.4"
 
@@ -59,6 +59,6 @@ crayclang:
         -E Kokkos_CoreUnitTest_DeviceAndThreads
         -D CDASH_MODEL="Nightly"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
-        -D CTestRun.cmake
+        -S CTestRun.cmake
         -D CTEST_SITE="frontier"
         -D CTEST_BUILD_NAME="crayclang/18.0.1-rocm/6.3.1"
