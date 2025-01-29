@@ -10,8 +10,8 @@ concurrency:
 permissions: read-all
 
 jobs:
-  gcc-smoketest:
-    name: gcc-smoketest
+  clang-smoketest:
+    name: clang-smoketest
     runs-on: [ubuntu-latest]
 
     steps:
