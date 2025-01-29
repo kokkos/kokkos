@@ -21,6 +21,7 @@
 
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
+#include <HIP/Kokkos_HIP_IsXnack.hpp>
 
 #include <atomic>
 #include <mutex>

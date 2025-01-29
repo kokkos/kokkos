@@ -75,6 +75,18 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   }
 #endif
 #ifdef KOKKOS_ARCH_AMD_GFX942_APU
+  if (!Kokkos::Impl::xnack_enabled()) {
+    std::cerr << R"warning(
+Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled. 
+                                 Kokkos requires xnack to be enabled for
+                                 ARCH_AMD_GFX942_APU (MI300A) to access host
+                                 allocations from the device. Set HSA_XNACK=1
+                                 in your environment and ensure
+                                 \"CONFIG_HMM_MIRROR=y\" is in the /boot/config
+                                 file and that file is readable)warning"
+              << "\n";
+  }
+
   if ((Kokkos::show_warnings()) &&
       (Impl::HIPInternal::m_deviceProp.integrated == 0)) {
     std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
