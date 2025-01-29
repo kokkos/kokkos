@@ -48,14 +48,6 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
     simd_type const computed_result =
         shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
 
-    // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-    // load values into simd vectors until simd values are directly accessed.
-    // Placing a memory fence to ensure that simd values are fully loaded
-    // before executing simd instructions.
-#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
-    __sync_synchronize();
-#endif
-
     host_check_equality(expected_result, computed_result, width);
   }
 }
@@ -83,14 +75,6 @@ inline void host_check_shift_by_lanes_on_one_loader(
                             Kokkos::Experimental::simd_flag_default);
 
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
-
-  // gcc build with cxxflag of -g and -O2 or above doesn't seem to properly
-  // load values into simd vectors until simd values are directly accessed.
-  // Placing a memory fence to ensure that simd values are fully loaded
-  // before executing simd instructions.
-#if defined(KOKKOS_COMPILER_GNU) && defined(NDEBUG)
-  __sync_synchronize();
-#endif
 
   host_check_equality(expected_result, computed_result, width);
 }
