@@ -131,7 +131,6 @@ NVIDIA-GRACE-GRACE:
       variables:
         CDASH_MODEL: "Experimental"
   script:
-    - apt-get update && apt-get install -y python3 cmake git
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
