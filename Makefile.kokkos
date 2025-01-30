@@ -1,5 +1,9 @@
 # Default settings common options.
 
+ifneq ($(KOKKOS_USE_DEPRECATED_MAKEFILES), 1)
+  $(error Makefile support is deprecated. Only CMake builds will be supported from Kokkos 5 on. Set KOKKOS_USE_DEPRECATED_MAKEFILES=1 to silence this error.)
+endif
+
 KOKKOS_VERSION_MAJOR = 4
 KOKKOS_VERSION_MINOR = 5
 KOKKOS_VERSION_PATCH = 99

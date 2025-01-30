@@ -398,9 +398,10 @@ struct CudaParallelLaunchKernelInvoker<
       params.blockDim       = block;
       params.gridDim        = grid;
       params.sharedMemBytes = shmem;
-      params.func           = (void*)base_t::get_kernel_func();
-      params.kernelParams   = (void**)args;
-      params.extra          = nullptr;
+      // Casting a function pointer to a data pointer...
+      params.func         = reinterpret_cast<void*>(base_t::get_kernel_func());
+      params.kernelParams = const_cast<void**>(args);
+      params.extra        = nullptr;
 
       KOKKOS_IMPL_CUDA_SAFE_CALL(
           (cuda_instance->cuda_graph_add_kernel_node_wrapper(
@@ -511,9 +512,10 @@ struct CudaParallelLaunchKernelInvoker<
       params.blockDim       = block;
       params.gridDim        = grid;
       params.sharedMemBytes = shmem;
-      params.func           = (void*)base_t::get_kernel_func();
-      params.kernelParams   = (void**)args;
-      params.extra          = nullptr;
+      // Casting a function pointer to a data pointer...
+      params.func         = reinterpret_cast<void*>(base_t::get_kernel_func());
+      params.kernelParams = const_cast<void**>(args);
+      params.extra        = nullptr;
 
       KOKKOS_IMPL_CUDA_SAFE_CALL(
           (cuda_instance->cuda_graph_add_kernel_node_wrapper(

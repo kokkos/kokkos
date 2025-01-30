@@ -3,7 +3,8 @@ name: Nightly CEA builds
 on:
   schedule:
     - cron: "0 2 * * 1-5" # every weekday at 2am UTC
-  workflow_dispatch:
+
+permissions: read-all
 
 jobs:
   build_and_test:
@@ -27,7 +28,7 @@ jobs:
     runs-on: [self-hosted, cuda]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Configure
         run: |

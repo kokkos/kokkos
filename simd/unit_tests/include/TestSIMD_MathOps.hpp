@@ -36,14 +36,17 @@ void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
     bool const loaded_second_arg =
         loader.host_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
-    simd_type expected_result;
-    // gcc 8.4.0 warns if using nlanes as upper bound about first_arg and/or
-    // second_arg being uninitialized
-    for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
-      if (lane < nlanes)
-        expected_result[lane] =
-            binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
+
+    T expected_val[width];
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      expected_val[lane] =
+          binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
     }
+
+    simd_type expected_result;
+    expected_result.copy_from(expected_val,
+                              Kokkos::Experimental::simd_flag_default);
+
     simd_type const computed_result = binary_op.on_host(first_arg, second_arg);
     host_check_equality(expected_result, computed_result, nlanes);
   }
@@ -62,16 +65,20 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    decltype(unary_op.on_host(arg)) expected_result;
-    for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
-      if (lane < nlanes) {
-        if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
-                      std::is_same_v<UnaryOp, exp_op> ||
-                      std::is_same_v<UnaryOp, log_op>)
-          arg[lane] = Kokkos::abs(arg[lane]);
-        expected_result[lane] = unary_op.on_host_serial(T(arg[lane]));
-      }
+    if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
+                  std::is_same_v<UnaryOp, exp_op> ||
+                  std::is_same_v<UnaryOp, log_op>)
+      arg = Kokkos::abs(arg);
+
+    typename decltype(unary_op.on_host(arg))::value_type expected_val[width];
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      expected_val[lane] = unary_op.on_host_serial(T(arg[lane]));
     }
+
+    decltype(unary_op.on_host(arg)) expected_result;
+    expected_result.copy_from(expected_val,
+                              Kokkos::Experimental::simd_flag_default);
+
     auto computed_result = unary_op.on_host(arg);
     host_check_equality(expected_result, computed_result, nlanes);
   }
@@ -184,11 +191,11 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     bool const loaded_second_arg =
         loader.device_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
-    simd_type expected_result;
-    for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] =
-          binary_op.on_device(first_arg[lane], second_arg[lane]);
-    }
+
+    simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+      return binary_op.on_device(first_arg[lane], second_arg[lane]);
+    });
+
     simd_type const computed_result =
         binary_op.on_device(first_arg, second_arg);
     device_check_equality(expected_result, computed_result, nlanes);
@@ -210,10 +217,10 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
     if (!loaded_arg) continue;
     auto computed_result = unary_op.on_device(arg);
 
-    decltype(computed_result) expected_result;
-    for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] = unary_op.on_device_serial(arg[lane]);
-    }
+    decltype(computed_result) expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+      return unary_op.on_device_serial(arg[lane]);
+    });
+
     device_check_equality(expected_result, computed_result, nlanes);
   }
 }

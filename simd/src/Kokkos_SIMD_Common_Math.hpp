@@ -130,10 +130,12 @@ template <class T, class Abi>
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> \
   FUNC(Experimental::basic_simd<T, Abi> const& a) {                          \
     Experimental::basic_simd<T, Abi> result;                                 \
+    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
     for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
          ++i) {                                                              \
-      result[i] = Kokkos::FUNC(a[i]);                                        \
+      vals[i] = Kokkos::FUNC(a[i]);                                          \
     }                                                                        \
+    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
     return result;                                                           \
   }                                                                          \
   namespace Experimental {                                                   \
@@ -150,10 +152,12 @@ template <class T, class Abi>
   [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> \
   FUNC(Experimental::basic_simd<T, Abi> const& a) {                          \
     Experimental::basic_simd<T, Abi> result;                                 \
+    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
     for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
          ++i) {                                                              \
-      result[i] = Kokkos::FUNC(a[i]);                                        \
+      vals[i] = Kokkos::FUNC(a[i]);                                          \
     }                                                                        \
+    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
     return result;                                                           \
   }
 #endif

@@ -1002,19 +1002,20 @@ class TestViewAPI {
     hView3 hv_3("dView3::HostMirror", N0);
     hView4 hv_4("dView4::HostMirror", N0);
 
-    dView0 dv_0_1(nullptr);
+    dView0 dummy("dummy");
+    dView0 dv_0_1(dummy.data());
     dView0 dv_0_2(hv_0.label(), hv_0.layout());
 
-    dView1 dv_1_1(nullptr, N0);
+    dView1 dv_1_1(dummy.data(), N0);
     dView1 dv_1_2(hv_1.label(), hv_1.layout());
 
-    dView2 dv_2_1(nullptr, N0);
+    dView2 dv_2_1(dummy.data(), N0);
     dView2 dv_2_2(hv_2.label(), hv_2.layout());
 
-    dView3 dv_3_1(nullptr, N0);
+    dView3 dv_3_1(dummy.data(), N0);
     dView3 dv_3_2(hv_3.label(), hv_3.layout());
 
-    dView4 dv_4_1(nullptr, N0);
+    dView4 dv_4_1(dummy.data(), N0);
     dView4 dv_4_2(hv_4.label(), hv_4.layout());
   }
 

@@ -219,9 +219,11 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   // Note that if P is empty, this constructor is the default constructor.
   // On the other hand, if P is not empty, the constraint implies that
   // there is no default constructor.
+  // NOLINTBEGIN(modernize-type-traits)
   template <typename... Args,
             typename = std::enable_if_t<std::conjunction_v<
                 std::is_constructible<view_ctor_prop_base<P>, Args &&>...>>>
+  // NOLINTEND(modernize-type-traits)
   ViewCtorProp(Args &&...args)
       : ViewCtorProp<void, P>(std::forward<Args>(args))... {}
 
