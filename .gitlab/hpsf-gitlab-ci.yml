@@ -120,16 +120,9 @@ AMD-MI300A:
       junit: build/result_mi300a.xml
 
 NVIDIA-GRACE-GRACE:
-  stage: test
+  extends: .common-setup
   tags: [uo, aarch64, cpu, grace, neoverse_v2]
   image: tcclevenger/kokkos-nvidia-cuda:12.6.1-devel-ubuntu24.04
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      variables:
-        CDASH_MODEL: "Nightly"
-    - when: on_success
-      variables:
-        CDASH_MODEL: "Experimental"
   script:
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
