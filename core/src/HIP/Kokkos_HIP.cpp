@@ -173,6 +173,8 @@ void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
 #endif
 
   os << "\nRuntime Configuration:\n";
+  os << "  XNACK enabled: ";
+  os << Impl::xnack_enabled() ? "yes\n": "no\n";
 
   m_space_instance->print_configuration(os);
 }
