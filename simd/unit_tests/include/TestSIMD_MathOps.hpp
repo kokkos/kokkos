@@ -21,11 +21,10 @@
 #include <SIMDTesting_Utilities.hpp>
 
 template <class Abi, class Loader, class BinaryOp, class T>
-void host_check_math_op_one_loader_binary(BinaryOp binary_op, std::size_t n,
-                                          T const* first_args,
-                                          T const* second_args, int ulps) {
+void host_check_math_op_one_loader(BinaryOp binary_op, std::size_t n,
+                                   T const* first_args, T const* second_args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -37,24 +36,27 @@ void host_check_math_op_one_loader_binary(BinaryOp binary_op, std::size_t n,
     bool const loaded_second_arg =
         loader.host_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
-    simd_type expected_result;
-    // gcc 8.4.0 warns if using nlanes as upper bound about first_arg and/or
-    // second_arg being uninitialized
-    for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
-      if (lane < nlanes)
-        expected_result[lane] =
-            binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
+
+    T expected_val[width];
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      expected_val[lane] =
+          binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
     }
+
+    simd_type expected_result;
+    expected_result.copy_from(expected_val,
+                              Kokkos::Experimental::simd_flag_default);
+
     simd_type const computed_result = binary_op.on_host(first_arg, second_arg);
-    host_check_equality(expected_result, computed_result, nlanes, ulps);
+    host_check_equality(expected_result, computed_result, nlanes);
   }
 }
 
 template <class Abi, class Loader, class UnaryOp, class T>
-void host_check_math_op_one_loader_unary(UnaryOp unary_op, std::size_t n,
-                                         T const* args, int ulps) {
+void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
+                                   T const* args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -63,97 +65,73 @@ void host_check_math_op_one_loader_unary(UnaryOp unary_op, std::size_t n,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    decltype(unary_op.on_host(arg)) expected_result;
-    for (std::size_t lane = 0; lane < simd_type::size(); ++lane) {
-      if (lane < nlanes) {
-        if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
-                      std::is_same_v<UnaryOp, exp_op> ||
-                      std::is_same_v<UnaryOp, log_op>)
-          arg[lane] = Kokkos::abs(arg[lane]);
-        expected_result[lane] = unary_op.on_host_serial(T(arg[lane]));
-      }
+    if constexpr (std::is_same_v<UnaryOp, cbrt_op> ||
+                  std::is_same_v<UnaryOp, exp_op> ||
+                  std::is_same_v<UnaryOp, log_op>)
+      arg = Kokkos::abs(arg);
+
+    typename decltype(unary_op.on_host(arg))::value_type expected_val[width];
+    for (std::size_t lane = 0; lane < width; ++lane) {
+      expected_val[lane] = unary_op.on_host_serial(T(arg[lane]));
     }
+
+    decltype(unary_op.on_host(arg)) expected_result;
+    expected_result.copy_from(expected_val,
+                              Kokkos::Experimental::simd_flag_default);
+
     auto computed_result = unary_op.on_host(arg);
-    host_check_equality(expected_result, computed_result, nlanes, ulps);
+    host_check_equality(expected_result, computed_result, nlanes);
   }
 }
 
-template <class Abi, class Op, class T>
-inline void host_check_math_op_all_loaders_unary(Op op, std::size_t n,
-                                                 T const* arg, int ulps) {
-  host_check_math_op_one_loader_unary<Abi, load_element_aligned>(op, n, arg,
-                                                                 ulps);
-  host_check_math_op_one_loader_unary<Abi, load_masked>(op, n, arg, ulps);
-  host_check_math_op_one_loader_unary<Abi, load_as_scalars>(op, n, arg, ulps);
-}
-
-template <class Abi, class Op, class T>
-inline void host_check_math_op_all_loaders_binary(Op op, std::size_t n,
-                                                  T const* arg1, T const* arg2,
-                                                  int ulps) {
-  host_check_math_op_one_loader_binary<Abi, load_element_aligned>(op, n, arg1,
-                                                                  arg2, ulps);
-  host_check_math_op_one_loader_binary<Abi, load_masked>(op, n, arg1, arg2,
-                                                         ulps);
-  host_check_math_op_one_loader_binary<Abi, load_as_scalars>(op, n, arg1, arg2,
-                                                             ulps);
+template <class Abi, class Op, class... T>
+inline void host_check_math_op_all_loaders(Op op, std::size_t n,
+                                           T const*... args) {
+  host_check_math_op_one_loader<Abi, load_element_aligned>(op, n, args...);
+  host_check_math_op_one_loader<Abi, load_masked>(op, n, args...);
+  host_check_math_op_one_loader<Abi, load_as_scalars>(op, n, args...);
+  host_check_math_op_one_loader<Abi, load_vector_aligned>(op, n, args...);
 }
 
 template <typename Abi, typename DataType, size_t n>
 inline void host_check_all_math_ops(const DataType (&first_args)[n],
                                     const DataType (&second_args)[n]) {
-  const int integral_ulps = 0;
-  host_check_math_op_all_loaders_binary<Abi>(plus(), n, first_args, second_args,
-                                             integral_ulps);
-  host_check_math_op_all_loaders_binary<Abi>(minus(), n, first_args,
-                                             second_args, integral_ulps);
-  host_check_math_op_all_loaders_binary<Abi>(multiplies(), n, first_args,
-                                             second_args, integral_ulps);
-  host_check_math_op_all_loaders_unary<Abi>(absolutes(), n, first_args,
-                                            integral_ulps);
+  host_check_math_op_all_loaders<Abi>(plus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(minus(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(multiplies(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(absolutes(), n, first_args);
 
-  host_check_math_op_all_loaders_unary<Abi>(floors(), n, first_args,
-                                            integral_ulps);
-  host_check_math_op_all_loaders_unary<Abi>(ceils(), n, first_args,
-                                            integral_ulps);
-  host_check_math_op_all_loaders_unary<Abi>(rounds(), n, first_args,
-                                            integral_ulps);
-  host_check_math_op_all_loaders_unary<Abi>(truncates(), n, first_args,
-                                            integral_ulps);
+  host_check_math_op_all_loaders<Abi>(floors(), n, first_args);
+  host_check_math_op_all_loaders<Abi>(ceils(), n, first_args);
+  host_check_math_op_all_loaders<Abi>(rounds(), n, first_args);
+  host_check_math_op_all_loaders<Abi>(truncates(), n, first_args);
 
   // TODO: Place fallback implementations for all simd integer types
   if constexpr (std::is_floating_point_v<DataType>) {
-    const int floating_ulps = 4;
-    host_check_math_op_all_loaders_binary<Abi>(divides(), n, first_args,
-                                               second_args, floating_ulps);
-#if defined(KOKKOS_HAVE_INTEL_SVML) && \
+    host_check_math_op_all_loaders<Abi>(divides(), n, first_args, second_args);
+
+#if defined(__INTEL_COMPILER) && \
     (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON))
-    host_check_math_op_all_loaders_unary<Abi>(cbrt_op(), n, first_args,
-                                              floating_ulps);
-    host_check_math_op_all_loaders_unary<Abi>(exp_op(), n, first_args,
-                                              floating_ulps);
-    DataType positive_args[n];
-    for (size_t i = 0; i < n; ++i) {
-      positive_args[i] = std::abs(first_args[i]) + 0.001;
-    }
-    host_check_math_op_all_loaders_unary<Abi>(log_op(), n, positive_args,
-                                              floating_ulps);
+    host_check_math_op_all_loaders<Abi>(cbrt_op(), n, first_args);
+    host_check_math_op_all_loaders<Abi>(exp_op(), n, first_args);
+    host_check_math_op_all_loaders<Abi>(log_op(), n, first_args);
 #endif
   }
 }
 
 template <typename Abi, typename DataType>
 inline void host_check_abi_size() {
-  using simd_type = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
   using mask_type = typename simd_type::mask_type;
   static_assert(simd_type::size() == mask_type::size());
 }
 
 template <typename Abi, typename DataType>
 inline void host_check_math_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     constexpr size_t alignment =
-        Kokkos::Experimental::simd<DataType, Abi>::size() * sizeof(DataType);
+        Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
+        sizeof(DataType);
 
     host_check_abi_size<Abi, DataType>();
 
@@ -201,7 +179,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     BinaryOp binary_op, std::size_t n, T const* first_args,
     T const* second_args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -213,11 +191,11 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(
     bool const loaded_second_arg =
         loader.device_load(second_args + i, nlanes, second_arg);
     if (!(loaded_first_arg && loaded_second_arg)) continue;
-    simd_type expected_result;
-    for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] =
-          binary_op.on_device(first_arg[lane], second_arg[lane]);
-    }
+
+    simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+      return binary_op.on_device(first_arg[lane], second_arg[lane]);
+    });
+
     simd_type const computed_result =
         binary_op.on_device(first_arg, second_arg);
     device_check_equality(expected_result, computed_result, nlanes);
@@ -229,7 +207,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
                                                             std::size_t n,
                                                             T const* args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::simd<T, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
   for (std::size_t i = 0; i < n; i += width) {
     std::size_t const nremaining = n - i;
@@ -239,10 +217,10 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
     if (!loaded_arg) continue;
     auto computed_result = unary_op.on_device(arg);
 
-    decltype(computed_result) expected_result;
-    for (std::size_t lane = 0; lane < nlanes; ++lane) {
-      expected_result[lane] = unary_op.on_device_serial(arg[lane]);
-    }
+    decltype(computed_result) expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+      return unary_op.on_device_serial(arg[lane]);
+    });
+
     device_check_equality(expected_result, computed_result, nlanes);
   }
 }
@@ -279,14 +257,14 @@ KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_abi_size() {
-  using simd_type = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
   using mask_type = typename simd_type::mask_type;
   static_assert(simd_type::size() == mask_type::size());
 }
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_math_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     device_check_abi_size<Abi, DataType>();
 
     if constexpr (!std::is_integral_v<DataType>) {
