@@ -58,7 +58,7 @@ inline void host_check_equality(
     checker.equality(expected_result[i], computed_result[i]);
   }
 
-#ifdef __INTEL_COMPILER
+#ifdef KOKKOS_HAVE_INTEL_SVML
   if constexpr (!std::is_integral_v<T>) return;
 #endif
 
