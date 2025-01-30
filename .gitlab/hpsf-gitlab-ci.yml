@@ -1,7 +1,7 @@
 .common-setup:
   stage: test
   before_script:
-    - if [ ${CI_COMMIT_REF_NAME} == "schedule" ]; then
+    - if [ ${CI_PIPELINE_SOURCE} == "schedule" ]; then
         export CDASH_MODEL="Nightly";
       elif [ ${CI_COMMIT_REF_NAME} == "develop" ]; then
         export CDASH_MODEL="Continuous";
