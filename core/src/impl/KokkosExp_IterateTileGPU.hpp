@@ -276,8 +276,18 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
       : m_policy(policy_), m_func(f_) {}
 #endif
 
+#if defined(KOKKOS_ENABLE_CUDA)
   static constexpr index_type max_blocks_x = 2147483647;
   static constexpr index_type max_blocks   = 65535;
+#elif defined(KOKKOS_ENABLE_HIP)
+  static constexpr index_type max_blocks_x = 4294967295;
+  static constexpr index_type max_blocks   = 4294967295;
+#elif defined(KOKKOS_ENABLE_SYCL)
+  static constexpr index_type max_blocks_x = 65535;
+  static constexpr index_type max_blocks   = 65535;
+#else
+#error("Programming model not supported")
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -429,8 +439,18 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
       : m_policy(policy_), m_func(f_) {}
 #endif
 
+#if defined(KOKKOS_ENABLE_CUDA)
   static constexpr index_type max_blocks_x = 2147483647;
   static constexpr index_type max_blocks   = 65535;
+#elif defined(KOKKOS_ENABLE_HIP)
+  static constexpr index_type max_blocks_x = 4294967295;
+  static constexpr index_type max_blocks   = 4294967295;
+#elif defined(KOKKOS_ENABLE_SYCL)
+  static constexpr index_type max_blocks_x = 65535;
+  static constexpr index_type max_blocks   = 65535;
+#else
+#error("Programming model not supported")
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -631,8 +651,18 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
       : m_policy(policy_), m_func(f_) {}
 #endif
 
+#if defined(KOKKOS_ENABLE_CUDA)
   static constexpr index_type max_blocks_x = 2147483647;
   static constexpr index_type max_blocks   = 65535;
+#elif defined(KOKKOS_ENABLE_HIP)
+  static constexpr index_type max_blocks_x = 4294967295;
+  static constexpr index_type max_blocks   = 4294967295;
+#elif defined(KOKKOS_ENABLE_SYCL)
+  static constexpr index_type max_blocks_x = 65535;
+  static constexpr index_type max_blocks   = 65535;
+#else
+#error("Programming model not supported")
+#endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
