@@ -174,7 +174,7 @@ void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
 
   os << "\nRuntime Configuration:\n";
   os << "  XNACK enabled: ";
-  os << Kokkos::Impl::xnack_enabled() ? "yes\n": "no\n";
+  os << Kokkos::Impl::xnack_enabled() ? "yes\n" : "no\n";
 
   m_space_instance->print_configuration(os);
 }
