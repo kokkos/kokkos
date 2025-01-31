@@ -22,6 +22,7 @@
 
 #include <Kokkos_Core.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_IsXnack.hpp>
 
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
 
