@@ -1453,11 +1453,24 @@ struct TestMDRange_4D {
     input_view(i, j, k, l) = 3;
   }
 
+  struct AtomicTag {};
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l) const {
+    Kokkos::atomic_add(&input_view(i, j, k, l), 1);
+  }
+
   // reduction tagged operators
   KOKKOS_INLINE_FUNCTION
   void operator()(const InitTag &, const int i, const int j, const int k,
                   const int l, value_type &lsum) const {
     lsum += input_view(i, j, k, l) * 3;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l, int &lmax) const {
+    lmax = Kokkos::max(lmax, input_view(i, j, k, l));
   }
 
   static void test_reduce4(const int N0, const int N1, const int N2,
@@ -2057,6 +2070,55 @@ struct TestMDRange_4D {
       ASSERT_EQ(counter, 0);
     }
   }  // end test_for4
+
+  // test that each iteration is evaluated only once
+  // see #7697
+  static void test_for4_eval_once(const int N0, const int N1, const int N2,
+                                  const int N3) {
+    {
+      // iteration order LR
+      using range_type = typename Kokkos::MDRangePolicy<
+          ExecSpace, Kokkos::Rank<4, Iterate::Left, Iterate::Right>,
+          Kokkos::IndexType<int>, AtomicTag>;
+      using point_type = typename range_type::point_type;
+
+      range_type range(point_type{{0, 0, 0, 0}}, point_type{{N0, N1, N2, N3}});
+
+      TestMDRange_4D functor(N0, N1, N2, N3);
+
+      parallel_for(range, functor);
+      DataType max_value = 0;
+      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+
+      if (max_value != 1) {
+        printf(" Errors in test_for4; mismatches = %d\n\n", max_value);
+      }
+
+      ASSERT_EQ(max_value, 1);
+    }
+
+    {
+      // iteration order RR
+      using range_type = typename Kokkos::MDRangePolicy<
+          ExecSpace, Kokkos::Rank<4, Iterate::Right, Iterate::Right>,
+          Kokkos::IndexType<int>, AtomicTag>;
+      using point_type = typename range_type::point_type;
+
+      range_type range(point_type{{0, 0, 0, 0}}, point_type{{N0, N1, N2, N3}});
+
+      TestMDRange_4D functor(N0, N1, N2, N3);
+
+      parallel_for(range, functor);
+      DataType max_value = 0;
+      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+
+      if (max_value != 1) {
+        printf(" Errors in test_for4; mismatches = %d\n\n", max_value);
+      }
+
+      ASSERT_EQ(max_value, 1);
+    }
+  }  // end test_for4_eval_once
 };
 
 template <typename ExecSpace>
