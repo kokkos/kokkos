@@ -38,8 +38,7 @@ class const_where_expression;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <typename T, typename Abi>
-[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT(
-    "hmin has been deprecated. Please use reduce_min instead")
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead")
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
     hmin(const_where_expression<basic_simd_mask<T, Abi>,
                                 basic_simd<T, Abi>> const& x) {
@@ -53,8 +52,7 @@ template <typename T, typename Abi>
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT(
-    "hmax has been deprecated. Please use reduce_max instead")
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead")
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
     hmax(const_where_expression<basic_simd_mask<T, Abi>,
                                 basic_simd<T, Abi>> const& x) {

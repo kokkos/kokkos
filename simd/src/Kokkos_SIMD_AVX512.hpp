@@ -3284,8 +3284,8 @@ class where_expression<
 };
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::int32_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
     hmax(const_where_expression<
          basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3311,8 +3311,8 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::int32_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
     hmin(const_where_expression<
          basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3360,8 +3360,8 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::uint32_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
     hmax(const_where_expression<
          basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3387,8 +3387,8 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::uint32_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
     hmin(const_where_expression<
          basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3436,8 +3436,8 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::int64_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t
     hmax(const_where_expression<
          basic_simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3461,8 +3461,8 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::int64_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t
     hmin(const_where_expression<
          basic_simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3486,8 +3486,8 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::uint64_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t
     hmax(const_where_expression<
          basic_simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3511,8 +3511,8 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    std::uint64_t
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t
     hmin(const_where_expression<
          basic_simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>,
          basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>> const& x) {
@@ -3536,10 +3536,11 @@ class where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
-hmax(const_where_expression<
-     basic_simd_mask<double, simd_abi::avx512_fixed_size<8>>,
-     basic_simd<double, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    double hmax(const_where_expression<
+                basic_simd_mask<double, simd_abi::avx512_fixed_size<8>>,
+                basic_simd<double, simd_abi::avx512_fixed_size<8>>> const& x) {
   if (none_of(x.impl_get_mask())) {
     return Kokkos::reduction_identity<double>::max();
   }
@@ -3559,10 +3560,11 @@ hmax(const_where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
-hmin(const_where_expression<
-     basic_simd_mask<double, simd_abi::avx512_fixed_size<8>>,
-     basic_simd<double, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    double hmin(const_where_expression<
+                basic_simd_mask<double, simd_abi::avx512_fixed_size<8>>,
+                basic_simd<double, simd_abi::avx512_fixed_size<8>>> const& x) {
   if (none_of(x.impl_get_mask())) {
     return Kokkos::reduction_identity<double>::min();
   }
@@ -3582,10 +3584,11 @@ hmin(const_where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
-hmax(const_where_expression<
-     basic_simd_mask<float, simd_abi::avx512_fixed_size<8>>,
-     basic_simd<float, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    float hmax(const_where_expression<
+               basic_simd_mask<float, simd_abi::avx512_fixed_size<8>>,
+               basic_simd<float, simd_abi::avx512_fixed_size<8>>> const& x) {
   if (none_of(x.impl_get_mask())) {
     return Kokkos::reduction_identity<float>::max();
   }
@@ -3606,10 +3609,11 @@ hmax(const_where_expression<
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
-hmin(const_where_expression<
-     basic_simd_mask<float, simd_abi::avx512_fixed_size<8>>,
-     basic_simd<float, simd_abi::avx512_fixed_size<8>>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead.")
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    float hmin(const_where_expression<
+               basic_simd_mask<float, simd_abi::avx512_fixed_size<8>>,
+               basic_simd<float, simd_abi::avx512_fixed_size<8>>> const& x) {
   if (none_of(x.impl_get_mask())) {
     return Kokkos::reduction_identity<float>::min();
   }

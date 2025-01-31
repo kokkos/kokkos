@@ -525,9 +525,10 @@ template <class T>
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION T
-hmax(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
-                            basic_simd<T, simd_abi::scalar>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_max() instead")
+    KOKKOS_FORCEINLINE_FUNCTION T
+    hmax(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
+                                basic_simd<T, simd_abi::scalar>> const& x) {
   return static_cast<bool>(x.impl_get_mask())
              ? static_cast<T>(x.impl_get_value())
              : Kokkos::reduction_identity<T>::max();
@@ -555,9 +556,10 @@ reduce_max(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION T
-hmin(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
-                            basic_simd<T, simd_abi::scalar>> const& x) {
+[[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead")
+    KOKKOS_FORCEINLINE_FUNCTION T
+    hmin(const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
+                                basic_simd<T, simd_abi::scalar>> const& x) {
   return static_cast<bool>(x.impl_get_mask())
              ? static_cast<T>(x.impl_get_value())
              : Kokkos::reduction_identity<T>::min();
