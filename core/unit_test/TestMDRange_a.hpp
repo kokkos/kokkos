@@ -24,6 +24,11 @@ TEST(TEST_CATEGORY, mdrange_5d) {
   TestMDRange_5D<TEST_EXECSPACE>::test_reduce5(100, 10, 10, 10, 5);
 #endif
   TestMDRange_5D<TEST_EXECSPACE>::test_for5(100, 10, 10, 10, 5);
+  TestMDRange_5D<TEST_EXECSPACE>::test_for5_eval_once(1024 * 1024, 1, 1, 1, 1);
+  TestMDRange_5D<TEST_EXECSPACE>::test_for5_eval_once(1, 1024 * 1024, 1, 1, 1);
+  TestMDRange_5D<TEST_EXECSPACE>::test_for5_eval_once(1, 1, 1024 * 1024, 1, 1);
+  TestMDRange_5D<TEST_EXECSPACE>::test_for5_eval_once(1, 1, 1, 1024 * 1024, 1);
+  TestMDRange_5D<TEST_EXECSPACE>::test_for5_eval_once(1, 1, 1, 1, 1024 * 1024);
 }
 
 }  // namespace Test
