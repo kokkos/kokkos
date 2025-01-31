@@ -631,7 +631,8 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
       : m_policy(policy_), m_func(f_) {}
 #endif
 
-  static constexpr index_type max_blocks = 65535;
+  static constexpr index_type max_blocks_x = 2147483647;
+  static constexpr index_type max_blocks   = 65535;
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
@@ -639,10 +640,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
     if (PolicyType::inner_direction == Iterate::Left) {
       index_type temp0        = m_policy.m_tile_end[0];
       index_type temp1        = m_policy.m_tile_end[1];
-      const index_type numbl0 = (temp0 <= max_blocks ? temp0 : max_blocks);
+      const index_type numbl0 = (temp0 <= max_blocks_x ? temp0 : max_blocks_x);
       const index_type numbl1 =
           (temp0 * temp1 > max_blocks
-               ? static_cast<index_type>(max_blocks / numbl0)
+               ? static_cast<index_type>(max_blocks_x / numbl0)
                : (temp1 <= max_blocks ? temp1 : max_blocks));
 
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
@@ -744,9 +745,9 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
       index_type temp1        = m_policy.m_tile_end[1];
       const index_type numbl1 = (temp1 <= max_blocks ? temp1 : max_blocks);
       const index_type numbl0 =
-          (temp0 * temp1 > max_blocks
+          (temp0 * temp1 > max_blocks_x
                ? static_cast<index_type>(max_blocks / numbl1)
-               : (temp0 <= max_blocks ? temp0 : max_blocks));
+               : (temp0 <= max_blocks_x ? temp0 : max_blocks_x));
 
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
       const index_type tile_id1 = static_cast<index_type>(blockIdx.x) % numbl1;
