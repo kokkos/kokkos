@@ -66,14 +66,14 @@
 #endif
 
 #ifdef KOKKOS_ENABLE_ONEDPL
-#define KOKKOS_ONEDPL_VERSION                                 \
+#define KOKKOS_IMPL_ONEDPL_VERSION                            \
   ONEDPL_VERSION_MAJOR * 10000 + ONEDPL_VERSION_MINOR * 100 + \
       ONEDPL_VERSION_PATCH
-#define KOKKOS_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
-  (KOKKOS_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+#define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
+  (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
 
-#if KOKKOS_ONEDPL_VERSION_GREATER_EQUAL(2022, 2, 0)
-#define KOKKOS_ONEDPL_HAS_SORT_BY_KEY
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 2, 0)
+#define KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
 #endif
@@ -148,7 +148,7 @@ void sort_by_key_rocthrust(
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 
-#if KOKKOS_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
 template <class Layout>
 inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> = true;
 #else
@@ -158,7 +158,7 @@ inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> =
     std::is_same_v<Layout, Kokkos::LayoutRight>;
 #endif
 
-#ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
+#ifdef KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
 template <class KeysDataType, class... KeysProperties, class ValuesDataType,
           class... ValuesProperties, class... MaybeComparator>
 void sort_by_key_onedpl(
@@ -168,7 +168,7 @@ void sort_by_key_onedpl(
     MaybeComparator&&... maybeComparator) {
   auto queue  = exec.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
-#if KOKKOS_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
   oneapi::dpl::sort_by_key(policy, ::Kokkos::Experimental::begin(keys),
                            ::Kokkos::Experimental::end(keys),
                            ::Kokkos::Experimental::begin(values),
@@ -355,8 +355,8 @@ void sort_by_key_device_view_without_comparator(
     const Kokkos::SYCL& exec,
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
-#ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
-#if KOKKOS_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#ifdef KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
   sort_by_key_onedpl(exec, keys, values);
 #else
   if (keys.stride(0) == 1 && values.stride(0) == 1)
@@ -419,8 +419,8 @@ void sort_by_key_device_view_with_comparator(
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
-#ifdef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
-#if KOKKOS_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#ifdef KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
   sort_by_key_onedpl(exec, keys, values, comparator);
 #else
   if (keys.stride(0) == 1 && values.stride(0) == 1)
@@ -447,9 +447,9 @@ sort_by_key_device_view_with_comparator(
   sort_by_key_via_sort(exec, keys, values, comparator);
 }
 
-#undef KOKKOS_ONEDPL_HAS_SORT_BY_KEY
+#undef KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
 
 }  // namespace Kokkos::Impl
-#undef KOKKOS_ONEDPL_VERSION
-#undef KOKKOS_ONEDPL_VERSION_GREATER_EQUAL
+#undef KOKKOS_IMPL_ONEDPL_VERSION
+#undef KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL
 #endif
