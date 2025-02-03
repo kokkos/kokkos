@@ -515,9 +515,12 @@ TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
     Kokkos::View<int*, TEST_EXECSPACE> view2("view2", 10);
 
     Kokkos::DualView<int*, TEST_EXECSPACE> v_dual(view1, view1);
+// FIXME_MSVC+CUDA error C2094: label 'gtest_label_520' was undefined
+#if !(defined(KOKKOS_COMPILER_MSVC) && defined(KOKKOS_ENABLE_CUDA))
     ASSERT_DEATH(
         (Kokkos::DualView<int*, TEST_EXECSPACE>(view1, view2)),
         "DualView storing one View constructed from two different Views");
+#endif
   }
 }
 
