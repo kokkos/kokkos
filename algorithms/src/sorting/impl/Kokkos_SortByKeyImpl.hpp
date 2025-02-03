@@ -149,6 +149,7 @@ void sort_by_key_rocthrust(
 template <class Layout>
 inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> = true;
 #else
+template <class Layout>
 inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> =
     std::is_same_v<Layout, Kokkos::LayoutLeft> ||
     std::is_same_v<Layout, Kokkos::LayoutRight>;
