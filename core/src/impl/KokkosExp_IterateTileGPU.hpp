@@ -39,14 +39,14 @@ struct EmulateCUDADim3 {
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
-#define MAX_BLOCKS_X 2147483647;
-#define MAX_BLOCKS 65535;
+#define MAX_BLOCKS_X 2147483647
+#define MAX_BLOCKS 65535
 #elif defined(KOKKOS_ENABLE_HIP)
-#define MAX_BLOCKS_X 4294967295;
-#define MAX_BLOCKS 4294967295;
+#define MAX_BLOCKS_X 4294967295
+#define MAX_BLOCKS 4294967295
 #elif defined(KOKKOS_ENABLE_SYCL)
-#define MAX_BLOCKS_X 4294967295;
-#define MAX_BLOCKS 4294967295;
+#define MAX_BLOCKS_X 4294967295
+#define MAX_BLOCKS 4294967295
 #else
 #error("Programming model not supported")
 #endif
