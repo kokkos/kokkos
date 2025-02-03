@@ -651,8 +651,8 @@ class OffsetView : public View<DataType, Properties...> {
       m_begins[i] = minIndices.begin()[i];
     }
     static_assert(
-        std::is_same<pointer_type, typename Kokkos::Impl::ViewCtorProp<
-                                       P...>::pointer_type>::value,
+        std::is_same_v<pointer_type,
+                       typename Kokkos::Impl::ViewCtorProp<P...>::pointer_type>,
         "When constructing OffsetView to wrap user memory, you must supply "
         "matching pointer type");
   }

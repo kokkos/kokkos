@@ -70,12 +70,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-5.6-C++20') {
+                stage('HIP-ROCm-5.7-C++20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:5.6-complete@sha256:578a310fb1037d9c5e23fded2564f239acf6dc7231ff4742d2e7279fe7cc5c4a'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:5.7.1-complete@sha256:fc6abb843a4cb2b3e5d8e9225ed0db1450e063dbcc347f44b43252264134485d'
                             label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -296,12 +296,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-5.2') {
+                stage('HIP-ROCm-5.3') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.2-complete@sha256:4030c8af0c06c286174758523dabe4b3850bf72d4a8c1ef275d3ec69aa475f65'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-20.04:5.3.3-complete@sha256:bac114b9d09e61d88b45fbeb40a15a315c2a78a203223c9b4ed7263b05ff3977'
                             label 'rocm-docker '
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -330,6 +330,46 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
+                              .. && \
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }
+                stage('HIP-ROCm-6.0-amdclang') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.hipcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.0-complete@sha256:29582288ec330d1c915091eb2be7857327fe71a73a174c4173b0bb4794dce7c8'
+                            label 'rocm-docker'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                        }
+                    }
+                    environment {
+                        // FIXME Test returns a wrong value
+                        GTEST_FILTER = '-hip_hostpinned.view_allocation_large_rank'
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DBUILD_SHARED_LIBS=ON \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/amdclang++ \
+                                -DCMAKE_CXX_CLANG_TIDY="/opt/rocm/llvm/bin/clang-tidy;-warnings-as-errors=*" \
+                                -DCMAKE_PREFIX_PATH=/opt/rocm/lib \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_HIP=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }

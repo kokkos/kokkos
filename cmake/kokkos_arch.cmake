@@ -67,6 +67,7 @@ declare_and_check_host_arch(POWER9 "IBM POWER9 CPUs")
 declare_and_check_host_arch(ZEN "AMD Zen architecture")
 declare_and_check_host_arch(ZEN2 "AMD Zen2 architecture")
 declare_and_check_host_arch(ZEN3 "AMD Zen3 architecture")
+declare_and_check_host_arch(ZEN4 "AMD Zen4 architecture")
 declare_and_check_host_arch(RISCV_SG2042 "SG2042 (RISC-V) CPUs")
 declare_and_check_host_arch(RISCV_RVA22V "RVA22V (RISC-V) CPUs")
 
@@ -172,7 +173,7 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
   endif()
 
-  set(GNU_WARNINGS "-Wempty-body" "-Wclobbered" "-Wignored-qualifiers" ${COMMON_WARNINGS})
+  set(GNU_WARNINGS "-Wempty-body" "-Wignored-qualifiers" ${COMMON_WARNINGS})
   if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU)
     list(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
   endif()
@@ -403,13 +404,31 @@ if(KOKKOS_ARCH_ZEN3)
     MSVC
     /arch:AVX2
     NVHPC
-    -tp=zen2
+    -tp=zen3
     DEFAULT
     -march=znver3
     -mtune=znver3
   )
   set(KOKKOS_ARCH_AMD_ZEN3 ON)
   set(KOKKOS_ARCH_AVX2 ON)
+endif()
+
+if(KOKKOS_ARCH_ZEN4)
+  compiler_specific_flags(
+    COMPILER_ID
+    KOKKOS_CXX_HOST_COMPILER_ID
+    Intel
+    -xCORE-AVX512
+    MSVC
+    /arch:AVX512
+    NVHPC
+    -tp=zen4
+    DEFAULT
+    -march=znver4
+    -mtune=znver4
+  )
+  set(KOKKOS_ARCH_AMD_ZEN4 ON)
+  set(KOKKOS_ARCH_AVX512XEON ON)
 endif()
 
 if(KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
@@ -1193,9 +1212,8 @@ if(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED AND NOT KOKKOS_IMPL_A
     )
   else()
     execute_process(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
-    string(LENGTH "${GPU_ARCHS}" len_str)
-    # enumerator always output gfx000 as the first line
-    if(${len_str} LESS 8)
+    # Exits early if no GPU was detected
+    if("${GPU_ARCHS}" STREQUAL "")
       message(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
                          "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'."
       )

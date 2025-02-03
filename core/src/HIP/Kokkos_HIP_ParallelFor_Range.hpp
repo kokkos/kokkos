@@ -39,13 +39,13 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
   const Policy m_policy;
 
   template <class TagType>
-  inline __device__ std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  inline __device__ std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member i) const {
     m_functor(i);
   }
 
   template <class TagType>
-  inline __device__ std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  inline __device__ std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member i) const {
     m_functor(TagType(), i);
   }

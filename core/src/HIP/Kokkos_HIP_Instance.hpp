@@ -21,6 +21,7 @@
 
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
+#include <HIP/Kokkos_HIP_IsXnack.hpp>
 
 #include <atomic>
 #include <mutex>
@@ -164,7 +165,7 @@ std::vector<HIP> partition_space(const HIP &, Args...) {
 template <class T>
 std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
   static_assert(
-      std::is_arithmetic<T>::value,
+      std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   // We only care about the number of instances to create and ignore weights

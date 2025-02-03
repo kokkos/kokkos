@@ -140,6 +140,7 @@ struct ObjectWithVLAEmulation {
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
+ private:
   // TODO @tasking @optimization DSH specialization for trivially constructible
   // VLAValueType?
   // TODO @tasking @minor DSH SFINAE-out this constructor for non-default
@@ -157,7 +158,7 @@ struct ObjectWithVLAEmulation {
 
     // Note: We can't do this at class scope because it unnecessarily requires
     // vla_value_type to be a complete type
-    static_assert(!std::is_abstract<vla_value_type>::value,
+    static_assert(!std::is_abstract_v<vla_value_type>,
                   "Can't use abstract type with VLA emulation");
 
     KOKKOS_EXPECTS(num_entries >= 0);
@@ -165,7 +166,9 @@ struct ObjectWithVLAEmulation {
       new (_vla_pointer() + i) vla_value_type();
     }
   }
+  friend Derived;
 
+ public:
   KOKKOS_INLINE_FUNCTION
   ~ObjectWithVLAEmulation() {
     for (auto&& value : *this) {

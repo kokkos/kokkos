@@ -294,7 +294,7 @@ struct Functor_TestHalfOperators {
     d_lhs        = static_cast<double>(h_lhs);
     d_rhs        = static_cast<double>(h_rhs);
 
-    if (std::is_same<view_type, ViewTypeHost>::value) {
+    if (std::is_same_v<view_type, ViewTypeHost>) {
       auto run_on_host = *this;
       run_on_host(Batch0{}, 0);
       run_on_host(Batch1{}, 0);
@@ -331,13 +331,13 @@ struct Functor_TestHalfOperators {
     auto sum = static_cast<LhsType>(h_lhs) + static_cast<RhsType>(h_rhs);
     actual_lhs(op_test_idx) = static_cast<double>(sum);
 
-    if (std::is_same<RhsType, half_type>::value &&
-        std::is_same<LhsType, half_type>::value) {
+    if (std::is_same_v<RhsType, half_type> &&
+        std::is_same_v<LhsType, half_type>) {
       expected_lhs(op_test_idx) = d_lhs + d_rhs;
     } else {
-      if (std::is_same<LhsType, half_type>::value)
+      if (std::is_same_v<LhsType, half_type>)
         expected_lhs(op_test_idx) = d_lhs + static_cast<RhsType>(d_rhs);
-      if (std::is_same<RhsType, half_type>::value)
+      if (std::is_same_v<RhsType, half_type>)
         expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) + d_rhs;
     }
 
@@ -351,13 +351,13 @@ struct Functor_TestHalfOperators {
     auto result = static_cast<LhsType>(h_lhs) - static_cast<RhsType>(h_rhs);
     actual_lhs(op_test_idx) = static_cast<double>(result);
 
-    if (std::is_same<RhsType, half_type>::value &&
-        std::is_same<LhsType, half_type>::value) {
+    if (std::is_same_v<RhsType, half_type> &&
+        std::is_same_v<LhsType, half_type>) {
       expected_lhs(op_test_idx) = d_lhs - d_rhs;
     } else {
-      if (std::is_same<LhsType, half_type>::value)
+      if (std::is_same_v<LhsType, half_type>)
         expected_lhs(op_test_idx) = d_lhs - static_cast<RhsType>(d_rhs);
-      if (std::is_same<RhsType, half_type>::value)
+      if (std::is_same_v<RhsType, half_type>)
         expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) - d_rhs;
     }
 
@@ -371,13 +371,13 @@ struct Functor_TestHalfOperators {
     auto result = static_cast<LhsType>(h_lhs) * static_cast<RhsType>(h_rhs);
     actual_lhs(op_test_idx) = static_cast<double>(result);
 
-    if (std::is_same<RhsType, half_type>::value &&
-        std::is_same<LhsType, half_type>::value) {
+    if (std::is_same_v<RhsType, half_type> &&
+        std::is_same_v<LhsType, half_type>) {
       expected_lhs(op_test_idx) = d_lhs * d_rhs;
     } else {
-      if (std::is_same<LhsType, half_type>::value)
+      if (std::is_same_v<LhsType, half_type>)
         expected_lhs(op_test_idx) = d_lhs * static_cast<RhsType>(d_rhs);
-      if (std::is_same<RhsType, half_type>::value)
+      if (std::is_same_v<RhsType, half_type>)
         expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) * d_rhs;
     }
 
@@ -391,13 +391,13 @@ struct Functor_TestHalfOperators {
     auto result = static_cast<LhsType>(h_lhs) / static_cast<RhsType>(h_rhs);
     actual_lhs(op_test_idx) = static_cast<double>(result);
 
-    if (std::is_same<RhsType, half_type>::value &&
-        std::is_same<LhsType, half_type>::value) {
+    if (std::is_same_v<RhsType, half_type> &&
+        std::is_same_v<LhsType, half_type>) {
       expected_lhs(op_test_idx) = d_lhs / d_rhs;
     } else {
-      if (std::is_same<LhsType, half_type>::value)
+      if (std::is_same_v<LhsType, half_type>)
         expected_lhs(op_test_idx) = d_lhs / static_cast<RhsType>(d_rhs);
-      if (std::is_same<RhsType, half_type>::value)
+      if (std::is_same_v<RhsType, half_type>)
         expected_lhs(op_test_idx) = static_cast<LhsType>(d_lhs) / d_rhs;
     }
 
