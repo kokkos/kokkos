@@ -70,8 +70,14 @@
 #endif
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-local-typedef"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
+#pragma GCC diagnostic pop
 #endif
 
 namespace Kokkos {

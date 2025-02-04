@@ -69,8 +69,14 @@
     (ONEDPL_VERSION_MAJOR > 2022 ||  \
      (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR >= 2))
 #define KOKKOS_ONEDPL_HAS_SORT_BY_KEY
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wunused-local-typedef"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-variable"
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
+#pragma GCC diagnostic pop
 #endif
 
 namespace Kokkos::Impl {
