@@ -19,7 +19,7 @@
 
 #include <gtest/gtest.h>
 
-namespace Test {
+namespace {
 
 struct InitTag {};
 struct WorkTag {};
@@ -44,8 +44,8 @@ struct TestFunctor {
 };
 
 // This test serves to ensure that lock-based atomic operations work in
-// a graph on Cuda, HIP and SYCL. In particular, this test serves to
-// ensure that the lock arrays needed for such operations be on device.
+// a graph on device. In particular, this test serves to ensure that the
+// lock arrays needed for such operations be on device.
 TEST(TEST_CATEGORY, graph_lock_based_atomic_op) {
   TEST_EXECSPACE ex{};
 
@@ -76,4 +76,4 @@ TEST(TEST_CATEGORY, graph_lock_based_atomic_op) {
   ASSERT_FLOAT_EQ(result_h.imag(), 100.);
 }
 
-}  // end namespace Test
+}  // end namespace

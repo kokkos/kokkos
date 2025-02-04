@@ -760,6 +760,9 @@ if(Kokkos_ENABLE_CUDA)
     ${Cuda_SOURCES_SHAREDSPACE}
   )
 
+  # This test seeks to make sure that `desul::ensure_cuda_lock_arrays_on_device` is called before a graph submission.
+  # It is in a separate file to ensure that the test takes place in a separate compilation unit, in which this function
+  # has not been called yet by Kokkos::initialize or by a preceding kernel launch.
   set(file ${CMAKE_CURRENT_BINARY_DIR}/cuda/TestCuda_GraphAtomicLocks.cpp)
   file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp "#include <TestCuda_Category.hpp>\n"
                                                         "#include <TestGraphAtomicLocks.hpp>\n"
