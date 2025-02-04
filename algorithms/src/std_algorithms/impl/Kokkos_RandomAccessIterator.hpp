@@ -63,7 +63,10 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
   using pointer           = typename view_type::pointer_type;
   using reference         = typename view_type::reference_type;
 
-#ifdef KOKKOS_ENABLE_SYCL
+// oneDPL needs this alias in order not to assume the data is on the host but on
+// the device, see
+// https://github.com/uxlfoundation/oneDPL/blob/a045eac689f9107f50ba7b42235e9e927118e483/include/oneapi/dpl/pstl/hetero/dpcpp/utils_ranges_sycl.h#L210-L214
+#ifdef KOKKOS_ENABLE_ONEDPL
   using is_passed_directly = std::true_type;
 #endif
 
