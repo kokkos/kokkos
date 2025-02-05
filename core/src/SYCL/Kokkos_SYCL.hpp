@@ -164,7 +164,7 @@ template <class T>
 std::vector<SYCL> partition_space(const SYCL& sycl_space,
                                   std::vector<T> const& weights) {
   static_assert(
-      std::is_arithmetic<T>::value,
+      std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   sycl::context context = sycl_space.sycl_queue().get_context();

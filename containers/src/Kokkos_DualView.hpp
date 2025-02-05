@@ -209,6 +209,12 @@ class DualView : public ViewTraits<DataType, Properties...> {
   t_modified_flags modified_flags;
 
  public:
+  // does the DualView have only one device
+  static constexpr bool impl_dualview_stores_single_view =
+      SpaceAccessibility<Kokkos::HostSpace,
+                         typename t_dev::memory_space>::accessible;
+
+ public:
   //@}
 
   // Moved this specifically after modified_flags to resolve an alignment issue
@@ -349,52 +355,10 @@ class DualView : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::throw_runtime_exception(
           "DualView constructed with incompatible views");
     }
+    if (impl_dualview_stores_single_view && (d_view.data() != h_view.data()))
+      Kokkos::abort(
+          "DualView storing one View constructed from two different Views");
   }
-  // does the DualView have only one device
-  struct impl_dualview_is_single_device {
-    enum : bool {
-      value = std::is_same_v<typename t_dev::device_type,
-                             typename t_host::device_type>
-    };
-  };
-
-  // does the given device match the device of t_dev?
-  template <typename Device>
-  struct impl_device_matches_tdev_device {
-    enum : bool { value = std::is_same_v<typename t_dev::device_type, Device> };
-  };
-  // does the given device match the device of t_host?
-  template <typename Device>
-  struct impl_device_matches_thost_device {
-    enum : bool {
-      value = std::is_same_v<typename t_host::device_type, Device>
-    };
-  };
-
-  // does the given device match the execution space of t_host?
-  template <typename Device>
-  struct impl_device_matches_thost_exec {
-    enum : bool {
-      value = std::is_same_v<typename t_host::execution_space, Device>
-    };
-  };
-
-  // does the given device match the execution space of t_dev?
-  template <typename Device>
-  struct impl_device_matches_tdev_exec {
-    enum : bool {
-      value = std::is_same_v<typename t_dev::execution_space, Device>
-    };
-  };
-
-  // does the given device's memory space match the memory space of t_dev?
-  template <typename Device>
-  struct impl_device_matches_tdev_memory_space {
-    enum : bool {
-      value = std::is_same_v<typename t_dev::memory_space,
-                             typename Device::memory_space>
-    };
-  };
 
   //@}
   //! \name Methods for synchronizing, marking as modified, and getting Views.
@@ -615,8 +579,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
         impl_report_host_sync();
       }
     }
-    if constexpr (std::is_same<typename t_host::memory_space,
-                               typename t_dev::memory_space>::value) {
+    if constexpr (std::is_same_v<typename t_host::memory_space,
+                                 typename t_dev::memory_space>) {
       typename t_dev::execution_space().fence(
           "Kokkos::DualView<>::sync: fence after syncing DualView");
       typename t_host::execution_space().fence(
@@ -625,22 +589,25 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   template <class Device>
-  void sync(const std::enable_if_t<
-                (std::is_same_v<typename traits::data_type,
-                                typename traits::non_const_data_type>) ||
-                    (std::is_same_v<Device, int>),
-                int>& = 0) {
-    sync_impl<Device>(std::true_type{});
+  void sync() {
+    if (impl_dualview_stores_single_view) return;
+
+    if constexpr (std::is_same_v<typename traits::data_type,
+                                 typename traits::non_const_data_type>)
+      sync_impl<Device>(std::true_type{});
+    else
+      sync_impl<Device>(std::false_type{});
   }
 
   template <class Device, class ExecutionSpace>
-  void sync(const ExecutionSpace& exec,
-            const std::enable_if_t<
-                (std::is_same_v<typename traits::data_type,
-                                typename traits::non_const_data_type>) ||
-                    (std::is_same_v<Device, int>),
-                int>& = 0) {
-    sync_impl<Device>(std::true_type{}, exec);
+  void sync(const ExecutionSpace& exec) {
+    if (impl_dualview_stores_single_view) return;
+
+    if constexpr (std::is_same_v<typename traits::data_type,
+                                 typename traits::non_const_data_type>)
+      sync_impl<Device>(std::true_type{}, exec);
+    else
+      sync_impl<Device>(std::false_type{}, exec);
   }
 
   // deliberately passing args by cref as they're used multiple times
@@ -666,29 +633,11 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
-  template <class Device>
-  void sync(const std::enable_if_t<
-                (!std::is_same_v<typename traits::data_type,
-                                 typename traits::non_const_data_type>) ||
-                    (std::is_same_v<Device, int>),
-                int>& = 0) {
-    sync_impl<Device>(std::false_type{});
-  }
-  template <class Device, class ExecutionSpace>
-  void sync(const ExecutionSpace& exec,
-            const std::enable_if_t<
-                (!std::is_same_v<typename traits::data_type,
-                                 typename traits::non_const_data_type>) ||
-                    (std::is_same_v<Device, int>),
-                int>& = 0) {
-    sync_impl<Device>(std::false_type{}, exec);
-  }
-
   // deliberately passing args by cref as they're used multiple times
   template <typename... Args>
   void sync_host_impl(Args const&... args) {
-    if (!std::is_same<typename traits::data_type,
-                      typename traits::non_const_data_type>::value)
+    if (!std::is_same_v<typename traits::data_type,
+                        typename traits::non_const_data_type>)
       Impl::throw_runtime_exception(
           "Calling sync_host on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;
@@ -718,8 +667,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
   // deliberately passing args by cref as they're used multiple times
   template <typename... Args>
   void sync_device_impl(Args const&... args) {
-    if (!std::is_same<typename traits::data_type,
-                      typename traits::non_const_data_type>::value)
+    if (!std::is_same_v<typename traits::data_type,
+                        typename traits::non_const_data_type>)
       Impl::throw_runtime_exception(
           "Calling sync_device on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;
@@ -798,10 +747,10 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// If \c Device is the same as this DualView's device type, then
   /// mark the device's data as modified.  Otherwise, mark the host's
   /// data as modified.
-  template <class Device, class Dummy = DualView,
-            std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
-                nullptr>
+  template <class Device>
   void modify() {
+    if (impl_dualview_stores_single_view) return;
+
     if (modified_flags.data() == nullptr) {
       modified_flags = t_modified_flags("DualView::modified_flags");
     }
@@ -837,17 +786,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #endif
   }
 
-  template <
-      class Device, class Dummy = DualView,
-      std::enable_if_t<Dummy::impl_dualview_is_single_device::value>* = nullptr>
-  void modify() {
-    return;
-  }
-
-  template <class Dummy = DualView,
-            std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
-                nullptr>
   inline void modify_host() {
+    if (impl_dualview_stores_single_view) return;
+
     if (modified_flags.data() != nullptr) {
       modified_flags(0) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
@@ -867,17 +808,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
-  template <
-      class Dummy = DualView,
-      std::enable_if_t<Dummy::impl_dualview_is_single_device::value>* = nullptr>
-  inline void modify_host() {
-    return;
-  }
-
-  template <class Dummy = DualView,
-            std::enable_if_t<!Dummy::impl_dualview_is_single_device::value>* =
-                nullptr>
   inline void modify_device() {
+    if (impl_dualview_stores_single_view) return;
+
     if (modified_flags.data() != nullptr) {
       modified_flags(1) =
           (modified_flags(1) > modified_flags(0) ? modified_flags(1)
@@ -895,13 +828,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
       }
 #endif
     }
-  }
-
-  template <
-      class Dummy = DualView,
-      std::enable_if_t<Dummy::impl_dualview_is_single_device::value>* = nullptr>
-  inline void modify_device() {
-    return;
   }
 
   inline void clear_sync_state() {

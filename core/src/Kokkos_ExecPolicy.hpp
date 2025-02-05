@@ -685,17 +685,18 @@ class TeamPolicy
 
  public:
   inline TeamPolicy& set_chunk_size(int chunk) {
-    static_assert(std::is_same<decltype(internal_policy::set_chunk_size(chunk)),
-                               internal_policy&>::value,
-                  "internal set_chunk_size should return a reference");
+    static_assert(
+        std::is_same_v<decltype(internal_policy::set_chunk_size(chunk)),
+                       internal_policy&>,
+        "internal set_chunk_size should return a reference");
     return static_cast<TeamPolicy&>(internal_policy::set_chunk_size(chunk));
   }
 
   inline TeamPolicy& set_scratch_size(const int& level,
                                       const Impl::PerTeamValue& per_team) {
-    static_assert(std::is_same<decltype(internal_policy::set_scratch_size(
-                                   level, per_team)),
-                               internal_policy&>::value,
+    static_assert(std::is_same_v<decltype(internal_policy::set_scratch_size(
+                                     level, per_team)),
+                                 internal_policy&>,
                   "internal set_chunk_size should return a reference");
 
     team_policy_check_valid_storage_level_argument(level);

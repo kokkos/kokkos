@@ -151,12 +151,13 @@ struct ViewCtorProp<void, T *> {
 // for NVCC/MSVC
 template <typename T>
 struct ViewCtorProp<T *> : public ViewCtorProp<void, T *> {
-  static constexpr bool has_memory_space    = false;
-  static constexpr bool has_execution_space = false;
-  static constexpr bool has_pointer         = true;
-  static constexpr bool has_label           = false;
-  static constexpr bool allow_padding       = false;
-  static constexpr bool initialize          = true;
+  static constexpr bool has_memory_space     = false;
+  static constexpr bool has_execution_space  = false;
+  static constexpr bool has_pointer          = true;
+  static constexpr bool has_label            = false;
+  static constexpr bool allow_padding        = false;
+  static constexpr bool initialize           = true;
+  static constexpr bool sequential_host_init = false;
 
   using memory_space    = void;
   using execution_space = void;
@@ -218,9 +219,11 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   // Note that if P is empty, this constructor is the default constructor.
   // On the other hand, if P is not empty, the constraint implies that
   // there is no default constructor.
+  // NOLINTBEGIN(modernize-type-traits)
   template <typename... Args,
             typename = std::enable_if_t<std::conjunction_v<
                 std::is_constructible<view_ctor_prop_base<P>, Args &&>...>>>
+  // NOLINTEND(modernize-type-traits)
   ViewCtorProp(Args &&...args)
       : ViewCtorProp<void, P>(std::forward<Args>(args))... {}
 

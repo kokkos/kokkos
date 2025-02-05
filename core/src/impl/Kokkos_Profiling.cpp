@@ -344,7 +344,7 @@ void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_for")};
+            Experimental::kernel_type_context_variable_id, "parallel_scan")};
     Experimental::set_input_values(context_id, 2, contextValues);
   }
 #endif
@@ -375,7 +375,7 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
         Experimental::make_variable_value(
             Experimental::kernel_name_context_variable_id, kernelPrefix),
         Experimental::make_variable_value(
-            Experimental::kernel_type_context_variable_id, "parallel_for")};
+            Experimental::kernel_type_context_variable_id, "parallel_reduce")};
     Experimental::set_input_values(context_id, 2, contextValues);
   }
 #endif
