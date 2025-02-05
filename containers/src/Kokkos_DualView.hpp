@@ -125,7 +125,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using traits = ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type>;
 #else
-  using traits = ViewTraits<DataType, Properties...>;
+  using traits      = ViewTraits<DataType, Properties...>;
 #endif
 
   //! The Kokkos Host Device type;
@@ -135,7 +135,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using t_dev = View<typename traits::data_type, Arg1Type, Arg2Type, Arg3Type>;
 #else
-  using t_dev = View<typename traits::data_type, Properties...>;
+  using t_dev       = View<typename traits::data_type, Properties...>;
 #endif
 
   /// \typedef t_host
