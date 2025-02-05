@@ -99,9 +99,6 @@ jobs:
       - name: maybe_use_flang_new
         if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
         run: echo "FC=flang-new" >> $GITHUB_ENV
-      - name: maybe_install_clang_tidy_fedora
-        if: ${{ startsWith(matrix.distro,'fedora:') }}
-        run: sudo yum update -y && sudo yum install -y clang-tools-extra
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
