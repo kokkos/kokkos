@@ -503,6 +503,19 @@ TEST(TEST_CATEGORY, dualview_resize) {
                              /* Initialize */ false>();
 }
 
+template <typename ExecutionSpace>
+void check_dualview_external_view_construction() {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  Kokkos::View<int*, ExecutionSpace> view1("view1", 10);
+  Kokkos::View<int*, ExecutionSpace> view2("view2", 10);
+
+  Kokkos::DualView<int*, ExecutionSpace> v_dual(view1, view1);
+  ASSERT_DEATH(
+      (Kokkos::DualView<int*, ExecutionSpace>(view1, view2)),
+      "DualView storing one View constructed from two different Views");
+}
+
 // FIXME_MSVC+CUDA error C2094: label 'gtest_label_520' was undefined
 #if !(defined(KOKKOS_COMPILER_MSVC) && defined(KOKKOS_ENABLE_CUDA))
 TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
@@ -511,15 +524,7 @@ TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
                     TEST_EXECSPACE::memory_space>::accessible) {
     GTEST_SKIP() << "test only relevant if HostSpace can access memory space";
   } else {
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
-    Kokkos::View<int*, TEST_EXECSPACE> view1("view1", 10);
-    Kokkos::View<int*, TEST_EXECSPACE> view2("view2", 10);
-
-    Kokkos::DualView<int*, TEST_EXECSPACE> v_dual(view1, view1);
-    ASSERT_DEATH(
-        (Kokkos::DualView<int*, TEST_EXECSPACE>(view1, view2)),
-        "DualView storing one View constructed from two different Views");
+    check_dualview_external_view_construction<TEST_EXECSPACE>();
   }
 }
 #endif
