@@ -73,6 +73,9 @@ TEST(TEST_CATEGORY, view_alloc_can_perfect_forward_label) {
 
   auto prop = Kokkos::view_alloc(std::move(label));
 
+  // This is not actually guaranteed in the C++ standard
+  // https://eel.is/c++draft/basic.string#string.cons-24
+  // > left in a valid but unspecified state
   ASSERT_TRUE(label.empty());  // NOLINT(bugprone-use-after-move)
   ASSERT_EQ(Kokkos::Impl::get_property<Kokkos::Impl::LabelTag>(prop),
             "our label");
