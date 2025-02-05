@@ -102,7 +102,7 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
         threadIdx(threadIdx_) {}
 #else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                const Functor& f_)
+                                                  const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 #endif
 
@@ -184,7 +184,7 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
         threadIdx(threadIdx_) {}
 #else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                const Functor& f_)
+                                                  const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 #endif
 
@@ -285,7 +285,7 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
         threadIdx(threadIdx_) {}
 #else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                const Functor& f_)
+                                                  const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 #endif
 
@@ -438,7 +438,7 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
         threadIdx(threadIdx_) {}
 #else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                const Functor& f_)
+                                                  const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 #endif
 
@@ -642,7 +642,7 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
         threadIdx(threadIdx_) {}
 #else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                const Functor& f_)
+                                                  const Functor& f_)
       : m_policy(policy_), m_func(f_) {}
 #endif
 
@@ -943,8 +943,8 @@ struct DeviceIterateTile {
         threadIdx(threadIdx_) {}
 #else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                const Functor& f_,
-                                                value_type_storage v_)
+                                                  const Functor& f_,
+                                                  value_type_storage v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 #endif
 
