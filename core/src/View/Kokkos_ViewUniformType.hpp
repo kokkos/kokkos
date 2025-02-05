@@ -51,7 +51,11 @@ struct ViewUniformLayout<Kokkos::LayoutRight, 1> {
 
 template <class ViewType, int Traits>
 struct ViewUniformType {
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  static constexpr size_t rank = ViewType::rank;
+#else
   static constexpr size_t rank = ViewType::rank();
+#endif
 
   using data_type       = typename ViewType::data_type;
   using const_data_type = typename ViewType::const_data_type;
