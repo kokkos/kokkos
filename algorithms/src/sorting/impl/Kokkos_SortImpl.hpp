@@ -78,6 +78,12 @@
 #include <oneapi/dpl/execution>
 #include <oneapi/dpl/algorithm>
 #pragma GCC diagnostic pop
+
+#define KOKKOS_IMPL_ONEDPL_VERSION                            \
+  ONEDPL_VERSION_MAJOR * 10000 + ONEDPL_VERSION_MINOR * 100 + \
+      ONEDPL_VERSION_PATCH
+#define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
+  (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
 #endif
 
 namespace Kokkos {
@@ -227,6 +233,10 @@ void sort_onedpl(const Kokkos::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+  static_assert(ViewType::rank == 1,
+                "Kokkos::sort currently only supports rank-1 Views.");
+#else
   static_assert(
       (ViewType::rank == 1) &&
           (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
@@ -240,18 +250,26 @@ void sort_onedpl(const Kokkos::SYCL& space,
   if (view.stride(0) != 1) {
     Kokkos::abort("SYCL sort only supports rank-1 Views with stride(0) = 1.");
   }
+#endif
 
   if (view.extent(0) <= 1) {
     return;
   }
 
-  // Can't use Experimental::begin/end here since the oneDPL then assumes that
-  // the data is on the host.
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
+
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+  oneapi::dpl::sort(policy, ::Kokkos::Experimental::begin(view),
+                    ::Kokkos::Experimental::end(view),
+                    std::forward<MaybeComparator>(maybeComparator)...);
+#else
+  // Can't use Experimental::begin/end here since the oneDPL then assumes that
+  // the data is on the host.
   const int n = view.extent(0);
   oneapi::dpl::sort(policy, view.data(), view.data() + n,
                     std::forward<MaybeComparator>(maybeComparator)...);
+#endif
 }
 #endif
 
@@ -328,11 +346,15 @@ void sort_device_view_without_comparator(
       "sort_device_view_without_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+  sort_onedpl(exec, view);
+#else
   if (view.stride(0) == 1) {
     sort_onedpl(exec, view);
   } else {
     copy_to_host_run_stdsort_copy_back(exec, view);
   }
+#endif
 }
 #endif
 
@@ -383,11 +405,15 @@ void sort_device_view_with_comparator(
       "sort_device_view_with_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+  sort_onedpl(exec, view, comparator);
+#else
   if (view.stride(0) == 1) {
     sort_onedpl(exec, view, comparator);
   } else {
     copy_to_host_run_stdsort_copy_back(exec, view, comparator);
   }
+#endif
 }
 #endif
 
@@ -419,4 +445,7 @@ sort_device_view_with_comparator(
 
 }  // namespace Impl
 }  // namespace Kokkos
+
+#undef KOKKOS_IMPL_ONEDPL_VERSION
+#undef KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL
 #endif
