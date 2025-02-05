@@ -1467,10 +1467,13 @@ struct TestMDRange_4D {
     lsum += input_view(i, j, k, l) * 3;
   }
 
+  using MinMax      = Kokkos::MinMax<DataType>;
+  using MinMaxValue = MinMax::value_type;
   KOKKOS_INLINE_FUNCTION
   void operator()(const AtomicTag &, const int i, const int j, const int k,
-                  const int l, int &lmax) const {
-    lmax = Kokkos::max(lmax, input_view(i, j, k, l));
+                  const int l, MinMaxValue &lminmax) const {
+    lminmax.min_val = Kokkos::min(lminmax.min_val, input_view(i, j, k, l));
+    lminmax.max_val = Kokkos::max(lminmax.max_val, input_view(i, j, k, l));
   }
 
   static void test_reduce4(const int N0, const int N1, const int N2,
@@ -2087,14 +2090,16 @@ struct TestMDRange_4D {
       TestMDRange_4D functor(N0, N1, N2, N3);
 
       parallel_for(range, functor);
-      DataType max_value = 0;
-      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+      MinMaxValue min_max_value;
+      parallel_reduce(range, functor, MinMax(min_max_value));
 
-      if (max_value != 1) {
-        printf(" Errors in test_for4; mismatches = %d\n\n", max_value);
+      if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
+        printf(" Errors in test_for4; min = %d, max = %d\n\n",
+               min_max_value.min_val, min_max_value.max_val);
       }
 
-      ASSERT_EQ(max_value, 1);
+      ASSERT_EQ(min_max_value.min_val, 1);
+      ASSERT_EQ(min_max_value.max_val, 1);
     }
 
     {
@@ -2109,14 +2114,16 @@ struct TestMDRange_4D {
       TestMDRange_4D functor(N0, N1, N2, N3);
 
       parallel_for(range, functor);
-      DataType max_value = 0;
-      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+      MinMaxValue min_max_value;
+      parallel_reduce(range, functor, MinMax(min_max_value));
 
-      if (max_value != 1) {
-        printf(" Errors in test_for4; mismatches = %d\n\n", max_value);
+      if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
+        printf(" Errors in test_for4; min = %d, max = %d\n\n",
+               min_max_value.min_val, min_max_value.max_val);
       }
 
-      ASSERT_EQ(max_value, 1);
+      ASSERT_EQ(min_max_value.min_val, 1);
+      ASSERT_EQ(min_max_value.max_val, 1);
     }
   }  // end test_for4_eval_once
 };
@@ -2168,10 +2175,13 @@ struct TestMDRange_5D {
     lsum += input_view(i, j, k, l, m) * 3;
   }
 
+  using MinMax      = Kokkos::MinMax<DataType>;
+  using MinMaxValue = MinMax::value_type;
   KOKKOS_INLINE_FUNCTION
   void operator()(const AtomicTag &, const int i, const int j, const int k,
-                  const int l, const int m, int &lmax) const {
-    lmax = Kokkos::max(lmax, input_view(i, j, k, l, m));
+                  const int l, const int m, MinMaxValue &lminmax) const {
+    lminmax.min_val = Kokkos::min(lminmax.min_val, input_view(i, j, k, l, m));
+    lminmax.max_val = Kokkos::max(lminmax.max_val, input_view(i, j, k, l, m));
   }
 
   static void test_reduce5(const int N0, const int N1, const int N2,
@@ -2731,14 +2741,16 @@ struct TestMDRange_5D {
       TestMDRange_5D functor(N0, N1, N2, N3, N4);
 
       parallel_for(range, functor);
-      DataType max_value = 0;
-      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+      MinMaxValue min_max_value;
+      parallel_reduce(range, functor, MinMax(min_max_value));
 
-      if (max_value != 1) {
-        printf(" Errors in test_for5; mismatches = %d\n\n", max_value);
+      if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
+        printf(" Errors in test_for5; min = %d, max = %d\n\n",
+               min_max_value.min_val, min_max_value.max_val);
       }
 
-      ASSERT_EQ(max_value, 1);
+      ASSERT_EQ(min_max_value.min_val, 1);
+      ASSERT_EQ(min_max_value.max_val, 1);
     }
 
     {
@@ -2754,14 +2766,16 @@ struct TestMDRange_5D {
       TestMDRange_5D functor(N0, N1, N2, N3, N4);
 
       parallel_for(range, functor);
-      DataType max_value = 0;
-      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+      MinMaxValue min_max_value;
+      parallel_reduce(range, functor, MinMax(min_max_value));
 
-      if (max_value != 1) {
-        printf(" Errors in test_for5; mismatches = %d\n\n", max_value);
+      if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
+        printf(" Errors in test_for5; min = %d, max = %d\n\n",
+               min_max_value.min_val, min_max_value.max_val);
       }
 
-      ASSERT_EQ(max_value, 1);
+      ASSERT_EQ(min_max_value.min_val, 1);
+      ASSERT_EQ(min_max_value.max_val, 1);
     }
   }  // end test_for5_eval_once
 };
@@ -2806,18 +2820,24 @@ struct TestMDRange_6D {
     Kokkos::atomic_add(&input_view(i, j, k, l, m, n), 1);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const AtomicTag &, const int i, const int j, const int k,
-                  const int l, const int m, const int n, int &lmax) const {
-    lmax = Kokkos::max(lmax, input_view(i, j, k, l, m, n));
-  }
-
   // reduction tagged operators
   KOKKOS_INLINE_FUNCTION
   void operator()(const InitTag &, const int i, const int j, const int k,
                   const int l, const int m, const int n,
                   value_type &lsum) const {
     lsum += input_view(i, j, k, l, m, n) * 3;
+  }
+
+  using MinMax      = Kokkos::MinMax<DataType>;
+  using MinMaxValue = MinMax::value_type;
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l, const int m, const int n,
+                  MinMaxValue &lminmax) const {
+    lminmax.min_val =
+        Kokkos::min(lminmax.min_val, input_view(i, j, k, l, m, n));
+    lminmax.max_val =
+        Kokkos::max(lminmax.max_val, input_view(i, j, k, l, m, n));
   }
 
   static void test_reduce6(const int N0, const int N1, const int N2,
@@ -3607,14 +3627,16 @@ struct TestMDRange_6D {
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
       parallel_for(range, functor);
-      DataType max_value = 0;
-      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+      MinMaxValue min_max_value;
+      parallel_reduce(range, functor, MinMax(min_max_value));
 
-      if (max_value != 1) {
-        printf(" Errors in test_for5; mismatches = %d\n\n", max_value);
+      if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
+        printf(" Errors in test_for6; min = %d, max = %d\n\n",
+               min_max_value.min_val, min_max_value.max_val);
       }
 
-      ASSERT_EQ(max_value, 1);
+      ASSERT_EQ(min_max_value.min_val, 1);
+      ASSERT_EQ(min_max_value.max_val, 1);
     }
 
     {
@@ -3630,14 +3652,16 @@ struct TestMDRange_6D {
       TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
       parallel_for(range, functor);
-      DataType max_value = 0;
-      parallel_reduce(range, functor, Kokkos::Max<DataType>(max_value));
+      MinMaxValue min_max_value;
+      parallel_reduce(range, functor, MinMax(min_max_value));
 
-      if (max_value != 1) {
-        printf(" Errors in test_for5; mismatches = %d\n\n", max_value);
+      if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
+        printf(" Errors in test_for6; min = %d, max = %d\n\n",
+               min_max_value.min_val, min_max_value.max_val);
       }
 
-      ASSERT_EQ(max_value, 1);
+      ASSERT_EQ(min_max_value.min_val, 1);
+      ASSERT_EQ(min_max_value.max_val, 1);
     }
   }  // end test_for6_eval_once
 };
