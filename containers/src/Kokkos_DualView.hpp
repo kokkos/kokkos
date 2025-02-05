@@ -431,11 +431,19 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #endif
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_INLINE_FUNCTION
   t_host view_host() const { return h_view; }
 
   KOKKOS_INLINE_FUNCTION
   t_dev view_device() const { return d_view; }
+#else
+  KOKKOS_INLINE_FUNCTION
+  const t_host& view_host() const { return h_view; }
+
+  KOKKOS_INLINE_FUNCTION
+  const t_dev& view_device() const { return d_view; }
+#endif
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
     return (d_view.is_allocated() && h_view.is_allocated());
