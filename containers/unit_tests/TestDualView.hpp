@@ -524,6 +524,9 @@ TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
                     TEST_EXECSPACE::memory_space>::accessible) {
     GTEST_SKIP() << "test only relevant if HostSpace can access memory space";
   } else {
+    // FIXME_CLANG We can't inline the function because recent clang versions
+    // would deduce that a static_assert isn't satisfied for TEST_EXECSPACE.
+    // Thus, we need to template the function on the execution space.
     check_dualview_external_view_construction<TEST_EXECSPACE>();
   }
 }
