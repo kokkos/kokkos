@@ -283,8 +283,8 @@ void sort_onedpl(const Kokkos::SYCL& space,
   auto view_end   = view.data() + n;
 #endif
 
-      if constexpr (sizeof...(MaybeComparator) == 0)
-          oneapi::dpl::sort(policy, view_begin, view_end);
+  if constexpr (sizeof...(MaybeComparator) == 0)
+    oneapi::dpl::sort(policy, view_begin, view_end);
   else {
     using value_type =
         typename Kokkos::View<DataType, Properties...>::value_type;
