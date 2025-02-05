@@ -77,7 +77,7 @@
   ONEDPL_VERSION_MAJOR * 10000 + ONEDPL_VERSION_MINOR * 100 + \
       ONEDPL_VERSION_PATCH
 #define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
-  (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+  (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR) * 10000 + (MINOR) * 100 + (PATCH)))
 
 namespace Kokkos::Impl {
 template <typename Comparator, typename ValueType>
@@ -269,7 +269,7 @@ void sort_onedpl(const Kokkos::SYCL& space,
 
 #if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
   auto view_begin = ::Kokkos::Experimental::begin(view);
-  auto view_end = ::Kokkos::Experimental::end(view)
+  auto view_end   = ::Kokkos::Experimental::end(view)
 #else
   if (view.stride(0) != 1) {
     Kokkos::abort(
@@ -278,13 +278,13 @@ void sort_onedpl(const Kokkos::SYCL& space,
 
   // Can't use Experimental::begin/end here since the oneDPL then assumes that
   // the data is on the host.
-  const int n = view.extent(0);
+  const int n     = view.extent(0);
   auto view_begin = view.data();
-  auto view_end = view.data()+n;
+  auto view_end   = view.data() + n;
 #endif
 
-  if constexpr (sizeof...(MaybeComparator) == 0)
-    oneapi::dpl::sort(policy, view_begin, view_end);
+      if constexpr (sizeof...(MaybeComparator) == 0)
+          oneapi::dpl::sort(policy, view_begin, view_end);
   else {
     using value_type =
         typename Kokkos::View<DataType, Properties...>::value_type;

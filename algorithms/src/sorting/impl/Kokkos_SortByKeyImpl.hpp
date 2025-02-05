@@ -70,7 +70,7 @@
   ONEDPL_VERSION_MAJOR * 10000 + ONEDPL_VERSION_MINOR * 100 + \
       ONEDPL_VERSION_PATCH
 #define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
-  (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+  (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR) * 10000 + (MINOR) * 100 + (PATCH)))
 
 #if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 2, 0)
 #define KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
@@ -171,8 +171,8 @@ void sort_by_key_onedpl(
 
 #if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
   auto keys_begin = ::Kokkos::Experimental::begin(keys);
-  auto keys_end = ::Kokkos::Experimental::end(keys)
-  auto values_begin = ::Kokkos::Experimental::begin(values);
+  auto keys_end   = ::Kokkos::Experimental::end(keys) auto values_begin =
+      ::Kokkos::Experimental::begin(values);
 #else
   if (keys.stride(0) != 1 && values.stride(0) != 1) {
     Kokkos::abort(
@@ -181,15 +181,14 @@ void sort_by_key_onedpl(
 
   // Can't use Experimental::begin/end here since the oneDPL then assumes that
   // the data is on the host.
-  const int n = keys.extent(0);
-  auto keys_begin = keys.data();
-  auto keys_end = keys.data()+n;
+  const int n       = keys.extent(0);
+  auto keys_begin   = keys.data();
+  auto keys_end     = keys.data() + n;
   auto values_begin = values.data();
 #endif
 
   if constexpr (sizeof...(MaybeComparator) == 0)
-    oneapi::dpl::sort_by_key(policy, keys_begin, keys_end,
-                             values_begin);
+    oneapi::dpl::sort_by_key(policy, keys_begin, keys_end, values_begin);
   else {
     using keys_value_type =
         typename Kokkos::View<KeysDataType, KeysProperties...>::value_type;
