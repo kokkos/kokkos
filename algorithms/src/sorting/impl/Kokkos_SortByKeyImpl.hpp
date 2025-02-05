@@ -311,7 +311,8 @@ void sort_by_key_via_sort(
     host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
     Kokkos::deep_copy(exec, permute, host_permute);
   } else {
-#if defined(KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY) && !KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if defined(KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY) && \
+    !KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
     auto* raw_keys_in_comparator = keys.data();
     auto stride                  = keys.stride(0);
     if constexpr (sizeof...(MaybeComparator) == 0) {
