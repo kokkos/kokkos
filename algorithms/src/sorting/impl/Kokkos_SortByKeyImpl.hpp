@@ -170,9 +170,9 @@ void sort_by_key_onedpl(
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
 
 #if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
-  auto keys_begin = ::Kokkos::Experimental::begin(keys);
-  auto keys_end   = ::Kokkos::Experimental::end(keys) auto values_begin =
-      ::Kokkos::Experimental::begin(values);
+  auto keys_begin   = ::Kokkos::Experimental::begin(keys);
+  auto keys_end     = ::Kokkos::Experimental::end(keys);
+  auto values_begin = ::Kokkos::Experimental::begin(values);
 #else
   if (keys.stride(0) != 1 && values.stride(0) != 1) {
     Kokkos::abort(
@@ -200,6 +200,7 @@ void sort_by_key_onedpl(
             keys_comparator});
   }
 }
+#endif
 #endif
 
 template <typename ExecutionSpace, typename PermutationView, typename ViewType>
@@ -310,10 +311,7 @@ void sort_by_key_via_sort(
     host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
     Kokkos::deep_copy(exec, permute, host_permute);
   } else {
-#if defined(KOKKOS_ONEDPL_HAS_SORT_BY_KEY) &&                      \
-    !(ONEDPL_VERSION_MAJOR > 2022 ||                               \
-      (ONEDPL_VERSION_MAJOR == 2022 && ONEDPL_VERSION_MINOR > 7 || \
-       (ONEDPL_VERSION_MINOR == 7 && ONEDPL_VERSION_PATCH >= 1)))
+#if defined(KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY) && !KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
     auto* raw_keys_in_comparator = keys.data();
     auto stride                  = keys.stride(0);
     if constexpr (sizeof...(MaybeComparator) == 0) {
