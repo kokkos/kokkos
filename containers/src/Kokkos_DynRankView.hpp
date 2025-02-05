@@ -888,6 +888,7 @@ class DynRankView : private View<DataType*******, Properties...> {
 #ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
 #pragma GCC pop_options
 #pragma pop
+#undef KOKKOS_IMPL_SKIP_OPTIMIZATION
 #endif
 
   //----------------------------------------
