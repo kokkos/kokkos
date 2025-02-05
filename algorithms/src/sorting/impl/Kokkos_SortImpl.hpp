@@ -269,7 +269,7 @@ void sort_onedpl(const Kokkos::SYCL& space,
 
 #if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
   auto view_begin = ::Kokkos::Experimental::begin(view);
-  auto view_end   = ::Kokkos::Experimental::end(view)
+  auto view_end   = ::Kokkos::Experimental::end(view);
 #else
   if (view.stride(0) != 1) {
     Kokkos::abort(
