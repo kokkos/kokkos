@@ -20,8 +20,8 @@ jobs:
           - Release
         backend:
           - name: cuda-a100
-            flags: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
-            gpu: a100
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
+            test: -e gpu -g a100
             modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
 
     runs-on: [self-hosted, cuda]
@@ -44,7 +44,7 @@ jobs:
               -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
               -DKokkos_ENABLE_TESTS=ON \
               -DKokkos_ENABLE_EXAMPLES=ON \
-              ${{ matrix.backend.flags }}
+              ${{ matrix.backend.configure }}
 
       - name: Start, update and configure
         continue-on-error: true
@@ -53,7 +53,6 @@ jobs:
           run \
             -m "${{ matrix.backend.modules }}" \
             -e local \
-            CMAKE_BUILD_PARALLEL_LEVEL=40 \
             ctest \
               -V \
               -D ExperimentalStart \
@@ -78,8 +77,7 @@ jobs:
           cd build
           run \
             -m "${{ matrix.backend.modules }}" \
-            -e gpu \
-            -g ${{ matrix.backend.gpu }} \
+            ${{ matrix.backend.test }} \
             ctest \
               -D ExperimentalTest \
               --output-on-failure
