@@ -124,6 +124,8 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
     set(VIEW_LEGACY_DEFAULT ON)
   elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
     set(VIEW_LEGACY_DEFAULT ON)
+  elseif(Kokkos_ENABLE_OPENACC)
+    set(VIEW_LEGACY_DEFAULT ON) # There are some issues with OpenACC at the moment and will be updated in the future
   else()
     set(VIEW_LEGACY_DEFAULT OFF)
   endif()
