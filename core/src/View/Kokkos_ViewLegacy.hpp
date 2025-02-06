@@ -574,9 +574,6 @@ class View : public ViewTraits<DataType, Properties...> {
       return m_map.m_impl_handle[i0 * m_map.m_impl_offset.m_stride.S0 +
                                  i1 * m_map.m_impl_offset.m_stride.S1];
     }
-#if defined KOKKOS_COMPILER_INTEL
-    __builtin_unreachable();
-#endif
   }
 
   // Rank 0 -> 8 operator() except for rank-1 and rank-2 with default map which
@@ -690,9 +687,6 @@ class View : public ViewTraits<DataType, Properties...> {
       return m_map.m_impl_handle[i0 * m_map.m_impl_offset.m_stride.S0 +
                                  i1 * m_map.m_impl_offset.m_stride.S1];
     }
-#if defined KOKKOS_COMPILER_INTEL
-    __builtin_unreachable();
-#endif
   }
 
   //------------------------------

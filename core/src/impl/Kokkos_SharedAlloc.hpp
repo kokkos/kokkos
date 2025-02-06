@@ -121,7 +121,7 @@ class SharedAllocationRecord<void, void> {
  public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
 
-#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
+#if defined(__EDG__)
 #pragma push
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
@@ -129,7 +129,7 @@ class SharedAllocationRecord<void, void> {
     KOKKOS_IF_ON_HOST(return t_tracking_enabled;)
     KOKKOS_IF_ON_DEVICE(return 0;)
   }
-#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
+#if defined(__EDG__)
 #pragma pop
 #endif
 
