@@ -1,3 +1,7 @@
+stages:
+  - test
+  - clean_up
+
 hipcc:
   stage: test
   tags: [frontier, shell]
@@ -47,3 +51,20 @@ crayclang:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
     - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="crayclang/18.0.1-rocm/6.3.1"
+
+include:
+- project: ci/resources/templates
+  ref: main
+  file:
+    - /runners.yml
+
+clear-ci-builds:
+  stage: clean_up
+  extends:
+    - .frontier-shell-runner
+  variables:
+    GIT_STRATEGY: none
+    OLCF_SERVICE_ACCOUNT: ums018_auser
+  script:
+    - ls -la $HOME
+    - rm -rf $HOME/.jacamar-ci/{builds,cache}
