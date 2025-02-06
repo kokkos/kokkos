@@ -297,9 +297,9 @@ class KOKKOS_DEPRECATED BasicTaskScheduler : public Impl::TaskSchedulerBase {
     typename task_type::function_type const ptr = task_type::apply;
     typename task_type::destroy_type const dtor = task_type::destroy;
 
+    auto const priority = arg_policy.priority();
     return _spawn_impl<TaskEnum>(
-        _get_task_ptr(std::move(arg_policy).predecessor()),
-        arg_policy.priority(), ptr, dtor,
+        _get_task_ptr(std::move(arg_policy).predecessor()), priority, ptr, dtor,
         std::forward<FunctorType>(arg_functor));
   }
 
