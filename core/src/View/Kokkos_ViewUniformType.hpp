@@ -51,6 +51,7 @@ struct ViewUniformLayout<Kokkos::LayoutRight, 1> {
 
 template <class ViewType, int Traits>
 struct ViewUniformType {
+// FIXME: legacy view does not support operator() with rank
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static constexpr size_t rank = ViewType::rank;
 #else

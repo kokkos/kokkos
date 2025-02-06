@@ -123,10 +123,6 @@ struct BasicViewFromTraits {
 template <class DataType, class... Properties>
 struct ViewTraits;
 
-} /* namespace Kokkos */
-
-namespace Kokkos {
-
 template <class DataType, class... Properties>
 class View;
 
@@ -144,6 +140,8 @@ inline constexpr bool is_view_v = is_view<T>::value;
 
 template <class DataType, class... Properties>
 class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
+  // We are deriving from BasicView, but need a helper to translate
+  // View template parameters to BasicView template parameters
  private:
   template <class, class...>
   friend class View;
@@ -170,7 +168,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using memory_space         = typename traits::memory_space;
   using memory_traits        = typename traits::memory_traits;
   using host_mirror_space    = typename traits::host_mirror_space;
-  using index_type           = typename traits::memory_space::size_type;
+  using typename base_t::index_type;
 
   // aliases from BasicView
 
@@ -188,7 +186,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       typename traits::non_const_scalar_array_type;
 
   // typedefs from BasicView
-  using mdspan_type    = typename base_t::mdspan_type;
+  using typename base_t::mdspan_type;
   using reference_type = typename base_t::reference;
 
   //----------------------------------------
@@ -894,6 +892,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       return 1;
     return base_t::extent(r);
   }
+
   KOKKOS_FUNCTION
   static constexpr size_t static_extent(size_t r) noexcept {
     // casting to int to avoid warning for pointless comparison of unsigned
@@ -1020,6 +1019,7 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 
 } /* namespace Kokkos */
 
+// FIXME: https://github.com/kokkos/kokkos/issues/7736 We may want to move these out
 #include <View/Kokkos_ViewCommonType.hpp>
 #include <View/Kokkos_ViewUniformType.hpp>
 #include <View/Kokkos_ViewAtomic.hpp>
