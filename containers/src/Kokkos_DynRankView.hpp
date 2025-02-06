@@ -1698,6 +1698,7 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
         Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy), v_resized, v);
   else {
+    // NOLINTNEXTLINE(bugprone-unused-raii)
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
     Kokkos::fence("Kokkos::resize(DynRankView)");
   }
