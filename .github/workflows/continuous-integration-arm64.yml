@@ -19,12 +19,10 @@ jobs:
     strategy:
       matrix:
         include:
-          - backend: "SERIAL"
+          - backend: "OPENMP"
             cmake_build_type: "RelWithDebInfo"
           - backend: "THREADS"
             cmake_build_type: "RelWithDebInfo"
-          - backend: "SERIAL"
-            cmake_build_type: "Debug"
           - backend: "SERIAL"
             cmake_build_type: "Release"
 
