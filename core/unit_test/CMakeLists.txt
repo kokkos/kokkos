@@ -284,6 +284,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
       list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewCopy_c)
     endif()
+    # FIXME: we will eventually likely remove ViewHooks entirely, but for now
+    # ViewHooks are not compatible
     if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
       list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewHooks)
     endif()
