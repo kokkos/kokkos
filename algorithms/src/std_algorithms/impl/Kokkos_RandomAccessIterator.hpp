@@ -144,9 +144,6 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
       return *(m_data + n);
     else
       return *(m_data + n * m_stride);
-#ifdef KOKKOS_COMPILER_INTEL
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION
@@ -191,9 +188,6 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
       return m_data - it.m_data;
     else
       return (m_data - it.m_data) / m_stride;
-#ifdef KOKKOS_COMPILER_INTEL
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION

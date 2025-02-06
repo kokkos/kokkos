@@ -420,9 +420,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
         }
       }
     }
-#ifdef KOKKOS_COMPILER_INTEL
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_INLINE_FUNCTION

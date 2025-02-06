@@ -228,7 +228,6 @@ class ParallelReduce<CombinedFunctorReducerType,
                                    0  // thread_local_bytes
     );
 
-#ifndef KOKKOS_COMPILER_INTEL
     if (execute_in_serial(m_iter.m_rp.space())) {
       const pointer_type ptr =
           m_result_ptr
@@ -244,7 +243,6 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       return;
     }
-#endif
 
     enum {
       is_dynamic =

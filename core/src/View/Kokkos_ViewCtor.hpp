@@ -283,8 +283,7 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
 // end of non-void function" warnings from CUDA builds (issue #5470). Because
 // KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
 // cuda_abort(), an unreachable while(true); is placed as a fallback method
-#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
-    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150))
   Kokkos::abort(
       "Prevents an incorrect warning: missing return statement at end of "
       "non-void function");
@@ -381,8 +380,7 @@ KOKKOS_FUNCTION const auto &get_property(
 // end of non-void function" warnings from CUDA builds (issue #5470). Because
 // KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
 // cuda_abort(), an unreachable while(true); is placed as a fallback method
-#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
-    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150))
   Kokkos::abort(
       "Prevents an incorrect warning: missing return statement at end of "
       "non-void function");
