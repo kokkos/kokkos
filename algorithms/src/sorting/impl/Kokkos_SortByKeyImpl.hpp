@@ -79,6 +79,10 @@
 #endif
 #endif
 
+#ifndef KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL
+#define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) 0
+#endif
+
 namespace Kokkos::Impl {
 
 template <typename T>
