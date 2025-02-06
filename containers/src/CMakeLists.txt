@@ -2,7 +2,7 @@
 kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
 kokkos_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-#-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -
+#-----------------------------------------------------------------------------
 
 set(KOKKOS_CONTAINERS_SRCS)
 append_glob(KOKKOS_CONTAINERS_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/impl/*.cpp)
