@@ -99,6 +99,7 @@ class neon_mask<Derived, 64, 2> {
     switch (i) {
       case 0: return vgetq_lane_u64(m_value, 0) != 0;
       case 1: return vgetq_lane_u64(m_value, 1) != 0;
+      default: Kokkos::abort("Index out of bound"); break;
     }
     return false;
   }
@@ -178,6 +179,7 @@ class neon_mask<Derived, 32, 2> {
     switch (i) {
       case 0: return vget_lane_u32(m_value, 0) != 0;
       case 1: return vget_lane_u32(m_value, 1) != 0;
+      default: Kokkos::abort("Index out of bound"); break;
     }
     return false;
   }
@@ -255,6 +257,7 @@ class neon_mask<Derived, 32, 4> {
       case 1: return vgetq_lane_u32(m_value, 1) != 0;
       case 2: return vgetq_lane_u32(m_value, 2) != 0;
       case 3: return vgetq_lane_u32(m_value, 3) != 0;
+      default: Kokkos::abort("Index out of bound"); break;
     }
     return false;
   }
