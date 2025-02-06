@@ -3,7 +3,6 @@ name: Nightly CEA builds
 on:
   schedule:
     - cron: "0 2 * * 1-5" # every weekday at 2am UTC
-  pull_request:  # XXX Remove me before merging!
 
 permissions: read-all
 
