@@ -23,7 +23,6 @@ Checks: >
   -bugprone-suspicious-stringview-data-usage,
   -bugprone-unchecked-optional-access,
   -bugprone-unhandled-exception-at-new,
-  -bugprone-unhandled-self-assignment,
   -bugprone-unused-raii,
   -bugprone-use-after-move,
   cppcoreguidelines-pro-type-cstyle-cast,
