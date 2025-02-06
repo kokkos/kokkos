@@ -21,7 +21,6 @@ Checks: >
   -bugprone-suspicious-memory-comparison,
   -bugprone-suspicious-string-compare,
   -bugprone-suspicious-stringview-data-usage,
-  -bugprone-unchecked-optional-access,
   -bugprone-unhandled-exception-at-new,
   -bugprone-unused-raii,
   cppcoreguidelines-pro-type-cstyle-cast,
