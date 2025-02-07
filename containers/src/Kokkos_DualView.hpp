@@ -211,8 +211,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
  public:
   // does the DualView have only one device
   static constexpr bool impl_dualview_stores_single_view =
-      SpaceAccessibility<Kokkos::HostSpace,
-                         typename t_dev::memory_space>::accessible;
+      std::is_same_v<typename t_dev::device_type, typename t_host::device_type>;
 
  public:
   //@}
