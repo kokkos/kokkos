@@ -448,7 +448,6 @@ class reduce {
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
     U result      = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
-    ;
     for (std::size_t i = 0; i < v.size(); ++i) {
       if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
         if (m[i]) result = result + v[i];
