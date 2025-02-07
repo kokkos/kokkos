@@ -379,9 +379,7 @@ template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
 reduce_min(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const&
                x) noexcept {
-  return reduce_min(
-      x, Experimental::basic_simd<T, Experimental::simd_abi::scalar>::mask_type(
-             true));
+  return x[0];
 }
 
 template <class T>
@@ -397,9 +395,7 @@ template <class T>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION T
 reduce_max(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const&
                x) noexcept {
-  return reduce_max(
-      x, Experimental::basic_simd<T, Experimental::simd_abi::scalar>::mask_type(
-             true));
+  return x[0];
 }
 
 template <class T>

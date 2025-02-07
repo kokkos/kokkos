@@ -43,10 +43,9 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
       auto computed = reduce_op.on_host(arg, identity, mask_false);
       gtest_checker().equality(expected, computed);
 
-      mask_type mask(KOKKOS_LAMBDA(std::size_t j) { return j < nlanes; });
-
-      expected = reduce_op.on_host_serial(arg, identity, mask);
-      computed = reduce_op.on_host(arg, identity, mask);
+      mask_type mask_true(true);
+      expected = reduce_op.on_host_serial(arg, identity, mask_true);
+      computed = reduce_op.on_host(arg, identity, mask_true);
 
       gtest_checker().equality(expected, computed);
     } else {
@@ -56,12 +55,12 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
       auto computed = reduce_op.on_host(arg, identity, mask_false);
       gtest_checker().equality(expected, computed);
 
-      mask_type mask([=](std::size_t j) { return j < nlanes; });
-
-      expected = reduce_op.on_host_serial(arg, identity, mask);
-      computed = reduce_op.on_host(arg, identity, mask);
-
-      gtest_checker().equality(expected, computed);
+      for (std::size_t j = 0; j < mask_type::size(); ++j) {
+        mask_type mask([=](std::size_t idx) { return idx >= j; });
+        expected = reduce_op.on_host_serial(arg, identity, mask);
+        computed = reduce_op.on_host(arg, identity, mask);
+        gtest_checker().equality(expected, computed);
+      }
     }
   }
 }
@@ -135,10 +134,12 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     auto computed = reduce_op.on_device(arg, identity, mask_false);
     kokkos_checker().equality(expected, computed);
 
-    mask_type mask(KOKKOS_LAMBDA(std::size_t j) { return j < nlanes; });
-    expected = reduce_op.on_device_serial(arg, identity, mask);
-    computed = reduce_op.on_device(arg, identity, mask);
-    kokkos_checker().equality(expected, computed);
+    for (std::size_t j = 0; j < mask_type::size(); ++j) {
+      mask_type mask(KOKKOS_LAMBDA(std::size_t idx) { return idx >= j; });
+      expected = reduce_op.on_device_serial(arg, identity, mask);
+      computed = reduce_op.on_device(arg, identity, mask);
+      kokkos_checker().equality(expected, computed);
+    }
   }
 }
 
