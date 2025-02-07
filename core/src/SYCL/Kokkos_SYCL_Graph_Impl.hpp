@@ -147,10 +147,14 @@ inline void GraphImpl<Kokkos::SYCL>::add_predecessor(
 }
 
 inline void GraphImpl<Kokkos::SYCL>::submit(const Kokkos::SYCL& exec) {
+  auto q = exec.sycl_queue();
+
+  desul::ensure_sycl_lock_arrays_on_device(q);
+
   if (!m_graph_exec) {
     instantiate();
   }
-  exec.sycl_queue().ext_oneapi_graph(*m_graph_exec);
+  q.ext_oneapi_graph(*m_graph_exec);
 }
 
 inline Kokkos::SYCL const& GraphImpl<Kokkos::SYCL>::get_execution_space()
