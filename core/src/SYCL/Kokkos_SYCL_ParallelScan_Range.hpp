@@ -258,7 +258,7 @@ class ParallelScanSYCLBase {
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
-    auto perform_work_group_scans = q.submit([&](sycl::handler& cgh) {
+    auto work_group_scan_lambda = [&](sycl::handler& cgh) {
       sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
       auto dummy_scan_lambda =
@@ -316,10 +316,18 @@ class ParallelScanSYCLBase {
                                              global_mem, group_results);
       cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
                        scan_lambda);
-    });
+    };
+
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+    sycl::ext::oneapi::experimental::submit(q, work_group_scan_lambda);
+    sycl::event perform_work_group_scans;
+#else
+    auto perform_work_group_scans = q.submit(work_group_scan_lambda);
+#endif
 
     // Write results to global memory
-    auto update_global_results = q.submit([&](sycl::handler& cgh) {
+    auto update_global_results_lambda = [&](sycl::handler& cgh) {
       // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
       // directly.
       pointer_type result_ptr = m_result_ptr_device_accessible
@@ -354,7 +362,16 @@ class ParallelScanSYCLBase {
               if (global_id == size - 1) *result_ptr = update;
             }
           });
-    });
+    };
+
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+    sycl::ext::oneapi::experimental::submit(q, update_global_results_lambda);
+    sycl::event update_global_results;
+#else
+    auto update_global_results    = q.submit(update_global_results_lambda);
+#endif
+
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
     q.ext_oneapi_submit_barrier(
         std::vector<sycl::event>{update_global_results});

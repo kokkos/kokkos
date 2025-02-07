@@ -135,10 +135,15 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       } else
 #endif
       {
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+        sycl::ext::oneapi::experimental::submit(q, cgh_lambda);
+#else
         last_reduction_event = q.submit(cgh_lambda);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         q.ext_oneapi_submit_barrier(
             std::vector<sycl::event>{last_reduction_event});
+#endif
 #endif
       }
     } else {
@@ -312,10 +317,15 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       } else
 #endif
       {
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+        sycl::ext::oneapi::experimental::submit(q, cgh_lambda);
+#else
         last_reduction_event = q.submit(cgh_lambda);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         q.ext_oneapi_submit_barrier(
             std::vector<sycl::event>{last_reduction_event});
+#endif
 #endif
       }
     }
