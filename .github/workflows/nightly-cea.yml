@@ -29,6 +29,9 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Initialize the build tree
+        # note: BUILDNAME sets the name of the build on the Dashboard
+        # note: SITE sets the name of the site on the Dashboard
+        # note: run is a Ruche command
         run: |
           run \
             -m "${{ matrix.backend.modules }}" \
@@ -48,12 +51,12 @@ jobs:
       - name: Start, update and configure
         continue-on-error: true
         run: |
-          cd build
           run \
             -m "${{ matrix.backend.modules }}" \
             -e local \
             ctest \
               -V \
+              --test-dir build \
               -D NightlyStart \
               -D NightlyUpdate \
               -D NightlyConfigure
@@ -61,31 +64,31 @@ jobs:
       - name: Build
         continue-on-error: true
         run: |
-          cd build
           run \
             -m "${{ matrix.backend.modules }}" \
             -e cpu \
             CMAKE_BUILD_PARALLEL_LEVEL=40 \
             ctest \
               -V \
+              --test-dir build \
               -D NightlyBuild
 
       - name: Test
         continue-on-error: true
         run: |
-          cd build
           run \
             -m "${{ matrix.backend.modules }}" \
             ${{ matrix.backend.test }} \
             ctest \
-              -D NightlyTest \
-              --output-on-failure
+              --output-on-failure \
+              --test-dir build \
+              -D NightlyTest
 
       - name: Submit
         run: |
-          cd build
           run \
             -m "${{ matrix.backend.modules }}" \
             -e local \
             ctest \
+              --test-dir build \
               -D NightlySubmit
