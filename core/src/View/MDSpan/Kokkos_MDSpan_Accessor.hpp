@@ -307,6 +307,13 @@ class ReferenceCountedDataHandle {
   pointer m_handle = nullptr;
 };
 
+template <class T>
+struct IsReferenceCountedDataHandle : std::false_type {};
+
+template <class ElementType, class MemorySpace>
+struct IsReferenceCountedDataHandle<
+    ReferenceCountedDataHandle<ElementType, MemorySpace>> : std::true_type {};
+
 template <class ElementType, class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor;
 
