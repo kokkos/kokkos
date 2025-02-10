@@ -153,11 +153,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     unsigned block_size =
         Kokkos::Impl::hip_get_preferred_blocksize<ParallelReduce, LaunchBounds>(
             instance, shmem_functor);
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
-                      "valid tile size."));
-    }
+    KOKKOS_ASSERT(block_size > 0);
     return block_size;
   }
 
@@ -233,11 +229,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     using closure_type  = ParallelReduce<CombinedFunctorReducerType,
                                         Kokkos::MDRangePolicy<Traits...>, HIP>;
     unsigned block_size = hip_get_max_blocksize<closure_type, LaunchBounds>();
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
-                      "valid tile size."));
-    }
+    KOKKOS_ASSERT(block_size > 0);
     return block_size;
   }
 };

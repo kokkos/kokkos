@@ -299,11 +299,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
   inline void execute() {
     const int block_size = static_cast<int>(
         local_block_size(Base::m_functor_reducer.get_functor()));
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
-                      "valid execution configuration."));
-    }
+    KOKKOS_ASSERT(block_size > 0);
 
     Base::impl_execute(block_size);
   }
@@ -342,11 +338,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   inline void execute() {
     const int block_size = static_cast<int>(
         local_block_size(Base::m_functor_reducer.get_functor()));
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelScan< HIP > could not find a "
-                      "valid execution configuration."));
-    }
+    KOKKOS_ASSERT(block_size > 0);
 
     Base::impl_execute(block_size);
 

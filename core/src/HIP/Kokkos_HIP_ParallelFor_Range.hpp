@@ -80,11 +80,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
     const dim3 grid(
         typename Policy::index_type((nwork + block.y - 1) / block.y), 1, 1);
 
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a "
-                      "valid execution configuration."));
-    }
+    KOKKOS_ASSERT(block_size > 0);
     Kokkos::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
         false);
