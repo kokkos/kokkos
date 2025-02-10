@@ -84,12 +84,12 @@ class HIPSpace {
                  const size_t arg_logical_size = 0) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
-#else
+#endif
+
   void* allocate(const HIP& exec_space, const size_t arg_alloc_size) const;
   void* allocate(const HIP& exec_space, const char* arg_label,
                  const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
-#endif
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;

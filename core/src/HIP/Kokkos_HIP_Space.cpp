@@ -66,7 +66,6 @@ HIPManagedSpace::HIPManagedSpace()
 HIPManagedSpace::HIPManagedSpace(int device_id, hipStream_t stream)
     : m_device(device_id), m_stream(stream) {}
 
-#ifndef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
 void* HIPSpace::allocate(const HIP& exec_space,
                          const size_t arg_alloc_size) const {
   return allocate(exec_space, "[unlabeled]", arg_alloc_size);
@@ -78,7 +77,6 @@ void* HIPSpace::allocate(const HIP& exec_space, const char* arg_label,
   return impl_allocate(exec_space.hip_device(), exec_space.hip_stream(),
                        arg_label, arg_alloc_size, arg_logical_size, true);
 }
-#endif
 
 void* HIPSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
