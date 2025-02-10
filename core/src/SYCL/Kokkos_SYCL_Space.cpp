@@ -33,6 +33,7 @@ namespace Kokkos {
 namespace Impl {
 
 void DeepCopySYCL(void* dst, const void* src, size_t n) {
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   Impl::SYCLInternal::singleton().m_queue->memcpy(dst, src, n);
 }
 
@@ -46,8 +47,9 @@ void DeepCopyAsyncSYCL(const Kokkos::SYCL& instance, void* dst, const void* src,
 }
 
 void DeepCopyAsyncSYCL(void* dst, const void* src, size_t n) {
-  Impl::SYCLInternal::singleton().m_queue->memcpy(dst, src, n);
-  SYCL().fence("Kokkos::Impl::DeepCopyAsyncSYCL: fence after memcpy");
+  SYCL exec;
+  exec.sycl_queue().memcpy(dst, src, n);
+  exec.fence("Kokkos::Impl::DeepCopyAsyncSYCL: fence after memcpy");
 }
 
 }  // namespace Impl
