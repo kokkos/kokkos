@@ -22,7 +22,6 @@ Checks: >
   -bugprone-suspicious-string-compare,
   -bugprone-suspicious-stringview-data-usage,
   -bugprone-unhandled-exception-at-new,
-  -bugprone-unused-raii,
   cppcoreguidelines-pro-type-cstyle-cast,
   modernize-type-traits,
   modernize-use-nullptr,
