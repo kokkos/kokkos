@@ -69,6 +69,7 @@ class SYCL {
   }
 
   sycl::queue& sycl_queue() const noexcept {
+    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
     return *m_space_instance->m_queue;
   }
 

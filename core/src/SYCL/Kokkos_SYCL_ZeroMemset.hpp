@@ -29,8 +29,8 @@ struct ZeroMemset<Kokkos::SYCL> {
     auto event =
         exec_space.impl_internal_space_instance()->m_queue->memset(dst, 0, cnt);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-    exec_space.impl_internal_space_instance()
-        ->m_queue->ext_oneapi_submit_barrier(std::vector<sycl::event>{event});
+    exec_space.sycl_queue().ext_oneapi_submit_barrier(
+        std::vector<sycl::event>{event});
 #endif
   }
 };
