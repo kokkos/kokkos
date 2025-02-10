@@ -513,7 +513,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
       "Ensure that kernel dispatch to global memory is finished "
       "before submission.");
 
-  graph->submit(ex);
+  graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
   ASSERT_TRUE(contains(ex, data, functor_t::count));
 
   ASSERT_TRUE(validate_event_set(
