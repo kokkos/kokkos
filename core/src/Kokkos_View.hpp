@@ -1019,7 +1019,8 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 
 } /* namespace Kokkos */
 
-// FIXME: https://github.com/kokkos/kokkos/issues/7736 We may want to move these out
+// FIXME: https://github.com/kokkos/kokkos/issues/7736 We may want to move these
+// out
 #include <View/Kokkos_ViewCommonType.hpp>
 #include <View/Kokkos_ViewUniformType.hpp>
 #include <View/Kokkos_ViewAtomic.hpp>

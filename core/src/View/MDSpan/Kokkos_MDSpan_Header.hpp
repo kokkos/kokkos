@@ -45,7 +45,8 @@ using std::mdspan;
 }  // namespace Kokkos
 #else
 // FIXME: we need to figure out the right mechanism for this
-//   We need to probably disable the if condition above and not use compiler-provided mdspan
+//   We need to probably disable the if condition above and not use
+//   compiler-provided mdspan
 //   * A lot of issues, i.e. what do we do with Kokkos::pair
 //   * What do we do with submdspan
 //   * What do we do with missing layout types
