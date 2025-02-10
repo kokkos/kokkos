@@ -83,8 +83,15 @@ jobs:
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
           restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}
       - name: maybe_use_flang_new
-        if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
-        run: echo "FC=flang-new" >> $GITHUB_ENV
+        if: ${{ matrix.cxx == 'clang++' }}
+        run: |
+          if type flang; then
+            echo "flang found"
+            echo "FC=flang" >> $GITHUB_ENV
+          elif type flang-new; then
+            echo "flang-new found"
+            echo "FC=flang-new" >> $GITHUB_ENV
+          fi
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
