@@ -75,9 +75,9 @@ class GraphImpl<Kokkos::HIP> {
   void instantiate() {
     KOKKOS_EXPECTS(!m_graph_exec);
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        (m_execution_space.impl_internal_space_instance()
-             ->hip_graph_instantiate_wrapper(&m_graph_exec, m_graph, nullptr,
-                                             nullptr, 0)));
+        m_execution_space.impl_internal_space_instance()
+            ->hip_graph_instantiate_wrapper(&m_graph_exec, m_graph, nullptr,
+                                            nullptr, 0));
     KOKKOS_ENSURES(m_graph_exec);
   }
 
@@ -97,29 +97,29 @@ inline GraphImpl<Kokkos::HIP>::~GraphImpl() {
   KOKKOS_EXPECTS(m_graph);
   if (m_graph_exec) {
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        (m_execution_space.impl_internal_space_instance()
-             ->hip_graph_exec_destroy_wrapper(m_graph_exec)));
+        m_execution_space.impl_internal_space_instance()
+            ->hip_graph_exec_destroy_wrapper(m_graph_exec));
   }
-  KOKKOS_IMPL_HIP_SAFE_CALL((m_execution_space.impl_internal_space_instance()
-                                 ->hip_graph_destroy_wrapper(m_graph)));
+  KOKKOS_IMPL_HIP_SAFE_CALL(m_execution_space.impl_internal_space_instance()
+                                ->hip_graph_destroy_wrapper(m_graph));
 }
 
 inline GraphImpl<Kokkos::HIP>::GraphImpl(Kokkos::HIP instance)
     : m_execution_space(std::move(instance)) {
-  KOKKOS_IMPL_HIP_SAFE_CALL((m_execution_space.impl_internal_space_instance()
-                                 ->hip_graph_create_wrapper(&m_graph, 0)));
+  KOKKOS_IMPL_HIP_SAFE_CALL(m_execution_space.impl_internal_space_instance()
+                                ->hip_graph_create_wrapper(&m_graph, 0));
 }
 
 inline void GraphImpl<Kokkos::HIP>::add_node(
     std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {
   // All of the predecessors are just added as normal, so all we need to
   // do here is add an empty node
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      (m_execution_space.impl_internal_space_instance()
-           ->hip_graph_add_empty_node_wrapper(
-               &(arg_node_ptr->node_details_t::node), m_graph,
-               /* dependencies = */ nullptr,
-               /* numDependencies = */ 0)));
+  KOKKOS_IMPL_HIP_SAFE_CALL(m_execution_space.impl_internal_space_instance()
+                                ->hip_graph_add_empty_node_wrapper(
+                                    &(arg_node_ptr->node_details_t::node),
+                                    m_graph,
+                                    /* dependencies = */ nullptr,
+                                    /* numDependencies = */ 0));
 }
 
 template <class NodeImpl>
@@ -157,9 +157,9 @@ inline void GraphImpl<Kokkos::HIP>::add_predecessor(
   auto const& node = arg_node_ptr->node_details_t::node;
   KOKKOS_EXPECTS(node);
 
-  KOKKOS_IMPL_HIP_SAFE_CALL((
+  KOKKOS_IMPL_HIP_SAFE_CALL(
       m_execution_space.impl_internal_space_instance()
-          ->hip_graph_add_dependencies_wrapper(m_graph, &pred_node, &node, 1)));
+          ->hip_graph_add_dependencies_wrapper(m_graph, &pred_node, &node, 1));
 }
 
 inline void GraphImpl<Kokkos::HIP>::submit(const Kokkos::HIP& exec) {
@@ -167,8 +167,8 @@ inline void GraphImpl<Kokkos::HIP>::submit(const Kokkos::HIP& exec) {
     instantiate();
   }
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      (exec.impl_internal_space_instance()->hip_graph_launch_wrapper(
-          m_graph_exec)));
+      exec.impl_internal_space_instance()->hip_graph_launch_wrapper(
+          m_graph_exec));
 }
 
 inline Kokkos::HIP const& GraphImpl<Kokkos::HIP>::get_execution_space()
@@ -181,11 +181,11 @@ inline auto GraphImpl<Kokkos::HIP>::create_root_node_ptr() {
   KOKKOS_EXPECTS(!m_graph_exec);
   auto rv = std::make_shared<root_node_impl_t>(get_execution_space(),
                                                _graph_node_is_root_ctor_tag{});
-  KOKKOS_IMPL_HIP_SAFE_CALL((m_execution_space.impl_internal_space_instance()
-                                 ->hip_graph_add_empty_node_wrapper(
-                                     &(rv->node_details_t::node), m_graph,
-                                     /* dependencies = */ nullptr,
-                                     /* numDependencies = */ 0)));
+  KOKKOS_IMPL_HIP_SAFE_CALL(m_execution_space.impl_internal_space_instance()
+                                ->hip_graph_add_empty_node_wrapper(
+                                    &(rv->node_details_t::node), m_graph,
+                                    /* dependencies = */ nullptr,
+                                    /* numDependencies = */ 0));
   KOKKOS_ENSURES(rv->node_details_t::node);
   return rv;
 }

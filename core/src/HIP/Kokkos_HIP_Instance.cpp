@@ -198,14 +198,14 @@ void HIPInternal::initialize(hipStream_t stream) {
   // and an event to avoid overwriting driver for previous kernel launches
   if (!constantMemHostStaging[m_hipDev]) {
     void *constant_mem_void_ptr = nullptr;
-    KOKKOS_IMPL_HIP_SAFE_CALL((hip_host_malloc_wrapper(
-        &constant_mem_void_ptr, Impl::HIPTraits::ConstantMemoryUsage)));
+    KOKKOS_IMPL_HIP_SAFE_CALL(hip_host_malloc_wrapper(
+        &constant_mem_void_ptr, Impl::HIPTraits::ConstantMemoryUsage));
     constantMemHostStaging[m_hipDev] =
         static_cast<unsigned long *>(constant_mem_void_ptr);
   }
   if (!constantMemReusable[m_hipDev])
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        (hip_event_create_wrapper(&constantMemReusable[m_hipDev])));
+        hip_event_create_wrapper(&constantMemReusable[m_hipDev]));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -280,7 +280,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
     // It's the responsibility of the features using scratch_flags,
     // namely parallel_reduce and parallel_scan, to reset the used values to 0.
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        (hip_memset_wrapper(m_scratchFlags, 0, alloc_size)));
+        hip_memset_wrapper(m_scratchFlags, 0, alloc_size));
   }
 
   return m_scratchFlags;
@@ -313,8 +313,8 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
   // HSA_XNACK=0. That's why we always copy the driver.
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
   std::memcpy(m_scratchFunctorHost, driver, size);
-  KOKKOS_IMPL_HIP_SAFE_CALL((hip_memcpy_async_wrapper(
-      m_scratchFunctor, m_scratchFunctorHost, size, hipMemcpyDefault)));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hip_memcpy_async_wrapper(
+      m_scratchFunctor, m_scratchFunctorHost, size, hipMemcpyDefault));
 
   return m_scratchFunctor;
 }
@@ -396,7 +396,7 @@ void HIPInternal::finalize() {
     m_team_scratch_ptr[i]          = nullptr;
   }
 
-  KOKKOS_IMPL_HIP_SAFE_CALL((hip_free_wrapper(m_scratch_locks)));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hip_free_wrapper(m_scratch_locks));
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
 }
@@ -454,8 +454,8 @@ void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     hipStream_t stream;
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        (instances[s].impl_internal_space_instance()->hip_stream_create_wrapper(
-            &stream)));
+        instances[s].impl_internal_space_instance()->hip_stream_create_wrapper(
+            &stream));
     instances[s] = HIP(stream, ManageStream::yes);
   }
 }

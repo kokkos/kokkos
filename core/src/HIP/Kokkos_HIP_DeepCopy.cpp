@@ -42,8 +42,8 @@ void DeepCopyHIP(void* dst, void const* src, size_t n) {
 void DeepCopyAsyncHIP(const HIP& instance, void* dst, void const* src,
                       size_t n) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      (instance.impl_internal_space_instance()->hip_memcpy_async_wrapper(
-          dst, src, n, hipMemcpyDefault)));
+      instance.impl_internal_space_instance()->hip_memcpy_async_wrapper(
+          dst, src, n, hipMemcpyDefault));
 }
 
 void DeepCopyAsyncHIP(void* dst, void const* src, size_t n) {

@@ -39,8 +39,8 @@ struct ZeroMemset<HIP> {
     zero_with_hip_kernel(exec_space, dst, cnt);
 #else
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        (exec_space.impl_internal_space_instance()->hip_memset_async_wrapper(
-            dst, 0, cnt)));
+        exec_space.impl_internal_space_instance()->hip_memset_async_wrapper(
+            dst, 0, cnt));
 #endif
   }
 };
