@@ -22,14 +22,13 @@ Aurora:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-fsycl-device-code-split=per_kernel -fp-model=precise'"
-    - export CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1550"
     - ctest -VV
         -D CDASH_MODEL=Nightly
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_pvc1550.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab-sunspot.alcf.anl.gov"
-        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1550"
   artifacts:
     when: always
     paths:
