@@ -12,8 +12,6 @@ Aurora:
   script:
     - module load cmake oneapi/eng-compiler
     - module list
-    - git clone https://github.com/kokkos/kokkos.git
-    - cd kokkos
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
@@ -35,6 +33,6 @@ Aurora:
   artifacts:
     when: always
     paths:
-      - kokkos/build/result_pvc1550.xml
+      - build/result_pvc1550.xml
     reports:
-      junit: kokkos/build/result_pvc1550.xml
+      junit: build/result_pvc1550.xml

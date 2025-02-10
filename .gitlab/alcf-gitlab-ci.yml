@@ -17,8 +17,6 @@ Polaris:
     - module load spack-pe-base/0.8.1
     - module load cmake/3.27.9 gcc/11.4.0
     - module list
-    - git clone https://github.com/kokkos/kokkos.git
-    - cd kokkos
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
