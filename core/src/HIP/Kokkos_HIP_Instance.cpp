@@ -26,6 +26,7 @@
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Space.hpp>
+#include <HIP/Kokkos_HIP_IsXnack.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -118,6 +119,9 @@ void HIPInternal::print_configuration(std::ostream &s) const {
       << ", APU or dGPU: " << gpu_type
       << ", Is Large Bar: " << hipProp.isLargeBar
       << ", Supports Managed Memory: " << hipProp.managedMemory
+      << ", Supports accessing system allocated memory: "
+      << (xnack_hmm_found() and xnack_environment_enabled() and
+          gpu_arch_can_access_system_allocations())
       << ", Wavefront Size: " << hipProp.warpSize;
     if (m_hipDev == i) s << " : Selected";
     s << '\n';
