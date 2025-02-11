@@ -20,10 +20,11 @@
 #include <Kokkos_MathematicalFunctions.hpp>  // For the float overloads
 #include <Kokkos_BitManipulation.hpp>        // bit_cast
 
-// Backends specific half implementation needs to be declared prior to the math
-// functions implementation so that specifics functions can be found if they
+// Backend specific half implementation needs to be declared prior to the math
+// functions implementation so that specific functions can be found if they
 // exist.
-// If this includes are removed, this mechanism will fail silently.
+// If these includes are removed, this mechanism will silently fall back to the
+// general implementation.
 #ifdef KOKKOS_ENABLE_CUDA
 #include <Cuda/Kokkos_Cuda_Half_MathematicalFunctions.hpp>
 #endif

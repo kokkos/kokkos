@@ -17,10 +17,6 @@
 #ifndef KOKKOS_CUDA_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 #define KOKKOS_CUDA_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 
-#include <Cuda/Kokkos_Cuda_Half_Impl_Type.hpp>
-#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
-#include <Kokkos_MathematicalFunctions.hpp>
-
 namespace Kokkos {
 
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
