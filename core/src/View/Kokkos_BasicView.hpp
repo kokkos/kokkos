@@ -99,9 +99,9 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
 // BasicView has to be in a different namespace than Impl;
 // The reason for this is that if BasicView is in Impl, View (which derives from
 // BasicView) can cause function resolution to ADL-find the Kokkos::Impl
-// namespace, i.e., an unqualified call can find an internal Kokkos function. This
-// was already exhibited in some Kokkos functions that were named the same in
-// both Kokkos:: and Kokkos::Impl:: namespaces and caused an ambiguous call
+// namespace, i.e., an unqualified call can find an internal Kokkos function.
+// This was already exhibited in some Kokkos functions that were named the same
+// in both Kokkos:: and Kokkos::Impl:: namespaces and caused an ambiguous call
 namespace BV {
 template <class ElementType, class Extents, class LayoutPolicy,
           class AccessorPolicy>
