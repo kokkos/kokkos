@@ -40,9 +40,13 @@ struct EmulateCUDADim3 {
 #endif
 
 #if defined(KOKKOS_ENABLE_CUDA)
+// see:
+// https://docs.nvidia.com/cuda/cuda-c-programming-guide/#features-and-technical-specifications-technical-specifications-per-compute-capability
 constexpr int mdrange_max_blocks_x = 2147483647;  // 2^31 - 1
 constexpr int mdrange_max_blocks   = 65535;       // 2^16 - 1
 #elif defined(KOKKOS_ENABLE_HIP)
+// see:
+// https://rocm.docs.amd.com/projects/HIP/en/latest/reference/hardware_features.html
 constexpr long mdrange_max_blocks_x = 4294967295;  // 2^32 - 1
 constexpr long mdrange_max_blocks   = 4294967295;  // 2^32 - 1
 #else
