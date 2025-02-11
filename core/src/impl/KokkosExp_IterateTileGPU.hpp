@@ -20,6 +20,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <algorithm>
+#include <limits>
 
 #include <utility>
 
@@ -44,11 +45,11 @@ constexpr int mdrange_max_blocks   = 65535;       // 2^16 - 1
 #elif defined(KOKKOS_ENABLE_HIP)
 constexpr long mdrange_max_blocks_x = 4294967295;  // 2^32 - 1
 constexpr long mdrange_max_blocks   = 4294967295;  // 2^32 - 1
-#elif defined(KOKKOS_ENABLE_SYCL)
-constexpr int mdrange_max_blocks_x = 4294967295;  // 2^32 - 1
-constexpr int mdrange_max_blocks   = 4294967295;  // 2^32 - 1
 #else
-#error("Programming model not supported")
+constexpr std::size_t mdrange_max_blocks_x =
+    std::numeric_limits<std::size_t>::max();  // +inf
+constexpr std::size_t mdrange_max_blocks =
+    std::numeric_limits<std::size_t>::max();  // +inf
 #endif
 
 template <class Tag, class Functor, class... Args>
