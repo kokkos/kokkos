@@ -45,6 +45,16 @@ so we infer its presence is not necessary.
 bool xnack_environment_enabled();
 // Returns true iff we detect CONFIG_HMM_MIROR=y in /boot/config-$(uname -r).
 bool xnack_boot_config_has_hmm_mirror();
+// Returns true iff the architecture of the gpu supports accessing system
+// allocated memory
+constexpr bool gpu_arch_can_access_system_allocations() {
+#if defined Kokkos_ARCH_AMD_GFX908 || Kokkos_ARCH_AMD_GFX90A || \
+    Kokkos_ARCH_AMD_GFX942 || Kokkos_ARCH_AMD_GFX942_APU
+  return true;
+#else
+  return false;
+#endif
+}
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_HIP_ISXNACK_HPP
