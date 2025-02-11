@@ -178,7 +178,34 @@ void HIPInternal::initialize(hipStream_t stream) {
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
+    // Get the device ID. If this is ROCm 5.6 or later, we can query this from
+    // the provided stream and potentially use multiple GPU devices. For
+    // ROCm 5.5 or earlier, we must use the singleton device id and there are no
+    // checks possible for the device id matching the device the stream was
+    // created on.
+#if (HIP_VERSION_MAJOR > 5 || \
+     (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR >= 6))
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamGetDevice(stream, &m_hipDev));
+#else
+  m_hipDev = singleton().m_hipDev;
+#endif
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
+  hip_devices.insert(m_hipDev);
+
   m_stream = stream;
+
+  // Allocate a staging buffer for constant mem in pinned host memory
+  // and an event to avoid overwriting driver for previous kernel launches
+  if (!constantMemHostStaging[m_hipDev]) {
+    void *constant_mem_void_ptr = nullptr;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hip_host_malloc_wrapper(
+        &constant_mem_void_ptr, Impl::HIPTraits::ConstantMemoryUsage));
+    constantMemHostStaging[m_hipDev] =
+        static_cast<unsigned long *>(constant_mem_void_ptr);
+  }
+  if (!constantMemReusable[m_hipDev])
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hip_event_create_wrapper(&constantMemReusable[m_hipDev]));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -214,7 +241,7 @@ void HIPInternal::initialize(hipStream_t stream) {
 Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
   if (verify_is_initialized("scratch_space") &&
       m_scratchSpaceCount < scratch_count(size)) {
-    Kokkos::HIPSpace mem_space;
+    auto mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
 
     if (m_scratchSpace) {
       mem_space.deallocate(m_scratchSpace,
@@ -235,7 +262,7 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
 Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
   if (verify_is_initialized("scratch_flags") &&
       m_scratchFlagsCount < scratch_count(size)) {
-    Kokkos::HIPSpace mem_space;
+    auto mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
 
     if (m_scratchFlags) {
       mem_space.deallocate(m_scratchFlags,
@@ -252,7 +279,8 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
     // We only zero-initialize the allocation when we actually allocate.
     // It's the responsibility of the features using scratch_flags,
     // namely parallel_reduce and parallel_scan, to reset the used values to 0.
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemset(m_scratchFlags, 0, alloc_size));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hip_memset_wrapper(m_scratchFlags, 0, alloc_size));
   }
 
   return m_scratchFlags;
@@ -261,8 +289,9 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
 Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
     void const *driver, std::size_t const size) const {
   if (verify_is_initialized("scratch_functor") && m_scratchFunctorSize < size) {
-    Kokkos::HIPSpace device_mem_space;
-    Kokkos::HIPHostPinnedSpace host_mem_space;
+    auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
+    auto host_mem_space =
+        Kokkos::HIPHostPinnedSpace::impl_create(m_hipDev, m_stream);
 
     if (m_scratchFunctor) {
       device_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
@@ -284,9 +313,8 @@ Kokkos::HIP::size_type *HIPInternal::stage_functor_for_execution(
   // HSA_XNACK=0. That's why we always copy the driver.
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamSynchronize(m_stream));
   std::memcpy(m_scratchFunctorHost, driver, size);
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemcpyAsync(m_scratchFunctor,
-                                           m_scratchFunctorHost, size,
-                                           hipMemcpyDefault, m_stream));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hip_memcpy_async_wrapper(
+      m_scratchFunctor, m_scratchFunctorHost, size, hipMemcpyDefault));
 
   return m_scratchFunctor;
 }
@@ -308,21 +336,22 @@ void *HIPInternal::resize_team_scratch_space(int scratch_pool_id,
   // Multiple ParallelFor/Reduce Teams can call this function at the same time
   // and invalidate the m_team_scratch_ptr. We use a pool to avoid any race
   // condition.
+  auto mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (m_team_scratch_current_size[scratch_pool_id] == 0) {
     m_team_scratch_current_size[scratch_pool_id] = bytes;
     m_team_scratch_ptr[scratch_pool_id] =
-        Kokkos::kokkos_malloc<Kokkos::HIPSpace>(
-            "Kokkos::HIPSpace::TeamScratchMemory",
-            m_team_scratch_current_size[scratch_pool_id]);
+        mem_space.allocate("Kokkos::HIPSpace::TeamScratchMemory",
+                           m_team_scratch_current_size[scratch_pool_id]);
   }
   if ((bytes > m_team_scratch_current_size[scratch_pool_id]) ||
       ((bytes < m_team_scratch_current_size[scratch_pool_id]) &&
        (force_shrink))) {
+    mem_space.deallocate("Kokkos::HIPSpace::TeamScratchMemory",
+                         m_team_scratch_ptr[scratch_pool_id],
+                         m_team_scratch_current_size[scratch_pool_id]);
     m_team_scratch_current_size[scratch_pool_id] = bytes;
     m_team_scratch_ptr[scratch_pool_id] =
-        Kokkos::kokkos_realloc<Kokkos::HIPSpace>(
-            m_team_scratch_ptr[scratch_pool_id],
-            m_team_scratch_current_size[scratch_pool_id]);
+        mem_space.allocate("Kokkos::HIPSpace::TeamScratchMemory", bytes);
   }
   return m_team_scratch_ptr[scratch_pool_id];
 }
@@ -337,9 +366,8 @@ void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 
+  auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
-    Kokkos::HIPSpace device_mem_space;
-
     device_mem_space.deallocate(m_scratchFlags,
                                 m_scratchSpaceCount * sizeScratchGrain);
     device_mem_space.deallocate(m_scratchSpace,
@@ -347,14 +375,16 @@ void HIPInternal::finalize() {
 
     if (m_scratchFunctorSize > 0) {
       device_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
-      Kokkos::HIPHostPinnedSpace host_mem_space;
+      auto host_mem_space =
+          Kokkos::HIPHostPinnedSpace::impl_create(m_hipDev, m_stream);
       host_mem_space.deallocate(m_scratchFunctorHost, m_scratchFunctorSize);
     }
   }
 
   for (int i = 0; i < m_n_team_scratch; ++i) {
     if (m_team_scratch_current_size[i] > 0)
-      Kokkos::kokkos_free<Kokkos::HIPSpace>(m_team_scratch_ptr[i]);
+      device_mem_space.deallocate(m_team_scratch_ptr[i],
+                                  m_team_scratch_current_size[i]);
   }
 
   m_scratchSpaceCount = 0;
@@ -366,20 +396,21 @@ void HIPInternal::finalize() {
     m_team_scratch_ptr[i]          = nullptr;
   }
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(m_scratch_locks));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hip_free_wrapper(m_scratch_locks));
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
 }
 
-int HIPInternal::m_hipDev          = -1;
 int HIPInternal::m_maxThreadsPerSM = 0;
 
 hipDeviceProp_t HIPInternal::m_deviceProp;
 
 std::mutex HIPInternal::scratchFunctorMutex;
-unsigned long *HIPInternal::constantMemHostStaging = nullptr;
-hipEvent_t HIPInternal::constantMemReusable        = nullptr;
-std::mutex HIPInternal::constantMemMutex;
+
+std::set<int> HIPInternal::hip_devices                             = {};
+std::map<int, unsigned long *> HIPInternal::constantMemHostStaging = {};
+std::map<int, hipEvent_t> HIPInternal::constantMemReusable         = {};
+std::map<int, std::mutex> HIPInternal::constantMemMutex            = {};
 
 //----------------------------------------------------------------------------
 
@@ -422,7 +453,9 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
   for (int s = 0; s < int(instances.size()); s++) {
     hipStream_t stream;
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        instances[s].impl_internal_space_instance()->hip_stream_create_wrapper(
+            &stream));
     instances[s] = HIP(stream, ManageStream::yes);
   }
 }
