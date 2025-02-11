@@ -32,35 +32,35 @@ static_assert(false,
 namespace Kokkos::Impl {
 // We do have implementation detail versions of these in our mdspan impl
 // However they are not part of the public standard interface
-template <class T>
-struct IsLayoutRightPadded : public std::false_type {};
+template <class>
+struct IsLayoutRightPadded : std::false_type {};
 
 template <size_t Pad>
-struct IsLayoutRightPadded<Kokkos::Experimental::layout_right_padded<Pad>>
-    : public std::true_type {};
+struct IsLayoutRightPadded<Experimental::layout_right_padded<Pad>>
+    : std::true_type {};
 
-template <class T>
-struct IsLayoutLeftPadded : public std::false_type {};
+template <class>
+struct IsLayoutLeftPadded : std::false_type {};
 
 template <size_t Pad>
-struct IsLayoutLeftPadded<Kokkos::Experimental::layout_left_padded<Pad>>
-    : public std::true_type {};
+struct IsLayoutLeftPadded<Experimental::layout_left_padded<Pad>>
+    : std::true_type {};
 
 template <class ArrayLayout>
 struct LayoutFromArrayLayout;
 
 template <>
-struct LayoutFromArrayLayout<Kokkos::LayoutLeft> {
-  using type = Kokkos::Experimental::layout_left_padded<dynamic_extent>;
+struct LayoutFromArrayLayout<LayoutLeft> {
+  using type = Experimental::layout_left_padded<dynamic_extent>;
 };
 
 template <>
-struct LayoutFromArrayLayout<Kokkos::LayoutRight> {
-  using type = Kokkos::Experimental::layout_right_padded<dynamic_extent>;
+struct LayoutFromArrayLayout<LayoutRight> {
+  using type = Experimental::layout_right_padded<dynamic_extent>;
 };
 
 template <>
-struct LayoutFromArrayLayout<Kokkos::LayoutStride> {
+struct LayoutFromArrayLayout<LayoutStride> {
   using type = layout_stride;
 };
 
