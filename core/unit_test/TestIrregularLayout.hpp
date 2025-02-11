@@ -57,7 +57,6 @@ struct LayoutSelective {
   }
   KOKKOS_INLINE_FUNCTION
   LayoutSelective& operator=(LayoutSelective const& rhs) {
-    if (&rhs == this) return *this;
     assign(rhs.offset_list, rhs.list_size);
     return *this;
   }

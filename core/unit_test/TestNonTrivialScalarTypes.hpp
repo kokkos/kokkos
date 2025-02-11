@@ -140,7 +140,6 @@ struct array_reduce {
 
   KOKKOS_INLINE_FUNCTION
   array_reduce &operator=(const array_reduce &src) {
-    if (&src == this) return *this;
     for (int i = 0; i < N; i++) data[i] = src.data[i];
     return *this;
   }

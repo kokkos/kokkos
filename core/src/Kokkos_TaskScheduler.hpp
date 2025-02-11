@@ -212,7 +212,6 @@ class KOKKOS_DEPRECATED BasicTaskScheduler : public Impl::TaskSchedulerBase {
 
   KOKKOS_INLINE_FUNCTION
   BasicTaskScheduler& operator=(BasicTaskScheduler const& rhs) {
-    if (&rhs == this) return *this;
     m_track = rhs.m_track;
     m_queue = rhs.m_queue;
     return *this;
