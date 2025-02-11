@@ -37,7 +37,7 @@
 
 template <int V>
 struct TestFunctor {
-  double values[V];
+  double values[V] = {};
   Kokkos::View<double*> a;
   int K;
   TestFunctor(Kokkos::View<double*> a_, int K_) : a(a_), K(K_) {}
@@ -50,7 +50,7 @@ struct TestFunctor {
 
 template <int V>
 struct TestRFunctor {
-  double values[V];
+  double values[V] = {};
   Kokkos::View<double*> a;
   int K;
   TestRFunctor(Kokkos::View<double*> a_, int K_) : a(a_), K(K_) {}
