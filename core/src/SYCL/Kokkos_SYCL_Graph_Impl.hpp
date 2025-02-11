@@ -37,9 +37,9 @@ class GraphImpl<Kokkos::SYCL> {
   using root_node_impl_t =
       GraphNodeImpl<Kokkos::SYCL, Kokkos::Experimental::TypeErasedTag,
                     Kokkos::Experimental::TypeErasedTag>;
-  using aggregate_kernel_impl_t = SYCLGraphNodeAggregateKernel;
+  using aggregate_impl_t = SYCLGraphNodeAggregate;
   using aggregate_node_impl_t =
-      GraphNodeImpl<Kokkos::SYCL, aggregate_kernel_impl_t,
+      GraphNodeImpl<Kokkos::SYCL, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
@@ -89,6 +89,8 @@ class GraphImpl<Kokkos::SYCL> {
   std::optional<sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::executable>>
       m_graph_exec;
+
+  std::vector<std::shared_ptr<node_details_t>> m_nodes;
 };
 
 inline GraphImpl<Kokkos::SYCL>::~GraphImpl() {
@@ -122,6 +124,7 @@ GraphImpl<Kokkos::SYCL>::add_node(
   kernel.set_sycl_graph_node_ptr(&node);
   kernel.execute();
   KOKKOS_ENSURES(node);
+  m_nodes.push_back(arg_node_ptr);
 }
 
 // Requires PredecessorRef is a specialization of GraphNodeRef that has
@@ -144,10 +147,14 @@ inline void GraphImpl<Kokkos::SYCL>::add_predecessor(
 }
 
 inline void GraphImpl<Kokkos::SYCL>::submit(const Kokkos::SYCL& exec) {
+  auto q = exec.sycl_queue();
+
+  desul::ensure_sycl_lock_arrays_on_device(q);
+
   if (!m_graph_exec) {
     instantiate();
   }
-  exec.sycl_queue().ext_oneapi_graph(*m_graph_exec);
+  q.ext_oneapi_graph(*m_graph_exec);
 }
 
 inline Kokkos::SYCL const& GraphImpl<Kokkos::SYCL>::get_execution_space()
@@ -170,9 +177,8 @@ inline auto GraphImpl<Kokkos::SYCL>::create_aggregate_ptr(
   // in the generic layer, which calls through to add_predecessor for
   // each predecessor ref, so all we need to do here is create the (trivial)
   // aggregate node.
-  return std::make_shared<aggregate_node_impl_t>(m_execution_space,
-                                                 _graph_node_kernel_ctor_tag{},
-                                                 aggregate_kernel_impl_t{});
+  return std::make_shared<aggregate_node_impl_t>(
+      m_execution_space, _graph_node_kernel_ctor_tag{}, aggregate_impl_t{});
 }
 }  // namespace Impl
 }  // namespace Kokkos

@@ -513,11 +513,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
                                  std::to_string(KOKKOS_COMPILER_GNU));
   declare_configuration_metadata("tools_only", "compiler_family", "gnu");
 #endif
-#ifdef KOKKOS_COMPILER_INTEL
-  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_INTEL",
-                                 std::to_string(KOKKOS_COMPILER_INTEL));
-  declare_configuration_metadata("tools_only", "compiler_family", "intel");
-#endif
 #ifdef KOKKOS_COMPILER_INTEL_LLVM
   declare_configuration_metadata("compiler_version",
                                  "KOKKOS_COMPILER_INTEL_LLVM",
@@ -1105,9 +1100,6 @@ void Kokkos::finalize() {
   post_finalize_internal();
 }
 
-#ifdef KOKKOS_COMPILER_INTEL
-void Kokkos::fence() { fence("Kokkos::fence: Unnamed Global Fence"); }
-#endif
 void Kokkos::fence(const std::string& name) { fence_internal(name); }
 
 namespace {

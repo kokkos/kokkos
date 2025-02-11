@@ -524,7 +524,10 @@ class DynRankView : private View<DataType*******, Properties...> {
         std::is_same_v<typename traits::array_layout, Kokkos::LayoutStride>,
 
     is_default_map = std::is_void_v<typename traits::specialize> &&
-                     (is_layout_left || is_layout_right || is_layout_stride)
+                     (is_layout_left || is_layout_right || is_layout_stride),
+
+    is_default_access =
+        is_default_map && std::is_same_v<reference_type, element_type&>
   };
 
 // Bounds checking macros
@@ -574,12 +577,131 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type::stride_7;            // FIXME: not tested
   using view_type::use_count;
 
+#ifdef KOKKOS_ENABLE_CUDA
   KOKKOS_FUNCTION reference_type
   operator()(index_type i0 = 0, index_type i1 = 0, index_type i2 = 0,
              index_type i3 = 0, index_type i4 = 0, index_type i5 = 0,
              index_type i6 = 0) const {
     return view_type::operator()(i0, i1, i2, i3, i4, i5, i6);
   }
+#else
+  // Adding shortcut operators for rank-0 to rank-3 for default layouts
+  // and access modalities.
+  // This removes performance overhead for always using rank-7 mapping.
+  // See https://github.com/kokkos/kokkos/issues/7604
+  // When boundschecking is enabled we still go through the underlying
+  // rank-7 View to leverage the error checks there.
+
+  KOKKOS_FUNCTION reference_type operator()() const {
+#ifdef KOKKOS_ENABLE_DEBUG
+    if (rank() != 0u)
+      Kokkos::abort(
+          "DynRankView rank 0 operator() called with invalid number of "
+          "arguments.");
+#endif
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+    if constexpr (is_default_access) {
+      return view_type::data()[0];
+    } else
+#endif
+      return view_type::operator()(0, 0, 0, 0, 0, 0, 0);
+  }
+
+  KOKKOS_FUNCTION reference_type operator()(index_type i0) const {
+#ifdef KOKKOS_ENABLE_DEBUG
+    // FIXME: Should be equal, only access(...) allows mismatch of rank and
+    // index args
+    if (rank() > 1u)
+      Kokkos::abort(
+          "DynRankView rank 1 operator() called with invalid number of "
+          "arguments.");
+#endif
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+    if constexpr (is_default_access) {
+      if constexpr (is_layout_stride) {
+        return view_type::data()[i0 * view_type::stride(0)];
+      } else {
+        return view_type::data()[i0];
+      }
+    } else
+#endif
+      return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
+    __builtin_unreachable();
+#endif
+  }
+
+  KOKKOS_FUNCTION reference_type operator()(index_type i0,
+                                            index_type i1) const {
+#ifdef KOKKOS_ENABLE_DEBUG
+    // FIXME: Should be equal, only access(...) allows mismatch of rank and
+    // index args
+    if (rank() > 2u)
+      Kokkos::abort(
+          "DynRankView rank 2 operator() called with invalid number of "
+          "arguments.");
+#endif
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+    if constexpr (is_default_access) {
+      if constexpr (is_layout_left) {
+        return view_type::data()[i0 + i1 * view_type::stride(1)];
+      } else if constexpr (is_layout_right) {
+        return view_type::data()[i0 * view_type::extent(1) + i1];
+      } else {
+        return view_type::data()[i0 * view_type::stride(0) +
+                                 i1 * view_type::stride(1)];
+      }
+    } else
+#endif
+      return view_type::operator()(i0, i1, 0, 0, 0, 0, 0);
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
+    __builtin_unreachable();
+#endif
+  }
+
+  KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
+                                            index_type i2) const {
+#ifdef KOKKOS_ENABLE_DEBUG
+    // FIXME: Should be equal, only access(...) allows mismatch of rank and
+    // index args
+    if (rank() > 3u)
+      Kokkos::abort(
+          "DynRankView rank 3 operator() called with invalid number of "
+          "arguments.");
+#endif
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+    if constexpr (is_default_access) {
+      if constexpr (is_layout_left) {
+        return view_type::data()[i0 + view_type::stride(1) *
+                                          (i1 + i2 * view_type::extent(1))];
+      } else if constexpr (is_layout_right) {
+        return view_type::data()[(i0 * view_type::extent(1) + i1) *
+                                     view_type::extent(2) +
+                                 i2];
+      } else {
+        return view_type::data()[i0 * view_type::stride(0) +
+                                 i1 * view_type::stride(1) +
+                                 i2 * view_type::stride(2)];
+      }
+    } else
+#endif
+      return view_type::operator()(i0, i1, i2, 0, 0, 0, 0);
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
+    __builtin_unreachable();
+#endif
+  }
+
+  KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
+                                            index_type i2, index_type i3,
+                                            index_type i4 = 0,
+                                            index_type i5 = 0,
+                                            index_type i6 = 0) const {
+    return view_type::operator()(i0, i1, i2, i3, i4, i5, i6);
+  }
+#endif
 
 // This is an accomodation for Phalanx, that is usint the operator[] to access
 // all elements in a linear fashion even when the rank is not 1
@@ -1345,9 +1467,8 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   }
-#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
   __builtin_unreachable();
 #endif
 }
@@ -1435,9 +1556,8 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
   __builtin_unreachable();
 #endif
 }
@@ -1578,6 +1698,7 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
         Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy), v_resized, v);
   else {
+    // NOLINTNEXTLINE(bugprone-unused-raii)
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
     Kokkos::fence("Kokkos::resize(DynRankView)");
   }

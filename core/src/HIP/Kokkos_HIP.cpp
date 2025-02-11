@@ -21,6 +21,7 @@
 #include <Kokkos_Core.hpp>
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
+#include <HIP/Kokkos_HIP_IsXnack.hpp>
 
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
@@ -75,6 +76,18 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   }
 #endif
 #ifdef KOKKOS_ARCH_AMD_GFX942_APU
+  if (!Kokkos::Impl::xnack_enabled()) {
+    std::cerr << R"warning(
+Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled. 
+                                 Kokkos requires xnack to be enabled for
+                                 ARCH_AMD_GFX942_APU (MI300A) to access host
+                                 allocations from the device. Set HSA_XNACK=1
+                                 in your environment and ensure
+                                 \"CONFIG_HMM_MIRROR=y\" is in the /boot/config
+                                 file and that file is readable)warning"
+              << "\n";
+  }
+
   if ((Kokkos::show_warnings()) &&
       (Impl::HIPInternal::m_deviceProp.integrated == 0)) {
     std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
@@ -95,9 +108,12 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
+
+  void* constant_mem_void_ptr = nullptr;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipHostMalloc(
-      reinterpret_cast<void**>(&Impl::HIPInternal::constantMemHostStaging),
-      Impl::HIPTraits::ConstantMemoryUsage));
+      &constant_mem_void_ptr, Impl::HIPTraits::ConstantMemoryUsage));
+  Impl::HIPInternal::constantMemHostStaging =
+      static_cast<unsigned long*>(constant_mem_void_ptr);
 
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipEventCreate(&Impl::HIPInternal::constantMemReusable));

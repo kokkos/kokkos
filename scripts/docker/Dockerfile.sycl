@@ -1,6 +1,8 @@
 ARG BASE=nvcr.io/nvidia/cuda:11.7.1-devel-ubuntu22.04@sha256:a3184e4dc6f968da5bba86df3081ff3013f8e3674a9bfce544af8be905d2f17a
 FROM $BASE
 
+ARG ADDITIONAL_PACKAGES
+
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 
 RUN apt-get update && apt-get install -y \
@@ -11,11 +13,12 @@ RUN apt-get update && apt-get install -y \
         python3 \
         git \
         libomp-dev \
+        ${ADDITIONAL_PACKAGES} \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
@@ -46,7 +49,7 @@ RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCT
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget https://cloud.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
+RUN wget https://cloud1.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
     echo "3416721faf83e5858e65795231bae47bb51ff91d4e8738613d498674f1636f72  oneapi-for-nvidia-gpus-2023.0.0-linux.sh" | sha256sum --check && \
     chmod +x oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
     ./oneapi-for-nvidia-gpus-2023.0.0-linux.sh -y && \

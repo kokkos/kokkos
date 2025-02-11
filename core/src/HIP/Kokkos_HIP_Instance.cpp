@@ -196,8 +196,10 @@ void HIPInternal::initialize(hipStream_t stream) {
     const unsigned reduce_block_count =
         maxWarpCount * Impl::HIPTraits::WarpSize;
 
-    (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
-    (void)scratch_space(reduce_block_count * 16 * sizeof(size_type));
+    (void)scratch_flags(static_cast<size_t>(reduce_block_count * 2) *
+                        sizeof(size_type));
+    (void)scratch_space(static_cast<size_t>(reduce_block_count * 16) *
+                        sizeof(size_type));
   }
 
   m_num_scratch_locks = concurrency();

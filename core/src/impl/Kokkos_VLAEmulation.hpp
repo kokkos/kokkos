@@ -140,6 +140,7 @@ struct ObjectWithVLAEmulation {
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
+ private:
   // TODO @tasking @optimization DSH specialization for trivially constructible
   // VLAValueType?
   // TODO @tasking @minor DSH SFINAE-out this constructor for non-default
@@ -165,7 +166,9 @@ struct ObjectWithVLAEmulation {
       new (_vla_pointer() + i) vla_value_type();
     }
   }
+  friend Derived;
 
+ public:
   KOKKOS_INLINE_FUNCTION
   ~ObjectWithVLAEmulation() {
     for (auto&& value : *this) {

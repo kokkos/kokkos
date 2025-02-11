@@ -164,11 +164,6 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     endif()
   endif()
 
-  # ICPC doesn't support -Wsuggest-override
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
-    list(REMOVE_ITEM COMMON_WARNINGS "-Wsuggest-override")
-  endif()
-
   if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
   endif()
@@ -363,8 +358,6 @@ if(KOKKOS_ARCH_ZEN)
   compiler_specific_flags(
     COMPILER_ID
     KOKKOS_CXX_HOST_COMPILER_ID
-    Intel
-    -mavx2
     MSVC
     /arch:AVX2
     NVHPC
@@ -381,8 +374,6 @@ if(KOKKOS_ARCH_ZEN2)
   compiler_specific_flags(
     COMPILER_ID
     KOKKOS_CXX_HOST_COMPILER_ID
-    Intel
-    -mavx2
     MSVC
     /arch:AVX2
     NVHPC
@@ -399,8 +390,6 @@ if(KOKKOS_ARCH_ZEN3)
   compiler_specific_flags(
     COMPILER_ID
     KOKKOS_CXX_HOST_COMPILER_ID
-    Intel
-    -mavx2
     MSVC
     /arch:AVX2
     NVHPC
@@ -417,8 +406,6 @@ if(KOKKOS_ARCH_ZEN4)
   compiler_specific_flags(
     COMPILER_ID
     KOKKOS_CXX_HOST_COMPILER_ID
-    Intel
-    -xCORE-AVX512
     MSVC
     /arch:AVX512
     NVHPC
@@ -438,8 +425,6 @@ if(KOKKOS_ARCH_SNB OR KOKKOS_ARCH_AMDAVX)
     KOKKOS_CXX_HOST_COMPILER_ID
     Cray
     NO-VALUE-SPECIFIED
-    Intel
-    -mavx
     MSVC
     /arch:AVX
     NVHPC
@@ -456,8 +441,6 @@ if(KOKKOS_ARCH_HSW)
     KOKKOS_CXX_HOST_COMPILER_ID
     Cray
     NO-VALUE-SPECIFIED
-    Intel
-    -xCORE-AVX2
     MSVC
     /arch:AVX2
     NVHPC
@@ -496,8 +479,6 @@ if(KOKKOS_ARCH_BDW)
     KOKKOS_CXX_HOST_COMPILER_ID
     Cray
     NO-VALUE-SPECIFIED
-    Intel
-    -xCORE-AVX2
     MSVC
     /arch:AVX2
     NVHPC
@@ -517,8 +498,6 @@ if(KOKKOS_ARCH_KNL)
     KOKKOS_CXX_HOST_COMPILER_ID
     Cray
     NO-VALUE-SPECIFIED
-    Intel
-    -xMIC-AVX512
     MSVC
     /arch:AVX512
     NVHPC
@@ -539,8 +518,6 @@ if(KOKKOS_ARCH_SKL)
     KOKKOS_CXX_HOST_COMPILER_ID
     Cray
     NO-VALUE-SPECIFIED
-    Intel
-    -xSKYLAKE
     MSVC
     /arch:AVX2
     NVHPC
@@ -558,8 +535,6 @@ if(KOKKOS_ARCH_SKX)
     KOKKOS_CXX_HOST_COMPILER_ID
     Cray
     NO-VALUE-SPECIFIED
-    Intel
-    -xCORE-AVX512
     MSVC
     /arch:AVX512
     NVHPC
@@ -1212,9 +1187,8 @@ if(KOKKOS_ENABLE_HIP AND NOT AMDGPU_ARCH_ALREADY_SPECIFIED AND NOT KOKKOS_IMPL_A
     )
   else()
     execute_process(COMMAND ${ROCM_ENUMERATOR} OUTPUT_VARIABLE GPU_ARCHS)
-    string(LENGTH "${GPU_ARCHS}" len_str)
-    # enumerator always output gfx000 as the first line
-    if(${len_str} LESS 8)
+    # Exits early if no GPU was detected
+    if("${GPU_ARCHS}" STREQUAL "")
       message(SEND_ERROR "HIP enabled but no AMD GPU architecture could be automatically detected. "
                          "Please manually specify one AMD GPU architecture via -DKokkos_ARCH_{..}=ON'."
       )

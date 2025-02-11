@@ -24,8 +24,9 @@ template <typename Abi, typename Loader, typename ReductionOp, typename T>
 inline void host_check_reduction_one_loader(ReductionOp reduce_op,
                                             std::size_t n, T const* args) {
   Loader loader;
-  using simd_type = Kokkos::Experimental::simd<T, Abi>;
-  using mask_type = typename Kokkos::Experimental::simd<T, Abi>::mask_type;
+  using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+  using mask_type =
+      typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
   constexpr std::size_t width = simd_type::size();
 
   for (std::size_t i = 0; i < n; i += width) {
@@ -35,15 +36,23 @@ inline void host_check_reduction_one_loader(ReductionOp reduce_op,
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    mask_type mask(false);
-    for (std::size_t j = 0; j < n; ++j) {
-      mask[j] = true;
-    }
-    auto value    = where(mask, arg);
-    auto expected = reduce_op.on_host_serial(value);
-    auto computed = reduce_op.on_host(value);
+    if constexpr (std::is_same_v<Abi, Kokkos::Experimental::simd_abi::scalar>) {
+      mask_type mask(KOKKOS_LAMBDA(std::size_t j) { return j < nlanes; });
 
-    gtest_checker().equality(expected, computed);
+      auto value    = where(mask, arg);
+      auto expected = reduce_op.on_host_serial(value);
+      auto computed = reduce_op.on_host(value);
+
+      gtest_checker().equality(expected, computed);
+    } else {
+      mask_type mask([=](std::size_t j) { return j < nlanes; });
+
+      auto value    = where(mask, arg);
+      auto expected = reduce_op.on_host_serial(value);
+      auto computed = reduce_op.on_host(value);
+
+      gtest_checker().equality(expected, computed);
+    }
   }
 }
 
@@ -65,7 +74,7 @@ inline void host_check_all_reductions(const DataType (&args)[n]) {
 
 template <typename Abi, typename DataType>
 inline void host_check_reductions() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     constexpr size_t n = 16;
 
     if constexpr (std::is_signed_v<DataType>) {
@@ -97,8 +106,9 @@ template <typename Abi, typename Loader, typename ReductionOp, typename T>
 KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     ReductionOp reduce_op, std::size_t n, T const* args) {
   Loader loader;
-  using simd_type = Kokkos::Experimental::simd<T, Abi>;
-  using mask_type = typename Kokkos::Experimental::simd<T, Abi>::mask_type;
+  using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+  using mask_type =
+      typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
   constexpr std::size_t width = simd_type::size();
 
   for (std::size_t i = 0; i < n; i += width) {
@@ -108,10 +118,8 @@ KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
 
-    mask_type mask(false);
-    for (std::size_t j = 0; j < n; ++j) {
-      mask[j] = true;
-    }
+    mask_type mask(KOKKOS_LAMBDA(std::size_t j) { return j < nlanes; });
+
     auto value    = where(mask, arg);
     auto expected = reduce_op.on_device_serial(value);
     auto computed = reduce_op.on_device(value);
@@ -139,7 +147,7 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_reductions() {
-  if constexpr (is_type_v<Kokkos::Experimental::simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     constexpr size_t n = 16;
 
     if constexpr (std::is_signed_v<DataType>) {

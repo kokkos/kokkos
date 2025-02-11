@@ -130,12 +130,8 @@ class GraphNodeRef {
 
   template <class NextKernelDeduced>
   auto _then_kernel(NextKernelDeduced&& arg_kernel) const {
-    // readability note:
-    //   std::remove_cvref_t<NextKernelDeduced> is a specialization of
-    //   Kokkos::Impl::GraphNodeKernelImpl:
-    static_assert(Kokkos::Impl::is_specialization_of<
-                      Kokkos::Impl::remove_cvref_t<NextKernelDeduced>,
-                      Kokkos::Impl::GraphNodeKernelImpl>::value,
+    static_assert(Kokkos::Impl::is_graph_kernel_v<
+                      Kokkos::Impl::remove_cvref_t<NextKernelDeduced>>,
                   "Kokkos internal error");
 
     auto graph_ptr = m_graph_impl.lock();
@@ -227,6 +223,28 @@ class GraphNodeRef {
 
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_for"> {{{2
+
+  // TODO We should do better than a p-for (that uses registers, heavier).
+  //      This should "just" launch the function on device with our driver.
+  template <typename Label, typename Functor,
+            typename = std::enable_if_t<std::is_invocable_r_v<
+                void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
+  auto then(Label&& label, const ExecutionSpace& exec,
+            Functor&& functor) const {
+    using next_kernel_t =
+        Kokkos::Impl::GraphNodeThenImpl<ExecutionSpace,
+                                        Kokkos::Impl::remove_cvref_t<Functor>>;
+    return this->_then_kernel(next_kernel_t{std::forward<Label>(label), exec,
+                                            std::forward<Functor>(functor)});
+  }
+
+  template <typename Label, typename Functor,
+            typename = std::enable_if_t<std::is_invocable_r_v<
+                void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
+  auto then(Label&& label, Functor&& functor) const {
+    return this->then(std::forward<Label>(label), ExecutionSpace{},
+                      std::forward<Functor>(functor));
+  }
 
   template <
       class Policy, class Functor,

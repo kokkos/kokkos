@@ -23,20 +23,6 @@ jobs:
         stdcxx: [17]
         include:
           - distro: 'ubuntu:intel'
-            cxx: 'icpc'
-            cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
-            cmake_build_type: 'Release'
-            backend: 'OPENMP'
-            clang-tidy: ''
-            stdcxx: '17'
-          - distro: 'ubuntu:intel'
-            cxx: 'icpc'
-            cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
-            cmake_build_type: 'Debug'
-            backend: 'OPENMP'
-            clang-tidy: ''
-            stdcxx: '17'
-          - distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed -fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
@@ -75,7 +61,7 @@ jobs:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
       - name: Checkout desul
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: desul/desul
           ref: 22931326247c9333cc909628004d75ee5de99fa2
@@ -90,8 +76,8 @@ jobs:
           cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
           sudo cmake --build . --target install --parallel 2
       - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
@@ -99,15 +85,6 @@ jobs:
       - name: maybe_use_flang_new
         if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
         run: echo "FC=flang-new" >> $GITHUB_ENV
-      - name: maybe_use_external_gtest
-        if: ${{ matrix.distro == 'ubuntu:latest' }}
-        run: sudo apt-get update && sudo apt-get install -y libgtest-dev
-      - name: maybe_install_clang_tidy_fedora
-        if: ${{ startsWith(matrix.distro,'fedora:') }}
-        run: sudo yum update -y && sudo yum install -y clang-tools-extra
-      - name: maybe_install_clang_tidy_ubuntu
-        if: ${{ startsWith(matrix.distro,'ubuntu:') }}
-        run: sudo apt-get update && sudo apt-get install -y clang-tidy
       - name: Configure Kokkos
         run: |
           cmake -B builddir \

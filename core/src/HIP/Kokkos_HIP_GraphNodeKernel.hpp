@@ -93,9 +93,7 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
   std::string label;
 };
 
-struct HIPGraphNodeAggregateKernel {
-  using graph_kernel = HIPGraphNodeAggregateKernel;
-};
+struct HIPGraphNodeAggregate {};
 
 template <typename KernelType,
           typename Tag =
