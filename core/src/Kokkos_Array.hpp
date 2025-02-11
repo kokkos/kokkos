@@ -272,7 +272,6 @@ struct KOKKOS_DEPRECATED
 
   KOKKOS_INLINE_FUNCTION
   Array& operator=(const Array& rhs) {
-    if (&rhs == this) return *this;
     const size_t n = size() < rhs.size() ? size() : rhs.size();
     for (size_t i = 0; i < n; ++i) m_elem[i] = rhs[i];
     return *this;
@@ -341,7 +340,6 @@ struct KOKKOS_DEPRECATED
 
   KOKKOS_INLINE_FUNCTION
   Array& operator=(const Array& rhs) {
-    if (&rhs == this) return *this;
     const size_t n = size() < rhs.size() ? size() : rhs.size();
     for (size_t i = 0; i < n; ++i) m_elem[i * m_stride] = rhs[i];
     return *this;
