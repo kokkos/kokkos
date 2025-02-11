@@ -125,9 +125,6 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     }
     return layout;
   }
-#ifdef KOKKOS_COMPILER_INTEL
-  __builtin_unreachable();
-#endif
 }
 
 template <class MappingType, class ArrayLayout, size_t... Idx>
@@ -228,9 +225,6 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
   } else {
     return mapping_type(extents_from_view_mapping<extents_type>(view_mapping));
   }
-#ifdef KOKKOS_COMPILER_INTEL
-  __builtin_unreachable();
-#endif
 }
 
 template <size_t ScalarSize>
