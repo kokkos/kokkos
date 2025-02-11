@@ -89,4 +89,6 @@ bool xnack_boot_config_has_hmm_mirror() {
   return cache;
 }
 
+}
+
 }  // namespace Kokkos::Impl
