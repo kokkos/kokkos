@@ -48,8 +48,8 @@ bool xnack_boot_config_has_hmm_mirror();
 // Returns true iff the architecture of the gpu supports accessing system
 // allocated memory
 constexpr bool gpu_arch_can_access_system_allocations() {
-#if defined Kokkos_ARCH_AMD_GFX908 || Kokkos_ARCH_AMD_GFX90A || \
-    Kokkos_ARCH_AMD_GFX942 || Kokkos_ARCH_AMD_GFX942_APU
+#if defined(KOKKOS_ARCH_AMD_GFX908) || defined(Kokkos_ARCH_AMD_GFX90A) || \
+    defined(Kokkos_ARCH_AMD_GFX942) || defined(Kokkos_ARCH_AMD_GFX942_APU)
   return true;
 #else
   return false;
