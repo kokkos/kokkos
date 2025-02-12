@@ -47,8 +47,8 @@ constexpr int mdrange_max_blocks   = 65535;       // 2^16 - 1
 #elif defined(KOKKOS_ENABLE_HIP)
 // see:
 // https://rocm.docs.amd.com/projects/HIP/en/latest/reference/hardware_features.html
-constexpr long mdrange_max_blocks_x = 4294967295;  // 2^32 - 1
-constexpr long mdrange_max_blocks   = 4294967295;  // 2^32 - 1
+constexpr unsigned int mdrange_max_blocks_x = 4294967295;  // 2^32 - 1
+constexpr unsigned int mdrange_max_blocks   = 4294967295;  // 2^32 - 1
 #else
 constexpr std::size_t mdrange_max_blocks_x =
     std::numeric_limits<std::size_t>::max();  // +inf
