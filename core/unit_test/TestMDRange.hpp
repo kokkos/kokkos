@@ -2094,8 +2094,10 @@ struct TestMDRange_4D {
       parallel_reduce(range, functor, MinMax(min_max_value));
 
       if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-        printf(" Errors in test_for4; min = %d, max = %d\n\n",
-               min_max_value.min_val, min_max_value.max_val);
+        printf(
+            " Errors in test_for4_eval_once for shape (%d, %d, %d, %d); min = "
+            "%d, max = %d\n\n",
+            N0, N1, N2, N3, min_max_value.min_val, min_max_value.max_val);
       }
 
       ASSERT_EQ(min_max_value.min_val, 1);
@@ -2118,8 +2120,10 @@ struct TestMDRange_4D {
       parallel_reduce(range, functor, MinMax(min_max_value));
 
       if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-        printf(" Errors in test_for4; min = %d, max = %d\n\n",
-               min_max_value.min_val, min_max_value.max_val);
+        printf(
+            " Errors in test_for4_eval_once for shape (%d, %d, %d, %d); min = "
+            "%d, max = %d\n\n",
+            N0, N1, N2, N3, min_max_value.min_val, min_max_value.max_val);
       }
 
       ASSERT_EQ(min_max_value.min_val, 1);
@@ -2745,8 +2749,10 @@ struct TestMDRange_5D {
       parallel_reduce(range, functor, MinMax(min_max_value));
 
       if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-        printf(" Errors in test_for5; min = %d, max = %d\n\n",
-               min_max_value.min_val, min_max_value.max_val);
+        printf(
+            " Errors in test_for5_eval_once for shape (%d, %d, %d, %d, %d); "
+            "min = %d, max = %d\n\n",
+            N0, N1, N2, N3, N4, min_max_value.min_val, min_max_value.max_val);
       }
 
       ASSERT_EQ(min_max_value.min_val, 1);
@@ -2770,8 +2776,10 @@ struct TestMDRange_5D {
       parallel_reduce(range, functor, MinMax(min_max_value));
 
       if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-        printf(" Errors in test_for5; min = %d, max = %d\n\n",
-               min_max_value.min_val, min_max_value.max_val);
+        printf(
+            " Errors in test_for5_eval_once for shape (%d, %d, %d, %d, %d); "
+            "min = %d, max = %d\n\n",
+            N0, N1, N2, N3, N4, min_max_value.min_val, min_max_value.max_val);
       }
 
       ASSERT_EQ(min_max_value.min_val, 1);
@@ -3631,8 +3639,11 @@ struct TestMDRange_6D {
       parallel_reduce(range, functor, MinMax(min_max_value));
 
       if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-        printf(" Errors in test_for6; min = %d, max = %d\n\n",
-               min_max_value.min_val, min_max_value.max_val);
+        printf(
+            " Errors in test_for6_eval_once for shape (%d, %d, %d, %d, %d, "
+            "%d); min = %d, max = %d\n\n",
+            N0, N1, N2, N3, N4, N5, min_max_value.min_val,
+            min_max_value.max_val);
       }
 
       ASSERT_EQ(min_max_value.min_val, 1);
@@ -3656,8 +3667,11 @@ struct TestMDRange_6D {
       parallel_reduce(range, functor, MinMax(min_max_value));
 
       if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-        printf(" Errors in test_for6; min = %d, max = %d\n\n",
-               min_max_value.min_val, min_max_value.max_val);
+        printf(
+            " Errors in test_for6_eval_once for shape (%d, %d, %d, %d, %d, "
+            "%d); min = %d, max = %d\n\n",
+            N0, N1, N2, N3, N4, N5, min_max_value.min_val,
+            min_max_value.max_val);
       }
 
       ASSERT_EQ(min_max_value.min_val, 1);
