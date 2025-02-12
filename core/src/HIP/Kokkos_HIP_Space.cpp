@@ -194,7 +194,7 @@ Kokkos::HIP::runtime WARNING: Kokkos was not able to verify that xnack is enable
                               Set HSA_XNACK=1 in your environment. For further information on HMM support
                               call `Kokkos::print_configuration`, or run with KOKKOS_PRINT_CONFIGURATION=1
                               in your environment.
-)warning"
+)warning";
       } while (false);
     }
     auto const error_code = hipMallocManaged(&ptr, arg_alloc_size);
