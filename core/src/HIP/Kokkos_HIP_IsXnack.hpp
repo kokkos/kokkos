@@ -44,7 +44,7 @@ so we infer its presence is not necessary.
 // Returns true iff we detect HSA_XNACK=1 in the environment.
 bool xnack_environment_enabled();
 // Returns true iff we detect CONFIG_HMM_MIROR=y in /boot/config-$(uname -r).
-bool xnack_hmm_found();
+bool xnack_boot_config_has_hmm_mirror();
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_HIP_ISXNACK_HPP

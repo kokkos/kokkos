@@ -84,7 +84,7 @@ bool xnack_environment_enabled() {
   return cache;
 }
 
-bool xnack_hmm_found() {
+bool xnack_boot_config_has_hmm_mirror() {
   static bool cache = [] { return config_hmm_mirror_in_boot_config(); }();
   return cache;
 }
