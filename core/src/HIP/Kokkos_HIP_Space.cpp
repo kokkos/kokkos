@@ -192,7 +192,8 @@ Kokkos::HIP::allocation WARNING: The combination of device and system configurat
 Kokkos::HIP::runtime WARNING: Kokkos was not able to verify that xnack is enabled.
                               Without xnack enabled, Kokkos::HIPManaged might not behave as expected.
                               Set HSA_XNACK=1 in your environment. For further information on HMM support
-                              check `Kokkos::print_configuration`.)warning"
+                              call `Kokkos::print_configuration`, or run with KOKKOS_PRINT_CONFIGURATION=1
+                              in your environment.)warning"
                     << std::endl;
       } while (false);
     }

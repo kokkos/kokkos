@@ -82,7 +82,9 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
                                  ARCH_AMD_GFX942_APU (MI300A) to access host
                                  allocations from the device. Set HSA_XNACK=1
                                  in your environment. For further information
-                                 on HMM support check `Kokkos::print_configuration`.)warning"
+                                 on HMM support call `Kokkos::print_configuration`,
+                                 or run with KOKKOS_PRINT_CONFIGURATION=1 in your
+                                 environemnt.)warning"
               << "\n";
   }
 
