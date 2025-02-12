@@ -84,8 +84,8 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
                                  in your environment. For further information
                                  on HMM support call `Kokkos::print_configuration`,
                                  or run with KOKKOS_PRINT_CONFIGURATION=1 in your
-                                 environemnt.)warning"
-              << "\n";
+                                 environment.
+)warning"
   }
 
   if ((Kokkos::show_warnings()) &&
