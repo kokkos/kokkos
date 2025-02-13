@@ -8,7 +8,7 @@ Aurora:
   stage: test
   extends: .aurora-batch-runner
   variables:
-    ANL_AURORA_SCHEDULER_PARAMETERS: "-q debug -A kokkos_math -l select=1,walltime=60:00" 
+    ANL_AURORA_SCHEDULER_PARAMETERS: "-q debug -A kokkos_math -l select=1,walltime=60:00,filesystems=flare"
   script:
     - module load cmake oneapi/eng-compiler
     - module list
