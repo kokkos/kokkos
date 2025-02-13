@@ -1504,18 +1504,24 @@ struct ParallelReduceAdaptor {
     using PassedReducerType = typename return_value_adapter::reducer_type;
     uint64_t kpID           = 0;
 
-    using ReducerSelector =
-        Kokkos::Impl::if_c<std::is_same_v<InvalidType, PassedReducerType>,
-                           FunctorType, PassedReducerType>;
+    constexpr bool passed_reducer_type_is_invalid =
+        std::is_same_v<InvalidType, PassedReducerType>;
+    using TheReducerType = std::conditional_t<passed_reducer_type_is_invalid,
+                                              FunctorType, PassedReducerType>;
+
     using Analysis = FunctorAnalysis<FunctorPatternInterface::REDUCE,
-                                     PolicyType, typename ReducerSelector::type,
+                                     PolicyType, TheReducerType,
                                      typename return_value_adapter::value_type>;
     using CombinedFunctorReducerType =
         CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>;
 
     CombinedFunctorReducerType functor_reducer(
-        functor, typename Analysis::Reducer(
-                     ReducerSelector::select(functor, return_value)));
+        functor, typename Analysis::Reducer([&] {
+          if constexpr (passed_reducer_type_is_invalid)
+            return functor;
+          else
+            return return_value;
+        }()));
     const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
         typename return_value_adapter::reducer_type>(policy, functor_reducer,
                                                      label, kpID);

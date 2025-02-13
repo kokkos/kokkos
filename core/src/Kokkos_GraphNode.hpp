@@ -410,15 +410,21 @@ class GraphNodeRef {
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
 
-    using reducer_selector =
-        Kokkos::Impl::if_c<std::is_same_v<InvalidType, passed_reducer_type>,
-                           functor_type, passed_reducer_type>;
+    constexpr bool passed_reducer_type_is_invalid =
+        std::is_same_v<InvalidType, passed_reducer_type>;
+    using TheReducerType =
+        std::conditional_t<passed_reducer_type_is_invalid, functor_type,
+                           passed_reducer_type>;
+
     using analysis = Kokkos::Impl::FunctorAnalysis<
-        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
-        typename reducer_selector::type,
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, TheReducerType,
         typename return_value_adapter::value_type>;
-    typename analysis::Reducer final_reducer(
-        reducer_selector::select(functor, return_value));
+    typename analysis::Reducer final_reducer([&] {
+      if constexpr (passed_reducer_type_is_invalid)
+        return functor;
+      else
+        return return_value;
+    }());
     Kokkos::Impl::CombinedFunctorReducer<functor_type,
                                          typename analysis::Reducer>
         functor_reducer(functor, final_reducer);
