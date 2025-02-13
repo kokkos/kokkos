@@ -21,7 +21,6 @@ Checks: >
   -bugprone-suspicious-memory-comparison,
   -bugprone-suspicious-stringview-data-usage,
   -bugprone-unhandled-exception-at-new,
-  -bugprone-unhandled-self-assignment,
   cppcoreguidelines-pro-type-cstyle-cast,
   modernize-type-traits,
   modernize-use-nullptr,

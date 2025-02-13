@@ -3699,6 +3699,7 @@ struct TestMDRange_ReduceScalar {
     }
     KOKKOS_INLINE_FUNCTION
     void operator=(const Scalar &src) {
+      if (&src == this) return;
       for (int i = 0; i < 4; i++) v[i] = src.v[i];
     }
     KOKKOS_INLINE_FUNCTION
