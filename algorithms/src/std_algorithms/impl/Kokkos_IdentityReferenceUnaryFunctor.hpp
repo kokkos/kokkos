@@ -26,7 +26,9 @@ namespace Impl {
 template <class ValueType>
 struct StdNumericScanIdentityReferenceUnaryFunctor {
   KOKKOS_FUNCTION
-  constexpr const ValueType& operator()(const ValueType& a) const { return a; }
+  constexpr ValueType&& operator()(ValueType&& a) const {
+    return static_cast<ValueType&&>(a);
+  }
 };
 
 }  // namespace Impl
