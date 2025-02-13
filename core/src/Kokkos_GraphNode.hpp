@@ -419,12 +419,19 @@ class GraphNodeRef {
     using analysis = Kokkos::Impl::FunctorAnalysis<
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, TheReducerType,
         typename return_value_adapter::value_type>;
-    typename analysis::Reducer final_reducer([&] {
-      if constexpr (passed_reducer_type_is_invalid)
-        return functor;
-      else
-        return return_value;
-    }());
+    typename analysis::Reducer final_reducer(
+    // FIXME_NVCC
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+        [&functor, &return_value]
+#else
+        [&]
+#endif
+        {
+          if constexpr (passed_reducer_type_is_invalid)
+            return functor;
+          else
+            return return_value;
+        }());
     Kokkos::Impl::CombinedFunctorReducer<functor_type,
                                          typename analysis::Reducer>
         functor_reducer(functor, final_reducer);

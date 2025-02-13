@@ -1516,12 +1516,19 @@ struct ParallelReduceAdaptor {
         CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>;
 
     CombinedFunctorReducerType functor_reducer(
-        functor, typename Analysis::Reducer([&] {
-          if constexpr (passed_reducer_type_is_invalid)
-            return functor;
-          else
-            return return_value;
-        }()));
+        functor, typename Analysis::Reducer(
+// FIXME_NVCC
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+                     [&functor, &return_value]
+#else
+                     [&]
+#endif
+                     {
+                       if constexpr (passed_reducer_type_is_invalid)
+                         return functor;
+                       else
+                         return return_value;
+                     }()));
     const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
         typename return_value_adapter::reducer_type>(policy, functor_reducer,
                                                      label, kpID);
