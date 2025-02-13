@@ -147,23 +147,52 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
   EXPECT_DEATH(
       {
         void* ptr = Kokkos::kokkos_malloc(1);
-        Kokkos::kokkos_free(ptr);  // FIXME just showing it does not die
+        Kokkos::kokkos_free(ptr);
       },
-      "FIXME");
+      "Kokkos allocation \"no-label\" is being allocated before "
+      "Kokkos::initialize was called");
+  EXPECT_DEATH(
+      {
+        void* ptr = Kokkos::kokkos_malloc(1);
+        Kokkos::kokkos_free(ptr);
+        Kokkos::initialize();
+        Kokkos::finalize();
+      },
+      "Kokkos allocation \"no-label\" is being allocated before "
+      "Kokkos::initialize was called");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         Kokkos::finalize();
         void* ptr = Kokkos::kokkos_malloc(1);
-        Kokkos::kokkos_free(ptr);  // FIXME should fail at malloc...
+        Kokkos::kokkos_free(ptr);
       },
-      "Kokkos allocation \"no-label\" is being deallocated after "
+      "Kokkos allocation \"no-label\" is being allocated after "
       "Kokkos::finalize was called");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         void* ptr = Kokkos::kokkos_malloc(1);
         Kokkos::finalize();
+        Kokkos::kokkos_free(ptr);
+      },
+      "Kokkos allocation \"no-label\" is being deallocated after "
+      "Kokkos::finalize was called");
+  // FIXME: Both the following tests don't die
+  EXPECT_DEATH(
+      {
+        void* ptr;
+        Kokkos::kokkos_free(ptr);
+        Kokkos::initialize();
+        Kokkos::finalize();
+      },
+      "Kokkos allocation \"no-label\" is being deallocated before "
+      "Kokkos::initialize was called");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        void* ptr;
         Kokkos::kokkos_free(ptr);
       },
       "Kokkos allocation \"no-label\" is being deallocated after "
