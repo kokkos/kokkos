@@ -122,7 +122,7 @@ void HIPInternal::print_configuration(std::ostream &s) const {
       << ", Architecture capable of accessing system allocated memory: "
       << gpu_arch_can_access_system_allocations()
       << ", System allows accessing system allocated memory on GPU: "
-      << (xnack_boot_config_has_hmm_mirror() and xnack_environment_enabled() and
+      << (xnack_boot_config_has_hmm_mirror() && xnack_environment_enabled() &&
           gpu_arch_can_access_system_allocations())
       << ", Wavefront Size: " << hipProp.warpSize;
     if (m_hipDev == i) s << " : Selected";
