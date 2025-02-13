@@ -79,11 +79,13 @@ bool config_hmm_mirror_in_boot_config() {
 
 namespace Kokkos::Impl {
 
-bool xnack_enabled() {
-  static bool cache = [] {
-    return config_hmm_mirror_in_boot_config() &&
-           hsa_xnack_enabled_in_host_environment();
-  }();
+bool xnack_environment_enabled() {
+  static bool cache = [] { return hsa_xnack_enabled_in_host_environment(); }();
+  return cache;
+}
+
+bool xnack_boot_config_has_hmm_mirror() {
+  static bool cache = [] { return config_hmm_mirror_in_boot_config(); }();
   return cache;
 }
 

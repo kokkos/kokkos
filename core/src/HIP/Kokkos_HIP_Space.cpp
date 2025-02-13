@@ -187,13 +187,14 @@ Kokkos::HIP::allocation WARNING: The combination of device and system configurat
         }
 
         // check for correct runtime environment
-        if (!Kokkos::Impl::xnack_enabled())
+        if (!Kokkos::Impl::xnack_environment_enabled())
           std::cerr << R"warning(
 Kokkos::HIP::runtime WARNING: Kokkos was not able to verify that xnack is enabled.
                               Without xnack enabled, Kokkos::HIPManaged might not behave as expected.
-                              Set HSA_XNACK=1 in your environment and ensure "CONFIG_HMM_MIRROR=y"
-                              is in the /boot/config file and that file is readable.)warning"
-                    << std::endl;
+                              Set HSA_XNACK=1 in your environment. For further information on HMM support
+                              call `Kokkos::print_configuration`, or run with KOKKOS_PRINT_CONFIGURATION=1
+                              in your environment.
+)warning";
       } while (false);
     }
     auto const error_code = hipMallocManaged(&ptr, arg_alloc_size);

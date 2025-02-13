@@ -21,10 +21,7 @@
 
 namespace Kokkos::Impl {
 
-/* Returns true iff we think the AMD MI300A can access allocations created with
-the system allocator.
-
-Based on AMD's ROCm 6.3.1 documentation:
+/*Based on AMD's ROCm 6.3.1 documentation:
 https://github.com/ROCm/HIP/blob/2c240cacff16c2bb18ce9e5b4c1b937ab17a0199/docs/how-to/hip_runtime_api/memory_management/unified_memory.rst?plain=1#L141-L146
 
     To ensure the proper functioning of system allocated unified memory on
@@ -43,7 +40,11 @@ be modified if a better way is determined to check for HMM support in Linux.
 Checking for CONFIG_HMM was considered, but it was not present on El Capitan,
 so we infer its presence is not necessary.
 */
-bool xnack_enabled();
+
+// Returns true iff we detect HSA_XNACK=1 in the environment.
+bool xnack_environment_enabled();
+// Returns true iff we detect CONFIG_HMM_MIROR=y in /boot/config-$(uname -r).
+bool xnack_boot_config_has_hmm_mirror();
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_HIP_ISXNACK_HPP
