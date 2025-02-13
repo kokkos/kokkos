@@ -421,7 +421,7 @@ class GraphNodeRef {
         typename return_value_adapter::value_type>;
     typename analysis::Reducer final_reducer(
     // FIXME_NVCC
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+#if defined(KOKKOS_COMPILER_NVCC)
         [&functor, &return_value]
 #else
         [&]
