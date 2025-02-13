@@ -1492,15 +1492,6 @@ struct ParallelReducePolicyType<
   }
 };
 
-template <class FunctorType, class ExecPolicy, class ValueType,
-          class ExecutionSpace>
-struct ParallelReduceFunctorType {
-  using functor_type = FunctorType;
-  static const functor_type& functor(const functor_type& functor) {
-    return functor;
-  }
-};
-
 template <class PolicyType, class FunctorType, class ReturnType>
 struct ParallelReduceAdaptor {
   using return_value_adapter =
