@@ -1410,7 +1410,7 @@ struct ParallelReduceReturnValue<
                                         value_type_scalar, value_type_array>;
 
   static return_type& return_value(ReturnType& return_val, const FunctorType&) {
-    return return_val;
+    return return_val;  // NOLINT(bugprone-return-const-ref-from-parameter)
   }
 };
 
