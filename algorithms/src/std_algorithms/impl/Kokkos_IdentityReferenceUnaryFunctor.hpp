@@ -23,7 +23,6 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 
-template <class /*Ignored*/>
 struct StdNumericScanIdentityReferenceUnaryFunctor {
   template <class T>
   KOKKOS_FUNCTION constexpr T&& operator()(T&& t) const {
