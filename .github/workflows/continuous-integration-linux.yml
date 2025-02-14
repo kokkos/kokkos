@@ -139,7 +139,7 @@ jobs:
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
+            -DCMAKE_CXX_FLAGS="-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Werror ${{ matrix.cxx_extra_flags }}" \
             -DCMAKE_CXX_STANDARD="${{ matrix.stdcxx }}" \
             -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
