@@ -112,21 +112,23 @@ void HIPInternal::print_configuration(std::ostream &s) const {
     std::string gpu_type = hipProp.integrated == 1 ? "APU" : "dGPU";
 
     s << "Kokkos::HIP[ " << i << " ] "
-      << "gcnArch " << hipProp.gcnArchName << ", Total Global Memory: "
-      << ::Kokkos::Impl::human_memory_size(hipProp.totalGlobalMem)
-      << ", Shared Memory per Block: "
-      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock)
-      << ", APU or dGPU: " << gpu_type
-      << ", Is Large Bar: " << hipProp.isLargeBar
-      << ", Supports Managed Memory: " << hipProp.managedMemory
-      << ", Architecture capable of accessing system allocated memory: "
-      << gpu_arch_can_access_system_allocations()
-      << ", System allows accessing system allocated memory on GPU: "
+      << "gcnArch " << hipProp.gcnArchName;
+    if (m_hipDev == i) s << " : Selected";
+    s << '\n'
+      << "  Total Global Memory: "
+      << ::Kokkos::Impl::human_memory_size(hipProp.totalGlobalMem) << '\n'
+      << "  Shared Memory per Block: "
+      << ::Kokkos::Impl::human_memory_size(hipProp.sharedMemPerBlock) << '\n'
+      << "  APU or dGPU: " << gpu_type << '\n'
+      << "  Is Large Bar: " << hipProp.isLargeBar << '\n'
+      << "  Supports Managed Memory: " << hipProp.managedMemory << '\n'
+      << "  Architecture capable of accessing system allocated memory: "
+      << gpu_arch_can_access_system_allocations() << '\n'
+      << "  System allows accessing system allocated memory on GPU: "
       << (xnack_boot_config_has_hmm_mirror() && xnack_environment_enabled() &&
           gpu_arch_can_access_system_allocations())
-      << ", Wavefront Size: " << hipProp.warpSize;
-    if (m_hipDev == i) s << " : Selected";
-    s << '\n';
+      << '\n'
+      << "  Wavefront Size: " << hipProp.warpSize << '\n';
   }
 }
 
