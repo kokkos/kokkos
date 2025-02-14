@@ -18,8 +18,8 @@ jobs:
         build_type:
           - Release
         backend:
-          - name: OpenMP-x86_64-GCC/10.3-Static-PIC
-            configure: -DKokkos_ENABLE_OPENMP=ON -DCMAKE_POSITION_INDEPENDENT_CODE=ON
+          - name: OpenMP-x86_64-GCC/10.3-Shared
+            configure: -DKokkos_ENABLE_OPENMP=ON -DBUILD_SHARED_LIBS=ON
             test: -e cpu OMP_PROC_BIND=spread OMP_PLACES=threads
             modules: gcc/10.3.0/gcc-4.8.5 cmake/3.28.3/gcc-11.2.0
 
