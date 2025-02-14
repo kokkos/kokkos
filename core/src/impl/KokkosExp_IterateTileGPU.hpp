@@ -115,6 +115,7 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
+    // LL
     if (PolicyType::inner_direction == Iterate::Left) {
       // Loop over size maxnumblocks until full range covered
       for (index_type tile_id1 = static_cast<index_type>(blockIdx.y);
@@ -138,7 +139,9 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
           }
         }
       }
-    } else {
+    }
+    // LR
+    else {
       for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
            tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
         const index_type offset_0 =
@@ -197,6 +200,7 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
+    // LL
     if (PolicyType::inner_direction == Iterate::Left) {
       for (index_type tile_id2 = static_cast<index_type>(blockIdx.z);
            tile_id2 < m_policy.m_tile_end[2]; tile_id2 += gridDim.z) {
@@ -229,7 +233,9 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
           }
         }
       }
-    } else {
+    }
+    // LR
+    else {
       for (index_type tile_id0 = static_cast<index_type>(blockIdx.x);
            tile_id0 < m_policy.m_tile_end[0]; tile_id0 += gridDim.x) {
         const index_type offset_0 =
@@ -298,15 +304,17 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
+    // LL
     if (PolicyType::inner_direction == Iterate::Left) {
       const index_type temp0 = m_policy.m_tile_end[0];
       const index_type temp1 = m_policy.m_tile_end[1];
       const index_type numbl0 =
           (temp0 <= mdrange_max_blocks_x ? temp0 : mdrange_max_blocks_x);
       const index_type numbl1 =
-          (temp0 * temp1 > mdrange_max_blocks
+          (temp0 * temp1 > mdrange_max_blocks_x
                ? static_cast<index_type>(mdrange_max_blocks_x / numbl0)
-               : (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks));
+               : (temp1 <= mdrange_max_blocks_x ? temp1
+                                                : mdrange_max_blocks_x));
 
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
       const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
@@ -355,14 +363,16 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
           }
         }
       }
-    } else {
+    }
+    // LR
+    else {
       const index_type temp0 = m_policy.m_tile_end[0];
       const index_type temp1 = m_policy.m_tile_end[1];
       const index_type numbl1 =
-          (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks);
+          (temp1 <= mdrange_max_blocks_x ? temp1 : mdrange_max_blocks_x);
       const index_type numbl0 =
           (temp0 * temp1 > mdrange_max_blocks_x
-               ? index_type(mdrange_max_blocks / numbl1)
+               ? index_type(mdrange_max_blocks_x / numbl1)
                : (temp0 <= mdrange_max_blocks_x ? temp0
                                                 : mdrange_max_blocks_x));
 
@@ -458,9 +468,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
       const index_type numbl0 =
           (temp0 <= mdrange_max_blocks_x ? temp0 : mdrange_max_blocks_x);
       const index_type numbl1 =
-          (temp0 * temp1 > mdrange_max_blocks
+          (temp0 * temp1 > mdrange_max_blocks_x
                ? index_type(mdrange_max_blocks_x / numbl0)
-               : (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks));
+               : (temp1 <= mdrange_max_blocks_x ? temp1
+                                                : mdrange_max_blocks_x));
 
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
       const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
@@ -539,10 +550,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
       index_type temp0 = m_policy.m_tile_end[0];
       index_type temp1 = m_policy.m_tile_end[1];
       const index_type numbl1 =
-          (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks);
+          (temp1 <= mdrange_max_blocks_x ? temp1 : mdrange_max_blocks_x);
       const index_type numbl0 =
           (temp0 * temp1 > mdrange_max_blocks_x
-               ? static_cast<index_type>(mdrange_max_blocks / numbl1)
+               ? static_cast<index_type>(mdrange_max_blocks_x / numbl1)
                : (temp0 <= mdrange_max_blocks_x ? temp0
                                                 : mdrange_max_blocks_x));
 
@@ -662,9 +673,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
       const index_type numbl0 =
           (temp0 <= mdrange_max_blocks_x ? temp0 : mdrange_max_blocks_x);
       const index_type numbl1 =
-          (temp0 * temp1 > mdrange_max_blocks
+          (temp0 * temp1 > mdrange_max_blocks_x
                ? static_cast<index_type>(mdrange_max_blocks_x / numbl0)
-               : (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks));
+               : (temp1 <= mdrange_max_blocks_x ? temp1
+                                                : mdrange_max_blocks_x));
 
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
       const index_type tile_id1 = static_cast<index_type>(blockIdx.x) / numbl0;
@@ -766,10 +778,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
       index_type temp0 = m_policy.m_tile_end[0];
       index_type temp1 = m_policy.m_tile_end[1];
       const index_type numbl1 =
-          (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks);
+          (temp1 <= mdrange_max_blocks_x ? temp1 : mdrange_max_blocks_x);
       const index_type numbl0 =
           (temp0 * temp1 > mdrange_max_blocks_x
-               ? static_cast<index_type>(mdrange_max_blocks / numbl1)
+               ? static_cast<index_type>(mdrange_max_blocks_x / numbl1)
                : (temp0 <= mdrange_max_blocks_x ? temp0
                                                 : mdrange_max_blocks_x));
 
