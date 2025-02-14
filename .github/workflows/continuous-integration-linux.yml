@@ -81,6 +81,14 @@ jobs:
             backend: 'SERIAL'
             stdcxx: '17'
             cmake_extra_opts: '-DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'x86'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'OPENMP'
+            stdcxx: '17'
+            cxx_extra_flags: '-m32'
+            cmake_extra_opts: '-DKokkos_ENABLE_HWLOC=OFF'
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -147,7 +155,7 @@ jobs:
         working-directory: builddir
         run: ctest --output-on-failure
       - name: Test linking against build dir
-        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DKokkos_ROOT=../../builddir
@@ -158,7 +166,7 @@ jobs:
       - name: Install
         run: sudo cmake --build builddir --target install
       - name: Test install
-        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
