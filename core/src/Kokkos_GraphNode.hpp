@@ -420,8 +420,9 @@ class GraphNodeRef {
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, TheReducerType,
         typename return_value_adapter::value_type>;
     typename analysis::Reducer final_reducer(
-    // FIXME_NVCC
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1170
+// FIXME_NVCC FIXME_MSVC
+#if (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1170) || \
+    defined(KOKKOS_COMPILER_MSVC)
         [&functor, &return_value]
 #else
         [&]

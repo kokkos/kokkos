@@ -1517,8 +1517,9 @@ struct ParallelReduceAdaptor {
 
     CombinedFunctorReducerType functor_reducer(
         functor, typename Analysis::Reducer(
-// FIXME_NVCC
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1170
+// FIXME_NVCC FIXME_MSVC
+#if (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1170) || \
+    defined(KOKKOS_COMPILER_MSVC)
                      [&functor, &return_value]
 #else
                      [&]
