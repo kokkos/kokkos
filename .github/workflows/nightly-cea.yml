@@ -3,7 +3,6 @@ name: Nightly CEA builds
 on:
   schedule:
     - cron: "0 2 * * 1-5" # every weekday at 2am UTC
-  pull_request: # XXX for testing only, remove before merging!
 
 permissions: read-all
 
@@ -78,9 +77,9 @@ jobs:
             ctest \
               -V \
               --test-dir build \
-              -D ExperimentalStart \
-              -D ExperimentalUpdate \
-              -D ExperimentalConfigure
+              -D NightlyStart \
+              -D NightlyUpdate \
+              -D NightlyConfigure
 
       - name: Build
         continue-on-error: true
@@ -92,7 +91,7 @@ jobs:
             ctest \
               -V \
               --test-dir build \
-              -D ExperimentalBuild
+              -D NightlyBuild
 
       - name: Test
         continue-on-error: true
@@ -103,7 +102,7 @@ jobs:
             ctest \
               --output-on-failure \
               --test-dir build \
-              -D ExperimentalTest
+              -D NightlyTest
 
       - name: Submit
         run: |
@@ -112,4 +111,4 @@ jobs:
             -e local \
             ctest \
               --test-dir build \
-              -D ExperimentalSubmit
+              -D NightlySubmit
