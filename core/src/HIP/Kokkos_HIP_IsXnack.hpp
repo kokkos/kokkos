@@ -19,6 +19,8 @@
 #ifndef KOKKOS_HIP_ISXNACK_HPP
 #define KOKKOS_HIP_ISXNACK_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos::Impl {
 
 /*Based on AMD's ROCm 6.3.1 documentation:
