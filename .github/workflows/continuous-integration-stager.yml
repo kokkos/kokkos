@@ -49,10 +49,6 @@ jobs:
     needs: [initial-check, clang-format-check, cmake-format-check]
     uses: ./.github/workflows/continuous-integration-linux-hpx.yml
 
-  linux-x86:
-    needs: [initial-check, clang-format-check, cmake-format-check]
-    uses: ./.github/workflows/continuous-integration-linux-32bit.yml
-
   osx-x64:
     needs: [initial-check, clang-format-check, cmake-format-check]
     uses: ./.github/workflows/continuous-integration-osx.yml
