@@ -56,7 +56,7 @@ inline void host_test_mask_traits() {
   mask_type move_mask(std::move(copy_mask));
   default_mask = std::move(move_mask);
   result       = default_mask;
-  EXPECT_EQ(test_mask, result);
+  EXPECT_TRUE(Kokkos::Experimental::all_of(test_mask == result));
 }
 
 template <typename Abi, typename DataType>
@@ -135,7 +135,7 @@ KOKKOS_INLINE_FUNCTION void device_test_mask_traits() {
   result       = default_mask;
 
   kokkos_checker checker;
-  checker.truth(test_mask == result);
+  checker.truth(Kokkos::Experimental::all_of(test_mask == result));
 }
 
 template <typename Abi, typename DataType>

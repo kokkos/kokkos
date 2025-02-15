@@ -82,10 +82,6 @@ KOKKOS_INLINE_FUNCTION void device_check_equality(
   for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
-  using mask_type =
-      typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-  mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return (i < nlanes); });
-  checker.equality((expected_result == computed_result) && mask, mask);
 }
 
 template <typename T, typename Abi>

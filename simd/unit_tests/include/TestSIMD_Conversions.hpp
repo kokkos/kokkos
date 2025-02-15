@@ -26,37 +26,37 @@ inline void host_check_conversions() {
     {
       auto a = Kokkos::Experimental::basic_simd<std::uint64_t, Abi>(1);
       auto b = Kokkos::Experimental::basic_simd<std::int64_t, Abi>(a);
-      EXPECT_TRUE(all_of(b == decltype(b)(1)));
+      EXPECT_TRUE(Kokkos::Experimental::all_of(b == decltype(b)(1)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd<std::int32_t, Abi>(1);
       auto b = Kokkos::Experimental::basic_simd<std::uint64_t, Abi>(a);
-      EXPECT_TRUE(all_of(b == decltype(b)(1)));
+      EXPECT_TRUE(Kokkos::Experimental::all_of(b == decltype(b)(1)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd<std::uint64_t, Abi>(1);
       auto b = Kokkos::Experimental::basic_simd<std::int32_t, Abi>(a);
-      EXPECT_TRUE(all_of(b == decltype(b)(1)));
+      EXPECT_TRUE(Kokkos::Experimental::all_of(b == decltype(b)(1)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<double, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::uint64_t, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int64_t, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<double, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
   }
 }
@@ -74,37 +74,37 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
     {
       auto a = Kokkos::Experimental::basic_simd<std::uint64_t, Abi>(1);
       auto b = Kokkos::Experimental::basic_simd<std::int64_t, Abi>(a);
-      checker.truth(all_of(b == decltype(b)(1)));
+      checker.truth(Kokkos::Experimental::all_of(b == decltype(b)(1)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd<std::int32_t, Abi>(1);
       auto b = Kokkos::Experimental::basic_simd<std::uint64_t, Abi>(a);
-      checker.truth(all_of(b == decltype(b)(1)));
+      checker.truth(Kokkos::Experimental::all_of(b == decltype(b)(1)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd<std::uint64_t, Abi>(1);
       auto b = Kokkos::Experimental::basic_simd<std::int32_t, Abi>(a);
-      checker.truth(all_of(b == decltype(b)(1)));
+      checker.truth(Kokkos::Experimental::all_of(b == decltype(b)(1)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<double, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::uint64_t, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int64_t, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<double, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(Kokkos::Experimental::all_of(b == decltype(b)(true)));
     }
   }
 }

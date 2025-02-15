@@ -303,30 +303,44 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator<<=(
 // implement mask reductions for type bool to allow generic code to accept
 // both basic_simd<double, Abi> and just double
 
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool all_of(bool a) { return a; }
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr bool all_of(
+    bool a) noexcept {
+  return a;
+}
 
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool any_of(bool a) { return a; }
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr bool any_of(
+    bool a) noexcept {
+  return a;
+}
 
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION bool none_of(bool a) { return !a; }
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr bool none_of(
+    bool a) noexcept {
+  return !a;
+}
 
 // fallback implementations of reductions across basic_simd_mask:
-
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
-    basic_simd_mask<T, Abi> const& a) {
-  return a == basic_simd_mask<T, Abi>(true);
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr bool all_of(
+    basic_simd_mask<T, Abi> const& a) noexcept {
+  for (size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
+    if (!a[i]) return false;
+  }
+  return true;
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
-    basic_simd_mask<T, Abi> const& a) {
-  return a != basic_simd_mask<T, Abi>(false);
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr bool any_of(
+    basic_simd_mask<T, Abi> const& a) noexcept {
+  for (size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
+    if (a[i]) return true;
+  }
+  return false;
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool none_of(
-    basic_simd_mask<T, Abi> const& a) {
-  return a == basic_simd_mask<T, Abi>(false);
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr bool none_of(
+    basic_simd_mask<T, Abi> const& a) noexcept {
+  return !any_of(a);
 }
 
 // A temporary device-callable implemenation of round half to nearest even
