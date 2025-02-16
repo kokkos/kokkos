@@ -132,7 +132,7 @@ jobs:
             echo "flang-new found"
             echo "FC=flang-new" >> $GITHUB_ENV
           fi
-# workaround for handle issue in hpx-1.10.0+, remove once fixed
+# FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
       - name: maybe_set_hpx_vars
         if: ${{ matrix.backend == 'HPX' }}
         run: echo "HPX_HANDLE_FAILED_NEW=0" >> $GITHUB_ENV
