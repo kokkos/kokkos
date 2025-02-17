@@ -600,7 +600,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   template <class Device, class ExecutionSpace>
-  void sync(const ExecutionSpace& exec) {
+  void sync([[maybe_unused]] const ExecutionSpace& exec) {
     if constexpr (impl_dualview_stores_single_view)
       return;
     else {
@@ -661,7 +661,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   template <class ExecSpace>
-  void sync_host(const ExecSpace& exec) {
+  void sync_host([[maybe_unused]] const ExecSpace& exec) {
     if constexpr (impl_dualview_stores_single_view)
       return;
     else
@@ -701,7 +701,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   template <class ExecSpace>
-  void sync_device(const ExecSpace& exec) {
+  void sync_device([[maybe_unused]] const ExecSpace& exec) {
     if constexpr (impl_dualview_stores_single_view)
       return;
     else
