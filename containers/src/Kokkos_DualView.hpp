@@ -588,7 +588,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
   template <class Device>
   void sync() {
     if constexpr (impl_dualview_stores_single_view) {
-      Kokkos::fence();
+      Kokkos::fence(
+          "Kokkos::DualView: fence for sync with host-accessible memory space");
       return;
     } else {
       if constexpr (std::is_same_v<typename traits::data_type,
@@ -669,7 +670,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
   void sync_host() {
     if constexpr (impl_dualview_stores_single_view) {
-      Kokkos::fence();
+      Kokkos::fence(
+          "Kokkos::DualView: fence for sync_host with host-accessible memory "
+          "space");
       return;
     } else
       sync_host_impl();
@@ -709,7 +712,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
   void sync_device() {
     if constexpr (impl_dualview_stores_single_view) {
-      Kokkos::fence();
+      Kokkos::fence(
+          "Kokkos::DualView: fence for sync_device with host-accessible memory "
+          "space");
       return;
     } else
       sync_device_impl();
