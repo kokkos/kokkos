@@ -213,8 +213,13 @@ class DualView : public ViewTraits<DataType, Properties...> {
   static constexpr bool impl_dualview_stores_single_view =
       std::is_same_v<typename t_dev::device_type, typename t_host::device_type>;
 
- public:
   //@}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+ public:
+#else
+ private:
+#endif
 
   // Moved this specifically after modified_flags to resolve an alignment issue
   // on MSVC/NVCC
@@ -224,6 +229,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   t_host h_view;
   //@}
 
+ public:
   //! \name Constructors
   //@{
 
@@ -421,11 +427,19 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_INLINE_FUNCTION
   t_host view_host() const { return h_view; }
 
   KOKKOS_INLINE_FUNCTION
   t_dev view_device() const { return d_view; }
+#else
+  KOKKOS_INLINE_FUNCTION
+  const t_host& view_host() const { return h_view; }
+
+  KOKKOS_INLINE_FUNCTION
+  const t_dev& view_device() const { return d_view; }
+#endif
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
     return (d_view.is_allocated() && h_view.is_allocated());
@@ -1186,10 +1200,10 @@ namespace Kokkos {
 template <class DT, class... DP, class ST, class... SP>
 void deep_copy(DualView<DT, DP...>& dst, const DualView<ST, SP...>& src) {
   if (src.need_sync_device()) {
-    deep_copy(dst.h_view, src.h_view);
+    deep_copy(dst.view_host(), src.view_host());
     dst.modify_host();
   } else {
-    deep_copy(dst.d_view, src.d_view);
+    deep_copy(dst.view_device(), src.view_device());
     dst.modify_device();
   }
 }
@@ -1198,10 +1212,10 @@ template <class ExecutionSpace, class DT, class... DP, class ST, class... SP>
 void deep_copy(const ExecutionSpace& exec, DualView<DT, DP...>& dst,
                const DualView<ST, SP...>& src) {
   if (src.need_sync_device()) {
-    deep_copy(exec, dst.h_view, src.h_view);
+    deep_copy(exec, dst.view_host(), src.view_host());
     dst.modify_host();
   } else {
-    deep_copy(exec, dst.d_view, src.d_view);
+    deep_copy(exec, dst.view_device(), src.view_device());
     dst.modify_device();
   }
 }
