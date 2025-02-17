@@ -484,6 +484,61 @@ TEST(TEST_CATEGORY, dualview_deep_copy) {
   test_dualview_deep_copy<double, TEST_EXECSPACE>();
 }
 
+template <typename ExecutionSpace>
+void test_dualview_sync_should_fence() {
+  using DualViewType = Kokkos::DualView<int, ExecutionSpace>;
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_device();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_device().data(), 1); });
+    dv.sync_host();
+    ASSERT_EQ(dv.view_host()(), 10000);
+  }
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_device();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_device().data(), 1); });
+    dv.template sync<typename DualViewType::t_host::device_type>();
+    ASSERT_EQ(dv.view_host()(), 10000);
+  }
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_host();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_host().data(), 1); });
+    dv.sync_device();
+    int result;
+    auto device_exec =
+        Kokkos::Experimental::partition_space(ExecutionSpace{}, 1);
+    Kokkos::deep_copy(device_exec[0], result, dv.view_device());
+    device_exec[0].fence();
+    ASSERT_EQ(result, 10000);
+  }
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_host();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_host().data(), 1); });
+    dv.template sync<typename DualViewType::t_dev::device_type>();
+    int result;
+    auto device_exec =
+        Kokkos::Experimental::partition_space(ExecutionSpace{}, 1);
+    Kokkos::deep_copy(device_exec[0], result, dv.view_device());
+    device_exec[0].fence();
+    ASSERT_EQ(result, 10000);
+  }
+}
+
+TEST(TEST_CATEGORY, dualview_sync_should_fence) {
+  test_dualview_sync_should_fence<TEST_EXECSPACE>();
+}
+
 struct NoDefaultConstructor {
   NoDefaultConstructor(int i_) : i(i_) {}
   KOKKOS_FUNCTION operator int() const { return i; }
