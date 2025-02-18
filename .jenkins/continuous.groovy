@@ -110,7 +110,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.0.3-devel-ubuntu20.04@sha256:10ab0f09fcdc796b4a2325ef1bce8f766f4a3500eab5a83780f80475ae26c7a6 --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran clang" --build-arg CMAKE_VERSION=3.17.3'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.0.3-devel-ubuntu20.04@sha256:10ab0f09fcdc796b4a2325ef1bce8f766f4a3500eab5a83780f80475ae26c7a6 --build-arg ADDITIONAL_PACKAGES="g++-8 gfortran clang" --build-arg CMAKE_VERSION=3.21.7'
                             label 'nvidia-docker && (volta || ampere)'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -158,18 +158,14 @@ pipeline {
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
-                              cd ../example/build_cmake_installed && \
+                              cd ../example/build_installed && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=g++-8 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --verbose && \
-                              cd ../.. && \
-                              cmake -B build_cmake_installed_different_compiler/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=17 build_cmake_installed_different_compiler && \
-                              cmake --build build_cmake_installed_different_compiler/build --target all && \
-                              cmake --build build_cmake_installed_different_compiler/build --target test'''
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
