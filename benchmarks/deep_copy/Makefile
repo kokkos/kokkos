@@ -20,10 +20,10 @@ default: build
 
 ifneq (,$(findstring Cuda,$(KOKKOS_DEVICES)))
 CXX = ${KOKKOS_PATH}/bin/nvcc_wrapper
-EXE = deeep_copy.cuda
+EXE = deep_copy.cuda
 else
 CXX = g++
-EXE = deeep_copy.exe
+EXE = deep_copy.exe
 endif
 
 CXXFLAGS ?= -O3 -g
