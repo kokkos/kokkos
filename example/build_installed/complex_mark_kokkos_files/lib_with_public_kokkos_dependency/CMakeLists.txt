@@ -3,10 +3,8 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../complex/lib_with_public_kokkos_depende
 
 # as the lib uses Kokkos in its implementation, the source files have to be marked accordingly
 kokkos_set_source_and_target_properties(
-        SOURCE
-        ${CMAKE_CURRENT_SOURCE_DIR}/../../example_source/lib_with_public_kokkos_dependency/source_with_public_kokkos_dependency.cpp
+  SOURCE
+  ${CMAKE_CURRENT_SOURCE_DIR}/../../example_source/lib_with_public_kokkos_dependency/source_with_public_kokkos_dependency.cpp
 )
 # same for the target
-kokkos_set_source_and_target_properties(
-        TARGET ${PROJECT_NAME}_Lib_with_public_kokkos_dependency
-)
+kokkos_set_source_and_target_properties(TARGET ${PROJECT_NAME}_Lib_with_public_kokkos_dependency)
