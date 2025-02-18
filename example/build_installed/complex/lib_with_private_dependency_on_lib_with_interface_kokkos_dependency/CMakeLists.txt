@@ -1,0 +1,12 @@
+add_library(
+  ${PROJECT_NAME}_Lib_with_private_dependency_on_lib_with_interface_kokkos_dependency
+  ../../example_source/lib_with_private_dependency_on_lib_with_interface_kokkos_dependency/source_with_private_dependency_on_lib_with_interface_kokkos_dependency.cpp
+)
+target_include_directories(
+  ${PROJECT_NAME}_Lib_with_private_dependency_on_lib_with_interface_kokkos_dependency
+  PUBLIC ../../example_source/lib_with_private_dependency_on_lib_with_interface_kokkos_dependency
+)
+target_link_libraries(
+  ${PROJECT_NAME}_Lib_with_private_dependency_on_lib_with_interface_kokkos_dependency
+  PRIVATE ${PROJECT_NAME}_Lib_with_interface_kokkos_dependency
+)
