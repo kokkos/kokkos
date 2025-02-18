@@ -24,10 +24,12 @@ TEST(TEST_CATEGORY, mdrange_4d) {
   TestMDRange_4D<TEST_EXECSPACE>::test_reduce4(100, 10, 10, 10);
 #endif
   TestMDRange_4D<TEST_EXECSPACE>::test_for4(100, 10, 10, 10);
+#ifdef KOKKOS_ENABLE_CUDA
   TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1024 * 1024, 1, 1, 1);
   TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, 1024 * 1024, 1, 1);
   TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, 1, 1024 * 1024, 1);
   TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, 1, 1, 1024 * 1024);
+#endif
 }
 
 }  // namespace Test

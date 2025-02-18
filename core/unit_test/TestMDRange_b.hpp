@@ -24,6 +24,7 @@ TEST(TEST_CATEGORY, mdrange_6d) {
   TestMDRange_6D<TEST_EXECSPACE>::test_reduce6(100, 10, 10, 10, 5, 5);
 #endif
   TestMDRange_6D<TEST_EXECSPACE>::test_for6(10, 10, 10, 10, 5, 5);
+#ifdef KOKKOS_ENABLE_CUDA
   TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1024 * 1024, 1, 1, 1, 1,
                                                       1);
   TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1024 * 1024, 1, 1, 1,
@@ -36,6 +37,7 @@ TEST(TEST_CATEGORY, mdrange_6d) {
                                                       1);
   TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1, 1, 1,
                                                       1024 * 1024);
+#endif
 }
 
 }  // namespace Test

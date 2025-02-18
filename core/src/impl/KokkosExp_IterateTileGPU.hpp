@@ -20,7 +20,6 @@
 #include <Kokkos_Macros.hpp>
 
 #include <algorithm>
-#include <limits>
 
 #include <utility>
 
@@ -44,18 +43,9 @@ struct EmulateCUDADim3 {
 // https://docs.nvidia.com/cuda/cuda-c-programming-guide/#features-and-technical-specifications-technical-specifications-per-compute-capability
 constexpr int mdrange_max_blocks_x = 2147483647;  // 2^31 - 1
 constexpr int mdrange_max_blocks   = 65535;       // 2^16 - 1
-#elif defined(KOKKOS_ENABLE_HIP)
-// note:
-// https://rocm.docs.amd.com/projects/HIP/en/latest/reference/hardware_features.html
-// is _wrong_ about the grid size
-// here are valid values on MI250 and MI300A
-constexpr int mdrange_max_blocks_x = 2147483647;  // 2^31 - 1
-constexpr int mdrange_max_blocks   = 65536;       // 2^16
 #else
-constexpr std::size_t mdrange_max_blocks_x =
-    std::numeric_limits<std::size_t>::max();  // +inf
-constexpr std::size_t mdrange_max_blocks =
-    std::numeric_limits<std::size_t>::max();  // +inf
+constexpr int mdrange_max_blocks_x = 65535;  // 2^16 - 1
+constexpr int mdrange_max_blocks   = 65535;  // 2^16 - 1
 #endif
 
 template <class Tag, class Functor, class... Args>
