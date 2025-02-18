@@ -56,7 +56,7 @@ static Result bench(const Dst &dst, const Src &src) {
 }
 
 int run_benchmark() {
-  printf("Reports fastest timing per kernel\n");
+  printf("Reports fastest time observed for each configuration\n");
   printf("Creating Views...\n");
 
   printf("Memory Sizes:\n");
