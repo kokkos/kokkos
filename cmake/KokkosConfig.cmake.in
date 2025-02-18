@@ -17,6 +17,7 @@ include(CMakeFindDependencyMacro)
 get_filename_component(Kokkos_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 include("${Kokkos_CMAKE_DIR}/KokkosTargets.cmake")
 include("${Kokkos_CMAKE_DIR}/KokkosConfigCommon.cmake")
+set(Kokkos_FOUND_INSTALL_DIR ${Kokkos_CMAKE_DIR}/../../..)
 unset(Kokkos_CMAKE_DIR)
 
 # components deprecation message
@@ -87,10 +88,27 @@ if(Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY)
     unset(IS_NVCC)
   endif()
   # end of deprecated build strategy with components
+  # new cmake strategy
+else()
+  # if not there already, add list of excluded dirs into cache
+  if(NOT DEFINED CACHE{Kokkos_EXCLUDE_BUILD_DIRS})
+    set(Kokkos_EXCLUDE_BUILD_DIRS
+        ""
+        CACHE
+          STRING
+          "List of directories Kokkos that are excluded from Kokkos setting build properties on source and target properties via a deferred call"
+    )
   endif()
 
-  # be mindful of the environment, pollution is bad
-  unset(IS_NVCC)
+  # defer a call to set source and target properties of all dirs-Kokkos_EXCLUDE_BUILD_DIR after the complete project has been processed by CMake
+  cmake_language(
+    EVAL
+    CODE
+    "
+    cmake_language(DEFER DIRECTORY ${PROJECT_SOURCE_DIR} CALL kokkos_set_source_and_target_properties GLOBAL Kokkos_ROOT ${Kokkos_FOUND_INSTALL_DIR})
+    "
+  )
 endif()
 
 set(Kokkos_COMPILE_LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
+unset(Kokkos_FOUND_INSTALL_DIR)
