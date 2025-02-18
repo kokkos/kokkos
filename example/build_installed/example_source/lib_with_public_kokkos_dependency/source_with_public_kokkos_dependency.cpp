@@ -20,21 +20,21 @@
 #endif
 #include <iostream>
 
-
 #if defined __CUDACC__ || defined __HIPCC__
-namespace cuda_hip_functions_without_kokkos_dependency{
-__global__
-void print_from_device();
+namespace cuda_hip_functions_without_kokkos_dependency {
+__global__ void print_from_device();
 }
 #endif
 
 namespace lib_with_public_kokkos_dependency {
 
 void print(Kokkos::View<int*> a) {
-  std::cout << "Hello from lib_with_public_kokkos_dependency, printig view a(0) " << a(0) << "\n";
+  std::cout
+      << "Hello from lib_with_public_kokkos_dependency, printig view a(0) "
+      << a(0) << "\n";
 #if defined __CUDACC__ || defined __HIPCC__
   std::cout << "Calling additional device function without kokkos dependency\n";
-  cuda_hip_functions_without_kokkos_dependency::print_from_device<<<1,1>>>();
+  cuda_hip_functions_without_kokkos_dependency::print_from_device<<<1, 1>>>();
 #endif
 }
 

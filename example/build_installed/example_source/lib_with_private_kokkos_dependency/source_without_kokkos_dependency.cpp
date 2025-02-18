@@ -21,9 +21,8 @@
 #include <iostream>
 
 #if defined __CUDACC__ || defined __HIPCC__
-namespace cuda_hip_functions_without_kokkos_dependency{
-__global__
-void print_from_device();
+namespace cuda_hip_functions_without_kokkos_dependency {
+__global__ void print_from_device();
 }
 #endif
 
@@ -34,7 +33,7 @@ void print_non_kokkos() {
                "lib_with_private_kokkos_dependency\n";
 #if defined __CUDACC__ || defined __HIPCC__
   std::cout << "Calling additional device function without kokkos dependency\n";
-  cuda_hip_functions_without_kokkos_dependency::print_from_device<<<1,1>>>();
+  cuda_hip_functions_without_kokkos_dependency::print_from_device<<<1, 1>>>();
 #endif
 }
 

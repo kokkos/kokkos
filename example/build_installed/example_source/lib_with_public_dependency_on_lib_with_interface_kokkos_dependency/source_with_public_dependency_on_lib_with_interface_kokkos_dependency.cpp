@@ -19,9 +19,9 @@
 
 namespace lib_with_public_dependency_on_lib_with_interface_kokkos_dependency {
 
-void print(
-    lib_with_interface_kokkos_dependency::StructOfLibWithInterfaceKokkosDependency<Kokkos::View<int*>>
-        in) {
+void print(lib_with_interface_kokkos_dependency::
+               StructOfLibWithInterfaceKokkosDependency<Kokkos::View<int*>>
+                   in) {
   std::cout
       << "Hello from "
          "lib_with_public_dependency_on_lib_with_interface_kokkos_dependency\n";
@@ -30,4 +30,5 @@ void print(
   std::cout << "Done\n";
 }
 
-}  // namespace lib_with_public_dependency_on_lib_with_interface_kokkos_dependency
+}  // namespace
+   // lib_with_public_dependency_on_lib_with_interface_kokkos_dependency

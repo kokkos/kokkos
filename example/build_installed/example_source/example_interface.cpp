@@ -24,14 +24,13 @@ extern "C" void print_fortran_();
 void print_plain_cxx();
 
 int main(int argc, char* argv[]) {
-
   lib_without_kokkos_dependency::print();
   Kokkos::initialize(argc, argv);
   {
     print_fortran_();
     print_plain_cxx();
     lib_with_interface_kokkos_dependency::print(
-          Kokkos::View<int*>{"testview", 10});
+        Kokkos::View<int*>{"testview", 10});
   }
   Kokkos::finalize();
 }

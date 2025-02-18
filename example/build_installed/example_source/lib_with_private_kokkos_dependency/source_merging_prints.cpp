@@ -19,7 +19,6 @@
 namespace lib_with_private_kokkos_dependency {
 
 void print([[maybe_unused]] StructOfLibWithPrivateKokkosDependency in) {
-
   print_non_kokkos();
   print_kokkos();
 }

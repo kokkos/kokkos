@@ -24,13 +24,14 @@ extern "C" void print_fortran_();
 void print_plain_cxx();
 
 int main(int argc, char* argv[]) {
-
   lib_without_kokkos_dependency::print();
   lib_with_private_kokkos_dependency::initialize();
   {
     print_fortran_();
     print_plain_cxx();
-    lib_with_public_dependency_on_lib_with_private_kokkos_dependency::print(lib_with_private_kokkos_dependency::StructOfLibWithPrivateKokkosDependency{});
+    lib_with_public_dependency_on_lib_with_private_kokkos_dependency::print(
+        lib_with_private_kokkos_dependency::
+            StructOfLibWithPrivateKokkosDependency{});
   }
   lib_with_private_kokkos_dependency::finalize();
 }

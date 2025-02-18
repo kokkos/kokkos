@@ -28,7 +28,9 @@ int main() {
 
   lib_with_private_kokkos_dependency::initialize();
   {
-  lib_with_private_kokkos_dependency::print(lib_with_private_kokkos_dependency::StructOfLibWithPrivateKokkosDependency{});
+    lib_with_private_kokkos_dependency::print(
+        lib_with_private_kokkos_dependency::
+            StructOfLibWithPrivateKokkosDependency{});
   }
   lib_with_private_kokkos_dependency::finalize();
 

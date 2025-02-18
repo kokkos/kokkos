@@ -26,18 +26,20 @@
 
 namespace lib_with_interface_kokkos_dependency {
 
-template<typename ViewType>
-void print(ViewType a)
-    {
-  static_assert(std::is_same_v<Kokkos::View<int*>, ViewType>, "ViewType must match Kokkos::View<int*>");
-  std::cout << "Hello from lib_with_interface_kokkos_dependency, printig view a(0) " << a(0) << "\n";
+template <typename ViewType>
+void print(ViewType a) {
+  static_assert(std::is_same_v<Kokkos::View<int*>, ViewType>,
+                "ViewType must match Kokkos::View<int*>");
+  std::cout
+      << "Hello from lib_with_interface_kokkos_dependency, printig view a(0) "
+      << a(0) << "\n";
 #if defined __CUDACC__ || defined __HIPCC__
   std::cout << "Calling additional device function without kokkos dependency\n";
-  cuda_hip_header_without_kokkos_dependency::print_from_device<<<1,1>>>(1.0);
+  cuda_hip_header_without_kokkos_dependency::print_from_device<<<1, 1>>>(1.0);
 #endif
-  }
+}
 
-template<typename ViewType>
+template <typename ViewType>
 struct StructOfLibWithInterfaceKokkosDependency {
   ViewType value;
 };

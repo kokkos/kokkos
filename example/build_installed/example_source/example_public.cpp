@@ -29,8 +29,8 @@ int main(int argc, char* argv[]) {
   {
     print_fortran_();
     print_plain_cxx();
-      lib_with_public_kokkos_dependency::print(
-          Kokkos::View<int*>{"testview", 10});
+    lib_with_public_kokkos_dependency::print(
+        Kokkos::View<int*>{"testview", 10});
   }
   Kokkos::finalize();
 }

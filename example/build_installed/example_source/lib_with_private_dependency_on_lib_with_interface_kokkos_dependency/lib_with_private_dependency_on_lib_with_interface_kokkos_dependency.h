@@ -25,5 +25,6 @@ void finalize();
 
 void print();
 
-}  // namespace lib_with_private_dependency_on_lib_with_inteface_kokkos_dependency
+}  // namespace
+   // lib_with_private_dependency_on_lib_with_interface_kokkos_dependency
 #endif

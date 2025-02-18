@@ -26,11 +26,14 @@ void print_plain_cxx();
 int main() {
   lib_without_kokkos_dependency::print();
 
-  lib_with_private_dependency_on_lib_with_interface_kokkos_dependency::initialize();
+  lib_with_private_dependency_on_lib_with_interface_kokkos_dependency::
+      initialize();
   {
-    lib_with_private_dependency_on_lib_with_interface_kokkos_dependency::print();
+    lib_with_private_dependency_on_lib_with_interface_kokkos_dependency::
+        print();
   }
-  lib_with_private_dependency_on_lib_with_interface_kokkos_dependency::finalize();
+  lib_with_private_dependency_on_lib_with_interface_kokkos_dependency::
+      finalize();
 
   print_fortran_();
   print_plain_cxx();

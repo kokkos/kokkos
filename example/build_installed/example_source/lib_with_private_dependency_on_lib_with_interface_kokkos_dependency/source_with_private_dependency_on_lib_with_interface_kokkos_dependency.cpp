@@ -36,12 +36,13 @@ void finalize() {
 }
 
 void print() {
-  std::cout
-      << "Hello from "
-         "lib_with_private_dependency_on_lib_with_interface_kokkos_dependency\n";
+  std::cout << "Hello from "
+               "lib_with_private_dependency_on_lib_with_interface_kokkos_"
+               "dependency\n";
   std::cout << "Will call lib_with_interface_kokkos_dependency now:\n";
   lib_with_interface_kokkos_dependency::print(Kokkos::View<int*>{"a", 10});
   std::cout << "Done\n";
 }
 
-}  // namespace lib_with_private_dependency_on_lib_with_interface_kokkos_dependency
+}  // namespace
+   // lib_with_private_dependency_on_lib_with_interface_kokkos_dependency

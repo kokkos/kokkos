@@ -40,7 +40,9 @@ void print() {
       << "Hello from "
          "lib_with_private_dependency_on_lib_with_private_kokkos_dependency\n";
   std::cout << "Will call lib_with_private_kokkos_dependency now:\n";
-  lib_with_private_kokkos_dependency::print(lib_with_private_kokkos_dependency::StructOfLibWithPrivateKokkosDependency{});
+  lib_with_private_kokkos_dependency::print(
+      lib_with_private_kokkos_dependency::
+          StructOfLibWithPrivateKokkosDependency{});
   std::cout << "Done\n";
 }
 

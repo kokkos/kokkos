@@ -22,19 +22,18 @@
 
 namespace lib_with_interface_dependency_on_lib_with_interface_kokkos_dependency {
 
-template<typename ViewType>
-void print(
-    lib_with_interface_kokkos_dependency::StructOfLibWithInterfaceKokkosDependency<ViewType>
-        in)
-{
-  std::cout
-      << "Hello from "
-         "lib_with_interface_dependency_on_lib_with_interface_kokkos_dependency\n";
+template <typename ViewType>
+void print(lib_with_interface_kokkos_dependency::
+               StructOfLibWithInterfaceKokkosDependency<ViewType>
+                   in) {
+  std::cout << "Hello from "
+               "lib_with_interface_dependency_on_lib_with_interface_kokkos_"
+               "dependency\n";
   std::cout << "Will call lib_with_interface_kokkos_dependency now:\n";
   lib_with_interface_kokkos_dependency::print(in.value);
   std::cout << "Done\n";
+}
 
-  }
-
-}  // namespace lib_with_interface_dependency_on_lib_with_interface_kokkos_dependency
+}  // namespace
+   // lib_with_interface_dependency_on_lib_with_interface_kokkos_dependency
 #endif
