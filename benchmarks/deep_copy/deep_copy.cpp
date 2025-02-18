@@ -16,10 +16,6 @@
 
 #include "Kokkos_Core.hpp"
 #include <cstdio>
-#include <cstdlib>
-#include <cmath>
-
-#include <sys/time.h>
 
 #define COPY_ARRAY_SIZE 100000000
 #define COPY_NTIMES 20
@@ -29,11 +25,35 @@
 using Scalar = double;
 
 using DeviceView =
-    Kokkos::View<Scalar*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<Scalar *, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 using HostView = typename DeviceView::HostMirror;
 
-using StridedDeviceView = Kokkos::View<Scalar*, Kokkos::LayoutStride>;
+using StridedDeviceView = Kokkos::View<Scalar *, Kokkos::LayoutStride>;
 using StridedHostView   = typename StridedDeviceView::HostMirror;
+
+struct Result {
+  double time;  // s
+  double tput;  // MiB/s
+};
+
+template <typename Dst, typename Src>
+static Result bench(const Dst &dst, const Src &src) {
+  Kokkos::Timer timer;
+  Result r;
+  r.time = std::numeric_limits<double>::max();
+  for (int k = 0; k < COPY_NTIMES; ++k) {
+    timer.reset();
+    Kokkos::deep_copy(dst, src);
+    r.time = std::min(r.time, timer.seconds());
+  }
+
+  static_assert(Dst::rank() == 1,
+                "Expected rank-1 view as deep_copy destination");
+  r.tput =
+      dst.extent(0) * sizeof(typename Dst::value_type) / r.time / 1024 / 1024;
+
+  return r;
+}
 
 int run_benchmark() {
   printf("Reports fastest timing per kernel\n");
@@ -51,148 +71,83 @@ int run_benchmark() {
 
   printf(HLINE);
 
-  DeviceView dev_a("a", COPY_ARRAY_SIZE);
-  DeviceView dev_b("b", COPY_ARRAY_SIZE);
+  {
+    DeviceView dev_a("a", COPY_ARRAY_SIZE);
+    DeviceView dev_b("b", COPY_ARRAY_SIZE);
 
-  HostView host_a = Kokkos::create_mirror_view(dev_a);
-  HostView host_b = Kokkos::create_mirror_view(dev_b);
+    HostView host_a = Kokkos::create_mirror_view(dev_a);
+    HostView host_b = Kokkos::create_mirror_view(dev_b);
 
-  double scalarToDeviceTime = std::numeric_limits<double>::max();
-  double scalarToHostTime   = std::numeric_limits<double>::max();
-  double hostToDeviceTime   = std::numeric_limits<double>::max();
-  double deviceToHostTime   = std::numeric_limits<double>::max();
-  double hostToHostTime     = std::numeric_limits<double>::max();
-  double deviceToDeviceTime = std::numeric_limits<double>::max();
+    printf("Start benchmarking for contiguous layout...\n");
 
-  printf("Start benchmarking for contiguous layout...\n");
+    Result scalarToDevice = bench(dev_a, 1.0);
+    Result scalarToHost   = bench(host_a, 2.0);
+    Result hostToDevice   = bench(dev_a, host_a);
+    Result deviceToHost   = bench(host_a, dev_a);
+    Result hostToHost     = bench(host_b, host_a);
+    Result deviceToDevice = bench(dev_b, dev_a);
 
-  Kokkos::Timer timer;
+    printf(HLINE);
 
-  for (int k = 0; k < COPY_NTIMES; ++k) {
-    timer.reset();
-    Kokkos::deep_copy(dev_a, 1.0);
-    scalarToDeviceTime = std::min(scalarToDeviceTime, timer.seconds());
+    printf("Scalar to Device     %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * scalarToDevice.time, scalarToDevice.tput);
+    printf("Scalar to Host       %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * scalarToHost.time, scalarToHost.tput);
+    printf("Host to Device       %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * hostToDevice.time, hostToDevice.tput);
+    printf("Device to Host       %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * deviceToHost.time, deviceToHost.tput);
+    printf("Host to Host         %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * hostToHost.time, hostToHost.tput);
+    printf("Device to Device     %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * deviceToDevice.time, deviceToDevice.tput);
 
-    timer.reset();
-    Kokkos::deep_copy(host_a, 2.0);
-    scalarToHostTime = std::min(scalarToHostTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(dev_a, host_a);
-    hostToDeviceTime = std::min(hostToDeviceTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(host_a, dev_a);
-    deviceToHostTime = std::min(deviceToHostTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(host_b, host_a);
-    hostToHostTime = std::min(hostToHostTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(dev_b, dev_a);
-    deviceToDeviceTime = std::min(deviceToDeviceTime, timer.seconds());
+    printf(HLINE);
   }
 
-  double scalarToDeviceTput =
-      COPY_ARRAY_SIZE * sizeof(Scalar) / scalarToDeviceTime;
-  double scalarToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / scalarToHostTime;
-  double hostToDeviceTput = COPY_ARRAY_SIZE * sizeof(Scalar) / hostToDeviceTime;
-  double deviceToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / deviceToHostTime;
-  double hostToHostTput   = COPY_ARRAY_SIZE * sizeof(Scalar) / hostToHostTime;
-  double deviceToDeviceTput =
-      COPY_ARRAY_SIZE * sizeof(Scalar) / deviceToDeviceTime;
+  {
+    Kokkos::LayoutStride layout(COPY_ARRAY_SIZE / 2, 2);
 
-  printf(HLINE);
+    DeviceView dev_a("a", COPY_ARRAY_SIZE);
+    DeviceView dev_b("b", COPY_ARRAY_SIZE);
 
-  printf("Scalar to Device     %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * scalarToDeviceTime, scalarToDeviceTput / 1024 / 1024);
-  printf("Scalar to Host       %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * scalarToHostTime, scalarToHostTput / 1024 / 1024);
-  printf("Host to Device       %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * hostToDeviceTime, hostToDeviceTput / 1024 / 1024);
-  printf("Device to Host       %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * deviceToHostTime, deviceToHostTput / 1024 / 1024);
-  printf("Host to Host         %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * hostToHostTime, hostToHostTput / 1024 / 1024);
-  printf("Device to Device     %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * deviceToDeviceTime, deviceToDeviceTput / 1024 / 1024);
+    StridedDeviceView dev_odd(dev_a.data(), layout);
+    StridedDeviceView dev_even(dev_a.data() + 1, layout);
 
-  printf(HLINE);
+    StridedHostView host_odd  = Kokkos::create_mirror_view(dev_odd);
+    StridedHostView host_even = Kokkos::create_mirror_view(dev_even);
 
-  Kokkos::LayoutStride layout(COPY_ARRAY_SIZE / 2, 2);
+    printf("Start benchmarking for strided layout...\n");
 
-  StridedDeviceView dev_odd(dev_a.data(), layout);
-  StridedDeviceView dev_even(dev_a.data() + 1, layout);
+    Result scalarToDevice = bench(dev_odd, 3.0);
+    Result scalarToHost   = bench(host_odd, 3.0);
+    Result hostToDevice   = bench(dev_odd, host_odd);
+    Result deviceToHost   = bench(host_odd, dev_odd);
+    Result hostToHost     = bench(host_even, host_odd);
+    Result deviceToDevice = bench(dev_even, dev_odd);
 
-  StridedHostView host_odd(host_a.data(), layout);
-  StridedHostView host_even(host_a.data() + 1, layout);
+    printf(HLINE);
 
-  scalarToDeviceTime = std::numeric_limits<double>::max();
-  scalarToHostTime   = std::numeric_limits<double>::max();
-  hostToDeviceTime   = std::numeric_limits<double>::max();
-  deviceToHostTime   = std::numeric_limits<double>::max();
-  hostToHostTime     = std::numeric_limits<double>::max();
-  deviceToDeviceTime = std::numeric_limits<double>::max();
+    printf("Scalar to Device     %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * scalarToDevice.time, scalarToDevice.tput);
+    printf("Scalar to Host       %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * scalarToHost.time, scalarToHost.tput);
+    printf("Host to Device       %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * hostToDevice.time, hostToDevice.tput);
+    printf("Device to Host       %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * deviceToHost.time, deviceToHost.tput);
+    printf("Host to Host         %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * hostToHost.time, hostToHost.tput);
+    printf("Device to Device     %13.2f ms %17.2f MiB/s\n",
+           1.0e3 * deviceToDevice.time, deviceToDevice.tput);
 
-  printf("Start benchmarking for strided layout...\n");
-
-  for (int k = 0; k < COPY_NTIMES; ++k) {
-    timer.reset();
-    Kokkos::deep_copy(dev_odd, 3.0);
-    scalarToDeviceTime = std::min(scalarToDeviceTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(host_odd, 3.0);
-    scalarToHostTime = std::min(scalarToHostTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(dev_odd, host_odd);
-    hostToDeviceTime = std::min(hostToDeviceTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(host_odd, dev_odd);
-    deviceToHostTime = std::min(deviceToHostTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(host_even, host_odd);
-    hostToHostTime = std::min(hostToHostTime, timer.seconds());
-
-    timer.reset();
-    Kokkos::deep_copy(dev_even, dev_odd);
-    deviceToDeviceTime = std::min(deviceToDeviceTime, timer.seconds());
+    printf(HLINE);
   }
-
-  scalarToDeviceTput =
-      COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / scalarToDeviceTime;
-  scalarToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / scalarToHostTime;
-  hostToDeviceTput = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / hostToDeviceTime;
-  deviceToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / deviceToHostTime;
-  hostToHostTput   = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / hostToHostTime;
-  deviceToDeviceTput =
-      COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / deviceToDeviceTime;
-
-  printf(HLINE);
-
-  printf("Scalar to Device     %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * scalarToDeviceTime, scalarToDeviceTput / 1024 / 1024);
-  printf("Scalar to Host       %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * scalarToHostTime, scalarToHostTput / 1024 / 1024);
-  printf("Host to Device       %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * hostToDeviceTime, hostToDeviceTput / 1024 / 1024);
-  printf("Device to Host       %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * deviceToHostTime, deviceToHostTput / 1024 / 1024);
-  printf("Host to Host         %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * hostToHostTime, hostToHostTput / 1024 / 1024);
-  printf("Device to Device     %13.2f ms %17.2f MiB/s\n",
-         1.0e3 * deviceToDeviceTime, deviceToDeviceTput / 1024 / 1024);
-
-  printf(HLINE);
 
   return 0;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
   printf(HLINE);
   printf("Kokkos deep_copy Benchmark\n");
   printf(HLINE);
