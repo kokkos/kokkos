@@ -218,13 +218,13 @@ function(kokkos_check_compile_dependency COMPILE_DEPENDENCY TRANSITIVE_COMPILE_D
   if(TARGET ${INVESTIGATED_TARGET})
     set(dependencies "")
     get_target_property(target_link_dependencies ${INVESTIGATED_TARGET} LINK_LIBRARIES)
-        if (target_link_dependencies)
-          list(APPEND dependencies ${target_link_dependencies})
-        endif()
+    if(target_link_dependencies)
+      list(APPEND dependencies ${target_link_dependencies})
+    endif()
     get_target_property(target_interface_dependencies ${INVESTIGATED_TARGET} INTERFACE_LINK_LIBRARIES)
-       if (target_interface_dependencies)
-         list(APPEND dependencies ${target_interface_dependencies})
-       endif()
+    if(target_interface_dependencies)
+      list(APPEND dependencies ${target_interface_dependencies})
+    endif()
     list(REMOVE_DUPLICATES dependencies)
     if(dependencies)
       #check the target directly
@@ -265,13 +265,13 @@ function(kokkos_check_link_dependency LINK_DEPENDENCY DEPENDENT_LIBRARY INVESTIG
   if(TARGET ${INVESTIGATED_TARGET})
     set(dependencies "")
     get_target_property(target_link_dependencies ${INVESTIGATED_TARGET} LINK_LIBRARIES)
-        if (target_link_dependencies)
-          list(APPEND dependencies ${target_link_dependencies})
-        endif()
+    if(target_link_dependencies)
+      list(APPEND dependencies ${target_link_dependencies})
+    endif()
     get_target_property(target_interface_dependencies ${INVESTIGATED_TARGET} INTERFACE_LINK_LIBRARIES)
-       if (target_interface_dependencies)
-         list(APPEND dependencies ${target_interface_dependencies})
-       endif()
+    if(target_interface_dependencies)
+      list(APPEND dependencies ${target_interface_dependencies})
+    endif()
     list(REMOVE_DUPLICATES dependencies)
     if(dependencies)
       if(${DEPENDENT_LIBRARY} IN_LIST dependencies)
@@ -393,10 +393,16 @@ function(kokkos_set_dependent_library_properties)
         endforeach()
       endforeach()
     endif()
-    kokkos_set_source_and_target_properties(USE_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER} TARGET ${COMPILE_TARGETS})
+    kokkos_set_source_and_target_properties(
+      USE_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER} TARGET
+      ${COMPILE_TARGETS}
+    )
   endif()
 
-  kokkos_set_source_and_target_properties(USE_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER} LINK_ONLY_TARGET ${LINK_TARGETS})
+  kokkos_set_source_and_target_properties(
+    USE_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER} LINK_ONLY_TARGET
+    ${LINK_TARGETS}
+  )
 endfunction()
 
 # this function sets the source and target properties for all targets that link to a given library but deferred to the end of the CMake setup
@@ -441,7 +447,10 @@ endfunction()
 #       Kokkos_FOUND_DIR        --> hint on where Kokkos was installed (important for CMake contexts that don't know this but depend on Kokkos)
 #
 function(kokkos_set_source_and_target_properties)
-  cmake_parse_arguments(INP "GLOBAL" "Kokkos_FOUND_DIR" "USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER;DIRECTORY;TARGET;LINK_ONLY_TARGET;SOURCE" ${ARGN})
+  cmake_parse_arguments(
+    INP "GLOBAL" "Kokkos_FOUND_DIR"
+    "USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER;DIRECTORY;TARGET;LINK_ONLY_TARGET;SOURCE" ${ARGN}
+  )
 
   #if you passed a launcher, we will just take it without modification. If not we still use our launcher for CUDA if nvcc is not the global cxx compiler
   if((NOT INP_USE_COMPILER_LAUNCHER) AND (NOT INP_USE_LINKER_LAUNCHER))
@@ -488,8 +497,12 @@ function(kokkos_set_source_and_target_properties)
           )
         endif()
 
-        set(INP_USE_COMPILER_LAUNCHER ${CMAKE_CXX_COMPILER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER})
-        set(INP_USE_LINKER_LAUNCHER ${CMAKE_CXX_LINKER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER})
+        set(INP_USE_COMPILER_LAUNCHER
+            ${CMAKE_CXX_COMPILER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+        )
+        set(INP_USE_LINKER_LAUNCHER
+            ${CMAKE_CXX_LINKER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+        )
       endif()
     endif()
   endif()
@@ -543,19 +556,19 @@ function(kokkos_set_source_and_target_properties)
         get_target_property(target_dir ${target} SOURCE_DIR)
         foreach(source IN LISTS target_sources)
           if(source)
-              cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_dir} OUTPUT_VARIABLE source_abs_path )
-              cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
-              string(REGEX REPLACE "^\\." "" extension_no_dot "${extension}")
-              if(${extension_no_dot} IN_LIST CMAKE_CXX_SOURCE_FILE_EXTENSIONS)
-                message(
-                  DEBUG
-                  "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for source ${source_abs_path}"
-                )
-                set_property(
-                    SOURCE ${source_abs_path} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
-                )
+            cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_dir} OUTPUT_VARIABLE source_abs_path)
+            cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
+            string(REGEX REPLACE "^\\." "" extension_no_dot "${extension}")
+            if(${extension_no_dot} IN_LIST CMAKE_CXX_SOURCE_FILE_EXTENSIONS)
+              message(
+                DEBUG
+                "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for source ${source_abs_path}"
+              )
+              set_property(
+                SOURCE ${source_abs_path} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
+              )
             endif()
-            endif()
+          endif()
         endforeach()
       endforeach()
     endif()
