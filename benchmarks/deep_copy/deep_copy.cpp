@@ -26,11 +26,13 @@
 
 #define HLINE "-------------------------------------------------------------\n"
 
+using Scalar = double;
+
 using DeviceView =
-    Kokkos::View<double*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
+    Kokkos::View<Scalar*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 using HostView = typename DeviceView::HostMirror;
 
-using StridedDeviceView = Kokkos::View<double*, Kokkos::LayoutStride>;
+using StridedDeviceView = Kokkos::View<Scalar*, Kokkos::LayoutStride>;
 using StridedHostView   = typename StridedDeviceView::HostMirror;
 
 int run_benchmark() {
@@ -92,16 +94,29 @@ int run_benchmark() {
     deviceToDeviceTime = std::min(deviceToDeviceTime, timer.seconds());
   }
 
+  double scalarToDeviceTput =
+      COPY_ARRAY_SIZE * sizeof(Scalar) / scalarToDeviceTime;
+  double scalarToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / scalarToHostTime;
+  double hostToDeviceTput = COPY_ARRAY_SIZE * sizeof(Scalar) / hostToDeviceTime;
+  double deviceToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / deviceToHostTime;
+  double hostToHostTput   = COPY_ARRAY_SIZE * sizeof(Scalar) / hostToHostTime;
+  double deviceToDeviceTput =
+      COPY_ARRAY_SIZE * sizeof(Scalar) / deviceToDeviceTime;
+
   printf(HLINE);
 
-  printf("Scalar to Device             %11.2f ms\n",
-         1.0e3 * scalarToDeviceTime);
-  printf("Scalar to Host               %11.2f ms\n", 1.0e3 * scalarToHostTime);
-  printf("Host to Device               %11.2f ms\n", 1.0e3 * hostToDeviceTime);
-  printf("Device to Host               %11.2f ms\n", 1.0e3 * deviceToHostTime);
-  printf("Host to Host                 %11.2f ms\n", 1.0e3 * hostToHostTime);
-  printf("Device to Device             %11.2f ms\n",
-         1.0e3 * deviceToDeviceTime);
+  printf("Scalar to Device     %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * scalarToDeviceTime, scalarToDeviceTput / 1024 / 1024);
+  printf("Scalar to Host       %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * scalarToHostTime, scalarToHostTput / 1024 / 1024);
+  printf("Host to Device       %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * hostToDeviceTime, hostToDeviceTput / 1024 / 1024);
+  printf("Device to Host       %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * deviceToHostTime, deviceToHostTput / 1024 / 1024);
+  printf("Host to Host         %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * hostToHostTime, hostToHostTput / 1024 / 1024);
+  printf("Device to Device     %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * deviceToDeviceTime, deviceToDeviceTput / 1024 / 1024);
 
   printf(HLINE);
 
@@ -112,6 +127,13 @@ int run_benchmark() {
 
   StridedHostView host_odd(host_a.data(), layout);
   StridedHostView host_even(host_a.data() + 1, layout);
+
+  scalarToDeviceTime = std::numeric_limits<double>::max();
+  scalarToHostTime   = std::numeric_limits<double>::max();
+  hostToDeviceTime   = std::numeric_limits<double>::max();
+  deviceToHostTime   = std::numeric_limits<double>::max();
+  hostToHostTime     = std::numeric_limits<double>::max();
+  deviceToDeviceTime = std::numeric_limits<double>::max();
 
   printf("Start benchmarking for strided layout...\n");
 
@@ -141,16 +163,29 @@ int run_benchmark() {
     deviceToDeviceTime = std::min(deviceToDeviceTime, timer.seconds());
   }
 
+  scalarToDeviceTput =
+      COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / scalarToDeviceTime;
+  scalarToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / scalarToHostTime;
+  hostToDeviceTput = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / hostToDeviceTime;
+  deviceToHostTput = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / deviceToHostTime;
+  hostToHostTput   = COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / hostToHostTime;
+  deviceToDeviceTput =
+      COPY_ARRAY_SIZE * sizeof(Scalar) / 2 / deviceToDeviceTime;
+
   printf(HLINE);
 
-  printf("Scalar to Device             %11.2f ms\n",
-         1.0e3 * scalarToDeviceTime);
-  printf("Scalar to Host               %11.2f ms\n", 1.0e3 * scalarToHostTime);
-  printf("Host to Device               %11.2f ms\n", 1.0e3 * hostToDeviceTime);
-  printf("Device to Host               %11.2f ms\n", 1.0e3 * deviceToHostTime);
-  printf("Host to Host                 %11.2f ms\n", 1.0e3 * hostToHostTime);
-  printf("Device to Device             %11.2f ms\n",
-         1.0e3 * deviceToDeviceTime);
+  printf("Scalar to Device     %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * scalarToDeviceTime, scalarToDeviceTput / 1024 / 1024);
+  printf("Scalar to Host       %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * scalarToHostTime, scalarToHostTput / 1024 / 1024);
+  printf("Host to Device       %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * hostToDeviceTime, hostToDeviceTput / 1024 / 1024);
+  printf("Device to Host       %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * deviceToHostTime, deviceToHostTput / 1024 / 1024);
+  printf("Host to Host         %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * hostToHostTime, hostToHostTput / 1024 / 1024);
+  printf("Device to Device     %13.2f ms %17.2f MiB/s\n",
+         1.0e3 * deviceToDeviceTime, deviceToDeviceTput / 1024 / 1024);
 
   printf(HLINE);
 
