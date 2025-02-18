@@ -26,6 +26,7 @@ static_assert(false,
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
+#include <impl/Kokkos_Utilities.hpp>  // integral_constant
 #include <type_traits>
 
 namespace Kokkos {
