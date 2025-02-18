@@ -121,8 +121,6 @@ int run_benchmark() {
 
     Result scalarToDevice = bench(dev_odd, 3.0);
     Result scalarToHost   = bench(host_odd, 3.0);
-    Result hostToDevice   = bench(dev_odd, host_odd);
-    Result deviceToHost   = bench(host_odd, dev_odd);
     Result hostToHost     = bench(host_even, host_odd);
     Result deviceToDevice = bench(dev_even, dev_odd);
 
@@ -132,10 +130,6 @@ int run_benchmark() {
            1.0e3 * scalarToDevice.time, scalarToDevice.tput);
     printf("Scalar to Host       %13.2f ms %17.2f MiB/s\n",
            1.0e3 * scalarToHost.time, scalarToHost.tput);
-    printf("Host to Device       %13.2f ms %17.2f MiB/s\n",
-           1.0e3 * hostToDevice.time, hostToDevice.tput);
-    printf("Device to Host       %13.2f ms %17.2f MiB/s\n",
-           1.0e3 * deviceToHost.time, deviceToHost.tput);
     printf("Host to Host         %13.2f ms %17.2f MiB/s\n",
            1.0e3 * hostToHost.time, hostToHost.tput);
     printf("Device to Device     %13.2f ms %17.2f MiB/s\n",
