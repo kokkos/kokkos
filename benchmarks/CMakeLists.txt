@@ -1,5 +1,6 @@
 #FIXME_OPENMPTARGET - compiling in debug mode causes ICE.
 kokkos_add_benchmark_directories(atomic)
+kokkos_add_benchmark_directories(deep_copy)
 kokkos_add_benchmark_directories(gather)
 kokkos_add_benchmark_directories(gups)
 kokkos_add_benchmark_directories(launch_latency)
