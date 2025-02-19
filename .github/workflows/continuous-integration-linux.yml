@@ -89,6 +89,13 @@ jobs:
             stdcxx: '17'
             cxx_extra_flags: '-m32'
             cmake_extra_opts: '-DKokkos_ENABLE_HWLOC=OFF'
+          - arch: 'x64'
+            distro: 'fedora:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'HPX'
+            stdcxx: '17'
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -125,6 +132,10 @@ jobs:
             echo "flang-new found"
             echo "FC=flang-new" >> $GITHUB_ENV
           fi
+# FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
+      - name: maybe_set_hpx_vars
+        if: ${{ matrix.backend == 'HPX' }}
+        run: echo "HPX_HANDLE_FAILED_NEW=0" >> $GITHUB_ENV
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
