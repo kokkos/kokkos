@@ -521,9 +521,9 @@ class BasicView {
 #else
   // C++17 variant of operator()
 
-  // Some weird unexplained issue in compiling the SFINAE version with CUDA/MSVC
+  // Some weird unexplained issue in compiling the SFINAE version with MSVC
   // So we just use post factor check here with static_assert
-#if defined(KOKKOS_ENABLE_CUDA) && defined(_WIN32)
+#if defined(_WIN32)
   template <class... OtherIndexTypes>
   KOKKOS_FUNCTION constexpr reference operator()(
       OtherIndexTypes... indices) const {
