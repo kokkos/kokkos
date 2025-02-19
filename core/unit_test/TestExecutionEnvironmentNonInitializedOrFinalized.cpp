@@ -178,7 +178,9 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       },
       "Kokkos allocation \"no-label\" is being deallocated after "
       "Kokkos::finalize was called");
-  // FIXME: Both the following tests don't die
+  // FIXME: The following logic of passing an uninitialized pointer to
+  // kokkos_free is better checked at compile time. These two tests have
+  // to be removed.
   EXPECT_DEATH(
       {
         void* ptr;
