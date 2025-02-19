@@ -123,13 +123,13 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
     return basic_simd_mask(_kor_mask8(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const {
-    return m_value == other.m_value;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(lhs.m_value == rhs.m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const {
-    return m_value != other.m_value;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(lhs.m_value != rhs.m_value);
   }
 };
 
@@ -246,13 +246,13 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<16>> {
     return basic_simd_mask(_kand_mask16(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const {
-    return m_value == other.m_value;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(lhs.m_value == rhs.m_value);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const {
-    return m_value != other.m_value;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(lhs.m_value != rhs.m_value);
   }
 };
 

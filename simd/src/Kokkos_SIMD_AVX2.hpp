@@ -117,13 +117,14 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>> {
     return basic_simd_mask(_mm256_or_pd(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const noexcept {
-    return _mm256_movemask_pd(m_value) == _mm256_movemask_pd(other.m_value);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(_mm256_movemask_pd(lhs.m_value) ==
+                           _mm256_movemask_pd(rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const noexcept {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -185,13 +186,14 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<4>> {
     return basic_simd_mask(_mm_or_ps(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const noexcept {
-    return _mm_movemask_ps(m_value) == _mm_movemask_ps(other.m_value);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(_mm_movemask_ps(lhs.m_value) ==
+                           _mm_movemask_ps(rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const noexcept {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -256,13 +258,14 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<8>> {
     return basic_simd_mask(_mm256_or_ps(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const noexcept {
-    return _mm256_movemask_ps(m_value) == _mm256_movemask_ps(other.m_value);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(_mm256_movemask_ps(lhs.m_value) ==
+                           _mm256_movemask_ps(rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const noexcept {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -329,14 +332,14 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>> {
     return basic_simd_mask(_mm_or_si128(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const noexcept {
-    return _mm_movemask_ps(_mm_castsi128_ps(m_value)) ==
-           _mm_movemask_ps(_mm_castsi128_ps(other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(_mm_movemask_ps(_mm_castsi128_ps(lhs.m_value)) ==
+                           _mm_movemask_ps(_mm_castsi128_ps(rhs.m_value)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const noexcept {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -406,14 +409,15 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>> {
     return basic_simd_mask(_mm256_or_si256(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const noexcept {
-    return _mm256_movemask_ps(_mm256_castsi256_ps(m_value)) ==
-           _mm256_movemask_ps(_mm256_castsi256_ps(other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(
+        _mm256_movemask_ps(_mm256_castsi256_ps(lhs.m_value)) ==
+        _mm256_movemask_ps(_mm256_castsi256_ps(rhs.m_value)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const noexcept {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -477,14 +481,15 @@ class basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>> {
     return basic_simd_mask(_mm256_or_si256(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const noexcept {
-    return _mm256_movemask_pd(_mm256_castsi256_pd(m_value)) ==
-           _mm256_movemask_pd(_mm256_castsi256_pd(other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(
+        _mm256_movemask_pd(_mm256_castsi256_pd(lhs.m_value)) ==
+        _mm256_movemask_pd(_mm256_castsi256_pd(rhs.m_value)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const noexcept {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -548,14 +553,15 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
     return basic_simd_mask(_mm256_and_si256(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      basic_simd_mask const& other) const noexcept {
-    return _mm256_movemask_pd(_mm256_castsi256_pd(m_value)) ==
-           _mm256_movemask_pd(_mm256_castsi256_pd(other.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator==(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return basic_simd_mask(
+        _mm256_movemask_pd(_mm256_castsi256_pd(lhs.m_value)) ==
+        _mm256_movemask_pd(_mm256_castsi256_pd(rhs.m_value)));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      basic_simd_mask const& other) const noexcept {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd_mask operator!=(
+      basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
