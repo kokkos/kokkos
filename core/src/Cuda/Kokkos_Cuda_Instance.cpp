@@ -219,7 +219,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
       << human_memory_size(prop.sharedMemPerBlock) << '\n'
       << "  Can access system allocated memory: " << prop.pageableMemoryAccess
       << '\n'
-      << "  Via Address Translation Service: "
+      << "    via Address Translation Service: "
       << prop.pageableMemoryAccessUsesHostPageTables << '\n';
   }
 }
