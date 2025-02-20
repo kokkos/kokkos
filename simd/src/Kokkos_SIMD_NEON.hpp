@@ -118,11 +118,11 @@ class neon_mask<Derived, 64, 2> {
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator&&(
       neon_mask const& lhs, neon_mask const& rhs) noexcept {
-    return Derived(vandq_u64(lhs.m_value, other.m_value));
+    return Derived(vandq_u64(lhs.m_value, rhs.m_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator||(
       neon_mask const& lhs, neon_mask const& rhs) noexcept {
-    return Derived(vorrq_u64(lhs.m_value, other.m_value));
+    return Derived(vorrq_u64(lhs.m_value, rhs.m_value));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
       neon_mask const& other) const {
