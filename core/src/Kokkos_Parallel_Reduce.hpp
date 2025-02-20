@@ -26,7 +26,6 @@ static_assert(false,
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
-#include <impl/Kokkos_Utilities.hpp>  // integral_constant
 #include <type_traits>
 
 namespace Kokkos {
@@ -1499,11 +1498,10 @@ struct ParallelReduceAdaptor {
       Impl::ParallelReduceReturnValue<void, ReturnType, FunctorType>;
 
   // Equivalent to std::get<I>(std::tuple) but callable on the device.
-  template <class T1, class T2, size_t I>
-  static KOKKOS_FUNCTION std::conditional_t<I == 0, T1&&, T2&&>
-  forwarding_switch(integral_constant<std::size_t, I>, T1&& v1, T2&& v2) {
-    static_assert(I == 0 || I == 1);
-    if constexpr (I == 0)
+  template <bool B, class T1, class T2>
+  static KOKKOS_FUNCTION std::conditional_t<B, T1&&, T2&&> forwarding_switch(
+      T1&& v1, T2&& v2) {
+    if constexpr (B)
       return static_cast<T1&&>(v1);
     else
       return static_cast<T2&&>(v2);
@@ -1528,11 +1526,9 @@ struct ParallelReduceAdaptor {
         CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>;
 
     CombinedFunctorReducerType functor_reducer(
-        functor,
-        typename Analysis::Reducer(forwarding_switch(
-            integral_constant<std::size_t,
-                              (passed_reducer_type_is_invalid ? 0 : 1)>(),
-            functor, return_value)));
+        functor, typename Analysis::Reducer(
+                     forwarding_switch<passed_reducer_type_is_invalid>(
+                         functor, return_value)));
     const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
         typename return_value_adapter::reducer_type>(policy, functor_reducer,
                                                      label, kpID);

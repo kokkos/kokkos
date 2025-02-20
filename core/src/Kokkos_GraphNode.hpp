@@ -32,7 +32,6 @@ static_assert(false,
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <impl/Kokkos_GraphImpl_Utilities.hpp>
 #include <impl/Kokkos_GraphImpl.hpp>  // GraphAccess
-#include <impl/Kokkos_Utilities.hpp>  // intergral_constant
 
 #include <memory>  // std::shared_ptr
 
@@ -323,12 +322,10 @@ class GraphNodeRef {
   // <editor-fold desc="then_parallel_reduce"> {{{2
 
   // Equivalent to std::get<I>(std::tuple) but callable on the device.
-  template <class T1, class T2, size_t I>
-  static KOKKOS_FUNCTION std::conditional_t<I == 0, T1&&, T2&&>
-  impl_forwarding_switch(Kokkos::Impl::integral_constant<std::size_t, I>,
-                         T1&& v1, T2&& v2) {
-    static_assert(I == 0 || I == 1);
-    if constexpr (I == 0)
+  template <bool B, class T1, class T2>
+  static KOKKOS_FUNCTION std::conditional_t<B, T1&&, T2&&>
+  impl_forwarding_switch(T1&& v1, T2&& v2) {
+    if constexpr (B)
       return static_cast<T1&&>(v1);
     else
       return static_cast<T2&&>(v2);
@@ -432,10 +429,9 @@ class GraphNodeRef {
     using analysis = Kokkos::Impl::FunctorAnalysis<
         Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, TheReducerType,
         typename return_value_adapter::value_type>;
-    typename analysis::Reducer final_reducer(impl_forwarding_switch(
-        Kokkos::Impl::integral_constant<
-            std::size_t, (passed_reducer_type_is_invalid ? 0 : 1)>(),
-        functor, return_value));
+    typename analysis::Reducer final_reducer(
+        impl_forwarding_switch<passed_reducer_type_is_invalid>(functor,
+                                                               return_value));
     Kokkos::Impl::CombinedFunctorReducer<functor_type,
                                          typename analysis::Reducer>
         functor_reducer(functor, final_reducer);
