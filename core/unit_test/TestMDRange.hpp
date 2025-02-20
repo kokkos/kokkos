@@ -3644,8 +3644,7 @@ struct TestMDRange_6D {
     if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
       printf(
           " Errors in test_for6_eval_once for shape (%d, %d, %d, %d, %d, %d) "
-          "and "
-          "iterate %s; min = %d, max = %d\n\n",
+          "and iterate %s; min = %d, max = %d\n\n",
           N0, N1, N2, N3, N4, N5, iterate_msg, min_max_value.min_val,
           min_max_value.max_val);
     }
