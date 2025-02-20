@@ -38,12 +38,15 @@ void deepcopy_view(ViewTypeA& a, ViewTypeB& b, benchmark::State& state) {
   }
 }
 
-template <class LayoutA, class LayoutB>
+template <
+    class LayoutA, class LayoutB,
+    class MemorySpaceA = typename Kokkos::DefaultExecutionSpace::memory_space,
+    class MemorySpaceB = typename Kokkos::DefaultExecutionSpace::memory_space>
 static void ViewDeepCopy_Rank1(benchmark::State& state) {
   const int N8 = std::pow(state.range(0), 8);
 
-  Kokkos::View<double*, LayoutA> a("A1", N8);
-  Kokkos::View<double*, LayoutB> b("B1", N8);
+  Kokkos::View<double*, LayoutA, MemorySpaceA> a("A1", N8);
+  Kokkos::View<double*, LayoutB, MemorySpaceB> b("B1", N8);
 
   deepcopy_view(a, b, state);
 }
@@ -143,6 +146,23 @@ static void ViewDeepCopy_Raw(benchmark::State& state) {
     Kokkos::fence();
     KokkosBenchmark::report_results(state, a, DATA_RATIO, timer.seconds());
   }
+}
+
+template <typename DstMemorySpace, typename SrcMemorySpace>
+static void ViewDeepCopy_Strided(benchmark::State& state) {
+  const int N8 = std::pow(state.range(0), 8);
+
+  // allocate 2x the size since layout only has 1/2 the elements
+  Kokkos::View<double*, DstMemorySpace> a("A1", N8 * 2);
+  Kokkos::View<double*, SrcMemorySpace> b("B1", N8 * 2);
+
+  Kokkos::LayoutStride layout(N8 / 2, 2);
+  Kokkos::View<double*, Kokkos::LayoutStride, DstMemorySpace> a_stride(a.data(),
+                                                                       layout);
+  Kokkos::View<double*, Kokkos::LayoutStride, SrcMemorySpace> b_stride(b.data(),
+                                                                       layout);
+
+  deepcopy_view(a_stride, b_stride, state);
 }
 
 }  // namespace Test
