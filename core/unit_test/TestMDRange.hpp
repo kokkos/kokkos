@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <cstdio>
+#include <sstream>
 
 #include <gtest/gtest.h>
 
@@ -2110,17 +2111,12 @@ struct TestMDRange_4D {
     DataType sum_value;
     parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
 
-    if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-      printf(
-          " Errors in test_for4_eval_once for shape (%d, %d, %d, %d) and "
-          "iterate %s; min = %d, max = %d\n\n",
-          N0, N1, N2, N3, iterate_msg, min_max_value.min_val,
-          min_max_value.max_val);
-    }
-
-    ASSERT_EQ(min_max_value.min_val, 1);
-    ASSERT_EQ(min_max_value.max_val, 1);
-    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3);
+    std::ostringstream message;
+    message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
+            << ") and iterate order " << iterate_msg;
+    ASSERT_EQ(min_max_value.min_val, 1) << message.str();
+    ASSERT_EQ(min_max_value.max_val, 1) << message.str();
+    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3) << message.str();
   }  // end test_for4_eval_once_iterate
 };
 
@@ -2759,17 +2755,12 @@ struct TestMDRange_5D {
     DataType sum_value;
     parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
 
-    if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-      printf(
-          " Errors in test_for5_eval_once for shape (%d, %d, %d, %d, %d) and "
-          "iterate %s; min = %d, max = %d\n\n",
-          N0, N1, N2, N3, N4, iterate_msg, min_max_value.min_val,
-          min_max_value.max_val);
-    }
-
-    ASSERT_EQ(min_max_value.min_val, 1);
-    ASSERT_EQ(min_max_value.max_val, 1);
-    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3 * N4);
+    std::ostringstream message;
+    message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
+            << ", " << N4 << ") and iterate order " << iterate_msg;
+    ASSERT_EQ(min_max_value.min_val, 1) << message.str();
+    ASSERT_EQ(min_max_value.max_val, 1) << message.str();
+    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3 * N4) << message.str();
   }  // end test_for5_eval_once_iterate
 };
 
@@ -3641,17 +3632,13 @@ struct TestMDRange_6D {
     DataType sum_value;
     parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
 
-    if (min_max_value.min_val != 1 or min_max_value.max_val != 1) {
-      printf(
-          " Errors in test_for6_eval_once for shape (%d, %d, %d, %d, %d, %d) "
-          "and iterate %s; min = %d, max = %d\n\n",
-          N0, N1, N2, N3, N4, N5, iterate_msg, min_max_value.min_val,
-          min_max_value.max_val);
-    }
-
-    ASSERT_EQ(min_max_value.min_val, 1);
-    ASSERT_EQ(min_max_value.max_val, 1);
-    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3 * N4 * N5);
+    std::ostringstream message;
+    message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
+            << ", " << N4 << ", " << N5 << ") and iterate order "
+            << iterate_msg;
+    ASSERT_EQ(min_max_value.min_val, 1) << message.str();
+    ASSERT_EQ(min_max_value.max_val, 1) << message.str();
+    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3 * N4 * N5) << message.str();
   }  // end test_for6_eval_once_iterate
 };
 
