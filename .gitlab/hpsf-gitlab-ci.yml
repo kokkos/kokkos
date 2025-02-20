@@ -122,8 +122,9 @@ AMD-MI300A:
 NVIDIA-GRACE-GRACE:
   extends: .common-setup
   tags: [uo, aarch64, cpu, grace, neoverse_v2]
-  image: tcclevenger/kokkos-nvidia-cuda:12.6.1-devel-ubuntu24.04
+  image: nvcr.io/nvidia/ai-workbench/python-cuda122:1.0.6
   script:
+    - apt-get update && apt-get install -y cmake git g++
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
