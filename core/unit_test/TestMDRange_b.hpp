@@ -25,18 +25,13 @@ TEST(TEST_CATEGORY, mdrange_6d) {
 #endif
   TestMDRange_6D<TEST_EXECSPACE>::test_for6(10, 10, 10, 10, 5, 5);
 #ifdef KOKKOS_ENABLE_CUDA
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1024 * 1024, 1, 1, 1, 1,
-                                                      1);
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1024 * 1024, 1, 1, 1,
-                                                      1);
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1024 * 1024, 1, 1,
-                                                      1);
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1, 1024 * 1024, 1,
-                                                      1);
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1, 1, 1024 * 1024,
-                                                      1);
-  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1, 1, 1,
-                                                      1024 * 1024);
+  const int size_x = 2 << 19;  // 2^20
+  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(size_x, 1, 1, 1, 1, 1);
+  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, size_x, 1, 1, 1, 1);
+  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, size_x, 1, 1, 1);
+  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1, size_x, 1, 1);
+  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1, 1, size_x, 1);
+  TestMDRange_6D<TEST_EXECSPACE>::test_for6_eval_once(1, 1, 1, 1, 1, size_x);
 #endif
 }
 
