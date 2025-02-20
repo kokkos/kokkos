@@ -149,7 +149,7 @@ static void ViewDeepCopy_Raw(benchmark::State& state) {
 }
 
 template <typename DstMemorySpace, typename SrcMemorySpace>
-static void ViewDeepCopy_Strided(benchmark::State& state) {
+static void ViewDeepCopy_Rank1Strided(benchmark::State& state) {
   const int N8 = std::pow(state.range(0), 8);
 
   // allocate 2x the size since layout only has 1/2 the elements

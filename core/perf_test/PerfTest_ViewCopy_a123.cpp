@@ -52,4 +52,18 @@ BENCHMARK(ViewDeepCopy_Rank3<Kokkos::LayoutLeft, Kokkos::LayoutLeft>)
     ->Arg(10)
     ->UseManualTime();
 
+BENCHMARK(
+    ViewDeepCopy_Rank1Strided<Kokkos::DefaultExecutionSpace::memory_space,
+                              Kokkos::DefaultExecutionSpace::memory_space>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
+BENCHMARK(
+    ViewDeepCopy_Rank1Strided<Kokkos::DefaultHostExecutionSpace::memory_space,
+                              Kokkos::DefaultHostExecutionSpace::memory_space>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
 }  // namespace Test
