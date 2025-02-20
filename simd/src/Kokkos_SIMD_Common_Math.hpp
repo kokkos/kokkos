@@ -194,10 +194,12 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
   FUNC(Experimental::basic_simd<T, Abi> const& a,                            \
        Experimental::basic_simd<T, Abi> const& b) {                          \
     Experimental::basic_simd<T, Abi> result;                                 \
+    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
     for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
          ++i) {                                                              \
-      result[i] = Kokkos::FUNC(a[i], b[i]);                                  \
+      vals[i] = Kokkos::FUNC(a[i], b[i]);                                    \
     }                                                                        \
+    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
     return result;                                                           \
   }                                                                          \
   namespace Experimental {                                                   \
@@ -205,7 +207,7 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
   [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION      \
       basic_simd<T, Abi>                                                     \
       FUNC(basic_simd<T, Abi> const& a, basic_simd<T, Abi> const& b) {       \
-    Kokkos::FUNC(a, b);                                                      \
+    return Kokkos::FUNC(a, b);                                               \
   }                                                                          \
   }
 #else
@@ -215,10 +217,12 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
   FUNC(Experimental::basic_simd<T, Abi> const& a,                            \
        Experimental::basic_simd<T, Abi> const& b) {                          \
     Experimental::basic_simd<T, Abi> result;                                 \
+    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
     for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
          ++i) {                                                              \
-      result[i] = Kokkos::FUNC(a[i], b[i]);                                  \
+      vals[i] = Kokkos::FUNC(a[i], b[i]);                                    \
     }                                                                        \
+    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
     return result;                                                           \
   }
 #endif
@@ -236,10 +240,12 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
        Experimental::basic_simd<T, Abi> const& b,                            \
        Experimental::basic_simd<T, Abi> const& c) {                          \
     Experimental::basic_simd<T, Abi> result;                                 \
+    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
     for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
          ++i) {                                                              \
-      result[i] = Kokkos::FUNC(a[i], b[i], c[i]);                            \
+      vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                              \
     }                                                                        \
+    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
     return result;                                                           \
   }                                                                          \
   namespace Experimental {                                                   \
@@ -259,10 +265,12 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
        Experimental::basic_simd<T, Abi> const& b,                            \
        Experimental::basic_simd<T, Abi> const& c) {                          \
     Experimental::basic_simd<T, Abi> result;                                 \
+    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
     for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
          ++i) {                                                              \
-      result[i] = Kokkos::FUNC(a[i], b[i], c[i]);                            \
+      vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                              \
     }                                                                        \
+    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
     return result;                                                           \
   }
 #endif

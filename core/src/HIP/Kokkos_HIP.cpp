@@ -21,6 +21,7 @@
 #include <Kokkos_Core.hpp>
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_Instance.hpp>
+#include <HIP/Kokkos_HIP_IsXnack.hpp>
 
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
@@ -48,7 +49,6 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   const int hip_device_id =
       Impl::get_gpu(settings).value_or(visible_devices[0]);
 
-  Impl::HIPInternal::m_hipDev = hip_device_id;
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
@@ -75,16 +75,17 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   }
 #endif
 #ifdef KOKKOS_ARCH_AMD_GFX942_APU
-  if (!Kokkos::Impl::xnack_enabled()) {
+  if (!Kokkos::Impl::xnack_environment_enabled()) {
     std::cerr << R"warning(
-Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled. 
+Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
                                  Kokkos requires xnack to be enabled for
                                  ARCH_AMD_GFX942_APU (MI300A) to access host
                                  allocations from the device. Set HSA_XNACK=1
-                                 in your environment and ensure
-                                 \"CONFIG_HMM_MIRROR=y\" is in the /boot/config
-                                 file and that file is readable)warning"
-              << "\n";
+                                 in your environment. For further information
+                                 on HMM support call `Kokkos::print_configuration`,
+                                 or run with KOKKOS_PRINT_CONFIGURATION=1 in your
+                                 environment.
+)warning";
   }
 
   if ((Kokkos::show_warnings()) &&
@@ -105,18 +106,10 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
   // Init the array for used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME
 
-  // Allocate a staging buffer for constant mem in pinned host memory
-  // and an event to avoid overwriting driver for previous kernel launches
+  // Set singleton device id
+  Impl::HIPInternal::singleton().m_hipDev = hip_device_id;
 
-  void* constant_mem_void_ptr = nullptr;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipHostMalloc(
-      &constant_mem_void_ptr, Impl::HIPTraits::ConstantMemoryUsage));
-  Impl::HIPInternal::constantMemHostStaging =
-      static_cast<unsigned long*>(constant_mem_void_ptr);
-
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipEventCreate(&Impl::HIPInternal::constantMemReusable));
-
+  // Create the singleton stream and initialize singleton instance.
   hipStream_t singleton_stream;
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
   Impl::HIPInternal::singleton().initialize(singleton_stream);
@@ -127,12 +120,17 @@ void HIP::impl_finalize() {
 
   desul::Impl::finalize_lock_arrays();  // FIXME
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipEventDestroy(Impl::HIPInternal::constantMemReusable));
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipHostFree(Impl::HIPInternal::constantMemHostStaging));
+  for (const auto hip_device : Impl::HIPInternal::hip_devices) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipEventDestroy(Impl::HIPInternal::constantMemReusable[hip_device]));
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipHostFree(Impl::HIPInternal::constantMemHostStaging[hip_device]));
+  }
 
   Impl::HIPInternal::singleton().finalize();
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      hipSetDevice(Impl::HIPInternal::singleton().m_hipDev));
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipStreamDestroy(Impl::HIPInternal::singleton().m_stream));
 }
@@ -187,7 +185,12 @@ void HIP::impl_static_fence(const std::string& name) {
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
-      [&]() { KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize()); });
+      [&]() {
+        for (const auto hip_device : Impl::HIPInternal::hip_devices) {
+          KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device));
+          KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize());
+        }
+      });
 }
 
 void HIP::fence(const std::string& name) const {

@@ -328,7 +328,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
   }
 
   auto const* comma = std::strchr(resource_str, ',');
-  if (!comma || strncmp(resource_str, "id:", 3)) {
+  if (!comma || strncmp(resource_str, "id:", 3) != 0) {
     std::ostringstream ss;
     ss << "Error: invalid value of " << ctest_resource_group_id_name << ": '"
        << resource_str << "'. Raised by Kokkos::Impl::get_ctest_gpu().";
@@ -512,11 +512,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_GNU",
                                  std::to_string(KOKKOS_COMPILER_GNU));
   declare_configuration_metadata("tools_only", "compiler_family", "gnu");
-#endif
-#ifdef KOKKOS_COMPILER_INTEL
-  declare_configuration_metadata("compiler_version", "KOKKOS_COMPILER_INTEL",
-                                 std::to_string(KOKKOS_COMPILER_INTEL));
-  declare_configuration_metadata("tools_only", "compiler_family", "intel");
 #endif
 #ifdef KOKKOS_COMPILER_INTEL_LLVM
   declare_configuration_metadata("compiler_version",
@@ -1105,9 +1100,6 @@ void Kokkos::finalize() {
   post_finalize_internal();
 }
 
-#ifdef KOKKOS_COMPILER_INTEL
-void Kokkos::fence() { fence("Kokkos::fence: Unnamed Global Fence"); }
-#endif
 void Kokkos::fence(const std::string& name) { fence_internal(name); }
 
 namespace {

@@ -143,14 +143,22 @@ inline void GraphImpl<Kokkos::SYCL>::add_predecessor(
   auto& node = arg_node_ptr->node_details_t::node;
   KOKKOS_EXPECTS(node);
 
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
   m_graph.make_edge(*pred_node, *node);
 }
 
 inline void GraphImpl<Kokkos::SYCL>::submit(const Kokkos::SYCL& exec) {
+  auto q = exec.sycl_queue();
+
+  desul::ensure_sycl_lock_arrays_on_device(q);
+
   if (!m_graph_exec) {
     instantiate();
   }
-  exec.sycl_queue().ext_oneapi_graph(*m_graph_exec);
+  KOKKOS_ASSERT(m_graph_exec);
+
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  q.ext_oneapi_graph(*m_graph_exec);
 }
 
 inline Kokkos::SYCL const& GraphImpl<Kokkos::SYCL>::get_execution_space()
