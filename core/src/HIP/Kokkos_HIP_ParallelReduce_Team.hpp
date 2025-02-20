@@ -395,6 +395,12 @@ class ParallelReduce<CombinedFunctorReducerType,
                       "L0 scratch memory"));
     }
 
+    if (m_scratch_size[1] > static_cast<size_t>(m_policy.scratch_size_max(1))) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelFor< HIP > requested too much L1 "
+                      "scratch memory"));
+    }
+
     size_t max_size = arg_policy.team_size_max(
         arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
         ParallelReduceTag());

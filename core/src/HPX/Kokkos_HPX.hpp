@@ -787,8 +787,12 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     m_league_size           = league_size_request;
     const int max_team_size = 1;  // TODO: Can't use team_size_max(...) because
                                   // it requires a functor as argument.
-    m_team_size =
-        team_size_request > max_team_size ? max_team_size : team_size_request;
+
+    if (team_size_request > max_team_size)
+      Kokkos::Impl::throw_runtime_exception(
+          "Kokkos::abort: Requested Team Size is too large!");
+
+    m_team_size = team_size_request;
 
     if (m_chunk_size > 0) {
       if (!Impl::is_integral_power_of_two(m_chunk_size))
@@ -1572,7 +1576,31 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league(arg_policy.league_size()),
         m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, arg_policy.team_size())) {}
+                     arg_functor, arg_policy.team_size())) {
+    if ((arg_policy.scratch_size(0) +
+         FunctorTeamShmemSize<FunctorType>::value(arg_functor,
+                                                  arg_policy.team_size())) >
+        static_cast<size_t>(
+            TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(0))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 0. Requested: "
+            << arg_policy.scratch_size(0) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       arg_functor, arg_policy.team_size())
+            << ", Maximum: "
+            << TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(0);
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
+    }
+    if (arg_policy.scratch_size(1) >
+        static_cast<size_t>(
+            TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(1))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 1. Requested: "
+            << arg_policy.scratch_size(1) << ", Maximum: "
+            << TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(1);
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
+    }
+  }
 };
 
 template <class CombinedFunctorReducerType, class... Properties>
@@ -1686,6 +1714,30 @@ class ParallelReduce<CombinedFunctorReducerType,
         Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
                                         Kokkos::HostSpace>::accessible,
         "HPX reduce result must be a View accessible from HostSpace");
+    if ((arg_policy.scratch_size(0) +
+         FunctorTeamShmemSize<FunctorType>::value(
+             arg_functor_reducer.get_functor(), arg_policy.team_size())) >
+        static_cast<size_t>(
+            TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(0))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 0. Requested: "
+            << arg_policy.scratch_size(0) +
+                   FunctorTeamShmemSize<FunctorType>::value(
+                       arg_functor_reducer.get_functor(),
+                       arg_policy.team_size())
+            << ", Maximum: "
+            << TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(0);
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
+    }
+    if (arg_policy.scratch_size(1) >
+        static_cast<size_t>(
+            TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(1))) {
+      std::stringstream error;
+      error << "Requested too much scratch memory on level 1. Requested: "
+            << arg_policy.scratch_size(1) << ", Maximum: "
+            << TeamPolicy<Kokkos::Experimental::HPX>::scratch_size_max(1);
+      Kokkos::Impl::throw_runtime_exception(error.str().c_str());
+    }
   }
 };
 }  // namespace Impl
