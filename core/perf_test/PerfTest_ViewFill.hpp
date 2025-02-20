@@ -126,7 +126,7 @@ static void ViewFill_Raw(benchmark::State& state) {
 }
 
 template <typename DstMemorySpace>
-static void ViewFill_Strided(benchmark::State& state) {
+static void ViewFill_Rank1Strided(benchmark::State& state) {
   const int N8 = std::pow(state.range(0), 8);
 
   // allocate 2x the size since layout only has 1/2 the elements
