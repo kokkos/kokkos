@@ -125,16 +125,14 @@ static void ViewFill_Raw(benchmark::State& state) {
   }
 }
 
-template <typename DstMemorySpace>
 static void ViewFill_Rank1Strided(benchmark::State& state) {
   const int N8 = std::pow(state.range(0), 8);
 
   // allocate 2x the size since layout only has 1/2 the elements
-  Kokkos::View<double*, DstMemorySpace> a("A1", N8 * 2);
+  Kokkos::View<double*> a("A1", N8 * 2);
 
   Kokkos::LayoutStride layout(N8 / 2, 2);
-  Kokkos::View<double*, Kokkos::LayoutStride, DstMemorySpace> a_stride(a.data(),
-                                                                       layout);
+  Kokkos::View<double*, Kokkos::LayoutStride> a_stride(a.data(), layout);
 
   fill_view(a_stride, 1.1, state);
 }

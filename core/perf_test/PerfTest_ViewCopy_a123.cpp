@@ -35,9 +35,7 @@ BENCHMARK(ViewDeepCopy_Rank1<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
     ->UseManualTime();
 
 // default -> default
-BENCHMARK(ViewDeepCopy_Rank1<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
-                             Kokkos::DefaultExecutionSpace::memory_space,
-                             Kokkos::DefaultExecutionSpace::memory_space>)
+BENCHMARK(ViewDeepCopy_Rank1<Kokkos::LayoutLeft, Kokkos::LayoutLeft>)
     ->ArgName("N")
     ->Arg(10)
     ->UseManualTime();
