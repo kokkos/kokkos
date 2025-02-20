@@ -69,6 +69,7 @@ jobs:
               ${{ matrix.backend.configure }}
 
       - name: Start, update and configure
+        id: start_update_configure
         continue-on-error: true
         run: |
           run \
@@ -82,6 +83,7 @@ jobs:
               -D NightlyConfigure
 
       - name: Build
+        id: build
         continue-on-error: true
         run: |
           run \
@@ -94,6 +96,7 @@ jobs:
               -D NightlyBuild
 
       - name: Test
+        id: test
         continue-on-error: true
         run: |
           run \
@@ -112,3 +115,14 @@ jobs:
             ctest \
               --test-dir build \
               -D NightlySubmit
+
+      # note: this marks the job as failed if any of the mentionned steps (that
+      # have `continue-on-error`) has failed
+      - name: Failure outcome
+        if: |-
+          ${{
+            steps.start_update_configure.outcome == 'failure' ||
+            steps.build.outcome == 'failure' ||
+            steps.test.outcome == 'failure'
+          }}
+        run: exit 1
