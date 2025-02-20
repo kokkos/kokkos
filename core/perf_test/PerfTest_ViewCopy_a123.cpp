@@ -18,7 +18,26 @@
 
 namespace Test {
 
-BENCHMARK(ViewDeepCopy_Rank1<Kokkos::LayoutLeft, Kokkos::LayoutLeft>)
+// host -> default
+BENCHMARK(ViewDeepCopy_Rank1<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
+                             Kokkos::DefaultExecutionSpace::memory_space,
+                             Kokkos::DefaultHostExecutionSpace::memory_space>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
+// default -> host
+BENCHMARK(ViewDeepCopy_Rank1<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
+                             Kokkos::DefaultHostExecutionSpace::memory_space,
+                             Kokkos::DefaultExecutionSpace::memory_space>)
+    ->ArgName("N")
+    ->Arg(10)
+    ->UseManualTime();
+
+// default -> default
+BENCHMARK(ViewDeepCopy_Rank1<Kokkos::LayoutLeft, Kokkos::LayoutLeft,
+                             Kokkos::DefaultExecutionSpace::memory_space,
+                             Kokkos::DefaultExecutionSpace::memory_space>)
     ->ArgName("N")
     ->Arg(10)
     ->UseManualTime();
