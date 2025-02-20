@@ -2106,10 +2106,10 @@ struct TestMDRange_4D {
 
     TestMDRange_4D functor(N0, N1, N2, N3);
 
-    parallel_for(range, functor);
+    Kokkos::parallel_for(range, functor);
     MinMaxValue min_max_value;
     DataType sum_value;
-    parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
+    Kokkos::parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
 
     std::ostringstream message;
     message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
@@ -2750,10 +2750,10 @@ struct TestMDRange_5D {
 
     TestMDRange_5D functor(N0, N1, N2, N3, N4);
 
-    parallel_for(range, functor);
+    Kokkos::parallel_for(range, functor);
     MinMaxValue min_max_value;
     DataType sum_value;
-    parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
+    Kokkos::parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
 
     std::ostringstream message;
     message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
@@ -3627,10 +3627,10 @@ struct TestMDRange_6D {
 
     TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
 
-    parallel_for(range, functor);
+    Kokkos::parallel_for(range, functor);
     MinMaxValue min_max_value;
     DataType sum_value;
-    parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
+    Kokkos::parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
 
     std::ostringstream message;
     message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
