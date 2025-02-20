@@ -146,22 +146,15 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
           extents_type{dextents<index_type, MappingType::extents_type::rank()>{
               layout.dimension[Idx]...}}};
     } else {
-      if constexpr (std::is_same_v<ArrayLayout, LayoutRight> &&
-                    extents_type::rank() > 2) {
-        size_t product_of_dimensions = 1;
-        for (size_t r = 1; r < extents_type::rank(); r++)
-          product_of_dimensions *= layout.dimension[r];
-        if (product_of_dimensions != layout.stride)
-          Kokkos::abort(
-              "Invalid conversion from LayoutRight to layout_right_padded");
-        return MappingType();
-      } else {
-        return MappingType{
-            extents_type{
-                dextents<index_type, MappingType::extents_type::rank()>{
-                    layout.dimension[Idx]...}},
-            layout.stride};
-      }
+      // This doesn't work because LayoutRight is not the same as
+      // std::layout_right_padded
+      static_assert(!(std::is_same_v<ArrayLayout, LayoutRight> &&
+                      extents_type::rank() > 2));
+
+      return MappingType{
+          extents_type{dextents<index_type, MappingType::extents_type::rank()>{
+              layout.dimension[Idx]...}},
+          layout.stride};
     }
   }
 }
