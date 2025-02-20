@@ -48,4 +48,14 @@ BENCHMARK(ViewFill_Rank3<Kokkos::LayoutRight>)
     ->Arg(N)
     ->UseManualTime();
 
+BENCHMARK(ViewFill_Strided<Kokkos::DefaultExecutionSpace::memory_space>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime();
+
+BENCHMARK(ViewFill_Strided<Kokkos::DefaultHostExecutionSpace::memory_space>)
+    ->ArgName("N")
+    ->Arg(N)
+    ->UseManualTime();
+
 }  // namespace Test
