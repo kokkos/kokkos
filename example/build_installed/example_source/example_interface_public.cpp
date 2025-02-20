@@ -25,7 +25,7 @@ void print_plain_cxx();
 
 int main(int argc, char* argv[]) {
   lib_without_kokkos_dependency::print();
-  Kokkos::initialize();
+  Kokkos::initialize(argc, argv);
   {
     print_fortran_();
     print_plain_cxx();

@@ -25,7 +25,7 @@ extern "C" void print_fortran_();
 void print_plain_cxx();
 
 int main(int argc, char* argv[]) {
-  Kokkos::initialize();
+  Kokkos::initialize(argc, argv);
   {
     print_fortran_();
     print_plain_cxx();
