@@ -18,6 +18,10 @@ add_executable(${PROJECT_NAME}_no_kokkos example_no_kokkos.cpp source_plain_fort
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_with_kokkos PROPERTIES LINKER_LANGUAGE Fortran)
   set_target_properties(${PROJECT_NAME}_no_kokkos PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_with_kokkos PRIVATE -fno-fortran-main)
+    target_link_options(${PROJECT_NAME}_no_kokkos PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 # This is the only thing required to set up compiler/linker flags

@@ -50,6 +50,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_public PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_public PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPublic_Verify COMMAND ${PROJECT_NAME}_executable_public 10)
@@ -68,6 +71,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_interface PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_interface PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosInterface_Verify COMMAND ${PROJECT_NAME}_executable_interface 10)
@@ -87,6 +93,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_private PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_private PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPrivate_Verify COMMAND ${PROJECT_NAME}_executable_private 10)
@@ -108,6 +117,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_public_interface PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_public_interface PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPublic_interface_Verify COMMAND ${PROJECT_NAME}_executable_public_interface 10)
@@ -128,6 +140,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_public_public PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_public_public PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPublic_public_Verify COMMAND ${PROJECT_NAME}_executable_public_public 10)
@@ -148,6 +163,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_public_private PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_public_private PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPublic_private_Verify COMMAND ${PROJECT_NAME}_executable_public_private 10)
@@ -168,6 +186,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_private_interface PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_private_interface PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPrivate_interface_Verify COMMAND ${PROJECT_NAME}_executable_private_interface 10)
@@ -188,6 +209,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_private_public PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_private_public PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPrivate_public_Verify COMMAND ${PROJECT_NAME}_executable_private_public 10)
@@ -208,6 +232,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_private_private PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_private_private PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosPrivate_private_Verify COMMAND ${PROJECT_NAME}_executable_private_private 10)
@@ -228,6 +255,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_interface_interface PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_interface_interface PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosInterface_interface_Verify COMMAND ${PROJECT_NAME}_executable_interface_interface
@@ -250,6 +280,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_interface_public PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_interface_public PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosInterface_public_Verify COMMAND ${PROJECT_NAME}_executable_interface_public 10)
@@ -270,6 +303,9 @@ target_link_libraries(
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_interface_private PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_interface_private PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosInterface_private_Verify COMMAND ${PROJECT_NAME}_executable_interface_private 10)

@@ -12,6 +12,9 @@ find_package(Kokkos REQUIRED)
 add_executable(ExampleSimple cmake_example.cpp source_plain_fortran.f)
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(ExampleSimple PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(example PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 # This is the only thing required to set up compiler/linker flags
