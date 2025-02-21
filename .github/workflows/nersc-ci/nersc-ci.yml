@@ -1,0 +1,10 @@
+default:
+  tags:
+    - muller-login
+
+build-job:
+  stage: build
+  script:
+    - echo "Hello, $GITLAB_USER_LOGIN from $CI_PROJECT_DIR"
+    - echo "Build and Test Kokkos with OpenMP, OpenMPTarget and CUDA builds"
+    - bash nersc-build.sh
