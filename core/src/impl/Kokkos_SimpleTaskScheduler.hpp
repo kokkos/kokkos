@@ -421,9 +421,8 @@ class SimpleTaskScheduler
     // see #7779
     // There are issues with the implementation of std::is_base_of in NVCC
     // <= 12.5 for C++ 20
-#if __cplusplus < 202002L || !defined(__CUDACC__) || \
-    __CUDACC_VER_MAJOR__ > 12 ||                     \
-    __CUDACC_VER_MAJOR__ == 12 && __CUDACC_VER_MINOR__ >= 5
+#if defined(KOKKOS_ENABLE_CXX17) || !defined(KOKKOS_COMPILER_NVCC) || \
+    KOKKOS_COMPILER_NVCC >= 1250
     static_assert(
         std::is_base_of_v<scheduler_type,
                           typename generated_type::scheduler_type>,
