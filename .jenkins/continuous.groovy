@@ -532,7 +532,7 @@ pipeline {
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose''' \
+                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose \
                               cd ../../build_installed && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=17 -DExamples_CMAKE_LANGUAGE=CUDA .. && make -j8 && ctest --verbose'''
