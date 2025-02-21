@@ -530,7 +530,7 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
-                              cd ../example/build_cmake_in_tree && \
+                              cd ../example/build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
                     }
