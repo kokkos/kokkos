@@ -108,14 +108,18 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     KOKKOS_ASSERT(maxblocks[1] <= static_cast<int>(maxblocks_api[1]));
     KOKKOS_ASSERT(maxblocks[2] <= static_cast<int>(maxblocks_api[2]));
 
+    // maximum number of threads per block as fetched by the API
     const auto maxthreads = m_rp.space().cuda_device_prop().maxThreadsDim;
 
-    [[maybe_unused]] const auto maxThreadsPerBlock =
+    // maximum total number of threads per block as fetched by the API
+    [[maybe_unused]] const auto maxthreads_total =
         m_rp.space().cuda_device_prop().maxThreadsPerBlock;
+
     // make sure the Z dimension (it is less than x,y limits) isn't exceeded
     const auto clampZ = [&](const int input) {
       return std::min(input, maxthreads[2]);
     };
+
     // make sure the block dimensions don't exceed the max number of threads
     // allowed
     const auto check_block_sizes = [&]([[maybe_unused]] const dim3& block) {
@@ -126,8 +130,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       KOKKOS_ASSERT(block.z > 0 &&
                     block.z <= static_cast<unsigned int>(maxthreads[2]));
       KOKKOS_ASSERT(block.x * block.y * block.z <=
-                    static_cast<unsigned int>(maxThreadsPerBlock));
+                    static_cast<unsigned int>(maxthreads_total));
     };
+
     // make sure the grid dimensions don't exceed the max number of blocks
     // allowed
     const auto check_grid_sizes = [&]([[maybe_unused]] const dim3& grid) {
@@ -138,6 +143,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       KOKKOS_ASSERT(grid.z > 0 &&
                     grid.z <= static_cast<unsigned int>(maxblocks[2]));
     };
+
     if (RP::rank == 2) {
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
       check_block_sizes(block);
