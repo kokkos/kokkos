@@ -178,9 +178,20 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       },
       "Kokkos allocation \"no-label\" is being deallocated after "
       "Kokkos::finalize was called");
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        void* prev = Kokkos::kokkos_malloc(1);
+        Kokkos::finalize();
+        void* next = Kokkos::kokkos_realloc(prev, 2);
+        Kokkos::kokkos_free(next);
+      },
+      "Kokkos allocation \"no-label\" is being allocated after "
+      "Kokkos::finalize was called");
   // FIXME: The following logic of passing an uninitialized pointer to
   // kokkos_free is better checked at compile time. These two tests have
   // to be removed.
+  /*
   EXPECT_DEATH(
       {
         void* ptr;
@@ -199,6 +210,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       },
       "Kokkos allocation \"no-label\" is being deallocated after "
       "Kokkos::finalize was called");
+  */
 }
 
 }  // namespace
