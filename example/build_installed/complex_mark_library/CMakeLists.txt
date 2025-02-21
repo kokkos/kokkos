@@ -30,6 +30,9 @@ target_link_libraries(${PROJECT_NAME}_executable_without ${PROJECT_NAME}_Lib_wit
 
 if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
   set_target_properties(${PROJECT_NAME}_executable_without PROPERTIES LINKER_LANGUAGE Fortran)
+  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+    target_link_options(${PROJECT_NAME}_executable_without PRIVATE -fno-fortran-main)
+  endif()
 endif()
 
 add_test(NAME ${PROJECT_NAME}_KokkosWithout_Verify COMMAND ${PROJECT_NAME}_executable_without 10)
