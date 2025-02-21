@@ -3,6 +3,7 @@ name: Nightly CEA builds
 on:
   schedule:
     - cron: "0 2 * * 1-5" # every weekday at 2am UTC
+  pull_request: # XXX for testing only, remove before merging!
 
 permissions: read-all
 
@@ -18,7 +19,7 @@ jobs:
         build_type:
           - Release
         cxx_standard:
-          - 17
+          # - 17
           - 20
         backend:
           - name: OpenMP-x86_64-GCC/10.3-Shared
@@ -86,9 +87,9 @@ jobs:
             ctest \
               -V \
               --test-dir build \
-              -D NightlyStart \
-              -D NightlyUpdate \
-              -D NightlyConfigure
+              -D ExperimentalStart \
+              -D ExperimentalUpdate \
+              -D ExperimentalConfigure
 
       - name: Build
         id: build
@@ -101,7 +102,7 @@ jobs:
             ctest \
               -V \
               --test-dir build \
-              -D NightlyBuild
+              -D ExperimentalBuild
 
       - name: Test
         id: test
@@ -113,7 +114,7 @@ jobs:
             ctest \
               --output-on-failure \
               --test-dir build \
-              -D NightlyTest
+              -D ExperimentalTest
 
       - name: Submit
         run: |
@@ -122,7 +123,7 @@ jobs:
             -e local \
             ctest \
               --test-dir build \
-              -D NightlySubmit
+              -D ExperimentalSubmit
 
       # note: this marks the job as failed if any of the mentionned steps (that
       # have `continue-on-error`) has failed
