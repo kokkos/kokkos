@@ -84,11 +84,12 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
                       "valid execution configuration."));
     }
     const dim3 block(1, block_size, 1);
-    const int maxGridSizeX = m_policy.space().hip_device_prop().maxGridSize[0];
-    const dim3 grid(
-        std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
-                 typename Policy::index_type(maxGridSizeX)),
-        1, 1);
+    const int max_work_items =
+        m_policy.space().hip_device_prop().maxGridSize[0];
+    const auto n_blocks = std::min<typename Policy::index_type>(
+                              nwork + block.y - 1, max_work_items) /
+                          block.y;
+    const dim3 grid(n_blocks, 1, 1);
 
     Kokkos::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
