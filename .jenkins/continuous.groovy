@@ -501,7 +501,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.6.2-devel-ubuntu20.04@sha256:d95d54bc231f8aea7fda79f60da620324584b20ed31a8ebdb0686cffd34dd405'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.6.2-devel-ubuntu20.04@sha256:d95d54bc231f8aea7fda79f60da620324584b20ed31a8ebdb0686cffd34dd405 --build-arg CMAKE_VERSION=3.21.7'
                             label 'nvidia-docker && (volta || ampere)'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
