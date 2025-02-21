@@ -513,7 +513,6 @@ pipeline {
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS="-Werror -Werror=all-warnings" \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
@@ -528,11 +527,15 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
+                                -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
+                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose''' \
+                              cd ../../build_installed && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=17 -DExamples_CMAKE_LANGUAGE=CUDA .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
