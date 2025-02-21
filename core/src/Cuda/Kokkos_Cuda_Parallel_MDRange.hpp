@@ -96,7 +96,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   inline void execute() const {
     if (m_rp.m_num_tiles == 0) return;
     // maximum number of blocks per grid as fetched by the API
-    const auto maxblocks_api = m_rp.space().cuda_device_prop().maxGridSize;
+    [[maybe_unused]] const auto maxblocks_api =
+        m_rp.space().cuda_device_prop().maxGridSize;
 
     // maximum numebr of blocks per grid hard-coded for unpacking on device
     const int maxblocks[3] = {mdrange_max_blocks_x, mdrange_max_blocks,
