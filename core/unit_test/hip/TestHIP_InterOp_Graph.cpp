@@ -130,6 +130,9 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
 // Build a Kokkos::Graph from an existing hipGraph_t.
 TEST(TEST_CATEGORY, graph_construct_from_native) {
+#if !defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+  GTEST_SKIP() << "This test will not work without native graph support";
+#else
   using view_t = Kokkos::View<int, Kokkos::HIPManagedSpace>;
 
   hipGraph_t native_graph = nullptr;
@@ -153,6 +156,7 @@ TEST(TEST_CATEGORY, graph_construct_from_native) {
   exec.fence();
 
   ASSERT_EQ(data(), 1);
+#endif
 }
 
 }  // namespace
