@@ -18,9 +18,29 @@ jobs:
         build_type:
           - Release
         backend:
-          - name: Cuda-A100-GCC/11.2-Cuda/12.2.1
-            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON
+          - name: OpenMP-x86_64-GCC/10.3-Shared
+            configure: -DKokkos_ENABLE_OPENMP=ON -DBUILD_SHARED_LIBS=ON
+            test: -e cpu OMP_PROC_BIND=spread OMP_PLACES=threads
+            modules: gcc/10.3.0/gcc-4.8.5 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-A100-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
             test: -e gpu -g a100
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-A100-UVM-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_UVM=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g a100
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-V100-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g v100
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-V100-UVM-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_UVM=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g v100
             modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
 
     runs-on: [self-hosted, cuda]
@@ -38,7 +58,7 @@ jobs:
             -e local \
             cmake \
               -B build \
-              -DBUILDNAME=${{ matrix.backend.name }} \
+              -DBUILDNAME=${{ matrix.backend.name }}-${{ matrix.build_type }} \
               -DSITE=cea-ruche \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
               -DCMAKE_CXX_STANDARD=17 \
@@ -49,6 +69,7 @@ jobs:
               ${{ matrix.backend.configure }}
 
       - name: Start, update and configure
+        id: start_update_configure
         continue-on-error: true
         run: |
           run \
@@ -62,6 +83,7 @@ jobs:
               -D NightlyConfigure
 
       - name: Build
+        id: build
         continue-on-error: true
         run: |
           run \
@@ -74,6 +96,7 @@ jobs:
               -D NightlyBuild
 
       - name: Test
+        id: test
         continue-on-error: true
         run: |
           run \
@@ -92,3 +115,14 @@ jobs:
             ctest \
               --test-dir build \
               -D NightlySubmit
+
+      # note: this marks the job as failed if any of the mentionned steps (that
+      # have `continue-on-error`) has failed
+      - name: Failure outcome
+        if: |-
+          ${{
+            steps.start_update_configure.outcome == 'failure' ||
+            steps.build.outcome == 'failure' ||
+            steps.test.outcome == 'failure'
+          }}
+        run: exit 1

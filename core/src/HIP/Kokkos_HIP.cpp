@@ -173,6 +173,11 @@ void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
 #endif
 
   os << "\nRuntime Configuration:\n";
+  os << "  XNACK environment variable set: ";
+  os << (Kokkos::Impl::xnack_environment_enabled() ? "yes\n" : "no\n");
+  os << "  Kernel reports HMM module via `CONFIG_HMM_MIRROR=y` in "
+        "`/boot/config`: ";
+  os << (Kokkos::Impl::xnack_boot_config_has_hmm_mirror() ? "yes\n" : "no\n");
 
   m_space_instance->print_configuration(os);
 }
