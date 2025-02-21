@@ -114,7 +114,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
         m_rp.space().cuda_device_prop().maxThreadsPerBlock;
     // make sure the Z dimension (it is less than x,y limits) isn't exceeded
     const auto clampZ = [&](const int input) {
-      return (input > maxthreads[2] ? maxthreads[2] : input);
+      return std::min(input, maxthreads[2]);
     };
     // make sure the block dimensions don't exceed the max number of threads
     // allowed
