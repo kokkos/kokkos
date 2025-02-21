@@ -336,13 +336,13 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 <= mdrange_max_blocks_x ? temp0 : mdrange_max_blocks_x);
+          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks_x));
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp0 * temp1 > mdrange_max_blocks_x
-               ? static_cast<index_type>(mdrange_max_blocks_x / numbl0)
-               : (temp1 <= mdrange_max_blocks_x ? temp1
-                                                : mdrange_max_blocks_x));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
+               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl0
+               : Kokkos::min(temp1,
+                             static_cast<index_type>(mdrange_max_blocks_x)));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
@@ -419,13 +419,13 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp1 <= mdrange_max_blocks_x ? temp1 : mdrange_max_blocks_x);
+          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks_x));
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 * temp1 > mdrange_max_blocks_x
-               ? index_type(mdrange_max_blocks_x / numbl1)
-               : (temp0 <= mdrange_max_blocks_x ? temp0
-                                                : mdrange_max_blocks_x));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
+               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl1
+               : Kokkos::min(temp0,
+                             static_cast<index_type>(mdrange_max_blocks_x)));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
@@ -539,13 +539,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 <= mdrange_max_blocks_x ? temp0 : mdrange_max_blocks_x);
+          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks_x));
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp0 * temp1 > mdrange_max_blocks_x
-               ? index_type(mdrange_max_blocks_x / numbl0)
-               : (temp1 <= mdrange_max_blocks_x ? temp1
-                                                : mdrange_max_blocks_x));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
+               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl0
+               : Kokkos::min(temp1,
+                             static_cast<index_type>(mdrange_max_blocks_x)));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
@@ -566,12 +566,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          (temp0 <= mdrange_max_blocks ? temp0 : mdrange_max_blocks);
+          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks));
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          (temp0 * temp1 > mdrange_max_blocks
-               ? index_type(mdrange_max_blocks / numbl2)
-               : (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
+               ? static_cast<index_type>(mdrange_max_blocks) / numbl2
+               : Kokkos::min(temp1,
+                             static_cast<index_type>(mdrange_max_blocks)));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
@@ -659,13 +660,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp1 <= mdrange_max_blocks_x ? temp1 : mdrange_max_blocks_x);
+          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks_x));
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 * temp1 > mdrange_max_blocks_x
-               ? static_cast<index_type>(mdrange_max_blocks_x / numbl1)
-               : (temp0 <= mdrange_max_blocks_x ? temp0
-                                                : mdrange_max_blocks_x));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
+               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl1
+               : Kokkos::min(temp0,
+                             static_cast<index_type>(mdrange_max_blocks_x)));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
@@ -686,12 +687,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks);
+          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks));
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          (temp0 * temp1 > mdrange_max_blocks
-               ? index_type(mdrange_max_blocks / numbl3)
-               : (temp0 <= mdrange_max_blocks ? temp0 : mdrange_max_blocks));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
+               ? static_cast<index_type>(mdrange_max_blocks) / numbl3
+               : Kokkos::min(temp0,
+                             static_cast<index_type>(mdrange_max_blocks)));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
@@ -816,13 +818,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 <= mdrange_max_blocks_x ? temp0 : mdrange_max_blocks_x);
+          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks_x));
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp0 * temp1 > mdrange_max_blocks_x
-               ? static_cast<index_type>(mdrange_max_blocks_x / numbl0)
-               : (temp1 <= mdrange_max_blocks_x ? temp1
-                                                : mdrange_max_blocks_x));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
+               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl0
+               : Kokkos::min(temp1,
+                             static_cast<index_type>(mdrange_max_blocks_x)));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
@@ -843,12 +845,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          (temp0 <= mdrange_max_blocks ? temp0 : mdrange_max_blocks);
+          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks));
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          (temp0 * temp1 > mdrange_max_blocks
-               ? static_cast<index_type>(mdrange_max_blocks / numbl2)
-               : (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
+               ? static_cast<index_type>(mdrange_max_blocks) / numbl2
+               : Kokkos::min(temp1,
+                             static_cast<index_type>(mdrange_max_blocks)));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
@@ -869,12 +872,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 4
       const index_type numbl4 =
-          (temp0 <= mdrange_max_blocks ? temp0 : mdrange_max_blocks);
+          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks));
       // number of virtual blocks for dimension 5
       const index_type numbl5 =
-          (temp0 * temp1 > mdrange_max_blocks
-               ? static_cast<index_type>(mdrange_max_blocks / numbl4)
-               : (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
+               ? static_cast<index_type>(mdrange_max_blocks) / numbl4
+               : Kokkos::min(temp1,
+                             static_cast<index_type>(mdrange_max_blocks)));
 
       // first virtual block index for dimension 4
       const index_type tile_id4 = static_cast<index_type>(blockIdx.z) % numbl4;
@@ -972,13 +976,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp1 <= mdrange_max_blocks_x ? temp1 : mdrange_max_blocks_x);
+          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks_x));
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 * temp1 > mdrange_max_blocks_x
-               ? static_cast<index_type>(mdrange_max_blocks_x / numbl1)
-               : (temp0 <= mdrange_max_blocks_x ? temp0
-                                                : mdrange_max_blocks_x));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
+               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl1
+               : Kokkos::min(temp0,
+                             static_cast<index_type>(mdrange_max_blocks_x)));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
@@ -999,12 +1003,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks);
+          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks));
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          (temp0 * temp1 > mdrange_max_blocks
-               ? static_cast<index_type>(mdrange_max_blocks / numbl3)
-               : (temp0 <= mdrange_max_blocks ? temp0 : mdrange_max_blocks));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
+               ? static_cast<index_type>(mdrange_max_blocks) / numbl3
+               : Kokkos::min(temp0,
+                             static_cast<index_type>(mdrange_max_blocks)));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
@@ -1025,12 +1030,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 5
       const index_type numbl5 =
-          (temp1 <= mdrange_max_blocks ? temp1 : mdrange_max_blocks);
+          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks));
       // number of virtual blocks for dimension 3
       const index_type numbl4 =
-          (temp0 * temp1 > mdrange_max_blocks
-               ? static_cast<index_type>(mdrange_max_blocks / numbl5)
-               : (temp0 <= mdrange_max_blocks ? temp0 : mdrange_max_blocks));
+          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
+               ? static_cast<index_type>(mdrange_max_blocks) / numbl5
+               : Kokkos::min(temp0,
+                             static_cast<index_type>(mdrange_max_blocks)));
 
       // first virtual block index for dimension 4
       const index_type tile_id4 = static_cast<index_type>(blockIdx.z) / numbl5;
@@ -1099,7 +1105,7 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
                             const index_type offset_5 =
                                 n * m_policy.m_tile[5] + thr_id5 +
                                 static_cast<index_type>(m_policy.m_lower[5]);
-                              // check index for dimension 5 is within range
+                            // check index for dimension 5 is within range
                             if (offset_5 < m_policy.m_upper[5] &&
                                 thr_id5 < m_policy.m_tile[5]) {
                               // call kernel with computed indices
