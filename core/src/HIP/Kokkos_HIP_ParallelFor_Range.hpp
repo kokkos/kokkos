@@ -64,8 +64,9 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
     for (Member iwork =
              m_policy.begin() + threadIdx.y + blockDim.y * blockIdx.x;
          iwork < work_end;
-         iwork = iwork < work_end - work_stride ? iwork + work_stride
-                                                : work_end) {
+         iwork = iwork < static_cast<Member>(work_end - work_stride)
+                     ? iwork + work_stride
+                     : work_end) {
       this->template exec_range<WorkTag>(iwork);
     }
   }
