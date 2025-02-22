@@ -462,13 +462,13 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.0.3-Clang-Tidy') {
+                stage('CUDA-11.0.3-Clang-18.1.8') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.kokkosllvmproject'
+                            filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES --build-arg ADDITIONAL_PACKAGES="clang-18 clang-tidy-18"'
                         }
                     }
                     steps {
@@ -476,9 +476,9 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
-                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*;--checks=-bugprone-unused-raii" \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-18;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++ \
+                                -DCMAKE_CXX_COMPILER=clang++-18 \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version" \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
