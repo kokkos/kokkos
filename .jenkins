@@ -468,7 +468,8 @@ pipeline {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES --build-arg ADDITIONAL_PACKAGES="clang-18 clang-tidy-18"'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                            additionalBuildArgs '--build-arg ADDITIONAL_PACKAGES="clang-18 clang-tidy-18"'
                         }
                     }
                     steps {
