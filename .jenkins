@@ -462,7 +462,7 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.0.3-Clang-18.1.8') {
+                stage('CUDA-11.0.3-Clang-18') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
