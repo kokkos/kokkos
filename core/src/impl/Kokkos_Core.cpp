@@ -604,6 +604,10 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV80");
 #elif defined(KOKKOS_ARCH_ARMV81)
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV81");
+#elif defined(KOKKOS_ARCH_ARMV84)
+  declare_configuration_metadata("architecture", "CPU architecture", "ARMV84");
+#elif defined(KOKKOS_ARCH_ARMV84_SVE)
+  declare_configuration_metadata("architecture", "CPU architecture", "ARMV84_SVE");
 #elif defined(KOKKOS_ARCH_ARMV8_THUNDERX)
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV8_THUNDERX");
 #elif defined(KOKKOS_ARCH_ARMV8_THUNDERX2)

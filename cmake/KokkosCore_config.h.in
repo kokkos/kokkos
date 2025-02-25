@@ -75,12 +75,14 @@
 #cmakedefine KOKKOS_ARCH_ARMV81
 #cmakedefine KOKKOS_ARCH_ARMV8_THUNDERX2
 #cmakedefine KOKKOS_ARCH_ARMV9_GRACE
+#cmakedefine KOKKOS_ARCH_ARMV84
+#cmakedefine KOKKOS_ARCH_ARMV84_SVE
+#cmakedefine KOKKOS_ARCH_ARM_NEON
+#cmakedefine KOKKOS_ARCH_ARM_SVE
 #cmakedefine KOKKOS_ARCH_A64FX
 #cmakedefine KOKKOS_ARCH_AVX
 #cmakedefine KOKKOS_ARCH_AVX2
 #cmakedefine KOKKOS_ARCH_AVX512XEON
-#cmakedefine KOKKOS_ARCH_ARM_NEON
-#cmakedefine KOKKOS_ARCH_ARM_SVE
 #cmakedefine KOKKOS_ARCH_KNC
 #cmakedefine KOKKOS_ARCH_AVX512MIC
 #cmakedefine KOKKOS_ARCH_POWER7
