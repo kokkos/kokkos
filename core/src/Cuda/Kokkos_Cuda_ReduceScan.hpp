@@ -585,7 +585,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
   }
 
   const integral_nonzero_constant<
-      size_type, std::is_pointer<typename FunctorType::reference_type>::value
+      size_type, std::is_pointer_v<typename FunctorType::reference_type>
                      ? 0
                      : sizeof(value_type) / sizeof(size_type)>
       word_count((sizeof(value_type) * functor.length()) / sizeof(size_type));
@@ -661,7 +661,7 @@ __device__ bool cuda_single_inter_block_reduce_scan(
     const FunctorType& functor, const Cuda::size_type block_id,
     const Cuda::size_type block_count, SizeType* const shared_data,
     SizeType* const global_data, Cuda::size_type* const global_flags) {
-  if (!DoScan && !std::is_pointer<typename FunctorType::reference_type>::value)
+  if (!DoScan && !std::is_pointer_v<typename FunctorType::reference_type>)
     return Kokkos::Impl::CudaReductionsFunctor<
         FunctorType, false, (sizeof(typename FunctorType::value_type) > 16)>::
         scalar_inter_block_reduction(functor, block_id, block_count,

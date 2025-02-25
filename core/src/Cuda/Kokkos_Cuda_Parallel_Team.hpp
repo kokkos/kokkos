@@ -477,13 +477,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_t m_num_scratch_locks;
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_team(
       const Member& member) const {
     m_functor(member);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_team(
       const Member& member) const {
     m_functor(TagType(), member);
   }
@@ -673,13 +673,13 @@ class ParallelReduce<CombinedFunctorReducerType,
   const size_type m_vector_size;
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_team(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_team(
       const Member& member, reference_type update) const {
     m_functor_reducer.get_functor()(member, update);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_team(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_team(
       const Member& member, reference_type update) const {
     m_functor_reducer.get_functor()(TagType(), member, update);
   }
