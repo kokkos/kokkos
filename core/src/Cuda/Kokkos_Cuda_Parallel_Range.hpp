@@ -48,9 +48,6 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   const FunctorType m_functor;
   const Policy m_policy;
 
-  ParallelFor()                              = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-
   template <class TagType>
   inline __device__ std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member i) const {
@@ -65,6 +62,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
  public:
   using functor_type = FunctorType;
+
+  ParallelFor()                              = delete;
+  ParallelFor(const ParallelFor&)            = default;
+  ParallelFor& operator=(const ParallelFor&) = delete;
 
   Policy const& get_policy() const { return m_policy; }
 
