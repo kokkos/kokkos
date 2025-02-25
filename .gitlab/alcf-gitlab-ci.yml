@@ -29,9 +29,16 @@ Polaris:
     - ctest -VV
         -D CDASH_MODEL=Nightly
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_a100.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="Polaris-A100"
+  artifacts:
+    when: always
+    paths:
+      - build/result_a100.xml
+    reports:
+      junit: build/result_a100.xml
 
 Aurora:
   stage: test
