@@ -1015,7 +1015,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         if (!m_result_ptr_device_accessible)
           DeepCopy<HostSpace, CudaSpace, Cuda>(
               m_policy.space(), m_result_ptr,
-              m_scratch_space + (grid_x - 1) * size / sizeof(word_size_type),
+              m_scratch_space + (static_cast<ptrdiff_t>(grid_x) - 1) * size /
+                                    sizeof(word_size_type),
               size);
       }
     }

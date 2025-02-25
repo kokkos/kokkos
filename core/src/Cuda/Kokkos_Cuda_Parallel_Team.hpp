@@ -203,7 +203,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t);
     // arbitrarily setting level 1 scratch limit to 20MB, for a
     // Volta V100 that would give us about 3.2GB for 2 teams per SM
-    constexpr size_t max_l1_scratch_size = 20 * 1024 * 1024;
+    constexpr size_t max_l1_scratch_size =
+        static_cast<size_t>(20) * 1024 * 1024;
 
     size_t max_shmem = Cuda().cuda_device_prop().sharedMemPerBlock;
     return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team
@@ -412,15 +413,16 @@ __device__ inline int64_t cuda_get_scratch_index(Cuda::size_type league_size,
     int64_t const wraparound_len = Kokkos::max(
         int64_t(1),
         Kokkos::min(int64_t(league_size),
-                    int64_t(num_scratch_locks) / (blockDim.x * blockDim.y)));
+                    int64_t(num_scratch_locks) /
+                        (static_cast<int64_t>(blockDim.x) * blockDim.y)));
     threadid = (blockIdx.x * blockDim.z + threadIdx.z) % wraparound_len;
-    threadid *= blockDim.x * blockDim.y;
+    threadid *= static_cast<int64_t>(blockDim.x) * blockDim.y;
     int done = 0;
     while (!done) {
       done = (0 == atomicCAS(&scratch_locks[threadid], 0, 1));
       if (!done) {
-        threadid += blockDim.x * blockDim.y;
-        if (int64_t(threadid + blockDim.x * blockDim.y) >=
+        threadid += static_cast<int64_t>(blockDim.x) * blockDim.y;
+        if ((threadid + static_cast<int64_t>(blockDim.x) * blockDim.y) >=
             wraparound_len * blockDim.x * blockDim.y)
           threadid = 0;
       }
@@ -505,7 +507,8 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
       this->template exec_team<WorkTag>(typename Policy::member_type(
           kokkos_impl_cuda_shared_memory<void>(), m_shmem_begin, m_shmem_size,
           (void*)(((char*)m_scratch_ptr[1]) +
-                  ptrdiff_t(threadid / (blockDim.x * blockDim.y)) *
+                  ptrdiff_t(threadid /
+                            (static_cast<int64_t>(blockDim.x) * blockDim.y)) *
                       m_scratch_size[1]),
           m_scratch_size[1], league_rank, m_league_size));
     }
