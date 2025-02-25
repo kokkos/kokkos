@@ -114,6 +114,7 @@ set(BENCHMARK_SOURCES
     PerfTest_ViewResize_7.cpp
     PerfTest_ViewResize_8.cpp
     PerfTest_ViewResize_Raw.cpp
+    PerfTest_KernelName.cpp
 )
 
 if(Kokkos_ENABLE_OPENMPTARGET)
