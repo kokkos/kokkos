@@ -89,7 +89,7 @@ inline void host_test_simd_alias() {
 
 template <typename Abi, typename DataType>
 inline void host_check_construction() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
     host_test_simd_traits<Abi, DataType>();
     host_test_mask_traits<Abi, DataType>();
     host_test_simd_alias<Abi, DataType>();
