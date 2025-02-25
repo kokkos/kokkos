@@ -255,13 +255,6 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     if constexpr (std::is_convertible_v<member_type, IndexType>) {
 #if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
     defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-
-      std::string msg =
-          "Kokkos::RangePolicy bound type error: an unsafe implicit conversion "
-          "is performed on a bound (" +
-          std::to_string(bound) +
-          "), which may "
-          "not preserve its original value.\n";
       bool warn = false;
 
       if constexpr (std::is_arithmetic_v<member_type> &&
@@ -283,6 +276,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
           (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);
 
       if (warn) {
+        std::string msg =
+            "Kokkos::RangePolicy bound type error: an unsafe implicit "
+            "conversion is performed on a bound (" +
+            std::to_string(bound) +
+            "), which may not preserve its original value.\n";
+
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
         Kokkos::abort(msg.c_str());
 #endif
