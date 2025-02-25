@@ -17,6 +17,9 @@ jobs:
       matrix:
         build_type:
           - Release
+        cxx_standard:
+          - 17
+          - 20
         backend:
           - name: OpenMP-x86_64-GCC/10.3-Shared
             configure: -DKokkos_ENABLE_OPENMP=ON -DBUILD_SHARED_LIBS=ON
@@ -42,6 +45,11 @@ jobs:
             configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_UVM=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
             test: -e gpu -g v100
             modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+        exclude:
+          # note: GCC 10.3 does not support C++ 20 well enough
+          - backend:
+              name: OpenMP-x86_64-GCC/10.3-Shared
+            cxx_standard: 20
 
     runs-on: [self-hosted, cuda]
 
@@ -58,10 +66,10 @@ jobs:
             -e local \
             cmake \
               -B build \
-              -DBUILDNAME=${{ matrix.backend.name }}-${{ matrix.build_type }} \
+              -DBUILDNAME=${{ matrix.backend.name }}-C++${{ matrix.cxx_standard }}-${{ matrix.build_type }} \
               -DSITE=cea-ruche \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_CXX_STANDARD=17 \
+              -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }} \
               -DCMAKE_COMPILE_WARNING_AS_ERROR=ON \
               -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
               -DKokkos_ENABLE_TESTS=ON \
