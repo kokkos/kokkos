@@ -462,14 +462,14 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.0.3-Clang-18') {
+                stage('CUDA-11.8-Clang-15') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
-                            additionalBuildArgs '--build-arg ADDITIONAL_PACKAGES="clang-18 clang-tidy-18"'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04 --build-arg ADDITIONAL_PACKAGES="clang-15 clang-tidy-15"'
                         }
                     }
                     steps {
@@ -477,11 +477,11 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
-                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-18;-warnings-as-errors=*" \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-15;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++-18 \
+                                -DCMAKE_CXX_COMPILER=clang++-15 \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version" \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
