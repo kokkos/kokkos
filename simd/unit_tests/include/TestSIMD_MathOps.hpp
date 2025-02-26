@@ -117,7 +117,7 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
 
   // TODO: Place fallback implementations for all simd integer types
   if constexpr (std::is_floating_point_v<DataType>) {
-#if (defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)) && \
+#if defined(__INTEL_COMPILER) && \
     (defined(KOKKOS_ARCH_AVX2) || defined(KOKKOS_ARCH_AVX512XEON))
     host_check_math_op_all_loaders<Abi>(cbrt_op(), n, first_args);
     host_check_math_op_all_loaders<Abi>(exp_op(), n, first_args);
