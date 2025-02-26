@@ -670,29 +670,37 @@ TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
                           FunctorReductionWithLargeIterationCount(), nu);
   ASSERT_DOUBLE_EQ(nu, double(N));
 }
-#endif
 
 void test_reduction_with_large_view() {
-  using ExecutionSpace       = typename TEST_EXECSPACE::execution_space;
-  constexpr std::size_t size = 1llu << 32;
+  using ExecutionSpace              = typename TEST_EXECSPACE::execution_space;
+  constexpr long long unsigned size = 1llu << 32;
   Kokkos::View<int*, TEST_EXECSPACE::memory_space> v(
       Kokkos::view_alloc(Kokkos::WithoutInitializing, "v"), size);
 
   Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<std::size_t>>(0,
-                                                                          size),
-      KOKKOS_LAMBDA(std::size_t i) { v(i) = 1; });
-  std::size_t sum;
+      Kokkos::RangePolicy<ExecutionSpace,
+                          Kokkos::IndexType<long long unsigned>>(0, size),
+      KOKKOS_LAMBDA(long long unsigned i) { v(i) = 1; });
+  long long unsigned sum;
   Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<std::size_t>>(0,
-                                                                          size),
-      KOKKOS_LAMBDA(std::size_t i, std::size_t & update) { update += v(i); },
+      Kokkos::RangePolicy<ExecutionSpace,
+                          Kokkos::IndexType<long long unsigned>>(0, size),
+      KOKKOS_LAMBDA(long long unsigned i, long long unsigned& update) {
+        update += v(i);
+      },
       sum);
   ASSERT_EQ(sum, size);
 }
 
 TEST(TEST_CATEGORY, reduction_with_large_view) {
+  if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,
+                               Kokkos::HostSpace>) {
+    GTEST_SKIP() << "Disabling for host backends";
+  }
+
   test_reduction_with_large_view();
 }
+
+#endif
 
 }  // namespace Test
