@@ -58,7 +58,7 @@ inline void host_check_equality(
     checker.equality(expected_result[i], computed_result[i]);
   }
 
-#ifdef __INTEL_COMPILER
+#if defined(__INTEL_COMPILER) || defined(__INTEL_LLVM_COMPILER)
   if constexpr (!std::is_integral_v<T>) return;
 #endif
 
