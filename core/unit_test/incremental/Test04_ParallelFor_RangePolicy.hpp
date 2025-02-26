@@ -25,7 +25,7 @@
 namespace Test {
 
 using value_type = double;
-int num_elements = 10;
+int num_elements = 100;
 
 struct ParallelForFunctor {
   value_type *_data;

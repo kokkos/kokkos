@@ -9,18 +9,20 @@
         export CDASH_MODEL="Experimental";
         export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-);
       fi
+  rules:
+    - if: $CI_COMMIT_MESSAGE =~ /\[skip hpsf ci\]/
+      when: manual
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+          CDASH_MODEL: "Nightly"
+    - when: on_success
+      variables:
+        CDASH_MODEL: "Experimental"
 
 NVIDIA-GH200:
   extends: .common-setup
   tags: [nvidia-gh200]
   image: nvidia/cuda:12.6.1-devel-ubuntu24.04
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "schedule"
-      variables:
-        CDASH_MODEL: "Nightly"
-    - when: on_success
-      variables:
-        CDASH_MODEL: "Experimental"
   script:
     - apt-get update && apt-get install -y cmake git python3
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
