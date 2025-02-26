@@ -476,7 +476,7 @@ pipeline {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Release \
+                                -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_CLANG_TIDY="clang-tidy-18;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++-18 \
