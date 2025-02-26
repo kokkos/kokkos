@@ -672,4 +672,27 @@ TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
 }
 #endif
 
+void test_reduction_with_large_view() {
+  using ExecutionSpace       = typename TEST_EXECSPACE::execution_space;
+  constexpr std::size_t size = 1llu << 32;
+  Kokkos::View<int*, TEST_EXECSPACE::memory_space> v(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "v"), size);
+
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<std::size_t>>(0,
+                                                                          size),
+      KOKKOS_LAMBDA(std::size_t i) { v(i) = 1; });
+  std::size_t sum;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<std::size_t>>(0,
+                                                                          size),
+      KOKKOS_LAMBDA(std::size_t i, std::size_t & update) { update += v(i); },
+      sum);
+  ASSERT_EQ(sum, size);
+}
+
+TEST(TEST_CATEGORY, reduction_with_large_view) {
+  test_reduction_with_large_view();
+}
+
 }  // namespace Test
