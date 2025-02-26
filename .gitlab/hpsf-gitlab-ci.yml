@@ -48,6 +48,43 @@ NVIDIA-GH200:
     reports:
       junit: build/result_gh200.xml
 
+NVIDIA-P100:
+  extends: .common-setup
+  tags: [nvidia-p100]
+  image: nvcr.io/nvidia/cuda:12.3.2-devel-ubuntu22.04
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        CDASH_MODEL: "Nightly"
+    - when: on_success
+      variables:
+        CDASH_MODEL: "Experimental"
+  script:
+    - apt-get update && apt-get install -y cmake git python3
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_PASCAL60=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export CTEST_BUILD_NAME="NVIDIA-GH200"
+    - ctest -VV
+        -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_p100.xml
+        -S CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+  artifacts:
+    when: always
+    paths:
+      - build/result_p100.xml
+    reports:
+      junit: build/result_p100.xml
+
 INTEL-DATA-CENTER-MAX-1100:
   extends: .common-setup
   tags: [intel-data-center-max-1100]
