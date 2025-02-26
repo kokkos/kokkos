@@ -671,6 +671,8 @@ TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
   ASSERT_DOUBLE_EQ(nu, double(N));
 }
 
+// For 32-bit builds a View can't store enough elements
+#ifndef KOKKOS_IMPL_32BIT
 void test_reduction_with_large_view() {
   using ExecutionSpace              = typename TEST_EXECSPACE::execution_space;
   constexpr long long unsigned size = 1llu << 32;
@@ -700,6 +702,7 @@ TEST(TEST_CATEGORY, reduction_with_large_view) {
 
   test_reduction_with_large_view();
 }
+#endif
 
 #endif
 
