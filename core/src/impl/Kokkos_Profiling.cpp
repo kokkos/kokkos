@@ -240,7 +240,7 @@ static std::unordered_map<size_t, VariableInfo> variable_metadata;
 static EventSet current_callbacks;
 static EventSet backup_callbacks;
 static EventSet no_profiling;
-static bool isProfileLibraryLoaded;
+static bool isProfileLibraryLoaded = false;
 static ToolSettings tool_requirements;
 bool eventSetsEqual(const EventSet& l, const EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
@@ -296,11 +296,7 @@ inline void invoke_kokkosp_callback(
 }
 }  // namespace Experimental
 bool profileLibraryLoaded() {
-#ifdef KOKKOS_TOOLS_ENABLE_LIBDL
   return Kokkos::Tools::Experimental::isProfileLibraryLoaded;
-#else
-  return false;
-#endif
 }
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
@@ -624,7 +620,6 @@ void initialize(const std::string& profileLibrary) {
 
   if ((profileLibrary.empty()) ||
       (profileLibrary == InitArguments::unset_string_option)) {
-    Kokkos::Tools::Experimental::isProfileLibraryLoaded = false;
     invoke_init_callbacks();
     return;
   }
@@ -1105,8 +1100,10 @@ void pause_tools() {
 }
 
 void resume_tools() {
-  current_callbacks      = backup_callbacks;
-  isProfileLibraryLoaded = true;
+  current_callbacks = backup_callbacks;
+  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
+      !Experimental::eventSetsEqual(Experimental::current_callbacks,
+                                    Experimental::no_profiling);
 }
 
 Kokkos::Tools::Experimental::EventSet get_callbacks() {
