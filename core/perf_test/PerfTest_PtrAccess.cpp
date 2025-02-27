@@ -24,9 +24,8 @@ static void OperatorParentesisImpact_View(benchmark::State& state) {
     Kokkos::View<double*> a("a", N);
     Kokkos::View<double*> b("b", N);
 
-    Kokkos::parallel_for("", N, KOKKOS_LAMBDA(int i){
-          a(i)+=b(i);
-        });
+    Kokkos::parallel_for(
+        "", N, KOKKOS_LAMBDA(int i) { a(i) += b(i); });
     Kokkos::fence();
   }
 }
@@ -43,9 +42,8 @@ static void OperatorParentesisImpact_Ptr1(benchmark::State& state) {
     Kokkos::View<double*> a("a", N);
     Kokkos::View<double*> b("b", N);
 
-    Kokkos::parallel_for("", N, KOKKOS_LAMBDA(int i){
-          a.data()[i]+=b.data()[i];
-        });
+    Kokkos::parallel_for(
+        "", N, KOKKOS_LAMBDA(int i) { a.data()[i] += b.data()[i]; });
     Kokkos::fence();
   }
 }
@@ -65,9 +63,8 @@ static void OperatorParentesisImpact_Ptr2(benchmark::State& state) {
     double* aptr = a.data();
     double* bptr = b.data();
 
-    Kokkos::parallel_for("", N, KOKKOS_LAMBDA(int i){
-          aptr[i]+=bptr[i];
-        });
+    Kokkos::parallel_for(
+        "", N, KOKKOS_LAMBDA(int i) { aptr[i] += bptr[i]; });
     Kokkos::fence();
   }
 }
