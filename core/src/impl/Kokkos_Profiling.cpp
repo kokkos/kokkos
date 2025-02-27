@@ -240,6 +240,7 @@ static std::unordered_map<size_t, VariableInfo> variable_metadata;
 static EventSet current_callbacks;
 static EventSet backup_callbacks;
 static EventSet no_profiling;
+static bool isProfileLibraryLoaded;
 static ToolSettings tool_requirements;
 bool eventSetsEqual(const EventSet& l, const EventSet& r) {
   return l.init == r.init && l.finalize == r.finalize &&
@@ -295,8 +296,11 @@ inline void invoke_kokkosp_callback(
 }
 }  // namespace Experimental
 bool profileLibraryLoaded() {
-  return !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                       Experimental::no_profiling);
+#ifdef KOKKOS_TOOLS_ENABLE_LIBDL
+  return Kokkos::Tools::Experimental::isProfileLibraryLoaded;
+#else
+  return false;
+#endif
 }
 
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
@@ -620,6 +624,7 @@ void initialize(const std::string& profileLibrary) {
 
   if ((profileLibrary.empty()) ||
       (profileLibrary == InitArguments::unset_string_option)) {
+    Kokkos::Tools::Experimental::isProfileLibraryLoaded = false;
     invoke_init_callbacks();
     return;
   }
@@ -786,6 +791,10 @@ void initialize(const std::string& profileLibrary) {
   Experimental::no_profiling.declare_output_type   = nullptr;
   Experimental::no_profiling.request_output_values = nullptr;
   Experimental::no_profiling.end_tuning_context    = nullptr;
+
+  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
+      !Experimental::eventSetsEqual(Experimental::current_callbacks,
+                                    Experimental::no_profiling);
 }
 
 void finalize() {
@@ -954,11 +963,15 @@ void set_declare_optimization_goal_callback(
 }
 
 void pause_tools() {
-  backup_callbacks  = current_callbacks;
-  current_callbacks = no_profiling;
+  isProfileLibraryLoaded = false;
+  backup_callbacks       = current_callbacks;
+  current_callbacks      = no_profiling;
 }
 
-void resume_tools() { current_callbacks = backup_callbacks; }
+void resume_tools() {
+  current_callbacks      = backup_callbacks;
+  isProfileLibraryLoaded = true;
+}
 
 Kokkos::Tools::Experimental::EventSet get_callbacks() {
   return current_callbacks;
