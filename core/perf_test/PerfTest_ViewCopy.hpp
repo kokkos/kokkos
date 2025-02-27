@@ -152,17 +152,23 @@ template <typename DstMemorySpace, typename SrcMemorySpace>
 static void ViewDeepCopy_Rank1Strided(benchmark::State& state) {
   const size_t N8 = std::pow(state.range(0), 8);
 
-  // allocate 2x the size since layout only has 1/2 the elements
-  Kokkos::View<double*, DstMemorySpace> a("A1", N8 * 2);
-  Kokkos::View<double*, SrcMemorySpace> b("B1", N8 * 2);
+  // This benchmark allocates more data in order to measure a deep_copy
+  // of the same size as the contiguous benchmarks, so in cases where they
+  // can be run, this one may fail to allocate data (e.g., on a small CI runner)
+  try {
+    // allocate 2x the size since layout only has 1/2 the elements
+    Kokkos::View<double*, DstMemorySpace> a("A1", N8 * 2);
+    Kokkos::View<double*, SrcMemorySpace> b("B1", N8 * 2);
 
-  Kokkos::LayoutStride layout(N8 / 2, 2);
-  Kokkos::View<double*, Kokkos::LayoutStride, DstMemorySpace> a_stride(a.data(),
-                                                                       layout);
-  Kokkos::View<double*, Kokkos::LayoutStride, SrcMemorySpace> b_stride(b.data(),
-                                                                       layout);
-
-  deepcopy_view(a_stride, b_stride, state);
+    Kokkos::LayoutStride layout(N8 / 2, 2);
+    Kokkos::View<double*, Kokkos::LayoutStride, DstMemorySpace> a_stride(
+        a.data(), layout);
+    Kokkos::View<double*, Kokkos::LayoutStride, SrcMemorySpace> b_stride(
+        b.data(), layout);
+    deepcopy_view(a_stride, b_stride, state);
+  } catch (const std::runtime_error& e) {
+    state.SkipWithError(e.what());
+  }
 }
 
 }  // namespace Test
