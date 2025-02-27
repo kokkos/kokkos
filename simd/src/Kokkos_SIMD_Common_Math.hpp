@@ -116,9 +116,11 @@ template <class T, class Abi>
     Experimental::basic_simd<T, Abi> const& a,
     Experimental::basic_simd<T, Abi> const& b) {
   Experimental::basic_simd<T, Abi> result;
+  T vals[Experimental::basic_simd<T, Abi>::size()] = {0};
   for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size(); ++i) {
-    result[i] = Kokkos::min(a[i], b[i]);
+    vals[i] = Kokkos::min(a[i], b[i]);
   }
+  result.copy_from(vals, Kokkos::Experimental::simd_flag_default);
   return result;
 }
 
@@ -139,9 +141,11 @@ template <class T, class Abi>
     Experimental::basic_simd<T, Abi> const& a,
     Experimental::basic_simd<T, Abi> const& b) {
   Experimental::basic_simd<T, Abi> result;
+  T vals[Experimental::basic_simd<T, Abi>::size()] = {0};
   for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size(); ++i) {
-    result[i] = Kokkos::max(a[i], b[i]);
+    vals[i] = Kokkos::max(a[i], b[i]);
   }
+  result.copy_from(vals, Kokkos::Experimental::simd_flag_default);
   return result;
 }
 

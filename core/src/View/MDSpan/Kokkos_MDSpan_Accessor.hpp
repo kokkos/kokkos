@@ -307,6 +307,17 @@ class ReferenceCountedDataHandle {
   pointer m_handle = nullptr;
 };
 
+template <class T>
+struct IsReferenceCountedDataHandle : std::false_type {};
+
+template <class ElementType, class MemorySpace>
+struct IsReferenceCountedDataHandle<
+    ReferenceCountedDataHandle<ElementType, MemorySpace>> : std::true_type {};
+
+template <class T>
+constexpr bool IsReferenceCountedDataHandleV =
+    IsReferenceCountedDataHandle<T>::value;
+
 template <class ElementType, class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor;
 
@@ -317,6 +328,10 @@ template <class ElementType, class MemorySpace, class NestedAccessor>
 struct IsReferenceCountedAccessor<
     ReferenceCountedAccessor<ElementType, MemorySpace, NestedAccessor>>
     : std::true_type {};
+
+template <class T>
+constexpr bool IsReferenceCountedAccessorV =
+    IsReferenceCountedAccessor<T>::value;
 
 template <class ElementType, class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor {

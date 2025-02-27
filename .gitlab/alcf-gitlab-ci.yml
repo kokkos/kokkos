@@ -29,6 +29,45 @@ Polaris:
     - ctest -VV
         -D CDASH_MODEL=Nightly
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_a100.xml
         -S CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="Polaris-A100"
+  artifacts:
+    when: always
+    paths:
+      - build/result_a100.xml
+    reports:
+      junit: build/result_a100.xml
+
+Aurora:
+  stage: test
+  extends: .aurora-batch-runner
+  variables:
+    ANL_AURORA_SCHEDULER_PARAMETERS: "-q debug -A kokkos_math -l select=1,walltime=60:00,filesystems=flare"
+  script:
+    - module load cmake oneapi/eng-compiler
+    - module list
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=icpx"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_PVC=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - ctest -VV
+        -D CDASH_MODEL=Nightly
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_pvc1550.xml
+        -S CTestRun.cmake
+        -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
+        -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1550"
+  artifacts:
+    when: always
+    paths:
+      - build/result_pvc1550.xml
+    reports:
+      junit: build/result_pvc1550.xml

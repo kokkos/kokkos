@@ -34,6 +34,7 @@ jobs:
     # default is overwritten
     permissions:
       # required for all workflows
+      contents: read
       security-events: write
     uses: ./.github/workflows/codeql.yml
 
