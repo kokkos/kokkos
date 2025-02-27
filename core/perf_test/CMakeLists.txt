@@ -80,6 +80,7 @@ set(BENCHMARK_SOURCES
     PerfTest_ExecSpacePartitioning.cpp
     PerfTestHexGrad.cpp
     PerfTest_MallocFree.cpp
+    PerfTest_PtrAccess.cpp
     PerfTest_ViewAllocate.cpp
     PerfTest_ViewCopy_a123.cpp
     PerfTest_ViewCopy_b123.cpp
@@ -114,9 +115,7 @@ set(BENCHMARK_SOURCES
     PerfTest_ViewResize_7.cpp
     PerfTest_ViewResize_8.cpp
     PerfTest_ViewResize_Raw.cpp
-    PerfTest_KernelName.cpp
-    PerfTest_PtrAccess.cpp
-    PerfTest_FenceOverhead.cpp
+    MicroBench_ParallelForOverheads.cpp
 )
 
 if(Kokkos_ENABLE_OPENMPTARGET)
