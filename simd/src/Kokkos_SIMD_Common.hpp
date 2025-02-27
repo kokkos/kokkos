@@ -314,19 +314,25 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator<<=(
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
     basic_simd_mask<T, Abi> const& a) {
-  return a == basic_simd_mask<T, Abi>(true);
+  for (size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
+    if (!a[i]) return false;
+  }
+  return true;
 }
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
     basic_simd_mask<T, Abi> const& a) {
-  return a != basic_simd_mask<T, Abi>(false);
+  for (size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
+    if (a[i]) return true;
+  }
+  return false;
 }
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool none_of(
     basic_simd_mask<T, Abi> const& a) {
-  return a == basic_simd_mask<T, Abi>(false);
+  return !any_of(a);
 }
 
 // A temporary device-callable implemenation of round half to nearest even

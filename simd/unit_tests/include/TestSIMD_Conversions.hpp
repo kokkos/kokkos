@@ -20,6 +20,8 @@
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
+using Kokkos::Experimental::all_of;
+
 template <typename Abi>
 inline void host_check_conversions() {
   if constexpr (is_type_v<Kokkos::Experimental::basic_simd<uint64_t, Abi>>) {
@@ -41,22 +43,22 @@ inline void host_check_conversions() {
     {
       auto a = Kokkos::Experimental::basic_simd_mask<double, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::uint64_t, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int64_t, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<double, Abi>(a);
-      EXPECT_TRUE(b == decltype(b)(true));
+      EXPECT_TRUE(all_of(b == decltype(b)(true)));
     }
   }
 }
@@ -89,22 +91,22 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
     {
       auto a = Kokkos::Experimental::basic_simd_mask<double, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::uint64_t, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<std::int64_t, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(all_of(b == decltype(b)(true)));
     }
     {
       auto a = Kokkos::Experimental::basic_simd_mask<std::int32_t, Abi>(true);
       auto b = Kokkos::Experimental::basic_simd_mask<double, Abi>(a);
-      checker.truth(b == decltype(b)(true));
+      checker.truth(all_of(b == decltype(b)(true)));
     }
   }
 }

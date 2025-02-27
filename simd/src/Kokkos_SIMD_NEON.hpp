@@ -63,7 +63,7 @@ class neon_mask<Derived, 64, 2> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION neon_mask() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(
       value_type value) noexcept
-      : m_value(vmovq_n_u64(value ? 0xFFFFFFFFFFFFFFFFULL : 0)) {}
+      : m_value(vmovq_n_u64(value ? 0xFFFF'FFFF'FFFF'FFFFULL : 0)) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       uint64x2_t const& value_in) noexcept
       : m_value(value_in) {}
@@ -71,9 +71,9 @@ class neon_mask<Derived, 64, 2> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(
       neon_mask<U, 32, 2> const& other) noexcept {
     m_value =
-        vsetq_lane_u64((other[0] ? 0xFFFFFFFFFFFFFFFFULL : 0), m_value, 0);
+        vsetq_lane_u64((other[0] ? 0xFFFF'FFFF'FFFF'FFFFULL : 0), m_value, 0);
     m_value =
-        vsetq_lane_u64((other[1] ? 0xFFFFFFFFFFFFFFFFULL : 0), m_value, 1);
+        vsetq_lane_u64((other[1] ? 0xFFFF'FFFF'FFFF'FFFFULL : 0), m_value, 1);
   }
   template <class U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit neon_mask(
@@ -86,16 +86,15 @@ class neon_mask<Derived, 64, 2> {
                 bool> = false>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       G&& gen) noexcept {
-    m_value = vsetq_lane_u64(
-        (gen(std::integral_constant<std::size_t, 0>()) ? 0xFFFFFFFFFFFFFFFFULL
-                                                       : 0),
-        m_value, 0);
-    m_value = vsetq_lane_u64(
-        (gen(std::integral_constant<std::size_t, 1>()) ? 0xFFFFFFFFFFFFFFFFULL
-                                                       : 0),
-        m_value, 1);
+    m_value = vsetq_lane_u64((gen(std::integral_constant<std::size_t, 0>())
+                                  ? 0xFFFF'FFFF'FFFF'FFFFULL
+                                  : 0),
+                             m_value, 0);
+    m_value = vsetq_lane_u64((gen(std::integral_constant<std::size_t, 1>())
+                                  ? 0xFFFF'FFFF'FFFF'FFFFULL
+                                  : 0),
+                             m_value, 1);
   }
-
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   operator[](std::size_t i) const {
     switch (i) {
@@ -124,19 +123,20 @@ class neon_mask<Derived, 64, 2> {
       neon_mask const& lhs, neon_mask const& rhs) noexcept {
     return Derived(vorrq_u64(lhs.m_value, rhs.m_value));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      neon_mask const& other) const {
-    uint64x2_t const elementwise_equality = vceqq_u64(m_value, other.m_value);
+
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator==(
+      neon_mask const& lhs, neon_mask const& rhs) noexcept {
+    uint64x2_t const elementwise_equality = vceqq_u64(lhs.m_value, rhs.m_value);
     uint32x2_t const narrow_elementwise_equality =
         vqmovn_u64(elementwise_equality);
     uint64x1_t const overall_equality_neon =
         vreinterpret_u64_u32(narrow_elementwise_equality);
     uint64_t const overall_equality = vget_lane_u64(overall_equality_neon, 0);
-    return overall_equality == 0xFFFFFFFFFFFFFFFFULL;
+    return Derived(overall_equality == 0xFFFF'FFFF'FFFF'FFFFULL);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      neon_mask const& other) const {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator!=(
+      neon_mask const& lhs, neon_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -214,17 +214,17 @@ class neon_mask<Derived, 32, 2> {
     return Derived(vorr_u32(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      neon_mask const& other) const {
-    uint32x2_t const elementwise_equality = vceq_u32(m_value, other.m_value);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator==(
+      neon_mask const& lhs, neon_mask const& rhs) noexcept {
+    uint32x2_t const elementwise_equality = vceq_u32(lhs.m_value, rhs.m_value);
     uint64x1_t const overall_equality_neon =
         vreinterpret_u64_u32(elementwise_equality);
     uint64_t const overall_equality = vget_lane_u64(overall_equality_neon, 0);
-    return overall_equality == 0xFFFFFFFFFFFFFFFFULL;
+    return Derived(overall_equality == 0xFFFF'FFFF'FFFF'FFFFULL);
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      neon_mask const& other) const {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator!=(
+      neon_mask const& lhs, neon_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 
@@ -302,17 +302,17 @@ class neon_mask<Derived, 32, 4> {
     return Derived(vorrq_u32(lhs.m_value, rhs.m_value));
   }
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator==(
-      neon_mask const& other) const {
-    uint32x4_t const elementwise_equality = vceqq_u32(m_value, other.m_value);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator==(
+      neon_mask const& lhs, neon_mask const& rhs) noexcept {
+    uint32x4_t const elementwise_equality = vceqq_u32(lhs.m_value, rhs.m_value);
     uint64x2_t const overall_equality_neon =
         vreinterpretq_u64_u32(elementwise_equality);
-    return (overall_equality_neon[0] == 0xFFFFFFFFFFFFFFFFULL) &&
-           (overall_equality_neon[1] == 0xFFFFFFFFFFFFFFFFULL);
+    return Derived((overall_equality_neon[0] == 0xFFFF'FFFF'FFFF'FFFFULL) &&
+                   (overall_equality_neon[1] == 0xFFFF'FFFF'FFFF'FFFFULL));
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool operator!=(
-      neon_mask const& other) const {
-    return !operator==(other);
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend Derived operator!=(
+      neon_mask const& lhs, neon_mask const& rhs) noexcept {
+    return !operator==(lhs, rhs);
   }
 };
 

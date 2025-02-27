@@ -20,6 +20,8 @@
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
+using Kokkos::Experimental::all_of;
+
 template <typename Abi, typename DataType>
 inline void host_test_simd_traits() {
   using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
@@ -56,7 +58,7 @@ inline void host_test_mask_traits() {
   mask_type move_mask(std::move(copy_mask));
   default_mask = std::move(move_mask);
   result       = default_mask;
-  EXPECT_EQ(test_mask, result);
+  EXPECT_TRUE(all_of(test_mask == result));
 }
 
 template <typename Abi, typename DataType>
@@ -135,7 +137,7 @@ KOKKOS_INLINE_FUNCTION void device_test_mask_traits() {
   result       = default_mask;
 
   kokkos_checker checker;
-  checker.truth(test_mask == result);
+  checker.truth(all_of(test_mask == result));
 }
 
 template <typename Abi, typename DataType>
