@@ -299,6 +299,12 @@ bool profileLibraryLoaded() {
   return Kokkos::Tools::Experimental::isProfileLibraryLoaded;
 }
 
+void updateProfileLibraryState() {
+  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
+      !Experimental::eventSetsEqual(Experimental::current_callbacks,
+                                    Experimental::no_profiling);
+}
+
 void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
   Experimental::invoke_kokkosp_callback(
@@ -787,9 +793,7 @@ void initialize(const std::string& profileLibrary) {
   Experimental::no_profiling.request_output_values = nullptr;
   Experimental::no_profiling.end_tuning_context    = nullptr;
 
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 
 void finalize() {
@@ -847,250 +851,148 @@ namespace Tools {
 namespace Experimental {
 void set_init_callback(initFunction callback) {
   current_callbacks.init = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_finalize_callback(finalizeFunction callback) {
   current_callbacks.finalize = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_parse_args_callback(parseArgsFunction callback) {
   current_callbacks.parse_args = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_print_help_callback(printHelpFunction callback) {
   current_callbacks.print_help = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_begin_parallel_for_callback(beginFunction callback) {
   current_callbacks.begin_parallel_for = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_end_parallel_for_callback(endFunction callback) {
   current_callbacks.end_parallel_for = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_begin_parallel_reduce_callback(beginFunction callback) {
   current_callbacks.begin_parallel_reduce = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_end_parallel_reduce_callback(endFunction callback) {
   current_callbacks.end_parallel_reduce = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_begin_parallel_scan_callback(beginFunction callback) {
   current_callbacks.begin_parallel_scan = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_end_parallel_scan_callback(endFunction callback) {
   current_callbacks.end_parallel_scan = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_push_region_callback(pushFunction callback) {
   current_callbacks.push_region = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_pop_region_callback(popFunction callback) {
   current_callbacks.pop_region = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_allocate_data_callback(allocateDataFunction callback) {
   current_callbacks.allocate_data = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_deallocate_data_callback(deallocateDataFunction callback) {
   current_callbacks.deallocate_data = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_create_profile_section_callback(
     createProfileSectionFunction callback) {
   current_callbacks.create_profile_section = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_start_profile_section_callback(startProfileSectionFunction callback) {
   current_callbacks.start_profile_section = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_stop_profile_section_callback(stopProfileSectionFunction callback) {
   current_callbacks.stop_profile_section = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_destroy_profile_section_callback(
     destroyProfileSectionFunction callback) {
   current_callbacks.destroy_profile_section = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_profile_event_callback(profileEventFunction callback) {
   current_callbacks.profile_event = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_begin_deep_copy_callback(beginDeepCopyFunction callback) {
   current_callbacks.begin_deep_copy = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_end_deep_copy_callback(endDeepCopyFunction callback) {
   current_callbacks.end_deep_copy = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_begin_fence_callback(beginFenceFunction callback) {
   current_callbacks.begin_fence = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_end_fence_callback(endFenceFunction callback) {
   current_callbacks.end_fence = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 
 void set_dual_view_sync_callback(dualViewSyncFunction callback) {
   current_callbacks.sync_dual_view = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_dual_view_modify_callback(dualViewModifyFunction callback) {
   current_callbacks.modify_dual_view = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_declare_metadata_callback(declareMetadataFunction callback) {
   current_callbacks.declare_metadata = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_request_tool_settings_callback(requestToolSettingsFunction callback) {
   current_callbacks.request_tool_settings = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_provide_tool_programming_interface_callback(
     provideToolProgrammingInterfaceFunction callback) {
   current_callbacks.provide_tool_programming_interface = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 
 void set_declare_output_type_callback(
     Experimental::outputTypeDeclarationFunction callback) {
   current_callbacks.declare_output_type = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_declare_input_type_callback(
     Experimental::inputTypeDeclarationFunction callback) {
   current_callbacks.declare_input_type = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_request_output_values_callback(
     Experimental::requestValueFunction callback) {
   current_callbacks.request_output_values = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_end_context_callback(Experimental::contextEndFunction callback) {
   current_callbacks.end_tuning_context = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_begin_context_callback(Experimental::contextBeginFunction callback) {
   current_callbacks.begin_tuning_context = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 void set_declare_optimization_goal_callback(
     Experimental::optimizationGoalDeclarationFunction callback) {
   current_callbacks.declare_optimization_goal = callback;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 
 void pause_tools() {
@@ -1101,9 +1003,7 @@ void pause_tools() {
 
 void resume_tools() {
   current_callbacks = backup_callbacks;
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 
 Kokkos::Tools::Experimental::EventSet get_callbacks() {
@@ -1111,10 +1011,7 @@ Kokkos::Tools::Experimental::EventSet get_callbacks() {
 }
 void set_callbacks(Kokkos::Tools::Experimental::EventSet new_events) {
   current_callbacks = new_events;
-
-  Kokkos::Tools::Experimental::isProfileLibraryLoaded =
-      !Experimental::eventSetsEqual(Experimental::current_callbacks,
-                                    Experimental::no_profiling);
+  updateProfileLibraryState();
 }
 }  // namespace Experimental
 }  // namespace Tools
