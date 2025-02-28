@@ -965,7 +965,7 @@ struct Functor_TestHalfOperators {
 };
 
 template <class half_type>
-void __test_half_operators(half_type h_lhs, half_type h_rhs) {
+void _test_half_operators(half_type h_lhs, half_type h_rhs) {
   half_type epsilon = Kokkos::Experimental::epsilon<half_type>::value;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
@@ -1017,10 +1017,10 @@ void test_half_operators() {
   for (int i = -3; i < 2; i++) {
     // printf("%f OP %f\n", float(h_lhs + cast_to_half(i + 1)), float(h_rhs +
     // cast_to_half(i)));
-    __test_half_operators<half_t>(h_lhs + cast_to_half(i + 1),
-                                  h_rhs + cast_to_half(i));
-    // TODO: __test_half_operators(h_lhs + cast_to_half(i + 1), half_t(0));
-    // TODO: __test_half_operators(half_t(0), h_rhs + cast_to_half(i));
+    _test_half_operators<half_t>(h_lhs + cast_to_half(i + 1),
+                                 h_rhs + cast_to_half(i));
+    // TODO: _test_half_operators(h_lhs + cast_to_half(i + 1), half_t(0));
+    // TODO: _test_half_operators(half_t(0), h_rhs + cast_to_half(i));
   }
 }
 
@@ -1029,8 +1029,8 @@ void test_bhalf_operators() {
   for (int i = -2; i < 2; i++) {
     // printf("%f OP %f\n", float(h_lhs + cast_to_bhalf(i + 1)), float(h_rhs +
     // cast_to_bhalf(i)));
-    __test_half_operators<bhalf_t>(h_lhs + cast_to_bhalf(i + 1),
-                                   h_rhs + cast_to_bhalf(i));
+    _test_half_operators<bhalf_t>(h_lhs + cast_to_bhalf(i + 1),
+                                  h_rhs + cast_to_bhalf(i));
   }
 }
 
