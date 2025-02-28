@@ -20,12 +20,23 @@ jobs:
         with:
           path: kokkos
 
+      - name: Install ccache
+        run: |
+          sudo apt-get update
+          sudo apt-get install ccache
+
+      - uses: actions/cache@0c907a75c2c80ebcb7f088228285e798b750cf8f # v4.2.1
+        with:
+          path: ~/.cache/ccache
+          key: kokkos-basic-test-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-basic-test-${{ github.ref }}
+
       - name: configure kokkos
         run: |
-          mkdir -p kokkos/{build,install}
-          cd kokkos/build
           cmake \
-            -DCMAKE_BUILD_TYPE=Debug \
+            -S kokkos \
+            -B builddir \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_INSTALL_PREFIX=$PWD/../install \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS="-Werror" \
@@ -34,12 +45,14 @@ jobs:
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_TESTS=ON \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             ..
 
       - name: build_and_install_kokkos
-        working-directory: kokkos/build
-        run: make -j4 install
+        run:  |
+          ccache -z
+          cmake --build builddir --target install --parallel $(nproc)
+          ccache -s
 
       - name: test_kokkos
-        working-directory: kokkos/build
-        run: ctest --timeout 2000 -j2 --output-on-failure
+        run: ctest --test-dir builddir --timeout 2000 -j$(nproc) --output-on-failure

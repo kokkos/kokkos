@@ -504,7 +504,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
         return MatchDiagnostic{true};
       }));
 
-  graph->instantiate();
+  EXPECT_TRUE(static_cast<bool>(graph));
+  graph->instantiate();  // NOLINT(bugprone-unchecked-optional-access)
 
   // Fencing the default execution space instance, as the node policy
   // was created without giving an instance (it used the default one).
@@ -512,7 +513,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
       "Ensure that kernel dispatch to global memory is finished "
       "before submission.");
 
-  graph->submit(ex);
+  graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
   ASSERT_TRUE(contains(ex, data, functor_t::count));
 
   ASSERT_TRUE(validate_event_set(
@@ -572,7 +573,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), node_lifetime) {
 
   ASSERT_EQ(data.use_count(), 2) << "The node should be holding one count.";
 
-  graph->submit(ex);
+  EXPECT_TRUE(static_cast<bool>(graph));
+  graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
 
   ASSERT_TRUE(contains(ex, Kokkos::subview(data, size - 1), 2));
 

@@ -417,11 +417,18 @@ class SimpleTaskScheduler
     static_assert(is_future<generated_type>::value,
                   "when_all function must return a Kokkos future (an instance "
                   "of Kokkos::BasicFuture)");
+
+    // see #7779
+    // There are issues with the implementation of std::is_base_of in NVCC
+    // <= 12.5 for C++ 20
+#if defined(KOKKOS_ENABLE_CXX17) || \
+    (!defined(KOKKOS_COMPILER_NVCC) || KOKKOS_COMPILER_NVCC >= 1250)
     static_assert(
         std::is_base_of_v<scheduler_type,
                           typename generated_type::scheduler_type>,
         "when_all function must return a Kokkos::BasicFuture of a compatible "
         "scheduler type");
+#endif
 
     auto* aggregate_task =
         m_queue->template allocate_and_construct_with_vla_emulation<

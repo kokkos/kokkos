@@ -185,6 +185,7 @@ KOKKOS_FUNCTION IteratorType unique_team_impl(const TeamHandleType& teamHandle,
           IteratorType result = first;
           IteratorType lfirst = first;
           while (++lfirst != last) {
+            // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
             if (!pred(*result, *lfirst) && ++result != lfirst) {
               *result = std::move(*lfirst);
             }

@@ -1,5 +1,7 @@
 image:
   - Visual Studio 2019
+skip_commits:
+  message: /\[skip appveyor\]/
 clone_folder: c:\projects\source
 build_script:
 - cmd: >-

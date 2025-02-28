@@ -19,12 +19,11 @@
 #ifndef KOKKOS_HIP_ISXNACK_HPP
 #define KOKKOS_HIP_ISXNACK_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos::Impl {
 
-/* Returns true iff we think the AMD MI300A can access allocations created with
-the system allocator.
-
-Based on AMD's ROCm 6.3.1 documentation:
+/*Based on AMD's ROCm 6.3.1 documentation:
 https://github.com/ROCm/HIP/blob/2c240cacff16c2bb18ce9e5b4c1b937ab17a0199/docs/how-to/hip_runtime_api/memory_management/unified_memory.rst?plain=1#L141-L146
 
     To ensure the proper functioning of system allocated unified memory on
@@ -43,7 +42,22 @@ be modified if a better way is determined to check for HMM support in Linux.
 Checking for CONFIG_HMM was considered, but it was not present on El Capitan,
 so we infer its presence is not necessary.
 */
-bool xnack_enabled();
+
+// Returns true iff we detect HSA_XNACK=1 in the environment.
+bool xnack_environment_enabled();
+// Returns true iff we detect CONFIG_HMM_MIROR=y in /boot/config-$(uname -r).
+bool xnack_boot_config_has_hmm_mirror();
+// Returns true iff the architecture of the gpu supports accessing system
+// allocated memory
+constexpr bool gpu_arch_can_access_system_allocations() {
+#if defined(KOKKOS_ARCH_AMD_GFX908) || defined(KOKKOS_ARCH_AMD_GFX90A) || \
+    defined(KOKKOS_ARCH_AMD_GFX942) || defined(KOKKOS_ARCH_AMD_GFX942_APU)
+  return true;
+#elif defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX1103) || \
+    defined(KOKKOS_ARCH_AMD_GFX1100) || defined(KOKKOS_ARCH_AMD_GFX1030)
+  return false;
+#endif
+}
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_HIP_ISXNACK_HPP

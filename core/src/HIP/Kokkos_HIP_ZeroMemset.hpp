@@ -18,6 +18,7 @@
 
 #include <Kokkos_Macros.hpp>
 #include <HIP/Kokkos_HIP.hpp>
+#include <HIP/Kokkos_HIP_Instance.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
 
 namespace Kokkos {
@@ -38,7 +39,8 @@ struct ZeroMemset<HIP> {
     zero_with_hip_kernel(exec_space, dst, cnt);
 #else
     KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipMemsetAsync(dst, 0, cnt, exec_space.hip_stream()));
+        exec_space.impl_internal_space_instance()->hip_memset_async_wrapper(
+            dst, 0, cnt));
 #endif
   }
 };

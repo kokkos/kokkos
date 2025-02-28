@@ -674,6 +674,30 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       for (iType i = loop_boundaries.start + threadIdx.x;
            i < loop_boundaries.end; i += blockDim.x) { closure(i); }
 
+      // Sync up all the threads that were in the vector
+      // * Everyone in the vector is actually done when the parallel_for returns
+      // * Any memory modifications made within the lambda are visible to other
+      // threads in the warp
+      //
+      // The context for the mask is that the CUDA backend sets
+      // Range parallel: grid=(ceil(n/B), 1, 1) and block=(1, B, 1)
+      // Team parallel: grid=(league_size, 1, 1) and
+      //                block=(vector_size, team_size, 1)
+      // For this, think of Range as a Team policy configuration where
+      // vector_size is 1
+      //
+      // blockDim.x                        : the size of the vector
+      // ((1 << blockDim.x) - 1)           : vector_size bits set to 1
+      // (32 / blockDim.x)                 : how many vectors are in each warp
+      // threadIdx.y                       : my team ID
+      // (threadIdx.y % (32 / blockDim.x)) : which vector within the warp I am
+      //                                   : in, e.g. if vector_size is 8, there
+      //                                   : are 4 vectors in a warp so this
+      //                                   : becomes (team ID % 4). This gets
+      //                                   : multiplied by vector_size to offset
+      //                                   : it to the start of the vector in
+      //                                   : the warp and then used to shift the
+      //                                   : vector_size 1 bits
       __syncwarp(blockDim.x == 32
                      ? 0xffffffff
                      : ((1 << blockDim.x) - 1)

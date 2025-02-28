@@ -103,6 +103,7 @@ AMD-MI300A:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export CTEST_BUILD_NAME="AMD-MI300A"
     - export HSA_XNACK=1
+    - export GTEST_FILTER="-hip.atomic_views_integral" #FIXME: Test has kernel with much longer than expected execution time (Issue #7757)
     - ctest -VV
       -D CDASH_MODEL=${CDASH_MODEL}
       -D GITHUB_PR_ID="${GITHUB_PR_ID}"

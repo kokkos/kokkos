@@ -47,6 +47,8 @@ struct GraphImpl<Kokkos::Cuda> {
   cudaGraph_t m_graph          = nullptr;
   cudaGraphExec_t m_graph_exec = nullptr;
 
+  bool m_graph_owning = false;
+
   using cuda_graph_flags_t = unsigned int;
 
   using node_details_t = GraphNodeBackendSpecificDetails<Kokkos::Cuda>;
@@ -89,16 +91,25 @@ struct GraphImpl<Kokkos::Cuda> {
           (m_execution_space.impl_internal_space_instance()
                ->cuda_graph_exec_destroy_wrapper(m_graph_exec)));
     }
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (m_execution_space.impl_internal_space_instance()
-             ->cuda_graph_destroy_wrapper(m_graph)));
+    if (m_graph_owning) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(
+          (m_execution_space.impl_internal_space_instance()
+               ->cuda_graph_destroy_wrapper(m_graph)));
+    }
   };
 
   explicit GraphImpl(Kokkos::Cuda arg_instance)
-      : m_execution_space(std::move(arg_instance)) {
+      : m_execution_space(std::move(arg_instance)), m_graph_owning(true) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (m_execution_space.impl_internal_space_instance()
              ->cuda_graph_create_wrapper(&m_graph, cuda_graph_flags_t{0})));
+  }
+
+  explicit GraphImpl(Kokkos::Cuda arg_instance, cudaGraph_t graph)
+      : m_execution_space(std::move(arg_instance)),
+        m_graph(graph),
+        m_graph_owning(false) {
+    KOKKOS_EXPECTS(graph != nullptr);
   }
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {

@@ -102,8 +102,8 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
   static int vector_length_max() {
     std::vector<size_t> sub_group_sizes =
         execution_space{}
-            .impl_internal_space_instance()
-            ->m_queue->get_device()
+            .sycl_queue()
+            .get_device()
             .template get_info<sycl::info::device::sub_group_sizes>();
     return *std::max_element(sub_group_sizes.begin(), sub_group_sizes.end());
   }
