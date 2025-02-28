@@ -861,6 +861,7 @@ struct FunctorAnalysis {
     static size_t team_shmem_size(F const&, int) { return 0; }
   };
 
+  // NOLINTBEGIN(bugprone-sizeof-expression)
   template <class F>
   struct DeduceTeamShmem<F, std::enable_if_t<0 < sizeof(&F::team_shmem_size)>> {
     enum : bool { value = true };
@@ -880,6 +881,7 @@ struct FunctorAnalysis {
       return f->shmem_size(team_size);
     }
   };
+  // NOLINTEND(bugprone-sizeof-expression)
 
   //----------------------------------------
 
