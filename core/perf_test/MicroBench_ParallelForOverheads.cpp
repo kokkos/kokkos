@@ -30,23 +30,23 @@ static void ParallelFor_NoOverhead(benchmark::State& state) {
 }
 BENCHMARK(ParallelFor_NoOverhead)->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadDefaultName(benchmark::State& state) {
+static void ParallelFor_Overhead_DefaultName(benchmark::State& state) {
   Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
   for (auto _ : state) {
     Kokkos::parallel_for(policy, KOKKOS_LAMBDA(int){});
   }
 }
-BENCHMARK(ParallelFor_OverheadDefaultName)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_DefaultName)->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadEmptyName(benchmark::State& state) {
+static void ParallelFor_Overhead_EmptyName(benchmark::State& state) {
   Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
   for (auto _ : state) {
     Kokkos::parallel_for("", policy, KOKKOS_LAMBDA(int){});
   }
 }
-BENCHMARK(ParallelFor_OverheadEmptyName)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_EmptyName)->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadLongName(benchmark::State& state) {
+static void ParallelFor_Overhead_LongName(benchmark::State& state) {
   std::string name = "Hello World a long string that does not fit god dammit";
   for (int i = 0; i < 15; ++i) {
     name += name;
@@ -56,13 +56,13 @@ static void ParallelFor_OverheadLongName(benchmark::State& state) {
     Kokkos::parallel_for(name, policy, KOKKOS_LAMBDA(int){});
   }
 }
-BENCHMARK(ParallelFor_OverheadLongName)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_LongName)->Unit(benchmark::kNanosecond);
 
 struct
     StupidTagWithALongNameAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA {
 };
 
-static void ParallelFor_OverheadLongTag(benchmark::State& state) {
+static void ParallelFor_Overhead_LongTag(benchmark::State& state) {
   std::string name = "Hello World a long string that does not fit god dammit";
   Kokkos::RangePolicy<
       Kokkos::DefaultExecutionSpace,
@@ -76,12 +76,12 @@ static void ParallelFor_OverheadLongTag(benchmark::State& state) {
             int){});
   }
 }
-BENCHMARK(ParallelFor_OverheadLongTag)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_LongTag)->Unit(benchmark::kNanosecond);
 
 struct Func {
-  void operator()(int) const {}
+  KOKKOS_FUNCTION void operator()(int) const {}
 };
-static void ParallelFor_OverheadFunctor(benchmark::State& state) {
+static void ParallelFor_Overhead_Functor(benchmark::State& state) {
   Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
   Func func;
   std::string name = "name";
@@ -89,17 +89,17 @@ static void ParallelFor_OverheadFunctor(benchmark::State& state) {
     Kokkos::parallel_for("name", policy, func);
   }
 }
-BENCHMARK(ParallelFor_OverheadFunctor)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_Functor)->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadPolicyCreation(benchmark::State& state) {
+static void ParallelFor_Overhead_PolicyCreation(benchmark::State& state) {
   std::string name = "name";
   for (auto _ : state) {
     Kokkos::parallel_for(name, 0, KOKKOS_LAMBDA(int){});
   }
 }
-BENCHMARK(ParallelFor_OverheadPolicyCreation)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_PolicyCreation)->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadSpaceSpecificFence(benchmark::State& state) {
+static void ParallelFor_Overhead_SpaceSpecificFence(benchmark::State& state) {
   Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
   std::string name = "name";
   Kokkos::DefaultExecutionSpace space;
@@ -108,9 +108,25 @@ static void ParallelFor_OverheadSpaceSpecificFence(benchmark::State& state) {
     space.fence();
   }
 }
-BENCHMARK(ParallelFor_OverheadSpaceSpecificFence)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_SpaceSpecificFence)
+    ->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadSpaceCreation(benchmark::State& state) {
+static void ParallelFor_Overhead_NamedSpaceSpecificFence(
+    benchmark::State& state) {
+  Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
+  std::string kernel_name = "kernel";
+  std::string fence_name  = "fence";
+  Kokkos::DefaultExecutionSpace space;
+  for (auto _ : state) {
+    Kokkos::parallel_for(kernel_name, policy, KOKKOS_LAMBDA(int){});
+    space.fence(fence_name);
+  }
+}
+BENCHMARK(ParallelFor_Overhead_NamedSpaceSpecificFence)
+    ->Unit(benchmark::kNanosecond);
+
+static void ParallelFor_Overhead_FenceWithSpaceCreation(
+    benchmark::State& state) {
   Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
   std::string name = "name";
   for (auto _ : state) {
@@ -118,9 +134,10 @@ static void ParallelFor_OverheadSpaceCreation(benchmark::State& state) {
     Kokkos::DefaultExecutionSpace{}.fence();
   }
 }
-BENCHMARK(ParallelFor_OverheadSpaceCreation)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_FenceWithSpaceCreation)
+    ->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadGlobalFence(benchmark::State& state) {
+static void ParallelFor_Overhead_GlobalFence(benchmark::State& state) {
   Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
   std::string name = "name";
   for (auto _ : state) {
@@ -128,12 +145,30 @@ static void ParallelFor_OverheadGlobalFence(benchmark::State& state) {
     Kokkos::fence();
   }
 }
-BENCHMARK(ParallelFor_OverheadGlobalFence)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_GlobalFence)->Unit(benchmark::kNanosecond);
 
-static void ParallelFor_OverheadFull(benchmark::State& state) {
+static void ParallelFor_Overhead_NamedGlobalFence(benchmark::State& state) {
+  Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace> policy(0, 0);
+  std::string kernel_name = "kernel";
+  std::string fence_name  = "fence";
+  for (auto _ : state) {
+    Kokkos::parallel_for(kernel_name, policy, KOKKOS_LAMBDA(int){});
+    Kokkos::fence(fence_name);
+  }
+}
+BENCHMARK(ParallelFor_Overhead_NamedGlobalFence)->Unit(benchmark::kNanosecond);
+
+static void ParallelFor_FenceOnly(benchmark::State& state) {
+  for (auto _ : state) {
+    Kokkos::fence();
+  }
+}
+BENCHMARK(ParallelFor_FenceOnly)->Unit(benchmark::kNanosecond);
+
+static void ParallelFor_Overhead_Full(benchmark::State& state) {
   for (auto _ : state) {
     Kokkos::parallel_for("", 0, KOKKOS_LAMBDA(int){});
     Kokkos::fence();
   }
 }
-BENCHMARK(ParallelFor_OverheadFull)->Unit(benchmark::kNanosecond);
+BENCHMARK(ParallelFor_Overhead_Full)->Unit(benchmark::kNanosecond);
