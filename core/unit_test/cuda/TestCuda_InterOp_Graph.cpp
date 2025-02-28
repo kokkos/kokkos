@@ -34,6 +34,8 @@ struct Increment {
   void operator()(const int) const { ++data(); }
 };
 
+// FIXME_GRAPH
+// NOLINTBEGIN(bugprone-unchecked-optional-access)
 class TEST_CATEGORY_FIXTURE(GraphInterOp) : public ::testing::Test {
  public:
   using execution_space = Kokkos::Cuda;
@@ -168,5 +170,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), construct_from_native) {
 
   ASSERT_EQ(data(), 1);
 }
+// NOLINTEND(bugprone-unchecked-optional-access)
 
 }  // namespace

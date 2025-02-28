@@ -48,23 +48,24 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   const FunctorType m_functor;
   const Policy m_policy;
 
-  ParallelFor()                              = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-
   template <class TagType>
-  inline __device__ std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  inline __device__ std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member i) const {
     m_functor(i);
   }
 
   template <class TagType>
-  inline __device__ std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  inline __device__ std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member i) const {
     m_functor(TagType(), i);
   }
 
  public:
   using functor_type = FunctorType;
+
+  ParallelFor()                              = delete;
+  ParallelFor(const ParallelFor&)            = default;
+  ParallelFor& operator=(const ParallelFor&) = delete;
 
   Policy const& get_policy() const { return m_policy; }
 
@@ -175,13 +176,13 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
   // Make the exec_range calls call to Reduce::DeviceIterateTile
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update) const {
     m_functor_reducer.get_functor()(i, update);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update) const {
     m_functor_reducer.get_functor()(TagType(), i, update);
   }
@@ -438,13 +439,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 #endif
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(i, update, final_result);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(TagType(), i, update, final_result);
   }
@@ -757,13 +758,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 #endif
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(i, update, final_result);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(TagType(), i, update, final_result);
   }
@@ -1015,7 +1016,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         if (!m_result_ptr_device_accessible)
           DeepCopy<HostSpace, CudaSpace, Cuda>(
               m_policy.space(), m_result_ptr,
-              m_scratch_space + (grid_x - 1) * size / sizeof(word_size_type),
+              m_scratch_space + (static_cast<ptrdiff_t>(grid_x) - 1) * size /
+                                    sizeof(word_size_type),
               size);
       }
     }

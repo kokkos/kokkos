@@ -304,11 +304,10 @@ void CudaInternal::initialize(cudaStream_t stream) {
   {
     // Maximum number of warps,
     // at most one warp per thread in a warp for reduction.
-    auto const maxWarpCount = std::min<unsigned>(
-        m_deviceProp.maxThreadsPerBlock / CudaTraits::WarpSize,
-        CudaTraits::WarpSize);
-    unsigned const reduce_block_count =
-        maxWarpCount * Impl::CudaTraits::WarpSize;
+    auto const maxWarpCount =
+        std::min<size_t>(m_deviceProp.maxThreadsPerBlock / CudaTraits::WarpSize,
+                         CudaTraits::WarpSize);
+    size_t const reduce_block_count = maxWarpCount * Impl::CudaTraits::WarpSize;
 
     (void)scratch_unified(16 * sizeof(size_type));
     (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));

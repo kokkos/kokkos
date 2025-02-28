@@ -385,7 +385,7 @@ struct CudaParallelLaunchKernelInvoker<
                         experimental_contains_desired_occupancy) {
         int desired_occupancy =
             driver.get_policy().impl_get_desired_occupancy().value();
-        size_t block_size = block.x * block.y * block.z;
+        size_t block_size = static_cast<size_t>(block.x) * block.y * block.z;
         Impl::configure_shmem_preference<DriverType, LaunchBounds>(
             cuda_instance->m_cudaDev, base_t::get_kernel_func(),
             cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
@@ -486,7 +486,7 @@ struct CudaParallelLaunchKernelInvoker<
                         experimental_contains_desired_occupancy) {
         int desired_occupancy =
             driver.get_policy().impl_get_desired_occupancy().value();
-        size_t block_size = block.x * block.y * block.z;
+        size_t block_size = static_cast<size_t>(block.x) * block.y * block.z;
         Impl::configure_shmem_preference<DriverType, LaunchBounds>(
             cuda_instance->m_cudaDev, base_t::get_kernel_func(),
             cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
@@ -670,7 +670,7 @@ struct CudaParallelLaunchImpl<
                         experimental_contains_desired_occupancy) {
         int desired_occupancy =
             driver.get_policy().impl_get_desired_occupancy().value();
-        size_t block_size = block.x * block.y * block.z;
+        size_t block_size = static_cast<size_t>(block.x) * block.y * block.z;
         Impl::configure_shmem_preference<
             DriverType,
             Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>>(
