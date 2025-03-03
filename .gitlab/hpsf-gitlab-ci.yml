@@ -140,3 +140,35 @@ AMD-MI300A:
       - build/result_mi300a.xml
     reports:
       junit: build/result_mi300a.xml
+
+NVIDIA-GRACE-GRACE:
+  extends: .common-setup
+  tags: [grace, hpsf-neoverse_v2, hpsf-aarch64]
+  image: ubuntu:latest
+  script:
+    - apt-get update && apt-get install -y cmake git g++
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=g++"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_OPENMP=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_ARMV9_GRACE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export CTEST_BUILD_NAME="NVIDIA-GRACE-GRACE"
+    - ctest -VV
+        -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_grace_grace.xml
+        -S CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+  artifacts:
+    when: always
+    paths:
+      - build/result_grace_grace.xml
+    reports:
+      junit: build/result_grace_grace.xml
+
