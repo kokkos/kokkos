@@ -294,7 +294,7 @@ OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
   using index_type = typename InputIteratorType::difference_type;
   using value_type =
       std::remove_const_t<typename InputIteratorType::value_type>;
-  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
+  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor;
   using func_type     = ExeSpaceTransformInclusiveScanNoInitValueFunctor<
       ExecutionSpace, index_type, value_type, InputIteratorType,
       OutputIteratorType, BinaryOpType, unary_op_type>;
@@ -334,7 +334,7 @@ OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
 
   // aliases
   using index_type    = typename InputIteratorType::difference_type;
-  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
+  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor;
   using func_type     = ExeSpaceTransformInclusiveScanWithInitValueFunctor<
       ExecutionSpace, index_type, ValueType, InputIteratorType,
       OutputIteratorType, BinaryOpType, unary_op_type>;
@@ -427,7 +427,7 @@ KOKKOS_FUNCTION OutputIteratorType inclusive_scan_custom_binary_op_team_impl(
 
   // aliases
   using exe_space     = typename TeamHandleType::execution_space;
-  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<value_type>;
+  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor;
   using func_type     = TeamTransformInclusiveScanNoInitValueFunctor<
       exe_space, value_type, InputIteratorType, OutputIteratorType,
       BinaryOpType, unary_op_type>;
@@ -468,7 +468,7 @@ KOKKOS_FUNCTION OutputIteratorType inclusive_scan_custom_binary_op_team_impl(
 
   // aliases
   using exe_space     = typename TeamHandleType::execution_space;
-  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor<ValueType>;
+  using unary_op_type = StdNumericScanIdentityReferenceUnaryFunctor;
   using func_type     = TeamTransformInclusiveScanWithInitValueFunctor<
       exe_space, ValueType, InputIteratorType, OutputIteratorType, BinaryOpType,
       unary_op_type>;

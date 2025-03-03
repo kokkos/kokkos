@@ -26,6 +26,7 @@
 
 //------------------------------------------------------------------------------
 
+// NOLINTBEGIN(bugprone-reserved-identifier)
 template <class...>
 struct _kokkos____________________static_test_failure_____;
 
@@ -77,6 +78,7 @@ struct static_expect_same {
           Expected, _kokkos__________actual_type_was__, Actual>,
       Expected, Actual>::type;
 };
+// NOLINTEND(bugprone-reserved-identifier)
 
 //------------------------------------------------------------------------------
 
@@ -2193,12 +2195,14 @@ struct get_view_type<Kokkos::View<T, Args...>> {
   using type = T;
 };
 
+// NOLINTBEGIN(bugprone-reserved-identifier)
 template <class T>
 struct
     ___________________________________TYPE_DISPLAY________________________________________;
 #define TYPE_DISPLAY(...)                                                                           \
   typename ___________________________________TYPE_DISPLAY________________________________________< \
       __VA_ARGS__>::type notdefined;
+// NOLINTEND(bugprone-reserved-identifier)
 
 template <class Space, class Layout>
 struct TestSubviewStaticSizes {

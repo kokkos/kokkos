@@ -42,6 +42,9 @@ class GraphImpl<Kokkos::SYCL> {
       GraphNodeImpl<Kokkos::SYCL, aggregate_impl_t,
                     Kokkos::Experimental::TypeErasedTag>;
 
+  using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::modifiable>;
+
   // Not movable or copyable; it spends its whole life as a shared_ptr in the
   // Graph object.
   GraphImpl()                            = delete;
@@ -53,6 +56,8 @@ class GraphImpl<Kokkos::SYCL> {
   ~GraphImpl();
 
   explicit GraphImpl(Kokkos::SYCL instance);
+
+  GraphImpl(Kokkos::SYCL instance, native_graph_t native_graph);
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr);
 
@@ -83,9 +88,7 @@ class GraphImpl<Kokkos::SYCL> {
 
  private:
   Kokkos::SYCL m_execution_space;
-  sycl::ext::oneapi::experimental::command_graph<
-      sycl::ext::oneapi::experimental::graph_state::modifiable>
-      m_graph;
+  native_graph_t m_graph;
   std::optional<sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::executable>>
       m_graph_exec;
@@ -101,6 +104,11 @@ inline GraphImpl<Kokkos::SYCL>::GraphImpl(Kokkos::SYCL instance)
     : m_execution_space(std::move(instance)),
       m_graph(m_execution_space.sycl_queue().get_context(),
               m_execution_space.sycl_queue().get_device()) {}
+
+inline GraphImpl<Kokkos::SYCL>::GraphImpl(Kokkos::SYCL instance,
+                                          native_graph_t native_graph)
+    : m_execution_space(std::move(instance)),
+      m_graph(std::move(native_graph)) {}
 
 inline void GraphImpl<Kokkos::SYCL>::add_node(
     std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {

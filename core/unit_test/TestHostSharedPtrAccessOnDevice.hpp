@@ -237,7 +237,7 @@ TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
   host_shared_ptr_test_reference_counting<typename TEST_EXECSPACE::memory_space,
                                           Kokkos::HostSpace>();
 #ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>)
     host_shared_ptr_test_reference_counting<Kokkos::CudaUVMSpace,
                                             Kokkos::CudaUVMSpace>();
 #endif

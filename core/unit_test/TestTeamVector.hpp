@@ -1019,7 +1019,7 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // GPU) See https://github.com/kokkos/kokkos/issues/1513
 // For Intel GPUs, the requested workgroup size is just too large here.
 #if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>)
 #elif defined(KOKKOS_ENABLE_SYCL)
   if (!std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
 #endif

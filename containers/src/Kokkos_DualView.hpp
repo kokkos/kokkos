@@ -209,12 +209,18 @@ class DualView : public ViewTraits<DataType, Properties...> {
   t_modified_flags modified_flags;
 
  public:
-  // does the DualView have only one device
+  // does the DualView only reference one View
   static constexpr bool impl_dualview_stores_single_view =
-      std::is_same_v<typename t_dev::device_type, typename t_host::device_type>;
+      SpaceAccessibility<Kokkos::HostSpace,
+                         typename t_dev::memory_space>::accessible;
 
- public:
   //@}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+ public:
+#else
+ private:
+#endif
 
   // Moved this specifically after modified_flags to resolve an alignment issue
   // on MSVC/NVCC
@@ -224,6 +230,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   t_host h_view;
   //@}
 
+ public:
   //! \name Constructors
   //@{
 
@@ -421,11 +428,19 @@ class DualView : public ViewTraits<DataType, Properties...> {
     }
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_INLINE_FUNCTION
   t_host view_host() const { return h_view; }
 
   KOKKOS_INLINE_FUNCTION
   t_dev view_device() const { return d_view; }
+#else
+  KOKKOS_INLINE_FUNCTION
+  const t_host& view_host() const { return h_view; }
+
+  KOKKOS_INLINE_FUNCTION
+  const t_dev& view_device() const { return d_view; }
+#endif
 
   KOKKOS_INLINE_FUNCTION constexpr bool is_allocated() const {
     return (d_view.is_allocated() && h_view.is_allocated());
@@ -586,24 +601,30 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   template <class Device>
   void sync() {
-    if (impl_dualview_stores_single_view) return;
-
-    if constexpr (std::is_same_v<typename traits::data_type,
-                                 typename traits::non_const_data_type>)
-      sync_impl<Device>(std::true_type{});
-    else
-      sync_impl<Device>(std::false_type{});
+    if constexpr (impl_dualview_stores_single_view) {
+      Kokkos::fence(
+          "Kokkos::DualView: fence for sync with host-accessible memory space");
+      return;
+    } else {
+      if constexpr (std::is_same_v<typename traits::data_type,
+                                   typename traits::non_const_data_type>)
+        sync_impl<Device>(std::true_type{});
+      else
+        sync_impl<Device>(std::false_type{});
+    }
   }
 
   template <class Device, class ExecutionSpace>
-  void sync(const ExecutionSpace& exec) {
-    if (impl_dualview_stores_single_view) return;
-
-    if constexpr (std::is_same_v<typename traits::data_type,
-                                 typename traits::non_const_data_type>)
-      sync_impl<Device>(std::true_type{}, exec);
-    else
-      sync_impl<Device>(std::false_type{}, exec);
+  void sync([[maybe_unused]] const ExecutionSpace& exec) {
+    if constexpr (impl_dualview_stores_single_view)
+      return;
+    else {
+      if constexpr (std::is_same_v<typename traits::data_type,
+                                   typename traits::non_const_data_type>)
+        sync_impl<Device>(std::true_type{}, exec);
+      else
+        sync_impl<Device>(std::false_type{}, exec);
+    }
   }
 
   // deliberately passing args by cref as they're used multiple times
@@ -655,10 +676,21 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   template <class ExecSpace>
-  void sync_host(const ExecSpace& exec) {
-    sync_host_impl(exec);
+  void sync_host([[maybe_unused]] const ExecSpace& exec) {
+    if constexpr (impl_dualview_stores_single_view)
+      return;
+    else
+      sync_host_impl(exec);
   }
-  void sync_host() { sync_host_impl(); }
+  void sync_host() {
+    if constexpr (impl_dualview_stores_single_view) {
+      Kokkos::fence(
+          "Kokkos::DualView: fence for sync_host with host-accessible memory "
+          "space");
+      return;
+    } else
+      sync_host_impl();
+  }
 
   // deliberately passing args by cref as they're used multiple times
   template <typename... Args>
@@ -686,10 +718,21 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   template <class ExecSpace>
-  void sync_device(const ExecSpace& exec) {
-    sync_device_impl(exec);
+  void sync_device([[maybe_unused]] const ExecSpace& exec) {
+    if constexpr (impl_dualview_stores_single_view)
+      return;
+    else
+      sync_device_impl(exec);
   }
-  void sync_device() { sync_device_impl(); }
+  void sync_device() {
+    if constexpr (impl_dualview_stores_single_view) {
+      Kokkos::fence(
+          "Kokkos::DualView: fence for sync_device with host-accessible memory "
+          "space");
+      return;
+    } else
+      sync_device_impl();
+  }
 
   template <class Device>
   bool need_sync() const {
@@ -745,55 +788,35 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// data as modified.
   template <class Device>
   void modify() {
-    if (impl_dualview_stores_single_view) return;
+    if constexpr (impl_dualview_stores_single_view) {
+      return;
+    } else {
+      if (modified_flags.data() == nullptr) {
+        modified_flags = t_modified_flags("DualView::modified_flags");
+      }
 
-    if (modified_flags.data() == nullptr) {
-      modified_flags = t_modified_flags("DualView::modified_flags");
-    }
+      int dev = get_device_side<Device>();
 
-    int dev = get_device_side<Device>();
+      if (dev == 1) {  // if Device is the same as DualView's device type
+        // Increment the device's modified count.
+        modified_flags(1) =
+            (modified_flags(1) > modified_flags(0) ? modified_flags(1)
+                                                   : modified_flags(0)) +
+            1;
+        impl_report_device_modification();
+      }
+      if (dev == 0) {  // hopefully Device is the same as DualView's host type
+        // Increment the host's modified count.
+        modified_flags(0) =
+            (modified_flags(1) > modified_flags(0) ? modified_flags(1)
+                                                   : modified_flags(0)) +
+            1;
+        impl_report_host_modification();
+      }
 
-    if (dev == 1) {  // if Device is the same as DualView's device type
-      // Increment the device's modified count.
-      modified_flags(1) =
-          (modified_flags(1) > modified_flags(0) ? modified_flags(1)
-                                                 : modified_flags(0)) +
-          1;
-      impl_report_device_modification();
-    }
-    if (dev == 0) {  // hopefully Device is the same as DualView's host type
-      // Increment the host's modified count.
-      modified_flags(0) =
-          (modified_flags(1) > modified_flags(0) ? modified_flags(1)
-                                                 : modified_flags(0)) +
-          1;
-      impl_report_host_modification();
-    }
-
-#ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
-    if (modified_flags(0) && modified_flags(1)) {
-      std::string msg = "Kokkos::DualView::modify ERROR: ";
-      msg += "Concurrent modification of host and device views ";
-      msg += "in DualView \"";
-      msg += d_view.label();
-      msg += "\"\n";
-      Kokkos::abort(msg.c_str());
-    }
-#endif
-  }
-
-  inline void modify_host() {
-    if (impl_dualview_stores_single_view) return;
-
-    if (modified_flags.data() != nullptr) {
-      modified_flags(0) =
-          (modified_flags(1) > modified_flags(0) ? modified_flags(1)
-                                                 : modified_flags(0)) +
-          1;
-      impl_report_host_modification();
 #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
       if (modified_flags(0) && modified_flags(1)) {
-        std::string msg = "Kokkos::DualView::modify_host ERROR: ";
+        std::string msg = "Kokkos::DualView::modify ERROR: ";
         msg += "Concurrent modification of host and device views ";
         msg += "in DualView \"";
         msg += d_view.label();
@@ -801,28 +824,54 @@ class DualView : public ViewTraits<DataType, Properties...> {
         Kokkos::abort(msg.c_str());
       }
 #endif
+    }
+  }
+
+  inline void modify_host() {
+    if constexpr (impl_dualview_stores_single_view) {
+      return;
+    } else {
+      if (modified_flags.data() != nullptr) {
+        modified_flags(0) =
+            (modified_flags(1) > modified_flags(0) ? modified_flags(1)
+                                                   : modified_flags(0)) +
+            1;
+        impl_report_host_modification();
+#ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
+        if (modified_flags(0) && modified_flags(1)) {
+          std::string msg = "Kokkos::DualView::modify_host ERROR: ";
+          msg += "Concurrent modification of host and device views ";
+          msg += "in DualView \"";
+          msg += d_view.label();
+          msg += "\"\n";
+          Kokkos::abort(msg.c_str());
+        }
+#endif
+      }
     }
   }
 
   inline void modify_device() {
-    if (impl_dualview_stores_single_view) return;
-
-    if (modified_flags.data() != nullptr) {
-      modified_flags(1) =
-          (modified_flags(1) > modified_flags(0) ? modified_flags(1)
-                                                 : modified_flags(0)) +
-          1;
-      impl_report_device_modification();
+    if constexpr (impl_dualview_stores_single_view) {
+      return;
+    } else {
+      if (modified_flags.data() != nullptr) {
+        modified_flags(1) =
+            (modified_flags(1) > modified_flags(0) ? modified_flags(1)
+                                                   : modified_flags(0)) +
+            1;
+        impl_report_device_modification();
 #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
-      if (modified_flags(0) && modified_flags(1)) {
-        std::string msg = "Kokkos::DualView::modify_device ERROR: ";
-        msg += "Concurrent modification of host and device views ";
-        msg += "in DualView \"";
-        msg += d_view.label();
-        msg += "\"\n";
-        Kokkos::abort(msg.c_str());
-      }
+        if (modified_flags(0) && modified_flags(1)) {
+          std::string msg = "Kokkos::DualView::modify_device ERROR: ";
+          msg += "Concurrent modification of host and device views ";
+          msg += "in DualView \"";
+          msg += d_view.label();
+          msg += "\"\n";
+          Kokkos::abort(msg.c_str());
+        }
 #endif
+      }
     }
   }
 
@@ -1186,10 +1235,10 @@ namespace Kokkos {
 template <class DT, class... DP, class ST, class... SP>
 void deep_copy(DualView<DT, DP...>& dst, const DualView<ST, SP...>& src) {
   if (src.need_sync_device()) {
-    deep_copy(dst.h_view, src.h_view);
+    deep_copy(dst.view_host(), src.view_host());
     dst.modify_host();
   } else {
-    deep_copy(dst.d_view, src.d_view);
+    deep_copy(dst.view_device(), src.view_device());
     dst.modify_device();
   }
 }
@@ -1198,10 +1247,10 @@ template <class ExecutionSpace, class DT, class... DP, class ST, class... SP>
 void deep_copy(const ExecutionSpace& exec, DualView<DT, DP...>& dst,
                const DualView<ST, SP...>& src) {
   if (src.need_sync_device()) {
-    deep_copy(exec, dst.h_view, src.h_view);
+    deep_copy(exec, dst.view_host(), src.view_host());
     dst.modify_host();
   } else {
-    deep_copy(exec, dst.d_view, src.d_view);
+    deep_copy(exec, dst.view_device(), src.view_device());
     dst.modify_device();
   }
 }

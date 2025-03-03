@@ -321,6 +321,16 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_reduce"> {{{2
 
+  // Equivalent to std::get<I>(std::tuple) but callable on the device.
+  template <bool B, class T1, class T2>
+  static KOKKOS_FUNCTION std::conditional_t<B, T1&&, T2&&>
+  impl_forwarding_switch(T1&& v1, T2&& v2) {
+    if constexpr (B)
+      return static_cast<T1&&>(v1);
+    else
+      return static_cast<T2&&>(v2);
+  }
+
   template <
       class Policy, class Functor, class ReturnType,
       std::enable_if_t<
@@ -410,15 +420,18 @@ class GraphNodeRef {
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
 
-    using reducer_selector =
-        Kokkos::Impl::if_c<std::is_same_v<InvalidType, passed_reducer_type>,
-                           functor_type, passed_reducer_type>;
+    constexpr bool passed_reducer_type_is_invalid =
+        std::is_same_v<InvalidType, passed_reducer_type>;
+    using TheReducerType =
+        std::conditional_t<passed_reducer_type_is_invalid, functor_type,
+                           passed_reducer_type>;
+
     using analysis = Kokkos::Impl::FunctorAnalysis<
-        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
-        typename reducer_selector::type,
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, TheReducerType,
         typename return_value_adapter::value_type>;
     typename analysis::Reducer final_reducer(
-        reducer_selector::select(functor, return_value));
+        impl_forwarding_switch<passed_reducer_type_is_invalid>(functor,
+                                                               return_value));
     Kokkos::Impl::CombinedFunctorReducer<functor_type,
                                          typename analysis::Reducer>
         functor_reducer(functor, final_reducer);
