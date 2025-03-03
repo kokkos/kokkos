@@ -121,8 +121,8 @@ AMD-MI300A:
 
 NVIDIA-GRACE-GRACE:
   extends: .common-setup
-  tags: [uo, aarch64, cpu, grace, neoverse_v2]
-  image: nvcr.io/nvidia/ai-workbench/python-cuda122:1.0.6
+  tags: [grace, hpsf-neoverse_v2, hpsf-aarch64]
+  image: ubuntu:latest
   script:
     - apt-get update && apt-get install -y cmake git g++
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
