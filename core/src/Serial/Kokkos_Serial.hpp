@@ -147,21 +147,20 @@ class Serial {
     auto fence = []() {};
 #else
     auto fence = []() {
-          std::lock_guard<std::mutex> lock_all_instances(
-              Impl::SerialInternal::all_instances_mutex);
-          for (auto* instance_ptr : Impl::SerialInternal::all_instances) {
-            std::lock_guard<std::mutex> lock_instance(
-                instance_ptr->m_instance_mutex);
-          }
-        };
+      std::lock_guard<std::mutex> lock_all_instances(
+          Impl::SerialInternal::all_instances_mutex);
+      for (auto* instance_ptr : Impl::SerialInternal::all_instances) {
+        std::lock_guard<std::mutex> lock_instance(
+            instance_ptr->m_instance_mutex);
+      }
+    };
 #endif
     if (Kokkos::Tools::profileLibraryLoaded()) {
       Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
           name,
           Kokkos::Tools::Experimental::SpecialSynchronizationCases::
               GlobalDeviceSynchronization,
-              fence
-          );  // TODO: correct device ID
+          fence);  // TODO: correct device ID
     } else {
       fence();
     }
@@ -176,9 +175,9 @@ class Serial {
     auto fence = []() {};
 #else
     auto fence = [this]() {
-          auto* internal_instance = this->impl_internal_space_instance();
-          std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
-        };
+      auto* internal_instance = this->impl_internal_space_instance();
+      std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
+    };
 #endif
     if (Kokkos::Tools::profileLibraryLoaded()) {
       Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
