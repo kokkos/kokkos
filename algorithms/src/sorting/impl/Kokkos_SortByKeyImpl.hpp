@@ -47,6 +47,7 @@
 #ifdef _CubLog
 #undef _CubLog
 #endif
+// NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define _CubLog
 #include <thrust/device_ptr.h>
 #include <thrust/sort.h>

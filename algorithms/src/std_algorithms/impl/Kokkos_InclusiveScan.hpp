@@ -53,6 +53,7 @@
 #ifdef _CubLog
 #undef _CubLog
 #endif
+// NOLINTNEXTLINE(bugprone-reserved-identifier)
 #define _CubLog
 #include <thrust/distance.h>
 #include <thrust/scan.h>
