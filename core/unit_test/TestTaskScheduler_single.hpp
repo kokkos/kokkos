@@ -46,7 +46,7 @@ TEST(TEST_CATEGORY,
 
 TEST(TEST_CATEGORY,
      KOKKOS_TEST_WITH_SUFFIX(task_multiple_depend, TEST_SCHEDULER_SUFFIX)) {
-#if defined(__clang__) && defined(__CUDA__) && \
+#if defined(KOKKOS_COMPILER_CLANG) && \
     defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     GTEST_SKIP() << "skipping because test fails with Clang NVPTX + RDC";
