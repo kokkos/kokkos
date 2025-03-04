@@ -679,6 +679,8 @@ void test_reduction_with_large_view() {
   Kokkos::View<int*, TEST_EXECSPACE::memory_space> v(
       Kokkos::view_alloc(Kokkos::WithoutInitializing, "v"), size);
 
+  // We want to explicitly test that using a parallel_for for filling the View
+  // works
   Kokkos::parallel_for(
       Kokkos::RangePolicy<ExecutionSpace,
                           Kokkos::IndexType<long long unsigned>>(0, size),
@@ -687,8 +689,8 @@ void test_reduction_with_large_view() {
   Kokkos::parallel_reduce(
       Kokkos::RangePolicy<ExecutionSpace,
                           Kokkos::IndexType<long long unsigned>>(0, size),
-      KOKKOS_LAMBDA(long long unsigned i, long long unsigned& update) {
-        update += v(i);
+      KOKKOS_LAMBDA(long long unsigned i, long long unsigned& partial_sum) {
+        partial_sum += v(i);
       },
       sum);
   ASSERT_EQ(sum, size);
