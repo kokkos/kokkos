@@ -21,7 +21,7 @@ jobs:
       with:
         cuda: '12.4.1'
         method: 'network'
-        sub-packages: '["nvcc","cudart","thrust"]'
+        sub-packages: '["nvcc","cudart","thrust","visual_studio_integration"]'
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: configure
       shell: bash
