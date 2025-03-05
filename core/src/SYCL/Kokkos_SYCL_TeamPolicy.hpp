@@ -18,6 +18,7 @@
 #define KOKKOS_SYCL_TEAM_POLICY_HPP
 
 #include <SYCL/Kokkos_SYCL_Team.hpp>
+#include <Kokkos_BitManipulation.hpp>
 
 #include <vector>
 
@@ -108,22 +109,6 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
     return *std::max_element(sub_group_sizes.begin(), sub_group_sizes.end());
   }
 
- private:
-  static int verify_requested_vector_length(int requested_vector_length) {
-    int test_vector_length =
-        std::min(requested_vector_length, vector_length_max());
-
-    // Allow only power-of-two vector_length
-    if (!(is_integral_power_of_two(test_vector_length))) {
-      int test_pow2 = 1;
-      while (test_pow2 < test_vector_length) test_pow2 <<= 1;
-      test_vector_length = test_pow2 >> 1;
-    }
-
-    return test_vector_length;
-  }
-
- public:
   static int scratch_size_max(int level) {
     return level == 0 ? 1024 * 32
                       :           // FIXME_SYCL arbitrarily setting this to 32kB
@@ -170,10 +155,10 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
       : m_space(space_),
         m_league_size(league_size_),
         m_team_size(team_size_request),
-        m_vector_length(
-            (vector_length_request > 0)
-                ? verify_requested_vector_length(vector_length_request)
-                : (verify_requested_vector_length(1))),
+        m_vector_length((vector_length_request > 0)
+                            ? Kokkos::bit_floor(
+                                  static_cast<unsigned>(vector_length_request))
+                            : 1),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(vector_length_max()),
