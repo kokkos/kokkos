@@ -488,6 +488,7 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
