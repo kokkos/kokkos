@@ -12,7 +12,6 @@ Checks: >
   -bugprone-narrowing-conversions,
   -bugprone-non-zero-enum-to-bool-conversion,
   -bugprone-signed-char-misuse,
-  -bugprone-sizeof-expression,
   -bugprone-suspicious-include,
   -bugprone-suspicious-memory-comparison,
   -bugprone-unhandled-exception-at-new,
