@@ -92,10 +92,9 @@ static_assert((0 < int(KOKKOS_MEMORY_ALIGNMENT)) &&
  *  Enable compatibility of views from different devices with static stride.
  *  Use compiler flag to enable overwrites.
  */
-enum : unsigned {
-  MEMORY_ALIGNMENT           = KOKKOS_MEMORY_ALIGNMENT,
-  MEMORY_ALIGNMENT_THRESHOLD = KOKKOS_MEMORY_ALIGNMENT_THRESHOLD
-};
+static constexpr unsigned MEMORY_ALIGNMENT = KOKKOS_MEMORY_ALIGNMENT;
+static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD =
+    KOKKOS_MEMORY_ALIGNMENT_THRESHOLD;
 
 // ------------------------------------------------------------------ //
 //  this identifies the default memory trait
