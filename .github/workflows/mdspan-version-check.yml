@@ -2,6 +2,8 @@ name: mdspan version check
 
 on:
   workflow_call:
+    paths:
+      - 'tpls/mdspan/**'
 
 permissions: read-all
 
