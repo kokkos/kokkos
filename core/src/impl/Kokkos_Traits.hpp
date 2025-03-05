@@ -142,18 +142,6 @@ constexpr unsigned integral_power_of_two(const size_t N) {
                                      : ~0u;
 }
 
-/** \brief  If power of two then return power,
- *          otherwise return ~0u.
- */
-KOKKOS_FORCEINLINE_FUNCTION
-unsigned power_of_two_if_valid(const unsigned N) {
-  unsigned p = ~0u;
-  if (is_integral_power_of_two(N)) {
-    p = bit_scan_forward(N);
-  }
-  return p;
-}
-
 //----------------------------------------------------------------------------
 
 template <typename T, T v, bool NonZero = (v != T(0))>
