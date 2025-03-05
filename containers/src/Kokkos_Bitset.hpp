@@ -22,6 +22,7 @@
 #endif
 
 #include <Kokkos_Core.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Functional.hpp>
 
 #include <impl/Kokkos_Bitset_impl.hpp>
@@ -65,7 +66,8 @@ class Bitset {
   static constexpr unsigned block_size = sizeof(unsigned) * CHAR_BIT;
   static constexpr unsigned block_mask = block_size - 1u;
   static constexpr unsigned block_shift =
-      Kokkos::Impl::integral_power_of_two(block_size);
+      Kokkos::has_single_bit(block_size) ? Kokkos::bit_width(block_size) - 1
+                                         : ~0u;
 
   //! Type of @ref m_blocks.
   using block_view_type = View<unsigned*, Device, MemoryTraits<RandomAccess>>;
@@ -324,7 +326,8 @@ class ConstBitset {
   static constexpr unsigned block_size = sizeof(unsigned) * CHAR_BIT;
   static constexpr unsigned block_mask = block_size - 1u;
   static constexpr unsigned block_shift =
-      Kokkos::Impl::integral_power_of_two(block_size);
+      Kokkos::has_single_bit(block_size) ? Kokkos::bit_width(block_size) - 1
+                                         : ~0u;
 
  public:
   KOKKOS_FUNCTION
