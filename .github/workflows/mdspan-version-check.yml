@@ -1,7 +1,12 @@
 name: mdspan version check
 
 on:
-  workflow_call:
+  push:
+    paths:
+      - 'tpls/mdspan/**'
+    branches:
+      - develop
+  pull_request:
     paths:
       - 'tpls/mdspan/**'
 
