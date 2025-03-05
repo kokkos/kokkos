@@ -13,15 +13,13 @@ jobs:
   windows-cuda:
     # Cuda build on Windows
     name: Windows Cuda
-    runs-on: windows-2022
+    runs-on: windows-2019
 
     steps:
     - uses: Jimver/cuda-toolkit@8022558310ea543e35132143092835585f60e628 # v0.2.21
       id: cuda-toolkit
       with:
         cuda: '12.4.1'
-        method: 'network'
-        sub-packages: '["nvcc","cudart","thrust"]'
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
     - name: configure
       shell: bash
@@ -29,7 +27,7 @@ jobs:
         mkdir build
         mkdir c:/project
         cd build
-        cmake -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON -DCMAKE_CXX_COMPILER="${CUDA_PATH}/bin/nvcc" ..
+        cmake -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON ..
     - name: build library
       shell: bash
       run: |
