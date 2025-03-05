@@ -63,7 +63,7 @@ static_assert(false,
   }
 #endif
 
-#define KOKKOS_IMPL_NO_UNIQUE_ADDRESS _MDSPAN_NO_UNIQUE_ADDRESS
+#define KOKKOS_IMPL_NO_UNIQUE_ADDRESS MDSPAN_IMPL_NO_UNIQUE_ADDRESS
 namespace Kokkos::Impl {
 
 constexpr inline struct SubViewCtorTag {

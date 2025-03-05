@@ -134,6 +134,7 @@ struct ObjectWithVLAEmulation {
   static /* constexpr */ size_t required_allocation_size(
       vla_entry_count_type num_vla_entries) {
     KOKKOS_EXPECTS(num_vla_entries >= 0);
+    // NOLINTNEXTLINE(bugprone-sizeof-expression)
     return sizeof(Derived) + num_vla_entries * sizeof(VLAValueType);
   }
 
