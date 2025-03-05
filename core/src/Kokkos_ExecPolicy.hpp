@@ -26,6 +26,7 @@ static_assert(false,
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_TypeInfo.hpp>
 #ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
@@ -212,7 +213,7 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     if (concurrency == 0) concurrency = 1;
 
     if (m_granularity > 0) {
-      if (!Impl::is_integral_power_of_two(m_granularity))
+      if (!Kokkos::has_single_bit(static_cast<unsigned>(m_granularity)))
         Kokkos::abort("RangePolicy blocking granularity must be power of two");
     }
 
