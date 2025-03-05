@@ -127,12 +127,6 @@ constexpr bool is_integral_power_of_two(const size_t N) {
   return (0 < N) && (0 == (N & (N - 1)));
 }
 
-/**\brief  Return integral 'k' such that N = 2^k, assuming valid.  */
-KOKKOS_INLINE_FUNCTION
-constexpr unsigned integral_power_of_two_assume_valid(const size_t N) {
-  return N == 1 ? 0 : 1 + integral_power_of_two_assume_valid(N >> 1);
-}
-
 //----------------------------------------------------------------------------
 
 template <typename T, T v, bool NonZero = (v != T(0))>
