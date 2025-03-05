@@ -23,6 +23,9 @@ jobs:
   cmake-format-check:
     uses: ./.github/workflows/cmake-format-check.yml
 
+  mdspan-version-check:
+    uses: ./.github/workflows/mdspan-version-check.yml
+
   initial-check:
     uses: ./.github/workflows/continuous-integration-smoketest.yml
 
