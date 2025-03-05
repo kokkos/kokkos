@@ -584,6 +584,7 @@ __device__ bool cuda_single_inter_block_reduce_scan2(
         "blockDim");
   }
 
+  // NOLINTNEXTLINE(bugprone-sizeof-expression)
   const integral_nonzero_constant<
       size_type, std::is_pointer_v<typename FunctorType::reference_type>
                      ? 0
