@@ -93,8 +93,8 @@ struct SpaceAwareAccessor {
 // We either compile with our custom mdspan impl
 // in which case we discover inside it whether no_unique_address
 // works, or we use C++23 in which case it better be available
-#ifdef _MDSPAN_NO_UNIQUE_ADDRESS
-  _MDSPAN_NO_UNIQUE_ADDRESS
+#ifdef MDSPAN_IMPL_NO_UNIQUE_ADDRESS
+  MDSPAN_IMPL_NO_UNIQUE_ADDRESS
 #else
   [[no_unique_address]]
 #endif
@@ -158,8 +158,8 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
 // We either compile with our custom mdspan impl
 // in which case we discover inside it whether no_unique_address
 // works, or we use C++23 in which case it better be available
-#ifdef _MDSPAN_NO_UNIQUE_ADDRESS
-  _MDSPAN_NO_UNIQUE_ADDRESS
+#ifdef MDSPAN_IMPL_NO_UNIQUE_ADDRESS
+  MDSPAN_IMPL_NO_UNIQUE_ADDRESS
 #else
   [[no_unique_address]]
 #endif
@@ -395,8 +395,8 @@ class ReferenceCountedAccessor {
   constexpr auto nested_accessor() const { return m_nested_acc; }
 
  private:
-#ifdef _MDSPAN_NO_UNIQUE_ADDRESS
-  _MDSPAN_NO_UNIQUE_ADDRESS
+#ifdef MDSPAN_IMPL_NO_UNIQUE_ADDRESS
+  MDSPAN_IMPL_NO_UNIQUE_ADDRESS
 #else
   [[no_unique_address]]
 #endif
