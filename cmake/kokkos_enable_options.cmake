@@ -200,11 +200,11 @@ endif()
 # This is known to occur with Clang 9 until Clang 15. We would need to use nvcc as the linker
 # http://lists.llvm.org/pipermail/cfe-dev/2018-June/058296.html
 if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_CXX_COMPILER_VERSION
-                                                                                            VERSION_LESS 15
+                                                                                            VERSION_LESS 17
 )
   message(
     FATAL_ERROR
-      "Relocatable device code is currently not supported with Clang < 15 - must use nvcc_wrapper or turn off RDC"
+      "Relocatable device code is currently not supported with Clang < 17 - must use nvcc_wrapper or turn off RDC"
   )
 endif()
 
