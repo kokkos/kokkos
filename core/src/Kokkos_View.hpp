@@ -31,7 +31,6 @@ static_assert(false,
 #include <View/Kokkos_ViewLegacy.hpp>
 #else
 
-#if defined(KOKKOS_ENABLE_IMPL_MDSPAN)
 #include <View/Kokkos_BasicView.hpp>
 #include <View/Kokkos_ViewTraits.hpp>
 #include <Kokkos_MemoryTraits.hpp>
