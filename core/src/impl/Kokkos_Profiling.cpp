@@ -299,7 +299,7 @@ bool profileLibraryLoaded() {
   return Kokkos::Tools::Experimental::isProfileLibraryLoaded;
 }
 
-void updateProfileLibraryState() {
+static void updateProfileLibraryState() {
   Kokkos::Tools::Experimental::isProfileLibraryLoaded =
       !Experimental::eventSetsEqual(Experimental::current_callbacks,
                                     Experimental::no_profiling);
