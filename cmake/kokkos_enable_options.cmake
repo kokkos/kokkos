@@ -99,9 +99,11 @@ kokkos_enable_option(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external versio
 kokkos_enable_option(
   IMPL_SKIP_COMPILER_MDSPAN ON BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan"
 )
+kokkos_enable_option(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS OFF "Whether to check for uses of LayoutRight that have an explicit stride that may have changed in the new View implementation.")
 mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
+mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
