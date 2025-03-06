@@ -235,8 +235,8 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         m_league_size(league_size_),
         m_team_size(team_size_request),
         m_vector_length((vector_length_request > 0)
-                            ? Kokkos::bit_floor(
-                                  static_cast<unsigned>(vector_length_request))
+                            ? Kokkos::bit_floor(std::min<unsigned>(
+                                  vector_length_request, vector_length_max()))
                             : 1),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
