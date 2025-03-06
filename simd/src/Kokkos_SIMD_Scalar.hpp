@@ -451,11 +451,10 @@ template <class T, class BinaryOperation>
 [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
     Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
     BinaryOperation binary_op) noexcept {
-  return reduce(
-      x,
-      Experimental::basic_simd<T, Experimental::simd_abi::scalar>::mask_type(
-          true),
-      Impl::Identity<T, BinaryOperation>(), binary_op);
+  return reduce(x,
+                typename Experimental::basic_simd<
+                    T, Experimental::simd_abi::scalar>::mask_type(true),
+                T(Impl::Identity<T, BinaryOperation>()), binary_op);
 }
 
 template <class T>
