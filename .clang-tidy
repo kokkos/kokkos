@@ -8,7 +8,6 @@ Checks: >
   -bugprone-integer-division,
   -bugprone-macro-parentheses,
   -bugprone-misplaced-widening-cast,
-  -bugprone-multi-level-implicit-pointer-conversion,
   -bugprone-narrowing-conversions,
   -bugprone-non-zero-enum-to-bool-conversion,
   -bugprone-signed-char-misuse,
