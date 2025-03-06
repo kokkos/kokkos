@@ -3,11 +3,13 @@ name: mdspan version check
 on:
   push:
     paths:
+      - '.github/workflows/mdspan-version-check.yml'
       - 'tpls/mdspan/**'
     branches:
       - develop
   pull_request:
     paths:
+      - '.github/workflows/mdspan-version-check.yml'
       - 'tpls/mdspan/**'
 
 permissions: read-all
