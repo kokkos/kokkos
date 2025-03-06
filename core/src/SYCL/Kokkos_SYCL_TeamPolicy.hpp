@@ -109,6 +109,15 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
     return *std::max_element(sub_group_sizes.begin(), sub_group_sizes.end());
   }
 
+ private:
+  static int determine_vector_length(int requested) {
+    // restrict requested between 1 and max
+    unsigned vector_length = std::clamp(requested, 1, vector_length_max());
+    // return the largest integral power of 2 not greater than requested
+    return Kokkos::bit_floor(vector_length);
+  }
+
+ public:
   static int scratch_size_max(int level) {
     return level == 0 ? 1024 * 32
                       :           // FIXME_SYCL arbitrarily setting this to 32kB
@@ -155,8 +164,7 @@ class Kokkos::Impl::TeamPolicyInternal<Kokkos::SYCL, Properties...>
       : m_space(space_),
         m_league_size(league_size_),
         m_team_size(team_size_request),
-        m_vector_length(Kokkos::bit_floor(std::clamp<unsigned>(
-            vector_length_request, 1, vector_length_max()))),
+        m_vector_length(determine_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(vector_length_max()),
