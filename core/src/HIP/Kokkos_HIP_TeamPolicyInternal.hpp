@@ -194,10 +194,8 @@ class TeamPolicyInternal<HIP, Properties...>
       : m_space(space_),
         m_league_size(league_size_),
         m_team_size(team_size_request),
-        m_vector_length((vector_length_request > 0)
-                            ? Kokkos::bit_floor(std::min<unsigned>(
-                                  vector_length_request, vector_length_max()))
-                            : 1),
+        m_vector_length(Kokkos::bit_floor(std::clamp<unsigned>(
+            vector_length_request, 1, vector_length_max()))),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(HIPTraits::WarpSize),
