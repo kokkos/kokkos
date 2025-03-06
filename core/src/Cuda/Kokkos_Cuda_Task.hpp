@@ -598,7 +598,7 @@ class TaskExec<Kokkos::Cuda, Scheduler> {
   template <class, class>
   friend class Kokkos::Impl::TaskQueueSpecializationConstrained;
   template <class>
-  friend class Kokkos::Impl::TaskQueueSpecialization;
+  friend struct Kokkos::Impl::TaskQueueSpecialization;
 
   int32_t* m_team_shmem;
   const int m_team_size;
@@ -1078,7 +1078,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       // accum = accumulated, sum in total for this iteration
 
       // INCLUSIVE scan
-      for (int offset = blockDim.x; offset < Impl::CudaTraits::WarpSize;
+      for (int offset = blockDim.x;
+           offset < static_cast<int>(Impl::CudaTraits::WarpSize);
            offset <<= 1) {
         y = Kokkos::shfl_up(val, offset, Impl::CudaTraits::WarpSize);
         if (lane >= offset) {
@@ -1143,9 +1144,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       // accum = accumulated, sum in total for this iteration
 
       // INCLUSIVE scan
-      for (int offset = 1; offset < blockDim.x; offset <<= 1) {
+      for (int offset = 1; offset < static_cast<int>(blockDim.x);
+           offset <<= 1) {
         y = Kokkos::shfl_up(val, offset, blockDim.x);
-        if (threadIdx.x >= offset) {
+        if (static_cast<int>(threadIdx.x) >= offset) {
           val += y;
         }
       }
