@@ -297,11 +297,6 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       KOKKOS_ASSERT(block_size > 0);
 
-      // TODO: down casting these uses more space than required?
-      m_scratch_space = (word_size_type*)cuda_internal_scratch_space(
-          m_policy.space(), m_functor_reducer.get_reducer().value_size() *
-                                block_size /* block_size == max block_count */);
-
       // Intentionally do not downcast to word_size_type since we use Cuda
       // atomics in Kokkos_Cuda_ReduceScan.hpp
       m_scratch_flags = cuda_internal_scratch_flags(m_policy.space(),
@@ -312,10 +307,15 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
-      // Required grid.x <= block.y
-      dim3 grid(std::min(index_type(block.y),
-                         index_type((nwork + block.y - 1) / block.y)),
-                1, 1);
+      auto cc = Kokkos::Cuda::concurrency() / block_size;
+      dim3 grid(
+          std::min(index_type(cc), index_type((nwork + block.y - 1) / block.y)),
+          1, 1);
+
+      // TODO: down casting these uses more space than required?
+      m_scratch_space = (word_size_type*)cuda_internal_scratch_space(
+          m_policy.space(),
+          m_functor_reducer.get_reducer().value_size() * grid.x);
 
       // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
