@@ -371,6 +371,8 @@ void test_large_parallel_for_reduce() {
   ASSERT_EQ(sum, size);
 }
 
+// For 32-bit builds a View can't store enough elements
+#ifndef KOKKOS_IMPL_32BIT
 TEST(TEST_CATEGORY, large_parallel_for_reduce) {
   if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,
                                Kokkos::HostSpace>) {
@@ -378,5 +380,6 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
   }
   test_large_parallel_for_reduce();
 }
+#endif
 
 }  // namespace Test
