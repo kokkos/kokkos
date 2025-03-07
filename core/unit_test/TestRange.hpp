@@ -347,6 +347,8 @@ TEST(TEST_CATEGORY, range_dynamic_policy) {
 }
 #endif
 
+// For 32-bit builds a View can't store enough elements
+#ifndef KOKKOS_IMPL_32BIT
 void test_large_parallel_for_reduce() {
   using ExecutionSpace              = typename TEST_EXECSPACE::execution_space;
   constexpr long long unsigned size = 1llu << 32;
@@ -371,8 +373,6 @@ void test_large_parallel_for_reduce() {
   ASSERT_EQ(sum, size);
 }
 
-// For 32-bit builds a View can't store enough elements
-#ifndef KOKKOS_IMPL_32BIT
 TEST(TEST_CATEGORY, large_parallel_for_reduce) {
   if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,
                                Kokkos::HostSpace>) {
