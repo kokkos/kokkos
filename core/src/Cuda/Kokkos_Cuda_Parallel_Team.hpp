@@ -32,6 +32,7 @@
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_MinMax.hpp>
 #include <Kokkos_Vectorization.hpp>
 
@@ -172,24 +173,11 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
 
   inline static int vector_length_max() { return Impl::CudaTraits::WarpSize; }
 
-  inline static int verify_requested_vector_length(
-      int requested_vector_length) {
-    int test_vector_length =
-        std::min(requested_vector_length, vector_length_max());
-
-    // Allow only power-of-two vector_length
-    if (!(is_integral_power_of_two(test_vector_length))) {
-      int test_pow2 = 1;
-      for (int i = 0; i < 5; i++) {
-        test_pow2 = test_pow2 << 1;
-        if (test_pow2 > test_vector_length) {
-          break;
-        }
-      }
-      test_vector_length = test_pow2 >> 1;
-    }
-
-    return test_vector_length;
+  inline static int impl_determine_vector_length(int requested) {
+    // restrict requested between 1 and max
+    unsigned vector_length = std::clamp(requested, 1, vector_length_max());
+    // return the largest integral power of 2 not greater than requested
+    return Kokkos::bit_floor(vector_length);
   }
 
   inline static int scratch_size_max(int level) {
@@ -253,10 +241,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
       : m_space(space_),
         m_league_size(league_size_),
         m_team_size(team_size_request),
-        m_vector_length(
-            (vector_length_request > 0)
-                ? verify_requested_vector_length(vector_length_request)
-                : verify_requested_vector_length(1)),
+        m_vector_length(impl_determine_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(Impl::CudaTraits::WarpSize),
