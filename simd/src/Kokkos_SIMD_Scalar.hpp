@@ -490,6 +490,24 @@ reduce_max(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const&
 }
 
 template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<
+    T, Experimental::simd_abi::scalar>
+min(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& a,
+    Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& b) {
+  return Experimental::basic_simd<T, Experimental::simd_abi::scalar>(
+      Kokkos::min(a[0], b[0]));
+}
+
+template <class T>
+[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<
+    T, Experimental::simd_abi::scalar>
+max(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& a,
+    Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& b) {
+  return Experimental::basic_simd<T, Experimental::simd_abi::scalar>(
+      Kokkos::max(a[0], b[0]));
+}
+
+template <class T>
 class const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
                              basic_simd<T, simd_abi::scalar>> {
  public:

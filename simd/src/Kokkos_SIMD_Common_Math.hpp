@@ -111,10 +111,13 @@ reduce(basic_simd<T, Abi> const& v,
 
 }  // namespace Experimental
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> min(
-    Experimental::basic_simd<T, Abi> const& a,
-    Experimental::basic_simd<T, Abi> const& b) {
+template <class T, class Abi,
+          std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,
+                           bool> = false>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    Experimental::basic_simd<T, Abi>
+    min(Experimental::basic_simd<T, Abi> const& a,
+        Experimental::basic_simd<T, Abi> const& b) {
   Experimental::basic_simd<T, Abi> result;
   T vals[Experimental::basic_simd<T, Abi>::size()] = {0};
   for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size(); ++i) {
@@ -136,10 +139,13 @@ template <class T, class Abi>
 }  // namespace Experimental
 #endif
 
-template <class T, class Abi>
-[[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> max(
-    Experimental::basic_simd<T, Abi> const& a,
-    Experimental::basic_simd<T, Abi> const& b) {
+template <class T, class Abi,
+          std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,
+                           bool> = false>
+[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    Experimental::basic_simd<T, Abi>
+    max(Experimental::basic_simd<T, Abi> const& a,
+        Experimental::basic_simd<T, Abi> const& b) {
   Experimental::basic_simd<T, Abi> result;
   T vals[Experimental::basic_simd<T, Abi>::size()] = {0};
   for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size(); ++i) {
