@@ -153,15 +153,6 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       "Kokkos::initialize was called");
   EXPECT_DEATH(
       {
-        void* ptr = Kokkos::kokkos_malloc(1);
-        Kokkos::kokkos_free(ptr);
-        Kokkos::initialize();
-        Kokkos::finalize();
-      },
-      "Kokkos allocation \"no-label\" is being allocated before "
-      "Kokkos::initialize was called");
-  EXPECT_DEATH(
-      {
         Kokkos::initialize();
         Kokkos::finalize();
         void* ptr = Kokkos::kokkos_malloc(1);
@@ -176,7 +167,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
         Kokkos::finalize();
         Kokkos::kokkos_free(ptr);
       },
-      "Kokkos allocation \"no-label\" is being deallocated after "
+      "Kokkos allocation \"label-unknown\" is being deallocated after "
       "Kokkos::finalize was called");
   EXPECT_DEATH(
       {
@@ -186,31 +177,30 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
         void* next = Kokkos::kokkos_realloc(prev, 2);
         Kokkos::kokkos_free(next);
       },
-      "Kokkos allocation \"no-label\" is being allocated after "
+      "Kokkos allocation \"label-unknown\" is being allocated after "
       "Kokkos::finalize was called");
-  // FIXME: The following logic of passing an uninitialized pointer to
-  // kokkos_free is better checked at compile time. These two tests have
-  // to be removed.
-  /*
   EXPECT_DEATH(
       {
-        void* ptr;
+        // Simulate an unitialized pointer and prevent warning based on
+        // use of unitialized variable.
+        void* ptr = reinterpret_cast<void*>(rand());
         Kokkos::kokkos_free(ptr);
         Kokkos::initialize();
         Kokkos::finalize();
       },
-      "Kokkos allocation \"no-label\" is being deallocated before "
+      "Kokkos allocation \"label-unknown\" is being deallocated before "
       "Kokkos::initialize was called");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         Kokkos::finalize();
-        void* ptr;
+        // Simulate an unitialized pointer and prevent warning based on
+        // use of unitialized variable.
+        void* ptr = reinterpret_cast<void*>(rand());
         Kokkos::kokkos_free(ptr);
       },
-      "Kokkos allocation \"no-label\" is being deallocated after "
+      "Kokkos allocation \"label-unknown\" is being deallocated after "
       "Kokkos::finalize was called");
-  */
 }
 
 }  // namespace
