@@ -358,7 +358,7 @@ void test_large_parallel_for_reduce() {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<ExecutionSpace,
                           Kokkos::IndexType<long long unsigned>>(0, size),
-      KOKKOS_LAMBDA(long long unsigned) { v(i) = 1; });
+      KOKKOS_LAMBDA(long long unsigned i) { v(i) = 1; });
 
   long long unsigned sum;
   Kokkos::parallel_reduce(
