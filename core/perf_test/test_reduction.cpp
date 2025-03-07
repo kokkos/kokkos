@@ -35,8 +35,8 @@ static void Test_Reduction(benchmark::State& state) {
   // Prep some Views used for benchmark
   // avoids allocating/deallocating during benchmark phase
   Kokkos::View<T*> data("data", N);
-  Kokkos::View<T> d_result("d_result");
-  Kokkos::View<T, Kokkos::HostSpace> h_result("h_result");
+  [[maybe_unused]] Kokkos::View<T> d_result("d_result");
+  [[maybe_unused]] Kokkos::View<T, Kokkos::HostSpace> h_result("h_result");
   Kokkos::parallel_for(
       "FillData", N, KOKKOS_LAMBDA(int i) { data(i) = i; });
 
@@ -55,7 +55,7 @@ static void Test_Reduction(benchmark::State& state) {
     val += result;
   };
 
-  T s_result = 0;
+  [[maybe_unused]] T s_result = 0;
 
   // Warmup to get scratch sizes set up properly
   if constexpr (TestCase == 0) run_reduction(N, f_simple, s_result);
