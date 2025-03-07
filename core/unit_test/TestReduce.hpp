@@ -670,7 +670,6 @@ TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
                           FunctorReductionWithLargeIterationCount(), nu);
   ASSERT_DOUBLE_EQ(nu, double(N));
 }
-
 #endif
 
 }  // namespace Test
