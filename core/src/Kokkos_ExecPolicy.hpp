@@ -212,9 +212,9 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     auto concurrency = static_cast<int64_t>(m_space.concurrency());
     if (concurrency == 0) concurrency = 1;
 
-    if (m_granularity > 0) {
-      if (!Kokkos::has_single_bit(static_cast<unsigned>(m_granularity)))
-        Kokkos::abort("RangePolicy blocking granularity must be power of two");
+    if (m_granularity > 0 &&
+        !Kokkos::has_single_bit(static_cast<unsigned>(m_granularity))) {
+      Kokkos::abort("RangePolicy blocking granularity must be power of two");
     }
 
     int64_t new_chunk_size = 1;
