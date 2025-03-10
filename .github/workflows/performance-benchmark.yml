@@ -11,6 +11,8 @@ jobs:
   CI:
     continue-on-error: true
     strategy:
+      # We must avoid pushing to the benchmark repository concurrently.
+      max-parallel: 1
       matrix:
         distro: ['ubuntu:latest']
         cxx: ['g++', 'clang++']
@@ -50,6 +52,11 @@ jobs:
         run: |
           mkdir ${{ env.BUILD_ID }}
           find builddir/core/perf_test/ -name "*.json" -exec mv {} ${{ env.BUILD_ID }}/  \;
+      - name: Archive benchmark results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.BUILD_ID }}
+          path: ${{ env.BUILD_ID }}
       - name: Push benchmark results
         if: ${{ github.ref == 'refs/heads/develop' }}
         uses: dmnemec/copy_file_to_another_repo_action@bbebd3da22e4a37d04dca5f782edd5201cb97083 # main
