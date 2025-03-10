@@ -83,7 +83,7 @@ jobs:
       - name: build_and_install_kokkos
         working-directory: kokkos
         run: |
-          cmake --build build $(nproc)
+          cmake --build build --parallel $(nproc)
           cmake --install build --prefix install
 
       - name: test_kokkos
