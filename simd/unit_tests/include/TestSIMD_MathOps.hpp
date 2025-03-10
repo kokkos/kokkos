@@ -115,6 +115,9 @@ inline void host_check_all_math_ops(const DataType (&first_args)[n],
   host_check_math_op_all_loaders<Abi>(rounds(), n, first_args);
   host_check_math_op_all_loaders<Abi>(truncates(), n, first_args);
 
+  host_check_math_op_all_loaders<Abi>(minimum(), n, first_args, second_args);
+  host_check_math_op_all_loaders<Abi>(maximum(), n, first_args, second_args);
+
   // TODO: Place fallback implementations for all simd integer types
   if constexpr (std::is_floating_point_v<DataType>) {
 #if defined(__INTEL_COMPILER) && \
@@ -265,6 +268,9 @@ KOKKOS_INLINE_FUNCTION void device_check_all_math_ops(
   device_check_math_op_all_loaders<Abi>(ceils(), n, first_args);
   device_check_math_op_all_loaders<Abi>(rounds(), n, first_args);
   device_check_math_op_all_loaders<Abi>(truncates(), n, first_args);
+
+  device_check_math_op_all_loaders<Abi>(minimum(), n, first_args, second_args);
+  device_check_math_op_all_loaders<Abi>(maximum(), n, first_args, second_args);
 }
 
 template <typename Abi, typename DataType>

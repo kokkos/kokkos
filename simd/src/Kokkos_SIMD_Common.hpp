@@ -377,21 +377,20 @@ struct Identity {
 template <class T, class Abi, class BinaryOperation = std::plus<>>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce(const basic_simd<T, Abi>& x, BinaryOperation binary_op = {}) {
-  return reduce(x, basic_simd<T, Abi>::mask_type(true),
-                Impl::Identity<T, BinaryOperation>(), binary_op);
+  return reduce(x, typename basic_simd<T, Abi>::mask_type(true),
+                T(Impl::Identity<T, BinaryOperation>()), binary_op);
 }
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce_min(const basic_simd<T, Abi>& x) noexcept {
-  return reduce_min(x, basic_simd<T, Abi>::mask_type(true));
+  return reduce_min(x, typename basic_simd<T, Abi>::mask_type(true));
 }
 
 template <class T, class Abi>
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce_max(const basic_simd<T, Abi>& x) noexcept {
-  auto v = where(true, x);
-  return reduce_max(x, basic_simd<T, Abi>::mask_type(true));
+  return reduce_max(x, typename basic_simd<T, Abi>::mask_type(true));
 }
 
 }  // namespace Experimental
