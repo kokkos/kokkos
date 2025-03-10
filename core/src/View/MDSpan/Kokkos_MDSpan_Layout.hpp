@@ -154,11 +154,12 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
       if constexpr (std::is_same_v<ArrayLayout, LayoutRight> &&
                     extents_type::rank() > 2) {
         if (layout.stride != KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
-          ::Kokkos::abort(
-              "The layout of values in this Kokkos View may be different due "
-              "to a non-defaulted stride. Verify that this is not an issue for "
-              "your Views and then disable "
-              "KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS.")
+          std::cerr << "The layout of values in this Kokkos View may be "
+                       "different due "
+                       "to a non-defaulted stride. Verify that this is not an "
+                       "issue for "
+                       "your Views and then disable "
+                       "KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS.\n";
         }
       }
 #endif
