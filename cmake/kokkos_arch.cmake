@@ -362,7 +362,10 @@ if(KOKKOS_ARCH_ARMV9_GRACE)
       -msve-vector-bits=128
     )
   else()
-    message(SEND_ERROR "Compiler does not support ARMv9 Grace architecture")
+    message(
+      SEND_ERROR
+        "Compiler does not support ARMv9 Grace architecture. You may want to try -DKokkos_ARCH_NATIVE=ON instead"
+    )
   endif()
 endif()
 
