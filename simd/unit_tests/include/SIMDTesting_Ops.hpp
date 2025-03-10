@@ -339,10 +339,10 @@ class minimum {
  public:
   template <typename T>
   auto on_host(T const& a, T const& b) const {
-    if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+    if constexpr (std::is_arithmetic_v<T>) {
       return Kokkos::min(a, b);
     } else {
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
       KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #endif
@@ -350,10 +350,10 @@ class minimum {
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
       KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
-#else
-      return Kokkos::min(a, b);
-#endif
     }
+#else
+    return Kokkos::min(a, b);
+#endif
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
@@ -365,10 +365,10 @@ class maximum {
  public:
   template <typename T>
   auto on_host(T const& a, T const& b) const {
-    if constexpr (std::is_integral_v<T> || std::is_floating_point_v<T>) {
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+    if constexpr (std::is_arithmetic_v<T>) {
       return Kokkos::max(a, b);
     } else {
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
       KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #endif
@@ -376,10 +376,10 @@ class maximum {
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
       KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
-#else
-      return Kokkos::max(a, b);
-#endif
     }
+#else
+    return Kokkos::max(a, b);
+#endif
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
