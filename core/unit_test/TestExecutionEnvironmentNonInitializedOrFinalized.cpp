@@ -145,21 +145,19 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   EXPECT_DEATH(
-      {
-        void* ptr = Kokkos::kokkos_malloc(1);
-        Kokkos::kokkos_free(ptr);
-      },
-      "Kokkos allocation \"no-label\" is being allocated before "
-      "Kokkos::initialize was called");
+      { void* ptr = Kokkos::kokkos_malloc(1); },
+      "Kokkos ERROR: attempting to perform C-style memory management via "
+      "kokkos_malloc\\(\\) \\*\\*before\\*\\* Kokkos::initialize\\(\\) was "
+      "called");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         Kokkos::finalize();
         void* ptr = Kokkos::kokkos_malloc(1);
-        Kokkos::kokkos_free(ptr);
       },
-      "Kokkos allocation \"no-label\" is being allocated after "
-      "Kokkos::finalize was called");
+      "Kokkos ERROR: attempting to perform C-style memory management via "
+      "kokkos_malloc\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was "
+      "called");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
@@ -167,40 +165,37 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
         Kokkos::finalize();
         Kokkos::kokkos_free(ptr);
       },
-      "Kokkos allocation \"label-unknown\" is being deallocated after "
-      "Kokkos::finalize was called");
+      "Kokkos ERROR: attempting to perform C-style memory management via "
+      "kokkos_free\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was called");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         void* prev = Kokkos::kokkos_malloc(1);
         Kokkos::finalize();
         void* next = Kokkos::kokkos_realloc(prev, 2);
-        Kokkos::kokkos_free(next);
       },
-      "Kokkos allocation \"label-unknown\" is being allocated after "
-      "Kokkos::finalize was called");
+      "Kokkos ERROR: attempting to perform C-style memory management via "
+      "kokkos_realloc\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was "
+      "called");
   EXPECT_DEATH(
       {
-        // Simulate an unitialized pointer and prevent warning based on
-        // use of unitialized variable.
-        void* ptr = reinterpret_cast<void*>(rand());
+        // Take a fake pointer
+        void* ptr = reinterpret_cast<void*>(0x8BADF00D);
         Kokkos::kokkos_free(ptr);
-        Kokkos::initialize();
-        Kokkos::finalize();
       },
-      "Kokkos allocation \"label-unknown\" is being deallocated before "
-      "Kokkos::initialize was called");
+      "Kokkos ERROR: attempting to perform C-style memory management via "
+      "kokkos_free\\(\\) \\*\\*before\\*\\* Kokkos::initialize\\(\\) was "
+      "called");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         Kokkos::finalize();
-        // Simulate an unitialized pointer and prevent warning based on
-        // use of unitialized variable.
-        void* ptr = reinterpret_cast<void*>(rand());
+        // Take a fake pointer
+        void* ptr = reinterpret_cast<void*>(0xB105F00D);
         Kokkos::kokkos_free(ptr);
       },
-      "Kokkos allocation \"label-unknown\" is being deallocated after "
-      "Kokkos::finalize was called");
+      "Kokkos ERROR: attempting to perform C-style memory management via "
+      "kokkos_free\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was called");
 }
 
 }  // namespace

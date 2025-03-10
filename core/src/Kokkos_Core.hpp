@@ -147,28 +147,16 @@ void print_configuration(std::ostream& os, bool verbose = false);
 
 namespace Kokkos {
 
-static inline void check_init_final(const std::string& oper_type,
-                                    const std::string& label) {
-  std::string oper_act = "";
-
-  if ((oper_type == "malloc") || (oper_type == "realloc")) {
-    oper_act = "allocated";
-  } else if (oper_type == "free") {
-    oper_act = "deallocated";
-  }
-
+static inline void check_init_final(const std::string& func_name) {
   if (is_finalized()) {
     std::stringstream ss;
-    ss << "Kokkos allocation \"";
-    ss << label;
-    ss << "\" is being " << oper_act << " after Kokkos::finalize was called\n";
+    ss << "Kokkos ERROR: attempting to perform C-style memory management via ";
+    ss << func_name << "() **after** Kokkos::finalize() was called\n";
     Kokkos::abort(ss.str().c_str());
   } else if (!is_initialized()) {
     std::stringstream ss;
-    ss << "Kokkos allocation \"";
-    ss << label;
-    ss << "\" is being " << oper_act
-       << " before Kokkos::initialize was called\n";
+    ss << "Kokkos ERROR: attempting to perform C-style memory management via ";
+    ss << func_name << "() **before** Kokkos::initialize() was called\n";
     Kokkos::abort(ss.str().c_str());
   }
 }
@@ -180,7 +168,7 @@ static inline void check_init_final(const std::string& oper_type,
 template <class Space = Kokkos::DefaultExecutionSpace::memory_space>
 inline void* kokkos_malloc(const std::string& arg_alloc_label,
                            const size_t arg_alloc_size) {
-  check_init_final("malloc", arg_alloc_label);
+  check_init_final("kokkos_malloc");
   using MemorySpace = typename Space::memory_space;
   return Impl::SharedAllocationRecord<MemorySpace>::allocate_tracked(
       MemorySpace(), arg_alloc_label, arg_alloc_size);
@@ -188,16 +176,15 @@ inline void* kokkos_malloc(const std::string& arg_alloc_label,
 
 template <class Space = Kokkos::DefaultExecutionSpace::memory_space>
 inline void* kokkos_malloc(const size_t arg_alloc_size) {
-  std::string label = "no-label";
-  check_init_final("malloc", label);
+  check_init_final("kokkos_malloc");
   using MemorySpace = typename Space::memory_space;
   return Impl::SharedAllocationRecord<MemorySpace>::allocate_tracked(
-      MemorySpace(), label, arg_alloc_size);
+      MemorySpace(), "no-label", arg_alloc_size);
 }
 
 template <class Space = Kokkos::DefaultExecutionSpace::memory_space>
 inline void kokkos_free(void* arg_alloc) {
-  check_init_final("free", "label-unknown");
+  check_init_final("kokkos_free");
   using MemorySpace = typename Space::memory_space;
   return Impl::SharedAllocationRecord<MemorySpace>::deallocate_tracked(
       arg_alloc);
@@ -205,7 +192,7 @@ inline void kokkos_free(void* arg_alloc) {
 
 template <class Space = Kokkos::DefaultExecutionSpace::memory_space>
 inline void* kokkos_realloc(void* arg_alloc, const size_t arg_alloc_size) {
-  check_init_final("realloc", "label-unknown");
+  check_init_final("kokkos_realloc");
   using MemorySpace = typename Space::memory_space;
   return Impl::SharedAllocationRecord<MemorySpace>::reallocate_tracked(
       arg_alloc, arg_alloc_size);
