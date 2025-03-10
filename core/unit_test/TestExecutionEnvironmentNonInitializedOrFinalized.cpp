@@ -145,7 +145,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   EXPECT_DEATH(
-      { void* ptr = Kokkos::kokkos_malloc(1); },
+      { [[maybe_unused]] void* ptr = Kokkos::kokkos_malloc(1); },
       "Kokkos ERROR: attempting to perform C-style memory management via "
       "kokkos_malloc\\(\\) \\*\\*before\\*\\* Kokkos::initialize\\(\\) was "
       "called");
@@ -153,7 +153,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       {
         Kokkos::initialize();
         Kokkos::finalize();
-        void* ptr = Kokkos::kokkos_malloc(1);
+        [[maybe_unused]] void* ptr = Kokkos::kokkos_malloc(1);
       },
       "Kokkos ERROR: attempting to perform C-style memory management via "
       "kokkos_malloc\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was "
@@ -172,7 +172,7 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
         Kokkos::initialize();
         void* prev = Kokkos::kokkos_malloc(1);
         Kokkos::finalize();
-        void* next = Kokkos::kokkos_realloc(prev, 2);
+        [[maybe_unused]] void* next = Kokkos::kokkos_realloc(prev, 2);
       },
       "Kokkos ERROR: attempting to perform C-style memory management via "
       "kokkos_realloc\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was "
