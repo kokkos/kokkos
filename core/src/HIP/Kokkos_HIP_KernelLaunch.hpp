@@ -472,6 +472,9 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       KOKKOS_IMPL_HIP_SAFE_CALL(hip_instance->hip_memcpy_async_wrapper(
           driver_ptr, &driver, sizeof(DriverType), hipMemcpyDefault));
 
+      // FIXME_HIP Modifying the assignment to args causes a segfault in
+      // hip_graph.force_global_launch
+      // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
       void const *args[] = {&driver_ptr};
 
       hipKernelNodeParams params = {};
