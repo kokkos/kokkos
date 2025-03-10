@@ -329,10 +329,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       m_team_size = arg_policy.team_size_recommended(
           arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
           ParallelReduceTag());
-      if (m_team_size <= 0)
-        Kokkos::Impl::throw_runtime_exception(
-            "Kokkos::Impl::ParallelReduce<HIP, TeamPolicy> could not find a "
-            "valid execution configuration.");
+      KOKKOS_ASSERT(m_team_size > 0);
     }
 
     m_team_begin =

@@ -159,10 +159,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
     using closure_type =
         ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP>;
     unsigned block_size = hip_get_max_blocksize<closure_type, LaunchBounds>();
-    if (block_size == 0)
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelFor< HIP > could not find a valid "
-                      "tile size."));
+    KOKKOS_ASSERT(block_size > 0);
     return block_size;
   }
 };
