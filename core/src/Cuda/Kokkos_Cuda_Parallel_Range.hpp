@@ -70,14 +70,15 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   Policy const& get_policy() const { return m_policy; }
 
   inline __device__ void operator()() const {
-    const Member work_stride = blockDim.y * gridDim.x;
-    const Member work_end    = m_policy.end();
+    const auto work_stride = Member(blockDim.y) * gridDim.x;
+    const Member work_end  = m_policy.end();
 
     for (Member iwork =
              m_policy.begin() + threadIdx.y + blockDim.y * blockIdx.x;
          iwork < work_end;
-         iwork = iwork < work_end - work_stride ? iwork + work_stride
-                                                : work_end) {
+         iwork = iwork < static_cast<Member>(work_end - work_stride)
+                     ? iwork + work_stride
+                     : work_end) {
       this->template exec_range<WorkTag>(iwork);
     }
   }
