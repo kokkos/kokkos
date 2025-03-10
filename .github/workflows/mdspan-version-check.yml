@@ -1,7 +1,10 @@
 name: mdspan version check
 
 on:
-  workflow_call:
+  pull_request:
+    paths:
+      - '.github/workflows/mdspan-version-check.yml'
+      - 'tpls/mdspan/**'
 
 permissions: read-all
 
