@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <cstdio>
+#include <sstream>
 
 #include <gtest/gtest.h>
 
@@ -1453,11 +1454,28 @@ struct TestMDRange_4D {
     input_view(i, j, k, l) = 3;
   }
 
+  struct AtomicTag {};
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l) const {
+    Kokkos::atomic_add(&input_view(i, j, k, l), 1);
+  }
+
   // reduction tagged operators
   KOKKOS_INLINE_FUNCTION
   void operator()(const InitTag &, const int i, const int j, const int k,
                   const int l, value_type &lsum) const {
     lsum += input_view(i, j, k, l) * 3;
+  }
+
+  using MinMax      = Kokkos::MinMax<DataType>;
+  using MinMaxValue = MinMax::value_type;
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l, MinMaxValue &lminmax, DataType &lsum) const {
+    lminmax.min_val = Kokkos::min(lminmax.min_val, input_view(i, j, k, l));
+    lminmax.max_val = Kokkos::max(lminmax.max_val, input_view(i, j, k, l));
+    lsum += 1;
   }
 
   static void test_reduce4(const int N0, const int N1, const int N2,
@@ -2057,6 +2075,49 @@ struct TestMDRange_4D {
       ASSERT_EQ(counter, 0);
     }
   }  // end test_for4
+
+  // test that each iteration is evaluated only once
+  // see #7697
+  static void test_for4_eval_once(const int N0, const int N1, const int N2,
+                                  const int N3) {
+    test_for4_eval_once_iterate<Iterate::Left, Iterate::Left>(N0, N1, N2, N3,
+                                                              "LL");
+    test_for4_eval_once_iterate<Iterate::Left, Iterate::Right>(N0, N1, N2, N3,
+                                                               "LR");
+    test_for4_eval_once_iterate<Iterate::Right, Iterate::Left>(N0, N1, N2, N3,
+                                                               "RL");
+    test_for4_eval_once_iterate<Iterate::Right, Iterate::Right>(N0, N1, N2, N3,
+                                                                "RR");
+  }  // end test_for4_eval_once
+
+ private:
+  // test that each iteration is evaluated only once for a specified iteration
+  // order
+  template <Iterate Outer, Iterate Inner>
+  static void test_for4_eval_once_iterate(const int N0, const int N1,
+                                          const int N2, const int N3,
+                                          const char *iterate_msg) {
+    using range_type =
+        typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<4, Outer, Inner>,
+                                       Kokkos::IndexType<int>, AtomicTag>;
+    using point_type = typename range_type::point_type;
+
+    range_type range(point_type{{0, 0, 0, 0}}, point_type{{N0, N1, N2, N3}});
+
+    TestMDRange_4D functor(N0, N1, N2, N3);
+
+    Kokkos::parallel_for(range, functor);
+    MinMaxValue min_max_value;
+    DataType sum_value;
+    Kokkos::parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
+
+    std::ostringstream message;
+    message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
+            << ") and iterate order " << iterate_msg;
+    ASSERT_EQ(min_max_value.min_val, 1) << message.str();
+    ASSERT_EQ(min_max_value.max_val, 1) << message.str();
+    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3) << message.str();
+  }  // end test_for4_eval_once_iterate
 };
 
 template <typename ExecSpace>
@@ -2092,11 +2153,29 @@ struct TestMDRange_5D {
     input_view(i, j, k, l, m) = 3;
   }
 
+  struct AtomicTag {};
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l, const int m) const {
+    Kokkos::atomic_add(&input_view(i, j, k, l, m), 1);
+  }
+
   // reduction tagged operators
   KOKKOS_INLINE_FUNCTION
   void operator()(const InitTag &, const int i, const int j, const int k,
                   const int l, const int m, value_type &lsum) const {
     lsum += input_view(i, j, k, l, m) * 3;
+  }
+
+  using MinMax      = Kokkos::MinMax<DataType>;
+  using MinMaxValue = MinMax::value_type;
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l, const int m, MinMaxValue &lminmax,
+                  DataType &lsum) const {
+    lminmax.min_val = Kokkos::min(lminmax.min_val, input_view(i, j, k, l, m));
+    lminmax.max_val = Kokkos::max(lminmax.max_val, input_view(i, j, k, l, m));
+    lsum += 1;
   }
 
   static void test_reduce5(const int N0, const int N1, const int N2,
@@ -2637,7 +2716,52 @@ struct TestMDRange_5D {
 
       ASSERT_EQ(counter, 0);
     }
-  }
+  }  // end test_for5
+
+  // test that each iteration is evaluated only once
+  // see #7697
+  static void test_for5_eval_once(const int N0, const int N1, const int N2,
+                                  const int N3, const int N4) {
+    test_for5_eval_once_iterate<Iterate::Left, Iterate::Left>(N0, N1, N2, N3,
+                                                              N4, "LL");
+    test_for5_eval_once_iterate<Iterate::Left, Iterate::Right>(N0, N1, N2, N3,
+                                                               N4, "LR");
+    test_for5_eval_once_iterate<Iterate::Right, Iterate::Left>(N0, N1, N2, N3,
+                                                               N4, "RL");
+    test_for5_eval_once_iterate<Iterate::Right, Iterate::Right>(N0, N1, N2, N3,
+                                                                N4, "RR");
+  }  // end test_for5_eval_once
+
+ private:
+  // test that each iteration is evaluated only once for a specified iteration
+  // order
+  template <Iterate Outer, Iterate Inner>
+  static void test_for5_eval_once_iterate(const int N0, const int N1,
+                                          const int N2, const int N3,
+                                          const int N4,
+                                          const char *iterate_msg) {
+    using range_type =
+        typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<5, Outer, Inner>,
+                                       Kokkos::IndexType<int>, AtomicTag>;
+    using point_type = typename range_type::point_type;
+
+    range_type range(point_type{{0, 0, 0, 0, 0}},
+                     point_type{{N0, N1, N2, N3, N4}});
+
+    TestMDRange_5D functor(N0, N1, N2, N3, N4);
+
+    Kokkos::parallel_for(range, functor);
+    MinMaxValue min_max_value;
+    DataType sum_value;
+    Kokkos::parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
+
+    std::ostringstream message;
+    message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
+            << ", " << N4 << ") and iterate order " << iterate_msg;
+    ASSERT_EQ(min_max_value.min_val, 1) << message.str();
+    ASSERT_EQ(min_max_value.max_val, 1) << message.str();
+    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3 * N4) << message.str();
+  }  // end test_for5_eval_once_iterate
 };
 
 template <typename ExecSpace>
@@ -2673,12 +2797,32 @@ struct TestMDRange_6D {
     input_view(i, j, k, l, m, n) = 3;
   }
 
+  struct AtomicTag {};
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l, const int m, const int n) const {
+    Kokkos::atomic_add(&input_view(i, j, k, l, m, n), 1);
+  }
+
   // reduction tagged operators
   KOKKOS_INLINE_FUNCTION
   void operator()(const InitTag &, const int i, const int j, const int k,
                   const int l, const int m, const int n,
                   value_type &lsum) const {
     lsum += input_view(i, j, k, l, m, n) * 3;
+  }
+
+  using MinMax      = Kokkos::MinMax<DataType>;
+  using MinMaxValue = MinMax::value_type;
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicTag &, const int i, const int j, const int k,
+                  const int l, const int m, const int n, MinMaxValue &lminmax,
+                  DataType &lsum) const {
+    lminmax.min_val =
+        Kokkos::min(lminmax.min_val, input_view(i, j, k, l, m, n));
+    lminmax.max_val =
+        Kokkos::max(lminmax.max_val, input_view(i, j, k, l, m, n));
+    lsum += 1;
   }
 
   static void test_reduce6(const int N0, const int N1, const int N2,
@@ -3338,7 +3482,53 @@ struct TestMDRange_6D {
 
       ASSERT_EQ(counter, 0);
     }
-  }
+  }  // test_for6
+
+  // test that each iteration is evaluated only once
+  // see #7697
+  static void test_for6_eval_once(const int N0, const int N1, const int N2,
+                                  const int N3, const int N4, const int N5) {
+    test_for6_eval_once_iterate<Iterate::Left, Iterate::Left>(N0, N1, N2, N3,
+                                                              N4, N5, "LL");
+    test_for6_eval_once_iterate<Iterate::Left, Iterate::Right>(N0, N1, N2, N3,
+                                                               N4, N5, "LR");
+    test_for6_eval_once_iterate<Iterate::Right, Iterate::Left>(N0, N1, N2, N3,
+                                                               N4, N5, "RL");
+    test_for6_eval_once_iterate<Iterate::Right, Iterate::Right>(N0, N1, N2, N3,
+                                                                N4, N5, "RR");
+  }  // end test_for6_eval_once
+
+ private:
+  // test that each iteration is evaluated only once for a specified iteration
+  // order
+  template <Iterate Outer, Iterate Inner>
+  static void test_for6_eval_once_iterate(const int N0, const int N1,
+                                          const int N2, const int N3,
+                                          const int N4, const int N5,
+                                          const char *iterate_msg) {
+    using range_type =
+        typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<6, Outer, Inner>,
+                                       Kokkos::IndexType<int>, AtomicTag>;
+    using point_type = typename range_type::point_type;
+
+    range_type range(point_type{{0, 0, 0, 0, 0, 0}},
+                     point_type{{N0, N1, N2, N3, N4, N5}});
+
+    TestMDRange_6D functor(N0, N1, N2, N3, N4, N5);
+
+    Kokkos::parallel_for(range, functor);
+    MinMaxValue min_max_value;
+    DataType sum_value;
+    Kokkos::parallel_reduce(range, functor, MinMax(min_max_value), sum_value);
+
+    std::ostringstream message;
+    message << "For shape (" << N0 << ", " << N1 << ", " << N2 << ", " << N3
+            << ", " << N4 << ", " << N5 << ") and iterate order "
+            << iterate_msg;
+    ASSERT_EQ(min_max_value.min_val, 1) << message.str();
+    ASSERT_EQ(min_max_value.max_val, 1) << message.str();
+    ASSERT_EQ(sum_value, N0 * N1 * N2 * N3 * N4 * N5) << message.str();
+  }  // end test_for6_eval_once_iterate
 };
 
 template <typename ExecSpace>
