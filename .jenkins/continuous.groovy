@@ -96,7 +96,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
@@ -331,7 +331,7 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
@@ -371,7 +371,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
