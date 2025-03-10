@@ -68,7 +68,6 @@ jobs:
         run: |
           cd kokkos
           cmake -S . -B build \
-            -DCMAKE_CXX_STANDARD=20 \
             -DKokkos_ENABLE_HIP=ON \
             -DKokkos_ARCH_AMD_GFX90A=ON \
             -DKokkos_ARCH_NATIVE=ON \
