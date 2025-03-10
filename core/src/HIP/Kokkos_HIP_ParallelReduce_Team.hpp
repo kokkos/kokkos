@@ -382,7 +382,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     const unsigned int shmem_size_total =
         m_team_begin + m_shmem_begin + m_shmem_size;
 
-    if (!Kokkos::has_single_bit(static_cast<size_t>(m_team_size)) &&
+    if (!Kokkos::has_single_bit(static_cast<unsigned>(m_team_size)) &&
         !UseShflReduction) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > bad team size"));
