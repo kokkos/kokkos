@@ -75,18 +75,18 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:5.7.1-complete@sha256:fc6abb843a4cb2b3e5d8e9225ed0db1450e063dbcc347f44b43252264134485d'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:5.7.1-complete@sha256:fc6abb843a4cb2b3e5d8e9225ed0db1450e063dbcc347f44b43252264134485d --build-arg CMAKE_VERSION=3.21.7'
                             label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf install && mkdir -p install && \
+                              rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-                                -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
@@ -95,8 +95,18 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
+                                -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
-                              make -j16 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose && \
+                              make install && \
+                              export CMAKE_PREFIX_PATH=${PWD}/../install && \
+                              cd ../example/build_in_tree && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=20 .. && make -j8 && ctest --verbose \
+                              cd ../../build_installed && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=17 -DExamples_CMAKE_LANGUAGE=HIP .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
