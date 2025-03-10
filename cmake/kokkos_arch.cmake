@@ -345,10 +345,22 @@ endif()
 
 if(KOKKOS_ARCH_ARMV9_GRACE)
   set(KOKKOS_ARCH_ARM_NEON ON)
-  check_cxx_compiler_flag("-mcpu=neoverse-n2" COMPILER_SUPPORTS_NEOVERSE_N2)
-  check_cxx_compiler_flag("-msve-vector-bits=128" COMPILER_SUPPORTS_SVE_VECTOR_BITS)
-  if(COMPILER_SUPPORTS_NEOVERSE_N2 AND COMPILER_SUPPORTS_SVE_VECTOR_BITS)
-    compiler_specific_flags(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID DEFAULT -mcpu=neoverse-n2 -msve-vector-bits=128)
+  if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL NVHPC)
+    check_cxx_compiler_flag("-tp=grace" COMPILER_SUPPORTS_GRACE_AS_TARGET_PROCESSOR)
+  else()
+    check_cxx_compiler_flag("-mcpu=neoverse-n2" COMPILER_SUPPORTS_NEOVERSE_N2)
+    check_cxx_compiler_flag("-msve-vector-bits=128" COMPILER_SUPPORTS_SVE_VECTOR_BITS)
+  endif()
+  if(COMPILER_SUPPORTS_NEOVERSE_N2 AND COMPILER_SUPPORTS_SVE_VECTOR_BITS OR COMPILER_SUPPORTS_GRACE_AS_TARGET_PROCESSOR)
+    compiler_specific_flags(
+      COMPILER_ID
+      KOKKOS_CXX_HOST_COMPILER_ID
+      NVHPC
+      -tp=grace
+      DEFAULT
+      -mcpu=neoverse-n2
+      -msve-vector-bits=128
+    )
   else()
     message(WARNING "Compiler does not support ARMv9 Grace architecture")
   endif()
