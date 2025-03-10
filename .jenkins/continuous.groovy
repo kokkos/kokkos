@@ -518,7 +518,8 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
+                        sh '''rm -rf install && mkdir -p install && \
+                              rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=Debug \
@@ -538,8 +539,11 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                                 -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
+                              make install && \
+                              export CMAKE_PREFIX_PATH=${PWD}/../install && \
                               cd ../example/build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose \
