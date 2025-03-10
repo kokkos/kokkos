@@ -307,7 +307,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
-      auto cc = Kokkos::Cuda::concurrency() / block_size;
+      auto cc = m_policy.space().concurrency() / block_size;
       dim3 grid(
           std::min(index_type(cc), index_type((nwork + block.y - 1) / block.y)),
           1, 1);
