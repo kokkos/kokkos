@@ -31,7 +31,7 @@ NVIDIA-GH200:
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_gh200.xml
-        -S CTestRun.cmake
+        -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
@@ -61,7 +61,7 @@ NVIDIA-P100:
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_p100.xml
-        -S CTestRun.cmake
+        -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
@@ -97,7 +97,7 @@ INTEL-DATA-CENTER-MAX-1100:
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_pvc1100.xml
-        -S CTestRun.cmake
+        -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
@@ -131,7 +131,7 @@ AMD-MI300A:
       -D GITHUB_PR_ID="${GITHUB_PR_ID}"
       -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
       -D OUTPUT_JUNIT_FILE=result_mi300a.xml
-      -S CTestRun.cmake
+      -S scripts/CTestRun.cmake
       -D CTEST_SITE="gitlab.spack.io"
       -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
@@ -162,7 +162,7 @@ NVIDIA-GRACE-GRACE:
         -D GITHUB_PR_ID="${GITHUB_PR_ID}"
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_grace_grace.xml
-        -S CTestRun.cmake
+        -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
   artifacts:
