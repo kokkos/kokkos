@@ -93,7 +93,6 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
   __device__ static void driver(scheduler_type scheduler,
                                 int32_t shmem_per_warp) {
-    using queue_type     = typename scheduler_type::task_queue_type;
     using task_base_type = typename scheduler_type::task_base_type;
     using runnable_task_base_type =
         typename scheduler_type::runnable_task_base_type;
@@ -242,8 +241,6 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
                           block.z) ==
         static_cast<long>(get_max_team_count(scheduler.get_execution_space()) *
                           Kokkos::Impl::CudaTraits::WarpSize));
-
-    auto& queue = scheduler.queue();
 
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
@@ -598,7 +595,7 @@ class TaskExec<Kokkos::Cuda, Scheduler> {
   template <class, class>
   friend class Kokkos::Impl::TaskQueueSpecializationConstrained;
   template <class>
-  friend class Kokkos::Impl::TaskQueueSpecialization;
+  friend struct Kokkos::Impl::TaskQueueSpecialization;
 
   int32_t* m_team_shmem;
   const int m_team_size;
@@ -1078,7 +1075,8 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       // accum = accumulated, sum in total for this iteration
 
       // INCLUSIVE scan
-      for (int offset = blockDim.x; offset < Impl::CudaTraits::WarpSize;
+      for (int offset = blockDim.x;
+           offset < static_cast<int>(Impl::CudaTraits::WarpSize);
            offset <<= 1) {
         y = Kokkos::shfl_up(val, offset, Impl::CudaTraits::WarpSize);
         if (lane >= offset) {
@@ -1143,9 +1141,10 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       // accum = accumulated, sum in total for this iteration
 
       // INCLUSIVE scan
-      for (int offset = 1; offset < blockDim.x; offset <<= 1) {
+      for (int offset = 1; offset < static_cast<int>(blockDim.x);
+           offset <<= 1) {
         y = Kokkos::shfl_up(val, offset, blockDim.x);
-        if (threadIdx.x >= offset) {
+        if (static_cast<int>(threadIdx.x) >= offset) {
           val += y;
         }
       }
@@ -1183,6 +1182,8 @@ KOKKOS_INLINE_FUNCTION void single(
     const FunctorType& lambda) {
 #ifdef __CUDA_ARCH__
   if (threadIdx.x == 0) lambda();
+#else
+  (void)lambda;
 #endif
 }
 
@@ -1192,6 +1193,8 @@ KOKKOS_INLINE_FUNCTION void single(
     const FunctorType& lambda) {
 #ifdef __CUDA_ARCH__
   if (threadIdx.x == 0 && threadIdx.y == 0) lambda();
+#else
+  (void)lambda;
 #endif
 }
 
@@ -1204,6 +1207,10 @@ KOKKOS_INLINE_FUNCTION void single(
   if (1 < s.team_member.team_size()) {
     val = shfl(val, 0, blockDim.x);
   }
+#else
+  (void)s;
+  (void)val;
+  (void)lambda;
 #endif
 }
 
@@ -1217,6 +1224,10 @@ KOKKOS_INLINE_FUNCTION void single(
     lambda(val);
   }
   single_struct.team_member.team_broadcast(val, 0);
+#else
+  (void)single_struct;
+  (void)val;
+  (void)lambda;
 #endif
 }
 

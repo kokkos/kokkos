@@ -477,9 +477,9 @@ pipeline {
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-15;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=clang++-15 \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-15;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -Wno-pass-failed" \
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
@@ -488,6 +488,44 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_TUNING=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }
+                stage('CUDA-12.5.1-Clang-17-RDC') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:12.5.1-devel-ubuntu24.04 --build-arg ADDITIONAL_PACKAGES="clang-17 clang-tidy-17"'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=clang++-17 \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -Wno-pass-failed" \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
