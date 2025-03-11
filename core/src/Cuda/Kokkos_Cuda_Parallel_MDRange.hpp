@@ -96,11 +96,13 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   inline void execute() const {
     if (m_rp.m_num_tiles == 0) return;
 
-    // maximum number of blocks per grid as fetched by the API
+    // maximum number of blocks in each dimension of the grid as fetched by the
+    // API
     [[maybe_unused]] const auto maxblocks_api =
         m_rp.space().cuda_device_prop().maxGridSize;
 
-    // maximum numebr of blocks per grid hard-coded for unpacking on device
+    // maximum numebr of blocks in each dimension of the grid hard-coded for
+    // unpacking on device
     const int maxblocks[3] = {mdrange_max_blocks_x, mdrange_max_blocks,
                               mdrange_max_blocks};
 
@@ -109,29 +111,30 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     KOKKOS_ASSERT(maxblocks[1] <= static_cast<int>(maxblocks_api[1]));
     KOKKOS_ASSERT(maxblocks[2] <= static_cast<int>(maxblocks_api[2]));
 
-    // maximum number of threads per block as fetched by the API
-    const auto maxthreads = m_rp.space().cuda_device_prop().maxThreadsDim;
+    // maximum number of threads in each dimension of the block as fetched by
+    // the API
+    const auto max_threads_dim = m_rp.space().cuda_device_prop().maxThreadsDim;
 
     // maximum total number of threads per block as fetched by the API
-    [[maybe_unused]] const auto maxthreads_total =
+    [[maybe_unused]] const auto max_threads_per_block =
         m_rp.space().cuda_device_prop().maxThreadsPerBlock;
 
     // make sure the Z dimension (it is less than x,y limits) isn't exceeded
     const auto clampZ = [&](const int input) {
-      return std::min(input, maxthreads[2]);
+      return std::min(input, max_threads_dim[2]);
     };
 
     // make sure the block dimensions don't exceed the max number of threads
     // allowed
     const auto check_block_sizes = [&]([[maybe_unused]] const dim3& block) {
       KOKKOS_ASSERT(block.x > 0 &&
-                    block.x <= static_cast<unsigned int>(maxthreads[0]));
+                    block.x <= static_cast<unsigned int>(max_threads_dim[0]));
       KOKKOS_ASSERT(block.y > 0 &&
-                    block.y <= static_cast<unsigned int>(maxthreads[1]));
+                    block.y <= static_cast<unsigned int>(max_threads_dim[1]));
       KOKKOS_ASSERT(block.z > 0 &&
-                    block.z <= static_cast<unsigned int>(maxthreads[2]));
+                    block.z <= static_cast<unsigned int>(max_threads_dim[2]));
       KOKKOS_ASSERT(block.x * block.y * block.z <=
-                    static_cast<unsigned int>(maxthreads_total));
+                    static_cast<unsigned int>(max_threads_per_block));
     };
 
     // make sure the grid dimensions don't exceed the max number of blocks

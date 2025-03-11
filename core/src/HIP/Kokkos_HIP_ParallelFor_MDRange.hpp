@@ -58,7 +58,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
     using ClosureType = ParallelFor<FunctorType, Policy, HIP>;
     if (m_policy.m_num_tiles == 0) return;
 
-    // maximum number of blocks per grid as fetched by the API
+    // maximum number of blocks in each dimension of the grid as fetched by the
+    // API
     auto const maxblocks = m_policy.space().hip_device_prop().maxGridSize;
 
     if (Policy::rank == 2) {
