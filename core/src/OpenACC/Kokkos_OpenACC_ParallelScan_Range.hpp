@@ -76,11 +76,11 @@ class ParallelScanOpenACCBase {
   void OpenACCParallelScanRangePolicy(const IndexType begin,
                                       const IndexType end, IndexType chunk_size,
                                       const int async_arg) const {
-    if (chunk_size > 1 &&
-        !Kokkos::has_single_bit<std::make_unsigned_t<IndexType>>(chunk_size)) {
-      Kokkos::abort(
-          "RangePolicy blocking granularity must be power of two to be used "
-          "with OpenACC parallel_scan()");
+    if (chunk_size > 1) {
+      if (!Kokkos::has_single_bit<std::make_unsigned_t<IndexType>>(chunk_size))
+        Kokkos::abort(
+            "RangePolicy blocking granularity must be power of two to be used "
+            "with OpenACC parallel_scan()");
     } else {
       chunk_size = default_scan_chunk_size;
     }
