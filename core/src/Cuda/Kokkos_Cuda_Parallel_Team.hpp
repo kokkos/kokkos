@@ -948,8 +948,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_policy.space().cuda_device_prop().sharedMemPerBlock;
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
 
-    if (!Kokkos::Impl::is_integral_power_of_two(m_team_size) &&
-        !UseShflReduction) {
+    if (!Kokkos::has_single_bit<unsigned>(m_team_size) && !UseShflReduction) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< Cuda > bad team size"));
     }

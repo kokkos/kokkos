@@ -27,6 +27,7 @@ static_assert(false,
 
 #include <Kokkos_Core_fwd.hpp>
 
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
@@ -790,9 +791,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     m_team_size =
         team_size_request > max_team_size ? max_team_size : team_size_request;
 
-    if (m_chunk_size > 0) {
-      if (!Impl::is_integral_power_of_two(m_chunk_size))
-        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+    if (m_chunk_size > 0 &&
+        !Kokkos::has_single_bit(static_cast<unsigned>(m_chunk_size))) {
+      Kokkos::abort("TeamPolicy blocking granularity must be power of two");
     } else {
       int new_chunk_size = 1;
       while (new_chunk_size * 4 * m_space.concurrency() < m_league_size) {

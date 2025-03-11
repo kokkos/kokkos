@@ -118,16 +118,6 @@ namespace Kokkos {
 namespace Impl {
 
 //----------------------------------------------------------------------------
-// These 'constexpr'functions can be used as
-// both regular functions and meta-function.
-
-/**\brief  There exists integral 'k' such that N = 2^k */
-KOKKOS_INLINE_FUNCTION
-constexpr bool is_integral_power_of_two(const size_t N) {
-  return (0 < N) && (0 == (N & (N - 1)));
-}
-
-//----------------------------------------------------------------------------
 
 template <typename T, T v, bool NonZero = (v != T(0))>
 struct integral_nonzero_constant {
