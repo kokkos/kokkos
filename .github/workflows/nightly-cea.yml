@@ -74,6 +74,7 @@ jobs:
               -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
               -DKokkos_ENABLE_TESTS=ON \
               -DKokkos_ENABLE_EXAMPLES=ON \
+              -DKokkos_ENABLE_BENCHMARKS=ON \
               ${{ matrix.backend.configure }}
 
       - name: Start, update and configure
