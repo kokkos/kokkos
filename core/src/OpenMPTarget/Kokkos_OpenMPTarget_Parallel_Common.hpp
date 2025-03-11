@@ -204,9 +204,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // based on NVIDIA-V100 and should be modifid to be based on the
     // architecture in the future.
     const int max_team_threads = 32;
-    const int max_teams =
-        p.space().impl_internal_space_instance()->concurrency() /
-        max_team_threads;
+    const int max_teams        = p.space().concurrency() / max_team_threads;
     // Number of elements in the reduction
     const auto value_count = FunctorAnalysis::value_count(f.get_functor());
 
