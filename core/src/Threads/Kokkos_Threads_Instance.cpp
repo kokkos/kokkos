@@ -381,7 +381,7 @@ void ThreadsInternal::first_touch_allocate_thread_private_scratch(
 }
 
 void *ThreadsInternal::resize_scratch(size_t reduce_size, size_t thread_size) {
-  enum { ALIGN_MASK = Kokkos::Impl::MEMORY_ALIGNMENT - 1 };
+  constexpr size_t ALIGN_MASK = KOKKOS_MEMORY_ALIGNMENT - 1;
 
   fence();
 

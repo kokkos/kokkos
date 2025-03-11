@@ -63,10 +63,10 @@ void *HostSpace::impl_allocate(
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
-  static_assert(Kokkos::has_single_bit(Kokkos::Impl::MEMORY_ALIGNMENT),
+  static_assert(Kokkos::has_single_bit<unsigned>(KOKKOS_MEMORY_ALIGNMENT),
                 "Memory alignment must be power of two");
 
-  constexpr uintptr_t alignment      = Kokkos::Impl::MEMORY_ALIGNMENT;
+  constexpr uintptr_t alignment      = KOKKOS_MEMORY_ALIGNMENT;
   constexpr uintptr_t alignment_mask = alignment - 1;
 
   void *ptr = nullptr;
@@ -107,7 +107,7 @@ void HostSpace::impl_deallocate(
       Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                         reported_size);
     }
-    constexpr uintptr_t alignment = Kokkos::Impl::MEMORY_ALIGNMENT;
+    constexpr uintptr_t alignment = KOKKOS_MEMORY_ALIGNMENT;
     operator delete(arg_alloc_ptr, std::align_val_t(alignment),
                     std::nothrow_t{});
   }
