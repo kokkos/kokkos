@@ -61,25 +61,33 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto& m_tile_end = m_policy.m_tile_end;
 
     if constexpr (Policy::rank == 2) {
+      // id0 to threadIdx.x; id1 to threadIdx.y
       sycl::range<3> local_sizes(m_tile[0], m_tile[1], 1);
+
       sycl::range<3> global_sizes(m_tile_end[0] * m_tile[0],
                                   m_tile_end[1] * m_tile[1], 1);
+
       return {global_sizes, local_sizes};
     }
     if constexpr (Policy::rank == 3) {
+      // id0 to threadIdx.x; id1 to threadIdx.y; id2 to threadIdx.z
       sycl::range<3> local_sizes(m_tile[0], m_tile[1], m_tile[2]);
+
       sycl::range<3> global_sizes(m_tile_end[0] * m_tile[0],
                                   m_tile_end[1] * m_tile[1],
                                   m_tile_end[2] * m_tile[2]);
+
       return {global_sizes, local_sizes};
     }
     if constexpr (Policy::rank == 4) {
       // id0,id1 encoded within first index; id2 to second index; id3 to third
       // index
       sycl::range<3> local_sizes(m_tile[0] * m_tile[1], m_tile[2], m_tile[3]);
+
       sycl::range<3> global_sizes(
           m_tile_end[0] * m_tile[0] * m_tile_end[1] * m_tile[1],
           m_tile_end[2] * m_tile[2], m_tile_end[3] * m_tile[3]);
+
       return {global_sizes, local_sizes};
     }
     if constexpr (Policy::rank == 5) {
@@ -87,10 +95,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       // third index
       sycl::range<3> local_sizes(m_tile[0] * m_tile[1], m_tile[2] * m_tile[3],
                                  m_tile[4]);
+
       sycl::range<3> global_sizes(
           m_tile_end[0] * m_tile[0] * m_tile_end[1] * m_tile[1],
           m_tile_end[2] * m_tile[2] * m_tile_end[3] * m_tile[3],
           m_tile_end[4] * m_tile[4]);
+
       return {global_sizes, local_sizes};
     }
     if constexpr (Policy::rank == 6) {
@@ -98,10 +108,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       // third index
       sycl::range<3> local_sizes(m_tile[0] * m_tile[1], m_tile[2] * m_tile[3],
                                  m_tile[4] * m_tile[5]);
+
       sycl::range<3> global_sizes(
           m_tile_end[0] * m_tile[0] * m_tile_end[1] * m_tile[1],
           m_tile_end[2] * m_tile[2] * m_tile_end[3] * m_tile[3],
           m_tile_end[4] * m_tile[4] * m_tile_end[5] * m_tile[5]);
+
       return {global_sizes, local_sizes};
     }
     static_assert(Policy::rank > 1 && Policy::rank < 7,

@@ -57,9 +57,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   inline void execute() const {
     using ClosureType = ParallelFor<FunctorType, Policy, HIP>;
     if (m_policy.m_num_tiles == 0) return;
+
+    // maximum number of blocks per grid as fetched by the API
     auto const maxblocks = m_policy.space().hip_device_prop().maxGridSize;
+
     if (Policy::rank == 2) {
+      // id0 to threadIdx.x; id1 to threadIdx.y
       dim3 const block(m_policy.m_tile[0], m_policy.m_tile[1], 1);
+
       dim3 const grid(
           std::min<array_index_type>(
               (m_policy.m_upper[0] - m_policy.m_lower[0] + block.x - 1) /
@@ -70,12 +75,15 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
                   block.y,
               maxblocks[1]),
           1);
+
       hip_parallel_launch<ClosureType, LaunchBounds>(
           *this, grid, block, 0,
           m_policy.space().impl_internal_space_instance(), false);
     } else if (Policy::rank == 3) {
+      // id0 to threadIdx.x; id1 to threadIdx.y; id2 to threadIdx.z
       dim3 const block(m_policy.m_tile[0], m_policy.m_tile[1],
                        m_policy.m_tile[2]);
+
       dim3 const grid(
           std::min<array_index_type>(
               (m_policy.m_upper[0] - m_policy.m_lower[0] + block.x - 1) /
@@ -89,6 +97,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
               (m_policy.m_upper[2] - m_policy.m_lower[2] + block.z - 1) /
                   block.z,
               maxblocks[2]));
+
       hip_parallel_launch<ClosureType, LaunchBounds>(
           *this, grid, block, 0,
           m_policy.space().impl_internal_space_instance(), false);
@@ -97,6 +106,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
       // threadIdx.z
       dim3 const block(m_policy.m_tile[0] * m_policy.m_tile[1],
                        m_policy.m_tile[2], m_policy.m_tile[3]);
+
       dim3 const grid(
           std::min<array_index_type>(
               m_policy.m_tile_end[0] * m_policy.m_tile_end[1], maxblocks[0]),
@@ -108,6 +118,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
               (m_policy.m_upper[3] - m_policy.m_lower[3] + block.z - 1) /
                   block.z,
               maxblocks[2]));
+
       hip_parallel_launch<ClosureType, LaunchBounds>(
           *this, grid, block, 0,
           m_policy.space().impl_internal_space_instance(), false);
@@ -117,6 +128,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
       dim3 const block(m_policy.m_tile[0] * m_policy.m_tile[1],
                        m_policy.m_tile[2] * m_policy.m_tile[3],
                        m_policy.m_tile[4]);
+
       dim3 const grid(
           std::min<array_index_type>(
               m_policy.m_tile_end[0] * m_policy.m_tile_end[1], maxblocks[0]),
@@ -126,6 +138,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
               (m_policy.m_upper[4] - m_policy.m_lower[4] + block.z - 1) /
                   block.z,
               maxblocks[2]));
+
       hip_parallel_launch<ClosureType, LaunchBounds>(
           *this, grid, block, 0,
           m_policy.space().impl_internal_space_instance(), false);
@@ -135,6 +148,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
       dim3 const block(m_policy.m_tile[0] * m_policy.m_tile[1],
                        m_policy.m_tile[2] * m_policy.m_tile[3],
                        m_policy.m_tile[4] * m_policy.m_tile[5]);
+
       dim3 const grid(
           std::min<array_index_type>(
               m_policy.m_tile_end[0] * m_policy.m_tile_end[1], maxblocks[0]),
@@ -142,6 +156,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
               m_policy.m_tile_end[2] * m_policy.m_tile_end[3], maxblocks[1]),
           std::min<array_index_type>(
               m_policy.m_tile_end[4] * m_policy.m_tile_end[5], maxblocks[2]));
+
       hip_parallel_launch<ClosureType, LaunchBounds>(
           *this, grid, block, 0,
           m_policy.space().impl_internal_space_instance(), false);
