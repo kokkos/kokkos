@@ -34,6 +34,8 @@
 // We allow using deprecated classes in this file
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 
+// NOLINTBEGIN
+
 #if defined(__CUDA_ARCH__)
 #define KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN(MSG)                           \
   {                                                                        \
@@ -103,9 +105,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     extern __shared__ int32_t shmem_all[];
 
     int32_t* const warp_shmem =
-        shmem_all +
-        (static_cast<std::uintptr_t>(threadIdx.z) * shmem_per_warp) /
-            sizeof(int32_t);
+        shmem_all + (threadIdx.z * shmem_per_warp) / sizeof(int32_t);
 
     task_base_type* const shared_memory_task_copy = (task_base_type*)warp_shmem;
 
@@ -133,10 +133,10 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
       __syncwarp(0xffffffff);
 
       // pretend it's an int* for shuffle purposes
-      reinterpret_cast<int*>(&current_task)[0] = __shfl_sync(
-          0xffffffff, reinterpret_cast<int*>(&current_task)[0], 0, 32);
-      reinterpret_cast<int*>(&current_task)[1] = __shfl_sync(
-          0xffffffff, reinterpret_cast<int*>(&current_task)[1], 0, 32);
+      ((int*)&current_task)[0] =
+          __shfl_sync(0xffffffff, ((int*)&current_task)[0], 0, 32);
+      ((int*)&current_task)[1] =
+          __shfl_sync(0xffffffff, ((int*)&current_task)[1], 0, 32);
 
       if (current_task) {
         KOKKOS_ASSERT(!current_task->as_runnable_task().get_respawn_flag());
@@ -219,7 +219,7 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
             current_task->as_runnable_task().set_respawn_flag();
           }
 
-          queue.complete(std::move(*current_task).as_runnable_task(),
+          queue.complete((*std::move(current_task)).as_runnable_task(),
                          team_scheduler.team_scheduler_info());
         }
       }
@@ -292,8 +292,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
     void* storage = cuda_internal_scratch_unified(
         Kokkos::Cuda(), sizeof(function_type) + sizeof(destroy_type));
     function_type* ptr_ptr = (function_type*)storage;
-    destroy_type* dtor_ptr = reinterpret_cast<destroy_type*>(
-        static_cast<char*>(storage) + sizeof(function_type));
+    destroy_type* dtor_ptr =
+        (destroy_type*)((char*)storage + sizeof(function_type));
 
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::"
@@ -318,8 +318,8 @@ class TaskQueueSpecialization<SimpleTaskScheduler<Kokkos::Cuda, QueueType>> {
 
 template <class Scheduler>
 class TaskQueueSpecializationConstrained<
-    Scheduler, std::enable_if_t<std::is_same_v<
-                   typename Scheduler::execution_space, Kokkos::Cuda>>> {
+    Scheduler, std::enable_if_t<std::is_same<
+                   typename Scheduler::execution_space, Kokkos::Cuda>::value>> {
  public:
   using scheduler_type  = Scheduler;
   using execution_space = Kokkos::Cuda;
@@ -338,17 +338,13 @@ class TaskQueueSpecializationConstrained<
 
     extern __shared__ int32_t shmem_all[];
 
-    task_root_type* const end =
-        reinterpret_cast<task_root_type*>(task_root_type::EndTag);
+    task_root_type* const end = (task_root_type*)task_root_type::EndTag;
     task_root_type* const no_more_tasks_sentinel = nullptr;
 
     int32_t* const warp_shmem =
-        shmem_all +
-        (static_cast<std::uintptr_t>(threadIdx.z) * shmem_per_warp) /
-            sizeof(int32_t);
+        shmem_all + (threadIdx.z * shmem_per_warp) / sizeof(int32_t);
 
-    task_root_type* const task_shmem =
-        reinterpret_cast<task_root_type*>(warp_shmem);
+    task_root_type* const task_shmem = (task_root_type*)warp_shmem;
 
     const int warp_lane = threadIdx.x + threadIdx.y * blockDim.x;
 
@@ -390,16 +386,16 @@ class TaskQueueSpecializationConstrained<
 
       // Broadcast task pointer:
 
-      reinterpret_cast<int*>(&task_ptr)[0] =
-          __shfl_sync(0xffffffff, reinterpret_cast<int*>(&task_ptr)[0], 0, 32);
-      reinterpret_cast<int*>(&task_ptr)[1] =
-          __shfl_sync(0xffffffff, reinterpret_cast<int*>(&task_ptr)[1], 0, 32);
+      ((int*)&task_ptr)[0] =
+          __shfl_sync(0xffffffff, ((int*)&task_ptr)[0], 0, 32);
+      ((int*)&task_ptr)[1] =
+          __shfl_sync(0xffffffff, ((int*)&task_ptr)[1], 0, 32);
 
 #if defined(KOKKOS_ENABLE_DEBUG)
       KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN("TaskQueue CUDA task_ptr");
 #endif
 
-      if (nullptr == task_ptr) break;  // 0 == queue->m_ready_count
+      if (0 == task_ptr) break;  // 0 == queue->m_ready_count
 
       if (end != task_ptr) {
         // Whole warp copy task's closure to/from shared memory.
@@ -409,8 +405,7 @@ class TaskQueueSpecializationConstrained<
         int32_t const e =
             *((int32_t volatile*)(&task_ptr->m_alloc_size)) / sizeof(int32_t);
 
-        int32_t volatile* const task_mem =
-            reinterpret_cast<int32_t volatile*>(task_ptr);
+        int32_t volatile* const task_mem = (int32_t volatile*)task_ptr;
 
         KOKKOS_ASSERT(e * sizeof(int32_t) < shmem_per_warp);
 
@@ -456,7 +451,7 @@ class TaskQueueSpecializationConstrained<
         // If respawn requested copy respawn data back to main memory
 
         if (0 == warp_lane) {
-          if (reinterpret_cast<task_root_type*>(task_root_type::LockTag) !=
+          if (((task_root_type*)task_root_type::LockTag) !=
               task_shmem->m_next) {
             ((volatile task_root_type*)task_ptr)->m_next = task_shmem->m_next;
             ((volatile task_root_type*)task_ptr)->m_priority =
@@ -483,7 +478,7 @@ class TaskQueueSpecializationConstrained<
     // const dim3 grid( 1 , 1 , 1 );
     const dim3 block(1, Kokkos::Impl::CudaTraits::WarpSize, warps_per_block);
     const int shared_total    = shared_per_warp * warps_per_block;
-    const cudaStream_t stream = nullptr;
+    const cudaStream_t stream = 0;
 
     auto& queue = scheduler.queue();
     queue.initialize_team_queues(warps_per_block * grid.x);
@@ -530,9 +525,9 @@ class TaskQueueSpecializationConstrained<
 
     void* storage = cuda_internal_scratch_unified(
         Kokkos::Cuda(), sizeof(function_type) + sizeof(destroy_type));
-    function_type* ptr_ptr = static_cast<function_type*>(storage);
-    destroy_type* dtor_ptr = reinterpret_cast<destroy_type*>(
-        static_cast<char*>(storage) + sizeof(function_type));
+    function_type* ptr_ptr = (function_type*)storage;
+    destroy_type* dtor_ptr =
+        (destroy_type*)((char*)storage + sizeof(function_type));
 
     Impl::cuda_device_synchronize(
         "Kokkos::Impl::TaskQueueSpecializationConstrained<SimpleTaskScheduler<"
@@ -1244,6 +1239,8 @@ KOKKOS_INLINE_FUNCTION void single(
 //----------------------------------------------------------------------------
 
 #undef KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN
+
+// NOLINTEND
 
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
