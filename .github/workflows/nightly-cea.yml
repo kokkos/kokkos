@@ -1,9 +1,8 @@
-name: Experimental CEA builds
+name: Nightly CEA builds
 
 on:
   schedule:
     - cron: "0 2 * * 1-5" # every weekday at 2am UTC
-  pull_request: # XXX remove before merging!
 
 permissions: read-all
 
@@ -88,9 +87,9 @@ jobs:
             ctest \
               -V \
               --test-dir build \
-              -D ExperimentalStart \
-              -D ExperimentalUpdate \
-              -D ExperimentalConfigure
+              -D NightlyStart \
+              -D NightlyUpdate \
+              -D NightlyConfigure
 
       - name: Build
         id: build
@@ -103,7 +102,7 @@ jobs:
             ctest \
               -V \
               --test-dir build \
-              -D ExperimentalBuild
+              -D NightlyBuild
 
       - name: Test
         id: test
@@ -115,7 +114,7 @@ jobs:
             ctest \
               --output-on-failure \
               --test-dir build \
-              -D ExperimentalTest
+              -D NightlyTest
 
       - name: Submit
         run: |
@@ -124,7 +123,7 @@ jobs:
             -e local \
             ctest \
               --test-dir build \
-              -D ExperimentalSubmit
+              -D NightlySubmit
 
       # note: this marks the job as failed if any of the mentionned steps (that
       # have `continue-on-error`) has failed
