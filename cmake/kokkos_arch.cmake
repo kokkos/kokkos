@@ -364,7 +364,7 @@ if(KOKKOS_ARCH_ARMV9_GRACE)
   else()
     message(
       SEND_ERROR
-        "Compiler does not support ARMv9 Grace architecture. You may want to try -DKokkos_ARCH_NATIVE=ON instead"
+        "Unable to verify that the compiler has support for the ARMv9 Grace architecture failed. You may want to try -DKokkos_ARCH_NATIVE=ON instead"
     )
   endif()
 endif()
