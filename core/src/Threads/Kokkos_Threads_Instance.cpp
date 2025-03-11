@@ -381,7 +381,7 @@ void ThreadsInternal::first_touch_allocate_thread_private_scratch(
 }
 
 void *ThreadsInternal::resize_scratch(size_t reduce_size, size_t thread_size) {
-  constexpr size_t ALIGN_MASK = KOKKOS_MEMORY_ALIGNMENT - 1;
+  constexpr size_t align_mask = KOKKOS_MEMORY_ALIGNMENT - 1;
 
   fence();
 
@@ -389,8 +389,8 @@ void *ThreadsInternal::resize_scratch(size_t reduce_size, size_t thread_size) {
   const size_t old_thread_size = s_threads_process.m_scratch_thread_end -
                                  s_threads_process.m_scratch_reduce_end;
 
-  reduce_size = (reduce_size + ALIGN_MASK) & ~ALIGN_MASK;
-  thread_size = (thread_size + ALIGN_MASK) & ~ALIGN_MASK;
+  reduce_size = (reduce_size + align_mask) & ~align_mask;
+  thread_size = (thread_size + align_mask) & ~align_mask;
 
   // Increase size or deallocate completely.
 
