@@ -30,7 +30,7 @@ Polaris:
         -D CDASH_MODEL=Nightly
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_a100.xml
-        -S CTestRun.cmake
+        -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="Polaris-A100"
   artifacts:
@@ -62,7 +62,7 @@ Aurora:
         -D CDASH_MODEL=Nightly
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
         -D OUTPUT_JUNIT_FILE=result_pvc1550.xml
-        -S CTestRun.cmake
+        -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1550"
   artifacts:

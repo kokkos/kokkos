@@ -16,7 +16,7 @@ hipcc:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
-    - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="hipcc-rocm/6.0"
+    - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="hipcc-rocm/6.0"
 
 amdclang:
   stage: test
@@ -33,7 +33,7 @@ amdclang:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_CLANG_TIDY=/opt/rocm-6.2.4/llvm/bin/clang-tidy\;-warnings-as-errors=*"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
-    - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="amdclang-rocm/6.2.4"
+    - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="amdclang-rocm/6.2.4"
 
 crayclang:
   stage: test
@@ -50,7 +50,7 @@ crayclang:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=CC"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
-    - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="crayclang/18.0.1-rocm/6.3.1"
+    - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="crayclang/18.0.1-rocm/6.3.1"
 
 include:
 - project: ci/resources/templates
