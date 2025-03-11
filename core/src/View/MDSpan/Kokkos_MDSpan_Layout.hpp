@@ -26,6 +26,10 @@ static_assert(false,
 #include <View/Kokkos_ViewDataAnalysis.hpp>
 #include <Kokkos_Abort.hpp>
 
+#ifdef KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
+#include <iostream>
+#endif
+
 // The difference between a legacy Kokkos array layout and an
 // mdspan layout is that the array layouts can have state, but don't have the
 // nested mapping. This file provides interoperability helpers.
