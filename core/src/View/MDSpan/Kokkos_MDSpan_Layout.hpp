@@ -24,7 +24,6 @@ static_assert(false,
 
 #include "Kokkos_MDSpan_Extents.hpp"
 #include <View/Kokkos_ViewDataAnalysis.hpp>
-#include <Kokkos_Abort.hpp>
 
 #ifdef KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
 #include <iostream>
