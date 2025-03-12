@@ -340,6 +340,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
         h_view(h_view_) {
     if (int(d_view.rank) != int(h_view.rank) ||
         [&]() {
+          // This has a false positive in clang-tidy
+          // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
           for (size_t r = 0; r < d_view.rank(); ++r) {
             if (d_view.extent(r) != h_view.extent(r) ||
                 d_view.stride(r) != h_view.stride(r))
