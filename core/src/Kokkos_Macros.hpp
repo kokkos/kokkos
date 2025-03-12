@@ -198,8 +198,10 @@
 #endif
 #endif
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #if !defined(KOKKOS_MEMORY_ALIGNMENT)
 #define KOKKOS_MEMORY_ALIGNMENT 64
+#endif
 #endif
 
 #if defined(_WIN32)
@@ -397,12 +399,14 @@
 //----------------------------------------------------------------------------
 // Define Macro for alignment:
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #if !defined(KOKKOS_MEMORY_ALIGNMENT)
 #define KOKKOS_MEMORY_ALIGNMENT 64
 #endif
 
 #if !defined(KOKKOS_MEMORY_ALIGNMENT_THRESHOLD)
 #define KOKKOS_MEMORY_ALIGNMENT_THRESHOLD 1
+#endif
 #endif
 
 #if !defined(KOKKOS_IMPL_ALIGN_PTR)

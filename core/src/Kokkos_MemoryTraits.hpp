@@ -81,6 +81,7 @@ using MemoryRandomAccess =
 namespace Kokkos {
 namespace Impl {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 static_assert((0 < int(KOKKOS_MEMORY_ALIGNMENT)) &&
                   (0 == (int(KOKKOS_MEMORY_ALIGNMENT) &
                          (int(KOKKOS_MEMORY_ALIGNMENT) - 1))),
@@ -95,6 +96,10 @@ static_assert((0 < int(KOKKOS_MEMORY_ALIGNMENT)) &&
 static constexpr unsigned MEMORY_ALIGNMENT = KOKKOS_MEMORY_ALIGNMENT;
 static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD =
     KOKKOS_MEMORY_ALIGNMENT_THRESHOLD;
+#else
+static constexpr unsigned MEMORY_ALIGNMENT           = 64;
+static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD = 1;
+#endif
 
 // ------------------------------------------------------------------ //
 //  this identifies the default memory trait
