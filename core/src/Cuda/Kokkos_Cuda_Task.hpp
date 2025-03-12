@@ -34,6 +34,8 @@
 // We allow using deprecated classes in this file
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 
+// NOLINTBEGIN
+
 #if defined(__CUDA_ARCH__)
 #define KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN(MSG)                           \
   {                                                                        \
@@ -1237,6 +1239,8 @@ KOKKOS_INLINE_FUNCTION void single(
 //----------------------------------------------------------------------------
 
 #undef KOKKOS_IMPL_CUDA_SYNCWARP_OR_RETURN
+
+// NOLINTEND
 
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
