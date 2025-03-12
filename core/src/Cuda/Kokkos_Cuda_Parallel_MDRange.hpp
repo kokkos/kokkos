@@ -95,11 +95,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
   inline void execute() const {
     if (m_rp.m_num_tiles == 0) return;
-    // maximum number of blocks per grid as fetched by the API
+
+    // maximum number of blocks in each dimension of the grid as fetched by the
+    // API
     [[maybe_unused]] const auto maxblocks_api =
         m_rp.space().cuda_device_prop().maxGridSize;
 
-    // maximum numebr of blocks per grid hard-coded for unpacking on device
+    // maximum number of blocks in each dimension of the grid hard-coded for
+    // unpacking on device
     const int maxblocks[3] = {mdrange_max_blocks_x, mdrange_max_blocks,
                               mdrange_max_blocks};
 
@@ -108,26 +111,32 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     KOKKOS_ASSERT(maxblocks[1] <= static_cast<int>(maxblocks_api[1]));
     KOKKOS_ASSERT(maxblocks[2] <= static_cast<int>(maxblocks_api[2]));
 
-    const auto maxthreads = m_rp.space().cuda_device_prop().maxThreadsDim;
+    // maximum number of threads in each dimension of the block as fetched by
+    // the API
+    const auto max_threads_dim = m_rp.space().cuda_device_prop().maxThreadsDim;
 
-    [[maybe_unused]] const auto maxThreadsPerBlock =
+    // maximum total number of threads per block as fetched by the API
+    [[maybe_unused]] const auto max_threads_per_block =
         m_rp.space().cuda_device_prop().maxThreadsPerBlock;
+
     // make sure the Z dimension (it is less than x,y limits) isn't exceeded
     const auto clampZ = [&](const int input) {
-      return (input > maxthreads[2] ? maxthreads[2] : input);
+      return std::min(input, max_threads_dim[2]);
     };
+
     // make sure the block dimensions don't exceed the max number of threads
     // allowed
     const auto check_block_sizes = [&]([[maybe_unused]] const dim3& block) {
       KOKKOS_ASSERT(block.x > 0 &&
-                    block.x <= static_cast<unsigned int>(maxthreads[0]));
+                    block.x <= static_cast<unsigned int>(max_threads_dim[0]));
       KOKKOS_ASSERT(block.y > 0 &&
-                    block.y <= static_cast<unsigned int>(maxthreads[1]));
+                    block.y <= static_cast<unsigned int>(max_threads_dim[1]));
       KOKKOS_ASSERT(block.z > 0 &&
-                    block.z <= static_cast<unsigned int>(maxthreads[2]));
+                    block.z <= static_cast<unsigned int>(max_threads_dim[2]));
       KOKKOS_ASSERT(block.x * block.y * block.z <=
-                    static_cast<unsigned int>(maxThreadsPerBlock));
+                    static_cast<unsigned int>(max_threads_per_block));
     };
+
     // make sure the grid dimensions don't exceed the max number of blocks
     // allowed
     const auto check_grid_sizes = [&]([[maybe_unused]] const dim3& grid) {
@@ -138,9 +147,12 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
       KOKKOS_ASSERT(grid.z > 0 &&
                     grid.z <= static_cast<unsigned int>(maxblocks[2]));
     };
+
     if (RP::rank == 2) {
+      // id0 to threadIdx.x; id1 to threadIdx.y
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], 1);
       check_block_sizes(block);
+
       const dim3 grid(
           std::min<array_index_type>(
               (m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
@@ -150,11 +162,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
               maxblocks[1]),
           1);
       check_grid_sizes(grid);
+
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance());
     } else if (RP::rank == 3) {
+      // id0 to threadIdx.x; id1 to threadIdx.y; id2 to threadIdx.z
       const dim3 block(m_rp.m_tile[0], m_rp.m_tile[1], clampZ(m_rp.m_tile[2]));
       check_block_sizes(block);
+
       const dim3 grid(
           std::min<array_index_type>(
               (m_rp.m_upper[0] - m_rp.m_lower[0] + block.x - 1) / block.x,
@@ -167,6 +182,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
               maxblocks[2]));
       // ensure we don't exceed the capability of the device
       check_grid_sizes(grid);
+
       CudaParallelLaunch<ParallelFor, LaunchBounds>(
           *this, grid, block, 0, m_rp.space().impl_internal_space_instance());
     } else if (RP::rank == 4) {
