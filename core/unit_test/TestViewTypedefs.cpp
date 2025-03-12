@@ -160,8 +160,13 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::element_type, ValueType>);
   // FIXME: should be remove_const_t<element_type>
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
-  // FIXME: should be extents_type::index_type
-  static_assert(std::is_same_v<typename ViewType::index_type, typename Space::memory_space::size_type>);
+  static_assert(std::is_same_v<typename ViewType::size_type, typename Space::memory_space::size_type>);
+  // FIXME: we need to evaluate how we want to proceed with this, as with
+  // extents index_type also determines the stride, while LegacyView uses size_t strides
+  // So we are doing this now to avoid breakage but it means we may use 64 bit indices on the GPU
+  #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  static_assert(std::is_same_v<typename ViewType::index_type, size_t>);
+  #endif
   // FIXME: this isn't given in View since for example SYCL has "int" as its size_type
   // static_assert(std::is_same_v<typename ViewType::size_type, std::make_unsigned_t<typename ViewType::index_type>>);
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
