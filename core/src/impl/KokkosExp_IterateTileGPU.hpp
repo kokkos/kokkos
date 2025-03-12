@@ -38,16 +38,6 @@ struct EmulateCUDADim3 {
 };
 #endif
 
-#if defined(KOKKOS_ENABLE_CUDA)
-// see:
-// https://docs.nvidia.com/cuda/cuda-c-programming-guide/#features-and-technical-specifications-technical-specifications-per-compute-capability
-constexpr int mdrange_max_blocks_x = 2147483647;  // 2^31 - 1
-constexpr int mdrange_max_blocks   = 65535;       // 2^16 - 1
-#else
-constexpr int mdrange_max_blocks_x = 65535;  // 2^16 - 1
-constexpr int mdrange_max_blocks   = 65535;  // 2^16 - 1
-#endif
-
 template <class Tag, class Functor, class... Args>
 KOKKOS_IMPL_FORCEINLINE_FUNCTION std::enable_if_t<std::is_void_v<Tag>>
 _tag_invoke(Functor const& f, Args&&... args) {
@@ -78,12 +68,14 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
 
 // ------------------------------------------------------------------ //
 // ParallelFor iteration pattern
-template <int N, typename PolicyType, typename Functor, typename Tag>
+template <int N, typename PolicyType, typename Functor, typename MaxGridSize,
+          typename Tag>
 struct DeviceIterateTile;
 
 // Rank 2
-template <typename PolicyType, typename Functor, typename Tag>
-struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
+template <typename PolicyType, typename Functor, typename MaxGridSize,
+          typename Tag>
+struct DeviceIterateTile<2, PolicyType, Functor, MaxGridSize, Tag> {
   using index_type = typename PolicyType::index_type;
 
 #ifdef KOKKOS_ENABLE_SYCL
@@ -98,9 +90,10 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
 #else
-  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                  const Functor& f_)
-      : m_policy(policy_), m_func(f_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_)
+      : m_policy(policy_), m_func(f_), m_max_grid_size(max_grid_size_) {}
 #endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
@@ -172,6 +165,7 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+  const MaxGridSize& m_max_grid_size;
 #ifdef KOKKOS_ENABLE_SYCL
   const EmulateCUDADim3<index_type> gridDim;
   const EmulateCUDADim3<index_type> blockIdx;
@@ -180,8 +174,9 @@ struct DeviceIterateTile<2, PolicyType, Functor, Tag> {
 };
 
 // Rank 3
-template <typename PolicyType, typename Functor, typename Tag>
-struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
+template <typename PolicyType, typename Functor, typename MaxGridSize,
+          typename Tag>
+struct DeviceIterateTile<3, PolicyType, Functor, MaxGridSize, Tag> {
   using index_type = typename PolicyType::index_type;
 
 #ifdef KOKKOS_ENABLE_SYCL
@@ -196,9 +191,10 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
 #else
-  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                  const Functor& f_)
-      : m_policy(policy_), m_func(f_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_)
+      : m_policy(policy_), m_func(f_), m_max_grid_size(max_grid_size_) {}
 #endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
@@ -296,6 +292,7 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+  const MaxGridSize& m_max_grid_size;
 #ifdef KOKKOS_ENABLE_SYCL
   const EmulateCUDADim3<index_type> gridDim;
   const EmulateCUDADim3<index_type> blockIdx;
@@ -304,8 +301,9 @@ struct DeviceIterateTile<3, PolicyType, Functor, Tag> {
 };
 
 // Rank 4
-template <typename PolicyType, typename Functor, typename Tag>
-struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
+template <typename PolicyType, typename Functor, typename MaxGridSize,
+          typename Tag>
+struct DeviceIterateTile<4, PolicyType, Functor, MaxGridSize, Tag> {
   using index_type = typename PolicyType::index_type;
 
 #ifdef KOKKOS_ENABLE_SYCL
@@ -320,9 +318,10 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
 #else
-  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                  const Functor& f_)
-      : m_policy(policy_), m_func(f_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_)
+      : m_policy(policy_), m_func(f_), m_max_grid_size(max_grid_size_) {}
 #endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
@@ -336,13 +335,13 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks_x));
+          Kokkos::min(temp0, static_cast<index_type>(m_max_grid_size[0]));
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
-               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl0
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[0])
+               ? static_cast<index_type>(m_max_grid_size[0]) / numbl0
                : Kokkos::min(temp1,
-                             static_cast<index_type>(mdrange_max_blocks_x)));
+                             static_cast<index_type>(m_max_grid_size[0])));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
@@ -419,13 +418,13 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks_x));
+          Kokkos::min(temp1, static_cast<index_type>(m_max_grid_size[0]));
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
-               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl1
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[0])
+               ? static_cast<index_type>(m_max_grid_size[0]) / numbl1
                : Kokkos::min(temp0,
-                             static_cast<index_type>(mdrange_max_blocks_x)));
+                             static_cast<index_type>(m_max_grid_size[0])));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
@@ -499,6 +498,7 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+  const MaxGridSize& m_max_grid_size;
 #ifdef KOKKOS_ENABLE_SYCL
   const EmulateCUDADim3<index_type> gridDim;
   const EmulateCUDADim3<index_type> blockIdx;
@@ -507,8 +507,9 @@ struct DeviceIterateTile<4, PolicyType, Functor, Tag> {
 };
 
 // Rank 5
-template <typename PolicyType, typename Functor, typename Tag>
-struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
+template <typename PolicyType, typename Functor, typename MaxGridSize,
+          typename Tag>
+struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
   using index_type = typename PolicyType::index_type;
 
 #ifdef KOKKOS_ENABLE_SYCL
@@ -523,9 +524,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
 #else
-  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                  const Functor& f_)
-      : m_policy(policy_), m_func(f_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_)
+      : m_policy(policy_), m_func(f_), m_max_grid_size(max_grid_size_) {}
 #endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
@@ -539,13 +541,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks_x));
+          Kokkos::min(temp0, static_cast<index_type>(m_max_grid_size[0]));
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
-               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl0
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[0])
+               ? static_cast<index_type>(m_max_grid_size[0]) / numbl0
                : Kokkos::min(temp1,
-                             static_cast<index_type>(mdrange_max_blocks_x)));
+                             static_cast<index_type>(m_max_grid_size[0])));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
@@ -566,13 +568,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks));
+          Kokkos::min(temp0, static_cast<index_type>(m_max_grid_size[1]));
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
-               ? static_cast<index_type>(mdrange_max_blocks) / numbl2
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[1])
+               ? static_cast<index_type>(m_max_grid_size[1]) / numbl2
                : Kokkos::min(temp1,
-                             static_cast<index_type>(mdrange_max_blocks)));
+                             static_cast<index_type>(m_max_grid_size[1])));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
@@ -660,13 +662,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks_x));
+          Kokkos::min(temp1, static_cast<index_type>(m_max_grid_size[0]));
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
-               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl1
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[0])
+               ? static_cast<index_type>(m_max_grid_size[0]) / numbl1
                : Kokkos::min(temp0,
-                             static_cast<index_type>(mdrange_max_blocks_x)));
+                             static_cast<index_type>(m_max_grid_size[0])));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
@@ -687,13 +689,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks));
+          Kokkos::min(temp1, static_cast<index_type>(m_max_grid_size[1]));
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
-               ? static_cast<index_type>(mdrange_max_blocks) / numbl3
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[1])
+               ? static_cast<index_type>(m_max_grid_size[1]) / numbl3
                : Kokkos::min(temp0,
-                             static_cast<index_type>(mdrange_max_blocks)));
+                             static_cast<index_type>(m_max_grid_size[1])));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
@@ -778,6 +780,7 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+  const MaxGridSize& m_max_grid_size;
 #ifdef KOKKOS_ENABLE_SYCL
   const EmulateCUDADim3<index_type> gridDim;
   const EmulateCUDADim3<index_type> blockIdx;
@@ -786,8 +789,9 @@ struct DeviceIterateTile<5, PolicyType, Functor, Tag> {
 };
 
 // Rank 6
-template <typename PolicyType, typename Functor, typename Tag>
-struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
+template <typename PolicyType, typename Functor, typename MaxGridSize,
+          typename Tag>
+struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
   using index_type = typename PolicyType::index_type;
 
 #ifdef KOKKOS_ENABLE_SYCL
@@ -802,9 +806,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
 #else
-  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                  const Functor& f_)
-      : m_policy(policy_), m_func(f_) {}
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
+      const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_)
+      : m_policy(policy_), m_func(f_), m_max_grid_size(max_grid_size_) {}
 #endif
 
   KOKKOS_IMPL_DEVICE_FUNCTION
@@ -818,13 +823,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks_x));
+          Kokkos::min(temp0, static_cast<index_type>(m_max_grid_size[0]));
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
-               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl0
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[0])
+               ? static_cast<index_type>(m_max_grid_size[0]) / numbl0
                : Kokkos::min(temp1,
-                             static_cast<index_type>(mdrange_max_blocks_x)));
+                             static_cast<index_type>(m_max_grid_size[0])));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) % numbl0;
@@ -845,13 +850,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks));
+          Kokkos::min(temp0, static_cast<index_type>(m_max_grid_size[1]));
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
-               ? static_cast<index_type>(mdrange_max_blocks) / numbl2
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[1])
+               ? static_cast<index_type>(m_max_grid_size[1]) / numbl2
                : Kokkos::min(temp1,
-                             static_cast<index_type>(mdrange_max_blocks)));
+                             static_cast<index_type>(m_max_grid_size[1])));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) % numbl2;
@@ -872,13 +877,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 4
       const index_type numbl4 =
-          Kokkos::min(temp0, static_cast<index_type>(mdrange_max_blocks));
+          Kokkos::min(temp0, static_cast<index_type>(m_max_grid_size[2]));
       // number of virtual blocks for dimension 5
       const index_type numbl5 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
-               ? static_cast<index_type>(mdrange_max_blocks) / numbl4
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[2])
+               ? static_cast<index_type>(m_max_grid_size[2]) / numbl4
                : Kokkos::min(temp1,
-                             static_cast<index_type>(mdrange_max_blocks)));
+                             static_cast<index_type>(m_max_grid_size[2])));
 
       // first virtual block index for dimension 4
       const index_type tile_id4 = static_cast<index_type>(blockIdx.z) % numbl4;
@@ -976,13 +981,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 1
       const index_type numbl1 =
-          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks_x));
+          Kokkos::min(temp1, static_cast<index_type>(m_max_grid_size[0]));
       // number of virtual blocks for dimension 0
       const index_type numbl0 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks_x)
-               ? static_cast<index_type>(mdrange_max_blocks_x) / numbl1
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[0])
+               ? static_cast<index_type>(m_max_grid_size[0]) / numbl1
                : Kokkos::min(temp0,
-                             static_cast<index_type>(mdrange_max_blocks_x)));
+                             static_cast<index_type>(m_max_grid_size[0])));
 
       // first virtual block index for dimension 0
       const index_type tile_id0 = static_cast<index_type>(blockIdx.x) / numbl1;
@@ -1003,13 +1008,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 3
       const index_type numbl3 =
-          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks));
+          Kokkos::min(temp1, static_cast<index_type>(m_max_grid_size[1]));
       // number of virtual blocks for dimension 2
       const index_type numbl2 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
-               ? static_cast<index_type>(mdrange_max_blocks) / numbl3
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[1])
+               ? static_cast<index_type>(m_max_grid_size[1]) / numbl3
                : Kokkos::min(temp0,
-                             static_cast<index_type>(mdrange_max_blocks)));
+                             static_cast<index_type>(m_max_grid_size[1])));
 
       // first virtual block index for dimension 2
       const index_type tile_id2 = static_cast<index_type>(blockIdx.y) / numbl3;
@@ -1030,13 +1035,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
 
       // number of virtual blocks for dimension 5
       const index_type numbl5 =
-          Kokkos::min(temp1, static_cast<index_type>(mdrange_max_blocks));
+          Kokkos::min(temp1, static_cast<index_type>(m_max_grid_size[2]));
       // number of virtual blocks for dimension 3
       const index_type numbl4 =
-          (temp0 * temp1 > static_cast<index_type>(mdrange_max_blocks)
-               ? static_cast<index_type>(mdrange_max_blocks) / numbl5
+          (temp0 * temp1 > static_cast<index_type>(m_max_grid_size[2])
+               ? static_cast<index_type>(m_max_grid_size[2]) / numbl5
                : Kokkos::min(temp0,
-                             static_cast<index_type>(mdrange_max_blocks)));
+                             static_cast<index_type>(m_max_grid_size[2])));
 
       // first virtual block index for dimension 4
       const index_type tile_id4 = static_cast<index_type>(blockIdx.z) / numbl5;
@@ -1130,6 +1135,7 @@ struct DeviceIterateTile<6, PolicyType, Functor, Tag> {
  private:
   const PolicyType& m_policy;
   const Functor& m_func;
+  const MaxGridSize& m_max_grid_size;
 #ifdef KOKKOS_ENABLE_SYCL
   const EmulateCUDADim3<index_type> gridDim;
   const EmulateCUDADim3<index_type> blockIdx;
@@ -1207,8 +1213,8 @@ struct DeviceIterateTile {
         threadIdx(threadIdx_) {}
 #else
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(const PolicyType& policy_,
-                                                  const Functor& f_,
-                                                  value_type_storage v_)
+                                                const Functor& f_,
+                                                value_type_storage v_)
       : m_policy(policy_), m_func(f_), m_v(v_) {}
 #endif
 

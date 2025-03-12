@@ -17,6 +17,9 @@
 #ifndef KOKKOS_SYCL_PARALLEL_FOR_MDRANGE_HPP_
 #define KOKKOS_SYCL_PARALLEL_FOR_MDRANGE_HPP_
 
+#include <algorithm>
+#include <limits>
+
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
 #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
@@ -33,6 +36,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using array_index_type = typename Policy::array_index_type;
   using index_type       = typename Policy::index_type;
   using WorkTag          = typename Policy::work_tag;
+  using MaxGridSize      = Kokkos::Array<index_type, 3>;
 
   const FunctorType m_functor;
   // MDRangePolicy is not trivially copyable. Hence, replicate the data we
@@ -54,6 +58,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const typename Policy::index_type m_num_tiles;
     static constexpr Iterate inner_direction = Policy::inner_direction;
   } m_policy;
+  MaxGridSize m_max_grid_size;
   const Kokkos::SYCL& m_space;
 
   sycl::nd_range<3> compute_ranges() const {
@@ -159,8 +164,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         const index_type n_global_z = item.get_group_range(0);
 
         Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, FunctorType,
-                                        typename Policy::work_tag>(
-            bare_policy, functor_wrapper.get_functor(),
+                                        MaxGridSize, typename Policy::work_tag>(
+            bare_policy, functor_wrapper.get_functor(), m_max_grid_size,
             {n_global_x, n_global_y, n_global_z},
             {global_x, global_y, global_z}, {local_x, local_y, local_z})
             .exec_range();
@@ -205,7 +210,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_space(arg_policy.space()) {}
+        m_space(arg_policy.space()) {
+    // since the SYCL API does not allow to get the maximum grid size (ND-range
+    // size), we consider the max is infinite
+    std::fill_n(Kokkos::begin(m_max_grid_size), 3,
+                std::numeric_limits<index_type>::max());
+  }
 };
 
 #endif  // KOKKOS_SYCL_PARALLEL_FOR_MDRANGE_HPP_
