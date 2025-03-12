@@ -741,9 +741,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_HOPPER90)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "HOPPER90");
-#elif defined(KOKKOS_ARCH_BLACKWELL100)
+#elif defined(KOKKOS_ARCH_BLACKWELL120)
   declare_configuration_metadata("architecture", "GPU architecture",
-                                 "BLACKWELL100");
+                                 "BLACKWELL120");
 #elif defined(KOKKOS_ARCH_AMD_GFX906)
       declare_configuration_metadata("architecture", "GPU architecture",
                                      "AMD_GFX906");
