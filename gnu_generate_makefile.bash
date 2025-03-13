@@ -140,6 +140,7 @@ do
       echo "                 ZEN2            = AMD Zen2-Core CPU"
       echo "                 ZEN3            = AMD Zen3-Core CPU"
       echo "                 ZEN4            = AMD Zen4-Core CPU"
+      echo "                 ZEN5            = AMD Zen5-Core CPU"
       echo "               [ARM]"
       echo "                 ARMv80          = ARMv8.0 Compatible CPU"
       echo "                 ARMv81          = ARMv8.1 Compatible CPU"
