@@ -470,7 +470,7 @@ class MemoryPool {
   /* Return 0 for invalid block size */
   KOKKOS_INLINE_FUNCTION
   uint32_t allocate_block_size(uint64_t alloc_size) const noexcept {
-    return alloc_size <= (1UL << m_max_block_size_lg2)
+    return alloc_size <= (uint64_t(1) << m_max_block_size_lg2)
                ? (1UL << get_block_size_lg2(uint32_t(alloc_size)))
                : 0;
   }
@@ -487,7 +487,7 @@ class MemoryPool {
    */
   KOKKOS_FUNCTION
   void *allocate(size_t alloc_size, int32_t attempt_limit = 1) const noexcept {
-    if (size_t(1LU << m_max_block_size_lg2) < alloc_size) {
+    if ((size_t(1) << m_max_block_size_lg2) < alloc_size) {
       Kokkos::abort(
           "Kokkos MemoryPool allocation request exceeded specified maximum "
           "allocation size");
@@ -752,7 +752,7 @@ class MemoryPool {
         // mask into superblock and then shift down for block index
 
         const uint32_t bit =
-            (d & (ptrdiff_t(1LU << m_sb_size_lg2) - 1)) >> block_size_lg2;
+            (d & ((ptrdiff_t(1) << m_sb_size_lg2) - 1)) >> block_size_lg2;
 
         const int result = CB::release(sb_state_array, bit, block_state);
 
