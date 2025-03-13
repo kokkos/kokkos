@@ -273,8 +273,6 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=icpx \
                                 -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -fp-model=precise -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
-                                -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
-                                -DKOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL=OFF \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
