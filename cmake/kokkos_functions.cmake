@@ -1,3 +1,6 @@
+################################### DEPENDENCIES ###############################
+include(CheckCompilerFlag)
+include(CheckLinkerFlag)
 ################################### FUNCTIONS ##################################
 # List of functions
 #   kokkos_option
@@ -846,6 +849,26 @@ function(COMPILER_SPECIFIC_OPTIONS_HELPER)
     else()
       global_append(KOKKOS_COMPILE_OPTIONS ${COMPILER_SPECIFIC_FLAGS_TMP})
     endif()
+  endif()
+
+  set(CMAKE_REQUIRED_QUIET ON)
+  if(PARSE_COMPILE_OPTIONS AND COMPILER_SPECIFIC_FLAGS_TMP)
+    foreach(flag IN LISTS COMPILER_SPECIFIC_FLAGS_TMP)
+      check_compiler_flag(${KOKKOS_COMPILE_LANGUAGE} ${flag} compiler_result)
+      if(NOT compiler_result)
+        message(FATAL_ERROR "The compiler for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag ${flag}.")
+      endif()
+    endforeach()
+  endif()
+
+  if(PARSE_LINK_OPTIONS AND COMPILER_SPECIFIC_FLAGS_TMP)
+    foreach(flag IN LISTS COMPILER_SPECIFIC_FLAGS_TMP)
+      message(STATUS "${flag} and lang ${KOKKOS_COMPILE_LANGUAGE}")
+      check_linker_flag(${KOKKOS_COMPILE_LANGUAGE} ${flag} linker_result)
+      if(NOT linker_result)
+        message(FATAL_ERROR "Linker for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag ${flag}.")
+      endif()
+    endforeach()
   endif()
 
   if(PARSE_LINK_OPTIONS)
