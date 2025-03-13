@@ -473,16 +473,16 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   View(const View& other) = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   View(View&& other) = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   View& operator=(const View& other) = default;
 
-  KOKKOS_FUNCTION
+  KOKKOS_DEFAULTED_FUNCTION
   View& operator=(View&& other) = default;
 
   KOKKOS_FUNCTION
