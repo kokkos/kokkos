@@ -94,13 +94,7 @@ kokkos_enable_option(
 )
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
-if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
-  set(MDSPAN_DEFAULT OFF)
-  message(STATUS "Note: Experimental MDSpan support will not be able to be enabled with the Intel Classic compiler.")
-else()
-  set(MDSPAN_DEFAULT ON)
-endif()
-kokkos_enable_option(IMPL_MDSPAN ${MDSPAN_DEFAULT} "Whether to enable experimental mdspan support")
+kokkos_enable_option(IMPL_MDSPAN ON "Whether to enable experimental mdspan support")
 kokkos_enable_option(MDSPAN_EXTERNAL OFF "Whether to use an external version of mdspan")
 kokkos_enable_option(
   IMPL_SKIP_COMPILER_MDSPAN ON "Whether to use an internal version of mdspan even if the compiler provides mdspan"
