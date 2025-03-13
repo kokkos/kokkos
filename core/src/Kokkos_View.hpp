@@ -31,11 +31,10 @@ static_assert(false,
 #include <View/Kokkos_ViewLegacy.hpp>
 #else
 
-#include <View/Kokkos_BasicView.hpp>
 #include <View/Kokkos_ViewTraits.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 
-// This will eventually be removed
+// FIXME: This will eventually be removed
 namespace Kokkos::Impl {
 template <class, class...>
 class ViewMapping;
@@ -475,22 +474,16 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   View() = default;
 
   KOKKOS_FUNCTION
-  View(const View& other) : base_t(other) {}
+  View(const View& other) = default;
 
   KOKKOS_FUNCTION
-  View(View&& other) : base_t(std::move(other)) {}
+  View(View&& other) = default;
 
   KOKKOS_FUNCTION
-  View& operator=(const View& other) {
-    base_t::operator=(other);
-    return *this;
-  }
+  View& operator=(const View& other) = default;
 
   KOKKOS_FUNCTION
-  View& operator=(View&& other) {
-    base_t::operator=(std::move(other));
-    return *this;
-  }
+  View& operator=(View&& other) = default;
 
   KOKKOS_FUNCTION
   View(typename base_t::data_handle_type p,
@@ -551,7 +544,6 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
-  template <class... P>
   KOKKOS_FUNCTION explicit View(const typename base_t::data_handle_type& handle,
                                 typename traits::array_layout const& arg_layout)
       : base_t(
