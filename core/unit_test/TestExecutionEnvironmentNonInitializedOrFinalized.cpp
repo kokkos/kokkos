@@ -119,9 +119,8 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
   (void)error_constructing_exec_space_instance;
 
   std::string matcher =
-#if defined(KOKKOS_ENABLE_CUDA) || \
-    defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) //// These error out early
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)  //// These error out early
       error_constructing_exec_space_instance;
 #else
       "Constructing View and initializing data with uninitialized execution "

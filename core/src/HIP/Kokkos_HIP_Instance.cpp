@@ -407,7 +407,7 @@ void HIPInternal::finalize() {
   KOKKOS_IMPL_HIP_SAFE_CALL(hip_free_wrapper(m_scratch_locks));
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
-  m_hipDev = -1;
+  m_hipDev            = -1;
 }
 
 int HIPInternal::m_maxThreadsPerSM = 0;
