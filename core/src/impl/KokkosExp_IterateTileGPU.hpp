@@ -81,11 +81,13 @@ struct DeviceIterateTile<2, PolicyType, Functor, MaxGridSize, Tag> {
 #ifdef KOKKOS_ENABLE_SYCL
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
       const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_,
       const EmulateCUDADim3<index_type> gridDim_,
       const EmulateCUDADim3<index_type> blockIdx_,
       const EmulateCUDADim3<index_type> threadIdx_)
       : m_policy(policy_),
         m_func(f_),
+        m_max_grid_size(max_grid_size_),
         gridDim(gridDim_),
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
@@ -182,11 +184,13 @@ struct DeviceIterateTile<3, PolicyType, Functor, MaxGridSize, Tag> {
 #ifdef KOKKOS_ENABLE_SYCL
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
       const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_,
       const EmulateCUDADim3<index_type> gridDim_,
       const EmulateCUDADim3<index_type> blockIdx_,
       const EmulateCUDADim3<index_type> threadIdx_)
       : m_policy(policy_),
         m_func(f_),
+        m_max_grid_size(max_grid_size_),
         gridDim(gridDim_),
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
@@ -309,11 +313,13 @@ struct DeviceIterateTile<4, PolicyType, Functor, MaxGridSize, Tag> {
 #ifdef KOKKOS_ENABLE_SYCL
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
       const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_,
       const EmulateCUDADim3<index_type> gridDim_,
       const EmulateCUDADim3<index_type> blockIdx_,
       const EmulateCUDADim3<index_type> threadIdx_)
       : m_policy(policy_),
         m_func(f_),
+        m_max_grid_size(max_grid_size_),
         gridDim(gridDim_),
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
@@ -515,11 +521,13 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
 #ifdef KOKKOS_ENABLE_SYCL
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
       const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_,
       const EmulateCUDADim3<index_type> gridDim_,
       const EmulateCUDADim3<index_type> blockIdx_,
       const EmulateCUDADim3<index_type> threadIdx_)
       : m_policy(policy_),
         m_func(f_),
+        m_max_grid_size(max_grid_size_),
         gridDim(gridDim_),
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
@@ -797,11 +805,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
 #ifdef KOKKOS_ENABLE_SYCL
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
       const PolicyType& policy_, const Functor& f_,
+      const MaxGridSize& max_grid_size_,
       const EmulateCUDADim3<index_type> gridDim_,
       const EmulateCUDADim3<index_type> blockIdx_,
       const EmulateCUDADim3<index_type> threadIdx_)
       : m_policy(policy_),
         m_func(f_),
+        m_max_grid_size(max_grid_size_),
         gridDim(gridDim_),
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}

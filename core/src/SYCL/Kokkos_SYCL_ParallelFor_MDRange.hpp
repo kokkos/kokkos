@@ -134,6 +134,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     if (m_policy.m_num_tiles == 0) return {};
 
     const BarePolicy bare_policy(m_policy);
+    const auto& max_grid_size = m_max_grid_size;
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
@@ -150,7 +151,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy](
+      cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy,
+                                            max_grid_size](
                                                sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
         const index_type local_x    = item.get_local_id(2);
@@ -165,7 +167,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
         Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, FunctorType,
                                         MaxGridSize, typename Policy::work_tag>(
-            bare_policy, functor_wrapper.get_functor(), m_max_grid_size,
+            bare_policy, functor_wrapper.get_functor(), max_grid_size,
             {n_global_x, n_global_y, n_global_z},
             {global_x, global_y, global_z}, {local_x, local_y, local_z})
             .exec_range();
