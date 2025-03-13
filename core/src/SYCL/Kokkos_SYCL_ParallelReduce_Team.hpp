@@ -156,10 +156,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // reduction on the values in all workgroups separately, write the
       // workgroup results back to global memory and recurse until only one
       // workgroup does the reduction and thus gets the final value.
+      auto scratch_flags = static_cast<sycl_device_ptr<unsigned int>>(
+          instance.scratch_flags(sizeof(unsigned int)));
       auto cgh_lambda = [&](sycl::handler& cgh) {
-        auto scratch_flags = static_cast<sycl_device_ptr<unsigned int>>(
-            instance.scratch_flags(sizeof(unsigned int)));
-
         // FIXME_SYCL accessors seem to need a size greater than zero at least
         // for host queues
         sycl::local_accessor<char, 1> team_scratch_memory_L0(
