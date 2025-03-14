@@ -81,7 +81,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
   const FunctorType m_functor;
   const Policy m_rp;
-  MaxGridSize m_max_grid_size;
+  const MaxGridSize m_max_grid_size;
 
  public:
   template <typename Policy, typename Functor>
@@ -233,10 +233,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
   //  inline
   ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
-      : m_functor(arg_functor), m_rp(arg_policy) {
-    const auto& maxblocks = m_rp.space().cuda_device_prop().maxGridSize;
-    std::copy_n(maxblocks, 3, Kokkos::begin(m_max_grid_size));
-  }
+      : m_functor(arg_functor),
+        m_rp(arg_policy),
+        m_max_grid_size({
+            static_cast<index_type>(
+                m_rp.space().cuda_device_prop().maxGridSize[0]),
+            static_cast<index_type>(
+                m_rp.space().cuda_device_prop().maxGridSize[1]),
+            static_cast<index_type>(
+                m_rp.space().cuda_device_prop().maxGridSize[2]),
+        }) {}
 };
 
 template <class CombinedFunctorReducerType, class... Traits>

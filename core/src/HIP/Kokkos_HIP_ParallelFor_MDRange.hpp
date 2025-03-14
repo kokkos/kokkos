@@ -17,8 +17,6 @@
 #ifndef KOKKOS_HIP_PARALLEL_FOR_MDRANGE_HPP
 #define KOKKOS_HIP_PARALLEL_FOR_MDRANGE_HPP
 
-#include <algorithm>
-
 #include <Kokkos_Parallel.hpp>
 
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>
@@ -44,7 +42,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
 
   const FunctorType m_functor;
   const Policy m_policy;
-  MaxGridSize m_max_grid_size;
+  const MaxGridSize m_max_grid_size;
 
  public:
   ParallelFor()                              = delete;
@@ -173,10 +171,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   }  // end execute
 
   ParallelFor(FunctorType const& arg_functor, Policy const& arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {
-    const auto& maxblocks = m_policy.space().hip_device_prop().maxGridSize;
-    std::copy_n(maxblocks, 3, Kokkos::begin(m_max_grid_size));
-  }
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_max_grid_size({
+            static_cast<index_type>(
+                m_policy.space().hip_device_prop().maxGridSize[0]),
+            static_cast<index_type>(
+                m_policy.space().hip_device_prop().maxGridSize[1]),
+            static_cast<index_type>(
+                m_policy.space().hip_device_prop().maxGridSize[2]),
+        }) {}
 
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {
