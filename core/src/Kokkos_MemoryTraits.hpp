@@ -81,22 +81,27 @@ using MemoryRandomAccess =
 namespace Kokkos {
 namespace Impl {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-static_assert((0 < int(KOKKOS_MEMORY_ALIGNMENT)) &&
-                  (0 == (int(KOKKOS_MEMORY_ALIGNMENT) &
-                         (int(KOKKOS_MEMORY_ALIGNMENT) - 1))),
-              "KOKKOS_MEMORY_ALIGNMENT must be a power of two");
-
 /** \brief Memory alignment settings
  *
  *  Sets global value for memory alignment.  Must be a power of two!
  *  Enable compatibility of views from different devices with static stride.
  *  Use compiler flag to enable overwrites.
  */
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
 static constexpr unsigned MEMORY_ALIGNMENT = KOKKOS_MEMORY_ALIGNMENT;
 static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD =
     KOKKOS_MEMORY_ALIGNMENT_THRESHOLD;
+
+static_assert(0 == (MEMORY_ALIGNMENT & (MEMORY_ALIGNMENT - 1)),
+              "KOKKOS_MEMORY_ALIGNMENT must be a power of two");
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 #else
+// MEMORY_ALIGNMENT must be a power of two
 static constexpr unsigned MEMORY_ALIGNMENT           = 64;
 static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD = 1;
 #endif
