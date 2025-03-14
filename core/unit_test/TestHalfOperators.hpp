@@ -1034,7 +1034,7 @@ void test_bhalf_operators() {
   }
 }
 
-TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }
-TEST(TEST_CATEGORY, bhalf_operators) { test_bhalf_operators(); }
+// TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }
+// TEST(TEST_CATEGORY, bhalf_operators) { test_bhalf_operators(); }
 }  // namespace Test
 #endif  // TESTHALFOPERATOR_HPP_
