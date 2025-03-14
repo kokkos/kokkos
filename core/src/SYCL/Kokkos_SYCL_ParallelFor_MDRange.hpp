@@ -213,24 +213,30 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-  // the SYCL API does not allow to get the maximum grid size (maximum ND-range
+  // the SYCL specs do not allow to get the maximum grid size (maximum ND-range
   // size, maximum number of work groups)
-  // TODO update this when the API changes
+  // TODO update this when the specs change
 #ifdef SYCL_EXT_ONEAPI_MAX_WORK_GROUP_QUERY
         // we use an Intel extension if possible
         m_max_grid_size({
             static_cast<index_type>(
-                (sycl::device{sycl::gpu_selector_v})
-                    .get_info<sycl::ext::oneapi::experimental::info::device::
-                                  max_work_groups<3>>()[0]),
+                arg_policy.space()
+                    .sycl_queue()
+                    .get_device()
+                    .template get_info<sycl::ext::oneapi::experimental::info::
+                                           device::max_work_groups<3>>()[0]),
             static_cast<index_type>(
-                (sycl::device{sycl::gpu_selector_v})
-                    .get_info<sycl::ext::oneapi::experimental::info::device::
-                                  max_work_groups<3>>()[1]),
+                arg_policy.space()
+                    .sycl_queue()
+                    .get_device()
+                    .template get_info<sycl::ext::oneapi::experimental::info::
+                                           device::max_work_groups<3>>()[1]),
             static_cast<index_type>(
-                (sycl::device{sycl::gpu_selector_v})
-                    .get_info<sycl::ext::oneapi::experimental::info::device::
-                                  max_work_groups<3>>()[2]),
+                arg_policy.space()
+                    .sycl_queue()
+                    .get_device()
+                    .template get_info<sycl::ext::oneapi::experimental::info::
+                                           device::max_work_groups<3>>()[2]),
         }),
 #else
         // otherwise, we consider that the max is infinite
