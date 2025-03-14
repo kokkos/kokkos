@@ -61,8 +61,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
     const auto work_stride = Member(blockDim.y) * gridDim.x;
     const Member work_end  = m_policy.end();
 
-    for (Member iwork =
-             m_policy.begin() + threadIdx.y + blockDim.y * blockIdx.x;
+    for (Member iwork = m_policy.begin() + threadIdx.y +
+                        static_cast<Member>(blockDim.y) * blockIdx.x;
          iwork < work_end;
          iwork = iwork < static_cast<Member>(work_end - work_stride)
                      ? iwork + work_stride
