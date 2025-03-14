@@ -133,8 +133,10 @@ TEST(defaultdevicetype, shared_space) {
   int64_t deviceLocalMean;
   int64_t hostLocalMean;
 
-  int testRepetition = 0;
-  bool passed        = false;
+  int testRepetition               = 0;
+  bool passed                      = false;
+  bool fastAsLocalOnRepeatedAccess = false;
+
   while (!passed && testRepetition < 10) {
     // ALLOCATION
     Kokkos::View<int*, Kokkos::SharedSpace> sharedData("sharedData",
@@ -170,7 +172,7 @@ TEST(defaultdevicetype, shared_space) {
     hostLocalMean   = computeMean(hostLocalTimings);
 
     // ASSESS RESULTS
-    bool fastAsLocalOnRepeatedAccess = true;
+    fastAsLocalOnRepeatedAccess = true;
 
     for (unsigned cycle = 0; cycle < numDeviceHostCycles; ++cycle) {
       std::for_each(std::next(deviceSharedTimings[cycle].begin()),
