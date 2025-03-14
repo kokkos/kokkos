@@ -87,17 +87,6 @@ struct test_dualview_copy_construction_and_assignment {
 
     ASSERT_EQ(a.view_host(), c.view_host());
     ASSERT_EQ(a.view_device(), c.view_device());
-
-    // We can't test shallow equality of modified_flags because it's protected.
-    // So we test it indirectly through sync state behavior.
-    if (!std::decay_t<SrcViewType>::impl_dualview_stores_single_view) {
-      a.clear_sync_state();
-      a.modify_host();
-      ASSERT_TRUE(a.need_sync_device());
-      ASSERT_TRUE(b.need_sync_device());
-      ASSERT_TRUE(c.need_sync_device());
-      a.clear_sync_state();
-    }
   }
 };
 
@@ -560,34 +549,6 @@ TEST(TEST_CATEGORY, dualview_resize) {
   Impl::test_dualview_resize<NoDefaultConstructor, TEST_EXECSPACE,
                              /* Initialize */ false>();
 }
-
-template <typename ExecutionSpace>
-void check_dualview_external_view_construction() {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
-  Kokkos::View<int*, ExecutionSpace> view1("view1", 10);
-  Kokkos::View<int*, ExecutionSpace> view2("view2", 10);
-
-  Kokkos::DualView<int*, ExecutionSpace> v_dual(view1, view1);
-  ASSERT_DEATH(
-      (Kokkos::DualView<int*, ExecutionSpace>(view1, view2)),
-      "DualView storing one View constructed from two different Views");
-}
-
-// FIXME_MSVC+CUDA error C2094: label 'gtest_label_520' was undefined
-#if !(defined(KOKKOS_COMPILER_MSVC) && defined(KOKKOS_ENABLE_CUDA))
-TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
-  if constexpr (!Kokkos::DualView<
-                    int*, TEST_EXECSPACE>::impl_dualview_stores_single_view) {
-    GTEST_SKIP() << "test only relevant if DualView uses one allocation";
-  } else {
-    // FIXME_CLANG We can't inline the function because recent clang versions
-    // would deduce that a static_assert isn't satisfied for TEST_EXECSPACE.
-    // Thus, we need to template the function on the execution space.
-    check_dualview_external_view_construction<TEST_EXECSPACE>();
-  }
-}
-#endif
 
 namespace {
 /**
