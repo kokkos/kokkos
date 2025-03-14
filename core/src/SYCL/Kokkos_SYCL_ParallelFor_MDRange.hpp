@@ -19,6 +19,8 @@
 
 #include <limits>
 
+#include <sycl/sycl.hpp>
+
 #include <impl/KokkosExp_IterateTileGPU.hpp>
 
 #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
@@ -211,14 +213,33 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        // since the SYCL API does not allow to get the maximum grid size
-        // (maximum ND-range size, maximum number of work groups), we consider
-        // the max is infinite
-        // TODO update this when the API changes
+  // the SYCL API does not allow to get the maximum grid size (maximum ND-range
+  // size, maximum number of work groups)
+  // TODO update this when the API changes
+#ifdef SYCL_EXT_ONEAPI_MAX_WORK_GROUP_QUERY
+        // we use an Intel extension if possible
+        m_max_grid_size({
+            static_cast<index_type>(
+                (sycl::device{sycl::gpu_selector_v})
+                    .get_info<sycl::ext::oneapi::experimental::info::device::
+                                  max_work_groups<3>>()[0]),
+            static_cast<index_type>(
+                (sycl::device{sycl::gpu_selector_v})
+                    .get_info<sycl::ext::oneapi::experimental::info::device::
+                                  max_work_groups<3>>()[1]),
+            static_cast<index_type>(
+                (sycl::device{sycl::gpu_selector_v})
+                    .get_info<sycl::ext::oneapi::experimental::info::device::
+                                  max_work_groups<3>>()[2]),
+        }),
+#else
+        // otherwise, we consider that the max is infinite
         m_max_grid_size({std::numeric_limits<index_type>::max(),
                          std::numeric_limits<index_type>::max(),
                          std::numeric_limits<index_type>::max()}),
-        m_space(arg_policy.space()) {}
+#endif
+        m_space(arg_policy.space()) {
+  }
 };
 
 #endif  // KOKKOS_SYCL_PARALLEL_FOR_MDRANGE_HPP_
