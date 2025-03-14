@@ -137,7 +137,7 @@ TEST(defaultdevicetype, shared_space) {
   bool passed                      = false;
   bool fastAsLocalOnRepeatedAccess = false;
 
-  while (!passed && testRepetition < 10) {
+  while (!passed && testRepetition < 3) {
     // ALLOCATION
     Kokkos::View<int*, Kokkos::SharedSpace> sharedData("sharedData",
                                                        numBytes / sizeof(int));
