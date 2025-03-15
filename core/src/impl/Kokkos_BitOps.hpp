@@ -232,12 +232,6 @@ int bit_count(unsigned i) {
 #pragma pop
 #endif
 
-KOKKOS_INLINE_FUNCTION
-unsigned integral_power_of_two_that_contains(const unsigned N) {
-  const unsigned i = int_log2(N);
-  return ((1u << i) < N) ? i + 1 : i;
-}
-
 }  // namespace Impl
 }  // namespace Kokkos
 

@@ -74,6 +74,11 @@ class MemoryPool {
 
   enum : uint32_t { HINT_PER_BLOCK_SIZE = 2 };
 
+  static KOKKOS_FUNCTION unsigned integral_power_of_two_that_contains(
+      const unsigned N) {
+    return Kokkos::bit_width(Kokkos::bit_ceil(N)) - 1;
+  }
+
   /*  Each superblock has a concurrent bitset state
    *  which is an array of uint32_t integers.
    *    [ { block_count_lg2  : state_shift bits
@@ -348,13 +353,12 @@ class MemoryPool {
     // Maximum value is 'max_superblock_size'
 
     m_min_block_size_lg2 =
-        Kokkos::Impl::integral_power_of_two_that_contains(min_block_alloc_size);
+        integral_power_of_two_that_contains(min_block_alloc_size);
 
     m_max_block_size_lg2 =
-        Kokkos::Impl::integral_power_of_two_that_contains(max_block_alloc_size);
+        integral_power_of_two_that_contains(max_block_alloc_size);
 
-    m_sb_size_lg2 =
-        Kokkos::Impl::integral_power_of_two_that_contains(min_superblock_size);
+    m_sb_size_lg2 = integral_power_of_two_that_contains(min_superblock_size);
 
     {
       // number of superblocks is multiple of superblock size that
@@ -461,7 +465,7 @@ class MemoryPool {
    */
   KOKKOS_FORCEINLINE_FUNCTION
   uint32_t get_block_size_lg2(uint32_t n) const noexcept {
-    const unsigned i = Kokkos::Impl::integral_power_of_two_that_contains(n);
+    const unsigned i = integral_power_of_two_that_contains(n);
 
     return i < m_min_block_size_lg2 ? m_min_block_size_lg2 : i;
   }
