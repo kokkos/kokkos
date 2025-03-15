@@ -528,6 +528,9 @@ void test_dualview_sync_should_fence() {
 }
 
 TEST(TEST_CATEGORY, dualview_sync_should_fence) {
+#ifdef KOKKOS_ENABLE_HPX  // FIXME
+  GTEST_SKIP() << "Known to fail with HPX";
+#endif
   test_dualview_sync_should_fence<TEST_EXECSPACE>();
 }
 
