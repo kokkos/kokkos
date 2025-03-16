@@ -51,7 +51,7 @@ struct AUTO_t {
 
 /**\brief Token to indicate that a parameter's value is to be automatically
  * selected */
-inline const AUTO_t AUTO = Kokkos::AUTO_t();
+inline constexpr AUTO_t AUTO{};
 
 struct InvalidType {};
 
