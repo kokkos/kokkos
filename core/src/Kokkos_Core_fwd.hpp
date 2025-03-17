@@ -31,6 +31,10 @@
 #include <impl/Kokkos_Utilities.hpp>
 
 //----------------------------------------------------------------------------
+// Kokkos_CheckUsage.hpp checks the correct usage of Kokkos' APIs (contract)
+#include <Kokkos_CheckUsage.hpp>
+
+//----------------------------------------------------------------------------
 // Have assumed a 64-bit build (8-byte pointers) throughout the code base.
 // 32-bit build allowed but unsupported.
 #ifdef KOKKOS_IMPL_32BIT
