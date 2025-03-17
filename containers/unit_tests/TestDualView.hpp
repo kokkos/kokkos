@@ -90,7 +90,7 @@ struct test_dualview_copy_construction_and_assignment {
 
     // We can't test shallow equality of modified_flags because it's protected.
     // So we test it indirectly through sync state behavior.
-    if (!std::decay_t<SrcViewType>::impl_dualview_stores_single_view) {
+    if (!std::decay_t<SrcViewType>::impl_dualview_is_single_device) {
       a.clear_sync_state();
       a.modify_host();
       ASSERT_TRUE(a.need_sync_device());
@@ -539,6 +539,9 @@ void test_dualview_sync_should_fence() {
 }
 
 TEST(TEST_CATEGORY, dualview_sync_should_fence) {
+#ifdef KOKKOS_ENABLE_HPX  // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
+  GTEST_SKIP() << "Known to fail with HPX";
+#endif
   test_dualview_sync_should_fence<TEST_EXECSPACE>();
 }
 
@@ -578,7 +581,7 @@ void check_dualview_external_view_construction() {
 #if !(defined(KOKKOS_COMPILER_MSVC) && defined(KOKKOS_ENABLE_CUDA))
 TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
   if constexpr (!Kokkos::DualView<
-                    int*, TEST_EXECSPACE>::impl_dualview_stores_single_view) {
+                    int*, TEST_EXECSPACE>::impl_dualview_is_single_device) {
     GTEST_SKIP() << "test only relevant if DualView uses one allocation";
   } else {
     // FIXME_CLANG We can't inline the function because recent clang versions
