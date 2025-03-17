@@ -204,14 +204,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             .template get_info<sycl::ext::oneapi::experimental::info::device::
                                    max_work_groups<3>>();
 
-    return MaxGridSize({static_cast<index_type>(max_grid_size[0]),
-                        static_cast<index_type>(max_grid_size[1]),
-                        static_cast<index_type>(max_grid_size[2])});
+    return {static_cast<index_type>(max_grid_size[0]),
+            static_cast<index_type>(max_grid_size[1]),
+            static_cast<index_type>(max_grid_size[2])};
 #else
     // otherwise, we consider that the max is infinite
-    return MaxGridSize({std::numeric_limits<index_type>::max(),
-                        std::numeric_limits<index_type>::max(),
-                        std::numeric_limits<index_type>::max()});
+    return {std::numeric_limits<index_type>::max(),
+            std::numeric_limits<index_type>::max(),
+            std::numeric_limits<index_type>::max()};
 #endif
   }
 
