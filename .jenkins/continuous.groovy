@@ -286,9 +286,7 @@ pipeline {
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && \
-                              export GTEST_FILTER="-sycl_graph.submit_six:sycl_multi_gpu.scratch_space" && \
-                              ctest --no-compress-output -T Test --verbose'''
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
