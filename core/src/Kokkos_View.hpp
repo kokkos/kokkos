@@ -544,13 +544,6 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
-  KOKKOS_FUNCTION explicit View(const typename base_t::data_handle_type& handle,
-                                typename traits::array_layout const& arg_layout)
-      : base_t(
-            handle,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
-                arg_layout)) {}
-
 #ifdef KOKKOS_ENABLE_CXX17
   template <class Layout>
   KOKKOS_FUNCTION explicit View(
