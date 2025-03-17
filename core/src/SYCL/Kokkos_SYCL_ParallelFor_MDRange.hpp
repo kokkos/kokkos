@@ -191,6 +191,30 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     }
   }
 
+  static MaxGridSize get_max_grid_size(const Policy& policy) {
+    // the SYCL specs do not allow to get the maximum grid size (maximum
+    // ND-range size, maximum number of work groups)
+    // TODO update this when the specs change
+#ifdef SYCL_EXT_ONEAPI_MAX_WORK_GROUP_QUERY
+    // we use an Intel extension if possible
+    auto max_grid_size =
+        policy.space()
+            .sycl_queue()
+            .get_device()
+            .template get_info<sycl::ext::oneapi::experimental::info::device::
+                                   max_work_groups<3>>();
+
+    return MaxGridSize({static_cast<index_type>(max_grid_size[0]),
+                        static_cast<index_type>(max_grid_size[1]),
+                        static_cast<index_type>(max_grid_size[2])});
+#else
+    // otherwise, we consider that the max is infinite
+    return MaxGridSize({std::numeric_limits<index_type>::max(),
+                        std::numeric_limits<index_type>::max(),
+                        std::numeric_limits<index_type>::max()});
+#endif
+  }
+
  public:
   using functor_type = FunctorType;
 
@@ -211,36 +235,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
-      : ParallelFor(
-            arg_functor, arg_policy,
-  // the SYCL specs do not allow to get the maximum grid size (maximum ND-range
-  // size, maximum number of work groups)
-  // TODO update this when the specs change
-#ifdef SYCL_EXT_ONEAPI_MAX_WORK_GROUP_QUERY
-            // we use an Intel extension if possible
-            arg_policy.space()
-                .sycl_queue()
-                .get_device()
-                .template get_info<sycl::ext::oneapi::experimental::info::
-                                       device::max_work_groups<3>>()
-#else
-            // otherwise, we consider that the max is infinite
-            {std::numeric_limits<index_type>::max(),
-             std::numeric_limits<index_type>::max(),
-             std::numeric_limits<index_type>::max()}
-#endif
-        ) {
-  }
-
- private:
-  template <typename MaxGridSizeArg>
-  ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy,
-              const MaxGridSizeArg& arg_max_grid_size)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_max_grid_size({static_cast<index_type>(arg_max_grid_size[0]),
-                         static_cast<index_type>(arg_max_grid_size[1]),
-                         static_cast<index_type>(arg_max_grid_size[2])}),
+        m_max_grid_size(get_max_grid_size(arg_policy)),
         m_space(arg_policy.space()) {}
 };
 
