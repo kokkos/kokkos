@@ -209,11 +209,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
   t_modified_flags modified_flags;
 
  public:
-  // does the DualView only reference one View
-  static constexpr bool impl_dualview_stores_single_view =
-      SpaceAccessibility<Kokkos::HostSpace,
-                         typename t_dev::memory_space>::accessible;
-
+  // does the DualView have only one device
+  static constexpr bool impl_dualview_is_single_device =
+      std::is_same_v<typename t_dev::device_type, typename t_host::device_type>;
   //@}
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -361,7 +359,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::throw_runtime_exception(
           "DualView constructed with incompatible views");
     }
-    if (impl_dualview_stores_single_view && (d_view.data() != h_view.data()))
+    if (impl_dualview_is_single_device && (d_view.data() != h_view.data()))
       Kokkos::abort(
           "DualView storing one View constructed from two different Views");
   }
@@ -601,9 +599,11 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   template <class Device>
   void sync() {
-    if constexpr (impl_dualview_stores_single_view) {
-      Kokkos::fence(
-          "Kokkos::DualView: fence for sync with host-accessible memory space");
+    if constexpr (impl_dualview_is_single_device) {
+      // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
+      // Kokkos::fence(
+      //    "Kokkos::DualView: fence for sync with host-accessible memory
+      //    space");
       return;
     } else {
       if constexpr (std::is_same_v<typename traits::data_type,
@@ -616,7 +616,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   template <class Device, class ExecutionSpace>
   void sync([[maybe_unused]] const ExecutionSpace& exec) {
-    if constexpr (impl_dualview_stores_single_view)
+    if constexpr (impl_dualview_is_single_device)
       return;
     else {
       if constexpr (std::is_same_v<typename traits::data_type,
@@ -677,16 +677,17 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   template <class ExecSpace>
   void sync_host([[maybe_unused]] const ExecSpace& exec) {
-    if constexpr (impl_dualview_stores_single_view)
+    if constexpr (impl_dualview_is_single_device)
       return;
     else
       sync_host_impl(exec);
   }
   void sync_host() {
-    if constexpr (impl_dualview_stores_single_view) {
-      Kokkos::fence(
-          "Kokkos::DualView: fence for sync_host with host-accessible memory "
-          "space");
+    if constexpr (impl_dualview_is_single_device) {
+      // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
+      // Kokkos::fence(
+      //         "Kokkos::DualView: fence for sync_host with host-accessible
+      //         memory " "space");
       return;
     } else
       sync_host_impl();
@@ -719,16 +720,17 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   template <class ExecSpace>
   void sync_device([[maybe_unused]] const ExecSpace& exec) {
-    if constexpr (impl_dualview_stores_single_view)
+    if constexpr (impl_dualview_is_single_device)
       return;
     else
       sync_device_impl(exec);
   }
   void sync_device() {
-    if constexpr (impl_dualview_stores_single_view) {
-      Kokkos::fence(
-          "Kokkos::DualView: fence for sync_device with host-accessible memory "
-          "space");
+    if constexpr (impl_dualview_is_single_device) {
+      // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
+      // Kokkos::fence(
+      //          "Kokkos::DualView: fence for sync_device with host-accessible
+      //          memory " "space");
       return;
     } else
       sync_device_impl();
@@ -788,7 +790,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// data as modified.
   template <class Device>
   void modify() {
-    if constexpr (impl_dualview_stores_single_view) {
+    if constexpr (impl_dualview_is_single_device) {
       return;
     } else {
       if (modified_flags.data() == nullptr) {
@@ -828,7 +830,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   inline void modify_host() {
-    if constexpr (impl_dualview_stores_single_view) {
+    if constexpr (impl_dualview_is_single_device) {
       return;
     } else {
       if (modified_flags.data() != nullptr) {
@@ -852,7 +854,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   inline void modify_device() {
-    if constexpr (impl_dualview_stores_single_view) {
+    if constexpr (impl_dualview_is_single_device) {
       return;
     } else {
       if (modified_flags.data() != nullptr) {
