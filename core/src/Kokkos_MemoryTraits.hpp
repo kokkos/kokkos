@@ -23,6 +23,7 @@ static_assert(false,
 #define KOKKOS_MEMORYTRAITS_HPP
 
 #include <impl/Kokkos_Traits.hpp>
+#include <Kokkos_BitManipulation.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -94,9 +95,6 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 static constexpr unsigned MEMORY_ALIGNMENT = KOKKOS_MEMORY_ALIGNMENT;
 static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD =
     KOKKOS_MEMORY_ALIGNMENT_THRESHOLD;
-
-static_assert(0 == (MEMORY_ALIGNMENT & (MEMORY_ALIGNMENT - 1)),
-              "KOKKOS_MEMORY_ALIGNMENT must be a power of two");
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
@@ -105,6 +103,8 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 static constexpr unsigned MEMORY_ALIGNMENT           = 64;
 static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD = 1;
 #endif
+static_assert(has_single_bit(MEMORY_ALIGNMENT),
+              "MEMORY_ALIGNMENT must be a power of 2");
 
 // ------------------------------------------------------------------ //
 //  this identifies the default memory trait

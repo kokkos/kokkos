@@ -417,13 +417,13 @@ static_assert(false,
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #ifndef KOKKOS_MEMORY_ALIGNMENT_THRESHOLD
-#define KOKKOS_IMPL_MEMORY_ALIGNMENT 64
+#define KOKKOS_IMPL_MEMORY_ALIGNMENT_THRESHOLD 1
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 #define KOKKOS_MEMORY_ALIGNMENT_THRESHOLD                            \
   [] {                                                               \
     int memory_alignment [[deprecated(                               \
         "KOKKOS_MEMORY_ALIGNMENT_THRESHOLD macro is deprecated")]] = \
-        KOKKOS_IMPL_MEMORY_ALIGNMENT;                                \
+        KOKKOS_IMPL_MEMORY_ALIGNMENT_THRESHOLD;                      \
     return memory_alignment;                                         \
   }();
 #else
