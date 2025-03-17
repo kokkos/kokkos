@@ -1683,6 +1683,9 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   static_assert(
       !std::is_const_v<ReturnType>,
       "A const reduction result type is only allowed for a View, pointer or "
@@ -1704,6 +1707,8 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
   parallel_reduce("", policy, functor, return_value);
 }
 
@@ -1713,6 +1718,8 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const size_t& policy, const FunctorType& functor,
                 ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -1725,6 +1732,8 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const std::string& label, const size_t& policy,
                 const FunctorType& functor, ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -1741,6 +1750,9 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                          std::is_pointer_v<ReturnType>)>
 parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       label, policy, functor, return_value_impl);
@@ -1758,6 +1770,9 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                          std::is_pointer_v<ReturnType>)>
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+  
   parallel_reduce("", policy, functor, return_value);
 }
 
@@ -1767,6 +1782,9 @@ inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
                         std::is_pointer_v<ReturnType>>
 parallel_reduce(const size_t& policy, const FunctorType& functor,
                 const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -1780,6 +1798,9 @@ inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
                         std::is_pointer_v<ReturnType>>
 parallel_reduce(const std::string& label, const size_t& policy,
                 const FunctorType& functor, const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -1795,6 +1816,9 @@ inline void parallel_reduce(
     const FunctorType& functor,
     std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
         nullptr) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType, void>;
@@ -1820,11 +1844,17 @@ inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
     std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
         nullptr) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   parallel_reduce("", policy, functor);
 }
 
 template <class FunctorType>
 inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -1835,6 +1865,9 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
 template <class FunctorType>
 inline void parallel_reduce(const std::string& label, const size_t& policy,
                             const FunctorType& functor) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
+
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
