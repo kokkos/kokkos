@@ -572,7 +572,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // LayoutRight -> layout_right, layout_right_padded
   // LayoutStride -> layout_stride
   KOKKOS_FUNCTION
-  explicit View(const base_t::data_handle_type& handle,
+  explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutStride& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_stride>)
       : base_t(
@@ -581,7 +581,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit View(const base_t::data_handle_type& handle,
+  explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
                             Experimental::layout_left_padded<> >)
@@ -591,7 +591,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit View(const base_t::data_handle_type& handle,
+  explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type,
                             Experimental::layout_right_padded<> >)
@@ -601,7 +601,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit View(const base_t::data_handle_type& handle,
+  explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutLeft& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_left>)
       : base_t(
@@ -610,7 +610,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
-  explicit View(const base_t::data_handle_type& handle,
+  explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutRight& arg_layout)
     requires(std::is_same_v<typename base_t::layout_type, layout_right>)
       : base_t(
