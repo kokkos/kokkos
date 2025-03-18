@@ -142,49 +142,59 @@ kokkos_arch_option(INTEL_XEHP GPU "Intel GPU Xe-HP" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_PVC GPU "Intel GPU Ponte Vecchio" "KOKKOS_SHOW_SYCL_ARCHS")
 
 if(KOKKOS_ENABLE_COMPILER_WARNINGS)
-  set(COMMON_WARNINGS
-      "-Wall"
-      "-Wextra"
-      "-Wunused-parameter"
-      "-Wshadow"
-      "-pedantic"
-      "-Wsign-compare"
-      "-Wtype-limits"
-      "-Wuninitialized"
-      "-Wsuggest-override"
-  )
+  if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL "MSVC")
+    if(KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
+      set(_prefix "-Xcompiler")
+    endif()
+    set(WARNING_FLAGS "${_prefix} /W1")
+  else()
+    set(COMMON_WARNINGS
+        "-Wall"
+        "-Wextra"
+        "-Wunused-parameter"
+        "-Wshadow"
+        "-pedantic"
+        "-Wsign-compare"
+        "-Wtype-limits"
+        "-Wuninitialized"
+        "-Wsuggest-override"
+    )
 
-  # NOTE KOKKOS_ prefixed variable (all uppercase) is not set yet because TPLs are processed after ARCH
-  if(Kokkos_ENABLE_LIBQUADMATH)
-    # warning: non-standard suffix on floating constant [-Wpedantic]
-    list(REMOVE_ITEM COMMON_WARNINGS "-pedantic")
-  endif()
+    # NOTE KOKKOS_ prefixed variable (all uppercase) is not set yet because TPLs are processed after ARCH
+    if(Kokkos_ENABLE_LIBQUADMATH)
+      # warning: non-standard suffix on floating constant [-Wpedantic]
+      list(REMOVE_ITEM COMMON_WARNINGS "-pedantic")
+    endif()
 
-  # NVHPC compiler does not support -Wtype-limits.
-  if(KOKKOS_ENABLE_OPENACC)
-    if(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-      list(REMOVE_ITEM COMMON_WARNINGS "-Wtype-limits")
+    # NVHPC compiler does not support -Wtype-limits.
+    if(KOKKOS_ENABLE_OPENACC)
+      if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL NVHPC)
+        list(REMOVE_ITEM COMMON_WARNINGS "-Wtype-limits")
+      endif()
+    endif()
+
+    if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL Clang)
+      list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
+    endif()
+
+    set(GNU_WARNINGS "-Wempty-body" "-Wignored-qualifiers" ${COMMON_WARNINGS})
+    if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL GNU)
+      list(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
+    endif()
+
+    # Not using COMPILER_SPECIFIC_FLAGS function so the warning flags are not passed downstream
+    if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+      string(REPLACE ";" " " WARNING_FLAGS "${GNU_WARNINGS}")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL NVHPC)
+      # FIXME_NVHPC
+    else()
+      string(REPLACE ";" " " WARNING_FLAGS "${COMMON_WARNINGS}")
     endif()
   endif()
-
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-    list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
-  endif()
-
-  set(GNU_WARNINGS "-Wempty-body" "-Wignored-qualifiers" ${COMMON_WARNINGS})
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU)
-    list(APPEND GNU_WARNINGS "-Wimplicit-fallthrough")
-  endif()
-
-  # Not using COMPILER_SPECIFIC_FLAGS function so the warning flags are not passed downstream
-  if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
-    string(REPLACE ";" " " WARNING_FLAGS "${GNU_WARNINGS}")
-  elseif(CMAKE_CXX_COMPILER_ID STREQUAL NVHPC)
-    # FIXME_NVHPC
-  else()
-    string(REPLACE ";" " " WARNING_FLAGS "${COMMON_WARNINGS}")
-  endif()
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS}")
+  set(CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS "${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS} ${WARNING_FLAGS}"
+      CACHE STRING "Flags used by the CXX compiler during all build types." FORCE
+  )
+  message(STATUS "CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS: $CACHE{CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS}")
 endif()
 
 #------------------------------- KOKKOS_CUDA_OPTIONS ---------------------------
