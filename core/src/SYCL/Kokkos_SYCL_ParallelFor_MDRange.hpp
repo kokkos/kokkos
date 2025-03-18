@@ -70,8 +70,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       // id0 to threadIdx.x; id1 to threadIdx.y
       sycl::range<3> local_sizes(m_tile[0], m_tile[1], 1);
 
-      sycl::range<3> global_sizes(m_tile_end[0] * m_tile[0],
-                                  m_tile_end[1] * m_tile[1], 1);
+      sycl::range<3> global_sizes(
+          std::min<array_index_type>(m_tile_end[0], m_max_grid_size[0]) *
+              m_tile[0],
+          std::min<array_index_type>(m_tile_end[1], m_max_grid_size[1]) *
+              m_tile[1],
+          1);
 
       return {global_sizes, local_sizes};
     }
@@ -79,9 +83,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       // id0 to threadIdx.x; id1 to threadIdx.y; id2 to threadIdx.z
       sycl::range<3> local_sizes(m_tile[0], m_tile[1], m_tile[2]);
 
-      sycl::range<3> global_sizes(m_tile_end[0] * m_tile[0],
-                                  m_tile_end[1] * m_tile[1],
-                                  m_tile_end[2] * m_tile[2]);
+      sycl::range<3> global_sizes(
+          std::min<array_index_type>(m_tile_end[0], m_max_grid_size[0]) *
+              m_tile[0],
+          std::min<array_index_type>(m_tile_end[1], m_max_grid_size[1]) *
+              m_tile[1],
+          std::min<array_index_type>(m_tile_end[2], m_max_grid_size[2]) *
+              m_tile[2]);
 
       return {global_sizes, local_sizes};
     }
@@ -91,8 +99,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       sycl::range<3> local_sizes(m_tile[0] * m_tile[1], m_tile[2], m_tile[3]);
 
       sycl::range<3> global_sizes(
-          m_tile_end[0] * m_tile[0] * m_tile_end[1] * m_tile[1],
-          m_tile_end[2] * m_tile[2], m_tile_end[3] * m_tile[3]);
+          std::min<array_index_type>(m_tile_end[0] * m_tile_end[1],
+                                     m_max_grid_size[0]) *
+              m_tile[0] * m_tile[1],
+          std::min<array_index_type>(m_tile_end[2], m_max_grid_size[1]) *
+              m_tile[2],
+          std::min<array_index_type>(m_tile_end[3], m_max_grid_size[2]) *
+              m_tile[3]);
 
       return {global_sizes, local_sizes};
     }
@@ -103,9 +116,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                                  m_tile[4]);
 
       sycl::range<3> global_sizes(
-          m_tile_end[0] * m_tile[0] * m_tile_end[1] * m_tile[1],
-          m_tile_end[2] * m_tile[2] * m_tile_end[3] * m_tile[3],
-          m_tile_end[4] * m_tile[4]);
+          std::min<array_index_type>(m_tile_end[0] * m_tile_end[1],
+                                     m_max_grid_size[0]) *
+              m_tile[0] * m_tile[1],
+          std::min<array_index_type>(m_tile_end[2] * m_tile_end[3],
+                                     m_max_grid_size[1]) *
+              m_tile[2] * m_tile[3],
+          std::min<array_index_type>(m_tile_end[4], m_max_grid_size[2]) *
+              m_tile[4]);
 
       return {global_sizes, local_sizes};
     }
@@ -116,9 +134,15 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                                  m_tile[4] * m_tile[5]);
 
       sycl::range<3> global_sizes(
-          m_tile_end[0] * m_tile[0] * m_tile_end[1] * m_tile[1],
-          m_tile_end[2] * m_tile[2] * m_tile_end[3] * m_tile[3],
-          m_tile_end[4] * m_tile[4] * m_tile_end[5] * m_tile[5]);
+          std::min<array_index_type>(m_tile_end[0] * m_tile_end[1],
+                                     m_max_grid_size[0]) *
+              m_tile[0] * m_tile[1],
+          std::min<array_index_type>(m_tile_end[2] * m_tile_end[3],
+                                     m_max_grid_size[1]) *
+              m_tile[2] * m_tile[3],
+          std::min<array_index_type>(m_tile_end[4] * m_tile_end[5],
+                                     m_max_grid_size[2]) *
+              m_tile[4] * m_tile[5]);
 
       return {global_sizes, local_sizes};
     }
