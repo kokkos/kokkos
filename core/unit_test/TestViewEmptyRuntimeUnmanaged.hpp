@@ -23,7 +23,7 @@ namespace {
 template <class T>
 void test_empty_view_runtime_unmanaged() {
   T d{};
-  auto* p = reinterpret_cast<T*>(0xABADBABE);
+  auto* p = reinterpret_cast<T*>(3141592ULL);
 
   (void)Kokkos::View<T*>(p, 0);
   (void)Kokkos::View<T*>(&d, 0);
