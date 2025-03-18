@@ -204,9 +204,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             .template get_info<sycl::ext::oneapi::experimental::info::device::
                                    max_work_groups<3>>();
 
-    return {static_cast<index_type>(max_grid_size[0]),
+    // note that SYCL represents a (x, y, z) range with the the right-most term
+    // as the one varying the fastest, so the order must be reversed for Kokkos
+    // see:
+    // https://registry.khronos.org/SYCL/specs/sycl-2020/html/sycl-2020.html#sec:multi-dim-linearization
+    return {static_cast<index_type>(max_grid_size[2]),
             static_cast<index_type>(max_grid_size[1]),
-            static_cast<index_type>(max_grid_size[2])};
+            static_cast<index_type>(max_grid_size[0])};
 #else
     // otherwise, we consider that the max is infinite
     return {std::numeric_limits<index_type>::max(),
