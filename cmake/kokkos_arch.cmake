@@ -183,9 +183,9 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     endif()
 
     # Not using COMPILER_SPECIFIC_FLAGS function so the warning flags are not passed downstream
-    if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+    if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL GNU)
       string(REPLACE ";" " " WARNING_FLAGS "${GNU_WARNINGS}")
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL NVHPC)
+    elseif(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL NVHPC)
       # FIXME_NVHPC
     else()
       string(REPLACE ";" " " WARNING_FLAGS "${COMMON_WARNINGS}")
@@ -729,12 +729,12 @@ if(NOT KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
 endif()
 
 # Clang needs mcx16 option enabled for Windows atomic functions
-if(CMAKE_CXX_COMPILER_ID STREQUAL Clang AND WIN32)
+if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL Clang AND WIN32)
   compiler_specific_options(Clang -mcx16)
 endif()
 
 # MSVC ABI has many deprecation warnings, so ignore them
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
+if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL "MSVC" OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL "xMSVC")
   compiler_specific_defs(Clang _CRT_SECURE_NO_WARNINGS)
 endif()
 

@@ -1,6 +1,7 @@
 name: github-windows
 
 on:
+  push:
   workflow_call:
 
 concurrency:
