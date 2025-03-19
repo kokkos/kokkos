@@ -2,7 +2,7 @@ name: Nightly CEA builds
 
 on:
   schedule:
-    - cron: "0 2 * * 1-5" # every weekday at 2am UTC
+    - cron: "0 0 * * 1-5" # every weekday at midnight UTC
 
 permissions: read-all
 
