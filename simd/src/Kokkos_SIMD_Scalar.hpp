@@ -298,33 +298,33 @@ class basic_simd<T, simd_abi::scalar> {
     return basic_simd(lhs.m_value >> rhs.m_value);
   }
 
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator+=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator+=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs + rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator-=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator-=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs - rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator*=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator*=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs * rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator/=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator/=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs / rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator<<=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator<<=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs << rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator>>=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator>>=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs >> rhs;
     return lhs;
   }
