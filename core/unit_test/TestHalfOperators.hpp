@@ -318,9 +318,22 @@ struct Functor_TestHalfOperators {
       Kokkos::parallel_for("Test::Functor_TestHalfOperators_4",
                            Kokkos::RangePolicy<Batch4, ExecutionSpace>(0, 1),
                            *this);
+
+      // error: total scratch space exceeds HW supported limit for kernel
+      //
+      // Kokkos::Impl::FunctorWrapperRangePolicyParallelForCustom<Kokkos::Impl::SYCLFunctionWrapper<Test::Functor_TestHalfOperators<Kokkos::View<double*,
+      // Kokkos::HostSpace>,
+      // Kokkos::Experimental::Impl::floating_point_wrapper<sycl::_V1::ext::oneapi::bfloat16>
+      // >, Kokkos::Impl::SYCLInternal::USMObjectMem<(sycl::_V1::usm::alloc)0>,
+      // false>, Kokkos::RangePolicy<Test::Batch5, Kokkos::SYCL> >
+      //
+      // error: backend compiler failed build.
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+      KOKKOS_COMPILER_INTEL_LLVM < 20250000)
       Kokkos::parallel_for("Test::Functor_TestHalfOperators_5",
                            Kokkos::RangePolicy<Batch5, ExecutionSpace>(0, 1),
                            *this);
+#endif
     }
   }
 
