@@ -194,7 +194,6 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
   set(CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS "${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS} ${WARNING_FLAGS}"
       CACHE STRING "Flags used by the CXX compiler during all build types." FORCE
   )
-  message(STATUS "CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS: $CACHE{CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS}")
 endif()
 
 #------------------------------- KOKKOS_CUDA_OPTIONS ---------------------------
