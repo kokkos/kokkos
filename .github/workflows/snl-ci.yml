@@ -161,5 +161,5 @@ jobs:
 
       - name: test_kokkos
         working-directory: kokkos/build
-        run: ctest --output-on-failure --timeout 3600
+        run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure --timeout 3600
 
