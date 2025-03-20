@@ -1,5 +1,78 @@
 # CHANGELOG
 
+## 4.6.00
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.5.01...4.6.00)
+
+### Features:
+
+* core(graph): `then` node [\#7629](https://github.com/kokkos/kokkos/pull/7629)
+* core(graph): allow construction from native graph (interop) [\#7664](https://github.com/kokkos/kokkos/pull/7664)
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+ - Improved reduction performance, in particular on H100 and newer [\#7823](https://github.com/kokkos/kokkos/pull/7823)
+
+#### HIP:
+ - Change block size deduction to prefer smaller blocks/teams [\#7509](https://github.com/kokkos/kokkos/pull/7509)
+ - Enable `hipMallocAsync` by default [\#7659](https://github.com/kokkos/kokkos/pull/7659)
+ - Fix a segfault when a virtual function called inside a kernel requires too many registers[\#7660](https://github.com/kokkos/kokkos/pull/7660)
+ - Add support for HIP instances on multiple GPUs (available for rocm 5.6 and later) [\#7130](https://github.com/kokkos/kokkos/pull/7130)
+ - Fix performance bug affecting `atomic_fetch_{add,sub,min,max,and,or,xor}` on integral types `long` and `unsigned long` [\#7816](https://github.com/kokkos/kokkos/pull/7816)
+ - Fix execution of ranges with more than 2B elements [\#7797](https://github.com/kokkos/kokkos/pull/7797)
+
+#### SYCL:
+- oneDPL: Sort on device using Kokkos::RandomAccessIterator [\#7502](https://github.com/kokkos/kokkos/pull/7502)
+- Fix reductions with SYCL on AMD GPUs [\#7652](https://github.com/kokkos/kokkos/pull/7652)
+
+#### Serial:
+* Make fences non-blocking with the serial backend when Kokkos_ENABLE_ATOMICS_BYPASS is set [\#7821](https://github.com/kokkos/kokkos/pull/7821)
+
+### General Enhancements
+* Enable use of `kokkos_check` exported cmake function in a `<PackageName>Config.cmake` without raising warnings about the package name not matching [\#7669](https://github.com/kokkos/kokkos/pull/7669)
+* Add simd compound assignments and update simd reductions [\#7486](https://github.com/kokkos/kokkos/pull/7486)
+* Call thrust::inclusive_scan for Kokkos::Incluisve_scan when available [\#7542](https://github.com/kokkos/kokkos/pull/7542)
+* Reduce the overhead of checking if any tool binding have been set or not [\#7817](https://github.com/kokkos/kokkos/pull/7817)
+* Avoid storing the view in `RandomAccessIterator` to increase performance [\#7304](https://github.com/kokkos/kokkos/pull/7304)
+* Make `RandomAccessIterator` fulfill `std::random_access_iterator concept` [\#7451](https://github.com/kokkos/kokkos/pull/7451)
+* Print support for system allocated memory in `print_configuration` [\#7673](https://github.com/kokkos/kokkos/pull/7673)
+* Report to OSSF Scorecard [\#7798](https://github.com/kokkos/kokkos/pull/7798)
+
+### DualView Changes
+* DualView: Deprecate direct access to d_view and h_view [\#7716](https://github.com/kokkos/kokkos/pull/7716)
+
+### Build System Changes
+* Add support for Zen 4 AMD microarchitecture [\#7550](https://github.com/kokkos/kokkos/pull/7550)
+* Enable grace as target processor with NVHPC compiler [\#7858](https://github.com/kokkos/kokkos/pull/7858)
+* Improved using CUDA via CMake language facility by supporting static library builds [\#7830](https://github.com/kokkos/kokkos/pull/7830)
+
+### Incompatibilities (i.e. breaking changes)
+
+* Change SIMD comparison operator to return `simd_mask` instead of `bool` [\#7781](https://github.com/kokkos/kokkos/pull/7781)
+* Remove classic intel compiler support [\#7737](https://github.com/kokkos/kokkos/pull/7737)
+
+### Deprecations
+* Deprecate `StaticCrsGraph` and move it to Kokkos Kernels into `KokkosSparse::` [\#7516](https://github.com/kokkos/kokkos/pull/7516)
+* Deprecate `native_simd` and hide `simd_abi` [\#7472](https://github.com/kokkos/kokkos/pull/7472)
+* Remove `operator[]` overloads of Kokkos `basic_simd` and `basic_simd_mask` that return a reference [\#7630](https://github.com/kokkos/kokkos/pull/7630)
+* Makefile support [\#7613](https://github.com/kokkos/kokkos/pull/7613)
+
+### Bug Fixes
+* build_env_info: resolve issues with ninja [\#7557](https://github.com/kokkos/kokkos/pull/7557)
+* Fix Zen3 flag for NVHPC [\#7558](https://github.com/kokkos/kokkos/pull/7558)
+* graph(fix): nodes must be stored by the graph, whatever the backend [\#7619](https://github.com/kokkos/kokkos/pull/7619)
+* Make sure lock arrays on device before launching graph [\#7685](https://github.com/kokkos/kokkos/pull/7685)
+* Performance bug in `RangePolicy`: construct error message if and only if the precondition is violated [\#7809](https://github.com/kokkos/kokkos/pull/7809)
+* simd: fix a bug in scalar min/max [\#7813](https://github.com/kokkos/kokkos/pull/7813)
+* simd: fix a bug in non-masked reductions [\#7845](https://github.com/kokkos/kokkos/pull/7845)
+* Cuda: fixed a bug where a `MDRangePolicy` of rank 4 or more is incorrectly iterated, leading to some iterations being evaluated more than once for large loops [\#7724](https://github.com/kokkos/kokkos/pull/7724)
+* Cuda: ignore gcc assembler options in `nvcc-wrapper` [\#7492](https://github.com/kokkos/kokkos/pull/7492)
+* Build system: skip generation if compiler support for ARMv9 Grace arch is not detected [\#7862](https://github.com/kokkos/kokkos/pull/7862)
+* KOKKOS_VERSION_* macro fixed [\#7865](https://github.com/kokkos/kokkos/pull/7865)
+* Use right arch for MI300A in makefiles [\#7786](https://github.com/kokkos/kokkos/pull/7786)
+* Fix compiling BasicView on MSVC with a compiler workaround [\#7751](https://github.com/kokkos/kokkos/pull/7751)
+
 ## 4.5.01
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.5.00...4.5.01)
