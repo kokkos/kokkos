@@ -50,7 +50,7 @@
 ### Incompatibilities (i.e. breaking changes)
 
 * Change SIMD comparison operator to return `simd_mask` instead of `bool` [\#7781](https://github.com/kokkos/kokkos/pull/7781)
-* Remove classic intel compiler support [\#7737](https://github.com/kokkos/kokkos/pull/7737)
+* Remove classic Intel compiler support [\#7737](https://github.com/kokkos/kokkos/pull/7737)
 
 ### Deprecations
 * Deprecate `StaticCrsGraph` and move it to Kokkos Kernels into `KokkosSparse::` [\#7516](https://github.com/kokkos/kokkos/pull/7516)
