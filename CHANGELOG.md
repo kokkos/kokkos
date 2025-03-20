@@ -44,7 +44,7 @@
 
 ### Build System Changes
 * Add support for Zen 4 AMD microarchitecture [\#7550](https://github.com/kokkos/kokkos/pull/7550)
-* Enable grace as target processor with NVHPC compiler [\#7858](https://github.com/kokkos/kokkos/pull/7858)
+* Enable NVIDIA Grace as target processor with NVHPC compiler [\#7858](https://github.com/kokkos/kokkos/pull/7858)
 * Improved using CUDA via CMake language facility by supporting static library builds [\#7830](https://github.com/kokkos/kokkos/pull/7830)
 
 ### Incompatibilities (i.e. breaking changes)
