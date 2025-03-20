@@ -185,53 +185,6 @@ int bit_scan_forward(unsigned i) {
 #pragma pop
 #endif
 
-/// Count the number of bits set.
-KOKKOS_FORCEINLINE_FUNCTION
-int bit_count_fallback(unsigned i) {
-  // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetNaive
-  i = i - ((i >> 1) & ~0u / 3u);                           // temp
-  i = (i & ~0u / 15u * 3u) + ((i >> 2) & ~0u / 15u * 3u);  // temp
-  i = (i + (i >> 4)) & ~0u / 255u * 15u;                   // temp
-
-  // count
-  return (int)((i * (~0u / 255u)) >> (sizeof(unsigned) - 1) * CHAR_BIT);
-}
-
-KOKKOS_IMPL_DEVICE_FUNCTION inline int bit_count_device(unsigned i) {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return __popc(i);
-#elif defined(KOKKOS_COMPILER_INTEL_LLVM)
-  return _popcnt32(i);
-#else
-  return bit_count_fallback(i);
-#endif
-}
-
-KOKKOS_IMPL_HOST_FUNCTION inline int bit_count_host(unsigned i) {
-#if defined(KOKKOS_COMPILER_INTEL_LLVM)
-  return _popcnt32(i);
-#elif defined(KOKKOS_COMPILER_CRAYC)
-  return _popcnt(i);
-#elif defined(__GNUC__) || defined(__GNUG__)
-  return __builtin_popcount(i);
-#else
-  return bit_count_fallback(i);
-#endif
-}
-
-#if defined(__EDG__)
-#pragma push
-#pragma diag_suppress implicit_return_from_non_void_function
-#endif
-KOKKOS_FORCEINLINE_FUNCTION
-int bit_count(unsigned i) {
-  KOKKOS_IF_ON_DEVICE((return bit_count_device(i);))
-  KOKKOS_IF_ON_HOST((return bit_count_host(i);))
-}
-#if defined(__EDG__)
-#pragma pop
-#endif
-
 KOKKOS_INLINE_FUNCTION
 unsigned integral_power_of_two_that_contains(const unsigned N) {
   const unsigned i = int_log2(N);
