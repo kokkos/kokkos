@@ -23,7 +23,7 @@
  - Fix execution of ranges with more than 2B elements [\#7797](https://github.com/kokkos/kokkos/pull/7797)
 
 #### SYCL:
-- oneDPL: Sort on device using Kokkos::RandomAccessIterator [\#7502](https://github.com/kokkos/kokkos/pull/7502)
+- Improve sorting performance for non-contiguous views [\#7502](https://github.com/kokkos/kokkos/pull/7502)
 - Fix reductions with SYCL on AMD GPUs [\#7652](https://github.com/kokkos/kokkos/pull/7652)
 
 #### Serial:
