@@ -36,7 +36,7 @@
 * Reduce tooling interface overhead (don't pay for what you don't use) [\#7817](https://github.com/kokkos/kokkos/pull/7817)
 * Avoid storing the view in `RandomAccessIterator` to increase performance [\#7304](https://github.com/kokkos/kokkos/pull/7304)
 * Make `RandomAccessIterator` fulfill `std::random_access_iterator concept` [\#7451](https://github.com/kokkos/kokkos/pull/7451)
-* Print support for system allocated memory in `print_configuration` [\#7673](https://github.com/kokkos/kokkos/pull/7673)
+* Include information about support for system allocated memory in `print_configuration` (Cuda and HIP) [\#7673](https://github.com/kokkos/kokkos/pull/7673)
 * Report to OSSF Scorecard [\#7798](https://github.com/kokkos/kokkos/pull/7798)
 
 ### DualView Changes
