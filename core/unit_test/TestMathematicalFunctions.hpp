@@ -858,7 +858,7 @@ TEST(TEST_CATEGORY, mathematical_functions_fma) {
 #endif
 }
 
-TEST(TEST_CATEGORY, mathematical_functions_max_min) {
+TEST(TEST_CATEGORY, mathematical_functions_fmax_fmin) {
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
       static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(
