@@ -69,7 +69,6 @@
 * Cuda: fixed a bug where a `MDRangePolicy` of rank 4 or more is incorrectly iterated, leading to some iterations being evaluated more than once for large loops [\#7724](https://github.com/kokkos/kokkos/pull/7724)
 * Cuda: ignore gcc assembler options in `nvcc-wrapper` [\#7492](https://github.com/kokkos/kokkos/pull/7492)
 * Build system: skip generation if compiler support for ARMv9 Grace arch is not detected [\#7862](https://github.com/kokkos/kokkos/pull/7862)
-* KOKKOS_VERSION_* macro fixed [\#7865](https://github.com/kokkos/kokkos/pull/7865)
 * Use right arch for MI300A in makefiles [\#7786](https://github.com/kokkos/kokkos/pull/7786)
 * Fix compiling BasicView on MSVC with a compiler workaround [\#7751](https://github.com/kokkos/kokkos/pull/7751)
 
