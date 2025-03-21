@@ -107,6 +107,9 @@ void declare_configuration_metadata(const std::string& category,
 [[nodiscard]] int num_devices() noexcept;
 [[nodiscard]] int num_threads() noexcept;
 
+[[nodiscard]] size_t free_device_memory() noexcept;
+[[nodiscard]] size_t total_device_memory() noexcept;
+
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
 

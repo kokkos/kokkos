@@ -150,6 +150,24 @@ int get_device_count() {
 #endif
 }
 
+void device_mem_info(size_t* free, size_t* total) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemGetInfo(free, total));
+#elif defined(KOKKOS_ENABLE_HIP)
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemGetInfo(free, total));
+#elif defined(KOKKOS_ENABLE_SYCL)
+  std::vector<sycl::device> devices = Kokkos::Impl::get_sycl_devices();
+  for (auto& dev : devices) {
+    if (dev.is_gpu()) {
+      *total += dev.get_info<sycl::info::device::global_mem_size>();
+      if (dev.has(sycl::aspect::ext_intel_free_memory)) {
+        *free += dev.get_info<sycl::ext::intel::info::device::free_memory>();
+      }
+    }
+  }
+#endif
+}
+
 unsigned get_process_id() {
 #ifdef _WIN32
   return unsigned(GetCurrentProcessId());
@@ -205,6 +223,20 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   } else {
     return Impl::get_visible_devices().size();
   }
+}
+
+[[nodiscard]] size_t Kokkos::total_device_memory() noexcept {
+  size_t free  = 0ull;
+  size_t total = 0ull;
+  device_mem_info(&free, &total);
+  return total;
+}
+
+[[nodiscard]] size_t Kokkos::free_device_memory() noexcept {
+  size_t free  = 0ull;
+  size_t total = 0ull;
+  device_mem_info(&free, &total);
+  return free;
 }
 
 [[nodiscard]] int Kokkos::num_threads() noexcept {
