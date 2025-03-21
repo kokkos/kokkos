@@ -32,7 +32,7 @@
 ### General Enhancements
 * Enable use of `kokkos_check` exported cmake function in a `<PackageName>Config.cmake` without raising warnings about the package name not matching [\#7669](https://github.com/kokkos/kokkos/pull/7669)
 * Add simd compound assignments and update simd reductions [\#7486](https://github.com/kokkos/kokkos/pull/7486)
-* Call thrust::inclusive_scan for Kokkos::Incluisve_scan when available [\#7542](https://github.com/kokkos/kokkos/pull/7542)
+* Improve performance of the `inclusive_scan` algorithm with Cuda and HIP [\#7542](https://github.com/kokkos/kokkos/pull/7542)
 * Reduce the overhead of checking if any tool binding have been set or not [\#7817](https://github.com/kokkos/kokkos/pull/7817)
 * Avoid storing the view in `RandomAccessIterator` to increase performance [\#7304](https://github.com/kokkos/kokkos/pull/7304)
 * Make `RandomAccessIterator` fulfill `std::random_access_iterator concept` [\#7451](https://github.com/kokkos/kokkos/pull/7451)
