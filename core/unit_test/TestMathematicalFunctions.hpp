@@ -484,6 +484,8 @@ DEFINE_BINARY_FUNCTION_EVAL(pow, 2);
 DEFINE_BINARY_FUNCTION_EVAL(hypot, 2);
 DEFINE_BINARY_FUNCTION_EVAL(nextafter, 1);
 DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
+DEFINE_BINARY_FUNCTION_EVAL(fmax, 1);
+DEFINE_BINARY_FUNCTION_EVAL(fmin, 1);
 #endif
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
@@ -853,6 +855,27 @@ TEST(TEST_CATEGORY, mathematical_functions_fma) {
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2, 3.f, 4.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.l, 3.l, 4.l);
+#endif
+}
+
+TEST(TEST_CATEGORY, mathematical_functions_max_min) {
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
+      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(
+      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
+      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(
+      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2.f, 3.f);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2.f, 3.f);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2., 3.);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2., 3.);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2, 3.f);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2, 3.f);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2.l, 3.l);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2.l, 3.l);
 #endif
 }
 #endif
