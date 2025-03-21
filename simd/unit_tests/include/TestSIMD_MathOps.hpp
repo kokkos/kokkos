@@ -385,7 +385,7 @@ KOKKOS_INLINE_FUNCTION void device_check_math_op_one_loader(UnaryOp unary_op,
       arg /= simd_type(10.1);
     }
 
-    // acosh defined for x >= 1
+    // acosh is defined for x >= 1
     if constexpr (std::is_same_v<UnaryOp, acosh_op>) {
       arg = Kokkos::abs(arg) + simd_type(1.0);
     }
