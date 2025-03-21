@@ -234,13 +234,16 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   if((NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE) AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18"))
     #I can use link options
     #check for CXX linkage using the simple 3.18 way
+    kokkos_check_linker_flags(LANGUAGE CXX FLAGS ${KOKKOS_LINK_OPTIONS})
     target_link_options(${LIBRARY_NAME} PUBLIC $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>)
   else()
     #I can use link options
     #just assume CXX linkage
+    kokkos_check_linker_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
     target_link_options(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS})
   endif()
 
+  kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_COMPILE_OPTIONS})
   target_compile_options(
     ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_COMPILE_OPTIONS}>
   )
@@ -252,6 +255,10 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   target_link_libraries(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_LIBRARIES})
 
   if(KOKKOS_ENABLE_CUDA)
+    # exclude case with compiler launcher and nvcc_wrapper as the CXX compiler that gets invoked by cm
+    if (KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper"))
+      kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_CUDA_OPTIONS})
+    endif()
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_CUDA_OPTIONS}>
     )
@@ -259,12 +266,14 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     foreach(OPT ${KOKKOS_CUDAFE_OPTIONS})
       list(APPEND NODEDUP_CUDAFE_OPTIONS -Xcudafe ${OPT})
     endforeach()
+    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${NODEDUP_CUDAFE_OPTIONS})
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_CUDAFE_OPTIONS}>
     )
   endif()
 
   if(KOKKOS_ENABLE_HIP)
+    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_AMDGPU_OPTIONS})
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_AMDGPU_OPTIONS}>
     )
@@ -285,6 +294,7 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
       list(APPEND NODEDUP_XCOMPILER_OPTIONS -Xcompiler)
       list(APPEND NODEDUP_XCOMPILER_OPTIONS ${OPT})
     endforeach()
+    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${NODEDUP_XCOMPILER_OPTIONS})
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_XCOMPILER_OPTIONS}>
     )

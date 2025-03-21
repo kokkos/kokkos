@@ -1,6 +1,3 @@
-################################### DEPENDENCIES ###############################
-include(CheckCompilerFlag)
-include(CheckLinkerFlag)
 ################################### FUNCTIONS ##################################
 # List of functions
 #   kokkos_option
@@ -851,26 +848,6 @@ function(COMPILER_SPECIFIC_OPTIONS_HELPER)
     endif()
   endif()
 
-  set(CMAKE_REQUIRED_QUIET ON)
-  if(PARSE_COMPILE_OPTIONS AND COMPILER_SPECIFIC_FLAGS_TMP)
-    foreach(flag IN LISTS COMPILER_SPECIFIC_FLAGS_TMP)
-      check_compiler_flag(${KOKKOS_COMPILE_LANGUAGE} ${flag} compiler_result)
-      if(NOT compiler_result)
-        message(FATAL_ERROR "The compiler for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag ${flag}.")
-      endif()
-    endforeach()
-  endif()
-
-  if(PARSE_LINK_OPTIONS AND COMPILER_SPECIFIC_FLAGS_TMP)
-    foreach(flag IN LISTS COMPILER_SPECIFIC_FLAGS_TMP)
-      message(STATUS "${flag} and lang ${KOKKOS_COMPILE_LANGUAGE}")
-      check_linker_flag(${KOKKOS_COMPILE_LANGUAGE} ${flag} linker_result)
-      if(NOT linker_result)
-        message(FATAL_ERROR "Linker for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag ${flag}.")
-      endif()
-    endforeach()
-  endif()
-
   if(PARSE_LINK_OPTIONS)
     global_append(KOKKOS_LINK_OPTIONS ${COMPILER_SPECIFIC_FLAGS_TMP})
   endif()
@@ -975,6 +952,76 @@ int main()
   try_compile(_RET ${PROJECT_BINARY_DIR}/compile_tests SOURCES ${PROJECT_BINARY_DIR}/compile_tests/compiles_cuda.cpp)
 
   set(${_VAR} ${_RET} CACHE STRING "CXX compiler supports building CUDA")
+endfunction()
+
+# this function checks if the compiler supports specific flags. No-op for CMake < 3.19:
+#
+#       SILENT    --> check without printing the check (default=ON)
+#       LANGUAGE  --> compile language (required)
+#       FLAGS     --> list of compiler flags
+#       OPTIONS   --> list of options that get printed in case of failure (optional)
+#
+function(kokkos_check_compiler_flags)
+  cmake_parse_arguments(INP "" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
+
+  if(NOT INP_LANGUAGE)
+    message(FATAL_ERROR "'kokkos_check_compiler_flags' requires a LANGUAGE to be passed.")
+  endif()
+
+  if(NOT INP_SILENT)
+    set(CMAKE_REQUIRED_QUIET ON)
+  endif()
+
+  message(STATUS "${INP_LANGUAGE} compiler ${CMAKE_CXX_COMPILER} checking flags ${FLAGS}")
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
+    include(CheckCompilerFlag)
+    if(INP_FLAGS)
+      string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
+      check_compiler_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} compiler_result)
+        if(NOT compiler_result)
+          if(INP_OPTIONS)
+            message(FATAL_ERROR "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration.")
+          else()
+            message(FATAL_ERROR "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS}. Please check the given configuration.")
+          endif()
+        endif()
+    endif()
+endif()
+endfunction()
+
+# this function checks if the linker supports specific flags. No-op for CMake < 3.18:
+#
+#       SILENT    --> check without printing the check (default=ON)
+#       LANGUAGE  --> compile language (required)
+#       FLAGS     --> list of compiler flags
+#       OPTIONS   --> list of options that get printed in case of failure (optional)
+#
+function(kokkos_check_linker_flags)
+  cmake_parse_arguments(INP "" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
+
+  if(NOT INP_LANGUAGE)
+    message(FATAL_ERROR "'kokkos_check_linker_flags' requires a LANGUAGE to be passed.")
+  endif()
+
+  if(NOT INP_SILENT)
+    set(CMAKE_REQUIRED_QUIET ON)
+  endif()
+
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+    include(CheckLinkerFlag)
+    if(INP_FLAGS)
+      string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
+      check_linker_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} linker_result)
+        if(NOT linker_result)
+          if(INP_OPTIONS)
+            message(FATAL_ERROR "The linker for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration.")
+          else()
+            message(FATAL_ERROR "The linker for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS}. Please check the given configuration.")
+          endif()
+        endif()
+    endif()
+endif()
 endfunction()
 
 # this function is provided to easily select which files use nvcc_wrapper:
