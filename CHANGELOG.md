@@ -48,7 +48,6 @@
 * Improved using CUDA via CMake language facility by supporting static library builds [\#7830](https://github.com/kokkos/kokkos/pull/7830)
 
 ### Incompatibilities (i.e. breaking changes)
-
 * Change SIMD comparison operator to return `simd_mask` instead of `bool` [\#7781](https://github.com/kokkos/kokkos/pull/7781)
 * Remove classic Intel compiler support [\#7737](https://github.com/kokkos/kokkos/pull/7737)
 
