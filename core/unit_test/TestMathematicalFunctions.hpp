@@ -289,7 +289,7 @@ struct FloatingPointComparison {
   KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, int ulp) const {
     auto abs_tol = eps(fpv) * ulp;
 
-    bool ar = absolute(fpv) < abs_tol;
+    bool ar = absolute(fpv) == FPT(0) || absolute(fpv) < abs_tol;
     if (!ar) {
       Kokkos::printf("absolute value exceeds tolerance [|%e| > %e]\n",
                      (double)fpv, (double)abs_tol);
@@ -484,8 +484,8 @@ DEFINE_BINARY_FUNCTION_EVAL(pow, 2);
 DEFINE_BINARY_FUNCTION_EVAL(hypot, 2);
 DEFINE_BINARY_FUNCTION_EVAL(nextafter, 1);
 DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
-DEFINE_BINARY_FUNCTION_EVAL(fmax, 1);
-DEFINE_BINARY_FUNCTION_EVAL(fmin, 1);
+DEFINE_BINARY_FUNCTION_EVAL(fmax, 0);
+DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 #endif
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
