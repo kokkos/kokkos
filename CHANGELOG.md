@@ -18,7 +18,7 @@
  - Change block size deduction to prefer smaller blocks/teams [\#7509](https://github.com/kokkos/kokkos/pull/7509)
  - Allocate memory with stream ordered semantics (i.e. use `hipMallocAsync`) [\#7659](https://github.com/kokkos/kokkos/pull/7659)
  - Fix a segfault when a virtual function called inside a kernel requires too many registers[\#7660](https://github.com/kokkos/kokkos/pull/7660)
- - Add support for HIP instances on multiple GPUs (available for rocm 5.6 and later) [\#7130](https://github.com/kokkos/kokkos/pull/7130)
+ - Add experimental support for multi GPUs [\#7130](https://github.com/kokkos/kokkos/pull/7130)
  - Fix performance bug affecting `atomic_fetch_{add,sub,min,max,and,or,xor}` on integral types `long` and `unsigned long` [\#7816](https://github.com/kokkos/kokkos/pull/7816)
  - Fix execution of ranges with more than 2B elements [\#7797](https://github.com/kokkos/kokkos/pull/7797)
 
