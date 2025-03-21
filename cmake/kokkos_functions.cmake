@@ -972,8 +972,6 @@ function(kokkos_check_compiler_flags)
     set(CMAKE_REQUIRED_QUIET ON)
   endif()
 
-  message(STATUS "${INP_LANGUAGE} compiler ${CMAKE_CXX_COMPILER} checking flags ${FLAGS}")
-
 if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
     include(CheckCompilerFlag)
     if(INP_FLAGS)
