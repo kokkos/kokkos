@@ -37,7 +37,6 @@
 * Avoid storing the view in `RandomAccessIterator` to increase performance [\#7304](https://github.com/kokkos/kokkos/pull/7304)
 * Make `RandomAccessIterator` fulfill `std::random_access_iterator concept` [\#7451](https://github.com/kokkos/kokkos/pull/7451)
 * Include information about support for system allocated memory in `print_configuration` (Cuda and HIP) [\#7673](https://github.com/kokkos/kokkos/pull/7673)
-* Report to OSSF Scorecard [\#7798](https://github.com/kokkos/kokkos/pull/7798)
 
 ### DualView Changes
 * DualView: Deprecate direct access to d_view and h_view [\#7716](https://github.com/kokkos/kokkos/pull/7716)
