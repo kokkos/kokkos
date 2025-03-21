@@ -17,6 +17,8 @@
 #ifndef KOKKOS_SYCL_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 #define KOKKOS_SYCL_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
+
 namespace Kokkos {
 #ifdef KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 
