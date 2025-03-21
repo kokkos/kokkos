@@ -255,7 +255,8 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   target_link_libraries(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_LIBRARIES})
 
   if(KOKKOS_ENABLE_CUDA)
-    # exclude case with compiler launcher and nvcc_wrapper as the CXX compiler that gets invoked by cm
+    #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
     if (KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper"))
       kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_CUDA_OPTIONS})
     endif()
