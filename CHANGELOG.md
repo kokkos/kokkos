@@ -24,7 +24,6 @@
 
 #### SYCL:
 - Improve sorting performance for non-contiguous views [\#7502](https://github.com/kokkos/kokkos/pull/7502)
-- Fix reductions with SYCL on AMD GPUs [\#7652](https://github.com/kokkos/kokkos/pull/7652)
 
 #### Serial:
 * Reduce fences overhead when using `Kokkos_ENABLE_ATOMICS_BYPASS` [\#7821](https://github.com/kokkos/kokkos/pull/7821)
