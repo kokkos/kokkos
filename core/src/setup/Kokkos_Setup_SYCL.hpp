@@ -38,9 +38,6 @@
 #include <CL/sycl.hpp>
 #endif
 
-#define KOKKOS_IMPL_SYCL_GET_MULTI_PTR(accessor) \
-  accessor.get_multi_ptr<sycl::access::decorated::yes>()
-
 // FIXME_SYCL Use type directly once it has stabilized in SYCL.
 namespace Kokkos::Impl {
 #ifndef SYCL_EXT_INTEL_USM_ADDRESS_SPACES
