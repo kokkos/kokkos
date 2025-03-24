@@ -38,12 +38,8 @@
 #include <CL/sycl.hpp>
 #endif
 
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20230200
 #define KOKKOS_IMPL_SYCL_GET_MULTI_PTR(accessor) \
   accessor.get_multi_ptr<sycl::access::decorated::yes>()
-#else
-#define KOKKOS_IMPL_SYCL_GET_MULTI_PTR(accessor) accessor.get_pointer()
-#endif
 
 // FIXME_SYCL Use type directly once it has stabilized in SYCL.
 namespace Kokkos::Impl {
