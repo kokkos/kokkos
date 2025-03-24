@@ -27,7 +27,7 @@
 - Fix reductions with SYCL on AMD GPUs [\#7652](https://github.com/kokkos/kokkos/pull/7652)
 
 #### Serial:
-* Make fences non-blocking with the serial backend when Kokkos_ENABLE_ATOMICS_BYPASS is set [\#7821](https://github.com/kokkos/kokkos/pull/7821)
+* Reduce fences overhead when using `Kokkos_ENABLE_ATOMICS_BYPASS` [\#7821](https://github.com/kokkos/kokkos/pull/7821)
 
 ### General Enhancements
 * Enable use of `kokkos_check` exported cmake function in a `<PackageName>Config.cmake` without raising warnings about the package name not matching [\#7669](https://github.com/kokkos/kokkos/pull/7669)
