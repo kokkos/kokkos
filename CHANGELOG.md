@@ -7,7 +7,7 @@
 ### Features:
 
 * core(graph): `then` node [\#7629](https://github.com/kokkos/kokkos/pull/7629)
-* core(graph): allow construction from native graph (interop) [\#7664](https://github.com/kokkos/kokkos/pull/7664)
+* Kokkos::Graph: Allow construction from CUDA/HIP graph [\#7664](https://github.com/kokkos/kokkos/pull/7664)
 
 ### Backend and Architecture Enhancements:
 
