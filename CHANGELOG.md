@@ -8,7 +8,7 @@
 
 * Kokkos::Graph: Allow adding tasks to the graph via a `then`-node [\#7629](https://github.com/kokkos/kokkos/pull/7629)
 * Kokkos::Graph: Allow construction from CUDA/HIP graph [\#7664](https://github.com/kokkos/kokkos/pull/7664)
-
+Add experimental support for using multiple GPUs from one process [\#7130](https://github.com/kokkos/kokkos/pull/7130)
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
