@@ -43,7 +43,7 @@
 ### Build System Changes
 * Add support for Zen 4 AMD microarchitecture [\#7550](https://github.com/kokkos/kokkos/pull/7550)
 * Enable NVIDIA Grace architecture with NVHPC [\#7858](https://github.com/kokkos/kokkos/pull/7858)
-* Improved using CUDA via CMake language facility by supporting static library builds [\#7830](https://github.com/kokkos/kokkos/pull/7830)
+* Support static library builds when using CUDA as CMake language [\#7830](https://github.com/kokkos/kokkos/pull/7830)
 
 ### Incompatibilities (i.e. breaking changes)
 * Change SIMD comparison operator to return `simd_mask` instead of `bool` [\#7781](https://github.com/kokkos/kokkos/pull/7781)
