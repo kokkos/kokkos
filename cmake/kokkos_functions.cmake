@@ -956,19 +956,19 @@ endfunction()
 
 # this function checks if the compiler supports specific flags. No-op for CMake < 3.19:
 #
-#       SILENT    --> check without printing the check (default=ON)
+#       VERBOSE   --> check without printing the check (default=ON)
 #       LANGUAGE  --> compile language (required)
 #       FLAGS     --> list of compiler flags
 #       OPTIONS   --> list of options that get printed in case of failure (optional)
 #
 function(kokkos_check_compiler_flags)
-  cmake_parse_arguments(INP "" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
+  cmake_parse_arguments(INP "VERBOSE" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
 
   if(NOT INP_LANGUAGE)
     message(FATAL_ERROR "'kokkos_check_compiler_flags' requires a LANGUAGE to be passed.")
   endif()
 
-  if(NOT INP_SILENT)
+  if(NOT INP_VERBOSE)
     set(CMAKE_REQUIRED_QUIET ON)
   endif()
 
@@ -996,19 +996,19 @@ endfunction()
 
 # this function checks if the linker supports specific flags. No-op for CMake < 3.18:
 #
-#       SILENT    --> check without printing the check (default=ON)
+#       VERBOSE   --> check without printing the check (default=ON)
 #       LANGUAGE  --> compile language (required)
 #       FLAGS     --> list of compiler flags
 #       OPTIONS   --> list of options that get printed in case of failure (optional)
 #
 function(kokkos_check_linker_flags)
-  cmake_parse_arguments(INP "" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
+  cmake_parse_arguments(INP "VERBOSE" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
 
   if(NOT INP_LANGUAGE)
     message(FATAL_ERROR "'kokkos_check_linker_flags' requires a LANGUAGE to be passed.")
   endif()
 
-  if(NOT INP_SILENT)
+  if(NOT INP_VERBOSE)
     set(CMAKE_REQUIRED_QUIET ON)
   endif()
 
