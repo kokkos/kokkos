@@ -289,7 +289,7 @@ struct FloatingPointComparison {
   KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, int ulp) const {
     auto abs_tol = eps(fpv) * ulp;
 
-    bool ar = absolute(fpv) == FPT(0) || absolute(fpv) < abs_tol;
+    bool ar = absolute(fpv) <= abs_tol;
     if (!ar) {
       Kokkos::printf("absolute value exceeds tolerance [|%e| > %e]\n",
                      (double)fpv, (double)abs_tol);
@@ -310,7 +310,7 @@ struct FloatingPointComparison {
       double min_denom = static_cast<double>(
           absolute(rhs) < absolute(lhs) ? absolute(rhs) : absolute(lhs));
       double rel_diff = abs_diff / min_denom;
-      bool ar         = abs_diff == 0 || rel_diff < rel_tol;
+      bool ar         = rel_diff <= rel_tol;
       if (!ar) {
         Kokkos::printf("relative difference exceeds tolerance [%e > %e]\n",
                        (double)rel_diff, (double)rel_tol);
