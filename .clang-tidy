@@ -1,3 +1,24 @@
-Checks: '-*,kokkos-*,modernize-type-traits,modernize-use-using,modernize-use-nullptr,cppcoreguidelines-pro-type-cstyle-cast'
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-argument-comment,
+  -bugprone-branch-clone,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -bugprone-integer-division,
+  -bugprone-macro-parentheses,
+  -bugprone-misplaced-widening-cast,
+  -bugprone-narrowing-conversions,
+  -bugprone-non-zero-enum-to-bool-conversion,
+  -bugprone-signed-char-misuse,
+  -bugprone-suspicious-include,
+  -bugprone-suspicious-memory-comparison,
+  -bugprone-unhandled-exception-at-new,
+  cppcoreguidelines-pro-type-cstyle-cast,
+  modernize-type-traits,
+  modernize-use-nullptr,
+  modernize-use-using,
+  kokkos-*
+
 FormatStyle: file
 HeaderFilterRegex: '(algorithms|benchmarks|containers|core|example|simd).*\.hpp'

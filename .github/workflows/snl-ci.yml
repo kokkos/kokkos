@@ -21,10 +21,9 @@ jobs:
     
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: kokkos/kokkos
-          ref: ${{ github.base_ref }}
           path: kokkos
 
       - name: configure_kokkos
@@ -35,6 +34,7 @@ jobs:
             -DCMAKE_CXX_STANDARD=20 \
             -DKokkos_ENABLE_CUDA=ON \
             -DKokkos_ARCH_HOPPER90=ON \
+            -DKokkos_ARCH_NATIVE=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
