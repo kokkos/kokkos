@@ -65,7 +65,7 @@
 * simd: fix a bug in non-masked reductions [\#7845](https://github.com/kokkos/kokkos/pull/7845)
 * Cuda: fixed a bug where a `MDRangePolicy` of rank 4 or more is incorrectly iterated, leading to some iterations being evaluated more than once for large loops [\#7724](https://github.com/kokkos/kokkos/pull/7724)
 * Cuda: ignore gcc assembler options in `nvcc-wrapper` [\#7492](https://github.com/kokkos/kokkos/pull/7492)
-* Build system: skip generation if compiler support for ARMv9 Grace arch is not detected [\#7862](https://github.com/kokkos/kokkos/pull/7862)
+* Build system: hint to `ARCH_NATIVE` if ARMv9 Grace arch is not explicitly supported by the compiler [\#7862](https://github.com/kokkos/kokkos/pull/7862)
 * Use right arch for MI300A in makefiles [\#7786](https://github.com/kokkos/kokkos/pull/7786)
 * Fix compiling BasicView on MSVC with a compiler workaround [\#7751](https://github.com/kokkos/kokkos/pull/7751)
 
