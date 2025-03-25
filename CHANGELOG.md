@@ -59,7 +59,7 @@
 * build_env_info: resolve issues with ninja [\#7557](https://github.com/kokkos/kokkos/pull/7557)
 * Fix Zen3 flag for NVHPC [\#7558](https://github.com/kokkos/kokkos/pull/7558)
 * graph: nodes must be stored by the graph [\#7619](https://github.com/kokkos/kokkos/pull/7619)
-* Make sure lock arrays on device before launching graph [\#7685](https://github.com/kokkos/kokkos/pull/7685)
+* Make sure lock arrays are on device before launching a graph [\#7685](https://github.com/kokkos/kokkos/pull/7685)
 * Performance bug in `RangePolicy`: construct error message if and only if the precondition is violated [\#7809](https://github.com/kokkos/kokkos/pull/7809)
 * simd: fix a bug in scalar min/max [\#7813](https://github.com/kokkos/kokkos/pull/7813)
 * simd: fix a bug in non-masked reductions [\#7845](https://github.com/kokkos/kokkos/pull/7845)
