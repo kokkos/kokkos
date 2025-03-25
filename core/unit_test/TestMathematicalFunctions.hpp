@@ -1793,7 +1793,7 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
   TestIsNaN<TEST_EXECSPACE>();
 }
 
-KOKKOS_FUNCTION KE::half_t ref_test_fallback_half(KE::half_t x) {
+KOKKOS_FUNCTION KE::half_t ref_test_fallback_half(KE::half_t) {
 #if defined(KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED) || \
     defined(KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED)
   return KE::half_t(0.f);
@@ -1802,7 +1802,7 @@ KOKKOS_FUNCTION KE::half_t ref_test_fallback_half(KE::half_t x) {
 #endif
 }
 
-KOKKOS_FUNCTION KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t x) {
+KOKKOS_FUNCTION KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
 #if defined(KOKKOS_IMPL_BHALF_TYPE_DEFINED) && \
         (KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80) || \
     defined(KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED)
