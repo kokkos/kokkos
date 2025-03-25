@@ -6,7 +6,7 @@
 
 ### Features:
 
-* core(graph): `then` node [\#7629](https://github.com/kokkos/kokkos/pull/7629)
+* Kokkos::Graph: Allow adding tasks to the graph via a `then`-node [\#7629](https://github.com/kokkos/kokkos/pull/7629)
 * Kokkos::Graph: Allow construction from CUDA/HIP graph [\#7664](https://github.com/kokkos/kokkos/pull/7664)
 
 ### Backend and Architecture Enhancements:
