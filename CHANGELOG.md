@@ -67,7 +67,7 @@
 * Cuda: ignore gcc assembler options in `nvcc-wrapper` [\#7492](https://github.com/kokkos/kokkos/pull/7492)
 * Build system: hint to `ARCH_NATIVE` if ARMv9 Grace arch is not explicitly supported by the compiler [\#7862](https://github.com/kokkos/kokkos/pull/7862)
 * Use right arch for MI300A in makefiles [\#7786](https://github.com/kokkos/kokkos/pull/7786)
-* Fix compiling BasicView on MSVC with a compiler workaround [\#7751](https://github.com/kokkos/kokkos/pull/7751)
+* Fix compiling BasicView on MSVC [\#7751](https://github.com/kokkos/kokkos/pull/7751)
 
 ## 4.5.01
 
