@@ -41,6 +41,13 @@ namespace Kokkos {
     return sycl::OP(Experimental::half_t::impl_type(x));          \
   }
 
+#ifdef KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
+    Kokkos::Experimental::half_t) {
+  return Kokkos::Experimental::half_t(0.f);
+}
+#endif
+
 // Basic operations
 // KOKKOS_SYCL_HALF_UNARY_FUNCTION(abs)
 KOKKOS_SYCL_HALF_UNARY_FUNCTION(fabs)
@@ -125,6 +132,13 @@ KOKKOS_SYCL_HALF_UNARY_PREDICATE(signbit)
     return sycl::ext::oneapi::experimental::OP(                    \
         Experimental::bhalf_t::impl_type(x));                      \
   }
+
+#ifdef KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(
+    Kokkos::Experimental::bhalf_t) {
+  return Kokkos::Experimental::bhalf_t(0.f);
+}
+#endif
 
 // Basic operations
 // KOKKOS_SYCL_BHALF_UNARY_FUNCTION(abs)

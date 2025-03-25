@@ -64,19 +64,19 @@ namespace Kokkos {
   }
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, MIXED_TYPE) \
-  template <bool fallback = true>                                        \
-  KOKKOS_INLINE_FUNCTION double impl_##FUNC(HALF_TYPE x, MIXED_TYPE y) { \
-    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
-  }                                                                      \
-  KOKKOS_INLINE_FUNCTION double FUNC(HALF_TYPE x, MIXED_TYPE y) {        \
-    return Kokkos::impl_##FUNC(x, y);                                    \
-  }                                                                      \
-  template <bool fallback = true>                                        \
-  KOKKOS_INLINE_FUNCTION double impl_##FUNC(MIXED_TYPE x, HALF_TYPE y) { \
-    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
-  }                                                                      \
-  KOKKOS_INLINE_FUNCTION double FUNC(MIXED_TYPE x, HALF_TYPE y) {        \
-    return Kokkos::impl_##FUNC(x, y);                                    \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION double impl_##FUNC(HALF_TYPE x, MIXED_TYPE y) {         \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y));         \
+  }                                                                              \
+  KOKKOS_INLINE_FUNCTION double FUNC(HALF_TYPE x, MIXED_TYPE y) {                \
+    return Kokkos::impl_##FUNC(x, y);                                            \
+  }                                                                              \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION double impl_##FUNC(MIXED_TYPE x, HALF_TYPE y) {         \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y));         \
+  }                                                                              \
+  KOKKOS_INLINE_FUNCTION double FUNC(MIXED_TYPE x, HALF_TYPE y) {                \
+    return Kokkos::impl_##FUNC(x, y);                                            \
   }
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF(FUNC, HALF_TYPE)                 \
@@ -303,6 +303,25 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, signbi
 // islessequal
 // islessgreater
 // isunordered
+
+// Implementation test function: check if fallback for half and bhalf type are used
+#ifdef KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(Kokkos::Experimental::half_t) {
+  return Kokkos::Experimental::half_t(1.f);
+}
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t test_fallback_half(Kokkos::Experimental::half_t x) {
+  return impl_test_fallback_half(x);
+}
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(Kokkos::Experimental::bhalf_t) {
+  return Kokkos::Experimental::bhalf_t(1.f);
+}
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t test_fallback_bhalf(Kokkos::Experimental::bhalf_t x) {
+  return impl_test_fallback_bhalf(x);
+}
+#endif
+
 // Complex number functions
 #define KOKKOS_IMPL_MATH_COMPLEX_REAL_HALF(FUNC, HALF_TYPE) \
   KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x) { return x; }
