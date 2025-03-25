@@ -29,7 +29,7 @@
 * Reduce fences overhead when using `Kokkos_ENABLE_ATOMICS_BYPASS` [\#7821](https://github.com/kokkos/kokkos/pull/7821)
 
 ### General Enhancements
-* Enable use of `kokkos_check` exported cmake function in a `<PackageName>Config.cmake` without raising warnings about the package name not matching [\#7669](https://github.com/kokkos/kokkos/pull/7669)
+* Allow use of `kokkos_check` in `<PackageName>Config.cmake` without warnings [\#7669](https://github.com/kokkos/kokkos/pull/7669)
 * Add simd compound assignments and update simd reductions [\#7486](https://github.com/kokkos/kokkos/pull/7486)
 * Improve performance of the `inclusive_scan` algorithm with Cuda and HIP [\#7542](https://github.com/kokkos/kokkos/pull/7542)
 * Reduce tooling interface overhead (don't pay for what you don't use) [\#7817](https://github.com/kokkos/kokkos/pull/7817)
