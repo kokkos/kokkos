@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SIMD_PERF_TEST_HOST_HPP
-#define KOKKOS_SIMD_PERF_TEST_HOST_HPP
+#ifndef KOKKOS_SIMD_PERFTEST_HOST_HPP
+#define KOKKOS_SIMD_PERFTEST_HOST_HPP
 
 #include <benchmark/benchmark.h>
 #include <Kokkos_SIMD.hpp>
@@ -44,7 +44,7 @@ template <typename Abi, typename DataType>
 inline void host_register_common_benchmarks() {
   using ExecSpace = Kokkos::DefaultHostExecutionSpace;
 
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, add, plus);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, sub, minus);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, multiply, multiplies);
@@ -88,7 +88,7 @@ inline void host_register_math_benchmarks() {
   using ExecSpace = Kokkos::DefaultHostExecutionSpace;
 
   if constexpr (std::is_floating_point_v<DataType> &&
-                is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+                is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_UNARY_BENCH(math, exp, exp_op);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_UNARY_BENCH(math, exp2, exp2_op);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_UNARY_BENCH(math, log, log_op);
@@ -135,6 +135,7 @@ template <typename... Abis>
 inline void host_register_benchmarks_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
   using DataTypes = Kokkos::Experimental::Impl::data_type_set;
+  host_register_benchmarks_all_types<simd_abi_force_serial>(DataTypes());
   (host_register_benchmarks_all_types<Abis>(DataTypes()), ...);
 }
 
