@@ -8,21 +8,20 @@
 
 * Kokkos::Graph: Allow adding tasks to the graph via a `then`-node [\#7629](https://github.com/kokkos/kokkos/pull/7629)
 * Kokkos::Graph: Allow construction from CUDA/HIP graph [\#7664](https://github.com/kokkos/kokkos/pull/7664)
-Add experimental support for using multiple GPUs from one process [\#7130](https://github.com/kokkos/kokkos/pull/7130)
+* Add experimental support for using multiple GPUs from one process [\#7130](https://github.com/kokkos/kokkos/pull/7130)
+
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
- - Improved reduction performance, in particular on H100 and newer [\#7823](https://github.com/kokkos/kokkos/pull/7823)
+* Improved reduction performance, in particular on H100 and newer [\#7823](https://github.com/kokkos/kokkos/pull/7823)
 
 #### HIP:
- - Change block size deduction to prefer smaller blocks/teams [\#7509](https://github.com/kokkos/kokkos/pull/7509)
- - Allocate memory with stream ordered semantics (i.e. use `hipMallocAsync`) [\#7659](https://github.com/kokkos/kokkos/pull/7659)
- - Fix a segfault when a virtual function called inside a kernel requires too many registers[\#7660](https://github.com/kokkos/kokkos/pull/7660)
- - Fix performance bug affecting `atomic_fetch_{add,sub,min,max,and,or,xor}` on integral types `long` and `unsigned long` [\#7816](https://github.com/kokkos/kokkos/pull/7816)
- - Fix execution of ranges with more than 2B elements [\#7797](https://github.com/kokkos/kokkos/pull/7797)
+* Change block size deduction to prefer smaller blocks/teams [\#7509](https://github.com/kokkos/kokkos/pull/7509)
+* Allocate memory with stream ordered semantics (i.e. use `hipMallocAsync`) [\#7659](https://github.com/kokkos/kokkos/pull/7659)
+* Fix a segfault when a virtual function called inside a kernel requires too many registers[\#7660](https://github.com/kokkos/kokkos/pull/7660)
 
 #### SYCL:
-- Improve sorting performance for non-contiguous views [\#7502](https://github.com/kokkos/kokkos/pull/7502)
+* Improve sorting performance for non-contiguous views [\#7502](https://github.com/kokkos/kokkos/pull/7502)
 
 #### Serial:
 * Reduce fences overhead when using `Kokkos_ENABLE_ATOMICS_BYPASS` [\#7821](https://github.com/kokkos/kokkos/pull/7821)
@@ -55,6 +54,8 @@ Add experimental support for using multiple GPUs from one process [\#7130](https
 * Deprecate Makefile support [\#7613](https://github.com/kokkos/kokkos/pull/7613)
 
 ### Bug Fixes
+* Fix performance bug affecting `atomic_fetch_{add,sub,min,max,and,or,xor}` on integral types `long` and `unsigned long` [\#7816](https://github.com/kokkos/kokkos/pull/7816)
+* Fix execution of ranges with more than 2B elements [\#7797](https://github.com/kokkos/kokkos/pull/7797)
 * build_env_info: resolve issues with ninja [\#7557](https://github.com/kokkos/kokkos/pull/7557)
 * Fix Zen3 flag for NVHPC [\#7558](https://github.com/kokkos/kokkos/pull/7558)
 * graph: nodes must be stored by the graph [\#7619](https://github.com/kokkos/kokkos/pull/7619)
@@ -62,7 +63,7 @@ Add experimental support for using multiple GPUs from one process [\#7130](https
 * Performance bug in `RangePolicy`: construct error message if and only if the precondition is violated [\#7809](https://github.com/kokkos/kokkos/pull/7809)
 * simd: fix a bug in scalar min/max [\#7813](https://github.com/kokkos/kokkos/pull/7813)
 * simd: fix a bug in non-masked reductions [\#7845](https://github.com/kokkos/kokkos/pull/7845)
-* Cuda: fixed a bug where a `MDRangePolicy` of rank 4 or more is incorrectly iterated, leading to some iterations being evaluated more than once for large loops [\#7724](https://github.com/kokkos/kokkos/pull/7724)
+* Cuda: fix incorrect iteration in `MDRangePolicy` of rank > 4 for high iteration counts [\#7724](https://github.com/kokkos/kokkos/pull/7724)
 * Cuda: ignore gcc assembler options in `nvcc-wrapper` [\#7492](https://github.com/kokkos/kokkos/pull/7492)
 * Build system: hint to `ARCH_NATIVE` if ARMv9 Grace arch is not explicitly supported by the compiler [\#7862](https://github.com/kokkos/kokkos/pull/7862)
 * Use right arch for MI300A in makefiles [\#7786](https://github.com/kokkos/kokkos/pull/7786)
