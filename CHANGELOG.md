@@ -8,7 +8,7 @@
 
 * Kokkos::Graph: Allow adding tasks to the graph via a `then`-node [\#7629](https://github.com/kokkos/kokkos/pull/7629)
 * Kokkos::Graph: Allow construction from CUDA/HIP graph [\#7664](https://github.com/kokkos/kokkos/pull/7664)
-* Add experimental support for using multiple GPUs from one process [\#7130](https://github.com/kokkos/kokkos/pull/7130)
+* HIP: Add experimental support for using multiple GPUs from one process [\#7130](https://github.com/kokkos/kokkos/pull/7130)
 
 ### Backend and Architecture Enhancements:
 
@@ -35,9 +35,6 @@
 * Make `RandomAccessIterator` fulfill `std::random_access_iterator concept` [\#7451](https://github.com/kokkos/kokkos/pull/7451)
 * Include information about support for system allocated memory in `print_configuration` (Cuda and HIP) [\#7673](https://github.com/kokkos/kokkos/pull/7673)
 
-### DualView Changes
-* DualView: Deprecate direct access to d_view and h_view [\#7716](https://github.com/kokkos/kokkos/pull/7716)
-
 ### Build System Changes
 * Add support for Zen 4 AMD microarchitecture [\#7550](https://github.com/kokkos/kokkos/pull/7550)
 * Enable NVIDIA Grace architecture with NVHPC [\#7858](https://github.com/kokkos/kokkos/pull/7858)
@@ -46,17 +43,18 @@
 ### Incompatibilities (i.e. breaking changes)
 * Change SIMD comparison operator to return `simd_mask` instead of `bool` [\#7781](https://github.com/kokkos/kokkos/pull/7781)
 * Remove classic Intel compiler (icpc) support [\#7737](https://github.com/kokkos/kokkos/pull/7737)
+* Remove `operator[]` overloads of Kokkos `basic_simd` and `basic_simd_mask` that return a reference [\#7630](https://github.com/kokkos/kokkos/pull/7630)
 
 ### Deprecations
 * Deprecate `StaticCrsGraph` and move it to Kokkos Kernels into `KokkosSparse::` [\#7516](https://github.com/kokkos/kokkos/pull/7516)
 * Deprecate `native_simd` and hide `simd_abi` [\#7472](https://github.com/kokkos/kokkos/pull/7472)
-* Remove `operator[]` overloads of Kokkos `basic_simd` and `basic_simd_mask` that return a reference [\#7630](https://github.com/kokkos/kokkos/pull/7630)
 * Deprecate Makefile support [\#7613](https://github.com/kokkos/kokkos/pull/7613)
+* DualView: Deprecate direct access to d_view and h_view [\#7716](https://github.com/kokkos/kokkos/pull/7716)
 
 ### Bug Fixes
-* Fix performance bug affecting `atomic_fetch_{add,sub,min,max,and,or,xor}` on integral types `long` and `unsigned long` [\#7816](https://github.com/kokkos/kokkos/pull/7816)
+* Fix performance bug affecting `atomic_fetch_{add,sub,min,max,and,or,xor}` on integral types `long` and `unsigned long` with HIP [\#7816](https://github.com/kokkos/kokkos/pull/7816)
 * Fix execution of ranges with more than 2B elements [\#7797](https://github.com/kokkos/kokkos/pull/7797)
-* build_env_info: resolve issues with ninja [\#7557](https://github.com/kokkos/kokkos/pull/7557)
+* Fix clean target when embedding Kokkos in another project [\#7557](https://github.com/kokkos/kokkos/pull/7557)
 * Fix Zen3 flag for NVHPC [\#7558](https://github.com/kokkos/kokkos/pull/7558)
 * graph: nodes must be stored by the graph [\#7619](https://github.com/kokkos/kokkos/pull/7619)
 * Make sure lock arrays are on device before launching a graph [\#7685](https://github.com/kokkos/kokkos/pull/7685)
