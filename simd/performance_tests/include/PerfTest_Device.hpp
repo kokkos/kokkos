@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SIMD_PERF_TEST_DEVICE_HPP
-#define KOKKOS_SIMD_PERF_TEST_DEVICE_HPP
+#ifndef KOKKOS_SIMD_PERFTEST_DEVICE_HPP
+#define KOKKOS_SIMD_PERFTEST_DEVICE_HPP
 
 #include <benchmark/benchmark.h>
 #include <Kokkos_SIMD.hpp>
@@ -48,7 +48,7 @@ template <typename Abi, typename DataType>
 inline void device_register_common_benchmarks() {
   using ExecSpace = Kokkos::DefaultExecutionSpace;
 
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_BINARY_BENCH(common, add, plus);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_BINARY_BENCH(common, sub, minus);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_BINARY_BENCH(common, multiply, multiplies);
@@ -92,7 +92,7 @@ inline void device_register_math_benchmarks() {
   using ExecSpace = Kokkos::DefaultExecutionSpace;
 
   if constexpr (std::is_floating_point_v<DataType> &&
-                is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+                is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_UNARY_BENCH(math, exp, exp_op);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_UNARY_BENCH(math, exp2, exp2_op);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_UNARY_BENCH(math, log, log_op);
