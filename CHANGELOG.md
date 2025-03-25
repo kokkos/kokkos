@@ -53,7 +53,7 @@
 * Deprecate `StaticCrsGraph` and move it to Kokkos Kernels into `KokkosSparse::` [\#7516](https://github.com/kokkos/kokkos/pull/7516)
 * Deprecate `native_simd` and hide `simd_abi` [\#7472](https://github.com/kokkos/kokkos/pull/7472)
 * Remove `operator[]` overloads of Kokkos `basic_simd` and `basic_simd_mask` that return a reference [\#7630](https://github.com/kokkos/kokkos/pull/7630)
-* Makefile support [\#7613](https://github.com/kokkos/kokkos/pull/7613)
+* Deprecate Makefile support [\#7613](https://github.com/kokkos/kokkos/pull/7613)
 
 ### Bug Fixes
 * build_env_info: resolve issues with ninja [\#7557](https://github.com/kokkos/kokkos/pull/7557)
