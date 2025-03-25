@@ -28,7 +28,7 @@ else()
   target_compile_options(benchmark_main PRIVATE -w)
 endif()
 
-foreach(BENCH_TYPE Host HostForceSerial Device)
+foreach(BENCH_TYPE Host Device)
   kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
   kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
   kokkos_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)

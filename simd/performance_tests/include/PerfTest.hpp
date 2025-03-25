@@ -14,14 +14,14 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SIMD_PERF_TEST_HPP
-#define KOKKOS_SIMD_PERF_TEST_HPP
+#ifndef KOKKOS_SIMD_PERFTEST_HPP
+#define KOKKOS_SIMD_PERFTEST_HPP
 
 #include "PerfTest_Host.hpp"
 #include "PerfTest_Device.hpp"
 
 inline void register_benchmarks() {
-#if defined(KOKKOS_SIMD_PERFTEST_HOST) || defined(KOKKOS_SIMD_PERFTEST_HOSTFORCESERIAL)
+#if defined(KOKKOS_SIMD_PERFTEST_HOST)
   register_host_benchmarks();
 #endif
 #if defined(KOKKOS_SIMD_PERFTEST_DEVICE)
