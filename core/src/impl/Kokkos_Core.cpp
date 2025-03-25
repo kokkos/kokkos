@@ -23,6 +23,7 @@
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_DeviceUtils.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 
@@ -150,24 +151,6 @@ int get_device_count() {
 #endif
 }
 
-void device_mem_info(size_t* free, size_t* total) {
-#if defined(KOKKOS_ENABLE_CUDA)
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemGetInfo(free, total));
-#elif defined(KOKKOS_ENABLE_HIP)
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipMemGetInfo(free, total));
-#elif defined(KOKKOS_ENABLE_SYCL)
-  std::vector<sycl::device> devices = Kokkos::Impl::get_sycl_devices();
-  for (auto& dev : devices) {
-    if (dev.is_gpu()) {
-      *total += dev.get_info<sycl::info::device::global_mem_size>();
-      if (dev.has(sycl::aspect::ext_intel_free_memory)) {
-        *free += dev.get_info<sycl::ext::intel::info::device::free_memory>();
-      }
-    }
-  }
-#endif
-}
-
 unsigned get_process_id() {
 #ifdef _WIN32
   return unsigned(GetCurrentProcessId());
@@ -225,18 +208,20 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   }
 }
 
-[[nodiscard]] size_t Kokkos::total_device_memory() noexcept {
-  size_t free  = 0ull;
-  size_t total = 0ull;
-  device_mem_info(&free, &total);
-  return total;
-}
+std::pair<std::size_t, std::size_t> Kokkos::device_memory_info(int n_streams) {
+  using ExecSpace          = Kokkos::DefaultExecutionSpace;
+  std::size_t free_memory  = 0;
+  std::size_t total_memory = 0;
 
-[[nodiscard]] size_t Kokkos::free_device_memory() noexcept {
-  size_t free  = 0ull;
-  size_t total = 0ull;
-  device_mem_info(&free, &total);
-  return free;
+  if (std::is_same_v<ExecSpace, Kokkos::DefaultHostExecutionSpace>) {
+    return {free_memory, total_memory};
+  }
+
+  using MemorySpace = typename ExecSpace::memory_space;
+  Kokkos::Impl::get_free_total_memory<MemorySpace>(free_memory, total_memory,
+                                                   n_streams);
+
+  return {free_memory, total_memory};
 }
 
 [[nodiscard]] int Kokkos::num_threads() noexcept {

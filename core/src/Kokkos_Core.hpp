@@ -107,9 +107,6 @@ void declare_configuration_metadata(const std::string& category,
 [[nodiscard]] int num_devices() noexcept;
 [[nodiscard]] int num_threads() noexcept;
 
-[[nodiscard]] size_t free_device_memory() noexcept;
-[[nodiscard]] size_t total_device_memory() noexcept;
-
 bool show_warnings() noexcept;
 bool tune_internals() noexcept;
 
@@ -142,6 +139,9 @@ void fence(const std::string& name /*= "Kokkos::fence: Unnamed Global Fence"*/);
 
 /** \brief Print "Bill of Materials" */
 void print_configuration(std::ostream& os, bool verbose = false);
+
+// Free and total memory on the device
+std::pair<std::size_t, std::size_t> device_memory_info(int n_streams = 1);
 
 }  // namespace Kokkos
 
