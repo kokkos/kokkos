@@ -234,7 +234,12 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   if((NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE) AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18"))
     #I can use link options
     #check for CXX linkage using the simple 3.18 way
-    kokkos_check_linker_flags(LANGUAGE CXX FLAGS ${KOKKOS_LINK_OPTIONS})
+
+    #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
+    if(NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper"))
+      kokkos_check_linker_flags(LANGUAGE CXX FLAGS ${KOKKOS_LINK_OPTIONS})
+    endif()
     target_link_options(${LIBRARY_NAME} PUBLIC $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>)
   else()
     #I can use link options
@@ -257,7 +262,7 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   if(KOKKOS_ENABLE_CUDA)
     #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
     #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
-    if (KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper"))
+    if(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper"))
       kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_CUDA_OPTIONS})
     endif()
     target_compile_options(
