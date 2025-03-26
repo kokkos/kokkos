@@ -94,3 +94,10 @@ int Kokkos::Experimental::OpenACC::concurrency() const {
   return Impl::OpenACCInternal::m_concurrency;
 }
 #endif
+
+void Kokkos::Experimental::Impl::create_OpenACC_instances(
+    std::vector<OpenACC>& instances) {
+  for (int s = 0; s < int(instances.size()); s++) {
+    instances[s] = OpenACC(s);
+  }
+}
