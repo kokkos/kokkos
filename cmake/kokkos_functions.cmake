@@ -976,17 +976,18 @@ function(kokkos_check_compiler_flags)
     include(CheckCompilerFlag)
     if(INP_FLAGS)
       string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
-      check_compiler_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} KOKKOS_COMPILE_OPTIONS_CHECK)
+      string(REGEX REPLACE "(-device .*)" "\"\\1\"" QUOTED_FLAGS ${WHITESPACE_FLAGS})
+      check_compiler_flag(${INP_LANGUAGE} ${QUOTED_FLAGS} KOKKOS_COMPILE_OPTIONS_CHECK)
       if(NOT KOKKOS_COMPILE_OPTIONS_CHECK)
         if(INP_OPTIONS)
           message(
             FATAL_ERROR
-              "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
+            "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
           )
         else()
           message(
             FATAL_ERROR
-              "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS}. Please check the given configuration."
+            "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
           )
         endif()
       endif()
@@ -1016,17 +1017,18 @@ function(kokkos_check_linker_flags)
     include(CheckLinkerFlag)
     if(INP_FLAGS)
       string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
-      check_linker_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} KOKKOS_LINK_OPTIONS_CHECK)
+      string(REGEX REPLACE "(-device .*)" "\"\\1\"" QUOTED_FLAGS ${WHITESPACE_FLAGS})
+      check_linker_flag(${INP_LANGUAGE} ${QUOTED_FLAGS} KOKKOS_LINK_OPTIONS_CHECK)
       if(NOT KOKKOS_LINK_OPTIONS_CHECK)
         if(INP_OPTIONS)
           message(
             FATAL_ERROR
-              "The linker for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
+            "The linker for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
           )
         else()
           message(
             FATAL_ERROR
-              "The linker for ${INP_LANGUAGE} can not consume flag(s) ${WHITESPACE_FLAGS}. Please check the given configuration."
+            "The linker for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
           )
         endif()
       endif()
