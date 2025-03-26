@@ -976,8 +976,8 @@ function(kokkos_check_compiler_flags)
     include(CheckCompilerFlag)
     if(INP_FLAGS)
       string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
-      check_compiler_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} compiler_result)
-      if(NOT compiler_result)
+      check_compiler_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} KOKKOS_COMPILE_OPTIONS_CHECK)
+      if(NOT KOKKOS_COMPILE_OPTIONS_CHECK)
         if(INP_OPTIONS)
           message(
             FATAL_ERROR
@@ -1016,8 +1016,8 @@ function(kokkos_check_linker_flags)
     include(CheckLinkerFlag)
     if(INP_FLAGS)
       string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
-      check_linker_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} linker_result)
-      if(NOT linker_result)
+      check_linker_flag(${INP_LANGUAGE} ${WHITESPACE_FLAGS} KOKKOS_LINK_OPTIONS_CHECK)
+      if(NOT KOKKOS_LINK_OPTIONS_CHECK)
         if(INP_OPTIONS)
           message(
             FATAL_ERROR
