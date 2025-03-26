@@ -1793,23 +1793,31 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
   TestIsNaN<TEST_EXECSPACE>();
 }
 
-KOKKOS_FUNCTION KE::half_t ref_test_fallback_half(KE::half_t) {
-#if defined(KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED) || \
-    defined(KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED)
-  return KE::half_t(0.f);
-#else
-  return KE::half_t(1.f);
-#endif
+KE::half_t ref_test_fallback_half(KE::half_t) {
+  if (std::string(KOKKOS_IMPL_TOSTRING(TEST_EXECSPACE)) ==
+          std::string("Kokkos::Cuda") ||
+      std::string(KOKKOS_IMPL_TOSTRING(TEST_EXECSPACE)) ==
+          std::string("Kokkos::SYCL")) {
+    return KE::half_t(0.f);
+  } else {
+    return KE::half_t(1.f);
+  }
 }
 
-KOKKOS_FUNCTION KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
-#if defined(KOKKOS_IMPL_BHALF_TYPE_DEFINED) && \
-        (KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80) || \
-    defined(KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED)
-  return KE::bhalf_t(0.f);
+KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
+  if (std::string(KOKKOS_IMPL_TOSTRING(TEST_EXECSPACE)) ==
+      std::string("Kokkos::Cuda")) {
+#if KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80
+    return KE::bhalf_t(0.f);
 #else
-  return KE::bhalf_t(1.f);
+    return KE::bhalf_t(1.f);
 #endif
+  } else if (std::string(KOKKOS_IMPL_TOSTRING(TEST_EXECSPACE)) ==
+             std::string("Kokkos::SYCL")) {
+    return KE::bhalf_t(0.f);
+  } else {
+    return KE::bhalf_t(1.f);
+  }
 }
 
 DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(test_fallback_half, 0,
