@@ -110,7 +110,6 @@ jobs:
             -DKokkos_ENABLE_OPENMP=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ARCH_SPR=ON \
-            -DCMAKE_CXX_EXTENSIONS=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
