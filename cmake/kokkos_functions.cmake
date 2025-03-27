@@ -956,39 +956,48 @@ endfunction()
 
 # this function checks if the compiler supports specific flags. No-op for CMake < 3.19:
 #
-#       VERBOSE   --> check without printing the check (default=ON)
+#       SILENT    --> check without printing and erroring out (default=OFF)
 #       LANGUAGE  --> compile language (required)
 #       FLAGS     --> list of compiler flags
 #       OPTIONS   --> list of options that get printed in case of failure (optional)
+#       RESULT    --> bool with test result (output, optional)
 #
 function(kokkos_check_compiler_flags)
-  cmake_parse_arguments(INP "VERBOSE" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
+  cmake_parse_arguments(INP "SILENT" "LANGUAGE;RESULT" "FLAGS;OPTIONS" ${ARGN})
 
   if(NOT INP_LANGUAGE)
     message(FATAL_ERROR "'kokkos_check_compiler_flags' requires a LANGUAGE to be passed.")
   endif()
 
-  if(NOT INP_VERBOSE)
-    set(CMAKE_REQUIRED_QUIET ON)
+  #if no check is performed return true
+  if(DEFINED INP_RESULT)
+    set(${INP_RESULT} ON PARENT_SCOPE)
   endif()
 
+  set(CMAKE_REQUIRED_QUIET ON)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
     include(CheckCompilerFlag)
     if(INP_FLAGS)
+      #check_compiler_flag requires a whitespace separated list
       string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
       # sycl adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
       string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS ${WHITESPACE_FLAGS})
       check_compiler_flag(${INP_LANGUAGE} ${QUOTED_FLAGS} KOKKOS_COMPILE_OPTIONS_CHECK)
-      if(NOT KOKKOS_COMPILE_OPTIONS_CHECK)
+      #Return result
+      if(DEFINED INP_RESULT)
+        set(${INP_RESULT} ${KOKKOS_COMPILE_OPTIONS_CHECK} PARENT_SCOPE)
+      endif()
+      #if fail and not silent -> fail
+      if(NOT KOKKOS_COMPILE_OPTIONS_CHECK AND NOT INP_SILENT)
         if(INP_OPTIONS)
           message(
             FATAL_ERROR
-            "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
+              "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
           )
         else()
           message(
             FATAL_ERROR
-            "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
+              "The compiler for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
           )
         endif()
       endif()
@@ -998,39 +1007,47 @@ endfunction()
 
 # this function checks if the linker supports specific flags. No-op for CMake < 3.18:
 #
-#       VERBOSE   --> check without printing the check (default=ON)
+#       SILENT    --> check without printing and erroring out (default=OFF)
 #       LANGUAGE  --> compile language (required)
 #       FLAGS     --> list of compiler flags
 #       OPTIONS   --> list of options that get printed in case of failure (optional)
+#       RESULT    --> bool with test result (output)
 #
 function(kokkos_check_linker_flags)
-  cmake_parse_arguments(INP "VERBOSE" "LANGUAGE" "FLAGS;OPTIONS" ${ARGN})
+  cmake_parse_arguments(INP "SILENT" "LANGUAGE;RESULT" "FLAGS;OPTIONS" ${ARGN})
 
   if(NOT INP_LANGUAGE)
     message(FATAL_ERROR "'kokkos_check_linker_flags' requires a LANGUAGE to be passed.")
   endif()
 
-  if(NOT INP_VERBOSE)
-    set(CMAKE_REQUIRED_QUIET ON)
+  #if no check is performed return true
+  if(DEFINED INP_RESULT)
+    set(${INP_RESULT} ON PARENT_SCOPE)
   endif()
 
+  set(CMAKE_REQUIRED_QUIET ON)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
     include(CheckLinkerFlag)
     if(INP_FLAGS)
+      #check_linker_flag requires a whitespace separated list
       string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
       # sycl adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
       string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS ${WHITESPACE_FLAGS})
       check_linker_flag(${INP_LANGUAGE} ${QUOTED_FLAGS} KOKKOS_LINK_OPTIONS_CHECK)
-      if(NOT KOKKOS_LINK_OPTIONS_CHECK)
+      #return result
+      if(INP_RESULT)
+        set(${INP_RESULT} ${KOKKOS_LINK_OPTIONS_CHECK} PARENT_SCOPE)
+      endif()
+      if(NOT KOKKOS_LINK_OPTIONS_CHECK AND NOT INP_SILENT)
         if(INP_OPTIONS)
           message(
             FATAL_ERROR
-            "The linker for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
+              "The linker for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} which were set by the option(s) ${INP_OPTIONS}. Please check the given configuration."
           )
         else()
           message(
             FATAL_ERROR
-            "The linker for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
+              "The linker for ${INP_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
           )
         endif()
       endif()
