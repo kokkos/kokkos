@@ -44,11 +44,18 @@ class OpenACCSpace {
   OpenACCSpace() = default;
 
   /**\brief  Allocate untracked memory in the space */
-  void* allocate(const Kokkos::Experimental::OpenACC& exec_space,
-                 const size_t arg_alloc_size) const;
-  void* allocate(const Kokkos::Experimental::OpenACC& exec_space,
-                 const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace& exec_space,
+                 const size_t arg_alloc_size) const {
+    return allocate(exec_space, "[unlabeled]", arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size,
+                 const size_t arg_logical_size = 0) const {
+    return impl_allocate(exec_space, arg_label, arg_alloc_size,
+                         arg_logical_size);
+  }
   void* allocate(const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
                  const size_t arg_logical_size = 0) const;
@@ -62,11 +69,15 @@ class OpenACCSpace {
   static constexpr char const* name() { return "OpenACCSpace"; }
 
  private:
-  void* impl_allocate(const Kokkos::Experimental::OpenACC& exec_space,
-                      const char* arg_label, const size_t arg_alloc_size,
+  template <typename ExecutionSpace>
+  void* impl_allocate(const ExecutionSpace&, const char* arg_label,
+                      const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
-                      const Kokkos::Tools::SpaceHandle =
-                          Kokkos::Tools::make_space_handle(name())) const;
+                      const Kokkos::Tools::SpaceHandle arg_handle =
+                          Kokkos::Tools::make_space_handle(name())) const {
+    return impl_allocate(arg_label, arg_alloc_size, arg_logical_size,
+                         arg_handle);
+  }
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
                       const size_t arg_logical_size = 0,
                       const Kokkos::Tools::SpaceHandle =
@@ -85,11 +96,10 @@ class OpenACCSpace {
 template <>
 struct Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                        Kokkos::Experimental::OpenACCSpace> {
+  enum : bool { assignable = false };
 #if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
-  enum : bool{assignable = true};
   enum : bool{accessible = true};
 #else
-  enum : bool { assignable = false };
   enum : bool { accessible = false };
 #endif
   enum : bool { deepcopy = true };
@@ -98,13 +108,8 @@ struct Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
 template <>
 struct Kokkos::Impl::MemorySpaceAccess<Kokkos::Experimental::OpenACCSpace,
                                        Kokkos::HostSpace> {
-#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
-  enum : bool{assignable = true};
-  enum : bool{accessible = true};
-#else
   enum : bool { assignable = false };
   enum : bool { accessible = false };
-#endif
   enum : bool { deepcopy = true };
 };
 
