@@ -683,6 +683,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_INTEL_DG1)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "INTEL_DG1");
+#elif defined(KOKKOS_ARCH_INTEL_DG2)
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 "INTEL_DG2");
 #elif defined(KOKKOS_ARCH_INTEL_GEN9)
   declare_configuration_metadata("architecture", "GPU architecture",
                                  "INTEL_GEN9");
