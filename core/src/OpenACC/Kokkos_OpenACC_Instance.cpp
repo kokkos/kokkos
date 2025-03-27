@@ -97,6 +97,7 @@ int Kokkos::Experimental::OpenACC::concurrency() const {
 
 void Kokkos::Experimental::Impl::create_OpenACC_instances(
     std::vector<OpenACC>& instances) {
+  // FIXME_OPENACC: this is not thread-safe, causing race conditions.
   for (int s = 0; s < int(instances.size()); s++) {
     instances[s] = OpenACC(s);
   }
