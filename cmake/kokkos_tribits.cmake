@@ -231,6 +231,7 @@ endmacro()
 function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   cmake_parse_arguments(PARSE "PLAIN_STYLE" "" "" ${ARGN})
 
+  message(STATUS "Checking if linker can consume the Kokkos linker flags")
   if((NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE) AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18"))
     #I can use link options
     #check for CXX linkage using the simple 3.18 way
@@ -247,8 +248,9 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     kokkos_check_linker_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
     target_link_options(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS})
   endif()
+  message(STATUS "Checking if linker can consume the Kokkos linker flags - Success")
 
-  kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_COMPILE_OPTIONS})
+  list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_COMPILE_OPTIONS})
   target_compile_options(
     ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_COMPILE_OPTIONS}>
   )
@@ -260,11 +262,6 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   target_link_libraries(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_LIBRARIES})
 
   if(KOKKOS_ENABLE_CUDA)
-    #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
-    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
-    if(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper"))
-      kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_CUDA_OPTIONS})
-    endif()
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_CUDA_OPTIONS}>
     )
@@ -272,17 +269,23 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     foreach(OPT ${KOKKOS_CUDAFE_OPTIONS})
       list(APPEND NODEDUP_CUDAFE_OPTIONS -Xcudafe ${OPT})
     endforeach()
-    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${NODEDUP_CUDAFE_OPTIONS})
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_CUDAFE_OPTIONS}>
     )
+
+    #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
+    if(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper"))
+      list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_CUDA_OPTIONS})
+      list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${NODEDUP_CUDAFE_OPTIONS})
+    endif()
   endif()
 
   if(KOKKOS_ENABLE_HIP)
-    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_AMDGPU_OPTIONS})
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_AMDGPU_OPTIONS}>
     )
+    list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_AMDGPU_OPTIONS})
   endif()
 
   list(LENGTH KOKKOS_XCOMPILER_OPTIONS XOPT_LENGTH)
@@ -300,9 +303,45 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
       list(APPEND NODEDUP_XCOMPILER_OPTIONS -Xcompiler)
       list(APPEND NODEDUP_XCOMPILER_OPTIONS ${OPT})
     endforeach()
-    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${NODEDUP_XCOMPILER_OPTIONS})
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_XCOMPILER_OPTIONS}>
+    )
+    list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${NODEDUP_XCOMPILER_OPTIONS})
+  endif()
+
+  message(STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS and Kokkos compile flags")
+  list(APPEND ALL_COMPILER_FLAGS ${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS})
+  list(APPEND ALL_COMPILER_FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
+  kokkos_check_compiler_flags(
+    SILENT
+    LANGUAGE
+    ${KOKKOS_COMPILE_LANGUAGE}
+    FLAGS
+    ${ALL_COMPILER_FLAGS}
+    RESULT
+    COMBINED_FLAGS_CHECK
+  )
+  if(NOT COMBINED_FLAGS_CHECK)
+    message(
+      STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS and Kokkos compile flags - Fail"
+    )
+    # check individual sets (Kokkos
+    message(STATUS "Checking if compiler can consume Kokkos compile flags")
+    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
+    message(STATUS "Checking if compiler can consume Kokkos compile flags - Success")
+    #check set (CMAKE_<LANG>_FLAGS)
+    message(STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS")
+    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS})
+    message(STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS - Success")
+
+    message(
+      FATAL_ERROR
+        "Compiler can NOT consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS and Kokkos compile flags.\n Please create a working set of flags from CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS: ${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS} and Kokkos compile flags: ${ALL_KOKKOS_COMPILER_FLAGS}"
+    )
+  else()
+    message(
+      STATUS
+        "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS and Kokkos compile flags - Success"
     )
   endif()
 
