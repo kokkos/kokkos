@@ -31,10 +31,10 @@ using StreamIndex =
     int64_t;  // different than benchmarks/stream, which uses int
 using Policy = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
 
-void perform_set(StreamDeviceArray& a, const double scalar) {
+void perform_set(StreamDeviceArray& a, const double scalar_) {
   Kokkos::parallel_for(
       "set", Policy(0, a.extent(0)),
-      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar; });
+      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar_; });
 
   Kokkos::fence();
 }
@@ -48,10 +48,10 @@ void perform_copy(StreamDeviceArray& a, StreamDeviceArray& b) {
 }
 
 void perform_scale(StreamDeviceArray& b, StreamDeviceArray& c,
-                   const double scalar) {
+                   const double scalar_) {
   Kokkos::parallel_for(
       "scale", Policy(0, b.extent(0)),
-      KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar * c[i]; });
+      KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar_ * c[i]; });
 
   Kokkos::fence();
 }
@@ -66,10 +66,10 @@ void perform_add(StreamDeviceArray& a, StreamDeviceArray& b,
 }
 
 void perform_triad(StreamDeviceArray& a, StreamDeviceArray& b,
-                   StreamDeviceArray& c, const double scalar) {
+                   StreamDeviceArray& c, const double scalar_) {
   Kokkos::parallel_for(
       "triad", Policy(0, a.extent(0)),
-      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar * c[i]; });
+      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar_ * c[i]; });
 
   Kokkos::fence();
 }
@@ -79,7 +79,7 @@ int validate_array(StreamDeviceArray& a_dev, const double expected) {
   Kokkos::deep_copy(a, a_dev);
 
   double error = 0.0;
-  for (StreamIndex i = 0; i < a.size(); ++i) {
+  for (size_t i = 0; i < a.size(); ++i) {
     error += std::abs(a[i] - expected);
   }
   double avgError = error / (double)a.size();
