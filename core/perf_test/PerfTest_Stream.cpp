@@ -209,7 +209,6 @@ BENCHMARK(or_skip<StreamSet>)
     ->Name("StreamSet")
     ->ArgName("N")
     ->Arg(10)
-    ->Arg(15)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
@@ -217,7 +216,6 @@ BENCHMARK(or_skip<StreamCopy>)
     ->Name("StreamCopy")
     ->ArgName("N")
     ->Arg(10)
-    ->Arg(15)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
@@ -225,7 +223,6 @@ BENCHMARK(or_skip<StreamScale>)
     ->Name("StreamScale")
     ->ArgName("N")
     ->Arg(10)
-    ->Arg(15)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
@@ -233,7 +230,6 @@ BENCHMARK(or_skip<StreamAdd>)
     ->Name("StreamAdd")
     ->ArgName("N")
     ->Arg(10)
-    ->Arg(15)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
@@ -241,7 +237,6 @@ BENCHMARK(or_skip<StreamTriad>)
     ->Name("StreamTriad")
     ->ArgName("N")
     ->Arg(10)
-    ->Arg(15)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
