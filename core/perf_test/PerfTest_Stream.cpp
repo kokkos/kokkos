@@ -91,7 +91,6 @@ int validate_array(StreamDeviceArray& a_dev, const double expected) {
 static void StreamSet(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 1;
-  const double scalar             = 1.5;
 
   StreamDeviceArray a("a", N8);
 
