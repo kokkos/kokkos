@@ -71,6 +71,7 @@ declare_and_check_host_arch(ZEN4 "AMD Zen4 architecture")
 declare_and_check_host_arch(ZEN5 "AMD Zen5 architecture")
 declare_and_check_host_arch(RISCV_SG2042 "SG2042 (RISC-V) CPUs")
 declare_and_check_host_arch(RISCV_RVA22V "RVA22V (RISC-V) CPUs")
+declare_and_check_host_arch(RISCV_U74MC "U74MC (RISC-V) CPUs")
 
 if(Kokkos_ENABLE_CUDA
    OR Kokkos_ENABLE_OPENMPTARGET
@@ -503,6 +504,18 @@ if(KOKKOS_ARCH_RISCV_RVA22V)
   compiler_specific_flags(
     COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID DEFAULT
     -march=rv64imafdcv_sscofpmf_sstc_svpbmt_zicbom_zicboz_zicbop_zihintpause
+  )
+endif()
+
+if(KOKKOS_ARCH_RISCV_U74MC)
+  if(NOT (KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12)
+     OR (KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 14)
+  )
+    message(SEND_ERROR "Only gcc >= 12 and clang >= 14 support RISC-V.")
+  endif()
+  compiler_specific_flags(
+    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID DEFAULT
+    -march=rv64imafdc_zicntr_zicsr_zifencei_zihpm
   )
 endif()
 
