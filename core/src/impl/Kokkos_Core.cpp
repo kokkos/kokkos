@@ -23,6 +23,7 @@
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
 #include <impl/Kokkos_ParseCommandLineArgumentsAndEnvironmentVariables.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_DeviceUtils.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 
@@ -205,6 +206,22 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   } else {
     return Impl::get_visible_devices().size();
   }
+}
+
+std::pair<std::size_t, std::size_t> Kokkos::device_memory_info(int n_streams) {
+  using ExecSpace          = Kokkos::DefaultExecutionSpace;
+  std::size_t free_memory  = 0;
+  std::size_t total_memory = 0;
+
+  if (std::is_same_v<ExecSpace, Kokkos::DefaultHostExecutionSpace>) {
+    return {free_memory, total_memory};
+  }
+
+  using MemorySpace = typename ExecSpace::memory_space;
+  Kokkos::Impl::get_free_total_memory<MemorySpace>(free_memory, total_memory,
+                                                   n_streams);
+
+  return {free_memory, total_memory};
 }
 
 [[nodiscard]] int Kokkos::num_threads() noexcept {
