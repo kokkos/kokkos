@@ -57,6 +57,7 @@ class SYCL {
   using device_type     = Kokkos::Device<execution_space, memory_space>;
 
   using array_layout = LayoutLeft;
+  using index_type   = memory_space::index_type;
   using size_type    = memory_space::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<SYCL>;
