@@ -17,7 +17,7 @@
 #include <TestHIP_Category.hpp>
 #include <Kokkos_Core.hpp>
 
-namespace Test {
+namespace {
 
 // On MI300a with ROCM <= 6.2.1, hipMemsetAsync was failing with an error when
 // called on host-allocated buffers. The fix was in PR 7380 to use a
@@ -48,4 +48,25 @@ TEST(hip, unified_memory_zero_memset) {
   unified_memory_zero_memset<Kokkos::SharedSpace>();
   unified_memory_zero_memset<Kokkos::HIPSpace>();
 }
-}  // namespace Test
+
+TEST(hip, unified_memory_assign) {
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+  GTEST_SKIP()
+      << "this test should only be run with HIP unified memory enabled";
+#else
+  Kokkos::View<int*, Kokkos::HostSpace> view_host("view_host", 10);
+  Kokkos::View<int*, Kokkos::HIPHostPinnedSpace> view_hostpinned = view_host;
+  Kokkos::View<int*, Kokkos::HIPManagedSpace> view_shared        = view_host;
+  Kokkos::View<int*, Kokkos::HIPSpace> view_device               = view_host;
+
+  EXPECT_EQ(view_host.use_count(), 4);
+  EXPECT_EQ(view_hostpinned.use_count(), 4);
+  EXPECT_EQ(view_shared.use_count(), 4);
+  EXPECT_EQ(view_device.use_count(), 4);
+
+  EXPECT_EQ(view_host.data(), view_hostpinned.data());
+  EXPECT_EQ(view_host.data(), view_shared.data());
+  EXPECT_EQ(view_host.data(), view_device.data());
+#endif
+}
+}  // namespace

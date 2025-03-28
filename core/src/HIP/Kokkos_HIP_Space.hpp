@@ -334,7 +334,11 @@ struct MemorySpaceAccess<HostSpace, HIPManagedSpace> {
 
 template <>
 struct MemorySpaceAccess<HIPSpace, HostSpace> {
+#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+  enum : bool{assignable = true};
+#else
   enum : bool { assignable = false };
+#endif
   enum : bool { accessible = false };
   enum : bool { deepcopy = true };
 };
@@ -361,8 +365,12 @@ struct MemorySpaceAccess<HIPSpace, HIPManagedSpace> {
 
 template <>
 struct MemorySpaceAccess<HIPHostPinnedSpace, HostSpace> {
-  enum : bool { assignable = false };  // Cannot access from HIP
-  enum : bool { accessible = true };   // HIPHostPinnedSpace::execution_space
+#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+  enum : bool{assignable = true};
+#else
+  enum : bool { assignable = false };
+#endif
+  enum : bool { accessible = true };  // HIPHostPinnedSpace::execution_space
   enum : bool { deepcopy = true };
 };
 
@@ -386,7 +394,11 @@ struct MemorySpaceAccess<HIPHostPinnedSpace, HIPManagedSpace> {
 
 template <>
 struct MemorySpaceAccess<HIPManagedSpace, HostSpace> {
+#if defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+  enum : bool{assignable = true};
+#else
   enum : bool { assignable = false };
+#endif
   enum : bool { accessible = false };  // HIPHostPinnedSpace::execution_space
   enum : bool { deepcopy = true };
 };
