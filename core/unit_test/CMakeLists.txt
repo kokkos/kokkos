@@ -841,8 +841,13 @@ if(Kokkos_ENABLE_SYCL)
   kokkos_add_executable_and_test(CoreUnitTest_SYCL2D SOURCES UnitTestMainInit.cpp ${SYCL_SOURCES2D})
 
   kokkos_add_executable_and_test(
-    CoreUnitTest_SYCL3 SOURCES UnitTestMainInit.cpp sycl/TestSYCL_TeamScratchStreams.cpp ${SYCL_SOURCES3}
+    CoreUnitTest_SYCL3
+    SOURCES
+    UnitTestMainInit.cpp
+    sycl/TestSYCL_TeamScratchStreams.cpp
+    ${SYCL_SOURCES3}
     sycl/TestSYCL_Spaces.cpp
+    sycl/TestSYCL_SubgroupSize.cpp
   )
 
   kokkos_add_executable_and_test(CoreUnitTest_SYCLInterOpInit SOURCES UnitTestMain.cpp sycl/TestSYCL_InterOp_Init.cpp)
