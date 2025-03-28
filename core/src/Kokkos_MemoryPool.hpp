@@ -76,7 +76,7 @@ class MemoryPool {
 
   static KOKKOS_FUNCTION unsigned integral_power_of_two_that_contains(
       const unsigned N) {
-    return Kokkos::bit_width(N ? N - 1 : 0);
+    return N ? Kokkos::bit_width(N - 1) : 0;
   }
 
   /*  Each superblock has a concurrent bitset state

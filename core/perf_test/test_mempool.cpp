@@ -160,7 +160,7 @@ int get_number_alloc(int chunk_span, unsigned min_superblock_size,
     chunk_span_bytes += Kokkos::bit_ceil(chunk_bytes);
   }
   auto actual_superblock_bytes_lg2 =
-      Kokkos::bit_width(min_superblock_size ? min_superblock_size - 1 : 0);
+      min_superblock_size ? Kokkos::bit_width(min_superblock_size - 1) : 0;
   auto actual_superblock_bytes = (1 << actual_superblock_bytes_lg2);
   auto superblock_mask         = actual_superblock_bytes - 1;
   auto nsuperblocks =
