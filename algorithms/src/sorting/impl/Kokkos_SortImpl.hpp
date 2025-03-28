@@ -85,6 +85,20 @@
       ONEDPL_VERSION_PATCH
 #define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
   (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+
+namespace Kokkos::Impl {
+template <typename Comparator, typename ValueType>
+struct ComparatorWrapper {
+  Comparator comparator;
+  KOKKOS_FUNCTION bool operator()(ValueType i, ValueType j) const {
+    return comparator(i, j);
+  }
+};
+}  // namespace Kokkos::Impl
+
+template <typename Comparator, typename ValueType>
+struct sycl::is_device_copyable<
+    Kokkos::Impl::ComparatorWrapper<Comparator, ValueType>> : std::true_type {};
 #endif
 
 namespace Kokkos {
@@ -261,16 +275,32 @@ void sort_onedpl(const Kokkos::SYCL& space,
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
 
 #if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
-  oneapi::dpl::sort(policy, ::Kokkos::Experimental::begin(view),
-                    ::Kokkos::Experimental::end(view),
-                    std::forward<MaybeComparator>(maybeComparator)...);
+  auto view_begin = ::Kokkos::Experimental::begin(view);
+  auto view_end   = ::Kokkos::Experimental::end(view);
 #else
+  if (view.stride(0) != 1) {
+    Kokkos::abort(
+        "SYCL sort_by_key only supports rank-1 Views with stride(0) = 1.");
+  }
+
   // Can't use Experimental::begin/end here since the oneDPL then assumes that
   // the data is on the host.
-  const int n = view.extent(0);
-  oneapi::dpl::sort(policy, view.data(), view.data() + n,
-                    std::forward<MaybeComparator>(maybeComparator)...);
+  const int n     = view.extent(0);
+  auto view_begin = view.data();
+  auto view_end   = view.data() + n;
 #endif
+
+  if constexpr (sizeof...(MaybeComparator) == 0)
+    oneapi::dpl::sort(policy, view_begin, view_end);
+  else {
+    using value_type =
+        typename Kokkos::View<DataType, Properties...>::value_type;
+    auto comparator =
+        std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+    oneapi::dpl::sort(
+        policy, view_begin, view_end,
+        ComparatorWrapper<decltype(comparator), value_type>{comparator});
+  }
 }
 #endif
 
