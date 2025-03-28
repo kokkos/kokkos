@@ -231,16 +231,28 @@ endmacro()
 function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   cmake_parse_arguments(PARSE "PLAIN_STYLE" "" "" ${ARGN})
 
+  message(STATUS "Checking if linker can consume the Kokkos linker flags")
   if((NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE) AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18"))
     #I can use link options
     #check for CXX linkage using the simple 3.18 way
+
+    #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
+    if(NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper") OR (${KOKKOS_CXX_COMPILER_ID}
+                                                                                        STREQUAL Clang)
+    )
+      kokkos_check_linker_flags(LANGUAGE CXX FLAGS ${KOKKOS_LINK_OPTIONS})
+    endif()
     target_link_options(${LIBRARY_NAME} PUBLIC $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>)
   else()
     #I can use link options
     #just assume CXX linkage
+    kokkos_check_linker_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
     target_link_options(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS})
   endif()
+  message(STATUS "Checking if linker can consume the Kokkos linker flags - Success")
 
+  list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_COMPILE_OPTIONS})
   target_compile_options(
     ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_COMPILE_OPTIONS}>
   )
@@ -262,12 +274,22 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_CUDAFE_OPTIONS}>
     )
+
+    #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
+    if(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
+       OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)
+    )
+      list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_CUDA_OPTIONS})
+      list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${NODEDUP_CUDAFE_OPTIONS})
+    endif()
   endif()
 
   if(KOKKOS_ENABLE_HIP)
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_AMDGPU_OPTIONS}>
     )
+    list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_AMDGPU_OPTIONS})
   endif()
 
   list(LENGTH KOKKOS_XCOMPILER_OPTIONS XOPT_LENGTH)
@@ -288,7 +310,14 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_XCOMPILER_OPTIONS}>
     )
+    list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${NODEDUP_XCOMPILER_OPTIONS})
   endif()
+
+  message(STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS and Kokkos compile flags")
+  kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
+  message(
+    STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS and Kokkos compile flags - Success"
+  )
 
   if(KOKKOS_CXX_STANDARD_FEATURE)
     #GREAT! I can do this the right way
