@@ -982,6 +982,8 @@ function(kokkos_check_compiler_flags)
       string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
       # sycl adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
       string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS ${WHITESPACE_FLAGS})
+      #disable caching
+      unset(KOKKOS_COMPILE_OPTIONS_CHECK CACHE)
       check_compiler_flag(${INP_LANGUAGE} ${QUOTED_FLAGS} KOKKOS_COMPILE_OPTIONS_CHECK)
       #Return result
       if(DEFINED INP_RESULT)
@@ -1035,6 +1037,8 @@ function(kokkos_check_linker_flags)
       string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS ${WHITESPACE_FLAGS})
       # temporarily set language flags to nothing ... the linker often can not handle these which leads to false errors
       set(CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS "")
+      #disable caching
+      unset(KOKKOS_LINK_OPTIONS_CHECK CACHE)
       check_linker_flag(${INP_LANGUAGE} ${QUOTED_FLAGS} KOKKOS_LINK_OPTIONS_CHECK)
       #return result
       if(INP_RESULT)
