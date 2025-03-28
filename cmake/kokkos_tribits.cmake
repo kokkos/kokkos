@@ -329,9 +329,6 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
     message(STATUS "Checking if compiler can consume Kokkos compile flags - Success")
     #check set (CMAKE_<LANG>_FLAGS)
-    message(STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS")
-    kokkos_check_compiler_flags(LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS})
-    message(STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS - Success")
 
     message(
       FATAL_ERROR
