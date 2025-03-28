@@ -500,8 +500,6 @@ constexpr X test_bit_cast(...) {
   return {};
 }
 
-#if !defined(KOKKOS_ENABLE_SYCL) || \
-    (defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20240000)
 namespace TypesNotTheSameSize {
 struct To {
   char a;
@@ -534,7 +532,6 @@ struct From {
 };
 static_assert(test_bit_cast<To, From>().did_not_match());
 }  // namespace FromNotTriviallyCopyable
-#endif
 
 namespace ReturnTypeIllFormed {
 struct From {
