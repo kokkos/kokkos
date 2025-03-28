@@ -271,10 +271,8 @@ pipeline {
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
-                                -DCMAKE_PREFIX_PATH="$ONE_DPL_DIR" \
-                                -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
+                                -DCMAKE_CXX_COMPILER=icpx \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -fp-model=precise -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -282,6 +280,7 @@ pipeline {
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DoneDPL_ROOT=/opt/intel/oneapi/2025.0 \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \

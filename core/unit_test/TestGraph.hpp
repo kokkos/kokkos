@@ -273,8 +273,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
 #endif
-#if defined(KOKKOS_ENABLE_SYCL) && \
-    !defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
+#if defined(KOKKOS_ENABLE_SYCL) &&      \
+    (!defined(SYCL_EXT_ONEAPI_GRAPH) || \
+     !defined(KOKKOS_ARCH_INTEL_GPU))  // FIXME_SYCL
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
     GTEST_SKIP() << "skipping since test case is known to fail with SYCL";
 #endif

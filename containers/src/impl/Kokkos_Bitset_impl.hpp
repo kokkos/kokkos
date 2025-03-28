@@ -61,7 +61,7 @@ struct BitsetCount {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_type i, value_type& count) const {
-    count += bit_count(m_bitset.m_blocks[i]);
+    count += Kokkos::Experimental::popcount_builtin(m_bitset.m_blocks[i]);
   }
 };
 
