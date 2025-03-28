@@ -26,8 +26,9 @@
 #include <iostream>
 
 // Arbitrary value to denote that we don't know yet what device to use.
-int Kokkos::Experimental::Impl::OpenACCInternal::m_acc_device_num = -1;
-int Kokkos::Experimental::Impl::OpenACCInternal::m_concurrency    = -1;
+int Kokkos::Experimental::Impl::OpenACCInternal::m_acc_device_num  = -1;
+int Kokkos::Experimental::Impl::OpenACCInternal::m_concurrency     = -1;
+int Kokkos::Experimental::Impl::OpenACCInternal::m_num_user_asyncs = 0;
 
 Kokkos::Experimental::Impl::OpenACCInternal&
 Kokkos::Experimental::Impl::OpenACCInternal::singleton() {
@@ -97,8 +98,10 @@ int Kokkos::Experimental::OpenACC::concurrency() const {
 
 void Kokkos::Experimental::Impl::create_OpenACC_instances(
     std::vector<OpenACC>& instances) {
-  // FIXME_OPENACC: this is not thread-safe, causing race conditions.
-  for (int s = 0; s < int(instances.size()); s++) {
-    instances[s] = OpenACC(s);
+  int instances_size = int(instances.size());
+  int num_user_asyncs =
+      atomic_fetch_add(&OpenACCInternal::m_num_user_asyncs, instances_size);
+  for (int s = 0; s < instances_size; s++) {
+    instances[s] = OpenACC(s + num_user_asyncs);
   }
 }
