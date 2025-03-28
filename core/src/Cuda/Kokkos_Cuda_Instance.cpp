@@ -500,6 +500,7 @@ void CudaInternal::finalize() {
   KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_free_wrapper(m_scratch_locks)));
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
+  m_cudaDev           = -1;
 }
 
 //----------------------------------------------------------------------------

@@ -374,6 +374,8 @@ void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
+
   auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     device_mem_space.deallocate(m_scratchFlags,
@@ -407,6 +409,7 @@ void HIPInternal::finalize() {
   KOKKOS_IMPL_HIP_SAFE_CALL(hip_free_wrapper(m_scratch_locks));
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
+  m_hipDev            = -1;
 }
 
 int HIPInternal::m_maxThreadsPerSM = 0;
