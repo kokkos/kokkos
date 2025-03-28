@@ -1,0 +1,46 @@
+name: Docker
+
+on:
+  workflow_call:
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-docker-build
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+jobs:
+  Build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 #v4.2.23
+        with:
+          path: kokkos
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 #v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Prepare
+        id: prep
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/}
+          elif [[ $GITHUB_REF == refs/heads/* ]]; then
+            VERSION=$(echo ${GITHUB_REF#refs/heads/} | sed -r 's#/+#-#g')
+          elif [[ $GITHUB_REF == refs/pull/* ]]; then
+            VERSION=pr-${{ github.event.number }}
+          fi
+          if [[ $VERSION = develop ]]; then
+            VERSION=latest
+          fi
+          echo VERSION=${VERSION}
+          echo ::set-output name=version::${VERSION}
+      - name: Build and Push Docker Image
+        id: docker_build
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 #v6.15.0
+        with:
+          context: ${{github.workspace}}
+          file: kokkos/.github/workflows/Dockerfile
+          push: ${{ github.event_name == 'push' ||  github.event_name == 'schedule' }}
+          tags: ghcr.io/kokkos/kokkos:${{ steps.prep.outputs.version }}
