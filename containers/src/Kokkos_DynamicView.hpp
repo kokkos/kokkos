@@ -498,8 +498,8 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
               const unsigned min_chunk_size,
               const unsigned max_extent)
       :  // The chunk size is guaranteed to be a power of two
-        m_chunk_shift(Kokkos::Impl::integral_power_of_two_that_contains(
-            min_chunk_size))  // div ceil(log2(min_chunk_size))
+        m_chunk_shift(min_chunk_size ? Kokkos::bit_width(min_chunk_size - 1)
+                                     : 0)  // div ceil(log2(min_chunk_size))
         ,
         m_chunk_mask((1 << m_chunk_shift) - 1)  // mod
         ,
