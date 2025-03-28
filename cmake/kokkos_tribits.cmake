@@ -312,7 +312,6 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   message(STATUS "Checking if compiler can consume CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS and Kokkos compile flags")
   list(APPEND ALL_COMPILER_FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
   kokkos_check_compiler_flags(
-    SILENT
     LANGUAGE
     ${KOKKOS_COMPILE_LANGUAGE}
     FLAGS
