@@ -1,0 +1,73 @@
+include:
+  - project: 'anl/ci-resources/defaults'
+    ref: main
+    file:
+      - '/runners.yml'
+
+Polaris:
+  stage: test
+  extends: .polaris-shell-runner
+  script:
+    - module use /opt/cray/pe/lmod/modulefiles/core
+    - module use /opt/cray/pe/lmod/modulefiles/craype-targets/default
+    - module load craype-x86-milan craype-accel-nvidia80
+    - module swap PrgEnv-nvhpc PrgEnv-gnu
+    - module use /soft/modulefiles
+    - module load cuda-PrgEnv-nvidia/12.2.91
+    - module load spack-pe-base/0.8.1
+    - module load cmake/3.27.9 gcc/11.4.0
+    - module list
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_AMPERE80=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - ctest -VV
+        -D CDASH_MODEL=Nightly
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_a100.xml
+        -S scripts/CTestRun.cmake
+        -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
+        -D CTEST_BUILD_NAME="Polaris-A100"
+  artifacts:
+    when: always
+    paths:
+      - build/result_a100.xml
+    reports:
+      junit: build/result_a100.xml
+
+Aurora:
+  stage: test
+  extends: .aurora-batch-runner
+  variables:
+    ANL_AURORA_SCHEDULER_PARAMETERS: "-q debug -A kokkos_math -l select=1,walltime=60:00,filesystems=flare"
+  script:
+    - module load cmake oneapi/eng-compiler
+    - module list
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=Release"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=icpx"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_PVC=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - ctest -VV
+        -D CDASH_MODEL=Nightly
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_pvc1550.xml
+        -S scripts/CTestRun.cmake
+        -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
+        -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1550"
+  artifacts:
+    when: always
+    paths:
+      - build/result_pvc1550.xml
+    reports:
+      junit: build/result_pvc1550.xml

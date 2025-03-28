@@ -1,0 +1,24 @@
+name: mdspan version check
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mdspan-version-check.yml'
+      - 'tpls/mdspan/**'
+
+permissions: read-all
+
+jobs:
+  mdspan-version-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        repository: kokkos/mdspan
+        ref: 28192956b30906a8c61948268f012d6ea1ce7c2a
+        path: kokkos-mdspan
+    - run: |
+        rm kokkos-mdspan/include/experimental/mdarray
+        rm kokkos-mdspan/include/experimental/mdspan
+        diff --brief --recursive tpls/mdspan/include kokkos-mdspan/include

@@ -1,6 +1,8 @@
 ARG BASE=nvcr.io/nvidia/cuda:11.7.1-devel-ubuntu22.04@sha256:a3184e4dc6f968da5bba86df3081ff3013f8e3674a9bfce544af8be905d2f17a
 FROM $BASE
 
+ARG ADDITIONAL_PACKAGES
+
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 
 RUN apt-get update && apt-get install -y \
@@ -11,6 +13,7 @@ RUN apt-get update && apt-get install -y \
         python3 \
         git \
         libomp-dev \
+        ${ADDITIONAL_PACKAGES} \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
