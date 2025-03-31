@@ -762,18 +762,23 @@ endif()
 #   implementation. Otherwise, the feature is not supported when building shared
 #   libraries. Thus, we don't even check for support if shared libraries are
 #   requested and SYCL_EXT_ONEAPI_DEVICE_GLOBAL is not defined.
+#   As of oneAPI 2025.0.0, this feature only works well for Intel GPUs.
+#   For simplicity only test for JIT and PVC
 if(KOKKOS_ENABLE_SYCL)
   string(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
   include(CheckCXXSymbolExists)
-  check_cxx_symbol_exists(SYCL_EXT_ONEAPI_DEVICE_GLOBAL "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
-  if(KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
-    set(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
-    # Use the non-separable compilation implementation to support shared libraries as well.
-    compiler_specific_flags(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-  elseif(NOT BUILD_SHARED_LIBS AND KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
-    include(CheckCXXSourceCompiles)
-    check_cxx_source_compiles(
-      "
+  if(Kokkos_ARCH_INTEL_PVC OR Kokkos_ARCH_INTEL_GEN)
+    check_cxx_symbol_exists(
+      SYCL_EXT_ONEAPI_DEVICE_GLOBAL "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL
+    )
+    if(KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_DEVICE_GLOBAL)
+      set(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED ON)
+      # Use the non-separable compilation implementation to support shared libraries as well.
+      compiler_specific_flags(DEFAULT -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+    elseif(NOT BUILD_SHARED_LIBS AND KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
+      include(CheckCXXSourceCompiles)
+      check_cxx_source_compiles(
+        "
       #include <sycl/sycl.hpp>
       using namespace sycl::ext::oneapi::experimental;
       using namespace sycl;
@@ -788,12 +793,13 @@ if(KOKKOS_ENABLE_SYCL)
 
       int main(){ return 0; }
       "
-      KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
-    )
+        KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED
+      )
 
-    if(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
-      # Only the separable compilation implementation is supported.
-      compiler_specific_flags(DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+      if(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+        # Only the separable compilation implementation is supported.
+        compiler_specific_flags(DEFAULT -fsycl-device-code-split=off -DDESUL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+      endif()
     endif()
   endif()
 
