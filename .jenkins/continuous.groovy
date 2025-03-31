@@ -280,7 +280,7 @@ pipeline {
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
-                                -DoneDPL_ROOT=/opt/intel/oneapi/2025.0 \
+                                -DoneDPL_ROOT=/opt/intel/oneapi/dpl/2022.7 \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
