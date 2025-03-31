@@ -188,27 +188,29 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 
 class hmin {
  public:
-  template <typename T>
-  auto on_host(T const& a) const {
-    return Kokkos::Experimental::hmin(a);
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType const& mask) const {
+    return Kokkos::Experimental::hmin(where(mask, a));
   }
 
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    return Kokkos::Experimental::hmin(a);
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
+                                        MaskType const& mask) const {
+    return Kokkos::Experimental::hmin(where(mask, a));
   }
 };
 
 class hmax {
  public:
-  template <typename T>
-  auto on_host(T const& a) const {
-    return Kokkos::Experimental::hmax(a);
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType const& mask) const {
+    return Kokkos::Experimental::hmax(where(mask, a));
   }
 
-  template <typename T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    return Kokkos::Experimental::hmax(a);
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
+                                        MaskType const& mask) const {
+    return Kokkos::Experimental::hmax(where(mask, a));
   }
 };
 
@@ -219,55 +221,56 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 class reduce {
  public:
-  template <typename T, typename U>
-  auto on_host(T const& a, U) const {
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType) const {
     return Kokkos::Experimental::reduce(a, std::plus<>());
   }
-  template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U) const {
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, MaskType) const {
     return Kokkos::Experimental::reduce(a, std::plus<>());
   }
 };
 
 class reduce_min {
  public:
-  template <typename T, typename U>
-  auto on_host(T const& a, U) const {
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType) const {
     return Kokkos::Experimental::reduce_min(a);
   }
-  template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U) const {
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, MaskType) const {
     return Kokkos::Experimental::reduce_min(a);
   }
 };
 
 class reduce_max {
  public:
-  template <typename T, typename U>
-  auto on_host(T const& a, U) const {
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType) const {
     return Kokkos::Experimental::reduce_max(a);
   }
-  template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U) const {
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, MaskType) const {
     return Kokkos::Experimental::reduce_max(a);
   }
 };
 
 class masked_reduce {
  public:
-  template <typename T, typename U>
-  auto on_host(T const& a, U const& b) const {
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType const& mask) const {
     using DataType = typename T::value_type;
     return Kokkos::Experimental::reduce(
-        a, b,
+        a, mask,
         DataType(Kokkos::Experimental::Impl::Identity<DataType, std::plus<>>()),
         std::plus<>());
   }
-  template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
+                                        MaskType const& mask) const {
     using DataType = typename T::value_type;
     return Kokkos::Experimental::reduce(
-        a, b,
+        a, mask,
         DataType(Kokkos::Experimental::Impl::Identity<DataType, std::plus<>>()),
         std::plus<>());
   }
@@ -275,25 +278,27 @@ class masked_reduce {
 
 class masked_reduce_min {
  public:
-  template <typename T, typename U>
-  auto on_host(T const& a, U const& b) const {
-    return Kokkos::Experimental::reduce_min(a, b);
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType const& mask) const {
+    return Kokkos::Experimental::reduce_min(a, mask);
   }
-  template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
-    return Kokkos::Experimental::reduce_min(a, b);
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
+                                        MaskType const& mask) const {
+    return Kokkos::Experimental::reduce_min(a, mask);
   }
 };
 
 class masked_reduce_max {
  public:
-  template <typename T, typename U>
-  auto on_host(T const& a, U const& b) const {
-    return Kokkos::Experimental::reduce_max(a, b);
+  template <typename T, typename MaskType>
+  auto on_host(T const& a, MaskType const& mask) const {
+    return Kokkos::Experimental::reduce_max(a, mask);
   }
-  template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
-    return Kokkos::Experimental::reduce_max(a, b);
+  template <typename T, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
+                                        MaskType const& mask) const {
+    return Kokkos::Experimental::reduce_max(a, mask);
   }
 };
 ;
