@@ -71,11 +71,17 @@ class absolutes {
  public:
   template <typename T>
   auto on_host(T const& a) const {
-    return Kokkos::abs(a);
+    if constexpr (std::is_signed_v<typename T::value_type>) {
+      return Kokkos::abs(a);
+    }
+    return a;
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    return Kokkos::abs(a);
+    if constexpr (std::is_signed_v<typename T::value_type>) {
+      return Kokkos::abs(a);
+    }
+    return a;
   }
 };
 
