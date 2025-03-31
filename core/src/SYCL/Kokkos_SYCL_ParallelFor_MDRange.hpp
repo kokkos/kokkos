@@ -145,8 +145,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy](
-                                               sycl::nd_item<3> item) {
+
+      const auto lambda = [functor_wrapper,
+                           bare_policy](sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
         const index_type local_x    = item.get_local_id(2);
         const index_type local_y    = item.get_local_id(1);
@@ -164,7 +165,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             {n_global_x, n_global_y, n_global_z},
             {global_x, global_y, global_z}, {local_x, local_y, local_z})
             .exec_range();
-      });
+      };
+      cgh.parallel_for(sycl_swapped_range,
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+                       get_sycl_launch_properties<Policy>(),
+#endif
+                       lambda);
     };
 
 #ifdef SYCL_EXT_ONEAPI_GRAPH

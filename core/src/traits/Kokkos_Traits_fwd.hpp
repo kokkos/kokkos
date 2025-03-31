@@ -63,6 +63,9 @@ struct ScheduleTrait;
 struct IterationPatternTrait;
 struct WorkItemPropertyTrait;
 struct LaunchBoundsTrait;
+#ifdef KOKKOS_ENABLE_SYCL
+struct SubGroupSizeTrait;
+#endif
 struct OccupancyControlTrait;
 struct GraphKernelTrait;
 struct WorkTagTrait;
@@ -78,6 +81,9 @@ using execution_policy_trait_specifications =
     IterationPatternTrait,
     WorkItemPropertyTrait,
     LaunchBoundsTrait,
+#ifdef KOKKOS_ENABLE_SYCL
+    SubGroupSizeTrait,
+#endif
     OccupancyControlTrait,
     GraphKernelTrait,
     // This one has to be last, unfortunately:

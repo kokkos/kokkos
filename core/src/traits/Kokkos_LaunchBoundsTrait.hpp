@@ -62,6 +62,47 @@ struct PolicyTraitMatcher<LaunchBoundsTrait, LaunchBounds<maxT, minB>>
 // </editor-fold> end PolicyTraitMatcher specialization }}}1
 //==============================================================================
 
+//==============================================================================
+// <editor-fold desc="trait specification"> {{{1
+
+#ifdef KOKKOS_ENABLE_SYCL
+
+struct SubGroupSizeTrait : TraitSpecificationBase<SubGroupSizeTrait> {
+  struct base_traits {
+    static constexpr bool subgroup_size_is_defaulted = true;
+    static constexpr int subgroup_size               = -1;
+
+    KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
+  };
+  template <class SubGroupSizeParam, class AnalyzeNextTrait>
+  struct mixin_matching_trait : AnalyzeNextTrait {
+    using base_t = AnalyzeNextTrait;
+    using base_t::base_t;
+
+    static constexpr bool subgroup_size_is_defaulted = false;
+
+    static_assert(base_t::subgroup_size_is_defaulted,
+                  "Kokkos Error: More than one subgroup size given");
+
+    static constexpr int subgroup_size = SubGroupSizeParam::value;
+  };
+};
+
+// </editor-fold> end trait specification }}}1
+//==============================================================================
+
+//==============================================================================
+// <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
+
+template <int size>
+struct PolicyTraitMatcher<SubGroupSizeTrait, SubGroupSize<size>>
+    : std::true_type {};
+
+// </editor-fold> end PolicyTraitMatcher specialization }}}1
+//==============================================================================
+
+#endif
+
 }  // end namespace Impl
 }  // end namespace Kokkos
 

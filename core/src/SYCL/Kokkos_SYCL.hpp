@@ -184,6 +184,18 @@ std::vector<SYCL> partition_space(const SYCL& sycl_space,
 
 namespace Impl {
 std::vector<sycl::device> get_sycl_devices();
+
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+template <typename Policy>
+auto get_sycl_launch_properties() {
+  if constexpr (Policy::subgroup_size > 0)
+    return sycl::ext::oneapi::experimental::properties{
+        sycl::ext::oneapi::experimental::sub_group_size<Policy::subgroup_size>};
+  else
+    return sycl::ext::oneapi::experimental::properties{};
+}
+#endif
+
 }  // namespace Impl
 
 }  // namespace Kokkos

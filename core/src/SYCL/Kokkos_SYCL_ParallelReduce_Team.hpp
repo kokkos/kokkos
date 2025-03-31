@@ -360,6 +360,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
             sycl::nd_range<2>(
                 sycl::range<2>(m_team_size, n_wgroups * m_vector_size),
                 sycl::range<2>(m_team_size, m_vector_size)),
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+            get_sycl_launch_properties<Policy>(),
+#endif
             reduction_lambda);
       };
 #ifdef SYCL_EXT_ONEAPI_GRAPH

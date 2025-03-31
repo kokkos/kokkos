@@ -111,14 +111,22 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         sycl::nd_range<1> range(
             launch_range, sycl::ext::oneapi::experimental::auto_range<1>());
         cgh.parallel_for<
-            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
-                                                                         f);
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range,
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+            get_sycl_launch_properties<Policy>(),
+#endif
+            f);
 #else
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};
         sycl::range<1> range(policy.end() - policy.begin());
         cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
-            range, f);
+            range,
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+            get_sycl_launch_properties<Policy>(),
+#endif
+            f);
 #endif
       } else {
         // Use the chunk size as workgroup size. We need to make sure that the
@@ -133,8 +141,12 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
             policy.begin(), functor, actual_range};
         sycl::nd_range<1> range(launch_range, wgroup_size);
         cgh.parallel_for<
-            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
-                                                                         f);
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range,
+#ifdef SYCL_EXT_ONEAPI_KERNEL_PROPERTIES
+            get_sycl_launch_properties<Policy>(),
+#endif
+            f);
       }
     };
 
