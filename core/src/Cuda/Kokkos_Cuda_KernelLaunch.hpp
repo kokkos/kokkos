@@ -221,9 +221,8 @@ inline void configure_shmem_preference(const int cuda_device,
   // Set the carveout, but only call it once per kernel or when it changes
   // FIXME_CUDA_MULTIPLE_DEVICES
   auto set_cache_config = [&] {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (CudaInternal::singleton().cuda_func_set_attribute_wrapper(
-            func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout)));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFuncSetAttribute(
+        func, cudaFuncAttributePreferredSharedMemoryCarveout, carveout));
     return carveout;
   };
   // Store the value in a static variable so we only reset if needed
@@ -365,8 +364,12 @@ struct CudaParallelLaunchKernelInvoker<
   static void invoke_kernel(DriverType const& driver, dim3 const& grid,
                             dim3 const& block, int shmem,
                             CudaInternal const* cuda_instance) {
-    (base_t::get_kernel_func())<<<grid, block, shmem,
-                                  cuda_instance->get_stream()>>>(driver);
+    // Set cuda device before launching kernel
+    cuda_instance->set_cuda_device();
+
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
+        driver);
   }
 
   inline static void create_parallel_launch_graph_node(
@@ -466,8 +469,13 @@ struct CudaParallelLaunchKernelInvoker<
 
     KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_memcpy_async_wrapper(
         driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault)));
-    (base_t::get_kernel_func())<<<grid, block, shmem,
-                                  cuda_instance->get_stream()>>>(driver_ptr);
+
+    // Set cuda device before launching kernel
+    cuda_instance->set_cuda_device();
+
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>(
+        driver_ptr);
   }
 
   inline static void create_parallel_launch_graph_node(
@@ -600,9 +608,12 @@ struct CudaParallelLaunchKernelInvoker<
             kokkos_impl_cuda_constant_memory_buffer, staging,
             sizeof(DriverType), 0, cudaMemcpyHostToDevice)));
 
+    // Set cuda device before launching kernel
+    cuda_instance->set_cuda_device();
+
     // Invoke the driver function on the device
-    (base_t::get_kernel_func())<<<grid, block, shmem,
-                                  cuda_instance->get_stream()>>>();
+    (base_t::
+         get_kernel_func())<<<grid, block, shmem, cuda_instance->m_stream>>>();
 
     // Record an event that says when the constant buffer can be reused
     KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_event_record_wrapper(

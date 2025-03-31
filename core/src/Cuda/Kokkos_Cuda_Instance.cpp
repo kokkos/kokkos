@@ -734,9 +734,7 @@ uint32_t Cuda::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
 
-cudaStream_t Cuda::cuda_stream() const {
-  return m_space_instance->get_stream();
-}
+cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }
 const cudaDeviceProp &Cuda::cuda_device_prop() const {
   return m_space_instance->m_deviceProp;
