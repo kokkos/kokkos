@@ -29,7 +29,7 @@ else()
 endif()
 
 # We cannot use the kokkos_add_benchmark function defined in core/perf_test/CMakeLists.txt
-# because we need to register the benchmarks at runtime.
+# because we need to modify the main function in order to register the benchmarks at runtime.
 foreach(BENCH_TYPE Host Device)
   kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
   kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})

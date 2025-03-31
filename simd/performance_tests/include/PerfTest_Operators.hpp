@@ -71,17 +71,11 @@ class absolutes {
  public:
   template <typename T>
   auto on_host(T const& a) const {
-    if constexpr (std::is_signed_v<typename T::value_type>) {
-      return Kokkos::abs(a);
-    }
-    return a;
+    return Kokkos::abs(a);
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
-    if constexpr (std::is_signed_v<typename T::value_type>) {
-      return Kokkos::abs(a);
-    }
-    return a;
+    return Kokkos::abs(a);
   }
 };
 
@@ -136,11 +130,11 @@ class truncates {
 class shift_right {
  public:
   template <typename T, typename U>
-  auto on_host(T&& a, U&& b) const {
+  auto on_host(T const& a, U const& b) const {
     return a >> b;
   }
   template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
     return a >> b;
   }
 };
@@ -148,11 +142,11 @@ class shift_right {
 class shift_left {
  public:
   template <typename T, typename U>
-  auto on_host(T&& a, U&& b) const {
+  auto on_host(T const& a, U const& b) const {
     return a << b;
   }
   template <typename T, typename U>
-  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
     return a << b;
   }
 };
@@ -182,7 +176,7 @@ class maximum {
 };
 
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #endif
 
@@ -214,7 +208,7 @@ class hmax {
   }
 };
 
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 #endif
