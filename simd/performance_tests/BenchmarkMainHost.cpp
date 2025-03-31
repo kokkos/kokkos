@@ -14,19 +14,24 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SIMD_PERFTEST_HPP
-#define KOKKOS_SIMD_PERFTEST_HPP
+#include <benchmark/benchmark.h>
+#include <Kokkos_Core.hpp>
 
-#include "PerfTest_Host.hpp"
-#include "PerfTest_Device.hpp"
+#include <Benchmark_Context.hpp>
+#include <PerfTest_Host.hpp>
 
-inline void register_benchmarks() {
-#if defined(KOKKOS_SIMD_PERFTEST_HOST)
+int main(int argc, char** argv) {
+  Kokkos::initialize(argc, argv);
+
   register_host_benchmarks();
-#endif
-#if defined(KOKKOS_SIMD_PERFTEST_DEVICE)
-  register_device_benchmarks();
-#endif
-}
 
-#endif
+  benchmark::Initialize(&argc, argv);
+  benchmark::SetDefaultTimeUnit(benchmark::kMillisecond);
+  KokkosBenchmark::add_benchmark_context(true);
+
+  benchmark::RunSpecifiedBenchmarks();
+
+  benchmark::Shutdown();
+  Kokkos::finalize();
+  return 0;
+}
