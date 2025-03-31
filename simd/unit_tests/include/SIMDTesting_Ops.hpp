@@ -287,54 +287,6 @@ class shift_left_eq {
   }
 };
 
-class cbrt_op {
- public:
-  template <typename T>
-  auto on_host(T const& a) const {
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-    return Kokkos::Experimental::cbrt(a);
-#else
-    return Kokkos::cbrt(a);
-#endif
-  }
-  template <typename T>
-  auto on_host_serial(T const& a) const {
-    return Kokkos::cbrt(a);
-  }
-};
-
-class exp_op {
- public:
-  template <typename T>
-  auto on_host(T const& a) const {
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-    return Kokkos::Experimental::exp(a);
-#else
-    return Kokkos::exp(a);
-#endif
-  }
-  template <typename T>
-  auto on_host_serial(T const& a) const {
-    return Kokkos::exp(a);
-  }
-};
-
-class log_op {
- public:
-  template <typename T>
-  auto on_host(T const& a) const {
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-    return Kokkos::Experimental::log(a);
-#else
-    return Kokkos::log(a);
-#endif
-  }
-  template <typename T>
-  auto on_host_serial(T const& a) const {
-    return Kokkos::log(a);
-  }
-};
-
 class minimum {
  public:
   template <typename T>
@@ -618,5 +570,172 @@ class masked_reduce {
     return result;
   }
 };
+
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+#define KOKKOS_IMPL_SIMD_UNARY_TEST_OP(FUNC)                         \
+  class FUNC##_op {                                                  \
+   public:                                                           \
+    template <typename T>                                            \
+    auto on_host(T const& a) const {                                 \
+      return Kokkos::Experimental::FUNC(a);                          \
+    }                                                                \
+    template <typename T>                                            \
+    auto on_host_serial(T const& a) const {                          \
+      return Kokkos::FUNC(a);                                        \
+    }                                                                \
+    template <typename T>                                            \
+    KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {        \
+      return Kokkos::FUNC(a);                                        \
+    }                                                                \
+    template <typename T>                                            \
+    KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const { \
+      return Kokkos::FUNC(a);                                        \
+    }                                                                \
+  };
+
+#define KOKKOS_IMPL_SIMD_BINARY_TEST_OP(FUNC)                             \
+  class FUNC##_op {                                                       \
+   public:                                                                \
+    template <typename T>                                                 \
+    auto on_host(T const& a, T const& b) const {                          \
+      if constexpr (std::is_arithmetic_v<T>) {                            \
+        return Kokkos::FUNC(a, b);                                        \
+      } else {                                                            \
+        return Kokkos::Experimental::FUNC(a, b);                          \
+      }                                                                   \
+    }                                                                     \
+    template <typename T>                                                 \
+    KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const { \
+      return Kokkos::FUNC(a, b);                                          \
+    }                                                                     \
+  };
+
+#define KOKKOS_IMPL_SIMD_TERNARY_TEST_OP(FUNC)                    \
+  class FUNC##_op {                                               \
+   public:                                                        \
+    template <typename T>                                         \
+    auto on_host(T const& a, T const& b, T const& c) const {      \
+      if constexpr (std::is_arithmetic_v<T>) {                    \
+        return Kokkos::FUNC(a, b, c);                             \
+      } else {                                                    \
+        return Kokkos::Experimental::FUNC(a, b, c);               \
+      }                                                           \
+    }                                                             \
+    template <typename T>                                         \
+    KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b, \
+                                          T const& c) const {     \
+      return Kokkos::FUNC(a, b, c);                               \
+    }                                                             \
+  };
+#else
+#define KOKKOS_IMPL_SIMD_UNARY_TEST_OP(FUNC)                         \
+  class FUNC##_op {                                                  \
+   public:                                                           \
+    template <typename T>                                            \
+    auto on_host(T const& a) const {                                 \
+      return Kokkos::FUNC(a);                                        \
+    }                                                                \
+    template <typename T>                                            \
+    auto on_host_serial(T const& a) const {                          \
+      return Kokkos::FUNC(a);                                        \
+    }                                                                \
+    template <typename T>                                            \
+    KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {        \
+      return Kokkos::FUNC(a);                                        \
+    }                                                                \
+    template <typename T>                                            \
+    KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a) const { \
+      return Kokkos::FUNC(a);                                        \
+    }                                                                \
+  };
+
+#define KOKKOS_IMPL_SIMD_BINARY_TEST_OP(FUNC)                             \
+  class FUNC##_op {                                                       \
+   public:                                                                \
+    template <typename T>                                                 \
+    auto on_host(T const& a, T const& b) const {                          \
+      return Kokkos::FUNC(a, b);                                          \
+    }                                                                     \
+    template <typename T>                                                 \
+    KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const { \
+      return Kokkos::FUNC(a, b);                                          \
+    }                                                                     \
+  };
+
+#define KOKKOS_IMPL_SIMD_TERNARY_TEST_OP(FUNC)                    \
+  class FUNC##_op {                                               \
+   public:                                                        \
+    template <typename T>                                         \
+    auto on_host(T const& a, T const& b, T const& c) const {      \
+      return Kokkos::FUNC(a, b, c);                               \
+    }                                                             \
+    template <typename T>                                         \
+    KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b, \
+                                          T const& c) const {     \
+      return Kokkos::FUNC(a, b, c);                               \
+    }                                                             \
+  };
+#endif
+
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
+
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(abs)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(exp)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(exp2)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(log)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(log10)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(log2)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(sqrt)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(cbrt)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(sin)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(cos)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(tan)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(asin)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(acos)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(atan)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(sinh)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(cosh)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(tanh)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(asinh)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(acosh)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(atanh)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(erf)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(erfc)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(tgamma)
+KOKKOS_IMPL_SIMD_UNARY_TEST_OP(lgamma)
+
+KOKKOS_IMPL_SIMD_BINARY_TEST_OP(pow)
+KOKKOS_IMPL_SIMD_BINARY_TEST_OP(hypot)
+KOKKOS_IMPL_SIMD_BINARY_TEST_OP(atan2)
+KOKKOS_IMPL_SIMD_BINARY_TEST_OP(copysign)
+
+KOKKOS_IMPL_SIMD_TERNARY_TEST_OP(fma)
+
+class ternary_hypot_op {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b, T const& c) const {
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+    if constexpr (std::is_arithmetic_v<T>) {
+      return Kokkos::hypot(a, b, c);
+    } else {
+      return Kokkos::Experimental::hypot(a, b, c);
+    }
+#else
+    return Kokkos::hypot(a, b, c);
+#endif
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b,
+                                        T const& c) const {
+    return Kokkos::hypot(a, b, c);
+  }
+};
+
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 #endif
