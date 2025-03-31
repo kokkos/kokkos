@@ -141,7 +141,7 @@ void fence(const std::string& name /*= "Kokkos::fence: Unnamed Global Fence"*/);
 void print_configuration(std::ostream& os, bool verbose = false);
 
 // Free and total memory on the device
-std::pair<std::size_t, std::size_t> device_memory_info(int n_streams = 1);
+std::pair<std::size_t, std::size_t> device_memory_info();
 
 }  // namespace Kokkos
 

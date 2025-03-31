@@ -208,18 +208,15 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   }
 }
 
-std::pair<std::size_t, std::size_t> Kokkos::device_memory_info(int n_streams) {
-  using ExecSpace          = Kokkos::DefaultExecutionSpace;
+std::pair<std::size_t, std::size_t> Kokkos::device_memory_info() {
   std::size_t free_memory  = 0;
   std::size_t total_memory = 0;
 
-  if (std::is_same_v<ExecSpace, Kokkos::DefaultHostExecutionSpace>) {
+  using memory_space = typename Kokkos::DefaultExecutionSpace::memory_space;
+  if (std::is_same_v<memory_space, Kokkos::DefaultHostExecutionSpace>) {
     return {free_memory, total_memory};
   }
-
-  using MemorySpace = typename ExecSpace::memory_space;
-  Kokkos::Impl::get_free_total_memory<MemorySpace>(free_memory, total_memory,
-                                                   n_streams);
+  Kokkos::Impl::get_free_total_memory<memory_space>(free_memory, total_memory);
 
   return {free_memory, total_memory};
 }
