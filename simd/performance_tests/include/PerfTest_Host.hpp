@@ -179,8 +179,6 @@ void host_bench_reduction_op(benchmark::State& state) {
 
 template <typename Abi, typename DataType>
 inline void host_register_common_benchmarks() {
-  using ExecSpace = Kokkos::DefaultHostExecutionSpace;
-
   if constexpr (is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, add, plus);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, sub, minus);
@@ -206,7 +204,7 @@ inline void host_register_common_benchmarks() {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, min, minimum);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, max, maximum);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(common, hmin, hmin);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(common, hmax, hmax);
 #endif
@@ -227,8 +225,6 @@ inline void host_register_common_benchmarks() {
 
 template <typename Abi, typename DataType>
 inline void host_register_math_benchmarks() {
-  using ExecSpace = Kokkos::DefaultHostExecutionSpace;
-
   if constexpr (std::is_floating_point_v<DataType> &&
                 is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_UNARY_BENCH(math, exp, exp_op);
