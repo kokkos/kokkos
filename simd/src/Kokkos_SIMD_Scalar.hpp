@@ -298,33 +298,33 @@ class basic_simd<T, simd_abi::scalar> {
     return basic_simd(lhs.m_value >> rhs.m_value);
   }
 
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator+=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator+=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs + rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator-=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator-=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs - rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator*=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator*=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs * rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator/=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator/=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs / rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator<<=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator<<=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs << rhs;
     return lhs;
   }
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd
-  operator>>=(basic_simd& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator>>=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs >> rhs;
     return lhs;
   }
@@ -404,7 +404,7 @@ template <class T>
     T, Experimental::simd_abi::scalar>
 sqrt(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& a) {
   return Experimental::basic_simd<T, Experimental::simd_abi::scalar>(
-      std::sqrt(static_cast<T>(a)));
+      Kokkos::sqrt(static_cast<T>(a)));
 }
 
 template <class T>
@@ -414,7 +414,7 @@ fma(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
     Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& y,
     Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& z) {
   return Experimental::basic_simd<T, Experimental::simd_abi::scalar>(
-      (static_cast<T>(x) * static_cast<T>(y)) + static_cast<T>(z));
+      Kokkos::fma(static_cast<T>(x), static_cast<T>(y), static_cast<T>(z)));
 }
 
 template <class T>
@@ -422,7 +422,7 @@ template <class T>
     T, Experimental::simd_abi::scalar>
 copysign(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& a,
          Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& b) {
-  return std::copysign(static_cast<T>(a), static_cast<T>(b));
+  return Kokkos::copysign(static_cast<T>(a), static_cast<T>(b));
 }
 
 namespace Experimental {
