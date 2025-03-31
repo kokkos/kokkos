@@ -206,6 +206,11 @@ inline void host_register_common_benchmarks() {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, min, minimum);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, max, maximum);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(common, hmin, hmin);
+    KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(common, hmax, hmax);
+#endif
+
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(common, reduce, reduce);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(common, reduce_min,
                                                    reduce_min);
