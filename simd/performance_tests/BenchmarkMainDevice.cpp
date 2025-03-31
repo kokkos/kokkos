@@ -18,12 +18,12 @@
 #include <Kokkos_Core.hpp>
 
 #include <Benchmark_Context.hpp>
-#include <PerfTest.hpp>
+#include <PerfTest_Device.hpp>
 
 int main(int argc, char** argv) {
   Kokkos::initialize(argc, argv);
 
-  register_benchmarks();
+  register_device_benchmarks();
 
   benchmark::Initialize(&argc, argv);
   benchmark::SetDefaultTimeUnit(benchmark::kMillisecond);
