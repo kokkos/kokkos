@@ -271,11 +271,6 @@ void sort_onedpl(const Kokkos::SYCL& space,
   auto view_begin = ::Kokkos::Experimental::begin(view);
   auto view_end   = ::Kokkos::Experimental::end(view);
 #else
-  if (view.stride(0) != 1) {
-    Kokkos::abort(
-        "SYCL sort_by_key only supports rank-1 Views with stride(0) = 1.");
-  }
-
   // Can't use Experimental::begin/end here since the oneDPL then assumes that
   // the data is on the host.
   const int n     = view.extent(0);
