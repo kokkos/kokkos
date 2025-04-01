@@ -129,11 +129,11 @@ void device_bench_reduction_op(benchmark::State& state) {
 
   View<mask_type*, ExecSpace> masks("masks", BENCH_SIZE / width);
 
-  auto policy = Kokkos::RangePolicy(ExecSpace(), 0, BENCH_SIZE / width);
   Kokkos::Random_XorShift64_Pool<ExecSpace> random_pool(58051);
 
   Kokkos::parallel_for(
-      policy, KOKKOS_LAMBDA(std::size_t i) {
+      Kokkos::RangePolicy<>(ExecSpace(), 0, BENCH_SIZE / width),
+      KOKKOS_LAMBDA(std::size_t i) {
         auto generator = random_pool.get_state();
         masks(i)       = mask_type(generator.rand() % 2 == 0);
         random_pool.free_state(generator);
