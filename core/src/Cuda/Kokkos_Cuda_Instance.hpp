@@ -321,6 +321,20 @@ class CudaInternal {
   }
 
   // C++ API routines
+  template <typename T>
+  cudaError_t cuda_func_get_attributes_wrapper(cudaFuncAttributes* attr,
+                                               T* entry) const {
+    set_cuda_device();
+    return cudaFuncGetAttributes(attr, entry);
+  }
+
+  template <typename T>
+  cudaError_t cuda_func_set_attribute_wrapper(T* entry, cudaFuncAttribute attr,
+                                              int value) const {
+    set_cuda_device();
+    return cudaFuncSetAttribute(entry, attr, value);
+  }
+
   cudaError_t cuda_graph_instantiate_wrapper(cudaGraphExec_t* pGraphExec,
                                              cudaGraph_t graph) const {
     set_cuda_device();
