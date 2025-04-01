@@ -6,4 +6,5 @@ if(_DEVICE_PARALLEL STREQUAL "NoTypeDefined"
 )
   kokkos_add_example_directories(relocatable_function)
 endif()
+kokkos_add_example_directories(emoji)
 kokkos_add_example_directories(tutorial)
