@@ -76,7 +76,8 @@ class UniqueToken<SYCL, UniqueTokenScope::Global> {
   /// \brief acquire value such that 0 <= value < size()
   KOKKOS_INLINE_FUNCTION
   size_type impl_acquire() const {
-#if defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER >= 20250000
+#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+    KOKKOS_COMPILER_INTEL_LLVM >= 20250000
     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
 #else
     auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();

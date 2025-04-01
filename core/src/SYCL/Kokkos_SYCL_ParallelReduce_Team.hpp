@@ -125,7 +125,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               reference_type update = reducer.init(results_ptr);
               if (size == 1) {
                 const member_type team_member(
-                    KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0),
+                    team_scratch_memory_L0
+                        .get_multi_ptr<sycl::access::decorated::yes>(),
                     shmem_begin, scratch_size[0], global_scratch_ptr,
                     scratch_size[1], item, item.get_group_linear_id(),
                     item.get_group_range(1));
@@ -200,7 +201,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                   for (int league_rank = group_id; league_rank < league_size;
                        league_rank += n_wgroups) {
                     const member_type team_member(
-                        KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0),
+                        team_scratch_memory_L0
+                            .get_multi_ptr<sycl::access::decorated::yes>(),
                         shmem_begin, scratch_size[0],
                         global_scratch_ptr +
                             item.get_group(1) * scratch_size[1],
@@ -210,7 +212,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                     else
                       functor(WorkTag(), team_member, update);
                   }
-                  item.barrier(sycl::access::fence_space::local_space);
+                  sycl::group_barrier(item.get_group());
 
                   SYCLReduction::workgroup_reduction<>(
                       item, local_mem, results_ptr,
@@ -254,7 +256,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                   for (int league_rank = group_id; league_rank < league_size;
                        league_rank += n_wgroups) {
                     const member_type team_member(
-                        KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0),
+                        team_scratch_memory_L0
+                            .get_multi_ptr<sycl::access::decorated::yes>(),
                         shmem_begin, scratch_size[0],
                         global_scratch_ptr +
                             item.get_group(1) * scratch_size[1],
@@ -279,7 +282,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                         scratch_flags_ref(*scratch_flags);
                     num_teams_done[0] = ++scratch_flags_ref;
                   }
-                  item.barrier(sycl::access::fence_space::local_space);
+                  sycl::group_barrier(item.get_group());
                   if (num_teams_done[0] == n_wgroups) {
                     if (local_id == 0) *scratch_flags = 0;
                     if (local_id >= n_wgroups)
