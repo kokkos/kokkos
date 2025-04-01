@@ -21,6 +21,8 @@
 
 #include <tools/include/ToolTestingUtilities.hpp>
 
+#include "cublas_v2.h" // do not merge this
+
 namespace Test {
 
 template <class ExecSpace, class ValueType>
@@ -1116,3 +1118,115 @@ TEST(TEST_CATEGORY, graph_then) {
 }
 
 }  // end namespace Test
+
+//// NOT TO BE MERGED - JUST FOR DRAFTING THE API ////
+#define CHECK_CUBLAS_CALL(call)                           \
+  {                                                       \
+    const auto error_code = call;                         \
+    if(error_code != CUBLAS_STATUS_SUCCESS)               \
+    {                                                     \
+      printf("%s:%d: failure of statement %s: %s (%d)\n", \
+        __FILE__, __LINE__,                               \
+        #call,                                            \
+        cublasGetStatusName(error_code), error_code);     \
+      std::abort();                                       \
+    }                                                     \
+  }
+
+template <typename MatrixType, typename VectorType>
+struct Init
+{
+  MatrixType matrix;
+  VectorType vector;
+
+  template <typename T>
+  KOKKOS_FUNCTION
+  void operator()(const T) const {
+    matrix(0) = 1; matrix(1) = 2; vector(0) = 5;
+    matrix(2) = 3; matrix(3) = 4; vector(1) = 6;
+  }
+};
+
+auto create_cublas_handle()
+{
+  cublasHandle_t handle = nullptr;
+
+  CHECK_CUBLAS_CALL(cublasCreate(&handle));
+
+  printf("The 'cublas' handle is %p.\n", handle);
+
+  return std::shared_ptr<cublasContext>(handle, [](cublasHandle_t ptr) {
+    printf("Destroying 'cublas' handle %p.\n", ptr);
+    CHECK_CUBLAS_CALL(cublasDestroy(ptr));
+  });
+}
+
+// We will create the capture node within a scope. It will show that it will keep the handle resource alive.
+// This somehow mimics some Kokkos Kernels call.
+// Any reference-counted object captured in the lambda passed to 'cuda_capture' is guaranteed to stay alive for the graph lifetime.
+template <typename Exec, typename Pred, typename MatrixType, typename VectorType, typename ResultType>
+auto gemv(const Exec& exec, const Pred& pred, const MatrixType& matrix, const VectorType& vector, ResultType& result)
+{
+  static_assert(std::is_same_v<typename MatrixType::value_type, double>);
+  static_assert(std::is_same_v<typename VectorType::value_type, double>);
+  static_assert(std::is_same_v<typename ResultType::value_type, double>);
+
+  auto handle = create_cublas_handle();
+
+  const double alpha = 1., beta = 1.;
+
+  return pred.cuda_capture(
+    exec,
+    [handle, matrix, vector, result, alpha, beta](const Kokkos::Cuda& exec_) {
+      CHECK_CUBLAS_CALL(cublasSetStream(handle.get(), exec_.cuda_stream()))
+      CHECK_CUBLAS_CALL(cublasDgemv(
+        handle.get(),
+        CUBLAS_OP_N,
+        vector.size(),
+        result.size(),
+        &alpha,
+        matrix.data(), vector.size(),
+        vector.data(), 1,
+        &beta,
+        result.data(), 1
+      ))
+    }
+  );
+}
+
+// Running the graph twice and not getting the expected result means the capture went wrong.
+TEST(try, it)
+{
+  using value_t = double;
+
+  constexpr size_t nrows = 2, ncols = 2;
+
+  const Kokkos::Cuda exec {};
+
+  Kokkos::View<value_t[nrows * ncols], Kokkos::Cuda> matrix(Kokkos::view_alloc(Kokkos::WithoutInitializing, exec, "matrix"));
+  Kokkos::View<value_t[nrows        ], Kokkos::Cuda> vector(Kokkos::view_alloc(Kokkos::WithoutInitializing, exec, "vector"));
+  Kokkos::View<value_t[nrows        ], Kokkos::Cuda> result(Kokkos::view_alloc(                             exec, "result"));
+
+  Kokkos::parallel_for(Kokkos::RangePolicy(exec, 0, 1), Init{matrix, vector});
+
+  auto graph = Kokkos::Experimental::create_graph(exec);
+
+  auto root = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+
+  auto node_gemv = gemv(exec, root, matrix, vector, result);
+
+  graph.submit(exec);
+
+  Kokkos::deep_copy(exec, vector, result);
+
+  graph.submit(exec);
+
+  Kokkos::View<value_t[nrows], Kokkos::HostSpace> mirror(Kokkos::view_alloc(Kokkos::WithoutInitializing, "result - host mirror"));
+
+  Kokkos::deep_copy(exec, mirror, result);
+
+  exec.fence();
+
+  EXPECT_EQ(mirror(0), 23 + 125);
+  EXPECT_EQ(mirror(1), 34 + 182);
+}

@@ -1162,3 +1162,8 @@ endif()
 if(KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS AND NOT WIN32)
   add_subdirectory(headers_self_contained)
 endif()
+
+# Do not merge this.
+if(Kokkos_ENABLE_CUDA)
+  target_link_libraries(Kokkos_CoreUnitTest_Cuda1 PRIVATE CUDA::cublas)
+endif()
