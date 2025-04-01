@@ -289,28 +289,15 @@ void sort_by_key_via_sort(
     Kokkos::DefaultHostExecutionSpace host_exec;
 
     if constexpr (sizeof...(MaybeComparator) == 0) {
-#ifdef KOKKOS_ENABLE_ONEDPL
-      Kokkos::sort(
-          host_exec, host_permute,
-          KOKKOS_LAMBDA(int i, int j) { return host_keys(i) < host_keys(j); });
-#else
       Kokkos::sort(host_exec, host_permute,
                    LessFunctor<decltype(host_keys)>{host_keys});
-#endif
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
-#ifdef KOKKOS_ENABLE_ONEDPL
-      Kokkos::sort(
-          host_exec, host_permute, KOKKOS_LAMBDA(int i, int j) {
-            return keys_comparator(host_keys(i), host_keys(j));
-          });
-#else
       Kokkos::sort(
           host_exec, host_permute,
           KeyComparisonFunctor<decltype(host_keys), decltype(keys_comparator)>{
               host_keys, keys_comparator});
-#endif
     }
     host_exec.fence("Kokkos::Impl::sort_by_key_via_sort: after host sort");
     Kokkos::deep_copy(exec, permute, host_permute);
@@ -336,27 +323,14 @@ void sort_by_key_via_sort(
     }
 #else
     if constexpr (sizeof...(MaybeComparator) == 0) {
-#ifdef KOKKOS_ENABLE_ONEDPL
-      Kokkos::sort(
-          exec, permute,
-          KOKKOS_LAMBDA(int i, int j) { return keys(i) < keys(j); });
-#else
       Kokkos::sort(exec, permute, LessFunctor<decltype(keys)>{keys});
-#endif
     } else {
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
-#ifdef KOKKOS_ENABLE_ONEDPL
-      Kokkos::sort(
-          exec, permute, KOKKOS_LAMBDA(int i, int j) {
-            return keys_comparator(keys(i), keys(j));
-          });
-#else
       Kokkos::sort(
           exec, permute,
           KeyComparisonFunctor<decltype(keys), decltype(keys_comparator)>{
               keys, keys_comparator});
-#endif
     }
 #endif
   }
