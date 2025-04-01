@@ -241,7 +241,7 @@ void sort_onedpl(const Kokkos::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort currently only supports rank-1 Views.");
 #else
@@ -267,7 +267,7 @@ void sort_onedpl(const Kokkos::SYCL& space,
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   auto view_begin = ::Kokkos::Experimental::begin(view);
   auto view_end   = ::Kokkos::Experimental::end(view);
 #else
@@ -370,7 +370,7 @@ void sort_device_view_without_comparator(
       "sort_device_view_without_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   sort_onedpl(exec, view);
 #else
   if (view.stride(0) == 1) {
@@ -429,7 +429,7 @@ void sort_device_view_with_comparator(
       "sort_device_view_with_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   sort_onedpl(exec, view, comparator);
 #else
   if (view.stride(0) == 1) {

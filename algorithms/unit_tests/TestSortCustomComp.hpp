@@ -75,7 +75,7 @@ auto create_random_view_and_host_clone(
 template <class T>
 struct MyComp {
 #if !defined(KOKKOS_ENABLE_ONEDPL) || \
-    KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+    KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   // Make sure that the comparator isn't device copyable, this caused problems
   // with SYCL/oneDPL
   Kokkos::View<T*> dummy;

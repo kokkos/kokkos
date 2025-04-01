@@ -152,7 +152,7 @@ void sort_by_key_rocthrust(
 
 #if defined(KOKKOS_ENABLE_ONEDPL)
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
 template <class Layout>
 inline constexpr bool sort_on_device_v<Kokkos::SYCL, Layout> = true;
 #else
@@ -173,7 +173,7 @@ void sort_by_key_onedpl(
   auto queue  = exec.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   auto keys_begin   = ::Kokkos::Experimental::begin(keys);
   auto keys_end     = ::Kokkos::Experimental::end(keys);
   auto values_begin = ::Kokkos::Experimental::begin(values);
@@ -316,7 +316,7 @@ void sort_by_key_via_sort(
     Kokkos::deep_copy(exec, permute, host_permute);
   } else {
 #if defined(KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY) && \
-    !KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+    !KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
     auto* raw_keys_in_comparator = keys.data();
     auto stride                  = keys.stride(0);
     if constexpr (sizeof...(MaybeComparator) == 0) {
@@ -401,7 +401,7 @@ void sort_by_key_device_view_without_comparator(
     const Kokkos::View<KeysDataType, KeysProperties...>& keys,
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values) {
 #ifdef KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   sort_by_key_onedpl(exec, keys, values);
 #else
   if (keys.stride(0) == 1 && values.stride(0) == 1)
@@ -465,7 +465,7 @@ void sort_by_key_device_view_with_comparator(
     const Kokkos::View<ValuesDataType, ValuesProperties...>& values,
     const ComparatorType& comparator) {
 #ifdef KOKKOS_IMPL_ONEDPL_HAS_SORT_BY_KEY
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   sort_by_key_onedpl(exec, keys, values, comparator);
 #else
   if (keys.stride(0) == 1 && values.stride(0) == 1)
