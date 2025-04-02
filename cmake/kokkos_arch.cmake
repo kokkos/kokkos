@@ -135,7 +135,7 @@ endif()
 
 kokkos_arch_option(INTEL_GEN GPU "SPIR64-based devices, e.g. Intel GPUs, using JIT" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_DG1 GPU "Intel Iris XeMAX GPU" "KOKKOS_SHOW_SYCL_ARCHS")
-kokkos_arch_option(INTEL_DG2 GPU "Intel Arc Alchemist Xe-HPG GPU" "KOKKOS_SHOW_SYCL_ARCHS")
+kokkos_arch_option(INTEL_DG2 GPU "Intel Arc D2 GPU" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_GEN9 GPU "Intel GPU Gen9" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_GEN11 GPU "Intel GPU Gen11" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_GEN12LP GPU "Intel GPU Gen12LP" "KOKKOS_SHOW_SYCL_ARCHS")
