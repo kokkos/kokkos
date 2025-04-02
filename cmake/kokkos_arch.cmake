@@ -513,10 +513,7 @@ if(KOKKOS_ARCH_RISCV_U74MC)
   )
     message(SEND_ERROR "Only gcc >= 12 and clang >= 14 support RISC-V.")
   endif()
-  compiler_specific_flags(
-    COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID DEFAULT
-    -march=rv64imafdc_zicntr_zicsr_zifencei_zihpm
-  )
+  compiler_specific_flags(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID DEFAULT -march=rv64imafdc_zicntr_zicsr_zifencei_zihpm)
 endif()
 
 if(KOKKOS_ARCH_BDW)
