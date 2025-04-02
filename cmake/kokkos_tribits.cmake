@@ -254,7 +254,7 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
         # sycl adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
         string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS "${WHITESPACE_FLAGS}")
         # temporarily set language flags to nothing ... the linker often can not handle these which leads to false errors
-        set(FLAGS_CACHE CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS)
+        set(FLAGS_CACHE "${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS}")
         set(CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS "")
         #disable caching
         unset(KOKKOS_LINK_OPTIONS_CHECK CACHE)
