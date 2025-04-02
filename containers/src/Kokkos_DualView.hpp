@@ -606,11 +606,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
       //    space");
       return;
     } else {
-      if constexpr (std::is_same_v<typename traits::data_type,
-                                   typename traits::non_const_data_type>)
-        sync_impl<Device>(std::true_type{});
-      else
-        sync_impl<Device>(std::false_type{});
+      sync_impl<Device>(
+          typename std::is_same<typename traits::data_type,
+                                typename traits::non_const_data_type>::type{});
     }
   }
 
@@ -619,11 +617,10 @@ class DualView : public ViewTraits<DataType, Properties...> {
     if constexpr (impl_dualview_is_single_device)
       return;
     else {
-      if constexpr (std::is_same_v<typename traits::data_type,
-                                   typename traits::non_const_data_type>)
-        sync_impl<Device>(std::true_type{}, exec);
-      else
-        sync_impl<Device>(std::false_type{}, exec);
+      sync_impl<Device>(
+          typename std::is_same<typename traits::data_type,
+                                typename traits::non_const_data_type>::type{},
+          exec);
     }
   }
 
