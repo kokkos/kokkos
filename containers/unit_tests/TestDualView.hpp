@@ -90,7 +90,7 @@ struct test_dualview_copy_construction_and_assignment {
 
     // We can't test shallow equality of modified_flags because it's protected.
     // So we test it indirectly through sync state behavior.
-    if (!std::decay_t<SrcViewType>::impl_dualview_is_single_device) {
+    if (!SrcViewType::impl_dualview_is_single_device) {
       a.clear_sync_state();
       a.modify_host();
       ASSERT_TRUE(a.need_sync_device());
