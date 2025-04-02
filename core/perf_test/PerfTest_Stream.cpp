@@ -134,7 +134,6 @@ static void StreamScale(benchmark::State& state) {
   StreamDeviceArray b("b", N8);
 
   perform_set(a, aInit);
-  perform_set(b, bInit);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
