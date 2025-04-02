@@ -23,6 +23,7 @@ static_assert(false,
 #define KOKKOS_MEMORYTRAITS_HPP
 
 #include <impl/Kokkos_Traits.hpp>
+#include <Kokkos_BitManipulation.hpp>
 
 //----------------------------------------------------------------------------
 
@@ -81,20 +82,22 @@ using MemoryRandomAccess =
 namespace Kokkos {
 namespace Impl {
 
-static_assert((0 < int(KOKKOS_MEMORY_ALIGNMENT)) &&
-                  (0 == (int(KOKKOS_MEMORY_ALIGNMENT) &
-                         (int(KOKKOS_MEMORY_ALIGNMENT) - 1))),
-              "KOKKOS_MEMORY_ALIGNMENT must be a power of two");
-
 /** \brief Memory alignment settings
  *
  *  Sets global value for memory alignment.  Must be a power of two!
  *  Enable compatibility of views from different devices with static stride.
  *  Use compiler flag to enable overwrites.
  */
-static constexpr unsigned MEMORY_ALIGNMENT = KOKKOS_MEMORY_ALIGNMENT;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+static constexpr unsigned MEMORY_ALIGNMENT = KOKKOS_IMPL_MEMORY_ALIGNMENT;
 static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD =
-    KOKKOS_MEMORY_ALIGNMENT_THRESHOLD;
+    KOKKOS_IMPL_MEMORY_ALIGNMENT_THRESHOLD;
+#else
+static constexpr unsigned MEMORY_ALIGNMENT           = 64;
+static constexpr unsigned MEMORY_ALIGNMENT_THRESHOLD = 1;
+#endif
+static_assert(has_single_bit(MEMORY_ALIGNMENT),
+              "MEMORY_ALIGNMENT must be a power of 2");
 
 // ------------------------------------------------------------------ //
 //  this identifies the default memory trait
