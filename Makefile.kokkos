@@ -19,7 +19,7 @@ KOKKOS_DEVICES ?= "Threads"
 # IBM:      Power8,Power9
 # AMD-GPUS: AMD_GFX906,AMD_GFX908,AMD_GFX90A,AMD_GFX940,AMD_GFX942,AMD_GFX942_APU,AMD_GFX1030,AMD_GFX1100,AMD_GFX1103
 # AMD-CPUS: AMDAVX,Zen,Zen2,Zen3,Zen4,Zen5
-# Intel-GPUs: Intel_Gen,Intel_Gen9,Intel_Gen11,Intel_Gen12LP,Intel_DG1,Intel_XeHP,Intel_PVC
+# Intel-GPUs: Intel_Gen,Intel_Gen9,Intel_Gen11,Intel_Gen12LP,Intel_DG1,Intel_DG2,Intel_XeHP,Intel_PVC
 KOKKOS_ARCH ?= ""
 # Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -359,6 +359,10 @@ endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelDG1)
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1), 0)
   KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_DG1)
+endif
+KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelDG2)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_DG2)
 endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelXeHP)
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP), 0)
@@ -1322,6 +1326,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_DG1")
   KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device dg1"
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_DG2")
+  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device dg2"
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
