@@ -645,6 +645,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "SG2042 (RISC-V)")
 #elif defined(KOKKOS_ARCH_RISCV_RVA22V)
   declare_configuration_metadata("architecture", "CPU architecture", "RVA22V (RISC-V)")
+#elif defined(KOKKOS_ARCH_RISCV_U74MC)
+  declare_configuration_metadata("architecture", "CPU architecture", "U74MC (RISC-V)")
 #else
   declare_configuration_metadata("architecture", "CPU architecture", "none");
 #endif
