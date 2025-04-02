@@ -28,61 +28,6 @@
 namespace Kokkos {
 namespace Impl {
 
-KOKKOS_FORCEINLINE_FUNCTION
-int int_log2_fallback(unsigned i) {
-  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
-
-  int offset = 0;
-  if (i) {
-    for (offset = shift; (i & (1 << offset)) == 0; --offset)
-      ;
-  }
-  return offset;
-}
-
-KOKKOS_IMPL_DEVICE_FUNCTION
-inline int int_log2_device(unsigned i) {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
-  return shift - __clz(i);
-#elif defined(KOKKOS_COMPILER_INTEL_LLVM)
-  return _bit_scan_reverse(i);
-#else
-  return int_log2_fallback(i);
-#endif
-}
-
-KOKKOS_IMPL_HOST_FUNCTION
-inline int int_log2_host(unsigned i) {
-// duplicating shift to avoid unused warning in else branch
-#if defined(KOKKOS_COMPILER_INTEL_LLVM)
-  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
-  (void)shift;
-  return _bit_scan_reverse(i);
-#elif defined(KOKKOS_COMPILER_CRAYC)
-  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
-  return i ? shift - _leadz32(i) : 0;
-#elif defined(__GNUC__) || defined(__GNUG__)
-  constexpr int shift = sizeof(unsigned) * CHAR_BIT - 1;
-  return shift - __builtin_clz(i);
-#else
-  return int_log2_fallback(i);
-#endif
-}
-
-#if defined(__EDG__)
-#pragma push
-#pragma diag_suppress implicit_return_from_non_void_function
-#endif
-KOKKOS_FORCEINLINE_FUNCTION
-int int_log2(unsigned i) {
-  KOKKOS_IF_ON_DEVICE((return int_log2_device(i);))
-  KOKKOS_IF_ON_HOST((return int_log2_host(i);))
-}
-#if defined(__EDG__)
-#pragma pop
-#endif
-
 /**\brief  Find first zero bit.
  *
  *  If none then return -1 ;
