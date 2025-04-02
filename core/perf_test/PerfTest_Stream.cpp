@@ -14,6 +14,19 @@
 //
 //@HEADER
 
+/**
+ * @file PerfTest_Stream.cpp
+ * @brief Implementation of STREAM benchmark operations for Kokkos.
+ *
+ * @details This file provides a set of memory bandwidth benchmarks based on the
+ * STREAM benchmark suite. It implements the five core STREAM operations (Set,
+ * Copy, Scale, Add, and Triad) using Kokkos parallel primitives. It includes
+ * validation.
+ *
+ * The implementation strives to use as few Kokkos features as possible, and so
+ * validation is performed on the host rather than via parallel_reduce
+ */
+
 #include <Kokkos_Core.hpp>
 #include <benchmark/benchmark.h>
 #include "Benchmark_Context.hpp"
@@ -31,7 +44,8 @@ using StreamIndex =
     int64_t;  // different than benchmarks/stream, which uses int
 using Policy = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
 
-void perform_set(StreamDeviceArray& a, const double scalar_) {
+template <typename V>
+void perform_set(V& a, const double scalar_) {
   Kokkos::parallel_for(
       "set", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar_; });
@@ -39,7 +53,8 @@ void perform_set(StreamDeviceArray& a, const double scalar_) {
   Kokkos::fence();
 }
 
-void perform_copy(StreamDeviceArray& a, StreamDeviceArray& b) {
+template <typename V>
+void perform_copy(V& a, V& b) {
   Kokkos::parallel_for(
       "copy", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { b[i] = a[i]; });
@@ -47,8 +62,8 @@ void perform_copy(StreamDeviceArray& a, StreamDeviceArray& b) {
   Kokkos::fence();
 }
 
-void perform_scale(StreamDeviceArray& b, StreamDeviceArray& c,
-                   const double scalar_) {
+template <typename V>
+void perform_scale(V& b, V& c, const double scalar_) {
   Kokkos::parallel_for(
       "scale", Policy(0, b.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar_ * c[i]; });
@@ -56,8 +71,8 @@ void perform_scale(StreamDeviceArray& b, StreamDeviceArray& c,
   Kokkos::fence();
 }
 
-void perform_add(StreamDeviceArray& a, StreamDeviceArray& b,
-                 StreamDeviceArray& c) {
+template <typename V>
+void perform_add(V& a, V& b, V& c) {
   Kokkos::parallel_for(
       "add", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { c[i] = a[i] + b[i]; });
@@ -65,8 +80,8 @@ void perform_add(StreamDeviceArray& a, StreamDeviceArray& b,
   Kokkos::fence();
 }
 
-void perform_triad(StreamDeviceArray& a, StreamDeviceArray& b,
-                   StreamDeviceArray& c, const double scalar_) {
+template <typename V>
+void perform_triad(V& a, V& b, V& c, const double scalar_) {
   Kokkos::parallel_for(
       "triad", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar_ * c[i]; });
@@ -74,7 +89,8 @@ void perform_triad(StreamDeviceArray& a, StreamDeviceArray& b,
   Kokkos::fence();
 }
 
-int validate_array(StreamDeviceArray& a_dev, const double expected) {
+template <typename V>
+int validate_array(V& a_dev, const double expected) {
   auto a = Kokkos::create_mirror_view(a_dev);
   Kokkos::deep_copy(a, a_dev);
 
@@ -88,11 +104,12 @@ int validate_array(StreamDeviceArray& a_dev, const double expected) {
   return std::abs(avgError / expected) > epsilon;
 }
 
+template <unsigned MemTraits>
 static void StreamSet(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 1;
 
-  StreamDeviceArray a("a", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
@@ -105,12 +122,13 @@ static void StreamSet(benchmark::State& state) {
   }
 }
 
+template <unsigned MemTraits>
 static void StreamCopy(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  StreamDeviceArray a("a", N8);
-  StreamDeviceArray b("b", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
 
   perform_set(a, aInit);
 
@@ -125,14 +143,15 @@ static void StreamCopy(benchmark::State& state) {
   }
 }
 
+template <unsigned MemTraits>
 static void StreamScale(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  StreamDeviceArray a("a", N8);
-  StreamDeviceArray b("b", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
 
-  perform_set(a, aInit);
+  perform_set(b, bInit);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
@@ -145,13 +164,14 @@ static void StreamScale(benchmark::State& state) {
   }
 }
 
+template <unsigned MemTraits>
 static void StreamAdd(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  StreamDeviceArray a("a", N8);
-  StreamDeviceArray b("b", N8);
-  StreamDeviceArray c("c", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c("c", N8);
 
   perform_set(a, aInit);
   perform_set(b, bInit);
@@ -168,13 +188,14 @@ static void StreamAdd(benchmark::State& state) {
   }
 }
 
+template <unsigned MemTraits>
 static void StreamTriad(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  StreamDeviceArray a("a", N8);
-  StreamDeviceArray b("b", N8);
-  StreamDeviceArray c("c", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c("c", N8);
 
   perform_set(a, aInit);
   perform_set(b, bInit);
@@ -203,36 +224,71 @@ static void or_skip(benchmark::State& state) {
 
 namespace Test {
 
-BENCHMARK(or_skip<StreamSet>)
+BENCHMARK(or_skip<StreamSet<0>>)
     ->Name("StreamSet")
     ->ArgName("N")
     ->Arg(10)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
-BENCHMARK(or_skip<StreamCopy>)
+BENCHMARK(or_skip<StreamSet<Kokkos::Restrict>>)
+    ->Name("StreamSet<Restrict>")
+    ->ArgName("N")
+    ->Arg(10)
+    ->Unit(benchmark::kMillisecond)
+    ->UseManualTime();
+
+BENCHMARK(or_skip<StreamCopy<0>>)
     ->Name("StreamCopy")
     ->ArgName("N")
     ->Arg(10)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
-BENCHMARK(or_skip<StreamScale>)
+BENCHMARK(or_skip<StreamCopy<Kokkos::Restrict>>)
+    ->Name("StreamCopy<Restrict>")
+    ->ArgName("N")
+    ->Arg(10)
+    ->Unit(benchmark::kMillisecond)
+    ->UseManualTime();
+
+BENCHMARK(or_skip<StreamScale<0>>)
     ->Name("StreamScale")
     ->ArgName("N")
     ->Arg(10)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
-BENCHMARK(or_skip<StreamAdd>)
+BENCHMARK(or_skip<StreamScale<Kokkos::Restrict>>)
+    ->Name("StreamScale<Restrict>")
+    ->ArgName("N")
+    ->Arg(10)
+    ->Unit(benchmark::kMillisecond)
+    ->UseManualTime();
+
+BENCHMARK(or_skip<StreamAdd<0>>)
     ->Name("StreamAdd")
     ->ArgName("N")
     ->Arg(10)
     ->Unit(benchmark::kMillisecond)
     ->UseManualTime();
 
-BENCHMARK(or_skip<StreamTriad>)
+BENCHMARK(or_skip<StreamAdd<Kokkos::Restrict>>)
+    ->Name("StreamAdd<Restrict>")
+    ->ArgName("N")
+    ->Arg(10)
+    ->Unit(benchmark::kMillisecond)
+    ->UseManualTime();
+
+BENCHMARK(or_skip<StreamTriad<0>>)
     ->Name("StreamTriad")
+    ->ArgName("N")
+    ->Arg(10)
+    ->Unit(benchmark::kMillisecond)
+    ->UseManualTime();
+
+BENCHMARK(or_skip<StreamTriad<Kokkos::Restrict>>)
+    ->Name("StreamTriad<Restrict>")
     ->ArgName("N")
     ->Arg(10)
     ->Unit(benchmark::kMillisecond)
