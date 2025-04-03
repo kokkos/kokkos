@@ -257,6 +257,32 @@ using simd = basic_simd<T, simd_abi::Impl::native_abi<T, N>>;
 template <class T, int N = 0>
 using simd_mask = basic_simd_mask<T, simd_abi::Impl::native_abi<T, N>>;
 
+template <
+    typename T, typename... Flags,
+    std::enable_if_t<
+        !std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
+                        basic_simd<T, simd_abi::scalar>>,
+        bool> = false>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+    basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
+    simd_unchecked_load(const T* ptr,
+                        simd_flags<Flags...> flag = simd_flag_default) {
+  return simd_unchecked_load<
+      basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(ptr, flag);
+}
+
+template <
+    typename T, typename... Flags,
+    std::enable_if_t<
+        std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
+                       basic_simd<T, simd_abi::scalar>>,
+        bool> = false>
+KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar>
+simd_unchecked_load(const T* ptr,
+                    simd_flags<Flags...> flag = simd_flag_default) {
+  return simd_unchecked_load<basic_simd<T, simd_abi::scalar>>(ptr, flag);
+}
+
 namespace Impl {
 
 template <class... Abis>

@@ -20,6 +20,6 @@
 #include <TestSIMD_ShiftOps.hpp>
 #include <TestSIMD_Condition.hpp>
 #include <TestSIMD_GeneratorCtors.hpp>
-#include <TestSIMD_WhereExpressions.hpp>
 #include <TestSIMD_Reductions.hpp>
 #include <TestSIMD_Construction.hpp>
+#include <TestSIMD_LoadStore.hpp>
