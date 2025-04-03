@@ -34,9 +34,11 @@
 #define CUB_USE_COOPERATIVE_GROUPS
 #endif
 
+#ifndef KOKKOS_COMPILER_MSVC
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
 #pragma GCC diagnostic ignored "-Wsuggest-override"
+#endif
 
 #if defined(KOKKOS_COMPILER_CLANG)
 // Some versions of Clang fail to compile Thrust, failing with errors like
@@ -63,7 +65,9 @@
 #include <thrust/scan.h>
 #endif
 
+#ifndef KOKKOS_COMPILER_MSVC
 #pragma GCC diagnostic pop
+#endif
 
 #endif
 
