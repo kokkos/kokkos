@@ -21,6 +21,8 @@
 
 #include <tools/include/ToolTestingUtilities.hpp>
 
+#include "cublas_v2.h" // do not merge this
+
 namespace Test {
 
 template <class ExecSpace, class ValueType>
@@ -796,6 +798,14 @@ struct ThenFunctor {
   KOKKOS_FUNCTION void operator()() const { data() += value; }
 };
 
+// Supported graph node types.
+enum class GraphNodeType {
+  KERNEL    = 12,
+  AGGREGATE = 42,
+  THEN      = 66,
+  CAPTURE   = 666
+};
+
 template <typename Exec>
 struct GraphNodeTypes {
   // Type of a root node.
@@ -803,6 +813,16 @@ struct GraphNodeTypes {
       Kokkos::Experimental::GraphNodeRef<Exec,
                                          Kokkos::Experimental::TypeErasedTag,
                                          Kokkos::Experimental::TypeErasedTag>;
+
+#if defined(KOKKOS_ENABLE_CUDA)
+  static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::Cuda>;
+#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+    static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::HIP>;
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+  static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::SYCL>;
+#else
+  static constexpr bool support_capture = false;
+#endif
 
   // Type of a kernel node built using a Kokkos parallel construct.
   using kernel_t =
@@ -816,18 +836,36 @@ struct GraphNodeTypes {
   // Type of a then node.
   using then_t =
       Kokkos::Impl::GraphNodeThenImpl<Exec, ThenFunctor<Kokkos::View<int>>>;
+
+  // Type of a capture node.
+  using capture_t =
+      Kokkos::Impl::GraphNodeCaptureImpl<Exec, CountTestFunctor<Exec>>;
 };
 
+template <typename Exec>
 constexpr bool test_is_graph_kernel() {
-  using types = GraphNodeTypes<TEST_EXECSPACE>;
-  static_assert(Kokkos::Impl::is_graph_kernel_v<types::kernel_t>);
-  static_assert(!Kokkos::Impl::is_graph_kernel_v<types::aggregate_t>);
-  static_assert(Kokkos::Impl::is_graph_kernel_v<types::then_t>,
+  using types = GraphNodeTypes<Exec>;
+  static_assert(Kokkos::Impl::is_graph_kernel_v<typename types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::aggregate_t>);
+  static_assert(Kokkos::Impl::is_graph_kernel_v<typename types::then_t>,
                 "This should be verified until the 'then' has its own path to "
                 "the driver.");
+  if constexpr (types::support_capture)
+    static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::capture_t>);
   return true;
 }
-static_assert(test_is_graph_kernel());
+static_assert(test_is_graph_kernel<TEST_EXECSPACE>());
+
+constexpr bool test_is_graph_capture() {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+  static_assert(!Kokkos::Impl::is_graph_capture_v<types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_capture_v<types::aggregate_t>);
+  static_assert(!Kokkos::Impl::is_graph_capture_v<types::then_t>);
+  if constexpr (types::support_capture)
+    static_assert(Kokkos::Impl::is_graph_capture_v<types::capture_t>);
+  return true;
+}
+static_assert(test_is_graph_capture());
 
 // This test checks the node types before/after a 'when_all'.
 TEST(TEST_CATEGORY, when_all_type) {
@@ -865,6 +903,168 @@ TEST(TEST_CATEGORY, when_all_type) {
   static_assert(std::is_same_v<decltype(node_B), node_ref_first_layer_t>);
   static_assert(std::is_same_v<decltype(agg), node_ref_agg_t>);
   static_assert(std::is_same_v<decltype(tail), node_ref_tail_t>);
+}
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+template <GraphNodeType value, typename DstType, typename... SrcTypes>
+__global__ void set_to(DstType* const dst, const SrcTypes* const... srcs) {
+  dst[threadIdx.y] += (srcs[threadIdx.y] + ...) + static_cast<DstType>(value);
+}
+#endif
+
+template <typename Exec>
+struct ExternalCapture;
+
+// clang-format off
+#if defined(KOKKOS_ENABLE_CXX17)
+  #define KOKKOS_TEST_GRAPH_CAPTURE_DEFINE_ADD(_capture_, _backend_)                                        \
+    template <typename N, typename DstType, typename... SrcTypes>                                           \
+    static auto add(const N& pred, const Kokkos::_backend_& exec, const DstType& dst, SrcTypes&&... srcs) { \
+      return pred._capture_(exec,                                                                           \
+          [dst, tup = std::make_tuple(std::forward<SrcTypes>(srcs)...)](const Kokkos::_backend_& exec_) {   \
+              std::apply([&](const auto&... args) {                                                         \
+                  ExternalCapture::compute(exec_, dst.data(), args.data()...);}, tup);                      \
+      });                                                                                                   \
+    }
+#else
+  #define KOKKOS_TEST_GRAPH_CAPTURE_DEFINE_ADD(_capture_, _backend_)                                        \
+    template <typename N, typename DstType, typename... SrcTypes>                                           \
+    static auto add(const N& pred, const Kokkos::_backend_& exec, const DstType& dst, SrcTypes&&... srcs) { \
+      return pred._capture_(exec,                                                                           \
+          [dst, ... srcs = std::forward<SrcTypes>(srcs)](const Kokkos::_backend_& exec_) {                  \
+              ExternalCapture::compute(exec_, dst.data(), srcs.data()...);                                  \
+      });                                                                                                   \
+    }
+#endif
+// clang-format on
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <>
+struct ExternalCapture<Kokkos::Cuda> {
+  template <typename DstType, typename... SrcTypes>
+  static void compute(const Kokkos::Cuda& exec, DstType* const dst,
+                      const SrcTypes* const... srcs) {
+    set_to<GraphNodeType::CAPTURE>
+        <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.cuda_stream()>>>(dst, srcs...);
+  }
+
+  KOKKOS_TEST_GRAPH_CAPTURE_DEFINE_ADD(cuda_capture, Cuda)
+};
+#endif
+#if defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+template <>
+struct ExternalCapture<Kokkos::HIP> {
+  template <typename DstType, typename... SrcTypes>
+  static void compute(const Kokkos::HIP& exec, DstType* const dst,
+                      const SrcTypes* const... srcs) {
+    set_to<GraphNodeType::CAPTURE>
+        <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.hip_stream()>>>(dst, srcs...);
+  }
+
+  KOKKOS_TEST_GRAPH_CAPTURE_DEFINE_ADD(hip_capture, HIP)
+};
+#endif
+#if defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+template <>
+struct ExternalCapture<Kokkos::SYCL> {
+  template <typename DstType, typename... SrcTypes>
+  static void compute(const Kokkos::SYCL& exec, DstType* const dst,
+                      const SrcTypes* const... srcs) {
+    exec.sycl_queue().submit([&](sycl::handler& cgh) {
+      cgh.parallel_for(sycl::range<1>(1), [=](int) {
+        dst[0] +=
+            (srcs[0] + ...) + static_cast<DstType>(GraphNodeType::CAPTURE);
+      });
+    });
+  }
+
+  KOKKOS_TEST_GRAPH_CAPTURE_DEFINE_ADD(sycl_capture, SYCL)
+};
+#endif
+
+#undef KOKKOS_TEST_GRAPH_CAPTURE_DEFINE_ADD
+
+template <typename Exec>
+void test_graph_capture() {
+  using view_t = Kokkos::View<int[5], Exec>;
+
+  const auto execs = Kokkos::Experimental::partition_space(Exec{}, 1, 1, 1, 1);
+
+  const auto& exec       = execs.at(0);
+  const auto& exec_graph = execs.at(1);
+  const auto& exec_left  = execs.at(2);
+  const auto& exec_right = execs.at(3);
+
+  constexpr int offset_left = 123, offset_right = 456;
+
+  const view_t data(
+      Kokkos::view_alloc(exec, "data used in the captured kernel"));
+  exec.fence("Wait for data to be initialized.");
+
+  const auto data_0(Kokkos::subview(data, 0));
+  const auto data_1(Kokkos::subview(data, 1));
+  const auto data_2(Kokkos::subview(data, 2));
+  const auto data_3(Kokkos::subview(data, 3));
+  const auto data_4(Kokkos::subview(data, 4));
+
+  auto graph = Kokkos::Experimental::create_graph<Exec>(exec_graph);
+  auto root  = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+
+  auto memset_left = root.then_parallel_for(
+      Kokkos::RangePolicy<Exec>(exec_left, 0, 1),
+      SetViewToValueFunctor<Exec, int>{data_0, offset_left});
+
+  auto memset_right = root.then_parallel_for(
+      Kokkos::RangePolicy<Exec>(exec_right, 0, 1),
+      SetViewToValueFunctor<Exec, int>{data_4, offset_right});
+
+  // Purposely use the 'left' exec for the 'right' node, and vice-versa.
+  auto captured_left =
+      ExternalCapture<Exec>::add(memset_left, exec_right, data_1, data_0);
+  auto captured_right =
+      ExternalCapture<Exec>::add(memset_right, exec_left, data_3, data_4);
+
+  // We don't keep a reference to the created external nodes, to mimic that
+  // someone used capture in some deep-down library call (e.g. in
+  // Kokkos Kernels).
+  ExternalCapture<Exec>::add(
+      Kokkos::Experimental::when_all(std::move(captured_left),
+                                     std::move(captured_right)),
+      exec_graph, data_2, data_1, data_3);
+
+  // At this stage, no kernel was launched yet.
+  ASSERT_TRUE(contains(exec_left, data_0, 0));
+  ASSERT_TRUE(contains(exec_right, data_1, 0));
+  ASSERT_TRUE(contains(exec_graph, data_2, 0));
+  ASSERT_TRUE(contains(exec_left, data_3, 0));
+  ASSERT_TRUE(contains(exec_right, data_4, 0));
+
+  // The view is shared by:
+  //  - this scope (1 + 5)
+  //  - the memset nodes (2)
+  //  - the capture nodes (2 + 2 + 3)
+  ASSERT_EQ(data.use_count(), 1 + 5 + 2 + 2 + 2 + 3);
+
+  graph.submit(exec_graph);
+
+  ASSERT_TRUE(contains(exec_graph, data_1,
+                       offset_left + static_cast<int>(GraphNodeType::CAPTURE)));
+  ASSERT_TRUE(
+      contains(exec_graph, data_3,
+               offset_right + static_cast<int>(GraphNodeType::CAPTURE)));
+  ASSERT_TRUE(contains(exec_graph, data_2,
+                       offset_left + offset_right +
+                           3 * static_cast<int>(GraphNodeType::CAPTURE)));
+}
+
+TEST(TEST_CATEGORY, graph_capture) {
+  if constexpr (GraphNodeTypes<TEST_EXECSPACE>::support_capture) {
+    test_graph_capture<TEST_EXECSPACE>();
+  } else {
+    GTEST_SKIP() << "The graph backend for "
+                 << Kokkos::Impl::TypeInfo<TEST_EXECSPACE>::name()
+                 << " does not support capture.";
+  }
 }
 
 TEST(TEST_CATEGORY, graph_then) {
@@ -918,3 +1118,115 @@ TEST(TEST_CATEGORY, graph_then) {
 }
 
 }  // end namespace Test
+
+//// NOT TO BE MERGED - JUST FOR DRAFTING THE API ////
+#define CHECK_CUBLAS_CALL(call)                           \
+  {                                                       \
+    const auto error_code = call;                         \
+    if(error_code != CUBLAS_STATUS_SUCCESS)               \
+    {                                                     \
+      printf("%s:%d: failure of statement %s: %s (%d)\n", \
+        __FILE__, __LINE__,                               \
+        #call,                                            \
+        cublasGetStatusName(error_code), error_code);     \
+      std::abort();                                       \
+    }                                                     \
+  }
+
+template <typename MatrixType, typename VectorType>
+struct Init
+{
+  MatrixType matrix;
+  VectorType vector;
+
+  template <typename T>
+  KOKKOS_FUNCTION
+  void operator()(const T) const {
+    matrix(0) = 1; matrix(1) = 2; vector(0) = 5;
+    matrix(2) = 3; matrix(3) = 4; vector(1) = 6;
+  }
+};
+
+auto create_cublas_handle()
+{
+  cublasHandle_t handle = nullptr;
+
+  CHECK_CUBLAS_CALL(cublasCreate(&handle));
+
+  printf("The 'cublas' handle is %p.\n", handle);
+
+  return std::shared_ptr<cublasContext>(handle, [](cublasHandle_t ptr) {
+    printf("Destroying 'cublas' handle %p.\n", ptr);
+    CHECK_CUBLAS_CALL(cublasDestroy(ptr));
+  });
+}
+
+// We will create the capture node within a scope. It will show that it will keep the handle resource alive.
+// This somehow mimics some Kokkos Kernels call.
+// Any reference-counted object captured in the lambda passed to 'cuda_capture' is guaranteed to stay alive for the graph lifetime.
+template <typename Exec, typename Pred, typename MatrixType, typename VectorType, typename ResultType>
+auto gemv(const Exec& exec, const Pred& pred, const MatrixType& matrix, const VectorType& vector, ResultType& result)
+{
+  static_assert(std::is_same_v<typename MatrixType::value_type, double>);
+  static_assert(std::is_same_v<typename VectorType::value_type, double>);
+  static_assert(std::is_same_v<typename ResultType::value_type, double>);
+
+  auto handle = create_cublas_handle();
+
+  const double alpha = 1., beta = 1.;
+
+  return pred.cuda_capture(
+    exec,
+    [handle, matrix, vector, result, alpha, beta](const Kokkos::Cuda& exec_) {
+      CHECK_CUBLAS_CALL(cublasSetStream(handle.get(), exec_.cuda_stream()))
+      CHECK_CUBLAS_CALL(cublasDgemv(
+        handle.get(),
+        CUBLAS_OP_N,
+        vector.size(),
+        result.size(),
+        &alpha,
+        matrix.data(), vector.size(),
+        vector.data(), 1,
+        &beta,
+        result.data(), 1
+      ))
+    }
+  );
+}
+
+// Running the graph twice and not getting the expected result means the capture went wrong.
+TEST(try, it)
+{
+  using value_t = double;
+
+  constexpr size_t nrows = 2, ncols = 2;
+
+  const Kokkos::Cuda exec {};
+
+  Kokkos::View<value_t[nrows * ncols], Kokkos::Cuda> matrix(Kokkos::view_alloc(Kokkos::WithoutInitializing, exec, "matrix"));
+  Kokkos::View<value_t[nrows        ], Kokkos::Cuda> vector(Kokkos::view_alloc(Kokkos::WithoutInitializing, exec, "vector"));
+  Kokkos::View<value_t[nrows        ], Kokkos::Cuda> result(Kokkos::view_alloc(                             exec, "result"));
+
+  Kokkos::parallel_for(Kokkos::RangePolicy(exec, 0, 1), Init{matrix, vector});
+
+  auto graph = Kokkos::Experimental::create_graph(exec);
+
+  auto root = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+
+  auto node_gemv = gemv(exec, root, matrix, vector, result);
+
+  graph.submit(exec);
+
+  Kokkos::deep_copy(exec, vector, result);
+
+  graph.submit(exec);
+
+  Kokkos::View<value_t[nrows], Kokkos::HostSpace> mirror(Kokkos::view_alloc(Kokkos::WithoutInitializing, "result - host mirror"));
+
+  Kokkos::deep_copy(exec, mirror, result);
+
+  exec.fence();
+
+  EXPECT_EQ(mirror(0), 23 + 125);
+  EXPECT_EQ(mirror(1), 34 + 182);
+}
