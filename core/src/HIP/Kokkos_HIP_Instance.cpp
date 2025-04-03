@@ -374,8 +374,6 @@ void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
-
   auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     device_mem_space.deallocate(m_scratchFlags,
