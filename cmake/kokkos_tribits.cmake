@@ -241,34 +241,14 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     target_link_options(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS})
   endif()
 
+  #required for check_linker_flag
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-    if(KOKKOS_LINK_OPTIONS)
-      include(CheckLinkerFlag)
       #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
       #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
-      if(NOT ((KOKKOS_ENABLE_CUDA) AND NOT (("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
-                                            OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)))
-      )
-        #check_linker_flag requires a whitespace separated list
-        string(REPLACE ";" " " WHITESPACE_FLAGS "${KOKKOS_LINKER_OPTIONS}")
-        # sycl adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
-        string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS "${WHITESPACE_FLAGS}")
-        # temporarily set language flags to nothing ... the linker often can not handle these which leads to false errors
-        set(FLAGS_CACHE "${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS}")
-        set(CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS "")
-        #disable caching
-        unset(KOKKOS_LINK_OPTIONS_CHECK CACHE)
-        check_linker_flag(${KOKKOS_COMPILE_LANGUAGE} "${QUOTED_FLAGS}" KOKKOS_LINK_OPTIONS_CHECK)
-        #restore cache
-        set(CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS "${FLAGS_CACHE}")
-        if(NOT KOKKOS_LINK_OPTIONS_CHECK)
-          message(
-            FATAL_ERROR
-              "The linker for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
-          )
-        endif()
+      if(NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
+                                            OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang))
+        kokkos_check_flags(LINKER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
       endif()
-    endif()
   endif()
 
   list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_COMPILE_OPTIONS})
@@ -332,23 +312,9 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${NODEDUP_XCOMPILER_OPTIONS})
   endif()
 
+  #required for check_compiler_flag
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
-    if(ALL_KOKKOS_COMPILER_FLAGS)
-      include(CheckCompilerFlag)
-      #check_compiler_flag requires a whitespace separated list
-      string(REPLACE ";" " " WHITESPACE_FLAGS "${ALL_KOKKOS_COMPILER_FLAGS}")
-      # sycl adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
-      string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS "${WHITESPACE_FLAGS}")
-      #disable caching
-      unset(KOKKOS_COMPILE_OPTIONS_CHECK CACHE)
-      check_compiler_flag(${KOKKOS_COMPILE_LANGUAGE} "${QUOTED_FLAGS}" KOKKOS_COMPILE_OPTIONS_CHECK)
-      if(NOT KOKKOS_COMPILE_OPTIONS_CHECK)
-        message(
-          FATAL_ERROR
-            "The compiler for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} in combination with the CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS=${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS}. Please check the given configuration."
-        )
-      endif()
-    endif()
+    kokkos_check_flags(COMPILER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
   endif()
 
   if(KOKKOS_CXX_STANDARD_FEATURE)
