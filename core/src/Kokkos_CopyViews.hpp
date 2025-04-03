@@ -830,6 +830,26 @@ struct ZeroMemset {
   }
 };
 
+// Returns true when we can safely determine that the object has all 0 bits,
+// false otherwise.  It is intended to determine whether to perform zero memset
+// as an optimization.
+template <typename T>
+bool has_all_zero_bits(const T& value) {
+  static_assert(std::is_trivial_v<T>);
+
+  if constexpr (std::is_scalar_v<T>) {
+    return value == T();
+  }
+
+  if constexpr (std::is_standard_layout_v<T> &&
+                std::has_unique_object_representations_v<T>) {
+    constexpr std::byte all_zeroes[sizeof(T)] = {};
+    return std::memcmp(&value, all_zeroes, sizeof(T)) == 0;
+  }
+
+  return false;
+}
+
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
     std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
@@ -837,7 +857,7 @@ contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   // With OpenMP, using memset has significant performance issues.
-  if (Impl::is_zero_byte(value)
+  if (has_all_zero_bits(value)
 #ifdef KOKKOS_ENABLE_OPENMP
       && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
