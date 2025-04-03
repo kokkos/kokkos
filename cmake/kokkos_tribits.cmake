@@ -243,12 +243,13 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
 
   #required for check_linker_flag
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
-      #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
-      #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
-      if(NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
-                                            OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang))
-        kokkos_check_flags(LINKER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
-      endif()
+    #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
+    if(NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper") OR (${KOKKOS_CXX_COMPILER_ID}
+                                                                                        STREQUAL Clang)
+    )
+      kokkos_check_flags(LINKER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
+    endif()
   endif()
 
   list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_COMPILE_OPTIONS})
