@@ -28,63 +28,6 @@
 namespace Kokkos {
 namespace Impl {
 
-/**\brief  Find first zero bit.
- *
- *  If none then return -1 ;
- */
-KOKKOS_FORCEINLINE_FUNCTION
-int bit_first_zero_fallback(unsigned i) noexcept {
-  constexpr unsigned full = ~0u;
-
-  int offset = -1;
-  if (full != i) {
-    for (offset = 0; i & (1 << offset); ++offset)
-      ;
-  }
-  return offset;
-}
-
-KOKKOS_IMPL_DEVICE_FUNCTION
-inline int bit_first_zero_device(unsigned i) noexcept {
-  constexpr unsigned full = ~0u;
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  return full != i ? __ffs(~i) - 1 : -1;
-#elif defined(KOKKOS_COMPILER_INTEL_LLVM)
-  return full != i ? _bit_scan_forward(~i) : -1;
-#else
-  (void)full;
-  return bit_first_zero_fallback(i);
-#endif
-}
-
-KOKKOS_IMPL_HOST_FUNCTION
-inline int bit_first_zero_host(unsigned i) noexcept {
-  constexpr unsigned full = ~0u;
-#if defined(KOKKOS_COMPILER_INTEL_LLVM)
-  return full != i ? _bit_scan_forward(~i) : -1;
-#elif defined(KOKKOS_COMPILER_CRAYC)
-  return full != i ? _popcnt(i ^ (i + 1)) - 1 : -1;
-#elif defined(KOKKOS_COMPILER_GNU) || defined(__GNUC__) || defined(__GNUG__)
-  return full != i ? __builtin_ffs(~i) - 1 : -1;
-#else
-  (void)full;
-  return bit_first_zero_fallback(i);
-#endif
-}
-
-#if defined(__EDG__)
-#pragma push
-#pragma diag_suppress implicit_return_from_non_void_function
-#endif
-KOKKOS_FORCEINLINE_FUNCTION
-int bit_first_zero(unsigned i) noexcept {
-  KOKKOS_IF_ON_DEVICE((return bit_first_zero_device(i);))
-  KOKKOS_IF_ON_HOST((return bit_first_zero_host(i);))
-}
-#if defined(__EDG__)
-#pragma pop
-#endif
-
 KOKKOS_FORCEINLINE_FUNCTION
 int bit_scan_forward_fallback(unsigned i) {
   int offset = -1;
