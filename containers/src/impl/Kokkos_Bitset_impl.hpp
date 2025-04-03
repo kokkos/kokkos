@@ -18,7 +18,7 @@
 #define KOKKOS_BITSET_IMPL_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_BitOps.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <cstdint>
 
 #include <cstdio>
