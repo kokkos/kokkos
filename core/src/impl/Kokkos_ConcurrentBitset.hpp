@@ -144,7 +144,7 @@ struct concurrent_bitset {
       // Failed race to set the selected bit
       // Find a new bit to try.
 
-      const int j = Kokkos::countr_one(prev);
+      const int j = (prev == -1 ? -1 : Kokkos::countr_one(prev));
 
       if (0 <= j) {
         bit = (word << bits_per_int_lg2) | uint32_t(j);
@@ -233,7 +233,7 @@ struct concurrent_bitset {
       // Failed race to set the selected bit
       // Find a new bit to try.
 
-      const int j = Kokkos::countr_one(prev);
+      const int j = (prev == -1 ? -1 : Kokkos::countr_one(prev));
 
       if (0 <= j) {
         bit = (word << bits_per_int_lg2) | uint32_t(j);
