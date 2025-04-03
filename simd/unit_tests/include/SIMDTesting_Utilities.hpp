@@ -105,7 +105,9 @@ class load_element_aligned {
   bool host_load(T const* mem, std::size_t n,
                  Kokkos::Experimental::basic_simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::simd_flag_default);
+    using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+    result          = Kokkos::Experimental::simd_unchecked_load<simd_type>(
+        mem, Kokkos::Experimental::simd_flag_default);
     return true;
   }
   template <class T, class Abi>
@@ -113,7 +115,9 @@ class load_element_aligned {
       T const* mem, std::size_t n,
       Kokkos::Experimental::basic_simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::simd_flag_default);
+    using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+    result          = Kokkos::Experimental::simd_unchecked_load<simd_type>(
+        mem, Kokkos::Experimental::simd_flag_default);
     return true;
   }
 };
@@ -124,7 +128,9 @@ class load_vector_aligned {
   bool host_load(T const* mem, std::size_t n,
                  Kokkos::Experimental::basic_simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::simd_flag_aligned);
+    using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+    result          = Kokkos::Experimental::simd_unchecked_load<simd_type>(
+        mem, Kokkos::Experimental::simd_flag_aligned);
     return true;
   }
   template <class T, class Abi>
@@ -132,7 +138,9 @@ class load_vector_aligned {
       T const* mem, std::size_t n,
       Kokkos::Experimental::basic_simd<T, Abi>& result) const {
     if (n < result.size()) return false;
-    result.copy_from(mem, Kokkos::Experimental::simd_flag_aligned);
+    using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+    result          = Kokkos::Experimental::simd_unchecked_load<simd_type>(
+        mem, Kokkos::Experimental::simd_flag_aligned);
     return true;
   }
 };
@@ -145,8 +153,8 @@ class load_masked {
     using mask_type =
         typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
     mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i < n; });
-    result = T(0);
-    where(mask, result).copy_from(mem, Kokkos::Experimental::simd_flag_default);
+    result =
+        simd_partial_load(mem, mask, Kokkos::Experimental::simd_flag_default);
     return true;
   }
   template <class T, class Abi>
@@ -156,8 +164,8 @@ class load_masked {
     using mask_type =
         typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
     mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i < n; });
-    where(mask, result).copy_from(mem, Kokkos::Experimental::simd_flag_default);
-    where(!mask, result) = T(0);
+    result =
+        simd_partial_load(mem, mask, Kokkos::Experimental::simd_flag_default);
     return true;
   }
 };

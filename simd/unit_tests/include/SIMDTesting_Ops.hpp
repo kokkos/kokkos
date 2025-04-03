@@ -345,12 +345,10 @@ class reduce_min {
   auto on_host_serial(T const& a, U, MaskType mask) const {
     if (Kokkos::Experimental::none_of(mask))
       return Kokkos::reduction_identity<U>::min();
-    auto w        = Kokkos::Experimental::where(mask, a);
-    auto const& v = w.impl_get_value();
-    auto const& m = w.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<U>::min();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-      if (m[i]) result = Kokkos::min(result, v[i]);
+
+    auto result = Kokkos::reduction_identity<U>::min();
+    for (std::size_t i = 0; i < T::size(); ++i) {
+      if (mask[i]) result = Kokkos::min(result, a[i]);
     }
     return result;
   }
@@ -364,12 +362,10 @@ class reduce_min {
                                                MaskType mask) const {
     if (Kokkos::Experimental::none_of(mask))
       return Kokkos::reduction_identity<U>::min();
-    auto w        = Kokkos::Experimental::where(mask, a);
-    auto const& v = w.impl_get_value();
-    auto const& m = w.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<U>::min();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-      if (m[i]) result = Kokkos::min(result, v[i]);
+
+    auto result = Kokkos::reduction_identity<U>::min();
+    for (std::size_t i = 0; i < T::size(); ++i) {
+      if (mask[i]) result = Kokkos::min(result, a[i]);
     }
     return result;
   }
@@ -385,12 +381,10 @@ class reduce_max {
   auto on_host_serial(T const& a, U, MaskType mask) const {
     if (Kokkos::Experimental::none_of(mask))
       return Kokkos::reduction_identity<U>::max();
-    auto w        = Kokkos::Experimental::where(mask, a);
-    auto const& v = w.impl_get_value();
-    auto const& m = w.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<U>::max();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-      if (m[i]) result = Kokkos::max(result, v[i]);
+
+    auto result = Kokkos::reduction_identity<U>::max();
+    for (std::size_t i = 0; i < T::size(); ++i) {
+      if (mask[i]) result = Kokkos::max(result, a[i]);
     }
     return result;
   }
@@ -404,12 +398,10 @@ class reduce_max {
                                                MaskType mask) const {
     if (Kokkos::Experimental::none_of(mask))
       return Kokkos::reduction_identity<U>::max();
-    auto w        = Kokkos::Experimental::where(mask, a);
-    auto const& v = w.impl_get_value();
-    auto const& m = w.impl_get_mask();
-    auto result   = Kokkos::reduction_identity<U>::max();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-      if (m[i]) result = Kokkos::max(result, v[i]);
+
+    auto result = Kokkos::reduction_identity<U>::max();
+    for (std::size_t i = 0; i < T::size(); ++i) {
+      if (mask[i]) result = Kokkos::max(result, a[i]);
     }
     return result;
   }
@@ -425,12 +417,10 @@ class reduce {
   template <typename T, typename U, typename MaskType>
   auto on_host_serial(T const& a, U const& identity, MaskType mask) const {
     if (Kokkos::Experimental::none_of(mask)) return identity;
-    auto w        = Kokkos::Experimental::where(mask, a);
-    auto const& v = w.impl_get_value();
-    auto const& m = w.impl_get_mask();
-    U result      = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
-    for (std::size_t i = 0; i < v.size(); ++i) {
-      if (m[i]) result = BinaryOperation()(result, v[i]);
+
+    U result = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
+    for (std::size_t i = 0; i < T::size(); ++i) {
+      if (mask[i]) result = BinaryOperation()(result, a[i]);
     }
     return result;
   }
@@ -444,21 +434,19 @@ class reduce {
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a, U const& identity,
                                                MaskType mask) const {
     if (Kokkos::Experimental::none_of(mask)) return identity;
-    auto w        = Kokkos::Experimental::where(mask, a);
-    auto const& v = w.impl_get_value();
-    auto const& m = w.impl_get_mask();
-    U result      = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
-    for (std::size_t i = 0; i < v.size(); ++i) {
+
+    U result = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
+    for (std::size_t i = 0; i < T::size(); ++i) {
       if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
-        if (m[i]) result = result + v[i];
+        if (mask[i]) result = result + a[i];
       } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
-        if (m[i]) result = result * v[i];
+        if (mask[i]) result = result * a[i];
       } else if constexpr (std::is_same_v<BinaryOperation, std::bit_and<>>) {
-        if (m[i]) result = result & v[i];
+        if (mask[i]) result = result & a[i];
       } else if constexpr (std::is_same_v<BinaryOperation, std::bit_or<>>) {
-        if (m[i]) result = result | v[i];
+        if (mask[i]) result = result | a[i];
       } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
-        if (m[i]) result = result ^ v[i];
+        if (mask[i]) result = result ^ a[i];
       } else {
         Kokkos::abort("Unsupported reduce operation");
       }
