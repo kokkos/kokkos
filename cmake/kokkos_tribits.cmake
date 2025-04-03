@@ -244,10 +244,10 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
     if(KOKKOS_LINK_OPTIONS)
       include(CheckLinkerFlag)
-      #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
-      #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
-      if(NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper") OR (${KOKKOS_CXX_COMPILER_ID}
-                                                                                          STREQUAL Clang)
+      #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
+      #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
+      if(NOT ((KOKKOS_ENABLE_CUDA) AND NOT (("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
+                                            OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)))
       )
         #check_linker_flag requires a whitespace separated list
         string(REPLACE ";" " " WHITESPACE_FLAGS "${KOKKOS_LINKER_OPTIONS}")
@@ -294,8 +294,8 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_CUDAFE_OPTIONS}>
     )
 
-    #exclude case of compiler_launcher forwarding to nvcc_wrapper as the used CXX compiler is shadowed in this case (compiler_launcher changes the compiler).
-    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags.
+    #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
     if(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
        OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)
     )
