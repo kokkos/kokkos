@@ -129,8 +129,7 @@ void HIP::impl_finalize() {
   }
 
   Impl::HIPInternal::singleton().finalize();
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipSetDevice(Impl::HIPInternal::singleton().m_hipDev));
+
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipStreamDestroy(Impl::HIPInternal::singleton().m_stream));
 }
