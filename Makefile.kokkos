@@ -1535,6 +1535,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
     ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
       KOKKOS_CXXFLAGS += -acc=gpu,multicore
     endif
+    ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
+      KOKKOS_CXXFLAGS += --offload-arch=native
+      KOKKOS_LIBS += --offload-arch=native
+    endif
   endif
 endif
 
