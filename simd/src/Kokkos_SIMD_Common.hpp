@@ -46,10 +46,12 @@ inline constexpr simd_flags<simd_alignment_vector_aligned> simd_flag_aligned{};
 using element_aligned_tag = simd_flags<>;
 using vector_aligned_tag  = simd_flags<simd_alignment_vector_aligned>;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 // class template declarations for const_where_expression and where_expression
 
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class M, class T>
-class const_where_expression {
+class KOKKOS_DEPRECATED const_where_expression {
  protected:
   T& m_value;
   M const& m_mask;
@@ -61,7 +63,7 @@ class const_where_expression {
 };
 
 template <class M, class T>
-class where_expression : public const_where_expression<M, T> {
+class KOKKOS_DEPRECATED where_expression : public const_where_expression<M, T> {
   using base_type = const_where_expression<M, T>;
 
  public:
@@ -75,7 +77,7 @@ class where_expression : public const_where_expression<M, T> {
 // SIMD types and non-SIMD builtin arithmetic types
 
 template <class T>
-class const_where_expression<bool, T> {
+class KOKKOS_DEPRECATED const_where_expression<bool, T> {
  protected:
   T& m_value;
   bool m_mask;
@@ -88,7 +90,8 @@ class const_where_expression<bool, T> {
 };
 
 template <class T>
-class where_expression<bool, T> : public const_where_expression<bool, T> {
+class KOKKOS_DEPRECATED where_expression<bool, T>
+    : public const_where_expression<bool, T> {
   using base_type = const_where_expression<bool, T>;
 
  public:
@@ -104,7 +107,7 @@ class where_expression<bool, T> : public const_where_expression<bool, T> {
 };
 
 template <class T, class Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     where_expression<basic_simd_mask<T, Abi>, basic_simd<T, Abi>>
     where(typename basic_simd<T, Abi>::mask_type const& mask,
           basic_simd<T, Abi>& value) {
@@ -112,7 +115,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 }
 
 template <class T, class Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     const_where_expression<basic_simd_mask<T, Abi>, basic_simd<T, Abi>>
     where(typename basic_simd<T, Abi>::mask_type const& mask,
           basic_simd<T, Abi> const& value) {
@@ -120,22 +123,26 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION where_expression<bool, T> where(bool mask,
-                                                            T& value) {
+[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION
+    where_expression<bool, T>
+    where(bool mask, T& value) {
   return where_expression(mask, value);
 }
 
 template <class T>
-KOKKOS_FORCEINLINE_FUNCTION const_where_expression<bool, T> where(
-    bool mask, T const& value) {
+[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION
+    const_where_expression<bool, T>
+    where(bool mask, T const& value) {
   return const_where_expression(mask, value);
 }
+
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 // The code below provides:
 // operator@(basic_simd<T, Abi>, Arithmetic)
 // operator@(Arithmetic, basic_simd<T, Abi>)
 // operator@=(basic_simd<T, Abi>&, U&&)
-// operator@=(where_expression<M, T>&, U&&)
 
 template <class T, class U, class Abi,
           std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
@@ -164,12 +171,16 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator+=(
   return lhs;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class M, class T, class U>
-KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>& operator+=(
-    where_expression<M, T>& lhs, U&& rhs) {
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>&
+operator+=(where_expression<M, T>& lhs, U&& rhs) {
   lhs = lhs.value() + std::forward<U>(rhs);
   return lhs;
 }
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 template <class T, class U, class Abi,
           std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
@@ -198,12 +209,16 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator-=(
   return lhs;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class M, class T, class U>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>& operator-=(
-    where_expression<M, T>& lhs, U&& rhs) {
+KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>&
+operator-=(where_expression<M, T>& lhs, U&& rhs) {
   lhs = lhs.value() - std::forward<U>(rhs);
   return lhs;
 }
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 template <class T, class U, class Abi,
           std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
@@ -232,12 +247,16 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator*=(
   return lhs;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class M, class T, class U>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>& operator*=(
-    where_expression<M, T>& lhs, U&& rhs) {
+KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>&
+operator*=(where_expression<M, T>& lhs, U&& rhs) {
   lhs = lhs.value() * std::forward<U>(rhs);
   return lhs;
 }
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 template <class T, class Abi,
           std::enable_if_t<std::is_integral_v<T>, bool> = false>
@@ -275,12 +294,16 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator/=(
   return lhs;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class M, class T, class U>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>& operator/=(
-    where_expression<M, T>& lhs, U&& rhs) {
+KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>&
+operator/=(where_expression<M, T>& lhs, U&& rhs) {
   lhs = lhs.value() / std::forward<U>(rhs);
   return lhs;
 }
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 template <
     class T, class U, class Abi,
