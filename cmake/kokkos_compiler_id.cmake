@@ -3,6 +3,7 @@ kokkos_cfg_depends(COMPILER_ID NONE)
 set(KOKKOS_CXX_COMPILER ${CMAKE_CXX_COMPILER})
 set(KOKKOS_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
 set(KOKKOS_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+set(KOKKOS_BACKEND_COMPILER ${CMAKE_CXX_COMPILER})
 
 macro(kokkos_internal_have_compiler_nvcc)
   # Check if the compiler is nvcc (which really means nvcc_wrapper).
@@ -59,6 +60,7 @@ if(Kokkos_ENABLE_CUDA)
         -DKOKKOS_DEPENDENCE
       )
       set(INTERNAL_USE_COMPILER_LAUNCHER true)
+      set(KOKKOS_BACKEND_COMPILER ${Kokkos_NVCC_WRAPPER})
     endif()
   endif()
 endif()
