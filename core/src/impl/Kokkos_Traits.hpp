@@ -20,7 +20,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_BitOps.hpp>
 #include <string>
 #include <type_traits>
 
