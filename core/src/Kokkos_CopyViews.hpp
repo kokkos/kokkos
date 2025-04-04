@@ -869,7 +869,7 @@ void contiguous_fill_or_memset(
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
-  contiguous_fill(exec_space_type(), dst, value);
+  contiguous_fill_or_memset(exec_space_type(), dst, value);
 }
 }  // namespace Impl
 
