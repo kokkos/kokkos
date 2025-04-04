@@ -995,7 +995,7 @@ function(kokkos_check_flags)
     include(CheckLinkerFlag)
     # temporarily set language flags to nothing ... the linker often can not handle these which leads to false errors
     set(CMAKE_${INP_LANGUAGE}_FLAGS "")
-    #disable caching
+    #delete cache so we always do the check
     unset(KOKKOS_LINK_OPTIONS_CHECK CACHE)
     check_linker_flag(${INP_LANGUAGE} "${QUOTED_FLAGS}" KOKKOS_LINK_OPTIONS_CHECK)
     if(NOT KOKKOS_LINK_OPTIONS_CHECK)
