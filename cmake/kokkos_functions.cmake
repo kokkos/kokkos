@@ -958,6 +958,7 @@ endfunction()
 #
 #       COMPILER    --> do check for compiler
 #       LINKER      --> do check for linker
+#       LANGUAGE    --> the language for which to check (required)
 #       FLAGS       --> flags to check
 #
 function(kokkos_check_flags)
