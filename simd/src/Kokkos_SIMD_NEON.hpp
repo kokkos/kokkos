@@ -318,69 +318,52 @@ class neon_mask<Derived, 32, 4> {
 
 }  // namespace Impl
 
-template <class T>
-class basic_simd_mask<T, simd_abi::neon_fixed_size<2>>
-    : public Impl::neon_mask<basic_simd_mask<T, simd_abi::neon_fixed_size<2>>,
-                             sizeof(T) * 8, 2> {
-  using base_type =
-      Impl::neon_mask<basic_simd_mask<T, simd_abi::neon_fixed_size<2>>,
-                      sizeof(T) * 8, 2>;
+#define INSTANTIATE_SIMD_MASK_NEON(T, LANES_IN_VECTOR)                        \
+  template <>                                                                 \
+  class basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>        \
+      : public Impl::neon_mask<                                               \
+            basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>,   \
+            sizeof(T) * 8, LANES_IN_VECTOR> {                                 \
+    using base_type = Impl::neon_mask<                                        \
+        basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>,       \
+        sizeof(T) * 8, LANES_IN_VECTOR>;                                      \
+    using implementation_type = typename base_type::implementation_type;      \
+                                                                              \
+   public:                                                                    \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() noexcept =        \
+        default;                                                              \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(           \
+        bool value) noexcept                                                  \
+        : base_type(value) {}                                                 \
+    template <class U>                                                        \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(           \
+        basic_simd_mask<U, simd_abi::neon_fixed_size<LANES_IN_VECTOR>> const& \
+            other) noexcept                                                   \
+        : base_type(other) {}                                                 \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask( \
+        implementation_type const& value) noexcept                            \
+        : base_type(value) {}                                                 \
+    template <class G,                                                        \
+              std::enable_if_t<std::is_invocable_r_v<                         \
+                                   typename base_type::value_type, G,         \
+                                   std::integral_constant<std::size_t, 0>>,   \
+                               bool> = false>                                 \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask( \
+        G&& gen) noexcept                                                     \
+        : base_type(gen) {}                                                   \
+  };
 
-  using implementation_type = typename base_type::implementation_type;
+INSTANTIATE_SIMD_MASK_NEON(std::int32_t, 2);
+INSTANTIATE_SIMD_MASK_NEON(std::int32_t, 4);
+INSTANTIATE_SIMD_MASK_NEON(std::uint32_t, 2);
+INSTANTIATE_SIMD_MASK_NEON(std::uint32_t, 4);
 
- public:
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      bool value) noexcept
-      : base_type(value) {}
-  template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      basic_simd_mask<U, simd_abi::neon_fixed_size<2>> const& other) noexcept
-      : base_type(other) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      implementation_type const& value) noexcept
-      : base_type(value) {}
-  template <class G,
-            std::enable_if_t<
-                std::is_invocable_r_v<typename base_type::value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
-      : base_type(gen) {}
-};
+INSTANTIATE_SIMD_MASK_NEON(std::int64_t, 2);
+INSTANTIATE_SIMD_MASK_NEON(std::uint64_t, 2);
 
-template <class T>
-class basic_simd_mask<T, simd_abi::neon_fixed_size<4>>
-    : public Impl::neon_mask<basic_simd_mask<T, simd_abi::neon_fixed_size<4>>,
-                             sizeof(T) * 8, 4> {
-  using base_type =
-      Impl::neon_mask<basic_simd_mask<T, simd_abi::neon_fixed_size<4>>,
-                      sizeof(T) * 8, 4>;
-
-  using implementation_type = typename base_type::implementation_type;
-
- public:
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      bool value) noexcept
-      : base_type(value) {}
-  template <class U>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      basic_simd_mask<U, simd_abi::neon_fixed_size<4>> const& other) noexcept
-      : base_type(other) {}
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      implementation_type const& value) noexcept
-      : base_type(value) {}
-  template <class G,
-            std::enable_if_t<
-                std::is_invocable_r_v<typename base_type::value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
-      : base_type(gen) {}
-};
+INSTANTIATE_SIMD_MASK_NEON(float, 2);
+INSTANTIATE_SIMD_MASK_NEON(float, 4);
+INSTANTIATE_SIMD_MASK_NEON(double, 2);
 
 template <>
 class basic_simd<double, simd_abi::neon_fixed_size<2>> {
