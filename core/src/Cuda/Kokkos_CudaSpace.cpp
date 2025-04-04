@@ -41,7 +41,8 @@
 cudaStream_t Kokkos::Impl::cuda_get_deep_copy_stream() {
   static cudaStream_t s = nullptr;
   if (s == nullptr) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&s));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        (CudaInternal::singleton().cuda_stream_create_wrapper(&s)));
   }
   return s;
 }
@@ -58,7 +59,8 @@ namespace Kokkos {
 namespace Impl {
 
 void DeepCopyCuda(void *dst, const void *src, size_t n) {
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaMemcpy(dst, src, n, cudaMemcpyDefault));
+  KOKKOS_IMPL_CUDA_SAFE_CALL((CudaInternal::singleton().cuda_memcpy_wrapper(
+      dst, src, n, cudaMemcpyDefault)));
 }
 
 void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
@@ -70,6 +72,7 @@ void DeepCopyAsyncCuda(const Cuda &instance, void *dst, const void *src,
 
 void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
   cudaStream_t s = cuda_get_deep_copy_stream();
+  CudaInternal::singleton().set_cuda_device();
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaMemcpyAsync(dst, src, n, cudaMemcpyDefault, s));
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Cuda>(
