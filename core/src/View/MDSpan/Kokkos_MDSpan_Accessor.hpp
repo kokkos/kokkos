@@ -69,7 +69,8 @@ struct SpaceAwareAccessor {
   explicit operator NestedAccessor() const { return nested_acc; }
 
   KOKKOS_FUNCTION
-  constexpr reference access(data_handle_type p, size_t i) const noexcept {
+  constexpr reference access(const data_handle_type& p,
+                             size_t i) const noexcept {
     Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(
         "Kokkos::SpaceAwareAccessor ERROR: attempt to access inaccessible "
         "memory space");
@@ -137,7 +138,8 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   explicit operator NestedAccessor() const { return nested_acc; }
 
   KOKKOS_FUNCTION
-  constexpr reference access(data_handle_type p, size_t i) const noexcept {
+  constexpr reference access(const data_handle_type& p,
+                             size_t i) const noexcept {
     return nested_acc.access(p, i);
   }
 
@@ -202,7 +204,7 @@ struct AtomicAccessorRelaxed {
   }
 
   KOKKOS_FUNCTION
-  reference access(data_handle_type p, size_t i) const noexcept {
+  reference access(const data_handle_type& p, size_t i) const noexcept {
     return reference(p[i]);
   }
 
@@ -382,7 +384,7 @@ class ReferenceCountedAccessor {
   }
 
   KOKKOS_FUNCTION
-  constexpr reference access(data_handle_type p, size_t i) const {
+  constexpr reference access(const data_handle_type& p, size_t i) const {
     return m_nested_acc.access(p.get(), i);
   }
 
