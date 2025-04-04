@@ -961,7 +961,7 @@ endfunction()
 #       FLAGS       --> flags to check
 #
 function(kokkos_check_flags)
-  cmake_parse_arguments(INP "COMPILER;LINKER" "" "FLAGS;LANGUAGE" ${ARGN})
+  cmake_parse_arguments(INP "COMPILER;LINKER" "LANGUAGE" "FLAGS" ${ARGN})
 
   # do nothing if no flags are given
   if(NOT INP_FLAGS)
