@@ -975,7 +975,7 @@ function(kokkos_check_flags)
 
   #check_compiler/linker_flag requires a whitespace separated list
   string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
-  # sycl adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
+  # icpx adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
   string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS "${WHITESPACE_FLAGS}")
 
   if(INP_COMPILER)
