@@ -265,7 +265,7 @@ int Kokkos::Impl::get_ctest_gpu(int local_rank) {
 
   // Make sure rank is within bounds of resource groups specified by CTest
   auto resource_group_count = std::stoi(ctest_resource_group_count_str);
-  assert(local_rank >= 0);
+  KOKKOS_ASSERT(local_rank >= 0);
   if (local_rank >= resource_group_count) {
     std::ostringstream ss;
     ss << "Error: local rank " << local_rank
