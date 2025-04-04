@@ -433,8 +433,8 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
-    m_value = value_type(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; });
+    m_value = static_cast<float64x2_t>(basic_simd(
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -698,7 +698,7 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<double, simd_abi::neon_fixed_size<2>> const& simd, double* ptr,
     [[maybe_unused]] FlagType flag = simd_flag_default) {
-  vst1q_f64(ptr, simd);
+  vst1q_f64(ptr, static_cast<float64x2_t>(simd));
 }
 
 template <typename FlagType>
@@ -777,8 +777,8 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
-    m_value = value_type(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; });
+    m_value = static_cast<float32x2_t>(basic_simd(
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -1032,7 +1032,7 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::neon_fixed_size<2>> const& simd, float* ptr,
     [[maybe_unused]] FlagType flag = simd_flag_default) {
-  vst1_f32(ptr, simd);
+  vst1_f32(ptr, static_cast<float32x2_t>(simd));
 }
 
 template <typename FlagType>
@@ -1115,8 +1115,8 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
-    m_value = value_type(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; });
+    m_value = static_cast<float32x4_t>(basic_simd(
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -1372,7 +1372,7 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::neon_fixed_size<4>> const& simd, float* ptr,
     [[maybe_unused]] FlagType flag = simd_flag_default) {
-  vst1q_f32(ptr, simd);
+  vst1q_f32(ptr, static_cast<float32x4_t>(simd));
 }
 
 template <typename FlagType>
@@ -1458,8 +1458,8 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
-    m_value = value_type(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; });
+    m_value = static_cast<int32x2_t>(basic_simd(
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -1673,7 +1673,7 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& simd,
     std::int32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
-  vst1_s32(ptr, simd);
+  vst1_s32(ptr, static_cast<int32x2_t>(simd));
 }
 
 template <typename FlagType>
@@ -1757,13 +1757,13 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       value_type const* ptr, FlagType) noexcept {
-    m_value = vld1q_f32(ptr);
+    m_value = vld1q_s32(ptr);
   }
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
-    m_value = value_type(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; });
+    m_value = static_cast<int32x4_t>(basic_simd(
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -1979,7 +1979,7 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& simd,
     std::int32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
-  vst1q_s32(ptr, m_value);
+  vst1q_s32(ptr, static_cast<int32x4_t>(simd));
 }
 
 template <typename FlagType>
@@ -2068,8 +2068,8 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
-    m_value = value_type(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; });
+    m_value = static_cast<int64x2_t>(basic_simd(
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -2282,7 +2282,7 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& simd,
     std::int64_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
-  vst1q_s64(ptr, m_value);
+  vst1q_s64(ptr, static_cast<int64x2_t>(simd));
 }
 
 template <typename FlagType>
@@ -2369,8 +2369,8 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   template <typename FlagType>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
-    m_value = value_type(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; });
+    m_value = static_cast<uint64x2_t>(basic_simd(
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -2581,7 +2581,7 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& simd,
     std::uint64_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
-  vst1q_u64(ptr, m_value);
+  vst1q_u64(ptr, static_cast<uint64x2_t>(simd));
 }
 
 template <typename FlagType>
