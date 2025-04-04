@@ -283,6 +283,12 @@ class CudaInternal {
     return cudaMemPrefetchAsync(devPtr, count, dstDevice, m_stream);
   }
 
+  cudaError_t cuda_memcpy_wrapper(void* dst, const void* src, size_t count,
+                                  cudaMemcpyKind kind) const {
+    set_cuda_device();
+    return cudaMemcpy(dst, src, count, kind);
+  }
+
   cudaError_t cuda_memcpy_async_wrapper(void* dst, const void* src,
                                         size_t count,
                                         cudaMemcpyKind kind) const {
