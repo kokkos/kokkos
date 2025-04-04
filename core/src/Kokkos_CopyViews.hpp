@@ -863,34 +863,7 @@ contiguous_fill_or_memset(
 }
 
 template <class DT, class... DP>
-inline std::enable_if_t<
-    std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
-contiguous_fill_or_memset(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value) {
-  using ViewType        = View<DT, DP...>;
-  using exec_space_type = typename ViewType::execution_space;
-  exec_space_type exec;
-
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-  if (Impl::is_zero_byte(value))
-    // FIXME intel/19 icpc fails to deduce template parameter here,
-    // resulting in compilation errors; explicitly passing the template
-    // parameter to ZeroMemset helps workaround the issue.
-    // See https://github.com/kokkos/kokkos/issues/7273.
-    ZeroMemset<exec_space_type>(
-        exec, dst.data(), dst.size() * sizeof(typename ViewType::value_type));
-  else
-#endif
-    contiguous_fill(exec, dst, value);
-}
-
-template <class DT, class... DP>
-inline std::enable_if_t<
-    !std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
-contiguous_fill_or_memset(
+void contiguous_fill_or_memset(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
