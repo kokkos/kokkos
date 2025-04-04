@@ -338,7 +338,7 @@ class MultidimensionalSparseTuningProblem {
   MultidimensionalSparseTuningProblem(StoredProblemSpace space,
                                       const std::vector<std::string>& names)
       : m_space(std::move(space)), m_variable_names(names) {
-    assert(names.size() == space_dimensionality);
+    KOKKOS_ASSERT(names.size() == space_dimensionality);
     for (unsigned long x = 0; x < names.size(); ++x) {
       VariableInfo info;
       info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
