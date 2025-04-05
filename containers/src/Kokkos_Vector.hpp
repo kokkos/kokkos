@@ -90,7 +90,7 @@ class KOKKOS_DEPRECATED vector
       : DualView<Scalar*, LayoutLeft, Arg1Type>("Vector", size_t(n * (1.1))) {
     _size                 = n;
     _extra_storage        = 1.1;
-    DV::modified_flags(0) = 1;
+    DV::modified_flags[0] = 1;
 
     assign(n, val);
   }
