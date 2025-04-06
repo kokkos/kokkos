@@ -235,8 +235,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// \brief Empty constructor.
   ///
   /// Both device and host View objects are constructed using their
-  /// default constructors.  The "modified" flags are both initialized
-  /// to "unmodified."
+  /// default constructors.  The "modified" flags are not allocated.
   DualView() = default;
 
   /// \brief Constructor that allocates View objects on both host and device.
@@ -790,9 +789,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
     if constexpr (impl_dualview_is_single_device) {
       return;
     } else {
-      if (modified_flags.data() == nullptr) {
-        modified_flags = t_modified_flags("DualView::modified_flags");
-      }
+      if (modified_flags.data() == nullptr) return;
 
       int dev = get_device_side<Device>();
 
