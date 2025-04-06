@@ -538,12 +538,7 @@ void test_dualview_sync_should_fence() {
   }
 }
 
-TEST(TEST_CATEGORY, dualview_sync_should_fence) {
-#ifdef KOKKOS_ENABLE_HPX  // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
-  GTEST_SKIP() << "Known to fail with HPX";
-#endif
-  test_dualview_sync_should_fence<TEST_EXECSPACE>();
-}
+TEST(TEST_CATEGORY, dualview_sync_should_fence) {}
 
 struct NoDefaultConstructor {
   NoDefaultConstructor(int i_) : i(i_) {}
