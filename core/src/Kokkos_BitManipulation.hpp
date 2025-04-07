@@ -405,6 +405,10 @@ KOKKOS_FUNCTION std::enable_if_t<std::is_integral_v<T>, T> byteswap_builtin(
     T x) noexcept {
   KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::byteswap_builtin_device(x);))
   KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::byteswap_builtin_host(x);))
+// FIXME-NVHPC: erroneous warning about return from non-void function
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  return T();
+#endif
 }
 
 template <class T>
@@ -413,6 +417,10 @@ KOKKOS_FUNCTION std::enable_if_t<
 countl_zero_builtin(T x) noexcept {
   KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::countl_zero_builtin_device(x);))
   KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::countl_zero_builtin_host(x);))
+// FIXME-NVHPC: erroneous warning about return from non-void function
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  return 0;
+#endif
 }
 
 template <class T>
@@ -429,6 +437,10 @@ KOKKOS_FUNCTION std::enable_if_t<
 countr_zero_builtin(T x) noexcept {
   KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::countr_zero_builtin_device(x);))
   KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::countr_zero_builtin_host(x);))
+// FIXME-NVHPC: erroneous warning about return from non-void function
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  return 0;
+#endif
 }
 
 template <class T>
@@ -445,6 +457,10 @@ KOKKOS_FUNCTION std::enable_if_t<
 popcount_builtin(T x) noexcept {
   KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::popcount_builtin_device(x);))
   KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::popcount_builtin_host(x);))
+// FIXME-NVHPC: erroneous warning about return from non-void function
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  return 0;
+#endif
 }
 
 template <class T>
