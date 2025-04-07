@@ -20,6 +20,8 @@
 #include <Kokkos_SIMD.hpp>
 #include <SIMDTesting_Utilities.hpp>
 
+using Kokkos::Experimental::all_of;
+
 template <typename Abi, typename DataType>
 inline void host_test_simd_traits() {
   using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
@@ -49,13 +51,14 @@ inline void host_test_mask_traits() {
   static_assert(std::is_nothrow_move_assignable_v<mask_type>);
   static_assert(std::is_nothrow_move_constructible_v<mask_type>);
 
-  mask_type default_mask, result;
+  mask_type default_mask(false);
+  mask_type result(false);
   mask_type test_mask(KOKKOS_LAMBDA(std::size_t i) { return (i % 2 == 0); });
   mask_type copy_mask(test_mask);
   mask_type move_mask(std::move(copy_mask));
   default_mask = std::move(move_mask);
   result       = default_mask;
-  EXPECT_EQ(test_mask, result);
+  EXPECT_TRUE(all_of(test_mask == result));
 }
 
 template <typename Abi, typename DataType>
@@ -125,7 +128,8 @@ template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_test_mask_traits() {
   using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
 
-  mask_type default_mask, result;
+  mask_type default_mask(false);
+  mask_type result(false);
   mask_type test_mask(KOKKOS_LAMBDA(std::size_t i) { return (i % 2 == 0); });
   mask_type copy_mask(test_mask);
   mask_type move_mask(std::move(copy_mask));
@@ -133,7 +137,7 @@ KOKKOS_INLINE_FUNCTION void device_test_mask_traits() {
   result       = default_mask;
 
   kokkos_checker checker;
-  checker.truth(test_mask == result);
+  checker.truth(all_of(test_mask == result));
 }
 
 template <typename Abi, typename DataType>

@@ -760,6 +760,16 @@ if(Kokkos_ENABLE_CUDA)
     ${Cuda_SOURCES_SHAREDSPACE}
   )
 
+  # This test seeks to make sure that `desul::ensure_cuda_lock_arrays_on_device` is called before a graph submission.
+  # It is in a separate file to ensure that the test takes place in a separate compilation unit, in which this function
+  # has not been called yet by Kokkos::initialize or by a preceding kernel launch.
+  set(file ${CMAKE_CURRENT_BINARY_DIR}/cuda/TestCuda_GraphAtomicLocks.cpp)
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp "#include <TestCuda_Category.hpp>\n"
+                                                        "#include <TestGraphAtomicLocks.hpp>\n"
+  )
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp ${file})
+  kokkos_add_executable_and_test(CoreUnitTest_CudaGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
+
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaTimingBased SOURCES UnitTestMainInit.cpp cuda/TestCuda_DebugSerialExecution.cpp
     cuda/TestCuda_DebugPinUVMSpace.cpp
@@ -792,14 +802,27 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_BlocksizeDeduction.cpp
     hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
   )
+
+  set(file ${CMAKE_CURRENT_BINARY_DIR}/hip/TestHIP_GraphAtomicLocks.cpp)
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hip/dummy.cpp "#include <TestHIP_Category.hpp>\n"
+                                                       "#include <TestGraphAtomicLocks.hpp>\n"
+  )
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/hip/dummy.cpp ${file})
+  kokkos_add_executable_and_test(CoreUnitTest_HIPGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
+
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpStreams SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Streams.cpp
   )
-
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpGraph SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_Graph.cpp
   )
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5.6)
+    # MultiGPU only works for rocm 5.6+
+    kokkos_add_executable_and_test(
+      CoreUnitTest_HIPInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_StreamsMultiGPU.cpp
+    )
+  endif()
 endif()
 
 if(Kokkos_ENABLE_SYCL)

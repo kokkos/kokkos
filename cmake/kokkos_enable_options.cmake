@@ -99,9 +99,15 @@ kokkos_enable_option(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external versio
 kokkos_enable_option(
   IMPL_SKIP_COMPILER_MDSPAN ON BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan"
 )
+kokkos_enable_option(
+  IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
+  OFF
+  "Whether to check for uses of LayoutRight that have an explicit stride that may have changed in the new View implementation."
+)
 mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
+mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
@@ -197,13 +203,14 @@ if(KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
   endif()
 endif()
 
-# This is known to occur with Clang 9. We would need to use nvcc as the linker
+# This is known to occur with Clang 9 until Clang 15. We would need to use nvcc as the linker
 # http://lists.llvm.org/pipermail/cfe-dev/2018-June/058296.html
-# TODO: Through great effort we can use a different linker by hacking
-# CMAKE_CXX_LINK_EXECUTABLE in a future release
-if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_CXX_COMPILER_VERSION
+                                                                                            VERSION_LESS 17
+)
   message(
-    FATAL_ERROR "Relocatable device code is currently not supported with Clang - must use nvcc_wrapper or turn off RDC"
+    FATAL_ERROR
+      "Relocatable device code is currently not supported with Clang < 17 - must use nvcc_wrapper or turn off RDC"
   )
 endif()
 

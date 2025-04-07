@@ -273,8 +273,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
 #endif
-#if defined(KOKKOS_ENABLE_SYCL) && \
-    !defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
+#if defined(KOKKOS_ENABLE_SYCL) &&      \
+    (!defined(SYCL_EXT_ONEAPI_GRAPH) || \
+     !defined(KOKKOS_ARCH_INTEL_GPU))  // FIXME_SYCL
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
     GTEST_SKIP() << "skipping since test case is known to fail with SYCL";
 #endif
@@ -504,7 +505,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
         return MatchDiagnostic{true};
       }));
 
-  graph->instantiate();
+  EXPECT_TRUE(static_cast<bool>(graph));
+  graph->instantiate();  // NOLINT(bugprone-unchecked-optional-access)
 
   // Fencing the default execution space instance, as the node policy
   // was created without giving an instance (it used the default one).
@@ -512,7 +514,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
       "Ensure that kernel dispatch to global memory is finished "
       "before submission.");
 
-  graph->submit(ex);
+  graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
   ASSERT_TRUE(contains(ex, data, functor_t::count));
 
   ASSERT_TRUE(validate_event_set(
@@ -572,7 +574,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), node_lifetime) {
 
   ASSERT_EQ(data.use_count(), 2) << "The node should be holding one count.";
 
-  graph->submit(ex);
+  EXPECT_TRUE(static_cast<bool>(graph));
+  graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
 
   ASSERT_TRUE(contains(ex, Kokkos::subview(data, size - 1), 2));
 

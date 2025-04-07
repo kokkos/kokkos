@@ -78,7 +78,6 @@
  *
  *  KOKKOS_COMPILER_NVCC
  *  KOKKOS_COMPILER_GNU
- *  KOKKOS_COMPILER_INTEL
  *  KOKKOS_COMPILER_INTEL_LLVM
  *  KOKKOS_COMPILER_CRAYC
  *  KOKKOS_COMPILER_APPLECC
@@ -136,10 +135,7 @@
 
 // Intel compiler for host code.
 
-#if defined(__INTEL_COMPILER)
-#define KOKKOS_COMPILER_INTEL __INTEL_COMPILER
-
-#elif defined(__INTEL_LLVM_COMPILER)
+#if defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_COMPILER_INTEL_LLVM __INTEL_LLVM_COMPILER
 
 // Cray compiler for device offload code
@@ -191,18 +187,15 @@
 //----------------------------------------------------------------------------
 // Intel compiler macros
 
-#if defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_INTEL_LLVM)
-#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
-    KOKKOS_COMPILER_INTEL_LLVM >= 20230100
+#if defined(KOKKOS_COMPILER_INTEL_LLVM)
+#if KOKKOS_COMPILER_INTEL_LLVM >= 20230100
 #define KOKKOS_ENABLE_PRAGMA_UNROLL 1
+
+#ifndef __SYCL_DEVICE_ONLY__
 #define KOKKOS_ENABLE_PRAGMA_LOOPCOUNT 1
 #define KOKKOS_ENABLE_PRAGMA_VECTOR 1
-
 #define KOKKOS_ENABLE_PRAGMA_IVDEP 1
 #endif
-
-#if !defined(KOKKOS_MEMORY_ALIGNMENT)
-#define KOKKOS_MEMORY_ALIGNMENT 64
 #endif
 
 #if defined(_WIN32)
@@ -217,10 +210,6 @@
 #else
 #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((align_value(size)))
 #endif
-#endif
-
-#if defined(KOKKOS_COMPILER_INTEL) && (1900 > KOKKOS_COMPILER_INTEL)
-#error "Compiling with Intel version earlier than 19.0.5 is not supported."
 #endif
 
 #if !defined(KOKKOS_ENABLE_ASM) && !defined(_WIN32)
@@ -404,12 +393,53 @@
 //----------------------------------------------------------------------------
 // Define Macro for alignment:
 
-#if !defined(KOKKOS_MEMORY_ALIGNMENT)
-#define KOKKOS_MEMORY_ALIGNMENT 64
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifndef KOKKOS_MEMORY_ALIGNMENT
+#define KOKKOS_IMPL_MEMORY_ALIGNMENT 64
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+#define KOKKOS_MEMORY_ALIGNMENT                                         \
+  [] {                                                                  \
+    int memory_alignment                                                \
+        [[deprecated("KOKKOS_MEMORY_ALIGNMENT macro is deprecated")]] = \
+            KOKKOS_IMPL_MEMORY_ALIGNMENT;                               \
+    return memory_alignment;                                            \
+  }();
+#else
+#define KOKKOS_MEMORY_ALIGNMENT KOKKOS_IMPL_MEMORY_ALIGNMENT
+#endif
+#else
+#define KOKKOS_IMPL_MEMORY_ALIGNMENT KOKKOS_MEMORY_ALIGNMENT
+#endif
+#else  // KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_MEMORY_ALIGNMENT
+static_assert(false,
+              "External definition of KOKKOS_MEMORY_ALIGNMENT is not allowed");
+#endif
 #endif
 
-#if !defined(KOKKOS_MEMORY_ALIGNMENT_THRESHOLD)
-#define KOKKOS_MEMORY_ALIGNMENT_THRESHOLD 1
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifndef KOKKOS_MEMORY_ALIGNMENT_THRESHOLD
+#define KOKKOS_IMPL_MEMORY_ALIGNMENT_THRESHOLD 1
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+#define KOKKOS_MEMORY_ALIGNMENT_THRESHOLD                            \
+  [] {                                                               \
+    int memory_alignment [[deprecated(                               \
+        "KOKKOS_MEMORY_ALIGNMENT_THRESHOLD macro is deprecated")]] = \
+        KOKKOS_IMPL_MEMORY_ALIGNMENT_THRESHOLD;                      \
+    return memory_alignment;                                         \
+  }();
+#else
+#define KOKKOS_MEMORY_ALIGNMENT_THRESHOLD KOKKOS_IMPL_MEMORY_ALIGNMENT_THRESHOLD
+#endif
+#else
+#define KOKKOS_IMPL_MEMORY_ALIGNMENT_THRESHOLD KOKKOS_MEMORY_ALIGNMENT_THRESHOLD
+#endif
+#else  // KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_MEMORY_ALIGNMENT_THRESHOLD
+static_assert(
+    false,
+    "External definition of KOKKOS_MEMORY_ALIGNMENT_THRESHOLD is not allowed");
+#endif
 #endif
 
 #if !defined(KOKKOS_IMPL_ALIGN_PTR)
@@ -579,8 +609,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 // Guard intel compiler version 19 and older
 // intel error #2651: attribute does not apply to any entity
 // using <deprecated_type> KOKKOS_DEPRECATED = ...
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__) && \
-    (!defined(KOKKOS_COMPILER_INTEL) || KOKKOS_COMPILER_INTEL >= 2021)
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
@@ -653,9 +682,8 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IMPL_ATTRIBUTE_UNLIKELY
 #endif
 
-#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||        \
-     defined(KOKKOS_COMPILER_INTEL) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
-     defined(KOKKOS_COMPILER_NVHPC)) &&                                       \
+#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||         \
+     defined(KOKKOS_COMPILER_INTEL_LLVM) || defined(KOKKOS_COMPILER_NVHPC)) && \
     !defined(_WIN32) && !defined(__ANDROID__)
 #if __has_include(<execinfo.h>)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE

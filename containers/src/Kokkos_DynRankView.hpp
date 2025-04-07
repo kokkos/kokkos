@@ -626,9 +626,8 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
-#if defined KOKKOS_COMPILER_INTEL ||                                  \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
     __builtin_unreachable();
 #endif
   }
@@ -656,9 +655,8 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, i1, 0, 0, 0, 0, 0);
-#if defined KOKKOS_COMPILER_INTEL ||                                  \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
     __builtin_unreachable();
 #endif
   }
@@ -690,9 +688,8 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, i1, i2, 0, 0, 0, 0);
-#if defined KOKKOS_COMPILER_INTEL ||                                  \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
     __builtin_unreachable();
 #endif
   }
@@ -1470,9 +1467,8 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   }
-#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
   __builtin_unreachable();
 #endif
 }
@@ -1560,9 +1556,8 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
   __builtin_unreachable();
 #endif
 }
@@ -1703,6 +1698,7 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
         Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy), v_resized, v);
   else {
+    // NOLINTNEXTLINE(bugprone-unused-raii)
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
     Kokkos::fence("Kokkos::resize(DynRankView)");
   }

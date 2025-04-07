@@ -47,6 +47,7 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
 
     simd_type const computed_result =
         shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
+
     host_check_equality(expected_result, computed_result, width);
   }
 }
@@ -74,6 +75,7 @@ inline void host_check_shift_by_lanes_on_one_loader(
                             Kokkos::Experimental::simd_flag_default);
 
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
+
   host_check_equality(expected_result, computed_result, width);
 }
 
@@ -128,13 +130,19 @@ inline void host_check_shift_ops() {
 
       host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                            num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                           shift_by, num_cases);
       host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
+                                           num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals, shift_by,
                                            num_cases);
 
       if constexpr (std::is_signed_v<DataType>) {
         for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
         host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                              num_cases);
+        host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                             shift_by, num_cases);
       }
     }
   }
@@ -245,12 +253,18 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
 
       device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                              num_cases);
+      device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                             shift_by, num_cases);
       device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
                                              num_cases);
+      device_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals,
+                                             shift_by, num_cases);
 
       if constexpr (std::is_signed_v<DataType>) {
         for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
         device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals,
+                                               shift_by, num_cases);
+        device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
                                                shift_by, num_cases);
       }
     }

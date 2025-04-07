@@ -296,7 +296,7 @@ class SYCLTeamMember {
       intermediate += base_data[n_active_subgroups - 1];
     }
     // Make sure that the reduction array hasn't been modified in the meantime.
-    m_item.barrier(sycl::access::fence_space::local_space);
+    sycl::group_barrier(m_item.get_group());
 
     return intermediate;
   }

@@ -25,27 +25,46 @@ static_assert(false,
 #include "Kokkos_MDSpan_Extents.hpp"
 #include <View/Kokkos_ViewDataAnalysis.hpp>
 
+#ifdef KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
+#include <iostream>
+#endif
+
 // The difference between a legacy Kokkos array layout and an
 // mdspan layout is that the array layouts can have state, but don't have the
 // nested mapping. This file provides interoperability helpers.
 
 namespace Kokkos::Impl {
+// We do have implementation detail versions of these in our mdspan impl
+// However they are not part of the public standard interface
+template <class>
+struct IsLayoutRightPadded : std::false_type {};
+
+template <size_t Pad>
+struct IsLayoutRightPadded<Experimental::layout_right_padded<Pad>>
+    : std::true_type {};
+
+template <class>
+struct IsLayoutLeftPadded : std::false_type {};
+
+template <size_t Pad>
+struct IsLayoutLeftPadded<Experimental::layout_left_padded<Pad>>
+    : std::true_type {};
 
 template <class ArrayLayout>
 struct LayoutFromArrayLayout;
 
 template <>
-struct LayoutFromArrayLayout<Kokkos::LayoutLeft> {
-  using type = Kokkos::Experimental::layout_left_padded<dynamic_extent>;
+struct LayoutFromArrayLayout<LayoutLeft> {
+  using type = Experimental::layout_left_padded<dynamic_extent>;
 };
 
 template <>
-struct LayoutFromArrayLayout<Kokkos::LayoutRight> {
-  using type = Kokkos::Experimental::layout_right_padded<dynamic_extent>;
+struct LayoutFromArrayLayout<LayoutRight> {
+  using type = Experimental::layout_right_padded<dynamic_extent>;
 };
 
 template <>
-struct LayoutFromArrayLayout<Kokkos::LayoutStride> {
+struct LayoutFromArrayLayout<LayoutStride> {
   using type = layout_stride;
 };
 
@@ -110,9 +129,6 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     }
     return layout;
   }
-#ifdef KOKKOS_COMPILER_INTEL
-  __builtin_unreachable();
-#endif
 }
 
 template <class MappingType, class ArrayLayout, size_t... Idx>
@@ -134,14 +150,29 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
           extents_type{dextents<index_type, MappingType::extents_type::rank()>{
               layout.dimension[Idx]...}}};
     } else {
-      if constexpr (std::is_same_v<ArrayLayout, LayoutRight> &&
-                    extents_type::rank() > 2) {
-        size_t product_of_dimensions = 1;
-        for (size_t r = 1; r < extents_type::rank(); r++)
-          product_of_dimensions *= layout.dimension[r];
-        if (product_of_dimensions != layout.stride)
-          Kokkos::abort(
-              "Invalid conversion from LayoutRight to layout_right_padded");
+// Handle DEFAULT_ARG, should be layout_dimension 0 or n -1
+// assert that this is not default_arg, as a tool for people to
+// transition their code and avoid breaking changes
+#ifdef KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
+      KOKKOS_IF_ON_HOST(
+          (if constexpr (std::is_same_v<ArrayLayout, LayoutRight> &&
+                         extents_type::rank() > 2) {
+            if (layout.stride != KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+              std::cerr
+                  << "The layout of values in this Kokkos View may be "
+                     "different due "
+                     "to a non-defaulted stride. Verify that this is not an "
+                     "issue for "
+                     "your Views and then disable "
+                     "KOKKOS_ENABLE_IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS.\n";
+            }
+          }))
+#endif
+
+      if (layout.stride == KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
+        return MappingType{extents_type{
+            dextents<index_type, MappingType::extents_type::rank()>{
+                layout.dimension[Idx]...}}};
       } else {
         return MappingType{
             extents_type{
@@ -152,6 +183,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
     }
   }
 }
+
 template <class MappingType, size_t... Idx>
 KOKKOS_INLINE_FUNCTION auto mapping_from_array_layout_impl(
     LayoutStride layout, std::index_sequence<Idx...>) {
@@ -211,11 +243,86 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
   } else {
     return mapping_type(extents_from_view_mapping<extents_type>(view_mapping));
   }
-#ifdef KOKKOS_COMPILER_INTEL
-  __builtin_unreachable();
-#endif
 }
 
+template <size_t ScalarSize>
+struct Padding {
+  static constexpr size_t div =
+      ScalarSize == 0 ? 0 : static_cast<size_t>(MEMORY_ALIGNMENT) / ScalarSize;
+  static constexpr size_t mod =
+      ScalarSize == 0 ? 0 : static_cast<size_t>(MEMORY_ALIGNMENT) % ScalarSize;
+
+  // If memory alignment is a multiple of the trivial scalar size then attempt
+  // to align.
+  static constexpr size_t align  = ScalarSize != 0 && mod == 0 ? div : 0;
+  static constexpr size_t div_ok = (div != 0) ? div : 1;
+
+  KOKKOS_INLINE_FUNCTION
+  static constexpr size_t stride(size_t const N) {
+    return ((align != 0) &&
+            ((static_cast<size_t>(MEMORY_ALIGNMENT_THRESHOLD) * align) < N) &&
+            ((N % div_ok) != 0))
+               ? N + align - (N % div_ok)
+               : N;
+  }
+};
+
+template <class MappingType, size_t ScalarSize, class ViewCtorProperties,
+          class... Sizes>
+KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_sizes(
+    const ViewCtorProperties &, const Sizes... args) {
+  using layout_t = typename MappingType::layout_type;
+  using ext_t    = typename MappingType::extents_type;
+  ext_t ext{args...};
+  constexpr bool padded = ViewCtorProperties::allow_padding;
+  if constexpr (IsLayoutLeftPadded<layout_t>::value && padded &&
+                ext_t::rank() > 1) {
+    return MappingType(ext, Padding<ScalarSize>::stride(ext.extent(0)));
+  } else if constexpr (IsLayoutRightPadded<layout_t>::value && padded &&
+                       ext_t::rank() > 1) {
+    return MappingType(
+        ext, Padding<ScalarSize>::stride(ext.extent(ext_t::rank() - 1)));
+  } else {
+    return MappingType(ext);
+  }
+}
+
+template <class MappingType, size_t ScalarSize, class ViewCtorProperties>
+KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_8sizes(
+    const ViewCtorProperties &arg_prop, [[maybe_unused]] const size_t arg_N0,
+    [[maybe_unused]] const size_t arg_N1, [[maybe_unused]] const size_t arg_N2,
+    [[maybe_unused]] const size_t arg_N3, [[maybe_unused]] const size_t arg_N4,
+    [[maybe_unused]] const size_t arg_N5, [[maybe_unused]] const size_t arg_N6,
+    [[maybe_unused]] const size_t arg_N7) {
+  if constexpr (MappingType::extents_type::rank() == 0) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop);
+  } else if constexpr (MappingType::extents_type::rank() == 1) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop,
+                                                                arg_N0);
+  } else if constexpr (MappingType::extents_type::rank() == 2) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop,
+                                                                arg_N0, arg_N1);
+  } else if constexpr (MappingType::extents_type::rank() == 3) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2);
+  } else if constexpr (MappingType::extents_type::rank() == 4) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3);
+  } else if constexpr (MappingType::extents_type::rank() == 5) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4);
+  } else if constexpr (MappingType::extents_type::rank() == 6) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5);
+  } else if constexpr (MappingType::extents_type::rank() == 7) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6);
+  } else if constexpr (MappingType::extents_type::rank() == 8) {
+    return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
+        arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
+        arg_N7);
+  }
+}
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_LAYOUT_HPP

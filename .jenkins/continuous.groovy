@@ -96,7 +96,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
@@ -271,10 +271,8 @@ pipeline {
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
-                                -DCMAKE_PREFIX_PATH="$ONE_DPL_DIR" \
-                                -DKOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED=0 \
+                                -DCMAKE_CXX_COMPILER=icpx \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -fp-model=precise -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
@@ -282,6 +280,7 @@ pipeline {
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DoneDPL_ROOT=/opt/intel/oneapi/dpl/2022.7 \
                                 -DKokkos_ENABLE_SYCL=ON \
                                 -DKokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
@@ -331,7 +330,7 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
@@ -371,7 +370,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
@@ -462,31 +461,71 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.0.3-Clang-Tidy') {
+                stage('CUDA-11.8-Clang-15') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.kokkosllvmproject'
+                            filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04 --build-arg ADDITIONAL_PACKAGES="clang-15 clang-tidy-15"'
                         }
                     }
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
-                                -DCMAKE_BUILD_TYPE=Release \
-                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version" \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_COMPILER=clang++-15 \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-15;-warnings-as-errors=*" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -Wno-pass-failed" \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_TUNING=ON \
+                                -DKokkos_ARCH_VOLTA70=ON \
+                              .. && \
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                    }
+                    post {
+                        always {
+                            sh 'ccache --show-stats'
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }
+                stage('CUDA-12.5.1-Clang-17-RDC') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.nvcc'
+                            dir 'scripts/docker'
+                            label 'nvidia-docker && volta'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:12.5.1-devel-ubuntu24.04 --build-arg ADDITIONAL_PACKAGES="clang-17 clang-tidy-17"'
+                        }
+                    }
+                    steps {
+                        sh 'ccache --zero-stats'
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+                                -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+                                -DCMAKE_CXX_COMPILER=clang++-17 \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-17;-warnings-as-errors=*" \
+                                -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -Wno-pass-failed" \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ARCH_NATIVE=ON \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_CUDA=ON \
+                                -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \

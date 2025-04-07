@@ -63,8 +63,6 @@ if(NOT DEFINED CMAKE_CXX_EXTENSIONS OR CMAKE_CXX_EXTENSIONS)
   endif()
 endif()
 
-include(FindPackageHandleStandardArgs)
-
 #   This function makes sure that Kokkos was built with the requested backends
 #   and target architectures and generates a fatal error if it was not.
 #
@@ -91,27 +89,23 @@ function(kokkos_check)
   endforeach()
   set(KOKKOS_CHECK_SUCCESS TRUE)
   foreach(arg ${REQUESTED_ARGS})
-    # Define variables named after the required arguments that are provided by
-    # the Kokkos install.
+    set(MISSING_OPTIONS "")
     foreach(requested ${KOKKOS_CHECK_${arg}})
+      set(FOUND_MATCHING_OPTION FALSE)
       foreach(provided ${Kokkos_${arg}})
         string(TOUPPER ${requested} REQUESTED_UC)
         string(TOUPPER ${provided} PROVIDED_UC)
         if(PROVIDED_UC STREQUAL REQUESTED_UC)
-          string(REPLACE ";" " " ${requested} "${KOKKOS_CHECK_${arg}}")
+          set(FOUND_MATCHING_OPTION TRUE)
         endif()
       endforeach()
+      if(NOT FOUND_MATCHING_OPTION)
+        list(APPEND MISSING_OPTIONS ${requested})
+        set(KOKKOS_CHECK_SUCCESS FALSE)
+      endif()
     endforeach()
-    # Somewhat divert the CMake function below from its original purpose and
-    # use it to check that there are variables defined for all required
-    # arguments. Success or failure messages will be displayed but we are
-    # responsible for signaling failure and skip the build system generation.
-    if(KOKKOS_CHECK_RETURN_VALUE)
-      set(Kokkos_${arg}_FIND_QUIETLY ON)
-    endif()
-    find_package_handle_standard_args("Kokkos_${arg}" DEFAULT_MSG ${KOKKOS_CHECK_${arg}})
-    if(NOT Kokkos_${arg}_FOUND)
-      set(KOKKOS_CHECK_SUCCESS FALSE)
+    if(NOT KOKKOS_CHECK_SUCCESS AND NOT KOKKOS_CHECK_RETURN_VALUE)
+      message(STATUS "Could NOT find Kokkos_${arg} (missing: ${MISSING_OPTIONS})")
     endif()
   endforeach()
   if(NOT KOKKOS_CHECK_SUCCESS AND NOT KOKKOS_CHECK_RETURN_VALUE)

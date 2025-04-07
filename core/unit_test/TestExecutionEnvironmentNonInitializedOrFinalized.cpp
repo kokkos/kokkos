@@ -106,38 +106,29 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
       },
       "Kokkos allocation \"v\" is being deallocated after Kokkos::finalize was "
       "called");
-  // NOLINTBEGIN(bugprone-unused-local-non-trivial-variable)
-  [[maybe_unused]] std::string error_constructing_view_with_unitialized_exec =
-      "Constructing View and initializing data with uninitialized execution "
-      "space";
-  [[maybe_unused]] std::string error_constructing_exec_space_instance =
-      std::string("Kokkos::") +
-#ifdef KOKKOS_ENABLE_OPENACC
-      "Experimental::" +
-#endif
-      Kokkos::DefaultExecutionSpace::name() +
-      "::" + Kokkos::DefaultExecutionSpace::name() +
-      " instance constructor : ERROR device not initialized";
-  // NOLINTEND(bugprone-unused-local-non-trivial-variable)
+
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
-  std::string matcher1 = error_constructing_exec_space_instance;
-#else
-  std::string matcher1 = error_constructing_view_with_unitialized_exec;
+  std::string matcher = std::string("Kokkos::") +
+#ifdef KOKKOS_ENABLE_OPENACC
+                        "Experimental::" +
 #endif
-#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
-  std::string matcher2 = error_constructing_exec_space_instance;
+                        Kokkos::DefaultExecutionSpace::name() +
+                        "::" + Kokkos::DefaultExecutionSpace::name() +
+                        " instance constructor : ERROR device not initialized";
 #else
-  std::string matcher2 = error_constructing_view_with_unitialized_exec;
+  std::string matcher =
+      "Constructing View and initializing data with uninitialized execution "
+      "space";
 #endif
-  EXPECT_DEATH({ Kokkos::View<int*> v("v", 0); }, matcher1);
+  EXPECT_DEATH({ Kokkos::View<int*> v("v", 0); }, matcher);
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         Kokkos::finalize();
         Kokkos::View<int*> v("v", 0);
       },
-      matcher2);
+      matcher);
 }
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
