@@ -7,6 +7,6 @@ build_script:
 - cmd: >-
     mkdir build &&
     cd build &&
-    cmake c:\projects\source -DKokkos_ENABLE_TESTS=ON -DCMAKE_CXX_FLAGS="/W0 /EHsc" -DKokkos_ENABLE_DEPRECATED_CODE_4=ON &&
-    cmake --build . --target install &&
-    ctest -C Debug --output-on-failure
+    cmake c:\projects\source -DKokkos_ENABLE_TESTS=ON -DCMAKE_CXX_FLAGS="/O2 /W0 /EHsc" -DKokkos_ENABLE_DEPRECATED_CODE_4=ON &&
+    cmake --build . --target install --config Release --parallel 2 &&
+    ctest -C Release --output-on-failure -j 2
