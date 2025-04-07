@@ -32,17 +32,17 @@ struct TestTeamPolicy {
 
   view_type m_flags;
 
-  // initialie m_flags first with default view so that the class
+  // initialize m_flags first with default view so that the class
   // is fully initialized when *this is used to figure out the length
   // for m_flags
-  TestTeamPolicy(const size_t league_size) : m_flags(view_type()) {
+  TestTeamPolicy(const size_t league_size) : m_flags() {
     m_flags = view_type(
         Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"),
     // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
         Kokkos::TeamPolicy<ScheduleType, ExecSpace>(
             1,
-            std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value
+            std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget>
                 ? 32
                 : 1)
             .team_size_max(*this, Kokkos::ParallelReduceTag()),
