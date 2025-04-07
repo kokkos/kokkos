@@ -241,6 +241,18 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     target_link_options(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS})
   endif()
 
+  #required for check_linker_flag
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.18)
+    #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
+    if(NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper") OR (${KOKKOS_CXX_COMPILER_ID}
+                                                                                        STREQUAL Clang)
+    )
+      kokkos_check_flags(LINKER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
+    endif()
+  endif()
+
+  list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_COMPILE_OPTIONS})
   target_compile_options(
     ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_COMPILE_OPTIONS}>
   )
@@ -262,12 +274,22 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_CUDAFE_OPTIONS}>
     )
+
+    #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
+    #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
+    if(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
+       OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)
+    )
+      list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_CUDA_OPTIONS})
+      list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${NODEDUP_CUDAFE_OPTIONS})
+    endif()
   endif()
 
   if(KOKKOS_ENABLE_HIP)
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_AMDGPU_OPTIONS}>
     )
+    list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_AMDGPU_OPTIONS})
   endif()
 
   list(LENGTH KOKKOS_XCOMPILER_OPTIONS XOPT_LENGTH)
@@ -288,6 +310,12 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     target_compile_options(
       ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${NODEDUP_XCOMPILER_OPTIONS}>
     )
+    list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${NODEDUP_XCOMPILER_OPTIONS})
+  endif()
+
+  #required for check_compiler_flag
+  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
+    kokkos_check_flags(COMPILER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
   endif()
 
   if(KOKKOS_CXX_STANDARD_FEATURE)
