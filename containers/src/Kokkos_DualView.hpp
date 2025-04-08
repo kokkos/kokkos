@@ -359,7 +359,9 @@ class DualView : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::throw_runtime_exception(
           "DualView constructed with incompatible views");
     }
-    if (impl_dualview_is_single_device && (d_view.data() != h_view.data()))
+    if (Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                   typename t_dev::memory_space>::accessible &&
+        (d_view.data() != h_view.data()))
       Kokkos::abort(
           "DualView storing one View constructed from two different Views");
   }
