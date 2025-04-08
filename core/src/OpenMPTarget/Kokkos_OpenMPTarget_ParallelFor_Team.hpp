@@ -141,11 +141,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 // the clang compiler. atomic_compare_exchange can be avoided since the standard
 // guarantees that the number of teams specified in the `num_teams` clause is
 // always less than or equal to the maximum concurrently running teams.
-#if !defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
-    KOKKOS_IMPL_OMPTARGET_PRAGMA(
-        teams thread_limit(team_size) firstprivate(a_functor)
-            num_teams(max_active_teams) is_device_ptr(scratch_ptr)
-                KOKKOS_IMPL_OMPX_DYN_CGROUP_MEM(shmem_size_L0))
 #pragma omp parallel
     {
       if (omp_get_num_teams() > max_active_teams)
@@ -165,23 +160,6 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         a_functor(team);
       }
     }
-#else
-#pragma omp target teams distribute firstprivate(a_functor) \
-    is_device_ptr(scratch_ptr) num_teams(max_active_teams)  \
-    thread_limit(team_size)
-    for (int i = 0; i < league_size; i++) {
-#pragma omp parallel
-      {
-        if (omp_get_num_teams() > max_active_teams)
-          Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
-
-        typename Policy::member_type team(i, league_size, team_size,
-                                          vector_length, scratch_ptr, i,
-                                          shmem_size_L0, shmem_size_L1);
-        a_functor(team);
-      }
-    }
-#endif
   }
 
  public:
