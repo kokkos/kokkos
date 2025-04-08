@@ -5,7 +5,7 @@ stages:
 
 default:
   tags:
-    - perlmutter-login01
+    - perlmutter-login
   before_script:
     - export SOURCE_DIR=$SCRATCH/.nightly/testing/kokkos
     - if [ ! -d $SOURCE_DIR ]; then
@@ -16,7 +16,7 @@ default:
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
     - export SCRIPT_FILE=${SOURCE_DIR}/scripts/CTestRun.cmake
-    - export OMP_NUM_THREADS=32
+    - export OMP_NUM_THREADS=4
     - export OMP_PROC_BIND=spread
     - export OMP_PLACES=cores
 
@@ -62,6 +62,7 @@ A100-OpenMPTarget-clang:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=clang++"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_AMPERE80=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMPTARGET=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS='-Wno-unknown-cuda-version -Wno-pass-failed'"
     - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_BUILD_NAME="NVIDIA-A100-OpenMPTarget-clang/18"
 
 clear-ci-builds:
