@@ -41,10 +41,9 @@ struct TestTeamPolicy {
     // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
         Kokkos::TeamPolicy<ScheduleType, ExecSpace>(
-            1,
-            std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget>
-                ? 32
-                : 1)
+            1, std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget>
+                   ? 32
+                   : 1)
             .team_size_max(*this, Kokkos::ParallelReduceTag()),
 #else
         Kokkos::TeamPolicy<ScheduleType, ExecSpace>(1, 1).team_size_max(
