@@ -38,7 +38,7 @@ jobs:
       security-events: write
     uses: ./.github/workflows/codeql.yml
 
-  windows-cuda:
+  windows:
     needs: [initial-check, clang-format-check, cmake-format-check]
     uses: ./.github/workflows/continuous-integration-windows.yml
 
