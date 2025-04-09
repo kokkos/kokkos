@@ -2352,29 +2352,32 @@ inline void deep_copy(
     constexpr bool ExecCanAccessSrcDst =
         Kokkos::SpaceAccessibility<ExecSpace, dst_memory_space>::accessible &&
         Kokkos::SpaceAccessibility<ExecSpace, src_memory_space>::accessible;
-    constexpr bool DstExecCanAccessSrc =
-        Kokkos::SpaceAccessibility<dst_execution_space,
-                                   src_memory_space>::accessible;
-    constexpr bool SrcExecCanAccessDst =
-        Kokkos::SpaceAccessibility<src_execution_space,
-                                   dst_memory_space>::accessible;
 
     if constexpr (ExecCanAccessSrcDst) {
       Impl::view_copy(exec_space, dst, src);
-    } else if constexpr (DstExecCanAccessSrc || SrcExecCanAccessDst) {
-      using cpy_exec_space =
-          std::conditional_t<DstExecCanAccessSrc, dst_execution_space,
-                             src_execution_space>;
-      exec_space.fence(
-          "Kokkos::deep_copy: view-to-view noncontiguous copy on space, pre "
-          "copy");
-      Impl::view_copy(cpy_exec_space(), dst, src);
-      cpy_exec_space().fence(
-          "Kokkos::deep_copy: view-to-view noncontiguous copy on space, post "
-          "copy");
     } else {
-      Kokkos::Impl::throw_runtime_exception(
-          "deep_copy given views that would require a temporary allocation");
+      constexpr bool DstExecCanAccessSrc =
+          Kokkos::SpaceAccessibility<dst_execution_space,
+                                     src_memory_space>::accessible;
+      constexpr bool SrcExecCanAccessDst =
+          Kokkos::SpaceAccessibility<src_execution_space,
+                                     dst_memory_space>::accessible;
+
+      if constexpr (DstExecCanAccessSrc || SrcExecCanAccessDst) {
+        using cpy_exec_space =
+            std::conditional_t<DstExecCanAccessSrc, dst_execution_space,
+                               src_execution_space>;
+        exec_space.fence(
+            "Kokkos::deep_copy: view-to-view noncontiguous copy on space, pre "
+            "copy");
+        Impl::view_copy(cpy_exec_space(), dst, src);
+        cpy_exec_space().fence(
+            "Kokkos::deep_copy: view-to-view noncontiguous copy on space, post "
+            "copy");
+      } else {
+        Kokkos::Impl::throw_runtime_exception(
+            "deep_copy given views that would require a temporary allocation");
+      }
     }
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {

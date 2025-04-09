@@ -21,7 +21,8 @@
 
 // suppress NVCC warnings with the [[nodiscard]] attribute on overloaded
 // operators implemented as hidden friends
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wattributes"
 #endif
@@ -70,7 +71,8 @@
 #endif
 #endif
 
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
 #pragma GCC diagnostic pop
 #endif
 
