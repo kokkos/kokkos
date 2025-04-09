@@ -120,7 +120,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
 
         const std::size_t launch_range =
             (actual_range + wgroup_size_multiple - 1) / wgroup_size_multiple *
-            static_cast<size_t>(wgroup_size_multiple);
+            wgroup_size_multiple;
         sycl::nd_range<1> range(
             std::min<std::size_t>(launch_range, INT_MAX),
             sycl::ext::oneapi::experimental::auto_range<1>());
