@@ -141,6 +141,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 // the clang compiler. atomic_compare_exchange can be avoided since the standard
 // guarantees that the number of teams specified in the `num_teams` clause is
 // always less than or equal to the maximum concurrently running teams.
+    KOKKOS_IMPL_OMPTARGET_PRAGMA(
+        teams thread_limit(team_size) firstprivate(a_functor)
+            num_teams(max_active_teams) is_device_ptr(scratch_ptr)
+                KOKKOS_IMPL_OMPX_DYN_CGROUP_MEM(shmem_size_L0))
 #pragma omp parallel
     {
       if (omp_get_num_teams() > max_active_teams)

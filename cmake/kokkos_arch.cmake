@@ -130,7 +130,7 @@ foreach(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
   kokkos_arch_option(${ARCH} GPU "AMD GPU ${GPU} ${FLAG}" "KOKKOS_SHOW_HIP_ARCHS")
 endforeach()
 
-if(Kokkos_ENABLE_SYCL OR Kokkos_ENABLE_OPENMPTARGET)
+if(Kokkos_ENABLE_SYCL)
   set(KOKKOS_SHOW_SYCL_ARCHS ON)
 endif()
 
