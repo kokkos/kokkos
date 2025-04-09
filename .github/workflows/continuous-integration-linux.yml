@@ -14,65 +14,94 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
+        arch: ['x64']
         distro: ['fedora:latest', 'ubuntu:latest']
         cxx: ['g++', 'clang++']
         cxx_extra_flags: ['']
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
-        clang-tidy: ['']
+        cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
         stdcxx: [17]
         include:
-          - distro: 'ubuntu:intel'
-            cxx: 'icpc'
-            cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
-            cmake_build_type: 'Release'
-            backend: 'OPENMP'
-            stdcxx: '17'
-          - distro: 'ubuntu:intel'
-            cxx: 'icpc'
-            cxx_extra_flags: '-diag-disable=177,1478,1786,10441'
-            cmake_build_type: 'Debug'
-            backend: 'OPENMP'
-            stdcxx: '17'
-          - distro: 'ubuntu:intel'
+          - arch: 'x64'
+            distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed -fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             cmake_build_type: 'Release'
             backend: 'OPENMP'
             stdcxx: '17'
-          - distro: 'ubuntu:intel'
+          - arch: 'x64'
+            distro: 'ubuntu:intel'
             cxx: 'icpx'
             cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
             cmake_build_type: 'Debug'
             backend: 'OPENMP'
             stdcxx: '20'
-          - distro: 'ubuntu:latest'
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
             cxx: 'clang++'
             cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
-            clang-tidy: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
             stdcxx: '23'
-          - distro: 'ubuntu:latest'
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
             cxx: 'clang++'
             cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'SERIAL'
             stdcxx: '20'
-          - distro: 'ubuntu:latest'
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             stdcxx: '23'
-    runs-on: ubuntu-latest
+          - arch: 'arm64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'OPENMP'
+            stdcxx: '17'
+            cmake_extra_opts: '-DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'arm64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            stdcxx: '17'
+            cmake_extra_opts: '-DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'arm64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'Release'
+            backend: 'SERIAL'
+            stdcxx: '17'
+            cmake_extra_opts: '-DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'x86'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'OPENMP'
+            stdcxx: '17'
+            cxx_extra_flags: '-m32'
+            cmake_extra_opts: '-DKokkos_ENABLE_HWLOC=OFF'
+          - arch: 'x64'
+            distro: 'fedora:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'HPX'
+            stdcxx: '17'
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
       - name: Checkout desul
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           repository: desul/desul
           ref: 22931326247c9333cc909628004d75ee5de99fa2
@@ -87,26 +116,30 @@ jobs:
           cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
           sudo cmake --build . --target install --parallel 2
       - name: Checkout code
-        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
-      - uses: actions/cache@6849a6489940f00c2f30c0fb92c6274307ccb58a # v4.1.2
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
         with:
           path: ~/.cache/ccache
-          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}-${{ github.sha }}
-          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.cmake_build_type }}-${{ matrix.openmp }}-${{ github.ref }}
+          key: kokkos-${{ matrix.arch }}-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.stdcxx }}-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-${{ matrix.arch }}${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.stdcxx }}-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}
       - name: maybe_use_flang_new
-        if: ${{ matrix.cxx == 'clang++' && startsWith(matrix.distro,'fedora:') }}
-        run: echo "FC=flang-new" >> $GITHUB_ENV
-      - name: maybe_use_external_gtest
-        if: ${{ matrix.distro == 'ubuntu:latest' }}
-        run: sudo apt-get update && sudo apt-get install -y libgtest-dev
-      - name: maybe_install_clang_tidy
-        if: ${{ matrix.clang-tidy != '' }}
-        run: sudo apt-get update && sudo apt-get install -y clang-tidy
+        if: ${{ matrix.cxx == 'clang++' }}
+        run: |
+          if type flang; then
+            echo "flang found"
+            echo "FC=flang" >> $GITHUB_ENV
+          elif type flang-new; then
+            echo "flang-new found"
+            echo "FC=flang-new" >> $GITHUB_ENV
+          fi
+# FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
+      - name: maybe_set_hpx_vars
+        if: ${{ matrix.backend == 'HPX' }}
+        run: echo "HPX_HANDLE_FAILED_NEW=0" >> $GITHUB_ENV
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
             -DCMAKE_INSTALL_PREFIX=/usr \
-            ${{ matrix.clang-tidy }} \
             -DBUILD_SHARED_LIBS=ON \
             -Ddesul_ROOT=/usr/desul-install/ \
             -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
@@ -122,6 +155,7 @@ jobs:
             -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            ${{ matrix.cmake_extra_opts }} \
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
       - name: Build
         run: |
@@ -132,7 +166,7 @@ jobs:
         working-directory: builddir
         run: ctest --output-on-failure
       - name: Test linking against build dir
-        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DKokkos_ROOT=../../builddir
@@ -143,7 +177,7 @@ jobs:
       - name: Install
         run: sudo cmake --build builddir --target install
       - name: Test install
-        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
