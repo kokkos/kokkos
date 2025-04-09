@@ -44,6 +44,7 @@
 namespace Kokkos {
 namespace Impl {
 
+// NOLINTBEGIN(bugprone-non-zero-enum-to-bool-conversion)
 template <class T>
 struct is_integral_extent_type {
   enum : bool { value = std::is_same_v<T, Kokkos::ALL_t> ? 1 : 0 };
@@ -163,6 +164,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride, Kokkos::LayoutStride,
                                    SubViewArgs...> {
   enum : bool { value = true };
 };
+// NOLINTEND(bugprone-non-zero-enum-to-bool-conversion)
 
 template <unsigned DomainRank, unsigned RangeRank>
 struct SubviewExtents {
