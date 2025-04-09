@@ -136,11 +136,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;
 
-// Performing our own scheduling of teams to avoid separation of code between
-// teams-distribute and parallel. Gave a 2x performance boost in test cases with
-// the clang compiler. atomic_compare_exchange can be avoided since the standard
-// guarantees that the number of teams specified in the `num_teams` clause is
-// always less than or equal to the maximum concurrently running teams.
+    // Performing our own scheduling of teams to avoid separation of code
+    // between teams-distribute and parallel. Gave a 2x performance boost in
+    // test cases with the clang compiler. atomic_compare_exchange can be
+    // avoided since the standard guarantees that the number of teams specified
+    // in the `num_teams` clause is always less than or equal to the maximum
+    // concurrently running teams.
     KOKKOS_IMPL_OMPTARGET_PRAGMA(
         teams thread_limit(team_size) firstprivate(a_functor)
             num_teams(max_active_teams) is_device_ptr(scratch_ptr)
