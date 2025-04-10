@@ -979,10 +979,10 @@ endif()
 if(KOKKOS_ENABLE_OPENMPTARGET)
   set(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
   if(CLANG_CUDA_ARCH)
-      string(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${CLANG_CUDA_ARCH})
-      compiler_specific_flags(
-        Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64 NVHPC -gpu=${NVHPC_CUDA_ARCH}
-      )
+    string(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${CLANG_CUDA_ARCH})
+    compiler_specific_flags(
+      Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64 NVHPC -gpu=${NVHPC_CUDA_ARCH}
+    )
   endif()
   set(CLANG_AMDGPU_ARCH ${KOKKOS_AMDGPU_ARCH_FLAG})
   if(CLANG_AMDGPU_ARCH)
