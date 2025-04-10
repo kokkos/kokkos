@@ -18,12 +18,20 @@
 #include <Kokkos_Core.hpp>
 
 #include <Benchmark_Context.hpp>
+#if defined(KOKKOS_IMPL_SIMD_HOST_PERFTEST)
 #include <PerfTest_Host.hpp>
+#else
+#include <PerfTest_Device.hpp>
+#endif
 
 int main(int argc, char** argv) {
   Kokkos::initialize(argc, argv);
 
+#if defined(KOKKOS_IMPL_SIMD_HOST_PERFTEST)
   register_host_benchmarks();
+#else
+  register_device_benchmarks();
+#endif
 
   benchmark::Initialize(&argc, argv);
   benchmark::SetDefaultTimeUnit(benchmark::kMillisecond);
