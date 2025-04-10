@@ -1,5 +1,7 @@
 [![Kokkos](https://avatars2.githubusercontent.com/u/10199860?s=200&v=4)](https://kokkos.org)
 
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9344/badge)](https://www.bestpractices.dev/projects/9344)
+
 # Kokkos: Core Libraries
 
 Kokkos Core implements a programming model in C++ for writing performance portable
