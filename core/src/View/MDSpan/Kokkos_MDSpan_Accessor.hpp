@@ -69,8 +69,14 @@ struct SpaceAwareAccessor {
   explicit operator NestedAccessor() const { return nested_acc; }
 
   KOKKOS_FUNCTION
-  constexpr reference access(const data_handle_type& p,
-                             size_t i) const noexcept {
+  constexpr reference access(
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const noexcept {
     Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(
         "Kokkos::SpaceAwareAccessor ERROR: attempt to access inaccessible "
         "memory space");
@@ -79,7 +85,13 @@ struct SpaceAwareAccessor {
 
   KOKKOS_FUNCTION
   constexpr typename offset_policy::data_handle_type offset(
-      data_handle_type p, size_t i) const noexcept {
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const noexcept {
     return nested_acc.offset(p, i);
   }
 
@@ -138,14 +150,26 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   explicit operator NestedAccessor() const { return nested_acc; }
 
   KOKKOS_FUNCTION
-  constexpr reference access(const data_handle_type& p,
-                             size_t i) const noexcept {
+  constexpr reference access(
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const noexcept {
     return nested_acc.access(p, i);
   }
 
   KOKKOS_FUNCTION
   constexpr typename offset_policy::data_handle_type offset(
-      data_handle_type p, size_t i) const noexcept {
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const noexcept {
     return nested_acc.offset(p, i);
   }
 
@@ -204,12 +228,26 @@ struct AtomicAccessorRelaxed {
   }
 
   KOKKOS_FUNCTION
-  reference access(const data_handle_type& p, size_t i) const noexcept {
+  reference access(
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const noexcept {
     return reference(p[i]);
   }
 
   KOKKOS_FUNCTION
-  data_handle_type offset(data_handle_type p, size_t i) const noexcept {
+  data_handle_type offset(
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const noexcept {
     return p + i;
   }
 };
@@ -384,12 +422,26 @@ class ReferenceCountedAccessor {
   }
 
   KOKKOS_FUNCTION
-  constexpr reference access(const data_handle_type& p, size_t i) const {
+  constexpr reference access(
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const {
     return m_nested_acc.access(p.get(), i);
   }
 
   KOKKOS_FUNCTION
-  constexpr data_handle_type offset(data_handle_type p, size_t i) const {
+  constexpr data_handle_type offset(
+#ifndef KOKKOS_ENABLE_OPENACC
+      const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
+      size_t i) const {
     return data_handle_type(p, m_nested_acc.offset(p.get(), i));
   }
 
