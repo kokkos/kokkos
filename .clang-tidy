@@ -12,7 +12,6 @@ Checks: >
   -bugprone-signed-char-misuse,
   -bugprone-suspicious-include,
   -bugprone-suspicious-memory-comparison,
-  -bugprone-unhandled-exception-at-new,
   cppcoreguidelines-pro-type-cstyle-cast,
   modernize-type-traits,
   modernize-use-nullptr,
