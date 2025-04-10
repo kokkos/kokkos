@@ -19,6 +19,7 @@
 
 #include <benchmark/benchmark.h>
 #include <Kokkos_SIMD.hpp>
+#include <cstdlib>
 
 #include "Common.hpp"
 #include "PerfTest_Operators.hpp"
@@ -133,15 +134,15 @@ void host_bench_reduction_op(benchmark::State& state) {
   Args<T, ExecSpace> args(BENCH_SIZE);
 
   View<mask_type*, ExecSpace> masks("masks", BENCH_SIZE / width);
-  Kokkos::Random_XorShift64_Pool<ExecSpace> random_pool(58051);
+  std::srand(58051);
 
   for (std::size_t i = 0; i < masks.size(); i++) {
-    masks(i) = mask_type(KOKKOS_LAMBDA(std::size_t) {
-      auto generator = random_pool.get_state();
-      const bool val = generator.rand() % 2 == 0;
-      random_pool.free_state(generator);
-      return val;
-    });
+    if constexpr (std::is_same_v<RealAbi,
+                                 Kokkos::Experimental::simd_abi::scalar>) {
+      masks(i) = mask_type(std::rand() % 2 == 0);
+    } else {
+      masks(i) = mask_type([=](std::size_t) { return std::rand() % 2 == 0; });
+    }
   }
 
   View<typename simd_type::value_type*, ExecSpace> res("res",
