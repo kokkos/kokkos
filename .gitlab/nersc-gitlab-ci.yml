@@ -68,4 +68,4 @@ A100-OpenMPTarget-clang:
 clear-ci-builds:
   stage: clean_up
   script:
-    - rm -rf ${SOURCE_DIR}/build_*
+    - rm -rf ${SOURCE_DIR}
