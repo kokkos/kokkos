@@ -589,13 +589,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
         impl_report_host_sync();
       }
     }
-    if constexpr (std::is_same_v<typename t_host::memory_space,
-                                 typename t_dev::memory_space>) {
-      typename t_dev::execution_space().fence(
-          "Kokkos::DualView<>::sync: fence after syncing DualView");
-      typename t_host::execution_space().fence(
-          "Kokkos::DualView<>::sync: fence after syncing DualView");
-    }
   }
 
   template <class Device>
