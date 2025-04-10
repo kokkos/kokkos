@@ -28,20 +28,21 @@ else()
   target_compile_options(benchmark_main PRIVATE -w)
 endif()
 
-# We cannot use the kokkos_add_benchmark function defined in core/perf_test/CMakeLists.txt
-# because we need to modify the main function in order to register the benchmarks at runtime.
-foreach(BENCH_TYPE Host Device)
-  kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
-  kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
-  kokkos_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/include)
+kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/../../core/perf_test)
 
+# We cannot use the kokkos_add_benchmark function defined in core/perf_test/CMakeLists.txt
+# because we need our own BenchmarMain.cpp file in order to register the benchmarks at runtime.
+foreach(BENCH_TYPE Host Device)
   set(BENCHMARK_NAME Kokkos_Simd${BENCH_TYPE}PerformanceTest)
-  set(BENCHMARK_SOURCES)
-  list(APPEND BENCHMARK_SOURCES BenchmarkMain${BENCH_TYPE}.cpp Benchmark_Context.cpp)
+  set(BENCHMARK_SOURCES BenchmarkMain.cpp ../../core/perf_test/Benchmark_Context.cpp)
 
   add_executable(${BENCHMARK_NAME} ${BENCHMARK_SOURCES})
   target_link_libraries(${BENCHMARK_NAME} PRIVATE benchmark::benchmark Kokkos::kokkos impl_git_version)
   target_include_directories(${BENCHMARK_NAME} SYSTEM PRIVATE ${benchmark_SOURCE_DIR}/include)
+  string(TOUPPER "KOKKOS_IMPL_SIMD_${BENCH_TYPE}_PERFTEST" BENCH_TYPE_MACRO)
+  target_compile_definitions(${BENCHMARK_NAME} PRIVATE ${BENCH_TYPE_MACRO})
 
   # FIXME: This alone will not work. It might need an architecture and standard which need to be defined on target level.
   # It will potentially go away with #7582.
