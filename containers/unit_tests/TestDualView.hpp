@@ -24,6 +24,8 @@
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_DualView.hpp>
 
+#include <../../core/unit_test/tools/include/ToolTestingUtilities.hpp>
+
 namespace Test {
 
 namespace Impl {
@@ -769,6 +771,74 @@ TEST(TEST_CATEGORY, dualview_default_constructed) {
   ASSERT_FALSE(dv.need_sync_host());
   ASSERT_FALSE(dv.need_sync_device());
   dv.sync_device();
+}
+
+TEST(TEST_CATEGORY, dualview_sync_fences) {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+  Kokkos::DualView<int, TEST_EXECSPACE> dv("dv");
+  using device_type = decltype(dv)::t_dev;
+  using host_type   = decltype(dv)::t_host;
+
+  {
+    bool first_fence = validate_existence(
+        [&]() {
+          dv.modify<device_type>();
+          dv.sync<host_type>();
+        },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+
+    bool no_second_fence = validate_absence(
+        [&]() { dv.sync<host_type>(); },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+    ASSERT_TRUE(first_fence);
+    ASSERT_TRUE(no_second_fence);
+  }
+
+  {
+    bool first_fence = validate_existence(
+        [&]() {
+          dv.modify<host_type>();
+          dv.sync<device_type>();
+        },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+
+    bool no_second_fence = validate_absence(
+        [&]() { dv.sync<device_type>(); },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+    ASSERT_TRUE(first_fence);
+    ASSERT_TRUE(no_second_fence);
+  }
+
+  {
+    bool first_fence = validate_existence(
+        [&]() {
+          dv.modify_device();
+          dv.sync_host();
+        },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+
+    bool no_second_fence = validate_absence(
+        [&]() { dv.sync_host(); },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+    ASSERT_TRUE(first_fence);
+    ASSERT_TRUE(no_second_fence);
+  }
+
+  {
+    bool first_fence = validate_existence(
+        [&]() {
+          dv.modify_host();
+          dv.sync_device();
+        },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+
+    bool no_second_fence = validate_absence(
+        [&]() { dv.sync_device(); },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; });
+    ASSERT_TRUE(first_fence);
+    ASSERT_TRUE(no_second_fence);
+  }
 }
 }  // anonymous namespace
 }  // namespace Test
