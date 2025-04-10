@@ -841,6 +841,7 @@ bool has_all_zero_bits(const T& value) {
     return value == T();
   }
 
+  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
   if constexpr (std::is_standard_layout_v<T> &&
                 std::has_unique_object_representations_v<T>) {
     constexpr std::byte all_zeroes[sizeof(T)] = {};
@@ -848,6 +849,7 @@ bool has_all_zero_bits(const T& value) {
   }
 
   return false;
+  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
 }
 
 template <typename ExecutionSpace, class DT, class... DP>
