@@ -864,13 +864,8 @@ contiguous_fill_or_memset(
       && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
   )
-    // FIXME intel/19 icpc fails to deduce template parameter here,
-    // resulting in compilation errors; explicitly passing the template
-    // parameter to ZeroMemset helps workaround the issue.
-    // See https://github.com/kokkos/kokkos/issues/7273.
-    ZeroMemset<ExecutionSpace>(
-        exec_space, dst.data(),
-        dst.size() * sizeof(typename ViewTraits<DT, DP...>::value_type));
+    ZeroMemset(exec_space, dst.data(),
+               dst.size() * sizeof(typename ViewTraits<DT, DP...>::value_type));
   else
     contiguous_fill(exec_space, dst, value);
 }
