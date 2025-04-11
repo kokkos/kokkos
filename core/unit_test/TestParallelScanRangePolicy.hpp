@@ -75,7 +75,7 @@ struct TestParallelScanRangePolicy {
         ASSERT_EQ((static_cast<ValueType>(i) * (i - 1)) / 2, prefix_h(i));
 
         // Check postfix sum
-        ASSERT_EQ((static_cast<ValueType>(i) * (i + 1)) / 2, prefix_h(i));
+        ASSERT_EQ((static_cast<ValueType>(i) * (i + 1)) / 2, postfix_h(i));
       }
 
       // Reset results
