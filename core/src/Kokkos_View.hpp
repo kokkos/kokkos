@@ -264,14 +264,38 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     // base class doesn't have constraint
     // FIXME: Eventually we need to deprecate this behavior and just use
     // BasicView implementation
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    using l_t = typename mdspan_type::layout_type;
+    if (r >= rank()) {
+      if constexpr (std::is_same_v<l_t, layout_right> ||
+                    Impl::IsLayoutRightPadded<l_t>::value) {
+        return 1;
+      }
+      if constexpr (std::is_same_v<l_t, layout_left> ||
+                    Impl::IsLayoutLeftPadded<l_t>::value) {
+        return stride(rank() - 1) * extent(rank() - 1);
+      }
+      if constexpr (std::is_same_v<l_t, layout_stride>) {
+        return 0;
+      }
+    }
+#endif
     return base_t::stride(r);
   }
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride([[maybe_unused]] iType* const s) const {
     if constexpr (rank() > 0) {
-      for (size_t r = 0; r < rank(); r++) s[r] = base_t::stride(r);
-      s[rank()] = s[rank() - 1] * base_t::extent(rank() - 1);
+      size_t max_stride     = 0;
+      size_t max_stride_idx = 0;
+      for (size_t r = 0; r < rank(); r++) {
+        s[r] = base_t::stride(r);
+        if (s[r] > max_stride) {
+          max_stride     = s[r];
+          max_stride_idx = r;
+        }
+      }
+      s[rank()] = max_stride * base_t::extent(max_stride_idx);
     }
   }
 
