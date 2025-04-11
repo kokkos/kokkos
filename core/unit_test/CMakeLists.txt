@@ -744,6 +744,7 @@ endif()
 if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
     CoreUnitTest_Cuda1 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES1} cuda/TestCuda_ReducerViewSizeLimit.cpp
+    cuda/TestCuda_UnifiedMemory.cpp
   )
 
   kokkos_add_executable_and_test(CoreUnitTest_Cuda2 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES2})
@@ -805,7 +806,7 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamScratchStreams.cpp
     hip/TestHIP_AsyncLauncher.cpp
     hip/TestHIP_BlocksizeDeduction.cpp
-    hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
+    hip/TestHIP_UnifiedMemory.cpp
   )
 
   set(file ${CMAKE_CURRENT_BINARY_DIR}/hip/TestHIP_GraphAtomicLocks.cpp)
