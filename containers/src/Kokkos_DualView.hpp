@@ -338,22 +338,16 @@ class DualView : public ViewTraits<DataType, Properties...> {
         d_view(d_view_),
         h_view(h_view_) {
     if (int(d_view.rank) != int(h_view.rank) ||
-        d_view.extent(0) != h_view.extent(0) ||
-        d_view.extent(1) != h_view.extent(1) ||
-        d_view.extent(2) != h_view.extent(2) ||
-        d_view.extent(3) != h_view.extent(3) ||
-        d_view.extent(4) != h_view.extent(4) ||
-        d_view.extent(5) != h_view.extent(5) ||
-        d_view.extent(6) != h_view.extent(6) ||
-        d_view.extent(7) != h_view.extent(7) ||
-        d_view.stride_0() != h_view.stride_0() ||
-        d_view.stride_1() != h_view.stride_1() ||
-        d_view.stride_2() != h_view.stride_2() ||
-        d_view.stride_3() != h_view.stride_3() ||
-        d_view.stride_4() != h_view.stride_4() ||
-        d_view.stride_5() != h_view.stride_5() ||
-        d_view.stride_6() != h_view.stride_6() ||
-        d_view.stride_7() != h_view.stride_7() ||
+        [&]() {
+          // This has a false positive in clang-tidy
+          // NOLINTNEXTLINE(bugprone-inc-dec-in-conditions)
+          for (size_t r = 0; r < d_view.rank(); ++r) {
+            if (d_view.extent(r) != h_view.extent(r) ||
+                d_view.stride(r) != h_view.stride(r))
+              return true;
+          }
+          return false;
+        }() ||
         d_view.span() != h_view.span()) {
       Kokkos::Impl::throw_runtime_exception(
           "DualView constructed with incompatible views");
