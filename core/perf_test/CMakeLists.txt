@@ -36,8 +36,8 @@ else()
   FetchContent_Declare(
     googlebenchmark
     DOWNLOAD_EXTRACT_TIMESTAMP FALSE
-    URL https://github.com/google/benchmark/archive/refs/tags/v1.7.1.tar.gz
-    URL_HASH MD5=0459a6c530df9851bee6504c3e37c2e7
+    URL https://github.com/google/benchmark/archive/refs/tags/v1.9.1.tar.gz
+    URL_HASH MD5=92000ef8b4a7b1e9229972f8943070a7
   )
   FetchContent_MakeAvailable(googlebenchmark)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
