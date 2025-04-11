@@ -405,15 +405,15 @@ T PlusEqualAtomicViewCheck(const int64_t input_length) {
   T result[2];
 
   if (N % 2 == 0) {
-    const int64_t half_sum_end = (N / 2) - 1;
-    const int64_t full_sum_end = N - 1;
-    result[0] = half_sum_end * (half_sum_end + 1) / 2;  // Even sum.
+    const T half_sum_end = static_cast<T>(N) / 2 - 1;
+    const T full_sum_end = static_cast<T>(N) - 1;
+    result[0]            = half_sum_end * (half_sum_end + 1) / 2;  // Even sum.
     result[1] =
         (full_sum_end * (full_sum_end + 1) / 2) - result[0];  // Odd sum.
   } else {
-    const int64_t half_sum_end = (T)(N / 2);
-    const int64_t full_sum_end = N - 2;
-    result[0] = half_sum_end * (half_sum_end - 1) / 2;  // Even sum.
+    const T half_sum_end = static_cast<T>(N) / 2;
+    const T full_sum_end = static_cast<T>(N) - 2;
+    result[0]            = half_sum_end * (half_sum_end - 1) / 2;  // Even sum.
     result[1] =
         (full_sum_end * (full_sum_end - 1) / 2) - result[0];  // Odd sum.
   }
@@ -494,14 +494,14 @@ T MinusEqualAtomicViewCheck(const int64_t input_length) {
   T result[2];
 
   if (N % 2 == 0) {
-    const int64_t half_sum_end = (N / 2) - 1;
-    const int64_t full_sum_end = N - 1;
+    const T half_sum_end = static_cast<T>(N) / 2 - 1;
+    const T full_sum_end = static_cast<T>(N) - 1;
     result[0] = -1 * (half_sum_end * (half_sum_end + 1) / 2);  // Even sum.
     result[1] =
         -1 * ((full_sum_end * (full_sum_end + 1) / 2) + result[0]);  // Odd sum.
   } else {
-    const int64_t half_sum_end = (int64_t)(N / 2);
-    const int64_t full_sum_end = N - 2;
+    const T half_sum_end = static_cast<T>(N) / 2;
+    const T full_sum_end = static_cast<T>(N) - 2;
     result[0] = -1 * (half_sum_end * (half_sum_end - 1) / 2);  // Even sum.
     result[1] =
         -1 * ((full_sum_end * (full_sum_end - 1) / 2) + result[0]);  // Odd sum.
