@@ -104,6 +104,13 @@ void test_left_stride(Extents... extents) {
     ASSERT_EQ(all_strides[i], expected_stride);
     expected_stride *= view.extent(i);
   }
+  ASSERT_EQ(all_strides[view_type::rank], expected_stride);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  for (size_t ri = view_type::rank; ri < size_t(8); ++ri) {
+    ASSERT_EQ(view.stride(ri), view.stride(view_type::rank() - 1) *
+                                   view.extent(view_type::rank() - 1));
+  }
+#endif
 }
 
 template <typename DataType, typename... Extents>
@@ -120,12 +127,51 @@ void test_right_stride(Extents... extents) {
     ASSERT_EQ(all_strides[i], expected_stride);
     expected_stride *= view.extent(i);
   }
+  ASSERT_EQ(all_strides[view_type::rank], expected_stride);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  for (size_t ri = view_type::rank; ri < size_t(8); ++ri) {
+    ASSERT_EQ(view.stride(ri), size_t(1));
+  }
+#endif
+}
+
+template <typename DataType, typename... Extents>
+void test_stride_stride(Extents... extents) {
+  using view_type_right =
+      Kokkos::View<DataType, Kokkos::LayoutRight, Kokkos::HostSpace>;
+  view_type_right view_right("view", extents...);
+
+  using view_type =
+      Kokkos::View<DataType, Kokkos::LayoutStride, Kokkos::HostSpace>;
+  view_type view(view_right);
+
+  size_t all_strides[view_type_right::rank() + 1];
+  view.stride(all_strides);
+
+  size_t max_stride     = 0;
+  size_t max_stride_idx = 0;
+  for (size_t i = 0; i < view_type::rank; ++i) {
+    ASSERT_EQ(view.stride(i), view_right.stride(i));
+    ASSERT_EQ(all_strides[i], view_right.stride(i));
+    if (view.stride(i) > max_stride) {
+      max_stride     = view.stride(i);
+      max_stride_idx = i;
+    }
+  }
+  ASSERT_EQ(all_strides[view_type::rank],
+            max_stride * view.extent(max_stride_idx));
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  for (size_t ri = view_type::rank; ri < size_t(8); ++ri) {
+    ASSERT_EQ(view.stride(ri), size_t(0));
+  }
+#endif
 }
 
 template <typename DataType, typename... Extents>
 void test_stride(Extents... extents) {
   test_right_stride<DataType>(extents...);
   test_left_stride<DataType>(extents...);
+  test_stride_stride<DataType>(extents...);
 }
 
 TEST(TEST_CATEGORY, view_stride_method) {
