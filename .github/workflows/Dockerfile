@@ -4,6 +4,8 @@ CMD /bin/bash
 WORKDIR /home/kokkos/src/
 COPY kokkos/ /home/kokkos/src/kokkos
 RUN sudo chown -R kokkos:kokkos kokkos
+ENV OMP_PROC_BIND=spread
+ENV OMP_PLACES=threads
 RUN cmake -S kokkos -B kokkos/build \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_INSTALL_PREFIX=/usr \
