@@ -755,6 +755,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
         return true;
       }
     }
+    if ((dev == -1) && (modified_flags(0) || modified_flags(1))) return true;
     return false;
   }
 
