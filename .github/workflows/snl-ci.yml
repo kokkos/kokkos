@@ -18,6 +18,10 @@ jobs:
   CUDA_12_2_CPP20:
     name: SNL_CUDA_NVCC_12_2_CPP20
     runs-on: [snl-kk-env-cuda-12.2.0-gcc-11.3.0-latest]
+
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
     
     steps:
       - name: checkout_kokkos
@@ -38,6 +42,7 @@ jobs:
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
@@ -57,6 +62,10 @@ jobs:
     name: SNL_HIP_ROCM_5_6_1
     runs-on: [snl-kk-env-openblas-0.3.23-hip-5.6.1-latest]
 
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
+
     steps:
       - name: checkout_kokkos
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -75,6 +84,7 @@ jobs:
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
@@ -92,6 +102,10 @@ jobs:
   INTEL_2024_2_1_SPR:
     name: SNL_OPENMP_SERIAL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-spr]
+
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -111,6 +125,7 @@ jobs:
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ARCH_SPR=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
@@ -128,6 +143,10 @@ jobs:
   INTEL_2024_2_1_PVC:
     name: SNL_SYCL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
+
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -147,6 +166,7 @@ jobs:
             -DKokkos_ENABLE_SYCL=ON \
             -DKokkos_ARCH_INTEL_PVC=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
