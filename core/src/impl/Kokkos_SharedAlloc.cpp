@@ -204,20 +204,6 @@ void SharedAllocationRecord<void, void>::increment(
 
   if (old_count < 0) {  // Error
     Kokkos::abort("Kokkos::Impl::SharedAllocationRecord failed increment");
-  } else {
-    if (is_finalized()) {
-      std::stringstream ss;
-      ss << "Kokkos allocation \"";
-      ss << arg_record->get_label();
-      ss << "\" is being allocated after Kokkos::finalize was called\n";
-      Kokkos::abort(ss.str().c_str());
-    } else if (!is_initialized()) {
-      std::stringstream ss;
-      ss << "Kokkos allocation \"";
-      ss << arg_record->get_label();
-      ss << "\" is being allocated before Kokkos::initialize was called\n";
-      Kokkos::abort(ss.str().c_str());
-    }
   }
 }
 
