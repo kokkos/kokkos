@@ -583,23 +583,18 @@ class DualView : public ViewTraits<DataType, Properties...> {
         impl_report_host_sync();
       }
     }
-    if constexpr (std::is_same_v<typename t_host::memory_space,
-                                 typename t_dev::memory_space>) {
-      typename t_dev::execution_space().fence(
-          "Kokkos::DualView<>::sync: fence after syncing DualView");
-      typename t_host::execution_space().fence(
-          "Kokkos::DualView<>::sync: fence after syncing DualView");
-    }
   }
 
   template <class Device>
   void sync() {
     if constexpr (impl_dualview_is_single_device) {
-      // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
-      // Kokkos::fence(
-      //    "Kokkos::DualView: fence for sync with host-accessible memory
-      //    space");
-      return;
+      if (modified_flags.data() && (modified_flags(0) || modified_flags(1))) {
+        Kokkos::fence(
+            "Kokkos::DualView: fence for sync with host-accessible memory "
+            "space");
+        modified_flags(0) = 0;
+        modified_flags(1) = 0;
+      }
     } else {
       sync_impl<Device>(
           typename std::is_same<typename traits::data_type,
@@ -676,11 +671,13 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
   void sync_host() {
     if constexpr (impl_dualview_is_single_device) {
-      // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
-      // Kokkos::fence(
-      //         "Kokkos::DualView: fence for sync_host with host-accessible
-      //         memory " "space");
-      return;
+      if (modified_flags.data() && (modified_flags(0) || modified_flags(1))) {
+        Kokkos::fence(
+            "Kokkos::DualView: fence for sync with host-accessible memory "
+            "space");
+        modified_flags(0) = 0;
+        modified_flags(1) = 0;
+      }
     } else
       sync_host_impl();
   }
@@ -719,11 +716,13 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
   void sync_device() {
     if constexpr (impl_dualview_is_single_device) {
-      // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
-      // Kokkos::fence(
-      //          "Kokkos::DualView: fence for sync_device with host-accessible
-      //          memory " "space");
-      return;
+      if (modified_flags.data() && (modified_flags(0) || modified_flags(1))) {
+        Kokkos::fence(
+            "Kokkos::DualView: fence for sync with host-accessible memory "
+            "space");
+        modified_flags(0) = 0;
+        modified_flags(1) = 0;
+      }
     } else
       sync_device_impl();
   }
@@ -782,11 +781,16 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// data as modified.
   template <class Device>
   void modify() {
+    if (modified_flags.data() == nullptr) return;
+
     if constexpr (impl_dualview_is_single_device) {
+      // We can't distinguish so mark both as modified
+      ++modified_flags(0);
+      impl_report_host_modification();
+      ++modified_flags(1);
+      impl_report_device_modification();
       return;
     } else {
-      if (modified_flags.data() == nullptr) return;
-
       int dev = get_device_side<Device>();
 
       if (dev == 1) {  // if Device is the same as DualView's device type
@@ -820,50 +824,48 @@ class DualView : public ViewTraits<DataType, Properties...> {
   }
 
   inline void modify_host() {
-    if constexpr (impl_dualview_is_single_device) {
-      return;
-    } else {
-      if (modified_flags.data() != nullptr) {
-        modified_flags(0) =
-            (modified_flags(1) > modified_flags(0) ? modified_flags(1)
-                                                   : modified_flags(0)) +
-            1;
-        impl_report_host_modification();
+    if (modified_flags.data() == nullptr) return;
+
+    modified_flags(0) =
+        (modified_flags(1) > modified_flags(0) ? modified_flags(1)
+                                               : modified_flags(0)) +
+        1;
+    impl_report_host_modification();
+
+    if constexpr (!impl_dualview_is_single_device) {
 #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
-        if (modified_flags(0) && modified_flags(1)) {
-          std::string msg = "Kokkos::DualView::modify_host ERROR: ";
-          msg += "Concurrent modification of host and device views ";
-          msg += "in DualView \"";
-          msg += d_view.label();
-          msg += "\"\n";
-          Kokkos::abort(msg.c_str());
-        }
-#endif
+      if (modified_flags(0) && modified_flags(1)) {
+        std::string msg = "Kokkos::DualView::modify_host ERROR: ";
+        msg += "Concurrent modification of host and device views ";
+        msg += "in DualView \"";
+        msg += d_view.label();
+        msg += "\"\n";
+        Kokkos::abort(msg.c_str());
       }
+#endif
     }
   }
 
   inline void modify_device() {
-    if constexpr (impl_dualview_is_single_device) {
-      return;
-    } else {
-      if (modified_flags.data() != nullptr) {
-        modified_flags(1) =
-            (modified_flags(1) > modified_flags(0) ? modified_flags(1)
-                                                   : modified_flags(0)) +
-            1;
-        impl_report_device_modification();
+    if (modified_flags.data() == nullptr) return;
+
+    modified_flags(1) =
+        (modified_flags(1) > modified_flags(0) ? modified_flags(1)
+                                               : modified_flags(0)) +
+        1;
+    impl_report_device_modification();
+
+    if constexpr (!impl_dualview_is_single_device) {
 #ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
-        if (modified_flags(0) && modified_flags(1)) {
-          std::string msg = "Kokkos::DualView::modify_device ERROR: ";
-          msg += "Concurrent modification of host and device views ";
-          msg += "in DualView \"";
-          msg += d_view.label();
-          msg += "\"\n";
-          Kokkos::abort(msg.c_str());
-        }
-#endif
+      if (modified_flags(0) && modified_flags(1)) {
+        std::string msg = "Kokkos::DualView::modify_device ERROR: ";
+        msg += "Concurrent modification of host and device views ";
+        msg += "in DualView \"";
+        msg += d_view.label();
+        msg += "\"\n";
+        Kokkos::abort(msg.c_str());
       }
+#endif
     }
   }
 
