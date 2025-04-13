@@ -228,15 +228,25 @@ template <class Traits>
 using accessor_from_view_traits_t =
     typename AccessorFromViewTraits<Traits>::type;
 
-template <class Traits, class Enabled = void>
-struct MDSpanViewTraits {
-  using mdspan_type = UnsupportedKokkosArrayLayout;
-};
+template <class ValueType, class LayoutType, class DeviceType,
+          class MemoryTraits>
+struct ViewArguments {};
+
+template <class ValueType, class LayoutType, class DeviceType,
+          class MemoryTraits>
+void mdspan_from_view_arguments(
+    ViewArguments<ValueType, LayoutType, DeviceType, MemoryTraits>) {}
 
 // "Natural" mdspan for a view if the View's ArrayLayout is supported.
-template <class Traits>
-struct MDSpanViewTraits<Traits, std::void_t<typename LayoutFromArrayLayout<
-                                    typename Traits::array_layout>::type>> {
+template <class Traits, class Enabled = decltype(mdspan_from_view_arguments(
+                            ViewArguments<typename Traits::value_type,
+                                          typename Traits::array_layout,
+                                          typename Traits::device_type,
+                                          typename Traits::memory_traits>()))>
+struct MDSpanViewTraits {
+  //  static_assert(std::is_same_v<typename LayoutFromArrayLayout<
+  //                                    typename Traits::array_layout>::type,
+  //                                    void>, "Unsupported ArrayLayout");
   using index_type = std::size_t;
   using extents_type =
       typename ExtentsFromDataType<index_type,
@@ -247,7 +257,21 @@ struct MDSpanViewTraits<Traits, std::void_t<typename LayoutFromArrayLayout<
   using mdspan_type   = mdspan<typename Traits::value_type, extents_type,
                              mdspan_layout_type, accessor_type>;
 };
+
+template <class Traits, class ValueType, class ExtentsType, class LayoutType,
+          class MappingType>
+struct MDSpanViewTraits<
+    Traits, mdspan<ValueType, ExtentsType, LayoutType, MappingType>> {
+  using mdspan_type = mdspan<ValueType, ExtentsType, LayoutType, MappingType>;
+  using index_type  = typename mdspan_type::index_type;
+  using extents_type =
+      typename ExtentsFromDataType<index_type,
+                                   typename Traits::data_type>::type;
+  using mdspan_layout_type = typename mdspan_type::layout_type;
+  using accessor_type      = typename mdspan_type::accessor_type;
+};
 }  // namespace Impl
+
 #endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 
 /** \class ViewTraits
