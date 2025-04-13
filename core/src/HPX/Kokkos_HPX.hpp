@@ -82,7 +82,7 @@ class hpx_thread_buffer {
   hpx_thread_buffer &operator=(hpx_thread_buffer)         = delete;
 
   void resize(const std::size_t num_threads, const std::size_t size_per_thread,
-              const std::size_t extra_space = 0) noexcept;
+              const std::size_t extra_space = 0);
   void *get(std::size_t thread_num) const noexcept;
   void *get_extra_space() const noexcept;
 };

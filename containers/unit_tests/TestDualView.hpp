@@ -580,8 +580,9 @@ void check_dualview_external_view_construction() {
 // FIXME_MSVC+CUDA error C2094: label 'gtest_label_520' was undefined
 #if !(defined(KOKKOS_COMPILER_MSVC) && defined(KOKKOS_ENABLE_CUDA))
 TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
-  if constexpr (!Kokkos::DualView<
-                    int*, TEST_EXECSPACE>::impl_dualview_is_single_device) {
+  if constexpr (!Kokkos::SpaceAccessibility<
+                    Kokkos::HostSpace,
+                    TEST_EXECSPACE::memory_space>::accessible) {
     GTEST_SKIP() << "test only relevant if DualView uses one allocation";
   } else {
     // FIXME_CLANG We can't inline the function because recent clang versions
@@ -754,6 +755,25 @@ TEST(TEST_CATEGORY, dualview_sequential_host_init) {
   dv.realloc(Kokkos::view_alloc(Kokkos::SequentialHostInit), 3u);
   ASSERT_EQ(dv.view_device().size(), 3u);
   ASSERT_EQ(dv.view_host().size(), 3u);
+}
+
+TEST(TEST_CATEGORY, dualview_default_constructed) {
+  DualViewType dv;
+
+  dv.modify<TEST_EXECSPACE>();
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+  dv.sync<TEST_EXECSPACE>();
+
+  dv.modify_host();
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+  dv.sync_host();
+
+  dv.modify_device();
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+  dv.sync_device();
 }
 }  // anonymous namespace
 }  // namespace Test

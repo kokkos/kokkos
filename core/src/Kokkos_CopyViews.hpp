@@ -830,6 +830,28 @@ struct ZeroMemset {
   }
 };
 
+// Returns true when we can safely determine that the object has all 0 bits,
+// false otherwise.  It is intended to determine whether to perform zero memset
+// as an optimization.
+template <typename T>
+bool has_all_zero_bits(const T& value) {
+  static_assert(std::is_trivial_v<T>);
+
+  if constexpr (std::is_scalar_v<T>) {
+    return value == T();
+  }
+
+  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
+  if constexpr (std::is_standard_layout_v<T> &&
+                std::has_unique_object_representations_v<T>) {
+    constexpr std::byte all_zeroes[sizeof(T)] = {};
+    return std::memcmp(&value, all_zeroes, sizeof(T)) == 0;
+  }
+
+  return false;
+  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
+}
+
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
     std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
@@ -837,7 +859,7 @@ contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   // With OpenMP, using memset has significant performance issues.
-  if (Impl::is_zero_byte(value)
+  if (has_all_zero_bits(value)
 #ifdef KOKKOS_ENABLE_OPENMP
       && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
@@ -863,40 +885,13 @@ contiguous_fill_or_memset(
 }
 
 template <class DT, class... DP>
-inline std::enable_if_t<
-    std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
-contiguous_fill_or_memset(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value) {
-  using ViewType        = View<DT, DP...>;
-  using exec_space_type = typename ViewType::execution_space;
-  exec_space_type exec;
-
-// On A64FX memset seems to do the wrong thing with regards to first touch
-// leading to the significant performance issues
-#ifndef KOKKOS_ARCH_A64FX
-  if (Impl::is_zero_byte(value))
-    // FIXME intel/19 icpc fails to deduce template parameter here,
-    // resulting in compilation errors; explicitly passing the template
-    // parameter to ZeroMemset helps workaround the issue.
-    // See https://github.com/kokkos/kokkos/issues/7273.
-    ZeroMemset<exec_space_type>(
-        exec, dst.data(), dst.size() * sizeof(typename ViewType::value_type));
-  else
-#endif
-    contiguous_fill(exec, dst, value);
-}
-
-template <class DT, class... DP>
-inline std::enable_if_t<
-    !std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
-contiguous_fill_or_memset(
+void contiguous_fill_or_memset(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   using ViewType        = View<DT, DP...>;
   using exec_space_type = typename ViewType::execution_space;
 
-  contiguous_fill(exec_space_type(), dst, value);
+  contiguous_fill_or_memset(exec_space_type(), dst, value);
 }
 }  // namespace Impl
 

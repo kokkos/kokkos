@@ -129,7 +129,6 @@ class KOKKOS_DEPRECATED vector
 
   void push_back(Scalar val) {
     DV::template sync<typename DV::t_host::device_type>();
-    DV::template modify<typename DV::t_host::device_type>();
     if (_size == span()) {
       size_t new_size = _size * _extra_storage;
       if (new_size == _size) new_size++;
@@ -138,6 +137,7 @@ class KOKKOS_DEPRECATED vector
 
     DV::view_host()(_size) = val;
     _size++;
+    DV::template modify<typename DV::t_host::device_type>();
   }
 
   void pop_back() { _size--; }

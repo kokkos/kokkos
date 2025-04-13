@@ -151,9 +151,10 @@ class SYCLInternal {
     }
 
     void register_event(sycl::event event) {
-      assert(m_last_event
-                 .get_info<sycl::info::event::command_execution_status>() ==
-             sycl::info::event_command_status::complete);
+      KOKKOS_ASSERT(
+          m_last_event
+              .get_info<sycl::info::event::command_execution_status>() ==
+          sycl::info::event_command_status::complete);
       m_last_event = event;
       m_mutex.unlock();
     }
