@@ -937,26 +937,18 @@ endif()
 
 kokkos_add_executable_and_test(CoreUnitTest_Default SOURCES ${DEFAULT_DEVICE_SOURCES})
 
-set(INIT_FINAL_SOURCES
-    UnitTestMain.cpp
-    TestExecutionEnvironmentNonInitializedOrFinalized.cpp
-    TestExecEnvNonInitializedOrFinalizedCStyleMemMgmt.cpp
-    TestInitializationSettings.cpp
-    TestInitializeFinalize.cpp
-    TestLegionInitialization.cpp
-    TestParseCmdLineArgsAndEnvVars.cpp
-    TestPushFinalizeHook.cpp
-    TestScopeGuard.cpp
+kokkos_add_executable_and_test(
+  CoreUnitTest_InitializeFinalize
+  SOURCES
+  UnitTestMain.cpp
+  TestExecutionEnvironmentNonInitializedOrFinalized.cpp
+  TestInitializationSettings.cpp
+  TestInitializeFinalize.cpp
+  TestLegionInitialization.cpp
+  TestParseCmdLineArgsAndEnvVars.cpp
+  TestPushFinalizeHook.cpp
+  TestScopeGuard.cpp
 )
-
-# FIXME_THREADS when issue #7944 is addressed, the test in TestExecEnvNonInitializedOrFinalized.cpp
-# will be merged into TestExecutionEnvironmentNonInitializedOrFinalized.cpp and will be run for
-# Threads backend also.
-if(KOKKOS_ENABLE_THREADS)
-  list(REMOVE_ITEM INIT_FINAL_SOURCES TestExecEnvNonInitializedOrFinalizedCStyleMemMgmt.cpp)
-endif()
-
-kokkos_add_executable_and_test(CoreUnitTest_InitializeFinalize SOURCES ${INIT_FINAL_SOURCES})
 
 # This test is intended for development and debugging by putting code
 # into TestDefaultDeviceDevelop.cpp. By default its empty.
