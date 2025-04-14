@@ -125,7 +125,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using traits = ViewTraits<DataType, Arg1Type, Arg2Type, Arg3Type>;
 #else
-  using traits      = ViewTraits<DataType, Properties...>;
+  using traits = ViewTraits<DataType, Properties...>;
 #endif
 
   //! The Kokkos Host Device type;
@@ -135,7 +135,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using t_dev = View<typename traits::data_type, Arg1Type, Arg2Type, Arg3Type>;
 #else
-  using t_dev       = View<typename traits::data_type, Properties...>;
+  using t_dev = View<typename traits::data_type, Properties...>;
 #endif
 
   /// \typedef t_host
@@ -761,12 +761,12 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   inline bool need_sync_host() const {
     if (modified_flags.data() == nullptr) return false;
-    return modified_flags(0);
+    return modified_flags(1);
   }
 
   inline bool need_sync_device() const {
     if (modified_flags.data() == nullptr) return false;
-    return modified_flags(1);
+    return modified_flags(0);
   }
   void impl_report_device_modification() {
     if (Kokkos::Tools::Experimental::get_callbacks().modify_dual_view !=
@@ -1074,10 +1074,10 @@ class DualView : public ViewTraits<DataType, Properties...> {
         return;
       }
     } else {
-      if (modified_flags(1)) {
-        resize_on_device(arg_prop);
-      } else {
+      if (modified_flags(0)) {
         resize_on_host(arg_prop);
+      } else {
+        resize_on_device(arg_prop);
       }
     }
   }
