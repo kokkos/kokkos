@@ -39,7 +39,7 @@ struct FunctorWrapperRangePolicyParallelFor {
           m_functor_wrapper.get_functor()(id);
         else
           m_functor_wrapper.get_functor()(WorkTag(), id);
-        if (end < INT_MAX || (id >= (end - INT_MAX))) break;
+        if (end <= INT_MAX || (id >= (end - INT_MAX))) break;
         id += INT_MAX;
       }
     }
@@ -65,7 +65,7 @@ struct FunctorWrapperRangePolicyParallelForCustom {
           m_functor_wrapper.get_functor()(id);
         else
           m_functor_wrapper.get_functor()(WorkTag(), id);
-        if (end < INT_MAX || (id >= (end - INT_MAX))) break;
+        if (end <= INT_MAX || (id >= (end - INT_MAX))) break;
         id += INT_MAX;
       }
     }
