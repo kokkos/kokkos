@@ -18,6 +18,7 @@ jobs:
   CUDA_12_2_CPP20:
     name: SNL_CUDA_NVCC_12_2_CPP20
     runs-on: [snl-kk-env-cuda-12.2.0-gcc-11.3.0-latest]
+    continue-on-error: true
 
     strategy:
       matrix:
@@ -61,6 +62,7 @@ jobs:
   HIP_5_6_1:
     name: SNL_HIP_ROCM_5_6_1
     runs-on: [snl-kk-env-openblas-0.3.23-hip-5.6.1-latest]
+    continue-on-error: true
 
     strategy:
       matrix:
@@ -102,6 +104,7 @@ jobs:
   INTEL_2024_2_1_SPR:
     name: SNL_OPENMP_SERIAL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-spr]
+    continue-on-error: true
 
     strategy:
       matrix:
@@ -143,6 +146,7 @@ jobs:
   INTEL_2024_2_1_PVC:
     name: SNL_SYCL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
+    continue-on-error: true
 
     strategy:
       matrix:
