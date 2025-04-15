@@ -1330,7 +1330,7 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_DG2")
-  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device dg2"
+  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64 -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device dg2"
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
