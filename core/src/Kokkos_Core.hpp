@@ -150,7 +150,7 @@ namespace Kokkos {
 namespace Impl {
 
 static inline void check_init_final(
-    [[maybe_unused]] const std::string& func_name) {
+    [[maybe_unused]] char const* func_name) {
 // FIXME_THREADS: Checking for calls to kokkos_malloc, kokkos_realloc,
 // kokkos_free before initialize or after finalize is currently disabled
 // for the Threads backend. Refer issue #7944.
