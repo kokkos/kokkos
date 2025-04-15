@@ -45,8 +45,7 @@ jobs:
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_TESTS=ON \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            ..
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: build_and_install_kokkos
         run:  |
