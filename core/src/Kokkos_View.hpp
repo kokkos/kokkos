@@ -273,7 +273,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       }
       if constexpr (std::is_same_v<LayoutType, layout_left> ||
                     Impl::IsLayoutLeftPadded<LayoutType>::value) {
-        return stride(rank() - 1) * extent(rank() - 1);
+        return base_t::stride(rank() - 1) * extent(rank() - 1);
       }
       if constexpr (std::is_same_v<LayoutType, layout_stride>) {
         return 0;
