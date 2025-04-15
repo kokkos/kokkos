@@ -267,6 +267,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     using LayoutType = typename mdspan_type::layout_type;
     if (r >= static_cast<iType>(rank())) {
+      if constexpr (rank() == 0) return 1;
       if constexpr (std::is_same_v<LayoutType, layout_right> ||
                     Impl::IsLayoutRightPadded<LayoutType>::value) {
         return 1;
