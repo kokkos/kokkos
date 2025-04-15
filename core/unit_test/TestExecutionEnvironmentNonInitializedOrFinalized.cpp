@@ -131,13 +131,15 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
       matcher);
 }
 
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
+       c_style_memory_management) {
 // FIXME_THREADS: Checking for calls to kokkos_malloc, kokkos_realloc,
 // kokkos_free before initialize or after finalize is currently disabled
 // for the Threads backend. Refer issue #7944.
-#if !defined(KOKKOS_ENABLE_THREADS)
-
-TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
-       c_style_memory_management) {
+#ifdef KOKKOS_ENABLE_THREADS
+  GTEST_SKIP()
+      << "skipping since initializing Threads backend calls kokkos_malloc";
+#endif
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   EXPECT_DEATH(
@@ -193,7 +195,5 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
       "Kokkos ERROR: attempting to perform C-style memory management via "
       "kokkos_free\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was called");
 }
-
-#endif
 
 }  // namespace
