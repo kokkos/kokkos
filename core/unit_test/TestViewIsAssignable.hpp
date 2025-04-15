@@ -16,14 +16,23 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <gtest/gtest.h>
+
 namespace Test {
 namespace Impl {
 template <class ViewTypeDst, class ViewTypeSrc>
 struct TestAssignability {
   using mapping_type =
       Kokkos::Impl::ViewMapping<typename ViewTypeDst::traits,
-                                typename ViewTypeSrc::traits,
-                                typename ViewTypeDst::specialize>;
+                                typename ViewTypeSrc::traits
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+                                ,
+                                typename ViewTypeDst::specialize
+#else
+                                ,
+                                void
+#endif
+                                >;
 
   template <class MappingType>
   static void try_assign(
@@ -36,8 +45,7 @@ struct TestAssignability {
   static void try_assign(
       ViewTypeDst&, ViewTypeSrc&,
       std::enable_if_t<!MappingType::is_assignable>* = nullptr) {
-    Kokkos::Impl::throw_runtime_exception(
-        "TestAssignability::try_assign: Unexpected call path");
+    FAIL() << "TestAssignability::try_assign: Unexpected call path";
   }
 
   template <class... Dimensions>
@@ -49,20 +57,15 @@ struct TestAssignability {
         Kokkos::is_always_assignable<ViewTypeDst, ViewTypeSrc>::value;
     bool is_assignable = Kokkos::is_assignable(dst, src);
 
-    // Print out if there is an error with typeid so you can just filter the
-    // output with c++filt -t to see which assignment causes the error.
-    if (is_always_assignable != always || is_assignable != sometimes)
-      printf(
-          "is_always_assignable: %i (%i), is_assignable: %i (%i) [ %s ] to [ "
-          "%s ]\n",
-          is_always_assignable ? 1 : 0, always ? 1 : 0, is_assignable ? 1 : 0,
-          sometimes ? 1 : 0, typeid(ViewTypeSrc).name(),
-          typeid(ViewTypeDst).name());
     if (sometimes) {
-      ASSERT_NO_THROW(try_assign<mapping_type>(dst, src));
+      try_assign<mapping_type>(dst, src);
     }
-    ASSERT_EQ(always, is_always_assignable);
-    ASSERT_EQ(sometimes, is_assignable);
+    ASSERT_EQ(always, is_always_assignable)
+        << Kokkos::Impl::TypeInfo<ViewTypeSrc>::name() << " to "
+        << Kokkos::Impl::TypeInfo<ViewTypeDst>::name();
+    ASSERT_EQ(sometimes, is_assignable)
+        << Kokkos::Impl::TypeInfo<ViewTypeSrc>::name() << " to "
+        << Kokkos::Impl::TypeInfo<ViewTypeDst>::name();
   }
 };
 
@@ -90,18 +93,18 @@ TEST(TEST_CATEGORY, view_is_assignable) {
                           View<int[10], left, d_exec>>::test(false, false);
   Impl::TestAssignability<View<int**, left, d_exec>,
                           View<int**, left, d_exec>>::test(true, true, 10, 10);
-  Impl::TestAssignability<View<int * [10], left, d_exec>,
+  Impl::TestAssignability<View<int* [10], left, d_exec>,
                           View<int**, left, d_exec>>::test(false, true, 10, 10);
-  Impl::TestAssignability<View<int * [5], left, d_exec>,
+  Impl::TestAssignability<View<int* [5], left, d_exec>,
                           View<int**, left, d_exec>>::test(false, false, 10,
                                                            10);
   Impl::TestAssignability<View<int**, left, d_exec>,
-                          View<int * [10], left, d_exec>>::test(true, true, 10);
-  Impl::TestAssignability<View<int * [10], left, d_exec>,
-                          View<int * [10], left, d_exec>>::test(true, true, 10);
-  Impl::TestAssignability<View<int * [5], left, d_exec>,
-                          View<int * [10], left, d_exec>>::test(false, false,
-                                                                10);
+                          View<int* [10], left, d_exec>>::test(true, true, 10);
+  Impl::TestAssignability<View<int* [10], left, d_exec>,
+                          View<int* [10], left, d_exec>>::test(true, true, 10);
+  Impl::TestAssignability<View<int* [5], left, d_exec>,
+                          View<int* [10], left, d_exec>>::test(false, false,
+                                                               10);
 
   // Mismatch value_type
   Impl::TestAssignability<View<int*, left, d_exec>,

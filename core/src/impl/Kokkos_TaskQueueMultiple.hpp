@@ -20,6 +20,11 @@
 #define KOKKOS_IMPL_TASKQUEUEMULTIPLE_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#error "The tasking framework is deprecated"
+#endif
+
 #if defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_TaskScheduler_fwd.hpp>
@@ -39,6 +44,11 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
 
 namespace Kokkos {
 namespace Impl {
@@ -178,11 +188,11 @@ class LeagueQueueCollection {
   int m_size = static_cast<int>(KOKKOS_INVALID_INDEX);
 
  public:
-  LeagueQueueCollection()                             = delete;
-  LeagueQueueCollection(LeagueQueueCollection const&) = delete;
-  LeagueQueueCollection(LeagueQueueCollection&&)      = delete;
+  LeagueQueueCollection()                                        = delete;
+  LeagueQueueCollection(LeagueQueueCollection const&)            = delete;
+  LeagueQueueCollection(LeagueQueueCollection&&)                 = delete;
   LeagueQueueCollection& operator=(LeagueQueueCollection const&) = delete;
-  LeagueQueueCollection& operator=(LeagueQueueCollection&&) = delete;
+  LeagueQueueCollection& operator=(LeagueQueueCollection&&)      = delete;
 
   ~LeagueQueueCollection() {
     // destroy only the initialized queues that we own
@@ -199,7 +209,7 @@ class LeagueQueueCollection {
   void initialize_team_queues(int arg_count,
                               memory_pool const& arg_memory_pool) noexcept {
     arg_count = std::min((int)max_num_queues, arg_count);
-    // assert(arg_count <= max_num_queues);
+    // KOKKOS_ASSERT(arg_count <= max_num_queues);
     if (arg_count > m_size) {
       for (int i = m_size; i < arg_count; ++i) {
         new (&m_queues[i - 1].initialized)
@@ -221,9 +231,9 @@ class LeagueQueueCollection {
   team_queue_type& get_team_queue(int iteam) {
     iteam %= max_num_queues;
 #if !defined(__HIP_DEVICE_COMPILE__) && !defined(__CUDA_ARCH__)
-    assert(initialized());
-    assert(iteam < m_size);
-    assert(iteam >= 0);
+    KOKKOS_ASSERT(initialized());
+    KOKKOS_ASSERT(iteam < m_size);
+    KOKKOS_ASSERT(iteam >= 0);
 #endif
     if (iteam == 0)
       return *m_rank_zero_queue;
@@ -234,6 +244,10 @@ class LeagueQueueCollection {
 
 } /* namespace Impl */
 } /* namespace Kokkos */
+
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

@@ -1,0 +1,55 @@
+name: staged-continuous-integration
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    paths-ignore:
+    - '**/*.md'
+    types: [ opened, reopened, synchronize ]
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+permissions: read-all
+
+jobs:
+  # pre-stage
+  clang-format-check:
+    uses: ./.github/workflows/clang-format-check.yml
+
+  cmake-format-check:
+    uses: ./.github/workflows/cmake-format-check.yml
+
+  initial-check:
+    uses: ./.github/workflows/continuous-integration-smoketest.yml
+
+  # primary testing
+  codeql:
+    needs: [initial-check, clang-format-check, cmake-format-check]
+    # need to set manual permissions since it requires security-events write
+    # but then we have to set everything else manually to read since the
+    # default is overwritten
+    permissions:
+      # required for all workflows
+      contents: read
+      security-events: write
+    uses: ./.github/workflows/codeql.yml
+
+  windows:
+    needs: [initial-check, clang-format-check, cmake-format-check]
+    uses: ./.github/workflows/continuous-integration-windows.yml
+
+  linux:
+    needs: [initial-check, clang-format-check, cmake-format-check]
+    uses: ./.github/workflows/continuous-integration-linux.yml
+
+  osx-x64:
+    needs: [initial-check, clang-format-check, cmake-format-check]
+    uses: ./.github/workflows/continuous-integration-osx.yml
+
+  performance-test:
+    needs: [initial-check, clang-format-check, cmake-format-check]
+    uses: ./.github/workflows/performance-benchmark.yml

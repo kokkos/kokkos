@@ -60,7 +60,7 @@ class ThreadsInternal {
   int m_pool_rank_rev;
   int m_pool_size;
   int m_pool_fan_size;
-  ThreadState volatile m_pool_state;  ///< State for global synchronizations
+  std::atomic<ThreadState> m_pool_state;  ///< State for global synchronizations
 
   // Members for dynamic scheduling
   // Which thread am I stealing from currently
@@ -96,7 +96,7 @@ class ThreadsInternal {
     return reinterpret_cast<unsigned char *>(m_scratch) + m_scratch_reduce_end;
   }
 
-  KOKKOS_INLINE_FUNCTION ThreadState volatile &state() { return m_pool_state; }
+  KOKKOS_INLINE_FUNCTION auto &state() { return m_pool_state; }
   KOKKOS_INLINE_FUNCTION ThreadsInternal *const *pool_base() const {
     return m_pool_base;
   }
@@ -225,7 +225,7 @@ class ThreadsInternal {
     //  to inactive triggers another thread to exit a spinwait
     //  and read the 'reduce_memory'.
     //  Must 'memory_fence()' to guarantee that storing the update to
-    //  'reduce_memory()' will complete before storing the the update to
+    //  'reduce_memory()' will complete before storing the update to
     //  'm_pool_state'.
 
     memory_fence();
@@ -402,7 +402,9 @@ class ThreadsInternal {
    */
   static void start(void (*)(ThreadsInternal &, const void *), const void *);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int in_parallel();
+#endif
   static void fence();
   static void fence(const std::string &);
   static void internal_fence();
@@ -544,9 +546,11 @@ class ThreadsInternal {
 
 namespace Kokkos {
 
-inline int Threads::in_parallel() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED inline int Threads::in_parallel() {
   return Impl::ThreadsInternal::in_parallel();
 }
+#endif
 
 inline int Threads::impl_is_initialized() {
   return Impl::ThreadsInternal::is_initialized();

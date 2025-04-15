@@ -198,8 +198,8 @@ auto create_deep_copyable_compatible_view_with_same_extent(ViewType view) {
 
   // this is needed for intel to avoid
   // error #1011: missing return statement at end of non-void function
-#if defined KOKKOS_COMPILER_INTEL || \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130)
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
   __builtin_unreachable();
 #endif
 }
@@ -238,16 +238,8 @@ KOKKOS_FUNCTION bool team_members_have_matching_result(
   // set accum to 1 if a mismach is found
   const bool mismatch = memberValue != target;
   int accum           = static_cast<int>(mismatch);
-  // FIXME_OPENMPTARGET: team API does not meet the TeamHandle concept and
-  // ignores the reducer passed
-#if defined KOKKOS_ENABLE_OPENMPTARGET
-  Kokkos::Sum<int> dummyReducer(accum);
-  const auto result = teamHandle.team_reduce(accum, dummyReducer);
-  return (result == 0);
-#else
   teamHandle.team_reduce(Kokkos::Sum<int>(accum));
   return (accum == 0);
-#endif
 }
 
 template <class ValueType1, class ValueType2>
@@ -541,10 +533,10 @@ void fill_views_inc(ViewType view, ViewHostType host_view) {
 }
 
 template <class ValueType, class ViewType>
-std::enable_if_t<!std::is_same<typename ViewType::traits::array_layout,
-                               Kokkos::LayoutStride>::value>
+std::enable_if_t<!std::is_same_v<typename ViewType::traits::array_layout,
+                                 Kokkos::LayoutStride>>
 verify_values(ValueType expected, const ViewType view) {
-  static_assert(std::is_same<ValueType, typename ViewType::value_type>::value,
+  static_assert(std::is_same_v<ValueType, typename ViewType::value_type>,
                 "Non-matching value types of view and reference value");
   auto view_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), view);
   for (std::size_t i = 0; i < view_h.extent(0); i++) {
@@ -553,10 +545,10 @@ verify_values(ValueType expected, const ViewType view) {
 }
 
 template <class ValueType, class ViewType>
-std::enable_if_t<std::is_same<typename ViewType::traits::array_layout,
-                              Kokkos::LayoutStride>::value>
+std::enable_if_t<std::is_same_v<typename ViewType::traits::array_layout,
+                                Kokkos::LayoutStride>>
 verify_values(ValueType expected, const ViewType view) {
-  static_assert(std::is_same<ValueType, typename ViewType::value_type>::value,
+  static_assert(std::is_same_v<ValueType, typename ViewType::value_type>,
                 "Non-matching value types of view and reference value");
 
   using non_strided_view_t = Kokkos::View<typename ViewType::value_type*>;
@@ -573,11 +565,11 @@ verify_values(ValueType expected, const ViewType view) {
 }
 
 template <class ViewType1, class ViewType2>
-std::enable_if_t<!std::is_same<typename ViewType2::traits::array_layout,
-                               Kokkos::LayoutStride>::value>
+std::enable_if_t<!std::is_same_v<typename ViewType2::traits::array_layout,
+                                 Kokkos::LayoutStride>>
 compare_views(ViewType1 expected, const ViewType2 actual) {
-  static_assert(std::is_same<typename ViewType1::value_type,
-                             typename ViewType2::value_type>::value,
+  static_assert(std::is_same_v<typename ViewType1::value_type,
+                               typename ViewType2::value_type>,
                 "Non-matching value types of expected and actual view");
   auto expected_h =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), expected);
@@ -590,11 +582,11 @@ compare_views(ViewType1 expected, const ViewType2 actual) {
 }
 
 template <class ViewType1, class ViewType2>
-std::enable_if_t<std::is_same<typename ViewType2::traits::array_layout,
-                              Kokkos::LayoutStride>::value>
+std::enable_if_t<std::is_same_v<typename ViewType2::traits::array_layout,
+                                Kokkos::LayoutStride>>
 compare_views(ViewType1 expected, const ViewType2 actual) {
-  static_assert(std::is_same<typename ViewType1::value_type,
-                             typename ViewType2::value_type>::value,
+  static_assert(std::is_same_v<typename ViewType1::value_type,
+                               typename ViewType2::value_type>,
                 "Non-matching value types of expected and actual view");
 
   using non_strided_view_t = Kokkos::View<typename ViewType2::value_type*>;

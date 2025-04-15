@@ -1,5 +1,7 @@
-ARG BASE=nvidia/cuda:11.1.1-devel-ubuntu20.04
+ARG BASE=nvcr.io/nvidia/cuda:12.3.2-devel-ubuntu22.04@sha256:b3acdfb50afe62e6c367eba59ecf2d1768f9f174a62e005d282f843779721cb0
 FROM $BASE
+
+ARG ADDITIONAL_PACKAGES
 
 RUN apt-get update && apt-get install -y \
         bc \
@@ -9,13 +11,14 @@ RUN apt-get update && apt-get install -y \
         python3 \
         libelf-dev \
         g++-multilib \
+        ${ADDITIONAL_PACKAGES} \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 ARG NPROC=8
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
@@ -55,8 +58,8 @@ RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
       -DCMAKE_CXX_COMPILER=g++ \
       -DLLVM_ENABLE_PROJECTS="clang" \
       -DLLVM_ENABLE_RUNTIMES="openmp" \
-      -DCLANG_OPENMP_NVPTX_DEFAULT_ARCH=sm_70 \
-      -DLIBOMPTARGET_NVPTX_COMPUTE_CAPABILITIES=70 \
+      -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
+      -DLIBOMPTARGET_DEVICE_ARCHITECTURES=sm_70 \
     ../llvm && \
     make -j${NPROC} && \
     make install && \

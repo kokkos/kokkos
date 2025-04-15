@@ -24,7 +24,7 @@ template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 inline void host_check_shift_on_one_loader(ShiftOp shift_op,
                                            DataType test_vals[],
                                            DataType shift_by[], std::size_t n) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
 
@@ -35,17 +35,19 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
       continue;
     }
 
-    simd_type expected_result;
-
+    DataType expected_val[width];
     for (std::size_t lane = 0; lane < width; ++lane) {
-      DataType value = simd_vals[lane];
-      expected_result[lane] =
-          shift_op.on_host(value, static_cast<int>(shift_by[i]));
-      EXPECT_EQ(value, value);
+      expected_val[lane] =
+          shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[i]));
     }
+
+    simd_type expected_result;
+    expected_result.copy_from(expected_val,
+                              Kokkos::Experimental::simd_flag_default);
 
     simd_type const computed_result =
         shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
+
     host_check_equality(expected_result, computed_result, width);
   }
 }
@@ -53,8 +55,8 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 inline void host_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
-    Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+    Kokkos::Experimental::basic_simd<DataType, Abi>& shift_by) {
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
 
@@ -62,15 +64,18 @@ inline void host_check_shift_by_lanes_on_one_loader(
   bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
   ASSERT_TRUE(loaded_arg);
 
-  simd_type expected_result;
-
+  DataType expected_val[width];
   for (std::size_t lane = 0; lane < width; ++lane) {
-    DataType value = simd_vals[lane];
-    expected_result[lane] =
-        shift_op.on_host(value, static_cast<int>(shift_by[lane]));
-    EXPECT_EQ(value, value);
+    expected_val[lane] =
+        shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[lane]));
   }
+
+  simd_type expected_result;
+  expected_result.copy_from(expected_val,
+                            Kokkos::Experimental::simd_flag_default);
+
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
+
   host_check_equality(expected_result, computed_result, width);
 }
 
@@ -85,10 +90,11 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
                                                    shift_by, n);
   host_check_shift_on_one_loader<Abi, load_as_scalars>(shift_op, test_vals,
                                                        shift_by, n);
+  host_check_shift_on_one_loader<Abi, load_vector_aligned>(shift_op, test_vals,
+                                                           shift_by, n);
 
-  Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
-  shift_by_lanes.copy_from(shift_by,
-                           Kokkos::Experimental::element_aligned_tag());
+  Kokkos::Experimental::basic_simd<DataType, Abi> shift_by_lanes;
+  shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
 
   host_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
       shift_op, test_vals, shift_by_lanes);
@@ -96,36 +102,48 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
                                                             shift_by_lanes);
   host_check_shift_by_lanes_on_one_loader<Abi, load_as_scalars>(
       shift_op, test_vals, shift_by_lanes);
+  host_check_shift_by_lanes_on_one_loader<Abi, load_vector_aligned>(
+      shift_op, test_vals, shift_by_lanes);
 }
 
 template <typename Abi, typename DataType>
 inline void host_check_shift_ops() {
-  if constexpr (std::is_integral_v<DataType>) {
-    using simd_type                 = Kokkos::Experimental::simd<DataType, Abi>;
-    constexpr std::size_t width     = simd_type::size();
-    constexpr std::size_t num_cases = 8;
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+    if constexpr (std::is_integral_v<DataType>) {
+      using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+      constexpr std::size_t width     = simd_type::size();
+      constexpr std::size_t num_cases = 16;
+      constexpr size_t alignment =
+          Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
+          sizeof(DataType);
 
-    DataType max = std::numeric_limits<DataType>::max();
+      DataType max = std::numeric_limits<DataType>::max();
 
-    DataType shift_by[num_cases] = {
-        0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
-    DataType test_vals[width];
-    for (std::size_t i = 0; i < width; ++i) {
-      DataType inc = max / width;
-      test_vals[i] = i * inc + 1;
-    }
+      alignas(alignment) DataType shift_by[num_cases] = {
+          0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1,
+          0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
+      alignas(alignment) DataType test_vals[width];
+      for (std::size_t i = 0; i < width; ++i) {
+        DataType inc = max / width;
+        test_vals[i] = i * inc + 1;
+      }
 
-    host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
-                                         num_cases);
-    host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
-                                         num_cases);
-
-    if constexpr (std::is_signed_v<DataType>) {
-      for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
       host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                            num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                           shift_by, num_cases);
       host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
                                            num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals, shift_by,
+                                           num_cases);
+
+      if constexpr (std::is_signed_v<DataType>) {
+        for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+        host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
+                                             num_cases);
+        host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                             shift_by, num_cases);
+      }
     }
   }
 }
@@ -147,7 +165,7 @@ template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
     ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
     std::size_t n) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
 
@@ -158,12 +176,9 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
       continue;
     }
 
-    simd_type expected_result;
-
-    for (std::size_t lane = 0; lane < width; ++lane) {
-      expected_result[lane] = shift_op.on_device(DataType(simd_vals[lane]),
-                                                 static_cast<int>(shift_by[i]));
-    }
+    simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+      return shift_op.on_device(simd_vals[lane], static_cast<int>(shift_by[i]));
+    });
 
     simd_type const computed_result =
         shift_op.on_device(simd_vals, static_cast<int>(shift_by[i]));
@@ -174,19 +189,18 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
-    Kokkos::Experimental::simd<DataType, Abi>& shift_by) {
-  using simd_type             = Kokkos::Experimental::simd<DataType, Abi>;
+    Kokkos::Experimental::basic_simd<DataType, Abi>& shift_by) {
+  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
   constexpr std::size_t width = simd_type::size();
   Loader loader;
   simd_type simd_vals;
   loader.device_load(test_vals, width, simd_vals);
 
-  simd_type expected_result;
+  simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+    return shift_op.on_device(simd_vals[lane],
+                              static_cast<int>(shift_by[lane]));
+  });
 
-  for (std::size_t lane = 0; lane < width; ++lane) {
-    expected_result[lane] = shift_op.on_device(
-        DataType(simd_vals[lane]), static_cast<int>(shift_by[lane]));
-  }
   simd_type const computed_result = shift_op.on_device(simd_vals, shift_by);
   device_check_equality(expected_result, computed_result, width);
 }
@@ -201,10 +215,11 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
                                                      shift_by, n);
   device_check_shift_on_one_loader<Abi, load_as_scalars>(shift_op, test_vals,
                                                          shift_by, n);
+  device_check_shift_on_one_loader<Abi, load_vector_aligned>(
+      shift_op, test_vals, shift_by, n);
 
-  Kokkos::Experimental::simd<DataType, Abi> shift_by_lanes;
-  shift_by_lanes.copy_from(shift_by,
-                           Kokkos::Experimental::element_aligned_tag());
+  Kokkos::Experimental::basic_simd<DataType, Abi> shift_by_lanes;
+  shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
 
   device_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
       shift_op, test_vals, shift_by_lanes);
@@ -212,37 +227,46 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
       shift_op, test_vals, shift_by_lanes);
   device_check_shift_by_lanes_on_one_loader<Abi, load_as_scalars>(
       shift_op, test_vals, shift_by_lanes);
+  device_check_shift_by_lanes_on_one_loader<Abi, load_vector_aligned>(
+      shift_op, test_vals, shift_by_lanes);
 }
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
-  if constexpr (std::is_integral_v<DataType>) {
-    using simd_type                 = Kokkos::Experimental::simd<DataType, Abi>;
-    constexpr std::size_t width     = simd_type::size();
-    constexpr std::size_t num_cases = 8;
+  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+    if constexpr (std::is_integral_v<DataType>) {
+      using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+      constexpr std::size_t width     = simd_type::size();
+      constexpr std::size_t num_cases = 16;
 
-    DataType max = Kokkos::reduction_identity<DataType>::max();
+      DataType max = Kokkos::reduction_identity<DataType>::max();
 
-    DataType shift_by[num_cases] = {
-        0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
-    DataType test_vals[width];
+      DataType shift_by[num_cases] = {
+          0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1,
+          0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
+      DataType test_vals[width];
 
-    for (std::size_t i = 0; i < width; ++i) {
-      DataType inc = max / width;
-      test_vals[i] = i * inc + 1;
-    }
+      for (std::size_t i = 0; i < width; ++i) {
+        DataType inc = max / width;
+        test_vals[i] = i * inc + 1;
+      }
 
-    device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
-                                           num_cases);
-    device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
-                                           num_cases);
-
-    if constexpr (std::is_signed_v<DataType>) {
-      for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
       device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                              num_cases);
+      device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                             shift_by, num_cases);
       device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
                                              num_cases);
+      device_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals,
+                                             shift_by, num_cases);
+
+      if constexpr (std::is_signed_v<DataType>) {
+        for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+        device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals,
+                                               shift_by, num_cases);
+        device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                               shift_by, num_cases);
+      }
     }
   }
 }

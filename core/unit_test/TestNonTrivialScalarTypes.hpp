@@ -140,6 +140,11 @@ struct array_reduce {
 
   KOKKOS_INLINE_FUNCTION
   array_reduce &operator=(const array_reduce &src) {
+    // ROCm 5.5 and earlier returns the wrong result when early return is enable
+#if !defined(KOKKOS_ENABLE_HIP) || (HIP_VERSION_MAJOR > 5) || \
+    ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR >= 6))
+    if (&src == this) return *this;
+#endif
     for (int i = 0; i < N; i++) data[i] = src.data[i];
     return *this;
   }
@@ -214,7 +219,7 @@ struct point_t {
   uint8_t x, y, z;
 
   KOKKOS_FUNCTION
-  point_t() : x(1), y(1), z(1){};
+  point_t() : x(0), y(0), z(0){};
 
   KOKKOS_FUNCTION
   point_t(const point_t &val) : x(val.x), y(val.y), z(val.z){};

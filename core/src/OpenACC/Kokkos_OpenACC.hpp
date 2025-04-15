@@ -42,6 +42,7 @@ static_assert(false,
 // LLVM/Clacc compiler does not need this.
 #ifndef KOKKOS_COMPILER_CLANG
 #define KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
+#define KOKKOS_ENABLE_OPENACC_COLLAPSE_MDRANGE_LOOPS
 #endif
 
 namespace Kokkos::Experimental::Impl {
@@ -87,11 +88,15 @@ class OpenACC {
 
   static char const* name() { return "OpenACC"; }
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static int concurrency() { return 256000; }  // FIXME_OPENACC
+  static int concurrency();
 #else
-  int concurrency() const { return 256000; }  // FIXME_OPENACC
+  int concurrency() const;
 #endif
-  static bool in_parallel() { return acc_on_device(acc_device_not_host); }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED static bool in_parallel() {
+    return acc_on_device(acc_device_not_host);
+  }
+#endif
   uint32_t impl_instance_id() const noexcept;
   Impl::OpenACCInternal* impl_internal_space_instance() const {
     return m_space_instance.get();

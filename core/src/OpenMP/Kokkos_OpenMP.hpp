@@ -27,17 +27,9 @@ static_assert(false,
 
 #include <Kokkos_Core_fwd.hpp>
 
-#include <cstddef>
-#include <iosfwd>
 #include <Kokkos_HostSpace.hpp>
-
-#ifdef KOKKOS_ENABLE_HBWSPACE
-#include <Kokkos_HBWSpace.hpp>
-#endif
-
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_Parallel.hpp>
-#include <Kokkos_TaskScheduler.hpp>
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Profiling_Interface.hpp>
@@ -45,6 +37,8 @@ static_assert(false,
 
 #include <omp.h>
 
+#include <cstddef>
+#include <iosfwd>
 #include <vector>
 
 /*--------------------------------------------------------------------------*/
@@ -62,12 +56,7 @@ class OpenMP {
   //! Tag this class as a kokkos execution space
   using execution_space = OpenMP;
 
-  using memory_space =
-#ifdef KOKKOS_ENABLE_HBWSPACE
-      Experimental::HBWSpace;
-#else
-      HostSpace;
-#endif
+  using memory_space = HostSpace;
 
   //! This execution space preferred device_type
   using device_type          = Kokkos::Device<execution_space, memory_space>;
@@ -77,13 +66,23 @@ class OpenMP {
 
   OpenMP();
 
-  OpenMP(int pool_size);
+  explicit OpenMP(int pool_size);
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  template <typename T = void>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "OpenMP execution space should be constructed explicitly.")
+  OpenMP(int pool_size)
+      : OpenMP(pool_size) {}
+#endif
 
   /// \brief Print configuration information to the given output stream.
   void print_configuration(std::ostream& os, bool verbose = false) const;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief is the instance running a parallel algorithm
-  static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
+  KOKKOS_DEPRECATED static bool in_parallel(OpenMP const& = OpenMP()) noexcept;
+#endif
 
   /// \brief Wait until all dispatched functors complete on the given instance
   ///
@@ -93,11 +92,16 @@ class OpenMP {
   void fence(std::string const& name =
                  "Kokkos::OpenMP::fence: Unnamed Instance Fence") const;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /// \brief Does the given instance return immediately after launching
   /// a parallel algorithm
   ///
   /// This always returns false on OpenMP
-  inline static bool is_asynchronous(OpenMP const& = OpenMP()) noexcept;
+  KOKKOS_DEPRECATED inline static bool is_asynchronous(
+      OpenMP const& = OpenMP()) noexcept {
+    return false;
+  }
+#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency(OpenMP const& = OpenMP());
@@ -154,18 +158,6 @@ inline int OpenMP::impl_thread_pool_rank() noexcept {
   KOKKOS_IF_ON_DEVICE((return -1;))
 }
 
-inline void OpenMP::impl_static_fence(std::string const& name) {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
-      name,
-      Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-          GlobalDeviceSynchronization,
-      []() {});
-}
-
-inline bool OpenMP::is_asynchronous(OpenMP const& /*instance*/) noexcept {
-  return false;
-}
-
 inline int OpenMP::impl_thread_pool_size(int depth) const {
   return depth < 2 ? impl_thread_pool_size() : 1;
 }
@@ -210,7 +202,9 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
 
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <OpenMP/Kokkos_OpenMP_Team.hpp>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <OpenMP/Kokkos_OpenMP_Task.hpp>
+#endif
 
 #include <KokkosExp_MDRangePolicy.hpp>
 /*--------------------------------------------------------------------------*/

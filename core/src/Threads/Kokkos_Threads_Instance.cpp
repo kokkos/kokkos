@@ -67,8 +67,9 @@ std::pair<unsigned, unsigned>
 
 int s_thread_pool_size[3] = {0, 0, 0};
 
-void (*volatile s_current_function)(ThreadsInternal &, const void *);
-const void *volatile s_current_function_arg = nullptr;
+using s_current_function_type = void (*)(ThreadsInternal &, const void *);
+std::atomic<s_current_function_type> s_current_function;
+std::atomic<const void *> s_current_function_arg = nullptr;
 
 inline unsigned fan_size(const unsigned rank, const unsigned size) {
   const unsigned rank_rev = size - (rank + 1);
@@ -79,7 +80,7 @@ inline unsigned fan_size(const unsigned rank, const unsigned size) {
   return count;
 }
 
-void wait_yield(volatile ThreadState &flag, const ThreadState value) {
+void wait_yield(std::atomic<ThreadState> &flag, const ThreadState value) {
   while (value == flag) {
     std::this_thread::yield();
   }
@@ -135,11 +136,12 @@ ThreadsInternal::ThreadsInternal()
     ThreadsInternal *const nil = nullptr;
 
     // Which entry in 's_threads_exec', possibly determined from hwloc binding
-    const int entry = reinterpret_cast<size_t>(s_current_function_arg) <
-                              size_t(s_thread_pool_size[0])
-                          ? reinterpret_cast<size_t>(s_current_function_arg)
-                          : size_t(Kokkos::hwloc::bind_this_thread(
-                                s_thread_pool_size[0], s_threads_coord));
+    const int entry =
+        reinterpret_cast<size_t>(s_current_function_arg.load()) <
+                size_t(s_thread_pool_size[0])
+            ? reinterpret_cast<size_t>(s_current_function_arg.load())
+            : size_t(Kokkos::hwloc::bind_this_thread(s_thread_pool_size[0],
+                                                     s_threads_coord));
 
     // Given a good entry set this thread in the 's_threads_exec' array
     if (entry < s_thread_pool_size[0] &&
@@ -172,14 +174,9 @@ ThreadsInternal::ThreadsInternal()
 ThreadsInternal::~ThreadsInternal() {
   const unsigned entry = m_pool_size - (m_pool_rank + 1);
 
-  using Record = Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-
   if (m_scratch) {
-    Record *const r = Record::get_record(m_scratch);
-
+    Kokkos::kokkos_free<Kokkos::HostSpace>(m_scratch);
     m_scratch = nullptr;
-
-    Record::decrement(r);
   }
 
   m_pool_base          = nullptr;
@@ -246,13 +243,15 @@ void ThreadsInternal::verify_is_process(const std::string &name,
   }
 }
 
-int ThreadsInternal::in_parallel() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_DEPRECATED int ThreadsInternal::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
   // the master process is a worker or is not the master process.
   return s_current_function && (&s_threads_process != s_current_function_arg) &&
          (s_threads_process.m_pool_base || !is_process());
 }
+#endif
 void ThreadsInternal::fence() {
   fence("Kokkos::ThreadsInternal::fence: Unnamed Instance Fence");
 }
@@ -315,11 +314,8 @@ void ThreadsInternal::execute_resize_scratch_in_serial() {
 
   auto deallocate_scratch_memory = [](ThreadsInternal &exec) {
     if (exec.m_scratch) {
-      using Record =
-          Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-      Record *const r = Record::get_record(exec.m_scratch);
-      exec.m_scratch  = nullptr;
-      Record::decrement(r);
+      Kokkos::kokkos_free<Kokkos::HostSpace>(exec.m_scratch);
+      exec.m_scratch = nullptr;
     }
   };
   if (s_threads_process.m_pool_base) {
@@ -370,15 +366,8 @@ void ThreadsInternal::first_touch_allocate_thread_private_scratch(
   if (s_threads_process.m_scratch_thread_end) {
     // Allocate tracked memory:
     {
-      using Record =
-          Kokkos::Impl::SharedAllocationRecord<Kokkos::HostSpace, void>;
-      Record *const r =
-          Record::allocate(Kokkos::HostSpace(), "Kokkos::thread_scratch",
-                           s_threads_process.m_scratch_thread_end);
-
-      Record::increment(r);
-
-      exec.m_scratch = r->data();
+      exec.m_scratch = Kokkos::kokkos_malloc<Kokkos::HostSpace>(
+          "Kokkos::thread_scratch", s_threads_process.m_scratch_thread_end);
     }
 
     unsigned *ptr = reinterpret_cast<unsigned *>(exec.m_scratch);
@@ -556,7 +545,7 @@ void ThreadsInternal::initialize(int thread_count_arg) {
     for (unsigned ith = 1; ith < thread_count; ++ith) {
       // Try to protect against cache coherency failure by casting to volatile.
       ThreadsInternal *const th =
-          ((ThreadsInternal * volatile *)s_threads_exec)[ith];
+          ((ThreadsInternal *volatile *)s_threads_exec)[ith];
       if (th) {
         wait_yield(th->m_pool_state, ThreadState::Active);
       } else {
@@ -672,8 +661,6 @@ void ThreadsInternal::finalize() {
   s_threads_process.m_pool_size     = 1;
   s_threads_process.m_pool_fan_size = 0;
   s_threads_process.m_pool_state    = ThreadState::Inactive;
-
-  Kokkos::Profiling::finalize();
 }
 
 //----------------------------------------------------------------------------

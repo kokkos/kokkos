@@ -34,6 +34,8 @@ class mdspan
 private:
   static_assert(detail::__is_extents_v<Extents>,
                 MDSPAN_IMPL_STANDARD_NAMESPACE_STRING "::mdspan's Extents template parameter must be a specialization of " MDSPAN_IMPL_STANDARD_NAMESPACE_STRING "::extents.");
+  static_assert(std::is_same<ElementType, typename AccessorPolicy::element_type>::value,
+                MDSPAN_IMPL_STANDARD_NAMESPACE_STRING "::mdspan's ElementType template parameter must be the same as its AccessorPolicy::element_type.");
 
   // Workaround for non-deducibility of the index sequence template parameter if it's given at the top level
   template <class>
@@ -44,17 +46,24 @@ private:
   {
     MDSPAN_FORCE_INLINE_FUNCTION static constexpr
     size_t __size(mdspan const& __self) noexcept {
-      return _MDSPAN_FOLD_TIMES_RIGHT((__self.__mapping_ref().extents().extent(Idxs)), /* * ... * */ size_t(1));
+      return MDSPAN_IMPL_FOLD_TIMES_RIGHT((__self.__mapping_ref().extents().extent(Idxs)), /* * ... * */ size_t(1));
     }
     MDSPAN_FORCE_INLINE_FUNCTION static constexpr
     bool __empty(mdspan const& __self) noexcept {
-      return (__self.rank()>0) && _MDSPAN_FOLD_OR((__self.__mapping_ref().extents().extent(Idxs)==index_type(0)));
+      return (__self.rank()>0) && MDSPAN_IMPL_FOLD_OR((__self.__mapping_ref().extents().extent(Idxs)==index_type(0)));
     }
     template <class ReferenceType, class SizeType, size_t N>
     MDSPAN_FORCE_INLINE_FUNCTION static constexpr
     ReferenceType __callop(mdspan const& __self, const std::array<SizeType, N>& indices) noexcept {
       return __self.__accessor_ref().access(__self.__ptr_ref(), __self.__mapping_ref()(indices[Idxs]...));
     }
+#ifdef __cpp_lib_span
+    template <class ReferenceType, class SizeType, size_t N>
+    MDSPAN_FORCE_INLINE_FUNCTION static constexpr
+    ReferenceType __callop(mdspan const& __self, const std::span<SizeType, N>& indices) noexcept {
+      return __self.__accessor_ref().access(__self.__ptr_ref(), __self.__mapping_ref()(indices[Idxs]...));
+    }
+#endif
   };
 
 public:
@@ -98,9 +107,9 @@ public:
     requires(
        // nvhpc has a bug where using just rank_dynamic() here doesn't work ...
        (extents_type::rank_dynamic() > 0) &&
-       _MDSPAN_TRAIT(std::is_default_constructible, data_handle_type) &&
-       _MDSPAN_TRAIT(std::is_default_constructible, mapping_type) &&
-       _MDSPAN_TRAIT(std::is_default_constructible, accessor_type)
+       MDSPAN_IMPL_TRAIT(std::is_default_constructible, data_handle_type) &&
+       MDSPAN_IMPL_TRAIT(std::is_default_constructible, mapping_type) &&
+       MDSPAN_IMPL_TRAIT(std::is_default_constructible, accessor_type)
      ) = default;
 #endif
   MDSPAN_INLINE_FUNCTION_DEFAULTED constexpr mdspan(const mdspan&) = default;
@@ -109,11 +118,10 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class... SizeTypes,
     /* requires */ (
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT(std::is_convertible, SizeTypes, index_type) /* && ... */) &&
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeTypes) /* && ... */) &&
       ((sizeof...(SizeTypes) == rank()) || (sizeof...(SizeTypes) == rank_dynamic())) &&
-      _MDSPAN_TRAIT(std::is_constructible, mapping_type, extents_type) &&
-      _MDSPAN_TRAIT(std::is_default_constructible, accessor_type)
+      (detail::are_valid_indices<index_type, SizeTypes...>()) &&
+      MDSPAN_IMPL_TRAIT(std::is_constructible, mapping_type, extents_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_default_constructible, accessor_type)
     )
   )
   MDSPAN_INLINE_FUNCTION
@@ -125,11 +133,11 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType, size_t N,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_convertible, SizeType, index_type) &&
-      _MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeType) &&
+      MDSPAN_IMPL_TRAIT(std::is_convertible, const SizeType&, index_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, const SizeType&) &&
       ((N == rank()) || (N == rank_dynamic())) &&
-      _MDSPAN_TRAIT(std::is_constructible, mapping_type, extents_type) &&
-      _MDSPAN_TRAIT(std::is_default_constructible, accessor_type)
+      MDSPAN_IMPL_TRAIT(std::is_constructible, mapping_type, extents_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_default_constructible, accessor_type)
     )
   )
   MDSPAN_CONDITIONAL_EXPLICIT(N != rank_dynamic())
@@ -142,11 +150,11 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType, size_t N,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_convertible, SizeType, index_type) &&
-      _MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeType) &&
+      MDSPAN_IMPL_TRAIT(std::is_convertible, const SizeType&, index_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, const SizeType&) &&
       ((N == rank()) || (N == rank_dynamic())) &&
-      _MDSPAN_TRAIT(std::is_constructible, mapping_type, extents_type) &&
-      _MDSPAN_TRAIT(std::is_default_constructible, accessor_type)
+      MDSPAN_IMPL_TRAIT(std::is_constructible, mapping_type, extents_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_default_constructible, accessor_type)
     )
   )
   MDSPAN_CONDITIONAL_EXPLICIT(N != rank_dynamic())
@@ -159,15 +167,15 @@ public:
   MDSPAN_FUNCTION_REQUIRES(
     (MDSPAN_INLINE_FUNCTION constexpr),
     mdspan, (data_handle_type p, const extents_type& exts), ,
-    /* requires */ (_MDSPAN_TRAIT(std::is_default_constructible, accessor_type) &&
-                    _MDSPAN_TRAIT(std::is_constructible, mapping_type, extents_type))
+    /* requires */ (MDSPAN_IMPL_TRAIT(std::is_default_constructible, accessor_type) &&
+                    MDSPAN_IMPL_TRAIT(std::is_constructible, mapping_type, const extents_type&))
   ) : __members(std::move(p), __map_acc_pair_t(mapping_type(exts), accessor_type()))
   { }
 
   MDSPAN_FUNCTION_REQUIRES(
     (MDSPAN_INLINE_FUNCTION constexpr),
     mdspan, (data_handle_type p, const mapping_type& m), ,
-    /* requires */ (_MDSPAN_TRAIT(std::is_default_constructible, accessor_type))
+    /* requires */ (MDSPAN_IMPL_TRAIT(std::is_default_constructible, accessor_type))
   ) : __members(std::move(p), __map_acc_pair_t(m, accessor_type()))
   { }
 
@@ -179,16 +187,20 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class OtherElementType, class OtherExtents, class OtherLayoutPolicy, class OtherAccessor,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_constructible, mapping_type, typename OtherLayoutPolicy::template mapping<OtherExtents>) &&
-      _MDSPAN_TRAIT(std::is_constructible, accessor_type, OtherAccessor)
+      MDSPAN_IMPL_TRAIT(std::is_constructible, mapping_type, const typename OtherLayoutPolicy::template mapping<OtherExtents>&) &&
+      MDSPAN_IMPL_TRAIT(std::is_constructible, accessor_type, const OtherAccessor&)
     )
+  )
+  MDSPAN_CONDITIONAL_EXPLICIT(
+    !MDSPAN_IMPL_TRAIT(std::is_convertible, const typename OtherLayoutPolicy::template mapping<OtherExtents>&, mapping_type) ||
+    !MDSPAN_IMPL_TRAIT(std::is_convertible, const OtherAccessor&, accessor_type)
   )
   MDSPAN_INLINE_FUNCTION
   constexpr mdspan(const mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessor>& other)
     : __members(other.__ptr_ref(), __map_acc_pair_t(other.__mapping_ref(), other.__accessor_ref()))
   {
-      static_assert(_MDSPAN_TRAIT(std::is_constructible, data_handle_type, typename OtherAccessor::data_handle_type),"Incompatible data_handle_type for mdspan construction");
-      static_assert(_MDSPAN_TRAIT(std::is_constructible, extents_type, OtherExtents),"Incompatible extents for mdspan construction");
+      static_assert(MDSPAN_IMPL_TRAIT(std::is_constructible, data_handle_type, typename OtherAccessor::data_handle_type),"Incompatible data_handle_type for mdspan construction");
+      static_assert(MDSPAN_IMPL_TRAIT(std::is_constructible, extents_type, OtherExtents),"Incompatible extents for mdspan construction");
       /*
        * TODO: Check precondition
        * For each rank index r of extents_type, static_extent(r) == dynamic_extent || static_extent(r) == other.extent(r) is true.
@@ -200,8 +212,8 @@ public:
   ~mdspan() = default;
   */
 
-  MDSPAN_INLINE_FUNCTION_DEFAULTED _MDSPAN_CONSTEXPR_14_DEFAULTED mdspan& operator=(const mdspan&) = default;
-  MDSPAN_INLINE_FUNCTION_DEFAULTED _MDSPAN_CONSTEXPR_14_DEFAULTED mdspan& operator=(mdspan&&) = default;
+  MDSPAN_INLINE_FUNCTION_DEFAULTED MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED mdspan& operator=(const mdspan&) = default;
+  MDSPAN_INLINE_FUNCTION_DEFAULTED MDSPAN_IMPL_CONSTEXPR_14_DEFAULTED mdspan& operator=(mdspan&&) = default;
 
 
   //--------------------------------------------------------------------------------
@@ -211,8 +223,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class... SizeTypes,
     /* requires */ (
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT(std::is_convertible, SizeTypes, index_type) /* && ... */) &&
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeTypes) /* && ... */) &&
+      MDSPAN_IMPL_FOLD_AND(MDSPAN_IMPL_TRAIT(std::is_convertible, SizeTypes, index_type) /* && ... */) &&
+      MDSPAN_IMPL_FOLD_AND(MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, SizeTypes) /* && ... */) &&
       (rank() == sizeof...(SizeTypes))
     )
   )
@@ -226,8 +238,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_convertible, SizeType, index_type) &&
-      _MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeType)
+      MDSPAN_IMPL_TRAIT(std::is_convertible, const SizeType&, index_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, const SizeType&)
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
@@ -240,8 +252,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_convertible, SizeType, index_type) &&
-      _MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeType)
+      MDSPAN_IMPL_TRAIT(std::is_convertible, const SizeType&, index_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, const SizeType&)
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
@@ -255,8 +267,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class Index,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_convertible, Index, index_type) &&
-      _MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, Index) &&
+      MDSPAN_IMPL_TRAIT(std::is_convertible, Index, index_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, Index) &&
       extents_type::rank() == 1
     )
   )
@@ -271,9 +283,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class... SizeTypes,
     /* requires */ (
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT(std::is_convertible, SizeTypes, index_type) /* && ... */) &&
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeTypes) /* && ... */) &&
-      extents_type::rank() == sizeof...(SizeTypes)
+      extents_type::rank() == sizeof...(SizeTypes) &&
+      (detail::are_valid_indices<index_type, SizeTypes...>())
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
@@ -285,8 +296,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_convertible, SizeType, index_type) &&
-      _MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeType)
+      MDSPAN_IMPL_TRAIT(std::is_convertible, const SizeType&, index_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, const SizeType&)
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
@@ -299,8 +310,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_convertible, SizeType, index_type) &&
-      _MDSPAN_TRAIT(std::is_nothrow_constructible, index_type, SizeType)
+      MDSPAN_IMPL_TRAIT(std::is_convertible, const SizeType&, index_type) &&
+      MDSPAN_IMPL_TRAIT(std::is_nothrow_constructible, index_type, const SizeType&)
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
@@ -311,8 +322,8 @@ public:
   #endif // __cpp_lib_span
   #endif // MDSPAN_USE_PAREN_OPERATOR
 
-  MDSPAN_INLINE_FUNCTION constexpr size_t size() const noexcept {
-    return __impl::__size(*this);
+  MDSPAN_INLINE_FUNCTION constexpr size_type size() const noexcept {
+    return static_cast<size_type>(__impl::__size(*this));
   };
 
   MDSPAN_INLINE_FUNCTION constexpr bool empty() const noexcept {
@@ -322,7 +333,7 @@ public:
   MDSPAN_INLINE_FUNCTION
   friend constexpr void swap(mdspan& x, mdspan& y) noexcept {
     // can't call the std::swap inside on HIP
-    #if !defined(_MDSPAN_HAS_HIP) && !defined(_MDSPAN_HAS_CUDA)
+    #if !defined(MDSPAN_IMPL_HAS_HIP) && !defined(MDSPAN_IMPL_HAS_CUDA)
     using std::swap;
     swap(x.__ptr_ref(), y.__ptr_ref());
     swap(x.__mapping_ref(), y.__mapping_ref());
@@ -346,24 +357,24 @@ public:
   //--------------------------------------------------------------------------------
   // [mdspan.basic.obs], mdspan observers of the mapping
 
-  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_unique() noexcept { return mapping_type::is_always_unique(); };
-  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_exhaustive() noexcept { return mapping_type::is_always_exhaustive(); };
-  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_strided() noexcept { return mapping_type::is_always_strided(); };
+  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_unique() { return mapping_type::is_always_unique(); };
+  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_exhaustive() { return mapping_type::is_always_exhaustive(); };
+  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_strided() { return mapping_type::is_always_strided(); };
 
-  MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const noexcept { return __mapping_ref().is_unique(); };
-  MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const noexcept { return __mapping_ref().is_exhaustive(); };
-  MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const noexcept { return __mapping_ref().is_strided(); };
+  MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const { return __mapping_ref().is_unique(); };
+  MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const { return __mapping_ref().is_exhaustive(); };
+  MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const { return __mapping_ref().is_strided(); };
   MDSPAN_INLINE_FUNCTION constexpr index_type stride(size_t r) const { return __mapping_ref().stride(r); };
 
 private:
 
   detail::__compressed_pair<data_handle_type, __map_acc_pair_t> __members{};
 
-  MDSPAN_FORCE_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14 data_handle_type& __ptr_ref() noexcept { return __members.__first(); }
+  MDSPAN_FORCE_INLINE_FUNCTION MDSPAN_IMPL_CONSTEXPR_14 data_handle_type& __ptr_ref() noexcept { return __members.__first(); }
   MDSPAN_FORCE_INLINE_FUNCTION constexpr data_handle_type const& __ptr_ref() const noexcept { return __members.__first(); }
-  MDSPAN_FORCE_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14 mapping_type& __mapping_ref() noexcept { return __members.__second().__first(); }
+  MDSPAN_FORCE_INLINE_FUNCTION MDSPAN_IMPL_CONSTEXPR_14 mapping_type& __mapping_ref() noexcept { return __members.__second().__first(); }
   MDSPAN_FORCE_INLINE_FUNCTION constexpr mapping_type const& __mapping_ref() const noexcept { return __members.__second().__first(); }
-  MDSPAN_FORCE_INLINE_FUNCTION _MDSPAN_CONSTEXPR_14 accessor_type& __accessor_ref() noexcept { return __members.__second().__second(); }
+  MDSPAN_FORCE_INLINE_FUNCTION MDSPAN_IMPL_CONSTEXPR_14 accessor_type& __accessor_ref() noexcept { return __members.__second().__second(); }
   MDSPAN_FORCE_INLINE_FUNCTION constexpr accessor_type const& __accessor_ref() const noexcept { return __members.__second().__second(); }
 
   template <class, class, class, class>
@@ -371,10 +382,10 @@ private:
 
 };
 
-#if defined(_MDSPAN_USE_CLASS_TEMPLATE_ARGUMENT_DEDUCTION)
+#if defined(MDSPAN_IMPL_USE_CLASS_TEMPLATE_ARGUMENT_DEDUCTION)
 MDSPAN_TEMPLATE_REQUIRES(
   class ElementType, class... SizeTypes,
-  /* requires */ _MDSPAN_FOLD_AND(_MDSPAN_TRAIT(std::is_integral, SizeTypes) /* && ... */) &&
+  /* requires */ MDSPAN_IMPL_FOLD_AND(MDSPAN_IMPL_TRAIT(std::is_convertible, SizeTypes, size_t) /* && ... */) &&
   (sizeof...(SizeTypes) > 0)
 )
 MDSPAN_DEDUCTION_GUIDE explicit mdspan(ElementType*, SizeTypes...)
@@ -382,13 +393,13 @@ MDSPAN_DEDUCTION_GUIDE explicit mdspan(ElementType*, SizeTypes...)
 
 MDSPAN_TEMPLATE_REQUIRES(
   class Pointer,
-  (_MDSPAN_TRAIT(std::is_pointer, std::remove_reference_t<Pointer>))
+  (MDSPAN_IMPL_TRAIT(std::is_pointer, std::remove_reference_t<Pointer>))
 )
 MDSPAN_DEDUCTION_GUIDE mdspan(Pointer&&) -> mdspan<std::remove_pointer_t<std::remove_reference_t<Pointer>>, extents<size_t>>;
 
 MDSPAN_TEMPLATE_REQUIRES(
   class CArray,
-  (_MDSPAN_TRAIT(std::is_array, CArray) && (std::rank_v<CArray> == 1))
+  (MDSPAN_IMPL_TRAIT(std::is_array, CArray) && (std::rank_v<CArray> == 1))
 )
 MDSPAN_DEDUCTION_GUIDE mdspan(CArray&) -> mdspan<std::remove_all_extents_t<CArray>, extents<size_t, ::std::extent_v<CArray,0>>>;
 

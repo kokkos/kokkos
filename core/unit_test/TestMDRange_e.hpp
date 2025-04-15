@@ -24,6 +24,14 @@ TEST(TEST_CATEGORY, mdrange_4d) {
   TestMDRange_4D<TEST_EXECSPACE>::test_reduce4(100, 10, 10, 10);
 #endif
   TestMDRange_4D<TEST_EXECSPACE>::test_for4(100, 10, 10, 10);
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+  const int size_x = 2 << 19;  // 2^20
+  TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(size_x, 1, 1, 1);
+  TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, size_x, 1, 1);
+  TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, 1, size_x, 1);
+  TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, 1, 1, size_x);
+#endif
 }
 
 }  // namespace Test

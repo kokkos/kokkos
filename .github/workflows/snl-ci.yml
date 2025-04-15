@@ -1,0 +1,183 @@
+name: SNL-CI
+
+on: 
+  pull_request:
+    paths-ignore:
+    - '**/*.md'
+    types: [ opened, reopened, synchronize ]
+
+permissions:
+  contents: none
+
+# Cancels any in progress 'workflow' associated with this PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  CUDA_12_2_CPP20:
+    name: SNL_CUDA_NVCC_12_2_CPP20
+    runs-on: [snl-kk-env-cuda-12.2.0-gcc-11.3.0-latest]
+
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
+    
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          nvidia-smi
+          cd kokkos
+          cmake -B build \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DKokkos_ENABLE_CUDA=ON \
+            -DKokkos_ARCH_HOPPER90=ON \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
+            ./
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build -j36
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
+  HIP_5_6_1:
+    name: SNL_HIP_ROCM_5_6_1
+    runs-on: [snl-kk-env-openblas-0.3.23-hip-5.6.1-latest]
+
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+            -DCMAKE_CXX_COMPILER=hipcc \
+            -DKokkos_ENABLE_HIP=ON \
+            -DKokkos_ARCH_AMD_GFX90A=ON \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
+  INTEL_2024_2_1_SPR:
+    name: SNL_OPENMP_SERIAL_INTEL_2024_2_1
+    runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-spr]
+
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+            -DCMAKE_CXX_COMPILER=icpx \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -Wno-pass-failed' \
+            -DKokkos_ENABLE_OPENMP=ON \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ARCH_SPR=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
+  INTEL_2024_2_1_PVC:
+    name: SNL_SYCL_INTEL_2024_2_1
+    runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
+
+    strategy:
+      matrix:
+        view_legacy: [ON, OFF]
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+            -DCMAKE_CXX_COMPILER=icpx \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -fsycl-device-code-split=per_kernel' \
+            -DKokkos_ENABLE_SYCL=ON \
+            -DKokkos_ARCH_INTEL_PVC=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure --timeout 3600
+

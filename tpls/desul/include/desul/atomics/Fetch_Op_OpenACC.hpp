@@ -390,9 +390,11 @@ std::enable_if_t<is_openacc_arithmetic_type_v<T>, void> device_atomic_store(
 template <class T>
 std::enable_if_t<is_openacc_arithmetic_type_v<T>, void> device_atomic_store(
     T* const ptr, const T val, MemoryOrderRelease, MemoryScopeDevice) {
-  printf(
-      "DESUL error in device_atomic_store(MemoryOrderRelease): Not supported atomic "
-      "operation in the OpenACC backend\n");
+  if (acc_on_device(acc_device_not_host)) {
+    printf(
+        "DESUL error in device_atomic_store(MemoryOrderRelease): Not supported atomic "
+        "operation in the OpenACC backend\n");
+  }
 #pragma acc atomic write
   *ptr = val;
 }
@@ -411,9 +413,11 @@ std::enable_if_t<is_openacc_arithmetic_type_v<T>, T> device_atomic_load(
 template <class T>
 std::enable_if_t<is_openacc_arithmetic_type_v<T>, T> device_atomic_load(
     const T* const ptr, MemoryOrderAcquire, MemoryScopeDevice) {
-  printf(
-      "DESUL error in device_atomic_load(MemoryOrderAcquire): Not supported atomic "
-      "operation in the OpenACC backend\n");
+  if (acc_on_device(acc_device_not_host)) {
+    printf(
+        "DESUL error in device_atomic_load(MemoryOrderAcquire): Not supported atomic "
+        "operation in the OpenACC backend\n");
+  }
   T retval;
 #pragma acc atomic read
   retval = *ptr;

@@ -92,7 +92,7 @@ void fill_view(ViewType dest_view, const std::string& name) {
   }
 
   else {
-    throw std::runtime_error("invalid choice");
+    FAIL() << "invalid choice";
   }
 
   Kokkos::deep_copy(aux_view, v_h);
@@ -123,7 +123,8 @@ auto compute_gold(ViewType view, const std::string& name) {
   } else if (name == "large-b") {
     return KE::begin(view) + 156;
   } else {
-    throw std::runtime_error("invalid choice");
+    Kokkos::abort("invalid choice");
+    return KE::end(view);  // unreachable
   }
 }
 
@@ -145,25 +146,26 @@ void run_single_scenario(const InfoType& scenario_info) {
       KE::is_sorted_until("label", exespace(), KE::begin(view), KE::end(view));
   auto r3 = KE::is_sorted_until(exespace(), view);
   auto r4 = KE::is_sorted_until("label", exespace(), view);
-  ASSERT_EQ(r1, gold);
-  ASSERT_EQ(r2, gold);
-  ASSERT_EQ(r3, gold);
-  ASSERT_EQ(r4, gold);
+  ASSERT_EQ(r1, gold) << name << ", " << view_tag_to_string(Tag{});
+  ASSERT_EQ(r2, gold) << name << ", " << view_tag_to_string(Tag{});
+  ASSERT_EQ(r3, gold) << name << ", " << view_tag_to_string(Tag{});
+  ASSERT_EQ(r4, gold) << name << ", " << view_tag_to_string(Tag{});
 
 #if !defined KOKKOS_ENABLE_OPENMPTARGET
   CustomLessThanComparator<ValueType, ValueType> comp;
-  auto r5 =
+  [[maybe_unused]] auto r5 =
       KE::is_sorted_until(exespace(), KE::cbegin(view), KE::cend(view), comp);
-  auto r6 = KE::is_sorted_until("label", exespace(), KE::cbegin(view),
-                                KE::cend(view), comp);
-  auto r7 = KE::is_sorted_until(exespace(), view, comp);
-  auto r8 = KE::is_sorted_until("label", exespace(), view, comp);
+  [[maybe_unused]] auto r6 = KE::is_sorted_until(
+      "label", exespace(), KE::cbegin(view), KE::cend(view), comp);
+  [[maybe_unused]] auto r7 = KE::is_sorted_until(exespace(), view, comp);
+  [[maybe_unused]] auto r8 =
+      KE::is_sorted_until("label", exespace(), view, comp);
 #endif
 
-  ASSERT_EQ(r1, gold);
-  ASSERT_EQ(r2, gold);
-  ASSERT_EQ(r3, gold);
-  ASSERT_EQ(r4, gold);
+  ASSERT_EQ(r1, gold) << name << ", " << view_tag_to_string(Tag{});
+  ASSERT_EQ(r2, gold) << name << ", " << view_tag_to_string(Tag{});
+  ASSERT_EQ(r3, gold) << name << ", " << view_tag_to_string(Tag{});
+  ASSERT_EQ(r4, gold) << name << ", " << view_tag_to_string(Tag{});
 
   Kokkos::fence();
 }
@@ -175,9 +177,6 @@ void run_is_sorted_until_all_scenarios() {
       {"two-elements-b", 2}, {"small-a", 9},     {"small-b", 13},
       {"medium-a", 1003},    {"medium-b", 1003}, {"large-a", 101513},
       {"large-b", 101513}};
-
-  std::cout << "is_sorted_until: " << view_tag_to_string(Tag{})
-            << ", all overloads \n";
 
   for (const auto& it : scenarios) {
     run_single_scenario<Tag, ValueType>(it);

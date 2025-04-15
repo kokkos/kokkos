@@ -27,25 +27,16 @@ static_assert(false,
 
 #include <Kokkos_Core_fwd.hpp>
 
-#include <Kokkos_HostSpace.hpp>
-#include <cstddef>
-#include <iosfwd>
-
-#ifdef KOKKOS_ENABLE_HBWSPACE
-#include <Kokkos_HBWSpace.hpp>
-#endif
-
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_Layout.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_ScratchSpace.hpp>
-#include <Kokkos_TaskScheduler.hpp>
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_Tools.hpp>
-#include <impl/Kokkos_TaskQueue.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
@@ -59,6 +50,7 @@ static_assert(false,
 
 #include <Kokkos_UniqueToken.hpp>
 
+#include <cstddef>
 #include <iosfwd>
 #include <functional>
 #include <memory>
@@ -82,15 +74,15 @@ class hpx_thread_buffer {
   }
 
  public:
-  hpx_thread_buffer()                          = default;
-  ~hpx_thread_buffer()                         = default;
-  hpx_thread_buffer(const hpx_thread_buffer &) = delete;
-  hpx_thread_buffer(hpx_thread_buffer &&)      = delete;
+  hpx_thread_buffer()                                     = default;
+  ~hpx_thread_buffer()                                    = default;
+  hpx_thread_buffer(const hpx_thread_buffer &)            = delete;
+  hpx_thread_buffer(hpx_thread_buffer &&)                 = delete;
   hpx_thread_buffer &operator=(const hpx_thread_buffer &) = delete;
-  hpx_thread_buffer &operator=(hpx_thread_buffer) = delete;
+  hpx_thread_buffer &operator=(hpx_thread_buffer)         = delete;
 
   void resize(const std::size_t num_threads, const std::size_t size_per_thread,
-              const std::size_t extra_space = 0) noexcept;
+              const std::size_t extra_space = 0);
   void *get(std::size_t thread_num) const noexcept;
   void *get_extra_space() const noexcept;
 };
@@ -147,10 +139,10 @@ class HPX {
                   hpx::execution::experimental::unique_any_sender<> &&sender)
         : m_instance_id(instance_id), m_sender{std::move(sender)} {}
 
-    instance_data(const instance_data &) = delete;
-    instance_data(instance_data &&)      = delete;
+    instance_data(const instance_data &)            = delete;
+    instance_data(instance_data &&)                 = delete;
     instance_data &operator=(const instance_data &) = delete;
-    instance_data &operator=(instance_data) = delete;
+    instance_data &operator=(instance_data)         = delete;
 
     uint32_t m_instance_id{HPX::impl_default_instance_id()};
     hpx::execution::experimental::unique_any_sender<> m_sender{
@@ -175,21 +167,35 @@ class HPX {
       : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
             &m_default_instance_data, &default_instance_deleter)) {}
   ~HPX() = default;
-  HPX(instance_mode mode)
+  explicit HPX(instance_mode mode)
       : m_instance_data(
             mode == instance_mode::independent
                 ? (Kokkos::Impl::HostSharedPtr<instance_data>(
                       new instance_data(m_next_instance_id++)))
                 : Kokkos::Impl::HostSharedPtr<instance_data>(
                       &m_default_instance_data, &default_instance_deleter)) {}
-  HPX(hpx::execution::experimental::unique_any_sender<> &&sender)
+  explicit HPX(hpx::execution::experimental::unique_any_sender<> &&sender)
       : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
             new instance_data(m_next_instance_id++, std::move(sender)))) {}
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  template <typename T = void>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "HPX execution space should be constructed explicitly.")
+  HPX(instance_mode mode)
+      : HPX(mode) {}
+
+  template <typename T = void>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "HPX execution space should be constructed explicitly.")
+  HPX(hpx::execution::experimental::unique_any_sender<> &&sender)
+      : HPX(std::move(sender)) {}
+#endif
 
   HPX(HPX &&other)      = default;
   HPX(const HPX &other) = default;
 
-  HPX &operator=(HPX &&) = default;
+  HPX &operator=(HPX &&)      = default;
   HPX &operator=(const HPX &) = default;
 
   void print_configuration(std::ostream &os, bool /*verbose*/ = false) const;
@@ -201,14 +207,15 @@ class HPX {
     return impl_get_instance_data().m_instance_id;
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static bool &impl_get_in_parallel() noexcept;
 
   struct impl_in_parallel_scope {
     impl_in_parallel_scope() noexcept;
     ~impl_in_parallel_scope() noexcept;
-    impl_in_parallel_scope(impl_in_parallel_scope &&)      = delete;
-    impl_in_parallel_scope(impl_in_parallel_scope const &) = delete;
-    impl_in_parallel_scope &operator=(impl_in_parallel_scope &&) = delete;
+    impl_in_parallel_scope(impl_in_parallel_scope &&)                 = delete;
+    impl_in_parallel_scope(impl_in_parallel_scope const &)            = delete;
+    impl_in_parallel_scope &operator=(impl_in_parallel_scope &&)      = delete;
     impl_in_parallel_scope &operator=(impl_in_parallel_scope const &) = delete;
   };
 
@@ -223,9 +230,10 @@ class HPX {
         delete;
   };
 
-  static bool in_parallel(HPX const & = HPX()) noexcept {
+  KOKKOS_DEPRECATED static bool in_parallel(HPX const & = HPX()) noexcept {
     return impl_get_in_parallel();
   }
+#endif
 
   static void impl_decrement_active_parallel_region_count();
   static void impl_increment_active_parallel_region_count();
@@ -240,13 +248,15 @@ class HPX {
     impl_instance_fence(name);
   }
 
-  static bool is_asynchronous(HPX const & = HPX()) noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED static bool is_asynchronous(HPX const & = HPX()) noexcept {
 #if defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH)
     return true;
 #else
     return false;
 #endif
   }
+#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
@@ -272,8 +282,8 @@ class HPX {
     return impl_get_instance_data().m_buffer;
   }
 
-  hpx::execution::experimental::unique_any_sender<> &impl_get_sender() const
-      noexcept {
+  hpx::execution::experimental::unique_any_sender<> &impl_get_sender()
+      const noexcept {
     return impl_get_instance_data().m_sender;
   }
 
@@ -343,7 +353,9 @@ class HPX {
                            hpx::threads::thread_stacksize::default_) const {
     impl_bulk_plain_erased(force_synchronous, is_light_weight_policy,
                            {[functor](Index i) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                              impl_in_parallel_scope p;
+#endif
                              functor.execute_range(i);
                            }},
                            n, stacksize);
@@ -405,15 +417,21 @@ class HPX {
           hpx::threads::thread_stacksize::default_) const {
     impl_bulk_setup_finalize_erased(force_synchronous, is_light_weight_policy,
                                     {[functor](Index i) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.execute_range(i);
                                     }},
                                     {[functor]() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.setup();
                                     }},
                                     {[functor]() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
                                       impl_in_parallel_scope p;
+#endif
                                       functor.finalize();
                                     }},
                                     n, stacksize);
@@ -429,6 +447,20 @@ class HPX {
     return !(lhs == rhs);
   }
 };
+
+template <typename... Args>
+std::vector<HPX> partition_space(HPX const &, Args... args) {
+  std::vector<HPX> instances(sizeof...(args));
+  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
+  return instances;
+}
+
+template <typename T>
+std::vector<HPX> partition_space(HPX const &, std::vector<T> const &weights) {
+  std::vector<HPX> instances(weights.size());
+  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
+  return instances;
+}
 
 extern template void HPX::impl_bulk_plain_erased<int>(
     bool, bool, std::function<void(int)> &&, int const,
@@ -759,9 +791,9 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     m_team_size =
         team_size_request > max_team_size ? max_team_size : team_size_request;
 
-    if (m_chunk_size > 0) {
-      if (!Impl::is_integral_power_of_two(m_chunk_size))
-        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+    if (m_chunk_size > 0 &&
+        !Kokkos::has_single_bit(static_cast<unsigned>(m_chunk_size))) {
+      Kokkos::abort("TeamPolicy blocking granularity must be power of two");
     } else {
       int new_chunk_size = 1;
       while (new_chunk_size * 4 * m_space.concurrency() < m_league_size) {
@@ -1280,6 +1312,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1287,6 +1320,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1308,6 +1344,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1315,6 +1352,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1395,6 +1435,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const WorkRange range(m_policy, t, num_worker_threads);
     execute_chunk(range.begin(), range.end(), update_sum, false);
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1402,6 +1443,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     if (t == 0) {
       final_reducer.init(reinterpret_cast<pointer_type>(
@@ -1423,6 +1467,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       }
     }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
     {
       // Since arrive_and_wait may yield and resume on another worker thread we
       // set in_parallel = false on the current thread before suspending and set
@@ -1430,6 +1475,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       Kokkos::Experimental::HPX::impl_not_in_parallel_scope p;
       barrier.arrive_and_wait();
     }
+#else
+    barrier.arrive_and_wait();
+#endif
 
     reference_type update_base =
         Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
@@ -1739,11 +1787,24 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
-  result = ValueType();
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, Lambda,
+      ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
+
+  wrapped_reducer_type wrapped_reducer(lambda);
+  value_type value;
+  wrapped_reducer.init(&value);
+
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, result);
+    lambda(i, value);
   }
+
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 /** \brief  Intra-thread vector parallel_for. Executes lambda(iType i) for each
@@ -1777,14 +1838,26 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, ValueType &result) {
-  result = ValueType();
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, Lambda,
+      ValueType>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+  using value_type           = typename wrapped_reducer_type::value_type;
+
+  wrapped_reducer_type wrapped_reducer(lambda);
+  value_type value;
+  wrapped_reducer.init(&value);
+
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, result);
+    lambda(i, value);
   }
+  wrapped_reducer.final(&value);
+  result = value;
 }
 
 template <typename iType, class Lambda, typename ReducerType,
@@ -1793,11 +1866,24 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, const ReducerType &reducer) {
-  reducer.init(reducer.reference());
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, ReducerType,
+      value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value;
+  wrapped_reducer.init(&value);
+
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, reducer.reference());
+    lambda(i, value);
   }
+
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 template <typename iType, class Lambda, typename ReducerType,
@@ -1806,14 +1892,27 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
     const Impl::ThreadVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda, const ReducerType &reducer) {
-  reducer.init(reducer.reference());
+  using value_type            = typename ReducerType::value_type;
+  using functor_analysis_type = typename Impl::FunctorAnalysis<
+      Impl::FunctorPatternInterface::REDUCE,
+      TeamPolicy<typename Impl::HPXTeamMember::execution_space>, ReducerType,
+      value_type>;
+  using wrapped_reducer_type = typename functor_analysis_type::Reducer;
+
+  wrapped_reducer_type wrapped_reducer(reducer);
+  value_type value;
+  wrapped_reducer.init(&value);
+
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    lambda(i, reducer.reference());
+    lambda(i, value);
   }
+
+  wrapped_reducer.final(&value);
+  reducer.reference() = value;
 }
 
 template <typename iType, class FunctorType, typename ValueType>
@@ -1923,7 +2022,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   using closure_value_type = typename Kokkos::Impl::FunctorAnalysis<
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
       void>::value_type;
-  static_assert(std::is_same<closure_value_type, ValueType>::value,
+  static_assert(std::is_same_v<closure_value_type, ValueType>,
                 "Non-matching value types of closure and return type");
 
   ValueType accum;
@@ -1962,7 +2061,9 @@ KOKKOS_INLINE_FUNCTION void single(
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <HPX/Kokkos_HPX_Task.hpp>
+#endif
 
 #endif /* #if defined( KOKKOS_ENABLE_HPX ) */
 #endif /* #ifndef KOKKOS_HPX_HPP */

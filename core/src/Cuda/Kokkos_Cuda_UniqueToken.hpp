@@ -22,7 +22,6 @@
 
 #include <Cuda/Kokkos_CudaSpace.hpp>
 #include <Kokkos_UniqueToken.hpp>
-#include <impl/Kokkos_SharedAlloc.hpp>
 
 namespace Kokkos {
 
@@ -138,8 +137,7 @@ class UniqueToken<Cuda, UniqueTokenScope::Instance>
       : UniqueToken<Cuda, UniqueTokenScope::Global>(
             Kokkos::Cuda().concurrency()) {}
   explicit UniqueToken(execution_space const& arg)
-      : UniqueToken<Cuda, UniqueTokenScope::Global>(
-            Kokkos::Cuda().concurrency(), arg) {}
+      : UniqueToken<Cuda, UniqueTokenScope::Global>(arg.concurrency(), arg) {}
   explicit UniqueToken(size_type max_size)
       : UniqueToken<Cuda, UniqueTokenScope::Global>(max_size) {}
   UniqueToken(size_type max_size, execution_space const& arg)

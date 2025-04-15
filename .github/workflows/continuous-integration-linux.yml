@@ -1,0 +1,185 @@
+name: github-Linux
+
+on:
+  workflow_call:
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-linux-x64
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+permissions: read-all
+
+jobs:
+  CI:
+    continue-on-error: true
+    strategy:
+      matrix:
+        arch: ['x64']
+        distro: ['fedora:latest', 'ubuntu:latest']
+        cxx: ['g++', 'clang++']
+        cxx_extra_flags: ['']
+        cmake_build_type: ['Release', 'Debug']
+        backend: ['OPENMP']
+        cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+        stdcxx: [17]
+        include:
+          - arch: 'x64'
+            distro: 'ubuntu:intel'
+            cxx: 'icpx'
+            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed -fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
+            cmake_build_type: 'Release'
+            backend: 'OPENMP'
+            stdcxx: '17'
+          - arch: 'x64'
+            distro: 'ubuntu:intel'
+            cxx: 'icpx'
+            cxx_extra_flags: '-fp-model=precise -Wno-pass-failed'
+            cmake_build_type: 'Debug'
+            backend: 'OPENMP'
+            stdcxx: '20'
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            stdcxx: '23'
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
+            cxx: 'clang++'
+            cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
+            extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'SERIAL'
+            stdcxx: '20'
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            stdcxx: '23'
+          - arch: 'arm64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'OPENMP'
+            stdcxx: '17'
+            cmake_extra_opts: '-DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'arm64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'THREADS'
+            stdcxx: '17'
+            cmake_extra_opts: '-DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'arm64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'Release'
+            backend: 'SERIAL'
+            stdcxx: '17'
+            cmake_extra_opts: '-DKokkos_ARCH_NATIVE=ON -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'x86'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'OPENMP'
+            stdcxx: '17'
+            cxx_extra_flags: '-m32'
+            cmake_extra_opts: '-DKokkos_ENABLE_HWLOC=OFF'
+          - arch: 'x64'
+            distro: 'fedora:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'HPX'
+            stdcxx: '17'
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+    runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    container:
+      image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
+    steps:
+      - name: Checkout desul
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: desul/desul
+          ref: 22931326247c9333cc909628004d75ee5de99fa2
+          path: desul
+      - name: Install desul
+        working-directory: desul
+        run: |
+          git submodule init
+          git submodule update
+          mkdir build
+          cd build
+          cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
+          sudo cmake --build . --target install --parallel 2
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/ccache
+          key: kokkos-${{ matrix.arch }}-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.stdcxx }}-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-${{ matrix.arch }}${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.stdcxx }}-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}
+      - name: maybe_use_flang_new
+        if: ${{ matrix.cxx == 'clang++' }}
+        run: |
+          if type flang; then
+            echo "flang found"
+            echo "FC=flang" >> $GITHUB_ENV
+          elif type flang-new; then
+            echo "flang-new found"
+            echo "FC=flang-new" >> $GITHUB_ENV
+          fi
+# FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
+      - name: maybe_set_hpx_vars
+        if: ${{ matrix.backend == 'HPX' }}
+        run: echo "HPX_HANDLE_FAILED_NEW=0" >> $GITHUB_ENV
+      - name: Configure Kokkos
+        run: |
+          cmake -B builddir \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBUILD_SHARED_LIBS=ON \
+            -Ddesul_ROOT=/usr/desul-install/ \
+            -DKokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON \
+            -DKokkos_ENABLE_HWLOC=ON \
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
+            -DCMAKE_CXX_STANDARD="${{ matrix.stdcxx }}" \
+            -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            ${{ matrix.cmake_extra_opts }} \
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
+      - name: Build
+        run: |
+          ccache -z
+          cmake --build builddir --parallel $(nproc)
+          ccache -s
+      - name: Tests
+        working-directory: builddir
+        run: ctest --output-on-failure
+      - name: Test linking against build dir
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
+        working-directory: example/build_cmake_installed
+        run: |
+          cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DKokkos_ROOT=../../builddir
+          cmake --build builddir_buildtree
+          cmake --build builddir_buildtree --target test
+      - name: Test DESTDIR Install
+        run: DESTDIR=${PWD}/install cmake --build builddir --target install && rm -rf ${PWD}/install/usr && rmdir ${PWD}/install
+      - name: Install
+        run: sudo cmake --build builddir --target install
+      - name: Test install
+        if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
+        working-directory: example/build_cmake_installed
+        run: |
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          cmake --build builddir
+          cmake --build builddir --target test

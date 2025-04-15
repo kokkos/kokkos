@@ -22,6 +22,10 @@
 #include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
+#include "Kokkos_CudaSpace.hpp"
+
+#include <set>
+#include <map>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -84,13 +88,13 @@ class CudaInternal {
  public:
   using size_type = Cuda::size_type;
 
-  inline static int m_cudaDev = -1;
+  int m_cudaDev = -1;
 
   // Device Properties
-  inline static int m_cudaArch = -1;
+  static int m_cudaArch;
   static int concurrency();
 
-  inline static cudaDeviceProp m_deviceProp;
+  static cudaDeviceProp m_deviceProp;
 
   // Scratch Spaces for Reductions
   mutable std::size_t m_scratchSpaceCount;
@@ -104,7 +108,6 @@ class CudaInternal {
   mutable size_type* m_scratchFunctor;
   cudaStream_t m_stream;
   uint32_t m_instance_id;
-  bool m_manage_stream;
 
   // Team Scratch Level 1 Space
   int m_n_team_scratch = 10;
@@ -117,11 +120,10 @@ class CudaInternal {
   bool was_initialized = false;
   bool was_finalized   = false;
 
-  // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
-  //  here will break once there are multiple devices though
-  inline static unsigned long* constantMemHostStaging = nullptr;
-  inline static cudaEvent_t constantMemReusable       = nullptr;
-  inline static std::mutex constantMemMutex;
+  static std::set<int> cuda_devices;
+  static std::map<int, unsigned long*> constantMemHostStagingPerDevice;
+  static std::map<int, cudaEvent_t> constantMemReusablePerDevice;
+  static std::map<int, std::mutex> constantMemMutexPerDevice;
 
   static CudaInternal& singleton();
 
@@ -131,7 +133,7 @@ class CudaInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(cudaStream_t stream, bool manage_stream);
+  void initialize(cudaStream_t stream);
   void finalize();
 
   void print_configuration(std::ostream&) const;
@@ -223,12 +225,6 @@ class CudaInternal {
   }
 
   template <bool setCudaDevice = true>
-  cudaError_t cuda_device_synchronize_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaDeviceSynchronize();
-  }
-
-  template <bool setCudaDevice = true>
   cudaError_t cuda_event_create_wrapper(cudaEvent_t* event) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaEventCreate(event);
@@ -263,37 +259,6 @@ class CudaInternal {
   cudaError_t cuda_free_host_wrapper(void* ptr) const {
     if constexpr (setCudaDevice) set_cuda_device();
     return cudaFreeHost(ptr);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_count_wrapper(int* count) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceCount(count);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_device_properties_wrapper(cudaDeviceProp* prop,
-                                                 int device) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetDeviceProperties(prop, device);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_name_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorName(error);
-  }
-
-  template <bool setCudaDevice = true>
-  const char* cuda_get_error_string_wrapper(cudaError_t error) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetErrorString(error);
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_get_last_error_wrapper() const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGetLastError();
   }
 
   template <bool setCudaDevice = true>
@@ -449,29 +414,6 @@ class CudaInternal {
     return cudaStreamDestroy(stream);
   }
 
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_stream_synchronize_wrapper(cudaStream_t stream) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaStreamSynchronize(stream);
-  }
-
-  // The following are only available for cuda 11.2 and greater
-#if (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_malloc_async_wrapper(void** devPtr, size_t size,
-                                        cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaMallocAsync(devPtr, size, get_input_stream(hStream));
-  }
-
-  template <bool setCudaDevice = true>
-  cudaError_t cuda_free_async_wrapper(void* devPtr,
-                                      cudaStream_t hStream = nullptr) const {
-    if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFreeAsync(devPtr, get_input_stream(hStream));
-  }
-#endif
-
   // C++ API routines
   template <typename T, bool setCudaDevice = true>
   cudaError_t cuda_func_get_attributes_wrapper(cudaFuncAttributes* attr,
@@ -481,21 +423,25 @@ class CudaInternal {
   }
 
   template <typename T, bool setCudaDevice = true>
-  cudaError_t cuda_func_set_attributes_wrapper(T* entry, cudaFuncAttribute attr,
-                                               int value) const {
+  cudaError_t cuda_func_set_attribute_wrapper(T* entry, cudaFuncAttribute attr,
+                                              int value) const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaFuncSetAttributes(entry, attr, value);
+    return cudaFuncSetAttribute(entry, attr, value);
   }
 
   template <bool setCudaDevice = true>
   cudaError_t cuda_graph_instantiate_wrapper(cudaGraphExec_t* pGraphExec,
-                                             cudaGraph_t graph,
-                                             cudaGraphNode_t* pErrorNode,
-                                             char* pLogBuffer,
-                                             size_t bufferSize) const {
+                                             cudaGraph_t graph) const {
     if constexpr (setCudaDevice) set_cuda_device();
-    return cudaGraphInstantiate(pGraphExec, graph, pErrorNode, pLogBuffer,
-                                bufferSize);
+#if CUDA_VERSION < 12000
+    constexpr size_t error_log_size = 256;
+    cudaGraphNode_t error_node      = nullptr;
+    char error_log[error_log_size];
+    return cudaGraphInstantiate(pGraphExec, graph, &error_node, error_log,
+                                error_log_size);
+#else
+    return cudaGraphInstantiate(pGraphExec, graph);
+#endif
   }
 
   // Resizing of reduction related scratch spaces
@@ -533,7 +479,7 @@ std::vector<Cuda> partition_space(const Cuda&, Args...) {
 template <class T>
 std::vector<Cuda> partition_space(const Cuda&, std::vector<T> const& weights) {
   static_assert(
-      std::is_arithmetic<T>::value,
+      std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   // We only care about the number of instances to create and ignore weights

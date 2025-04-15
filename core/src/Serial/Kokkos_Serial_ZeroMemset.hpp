@@ -22,6 +22,7 @@
 #include <Serial/Kokkos_Serial.hpp>
 
 #include <type_traits>
+#include <cstring>
 
 namespace Kokkos {
 namespace Impl {
@@ -30,18 +31,11 @@ namespace Impl {
 // parallel execution space since the specialization for
 // DefaultHostExecutionSpace is defined elsewhere.
 struct DummyExecutionSpace;
-template <class T, class... P>
+template <>
 struct ZeroMemset<
-    std::conditional_t<!std::is_same<Serial, DefaultHostExecutionSpace>::value,
-                       Serial, DummyExecutionSpace>,
-    View<T, P...>>
-    : public ZeroMemset<DefaultHostExecutionSpace, View<T, P...>> {
-  using Base = ZeroMemset<DefaultHostExecutionSpace, View<T, P...>>;
-  using Base::Base;
-
-  ZeroMemset(const Serial&, const View<T, P...>& dst,
-             typename View<T, P...>::const_value_type& value)
-      : Base(dst, value) {}
+    std::conditional_t<!std::is_same_v<Serial, DefaultHostExecutionSpace>,
+                       Serial, DummyExecutionSpace>> {
+  ZeroMemset(const Serial&, void* dst, size_t cnt) { std::memset(dst, 0, cnt); }
 };
 
 }  // namespace Impl

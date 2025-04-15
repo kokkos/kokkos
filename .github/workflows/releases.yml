@@ -1,0 +1,71 @@
+on:
+  push:
+    tags: '[0-9]+.[0-9]+.[0-9][0-9]'
+  
+
+permissions: read-all
+
+jobs:
+  # This step builds our artifacts, uploads them to the workflow run, and
+  # outputs their digest.
+  build:
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Build artifacts
+        run: |
+          git archive --prefix=kokkos-${{ github.ref_name }}/ -o kokkos-${{ github.ref_name }}.zip HEAD
+          git archive --prefix=kokkos-${{ github.ref_name }}/ -o kokkos-${{ github.ref_name }}.tar.gz HEAD
+
+      - name: Generate hashes
+        shell: bash
+        id: hash
+        run: |
+          # sha256sum generates sha256 hash for all artifacts.
+          # base64 -w0 encodes to base64 and outputs on a single line.
+          sha256sum kokkos-${{ github.ref_name }}.zip kokkos-${{ github.ref_name }}.tar.gz > kokkos-${{ github.ref_name }}-SHA-256.txt
+          echo "hashes=$(base64 -w0 kokkos-${{ github.ref_name }}-SHA-256.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-artifacts
+          path: kokkos-${{ github.ref_name }}*
+          if-no-files-found: error
+          retention-days: 5
+
+  # This step calls the generic workflow to generate provenance.
+  provenance:
+    needs: [build]
+    permissions:
+      actions: read
+      id-token: write
+      contents: write
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: "${{ needs.build.outputs.hashes }}"
+      # Upload provenance to a new release
+      upload-assets: true
+      provenance-name: "kokkos-${{ github.ref_name }}.intoto.jsonl"
+
+  # This step uploads our artifacts to the tagged GitHub release.
+  release:
+    needs: [build, provenance]
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
+        with:
+          name: release-artifacts
+      - name: Upload assets
+        uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda # v2.2.1
+        with:
+          files: |
+            kokkos-${{ github.ref_name }}.zip
+            kokkos-${{ github.ref_name }}.tar.gz
+            kokkos-${{ github.ref_name }}-SHA-256.txt

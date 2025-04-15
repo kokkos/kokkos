@@ -21,7 +21,6 @@
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_Distance.hpp>
-#include <std_algorithms/Kokkos_Swap.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -31,7 +30,7 @@ namespace Impl {
 template <class InputIterator>
 struct StdReverseFunctor {
   using index_type = typename InputIterator::difference_type;
-  static_assert(std::is_signed<index_type>::value,
+  static_assert(std::is_signed_v<index_type>,
                 "Kokkos: StdReverseFunctor requires signed index type");
 
   InputIterator m_first;
@@ -39,7 +38,7 @@ struct StdReverseFunctor {
 
   KOKKOS_FUNCTION
   void operator()(index_type i) const {
-    ::Kokkos::Experimental::swap(m_first[i], m_last[-i - 1]);
+    ::Kokkos::kokkos_swap(m_first[i], m_last[-i - 1]);
   }
 
   KOKKOS_FUNCTION

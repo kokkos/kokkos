@@ -49,6 +49,11 @@ struct integral_constant {
 template <typename... Is>
 struct always_true : std::true_type {};
 
+// type-dependent expression that is always false intended for use in
+// static_assert to check "we should never get there"
+template <typename... Deps>
+struct always_false : std::false_type {};
+
 //==============================================================================
 
 #if defined(__cpp_lib_type_identity)
@@ -114,6 +119,10 @@ struct is_specialization_of : std::false_type {};
 
 template <template <class...> class Template, class... Args>
 struct is_specialization_of<Template<Args...>, Template> : std::true_type {};
+
+template <typename T, template <typename...> class U>
+inline constexpr bool is_specialization_of_v =
+    is_specialization_of<T, U>::value;
 
 // </editor-fold> end is_specialization_of }}}1
 //==============================================================================

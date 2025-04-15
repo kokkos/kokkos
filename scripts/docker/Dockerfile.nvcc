@@ -1,20 +1,20 @@
-ARG BASE=nvidia/cuda:9.2-devel
+ARG BASE=nvcr.io/nvidia/cuda:11.0.3-devel-ubuntu20.04@sha256:10ab0f09fcdc796b4a2325ef1bce8f766f4a3500eab5a83780f80475ae26c7a6
 FROM $BASE
 
 ARG ADDITIONAL_PACKAGES
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
         bc \
         wget \
         ccache \
-        $ADDITIONAL_PACKAGES \
+        ${ADDITIONAL_PACKAGES} \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \

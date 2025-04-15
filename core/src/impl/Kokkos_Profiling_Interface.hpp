@@ -101,6 +101,15 @@ inline uint32_t device_id(ExecutionSpace const& space) noexcept {
           << num_instance_bits) +
          space.impl_instance_id();
 }
+
+inline uint32_t int_for_synchronization_reason(
+    Kokkos::Tools::Experimental::SpecialSynchronizationCases reason) {
+  switch (reason) {
+    case GlobalDeviceSynchronization: return 0;
+    case DeepCopyResourceSynchronization: return 0x00ffffff;
+  }
+  return 0;
+}
 }  // namespace Experimental
 }  // namespace Tools
 }  // end namespace Kokkos
@@ -226,7 +235,7 @@ using ValueType           = Kokkos_Tools_VariableInfo_ValueType;
 using CandidateValueType  = Kokkos_Tools_VariableInfo_CandidateValueType;
 using SetOrRange          = Kokkos_Tools_VariableInfo_SetOrRange;
 using VariableInfo        = Kokkos_Tools_VariableInfo;
-using OptimizationGoal    = Kokkos_Tools_OptimzationGoal;
+using OptimizationGoal    = Kokkos_Tools_OptimizationGoal;
 using TuningString        = Kokkos_Tools_Tuning_String;
 using VariableValue       = Kokkos_Tools_VariableValue;
 

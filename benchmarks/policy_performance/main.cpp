@@ -106,8 +106,9 @@ int main(int argc, char* argv[]) {
 
   Kokkos::parallel_reduce(
       "parallel_reduce warmup", Kokkos::TeamPolicy<>(10, 1),
-      KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type team,
-                    double& lval) { lval += 1; },
+      KOKKOS_LAMBDA(const Kokkos::TeamPolicy<>::member_type&, double& lval) {
+        lval += 1;
+      },
       result);
 
   using view_type_1d = Kokkos::View<double*, Kokkos::LayoutRight>;
@@ -119,11 +120,12 @@ int main(int argc, char* argv[]) {
   // view appropriately for test and should obey first-touch etc Second call to
   // test is the one we actually care about and time
   view_type_1d v_1(Kokkos::view_alloc(Kokkos::WithoutInitializing, "v_1"),
-                   team_range * team_size);
+                   static_cast<size_t>(team_range) * team_size);
   view_type_2d v_2(Kokkos::view_alloc(Kokkos::WithoutInitializing, "v_2"),
-                   team_range * team_size, thread_range);
+                   static_cast<size_t>(team_range) * team_size, thread_range);
   view_type_3d v_3(Kokkos::view_alloc(Kokkos::WithoutInitializing, "v_3"),
-                   team_range * team_size, thread_range, vector_range);
+                   static_cast<size_t>(team_range) * team_size, thread_range,
+                   vector_range);
 
   double result_computed = 0.0;
   double result_expect   = 0.0;

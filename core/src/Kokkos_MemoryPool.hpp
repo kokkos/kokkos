@@ -29,6 +29,7 @@ static_assert(false,
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
+// NOLINTBEGIN(bugprone-implicit-widening-of-multiplication-result)
 namespace Kokkos {
 namespace Impl {
 /* Report violation of size constraints:
@@ -72,6 +73,11 @@ class MemoryPool {
   enum : uint32_t { max_bit_count = CB::max_bit_count };
 
   enum : uint32_t { HINT_PER_BLOCK_SIZE = 2 };
+
+  static KOKKOS_FUNCTION unsigned integral_power_of_two_that_contains(
+      const unsigned N) {
+    return N ? Kokkos::bit_width(N - 1) : 0;
+  }
 
   /*  Each superblock has a concurrent bitset state
    *  which is an array of uint32_t integers.
@@ -156,8 +162,13 @@ class MemoryPool {
     size_t reserved_bytes;   ///<  Unallocated bytes in assigned superblocks
   };
 
+  // This function is templated to avoid needing a full definition of
+  // DefaultHostExecutionSpace at class instantiation
+  template <typename ExecutionSpace = Kokkos::DefaultHostExecutionSpace>
   void get_usage_statistics(usage_statistics &stats) const {
     Kokkos::HostSpace host;
+    static_assert(
+        std::is_same_v<ExecutionSpace, Kokkos::DefaultHostExecutionSpace>);
 
     const size_t alloc_size = m_hint_offset * sizeof(uint32_t);
 
@@ -166,7 +177,7 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
-          sb_state_array, m_sb_state_array, alloc_size);
+          ExecutionSpace{}, sb_state_array, m_sb_state_array, alloc_size);
       Kokkos::fence(
           "MemoryPool::get_usage_statistics(): fence after copying state "
           "array to HostSpace");
@@ -196,9 +207,10 @@ class MemoryPool {
 
         stats.consumed_superblocks++;
         stats.consumed_blocks += block_used;
-        stats.consumed_bytes += block_used * block_size;
+        stats.consumed_bytes += static_cast<size_t>(block_used) * block_size;
         stats.reserved_blocks += block_count - block_used;
-        stats.reserved_bytes += (block_count - block_used) * block_size;
+        stats.reserved_bytes +=
+            static_cast<size_t>(block_count - block_used) * block_size;
       }
     }
 
@@ -207,8 +219,13 @@ class MemoryPool {
     }
   }
 
+  // This function is templated to avoid needing a full definition of
+  // DefaultHostExecutionSpace at class instantiation
+  template <typename ExecutionSpace = Kokkos::DefaultHostExecutionSpace>
   void print_state(std::ostream &s) const {
     Kokkos::HostSpace host;
+    static_assert(
+        std::is_same_v<ExecutionSpace, Kokkos::DefaultHostExecutionSpace>);
 
     const size_t alloc_size = m_hint_offset * sizeof(uint32_t);
 
@@ -217,7 +234,7 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<Kokkos::HostSpace, base_memory_space>(
-          sb_state_array, m_sb_state_array, alloc_size);
+          ExecutionSpace{}, sb_state_array, m_sb_state_array, alloc_size);
       Kokkos::fence(
           "MemoryPool::print_state(): fence after copying state array to "
           "HostSpace");
@@ -234,9 +251,9 @@ class MemoryPool {
 
   //--------------------------------------------------------------------------
 
-  KOKKOS_DEFAULTED_FUNCTION MemoryPool(MemoryPool &&)      = default;
-  KOKKOS_DEFAULTED_FUNCTION MemoryPool(const MemoryPool &) = default;
-  KOKKOS_DEFAULTED_FUNCTION MemoryPool &operator=(MemoryPool &&) = default;
+  KOKKOS_DEFAULTED_FUNCTION MemoryPool(MemoryPool &&)                 = default;
+  KOKKOS_DEFAULTED_FUNCTION MemoryPool(const MemoryPool &)            = default;
+  KOKKOS_DEFAULTED_FUNCTION MemoryPool &operator=(MemoryPool &&)      = default;
   KOKKOS_DEFAULTED_FUNCTION MemoryPool &operator=(const MemoryPool &) = default;
 
   KOKKOS_INLINE_FUNCTION MemoryPool()
@@ -336,13 +353,12 @@ class MemoryPool {
     // Maximum value is 'max_superblock_size'
 
     m_min_block_size_lg2 =
-        Kokkos::Impl::integral_power_of_two_that_contains(min_block_alloc_size);
+        integral_power_of_two_that_contains(min_block_alloc_size);
 
     m_max_block_size_lg2 =
-        Kokkos::Impl::integral_power_of_two_that_contains(max_block_alloc_size);
+        integral_power_of_two_that_contains(max_block_alloc_size);
 
-    m_sb_size_lg2 =
-        Kokkos::Impl::integral_power_of_two_that_contains(min_superblock_size);
+    m_sb_size_lg2 = integral_power_of_two_that_contains(min_superblock_size);
 
     {
       // number of superblocks is multiple of superblock size that
@@ -429,7 +445,8 @@ class MemoryPool {
 
     if (!accessible) {
       Kokkos::Impl::DeepCopy<base_memory_space, Kokkos::HostSpace>(
-          m_sb_state_array, sb_state_array, header_size);
+          typename base_memory_space::execution_space{}, m_sb_state_array,
+          sb_state_array, header_size);
       Kokkos::fence(
           "MemoryPool::MemoryPool(): fence after copying state array from "
           "HostSpace");
@@ -448,7 +465,7 @@ class MemoryPool {
    */
   KOKKOS_FORCEINLINE_FUNCTION
   uint32_t get_block_size_lg2(uint32_t n) const noexcept {
-    const unsigned i = Kokkos::Impl::integral_power_of_two_that_contains(n);
+    const unsigned i = integral_power_of_two_that_contains(n);
 
     return i < m_min_block_size_lg2 ? m_min_block_size_lg2 : i;
   }
@@ -457,7 +474,7 @@ class MemoryPool {
   /* Return 0 for invalid block size */
   KOKKOS_INLINE_FUNCTION
   uint32_t allocate_block_size(uint64_t alloc_size) const noexcept {
-    return alloc_size <= (1UL << m_max_block_size_lg2)
+    return alloc_size <= (uint64_t(1) << m_max_block_size_lg2)
                ? (1UL << get_block_size_lg2(uint32_t(alloc_size)))
                : 0;
   }
@@ -474,7 +491,7 @@ class MemoryPool {
    */
   KOKKOS_FUNCTION
   void *allocate(size_t alloc_size, int32_t attempt_limit = 1) const noexcept {
-    if (size_t(1LU << m_max_block_size_lg2) < alloc_size) {
+    if ((size_t(1) << m_max_block_size_lg2) < alloc_size) {
       Kokkos::abort(
           "Kokkos MemoryPool allocation request exceeded specified maximum "
           "allocation size");
@@ -739,7 +756,7 @@ class MemoryPool {
         // mask into superblock and then shift down for block index
 
         const uint32_t bit =
-            (d & (ptrdiff_t(1LU << m_sb_size_lg2) - 1)) >> block_size_lg2;
+            (d & ((ptrdiff_t(1) << m_sb_size_lg2) - 1)) >> block_size_lg2;
 
         const int result = CB::release(sb_state_array, bit, block_state);
 
@@ -790,5 +807,6 @@ class MemoryPool {
 };
 
 }  // namespace Kokkos
+   // NOLINTEND(bugprone-implicit-widening-of-multiplication-result)
 
 #endif /* #ifndef KOKKOS_MEMORYPOOL_HPP */

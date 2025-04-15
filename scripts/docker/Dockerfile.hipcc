@@ -1,18 +1,21 @@
-ARG BASE=rocm/dev-ubuntu-20.04:5.2
+ARG BASE=rocm/dev-ubuntu-20.04:5.2-complete@sha256:4030c8af0c06c286174758523dabe4b3850bf72d4a8c1ef275d3ec69aa475f65
 FROM $BASE
+
+ARG ADDITIONAL_PACKAGES
 
 RUN apt-get update && apt-get install -y \
         kmod \
         wget \
         ccache \
         file \
+        ${ADDITIONAL_PACKAGES} \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 ENV PATH=/opt/rocm/bin:$PATH
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \

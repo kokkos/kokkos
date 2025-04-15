@@ -19,7 +19,6 @@
 
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <Kokkos_UniqueToken.hpp>
-#include <impl/Kokkos_SharedAlloc.hpp>
 
 namespace Kokkos {
 
@@ -130,7 +129,7 @@ class UniqueToken<HIP, UniqueTokenScope::Instance>
   UniqueToken()
       : UniqueToken<HIP, UniqueTokenScope::Global>(HIP().concurrency()) {}
   explicit UniqueToken(execution_space const& arg)
-      : UniqueToken<HIP, UniqueTokenScope::Global>(HIP().concurrency(), arg) {}
+      : UniqueToken<HIP, UniqueTokenScope::Global>(arg.concurrency(), arg) {}
   explicit UniqueToken(size_type max_size)
       : UniqueToken<HIP, UniqueTokenScope::Global>(max_size) {}
   UniqueToken(size_type max_size, execution_space const& arg)

@@ -92,7 +92,7 @@ void fill_view(ViewType dest_view, const std::string& name) {
   }
 
   else {
-    throw std::runtime_error("invalid choice");
+    FAIL() << "invalid choice";
   }
 
   Kokkos::deep_copy(aux_view, v_h);
@@ -122,7 +122,8 @@ bool compute_gold(const std::string& name) {
   } else if (name == "large-b") {
     return false;
   } else {
-    throw std::runtime_error("invalid choice");
+    Kokkos::abort("invalid choice");
+    return false;  // unreachable
   }
 }
 
@@ -146,7 +147,7 @@ void run_single_scenario(const InfoType& scenario_info) {
   resultsA[3]     = KE::is_sorted("label", exespace(), view);
   const auto allA = std::all_of(resultsA.cbegin(), resultsA.cend(),
                                 [=](bool v) { return v == gold; });
-  EXPECT_TRUE(allA);
+  EXPECT_TRUE(allA) << name << ", " << view_tag_to_string(Tag{});
 
 #if !defined KOKKOS_ENABLE_OPENMPTARGET
   CustomLessThanComparator<ValueType, ValueType> comp;
@@ -154,12 +155,12 @@ void run_single_scenario(const InfoType& scenario_info) {
   resultsB[0] =
       KE::is_sorted(exespace(), KE::cbegin(view), KE::cend(view), comp);
   resultsB[1]     = KE::is_sorted("label", exespace(), KE::cbegin(view),
-                              KE::cend(view), comp);
+                                  KE::cend(view), comp);
   resultsB[2]     = KE::is_sorted(exespace(), view, comp);
   resultsB[3]     = KE::is_sorted("label", exespace(), view, comp);
   const auto allB = std::all_of(resultsB.cbegin(), resultsB.cend(),
                                 [=](bool v) { return v == gold; });
-  EXPECT_TRUE(allB);
+  EXPECT_TRUE(allB) << name << ", " << view_tag_to_string(Tag{});
 #endif
 
   Kokkos::fence();
@@ -172,9 +173,6 @@ void run_is_sorted_all_scenarios() {
       {"two-elements-b", 2}, {"small-a", 9},     {"small-b", 13},
       {"medium-a", 1003},    {"medium-b", 1003}, {"large-a", 101513},
       {"large-b", 101513}};
-
-  std::cout << "is_sorted: " << view_tag_to_string(Tag{})
-            << ", all overloads \n";
 
   for (const auto& it : scenarios) {
     run_single_scenario<Tag, ValueType>(it);
