@@ -1,3 +1,4 @@
+cmake_minimum_required(VERSION 3.21)
 # No need for policy push/pop. CMake also manages a new entry for scripts
 # loaded by include() and find_package() commands except when invoked with
 # the NO_POLICY_SCOPE option
