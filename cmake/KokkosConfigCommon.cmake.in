@@ -756,6 +756,11 @@ function(kokkos_compilation)
     COMP "GLOBAL;PROJECT;CHECK_CUDA_COMPILES" "COMPILER" "DIRECTORY;TARGET;SOURCE;COMMAND_PREFIX" ${ARGN}
   )
 
+  message(
+    WARNING
+      "'kokkos_compilation' is deprecated and will be removed in the future. Use `kokkos_set_source_and_target_properties` instead"
+  )
+
   # if built w/o CUDA support, we want to basically make this a no-op
   set(_Kokkos_ENABLE_CUDA @Kokkos_ENABLE_CUDA@)
 
