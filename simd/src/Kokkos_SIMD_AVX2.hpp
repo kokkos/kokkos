@@ -3088,7 +3088,7 @@ basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
   for (std::size_t i = 0; i < 4; ++i) {
     arr[i] = std::int32_t(other[i]);
   }
-  this->copy_from(arr, element_aligned_tag{});
+  m_value = _mm_loadu_si128(reinterpret_cast<__m128i const*>(arr));
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
