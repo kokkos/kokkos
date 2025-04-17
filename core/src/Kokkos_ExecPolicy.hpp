@@ -26,6 +26,7 @@ static_assert(false,
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_AnalyzePolicy.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_TypeInfo.hpp>
 #ifndef KOKKOS_ENABLE_IMPL_TYPEINFO
@@ -211,9 +212,9 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     auto concurrency = static_cast<int64_t>(m_space.concurrency());
     if (concurrency == 0) concurrency = 1;
 
-    if (m_granularity > 0) {
-      if (!Impl::is_integral_power_of_two(m_granularity))
-        Kokkos::abort("RangePolicy blocking granularity must be power of two");
+    if (m_granularity > 0 &&
+        !Kokkos::has_single_bit(static_cast<unsigned>(m_granularity))) {
+      Kokkos::abort("RangePolicy blocking granularity must be power of two");
     }
 
     int64_t new_chunk_size = 1;
@@ -255,13 +256,6 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
     if constexpr (std::is_convertible_v<member_type, IndexType>) {
 #if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4) || \
     defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-
-      std::string msg =
-          "Kokkos::RangePolicy bound type error: an unsafe implicit conversion "
-          "is performed on a bound (" +
-          std::to_string(bound) +
-          "), which may "
-          "not preserve its original value.\n";
       bool warn = false;
 
       if constexpr (std::is_arithmetic_v<member_type> &&
@@ -283,6 +277,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
           (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);
 
       if (warn) {
+        std::string msg =
+            "Kokkos::RangePolicy bound type error: an unsafe implicit "
+            "conversion is performed on a bound (" +
+            std::to_string(bound) +
+            "), which may not preserve its original value.\n";
+
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
         Kokkos::abort(msg.c_str());
 #endif

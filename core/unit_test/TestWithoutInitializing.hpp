@@ -73,8 +73,8 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
 
 TEST(TEST_CATEGORY, realloc_exec_space) {
 #ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<typename TEST_EXECSPACE::memory_space,
-                   Kokkos::CudaUVMSpace>::value)
+  if (std::is_same_v<typename TEST_EXECSPACE::memory_space,
+                     Kokkos::CudaUVMSpace>)
     GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
 #endif
 // FIXME_OPENMPTARGET The OpenMPTarget backend doesn't implement allocate taking
@@ -216,6 +216,10 @@ TEST(TEST_CATEGORY, deep_copy_zero_memset) {
     GTEST_SKIP() << "skipping since the OpenACC backend doesn't implement "
                     "ZeroMemset";
 #endif
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>)
+    GTEST_SKIP() << "skipping since the OpenMP backend doesn't use ZeroMemset";
+#endif
 
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -329,7 +333,7 @@ TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
 #endif
 
 #ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same<TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>::value)
+  if (std::is_same_v<TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>)
     GTEST_SKIP()
         << "skipping since the CudaUVMSpace requires additiional fences";
 #endif

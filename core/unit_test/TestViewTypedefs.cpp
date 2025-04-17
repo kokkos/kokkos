@@ -62,7 +62,9 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::scalar_array_type, DataType>);
   static_assert(std::is_same_v<typename ViewType::const_scalar_array_type, typename data_analysis<DataType>::const_data_type>);
   static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename data_analysis<DataType>::non_const_data_type>);
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(std::is_same_v<typename ViewType::specialize, void>);
+#endif
 
   // FIXME: value_type definition conflicts with mdspan value_type
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
@@ -73,7 +75,9 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::array_layout, Layout>);
 
   // FIXME: should be deprecated and is some complicated impl type
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(!std::is_void_v<typename ViewType::dimension>);
+#endif
 
   static_assert(std::is_same_v<typename ViewType::execution_space, typename Space::execution_space>);
   static_assert(std::is_same_v<typename ViewType::memory_space, typename Space::memory_space>);
@@ -156,14 +160,21 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::element_type, ValueType>);
   // FIXME: should be remove_const_t<element_type>
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
-  // FIXME: should be extents_type::index_type
-  static_assert(std::is_same_v<typename ViewType::index_type, typename Space::memory_space::size_type>);
+  static_assert(std::is_same_v<typename ViewType::size_type, typename Space::memory_space::size_type>);
+  // FIXME: we need to evaluate how we want to proceed with this, as with
+  // extents index_type also determines the stride, while LegacyView uses size_t strides
+  // So we are doing this now to avoid breakage but it means we may use 64 bit indices on the GPU
+  #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  static_assert(std::is_same_v<typename ViewType::index_type, size_t>);
+  #endif
   // FIXME: this isn't given in View since for example SYCL has "int" as its size_type
   // static_assert(std::is_same_v<typename ViewType::size_type, std::make_unsigned_t<typename ViewType::index_type>>);
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
 
   // FIXME: should come from accessor_type
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(std::is_same_v<typename ViewType::data_handle_type, typename ViewType::pointer_type>);
+#endif
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
   return true;
 }
@@ -266,9 +277,18 @@ namespace TestIntAtomic {
                                std::conditional_t<!has_unified_mem_space, Kokkos::HostSpace,
   // otherwise its the following Device type
                                Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
-  static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int,
-                                   Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>>(
-                     ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+// clang-format on
+static_assert(test_view_typedefs<
+              layout_type, space, memory_traits, host_mirror_space, int,
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+              Kokkos::Impl::AtomicDataElement<
+                  Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>
+#else
+              desul::AtomicRef<int, desul::MemoryOrderRelaxed,
+                               desul::MemoryScopeDevice>
+#endif
+              >(ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+// clang-format off
 }
 // clang-format on
 }  // namespace

@@ -26,7 +26,13 @@ class gtest_checker {
   void truth(bool x) const { EXPECT_TRUE(x); }
   template <class T>
   void equality(T const& a, T const& b) const {
-    EXPECT_EQ(a, b);
+    if constexpr (std::is_same_v<T, double>) {
+      EXPECT_DOUBLE_EQ(a, b);
+    } else if constexpr (std::is_same_v<T, float>) {
+      EXPECT_FLOAT_EQ(a, b);
+    } else {
+      EXPECT_EQ(a, b);
+    }
   }
 };
 
@@ -37,8 +43,20 @@ class kokkos_checker {
   }
   template <class T>
   KOKKOS_INLINE_FUNCTION void equality(T const& a, T const& b) const {
+#if defined(KOKKOS_IMPL_32BIT)
+    // This is needed to work around a bug where the comparison fails because it
+    // is done on the x87 fpu (which is the default for 32 bit gcc) in long
+    // double and a and b end up being different in long double but have the
+    // same value when casted to float or double. (see
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=323#c109)
+    T const volatile va = a;
+    T const volatile vb = b;
+    if (va != vb)
+      Kokkos::abort("SIMD unit test equality condition failed on device");
+#else
     if (a != b)
       Kokkos::abort("SIMD unit test equality condition failed on device");
+#endif
   }
 };
 
@@ -51,13 +69,6 @@ inline void host_check_equality(
   for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
-  using mask_type =
-      typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-  mask_type mask(false);
-  for (std::size_t i = 0; i < nlanes; ++i) {
-    mask[i] = true;
-  }
-  checker.equality((expected_result == computed_result) && mask, mask);
 }
 
 template <class T, class Abi>
@@ -69,13 +80,6 @@ KOKKOS_INLINE_FUNCTION void device_check_equality(
   for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
-  using mask_type =
-      typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-  mask_type mask(false);
-  for (std::size_t i = 0; i < nlanes; ++i) {
-    mask[i] = true;
-  }
-  checker.equality((expected_result == computed_result) && mask, mask);
 }
 
 template <typename T, typename Abi>
@@ -134,10 +138,7 @@ class load_masked {
                  Kokkos::Experimental::basic_simd<T, Abi>& result) const {
     using mask_type =
         typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-    mask_type mask(false);
-    for (std::size_t i = 0; i < n; ++i) {
-      mask[i] = true;
-    }
+    mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i < n; });
     result = T(0);
     where(mask, result).copy_from(mem, Kokkos::Experimental::simd_flag_default);
     return true;
@@ -148,10 +149,7 @@ class load_masked {
       Kokkos::Experimental::basic_simd<T, Abi>& result) const {
     using mask_type =
         typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
-    mask_type mask(false);
-    for (std::size_t i = 0; i < n; ++i) {
-      mask[i] = true;
-    }
+    mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i < n; });
     where(mask, result).copy_from(mem, Kokkos::Experimental::simd_flag_default);
     where(!mask, result) = T(0);
     return true;
@@ -163,24 +161,20 @@ class load_as_scalars {
   template <class T, class Abi>
   bool host_load(T const* mem, std::size_t n,
                  Kokkos::Experimental::basic_simd<T, Abi>& result) const {
-    for (std::size_t i = 0; i < n; ++i) {
-      result[i] = mem[i];
-    }
-    for (std::size_t i = n; i < result.size(); ++i) {
-      result[i] = T(0);
-    }
+    Kokkos::Experimental::basic_simd<T, Abi> init(
+        KOKKOS_LAMBDA(std::size_t i) { return (i < n) ? mem[i] : T(0); });
+    result = init;
+
     return true;
   }
   template <class T, class Abi>
   KOKKOS_INLINE_FUNCTION bool device_load(
       T const* mem, std::size_t n,
       Kokkos::Experimental::basic_simd<T, Abi>& result) const {
-    for (std::size_t i = 0; i < n; ++i) {
-      result[i] = mem[i];
-    }
-    for (std::size_t i = n; i < result.size(); ++i) {
-      result[i] = T(0);
-    }
+    Kokkos::Experimental::basic_simd<T, Abi> init(
+        KOKKOS_LAMBDA(std::size_t i) { return (i < n) ? mem[i] : T(0); });
+
+    result = init;
     return true;
   }
 };

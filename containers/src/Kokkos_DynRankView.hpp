@@ -423,8 +423,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type = View<DataType*******, Properties...>;
 
  private:
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using drdtraits = Impl::DynRankDimTraits<typename view_type::specialize>;
-
+#else
+  using drdtraits  = Impl::DynRankDimTraits<void>;
+#endif
  public:
   // typedefs from ViewTraits, overriden
   using data_type           = typename drvtraits::data_type;
@@ -452,7 +455,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using scalar_array_type           = value_type;
   using const_scalar_array_type     = const_value_type;
   using non_const_scalar_array_type = non_const_value_type;
-  using specialize                  = typename view_type::specialize;
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using specialize KOKKOS_DEPRECATED = void;
+#else
+  using specialize = typename view_type::specialize;
+#endif
 
   // typedefs in View for mdspan compatibility
   // cause issues with MSVC+CUDA
@@ -626,9 +633,8 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
-#if defined KOKKOS_COMPILER_INTEL ||                                  \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
     __builtin_unreachable();
 #endif
   }
@@ -656,9 +662,8 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, i1, 0, 0, 0, 0, 0);
-#if defined KOKKOS_COMPILER_INTEL ||                                  \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
     __builtin_unreachable();
 #endif
   }
@@ -690,9 +695,8 @@ class DynRankView : private View<DataType*******, Properties...> {
     } else
 #endif
       return view_type::operator()(i0, i1, i2, 0, 0, 0, 0);
-#if defined KOKKOS_COMPILER_INTEL ||                                  \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
     __builtin_unreachable();
 #endif
   }
@@ -766,8 +770,7 @@ class DynRankView : private View<DataType*******, Properties...> {
     return *this;
   }
 
-#if 0  // TODO: this will later be swapped in depending on whether the new View
-       // impl is active
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
  private:
   template <class Ext>
   KOKKOS_FUNCTION typename view_type::extents_type create_rank7_extents(
@@ -786,7 +789,7 @@ class DynRankView : private View<DataType*******, Properties...> {
                                      size_t new_rank)
       : view_type(rhs.data_handle(), drdtraits::createLayout(rhs.layout())),
         m_rank(new_rank) {
-    if (new_rank > rhs.rank())
+    if (new_rank > View<RT, RP...>::rank())
       Kokkos::abort(
           "Attempting to construct DynRankView from View and new rank, with "
           "the new rank being too large.");
@@ -845,6 +848,24 @@ class DynRankView : private View<DataType*******, Properties...> {
   // rank deduction can properly take place
   // We need two variants to avoid calling host function from host device
   // function warnings
+
+  // With NVCC 11.0 and 11.2 (and others likely) using GCC 8.5 a DynRankView
+  // test fails at runtime where construction from layout drops some extents.
+  // The bug goes away with O1.
+  // FIXME: NVCC GCC8 optimization bug DynRankView
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_GNU)
+#if KOKKOS_COMPILER_GNU < 900
+#define KOKKOS_IMPL_SKIP_OPTIMIZATION
+#endif
+#endif
+
+#ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
+// Also need to suppress warning about unrecognized GCC optimize pragma
+#pragma push
+#pragma diag_suppress = unrecognized_gcc_pragma
+#pragma GCC push_options
+#pragma GCC optimize("O1")
+#endif
   template <class... P>
   explicit KOKKOS_FUNCTION DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
@@ -864,6 +885,11 @@ class DynRankView : private View<DataType*******, Properties...> {
       : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
         m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {}
+#ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
+#pragma GCC pop_options
+#pragma pop
+#undef KOKKOS_IMPL_SKIP_OPTIMIZATION
+#endif
 
   //----------------------------------------
   // Constructor(s)
@@ -1470,9 +1496,8 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   }
-#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
   __builtin_unreachable();
 #endif
 }
@@ -1560,9 +1585,8 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_INTEL) ||                                 \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
   __builtin_unreachable();
 #endif
 }
@@ -1703,6 +1727,7 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(
         Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy), v_resized, v);
   else {
+    // NOLINTNEXTLINE(bugprone-unused-raii)
     Kokkos::Impl::DynRankViewRemap<drview_type, drview_type>(v_resized, v);
     Kokkos::fence("Kokkos::resize(DynRankView)");
   }

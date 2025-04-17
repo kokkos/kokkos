@@ -219,9 +219,11 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   // Note that if P is empty, this constructor is the default constructor.
   // On the other hand, if P is not empty, the constraint implies that
   // there is no default constructor.
+  // NOLINTBEGIN(modernize-type-traits)
   template <typename... Args,
             typename = std::enable_if_t<std::conjunction_v<
                 std::is_constructible<view_ctor_prop_base<P>, Args &&>...>>>
+  // NOLINTEND(modernize-type-traits)
   ViewCtorProp(Args &&...args)
       : ViewCtorProp<void, P>(std::forward<Args>(args))... {}
 
@@ -281,8 +283,7 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
 // end of non-void function" warnings from CUDA builds (issue #5470). Because
 // KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
 // cuda_abort(), an unreachable while(true); is placed as a fallback method
-#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
-    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150))
   Kokkos::abort(
       "Prevents an incorrect warning: missing return statement at end of "
       "non-void function");
@@ -379,8 +380,7 @@ KOKKOS_FUNCTION const auto &get_property(
 // end of non-void function" warnings from CUDA builds (issue #5470). Because
 // KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK removes [[noreturn]] attribute from
 // cuda_abort(), an unreachable while(true); is placed as a fallback method
-#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)) || \
-    (defined(KOKKOS_COMPILER_INTEL) && (KOKKOS_COMPILER_INTEL <= 2100))
+#if (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150))
   Kokkos::abort(
       "Prevents an incorrect warning: missing return statement at end of "
       "non-void function");

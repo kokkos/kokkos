@@ -336,6 +336,7 @@ class KOKKOS_DEPRECATED BasicFuture {
 
   KOKKOS_INLINE_FUNCTION
   BasicFuture& operator=(BasicFuture const& rhs) {
+    if (&rhs == this) return *this;
     if (m_task || rhs.m_task) queue_type::assign(&m_task, rhs.m_task);
     return *this;
   }

@@ -49,11 +49,9 @@ struct AUTO_t {
   constexpr const AUTO_t &operator()() const { return *this; }
 };
 
-namespace {
 /**\brief Token to indicate that a parameter's value is to be automatically
  * selected */
-constexpr AUTO_t AUTO = Kokkos::AUTO_t();
-}  // namespace
+inline constexpr AUTO_t AUTO{};
 
 struct InvalidType {};
 
@@ -259,15 +257,7 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-// Getting ICE in Trilinos in Sacado and Intrepid in deep_copy
-// See issue https://github.com/kokkos/kokkos/issues/5290
-// Simply taking string by value did not resolve the issue
-#ifdef KOKKOS_COMPILER_INTEL
-void fence();
-void fence(const std::string &name);
-#else
 void fence(const std::string &name = "Kokkos::fence: Unnamed Global Fence");
-#endif
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

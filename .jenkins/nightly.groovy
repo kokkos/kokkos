@@ -134,7 +134,7 @@ pipeline {
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
@@ -172,7 +172,7 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {

@@ -254,7 +254,7 @@ __device__ void hip_intra_block_reduce_scan(
 
   const unsigned value_count = functor.length();
   const unsigned not_less_power_of_two =
-      (1 << (Impl::int_log2(blockDim.y - 1) + 1));
+      Kokkos::Experimental::bit_ceil_builtin<unsigned>(blockDim.y);
   const unsigned BlockSizeMask = not_less_power_of_two - 1;
   // There is at most one warp that is neither completely full or empty.
   // For that warp, we shift all indices logically to the end and ignore join
@@ -369,11 +369,13 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
         "blockDim");
   }
 
+  // NOLINTBEGIN(bugprone-sizeof-expression)
   const integral_nonzero_constant<
       size_type, std::is_pointer_v<typename FunctorType::reference_type>
                      ? 0
                      : sizeof(value_type) / sizeof(size_type)>
       word_count((sizeof(value_type) * functor.length()) / sizeof(size_type));
+  // NOLINTEND(bugprone-sizeof-expression)
 
   // Reduce the accumulation for the entire block.
   hip_intra_block_reduce_scan<false>(functor, pointer_type(shared_data));

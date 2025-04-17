@@ -151,9 +151,10 @@ class SYCLInternal {
     }
 
     void register_event(sycl::event event) {
-      assert(m_last_event
-                 .get_info<sycl::info::event::command_execution_status>() ==
-             sycl::info::event_command_status::complete);
+      KOKKOS_ASSERT(
+          m_last_event
+              .get_info<sycl::info::event::command_execution_status>() ==
+          sycl::info::event_command_status::complete);
       m_last_event = event;
       m_mutex.unlock();
     }
@@ -329,29 +330,5 @@ struct sycl::is_device_copyable<
     Kokkos::Impl::SYCLFunctionWrapper<Functor, Storage, false>>
     : std::true_type {};
 
-#if (defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER < 20240000) || \
-    (defined(__LIBSYCL_MAJOR_VERSION) && __LIBSYCL_MAJOR_VERSION < 7)
-template <typename>
-struct NonTriviallyCopyableAndDeviceCopyable {
-  NonTriviallyCopyableAndDeviceCopyable(
-      const NonTriviallyCopyableAndDeviceCopyable&) {}
-};
-
-template <typename T>
-struct sycl::is_device_copyable<NonTriviallyCopyableAndDeviceCopyable<T>>
-    : std::true_type {};
-
-static_assert(
-    !std::is_trivially_copyable_v<
-        NonTriviallyCopyableAndDeviceCopyable<void>> &&
-    sycl::is_device_copyable_v<NonTriviallyCopyableAndDeviceCopyable<void>>);
-
-template <typename Functor, typename Storage>
-struct sycl::is_device_copyable<
-    const Kokkos::Impl::SYCLFunctionWrapper<Functor, Storage, false>,
-    std::enable_if_t<!sycl::is_device_copyable_v<
-        const NonTriviallyCopyableAndDeviceCopyable<Functor>>>>
-    : std::true_type {};
-#endif
 #endif
 #endif

@@ -44,6 +44,7 @@
 namespace Kokkos {
 namespace Impl {
 
+// NOLINTBEGIN(bugprone-non-zero-enum-to-bool-conversion)
 template <class T>
 struct is_integral_extent_type {
   enum : bool { value = std::is_same_v<T, Kokkos::ALL_t> ? 1 : 0 };
@@ -163,6 +164,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride, Kokkos::LayoutStride,
                                    SubViewArgs...> {
   enum : bool { value = true };
 };
+// NOLINTEND(bugprone-non-zero-enum-to-bool-conversion)
 
 template <unsigned DomainRank, unsigned RangeRank>
 struct SubviewExtents {
@@ -2431,8 +2433,7 @@ struct ViewDataHandle<
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
   // NOLINTNEXTLINE(modernize-use-using)
-  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(KOKKOS_MEMORY_ALIGNMENT)
-      handle_type;
+  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) handle_type;
   using return_type = typename Traits::value_type&;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
@@ -2469,8 +2470,7 @@ struct ViewDataHandle<
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
   // NOLINTNEXTLINE(modernize-use-using)
-  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(KOKKOS_MEMORY_ALIGNMENT)
-      handle_type;
+  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) handle_type;
   using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
@@ -3353,6 +3353,9 @@ KOKKOS_FUNCTION bool within_range(Map const& map,
   return (((std::size_t)indices < map.extent(Enumerate)) && ...);
 }
 
+// Disabled when using MDSpan because the MDSpan implementation has its own
+// version
+#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
 template <class... Indices>
 KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
     char* dest, Indices... indices) {
@@ -3370,6 +3373,7 @@ KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
   d[strlen(d) - 1] = ']';  // overwrite trailing comma
   return dest;
 }
+#endif
 
 template <class Map, class... Indices, std::size_t... Enumerate>
 KOKKOS_FUNCTION void print_extents(char* dest, Map const& map,

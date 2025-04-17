@@ -30,9 +30,8 @@
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif
 
-#if defined KOKKOS_COMPILER_INTEL ||                                  \
-    (defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-     !defined(KOKKOS_COMPILER_MSVC))
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
 #define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE __builtin_unreachable();
 #else
 #define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE
@@ -290,7 +289,7 @@ struct FloatingPointComparison {
   KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, int ulp) const {
     auto abs_tol = eps(fpv) * ulp;
 
-    bool ar = absolute(fpv) < abs_tol;
+    bool ar = absolute(fpv) <= abs_tol;
     if (!ar) {
       Kokkos::printf("absolute value exceeds tolerance [|%e| > %e]\n",
                      (double)fpv, (double)abs_tol);
@@ -311,7 +310,7 @@ struct FloatingPointComparison {
       double min_denom = static_cast<double>(
           absolute(rhs) < absolute(lhs) ? absolute(rhs) : absolute(lhs));
       double rel_diff = abs_diff / min_denom;
-      bool ar         = abs_diff == 0 || rel_diff < rel_tol;
+      bool ar         = rel_diff <= rel_tol;
       if (!ar) {
         Kokkos::printf("relative difference exceeds tolerance [%e > %e]\n",
                        (double)rel_diff, (double)rel_tol);
@@ -485,6 +484,8 @@ DEFINE_BINARY_FUNCTION_EVAL(pow, 2);
 DEFINE_BINARY_FUNCTION_EVAL(hypot, 2);
 DEFINE_BINARY_FUNCTION_EVAL(nextafter, 1);
 DEFINE_BINARY_FUNCTION_EVAL(copysign, 1);
+DEFINE_BINARY_FUNCTION_EVAL(fmax, 0);
+DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 #endif
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
@@ -854,6 +855,27 @@ TEST(TEST_CATEGORY, mathematical_functions_fma) {
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2, 3.f, 4.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.l, 3.l, 4.l);
+#endif
+}
+
+TEST(TEST_CATEGORY, mathematical_functions_fmax_fmin) {
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
+      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(
+      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(
+      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(
+      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2.f, 3.f);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2.f, 3.f);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2., 3.);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2., 3.);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2, 3.f);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2, 3.f);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmax>(2.l, 3.l);
+  do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2.l, 3.l);
 #endif
 }
 #endif

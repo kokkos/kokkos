@@ -35,17 +35,19 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
       continue;
     }
 
-    simd_type expected_result;
-
+    DataType expected_val[width];
     for (std::size_t lane = 0; lane < width; ++lane) {
-      DataType value = simd_vals[lane];
-      expected_result[lane] =
-          shift_op.on_host(value, static_cast<int>(shift_by[i]));
-      EXPECT_EQ(value, value);
+      expected_val[lane] =
+          shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[i]));
     }
+
+    simd_type expected_result;
+    expected_result.copy_from(expected_val,
+                              Kokkos::Experimental::simd_flag_default);
 
     simd_type const computed_result =
         shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
+
     host_check_equality(expected_result, computed_result, width);
   }
 }
@@ -62,15 +64,18 @@ inline void host_check_shift_by_lanes_on_one_loader(
   bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
   ASSERT_TRUE(loaded_arg);
 
-  simd_type expected_result;
-
+  DataType expected_val[width];
   for (std::size_t lane = 0; lane < width; ++lane) {
-    DataType value = simd_vals[lane];
-    expected_result[lane] =
-        shift_op.on_host(value, static_cast<int>(shift_by[lane]));
-    EXPECT_EQ(value, value);
+    expected_val[lane] =
+        shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[lane]));
   }
+
+  simd_type expected_result;
+  expected_result.copy_from(expected_val,
+                            Kokkos::Experimental::simd_flag_default);
+
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
+
   host_check_equality(expected_result, computed_result, width);
 }
 
@@ -125,13 +130,19 @@ inline void host_check_shift_ops() {
 
       host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                            num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                           shift_by, num_cases);
       host_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
+                                           num_cases);
+      host_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals, shift_by,
                                            num_cases);
 
       if constexpr (std::is_signed_v<DataType>) {
         for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
         host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                              num_cases);
+        host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                             shift_by, num_cases);
       }
     }
   }
@@ -165,12 +176,9 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
       continue;
     }
 
-    simd_type expected_result;
-
-    for (std::size_t lane = 0; lane < width; ++lane) {
-      expected_result[lane] = shift_op.on_device(DataType(simd_vals[lane]),
-                                                 static_cast<int>(shift_by[i]));
-    }
+    simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+      return shift_op.on_device(simd_vals[lane], static_cast<int>(shift_by[i]));
+    });
 
     simd_type const computed_result =
         shift_op.on_device(simd_vals, static_cast<int>(shift_by[i]));
@@ -188,12 +196,11 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
   simd_type simd_vals;
   loader.device_load(test_vals, width, simd_vals);
 
-  simd_type expected_result;
+  simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+    return shift_op.on_device(simd_vals[lane],
+                              static_cast<int>(shift_by[lane]));
+  });
 
-  for (std::size_t lane = 0; lane < width; ++lane) {
-    expected_result[lane] = shift_op.on_device(
-        DataType(simd_vals[lane]), static_cast<int>(shift_by[lane]));
-  }
   simd_type const computed_result = shift_op.on_device(simd_vals, shift_by);
   device_check_equality(expected_result, computed_result, width);
 }
@@ -246,12 +253,18 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
 
       device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                              num_cases);
+      device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
+                                             shift_by, num_cases);
       device_check_shift_op_all_loaders<Abi>(shift_left(), test_vals, shift_by,
                                              num_cases);
+      device_check_shift_op_all_loaders<Abi>(shift_left_eq(), test_vals,
+                                             shift_by, num_cases);
 
       if constexpr (std::is_signed_v<DataType>) {
         for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
         device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals,
+                                               shift_by, num_cases);
+        device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
                                                shift_by, num_cases);
       }
     }

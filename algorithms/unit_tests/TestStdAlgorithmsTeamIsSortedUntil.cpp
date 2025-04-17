@@ -158,7 +158,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId,
        this allows us to exercise that the algorithm returns
        the larest sorted interval starting from 0
     */
-    assert(numCols > 10);
+    KOKKOS_ASSERT(numCols > 10);
     const std::size_t midPoint = numCols / 2;
 
     UnifDist<int> randPoolA(0, midPoint, 3432779);

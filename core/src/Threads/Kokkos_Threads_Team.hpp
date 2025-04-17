@@ -25,6 +25,7 @@
 #include <impl/Kokkos_HostThreadTeam.hpp>
 
 #include <Kokkos_Atomic.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Threads/Kokkos_Threads_Spinwait.hpp>
 #include <Threads/Kokkos_Threads_State.hpp>
 
@@ -769,9 +770,9 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     int concurrency = space().concurrency() / m_team_alloc;
     if (concurrency == 0) concurrency = 1;
 
-    if (m_chunk_size > 0) {
-      if (!Impl::is_integral_power_of_two(m_chunk_size))
-        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+    if (m_chunk_size > 0 &&
+        !Kokkos::has_single_bit(static_cast<unsigned>(m_chunk_size))) {
+      Kokkos::abort("TeamPolicy blocking granularity must be power of two");
     }
 
     int new_chunk_size = 1;

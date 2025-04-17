@@ -134,6 +134,7 @@ struct ObjectWithVLAEmulation {
   static /* constexpr */ size_t required_allocation_size(
       vla_entry_count_type num_vla_entries) {
     KOKKOS_EXPECTS(num_vla_entries >= 0);
+    // NOLINTNEXTLINE(bugprone-sizeof-expression)
     return sizeof(Derived) + num_vla_entries * sizeof(VLAValueType);
   }
 
@@ -163,6 +164,7 @@ struct ObjectWithVLAEmulation {
 
     KOKKOS_EXPECTS(num_entries >= 0);
     for (vla_entry_count_type i = 0; i < m_num_entries; ++i) {
+      // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
       new (_vla_pointer() + i) vla_value_type();
     }
   }
