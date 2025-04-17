@@ -40,6 +40,12 @@ TEST(defaultdevicetype_DeathTest, view_memory_space_violation) {
                   "with Kokkos_ENABLE_DEBUG";
 #else
 
+#if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || \
+    defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+  GTEST_SKIP()
+      << "We don't want to check pointer memory spaces for APU-like setups";
+#endif
+
   auto create_host_view = [](auto view) {
     Kokkos::View<int*, Kokkos::HostSpace> host_unmanaged(view.data(),
                                                          view.size());
