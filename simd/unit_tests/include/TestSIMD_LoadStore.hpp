@@ -44,8 +44,9 @@ inline void host_test_simd_load(SimdType const& init, SimdType const& expected,
     }
   }
 
+  auto mask = (result == expected);
   for (size_t i = 0; i < SimdType::size(); ++i) {
-    EXPECT_EQ(result[i], expected[i]);
+    EXPECT_TRUE(mask[i]);
   }
 }
 
