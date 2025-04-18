@@ -276,17 +276,6 @@ else
   endif
 endif
 
-ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL_CLANG), 1)
-    KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fiopenmp -Wno-openmp-mapping
-  else ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
-    KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -mp=gpu 
-  else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 0)
-    #Assume GCC
-    KOKKOS_INTERNAL_OPENMPTARGET_FLAG := -fopenmp -foffload=nvptx-none
-  endif
-endif
-
 ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
   # Set OpenACC flags.
   ifeq ($(KOKKOS_INTERNAL_COMPILER_NVHPC), 1)
@@ -577,9 +566,6 @@ endif
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
   KOKKOS_LIBS += -latomic
   tmp := $(call kokkos_append_header,'$H''define KOKKOS_ENABLE_OPENMPTARGET')
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_GCC), 1)
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_WORKAROUND_OPENMPTARGET_GCC")
-  endif
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
@@ -1069,11 +1055,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA_ARCH), 1)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
-  ifeq ($(KOKKOS_INTERNAL_COMPILER_CRAY_CLANG), 1)
-    KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp
-    else ifeq ($(KOKKOS_INTERNAL_COMPILER_CLANG), 1)
-      KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp --offload-arch
-  endif
+		KOKKOS_INTERNAL_CUDA_ARCH_FLAG=-fopenmp --offload-arch
 endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENACC), 1)
@@ -1353,11 +1335,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_SYCL), 1)
   KOKKOS_LDFLAGS+=$(KOKKOS_INTERNAL_INTEL_ARCH_FLAG)
 
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE")
-endif
-
-ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
-  KOKKOS_CXXFLAGS+=$(KOKKOS_INTERNAL_INTEL_ARCH_FLAG) -D__STRICT_ANSI__
-  KOKKOS_LDFLAGS+=$(KOKKOS_INTERNAL_INTEL_ARCH_FLAG)
 endif
 
 ifeq ($(KOKKOS_INTERNAL_DISABLE_DESUL_ATOMICS), 1)
