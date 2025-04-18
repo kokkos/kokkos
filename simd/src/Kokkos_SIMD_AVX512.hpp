@@ -1865,7 +1865,8 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_epi32(ptr);
     } else {
-      m_value = _mm512_loadu_epi32(ptr);
+      mask_type mask(true);
+      m_value = _mm512_maskz_loadu_epi32(static_cast<__mmask16>(mask), ptr);
     }
   }
   template <typename FlagType>
@@ -2116,7 +2117,10 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_store_epi32(ptr, static_cast<__m512i>(simd));
   } else {
-    _mm512_storeu_epi32(ptr, static_cast<__m512i>(simd));
+    typename basic_simd<std::int32_t,
+                        simd_abi::avx512_fixed_size<16>>::mask_type mask(true);
+    _mm512_mask_storeu_epi32(ptr, static_cast<__mmask16>(mask),
+                             static_cast<__m512i>(simd));
   }
 }
 
@@ -2126,8 +2130,14 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     std::int32_t* ptr,
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const& mask,
     FlagType) {
-  _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
-                          static_cast<__m512i>(simd));
+  if constexpr (std::is_same_v<FlagType,
+                               simd_flags<simd_alignment_vector_aligned>>) {
+    _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
+                            static_cast<__m512i>(simd));
+  } else {
+    _mm512_mask_storeu_epi32(ptr, static_cast<__mmask16>(mask),
+                             static_cast<__m512i>(simd));
+  }
 }
 
 template <typename FlagType>
@@ -2562,7 +2572,8 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_epi32(ptr);
     } else {
-      m_value = _mm512_loadu_epi32(ptr);
+      mask_type mask(true);
+      m_value = _mm512_maskz_loadu_epi32(static_cast<__mmask16>(mask), ptr);
     }
   }
   template <typename FlagType>
@@ -2805,7 +2816,10 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_store_epi32(ptr, static_cast<__m512i>(simd));
   } else {
-    _mm512_storeu_epi32(ptr, static_cast<__m512i>(simd));
+    typename basic_simd<std::uint32_t,
+                        simd_abi::avx512_fixed_size<16>>::mask_type mask(true);
+    _mm512_mask_storeu_epi32(ptr, static_cast<__mmask16>(mask),
+                             static_cast<__m512i>(simd));
   }
 }
 
@@ -2815,8 +2829,14 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& mask,
     FlagType) {
-  _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
-                          static_cast<__m512i>(simd));
+  if constexpr (std::is_same_v<FlagType,
+                               simd_flags<simd_alignment_vector_aligned>>) {
+    _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
+                            static_cast<__m512i>(simd));
+  } else {
+    _mm512_mask_storeu_epi32(ptr, static_cast<__mmask16>(mask),
+                             static_cast<__m512i>(simd));
+  }
 }
 
 template <typename FlagType>
@@ -2825,8 +2845,14 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& mask,
     FlagType) {
-  _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
-                          static_cast<__m512i>(simd));
+  if constexpr (std::is_same_v<FlagType,
+                               simd_flags<simd_alignment_vector_aligned>>) {
+    _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
+                            static_cast<__m512i>(simd));
+  } else {
+    _mm512_mask_storeu_epi32(ptr, static_cast<__mmask16>(mask),
+                             static_cast<__m512i>(simd));
+  }
 }
 
 [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<
