@@ -1788,7 +1788,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     __m128i tmp = _mm_loadu_si128(reinterpret_cast<__m128i const*>(ptr));
-    m_value     = value_type(_mm_and_si128(tmp, static_cast<__m128i>(mask)));
+    m_value     = _mm_and_si128(tmp, static_cast<__m128i>(mask));
 #else
     m_value    = _mm_maskload_epi32(ptr, static_cast<__m128i>(mask));
 #endif
@@ -2125,7 +2125,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>> {
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     __m256i tmp = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(ptr));
-    m_value     = value_type(_mm256_and_si256(tmp, static_cast<__m256i>(mask)));
+    m_value     = _mm256_and_si256(tmp, static_cast<__m256i>(mask));
 #else
     m_value    = _mm256_maskload_epi32(ptr, static_cast<__m256i>(mask));
 #endif
@@ -2468,7 +2468,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     __m256i tmp = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(ptr));
-    m_value     = value_type(_mm256_and_si256(tmp, static_cast<__m256i>(mask)));
+    m_value     = _mm256_and_si256(tmp, static_cast<__m256i>(mask));
 #else
     m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                     static_cast<__m256i>(mask));
@@ -2823,7 +2823,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     __m256i tmp = _mm256_loadu_si256(reinterpret_cast<__m256i const*>(ptr));
-    m_value     = value_type(_mm256_and_si256(tmp, static_cast<__m256i>(mask)));
+    m_value     = _mm256_and_si256(tmp, static_cast<__m256i>(mask));
 #else
     m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                     static_cast<__m256i>(mask));
@@ -3176,7 +3176,7 @@ class KOKKOS_DEPRECATED
   void copy_from(double const* mem, element_aligned_tag) {
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     __m256d tmp = _mm256_loadu_pd(mem);
-    m_value = value_type(_mm256_and_si256(tmp, static_cast<__m256d>(m_mask)));
+    m_value     = value_type(_mm256_and_pd(tmp, static_cast<__m256d>(m_mask)));
 #else
     m_value = value_type(_mm256_maskload_pd(
         mem, _mm256_castpd_si256(static_cast<__m256d>(m_mask))));
@@ -3186,7 +3186,7 @@ class KOKKOS_DEPRECATED
   void copy_from(double const* mem, vector_aligned_tag) {
 #ifdef KOKKOS_IMPL_WORKAROUND_ROCM_AVX2_ISSUE
     __m256d tmp = _mm256_load_pd(mem);
-    m_value = value_type(_mm256_and_si256(tmp, static_cast<__m256d>(m_mask)));
+    m_value     = value_type(_mm256_and_pd(tmp, static_cast<__m256d>(m_mask)));
 #else
     m_value = value_type(_mm256_maskload_pd(
         mem, _mm256_castpd_si256(static_cast<__m256d>(m_mask))));

@@ -434,7 +434,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
     m_value = static_cast<float64x2_t>(basic_simd(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : value_type(); }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -782,7 +782,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
     m_value = static_cast<float32x2_t>(basic_simd(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : value_type(); }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -1124,7 +1124,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
     m_value = static_cast<float32x4_t>(basic_simd(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : value_type(); }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -1471,7 +1471,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
     m_value = static_cast<int32x2_t>(basic_simd(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : value_type(); }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -1779,7 +1779,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
     m_value = static_cast<int32x4_t>(basic_simd(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : value_type(); }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -2089,7 +2089,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
     m_value = static_cast<int64x2_t>(basic_simd(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : value_type(); }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -2394,7 +2394,7 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask, FlagType) noexcept {
     m_value = static_cast<uint64x2_t>(basic_simd(
-        [=](std::size_t i) { return (mask[i]) ? ptr[i] : m_value[i]; }));
+        [=](std::size_t i) { return (mask[i]) ? ptr[i] : value_type(); }));
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
