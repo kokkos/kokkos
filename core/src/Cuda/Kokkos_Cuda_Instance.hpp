@@ -202,9 +202,10 @@ class CudaInternal {
     return cudaDeviceSetLimit(limit, value);
   }
 
-  cudaError_t cuda_event_create_wrapper(cudaEvent_t* event) const {
+  cudaError_t cuda_event_create_with_flags_wrapper(
+      cudaEvent_t* event, const unsigned int flags) const {
     set_cuda_device();
-    return cudaEventCreate(event);
+    return cudaEventCreateWithFlags(event, flags);
   }
 
   cudaError_t cuda_event_record_wrapper(cudaEvent_t event) const {

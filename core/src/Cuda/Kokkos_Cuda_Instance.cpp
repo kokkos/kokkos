@@ -293,8 +293,8 @@ void CudaInternal::initialize(cudaStream_t stream) {
   }
 
   if (!constantMemReusablePerDevice[m_cudaDev])
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_event_create_wrapper(&constantMemReusablePerDevice[m_cudaDev])));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cuda_event_create_with_flags_wrapper(
+        &constantMemReusablePerDevice[m_cudaDev], cudaEventDisableTiming));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
