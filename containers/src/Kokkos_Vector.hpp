@@ -128,16 +128,16 @@ class KOKKOS_DEPRECATED vector
   void reserve(size_t n) { DV::resize(size_t(n * _extra_storage)); }
 
   void push_back(Scalar val) {
-    DV::template sync<typename DV::t_host::device_type>();
     if (_size == span()) {
       size_t new_size = _size * _extra_storage;
       if (new_size == _size) new_size++;
       DV::resize(new_size);
     }
 
+    DV::sync_host();
     DV::view_host()(_size) = val;
     _size++;
-    DV::template modify<typename DV::t_host::device_type>();
+    DV::modify_host();
   }
 
   void pop_back() { _size--; }
