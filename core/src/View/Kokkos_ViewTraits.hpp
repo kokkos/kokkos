@@ -228,14 +228,28 @@ template <class Traits>
 using accessor_from_view_traits_t =
     typename AccessorFromViewTraits<Traits>::type;
 
+// =========================================================
+// Customization points for View for projects such as Sacado
+// =========================================================
+
+// Type list for View Arguments
 template <class ValueType, class LayoutType, class DeviceType,
           class MemoryTraits>
 struct ViewArguments {};
 
+// Customization point to control mdspan arguments from view arguments
 template <class ValueType, class LayoutType, class DeviceType,
           class MemoryTraits>
 void mdspan_from_view_arguments(
     ViewArguments<ValueType, LayoutType, DeviceType, MemoryTraits>) {}
+
+// Compute allocation size from mapping and accessor
+// This is necessary in particular if the pointer type is not ElementType*
+template <class MappingType, class AccessorType>
+size_t allocation_size_from_mapping_and_accessor(const MappingType& mapping,
+                                                 const AccessorType&) {
+  return mapping.required_span_size();
+}
 
 // "Natural" mdspan for a view if the View's ArrayLayout is supported.
 template <class Traits, class Enabled = decltype(mdspan_from_view_arguments(

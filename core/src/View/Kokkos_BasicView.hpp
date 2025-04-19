@@ -125,11 +125,6 @@ class BasicView {
   using memory_space     = typename accessor_type::memory_space;
   using execution_space  = typename memory_space::execution_space;
 
-  // For now View and BasicView will have a restriction that the data handle
-  // needs to be convertible to element_type* and vice versa
-  static_assert(std::is_constructible_v<element_type *, data_handle_type>);
-  static_assert(std::is_constructible_v<data_handle_type, element_type *>);
-
   KOKKOS_FUNCTION static constexpr rank_type rank() noexcept {
     return extents_type::rank();
   }
@@ -334,10 +329,11 @@ class BasicView {
 
  private:
   template <class... P>
-  data_handle_type create_data_handle(
-      const Impl::ViewCtorProp<P...> &arg_prop,
-      const typename mdspan_type::mapping_type &arg_mapping) {
-    constexpr bool has_exec = Impl::ViewCtorProp<P...>::has_execution_space;
+  data_handle_type create_data_handle(const Impl::ViewCtorProp<P...> &arg_prop,
+                                      const mapping_type &arg_mapping,
+                                      const accessor_type &arg_accessor) {
+    using storage_value_type = typename data_handle_type::value_type;
+    constexpr bool has_exec  = Impl::ViewCtorProp<P...>::has_execution_space;
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =
@@ -354,23 +350,28 @@ class BasicView {
           "Constructing View and initializing data with uninitialized "
           "execution space");
     }
+
+    // get allocation size: may be different from
+    // arg_mapping.required_allocation_size()
+    size_t allocation_size =
+        allocation_size_from_mapping_and_accessor(arg_mapping, arg_accessor);
     if constexpr (has_exec) {
-      return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
-          arg_mapping.required_span_size(),
-          Impl::get_property<Impl::LabelTag>(prop_copy),
-          Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-          std::make_optional(
-              Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
-          std::bool_constant<alloc_prop::initialize>(),
-          std::bool_constant<alloc_prop::sequential_host_init>()));
+      return data_handle_type(
+          Impl::make_shared_allocation_record<storage_value_type>(
+              allocation_size, Impl::get_property<Impl::LabelTag>(prop_copy),
+              Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
+              std::make_optional(
+                  Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
+              std::bool_constant<alloc_prop::initialize>(),
+              std::bool_constant<alloc_prop::sequential_host_init>()));
     } else {
-      return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
-          arg_mapping.required_span_size(),
-          Impl::get_property<Impl::LabelTag>(prop_copy),
-          Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-          std::optional<execution_space>{},
-          std::bool_constant<alloc_prop::initialize>(),
-          std::bool_constant<alloc_prop::sequential_host_init>()));
+      return data_handle_type(
+          Impl::make_shared_allocation_record<storage_value_type>(
+              allocation_size, Impl::get_property<Impl::LabelTag>(prop_copy),
+              Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
+              std::optional<execution_space>{},
+              std::bool_constant<alloc_prop::initialize>(),
+              std::bool_constant<alloc_prop::sequential_host_init>()));
     }
   }
 
@@ -381,7 +382,8 @@ class BasicView {
       const Impl::ViewCtorProp<P...> &arg_prop,
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
                        typename mdspan_type::mapping_type> const &arg_mapping)
-      : BasicView(create_data_handle(arg_prop, arg_mapping), arg_mapping) {}
+      : BasicView(create_data_handle(arg_prop, arg_mapping, accessor_type()),
+                  arg_mapping) {}
 
   template <class... P>
   // requires(Impl::ViewCtorProp<P...>::has_pointer)
