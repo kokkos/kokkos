@@ -380,7 +380,18 @@ class BasicView {
   // requires(!Impl::ViewCtorProp<P...>::has_pointer)
   explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer && Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(create_data_handle(arg_prop, arg_mapping, accessor_from_mapping_and_accessor_args(
+                   Kokkos::Impl::AccessorTypeTag<accessor_type>(), arg_mapping, Impl::get_property<Impl::AccessorArgTag>(arg_prop))),
+                  arg_mapping, accessor_from_mapping_and_accessor_args(
+                   Kokkos::Impl::AccessorTypeTag<accessor_type>(), arg_mapping, Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
+
+  template <class... P>
+  // requires(!Impl::ViewCtorProp<P...>::has_pointer)
+  explicit inline BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer && !Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
       : BasicView(create_data_handle(arg_prop, arg_mapping, accessor_type()),
                   arg_mapping) {}

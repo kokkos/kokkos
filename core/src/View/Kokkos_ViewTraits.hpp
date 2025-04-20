@@ -237,18 +237,26 @@ template <class ValueType, class LayoutType, class DeviceType,
           class MemoryTraits>
 struct ViewArguments {};
 
+template<class AccessorType>
+struct AccessorTypeTag {};
+
 // Customization point to control mdspan arguments from view arguments
 template <class ValueType, class LayoutType, class DeviceType,
           class MemoryTraits>
-void mdspan_from_view_arguments(
+constexpr void mdspan_from_view_arguments(
     ViewArguments<ValueType, LayoutType, DeviceType, MemoryTraits>) {}
 
 // Compute allocation size from mapping and accessor
 // This is necessary in particular if the pointer type is not ElementType*
 template <class MappingType, class AccessorType>
-size_t allocation_size_from_mapping_and_accessor(const MappingType& mapping,
+constexpr size_t allocation_size_from_mapping_and_accessor(const MappingType& mapping,
                                                  const AccessorType&) {
   return mapping.required_span_size();
+}
+
+template<class AccessorType, class MappingType>
+constexpr auto accessor_from_mapping_and_accessor_args(const Kokkos::Impl::AccessorTypeTag<AccessorType>&, const MappingType&, const AccessorArg_t&) {
+  return AccessorType{};
 }
 
 // "Natural" mdspan for a view if the View's ArrayLayout is supported.
