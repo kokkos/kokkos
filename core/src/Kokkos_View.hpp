@@ -183,6 +183,15 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using non_const_scalar_array_type =
       typename traits::non_const_scalar_array_type;
 
+ private:
+  // Does this View type opt into customization points
+  constexpr static bool is_customized =
+      !std::is_same_v<decltype(Impl::mdspan_from_view_arguments(
+                          Impl::ViewArguments<value_type, array_layout,
+                                              device_type, memory_traits>())),
+                      size_t>;
+
+ public:
   // typedefs from BasicView
   using typename base_t::mdspan_type;
   using reference_type = typename base_t::reference;
@@ -727,23 +736,61 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                        typename traits::array_layout> const& arg_layout)
       : View(Impl::ViewCtorProp<std::string>(arg_label), arg_layout) {}
 
-  // Allocate label and layout, must disambiguate from subview constructor.
-  explicit View(const std::string& arg_label,
-                const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
-      : View(Impl::ViewCtorProp<std::string>(arg_label),
-             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    static_assert(traits::array_layout::is_extent_constructible,
-                  "Layout is not constructible from extent arguments. Use "
-                  "overload taking a layout object instead.");
+  /*
+    // Allocate label and layout, must disambiguate from subview constructor.
+    explicit View(const Impl::AccessorArg_t& acc_arg, const std::string&
+    arg_label, const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG, const size_t
+    arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG, const size_t arg_N2 =
+    KOKKOS_IMPL_CTOR_DEFAULT_ARG, const size_t arg_N3 =
+    KOKKOS_IMPL_CTOR_DEFAULT_ARG, const size_t arg_N4 =
+    KOKKOS_IMPL_CTOR_DEFAULT_ARG, const size_t arg_N5 =
+    KOKKOS_IMPL_CTOR_DEFAULT_ARG, const size_t arg_N6 =
+    KOKKOS_IMPL_CTOR_DEFAULT_ARG, const size_t arg_N7 =
+    KOKKOS_IMPL_CTOR_DEFAULT_ARG) :
+    View(Impl::ViewCtorProp<std::string>(arg_label), typename
+    traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
+    arg_N7)) { static_assert(traits::array_layout::is_extent_constructible,
+                    "Layout is not constructible from extent arguments. Use "
+                    "overload taking a layout object instead.");
+    }
+  */
+
+  template <class... Args>
+  View(const std::enable_if_t<(sizeof...(Args) != rank() + 1) &&
+                                  (std::is_integral_v<Args> && ... && true),
+                              std::string>& arg_label,
+       const Args... args)
+      : View(Impl::ViewCtorProp<std::string>(arg_label), args...) {}
+
+ private:
+  // Special thing for Sacado taking rank()+1 integers, where the last integer
+  // is the FAD dimension
+  template <class... Args, size_t... Idx>
+  auto view_alloc_from_label_and_integrals(std::true_type,
+                                           std::string& arg_label, Args... args,
+                                           std::index_sequence<Idx...>) {
+    return view_alloc(arg_label, Impl::AccessorArgs_t{((Idx == rank()?args:0) + ... + 0)};
   }
+
+  template <class... Args, size_t... Idx>
+  auto view_alloc_from_label_and_integrals(std::false_type,
+                                           std::string& arg_label, Args...,
+                                           std::index_sequence<Idx...>) {
+    return view_alloc(arg_label);
+  }
+
+ public:
+  template <class... Args>
+  View(const std::enable_if_t<(sizeof...(Args) == rank() + 1) &&
+                                  (std::is_integral_v<Args> && ... && true),
+                              std::string>& arg_label,
+       const Args... args)
+      : View(view_alloc_from_label_and_integrals(
+                 std::conditional_t<is_customized, std::true_type,
+                                    std::false_type>(),
+                 arg_label, args...,
+                 std::make_index_sequence<sizeof...(Args)>()),
+             args...) {}
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
