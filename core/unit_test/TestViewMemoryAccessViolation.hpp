@@ -171,10 +171,10 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
     GTEST_SKIP() << "skipping since no memory access violation would occur";
   }
 
-#if defined(KOKKOS_ENABLE_SYCL) && defined(NDEBUG)  // FIXME_SYCL
+#if defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
   if (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
-    GTEST_SKIP() << "skipping SYCL device-side abort does not work when NDEBUG "
-                    "is defined";
+    GTEST_SKIP() << "skipping SYCL device-side abort does not show an error "
+                    "message even when NDEBUG isn't defined";
   }
 #endif
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET
