@@ -10,6 +10,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_FECH_OP_HIP_HPP_
 
 #include <desul/atomics/Adapt_HIP.hpp>
+#include <desul/atomics/Operator_Function_Objects.hpp>
 
 namespace desul {
 namespace Impl {
