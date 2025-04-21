@@ -17,7 +17,7 @@
 #ifndef KOKKOS_CHECK_USAGE_HPP
 #define KOKKOS_CHECK_USAGE_HPP
 
-namespace Kokkos{
+namespace Kokkos {
 
 [[nodiscard]] bool is_initialized() noexcept;
 [[nodiscard]] bool is_finalized() noexcept;
@@ -26,35 +26,33 @@ namespace Impl {
 
 struct UsageRequires {
   struct isInitialized {};
-  //Another examples:
-  //isFinalized
-  //isConstV{}, etc.
+  // Another examples:
+  // isFinalized
+  // isConstV{}, etc.
 };
 
-template<typename ...T>
+template <typename... T>
 class CheckUsage;
 
-template<>
-class CheckUsage<UsageRequires::isInitialized>{
-  public:
-  static void check(){
-    KOKKOS_EXPECTS_CRITICAL(Kokkos::is_initialized());
-  }
+template <>
+class CheckUsage<UsageRequires::isInitialized> {
+ public:
+  static void check() { KOKKOS_EXPECTS_CRITICAL(Kokkos::is_initialized()); }
 };
 
-//Another examples
-// template<typename T>
-// class CheckUsage<UsageRequires::isConstV, T>{
-//   std::string msg = "A const reduction result type is only allowed for a View, pointer or "
-//      "reducer return type!";
-//   public:
-//   static void check(){
-//     KOKKOS_EXPECTS_CRITICAL(!std::is_const_v<int>);
-//   }
-// };
+// Another examples
+//  template<typename T>
+//  class CheckUsage<UsageRequires::isConstV, T>{
+//    std::string msg = "A const reduction result type is only allowed for a
+//    View, pointer or "
+//       "reducer return type!";
+//    public:
+//    static void check(){
+//      KOKKOS_EXPECTS_CRITICAL(!std::is_const_v<int>);
+//    }
+//  };
 
-}  // namespace Kokkos::Impl
-} // namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
-
-#endif //KOKKOS_CHECK_USAGE_HPP
+#endif  // KOKKOS_CHECK_USAGE_HPP
