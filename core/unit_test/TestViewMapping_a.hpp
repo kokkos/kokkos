@@ -675,8 +675,9 @@ void test_view_mapping() {
     static_assert(std::is_same_v<typename C::non_const_data_type, int*>);
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-<<<<<<< HEAD
-    static_assert(std::is_same_v<typename C::scalar_array_type, const int*>);
+    < < < < < < <
+        HEAD static_assert(
+            std::is_same_v<typename C::scalar_array_type, const int*>);
     static_assert(
         std::is_same_v<typename C::const_scalar_array_type, const int*>);
     static_assert(
@@ -750,8 +751,8 @@ void test_view_mapping() {
     static_assert(std::is_same_v<typename T::non_const_data_type, int*>);
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-<<<<<<< HEAD
-    static_assert(std::is_same_v<typename T::scalar_array_type, int*>);
+    < < < < < < <
+        HEAD static_assert(std::is_same_v<typename T::scalar_array_type, int*>);
     static_assert(
         std::is_same_v<typename T::const_scalar_array_type, const int*>);
     static_assert(
