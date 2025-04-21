@@ -14,7 +14,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, T)                           \
+#define DESUL_IMPL_HIP_ATOMIC_OP(OP, T)                                 \
   template <class MemoryOrder, class MemoryScope>                       \
   __device__ inline T device_atomic_fetch_##OP(                         \
       T* ptr, T val, MemoryOrder, MemoryScope) {                        \
@@ -30,34 +30,34 @@ namespace Impl {
         device_atomic_fetch_##OP(ptr, val, order, scope), val);         \
   }
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(OP) \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, int)           \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, long)          \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, long long)     \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, unsigned int)  \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, unsigned long) \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, unsigned long long)
+#define DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL(OP) \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, int)           \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, long)          \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, long long)     \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, unsigned int)  \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, unsigned long) \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, unsigned long long)
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(OP) \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, float)               \
-  DESUL_IMPL_HIP_ATOMIC_FETCH_OP(OP, double)
+#define DESUL_IMPL_HIP_ATOMIC_OP_FLOATING_POINT(OP) \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, float)               \
+  DESUL_IMPL_HIP_ATOMIC_OP(OP, double)
 
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(add)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(min)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(max)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(and)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(or)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL(xor)
-DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(add)
+DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL(add)
+DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL(min)
+DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL(max)
+DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL(and)
+DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL(or)
+DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL(xor)
+DESUL_IMPL_HIP_ATOMIC_OP_FLOATING_POINT(add)
 // atomic min/max gives the wrong results (tested with ROCm 6.0 on Frontier)
-// DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(min)
-// DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(max)
+// DESUL_IMPL_HIP_ATOMIC_OP_FLOATING_POINT(min)
+// DESUL_IMPL_HIP_ATOMIC_OP_FLOATING_POINT(max)
 
-#undef DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT
-#undef DESUL_IMPL_HIP_ATOMIC_FETCH_OP_INTEGRAL
-#undef DESUL_IMPL_HIP_ATOMIC_FETCH_OP
+#undef DESUL_IMPL_HIP_ATOMIC_OP_FLOATING_POINT
+#undef DESUL_IMPL_HIP_ATOMIC_OP_INTEGRAL
+#undef DESUL_IMPL_HIP_ATOMIC_OP
 
-#define DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(T)                             \
+#define DESUL_IMPL_HIP_ATOMIC_SUB(T)                                   \
   template <class MemoryOrder, class MemoryScope>                      \
   __device__ inline T device_atomic_fetch_sub(                         \
       T* ptr, T val, MemoryOrder, MemoryScope) {                       \
@@ -73,16 +73,16 @@ DESUL_IMPL_HIP_ATOMIC_FETCH_OP_FLOATING_POINT(add)
         device_atomic_fetch_sub(ptr, val, order, scope), val);         \
   }
 
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(int)
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(long)
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(long long)
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(unsigned int)
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(unsigned long)
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(unsigned long long)
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(float)
-DESUL_IMPL_HIP_ATOMIC_FETCH_SUB(double)
+DESUL_IMPL_HIP_ATOMIC_SUB(int)
+DESUL_IMPL_HIP_ATOMIC_SUB(long)
+DESUL_IMPL_HIP_ATOMIC_SUB(long long)
+DESUL_IMPL_HIP_ATOMIC_SUB(unsigned int)
+DESUL_IMPL_HIP_ATOMIC_SUB(unsigned long)
+DESUL_IMPL_HIP_ATOMIC_SUB(unsigned long long)
+DESUL_IMPL_HIP_ATOMIC_SUB(float)
+DESUL_IMPL_HIP_ATOMIC_SUB(double)
 
-#undef DESUL_IMPL_HIP_ATOMIC_FETCH_SUB
+#undef DESUL_IMPL_HIP_ATOMIC_SUB
 
 #define DESUL_IMPL_HIP_ATOMIC_FETCH_INC(T)                                        \
   template <class MemoryOrder, class MemoryScope>                                 \
