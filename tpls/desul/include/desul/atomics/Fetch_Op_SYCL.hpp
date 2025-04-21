@@ -54,6 +54,68 @@ DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(sub)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(min)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(max)
 
+// clang-format off
+#define DESUL_IMPL_SYCL_ATOMIC_INC(TYPE)                                     \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_fetch_inc(TYPE* dest, MemoryOrder, MemoryScopeDevice) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);   \
+    return dest_ref++;                                                       \
+  }                                                                          \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_fetch_inc(TYPE* dest, MemoryOrder, MemoryScopeCore  ) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);     \
+    return dest_ref++;                                                       \
+  }                                                                          \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_inc_fetch(TYPE* dest, MemoryOrder, MemoryScopeDevice) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);   \
+    return ++dest_ref;                                                       \
+  }                                                                          \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_inc_fetch(TYPE* dest, MemoryOrder, MemoryScopeCore)   { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);     \
+    return ++dest_ref;                                                       \
+  }
+
+#define DESUL_IMPL_SYCL_ATOMIC_DEC(TYPE)                                     \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_fetch_dec(TYPE* dest, MemoryOrder, MemoryScopeDevice) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);   \
+    return dest_ref--;                                                       \
+  }                                                                          \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_fetch_dec(TYPE* dest, MemoryOrder, MemoryScopeCore  ) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);     \
+    return dest_ref--;                                                       \
+  }                                                                          \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_dec_fetch(TYPE* dest, MemoryOrder, MemoryScopeDevice) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);   \
+    return --dest_ref;                                                       \
+  }                                                                          \
+  template <class MemoryOrder>                                               \
+  TYPE device_atomic_dec_fetch(TYPE* dest, MemoryOrder, MemoryScopeCore)   { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);     \
+    return --dest_ref;                                                       \
+  }
+
+#define DESUL_IMPL_SYCL_ATOMIC_INC_DEC(TYPE) \
+  DESUL_IMPL_SYCL_ATOMIC_INC(TYPE)           \
+  DESUL_IMPL_SYCL_ATOMIC_DEC(TYPE)
+// clang-format on
+
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(int)
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(unsigned int)
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(long)
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(unsigned long)
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(long long)
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(unsigned long long)
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(float)
+DESUL_IMPL_SYCL_ATOMIC_INC_DEC(double)
+
+#undef DESUL_IMPL_SYCL_ATOMIC_INC_DEC
+#undef DESUL_IMPL_SYCL_ATOMIC_INC
+#undef DESUL_IMPL_SYCL_ATOMIC_DEC
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER
