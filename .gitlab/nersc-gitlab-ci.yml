@@ -15,6 +15,8 @@ default:
     - export CMAKE_BUILD_PARALLEL_LEVEL=32
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export SCRIPT_FILE=${SOURCE_DIR}/scripts/CTestRun.cmake
     - export OMP_NUM_THREADS=4
     - export OMP_PROC_BIND=spread
