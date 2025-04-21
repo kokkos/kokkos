@@ -18,11 +18,6 @@
 
 namespace Test {
 TEST(TEST_CATEGORY, reducers_int) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
-  GTEST_SKIP()
-      << "skipping since this leads to illegal memory access on device. "
-         "OpenMPTarget backend";
-#endif
   TestReducers<int, TEST_EXECSPACE>::execute_integer();
 }
 
