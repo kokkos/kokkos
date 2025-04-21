@@ -358,7 +358,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   template <typename... Is>
   static KOKKOS_FUNCTION void check_access_member_function_valid_args(
       Is... is) {
-    static_assert(sizeof...(Is) <= 8 - rank);
+    // cast to int to work around pointless comparison of unsigned to 0 warning
+    static_assert(static_cast<int>(sizeof...(Is)) <=
+                  static_cast<int>(8 - rank));
     static_assert(Kokkos::Impl::are_integral<Is...>::value);
     if (!((is == static_cast<Is>(0)) && ... && true))
       Kokkos::abort("Extra arguments to Kokkos::access must be zero");
