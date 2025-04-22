@@ -36,8 +36,8 @@ struct CommonViewAllocProp;
 
 template <class ValueType>
 struct CommonViewAllocProp<void, ValueType> {
-  using value_type        = ValueType;
-  using scalar_array_type = ValueType;
+  using value_type = ValueType;
+  // using scalar_type = ValueType;
 
   template <class... Views>
   KOKKOS_INLINE_FUNCTION CommonViewAllocProp(const Views&...) {}
