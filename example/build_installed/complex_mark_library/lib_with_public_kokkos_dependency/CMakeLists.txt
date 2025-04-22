@@ -5,4 +5,4 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/../../complex/lib_with_public_kokkos_depende
 kokkos_set_source_and_target_properties(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # build all targets with kokkos settings if they link to the library downstream
-kokkos_defer_set_dependent_library_properties(PUBLIC LIBRARY ${PROJECT_NAME}_Lib_with_public_kokkos_dependency)
+kokkos_defer_set_dependent_library_properties(LIBRARY ${PROJECT_NAME}_Lib_with_public_kokkos_dependency)

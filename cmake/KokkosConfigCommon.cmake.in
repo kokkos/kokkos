@@ -434,13 +434,12 @@ endfunction()
 
 # this function sets the source and target properties for all targets that link to a given library
 #
-#       PUBLIC                  --> input: set downstream sources and targets to have a public dependency on kokkos. If not given, a private dependency is assumed
 #       LIBRARY                 --> input: name of the library downstream targets need to link to for this function to set the properties.
 #       USE_COMPILER_LAUNCHER   --> input: Command for a compiler launcher to use
 #       USE_LINKER_LAUNCHER     --> input: Command for a linker launcher to use
 #
 function(kokkos_set_dependent_library_properties)
-  cmake_parse_arguments(INP "PUBLIC" "" "LIBRARY;USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER" ${ARGN})
+  cmake_parse_arguments(INP "" "" "LIBRARY;USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER" ${ARGN})
 
   if(INP_UNPARSED_ARGUMENTS)
     message(
@@ -452,7 +451,14 @@ function(kokkos_set_dependent_library_properties)
     message(FATAL_ERROR "'kokkos_set_dependent_library_properties' needs a LIBRARY argument")
   endif()
 
-  kokkos_get_directory_targets(FOUND_TARGETS DIRECTORY_TARGETS SEARCH_DIR ${PROJECT_SOURCE_DIR})
+  kokkos_check_compile_dependency(library_compile_dependency library_transitive_compile_dependency library_link_dependency
+        "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
+        ${INP_LIBRARY}
+        KOKKOS_COMPILE_DEPENDENCY_CACHE
+        KOKKOS_TRANSITIVE_COMPILE_DEPENDENCY_CACHE
+      )
+
+  kokkos_get_directory_targets(FOUND_TARGETS DIRECTORY_TARGETS SEARCH_DIR ${CMAKE_SOURCE_DIR})
 
   foreach(directory_target IN LISTS DIRECTORY_TARGETS)
     kokkos_check_compile_dependency(
@@ -461,8 +467,8 @@ function(kokkos_set_dependent_library_properties)
       link_dependency
       "${INP_LIBRARY}"
       ${directory_target}
-      KOKKOS_COMPILE_TARGETS_CACHE
-      KOKKOS_TRANSITIVE_COMPILE_TARGETS_CACHE
+      ${INP_LIBRARY}_COMPILE_TARGETS_CACHE
+      ${INP_LIBRARY}_TRANSITIVE_COMPILE_TARGETS_CACHE
     )
     if(compile_dependency)
       list(APPEND COMPILE_TARGETS ${directory_target})
@@ -473,21 +479,35 @@ function(kokkos_set_dependent_library_properties)
     endif()
   endforeach()
 
-  if(INP_PUBLIC)
+  if(library_transitive_compile_dependency)
     # set all cpp,cxx sources in the found targets to the correct language
     if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
       foreach(target IN LISTS COMPILE_TARGETS)
         get_target_property(target_sources ${target} SOURCES)
-        get_target_property(target_dir ${target} SOURCE_DIR)
-        list(FILTER target_sources INCLUDE REGEX "\\.cpp$|\\.cxx$")
-        message(
-          DEBUG
-          "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for sources ${target_dir}/{${target_sources}}"
-        )
+        get_target_property(target_src_dir ${target} SOURCE_DIR)
+        get_target_property(target_bin_dir ${target} BINARY_DIR)
         foreach(source IN LISTS target_sources)
-          set_property(
-            SOURCE ${target_dir}/${source} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
-          )
+          if(source)
+            cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_src_dir} OUTPUT_VARIABLE source_abs_path)
+            if(NOT EXISTS ${source_abs_path})
+              message(DEBUG "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}")
+              cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_bin_dir} OUTPUT_VARIABLE source_abs_path)
+              if(NOT EXISTS ${source_abs_path})
+                message(FATAL_ERROR "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}.")
+              endif()
+            endif()
+            cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
+            string(REGEX REPLACE "^\\." "" extension_no_dot "${extension}")
+            if(${extension_no_dot} IN_LIST CMAKE_CXX_SOURCE_FILE_EXTENSIONS)
+              message(
+                DEBUG
+                "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for source ${source_abs_path}"
+              )
+              set_property(
+                SOURCE ${source_abs_path} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
+              )
+            endif()
+          endif()
         endforeach()
       endforeach()
     endif()
@@ -505,13 +525,12 @@ endfunction()
 
 # this function sets the source and target properties for all targets that link to a given library but deferred to the end of the CMake setup
 #
-#       PUBLIC                  --> input: set downstream sources and targets to have a public dependency on kokkos. If not given a private dependency is assumed
 #       LIBRARY                 --> input: name of the library downstream targets need to link to for this function to set the properties.
 #       USE_COMPILER_LAUNCHER   --> input: Command for a compiler launcher to use
 #       USE_LINKER_LAUNCHER     --> input: Command for a linker launcher to use
 #
 function(kokkos_defer_set_dependent_library_properties)
-  cmake_parse_arguments(ARG "PUBLIC" "" "LIBRARY;USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER" ${ARGN})
+  cmake_parse_arguments(ARG "" "" "LIBRARY;USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER" ${ARGN})
 
   if(ARG_UNPARSED_ARGUMENTS)
     message(
@@ -524,19 +543,11 @@ function(kokkos_defer_set_dependent_library_properties)
     message(FATAL_ERROR "'kokkos_defer_set_dependent_library_properties' needs a LIBRARY argument")
   endif()
 
-  if(ARG_PUBLIC)
     cmake_language(
       EVAL
       CODE
-      "cmake_language(DEFER DIRECTORY ${PROJECT_SOURCE_DIR} CALL kokkos_set_dependent_library_properties PUBLIC USE_COMPILER_LAUNCHER ${ARG_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${ARG_USE_LINKER_LAUNCHER} LIBRARY ${ARG_LIBRARY})"
+      "cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL kokkos_set_dependent_library_properties USE_COMPILER_LAUNCHER ${ARG_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${ARG_USE_LINKER_LAUNCHER} LIBRARY ${ARG_LIBRARY})"
     )
-  else()
-    cmake_language(
-      EVAL
-      CODE
-      "cmake_language(DEFER DIRECTORY ${PROJECT_SOURCE_DIR} CALL kokkos_set_dependent_library_properties USE_COMPILER_LAUNCHER ${ARG_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${ARG_USE_LINKER_LAUNCHER} LIBRARY ${ARG_LIBRARY})"
-    )
-  endif()
 
 endfunction()
 
