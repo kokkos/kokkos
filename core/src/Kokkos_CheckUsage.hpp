@@ -17,6 +17,8 @@
 #ifndef KOKKOS_CHECK_USAGE_HPP
 #define KOKKOS_CHECK_USAGE_HPP
 
+#include <Kokkos_Macros.hpp>
+
 namespace Kokkos {
 
 [[nodiscard]] bool is_initialized() noexcept;
