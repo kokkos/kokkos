@@ -912,7 +912,9 @@ struct TestComplexBesselJ1Y1Function {
     }
 
 // FIXME_SYCL Failing for Intel GPUs
-#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU))
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
     EXPECT_EQ(h_ref_cby1(0), h_cby1(0));
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cby1(i) - h_ref_cby1(i)),
@@ -1214,7 +1216,9 @@ struct TestComplexBesselI0K0Function {
 
     EXPECT_EQ(h_ref_cbk0(0), h_cbk0(0));
     // FIXME_SYCL Failing for Intel GPUs highly dependent on optimization flags
-#if !defined(KOKKOS_ENABLE_SYCL)
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbk0(i) - h_ref_cbk0(i)),
                 Kokkos::abs(h_ref_cbk0(i)) * 1e-13)
@@ -1453,21 +1457,20 @@ struct TestComplexBesselI1K1Function {
     h_ref_cbk1(24) =
         Kokkos::complex<double>(-1.425632026517104e-27, -1.836182865214478e+25);
 
-    int upper_limit_i1 = N;
-    // FIXME_SYCL Failing for Intel GPUs, 5 is the first failing test case
-#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU) && \
-    defined(KOKKOS_ENABLE_DEBUG)
-    if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) upper_limit_i1 = 5;
-#endif
-    for (int i = 0; i < upper_limit_i1; i++) {
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
+    for (int i = 0; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbi1(i) - h_ref_cbi1(i)),
                 Kokkos::abs(h_ref_cbi1(i)) * 1e-13)
           << "at index " << i;
     }
+#endif
 
     EXPECT_EQ(h_ref_cbk1(0), h_cbk1(0));
-    // FIXME_SYCL Failing for Intel GPUs highly dependent on optimization flags
-#if !defined(KOKKOS_ENABLE_SYCL)
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbk1(i) - h_ref_cbk1(i)),
                 Kokkos::abs(h_ref_cbk1(i)) * 1e-13)
@@ -1715,7 +1718,9 @@ struct TestComplexBesselH1Function {
 
     EXPECT_EQ(h_ref_ch10(0), h_ch10(0));
     // FIXME_SYCL Failing for Intel GPUs highly dependent on optimization flags
-#if !defined(KOKKOS_ENABLE_SYCL)
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch10(i) - h_ref_ch10(i)),
                 Kokkos::abs(h_ref_ch10(i)) * 1e-13)
@@ -1725,7 +1730,9 @@ struct TestComplexBesselH1Function {
 
     EXPECT_EQ(h_ref_ch11(0), h_ch11(0));
     // FIXME_SYCL Failing for Intel GPUs highly dependent on optimization flags
-#if !defined(KOKKOS_ENABLE_SYCL)
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch11(i) - h_ref_ch11(i)),
                 Kokkos::abs(h_ref_ch11(i)) * 1e-13)
@@ -1909,7 +1916,9 @@ struct TestComplexBesselH2Function {
        (HIP_VERSION_MAJOR == 6 && HIP_VERSION_MINOR == 2)))
     EXPECT_EQ(h_ref_ch20(0), h_ch20(0));
     // FIXME_SYCL Failing for Intel GPUs highly dependent on optimization flags
-#if !defined(KOKKOS_ENABLE_SYCL)
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
     for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch20(i) - h_ref_ch20(i)),
                 Kokkos::abs(h_ref_ch20(i)) * 1e-13)
@@ -1918,16 +1927,16 @@ struct TestComplexBesselH2Function {
 #endif
 
     EXPECT_EQ(h_ref_ch21(0), h_ch21(0));
-    int upper_limit_21 = N;
-    // FIXME_SYCL Failing for Intel GPUs, 1 is the first failing test case
-#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)
-    if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) upper_limit_21 = 1;
-#endif
-    for (int i = 1; i < upper_limit_21; i++) {
+    // FIXME_SYCL Failing for Intel GPUs
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_ARCH_INTEL_GPU)) || \
+    (defined(KOKKOS_COMPILER_INTEL_LLVM) &&                             \
+     KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
+    for (int i = 1; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_ch21(i) - h_ref_ch21(i)),
                 Kokkos::abs(h_ref_ch21(i)) * 1e-13)
           << "at index " << i;
     }
+#endif
 #endif
   }
 
