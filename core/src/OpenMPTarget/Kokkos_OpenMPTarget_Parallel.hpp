@@ -700,14 +700,14 @@ struct TeamThreadRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
   using index_type = iType;
   const iType start;
   const iType end;
-  const OpenMPTargetExecTeamMember& team;
+  const OpenMPTargetExecTeamMember& member;
 
   TeamThreadRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
                                   iType count)
-      : start(0), end(count), team(thread_) {}
+      : start(0), end(count), member(thread_) {}
   TeamThreadRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
                                   iType begin_, iType end_)
-      : start(begin_), end(end_), team(thread_) {}
+      : start(begin_), end(end_), member(thread_) {}
 };
 
 template <typename iType>
@@ -715,14 +715,14 @@ struct ThreadVectorRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
   using index_type = iType;
   const index_type start;
   const index_type end;
-  const OpenMPTargetExecTeamMember& team;
+  const OpenMPTargetExecTeamMember& member;
 
   ThreadVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
                                     index_type count)
-      : start(0), end(count), team(thread_) {}
+      : start(0), end(count), member(thread_) {}
   ThreadVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
                                     index_type begin_, index_type end_)
-      : start(begin_), end(end_), team(thread_) {}
+      : start(begin_), end(end_), member(thread_) {}
 };
 
 template <typename iType>
@@ -730,14 +730,14 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenMPTargetExecTeamMember> {
   using index_type = iType;
   const index_type start;
   const index_type end;
-  const OpenMPTargetExecTeamMember& team;
+  const OpenMPTargetExecTeamMember& member;
 
   TeamVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
                                   index_type count)
-      : start(0), end(count), team(thread_) {}
+      : start(0), end(count), member(thread_) {}
   TeamVectorRangeBoundariesStruct(const OpenMPTargetExecTeamMember& thread_,
                                   index_type begin_, index_type end_)
-      : start(begin_), end(end_), team(thread_) {}
+      : start(begin_), end(end_), member(thread_) {}
 };
 
 }  // namespace Impl

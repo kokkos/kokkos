@@ -428,13 +428,13 @@ struct TeamThreadRangeBoundariesStruct<iType, OpenACCTeamMember> {
   using index_type = iType;
   const iType start;
   const iType end;
-  const OpenACCTeamMember& team;
+  const OpenACCTeamMember& member;
 
   TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_, iType count)
-      : start(0), end(count), team(thread_) {}
+      : start(0), end(count), member(thread_) {}
   TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                   iType begin_, iType end_)
-      : start(begin_), end(end_), team(thread_) {}
+      : start(begin_), end(end_), member(thread_) {}
 };
 
 template <typename iType>
@@ -442,14 +442,14 @@ struct ThreadVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   using index_type = iType;
   const index_type start;
   const index_type end;
-  const OpenACCTeamMember& team;
+  const OpenACCTeamMember& member;
 
   ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                     index_type count)
-      : start(0), end(count), team(thread_) {}
+      : start(0), end(count), member(thread_) {}
   ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                     index_type begin_, index_type end_)
-      : start(begin_), end(end_), team(thread_) {}
+      : start(begin_), end(end_), member(thread_) {}
 };
 
 template <typename iType>
@@ -457,14 +457,14 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   using index_type = iType;
   const index_type start;
   const index_type end;
-  const OpenACCTeamMember& team;
+  const OpenACCTeamMember& member;
 
   TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                   index_type count)
-      : start(0), end(count), team(thread_) {}
+      : start(0), end(count), member(thread_) {}
   TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
                                   index_type begin_, index_type end_)
-      : start(begin_), end(end_), team(thread_) {}
+      : start(begin_), end(end_), member(thread_) {}
 };
 
 }  // namespace Impl
