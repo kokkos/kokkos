@@ -173,8 +173,9 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
 
 #if defined(KOKKOS_ENABLE_SYCL)  // FIXME_SYCL
   if (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
-    GTEST_SKIP() << "skipping SYCL device-side abort does not show an error "
-                    "message even when NDEBUG isn't defined";
+    GTEST_SKIP()
+        << "skipping because SYCL device-side abort does not show an error "
+           "message independent of NDEBUG";
   }
 #endif
 #if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET
