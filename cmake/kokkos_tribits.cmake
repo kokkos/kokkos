@@ -247,9 +247,9 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
     #FIXME_NVHPC nvc++ is failing the check spuriously with various version numbers.
     if(NOT (KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
-       OR NOT (KOKKOS_ENABLE_CUDA)
+       AND (NOT (KOKKOS_ENABLE_CUDA)
        OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
-       OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)
+       OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang))
     )
       kokkos_check_flags(LINKER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
     endif()
