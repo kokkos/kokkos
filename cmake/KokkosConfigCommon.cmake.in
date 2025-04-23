@@ -454,8 +454,8 @@ function(kokkos_set_dependent_library_properties)
   kokkos_check_compile_dependency(library_compile_dependency library_transitive_compile_dependency library_link_dependency
         "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
         ${INP_LIBRARY}
-        KOKKOS_COMPILE_DEPENDENCY_CACHE
-        KOKKOS_TRANSITIVE_COMPILE_DEPENDENCY_CACHE
+        KOKKOS_LINK_DEPENDENCY_CACHE
+        KOKKOS_PUBLIC_DEPENDENCY_CACHE
       )
 
   kokkos_get_directory_targets(FOUND_TARGETS DIRECTORY_TARGETS SEARCH_DIR ${CMAKE_SOURCE_DIR})
@@ -467,8 +467,8 @@ function(kokkos_set_dependent_library_properties)
       link_dependency
       "${INP_LIBRARY}"
       ${directory_target}
-      ${INP_LIBRARY}_COMPILE_TARGETS_CACHE
-      ${INP_LIBRARY}_TRANSITIVE_COMPILE_TARGETS_CACHE
+      ${INP_LIBRARY}_LINK_DEPENDENCY_CACHE
+      ${INP_LIBRARY}_PUBLIC_DEPENDENCY_CACHE
     )
     if(compile_dependency)
       list(APPEND COMPILE_TARGETS ${directory_target})
@@ -669,8 +669,8 @@ function(kokkos_set_source_and_target_properties)
         link_dependency
         "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
         ${directory_target}
-        KOKKOS_COMPILE_DEPENDENCY_CACHE
-        KOKKOS_TRANSITIVE_COMPILE_DEPENDENCY_CACHE
+        KOKKOS_LINK_DEPENDENCY_CACHE
+        KOKKOS_PUBLIC_DEPENDENCY_CACHE
       )
       if(compile_dependency)
         list(APPEND DIRECTORY_COMPILE_TARGETS ${directory_target})
