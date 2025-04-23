@@ -451,12 +451,15 @@ function(kokkos_set_dependent_library_properties)
     message(FATAL_ERROR "'kokkos_set_dependent_library_properties' needs a LIBRARY argument")
   endif()
 
-  kokkos_check_compile_dependency(library_compile_dependency library_transitive_compile_dependency library_link_dependency
-        "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
-        ${INP_LIBRARY}
-        KOKKOS_LINK_DEPENDENCY_CACHE
-        KOKKOS_PUBLIC_DEPENDENCY_CACHE
-      )
+  kokkos_check_compile_dependency(
+    library_compile_dependency
+    library_transitive_compile_dependency
+    library_link_dependency
+    "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
+    ${INP_LIBRARY}
+    KOKKOS_LINK_DEPENDENCY_CACHE
+    KOKKOS_PUBLIC_DEPENDENCY_CACHE
+  )
 
   kokkos_get_directory_targets(FOUND_TARGETS DIRECTORY_TARGETS SEARCH_DIR ${CMAKE_SOURCE_DIR})
 
@@ -490,10 +493,16 @@ function(kokkos_set_dependent_library_properties)
           if(source)
             cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_src_dir} OUTPUT_VARIABLE source_abs_path)
             if(NOT EXISTS ${source_abs_path})
-              message(DEBUG "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}")
+              message(
+                DEBUG
+                "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}"
+              )
               cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_bin_dir} OUTPUT_VARIABLE source_abs_path)
               if(NOT EXISTS ${source_abs_path})
-                message(FATAL_ERROR "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}.")
+                message(
+                  FATAL_ERROR
+                    "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}."
+                )
               endif()
             endif()
             cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
@@ -543,11 +552,11 @@ function(kokkos_defer_set_dependent_library_properties)
     message(FATAL_ERROR "'kokkos_defer_set_dependent_library_properties' needs a LIBRARY argument")
   endif()
 
-    cmake_language(
-      EVAL
-      CODE
-      "cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL kokkos_set_dependent_library_properties USE_COMPILER_LAUNCHER ${ARG_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${ARG_USE_LINKER_LAUNCHER} LIBRARY ${ARG_LIBRARY})"
-    )
+  cmake_language(
+    EVAL
+    CODE
+    "cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL kokkos_set_dependent_library_properties USE_COMPILER_LAUNCHER ${ARG_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${ARG_USE_LINKER_LAUNCHER} LIBRARY ${ARG_LIBRARY})"
+  )
 
 endfunction()
 
@@ -692,10 +701,16 @@ function(kokkos_set_source_and_target_properties)
           if(source)
             cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_src_dir} OUTPUT_VARIABLE source_abs_path)
             if(NOT EXISTS ${source_abs_path})
-              message(DEBUG "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}")
+              message(
+                DEBUG
+                "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}"
+              )
               cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_bin_dir} OUTPUT_VARIABLE source_abs_path)
               if(NOT EXISTS ${source_abs_path})
-                message(FATAL_ERROR "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}.")
+                message(
+                  FATAL_ERROR
+                    "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}."
+                )
               endif()
             endif()
             cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
