@@ -386,6 +386,37 @@ struct Identity {
   }
 };
 
+template <typename From, typename To>
+struct is_value_preserving_conversion {
+  static constexpr bool value =
+      (std::is_integral_v<From> && std::is_integral_v<To>) ||
+      (std::is_floating_point_v<From> && std::is_floating_point_v<To>);
+};
+
+template <typename From, typename To>
+constexpr bool is_value_preserving_conversion_v =
+    is_value_preserving_conversion<From, To>::value;
+
+template <typename From, typename To>
+struct is_narrowing_conversion {
+  static constexpr bool value =
+      (is_value_preserving_conversion_v<From, To>)&&(sizeof(To) < sizeof(From));
+};
+
+template <typename From, typename To>
+constexpr bool is_narrowing_conversion_v =
+    is_narrowing_conversion<From, To>::value;
+
+template <typename From, typename To>
+struct needs_explicit_conversion
+    : std::integral_constant<bool,
+                             !is_value_preserving_conversion_v<From, To> ||
+                                 is_narrowing_conversion_v<From, To>> {};
+
+template <typename From, typename To>
+constexpr bool needs_explicit_conversion_v =
+    needs_explicit_conversion<From, To>::value;
+
 }  // namespace Impl
 
 // common implementations of host only simd reductions:
