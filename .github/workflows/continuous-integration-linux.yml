@@ -96,6 +96,10 @@ jobs:
             backend: 'HPX'
             stdcxx: '17'
             cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+            # Since https://github.com/kokkos/kokkos/actions/runs/14537421172/job/40793403561, #8001
+            # we are seeing spurious maybe uninitialized warnings such as
+            # /__w/kokkos/kokkos/core/src/HPX/Kokkos_HPX.hpp:167:9: error: 'SR.21933' is used uninitialized [-Werror=uninitialized]
+            cxx_extra_flags: '-Wno-maybe-uninitialized'
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
