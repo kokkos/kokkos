@@ -254,7 +254,6 @@ class View : public ViewTraits<DataType, Properties...> {
            typename traits::memory_traits>;
 #endif
 
-  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   /** \brief  Compatible view of data type */
   using type = View<typename traits::data_type, typename traits::array_layout,
                     typename traits::device_type, typename traits::hooks_policy,
@@ -277,7 +276,6 @@ class View : public ViewTraits<DataType, Properties...> {
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>,
            typename traits::hooks_policy>;
-  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
   /** \brief  Compatible host mirror view */
   using HostMirror = host_mirror_type;

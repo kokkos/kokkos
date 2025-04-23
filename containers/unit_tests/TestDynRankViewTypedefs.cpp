@@ -65,9 +65,11 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::scalar_array_type, DataType>);
   static_assert(std::is_same_v<typename ViewType::const_scalar_array_type, typename data_analysis<DataType>::const_data_type>);
   static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename data_analysis<DataType>::non_const_data_type>);
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   #endif
   
   #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   static_assert(std::is_same_v<typename ViewType::specialize, void>);
   KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   #endif
