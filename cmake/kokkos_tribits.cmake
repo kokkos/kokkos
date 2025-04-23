@@ -246,8 +246,10 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
     #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
     #FIXME NVHPC with various version numbers does give false negatives in the check. Once this is stable the check can be renabled.
-    if(NOT(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC) OR NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper") OR (${KOKKOS_CXX_COMPILER_ID}
-                                                                                        STREQUAL Clang)
+    if(NOT (KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+       OR NOT (KOKKOS_ENABLE_CUDA)
+       OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
+       OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)
     )
       kokkos_check_flags(LINKER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${KOKKOS_LINK_OPTIONS})
     endif()
@@ -313,8 +315,10 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
     #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
     #FIXME NVHPC with various version numbers does give false negatives in the check. Once this is stable the check can be renabled.
-    if(NOT(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC) OR NOT (KOKKOS_ENABLE_CUDA) OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper") OR (${KOKKOS_CXX_COMPILER_ID}
-                                                                                        STREQUAL Clang)
+    if(NOT (KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+       OR NOT (KOKKOS_ENABLE_CUDA)
+       OR ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
+       OR (${KOKKOS_CXX_COMPILER_ID} STREQUAL Clang)
     )
       kokkos_check_flags(COMPILER LANGUAGE ${KOKKOS_COMPILE_LANGUAGE} FLAGS ${ALL_KOKKOS_COMPILER_FLAGS})
     endif()
