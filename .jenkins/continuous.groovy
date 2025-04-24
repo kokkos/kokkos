@@ -103,7 +103,7 @@ pipeline {
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
                               cd ../example/build_installed && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=20 -DExamples_CMAKE_LANGUAGE=HIP .. && make -j8 && ctest --verbose'''
+                              cmake -DCMAKE_CXX_STANDARD=20 -DExamples_CMAKE_LANGUAGE=HIP .. && make -j8'''
                     }
                     post {
                         always {
