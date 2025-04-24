@@ -520,9 +520,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                             HIPInternal const *hip_instance) {
     const auto hip_device = hip_instance->m_hipDev;
     // Wait until the previous kernel that uses the constant buffer is done
-    std::lock_guard<std::mutex> lock(HIPInternal::constantMemMutex[hip_device]);
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventSynchronize(HIPInternal::constantMemReusable[hip_device]));
+    HIPInternal::constantMemReusable[hip_device].acquire();
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging[hip_device];
@@ -541,9 +539,25 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     (base_t::
          get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>();
 
-    // Record an event that says when the constant buffer can be reused
-    KOKKOS_IMPL_HIP_SAFE_CALL(hip_instance->hip_event_record_wrapper(
-        HIPInternal::constantMemReusable[hip_device]));
+    // Register a host function to release the shared resource lock
+    // when the constant buffer can be reused.
+    void *user_data = reinterpret_cast<void *>(
+        std::addressof(HIPInternal::constantMemReusable[hip_device]));
+#if ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR < 4))
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamAddCallback(
+        hip_instance->m_stream,
+        [](hipStream_t, hipError_t, void *data) {
+          static_cast<SharedResourceLocking *>(data)->release();
+        },
+        user_data, 0));
+#else
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipLaunchHostFunc(
+        hip_instance->m_stream,
+        [](void *data) {
+          static_cast<SharedResourceLocking *>(data)->release();
+        },
+        user_data));
+#endif
   }
 };
 

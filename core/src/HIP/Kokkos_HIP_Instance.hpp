@@ -25,6 +25,7 @@
 #include <hip/hip_runtime_api.h>
 
 #include <atomic>
+#include <condition_variable>
 #include <map>
 #include <mutex>
 #include <set>
@@ -64,6 +65,43 @@ HIP::size_type *hip_internal_scratch_flags(const HIP &instance,
                                            const std::size_t size);
 
 //----------------------------------------------------------------------------
+
+// Helper to protect a shared resource from being used by multiple threads
+// simultaneously.
+// If used properly, only one thread at a time will be able to use the resource.
+// Typical usage:
+// @code
+// shared_resource_lock.acquire();
+//
+// ... do stuff on the shared resource ...
+//
+// shared_resource.release();
+// @endcode
+struct SharedResourceLocking {
+  bool available = true;
+  std::mutex mutex{};
+  std::condition_variable cond{};
+
+  // When the lock is acquired, the current thread is the only one using
+  // the shared resource.
+  // Note that holding the lock until releasing is not mandatory.
+  std::unique_lock<std::mutex> acquire() {
+    std::unique_lock<std::mutex> lock(mutex);
+    cond.wait(lock, [&] { return available; });
+    available = false;
+    return lock;
+  }
+
+  // Just notify one waiting thread that the lock can be acquired again (no
+  // need to notify them all).
+  void release() {
+    {
+      std::lock_guard lock(mutex);
+      available = true;
+    }
+    cond.notify_one();
+  }
+};
 
 class HIPInternal {
  private:
@@ -108,8 +146,7 @@ class HIPInternal {
 
   static std::set<int> hip_devices;
   static std::map<int, unsigned long *> constantMemHostStaging;
-  static std::map<int, hipEvent_t> constantMemReusable;
-  static std::map<int, std::mutex> constantMemMutex;
+  static std::map<int, SharedResourceLocking> constantMemReusable;
 
   static HIPInternal &singleton();
 
@@ -148,19 +185,6 @@ class HIPInternal {
   void set_hip_device() const {
     verify_is_initialized("set_hip_device");
     KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
-  }
-
-  // HIP API wrappers where we set the correct device id before calling the HIP
-  // API functions.
-  hipError_t hip_event_create_with_flags_wrapper(
-      hipEvent_t *event, const unsigned int flags) const {
-    set_hip_device();
-    return hipEventCreateWithFlags(event, flags);
-  }
-
-  hipError_t hip_event_record_wrapper(hipEvent_t event) const {
-    set_hip_device();
-    return hipEventRecord(event, m_stream);
   }
 
   hipError_t hip_free_wrapper(void *ptr) const {
