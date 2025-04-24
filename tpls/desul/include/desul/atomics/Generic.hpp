@@ -129,20 +129,20 @@ DESUL_INLINE_FUNCTION T atomic_rshift_fetch(T* const dest,
 
 DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T atomic_lshift(T* const dest,
-                                      const unsigned int val,
-                                      MemoryOrder order,
-                                      MemoryScope scope) {
+DESUL_INLINE_FUNCTION void atomic_lshift(T* const dest,
+                                         const unsigned int val,
+                                         MemoryOrder order,
+                                         MemoryScope scope) {
   DESUL_IF_ON_DEVICE(return Impl::device_atomic_lshift(dest, val, order, scope);)
   DESUL_IF_ON_HOST(return Impl::host_atomic_lshift(dest, val, order, scope);)
 }
 
 DESUL_IMPL_ACC_ROUTINE_DIRECTIVE
 template <class T, class MemoryOrder, class MemoryScope>
-DESUL_INLINE_FUNCTION T atomic_rshift(T* const dest,
-                                      const unsigned int val,
-                                      MemoryOrder order,
-                                      MemoryScope scope) {
+DESUL_INLINE_FUNCTION void atomic_rshift(T* const dest,
+                                         const unsigned int val,
+                                         MemoryOrder order,
+                                         MemoryScope scope) {
   DESUL_IF_ON_DEVICE(return Impl::device_atomic_rshift(dest, val, order, scope);)
   DESUL_IF_ON_HOST(return Impl::host_atomic_rshift(dest, val, order, scope);)
 }
