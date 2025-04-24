@@ -18,30 +18,29 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
-#define DESUL_IMPL_ATOMIC_FETCH_OP(ANNOTATION, HOST_OR_DEVICE, _OP)           \
-  template <class T, class MemoryOrder, class MemoryScope>                    \
-  ANNOTATION T HOST_OR_DEVICE##_atomic_fetch##_OP(                            \
-      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {     \
-    return HOST_OR_DEVICE##_atomic_fetch_oper(                                \
-        _OP##_fetch_operator<T, const T>(), dest, val, order, scope);         \
-  }                                                                           \
-  template <class T, class MemoryOrder, class MemoryScope>                    \
-  ANNOTATION T HOST_OR_DEVICE##_atomic##_OP##_fetch(                          \
-      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {     \
-    return _OP##_fetch_operator<T, const T>::apply(                           \
-        HOST_OR_DEVICE##_atomic_fetch##_OP(dest, val, order, scope), val);    \
-  }                                                                           \
-  template <class T, class MemoryOrder, class MemoryScope>                    \
-  ANNOTATION void HOST_OR_DEVICE##_atomic##_OP(                               \
-      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {     \
-    return (void)HOST_OR_DEVICE##_atomic_fetch##_OP(dest, val, order, scope); \
+#define DESUL_IMPL_ATOMIC_FETCH_OP(ANNOTATION, HOST_OR_DEVICE, _OP)        \
+  template <class T, class MemoryOrder, class MemoryScope>                 \
+  ANNOTATION T HOST_OR_DEVICE##_atomic_fetch##_OP(                         \
+      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {  \
+    return HOST_OR_DEVICE##_atomic_fetch_oper(                             \
+        _OP##_fetch_operator<T, const T>(), dest, val, order, scope);      \
+  }                                                                        \
+  template <class T, class MemoryOrder, class MemoryScope>                 \
+  ANNOTATION T HOST_OR_DEVICE##_atomic##_OP##_fetch(                       \
+      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {  \
+    return _OP##_fetch_operator<T, const T>::apply(                        \
+        HOST_OR_DEVICE##_atomic_fetch##_OP(dest, val, order, scope), val); \
+  }                                                                        \
+  template <class T, class MemoryOrder, class MemoryScope>                 \
+  ANNOTATION void HOST_OR_DEVICE##_atomic##_OP(                            \
+      T* const dest, const T val, MemoryOrder order, MemoryScope scope) {  \
+    (void)HOST_OR_DEVICE##_atomic_fetch##_OP(dest, val, order, scope);     \
   }
 
 #define DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_OP)           \
   DESUL_IMPL_ATOMIC_FETCH_OP(DESUL_IMPL_HOST_FUNCTION, host, _OP) \
   DESUL_IMPL_ATOMIC_FETCH_OP(DESUL_IMPL_DEVICE_FUNCTION, device, _OP)
 
-// clang-format off
 DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_add)
 DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_sub)
 DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_max)
@@ -56,7 +55,6 @@ DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_nand)
 
 DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_inc_mod)
 DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_dec_mod)
-// clang-format on
 
 #undef DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE
 #undef DESUL_IMPL_ATOMIC_FETCH_OP
@@ -77,7 +75,7 @@ DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_dec_mod)
   template <class T, class MemoryOrder, class MemoryScope>                           \
   ANNOTATION void HOST_OR_DEVICE##_atomic##_OP(                                      \
       T* const dest, const unsigned int val, MemoryOrder order, MemoryScope scope) { \
-    return (void)HOST_OR_DEVICE##_atomic##_OP(dest, val, order, scope);              \
+    (void)HOST_OR_DEVICE##_atomic##_OP(dest, val, order, scope);                     \
   }
 
 #define DESUL_IMPL_ATOMIC_FETCH_OP_SHIFT_HOST_AND_DEVICE(_OP)           \
