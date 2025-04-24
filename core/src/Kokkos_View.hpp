@@ -176,7 +176,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // and deprecate old behavior
   using size_type    = typename memory_space::size_type;
   using value_type   = typename traits::value_type;
-  using pointer_type = typename traits::value_type*;
+  using pointer_type = decltype(Impl::ptr_from_data_handle(std::declval<typename base_t::data_handle_type>()));
 
   using scalar_array_type       = typename traits::scalar_array_type;
   using const_scalar_array_type = typename traits::const_scalar_array_type;
@@ -185,11 +185,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
  private:
   // Does this View type opt into customization points
-  constexpr static bool is_customized =
-      !std::is_same_v<decltype(Impl::mdspan_from_view_arguments(
-                          Impl::ViewArguments<value_type, array_layout,
-                                              device_type, memory_traits>())),
-                      size_t>;
+  constexpr static bool is_customized = traits::impl_is_customized;
 
  public:
   // typedefs from BasicView
@@ -300,7 +296,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return data() != nullptr;
   }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const {
-    return static_cast<pointer_type>(base_t::data_handle());
+    return Impl::ptr_from_data_handle(base_t::data_handle());
   }
 
   KOKKOS_INLINE_FUNCTION constexpr int extent_int(size_t r) const {
@@ -646,7 +642,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // nullptr when pointer type is char*
   template <class... Args>
   explicit View(decltype(nullptr), Args... args)
-      : View(Kokkos::view_wrap(pointer_type(nullptr)), args...) {}
+      : View(Kokkos::view_wrap(data_handle_type(nullptr)), args...) {}
 #else
   // FIXME: The std::is_null_pointer_v<P> condition is to workaround a GCC8 bug
   // in overload resolution
@@ -654,11 +650,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // NOLINTBEGIN(modernize-type-traits)
   template <class P, class... Args,
             std::enable_if_t<!std::is_null_pointer_v<P> &&
-                                 std::is_convertible_v<P, pointer_type>,
+                                 std::is_constructible_v<typename base_t::data_handle_type, P>,
                              size_t> = 0ul>
   // NOLINTEND(modernize-type-traits)
   KOKKOS_FUNCTION View(P ptr_, Args... args)
-      : View(Kokkos::view_wrap(static_cast<pointer_type>(ptr_)), args...) {}
+      : View(Kokkos::view_wrap(ptr_), args...) {}
+      //: View(Kokkos::view_wrap(static_cast<typename base_t::data_handle_type>(ptr_)), args...) {}
 
   // Special function to be preferred over the above for string literals
   // when pointer type is char*
@@ -757,7 +754,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   template <class... Args>
   View(const std::enable_if_t<(sizeof...(Args) != rank() + 1) &&
-                                  (std::is_integral_v<Args> && ... && true),
+                                  (std::is_constructible_v<size_t, Args> && ... && true),
                               std::string>& arg_label,
        const Args... args)
       : View(Impl::ViewCtorProp<std::string>(arg_label), args...) {}
@@ -767,29 +764,29 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // is the FAD dimension
   template <class... Args, size_t... Idx>
   auto view_alloc_from_label_and_integrals(std::true_type,
-                                           std::string& arg_label, Args... args,
-                                           std::index_sequence<Idx...>) {
-    return view_alloc(arg_label, Impl::AccessorArgs_t{((Idx == rank()?args:0) + ... + 0)};
+                                           const std::string& arg_label,
+                                           std::index_sequence<Idx...>, Args...args) {
+    return view_alloc(arg_label, Impl::AccessorArg_t{static_cast<size_t>(((Idx == rank()?args:0) + ... + 0))});
   }
 
   template <class... Args, size_t... Idx>
   auto view_alloc_from_label_and_integrals(std::false_type,
-                                           std::string& arg_label, Args...,
-                                           std::index_sequence<Idx...>) {
+                                           const std::string& arg_label,
+                                           std::index_sequence<Idx...>, Args...) {
     return view_alloc(arg_label);
   }
 
  public:
   template <class... Args>
   View(const std::enable_if_t<(sizeof...(Args) == rank() + 1) &&
-                                  (std::is_integral_v<Args> && ... && true),
+                                  (std::is_constructible_v<size_t, Args> && ... && true),
                               std::string>& arg_label,
        const Args... args)
       : View(view_alloc_from_label_and_integrals(
                  std::conditional_t<is_customized, std::true_type,
                                     std::false_type>(),
-                 arg_label, args...,
-                 std::make_index_sequence<sizeof...(Args)>()),
+                 arg_label,
+                 std::make_index_sequence<sizeof...(Args)>(), args...),
              args...) {}
 
   //----------------------------------------

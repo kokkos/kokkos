@@ -406,7 +406,6 @@ KOKKOS_FUNCTION const auto &get_property(
         .value;
   } else if constexpr (std::is_same_v<Tag, AccessorArgTag>) {
     static_assert(ViewCtorProp<P...>::has_accessor_arg);
-    using pointer_type = typename ViewCtorProp<P...>::pointer_type;
     return static_cast<const ViewCtorProp<void, AccessorArg_t> &>(view_ctor_prop)
         .value;
   } else {

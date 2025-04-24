@@ -33,6 +33,12 @@ namespace Kokkos {
 // implementation detail for rebasing View on mdspan
 namespace Impl {
 
+template<class PointerType>
+KOKKOS_INLINE_FUNCTION
+constexpr auto ptr_from_data_handle(const PointerType& ptr) {
+  return ptr;
+}
+
 template <class MemorySpace, class NestedAccessor>
 struct SpaceAwareAccessor {
   // Part of Accessor Requirements
@@ -346,6 +352,12 @@ class ReferenceCountedDataHandle {
   SharedAllocationTracker m_tracker;
   pointer m_handle = nullptr;
 };
+
+template <class ElementType, class MemorySpace> 
+KOKKOS_INLINE_FUNCTION
+constexpr auto ptr_from_data_handle(const ReferenceCountedDataHandle<ElementType, MemorySpace>& handle) {
+  return handle.get();
+}
 
 template <class T>
 struct IsReferenceCountedDataHandle : std::false_type {};

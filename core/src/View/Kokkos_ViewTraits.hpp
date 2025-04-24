@@ -494,7 +494,6 @@ struct ViewTraits {
       std::is_void_v<typename data_analysis::specialize>,
       typename prop::specialize,
       typename data_analysis::specialize>; /* mapping specialization tag */
-
   static constexpr unsigned rank         = dimension::rank;
   static constexpr unsigned rank_dynamic = dimension::rank_dynamic;
 
@@ -509,6 +508,8 @@ struct ViewTraits {
   using hooks_policy      = HooksPolicy;
 
   using size_type = typename MemorySpace::size_type;
+  static constexpr bool impl_is_customized =
+    !std::is_same_v<void, decltype(mdspan_from_view_arguments(std::declval<Impl::ViewArguments<value_type, array_layout, device_type, memory_traits>>()))>;
 
   enum { is_hostspace = std::is_same_v<MemorySpace, HostSpace> };
   enum { is_managed = MemoryTraits::is_unmanaged == 0 };

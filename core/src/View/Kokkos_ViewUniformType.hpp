@@ -34,18 +34,18 @@ struct ViewScalarToDataType<ScalarType, 0> {
   using const_type = const ScalarType;
 };
 
-template <class LayoutType, int Rank>
+template <class LayoutType, int Rank, bool is_customized>
 struct ViewUniformLayout {
   using array_layout = LayoutType;
 };
 
 template <class LayoutType>
-struct ViewUniformLayout<LayoutType, 0> {
+struct ViewUniformLayout<LayoutType, 0, false> {
   using array_layout = Kokkos::LayoutLeft;
 };
 
 template <>
-struct ViewUniformLayout<Kokkos::LayoutRight, 1> {
+struct ViewUniformLayout<Kokkos::LayoutRight, 1, false> {
   using array_layout = Kokkos::LayoutLeft;
 };
 
@@ -67,7 +67,7 @@ struct ViewUniformType {
 
   using array_layout =
       typename ViewUniformLayout<typename ViewType::array_layout,
-                                 rank>::array_layout;
+                                 rank, ViewType::traits::impl_is_customized>::array_layout;
 
   using device_type = typename ViewType::device_type;
   using anonymous_device_type =

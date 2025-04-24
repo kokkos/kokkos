@@ -57,12 +57,15 @@ auto mdspan_from_view_argument(
 }  // namespace Foo
 namespace Test {
 
+enum {N=10};
 void foo() {
   static_assert(
       std::is_same_v<typename Kokkos::View<Foo::SpecialScalar>::index_type,
                      unsigned int>);
   static_assert(
       std::is_same_v<typename Kokkos::View<double>::index_type, size_t>);
+  int* ptr = new int[10];
+  Kokkos::View<int*> a("foo", N);
 }
 
 TEST(defaultdevicetype, development_test) { foo(); }

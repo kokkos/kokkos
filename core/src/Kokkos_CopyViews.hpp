@@ -683,7 +683,7 @@ struct CommonSubview {
   dst_subview_type dst_sub;
   src_subview_type src_sub;
   CommonSubview(const DstType& dst, const SrcType& src, const Args&... args)
-      : dst_sub(dst, args...), src_sub(src, args...) {}
+      : dst_sub(Kokkos::subview(dst, args...)), src_sub(Kokkos::subview(src, args...)) {}
 };
 
 template <class DstType, class SrcType, int Rank = DstType::rank>
@@ -928,7 +928,7 @@ inline void deep_copy(
                 "deep_copy requires non-const type");
 
   // If contiguous we can simply do a 1D flat loop or use memset
-  if (dst.span_is_contiguous()) {
+  if (dst.span_is_contiguous() && !ViewType::traits::impl_is_customized) {
     Impl::contiguous_fill_or_memset(dst, value);
     Kokkos::fence("Kokkos::deep_copy: scalar copy, post copy fence");
     if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {
@@ -1096,6 +1096,8 @@ inline void deep_copy(
   using src_memory_space = typename src_type::memory_space;
   using dst_value_type   = typename dst_type::value_type;
   using src_value_type   = typename src_type::value_type;
+  using dst_ptr_type = decltype(dst.data());
+  using src_ptr_type = decltype(src.data());
 
   static_assert(std::is_same_v<typename dst_type::value_type,
                                typename dst_type::non_const_value_type>,
@@ -1151,10 +1153,10 @@ inline void deep_copy(
   }
 
   // Checking for Overlapping Views.
-  dst_value_type* dst_start = dst.data();
-  dst_value_type* dst_end   = dst.data() + dst.span();
-  src_value_type* src_start = src.data();
-  src_value_type* src_end   = src.data() + src.span();
+  dst_ptr_type dst_start = dst.data();
+  dst_ptr_type dst_end   = dst.data() + allocation_size_from_mapping_and_accessor(dst.mapping(), dst.accessor());
+  src_ptr_type src_start = src.data();
+  src_ptr_type src_end   = src.data() + allocation_size_from_mapping_and_accessor(src.mapping(), src.accessor());
   if (((std::ptrdiff_t)dst_start == (std::ptrdiff_t)src_start) &&
       ((std::ptrdiff_t)dst_end == (std::ptrdiff_t)src_end) &&
       (dst.span_is_contiguous() && src.span_is_contiguous())) {
@@ -2469,7 +2471,34 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     auto prop_copy = Impl::with_properties_if_unset(
         arg_prop, typename view_type::execution_space{}, v.label());
 
-    view_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
+    view_type v_resized;
+    if constexpr (!view_type::traits::impl_is_customized) {
+      // FIXME: this should be forbidden anyway
+      v_resized = (prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
+    } else {
+      // FIXME SACADO: this is specializing for sacado, might need a better thing
+      Kokkos::Impl::AccessorArg_t acc_arg{new_extents[view_type::rank()]};
+      auto prop_copy2 = Impl::with_properties_if_unset(prop_copy, acc_arg);
+      if constexpr (view_type::rank() == 0) {
+        v_resized = view_type(prop_copy2);
+      } else if constexpr (view_type::rank() == 1) {
+        v_resized = view_type(prop_copy2, n0);
+      } else if constexpr (view_type::rank() == 2) {
+        v_resized = view_type(prop_copy2, n0, n1);
+      } else if constexpr (view_type::rank() == 3) {
+        v_resized = view_type(prop_copy2, n0, n1, n2);
+      } else if constexpr (view_type::rank() == 4) {
+        v_resized = view_type(prop_copy2, n0, n1, n2, n3);
+      } else if constexpr (view_type::rank() == 5) {
+        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4);
+      } else if constexpr (view_type::rank() == 6) {
+        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4, n5);
+      } else if constexpr (view_type::rank() == 7) {
+        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4, n5, n6);
+      } else {
+        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4, n5, n6, n7);
+      }
+    }
 
     if constexpr (alloc_prop_input::has_execution_space)
       Kokkos::Impl::ViewRemap<view_type, view_type>(
@@ -2568,6 +2597,8 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     auto prop_copy = Impl::with_properties_if_unset(arg_prop, v.label());
 
     view_type v_resized(prop_copy, layout);
+    for(int i=0; i<4; i++) printf("%i ",layout.dimension(i));
+    printf("\n");
 
     if constexpr (alloc_prop_input::has_execution_space)
       Kokkos::Impl::ViewRemap<view_type, view_type>(

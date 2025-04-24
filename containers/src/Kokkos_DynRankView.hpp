@@ -162,9 +162,15 @@ struct DynRankDimTraits {
        std::is_same_v<typename Traits::array_layout, Kokkos::LayoutLeft> ||
        std::is_same_v<typename Traits::array_layout, Kokkos::LayoutStride>),
       typename Traits::array_layout>
-  createLayout(const Kokkos::Impl::ViewCtorProp<P...>& /* prop */,
-               const typename Traits::array_layout& layout) {
-    return createLayout(layout);
+  createLayout(const Kokkos::Impl::ViewCtorProp<P...>& prop,
+               typename Traits::array_layout layout) {
+    if constexpr (Traits::impl_is_customized) {
+      auto rank = computeRank(prop, layout) - 1;
+      layout.dimension[rank-1] = unspecified;
+      return createLayout(layout);
+    } else {
+      return createLayout(layout);
+    }
   }
 
   // Create a view from the given dimension arguments.
@@ -568,6 +574,8 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type::extent;
   using view_type::extent_int;  // FIXME: not tested
   using view_type::impl_map;    // FIXME: not tested
+  using view_type::accessor;    // FIXME: not tested
+  using view_type::mapping;     // FIXME: not tested
   using view_type::is_allocated;
   using view_type::label;
   using view_type::size;
@@ -874,7 +882,7 @@ class DynRankView : private View<DataType*******, Properties...> {
           arg_layout)
       : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
-        m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {}
+        m_rank(drdtraits::computeRank(arg_prop, arg_layout) - (traits::impl_is_customized ? 1 : 0)) {}
 
   template <class... P>
   explicit DynRankView(
@@ -884,7 +892,7 @@ class DynRankView : private View<DataType*******, Properties...> {
           arg_layout)
       : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
-        m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {}
+        m_rank(drdtraits::computeRank(arg_prop, arg_layout) - (traits::impl_is_customized ? 1 : 0)) {}
 #ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
 #pragma GCC pop_options
 #pragma pop
