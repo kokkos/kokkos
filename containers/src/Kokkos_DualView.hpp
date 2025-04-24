@@ -562,7 +562,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #endif
 
         deep_copy(args..., d_view, h_view);
-        modified_flags(0) = modified_flags(1) = false;
+        clear_sync_state();
         impl_report_device_sync();
       }
     }
@@ -579,7 +579,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #endif
 
         deep_copy(args..., h_view, d_view);
-        modified_flags(0) = modified_flags(1) = false;
+        clear_sync_state();
         impl_report_host_sync();
       }
     }
@@ -650,7 +650,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       Impl::throw_runtime_exception(
           "Calling sync_host on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;
-    if (modified_flags(1) > modified_flags(0)) {
+    if (modified_flags(1)) {
 #ifdef KOKKOS_ENABLE_CUDA
       if (std::is_same<typename t_dev::memory_space,
                        Kokkos::CudaUVMSpace>::value) {
@@ -662,7 +662,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #endif
 
       deep_copy(args..., h_view, d_view);
-      modified_flags(1) = modified_flags(0) = false;
+      clear_sync_state();
       impl_report_host_sync();
     }
   }
@@ -693,7 +693,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
       Impl::throw_runtime_exception(
           "Calling sync_device on a DualView with a const datatype.");
     if (modified_flags.data() == nullptr) return;
-    if (modified_flags(0) > modified_flags(1)) {
+    if (modified_flags(0)) {
 #ifdef KOKKOS_ENABLE_CUDA
       if (std::is_same<typename t_dev::memory_space,
                        Kokkos::CudaUVMSpace>::value) {
@@ -705,7 +705,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 #endif
 
       deep_copy(args..., d_view, h_view);
-      modified_flags(1) = modified_flags(0) = false;
+      clear_sync_state();
       impl_report_device_sync();
     }
   }
@@ -922,7 +922,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
     if (modified_flags.data() == nullptr) {
       modified_flags = t_modified_flags("DualView::modified_flags");
     } else
-      modified_flags(1) = modified_flags(0) = false;
+      clear_sync_state();
   }
 
   template <class... ViewCtorArgs>
@@ -1003,7 +1003,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
         resync_host(properties);
 
         /* Mark Device copy as modified */
-        modified_flags(1) = true;
+        modify_device();
       }
     };
 
@@ -1017,7 +1017,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
         resync_device(properties);
 
         /* Mark Host copy as modified */
-        modified_flags(0) = true;
+        modify_host();
       }
     };
 
