@@ -559,7 +559,7 @@ pipeline {
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_FLAGS="-Werror -Werror=all-warnings" \
+                                -DCMAKE_CXX_FLAGS="-Werror" \
                                 -DCMAKE_CXX_STANDARD=17 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
