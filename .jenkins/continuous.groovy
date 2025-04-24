@@ -103,7 +103,10 @@ pipeline {
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
                               cd ../example/build_installed && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=20 -DExamples_CMAKE_LANGUAGE=HIP .. && make -j8'''
+                              cmake -DCMAKE_CXX_STANDARD=20 -DExamples_CMAKE_LANGUAGE=HIP .. && make -j8 && \
+                              cd ../../build_in_tree && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=20 .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -579,12 +582,12 @@ pipeline {
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               make install && \
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
-                              cd ../example/build_in_tree && \
+                              cd ../example/build_installed && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose \
-                              cd ../../build_installed && \
+                              cmake -DCMAKE_CXX_STANDARD=17 -DExamples_CMAKE_LANGUAGE=CUDA .. && make -j8 && ctest --verbose &&  \
+                              cd ../../build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=17 -DExamples_CMAKE_LANGUAGE=CUDA .. && make -j8 && ctest --verbose'''
+                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
