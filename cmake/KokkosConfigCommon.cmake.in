@@ -584,9 +584,8 @@ function(kokkos_set_source_and_target_properties)
   endif()
 
   #only do something if we are compiling with the language feature or need kokkos_launch_compiler
-  kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
-  if(NOT (@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@ OR (@Kokkos_ENABLE_CUDA@ AND @KOKKOS_CXX_COMPILER_ID@ STREQUAL
-                                                                                 NVIDIA AND NOT IS_NVCC))
+  if(NOT (@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@ OR (@Kokkos_ENABLE_CUDA@ AND NOT ("${CMAKE_CXX_COMPILER}" MATCHES
+                                                                                      "nvcc_wrapper")))
   )
     return()
   endif()
@@ -594,9 +593,10 @@ function(kokkos_set_source_and_target_properties)
   #if you passed a launcher, we will just take it without modification. If not we still use our launcher for CUDA if nvcc is not the global cxx compiler
   if((NOT INP_USE_COMPILER_LAUNCHER) AND (NOT INP_USE_LINKER_LAUNCHER))
     #if nvcc is not the CXX_COMPILER we go through the launcher
+    kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
     if(NOT IS_NVCC)
       #if use kokkos_launch_compiler to launch nvcc_wrapper
-      if(@Kokkos_ENABLE_CUDA@ AND @KOKKOS_CXX_COMPILER_ID@ STREQUAL NVIDIA
+      if(@Kokkos_ENABLE_CUDA@ AND NOT ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
          AND NOT @Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@
       )
         if(NOT Kokkos_COMPILE_LAUNCHER)
