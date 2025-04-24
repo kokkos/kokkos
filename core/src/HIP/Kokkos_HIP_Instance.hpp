@@ -73,6 +73,17 @@ class HIPInternal {
  public:
   using size_type = ::Kokkos::HIP::size_type;
 
+  struct ConstantMemReusable {
+    hipEvent_t m_event   = nullptr;
+    hipStream_t m_stream = nullptr;
+    std::mutex m_mutex   = {};
+
+    void ensure_wait_event_is_created(HIPInternal const *);
+    void acquire();
+    void record_wait_event_to_release(HIPInternal const *);
+    void destroy_wait_event();
+  };
+
   int m_hipDev = -1;
   static int m_maxThreadsPerSM;
 
@@ -108,8 +119,7 @@ class HIPInternal {
 
   static std::set<int> hip_devices;
   static std::map<int, unsigned long *> constantMemHostStaging;
-  static std::map<int, hipEvent_t> constantMemReusable;
-  static std::map<int, std::mutex> constantMemMutex;
+  static std::map<int, ConstantMemReusable> constantMemReusable;
 
   static HIPInternal &singleton();
 
