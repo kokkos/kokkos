@@ -75,7 +75,7 @@ DESUL_IMPL_ATOMIC_FETCH_OP_HOST_AND_DEVICE(_dec_mod)
   template <class T, class MemoryOrder, class MemoryScope>                           \
   ANNOTATION void HOST_OR_DEVICE##_atomic##_OP(                                      \
       T* const dest, const unsigned int val, MemoryOrder order, MemoryScope scope) { \
-    (void)HOST_OR_DEVICE##_atomic##_OP(dest, val, order, scope);                     \
+    (void)HOST_OR_DEVICE##_atomic_fetc##_OP(dest, val, order, scope);                \
   }
 
 #define DESUL_IMPL_ATOMIC_FETCH_OP_SHIFT_HOST_AND_DEVICE(_OP)           \
