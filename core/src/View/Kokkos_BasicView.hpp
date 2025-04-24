@@ -96,6 +96,13 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
   return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
 }
 
+// FIXME_HPX spurious warnings like
+// error: 'SR.14123' may be used uninitialized [-Werror=maybe-uninitialized]
+#if defined(KOKKOS_ENABLE_HPX) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#endif
+
 // BasicView has to be in a different namespace than Impl;
 // The reason for this is that if BasicView is in Impl, View (which derives from
 // BasicView) can cause function resolution to ADL-find the Kokkos::Impl
@@ -619,6 +626,11 @@ class BasicView {
   template <class, class, class, class>
   friend class BasicView;
 };
+
+#if defined(KOKKOS_ENABLE_HPX) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
 }  // namespace BV
 }  // namespace Kokkos::Impl
 
