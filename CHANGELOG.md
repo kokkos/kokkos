@@ -11,6 +11,7 @@
 
 ### Bug Fixes
 * Fix symbol visibility: make sure that `AUTO` has external linkage [\#7898](https://github.com/kokkos/kokkos/pull/7898)
+* Add missing HIP file to Makefiles [\#8030](https://github.com/kokkos/kokkos/pull/8030)
 
 ## 4.6.00
 
