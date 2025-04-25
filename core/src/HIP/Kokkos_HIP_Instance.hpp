@@ -163,11 +163,6 @@ class HIPInternal {
     return hipEventRecord(event, m_stream);
   }
 
-  hipError_t hip_event_synchronize_wrapper(hipEvent_t event) const {
-    set_hip_device();
-    return hipEventSynchronize(event);
-  }
-
   hipError_t hip_free_wrapper(void *ptr) const {
     set_hip_device();
     return hipFree(ptr);
