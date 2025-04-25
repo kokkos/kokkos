@@ -70,15 +70,15 @@ int OpenMPTargetInternal::concurrency() const {
   int max_threads    = 2048 * 80;
   int max_threads_sm = 2048;
 #if defined(KOKKOS_ARCH_AMPERE86)
-  max_threads = max_threads_sm * 84;
+  return max_threads_sm * 84;
 #elif defined(KOKKOS_ARCH_AMPERE80)
-  max_threads = max_threads_sm * 108;
+  return max_threads_sm * 108;
 #elif defined(KOKKOS_ARCH_VOLTA72)
-  max_threads = max_threads_sm * 84;
+  return max_threads_sm * 84;
 #elif defined(KOKKOS_ARCH_VOLTA70)
-  max_threads = max_threads_sm * 80;
+  return max_threads_sm * 80;
 #elif defined(KOKKOS_ARCH_PASCAL60) || defined(KOKKOS_ARCH_PASCAL61)
-  max_threads = max_threads_sm * 60;
+  return max_threads_sm * 60;
 #endif
 
   return max_threads;
