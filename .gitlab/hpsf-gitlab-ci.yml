@@ -47,7 +47,7 @@ NVIDIA-RTX5080:
 NVIDIA-GH200:
   extends: .common-setup
   tags: [nvidia-gh200]
-  image: nvcr.io/nvidia/cuda:12.6.1-devel-ubuntu24.04
+  image: nvcr.io/nvidia/cuda:12.8.0-devel-ubuntu24.04
   script:
     - apt-get update && apt-get install -y cmake git python3
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
