@@ -103,8 +103,8 @@ jobs:
       - name: Checkout desul
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          repository: desul/desul
-          ref: 22931326247c9333cc909628004d75ee5de99fa2
+          repository: dalg24/desul
+          ref: desul_atomic_op
           path: desul
       - name: Install desul
         working-directory: desul
