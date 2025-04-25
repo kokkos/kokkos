@@ -213,11 +213,6 @@ class CudaInternal {
     return cudaEventRecord(event, m_stream);
   }
 
-  cudaError_t cuda_event_synchronize_wrapper(cudaEvent_t event) const {
-    set_cuda_device();
-    return cudaEventSynchronize(event);
-  }
-
   cudaError_t cuda_free_wrapper(void* devPtr) const {
     set_cuda_device();
     return cudaFree(devPtr);
