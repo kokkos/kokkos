@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## 4.6.01
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.6.00...4.6.01)
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+* Add support for NVIDIA's Blackwell GPU architecture [\#7888](https://github.com/kokkos/kokkos/pull/7888)
+
+### Bug Fixes
+* Fix symbol visibility: make sure that `AUTO` has external linkage [\#7898](https://github.com/kokkos/kokkos/pull/7898)
+
 ## 4.6.00
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.5.01...4.6.00)
