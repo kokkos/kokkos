@@ -59,8 +59,12 @@ kokkos_enable_option(BENCHMARKS OFF "Whether to build the benchmarks")
 kokkos_enable_option(EXAMPLES OFF "Whether to build the examples")
 kokkos_enable_option(DEBUG ON "Whether to activate extra debug features - may increase compile times")
 kokkos_enable_option(DEBUG_DUALVIEW_MODIFY_CHECK ON "Debug check on dual views")
-if(NOT Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK)
-  message(FATAL_ERROR "Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=OFF isn't supported anymore")
+if(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+  message(
+    DEPRECATION "Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=OFF option is being ignored and is not supported anymore"
+  )
+else()
+  message(FATAL_ERROR "Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK has been removed and is always enabled")
 endif()
 
 unset(_UPPERCASE_CMAKE_BUILD_TYPE)
