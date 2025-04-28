@@ -11,6 +11,7 @@
 
 ### Bug Fixes
 * Fix symbol visibility: make sure that `AUTO` has external linkage [\#7898](https://github.com/kokkos/kokkos/pull/7898)
+* Building with generated makefiles: add missing HIP XNACK source file [\#8030](https://github.com/kokkos/kokkos/pull/8030)
 
 ## 4.6.00
 
