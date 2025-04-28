@@ -247,7 +247,7 @@ struct MDSpanViewTraits<Traits, std::void_t<typename LayoutFromLayoutType<
       typename ExtentsFromDataType<index_type,
                                    typename Traits::data_type>::type;
   using mdspan_layout_type =
-      typename LayoutFromArrayLayout<typename Traits::layout_type>::type;
+      typename LayoutFromLayoutType<typename Traits::layout_type>::type;
   using accessor_type = accessor_from_view_traits_t<Traits>;
   using mdspan_type   = mdspan<typename Traits::value_type, extents_type,
                              mdspan_layout_type, accessor_type>;
@@ -459,18 +459,13 @@ struct ViewTraits {
   using const_data_type     = typename data_analysis::const_type;
   using non_const_data_type = typename data_analysis::non_const_type;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  //------------------------------------
   // Compatible array of trivial type traits:
-  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use data_type instead.") = typename data_analysis::type;
-  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use const_data_type instead.") =
+  using scalar_array_type = typename data_analysis::scalar_array_type;
+  using const_scalar_array_type =
       typename data_analysis::const_scalar_array_type;
-  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use non_const_data_type instead.") =
+  using non_const_scalar_array_type =
       typename data_analysis::non_const_scalar_array_type;
-#endif
+
   //------------------------------------
   // Value type traits:
 

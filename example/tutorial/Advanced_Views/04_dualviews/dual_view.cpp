@@ -63,7 +63,9 @@ struct localsum {
       idx;
   // "data_type" is an alias in ViewTraits (and DualView) which is the
   // array version of the value(s) stored in the View.
-  Kokkos::View<view_type::data_type, view_type::layout_type, memory_space> dest;
+  Kokkos::View<view_type::scalar_array_type, view_type::layout_type,
+               memory_space>
+      dest;
   Kokkos::View<view_type::const_data_type, view_type::layout_type, memory_space,
                Kokkos::MemoryRandomAccess>
       src;

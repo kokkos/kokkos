@@ -246,17 +246,11 @@ class View : public ViewTraits<DataType, Properties...> {
 
  public:
   //----------------------------------------
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible view of array of data types */
-  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") =
-      View<typename traits::scalar_array_type, typename traits::array_layout,
+  /** \brief  Compatible view of data type */
+  using array_type =
+      View<typename traits::data_type, typename traits::layout_type,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
-#endif
-  /** \brief  Compatible view of data type */
-  using type = View<typename traits::data_type, typename traits::layout_type,
-                    typename traits::device_type, typename traits::hooks_policy,
-                    typename traits::memory_traits>;
   /** \brief  Compatible view of const data type */
   using const_type =
       View<typename traits::const_data_type, typename traits::layout_type,
