@@ -62,7 +62,11 @@ kokkos_enable_option(DEBUG_DUALVIEW_MODIFY_CHECK ON "Debug check on dual views")
 if(NOT Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK)
   if(KOKKOS_ENABLE_DEPRECATED_CODE_4)
     message(
-      DEPRECATION "Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=OFF option is being ignored and is not supported anymore"
+      DEPRECATION
+        "Setting Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK is deprecated. DualView modify is always checked. Forcing -Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=OFF"
+    )
+    set(Kokkos_ENABLE_Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK ON
+        CACHE BOOL "Kokkos turned debug dualview modify check ON!" FORCE
     )
   else()
     message(FATAL_ERROR "Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK has been removed and is always enabled")
