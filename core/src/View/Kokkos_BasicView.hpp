@@ -630,7 +630,7 @@ class BasicView {
   friend class BasicView;
 };
 
-#if defined(KOKKOS_ENABLE_HPX) && !defined(__clang__)
+#if defined(KOKKOS_ENABLE_HPX)
 #pragma GCC diagnostic pop
 #endif
 
