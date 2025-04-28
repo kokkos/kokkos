@@ -31,7 +31,7 @@
 #include <impl/Kokkos_Utilities.hpp>
 
 //----------------------------------------------------------------------------
-// Kokkos_CheckUsage.hpp checks the correct usage of Kokkos' APIs (contract)
+// Kokkos_CheckUsage.hpp asserts the correct use of Kokkos
 #include <Kokkos_CheckUsage.hpp>
 
 //----------------------------------------------------------------------------

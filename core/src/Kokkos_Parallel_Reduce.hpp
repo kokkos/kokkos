@@ -1772,7 +1772,7 @@ parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 const ReturnType& return_value) {
   /** Enforce correct use **/
   Impl::CheckUsage<Impl::UsageRequires::isInitialized>::check();
-  
+
   parallel_reduce("", policy, functor, return_value);
 }
 
