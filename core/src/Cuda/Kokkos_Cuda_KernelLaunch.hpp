@@ -594,8 +594,8 @@ struct CudaParallelLaunchKernelInvoker<
     // Wait until the previous kernel that uses the constant buffer is done
     std::lock_guard<std::mutex> lock(
         CudaInternal::constantMemMutexPerDevice[cuda_device]);
-    KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_event_synchronize_wrapper(
-        CudaInternal::constantMemReusablePerDevice[cuda_device])));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventSynchronize(
+        CudaInternal::constantMemReusablePerDevice[cuda_device]));
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long* staging =
