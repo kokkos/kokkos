@@ -38,14 +38,10 @@ namespace Impl {
 std::vector<SerialInternal*> SerialInternal::all_instances;
 std::mutex SerialInternal::all_instances_mutex;
 
-bool SerialInternal::is_initialized() { return m_is_initialized; }
+HostSharedPtr<SerialInternal> SerialInternal::default_instance;
 
-void SerialInternal::initialize() {
-  if (is_initialized()) return;
-
+SerialInternal::SerialInternal() {
   Impl::SharedAllocationRecord<void, void>::tracking_enable();
-
-  m_is_initialized = true;
 
   // guard pushing to all_instances
   {
@@ -54,7 +50,7 @@ void SerialInternal::initialize() {
   }
 }
 
-void SerialInternal::finalize() {
+SerialInternal::~SerialInternal() {
   if (m_thread_team_data.scratch_buffer()) {
     m_thread_team_data.disband_team();
     m_thread_team_data.disband_pool();
@@ -67,8 +63,6 @@ void SerialInternal::finalize() {
     m_thread_team_data.scratch_assign(nullptr, 0, 0, 0, 0, 0);
   }
 
-  m_is_initialized = false;
-
   // guard erasing from all_instances
   {
     std::scoped_lock lock(all_instances_mutex);
@@ -79,14 +73,6 @@ void SerialInternal::finalize() {
     std::swap(*it, all_instances.back());
     all_instances.pop_back();
   }
-}
-
-SerialInternal& SerialInternal::singleton() {
-  static SerialInternal* self = nullptr;
-  if (!self) {
-    self = new SerialInternal();
-  }
-  return *self;
 }
 
 // Resize thread team data scratch memory
@@ -156,17 +142,9 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
 }
 }  // namespace Impl
 
-Serial::Serial()
-    : m_space_instance(&Impl::SerialInternal::singleton(),
-                       [](Impl::SerialInternal*) {}) {}
+Serial::Serial() : m_space_instance(Impl::SerialInternal::default_instance) {}
 
-Serial::Serial(NewInstance)
-    : m_space_instance(new Impl::SerialInternal, [](Impl::SerialInternal* ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
-  m_space_instance->initialize();
-}
+Serial::Serial(NewInstance) : m_space_instance(new Impl::SerialInternal) {}
 
 void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Host Serial Execution Space:\n";
@@ -180,14 +158,17 @@ void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
 }
 
 bool Serial::impl_is_initialized() {
-  return Impl::SerialInternal::singleton().is_initialized();
+  return static_cast<bool>(Impl::SerialInternal::default_instance);
 }
 
 void Serial::impl_initialize(InitializationSettings const&) {
-  Impl::SerialInternal::singleton().initialize();
+  Impl::SerialInternal::default_instance =
+      Impl::HostSharedPtr(new Impl::SerialInternal);
 }
 
-void Serial::impl_finalize() { Impl::SerialInternal::singleton().finalize(); }
+void Serial::impl_finalize() {
+  Impl::SerialInternal::default_instance = nullptr;
+}
 
 const char* Serial::name() { return "Serial"; }
 
