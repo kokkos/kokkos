@@ -138,17 +138,12 @@ namespace Kokkos {
 
 namespace Impl {
 
-static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
-                                              Kokkos::HostSpace>::assignable);
-template <typename D>
-concept KokkosDevice =
-    Kokkos::is_device<Kokkos::Device<typename D::execution_space,
-                                     typename D::memory_space>>::value;
-
-// TODO Make this not use concepts in order to comply with C++17
-
-template <KokkosDevice D>
+template <class D>
 struct HostMirror {
+  static_assert(
+      Kokkos::is_device<Kokkos::Device<typename D::execution_space,
+                                       typename D::memory_space>>::value);
+
  private:
   // If input execution space can access HostSpace then keep it.
   // Example: Kokkos::OpenMP can access, Kokkos::Cuda cannot
@@ -174,16 +169,10 @@ struct HostMirror {
                          Kokkos::Device<Kokkos::HostSpace::execution_space,
                                         Kokkos::HostSpace::memory_space>>>;
 
-  using execution_space = Device::execution_space;
-  using memory_space    = Device::memory_space;
+  using execution_space = typename Device::execution_space;
+  using memory_space    = typename Device::memory_space;
   using Space           = memory_space;
 };
-
-// TODO Add struct HostMirrorDevice
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-// TODO Add deprecated original code here and specialize on !IsDevice via SFINAE
-#endif
 
 }  // namespace Impl
 }  // namespace Kokkos
