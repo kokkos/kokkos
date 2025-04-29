@@ -12,6 +12,7 @@
 ### Bug Fixes
 * Fix symbol visibility: make sure that `AUTO` has external linkage [\#7898](https://github.com/kokkos/kokkos/pull/7898)
 * Building with generated makefiles: add missing HIP XNACK source file [\#8030](https://github.com/kokkos/kokkos/pull/8030)
+* Fix building benchmarks when Kokkos exists as a subproject/subdirectory [\#8045](https://github.com/kokkos/kokkos/pull/8045)
 
 ## 4.6.00
 
