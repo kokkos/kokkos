@@ -10,6 +10,37 @@
         export GITHUB_PR_ID=$(echo ${CI_COMMIT_BRANCH} | cut -d \_ -f 1 | cut -c 3-);
       fi
 
+NVIDIA-RTX5080:
+  extends: .common-setup
+  tags: [nvidia-rtx5080, hpsf-gpu]
+  image: nvcr.io/nvidia/cuda:12.8.0-devel-ubuntu24.04
+  script:
+    - apt-get update && apt-get install -y cmake git python3
+    - export CMAKE_BUILD_PARALLEL_LEVEL=32
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror -Wno-attributes'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_BLACKWELL120=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_AMD_ZEN5=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export CTEST_BUILD_NAME="NVIDIA-RTX5080"
+    - ctest -VV
+        -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_rtx5080.xml
+        -S scripts/CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+  artifacts:
+    when: always
+    paths:
+      - build/result_rtx5080.xml
+    reports:
+      junit: build/result_rtx5080.xml
+
 NVIDIA-GH200:
   extends: .common-setup
   tags: [nvidia-gh200]
