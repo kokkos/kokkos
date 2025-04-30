@@ -163,9 +163,17 @@ class HPX {
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 
+// FIXME_HPX spurious warnings like
+// error: 'SR.14123' may be used uninitialized [-Werror=uninitialized]
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+
   HPX()
       : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
             &m_default_instance_data, &default_instance_deleter)) {}
+
+#pragma GCC diagnostic pop
+
   ~HPX() = default;
   explicit HPX(instance_mode mode)
       : m_instance_data(
