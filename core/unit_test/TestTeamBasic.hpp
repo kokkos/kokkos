@@ -397,87 +397,92 @@ TEST(TEST_CATEGORY, team_broadcast_double) {
 struct TeamBroadcastIntPtrFunctor {
   using TeamMember = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
 
-  KOKKOS_FUNCTION void operator()(const TeamMember& team_member) const {
+  TeamBroadcastIntPtrFunctor() : view("view") {}
+
+  void run() {
+    auto team_size = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO)
+                         .team_size_max(*this, Kokkos::ParallelReduceTag());
+    int errors;
+    Kokkos::parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, team_size),
+                            *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+
+  KOKKOS_FUNCTION void operator()(const TeamMember& team_member,
+                                  int& error_count) const {
     int* ptr = team_member.team_rank() == 0 ? view.data() : nullptr;
     team_member.team_broadcast(ptr, 0);
-    if (ptr != view.data()) errors()++;
+    if (ptr != view.data()) error_count++;
   }
 
   Kokkos::View<int, TEST_EXECSPACE> view;
-  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
-      errors;
 };
 
 TEST(TEST_CATEGORY, team_broadcast_int_ptr) {
-  Kokkos::View<int, TEST_EXECSPACE> view("view");
-  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
-      errors("errors");
-  TeamBroadcastIntPtrFunctor functor{view, errors};
-  auto team_size = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO)
-                       .team_size_max(functor, Kokkos::ParallelForTag());
-  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, team_size),
-                       functor);
-  Kokkos::fence();
-  ASSERT_EQ(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, errors)(),
-            0);
+  TeamBroadcastIntPtrFunctor team_broadcast_functor;
+  team_broadcast_functor.run();
 }
 
 struct TeamSingleThreadIntPtrFunctor {
   using TeamMember = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
 
-  KOKKOS_FUNCTION void operator()(const TeamMember& team_member) const {
+  TeamSingleThreadIntPtrFunctor() : view("view") {}
+
+  void run() {
+    auto vector_length =
+        Kokkos::TeamPolicy<TEST_EXECSPACE>::vector_length_max();
+    int errors;
+    Kokkos::parallel_reduce(
+        Kokkos::TeamPolicy<TEST_EXECSPACE>(1, 1, vector_length), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+
+  KOKKOS_FUNCTION void operator()(const TeamMember& team_member,
+                                  int& error_count) const {
     int* ptr = nullptr;
     Kokkos::single(
         Kokkos::PerThread(team_member),
         [&](int*& my_ptr) { my_ptr = view.data(); }, ptr);
-    if (ptr != view.data()) errors()++;
+    if (ptr != view.data()) error_count++;
   }
 
   Kokkos::View<int, TEST_EXECSPACE> view;
-  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
-      errors;
 };
 
 TEST(TEST_CATEGORY, team_single_thread_int_ptr) {
-  Kokkos::View<int, TEST_EXECSPACE> view("view");
-  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
-      errors("errors");
-  auto vector_length = Kokkos::TeamPolicy<TEST_EXECSPACE>::vector_length_max();
-  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, 1, vector_length),
-                       TeamSingleThreadIntPtrFunctor{view, errors});
-  Kokkos::fence();
-  ASSERT_EQ(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, errors)(),
-            0);
+  TeamSingleThreadIntPtrFunctor team_single_thread_functor;
+  team_single_thread_functor.run();
 }
 
 struct TeamSingleTeamIntPtrFunctor {
   using TeamMember = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
 
-  KOKKOS_FUNCTION void operator()(const TeamMember& team_member) const {
+  TeamSingleTeamIntPtrFunctor() : view("view") {}
+
+  void run() {
+    auto team_size = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO)
+                         .team_size_max(*this, Kokkos::ParallelReduceTag());
+    int errors;
+    Kokkos::parallel_reduce(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, team_size),
+                            *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+
+  KOKKOS_FUNCTION void operator()(const TeamMember& team_member,
+                                  int& error_count) const {
     int* ptr = nullptr;
     Kokkos::single(
         Kokkos::PerTeam(team_member),
         [&](int*& my_ptr) { my_ptr = view.data(); }, ptr);
-    if (ptr != view.data()) errors()++;
+    if (ptr != view.data()) error_count++;
   }
 
   Kokkos::View<int, TEST_EXECSPACE> view;
-  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
-      errors;
 };
 
 TEST(TEST_CATEGORY, team_single_team_int_ptr) {
-  Kokkos::View<int, TEST_EXECSPACE> view("view");
-  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
-      errors("errors");
-  TeamSingleTeamIntPtrFunctor functor{view, errors};
-  auto team_size = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO)
-                       .team_size_max(functor, Kokkos::ParallelForTag());
-  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, team_size),
-                       functor);
-  Kokkos::fence();
-  ASSERT_EQ(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, errors)(),
-            0);
+  TeamSingleTeamIntPtrFunctor team_single_team_functor;
+  team_single_team_functor.run();
 }
 
 TEST(TEST_CATEGORY, team_handle_by_value) {
