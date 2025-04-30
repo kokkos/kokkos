@@ -35,9 +35,15 @@ namespace Kokkos::Experimental {
 namespace Impl {
 // clang-format off
 template <class> struct infinity_helper {};
+#if defined(_MSC_VER)
+template <> struct infinity_helper<float> { static constexpr float value = __builtin_huge_valf(); };
+template <> struct infinity_helper<double> { static constexpr double value = __builtin_huge_val(); };
+template <> struct infinity_helper<long double> { static constexpr long double value = __builtin_huge_val(); };
+#else
 template <> struct infinity_helper<float> { static constexpr float value = HUGE_VALF; };
 template <> struct infinity_helper<double> { static constexpr double value = HUGE_VAL; };
 template <> struct infinity_helper<long double> { static constexpr long double value = HUGE_VALL; };
+#endif
 template <class> struct finite_min_helper {};
 template <> struct finite_min_helper<bool> { static constexpr bool value = false; };
 template <> struct finite_min_helper<char> { static constexpr char value = CHAR_MIN; };
