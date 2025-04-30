@@ -21,37 +21,35 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, team_for) {
-  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >::test_for(
-      0);
-  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >::test_for(
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_for(0);
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>::test_for(
       0);
 
-  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >::test_for(
-      2);
-  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >::test_for(
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_for(2);
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>::test_for(
       2);
 
-  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> >::test_for(
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_for(
       1000);
-  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> >::test_for(
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>>::test_for(
       1000);
 }
 
 // FIXME_OPENMPTARGET wrong results
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, team_reduce) {
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_reduce(
+      0);
   TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Static> >::test_reduce(0);
+                 Kokkos::Schedule<Kokkos::Dynamic>>::test_reduce(0);
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_reduce(
+      2);
   TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(0);
+                 Kokkos::Schedule<Kokkos::Dynamic>>::test_reduce(2);
+  TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_reduce(
+      1000);
   TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Static> >::test_reduce(2);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(2);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Static> >::test_reduce(1000);
-  TestTeamPolicy<TEST_EXECSPACE,
-                 Kokkos::Schedule<Kokkos::Dynamic> >::test_reduce(1000);
+                 Kokkos::Schedule<Kokkos::Dynamic>>::test_reduce(1000);
 }
 #endif
 
@@ -394,6 +392,66 @@ TEST(TEST_CATEGORY, team_broadcast_double) {
                           double>::test_teambroadcast(1000, 1.3);
       }
   }
+}
+
+TEST(TEST_CATEGORY, team_broadcast_int_ptr) {
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
+      errors("errors");
+  using TeamMember = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
+  auto lambda      = KOKKOS_LAMBDA(const TeamMember& team_member) {
+    int* ptr = team_member.team_rank() == 0 ? view.data() : 0;
+    team_member.team_broadcast(ptr, 0);
+    if (ptr != view.data()) errors()++;
+  };
+  auto team_size = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO)
+                       .team_size_max(lambda, Kokkos::ParallelForTag());
+  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, team_size),
+                       lambda);
+  Kokkos::fence();
+  ASSERT_EQ(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, errors)(),
+            0);
+}
+
+TEST(TEST_CATEGORY, team_single_thread_int_ptr) {
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
+      errors("errors");
+  using TeamMember = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
+  auto lambda      = KOKKOS_LAMBDA(const TeamMember& team_member) {
+    int* ptr = nullptr;
+    Kokkos::single(
+        Kokkos::PerThread(team_member),
+        [&](int*& my_ptr) { my_ptr = view.data(); }, ptr);
+    if (ptr != view.data()) errors()++;
+  };
+  auto vector_length = Kokkos::TeamPolicy<TEST_EXECSPACE>::vector_length_max();
+  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, 1, vector_length),
+                       lambda);
+  Kokkos::fence();
+  ASSERT_EQ(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, errors)(),
+            0);
+}
+
+TEST(TEST_CATEGORY, team_single_team_int_ptr) {
+  Kokkos::View<int, TEST_EXECSPACE> view("view");
+  Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>
+      errors("errors");
+  using TeamMember = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
+  auto lambda      = KOKKOS_LAMBDA(const TeamMember& team_member) {
+    int* ptr = nullptr;
+    Kokkos::single(
+        Kokkos::PerTeam(team_member),
+        [&](int*& my_ptr) { my_ptr = view.data(); }, ptr);
+    if (ptr != view.data()) errors()++;
+  };
+  auto team_size = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO)
+                       .team_size_max(lambda, Kokkos::ParallelForTag());
+  Kokkos::parallel_for(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, team_size),
+                       lambda);
+  Kokkos::fence();
+  ASSERT_EQ(Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, errors)(),
+            0);
 }
 
 TEST(TEST_CATEGORY, team_handle_by_value) {

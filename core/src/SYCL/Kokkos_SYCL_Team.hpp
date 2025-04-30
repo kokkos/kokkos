@@ -1016,8 +1016,15 @@ KOKKOS_INLINE_FUNCTION void single(
   const auto grange1          = item.get_local_range(1);
   const auto sg               = item.get_sub_group();
   if (item.get_local_id(1) == 0) lambda(val);
-  val = Kokkos::Impl::SYCLReduction::select_from_group(
-      sg, val, (sg.get_local_id() / grange1) * grange1);
+  if constexpr (std::is_pointer_v<ValueType>) {
+    uintptr_t tmp = reinterpret_cast<uintptr_t>(val);
+    tmp           = Kokkos::Impl::SYCLReduction::select_from_group(
+        sg, tmp, (sg.get_local_id() / grange1) * grange1);
+    val = reinterpret_cast<ValueType>(tmp);
+  } else {
+    val = Kokkos::Impl::SYCLReduction::select_from_group(
+        sg, val, (sg.get_local_id() / grange1) * grange1);
+  }
 }
 
 template <class FunctorType, class ValueType>
