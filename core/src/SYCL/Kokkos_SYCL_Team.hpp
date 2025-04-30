@@ -1016,6 +1016,8 @@ KOKKOS_INLINE_FUNCTION void single(
   const auto grange1          = item.get_local_range(1);
   const auto sg               = item.get_sub_group();
   if (item.get_local_id(1) == 0) lambda(val);
+  // FIXME_SYCL oneAPI broke pointer support in sycl::select_from_group past the
+  // 2025.0.0 release. It's supposed to be fixed in the 2025.2.0 release.
   if constexpr (std::is_pointer_v<ValueType>) {
     uintptr_t tmp = reinterpret_cast<uintptr_t>(val);
     tmp           = Kokkos::Impl::SYCLReduction::select_from_group(
