@@ -20,7 +20,12 @@
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 
+#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+KOKKOS_IMPL_SHARED_ALLOCATION_SPECIALIZATION(
+    Kokkos::Experimental::OpenACCSpace);
+#else
 KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_SPECIALIZATION(
     Kokkos::Experimental::OpenACCSpace);
+#endif
 
 #endif
