@@ -400,7 +400,7 @@ TEST(TEST_CATEGORY, team_broadcast_int_ptr) {
       errors("errors");
   using TeamMember = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
   auto lambda      = KOKKOS_LAMBDA(const TeamMember& team_member) {
-    int* ptr = team_member.team_rank() == 0 ? view.data() : 0;
+    int* ptr = team_member.team_rank() == 0 ? view.data() : nullptr;
     team_member.team_broadcast(ptr, 0);
     if (ptr != view.data()) errors()++;
   };
