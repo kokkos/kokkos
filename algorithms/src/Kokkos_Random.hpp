@@ -728,6 +728,8 @@ struct Random_UniqueIndex<
 };
 #endif
 
+enum RandomPoolConstructorIsAsync : bool { no = false, yes = true };
+
 }  // namespace Impl
 
 template <class DeviceType>
@@ -903,24 +905,31 @@ class Random_XorShift64_Pool {
 #else
   Random_XorShift64_Pool()   = default;
 #endif
-  Random_XorShift64_Pool(uint64_t seed) {
-    num_states_ = 0;
 
-    init(seed, execution_space().concurrency());
+  Random_XorShift64_Pool(uint64_t seed)
+      : Random_XorShift64_Pool(execution_space(), seed,
+                               Impl::RandomPoolConstructorIsAsync::no) {}
+
+  Random_XorShift64_Pool(execution_space const& exec, uint64_t seed,
+                         Impl::RandomPoolConstructorIsAsync is_async =
+                             Impl::RandomPoolConstructorIsAsync::yes)
+      : num_states_(exec.concurrency()) {
+    init(exec, seed);
+    if (!static_cast<bool>(is_async)) exec.fence();
   }
 
-  void init(uint64_t seed, int num_states) {
+  void init(execution_space const& exec, uint64_t seed) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
     // not too small. 64 sounded fine.
-    padding_    = num_states < 1000 ? 64 : 1;
-    num_states_ = num_states;
+    padding_ = num_states_ < 1000 ? 64 : 1;
 
-    locks_ =
-        locks_type("Kokkos::Random_XorShift64::locks", num_states, padding_);
-    state_ = state_data_type("Kokkos::Random_XorShift64::state", num_states_,
-                             padding_);
+    locks_ = locks_type(view_alloc(exec, "Kokkos::Random_XorShift64::locks"),
+                        num_states_, padding_);
+    state_ =
+        state_data_type(view_alloc(exec, "Kokkos::Random_XorShift64::state"),
+                        num_states_, padding_);
 
     typename state_data_type::HostMirror h_state =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, state_);
@@ -942,11 +951,12 @@ class Random_XorShift64_Pool {
                       (((static_cast<uint64_t>(n4)) & 0xffff) << 48);
       h_lock(i, 0) = 0;
     }
-    deep_copy(state_, h_state);
-    deep_copy(locks_, h_lock);
+    deep_copy(exec, state_, h_state);
+    deep_copy(exec, locks_, h_lock);
   }
 
-  KOKKOS_INLINE_FUNCTION Random_XorShift64<DeviceType> get_state() const {
+  KOKKOS_INLINE_FUNCTION
+  Random_XorShift64<DeviceType> get_state() const {
     KOKKOS_EXPECTS(num_states_ > 0);
     const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift64<DeviceType>(state_(i, 0), i);
@@ -1151,23 +1161,30 @@ class Random_XorShift1024_Pool {
   Random_XorShift1024_Pool() = default;
 #endif
 
-  Random_XorShift1024_Pool(uint64_t seed) {
-    num_states_ = 0;
+  Random_XorShift1024_Pool(uint64_t seed)
+      : Random_XorShift1024_Pool(execution_space(), seed,
+                                 Impl::RandomPoolConstructorIsAsync::no) {}
 
-    init(seed, execution_space().concurrency());
+  Random_XorShift1024_Pool(execution_space const& exec, uint64_t seed,
+                           Impl::RandomPoolConstructorIsAsync is_async =
+                               Impl::RandomPoolConstructorIsAsync::yes)
+      : num_states_(exec.concurrency()) {
+    init(exec, seed);
+    if (!static_cast<bool>(is_async)) exec.fence();
   }
 
-  void init(uint64_t seed, int num_states) {
+  void init(execution_space const& exec, uint64_t seed) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
     // not too small. 64 sounded fine.
-    padding_    = num_states < 1000 ? 64 : 1;
-    num_states_ = num_states;
-    locks_ =
-        locks_type("Kokkos::Random_XorShift1024::locks", num_states_, padding_);
-    state_ = state_data_type("Kokkos::Random_XorShift1024::state", num_states_);
-    p_ = int_view_type("Kokkos::Random_XorShift1024::p", num_states_, padding_);
+    padding_ = num_states_ < 1000 ? 64 : 1;
+    locks_ = locks_type(view_alloc(exec, "Kokkos::Random_XorShift1024::locks"),
+                        num_states_, padding_);
+    state_ = state_data_type(
+        view_alloc(exec, "Kokkos::Random_XorShift1024::state"), num_states_);
+    p_ = int_view_type(view_alloc(exec, "Kokkos::Random_XorShift1024::p"),
+                       num_states_, padding_);
 
     typename state_data_type::HostMirror h_state =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, state_);
@@ -1194,8 +1211,8 @@ class Random_XorShift1024_Pool {
       h_p(i, 0)    = 0;
       h_lock(i, 0) = 0;
     }
-    deep_copy(state_, h_state);
-    deep_copy(locks_, h_lock);
+    deep_copy(exec, state_, h_state);
+    deep_copy(exec, locks_, h_lock);
   }
 
   KOKKOS_INLINE_FUNCTION

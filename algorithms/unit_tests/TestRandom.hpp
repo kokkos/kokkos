@@ -539,6 +539,62 @@ void test_duplicate_stream() {
   }
 }
 
+template <class ExecutionSpace, class GeneratorPool>
+struct compare_random_streams {
+  using ViewType = Kokkos::View<uint64_t**, ExecutionSpace>;
+
+  ViewType vals;
+  GeneratorPool rand_pool;
+  int samples;
+
+  compare_random_streams(ViewType vals_, GeneratorPool rand_pool_, int samples_)
+      : vals(vals_), rand_pool(rand_pool_), samples(samples_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(int i, std::size_t& mismatches) const {
+    typename GeneratorPool::generator_type rand_gen = rand_pool.get_state();
+
+    for (int k = 0; k < samples; k++)
+      if (vals(i, k) != rand_gen.urand64()) mismatches++;
+
+    rand_pool.free_state(rand_gen);
+  }
+};
+
+template <class ExecutionSpace, class Pool>
+void test_async_initialization() {
+  using ViewType = Kokkos::View<uint64_t**, ExecutionSpace>;
+
+  int n_streams = 1;
+  int samples   = 123456;
+
+  // use default execution space instance to generate reference values
+  Pool rand_pool_A(42);
+  ViewType vals_d("Vals", n_streams, samples);
+  // create two, distinct ExecutionSpace instances
+  auto instances =
+      Kokkos::Experimental::partition_space(ExecutionSpace{}, 1, 1);
+  // use first instance to initialize values of vals_d
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace>(instances.at(0), 0, n_streams),
+      generate_random_stream<ExecutionSpace, Pool>(vals_d, rand_pool_A,
+                                                   samples));
+  instances.at(0).fence();
+
+  // use second instance to initialize another Pool using the same seed
+  Pool rand_pool_B(instances.at(1), 42);
+  std::size_t mismatches;
+  // compare values in stream of rand_pool_B with vals_d
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace>(instances.at(1), 0, n_streams),
+      compare_random_streams<ExecutionSpace, Pool>(vals_d, rand_pool_B,
+                                                   samples),
+      mismatches);
+
+  EXPECT_EQ(mismatches, 0) << "Stream from async constructed pool does not "
+                              "match stream from default constructed pool";
+}
+
 }  // namespace AlgoRandomImpl
 
 TEST(TEST_CATEGORY, Random_XorShift64) {
@@ -608,6 +664,9 @@ TEST(TEST_CATEGORY, Multi_streams) {
 
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool64>();
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool1024>();
+
+  AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool64>();
+  AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool1024>();
 }
 
 }  // namespace Test
