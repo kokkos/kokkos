@@ -44,26 +44,47 @@ NVIDIA-GH200:
   extends: .common-setup
   tags: [nvidia-gh200]
   image: nvcr.io/nvidia/cuda:12.6.1-devel-ubuntu24.04
-  script:
-    - apt-get update && apt-get install -y cmake git python3
-    - export CMAKE_BUILD_PARALLEL_LEVEL=48
-    - export ENV_CMAKE_OPTIONS=""
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_HOPPER90=ON"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON;"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
-    - export CTEST_BUILD_NAME="NVIDIA-GH200"
-    - ctest -VV
-        -D CDASH_MODEL=${CDASH_MODEL}
-        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
-        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
-        -D OUTPUT_JUNIT_FILE=result_gh200.xml
-        -S scripts/CTestRun.cmake
-        -D CTEST_SITE="gitlab.spack.io"
-        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+  steps:
+    - name: Checkout desul
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        repository: JBludau/desul
+        ref: cas_exchange_128bit
+        path: desul
+    - name: Install desul
+      working-directory: desul
+      run: |
+        git submodule init
+        git submodule update
+        mkdir build
+        cd build
+        cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=`pwd`/desul-install ..
+        sudo cmake --build . --target install --parallel 2
+    - name: Checkout code
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - name: Kokkos build
+      run: |
+       apt-get update && apt-get install -y cmake git python3
+       export CMAKE_BUILD_PARALLEL_LEVEL=48
+       export ENV_CMAKE_OPTIONS=""
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_HOPPER90=ON"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_CUDA_UNIFIED_MEMORY=ON;"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D desul_ROOT=`pwd`/desul-install"
+       export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL=ON"
+       export CTEST_BUILD_NAME="NVIDIA-GH200"
+       ctest -VV \
+        -D CDASH_MODEL=${CDASH_MODEL} \
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}" \
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" \
+        -D OUTPUT_JUNIT_FILE=result_gh200.xml \
+        -S scripts/CTestRun.cmake \
+        -D CTEST_SITE="gitlab.spack.io" \
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}" \
   artifacts:
     when: always
     paths:
