@@ -14,13 +14,15 @@
 //
 //@HEADER
 
+#include <Kokkos_Core.hpp>
+
 namespace Test {
 
 TEST(TEST_CATEGORY, KOKKOS_TEST_WITH_SUFFIX(task_fib, TEST_SCHEDULER_SUFFIX)) {
   const int N = 27;
   for (int i = 0; i < N; ++i) {
-    TestTaskScheduler::TestFib<TEST_SCHEDULER>::run(i,
-                                                    (i + 1) * (i + 1) * 64000);
+    TestTaskScheduler::TestFib<TEST_SCHEDULER>::run(
+        i, static_cast<size_t>(i + 1) * (i + 1) * 64000);
   }
 }
 
@@ -44,6 +46,12 @@ TEST(TEST_CATEGORY,
 
 TEST(TEST_CATEGORY,
      KOKKOS_TEST_WITH_SUFFIX(task_multiple_depend, TEST_SCHEDULER_SUFFIX)) {
+#if defined(KOKKOS_COMPILER_CLANG) && \
+    defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP() << "skipping because test fails with Clang NVPTX + RDC";
+  }
+#endif
   for (int i = 2; i < 6; ++i) {
     TestTaskScheduler::TestMultipleDependence<TEST_SCHEDULER>::run(i);
   }

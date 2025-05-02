@@ -76,8 +76,7 @@ kokkos_enable_option(
   HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF
   "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time"
 )
-kokkos_enable_option(IMPL_HIP_UNIFIED_MEMORY OFF "Whether to leverage unified memory architectures for HIP")
-kokkos_enable_option(IMPL_HIP_MALLOC_ASYNC OFF "Whether to enable hipMallocAsync")
+kokkos_enable_option(IMPL_HIP_MALLOC_ASYNC ${KOKKOS_ENABLE_HIP} "Whether to enable hipMallocAsync")
 kokkos_enable_option(OPENACC_FORCE_HOST_AS_DEVICE OFF "Whether to force to use host as a target device for OpenACC")
 
 # This option will go away eventually, but allows fallback to old implementation when needed.
@@ -96,13 +95,40 @@ kokkos_enable_option(
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
 kokkos_enable_option(IMPL_MDSPAN ON "Whether to enable experimental mdspan support")
-kokkos_enable_option(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
+kokkos_enable_option(MDSPAN_EXTERNAL OFF "Whether to use an external version of mdspan")
 kokkos_enable_option(
-  IMPL_SKIP_COMPILER_MDSPAN ON BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan"
+  IMPL_SKIP_COMPILER_MDSPAN ON "Whether to use an internal version of mdspan even if the compiler provides mdspan"
+)
+kokkos_enable_option(
+  IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
+  OFF
+  "Whether to check for uses of LayoutRight that have an explicit stride that may have changed in the new View implementation."
 )
 mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
+mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
+
+if(Kokkos_ENABLE_IMPL_MDSPAN)
+  # Older CUDA versions work with mdspan but *not* our mdspan-based view implementation due
+  # to various compiler bugs. So we will disable it here
+  # Similarly GCC 8 and 9 have excessive memory usage so we default to legacy view, though the
+  # user can enable the new implementation if they wish
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9)
+    set(VIEW_LEGACY_DEFAULT ON)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
+    set(VIEW_LEGACY_DEFAULT ON)
+  else()
+    set(VIEW_LEGACY_DEFAULT OFF)
+  endif()
+else()
+  set(VIEW_LEGACY_DEFAULT ON)
+endif()
+kokkos_enable_option(IMPL_VIEW_LEGACY ${VIEW_LEGACY_DEFAULT} "Whether to use the legacy implementation of View")
+mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
+  message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
+endif()
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
@@ -168,13 +194,7 @@ check_device_specific_options(
   IMPL_CUDA_UNIFIED_MEMORY
 )
 check_device_specific_options(
-  DEVICE
-  HIP
-  OPTIONS
-  HIP_RELOCATABLE_DEVICE_CODE
-  HIP_MULTIPLE_KERNEL_INSTANTIATIONS
-  IMPL_HIP_UNIFIED_MEMORY
-  IMPL_HIP_MALLOC_ASYNC
+  DEVICE HIP OPTIONS HIP_RELOCATABLE_DEVICE_CODE HIP_MULTIPLE_KERNEL_INSTANTIATIONS IMPL_HIP_MALLOC_ASYNC
 )
 check_device_specific_options(DEVICE HPX OPTIONS IMPL_HPX_ASYNC_DISPATCH)
 check_device_specific_options(DEVICE OPENACC OPTIONS OPENACC_FORCE_HOST_AS_DEVICE)
@@ -204,13 +224,14 @@ if(KOKKOS_COMPILE_LANGUAGE STREQUAL CUDA)
   endif()
 endif()
 
-# This is known to occur with Clang 9. We would need to use nvcc as the linker
+# This is known to occur with Clang 9 until Clang 15. We would need to use nvcc as the linker
 # http://lists.llvm.org/pipermail/cfe-dev/2018-June/058296.html
-# TODO: Through great effort we can use a different linker by hacking
-# CMAKE_CXX_LINK_EXECUTABLE in a future release
-if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+if(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_CXX_COMPILER_VERSION
+                                                                                            VERSION_LESS 17
+)
   message(
-    FATAL_ERROR "Relocatable device code is currently not supported with Clang - must use nvcc_wrapper or turn off RDC"
+    FATAL_ERROR
+      "Relocatable device code is currently not supported with Clang < 17 - must use nvcc_wrapper or turn off RDC"
   )
 endif()
 

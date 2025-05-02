@@ -199,7 +199,7 @@ class ParallelScanSYCLBase {
         value_type local_value;
         reducer.init(&local_value);
         if (global_id < size) {
-          if constexpr (std::is_void<WorkTag>::value)
+          if constexpr (std::is_void_v<WorkTag>)
             functor(global_id + begin, local_value, false);
           else
             functor(WorkTag(), global_id + begin, local_value, false);
@@ -220,7 +220,7 @@ class ParallelScanSYCLBase {
               scratch_flags_ref(*scratch_flags);
           num_teams_done[0] = ++scratch_flags_ref;
         }
-        item.barrier(sycl::access::fence_space::global_space);
+        sycl::group_barrier(item.get_group());
         if (num_teams_done[0] == n_wgroups) {
           if (local_id == 0) *scratch_flags = 0;
           value_type total;
@@ -244,7 +244,7 @@ class ParallelScanSYCLBase {
                 &total,
                 &local_mem[item.get_sub_group().get_group_range()[0] - 1]);
             if (offset + wgroup_size < n_wgroups)
-              item.barrier(sycl::access::fence_space::global_space);
+              sycl::group_barrier(item.get_group());
           }
         }
       };
@@ -346,7 +346,7 @@ class ParallelScanSYCLBase {
 
               reducer.join(&update, &group_results[item.get_group_linear_id()]);
 
-              if constexpr (std::is_void<WorkTag>::value)
+              if constexpr (std::is_void_v<WorkTag>)
                 functor(global_id + begin, update, true);
               else
                 functor(WorkTag(), global_id + begin, update, true);
@@ -434,7 +434,8 @@ class Kokkos::Impl::ParallelScanWithTotal<
             "Kokkos::Impl::ParallelReduce<SYCL, MDRangePolicy>::execute: "
             "result not device-accessible");
         const int size = Base::m_functor_reducer.get_reducer().value_size();
-        std::memcpy(Base::m_result_ptr, Base::m_scratch_host, size);
+        std::memcpy(static_cast<void*>(Base::m_result_ptr),
+                    static_cast<const void*>(Base::m_scratch_host), size);
       }
     });
   }

@@ -799,7 +799,6 @@ function(COMPILER_SPECIFIC_OPTIONS_HELPER)
       NVHPC
       DEFAULT
       Cray
-      Intel
       Clang
       AppleClang
       IntelLLVM
@@ -953,6 +952,59 @@ int main()
   try_compile(_RET ${PROJECT_BINARY_DIR}/compile_tests SOURCES ${PROJECT_BINARY_DIR}/compile_tests/compiles_cuda.cpp)
 
   set(${_VAR} ${_RET} CACHE STRING "CXX compiler supports building CUDA")
+endfunction()
+
+# this function is provided to easily select which files use nvcc_wrapper:
+#
+#       COMPILER    --> do check for compiler
+#       LINKER      --> do check for linker
+#       LANGUAGE    --> the language for which to check (required)
+#       FLAGS       --> flags to check
+#
+function(kokkos_check_flags)
+  cmake_parse_arguments(INP "COMPILER;LINKER" "LANGUAGE" "FLAGS" ${ARGN})
+
+  # do nothing if no flags are given
+  if(NOT INP_FLAGS)
+    return()
+  endif()
+
+  if(NOT INP_LANGUAGE)
+    message(FATAL_ERROR "'kokkos_check_flags' requires LANGUAGE keyword")
+  endif()
+
+  #check_compiler/linker_flag requires a whitespace separated list
+  string(REPLACE ";" " " WHITESPACE_FLAGS "${INP_FLAGS}")
+  # icpx adds "-device ..." options that need quotes (which CMake removes). We need to add them here again.
+  string(REGEX REPLACE "(-device [A-Za-z0-9_\\\\.]*)" "\"\\1\"" QUOTED_FLAGS "${WHITESPACE_FLAGS}")
+
+  if(INP_COMPILER)
+    include(CheckCompilerFlag)
+    #delete cache so we always do the check
+    unset(KOKKOS_COMPILE_OPTIONS_CHECK CACHE)
+    check_compiler_flag(${INP_LANGUAGE} "${QUOTED_FLAGS}" KOKKOS_COMPILE_OPTIONS_CHECK)
+    if(NOT KOKKOS_COMPILE_OPTIONS_CHECK)
+      message(
+        FATAL_ERROR
+          "The compiler for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS} in combination with the CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS=${CMAKE_${KOKKOS_COMPILE_LANGUAGE}_FLAGS}. Please check the given configuration."
+      )
+    endif()
+  endif()
+
+  if(INP_LINKER)
+    include(CheckLinkerFlag)
+    # temporarily set language flags to nothing ... the linker often cannot handle these which leads to false errors
+    set(CMAKE_${INP_LANGUAGE}_FLAGS "")
+    #delete cache so we always do the check
+    unset(KOKKOS_LINK_OPTIONS_CHECK CACHE)
+    check_linker_flag(${INP_LANGUAGE} "${QUOTED_FLAGS}" KOKKOS_LINK_OPTIONS_CHECK)
+    if(NOT KOKKOS_LINK_OPTIONS_CHECK)
+      message(
+        FATAL_ERROR
+          "The linker for ${KOKKOS_COMPILE_LANGUAGE} can not consume flag(s) ${QUOTED_FLAGS}. Please check the given configuration."
+      )
+    endif()
+  endif()
 endfunction()
 
 # this function is provided to easily select which files use nvcc_wrapper:

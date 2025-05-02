@@ -71,12 +71,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
       auto lambda = [=](sycl::nd_item<2> item) {
         const member_type team_member(
-            KOKKOS_IMPL_SYCL_GET_MULTI_PTR(team_scratch_memory_L0), shmem_begin,
-            scratch_size[0],
+            team_scratch_memory_L0
+                .get_multi_ptr<sycl::access::decorated::yes>(),
+            shmem_begin, scratch_size[0],
             global_scratch_ptr + item.get_group(1) * scratch_size[1],
             scratch_size[1], item, item.get_group_linear_id(),
             item.get_group_range(1));
-        if constexpr (std::is_void<work_tag>::value)
+        if constexpr (std::is_void_v<work_tag>)
           functor_wrapper.get_functor()(team_member);
         else
           functor_wrapper.get_functor()(work_tag(), team_member);
@@ -106,7 +107,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 #endif
       cgh.parallel_for(
           sycl::nd_range<2>(
-              sycl::range<2>(m_team_size, m_league_size * final_vector_size),
+              sycl::range<2>(m_team_size, static_cast<size_t>(m_league_size) *
+                                              final_vector_size),
               sycl::range<2>(m_team_size, final_vector_size)),
           lambda);
     };
@@ -164,10 +166,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         m_league_size(arg_policy.league_size()),
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()) {
-    // FIXME_SYCL optimize
-    if (m_team_size < 0)
+    if (m_team_size < 0) {
       m_team_size =
           m_policy.team_size_recommended(arg_functor, ParallelForTag{});
+      if (m_team_size <= 0)
+        Kokkos::Impl::throw_runtime_exception(
+            "Kokkos::Impl::ParallelFor<SYCL, TeamPolicy> could not find a "
+            "valid execution configuration.");
+    }
 
     m_shmem_begin = (sizeof(double) * (m_team_size + 2));
     m_shmem_size =

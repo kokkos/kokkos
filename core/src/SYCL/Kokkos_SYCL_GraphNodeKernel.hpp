@@ -30,6 +30,30 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename Functor>
+struct GraphNodeCaptureImpl<Kokkos::SYCL, Functor> {
+  using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::modifiable>;
+
+  Functor m_functor;
+  std::optional<sycl::ext::oneapi::experimental::node> m_node = std::nullopt;
+
+  void capture(const Kokkos::SYCL& exec, native_graph_t& graph) {
+    auto& sycl_queue = exec.sycl_queue();
+
+    native_graph_t recorded_graph(sycl_queue.get_context(),
+                                  sycl_queue.get_device());
+
+    recorded_graph.begin_recording(sycl_queue);
+    m_functor(exec);
+    recorded_graph.end_recording(sycl_queue);
+
+    m_node = graph.add([&](sycl::handler& cgh) {
+      cgh.ext_oneapi_graph(recorded_graph.finalize());
+    });
+  }
+};
+
 template <typename PolicyType, typename Functor, typename PatternTag,
           typename... Args>
 class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
@@ -87,15 +111,7 @@ class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
       m_graph_node_ptr = nullptr;
 };
 
-struct SYCLGraphNodeAggregateKernel {
-  using graph_kernel = SYCLGraphNodeAggregateKernel;
-
-  // Aggregates don't need a policy, but for the purposes of checking the static
-  // assertions about graph kernels,
-  struct Policy {
-    using is_graph_kernel = std::true_type;
-  };
-};
+struct SYCLGraphNodeAggregate {};
 
 template <typename KernelType,
           typename Tag =

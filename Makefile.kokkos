@@ -1,7 +1,11 @@
 # Default settings common options.
 
+ifneq ($(KOKKOS_USE_DEPRECATED_MAKEFILES), 1)
+  $(error Makefile support is deprecated. Only CMake builds will be supported from Kokkos 5 on. Set KOKKOS_USE_DEPRECATED_MAKEFILES=1 to silence this error.)
+endif
+
 KOKKOS_VERSION_MAJOR = 4
-KOKKOS_VERSION_MINOR = 4
+KOKKOS_VERSION_MINOR = 6
 KOKKOS_VERSION_PATCH = 99
 KOKKOS_VERSION = $(shell echo $(KOKKOS_VERSION_MAJOR)*10000+$(KOKKOS_VERSION_MINOR)*100+$(KOKKOS_VERSION_PATCH) | bc)
 
@@ -13,9 +17,9 @@ KOKKOS_DEVICES ?= "Threads"
 # NVIDIA:   Kepler,Kepler30,Kepler32,Kepler35,Kepler37,Maxwell,Maxwell50,Maxwell52,Maxwell53,Pascal60,Pascal61,Volta70,Volta72,Turing75,Ampere80,Ampere86,Ada89,Hopper90
 # ARM:      ARMv80,ARMv81,ARMv8-ThunderX,ARMv8-TX2,A64FX,ARMv9-Grace
 # IBM:      Power8,Power9
-# AMD-GPUS: AMD_GFX906,AMD_GFX908,AMD_GFX90A,AMD_GFX940,AMD_GFX942,AMD_GFX1030,AMD_GFX1100,AMD_GFX1103
-# AMD-CPUS: AMDAVX,Zen,Zen2,Zen3
-# Intel-GPUs: Intel_Gen,Intel_Gen9,Intel_Gen11,Intel_Gen12LP,Intel_DG1,Intel_XeHP,Intel_PVC
+# AMD-GPUS: AMD_GFX906,AMD_GFX908,AMD_GFX90A,AMD_GFX940,AMD_GFX942,AMD_GFX942_APU,AMD_GFX1030,AMD_GFX1100,AMD_GFX1103
+# AMD-CPUS: AMDAVX,Zen,Zen2,Zen3,Zen4,Zen5
+# Intel-GPUs: Intel_Gen,Intel_Gen9,Intel_Gen11,Intel_Gen12LP,Intel_DG1,Intel_DG2,Intel_XeHP,Intel_PVC
 KOKKOS_ARCH ?= ""
 # Options: yes,no
 KOKKOS_DEBUG ?= "no"
@@ -356,6 +360,10 @@ KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1 := $(call kokkos_has_string,$(KOKKOS_ARCH),In
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1), 0)
   KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_DG1)
 endif
+KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2 := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelDG2)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2), 0)
+  KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2 := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_DG2)
+endif
 KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP := $(call kokkos_has_string,$(KOKKOS_ARCH),IntelXeHP)
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP), 0)
   KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP := $(call kokkos_has_string,$(KOKKOS_ARCH),Intel_XeHP)
@@ -432,11 +440,17 @@ KOKKOS_INTERNAL_USE_ARCH_IBM := $(strip $(shell echo $(KOKKOS_INTERNAL_USE_ARCH_
 
 # AMD based.
 KOKKOS_INTERNAL_USE_ARCH_AMDAVX := $(call kokkos_has_string,$(KOKKOS_ARCH),AMDAVX)
+KOKKOS_INTERNAL_USE_ARCH_ZEN5 := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen5)
+KOKKOS_INTERNAL_USE_ARCH_ZEN4 := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen4)
 KOKKOS_INTERNAL_USE_ARCH_ZEN3 := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen3)
 KOKKOS_INTERNAL_USE_ARCH_ZEN2 := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen2)
-ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN3), 0)
-  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN2), 0)
-    KOKKOS_INTERNAL_USE_ARCH_ZEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN5), 0)
+  ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN4), 0)
+    ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN3), 0)
+      ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN2), 0)
+        KOKKOS_INTERNAL_USE_ARCH_ZEN := $(call kokkos_has_string,$(KOKKOS_ARCH),Zen)
+      endif
+    endif
   endif
 endif
 
@@ -453,7 +467,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A), 0)
   KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A := $(call kokkos_has_string,$(KOKKOS_ARCH),VEGA90A)
 endif
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940 := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX940)
-KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942 := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX942)
+KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942_APU := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX942_APU)
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942_APU), 0)
+  KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942 := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX942)
+endif
 KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030 := $(call kokkos_has_string,$(KOKKOS_ARCH),AMD_GFX1030)
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030), 0)
   KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030 := $(call kokkos_has_string,$(KOKKOS_ARCH),NAVI1030)
@@ -468,6 +485,7 @@ KOKKOS_INTERNAL_USE_ARCH_AMD := $(shell expr $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX9
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A)  \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940)  \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942) \
+                                              + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942_APU) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1100) \
                                               + $(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1103))
@@ -845,6 +863,32 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN3), 1)
   endif
 endif
 
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN4), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_ZEN4")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX512XEON")
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+    KOKKOS_CXXFLAGS += -xCORE-AVX512
+    KOKKOS_LDFLAGS += -xCORE-AVX512
+  else
+    KOKKOS_CXXFLAGS += -march=znver4 -mtune=znver4
+    KOKKOS_LDFLAGS += -march=znver4 -mtune=znver4
+  endif
+endif
+
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ZEN5), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_ZEN5")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AVX512XEON")
+
+  ifeq ($(KOKKOS_INTERNAL_COMPILER_INTEL), 1)
+    KOKKOS_CXXFLAGS += -xCORE-AVX512
+    KOKKOS_LDFLAGS += -xCORE-AVX512
+  else
+    KOKKOS_CXXFLAGS += -march=znver5 -mtune=znver5
+    KOKKOS_LDFLAGS += -march=znver5 -mtune=znver5
+  endif
+endif
+
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_ARMV8_THUNDERX), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV80")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_ARMV8_THUNDERX")
@@ -1173,42 +1217,47 @@ endif
 # Figure out the architecture flag for ROCm.
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX906), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX906")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx906\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx906
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX908), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX908")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx908\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx908
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX90A")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx90A\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx90a
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX940")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx940\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx940
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX942")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx942\"")
+  KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx942
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX942_APU), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX942_APU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx942\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx942
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1030), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1030")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1030\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1030
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1100), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1100")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1100\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1100
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX1103), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX1103")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx1103\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx1103
 endif
 
@@ -1277,6 +1326,11 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG1), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_DG1")
   KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device dg1"
+endif
+ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_DG2), 1)
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_DG2")
+  KOKKOS_INTERNAL_INTEL_ARCH_FLAG := -f${KOKKOS_INTERNAL_LC_BACKEND}-targets=spir64_gen -X${KOKKOS_INTERNAL_LC_BACKEND}-target-backend "-device dg2"
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_INTEL_XEHP), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_INTEL_GPU")
@@ -1623,6 +1677,12 @@ KokkosCore_config.h:
 $(DESUL_CONFIG_HEADER):
 
 KOKKOS_CPP_DEPENDS := $(DESUL_CONFIG_HEADER) KokkosCore_config.h $(KOKKOS_HEADERS)
+
+# Tasking is deprecated
+ifeq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+  TMP_KOKKOS_SRC := $(KOKKOS_SRC)
+  KOKKOS_SRC = $(patsubst %Task.cpp,, $(TMP_KOKKOS_SRC))
+endif
 
 KOKKOS_OBJ = $(KOKKOS_SRC:.cpp=.o)
 KOKKOS_OBJ_LINK = $(notdir $(KOKKOS_OBJ))

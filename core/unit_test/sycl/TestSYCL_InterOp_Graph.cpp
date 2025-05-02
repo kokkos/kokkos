@@ -14,15 +14,19 @@
 //
 //@HEADER
 
-#include <filesystem>
-#include <fstream>
-#include <regex>
-
 #include <TestSYCL_Category.hpp>
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
 
 #include <gtest/gtest.h>
+
+#include <fstream>
+#include <regex>
+
+#if !(defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9) && \
+    !(defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 110000)
+#include <filesystem>
+#endif
 
 namespace {
 
@@ -80,6 +84,15 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
   ASSERT_EQ(graph.native_graph().get_nodes().size(), 2u);
 
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
+  GTEST_SKIP()
+      << "The GNU C++ Library (libstdc++) versions less than 9.1 "
+         "require linking with `-lstdc++fs` when using std::filesystem";
+#elif defined(_LIBCPP_VERSION) && _LIBCPP_VERSION < 110000
+  GTEST_SKIP()
+      << "The LLVM C++ Standard Library (libc++) versions less than "
+         "11 require linking with `-lc++fs` when using std::filesystem";
+#else
   const auto dot = std::filesystem::temp_directory_path() / "sycl_graph.dot";
 
   graph.native_graph().print_graph(dot, true);
@@ -99,6 +112,35 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
   ASSERT_TRUE(std::regex_search(buffer.str(), std::regex(expected)))
       << "Could not find expected signature regex " << std::quoted(expected)
       << " in " << dot;
+#endif
+}
+
+// Build a Kokkos::Graph from an existing SYCL command graph.
+TEST(TEST_CATEGORY, graph_construct_from_native) {
+  using graph_impl_t   = Kokkos::Impl::GraphImpl<Kokkos::SYCL>;
+  using native_graph_t = typename graph_impl_t::native_graph_t;
+
+  using view_t = Kokkos::View<int, Kokkos::SYCLSharedUSMSpace>;
+
+  const Kokkos::SYCL exec{};
+
+  native_graph_t native_graph(exec.sycl_queue().get_context(),
+                              exec.sycl_queue().get_device());
+
+  auto graph_from_native = Kokkos::Experimental::create_graph_from_native(
+      exec, std::move(native_graph));
+
+  auto root = Kokkos::Impl::GraphAccess::create_root_ref(graph_from_native);
+
+  const view_t data(Kokkos::view_alloc(exec, "witness"));
+
+  root.then_parallel_for(1, Increment<view_t>{data});
+
+  graph_from_native.submit(exec);
+
+  exec.fence();
+
+  ASSERT_EQ(data(), 1);
 }
 
 }  // namespace

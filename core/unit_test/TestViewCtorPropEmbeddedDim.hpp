@@ -44,7 +44,7 @@ struct TestViewCtorProp_EmbeddedDim {
     void operator()(const int i) const { v(i) = i; }
   };
 
-  static void test_vcpt(const int N0, const int N1) {
+  static void test_vcpt(const size_t N0, const size_t N1) {
     // Create views to test
     {
       using VIT = typename TestViewCtorProp_EmbeddedDim::ViewIntType;

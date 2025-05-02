@@ -338,7 +338,7 @@ class MultidimensionalSparseTuningProblem {
   MultidimensionalSparseTuningProblem(StoredProblemSpace space,
                                       const std::vector<std::string>& names)
       : m_space(std::move(space)), m_variable_names(names) {
-    assert(names.size() == space_dimensionality);
+    KOKKOS_ASSERT(names.size() == space_dimensionality);
     for (unsigned long x = 0; x < names.size(); ++x) {
       VariableInfo info;
       info.type = Kokkos::Tools::Experimental::ValueType::kokkos_value_double;
@@ -395,6 +395,10 @@ struct ExtendableTunerMixin {
     const auto& sub_tuner = static_cast<const Tuner*>(this)->get_tuner();
     return sub_tuner.get_point(coordinates...);
   }
+
+ private:
+  ExtendableTunerMixin() = default;
+  friend Tuner;
 };
 
 template <size_t MaxDimensionSize = 100, template <class...> class Container,

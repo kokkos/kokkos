@@ -651,6 +651,9 @@ struct functor_vec_scan_ret_val {
         },
         return_val);
 
+    // Suppressing diagnostic and not casting since that test is being
+    // instantantiated with user-defined types such as array_reduce
+    // NOLINTNEXTLINE(bugprone-integer-division)
     Scalar sum_ref = ((upper_bound - 1) * (upper_bound)) / 2;
 
     if (flag() == 0 && return_val != sum_ref) {
@@ -808,7 +811,7 @@ class TestTripleNestedReduce {
 
 #ifdef KOKKOS_ENABLE_HPX
     team_size = 1;
-    if (!std::is_same<execution_space, Kokkos::Experimental::HPX>::value) {
+    if (!std::is_same_v<execution_space, Kokkos::Experimental::HPX>) {
       team_size = 1;
     }
 #endif
@@ -981,8 +984,9 @@ struct checkScan {
 
     Kokkos::View<value_type[n], Kokkos::HostSpace> expected("expected");
     {
+      typename Reducer::result_view_type result("result");
+      Reducer reducer(result);
       value_type identity;
-      Reducer reducer = {identity};
       reducer.init(identity);
 
       for (int i = 0; i < expected.extent_int(0); ++i) {
@@ -1024,16 +1028,16 @@ TEST(TEST_CATEGORY, triple_nested_parallelism) {
 // GPU) See https://github.com/kokkos/kokkos/issues/1513
 // For Intel GPUs, the requested workgroup size is just too large here.
 #if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_CUDA)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value)
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>)
 #elif defined(KOKKOS_ENABLE_SYCL)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
 #endif
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 32);
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 32, 16);
   }
 #if defined(KOKKOS_ENABLE_SYCL)
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::SYCL>::value)
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
 #endif
   {
     TestTripleNestedReduce<double, TEST_EXECSPACE>(8192, 2048, 16, 33);

@@ -30,6 +30,27 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename Functor>
+struct GraphNodeCaptureImpl<Kokkos::HIP, Functor> {
+  Functor m_functor;
+  hipGraphNode_t m_node = nullptr;
+
+  void capture(const Kokkos::HIP& exec, hipGraph_t graph) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipStreamBeginCapture(exec.hip_stream(), hipStreamCaptureModeGlobal));
+
+    m_functor(exec);
+
+    hipGraph_t captured_subgraph(nullptr);
+
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipStreamEndCapture(exec.hip_stream(), &captured_subgraph));
+
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphAddChildGraphNode(&m_node, graph, nullptr,
+                                                        0, captured_subgraph));
+  }
+};
+
 template <typename PolicyType, typename Functor, typename PatternTag,
           typename... Args>
 class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
@@ -93,15 +114,7 @@ class GraphNodeKernelImpl<Kokkos::HIP, PolicyType, Functor, PatternTag, Args...>
   std::string label;
 };
 
-struct HIPGraphNodeAggregateKernel {
-  using graph_kernel = HIPGraphNodeAggregateKernel;
-
-  // Aggregates don't need a policy, but for the purposes of checking the static
-  // assertions about graph kernels,
-  struct Policy {
-    using is_graph_kernel = std::true_type;
-  };
-};
+struct HIPGraphNodeAggregate {};
 
 template <typename KernelType,
           typename Tag =

@@ -18,6 +18,11 @@
 #define KOKKOS_IMPL_TASKQUEUECOMMON_HPP
 
 #include <Kokkos_Macros.hpp>
+
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#error "The tasking framework is deprecated"
+#endif
+
 #if defined(KOKKOS_ENABLE_TASKDAG)
 
 #include <Kokkos_TaskScheduler_fwd.hpp>
@@ -53,7 +58,6 @@ class TaskQueueCommonMixin {
   KOKKOS_INLINE_FUNCTION
   Derived& _self() { return *static_cast<Derived*>(this); }
 
- public:
   //----------------------------------------------------------------------------
   // <editor-fold desc="Constructors, destructor, and assignment"> {{{2
 
@@ -62,7 +66,9 @@ class TaskQueueCommonMixin {
     // TODO @tasking @memory_order DSH figure out if I need this store to be
     // atomic
   }
+  friend Derived;
 
+ public:
   ~TaskQueueCommonMixin() {
     KOKKOS_EXPECTS((Kokkos::memory_fence(), m_ready_count < 1));
     KOKKOS_EXPECTS(m_ready_count == 0);
@@ -302,9 +308,8 @@ class TaskQueueCommonMixin {
     using task_scheduling_info_type =
         typename Derived::task_scheduling_info_type;
     using team_scheduler_info_type = typename Derived::team_scheduler_info_type;
-    static_assert(
-        std::is_same<TeamSchedulerInfo, team_scheduler_info_type>::value,
-        "SchedulingInfo type mismatch!");
+    static_assert(std::is_same_v<TeamSchedulerInfo, team_scheduler_info_type>,
+                  "SchedulingInfo type mismatch!");
 
     bool incomplete_dependence_found = false;
 

@@ -30,6 +30,8 @@ LINK ?= $(CXX)
 LDFLAGS ?=
 override LDFLAGS += -lpthread
 
+KOKKOS_USE_DEPRECATED_MAKEFILES=1
+
 include $(KOKKOS_PATH)/Makefile.kokkos
 
 KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/core/unit_test -I${KOKKOS_PATH}/core/unit_test/category_files
@@ -62,7 +64,7 @@ else
    STACK_TRACE_TERMINATE_FILTER :=
 endif
 
-TESTS = AtomicOperations_int AtomicOperations_unsignedint AtomicOperations_longint AtomicOperations_unsignedlongint AtomicOperations_longlongint AtomicOperations_double AtomicOperations_float AtomicOperations_complexdouble AtomicOperations_complexfloat AtomicViews Atomics BlockSizeDeduction Concepts Complex Crs DeepCopyAlignment FunctorAnalysis Init LocalDeepCopy MDRange_a MDRange_b MDRange_c MDRange_d MDRange_e MDRange_f Other ParallelScanRangePolicy RangePolicy RangePolicyRequire Reductions Reducers_a Reducers_b Reducers_c Reducers_d Reducers_e Reductions_DeviceView SharedAlloc TeamBasic TeamReductionScan TeamScratch TeamTeamSize TeamVectorRange UniqueToken ViewAPI_a ViewAPI_b ViewAPI_c ViewAPI_d ViewAPI_e ViewCopy_a ViewCopy_b ViewCopy_c ViewLayoutStrideAssignment ViewMapping_a ViewMapping_b ViewMapping_subview ViewOfClass WorkGraph View_64bit ViewResize
+TESTS = AtomicOperations_int AtomicOperations_unsignedint AtomicOperations_longint AtomicOperations_unsignedlongint AtomicOperations_longlongint AtomicOperations_double AtomicOperations_float AtomicOperations_complexdouble AtomicOperations_complexfloat AtomicViews Atomics BlockSizeDeduction Concepts Complex Crs DeepCopyAlignment FunctorAnalysis  LocalDeepCopy MDRange_a MDRange_b MDRange_c MDRange_d MDRange_e MDRange_f Other ParallelScanRangePolicy RangePolicy RangePolicyRequire Reductions Reducers_a Reducers_b Reducers_c Reducers_d Reducers_e Reductions_DeviceView SharedAlloc TeamBasic TeamReductionScan TeamScratch TeamTeamSize TeamVectorRange UniqueToken ViewAPI_a ViewAPI_b ViewAPI_c ViewAPI_d ViewAPI_e ViewCopy_a ViewCopy_b ViewCopy_c ViewLayoutStrideAssignment ViewMapping_a ViewMapping_b ViewMapping_subview ViewOfClass WorkGraph View_64bit ViewResize
 
 tmp := $(foreach device, $(KOKKOS_DEVICELIST), \
   tmp2 := $(foreach test, $(TESTS), \
@@ -107,7 +109,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     )
 
     OBJ_CUDA = UnitTestMainInit.o gtest-all.o
-    OBJ_CUDA += TestCuda_Init.o
     OBJ_CUDA += TestCuda_SharedAlloc.o TestCudaUVM_SharedAlloc.o TestCudaHostPinned_SharedAlloc.o
     OBJ_CUDA += TestCuda_RangePolicy.o TestCuda_RangePolicyRequire.o
     OBJ_CUDA += TestCuda_ViewAPI_a.o TestCuda_ViewAPI_b.o TestCuda_ViewAPI_c.o TestCuda_ViewAPI_d.o TestCuda_ViewAPI_e.o TestCuda_ViewCopy_a.o TestCuda_ViewCopy_b.o TestCuda_ViewCopy_c.o
@@ -141,7 +142,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
     OBJ_CUDA += TestCuda_Other.o
     OBJ_CUDA += TestCuda_MDRange_a.o TestCuda_MDRange_b.o TestCuda_MDRange_c.o TestCuda_MDRange_d.o TestCuda_MDRange_e.o
     OBJ_CUDA += TestCuda_Crs.o
-    OBJ_CUDA += TestCuda_Task.o TestCuda_WorkGraph.o
+    ifneq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+      OBJ_CUDA += TestCuda_Task.o
+    endif
+    OBJ_CUDA += TestCuda_WorkGraph.o
     OBJ_CUDA += TestCuda_Spaces.o
     OBJ_CUDA += TestCuda_UniqueToken.o
     OBJ_CUDA += TestCuda_LocalDeepCopy.o
@@ -157,7 +161,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
     OBJ_THREADS = UnitTestMainInit.o gtest-all.o
-    OBJ_THREADS += TestThreads_Init.o
     OBJ_THREADS += TestThreads_SharedAlloc.o
     OBJ_THREADS += TestThreads_RangePolicy.o TestThreads_RangePolicyRequire.o
     OBJ_THREADS += TestThreads_View_64bit.o
@@ -193,7 +196,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
     OBJ_OPENMP = UnitTestMainInit.o gtest-all.o
-    OBJ_OPENMP += TestOpenMP_Init.o
     OBJ_OPENMP += TestOpenMP_SharedAlloc.o
     OBJ_OPENMP += TestOpenMP_RangePolicy.o TestOpenMP_RangePolicyRequire.o
     OBJ_OPENMP += TestOpenMP_View_64bit.o
@@ -221,7 +223,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
     OBJ_OPENMP += TestOpenMP_Other.o
     OBJ_OPENMP += TestOpenMP_MDRange_a.o TestOpenMP_MDRange_b.o TestOpenMP_MDRange_c.o TestOpenMP_MDRange_d.o TestOpenMP_MDRange_e.o
     OBJ_OPENMP += TestOpenMP_Crs.o
-    OBJ_OPENMP += TestOpenMP_Task.o TestOpenMP_WorkGraph.o
+    ifneq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+      OBJ_OPENMP += TestOpenMP_Task.o
+    endif
+    OBJ_OPENMP += TestOpenMP_WorkGraph.o
     OBJ_OPENMP += TestOpenMP_UniqueToken.o
     OBJ_OPENMP += TestOpenMP_LocalDeepCopy.o
 
@@ -233,7 +238,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     OBJ_OPENMPTARGET = UnitTestMainInit.o gtest-all.o
-    OBJ_OPENMPTARGET += TestOpenMPTarget_Init.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_SharedAlloc.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_RangePolicy.o
     OBJ_OPENMPTARGET += TestOpenMPTarget_ViewAPI_a.o TestOpenMPTarget_ViewAPI_b.o TestOpenMPTarget_ViewAPI_c.o TestOpenMPTarget_ViewAPI_d.o  #Some commented out code
@@ -265,7 +269,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMPTARGET), 1)
     #OBJ_OPENMPTARGET += TestOpenMPTarget_TeamReductionScan.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_Other.o
     #OBJ_OPENMPTARGET += TestOpenMPTarget_MDRange_a.o TestOpenMPTarget_MDRange_b.o TestOpenMPTarget_MDRange_c.o TestOpenMPTarget_MDRange_d.o TestOpenMPTarget_MDRange_d.e
-    #OBJ_OPENMPTARGET += TestOpenMPTarget_Task.o
 
     TARGETS += KokkosCore_UnitTest_OpenMPTarget
 
@@ -284,7 +287,6 @@ ifeq ($(KOKKOS_INTERNAL_USE_HIP), 1)
 	)
 
 	OBJ_HIP = UnitTestMainInit.o gtest-all.o
-	OBJ_HIP += TestHIP_Init.o
 	OBJ_HIP += TestHIP_Reducers_a.o TestHIP_Reducers_b.o TestHIP_Reducers_c.o TestHIP_Reducers_d.o TestHIP_Reducers_e.o
 	OBJ_HIP += TestHIP_Reductions.o
 	OBJ_HIP += TestHIP_MDRange_a.o TestHIP_MDRange_b.o TestHIP_MDRange_c.o TestHIP_MDRange_d.o TestHIP_MDRange_e.o
@@ -302,7 +304,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX = UnitTestMainInit.o gtest-all.o
-	OBJ_HPX += TestHPX_Init.o
 	OBJ_HPX += TestHPX_SharedAlloc.o
 	OBJ_HPX += TestHPX_RangePolicy.o TestHPX_RangePolicyRequire.o
 	OBJ_HPX += TestHPX_View_64bit.o
@@ -330,7 +331,9 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX += TestHPX_Other.o
 	OBJ_HPX += TestHPX_MDRange_a.o TestHPX_MDRange_b.o TestHPX_MDRange_c.o TestHPX_MDRange_d.o TestHPX_MDRange_e.o
 	OBJ_HPX += TestHPX_Crs.o
-	OBJ_HPX += TestHPX_Task.o
+	ifneq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+	  OBJ_HPX += TestHPX_Task.o
+	endif
 	OBJ_HPX += TestHPX_WorkGraph.o
 	OBJ_HPX += TestHPX_UniqueToken.o
 
@@ -342,7 +345,6 @@ endif
 
 ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
     OBJ_SERIAL = UnitTestMainInit.o gtest-all.o
-    OBJ_SERIAL += TestSerial_Init.o
     OBJ_SERIAL += TestSerial_SharedAlloc.o
     OBJ_SERIAL += TestSerial_RangePolicy.o TestSerial_RangePolicyRequire.o
     OBJ_SERIAL += TestSerial_View_64bit.o
@@ -373,7 +375,10 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
         OBJ_SERIAL += TestSerial_MDRange_a.o TestSerial_MDRange_b.o TestSerial_MDRange_c.o TestSerial_MDRange_d.o TestSerial_MDRange_e.o
     endif
     OBJ_SERIAL += TestSerial_Crs.o
-    OBJ_SERIAL += TestSerial_Task.o TestSerial_WorkGraph.o
+    ifneq ($(KOKKOS_INTERNAL_DISABLE_DEPRECATED_CODE), 1)
+      OBJ_SERIAL += TestSerial_Task.o
+    endif
+    OBJ_SERIAL += TestSerial_WorkGraph.o
     OBJ_SERIAL += TestSerial_LocalDeepCopy.o
 
     TARGETS += KokkosCore_UnitTest_Serial

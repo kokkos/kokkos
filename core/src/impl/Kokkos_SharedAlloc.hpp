@@ -121,7 +121,7 @@ class SharedAllocationRecord<void, void> {
  public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
 
-#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
+#if defined(__EDG__)
 #pragma push
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
@@ -129,7 +129,7 @@ class SharedAllocationRecord<void, void> {
     KOKKOS_IF_ON_HOST(return t_tracking_enabled;)
     KOKKOS_IF_ON_DEVICE(return 0;)
   }
-#if defined(__EDG__) && !defined(KOKKOS_COMPILER_INTEL)
+#if defined(__EDG__)
 #pragma pop
 #endif
 
@@ -261,15 +261,43 @@ class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
   static void* allocate_tracked(MemorySpace const& arg_space,
                                 std::string const& arg_alloc_label,
                                 size_t arg_alloc_size);
-  /**\brief  Reallocate tracked memory in the space */
-  static void deallocate_tracked(void* arg_alloc_ptr);
   /**\brief  Deallocate tracked memory in the space */
+  static void deallocate_tracked(void* arg_alloc_ptr);
+  /**\brief  Reallocate tracked memory in the space
+   * \note The ExecutionSpace template parameter is used to force
+   * templatization of the method to delay its definition. Otherwise, the
+   * method would use an execution space which is not complete yet.
+   */
+  template <class ExecutionSpace = typename MemorySpace::execution_space>
   static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
   static auto get_record(void* alloc_ptr) -> derived_t*;
   std::string get_label() const override;
   static void print_records(std::ostream& s, MemorySpace const&,
                             bool detail = false);
 };
+
+/**
+ * \note This method is implemented here to prevent circular dependencies.
+ */
+template <class MemorySpace>
+template <class ExecutionSpace>
+void* SharedAllocationRecordCommon<MemorySpace>::reallocate_tracked(
+    void* arg_alloc_ptr, size_t arg_alloc_size) {
+  derived_t* const r_old = derived_t::get_record(arg_alloc_ptr);
+  derived_t* const r_new =
+      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
+
+  Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
+      ExecutionSpace{}, r_new->data(), r_old->data(),
+      std::min(r_old->size(), r_new->size()));
+  Kokkos::fence(std::string("SharedAllocationRecord<") + MemorySpace::name() +
+                ", void>::reallocate_tracked(): fence after copying data");
+
+  record_base_t::increment(r_new);
+  record_base_t::decrement(r_old);
+
+  return r_new->data();
+}
 
 template <class MemorySpace>
 class HostInaccessibleSharedAllocationRecordCommon
@@ -322,16 +350,51 @@ class HostInaccessibleSharedAllocationRecordCommon
   static void* allocate_tracked(MemorySpace const& arg_space,
                                 std::string const& arg_alloc_label,
                                 size_t arg_alloc_size);
-  /**\brief  Reallocate tracked memory in the space */
-  static void deallocate_tracked(void* arg_alloc_ptr);
   /**\brief  Deallocate tracked memory in the space */
+  static void deallocate_tracked(void* arg_alloc_ptr);
+  /**\brief  Reallocate tracked memory in the space
+   * \note The ExecutionSpace template parameter is used to force
+   * templatization of the method to delay its definition. Otherwise, the
+   * method would use an execution space which is not complete yet.
+   */
+  template <class ExecutionSpace = typename MemorySpace::execution_space>
   static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
 
+  /**
+   * \note The ExecutionSpace template parameter is used to force
+   * templatization of the method to delay its definition. Otherwise, the
+   * method would use an execution space which is not complete yet.
+   */
+  template <class ExecutionSpace = Kokkos::DefaultHostExecutionSpace>
   static void print_records(std::ostream& s, MemorySpace const&,
                             bool detail = false);
   static auto get_record(void* alloc_ptr) -> derived_t*;
   std::string get_label() const override;
 };
+
+/**
+ * \note This method is implemented here to prevent circular dependencies.
+ */
+template <class MemorySpace>
+template <class ExecutionSpace>
+void* HostInaccessibleSharedAllocationRecordCommon<
+    MemorySpace>::reallocate_tracked(void* arg_alloc_ptr,
+                                     size_t arg_alloc_size) {
+  derived_t* const r_old = derived_t::get_record(arg_alloc_ptr);
+  derived_t* const r_new =
+      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
+
+  Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
+      ExecutionSpace{}, r_new->data(), r_old->data(),
+      std::min(r_old->size(), r_new->size()));
+  Kokkos::fence(std::string("SharedAllocationRecord<") + MemorySpace::name() +
+                ", void>::reallocate_tracked(): fence after copying data");
+
+  record_base_t::increment(r_new);
+  record_base_t::decrement(r_old);
+
+  return r_new->data();
+}
 
 #ifdef KOKKOS_ENABLE_DEBUG
 template <class MemorySpace>
@@ -556,6 +619,7 @@ union SharedAllocationTracker {
 
   KOKKOS_FORCEINLINE_FUNCTION
   SharedAllocationTracker& operator=(SharedAllocationTracker&& rhs) {
+    if (&rhs == this) return *this;
     auto swap_tmp     = m_record_bits;
     m_record_bits     = rhs.m_record_bits;
     rhs.m_record_bits = swap_tmp;
@@ -579,6 +643,7 @@ union SharedAllocationTracker {
         KOKKOS_FORCEINLINE_FUNCTION SharedAllocationTracker
         &
         operator=(const SharedAllocationTracker& rhs) {
+    if (&rhs == this) return *this;
     // If this is tracking then must decrement
     KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT
     m_record_bits = KOKKOS_IMPL_SHARED_ALLOCATION_CARRY_RECORD_BITS(rhs, true);
@@ -658,25 +723,12 @@ struct SharedAllocationDisableTrackingGuard {
   // clang-format on
 };
 
-// Intel classic compiler screwed up the reference counting here
-// in the BasicView test. Apparently the code simplification in
-// BasicView over View, let it think it can optimize stuff away
-// and it ends up not setting the "do-not-deref" flag
-// because it skips some copy ctors.
-// I tried a lot of stuff to no avail (don't move, make an explicit
-// volatile copy first etc.), only reducing opt-level fixed it.
-#ifdef KOKKOS_COMPILER_INTEL
-#pragma optimize("", off)
-#endif
 template <class FunctorType, class... Args>
 inline FunctorType construct_with_shared_allocation_tracking_disabled(
     Args&&... args) {
   [[maybe_unused]] auto guard = SharedAllocationDisableTrackingGuard{};
   return {std::forward<Args>(args)...};
 }
-#ifdef KOKKOS_COMPILER_INTEL
-#pragma optimize("", on)
-#endif
 } /* namespace Impl */
 } /* namespace Kokkos */
 #endif

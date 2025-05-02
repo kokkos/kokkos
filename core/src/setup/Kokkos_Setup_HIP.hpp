@@ -19,6 +19,12 @@
 
 #if defined(KOKKOS_ENABLE_HIP)
 
+#if defined(KOKKOS_ARCH_AMD_GFX942) && defined(KOKKOS_ARCH_AMD_GFX942_APU)
+static_assert(false,
+              "Kokkos detected both `KOKKOS_ARCH_AMD_GFX942` and "
+              "`KOKKOS_ARCH_AMD_GFX942_APU` which is not allowed.");
+#endif
+
 #define KOKKOS_IMPL_HIP_CLANG_WORKAROUND
 
 #include <hip/hip_runtime.h>
@@ -46,6 +52,10 @@
 // The implementation of hipGraph in ROCm 5.2 is bugged, so we cannot use it.
 #if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
 #define KOKKOS_IMPL_HIP_NATIVE_GRAPH
+#endif
+
+#ifdef KOKKOS_ARCH_AMD_GFX942_APU
+#define KOKKOS_IMPL_HIP_UNIFIED_MEMORY
 #endif
 
 #endif  // #if defined( KOKKOS_ENABLE_HIP )

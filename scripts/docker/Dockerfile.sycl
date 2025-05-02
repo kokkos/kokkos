@@ -1,5 +1,7 @@
-ARG BASE=nvcr.io/nvidia/cuda:11.7.1-devel-ubuntu22.04@sha256:a3184e4dc6f968da5bba86df3081ff3013f8e3674a9bfce544af8be905d2f17a
+ARG BASE=nvcr.io/nvidia/cuda:12.0.0-devel-ubuntu22.04@sha256:0578d90ce082ed37cdc8daf31d401b5a62594a847e9cf6b5cdf4c2356ac49869
 FROM $BASE
+
+ARG ADDITIONAL_PACKAGES
 
 RUN apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/3bf863cc.pub
 
@@ -11,11 +13,12 @@ RUN apt-get update && apt-get install -y \
         python3 \
         git \
         libomp-dev \
+        ${ADDITIONAL_PACKAGES} \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN KEYDUMP_URL=https://cloud.cees.ornl.gov/download && \
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
     KEYDUMP_FILE=keydump && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
     wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
@@ -38,39 +41,23 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
     rm cmake*
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
-RUN wget https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB && \
-    apt-key add GPG-PUB-KEY-INTEL-SW-PRODUCTS-2023.PUB && \
-    echo "deb https://apt.repos.intel.com/oneapi all main" | tee /etc/apt/sources.list.d/oneAPI.list && \
-    apt-get update -o Dir::Etc::sourcelist="sources.list.d/oneAPI.list" -o APT::Get::List-Cleanup="0" && \
-    apt-get install -y intel-oneapi-compiler-dpcpp-cpp-and-cpp-classic-2023.0.0 && \
+RUN wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRODUCTS.PUB \
+    | gpg --dearmor | tee /usr/share/keyrings/oneapi-archive-keyring.gpg > /dev/null && \
+    echo "deb [signed-by=/usr/share/keyrings/oneapi-archive-keyring.gpg] https://apt.repos.intel.com/oneapi all main" \
+    | tee /etc/apt/sources.list.d/oneAPI.list
+
+RUN apt-get update && apt-get install -y \
+        intel-oneapi-compiler-dpcpp-cpp-2025.0 \
+        curl \
+        && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN wget https://cloud.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
-    echo "3416721faf83e5858e65795231bae47bb51ff91d4e8738613d498674f1636f72  oneapi-for-nvidia-gpus-2023.0.0-linux.sh" | sha256sum --check && \
-    chmod +x oneapi-for-nvidia-gpus-2023.0.0-linux.sh && \
-    ./oneapi-for-nvidia-gpus-2023.0.0-linux.sh -y && \
-    rm oneapi-for-nvidia-gpus-2023.0.0-linux.sh
+RUN curl -LOJ "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2025.0.0&filters[]=12.0&filters[]=linux" && \
+    chmod +x oneapi-for-nvidia-gpus-2025.0.0-cuda-12.0-linux.sh && \
+    ./oneapi-for-nvidia-gpus-2025.0.0-cuda-12.0-linux.sh
 
-ENV ONE_DPL_DIR=/opt/onedpl
-RUN . /opt/intel/oneapi/setvars.sh --include-intel-llvm && \
-    ONE_DPL_VERSION=oneDPL-2022.2.0 && \
-    ONE_DPL_URL=https://github.com/oneapi-src/oneDPL/archive && \
-    ONE_DPL_ARCHIVE=${ONE_DPL_VERSION}-rc1.tar.gz && \
-    SCRATCH_DIR=/scratch && mkdir -p ${SCRATCH_DIR} && cd ${SCRATCH_DIR} && \
-    wget --quiet ${ONE_DPL_URL}/${ONE_DPL_ARCHIVE} && \
-    mkdir onedpl && \
-    tar -xf ${ONE_DPL_ARCHIVE} -C onedpl --strip-components=1 && cd onedpl && \
-    mkdir build && cd build && \
-    cmake -DCMAKE_CXX_COMPILER=icpx -DCMAKE_CXX_FLAGS="-w" -DCMAKE_INSTALL_PREFIX=${ONE_DPL_DIR} -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE -DONEDPL_BACKEND="dpcpp_only" .. && \
-    make -j${NPROCS} install && \
-    rm -rf ${SCRATCH_DIR}
-
-# clang++
-ENV PATH=/opt/intel/oneapi/compiler/latest/linux/bin-llvm/:$PATH
 # sycl-ls, icpx
-ENV PATH=/opt/intel/oneapi/compiler/latest/linux/bin/:$PATH
-# libsycl
-ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/linux/lib:$LD_LIBRARY_PATH
-# libsvml
-ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/linux/compiler/lib/intel64_lin:$LD_LIBRARY_PATH
+ENV PATH=/opt/intel/oneapi/compiler/2025.0/bin/:$PATH
+# libsycl, libsvml
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.0/lib:$LD_LIBRARY_PATH

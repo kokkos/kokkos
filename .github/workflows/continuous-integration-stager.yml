@@ -34,27 +34,17 @@ jobs:
     # default is overwritten
     permissions:
       # required for all workflows
-      security-events: write
-      # only required for workflows in private repositories
-      actions: read
       contents: read
+      security-events: write
     uses: ./.github/workflows/codeql.yml
 
-  windows-cuda:
+  windows:
     needs: [initial-check, clang-format-check, cmake-format-check]
     uses: ./.github/workflows/continuous-integration-windows.yml
 
-  linux-x64:
+  linux:
     needs: [initial-check, clang-format-check, cmake-format-check]
     uses: ./.github/workflows/continuous-integration-linux.yml
-
-  linux-x64-hpx:
-    needs: [initial-check, clang-format-check, cmake-format-check]
-    uses: ./.github/workflows/continuous-integration-linux-hpx.yml
-
-  linux-x86:
-    needs: [initial-check, clang-format-check, cmake-format-check]
-    uses: ./.github/workflows/continuous-integration-linux-32bit.yml
 
   osx-x64:
     needs: [initial-check, clang-format-check, cmake-format-check]

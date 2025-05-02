@@ -57,7 +57,8 @@ class GraphNodeRef {
       "Invalid execution space template parameter given to GraphNodeRef");
 
   static_assert(std::is_same_v<Predecessor, TypeErasedTag> ||
-                    Kokkos::Impl::is_graph_kernel<Kernel>::value,
+                    Kokkos::Impl::is_graph_kernel<Kernel>::value ||
+                    Kokkos::Impl::is_graph_capture<Kernel>::value,
                 "Invalid kernel template parameter given to GraphNodeRef");
 
   static_assert(!Kokkos::Impl::is_more_type_erased<Kernel, Predecessor>::value,
@@ -130,12 +131,8 @@ class GraphNodeRef {
 
   template <class NextKernelDeduced>
   auto _then_kernel(NextKernelDeduced&& arg_kernel) const {
-    // readability note:
-    //   std::remove_cvref_t<NextKernelDeduced> is a specialization of
-    //   Kokkos::Impl::GraphNodeKernelImpl:
-    static_assert(Kokkos::Impl::is_specialization_of<
-                      Kokkos::Impl::remove_cvref_t<NextKernelDeduced>,
-                      Kokkos::Impl::GraphNodeKernelImpl>::value,
+    static_assert(Kokkos::Impl::is_graph_kernel_v<
+                      Kokkos::Impl::remove_cvref_t<NextKernelDeduced>>,
                   "Kokkos internal error");
 
     auto graph_ptr = m_graph_impl.lock();
@@ -158,7 +155,7 @@ class GraphNodeRef {
     // Add the node itself to the backend's graph data structure, now that
     // everything is set up.
     graph_ptr->add_node(rv.m_node_impl);
-    // Add the predecessaor we stored in the constructor above in the backend's
+    // Add the predecessor we stored in the constructor above in the backend's
     // data structure, now that everything is set up.
     graph_ptr->add_predecessor(rv.m_node_impl, *this);
     KOKKOS_ENSURES(bool(rv.m_node_impl))
@@ -228,6 +225,73 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_for"> {{{2
 
+  // TODO We should do better than a p-for (that uses registers, heavier).
+  //      This should "just" launch the function on device with our driver.
+  template <typename Label, typename Functor,
+            typename = std::enable_if_t<std::is_invocable_r_v<
+                void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
+  auto then(Label&& label, const ExecutionSpace& exec,
+            Functor&& functor) const {
+    using next_kernel_t =
+        Kokkos::Impl::GraphNodeThenImpl<ExecutionSpace,
+                                        Kokkos::Impl::remove_cvref_t<Functor>>;
+    return this->_then_kernel(next_kernel_t{std::forward<Label>(label), exec,
+                                            std::forward<Functor>(functor)});
+  }
+
+  template <typename Label, typename Functor,
+            typename = std::enable_if_t<std::is_invocable_r_v<
+                void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
+  auto then(Label&& label, Functor&& functor) const {
+    return this->then(std::forward<Label>(label), ExecutionSpace{},
+                      std::forward<Functor>(functor));
+  }
+
+#if defined(KOKKOS_ENABLE_CUDA) ||                                           \
+    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)) || \
+    (defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH))
+  template <class Functor,
+            typename = std::enable_if_t<std::is_invocable_r_v<
+                void, const Kokkos::Impl::remove_cvref_t<Functor>,
+                const ExecutionSpace&>>>
+#if defined(KOKKOS_ENABLE_CUDA)
+  auto cuda_capture(const ExecutionSpace& exec, Functor&& functor) const {
+    if constexpr (std::is_same_v<ExecutionSpace, Kokkos::Cuda>) {
+#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+  auto hip_capture(const ExecutionSpace& exec, Functor&& functor) const {
+    if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+  auto sycl_capture(const ExecutionSpace& exec, Functor&& functor) const {
+    if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
+#endif
+      using capture_t = Kokkos::Impl::GraphNodeCaptureImpl<
+          ExecutionSpace, Kokkos::Impl::remove_cvref_t<Functor>>;
+      using return_t = GraphNodeRef<ExecutionSpace, capture_t, GraphNodeRef>;
+
+      auto graph_ptr = m_graph_impl.lock();
+      KOKKOS_EXPECTS(bool(graph_ptr))
+
+      auto rv = Kokkos::Impl::GraphAccess::make_graph_node_ref(
+          m_graph_impl,
+          Kokkos::Impl::GraphAccess::make_node_shared_ptr<
+              typename return_t::node_impl_t>(
+              m_node_impl->execution_space_instance(),
+              Kokkos::Impl::_graph_node_capture_ctor_tag{},
+              std::forward<Functor>(functor),
+              Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
+
+      // Add the node itself to the backend's graph data structure, now that
+      // everything is set up.
+      graph_ptr->add_node(exec, rv.m_node_impl);
+      // Add the predecessor we stored in the constructor above in the
+      // backend's data structure, now that everything is set up.
+      graph_ptr->add_predecessor(rv.m_node_impl, *this);
+      KOKKOS_ENSURES(bool(rv.m_node_impl))
+      return rv;
+    }
+  }
+#endif
+
   template <
       class Policy, class Functor,
       std::enable_if_t<
@@ -251,8 +315,7 @@ class GraphNodeRef {
     using policy_t = Kokkos::Impl::remove_cvref_t<Policy>;
     // constraint check: same execution space type (or defaulted, maybe?)
     static_assert(
-        std::is_same<typename policy_t::execution_space,
-                     execution_space>::value,
+        std::is_same_v<typename policy_t::execution_space, execution_space>,
         // TODO @graph make defaulted execution space work
         //|| policy_t::execution_space_is_defaulted,
         "Execution Space mismatch between execution policy and graph");
@@ -304,6 +367,16 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
   // <editor-fold desc="then_parallel_reduce"> {{{2
 
+  // Equivalent to std::get<I>(std::tuple) but callable on the device.
+  template <bool B, class T1, class T2>
+  static KOKKOS_FUNCTION std::conditional_t<B, T1&&, T2&&>
+  impl_forwarding_switch(T1&& v1, T2&& v2) {
+    if constexpr (B)
+      return static_cast<T1&&>(v1);
+    else
+      return static_cast<T2&&>(v2);
+  }
+
   template <
       class Policy, class Functor, class ReturnType,
       std::enable_if_t<
@@ -328,8 +401,7 @@ class GraphNodeRef {
 
     using policy_t = std::remove_cv_t<std::remove_reference_t<Policy>>;
     static_assert(
-        std::is_same<typename policy_t::execution_space,
-                     execution_space>::value,
+        std::is_same_v<typename policy_t::execution_space, execution_space>,
         // TODO @graph make defaulted execution space work
         // || policy_t::execution_space_is_defaulted,
         "Execution Space mismatch between execution policy and graph");
@@ -358,6 +430,23 @@ class GraphNodeRef {
                       Kokkos::is_reducer<return_type_remove_cvref>::value,
                   "Output argument to parallel reduce in a graph must be a "
                   "View or a Reducer");
+
+    if constexpr (Kokkos::is_reducer_v<return_type_remove_cvref>) {
+      static_assert(
+          Kokkos::SpaceAccessibility<
+              ExecutionSpace, typename return_type_remove_cvref::
+                                  result_view_type::memory_space>::accessible,
+          "The reduction target must be accessible by the graph execution "
+          "space.");
+    } else {
+      static_assert(
+          Kokkos::SpaceAccessibility<
+              ExecutionSpace,
+              typename return_type_remove_cvref::memory_space>::accessible,
+          "The reduction target must be accessible by the graph execution "
+          "space.");
+    }
+
     using return_type =
         // Yes, you do really have to do this...
         std::conditional_t<Kokkos::is_reducer<return_type_remove_cvref>::value,
@@ -377,15 +466,18 @@ class GraphNodeRef {
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
 
-    using reducer_selector = Kokkos::Impl::if_c<
-        std::is_same<InvalidType, passed_reducer_type>::value, functor_type,
-        passed_reducer_type>;
+    constexpr bool passed_reducer_type_is_invalid =
+        std::is_same_v<InvalidType, passed_reducer_type>;
+    using TheReducerType =
+        std::conditional_t<passed_reducer_type_is_invalid, functor_type,
+                           passed_reducer_type>;
+
     using analysis = Kokkos::Impl::FunctorAnalysis<
-        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
-        typename reducer_selector::type,
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy, TheReducerType,
         typename return_value_adapter::value_type>;
     typename analysis::Reducer final_reducer(
-        reducer_selector::select(functor, return_value));
+        impl_forwarding_switch<passed_reducer_type_is_invalid>(functor,
+                                                               return_value));
     Kokkos::Impl::CombinedFunctorReducer<functor_type,
                                          typename analysis::Reducer>
         functor_reducer(functor, final_reducer);

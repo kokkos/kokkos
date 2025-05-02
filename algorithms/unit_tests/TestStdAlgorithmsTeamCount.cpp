@@ -94,8 +94,8 @@ void test_A(const bool searched_value_exist, std::size_t numTeams,
 
   // Boundaries choosen so that every drawn number is at least once in the given
   // row
-  const ValueType lowerBound = numCols / 4;
-  const ValueType upperBound = 1 + numCols * 3 / 4;
+  const ValueType lowerBound = static_cast<ValueType>(numCols) / 4;
+  const ValueType upperBound = 1 + static_cast<ValueType>(numCols) * 3 / 4;
   const auto bounds          = make_bounds(lowerBound, upperBound);
 
   auto [dataView, dataViewBeforeOp_h] = create_random_view_and_host_clone(
@@ -111,7 +111,7 @@ void test_A(const bool searched_value_exist, std::size_t numTeams,
 
   using rand_pool =
       Kokkos::Random_XorShift64_Pool<Kokkos::DefaultHostExecutionSpace>;
-  rand_pool pool(lowerBound * upperBound);
+  rand_pool pool(static_cast<uint64_t>(lowerBound) * upperBound);
 
   if (searched_value_exist) {
     Kokkos::View<std::size_t*, Kokkos::DefaultHostExecutionSpace> randomIndices(

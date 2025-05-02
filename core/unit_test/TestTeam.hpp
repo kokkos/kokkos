@@ -32,21 +32,24 @@ struct TestTeamPolicy {
 
   view_type m_flags;
 
-  TestTeamPolicy(const size_t league_size)
-      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"),
-  // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
+  // initialize m_flags first with default view so that the class
+  // is fully initialized when *this is used to figure out the length
+  // for m_flags
+  TestTeamPolicy(const size_t league_size) : m_flags() {
+    m_flags = view_type(
+        Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"),
+    // FIXME_OPENMPTARGET temporary restriction for team size to be at least 32
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-                Kokkos::TeamPolicy<ScheduleType, ExecSpace>(
-                    1, std::is_same<ExecSpace,
-                                    Kokkos::Experimental::OpenMPTarget>::value
-                           ? 32
-                           : 1)
-                    .team_size_max(*this, Kokkos::ParallelReduceTag()),
+        Kokkos::TeamPolicy<ScheduleType, ExecSpace>(
+            1, std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget>
+                   ? 32
+                   : 1)
+            .team_size_max(*this, Kokkos::ParallelReduceTag()),
 #else
-                Kokkos::TeamPolicy<ScheduleType, ExecSpace>(1, 1).team_size_max(
-                    *this, Kokkos::ParallelReduceTag()),
+        Kokkos::TeamPolicy<ScheduleType, ExecSpace>(1, 1).team_size_max(
+            *this, Kokkos::ParallelReduceTag()),
 #endif
-                league_size) {
+        league_size);
   }
 
   struct VerifyInitTag {};
@@ -58,7 +61,7 @@ struct TestTeamPolicy {
 
     m_flags(member.team_rank(), member.league_rank()) = tid;
     static_assert(
-        (std::is_same<typename team_member::execution_space, ExecSpace>::value),
+        (std::is_same_v<typename team_member::execution_space, ExecSpace>),
         "TeamMember::execution_space is not the same as "
         "TeamPolicy<>::execution_space");
   }
@@ -279,7 +282,7 @@ class ReduceTeamFunctor {
     const int thread_size = ind.team_size() * ind.league_size();
     const int chunk       = (nwork + thread_size - 1) / thread_size;
 
-    size_type iwork           = chunk * thread_rank;
+    size_type iwork           = static_cast<size_type>(chunk) * thread_rank;
     const size_type iwork_end = iwork + chunk < nwork ? iwork + chunk : nwork;
 
     for (; iwork < iwork_end; ++iwork) {
@@ -323,7 +326,7 @@ class ArrayReduceTeamFunctor {
     const int thread_size = team.team_size() * team.league_size();
     const int chunk       = (nwork + thread_size - 1) / thread_size;
 
-    size_type iwork           = chunk * thread_rank;
+    size_type iwork           = static_cast<size_type>(chunk) * thread_rank;
     const size_type iwork_end = iwork + chunk < nwork ? iwork + chunk : nwork;
 
     for (; iwork < iwork_end; ++iwork) {
@@ -465,12 +468,13 @@ class ScanTeamFunctor {
   void operator()(const typename policy_type::member_type ind,
                   value_type &error) const {
     if (0 == ind.league_rank() && 0 == ind.team_rank()) {
-      const int64_t thread_count = ind.league_size() * ind.team_size();
-      total()                    = (thread_count * (thread_count + 1)) / 2;
+      const int64_t thread_count =
+          static_cast<int64_t>(ind.league_size()) * ind.team_size();
+      total() = (thread_count * (thread_count + 1)) / 2;
     }
 
     // Team max:
-    int64_t m = (int64_t)(ind.league_rank() + ind.team_rank());
+    int64_t m = static_cast<int64_t>(ind.league_rank()) + ind.team_rank();
     ind.team_reduce(Kokkos::Max<int64_t>(m));
 
     if (m != ind.league_rank() + (ind.team_size() - 1)) {
@@ -481,7 +485,7 @@ class ScanTeamFunctor {
           static_cast<int>(ind.team_rank()),
           static_cast<int>(ind.league_size()),
           static_cast<int>(ind.team_size()),
-          static_cast<long>(ind.league_rank() + (ind.team_size() - 1)),
+          static_cast<long>(ind.league_rank()) + ind.team_size() - 1,
           static_cast<long>(m));
     }
 
@@ -811,7 +815,7 @@ struct ScratchTeamFunctor {
       ind.team_barrier();
 
       for (int i = 0; i < SHARED_TEAM_COUNT; i++) {
-        if (scratch_A[i] != size_t(i + ind.league_rank())) ++update;
+        if (scratch_A[i] != size_t(i) + ind.league_rank()) ++update;
       }
 
       for (int i = 0; i < ind.team_size(); i++) {

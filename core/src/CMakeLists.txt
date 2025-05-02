@@ -49,11 +49,17 @@ append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/impl/*.hpp)
 
 if(KOKKOS_ENABLE_CUDA)
   append_glob(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Cuda/*.cpp)
+  if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4)
+    list(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Cuda/Kokkos_Cuda_Task.cpp)
+  endif()
   append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Cuda/*.hpp)
 endif()
 
 if(KOKKOS_ENABLE_OPENMP)
   append_glob(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/OpenMP/*.cpp)
+  if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4)
+    list(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/OpenMP/Kokkos_OpenMP_Task.cpp)
+  endif()
   append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/OpenMP/*.hpp)
 endif()
 
@@ -79,11 +85,17 @@ endif()
 
 if(KOKKOS_ENABLE_HPX)
   append_glob(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/HPX/*.cpp)
+  if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4)
+    list(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/HPX/Kokkos_HPX_Task.cpp)
+  endif()
   append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/HPX/*.hpp)
 endif()
 
 if(KOKKOS_ENABLE_SERIAL)
   append_glob(KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Serial/*.cpp)
+  if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4)
+    list(REMOVE_ITEM KOKKOS_CORE_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/Serial/Kokkos_Serial_Task.cpp)
+  endif()
   append_glob(KOKKOS_CORE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/Serial/*.hpp)
 endif()
 
@@ -99,6 +111,10 @@ if(NOT desul_FOUND)
     append_glob(KOKKOS_CORE_SRCS ${KOKKOS_SOURCE_DIR}/tpls/desul/src/Lock_Array_HIP.cpp)
   elseif(KOKKOS_ENABLE_SYCL)
     append_glob(KOKKOS_CORE_SRCS ${KOKKOS_SOURCE_DIR}/tpls/desul/src/Lock_Array_SYCL.cpp)
+    # The compiler implicitly generates a file that uses a zero size array for device global variables
+    set_source_files_properties(
+      ${KOKKOS_SOURCE_DIR}/tpls/desul/src/Lock_Array_SYCL.cpp PROPERTIES COMPILE_FLAGS "-Wno-zero-length-array"
+    )
   endif()
   append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/desul/include/desul/*.hpp)
   append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/desul/include/desul/*/*.hpp)

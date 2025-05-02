@@ -96,7 +96,7 @@ set(COMPILE_ONLY_SOURCES
     view/TestExtentsDatatypeConversion.cpp
 )
 
-if(NOT Kokkos_ENABLE_IMPL_MDSPAN)
+if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
 endif()
 
@@ -169,7 +169,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       Graph
       HostSharedPtr
       HostSharedPtrAccessOnDevice
-      Init
       JoinBackwardCompatibility
       LocalDeepCopy
       MathematicalConstants
@@ -285,6 +284,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
       list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewCopy_c)
     endif()
+    # FIXME: we will eventually likely remove ViewHooks entirely, but for now
+    # ViewHooks are not compatible
+    if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+      list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewHooks)
+    endif()
     foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -358,6 +362,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         configure_file(${dir}/dummy.cpp ${file})
         list(APPEND ${Tag}_VIEWSUPPORT ${file})
       endforeach()
+      if(KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
+        list(REMOVE_ITEM ${Tag}_VIEWSUPPORT ${dir}/Test${Tag}_View_BasicView.cpp)
+      endif()
       kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
   endif()
@@ -634,7 +641,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Complex.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ExecutionSpace.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ExecSpacePartitioning.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Init.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalConstants.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalSpecialFunctions.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MinMaxClamp.cpp
@@ -675,8 +681,14 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(Serial_EXTRA_SOURCES serial/TestSerial_Task.cpp)
+  else()
+    set(Serial_EXTRA_SOURCES)
+  endif()
+
   kokkos_add_executable_and_test(
-    CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1} serial/TestSerial_Task.cpp
+    CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1} ${Serial_EXTRA_SOURCES}
   )
   kokkos_add_executable_and_test(CoreUnitTest_Serial2 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES2})
 endif()
@@ -686,7 +698,11 @@ if(Kokkos_ENABLE_THREADS)
 endif()
 
 if(Kokkos_ENABLE_OPENMP)
-  set(OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(OpenMP_EXTRA_SOURCES openmp/TestOpenMP_Task.cpp)
+  else()
+    set(OpenMP_EXTRA_SOURCES)
+  endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_OpenMP SOURCES UnitTestMainInit.cpp ${OpenMP_SOURCES} ${OpenMP_EXTRA_SOURCES}
   )
@@ -694,7 +710,13 @@ if(Kokkos_ENABLE_OPENMP)
 endif()
 
 if(Kokkos_ENABLE_HPX)
-  kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES} hpx/TestHPX_Task.cpp)
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(HPX_EXTRA_SOURCES hpx/TestHPX_Task.cpp)
+  else()
+    set(HPX_EXTRA_SOURCES)
+  endif()
+
+  kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES} ${HPX_EXTRA_SOURCES})
   kokkos_add_executable_and_test(CoreUnitTest_HPXInterOp SOURCES UnitTestMain.cpp hpx/TestHPX_InterOp.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HPX_IndependentInstances
@@ -726,16 +748,32 @@ if(Kokkos_ENABLE_CUDA)
 
   kokkos_add_executable_and_test(CoreUnitTest_Cuda2 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES2})
 
+  if(Kokkos_ENABLE_DEPRECATED_CODE_4)
+    set(Cuda_EXTRA_SOURCES cuda/TestCuda_Task.cpp)
+  else()
+    set(Cuda_EXTRA_SOURCES)
+  endif()
+
   kokkos_add_executable_and_test(
     CoreUnitTest_Cuda3
     SOURCES
     UnitTestMainInit.cpp
-    cuda/TestCuda_Task.cpp
+    ${Cuda_EXTRA_SOURCES}
     cuda/TestCuda_TeamScratchStreams.cpp
     ${Cuda_SOURCES3}
     cuda/TestCuda_Spaces.cpp
     ${Cuda_SOURCES_SHAREDSPACE}
   )
+
+  # This test seeks to make sure that `desul::ensure_cuda_lock_arrays_on_device` is called before a graph submission.
+  # It is in a separate file to ensure that the test takes place in a separate compilation unit, in which this function
+  # has not been called yet by Kokkos::initialize or by a preceding kernel launch.
+  set(file ${CMAKE_CURRENT_BINARY_DIR}/cuda/TestCuda_GraphAtomicLocks.cpp)
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp "#include <TestCuda_Category.hpp>\n"
+                                                        "#include <TestGraphAtomicLocks.hpp>\n"
+  )
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp ${file})
+  kokkos_add_executable_and_test(CoreUnitTest_CudaGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
 
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaTimingBased SOURCES UnitTestMainInit.cpp cuda/TestCuda_DebugSerialExecution.cpp
@@ -756,9 +794,6 @@ if(Kokkos_ENABLE_CUDA)
 endif()
 
 if(Kokkos_ENABLE_HIP)
-  if(Kokkos_ENABLE_IMPL_HIP_UNIFIED_MEMORY)
-    set(HIP_UNIFIED_MEMORY_SOURCES hip/TestHIP_UnifiedMemory_ZeroMemset.cpp)
-  endif()
   kokkos_add_executable_and_test(
     CoreUnitTest_HIP
     SOURCES
@@ -770,16 +805,29 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamScratchStreams.cpp
     hip/TestHIP_AsyncLauncher.cpp
     hip/TestHIP_BlocksizeDeduction.cpp
-    ${HIP_UNIFIED_MEMORY_SOURCES}
+    hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
   )
+
+  set(file ${CMAKE_CURRENT_BINARY_DIR}/hip/TestHIP_GraphAtomicLocks.cpp)
+  file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/hip/dummy.cpp "#include <TestHIP_Category.hpp>\n"
+                                                       "#include <TestGraphAtomicLocks.hpp>\n"
+  )
+  configure_file(${CMAKE_CURRENT_BINARY_DIR}/hip/dummy.cpp ${file})
+  kokkos_add_executable_and_test(CoreUnitTest_HIPGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
+
   kokkos_add_executable_and_test(CoreUnitTest_HIPInterOpInit SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Init.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpStreams SOURCES UnitTestMain.cpp hip/TestHIP_InterOp_Streams.cpp
   )
-
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpGraph SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_Graph.cpp
   )
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5.6)
+    # MultiGPU only works for rocm 5.6+
+    kokkos_add_executable_and_test(
+      CoreUnitTest_HIPInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_StreamsMultiGPU.cpp
+    )
+  endif()
 endif()
 
 if(Kokkos_ENABLE_SYCL)
@@ -798,13 +846,7 @@ if(Kokkos_ENABLE_SYCL)
   kokkos_add_executable_and_test(CoreUnitTest_SYCL2D SOURCES UnitTestMainInit.cpp ${SYCL_SOURCES2D})
 
   kokkos_add_executable_and_test(
-    CoreUnitTest_SYCL3
-    SOURCES
-    UnitTestMainInit.cpp
-    # FIXME_SYCL
-    sycl/TestSYCL_Task.cpp
-    sycl/TestSYCL_TeamScratchStreams.cpp
-    ${SYCL_SOURCES3}
+    CoreUnitTest_SYCL3 SOURCES UnitTestMainInit.cpp sycl/TestSYCL_TeamScratchStreams.cpp ${SYCL_SOURCES3}
     sycl/TestSYCL_Spaces.cpp
   )
 
@@ -829,8 +871,6 @@ endif()
 set(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
     TestCStyleMemoryManagement.cpp
-    TestInitializationSettings.cpp
-    TestParseCmdLineArgsAndEnvVars.cpp
     TestSharedSpace.cpp
     TestSharedHostPinnedSpace.cpp
     TestCompilerMacros.cpp
@@ -897,36 +937,22 @@ endif()
 
 kokkos_add_executable_and_test(CoreUnitTest_Default SOURCES ${DEFAULT_DEVICE_SOURCES})
 
-kokkos_add_executable_and_test(CoreUnitTest_LegionInitialization SOURCES UnitTestMain.cpp TestLegionInitialization.cpp)
-
-kokkos_add_executable_and_test(CoreUnitTest_PushFinalizeHook SOURCES UnitTest_PushFinalizeHook.cpp)
-
-kokkos_add_executable_and_test(CoreUnitTest_ScopeGuard SOURCES UnitTestMain.cpp UnitTest_ScopeGuard.cpp)
+kokkos_add_executable_and_test(
+  CoreUnitTest_InitializeFinalize
+  SOURCES
+  UnitTestMain.cpp
+  TestExecutionEnvironmentNonInitializedOrFinalized.cpp
+  TestInitializationSettings.cpp
+  TestInitializeFinalize.cpp
+  TestLegionInitialization.cpp
+  TestParseCmdLineArgsAndEnvVars.cpp
+  TestPushFinalizeHook.cpp
+  TestScopeGuard.cpp
+)
 
 # This test is intended for development and debugging by putting code
 # into TestDefaultDeviceDevelop.cpp. By default its empty.
 kokkos_add_executable_and_test(CoreUnitTest_Develop SOURCES UnitTestMainInit.cpp default/TestDefaultDeviceDevelop.cpp)
-
-# With MSVC, the terminate handler is called and prints the message but the
-# program does not seem to exit and we get a timeout with ctest.
-if(NOT WIN32)
-  # This test is special, because it passes exactly when it prints the
-  # message "PASSED: I am the custom std::terminate handler.", AND calls
-  # std::terminate.  This means that we can't use
-  # KOKKOS_ADD_EXECUTABLE_AND_TEST.  See GitHub issue #2147.
-  kokkos_add_test_executable(CoreUnitTest_PushFinalizeHookTerminate SOURCES UnitTest_PushFinalizeHook_terminate.cpp)
-  add_test(NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex
-           COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
-  )
-  set_property(
-    TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateRegex PROPERTY PASS_REGULAR_EXPRESSION
-                                                                     "PASSED: I am the custom std::terminate handler."
-  )
-  add_test(NAME Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails
-           COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:Kokkos_CoreUnitTest_PushFinalizeHookTerminate>
-  )
-  set_property(TEST Kokkos_CoreUnitTest_PushFinalizeHookTerminateFails PROPERTY WILL_FAIL TRUE)
-endif()
 
 if(KOKKOS_ENABLE_TUNING)
   kokkos_add_executable_and_test(CoreUnitTest_TuningBuiltins SOURCES tools/TestBuiltinTuners.cpp)

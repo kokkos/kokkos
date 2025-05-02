@@ -89,9 +89,13 @@ class ScratchMemorySpaceBase {
     // This is each thread's start pointer for its allocation
     // Note: for team scratch m_offset is 0, since every
     // thread will get back the same shared pointer
-    PointerType tmp     = m_iter + m_offset * size;
-    uintptr_t increment = size * m_multiplier;
-    uintptr_t capacity  = m_end - m_iter;
+    PointerType tmp           = m_iter + m_offset * size;
+    uintptr_t increment = static_cast<uintptr_t>(size) * m_multiplier;
+
+    // Cast to uintptr_t to avoid problems with pointer arithmetic using SYCL
+    const auto end_iter = reinterpret_cast<uintptr_t>(m_end);
+    auto current_iter = reinterpret_cast<uintptr_t>(m_iter);
+    auto capacity     = end_iter - current_iter;
 
     if (increment > capacity) {
       // Request did overflow: return nullptr and reset m_iter

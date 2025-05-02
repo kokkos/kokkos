@@ -20,6 +20,7 @@
 #include <openacc.h>
 #include <impl/Kokkos_Traits.hpp>
 #include <OpenACC/Kokkos_OpenACC.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 
 //----------------------------------------------------------------------------
@@ -408,9 +409,9 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
   void set_auto_chunk_size() {
     int concurrency = 2048 * default_team_size;
 
-    if (m_chunk_size > 0) {
-      if (!Impl::is_integral_power_of_two(m_chunk_size))
-        Kokkos::abort("TeamPolicy blocking granularity must be power of two");
+    if (m_chunk_size > 0 &&
+        !Kokkos::has_single_bit(static_cast<unsigned>(m_chunk_size))) {
+      Kokkos::abort("TeamPolicy blocking granularity must be power of two");
     }
 
     int new_chunk_size = 1;
