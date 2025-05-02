@@ -229,24 +229,61 @@ struct AtomicAccessorRelaxed {
 
   KOKKOS_FUNCTION
   reference access(
-#ifndef KOKKOS_ENABLE_OPENACC
       const data_handle_type& p,
-#else
-      // FIXME OpenACC: illegal address when passing by reference
-      data_handle_type p,
-#endif
+      size_t i) const noexcept {
+    return *reference(p[i]);
+  }
+
+  KOKKOS_FUNCTION
+  data_handle_type offset(
+      const data_handle_type& p,
+      size_t i) const noexcept {
+    return p + i;
+  }
+};
+
+template <class ElementType, class MemorySpace>
+struct SYCLScratchMemoryAccessor {
+  using element_type = ElementType;
+  using reference = ElementType&;
+  using data_handle_type = std::conditional_t<
+      std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0>,
+      sycl::local_ptr<ElementType>, Impl::sycl_device_ptr<ElementType>>;
+  using offset_policy    = SYCLScratchMemoryAccessor;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  SYCLScratchMemoryAccessor() = default;
+
+  // Conversions from non-const to const element type
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr SYCLScratchMemoryAccessor(
+      Kokkos::default_accessor<OtherElementType>) noexcept {}
+
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr SYCLScratchMemoryAccessor(
+      SYCLScratchMemoryAccessor<OtherElementType, MemoryScope>) noexcept {}
+
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                element_type (*)[], OtherElementType (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION explicit operator default_accessor<OtherElementType>() const {
+    return default_accessor<OtherElementType>{};
+  }
+
+  KOKKOS_FUNCTION
+  reference access(
+      const data_handle_type& p,
       size_t i) const noexcept {
     return reference(p[i]);
   }
 
   KOKKOS_FUNCTION
   data_handle_type offset(
-#ifndef KOKKOS_ENABLE_OPENACC
       const data_handle_type& p,
-#else
-      // FIXME OpenACC: illegal address when passing by reference
-      data_handle_type p,
-#endif
       size_t i) const noexcept {
     return p + i;
   }
@@ -423,24 +460,14 @@ class ReferenceCountedAccessor {
 
   KOKKOS_FUNCTION
   constexpr reference access(
-#ifndef KOKKOS_ENABLE_OPENACC
       const data_handle_type& p,
-#else
-      // FIXME OpenACC: illegal address when passing by reference
-      data_handle_type p,
-#endif
       size_t i) const {
     return m_nested_acc.access(p.get(), i);
   }
 
   KOKKOS_FUNCTION
   constexpr data_handle_type offset(
-#ifndef KOKKOS_ENABLE_OPENACC
       const data_handle_type& p,
-#else
-      // FIXME OpenACC: illegal address when passing by reference
-      data_handle_type p,
-#endif
       size_t i) const {
     return data_handle_type(p, m_nested_acc.offset(p.get(), i));
   }
