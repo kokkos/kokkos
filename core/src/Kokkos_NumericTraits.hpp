@@ -25,10 +25,6 @@
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #include <Kokkos_ReductionIdentity.hpp>
 #endif
-#include <cfloat>
-#include <climits>
-#include <cmath>
-#include <cstdint>
 #include <type_traits>
 #include <limits>
 
