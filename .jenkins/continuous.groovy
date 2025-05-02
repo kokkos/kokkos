@@ -167,7 +167,7 @@ pipeline {
                               .. && \
                               make -j8 && ctest --verbose && \
                               cd ../.. && \
-                              cmake -B build_cmake_installed_different_compiler/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=17 build_cmake_installed_different_compiler && \
+                              cmake -B build_cmake_installed_different_compiler/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=17 -DKokkos_ENABLE_DEPRECATED_BUILD_STRATEGY=ON build_cmake_installed_different_compiler && \
                               cmake --build build_cmake_installed_different_compiler/build --target all && \
                               cmake --build build_cmake_installed_different_compiler/build --target test'''
                     }
