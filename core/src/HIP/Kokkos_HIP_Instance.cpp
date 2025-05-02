@@ -211,7 +211,6 @@ void HIPInternal::initialize(hipStream_t stream) {
     constantMemHostStaging[m_hipDev] =
         static_cast<unsigned long *>(constant_mem_void_ptr);
   }
-  constantMemReusable[m_hipDev].ensure_wait_event_is_created(this);
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -366,35 +365,6 @@ void HIPInternal::release_team_scratch_space(int scratch_pool_id) {
   m_team_scratch_pool[scratch_pool_id] = 0;
 }
 
-void HIPInternal::ConstantMemReusable::ensure_wait_event_is_created(
-    HIPInternal const *hip_instance) {
-  if (!m_event)
-    KOKKOS_IMPL_HIP_SAFE_CALL(hip_instance->hip_event_create_with_flags_wrapper(
-        &m_event, hipEventDisableTiming));
-}
-
-void HIPInternal::ConstantMemReusable::acquire() {
-  // First check the state of the stream in which the wait event was recorded.
-  // If it has completed all operations submitted to it or has been destroyed,
-  // don't check the wait event. Note that it is illegal to call synchronize on
-  // an event recorded into a stream that has become invalid.
-  const hipError_t error = hipStreamQuery(m_stream);
-  if (error != hipSuccess && error != hipErrorContextIsDestroyed) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventSynchronize(m_event));
-  }
-}
-
-void HIPInternal::ConstantMemReusable::record_wait_event_to_release(
-    HIPInternal const *hip_instance) {
-  // Keep track of the stream which the wait event is recorded into.
-  m_stream = hip_instance->m_stream;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hip_instance->hip_event_record_wrapper(m_event));
-}
-
-void HIPInternal::ConstantMemReusable::destroy_wait_event() {
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(m_event));
-}
-
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
@@ -443,10 +413,9 @@ hipDeviceProp_t HIPInternal::m_deviceProp;
 
 std::mutex HIPInternal::scratchFunctorMutex;
 
-std::set<int> HIPInternal::hip_devices                             = {};
-std::map<int, unsigned long *> HIPInternal::constantMemHostStaging = {};
-std::map<int, HIPInternal::ConstantMemReusable>
-    HIPInternal::constantMemReusable = {};
+std::set<int> HIPInternal::hip_devices                                = {};
+std::map<int, unsigned long *> HIPInternal::constantMemHostStaging    = {};
+std::map<int, SharedResourceLocking> HIPInternal::constantMemReusable = {};
 
 //----------------------------------------------------------------------------
 
