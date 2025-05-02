@@ -34,92 +34,42 @@
 
 namespace Kokkos::Experimental {
 namespace Impl {
-// clang-format off
-template <class T, class Enable = void> struct infinity_helper {};
-template <class T> struct infinity_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::infinity();
-};
 
-template <class T, class Enable = void> struct finite_min_helper {};
-template <class T> struct finite_min_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::lowest();
-};
+#define KOKKOS_IMPL_DEFINE_TRAITS_HELPER(TRAIT, STD_TRAIT, RETURN_TYPE,     \
+                                         CONSTRAINT)                        \
+  template <class T, class Enable = void>                                   \
+  struct TRAIT##_helper {};                                                 \
+  template <class T>                                                        \
+  struct TRAIT##_helper<T, std::enable_if_t<std::is_##CONSTRAINT##_v<T>>> { \
+    static constexpr RETURN_TYPE value = std::numeric_limits<T>::STD_TRAIT; \
+  };
 
-template <class T, class Enable = void> struct finite_max_helper {};
-template <class T> struct finite_max_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::max();
-};
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(infinity, infinity(), T, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(finite_min, lowest(), T, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(finite_max, max(), T, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(epsilon, epsilon(), T, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(round_error, round_error(), T, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(norm_min, min(), T, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(denorm_min, denorm_min(), T, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(quiet_NaN, quiet_NaN(), T, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(signaling_NaN, signaling_NaN(), T,
+                                 floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(digits, digits, int, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(digits10, digits10, int, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_digits10, max_digits10, int,
+                                 floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(radix, radix, int, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(min_exponent, min_exponent, int,
+                                 floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(min_exponent10, min_exponent10, int,
+                                 floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_exponent, max_exponent, int,
+                                 floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_exponent10, max_exponent10, int,
+                                 floating_point)
 
-template <class T, class Enable = void> struct epsilon_helper {};
-template <class T> struct epsilon_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::epsilon();
-};
+#undef KOKKOS_IMPL_DEFINE_TRAITS_HELPER
 
-template <class T, class Enable = void> struct round_error_helper {};
-template <class T> struct round_error_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::round_error();
-};
-
-template <class T, class Enable = void> struct norm_min_helper {};
-template <class T> struct norm_min_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::min();
-};
-
-template <class T, class Enable = void> struct denorm_min_helper {};
-template <class T> struct denorm_min_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::denorm_min();
-};
-
-template <class T, class Enable = void> struct quiet_NaN_helper {};
-template <class T> struct quiet_NaN_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::quiet_NaN();
-};
-
-template <class T, class Enable = void> struct signaling_NaN_helper {};
-template <class T> struct signaling_NaN_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr T value = std::numeric_limits<T>::signaling_NaN();
-};
-
-template <class T, class Enable = void> struct digits_helper {};
-template <class T> struct digits_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::digits;
-};
-
-template <class T, class Enable = void> struct digits10_helper {};
-template <class T> struct digits10_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::digits10;
-};
-
-template <class T, class Enable = void> struct max_digits10_helper {};
-template <class T> struct max_digits10_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::max_digits10;
-};
-
-template <class T, class Enable = void> struct radix_helper {};
-template <class T> struct radix_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::radix;
-};
-
-template <class T, class Enable = void> struct min_exponent_helper {};
-template <class T> struct min_exponent_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::min_exponent;
-};
-
-template <class T, class Enable = void> struct min_exponent10_helper {};
-template <class T> struct min_exponent10_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::min_exponent10;
-};
-
-template <class T, class Enable = void> struct max_exponent_helper {};
-template <class T> struct max_exponent_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::max_exponent;
-};
-
-template <class T, class Enable = void> struct max_exponent10_helper {};
-template <class T> struct max_exponent10_helper<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
-  static constexpr int value = std::numeric_limits<T>::max_exponent10;
-};
-// clang-format on
 }  // namespace Impl
 
 #define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT)                        \
