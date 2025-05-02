@@ -40,29 +40,25 @@ namespace Impl {
     static constexpr RETURN_TYPE value = std::numeric_limits<T>::STD_TRAIT; \
   };
 
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(infinity, infinity(), T, floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(finite_min, lowest(), T, arithmetic)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(finite_max, max(), T, arithmetic)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(epsilon, epsilon(), T, floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(round_error, round_error(), T, floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(norm_min, min(), T, arithmetic)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(denorm_min, denorm_min(), T, floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(quiet_NaN, quiet_NaN(), T, floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(signaling_NaN, signaling_NaN(), T,
-                                 floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(digits, digits, int, arithmetic)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(digits10, digits10, int, arithmetic)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_digits10, max_digits10, int,
-                                 floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(radix, radix, int, arithmetic)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(min_exponent, min_exponent, int,
-                                 floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(min_exponent10, min_exponent10, int,
-                                 floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_exponent, max_exponent, int,
-                                 floating_point)
-KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_exponent10, max_exponent10, int,
-                                 floating_point)
+// clang-format off
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(infinity,       infinity(),      T,   floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(finite_min,     lowest(),        T,   arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(finite_max,     max(),           T,   arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(epsilon,        epsilon(),       T,   floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(round_error,    round_error(),   T,   floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(norm_min,       min(),           T,   arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(denorm_min,     denorm_min(),    T,   floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(quiet_NaN,      quiet_NaN(),     T,   floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(signaling_NaN,  signaling_NaN(), T,   floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(digits,         digits,          int, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(digits10,       digits10,        int, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_digits10,   max_digits10,    int, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(radix,          radix,           int, arithmetic)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(min_exponent,   min_exponent,    int, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(min_exponent10, min_exponent10,  int, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_exponent,   max_exponent,    int, floating_point)
+KOKKOS_IMPL_DEFINE_TRAITS_HELPER(max_exponent10, max_exponent10,  int, floating_point)
+// clang-format on
 
 #undef KOKKOS_IMPL_DEFINE_TRAITS_HELPER
 
