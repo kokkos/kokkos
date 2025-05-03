@@ -30,41 +30,42 @@
 
 namespace Kokkos::Experimental {
 
-#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT, STD_TRAIT, RETURN_TYPE, CONSTRAINT) \
+#define KOKKOS_IMPL_DEFINE_TRAIT(TRAIT, NUMERIC_LIMITS_MEMBER, CONSTRAINT)  \
   namespace Impl {                                                          \
   template <class T, class Enable = void>                                   \
   struct TRAIT##_helper {};                                                 \
   template <class T>                                                        \
   struct TRAIT##_helper<T, std::enable_if_t<std::is_##CONSTRAINT##_v<T>>> { \
-    static constexpr RETURN_TYPE value = std::numeric_limits<T>::STD_TRAIT; \
+    static constexpr auto value =                                           \
+        std::numeric_limits<T>::NUMERIC_LIMITS_MEMBER;                      \
   };                                                                        \
   }                                                                         \
   template <class T>                                                        \
-  struct TRAIT : Impl::TRAIT##_helper<std::remove_cv_t<T>> {};              \
+  struct TRAIT : Impl::TRAIT##_helper<T> {};                                \
   template <class T>                                                        \
   inline constexpr auto TRAIT##_v = TRAIT<T>::value;
 
 // clang-format off
 // Numeric distinguished value traits
-KOKKOS_IMPL_DEFINE_TRAIT(infinity,       infinity(),      T,   floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(finite_min,     lowest(),        T,   arithmetic    )
-KOKKOS_IMPL_DEFINE_TRAIT(finite_max,     max(),           T,   arithmetic    )
-KOKKOS_IMPL_DEFINE_TRAIT(epsilon,        epsilon(),       T,   floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(round_error,    round_error(),   T,   floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(norm_min,       min(),           T,   floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(denorm_min,     denorm_min(),    T,   floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(quiet_NaN,      quiet_NaN(),     T,   floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(signaling_NaN,  signaling_NaN(), T,   floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(infinity,       infinity(),      floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(finite_min,     lowest(),        arithmetic    )
+KOKKOS_IMPL_DEFINE_TRAIT(finite_max,     max(),           arithmetic    )
+KOKKOS_IMPL_DEFINE_TRAIT(epsilon,        epsilon(),       floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(round_error,    round_error(),   floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(norm_min,       min(),           floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(denorm_min,     denorm_min(),    floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(quiet_NaN,      quiet_NaN(),     floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(signaling_NaN,  signaling_NaN(), floating_point)
 
 // Numeric characteristics traits
-KOKKOS_IMPL_DEFINE_TRAIT(digits,         digits,          int, arithmetic    )
-KOKKOS_IMPL_DEFINE_TRAIT(digits10,       digits10,        int, arithmetic    )
-KOKKOS_IMPL_DEFINE_TRAIT(max_digits10,   max_digits10,    int, floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(radix,          radix,           int, arithmetic    )
-KOKKOS_IMPL_DEFINE_TRAIT(min_exponent,   min_exponent,    int, floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(min_exponent10, min_exponent10,  int, floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(max_exponent,   max_exponent,    int, floating_point)
-KOKKOS_IMPL_DEFINE_TRAIT(max_exponent10, max_exponent10,  int, floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(digits,         digits,          arithmetic    )
+KOKKOS_IMPL_DEFINE_TRAIT(digits10,       digits10,        arithmetic    )
+KOKKOS_IMPL_DEFINE_TRAIT(max_digits10,   max_digits10,    floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(radix,          radix,           arithmetic    )
+KOKKOS_IMPL_DEFINE_TRAIT(min_exponent,   min_exponent,    floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(min_exponent10, min_exponent10,  floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(max_exponent,   max_exponent,    floating_point)
+KOKKOS_IMPL_DEFINE_TRAIT(max_exponent10, max_exponent10,  floating_point)
 // clang-format on
 
 #undef KOKKOS_IMPL_DEFINE_TRAIT
