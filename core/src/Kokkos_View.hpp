@@ -562,7 +562,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {
     static_assert(traits::is_managed,
-                  "View allocation constructor requires managed memory");
+                  "Can't construct managed View with unmanaged View traits!");
   }
 
   template <class... P>
@@ -728,7 +728,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
     static_assert(traits::is_managed,
-                  "View allocation constructor requires managed memory");
+                  "Can't construct managed View with unmanaged View traits!");
   }
 
   template <class... P>
