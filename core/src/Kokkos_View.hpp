@@ -560,7 +560,10 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       : base_t(
             arg_prop,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
-                arg_layout)) {}
+                arg_layout)) {
+    static_assert(traits::is_managed,
+                  "Can't construct managed View with unmanaged memory trait!");
+  }
 
   template <class... P>
   KOKKOS_FUNCTION explicit View(
@@ -724,6 +727,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
+    static_assert(traits::is_managed,
+                  "Can't construct managed View with unmanaged memory trait!");
   }
 
   template <class... P>
