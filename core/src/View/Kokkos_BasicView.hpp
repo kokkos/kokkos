@@ -400,7 +400,7 @@ class BasicView {
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
                        typename mdspan_type::mapping_type> const &arg_mapping)
       : BasicView(
-            data_handle_type(Impl::get_property<Impl::PointerTag>(arg_prop)),
+            data_handle_type{Impl::get_property<Impl::PointerTag>(arg_prop)},
             arg_mapping) {}
 
  protected:
