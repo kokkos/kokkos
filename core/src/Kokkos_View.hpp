@@ -773,11 +773,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<std::string>(arg_label),
              typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    static_assert(traits::array_layout::is_extent_constructible,
-                  "Layout is not constructible from extent arguments. Use "
-                  "overload taking a layout object instead.");
-  }
+                                           arg_N4, arg_N5, arg_N6, arg_N7)) {}
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
