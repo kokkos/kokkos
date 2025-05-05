@@ -365,22 +365,22 @@ class BasicView {
           "execution space");
     }
     if constexpr (has_exec) {
-      return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
+      return data_handle_type{Impl::make_shared_allocation_record<ElementType>(
           arg_mapping.required_span_size(),
           Impl::get_property<Impl::LabelTag>(prop_copy),
           Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
           std::make_optional(
               Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
           std::bool_constant<alloc_prop::initialize>(),
-          std::bool_constant<alloc_prop::sequential_host_init>()));
+          std::bool_constant<alloc_prop::sequential_host_init>())};
     } else {
-      return data_handle_type(Impl::make_shared_allocation_record<ElementType>(
+      return data_handle_type{Impl::make_shared_allocation_record<ElementType>(
           arg_mapping.required_span_size(),
           Impl::get_property<Impl::LabelTag>(prop_copy),
           Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
           std::optional<execution_space>{},
           std::bool_constant<alloc_prop::initialize>(),
-          std::bool_constant<alloc_prop::sequential_host_init>()));
+          std::bool_constant<alloc_prop::sequential_host_init>())};
     }
   }
 
