@@ -36,7 +36,7 @@ class [[nodiscard]] ScopedRegion {
 #if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
   [[nodiscard]]
 #endif
-  explicit ScopedRegion(std::string const &name) {
+  explicit ScopedRegion(const std::string_view name) {
     Kokkos::Profiling::pushRegion(name);
   }
   ~ScopedRegion() { Kokkos::Profiling::popRegion(); }

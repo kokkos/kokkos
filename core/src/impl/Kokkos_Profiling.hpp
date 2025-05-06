@@ -82,37 +82,38 @@ struct ToolResponse {
 
 bool profileLibraryLoaded();
 
-void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
+void beginParallelFor(const std::string_view kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID);
 void endParallelFor(const uint64_t kernelID);
-void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
-                       uint64_t* kernelID);
+void beginParallelScan(const std::string_view kernelPrefix,
+                       const uint32_t devID, uint64_t* kernelID);
 void endParallelScan(const uint64_t kernelID);
-void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
-                         uint64_t* kernelID);
+void beginParallelReduce(const std::string_view kernelPrefix,
+                         const uint32_t devID, uint64_t* kernelID);
 void endParallelReduce(const uint64_t kernelID);
 
-void pushRegion(const std::string& kName);
+void pushRegion(const std::string_view kName);
 void popRegion();
 
-void createProfileSection(const std::string& sectionName, uint32_t* secID);
+void createProfileSection(const std::string_view sectionName, uint32_t* secID);
 void startSection(const uint32_t secID);
 void stopSection(const uint32_t secID);
 void destroyProfileSection(const uint32_t secID);
 
-void markEvent(const std::string& evName);
+void markEvent(const std::string_view evName);
 
-void allocateData(const SpaceHandle space, const std::string label,
+void allocateData(const SpaceHandle space, const std::string_view label,
                   const void* ptr, const uint64_t size);
-void deallocateData(const SpaceHandle space, const std::string label,
+void deallocateData(const SpaceHandle space, const std::string_view label,
                     const void* ptr, const uint64_t size);
 
-void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
-                   const void* dst_ptr, const SpaceHandle src_space,
-                   const std::string src_label, const void* src_ptr,
+void beginDeepCopy(const SpaceHandle dst_space,
+                   const std::string_view dst_label, const void* dst_ptr,
+                   const SpaceHandle src_space,
+                   const std::string_view src_label, const void* src_ptr,
                    const uint64_t size);
 void endDeepCopy();
-void beginFence(const std::string name, const uint32_t deviceId,
+void beginFence(const std::string_view name, const uint32_t deviceId,
                 uint64_t* handle);
 void endFence(const uint64_t handle);
 

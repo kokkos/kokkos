@@ -305,11 +305,11 @@ static void updateProfileLibraryState() {
                                     Experimental::no_profiling);
 }
 
-void beginParallelFor(const std::string& kernelPrefix, const uint32_t devID,
+void beginParallelFor(const std::string_view kernelPrefix, const uint32_t devID,
                       uint64_t* kernelID) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
-      Experimental::current_callbacks.begin_parallel_for, kernelPrefix.c_str(),
+      Experimental::current_callbacks.begin_parallel_for, kernelPrefix.data(),
       devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -336,11 +336,11 @@ void endParallelFor(const uint64_t kernelID) {
 #endif
 }
 
-void beginParallelScan(const std::string& kernelPrefix, const uint32_t devID,
-                       uint64_t* kernelID) {
+void beginParallelScan(const std::string_view kernelPrefix,
+                       const uint32_t devID, uint64_t* kernelID) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
-      Experimental::current_callbacks.begin_parallel_scan, kernelPrefix.c_str(),
+      Experimental::current_callbacks.begin_parallel_scan, kernelPrefix.data(),
       devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
@@ -367,12 +367,12 @@ void endParallelScan(const uint64_t kernelID) {
 #endif
 }
 
-void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
-                         uint64_t* kernelID) {
+void beginParallelReduce(const std::string_view kernelPrefix,
+                         const uint32_t devID, uint64_t* kernelID) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
       Experimental::current_callbacks.begin_parallel_reduce,
-      kernelPrefix.c_str(), devID, kernelID);
+      kernelPrefix.data(), devID, kernelID);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Kokkos::tune_internals()) {
     auto context_id = Experimental::get_new_context_id();
@@ -398,10 +398,10 @@ void endParallelReduce(const uint64_t kernelID) {
 #endif
 }
 
-void pushRegion(const std::string& kName) {
+void pushRegion(const std::string_view kName) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
-      Experimental::current_callbacks.push_region, kName.c_str());
+      Experimental::current_callbacks.push_region, kName.data());
 }
 
 void popRegion() {
@@ -410,30 +410,31 @@ void popRegion() {
       Experimental::current_callbacks.pop_region);
 }
 
-void allocateData(const SpaceHandle space, const std::string label,
+void allocateData(const SpaceHandle space, const std::string_view label,
                   const void* ptr, const uint64_t size) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
-      Experimental::current_callbacks.allocate_data, space, label.c_str(), ptr,
+      Experimental::current_callbacks.allocate_data, space, label.data(), ptr,
       size);
 }
 
-void deallocateData(const SpaceHandle space, const std::string label,
+void deallocateData(const SpaceHandle space, const std::string_view label,
                     const void* ptr, const uint64_t size) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
-      Experimental::current_callbacks.deallocate_data, space, label.c_str(),
-      ptr, size);
+      Experimental::current_callbacks.deallocate_data, space, label.data(), ptr,
+      size);
 }
 
-void beginDeepCopy(const SpaceHandle dst_space, const std::string dst_label,
-                   const void* dst_ptr, const SpaceHandle src_space,
-                   const std::string src_label, const void* src_ptr,
+void beginDeepCopy(const SpaceHandle dst_space,
+                   const std::string_view dst_label, const void* dst_ptr,
+                   const SpaceHandle src_space,
+                   const std::string_view src_label, const void* src_ptr,
                    const uint64_t size) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.begin_deep_copy, dst_space,
-      dst_label.c_str(), dst_ptr, src_space, src_label.c_str(), src_ptr, size);
+      dst_label.data(), dst_ptr, src_space, src_label.data(), src_ptr, size);
 #ifdef KOKKOS_ENABLE_TUNING
   if (Experimental::current_callbacks.begin_deep_copy != nullptr) {
     if (Kokkos::tune_internals()) {
@@ -464,11 +465,11 @@ void endDeepCopy() {
 #endif
 }
 
-void beginFence(const std::string name, const uint32_t deviceId,
+void beginFence(const std::string_view name, const uint32_t deviceId,
                 uint64_t* handle) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
-      Experimental::current_callbacks.begin_fence, name.c_str(), deviceId,
+      Experimental::current_callbacks.begin_fence, name.data(), deviceId,
       handle);
 }
 
@@ -478,11 +479,11 @@ void endFence(const uint64_t handle) {
       Experimental::current_callbacks.end_fence, handle);
 }
 
-void createProfileSection(const std::string& sectionName, uint32_t* secID) {
+void createProfileSection(const std::string_view sectionName, uint32_t* secID) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
       Experimental::current_callbacks.create_profile_section,
-      sectionName.c_str(), secID);
+      sectionName.data(), secID);
 }
 
 void startSection(const uint32_t secID) {
@@ -503,10 +504,10 @@ void destroyProfileSection(const uint32_t secID) {
       Experimental::current_callbacks.destroy_profile_section, secID);
 }
 
-void markEvent(const std::string& eventName) {
+void markEvent(const std::string_view eventName) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::No,
-      Experimental::current_callbacks.profile_event, eventName.c_str());
+      Experimental::current_callbacks.profile_event, eventName.data());
 }
 
 bool printHelp(const std::string& args) {
@@ -1151,11 +1152,12 @@ VariableValue make_variable_value(size_t id, double val) {
   variable_value.value.double_value = val;
   return variable_value;
 }
-VariableValue make_variable_value(size_t id, const std::string& val) {
+VariableValue make_variable_value(size_t id, const std::string_view val) {
   VariableValue variable_value;
   variable_value.type_id = id;
-  strncpy(variable_value.value.string_value, val.c_str(),
-          KOKKOS_TOOLS_TUNING_STRING_LENGTH - 1);
+  strncpy(variable_value.value.string_value, val.data(),
+          std::max(val.size(),
+                   static_cast<size_t>(KOKKOS_TOOLS_TUNING_STRING_LENGTH - 1)));
   return variable_value;
 }
 SetOrRange make_candidate_set(size_t size, std::string* data) {
