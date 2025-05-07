@@ -287,9 +287,9 @@ struct SYCLScratchMemoryAccessor {
 
   KOKKOS_FUNCTION
   reference access(
-      const data_handle_type& p,
+      data_handle_type p,
       size_t i) const noexcept {
-    return const_cast<reference>(p[i]);
+    return p[i];
   }
 
   KOKKOS_FUNCTION
