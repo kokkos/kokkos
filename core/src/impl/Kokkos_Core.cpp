@@ -824,8 +824,14 @@ instead of hyphens). For example, to disable warning messages, you can either
 specify --kokkos-disable-warnings or set the KOKKOS_DISABLE_WARNINGS
 environment variable to yes.
 
-Join us on Slack, visit https://kokkosteam.slack.com
-Report bugs to https://github.com/kokkos/kokkos/issues
+--------------------------------------------------------------------------------
+For support, documentation, and more information about Kokkos,
+visit the official website: https://kokkos.org
+
+If you use Kokkos in your work, please cite
+  https://doi.ieeecomputersociety.org/10.1109/TPDS.2021.3097283
+
+Kokkos is a Linux Foundation Project.
 --------------------------------------------------------------------------------
 )";
   std::cout << help_message << std::endl;
