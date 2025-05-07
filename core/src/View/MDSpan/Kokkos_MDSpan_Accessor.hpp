@@ -231,7 +231,7 @@ struct AtomicAccessorRelaxed {
   KOKKOS_FUNCTION
   reference access(
 #ifndef KOKKOS_ENABLE_OPENACC
-       const data_handle_type& p,
+      const data_handle_type& p,
 #else
       // FIXME OpenACC: illegal address when passing by reference
       data_handle_type p,
@@ -243,7 +243,7 @@ struct AtomicAccessorRelaxed {
   KOKKOS_FUNCTION
   data_handle_type offset(
 #ifndef KOKKOS_ENABLE_OPENACC
-       const data_handle_type& p,
+      const data_handle_type& p,
 #else
       // FIXME OpenACC: illegal address when passing by reference
       data_handle_type p,
@@ -255,12 +255,12 @@ struct AtomicAccessorRelaxed {
 
 template <class ElementType, class MemorySpace>
 struct SYCLScratchMemoryAccessor {
-  using element_type = ElementType;
-  using reference = ElementType&;
+  using element_type     = ElementType;
+  using reference        = ElementType&;
   using data_handle_type = std::conditional_t<
       std::is_same_v<MemorySpace, Kokkos::SYCL::scratch_memory_space_l0>,
       sycl::local_ptr<ElementType>, Impl::sycl_device_ptr<ElementType>>;
-  using offset_policy    = SYCLScratchMemoryAccessor;
+  using offset_policy = SYCLScratchMemoryAccessor;
 
   KOKKOS_DEFAULTED_FUNCTION
   SYCLScratchMemoryAccessor() = default;
@@ -286,16 +286,10 @@ struct SYCLScratchMemoryAccessor {
   }
 
   KOKKOS_FUNCTION
-  reference access(
-      data_handle_type p,
-      size_t i) const noexcept {
-    return p[i];
-  }
+  reference access(data_handle_type p, size_t i) const noexcept { return p[i]; }
 
   KOKKOS_FUNCTION
-  data_handle_type offset(
-      const data_handle_type& p,
-      size_t i) const noexcept {
+  data_handle_type offset(const data_handle_type& p, size_t i) const noexcept {
     return p + i;
   }
 };
@@ -470,16 +464,12 @@ class ReferenceCountedAccessor {
   }
 
   KOKKOS_FUNCTION
-  constexpr reference access(
-      const data_handle_type& p,
-      size_t i) const {
+  constexpr reference access(const data_handle_type& p, size_t i) const {
     return m_nested_acc.access(p.get(), i);
   }
 
   KOKKOS_FUNCTION
-  constexpr data_handle_type offset(
-      const data_handle_type& p,
-      size_t i) const {
+  constexpr data_handle_type offset(const data_handle_type& p, size_t i) const {
     return data_handle_type(p, m_nested_acc.offset(p.get(), i));
   }
 
@@ -515,13 +505,15 @@ using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
 using CheckedSYCLScratchAccessor =
-    SpaceAwareAccessor<MemorySpace, SYCLScratchMemoryAccessor<ElementType, MemorySpace>>;
-            
+    SpaceAwareAccessor<MemorySpace,
+                       SYCLScratchMemoryAccessor<ElementType, MemorySpace>>;
+
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
 using CheckedReferenceCountedSYCLScratchAccessor = SpaceAwareAccessor<
-    MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
-                                          SYCLScratchMemoryAccessor<ElementType, MemorySpace>>>;
+    MemorySpace, ReferenceCountedAccessor<
+                     ElementType, MemorySpace,
+                     SYCLScratchMemoryAccessor<ElementType, MemorySpace>>>;
 
 }  // namespace Impl
 }  // namespace Kokkos
