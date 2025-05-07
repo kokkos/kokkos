@@ -1021,7 +1021,11 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
   using ExecutionSpace = typename TeamHandleType::execution_space;
-  using ArrayLayout    = typename ExecutionSpace::array_layout;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using ArrayLayout KOKKOS_DEPRECATED_WITH_COMMENT("Use LayoutType instead.") =
+      typename ExecutionSpace::array_layout;
+#endif
+  using LayoutType = typename ExecutionSpace::layout_type;
 
   static constexpr NestLevelType total_nest_level =
       Rank<N, OuterDir, InnerDir>::rank;
@@ -1031,7 +1035,7 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 
   static constexpr Iterate direction =
       OuterDir == Iterate::Default ? Impl::layout_iterate_type_selector<
-                                         ArrayLayout>::outer_iteration_pattern
+                                         LayoutType>::outer_iteration_pattern
                                    : iter;
 
   template <class... Args>
@@ -1057,7 +1061,11 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
   using ExecutionSpace = typename TeamHandleType::execution_space;
-  using ArrayLayout    = typename ExecutionSpace::array_layout;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using ArrayLayout KOKKOS_DEPRECATED_WITH_COMMENT("Use LayoutType instead.") =
+      typename ExecutionSpace::array_layout;
+#endif
+  using LayoutType = typename ExecutionSpace::layout_type;
 
   static constexpr NestLevelType total_nest_level =
       Rank<N, OuterDir, InnerDir>::rank;
@@ -1067,7 +1075,7 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 
   static constexpr Iterate direction =
       OuterDir == Iterate::Default ? Impl::layout_iterate_type_selector<
-                                         ArrayLayout>::outer_iteration_pattern
+                                         LayoutType>::outer_iteration_pattern
                                    : iter;
 
   template <class... Args>
@@ -1094,7 +1102,11 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
   using ExecutionSpace = typename TeamHandleType::execution_space;
-  using ArrayLayout    = typename ExecutionSpace::array_layout;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using ArrayLayout KOKKOS_DEPRECATED_WITH_COMMENT("Use LayoutType instead.") =
+      typename ExecutionSpace::array_layout;
+#endif
+  using LayoutType = typename ExecutionSpace::layout_type;
 
   static constexpr NestLevelType total_nest_level =
       Rank<N, OuterDir, InnerDir>::rank;
@@ -1104,7 +1116,7 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
 
   static constexpr Iterate direction =
       iter == Iterate::Default ? Impl::layout_iterate_type_selector<
-                                     ArrayLayout>::outer_iteration_pattern
+                                     LayoutType>::outer_iteration_pattern
                                : iter;
 
   template <class... Args>
