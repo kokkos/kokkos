@@ -225,6 +225,38 @@ struct AccessorFromViewTraits<
 };
 
 template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic && std::is_same_v<typename Traits::memory_space, Kokkos::SYCL::scratch_memory_space_l0>>> {
+  using type = CheckedReferenceCountedSYCLScratchAccessor<typename Traits::value_type,
+                                            Kokkos::SYCL::scratch_memory_space_l0>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<!Traits::is_managed && !Traits::memory_traits::is_atomic && std::is_same_v<typename Traits::memory_space, Kokkos::SYCL::scratch_memory_space_l0>>> {
+  using type = CheckedSYCLScratchAccessor<typename Traits::value_type,
+                                            Kokkos::SYCL::scratch_memory_space_l0>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic && std::is_same_v<typename Traits::memory_space, Kokkos::SYCL::scratch_memory_space_l1>>> {
+  using type = CheckedReferenceCountedSYCLScratchAccessor<typename Traits::value_type,
+                                            Kokkos::SYCL::scratch_memory_space_l1>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<!Traits::is_managed && !Traits::memory_traits::is_atomic && std::is_same_v<typename Traits::memory_space, Kokkos::SYCL::scratch_memory_space_l1>>> {
+  using type = CheckedSYCLScratchAccessor<typename Traits::value_type,
+                                            Kokkos::SYCL::scratch_memory_space_l1>;
+};
+
+template <class Traits>
 using accessor_from_view_traits_t =
     typename AccessorFromViewTraits<Traits>::type;
 

@@ -230,14 +230,24 @@ struct AtomicAccessorRelaxed {
 
   KOKKOS_FUNCTION
   reference access(
-      const data_handle_type& p,
+#ifndef KOKKOS_ENABLE_OPENACC
+       const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
       size_t i) const noexcept {
-    return *reference(p[i]);
+    return reference(p[i]);
   }
 
   KOKKOS_FUNCTION
   data_handle_type offset(
-      const data_handle_type& p,
+#ifndef KOKKOS_ENABLE_OPENACC
+       const data_handle_type& p,
+#else
+      // FIXME OpenACC: illegal address when passing by reference
+      data_handle_type p,
+#endif
       size_t i) const noexcept {
     return p + i;
   }
@@ -279,7 +289,7 @@ struct SYCLScratchMemoryAccessor {
   reference access(
       const data_handle_type& p,
       size_t i) const noexcept {
-    return p[i];
+    return const_cast<reference>(p[i]);
   }
 
   KOKKOS_FUNCTION
@@ -501,6 +511,17 @@ template <class ElementType, class MemorySpace,
 using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
     MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
                                           AtomicAccessorRelaxed<ElementType>>>;
+
+template <class ElementType, class MemorySpace,
+          class MemoryScope = desul::MemoryScopeDevice>
+using CheckedSYCLScratchAccessor =
+    SpaceAwareAccessor<MemorySpace, SYCLScratchMemoryAccessor<ElementType, MemorySpace>>;
+            
+template <class ElementType, class MemorySpace,
+          class MemoryScope = desul::MemoryScopeDevice>
+using CheckedReferenceCountedSYCLScratchAccessor = SpaceAwareAccessor<
+    MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
+                                          SYCLScratchMemoryAccessor<ElementType, MemorySpace>>>;
 
 }  // namespace Impl
 }  // namespace Kokkos
