@@ -96,9 +96,9 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
   return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
 }
 
-// FIXME_HPX spurious warnings like
+// FIXME spurious warnings like
 // error: 'SR.14123' may be used uninitialized [-Werror=maybe-uninitialized]
-#if defined(KOKKOS_ENABLE_HPX)
+#if defined(__GNUC__)
 #pragma GCC diagnostic push
 #if !defined(__clang__)
 #pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
@@ -630,7 +630,7 @@ class BasicView {
   friend class BasicView;
 };
 
-#if defined(KOKKOS_ENABLE_HPX)
+#if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
 
