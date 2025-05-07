@@ -33,10 +33,11 @@ class basic_simd;
 template <class T, class Abi>
 class basic_simd_mask;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class M, class T>
 class const_where_expression;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <typename T, typename Abi>
 [[nodiscard]] KOKKOS_DEPRECATED_WITH_COMMENT("Use reduce_min() instead")
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
@@ -64,6 +65,7 @@ template <class T, class Abi>
   }
   return result;
 }
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
 template <
@@ -118,13 +120,13 @@ template <class T, class Abi,
     Experimental::basic_simd<T, Abi>
     min(Experimental::basic_simd<T, Abi> const& a,
         Experimental::basic_simd<T, Abi> const& b) {
-  Experimental::basic_simd<T, Abi> result;
-  T vals[Experimental::basic_simd<T, Abi>::size()] = {0};
-  for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size(); ++i) {
+  using simd_type           = Experimental::basic_simd<T, Abi>;
+  T vals[simd_type::size()] = {0};
+  for (std::size_t i = 0; i < simd_type::size(); ++i) {
     vals[i] = Kokkos::min(a[i], b[i]);
   }
-  result.copy_from(vals, Kokkos::Experimental::simd_flag_default);
-  return result;
+  return Experimental::simd_unchecked_load<simd_type>(
+      vals, Experimental::simd_flag_default);
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -146,13 +148,13 @@ template <class T, class Abi,
     Experimental::basic_simd<T, Abi>
     max(Experimental::basic_simd<T, Abi> const& a,
         Experimental::basic_simd<T, Abi> const& b) {
-  Experimental::basic_simd<T, Abi> result;
-  T vals[Experimental::basic_simd<T, Abi>::size()] = {0};
-  for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size(); ++i) {
+  using simd_type           = Experimental::basic_simd<T, Abi>;
+  T vals[simd_type::size()] = {0};
+  for (std::size_t i = 0; i < simd_type::size(); ++i) {
     vals[i] = Kokkos::max(a[i], b[i]);
   }
-  result.copy_from(vals, Kokkos::Experimental::simd_flag_default);
-  return result;
+  return Experimental::simd_unchecked_load<simd_type>(
+      vals, Experimental::simd_flag_default);
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -180,14 +182,13 @@ template <class T, class Abi>
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
       Experimental::basic_simd<T, Abi>                                       \
       FUNC(Experimental::basic_simd<T, Abi> const& a) {                      \
-    Experimental::basic_simd<T, Abi> result;                                 \
-    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
-    for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
-         ++i) {                                                              \
+    using simd_type           = Experimental::basic_simd<T, Abi>;            \
+    T vals[simd_type::size()] = {0};                                         \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
       vals[i] = Kokkos::FUNC(a[i]);                                          \
     }                                                                        \
-    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
-    return result;                                                           \
+    return Experimental::simd_unchecked_load<simd_type>(                     \
+        vals, Experimental::simd_flag_default);                              \
   }                                                                          \
   template <                                                                 \
       class T, class Abi,                                                    \
@@ -215,14 +216,13 @@ template <class T, class Abi>
   [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
       Experimental::basic_simd<T, Abi>                                       \
       FUNC(Experimental::basic_simd<T, Abi> const& a) {                      \
-    Experimental::basic_simd<T, Abi> result;                                 \
-    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
-    for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
-         ++i) {                                                              \
+    using simd_type           = Experimental::basic_simd<T, Abi>;            \
+    T vals[simd_type::size()] = {0};                                         \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
       vals[i] = Kokkos::FUNC(a[i]);                                          \
     }                                                                        \
-    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
-    return result;                                                           \
+    return Experimental::simd_unchecked_load<simd_type>(                     \
+        vals, Experimental::simd_flag_default);                              \
   }                                                                          \
   template <                                                                 \
       class T, class Abi,                                                    \
@@ -270,14 +270,13 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
       Experimental::basic_simd<T, Abi>                                       \
       FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
            Experimental::basic_simd<T, Abi> const& b) {                      \
-    Experimental::basic_simd<T, Abi> result;                                 \
-    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
-    for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
-         ++i) {                                                              \
+    using simd_type           = Experimental::basic_simd<T, Abi>;            \
+    T vals[simd_type::size()] = {0};                                         \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
       vals[i] = Kokkos::FUNC(a[i], b[i]);                                    \
     }                                                                        \
-    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
-    return result;                                                           \
+    return Experimental::simd_unchecked_load<simd_type>(                     \
+        vals, Experimental::simd_flag_default);                              \
   }                                                                          \
   template <                                                                 \
       class T, class Abi,                                                    \
@@ -307,14 +306,13 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
       Experimental::basic_simd<T, Abi>                                       \
       FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
            Experimental::basic_simd<T, Abi> const& b) {                      \
-    Experimental::basic_simd<T, Abi> result;                                 \
-    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
-    for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
-         ++i) {                                                              \
+    using simd_type           = Experimental::basic_simd<T, Abi>;            \
+    T vals[simd_type::size()] = {0};                                         \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
       vals[i] = Kokkos::FUNC(a[i], b[i]);                                    \
     }                                                                        \
-    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
-    return result;                                                           \
+    return Experimental::simd_unchecked_load<simd_type>(                     \
+        vals, Experimental::simd_flag_default);                              \
   }                                                                          \
   template <                                                                 \
       class T, class Abi,                                                    \
@@ -344,14 +342,13 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
       FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
            Experimental::basic_simd<T, Abi> const& b,                        \
            Experimental::basic_simd<T, Abi> const& c) {                      \
-    Experimental::basic_simd<T, Abi> result;                                 \
-    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
-    for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
-         ++i) {                                                              \
+    using simd_type           = Experimental::basic_simd<T, Abi>;            \
+    T vals[simd_type::size()] = {0};                                         \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
       vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                              \
     }                                                                        \
-    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
-    return result;                                                           \
+    return Experimental::simd_unchecked_load<simd_type>(                     \
+        vals, Experimental::simd_flag_default);                              \
   }                                                                          \
   template <                                                                 \
       class T, class Abi,                                                    \
@@ -384,14 +381,13 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
       FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
            Experimental::basic_simd<T, Abi> const& b,                        \
            Experimental::basic_simd<T, Abi> const& c) {                      \
-    Experimental::basic_simd<T, Abi> result;                                 \
-    T vals[Experimental::basic_simd<T, Abi>::size()] = {0};                  \
-    for (std::size_t i = 0; i < Experimental::basic_simd<T, Abi>::size();    \
-         ++i) {                                                              \
+    using simd_type           = Experimental::basic_simd<T, Abi>;            \
+    T vals[simd_type::size()] = {0};                                         \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
       vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                              \
     }                                                                        \
-    result.copy_from(vals, Kokkos::Experimental::simd_flag_default);         \
-    return result;                                                           \
+    return Experimental::simd_unchecked_load<simd_type>(                     \
+        vals, Experimental::simd_flag_default);                              \
   }                                                                          \
   template <                                                                 \
       class T, class Abi,                                                    \
