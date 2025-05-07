@@ -20,6 +20,7 @@
 
 #include <Kokkos_Macros.hpp>
 
+#include <Kokkos_Core.hpp>  // Kokkos::DefaultHostExecutionSpace
 #include <Kokkos_HostSpace.hpp>
 #include <SYCL/Kokkos_SYCL.hpp>
 #include <SYCL/Kokkos_SYCL_Space.hpp>
@@ -64,13 +65,82 @@ std::string_view get_memory_space_name(sycl::usm::alloc allocation_kind) {
     case sycl::usm::alloc::host: return Kokkos::SYCLHostUSMSpace::name();
     case sycl::usm::alloc::device: return Kokkos::SYCLDeviceUSMSpace::name();
     case sycl::usm::alloc::shared: return Kokkos::SYCLSharedUSMSpace::name();
+    case sycl::usm::alloc::unknown: return "sycl::usm::alloc::unknown";
     default:
       Kokkos::abort("bug: unknown sycl allocation type");
       return "unreachable";
   }
 }
 
+template <typename RequestedMemorySpace>
+void check_memory_space(sycl::usm::alloc deduced_allocation_kind) {
+  switch (deduced_allocation_kind) {
+    case sycl::usm::alloc::host:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::SYCLHostUSMSpace>::assignable)
+        Kokkos::abort(("Detected SYCLHostUSMSpace but requested incompatible " +
+                       std::string(RequestedMemorySpace::name()))
+                          .c_str());
+      return;
+    case sycl::usm::alloc::device:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::SYCLDeviceUSMSpace>::assignable)
+        Kokkos::abort(
+            ("Detected SYCLDeviceUSMSpace but requeste incompatible " +
+             std::string(RequestedMemorySpace::name()))
+                .c_str());
+      return;
+    case sycl::usm::alloc::shared:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::SYCLSharedUSMSpace>::assignable)
+        Kokkos::abort(
+            ("Detected SYCLSharedUSMSpace but requested incompatible " +
+             std::string(RequestedMemorySpace::name()))
+                .c_str());
+      return;
+    case sycl::usm::alloc::unknown:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::HostSpace>::assignable)
+        Kokkos::abort(("Detected HostSpace but requested incompatible " +
+                       std::string(RequestedMemorySpace::name()))
+                          .c_str());
+      return;
+    default: Kokkos::abort("bug: unknown sycl allocation type");
+  }
+}
+
 }  // namespace
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLHostUSMSpace>(const void* ptr,
+                              const Kokkos::SYCLHostUSMSpace& space) {
+  check_memory_space<Kokkos::SYCLHostUSMSpace>(
+      sycl::get_pointer_type(ptr, space.impl_get_queue().get_context()));
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLSharedUSMSpace>(const void* ptr,
+                                const Kokkos::SYCLSharedUSMSpace& space) {
+  check_memory_space<Kokkos::SYCLSharedUSMSpace>(
+      sycl::get_pointer_type(ptr, space.impl_get_queue().get_context()));
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLDeviceUSMSpace>(const void* ptr,
+                                const Kokkos::SYCLDeviceUSMSpace& space) {
+  check_memory_space<Kokkos::SYCLDeviceUSMSpace>(
+      sycl::get_pointer_type(ptr, space.impl_get_queue().get_context()));
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
+    const void* ptr, const Kokkos::HostSpace&) {
+  check_memory_space<Kokkos::HostSpace>(
+      sycl::get_pointer_type(ptr, SYCL{}.sycl_queue().get_context()));
+}
 
 namespace Kokkos {
 
