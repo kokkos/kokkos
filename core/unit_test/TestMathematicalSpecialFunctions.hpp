@@ -29,7 +29,7 @@ struct TestExponentialIntergral1Function {
   using HostViewType = Kokkos::View<double*, Kokkos::HostSpace>;
 
   ViewType d_x, d_expint;
-  typename ViewType::HostMirror h_x, h_expint;
+  typename ViewType::host_mirror_type h_x, h_expint;
   HostViewType h_ref;
 
   void testit() {
@@ -105,11 +105,11 @@ struct TestComplexErrorFunction {
   using DblHostViewType = Kokkos::View<double*, Kokkos::HostSpace>;
 
   ViewType d_z, d_erf, d_erfcx;
-  typename ViewType::HostMirror h_z, h_erf, h_erfcx;
+  typename ViewType::host_mirror_type h_z, h_erf, h_erfcx;
   HostViewType h_ref_erf, h_ref_erfcx;
 
   DblViewType d_x, d_erfcx_dbl;
-  typename DblViewType::HostMirror h_x, h_erfcx_dbl;
+  typename DblViewType::host_mirror_type h_x, h_erfcx_dbl;
   DblHostViewType h_ref_erfcx_dbl;
 
   void testit() {
@@ -453,11 +453,11 @@ struct TestComplexBesselJ0Y0Function {
       Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
 
   ViewType d_z, d_cbj0, d_cby0;
-  typename ViewType::HostMirror h_z, h_cbj0, h_cby0;
+  typename ViewType::host_mirror_type h_z, h_cbj0, h_cby0;
   HostViewType h_ref_cbj0, h_ref_cby0;
 
   ViewType d_z_large, d_cbj0_large, d_cby0_large;
-  typename ViewType::HostMirror h_z_large, h_cbj0_large, h_cby0_large;
+  typename ViewType::host_mirror_type h_z_large, h_cbj0_large, h_cby0_large;
   HostViewType h_ref_cbj0_large, h_ref_cby0_large;
 
   void testit() {
@@ -749,11 +749,11 @@ struct TestComplexBesselJ1Y1Function {
       Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
 
   ViewType d_z, d_cbj1, d_cby1;
-  typename ViewType::HostMirror h_z, h_cbj1, h_cby1;
+  typename ViewType::host_mirror_type h_z, h_cbj1, h_cby1;
   HostViewType h_ref_cbj1, h_ref_cby1;
 
   ViewType d_z_large, d_cbj1_large, d_cby1_large;
-  typename ViewType::HostMirror h_z_large, h_cbj1_large, h_cby1_large;
+  typename ViewType::host_mirror_type h_z_large, h_cbj1_large, h_cby1_large;
   HostViewType h_ref_cbj1_large, h_ref_cby1_large;
 
   void testit() {
@@ -1050,11 +1050,11 @@ struct TestComplexBesselI0K0Function {
       Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
 
   ViewType d_z, d_cbi0, d_cbk0;
-  typename ViewType::HostMirror h_z, h_cbi0, h_cbk0;
+  typename ViewType::host_mirror_type h_z, h_cbi0, h_cbk0;
   HostViewType h_ref_cbi0, h_ref_cbk0;
 
   ViewType d_z_large, d_cbi0_large, d_cbk0_large;
-  typename ViewType::HostMirror h_z_large, h_cbi0_large, h_cbk0_large;
+  typename ViewType::host_mirror_type h_z_large, h_cbi0_large, h_cbk0_large;
   HostViewType h_ref_cbi0_large, h_ref_cbk0_large;
 
   void testit() {
@@ -1306,11 +1306,11 @@ struct TestComplexBesselI1K1Function {
       Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
 
   ViewType d_z, d_cbi1, d_cbk1;
-  typename ViewType::HostMirror h_z, h_cbi1, h_cbk1;
+  typename ViewType::host_mirror_type h_z, h_cbi1, h_cbk1;
   HostViewType h_ref_cbi1, h_ref_cbk1;
 
   ViewType d_z_large, d_cbi1_large, d_cbk1_large;
-  typename ViewType::HostMirror h_z_large, h_cbi1_large, h_cbk1_large;
+  typename ViewType::host_mirror_type h_z_large, h_cbi1_large, h_cbk1_large;
   HostViewType h_ref_cbi1_large, h_ref_cbk1_large;
 
   void testit() {
@@ -1557,7 +1557,7 @@ struct TestComplexBesselH1Function {
       Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
 
   ViewType d_z, d_ch10, d_ch11;
-  typename ViewType::HostMirror h_z, h_ch10, h_ch11;
+  typename ViewType::host_mirror_type h_z, h_ch10, h_ch11;
   HostViewType h_ref_ch10, h_ref_ch11;
 
   void testit() {
@@ -1755,7 +1755,7 @@ struct TestComplexBesselH2Function {
       Kokkos::View<Kokkos::complex<double>*, Kokkos::HostSpace>;
 
   ViewType d_z, d_ch20, d_ch21;
-  typename ViewType::HostMirror h_z, h_ch20, h_ch21;
+  typename ViewType::host_mirror_type h_z, h_ch20, h_ch21;
   HostViewType h_ref_ch20, h_ref_ch21;
 
   void testit() {

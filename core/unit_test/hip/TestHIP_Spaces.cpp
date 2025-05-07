@@ -195,15 +195,20 @@ TEST(hip, space_access) {
                                  Kokkos::HostSpace>::accessible);
 
   static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+                Kokkos::Impl::host_mirror_type<Kokkos::HIP>::Space,
                 Kokkos::HostSpace>::accessible);
 
   static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::HIPHostPinnedSpace>::Space,
+                Kokkos::Impl::host_mirror_type<Kokkos::HIPSpace>::Space,
                 Kokkos::HostSpace>::accessible);
 
+  static_assert(
+      Kokkos::SpaceAccessibility<
+          Kokkos::Impl::host_mirror_type<Kokkos::HIPHostPinnedSpace>::Space,
+          Kokkos::HostSpace>::accessible);
+
   static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
+                Kokkos::Impl::host_mirror_type<Kokkos::HIPManagedSpace>::Space,
                 Kokkos::HostSpace>::accessible);
 }
 

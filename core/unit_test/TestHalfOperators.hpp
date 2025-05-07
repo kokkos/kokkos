@@ -970,9 +970,9 @@ void _test_half_operators(half_type h_lhs, half_type h_rhs) {
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);
-  typename ViewType::HostMirror f_device_actual_lhs =
+  typename ViewType::host_mirror_type f_device_actual_lhs =
       Kokkos::create_mirror_view(f_device.actual_lhs);
-  typename ViewType::HostMirror f_device_expected_lhs =
+  typename ViewType::host_mirror_type f_device_expected_lhs =
       Kokkos::create_mirror_view(f_device.expected_lhs);
 
   ExecutionSpace().fence();

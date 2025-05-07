@@ -34,17 +34,17 @@ template <class ExecSpace>
 struct TestMDRangePolicy {
   // 2D View
   using View_2D      = Kokkos::View<value_type **, ExecSpace>;
-  using Host_View_2D = typename View_2D::HostMirror;
+  using Host_View_2D = typename View_2D::host_mirror_type;
   Host_View_2D hostDataView_2D;
 
   // 3D View
   using View_3D      = Kokkos::View<value_type ***, ExecSpace>;
-  using Host_View_3D = typename View_3D::HostMirror;
+  using Host_View_3D = typename View_3D::host_mirror_type;
   Host_View_3D hostDataView_3D;
 
   // 4D View
   using View_4D      = Kokkos::View<value_type ****, ExecSpace>;
-  using Host_View_4D = typename View_4D::HostMirror;
+  using Host_View_4D = typename View_4D::host_mirror_type;
   Host_View_4D hostDataView_4D;
 
   // Memory space type for Device and Host data

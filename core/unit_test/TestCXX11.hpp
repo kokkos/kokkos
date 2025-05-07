@@ -57,9 +57,9 @@ double AddTestFunctor() {
 
   Kokkos::View<double**, DeviceType> a("A", 100, 5);
   Kokkos::View<double**, DeviceType> b("B", 100, 5);
-  typename Kokkos::View<double**, DeviceType>::HostMirror h_a =
+  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_a =
       Kokkos::create_mirror_view(a);
-  typename Kokkos::View<double**, DeviceType>::HostMirror h_b =
+  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_b =
       Kokkos::create_mirror_view(b);
 
   for (int i = 0; i < 100; i++) {
@@ -91,9 +91,9 @@ template <class DeviceType, bool PWRTest>
 double AddTestLambda() {
   Kokkos::View<double**, DeviceType> a("A", 100, 5);
   Kokkos::View<double**, DeviceType> b("B", 100, 5);
-  typename Kokkos::View<double**, DeviceType>::HostMirror h_a =
+  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_a =
       Kokkos::create_mirror_view(a);
-  typename Kokkos::View<double**, DeviceType>::HostMirror h_b =
+  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_b =
       Kokkos::create_mirror_view(b);
 
   for (int i = 0; i < 100; i++) {
@@ -194,7 +194,7 @@ double ReduceTestFunctor() {
       Kokkos::View<double, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
   view_type a("A", 100, 5);
-  typename view_type::HostMirror h_a = Kokkos::create_mirror_view(a);
+  typename view_type::host_mirror_type h_a = Kokkos::create_mirror_view(a);
 
   for (int i = 0; i < 100; i++) {
     for (int j = 0; j < 5; j++) {
@@ -225,7 +225,7 @@ double ReduceTestLambda() {
       Kokkos::View<double, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
   view_type a("A", 100, 5);
-  typename view_type::HostMirror h_a = Kokkos::create_mirror_view(a);
+  typename view_type::host_mirror_type h_a = Kokkos::create_mirror_view(a);
 
   for (int i = 0; i < 100; i++) {
     for (int j = 0; j < 5; j++) {

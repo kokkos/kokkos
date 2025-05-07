@@ -479,7 +479,7 @@ class TestReduceDynamicView {
         Test::RuntimeReduceFunctor<ScalarType, execution_space>;
 
     using result_type      = Kokkos::View<ScalarType*, DeviceType>;
-    using result_host_type = typename result_type::HostMirror;
+    using result_host_type = typename result_type::host_mirror_type;
 
     const unsigned CountLimit = 23;
 
