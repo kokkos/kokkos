@@ -1245,7 +1245,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX908), 1)
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX90A), 1)
   tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GFX90A")
-  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx90A\"")
+  tmp := $(call kokkos_append_header,"$H""define KOKKOS_ARCH_AMD_GPU \"gfx90a\"")
   KOKKOS_INTERNAL_AMD_ARCH_FLAG := --offload-arch=gfx90a
 endif
 ifeq ($(KOKKOS_INTERNAL_USE_ARCH_AMD_GFX940), 1)
