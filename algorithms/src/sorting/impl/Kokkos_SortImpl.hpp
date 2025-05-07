@@ -73,6 +73,7 @@
 #if defined(KOKKOS_ENABLE_ONEDPL)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wshadow"
+#pragma GCC diagnostic ignored "-Wsign-compare"
 #pragma GCC diagnostic ignored "-Wunused-local-typedef"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wunused-variable"

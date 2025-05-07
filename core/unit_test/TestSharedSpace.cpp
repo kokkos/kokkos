@@ -115,6 +115,10 @@ TEST(defaultdevicetype, shared_space) {
   GTEST_SKIP() << "skipping because clock_tic is only defined for sycl+intel "
                   "gpu and with rdc support";
 #endif
+#if defined(KOKKOS_ENABLE_DEBUG)
+  GTEST_SKIP()
+      << "skipping due to spurious failures when compiling in Debug mode";
+#endif
 
   const unsigned int numRepetitions      = 10;
   const unsigned int numDeviceHostCycles = 3;

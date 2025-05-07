@@ -612,6 +612,11 @@ template <>
 struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::OpenMPTarget>
     : std::false_type {};
 #endif
+#ifdef KOKKOS_ENABLE_OPENACC
+template <>
+struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::OpenACC>
+    : std::false_type {};
+#endif
 
 template <class DeviceType>
 struct Random_UniqueIndex {
@@ -676,7 +681,7 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
 #else
-    auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();
+    auto item           = sycl::ext::oneapi::experimental::this_nd_item<3>();
 #endif
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
@@ -718,6 +723,36 @@ struct Random_UniqueIndex<
   static int get_state_idx(const locks_view_type& locks) {
     const int team_size = omp_get_num_threads();
     int i               = omp_get_team_num() * team_size + omp_get_thread_num();
+    const int lock_size = locks.extent_int(0);
+
+    while (Kokkos::atomic_compare_exchange(&locks(i, 0), 0, 1)) {
+      i = (i + 1) % lock_size;
+    }
+    return i;
+  }
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENACC
+template <class MemorySpace>
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::OpenACC, MemorySpace>> {
+  using locks_view_type =
+      View<int**, Kokkos::Device<Kokkos::Experimental::OpenACC, MemorySpace>>;
+  KOKKOS_FUNCTION
+  static int get_state_idx(const locks_view_type& locks) {
+#ifdef KOKKOS_COMPILER_NVHPC
+    const int team_size =
+        Kokkos::Impl::OpenACCTeamMember::DEFAULT_TEAM_SIZE_REC;
+    int i = __pgi_gangidx() * team_size + __pgi_vectoridx();
+#elif defined(KOKKOS_COMPILER_CLANG)
+    const int team_size = omp_get_num_threads();
+    int i               = omp_get_team_num() * team_size + omp_get_thread_num();
+#else
+    static_assert(false,
+                  "The current OpenACC backend implementation supports "
+                  "Random_UniqueIndex only when compiled with NVHPC or CLACC.");
+#endif
     const int lock_size = locks.extent_int(0);
 
     while (Kokkos::atomic_compare_exchange(&locks(i, 0), 0, 1)) {
