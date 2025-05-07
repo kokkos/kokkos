@@ -70,7 +70,9 @@ struct MemoryTraits {
 
 namespace Kokkos {
 
-using MemoryManaged   = Kokkos::MemoryTraits<0>;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+using MemoryManaged KOKKOS_DEPRECATED = Kokkos::MemoryTraits<0>;
+#endif
 using MemoryUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
 using MemoryRandomAccess =
     Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>;
