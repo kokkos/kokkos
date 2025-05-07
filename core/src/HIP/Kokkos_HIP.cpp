@@ -121,9 +121,6 @@ void HIP::impl_finalize() {
   desul::Impl::finalize_lock_arrays();  // FIXME
 
   for (const auto hip_device : Impl::HIPInternal::hip_devices) {
-    KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device));
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventDestroy(Impl::HIPInternal::constantMemReusable[hip_device]));
     KOKKOS_IMPL_HIP_SAFE_CALL(
         hipHostFree(Impl::HIPInternal::constantMemHostStaging[hip_device]));
   }
