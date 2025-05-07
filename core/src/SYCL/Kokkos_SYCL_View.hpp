@@ -79,7 +79,7 @@ struct SYCLUSMHandle {
 template <class Traits>
 struct ViewDataHandle<
     Traits,
-    std::enable_if_t<std::is_void<typename Traits::specialize>::value &&
+    std::enable_if_t<std::is_void_v<typename Traits::specialize> &&
                      !Traits::memory_traits::is_aligned &&
                      !Traits::memory_traits::is_restrict &&
                      !Traits::memory_traits::is_atomic &&
