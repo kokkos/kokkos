@@ -25,6 +25,7 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <SYCL/Kokkos_SYCL.hpp>
 #include <desul/atomics.hpp>
 
 namespace Kokkos {
@@ -265,7 +266,7 @@ struct SYCLScratchMemoryAccessor {
             std::enable_if_t<std::is_convertible_v<
                 OtherElementType (*)[], element_type (*)[]>>* = nullptr>
   KOKKOS_FUNCTION constexpr SYCLScratchMemoryAccessor(
-      SYCLScratchMemoryAccessor<OtherElementType, MemoryScope>) noexcept {}
+      SYCLScratchMemoryAccessor<OtherElementType, MemorySpace>) noexcept {}
 
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
@@ -278,7 +279,7 @@ struct SYCLScratchMemoryAccessor {
   reference access(
       const data_handle_type& p,
       size_t i) const noexcept {
-    return reference(p[i]);
+    return p[i];
   }
 
   KOKKOS_FUNCTION
