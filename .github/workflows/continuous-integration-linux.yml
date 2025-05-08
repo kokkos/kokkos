@@ -169,9 +169,6 @@ jobs:
           ccache -z
           cmake --build builddir --parallel $(nproc)
           ccache -s
-      - name: Set asan runtime env
-        if: ${{ contains(matrix.cxx_extra_flags, '-fsanitize=address') }}
-        run: echo "LSAN_OPTIONS=use_globals=0" >> $GITHUB_ENV
       - name: Tests
         if: ${{ !matrix.use_valgrind }}
         working-directory: builddir
