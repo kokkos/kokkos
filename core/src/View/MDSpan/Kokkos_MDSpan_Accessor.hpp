@@ -25,7 +25,9 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#ifdef KOKKOS_ENABLE_SYCL
 #include <SYCL/Kokkos_SYCL.hpp>
+#endif
 #include <desul/atomics.hpp>
 
 namespace Kokkos {
@@ -253,6 +255,7 @@ struct AtomicAccessorRelaxed {
   }
 };
 
+#ifdef KOKKOS_ENABLE_SYCL
 template <class ElementType, class MemorySpace>
 struct SYCLScratchMemoryAccessor {
   using element_type     = ElementType;
@@ -293,6 +296,7 @@ struct SYCLScratchMemoryAccessor {
     return p + i;
   }
 };
+#endif
 
 //=====================================================================
 //============= Reference Counted Accessor and DataHandle =============
@@ -502,6 +506,7 @@ using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
     MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
                                           AtomicAccessorRelaxed<ElementType>>>;
 
+#ifdef KOKKOS_ENABLE_SYCL
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
 using CheckedSYCLScratchAccessor =
@@ -514,6 +519,7 @@ using CheckedReferenceCountedSYCLScratchAccessor = SpaceAwareAccessor<
     MemorySpace, ReferenceCountedAccessor<
                      ElementType, MemorySpace,
                      SYCLScratchMemoryAccessor<ElementType, MemorySpace>>>;
+#endif
 
 }  // namespace Impl
 }  // namespace Kokkos
