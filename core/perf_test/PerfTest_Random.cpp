@@ -39,19 +39,22 @@ static void Random(benchmark::State &state) {
         N, KOKKOS_LAMBDA(const int i) {
           auto generator = random_pool.get_state();
           Scalar acc     = 0;
+
+          // work around "cannot first-capture I in a constexpr-if context"
+          auto SI = Scalar(I);
           for (size_t k = 0; k < K; ++k) {
             if constexpr (std::is_same_v<Scalar, double>) {
-              acc += generator.drand(Scalar(I));
+              acc += generator.drand(SI);
             } else if constexpr (std::is_same_v<Scalar, float>) {
-              acc += generator.frand(Scalar(I));
+              acc += generator.frand(SI);
             } else if constexpr (std::is_same_v<Scalar, uint64_t>) {
-              acc += generator.urand64(Scalar(I));
+              acc += generator.urand64(SI);
             } else if constexpr (std::is_same_v<Scalar, uint32_t>) {
-              acc += generator.urand(Scalar(I));
+              acc += generator.urand(SI);
             } else if constexpr (std::is_same_v<Scalar, int64_t>) {
-              acc += generator.rand64(Scalar(I));
+              acc += generator.rand64(SI);
             } else if constexpr (std::is_same_v<Scalar, int32_t>) {
-              acc += generator.rand(Scalar(I));
+              acc += generator.rand(SI);
             } else {
               static_assert(std::is_void_v<Scalar>, "unhandled Scalar type");
             }
