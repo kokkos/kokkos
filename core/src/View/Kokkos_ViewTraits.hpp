@@ -202,7 +202,13 @@ struct AccessorFromViewTraits<
 template <class Traits>
 struct AccessorFromViewTraits<
     Traits,
-    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic>> {
+    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic &&
+                     !std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l0> &&
+                     !std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l1>
+
+                     >> {
   using type = CheckedReferenceCountedAccessor<typename Traits::value_type,
                                                typename Traits::memory_space>;
 };
@@ -210,7 +216,11 @@ struct AccessorFromViewTraits<
 template <class Traits>
 struct AccessorFromViewTraits<
     Traits,
-    std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic>> {
+    std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic &&
+                     !std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l0> &&
+                     !std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l1>>> {
   using type = CheckedReferenceCountedRelaxedAtomicAccessor<
       typename Traits::value_type, typename Traits::memory_space>;
 };
@@ -219,7 +229,11 @@ struct AccessorFromViewTraits<
 template <class Traits>
 struct AccessorFromViewTraits<
     Traits,
-    std::enable_if_t<!Traits::is_managed && Traits::memory_traits::is_atomic>> {
+    std::enable_if_t<!Traits::is_managed && Traits::memory_traits::is_atomic &&
+                     !std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l0> &&
+                     !std::is_same_v<typename Traits::memory_space,
+                                     Kokkos::SYCL::scratch_memory_space_l1>>> {
   using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
                                             typename Traits::memory_space>;
 };
