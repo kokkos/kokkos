@@ -149,7 +149,7 @@ class TestAcquireTeamUniqueToken {
   using execution_space = typename Space::execution_space;
   using view_type       = Kokkos::View<int*, execution_space>;
   using scratch_view =
-      Kokkos::View<int, typename execution_space::scratch_memory_space,
+      Kokkos::View<int, typename execution_space::scratch_memory_space_l0,
                    Kokkos::MemoryUnmanaged>;
   using team_policy_type = Kokkos::TeamPolicy<execution_space>;
   using team_member_type = typename team_policy_type::member_type;
@@ -165,7 +165,7 @@ class TestAcquireTeamUniqueToken {
   void operator()(team_member_type team) const {
     Kokkos::Experimental::AcquireTeamUniqueToken<team_policy_type> token_val(
         tokens, team);
-    scratch_view team_rank_0_token_val(team.team_scratch(0));
+    scratch_view team_rank_0_token_val(team.template team_scratch<0>());
     const int32_t t = token_val.value();
 
     bool ok = true;

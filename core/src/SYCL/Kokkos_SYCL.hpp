@@ -59,7 +59,9 @@ class SYCL {
   using array_layout = LayoutLeft;
   using size_type    = memory_space::size_type;
 
-  using scratch_memory_space = ScratchMemorySpace<SYCL>;
+  using scratch_memory_space    = ScratchMemorySpace<SYCL>;
+  using scratch_memory_space_l0 = ScratchMemorySpaceBase<SYCL, L0Tag>;
+  using scratch_memory_space_l1 = ScratchMemorySpaceBase<SYCL, L1Tag>;
 
   SYCL();
   explicit SYCL(const sycl::queue&);

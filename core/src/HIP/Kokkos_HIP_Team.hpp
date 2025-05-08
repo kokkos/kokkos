@@ -68,6 +68,8 @@ class HIPTeamMember {
  public:
   using execution_space      = HIP;
   using scratch_memory_space = execution_space::scratch_memory_space;
+  using scratch_memory_space_l0 = execution_space::scratch_memory_space_l0;
+  using scratch_memory_space_l1 = execution_space::scratch_memory_space_l1;
   using team_handle          = HIPTeamMember;
 
  private:
@@ -79,14 +81,26 @@ class HIPTeamMember {
 
  public:
   KOKKOS_INLINE_FUNCTION
-  const execution_space::scratch_memory_space& team_shmem() const {
-    return m_team_shared.set_team_thread_mode(0, 1, 0);
+  const auto& team_shmem() const {
+    return m_team_shared.template set_team_thread_mode<0>(1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const auto&
+  team_scratch() const {
+    return m_team_shared.template set_team_thread_mode<Level>(1, 0);
   }
 
   KOKKOS_INLINE_FUNCTION
   const execution_space::scratch_memory_space& team_scratch(
       const int& level) const {
     return m_team_shared.set_team_thread_mode(level, 1, 0);
+  }
+
+  template <int Level>
+  KOKKOS_INLINE_FUNCTION const auto&
+  thread_scratch() const {
+    return m_team_shared.template set_team_thread_mode<Level>(team_size(), team_rank());
   }
 
   KOKKOS_INLINE_FUNCTION

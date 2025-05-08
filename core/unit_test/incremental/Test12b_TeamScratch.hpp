@@ -32,11 +32,12 @@ struct TeamScratch {
     using data_t   = Kokkos::View<size_t **, ExecSpace>;
     data_t v("Matrix", pN, sX);
 
-    using scratch_t = Kokkos::View<size_t **, ExecSpace,
-                                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+    using scratch_t =
+        Kokkos::View<size_t **, typename ExecSpace::scratch_memory_space_l1,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
     int scratchSize = scratch_t::shmem_size(sX, sY);
 
-    const int scratch_level = 1;
+    static constexpr int scratch_level = 1;
 
     Kokkos::parallel_for(
         "Team",
@@ -44,7 +45,7 @@ struct TeamScratch {
             .set_scratch_size(scratch_level, Kokkos::PerTeam(scratchSize)),
         KOKKOS_LAMBDA(const team_t &team) {
           // Allocate and use scratch pad memory
-          scratch_t v_S(team.team_scratch(scratch_level), sX, sY);
+          scratch_t v_S(team.template team_scratch<scratch_level>(), sX, sY);
           int n = team.league_rank();
 
           Kokkos::parallel_for(

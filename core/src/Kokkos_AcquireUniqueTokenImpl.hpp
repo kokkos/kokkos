@@ -30,7 +30,9 @@ namespace Experimental {
 template <typename TeamPolicy>
 KOKKOS_FUNCTION AcquireTeamUniqueToken<TeamPolicy>::AcquireTeamUniqueToken(
     AcquireTeamUniqueToken<TeamPolicy>::token_type t, team_member_type team)
-    : my_token(t), my_team_acquired_val(team.team_scratch(0)), my_team(team) {
+    : my_token(t),
+      my_team_acquired_val(team.template team_scratch<0>()),
+      my_team(team) {
   Kokkos::single(Kokkos::PerTeam(my_team),
                  [&]() { my_team_acquired_val() = my_token.acquire(); });
   my_team.team_barrier();
