@@ -22,8 +22,8 @@
 namespace Benchmark {
 
 // Fills each entry of
-// * a view of size N 
-// * with the sum of K random numbers 
+// * a view of size N
+// * with the sum of K random numbers
 // * between 0 and I
 template <typename Pool, typename Scalar>
 static void Random(benchmark::State &state) {
