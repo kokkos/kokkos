@@ -361,6 +361,10 @@
 #define KOKKOS_IMPL_RELOCATABLE_FUNCTION
 #endif
 
+#if !defined(KOKKOS_VIRTUAL)
+#define KOKKOS_VIRTUAL virtual
+#endif
+
 //----------------------------------------------------------------------------
 // Define final version of functions. This is so that clang tidy can find these
 // macros more easily

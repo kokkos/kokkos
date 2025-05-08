@@ -176,27 +176,32 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy,
-                                            max_grid_size](
-                                               sycl::nd_item<3> item) {
-        // swap back for correct index calculations in DeviceIterateTile
-        const index_type local_x    = item.get_local_id(2);
-        const index_type local_y    = item.get_local_id(1);
-        const index_type local_z    = item.get_local_id(0);
-        const index_type global_x   = item.get_group(2);
-        const index_type global_y   = item.get_group(1);
-        const index_type global_z   = item.get_group(0);
-        const index_type n_global_x = item.get_group_range(2);
-        const index_type n_global_y = item.get_group_range(1);
-        const index_type n_global_z = item.get_group_range(0);
+      cgh.parallel_for(
+          sycl_swapped_range,
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+          sycl::ext::oneapi::experimental::properties{
+              sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+          [functor_wrapper, bare_policy, max_grid_size](sycl::nd_item<3> item) {
+            // swap back for correct index calculations in DeviceIterateTile
+            const index_type local_x    = item.get_local_id(2);
+            const index_type local_y    = item.get_local_id(1);
+            const index_type local_z    = item.get_local_id(0);
+            const index_type global_x   = item.get_group(2);
+            const index_type global_y   = item.get_group(1);
+            const index_type global_z   = item.get_group(0);
+            const index_type n_global_x = item.get_group_range(2);
+            const index_type n_global_y = item.get_group_range(1);
+            const index_type n_global_z = item.get_group_range(0);
 
-        Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, FunctorType,
-                                        MaxGridSize, typename Policy::work_tag>(
-            bare_policy, functor_wrapper.get_functor(), max_grid_size,
-            {n_global_x, n_global_y, n_global_z},
-            {global_x, global_y, global_z}, {local_x, local_y, local_z})
-            .exec_range();
-      });
+            Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy,
+                                            FunctorType, MaxGridSize,
+                                            typename Policy::work_tag>(
+                bare_policy, functor_wrapper.get_functor(), max_grid_size,
+                {n_global_x, n_global_y, n_global_z},
+                {global_x, global_y, global_z}, {local_x, local_y, local_z})
+                .exec_range();
+          });
     };
 
 #ifdef SYCL_EXT_ONEAPI_GRAPH

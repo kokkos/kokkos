@@ -1,0 +1,3 @@
+kokkos_add_executable(example_virtual_functions SOURCES example_virtual_functions.cpp)
+
+add_test(NAME Kokkos_Example_VirtualFunctions COMMAND Kokkos_example_virtual_functions)

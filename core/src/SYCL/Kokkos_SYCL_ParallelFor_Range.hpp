@@ -111,14 +111,24 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         sycl::nd_range<1> range(
             launch_range, sycl::ext::oneapi::experimental::auto_range<1>());
         cgh.parallel_for<
-            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
-                                                                         f);
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range,
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            f);
 #else
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{policy.begin(),
                                                                 functor};
         sycl::range<1> range(policy.end() - policy.begin());
         cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
-            range, f);
+            range,
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            f);
 #endif
       } else {
         // Use the chunk size as workgroup size. We need to make sure that the
@@ -133,8 +143,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
             policy.begin(), functor, actual_range};
         sycl::nd_range<1> range(launch_range, wgroup_size);
         cgh.parallel_for<
-            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
-                                                                         f);
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range,
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            f);
       }
     };
 

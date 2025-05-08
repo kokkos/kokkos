@@ -188,6 +188,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         // implementation
         cgh.parallel_for(
             sycl::nd_range<1>{n_wgroups * wgroup_size, wgroup_size},
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
             [=](sycl::nd_item<1> item) {
               const int local_id = item.get_local_linear_id();
               const CombinedFunctorReducerType& functor_reducer =
