@@ -25,6 +25,8 @@ class Foo {
   Foo() { val = 0; }
 
   KOKKOS_FUNCTION KOKKOS_VIRTUAL int value() { return 0; };
+
+  KOKKOS_FUNCTION KOKKOS_VIRTUAL ~Foo() {}
 };
 
 class Foo_1 : public Foo {
