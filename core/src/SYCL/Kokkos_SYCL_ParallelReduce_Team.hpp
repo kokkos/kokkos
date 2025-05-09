@@ -116,6 +116,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 #endif
         cgh.parallel_for(
             sycl::nd_range<2>(sycl::range<2>(1, 1), sycl::range<2>(1, 1)),
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
             [=](sycl::nd_item<2> item) {
               const CombinedFunctorReducerType& functor_reducer =
                   functor_reducer_wrapper.get_functor();
@@ -360,6 +364,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
             sycl::nd_range<2>(
                 sycl::range<2>(m_team_size, n_wgroups * m_vector_size),
                 sycl::range<2>(m_team_size, m_vector_size)),
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
             reduction_lambda);
       };
 #ifdef SYCL_EXT_ONEAPI_GRAPH
