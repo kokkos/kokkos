@@ -62,7 +62,7 @@ __check_compatible_extents(
 
 template<class IndexType, class ... Arguments>
 MDSPAN_INLINE_FUNCTION
-static constexpr bool are_valid_indices() {
+constexpr bool are_valid_indices() {
     return
       MDSPAN_IMPL_FOLD_AND(std::is_convertible<Arguments, IndexType>::value) &&
       MDSPAN_IMPL_FOLD_AND(std::is_nothrow_constructible<IndexType, Arguments>::value);
