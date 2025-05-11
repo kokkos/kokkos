@@ -6,7 +6,7 @@ set -o pipefail
 
 ctest -D ExperimentalMemCheck \
 	--overwrite "MemoryCheckCommand=/usr/bin/valgrind" \
-	--overwrite "MemoryCheckCommandOptions=--leak-check=full --show-leak-kinds=all --suppressions=$PWD/../scripts/valgrind/kokkos.supp" \
+	--overwrite "MemoryCheckCommandOptions=--leak-check=full --show-leak-kinds=all --quiet --suppressions=$PWD/../scripts/valgrind/kokkos.supp" \
 	--output-on-failure | tee "$TMPFILE"
 
 EXIT_CODE=$?
