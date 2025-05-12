@@ -26,7 +26,10 @@ class Foo {
 
   KOKKOS_FUNCTION KOKKOS_VIRTUAL int value() { return 0; };
 
+// FIXME_SYCL Virtual destructors aren't supported yet.
+#ifndef KOKKOS_ENABLE_SYCL
   KOKKOS_FUNCTION KOKKOS_VIRTUAL ~Foo() {}
+#endif
 };
 
 class Foo_1 : public Foo {
@@ -74,6 +77,8 @@ int main(int argc, char* argv[]) {
         KOKKOS_LAMBDA(const int&, int& lsum) { lsum = f_2->value(); }, value_2);
     printf("Values: %i %i\n", value_1, value_2);
 
+// FIXME_SYCL Virtual destructors aren't supported yet.
+#ifndef KOKKOS_ENABLE_SYCL
     Kokkos::parallel_for(
         "DestroyObjects", Kokkos::RangePolicy<ExecutionSpace>(0, 1),
         KOKKOS_LAMBDA(const int&) {
@@ -81,6 +86,7 @@ int main(int argc, char* argv[]) {
           f_2->~Foo();
         });
     Kokkos::fence();
+#endif
 
     Kokkos::kokkos_free(f_1);
     Kokkos::kokkos_free(f_2);
