@@ -14,49 +14,60 @@
 //
 //@HEADER
 
+// @Kokkos_Feature_Level_Required:12
+// Unit test for hierarchical parallelism
+// Create concurrent work hierarchically and verify if
+// contributions of paticipating processing units corresponds to expected value
+// Use a scratch pad memory for each team
 #include <Kokkos_Core.hpp>
 
-#include <cstdio>
-#include <iostream>
+template <class ExecSpace>
+struct ThreadScratch {
+  using policy_t = Kokkos::TeamPolicy<ExecSpace>;
+  using team_t   = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+  using data_t   = Kokkos::View<size_t **, ExecSpace>;
 
-int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
-  Kokkos::DefaultExecutionSpace{}.print_configuration(std::cout);
+  using scratch_t =
+      Kokkos::View<size_t *, typename ExecSpace::scratch_memory_space_l1,
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
 
-  if (argc < 2) {
-    fprintf(stderr, "Usage: %s [<kokkos_options>] <size>\n", argv[0]);
-    Kokkos::finalize();
-    exit(1);
+  int sX, sY;
+  data_t v;
+
+  static constexpr int scratch_level = 0;
+  KOKKOS_FUNCTION
+  void operator()(const team_t &team) const {
+    // Allocate and use scratch pad memory
+    scratch_t v_S =
+        scratch_t(team.template thread_scratch<scratch_level>(), sY);
+    sycl::global_ptr<size_t> v_S_ptr = v_S.data();
+    // Kokkos::printf("%p\n", v_S_ptr.get());
+    int n = team.league_rank();
+
+    v_S[0] = 0;
   }
 
-  const long n = strtol(argv[1], nullptr, 10);
+  void run(const int pN, const int sX_, const int sY_) {
+    sX = sX_;
+    sY = sY_;
 
-  printf("Number of even integers from 0 to %ld\n", n - 1);
+    int scratchSize = scratch_t::shmem_size(sY);
+    // So this works with deprecated code enabled:
+    policy_t policy = policy_t(pN, 1, 1).set_scratch_size(
+        scratch_level, Kokkos::PerThread(scratchSize));
 
-  Kokkos::Timer timer;
-  timer.reset();
+    int max_team_size = policy.team_size_max(*this, Kokkos::ParallelForTag());
+    v                 = data_t("Matrix", pN, max_team_size);
 
-  // Compute the number of even integers from 0 to n-1, in parallel.
-  long count = 0;
-  Kokkos::parallel_reduce(
-      n, KOKKOS_LAMBDA(const long i, long& lcount) { lcount += (i % 2) == 0; },
-      count);
-
-  double count_time = timer.seconds();
-  printf("  Parallel: %ld    %10.6f\n", count, count_time);
-
-  timer.reset();
-
-  // Compare to a sequential loop.
-  long seq_count = 0;
-  for (long i = 0; i < n; ++i) {
-    seq_count += (i % 2) == 0;
+    Kokkos::parallel_for("Test12a_ThreadScratch",
+                         policy_t(pN, 1).set_scratch_size(
+                             scratch_level, Kokkos::PerThread(scratchSize)),
+                         *this);
   }
+};
 
-  count_time = timer.seconds();
-  printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
-
-  Kokkos::finalize();
-
-  return (count == seq_count) ? 0 : -1;
+int main() {
+  Kokkos::ScopeGuard guard;
+  ThreadScratch<Kokkos::Experimental::SYCL> test;
+  test.run(1, 1, 1);
 }

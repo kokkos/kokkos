@@ -46,6 +46,8 @@ class HIP {
   using size_type    = HIPSpace::size_type;
 
   using scratch_memory_space = ScratchMemorySpace<HIP>;
+  using scratch_memory_space_l0 = ScratchMemorySpaceBase<HIP, L0Tag>;
+    using scratch_memory_space_l1 = ScratchMemorySpaceBase<HIP, L1Tag>;
 
   HIP();
 

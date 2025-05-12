@@ -288,6 +288,24 @@ struct MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
   enum : bool { deepcopy = false };
 };
 
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::SYCLDeviceUSMSpace,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::SYCL, PointerType>> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::ScratchMemorySpace<Kokkos::SYCL>,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::SYCL, PointerType>> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = false };
+};
+
 }  // namespace Impl
 
 }  // namespace Kokkos
