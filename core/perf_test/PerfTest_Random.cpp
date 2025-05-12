@@ -54,7 +54,8 @@ static void Random(benchmark::State &state) {
             } else if constexpr (std::is_same_v<Scalar, int64_t>) {
               acc += generator.rand64(SI);
             } else if constexpr (std::is_same_v<Scalar, int32_t>) {
-              acc += generator.rand(SI);
+              acc += static_cast<uint32_t>(
+                  generator.rand(SI));  // avoid signed overflow UB
             } else {
               static_assert(std::is_void_v<Scalar>, "unhandled Scalar type");
             }
