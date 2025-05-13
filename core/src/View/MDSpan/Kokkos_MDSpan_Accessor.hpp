@@ -442,7 +442,7 @@ class ReferenceCountedAccessor {
       data_handle_type p,
 #endif
       size_t i) const {
-    return data_handle_type(p, m_nested_acc.offset(p.get(), i));
+    return data_handle_type{p, m_nested_acc.offset(p.get(), i)};
   }
 
   KOKKOS_FUNCTION
