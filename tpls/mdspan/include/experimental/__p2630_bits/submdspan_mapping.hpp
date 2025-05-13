@@ -168,7 +168,7 @@ struct deduce_layout_left_submapping<
   }
 
   MDSPAN_INLINE_FUNCTION
-  constexpr bool layout_left_padded_value() {
+  constexpr static bool layout_left_padded_value() {
     // Technically could also keep layout_left_padded for SubRank==0
     // and SubRank==1 with leftmost slice specifier being a contiguous range
     // but we intercept these cases separately
