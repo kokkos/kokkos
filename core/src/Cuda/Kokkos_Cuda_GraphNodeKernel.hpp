@@ -35,6 +35,25 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename Functor>
+struct GraphNodeHostImpl<Kokkos::Cuda, Functor> {
+  Functor functor;
+  cudaGraphNode_t m_node = nullptr;
+
+  static void callback(void* data) {
+    reinterpret_cast<Functor*>(data)->operator()();
+  }
+
+  void add_to_graph(cudaGraph_t graph) {
+    cudaHostNodeParams params = {};
+    params.fn                 = callback;
+    params.userData           = &functor;
+
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaGraphAddHostNode(&m_node, graph, nullptr, 0, &params));
+  }
+};
+
+template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::Cuda, Functor> {
   Functor m_functor;
   cudaGraphNode_t m_node = nullptr;
