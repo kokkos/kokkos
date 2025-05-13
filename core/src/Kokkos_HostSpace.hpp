@@ -138,40 +138,43 @@ namespace Kokkos {
 
 namespace Impl {
 
-template <class D>
+template <class S>
 struct HostMirror {
-  static_assert(
-      Kokkos::is_device<Kokkos::Device<typename D::execution_space,
-                                       typename D::memory_space>>::value);
+  using is_space = typename Kokkos::is_space<S>;
+  static_assert(is_space());
 
  private:
   // If input execution space can access HostSpace then keep it.
   // Example: Kokkos::OpenMP can access, Kokkos::Cuda cannot
   enum {
-    keep_exe = Kokkos::Impl::MemorySpaceAccess<typename D::memory_space,
-                                               Kokkos::HostSpace>::accessible
+    keep_exe = Kokkos::SpaceAccessibility<typename S::execution_space,
+                                          Kokkos::HostSpace>::accessible
   };
-
   // If HostSpace can access memory space then keep it.
   // Example: Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
   enum {
     keep_mem =
         Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
-                                        typename D::memory_space>::accessible
+                                        typename S::memory_space>::accessible
   };
 
  public:
+  // Construct a device mirror type
   using Device = std::conditional_t<
-      keep_exe && keep_mem, D,
+      keep_exe && keep_mem,
+      Kokkos::Device<typename S::execution_space, typename S::memory_space>,
       std::conditional_t<keep_mem,
                          Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                        typename D::memory_space>,
+                                        typename S::memory_space>,
                          Kokkos::Device<Kokkos::HostSpace::execution_space,
                                         Kokkos::HostSpace::memory_space>>>;
 
   using execution_space = typename Device::execution_space;
   using memory_space    = typename Device::memory_space;
-  using Space           = memory_space;
+
+  // Construct mirror type matching the template parameter type
+  using Space = std::conditional_t<is_space::is_exec_space(), execution_space,
+                                   memory_space>;
 };
 
 }  // namespace Impl
