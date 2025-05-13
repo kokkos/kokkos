@@ -755,7 +755,7 @@ struct Random_UniqueIndex<
                   "Random_UniqueIndex only when compiled with NVHPC or CLACC.");
 #endif
     const int lock_size = locks.extent_int(0);
-
+    i %= lock_size;
     while (Kokkos::atomic_compare_exchange(&locks(i, 0), 0, 1)) {
       i = (i + 1) % lock_size;
     }
