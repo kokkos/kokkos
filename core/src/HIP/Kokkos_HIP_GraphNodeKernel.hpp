@@ -31,6 +31,25 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename Functor>
+struct GraphNodeHostImpl<Kokkos::HIP, Functor> {
+  Functor functor;
+  hipGraphNode_t m_node = nullptr;
+
+  static void callback(void* data) {
+    reinterpret_cast<Functor*>(data)->operator()();
+  }
+
+  void add_to_graph(hipGraph_t graph) {
+    hipHostNodeParams params = {};
+    params.fn                = callback;
+    params.userData          = &functor;
+
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipGraphAddHostNode(&m_node, graph, nullptr, 0, &params));
+  }
+};
+
+template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::HIP, Functor> {
   Functor m_functor;
   hipGraphNode_t m_node = nullptr;

@@ -45,6 +45,19 @@ struct GraphNodeKernelDefaultImpl {
   ExecutionSpace m_execution_space;
 };
 
+template <typename ExecutionSpace, typename Functor>
+struct GraphNodeHostImpl : public GraphNodeKernelDefaultImpl<ExecutionSpace> {
+  using execute_kernel_vtable_base_t =
+      GraphNodeKernelDefaultImpl<ExecutionSpace>;
+
+  explicit GraphNodeHostImpl(Functor functor_)
+      : execute_kernel_vtable_base_t{}, functor(std::move(functor_)) {}
+
+  void execute_kernel() override final { functor(); }
+
+  Functor functor;
+};
+
 // TODO Indicate that this kernel specialization is only for the Host somehow?
 template <class ExecutionSpace, class PolicyType, class Functor,
           class PatternTag, class... Args>
