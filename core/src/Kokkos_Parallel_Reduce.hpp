@@ -1704,11 +1704,6 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 ReturnType& return_value) {
-  static_assert(
-      !std::is_const_v<ReturnType>,
-      "A const reduction result type is only allowed for a View, pointer or "
-      "reducer return type!");
-
   parallel_reduce("", policy, functor, return_value);
 }
 
@@ -1718,11 +1713,6 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const size_t& policy, const FunctorType& functor,
                 ReturnType& return_value) {
-  static_assert(
-      !std::is_const_v<ReturnType>,
-      "A const reduction result type is only allowed for a View, pointer or "
-      "reducer return type!");
-
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -1735,11 +1725,6 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const std::string& label, const size_t& policy,
                 const FunctorType& functor, ReturnType& return_value) {
-  static_assert(
-      !std::is_const_v<ReturnType>,
-      "A const reduction result type is only allowed for a View, pointer or "
-      "reducer return type!");
-
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -1835,14 +1820,6 @@ inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
     std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
         nullptr) {
-  using FunctorAnalysis =
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
-                            FunctorType, void>;
-
-  static_assert(
-      FunctorAnalysis::has_final_member_function,
-      "Calling parallel_reduce without either return value or final function.");
-
   parallel_reduce("", policy, functor);
 }
 
@@ -1851,12 +1828,6 @@ inline void parallel_reduce(const size_t& policy, const FunctorType& functor) {
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
-  using FunctorAnalysis =
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, policy_type,
-                            FunctorType, void>;
-  static_assert(
-      FunctorAnalysis::has_final_member_function,
-      "Calling parallel_reduce without either return value or final function.");
 
   parallel_reduce("", policy_type(0, policy), functor);
 }
@@ -1867,13 +1838,6 @@ inline void parallel_reduce(const std::string& label, const size_t& policy,
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
-  using FunctorAnalysis =
-      Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, policy_type,
-                            FunctorType, void>;
-
-  static_assert(
-      FunctorAnalysis::has_final_member_function,
-      "Calling parallel_reduce without either return value or final function.");
 
   parallel_reduce(label, policy_type(0, policy), functor);
 }
