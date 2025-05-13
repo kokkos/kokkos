@@ -454,7 +454,8 @@ void initialize_backends(const Kokkos::InitializationSettings& settings) {
 }
 
 void initialize_profiling(const Kokkos::Tools::InitArguments& args) {
-  auto initialization_status =
+  // Making this variable static prevents a leak if std::exit is called
+  static auto initialization_status =
       Kokkos::Tools::Impl::initialize_tools_subsystem(args);
   if (initialization_status.result ==
       Kokkos::Tools::Impl::InitializationStatus::InitializationResult::
@@ -731,7 +732,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 }
 
 void post_initialize_internal(const Kokkos::InitializationSettings& settings) {
-  Kokkos::Tools::InitArguments tools_init_arguments;
+  // Making this variable static prevents a leak if std::exit is called
+  static Kokkos::Tools::InitArguments tools_init_arguments;
   combine(tools_init_arguments, settings);
   initialize_profiling(tools_init_arguments);
   g_is_initialized = true;
@@ -1011,7 +1013,8 @@ void Kokkos::initialize(int& argc, char* argv[]) {
         "Error: Kokkos::initialize() has already been called."
         " Kokkos can be initialized at most once.\n");
   }
-  InitializationSettings settings;
+  // Making this variable static prevents a leak if std::exit is called
+  static InitializationSettings settings;
   Impl::parse_environment_variables(settings);
   Impl::parse_command_line_arguments(argc, argv, settings);
   initialize_internal(settings);
@@ -1023,7 +1026,8 @@ void Kokkos::initialize(InitializationSettings const& settings) {
         "Error: Kokkos::initialize() has already been called."
         " Kokkos can be initialized at most once.\n");
   }
-  InitializationSettings tmp;
+  // Making this variable static prevents a leak if std::exit is called
+  static InitializationSettings tmp;
   Impl::parse_environment_variables(tmp);
   combine(tmp, settings);
   initialize_internal(tmp);
