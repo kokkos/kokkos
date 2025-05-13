@@ -187,14 +187,6 @@ constexpr bool test_view_typedefs(ViewParams<T, ViewArgs...>) {
                                  T, L, S, M, HostMirrorDevice, ValueType, ReferenceType>();
 }
 
-constexpr bool is_host_exec = std::is_same_v<Kokkos::DefaultExecutionSpace, Kokkos::DefaultHostExecutionSpace>;
-
-#if defined(KOKKOS_ENABLE_CUDA_UVM) || defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
-constexpr bool has_unified_mem_space = true;
-#else
-constexpr bool has_unified_mem_space = false;
-#endif
-
 // The test take explicit template arguments for: LayoutType, Space, MemoryTraits, HostMirrorSpace, ValueType, ReferenceType
 // The ViewParams is just a type pack for the View template arguments
 
@@ -204,11 +196,7 @@ namespace TestInt {
   using memory_traits = Kokkos::MemoryTraits<0>;
   using space         = Kokkos::DefaultExecutionSpace;
   using device        = Kokkos::Device<space, typename space::memory_space>;
-  using host_mirror_device = std::conditional_t<is_host_exec, Kokkos::Device<Kokkos::DefaultExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>,
-  // If unified memory is not on its HostSpace
-    std::conditional_t<!has_unified_mem_space, Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::HostSpace>,
-  // otherwise its the following device type
-    Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
+  using host_mirror_device = Kokkos::Impl::HostMirror<device>::Device;
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_device, int, int&>(
                      ViewParams<int>{}));
 }
@@ -219,12 +207,7 @@ namespace TestIntDefaultExecutionSpace {
   using memory_traits = Kokkos::MemoryTraits<0>;
   using space         = Kokkos::DefaultExecutionSpace;
   using device        = Kokkos::Device<space, typename space::memory_space>;
-  using host_mirror_device= std::conditional_t<is_host_exec, Kokkos::Device<Kokkos::DefaultExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>,
-  // If unified memory is not on its HostSpace
-    std::conditional_t<!has_unified_mem_space, Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::HostSpace>,
-  // otherwise its the following device type
-    Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
-
+  using host_mirror_device = Kokkos::Impl::HostMirror<device>::Device;
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_device, int, int&>(
                      ViewParams<int, space>{}));
 }
@@ -235,7 +218,7 @@ namespace TestFloatPPHostSpace {
   using memory_traits = Kokkos::MemoryTraits<0>;
   using space         = Kokkos::HostSpace;
   using device        =  Kokkos::Device<space::execution_space, typename space::memory_space>;
-  using host_mirror_device = Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::HostSpace>;
+  using host_mirror_device = Kokkos::Impl::HostMirror<device>::Device;
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_device, const float, const float&>(
                      ViewParams<const float, space>{}));
 }
@@ -246,7 +229,7 @@ namespace TestFloatPPDeviceDefaultHostExecHostSpace {
   using memory_traits = Kokkos::MemoryTraits<0>;
   using space         = Kokkos::DefaultHostExecutionSpace;
   using device        = Kokkos::Device<space, Kokkos::HostSpace>;
-  using host_mirror_device = Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::HostSpace>;
+  using host_mirror_device = Kokkos::Impl::HostMirror<device>::Device;
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_device, float, float&>(
                      ViewParams<float, Kokkos::LayoutRight, device>{}));
 }
@@ -257,11 +240,7 @@ namespace TestIntAtomic {
   using memory_traits = Kokkos::MemoryTraits<Kokkos::Atomic>;
   using space         = Kokkos::DefaultExecutionSpace;
   using device        = Kokkos::Device<space::execution_space, typename space::memory_space>;
-    using host_mirror_device = std::conditional_t<is_host_exec, Kokkos::Device<Kokkos::DefaultExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>,
-  // If unified memory is not on its HostSpace
-    std::conditional_t<!has_unified_mem_space, Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::HostSpace>,
-  // otherwise its the following device type
-    Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
+  using host_mirror_device = Kokkos::Impl::HostMirror<device>::Device;
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using expected_ref_type = Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int*******, Kokkos::MemoryTraits<Kokkos::Atomic>>>;
 #else

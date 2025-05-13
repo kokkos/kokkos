@@ -28,7 +28,7 @@ namespace Test {
 TEST(TEST_CATEGORY, host_space_access) {
   using host_exec_space = Kokkos::HostSpace::execution_space;
   using device_space    = Kokkos::Device<host_exec_space, Kokkos::HostSpace>;
-  using device_mirror_space = Kokkos::Impl::HostMirror<device_space>::Device;
+  using device_mirror_space = Kokkos::Impl::HostMirror<device_space>::Space;
 
   static_assert(Kokkos::SpaceAccessibility<host_exec_space,
                                            Kokkos::HostSpace>::accessible);
