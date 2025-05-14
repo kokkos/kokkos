@@ -224,74 +224,47 @@ static void or_skip(benchmark::State& state) {
 
 namespace Test {
 
+#define STREAM_ARGS(label)            \
+  Name(label)                         \
+      ->ArgName("N")                  \
+      ->Arg(10)                       \
+      ->Unit(benchmark::kMillisecond) \
+      ->UseManualTime();
+
+// clang-format off
+// clang-format formatted these lines inconsistently, making it hard to
+// see the common pattern
 BENCHMARK(or_skip<StreamSet<0>>)
-    ->Name("StreamSet")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamSet");
 
 BENCHMARK(or_skip<StreamSet<Kokkos::Restrict>>)
-    ->Name("StreamSet<Restrict>")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamSet<Restrict>");
 
 BENCHMARK(or_skip<StreamCopy<0>>)
-    ->Name("StreamCopy")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamCopy");
 
 BENCHMARK(or_skip<StreamCopy<Kokkos::Restrict>>)
-    ->Name("StreamCopy<Restrict>")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamCopy<Restrict>");
 
 BENCHMARK(or_skip<StreamScale<0>>)
-    ->Name("StreamScale")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamScale");
 
 BENCHMARK(or_skip<StreamScale<Kokkos::Restrict>>)
-    ->Name("StreamScale<Restrict>")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamScale<Restrict>");
 
 BENCHMARK(or_skip<StreamAdd<0>>)
-    ->Name("StreamAdd")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamAdd");
 
 BENCHMARK(or_skip<StreamAdd<Kokkos::Restrict>>)
-    ->Name("StreamAdd<Restrict>")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamAdd<Restrict>");
 
 BENCHMARK(or_skip<StreamTriad<0>>)
-    ->Name("StreamTriad")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamTriad");
 
 BENCHMARK(or_skip<StreamTriad<Kokkos::Restrict>>)
-    ->Name("StreamTriad<Restrict>")
-    ->ArgName("N")
-    ->Arg(10)
-    ->Unit(benchmark::kMillisecond)
-    ->UseManualTime();
+    ->STREAM_ARGS("StreamTriad<Restrict>");
+// clang-format on
+
+#undef STREAM_ARGS
 
 }  // namespace Test
