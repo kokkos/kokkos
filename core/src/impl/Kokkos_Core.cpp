@@ -46,10 +46,11 @@
 
 //----------------------------------------------------------------------------
 namespace {
-bool g_is_initialized = false;
-bool g_is_finalized   = false;
-bool g_show_warnings  = true;
-bool g_tune_internals = false;
+bool g_print_help_and_exit = false;  // whether to exit early at initialize
+bool g_is_initialized      = false;
+bool g_is_finalized        = false;
+bool g_show_warnings       = true;
+bool g_tune_internals      = false;
 // When compiling with clang/LLVM and using the GNU (GCC) C++ Standard Library
 // (any recent version between GCC 7.3 and GCC 9.2), std::deque SEGV's during
 // the unwinding of the atexit(3C) handlers at program termination.  However,
@@ -488,6 +489,9 @@ std::string version_string_from_int(int version_number) {
 }
 
 void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
+  if (g_print_help_and_exit) {
+    std::exit(EXIT_SUCCESS);
+  }
   if (settings.has_disable_warnings() && settings.get_disable_warnings())
     g_show_warnings = false;
   if (settings.has_tune_internals() && settings.get_tune_internals())
@@ -897,8 +901,11 @@ void Kokkos::Impl::parse_command_line_arguments(
       remove_flag = true;
     } else if (check_arg(argv[iarg], "--kokkos-help") ||
                check_arg(argv[iarg], "--help")) {
-      help_flag   = true;
-      remove_flag = std::string(argv[iarg]).find("--kokkos-") == 0;
+      help_flag = true;
+      bool const has_kokkos_prefix =
+          std::string(argv[iarg]).find("--kokkos-") == 0;
+      remove_flag           = has_kokkos_prefix;
+      g_print_help_and_exit = has_kokkos_prefix;
     } else if (check_arg_str(argv[iarg], "--kokkos-map-device-id-by",
                              map_device_id_by)) {
       if (!is_valid_map_device_id_by(map_device_id_by)) {
