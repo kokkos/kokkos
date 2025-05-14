@@ -33,6 +33,7 @@ TEST_F(KokkosHelpCausesNormalProgramTermination_DeathTest,
 
   char const *argv[] = {
       "--kokkos-help",
+      nullptr,
   };
 
   ::testing::internal::CaptureStdout();
