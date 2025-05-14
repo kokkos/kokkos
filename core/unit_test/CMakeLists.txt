@@ -944,6 +944,7 @@ kokkos_add_executable_and_test(
   TestExecutionEnvironmentNonInitializedOrFinalized.cpp
   TestInitializationSettings.cpp
   TestInitializeFinalize.cpp
+  TestKokkosHelpCausesNormalProgramTermination.cpp
   TestLegionInitialization.cpp
   TestParseCmdLineArgsAndEnvVars.cpp
   TestPushFinalizeHook.cpp
