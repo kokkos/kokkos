@@ -38,7 +38,7 @@ void ViewFirstTouch_deepcopy(benchmark::State& state) {
 
     Kokkos::Timer timer;
     ViewType v_a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "A"), N);
-    Kokkos::deep_copy(v_a, 1.1);
+    Kokkos::deep_copy(v_a, 0.0);
     KokkosBenchmark::report_results(state, v_a, 1, timer.seconds());
   }
 }
