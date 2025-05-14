@@ -1,0 +1,64 @@
+module;
+
+#  include <Kokkos_Core.hpp>
+
+export module kokkoscore;
+export
+{
+  namespace Kokkos
+  {
+    using ::Kokkos::abort;
+    using ::Kokkos::abs;
+    using ::Kokkos::ALL;
+    using ::Kokkos::Array;
+    using ::Kokkos::atomic_add;
+    using ::Kokkos::AUTO;
+    using ::Kokkos::finalize;
+
+    using ::Kokkos::MemoryTraits;
+
+    using ::Kokkos::complex;
+    using ::Kokkos::create_mirror;
+    using ::Kokkos::create_mirror_view;
+    using ::Kokkos::create_mirror_view_and_copy;
+    using ::Kokkos::deep_copy;
+    using ::Kokkos::DefaultExecutionSpace;
+    using ::Kokkos::DefaultHostExecutionSpace;
+
+    using ::Kokkos::fence;
+    using ::Kokkos::finalize;
+    using ::Kokkos::fmax;
+    using ::Kokkos::HostSpace;
+    using ::Kokkos::IndexType;
+    using ::Kokkos::InitializationSettings;
+    using ::Kokkos::initialize;
+    using ::Kokkos::is_finalized;
+    using ::Kokkos::is_initialized;
+    using ::Kokkos::make_pair;
+    using ::Kokkos::Max;
+    using ::Kokkos::MDRangePolicy;
+    using ::Kokkos::pair;
+    using ::Kokkos::parallel_for;
+    using ::Kokkos::parallel_reduce;
+    using ::Kokkos::PerTeam;
+    using ::Kokkos::pow;
+    using ::Kokkos::push_finalize_hook;
+    using ::Kokkos::RangePolicy;
+    using ::Kokkos::Rank;
+    using ::Kokkos::realloc;
+    using ::Kokkos::resize;
+    using ::Kokkos::single;
+    using ::Kokkos::subview;
+    using ::Kokkos::TeamPolicy;
+    using ::Kokkos::TeamThreadRange;
+    using ::Kokkos::TeamVectorRange;
+    using ::Kokkos::Unmanaged;
+    using ::Kokkos::View;
+    using ::Kokkos::view_alloc;
+    using ::Kokkos::WithoutInitializing;
+
+    using ::Kokkos::SharedHostPinnedSpace;
+    using ::Kokkos::TeamThreadMDRange;
+  } // namespace Kokkos
+}
+

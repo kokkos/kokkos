@@ -149,6 +149,20 @@ if(NOT desul_FOUND)
   kokkos_lib_include_directories(kokkoscore ${KOKKOS_SOURCE_DIR}/tpls/desul/include)
 endif()
 
+add_library(kokkoscore_module)
+ target_sources(kokkoscore_module
+                   PUBLIC
+                   FILE_SET kokkoscore_module_sources
+                   TYPE CXX_MODULES
+                   FILES
+                     kokkoscore.ccm
+                    BASE_DIRS
+                     ${CMAKE_CURRENT_SOURCE_DIR}
+                     ${CMAKE_CURRENT_BINARY_DIR}
+    )
+
+    target_include_directories(kokkoscore_module PUBLIC ${KOKKOS_SOURCE_DIR}/tpls/desul/include ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include)
+
 if(Kokkos_ENABLE_IMPL_MDSPAN)
   message(STATUS "Experimental mdspan support is enabled")
 
