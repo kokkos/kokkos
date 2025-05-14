@@ -828,8 +828,8 @@ environment variable to yes.
 For support, documentation, and more information about Kokkos,
 visit the official website: https://kokkos.org
 
-If you use Kokkos in your work, please cite the recommended papers
-found at https://kokkos.org/citing-kokkos in your science publications.
+Please cite the recommended publications listed at https://kokkos.org/citing-kokkos
+when using Kokkos in your scientific work.
 
 Kokkos is a Linux Foundation Project.
 --------------------------------------------------------------------------------
