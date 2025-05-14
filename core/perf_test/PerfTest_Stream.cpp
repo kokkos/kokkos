@@ -224,10 +224,13 @@ static void or_skip(benchmark::State& state) {
 
 namespace Test {
 
+// As of May 2025, 10^8 doubles is larger than caches, but not so large as
+// to be inconvenient. Also run 11^8 for a quick check of convergence.
 #define STREAM_ARGS(label)            \
   Name(label)                         \
       ->ArgName("N")                  \
       ->Arg(10)                       \
+      ->Arg(11)                       \
       ->Unit(benchmark::kMillisecond) \
       ->UseManualTime();
 
