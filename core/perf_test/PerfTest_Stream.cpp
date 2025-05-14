@@ -40,9 +40,10 @@ using StreamDeviceArray =
     Kokkos::View<double*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
 using StreamHostArray = typename StreamDeviceArray::HostMirror;
 
-using StreamIndex =
-    int64_t;  // different than benchmarks/stream, which uses int
-using Policy = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
+// different than benchmarks/stream, which uses int
+// wide index types are common as GPU memory grows
+using StreamIndex = int64_t;
+using Policy      = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
 
 template <typename V>
 void perform_set(V& a, const double scalar_) {
