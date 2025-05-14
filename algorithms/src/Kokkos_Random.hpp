@@ -941,31 +941,34 @@ class Random_XorShift64_Pool {
 #endif
 
   Random_XorShift64_Pool(uint64_t seed) {
-    init(execution_space(), seed, execution_space().concurrency());
+    init_impl(execution_space(), seed, execution_space().concurrency());
     execution_space().fence("Random_XorShift64_Pool: Constructor");
   }
 
   Random_XorShift64_Pool(uint64_t seed, uint64_t num_states) {
-    init(execution_space(), seed, num_states);
+    init_impl(execution_space(), seed, num_states);
     execution_space().fence("Random_XorShift64_Pool: Constructor");
   }
 
   Random_XorShift64_Pool(const execution_space& exec, uint64_t seed) {
-    init(exec, seed, exec.concurrency());
+    init_impl(exec, seed, exec.concurrency());
   }
 
   Random_XorShift64_Pool(const execution_space& exec, uint64_t seed,
                          uint64_t num_states) {
-    init(exec, seed, num_states);
+    init_impl(exec, seed, num_states);
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   void init(uint64_t seed, uint64_t num_states) {
-    init(execution_space(), seed, num_states);
+    init_impl(execution_space(), seed, num_states);
     execution_space().fence("Random_XorShift64_Pool::init");
   }
+#endif
 
  private:
-  void init(execution_space const& exec, uint64_t seed, uint64_t num_states) {
+  void init_impl(execution_space const& exec, uint64_t seed,
+                 uint64_t num_states) {
     num_states_ = num_states;
 
     if (seed == 0) seed = uint64_t(1318319);
@@ -1218,31 +1221,34 @@ class Random_XorShift1024_Pool {
 #endif
 
   Random_XorShift1024_Pool(uint64_t seed) {
-    init(execution_space(), seed, execution_space().concurrency());
+    init_impl(execution_space(), seed, execution_space().concurrency());
     execution_space().fence("Random_XorShift1024_Pool: Constructor");
   }
 
   Random_XorShift1024_Pool(uint64_t seed, uint64_t num_states) {
-    init(execution_space(), seed, num_states);
+    init_impl(execution_space(), seed, num_states);
     execution_space().fence("Random_XorShift1024_Pool: Constructor");
   }
 
   Random_XorShift1024_Pool(const execution_space& exec, uint64_t seed) {
-    init(exec, seed, exec.concurrency());
+    init_impl(exec, seed, exec.concurrency());
   }
 
   Random_XorShift1024_Pool(const execution_space& exec, uint64_t seed,
                            uint64_t num_states) {
-    init(exec, seed, num_states);
+    init_impl(exec, seed, num_states);
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   void init(uint64_t seed, uint64_t num_states) {
-    init(execution_space(), seed, num_states);
+    init_impl(execution_space(), seed, num_states);
     execution_space().fence("Random_XorShift1024_Pool::init");
   }
+#endif
 
  private:
-  void init(execution_space const& exec, uint64_t seed, uint64_t num_states) {
+  void init_impl(execution_space const& exec, uint64_t seed,
+                 uint64_t num_states) {
     num_states_ = num_states;
 
     if (seed == 0) seed = uint64_t(1318319);
