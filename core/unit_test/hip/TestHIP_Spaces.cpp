@@ -194,9 +194,15 @@ TEST(hip, space_access) {
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
                      Kokkos::HIPManagedSpace>);
 
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
   static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
                      Kokkos::HostSpace>);
+                     #else
+  static_assert(
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+                     Kokkos::HIPSpace>);
+                     #endif
 
   static_assert(std::is_same_v<
                 Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::memory_space,
