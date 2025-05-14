@@ -34,7 +34,7 @@ static void Random(benchmark::State &state) {
   Kokkos::View<Scalar *> out("out", N);
   Pool random_pool(/*seed=*/12345);
 
-  for (auto _ : state) {
+  for ([[maybe_unused]] auto _ : state) {
     Kokkos::parallel_for(
         N, KOKKOS_LAMBDA(const int i) {
           auto generator = random_pool.get_state();
