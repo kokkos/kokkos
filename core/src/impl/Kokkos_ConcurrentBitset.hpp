@@ -129,7 +129,7 @@ struct concurrent_bitset {
     // There is a zero bit available somewhere,
     // now find the (first) available bit and set it.
 
-    while (1) {
+    while (true) {
       const uint32_t word = bit >> bits_per_int_lg2;
       const uint32_t mask = 1u << (bit & bits_per_int_mask);
       const uint32_t prev = Kokkos::atomic_fetch_or(
@@ -215,7 +215,7 @@ struct concurrent_bitset {
     // There is a zero bit available somewhere,
     // now find the (first) available bit and set it.
 
-    while (1) {
+    while (true) {
       const uint32_t word = bit >> bits_per_int_lg2;
       const uint32_t mask = 1u << (bit & bits_per_int_mask);
       const uint32_t prev = Kokkos::atomic_fetch_or(

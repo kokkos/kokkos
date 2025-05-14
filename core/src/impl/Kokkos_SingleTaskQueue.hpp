@@ -102,6 +102,7 @@ class SingleTaskQueue
       : base_t(arg_memory_pool) {}
 
   ~SingleTaskQueue() {
+    // NOLINTNEXTLINE(modernize-loop-convert)
     for (int i_priority = 0; i_priority < NumQueue; ++i_priority) {
       KOKKOS_EXPECTS(m_ready_queues[i_priority][TaskTeam].empty());
       KOKKOS_EXPECTS(m_ready_queues[i_priority][TaskSingle].empty());
@@ -128,6 +129,7 @@ class SingleTaskQueue
     OptionalRef<task_base_type> return_value;
     // always loop in order of priority first, then prefer team tasks over
     // single tasks
+    // NOLINTNEXTLINE(modernize-loop-convert)
     for (int i_priority = 0; i_priority < NumQueue; ++i_priority) {
       // Check for a team task with this priority
       return_value = m_ready_queues[i_priority][TaskTeam].pop();

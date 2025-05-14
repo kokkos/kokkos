@@ -105,6 +105,12 @@ class ViewDataHandle<
   }
 
   KOKKOS_INLINE_FUNCTION
+  static handle_type const&& assign(handle_type const&& arg_handle,
+                                    track_type const& /* arg_tracker */) {
+    return std::move(arg_handle);
+  }
+
+  KOKKOS_INLINE_FUNCTION
   static handle_type const assign(handle_type const& arg_handle,
                                   size_t offset) {
     return handle_type(arg_handle, offset);

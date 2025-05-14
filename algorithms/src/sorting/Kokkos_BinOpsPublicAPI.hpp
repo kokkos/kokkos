@@ -82,7 +82,7 @@ struct BinOp3D {
   BinOp3D() = delete;
 #endif
 
-  BinOp3D(int max_bins[], typename KeyViewType::const_value_type min[],
+  BinOp3D(int const max_bins[], typename KeyViewType::const_value_type min[],
           typename KeyViewType::const_value_type max[]) {
     max_bins_[0] = max_bins[0];
     max_bins_[1] = max_bins[1];

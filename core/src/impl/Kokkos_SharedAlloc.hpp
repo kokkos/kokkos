@@ -101,11 +101,13 @@ class SharedAllocationRecord<void, void> {
   int m_count;
   std::string m_label;
 
+ public:
   SharedAllocationRecord(SharedAllocationRecord&&)                 = delete;
   SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
   SharedAllocationRecord& operator=(SharedAllocationRecord&&)      = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
+ protected:
   /**\brief  Construct and insert into 'arg_root' tracking set.
    *         use_count is zero.
    */
@@ -234,7 +236,7 @@ class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
   static void deallocate(record_base_t* arg_rec);
 
  public:
-  ~SharedAllocationRecordCommon();
+  ~SharedAllocationRecordCommon() override;
   template <class ExecutionSpace>
   SharedAllocationRecordCommon(
       ExecutionSpace const& exec, MemorySpace const& space,
@@ -318,7 +320,7 @@ class HostInaccessibleSharedAllocationRecordCommon
   static void deallocate(record_base_t* arg_rec);
 
  public:
-  ~HostInaccessibleSharedAllocationRecordCommon();
+  ~HostInaccessibleSharedAllocationRecordCommon() override;
   template <class ExecutionSpace>
   HostInaccessibleSharedAllocationRecordCommon(
       ExecutionSpace const& exec, MemorySpace const& space,
@@ -481,11 +483,11 @@ class SharedAllocationRecord
             &Kokkos::Impl::deallocate<MemorySpace, DestroyFunctor>),
         m_destroy() {}
 
+ public:
   SharedAllocationRecord()                                         = delete;
   SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
   SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
 
- public:
   DestroyFunctor m_destroy;
 
   // Allocate with a zero use count.  Incrementing the use count from zero to

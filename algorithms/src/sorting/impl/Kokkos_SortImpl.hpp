@@ -168,7 +168,7 @@ void sort_via_binsort(const ExecutionSpace& exec,
     // using 10M as the cutoff for special behavior (roughly 40MB for the count
     // array)
     if ((max_val - min_val) < 10000000) {
-      max_bins     = max_val - min_val + 1;
+      max_bins     = static_cast<int64_t>(max_val - min_val + 1.);
       sort_in_bins = false;
     }
   }
