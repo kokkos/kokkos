@@ -206,7 +206,8 @@ endfunction()
 
 # this function finds the kokkos_launch_compiler script and prepends it to the compiler and linker launcher
 #
-#       SEARCH_PATH --> input: search path for kokkos_launch_compiler (optional)
+#       SEARCH_PATH       --> input: search path for kokkos_launch_compiler (optional)
+#       BACKEND_COMPILER  --> input: compiler to be mapped to by the launcher (optional)
 #
 function(kokkos_use_launch_compiler)
   cmake_parse_arguments(INP "" "SEARCH_PATH;BACKEND_COMPILER" "" ${ARGN})
