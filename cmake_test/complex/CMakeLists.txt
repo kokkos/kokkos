@@ -104,9 +104,8 @@ add_test(NAME ${PROJECT_NAME}_KokkosPrivate_Verify COMMAND ${PROJECT_NAME}_execu
 add_subdirectory(lib_with_public_dependency_on_lib_with_interface_kokkos_dependency)
 
 add_executable(
-  ${PROJECT_NAME}_executable_public_interface
-  ../test_source/test_public_interface.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ${PROJECT_NAME}_executable_public_interface ../test_source/test_public_interface.cpp
+                                              ../test_source/source_plain_cxx.cpp ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -127,9 +126,8 @@ add_test(NAME ${PROJECT_NAME}_KokkosPublic_interface_Verify COMMAND ${PROJECT_NA
 add_subdirectory(lib_with_public_dependency_on_lib_with_public_kokkos_dependency)
 
 add_executable(
-  ${PROJECT_NAME}_executable_public_public
-  ../test_source/test_public_public.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ${PROJECT_NAME}_executable_public_public ../test_source/test_public_public.cpp ../test_source/source_plain_cxx.cpp
+                                           ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -150,9 +148,8 @@ add_test(NAME ${PROJECT_NAME}_KokkosPublic_public_Verify COMMAND ${PROJECT_NAME}
 add_subdirectory(lib_with_public_dependency_on_lib_with_private_kokkos_dependency)
 
 add_executable(
-  ${PROJECT_NAME}_executable_public_private
-  ../test_source/test_public_private.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ${PROJECT_NAME}_executable_public_private ../test_source/test_public_private.cpp ../test_source/source_plain_cxx.cpp
+                                            ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -174,8 +171,7 @@ add_subdirectory(lib_with_private_dependency_on_lib_with_interface_kokkos_depend
 
 add_executable(
   ${PROJECT_NAME}_executable_private_interface
-  ../test_source/test_private_interface.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ../test_source/test_private_interface.cpp ../test_source/source_plain_cxx.cpp ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -196,9 +192,8 @@ add_test(NAME ${PROJECT_NAME}_KokkosPrivate_interface_Verify COMMAND ${PROJECT_N
 add_subdirectory(lib_with_private_dependency_on_lib_with_public_kokkos_dependency)
 
 add_executable(
-  ${PROJECT_NAME}_executable_private_public
-  ../test_source/test_private_public.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ${PROJECT_NAME}_executable_private_public ../test_source/test_private_public.cpp ../test_source/source_plain_cxx.cpp
+                                            ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -219,9 +214,8 @@ add_test(NAME ${PROJECT_NAME}_KokkosPrivate_public_Verify COMMAND ${PROJECT_NAME
 add_subdirectory(lib_with_private_dependency_on_lib_with_private_kokkos_dependency)
 
 add_executable(
-  ${PROJECT_NAME}_executable_private_private
-  ../test_source/test_private_private.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ${PROJECT_NAME}_executable_private_private ../test_source/test_private_private.cpp
+                                             ../test_source/source_plain_cxx.cpp ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -243,8 +237,7 @@ add_subdirectory(lib_with_interface_dependency_on_lib_with_interface_kokkos_depe
 
 add_executable(
   ${PROJECT_NAME}_executable_interface_interface
-  ../test_source/test_interface_interface.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ../test_source/test_interface_interface.cpp ../test_source/source_plain_cxx.cpp ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -267,9 +260,8 @@ add_test(NAME ${PROJECT_NAME}_KokkosInterface_interface_Verify COMMAND ${PROJECT
 add_subdirectory(lib_with_interface_dependency_on_lib_with_public_kokkos_dependency)
 
 add_executable(
-  ${PROJECT_NAME}_executable_interface_public
-  ../test_source/test_interface_public.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ${PROJECT_NAME}_executable_interface_public ../test_source/test_interface_public.cpp
+                                              ../test_source/source_plain_cxx.cpp ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
@@ -291,8 +283,7 @@ add_subdirectory(lib_with_interface_dependency_on_lib_with_private_kokkos_depend
 
 add_executable(
   ${PROJECT_NAME}_executable_interface_private
-  ../test_source/test_interface_private.cpp ../test_source/source_plain_cxx.cpp
-  ../test_source/source_plain_fortran.f
+  ../test_source/test_interface_private.cpp ../test_source/source_plain_cxx.cpp ../test_source/source_plain_fortran.f
 )
 
 target_link_libraries(
