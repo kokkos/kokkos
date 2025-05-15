@@ -265,10 +265,12 @@ endfunction()
 
 # this function searches a given target recursively looking for a transitive compile dependency to DEPENDENT_LIBRARY
 #
-#       COMPILE_DEPENDENCY                --> output: is set to ON if the target needs to be compiled with the requirements of DEPENDENT_LIBRARY
-#       TRANSITIVE_COMPILE_DEPENDENCY     --> output: is set to ON if the target infects targets that depend PUBLIC on it to need to be compiled with the requirements of DEPENDENT_LIBRARY
-#       DEPENDENT_LIBRARY                 --> input: The library to search for in the target properties
-#       INVESTIGATED_TARGET               --> input: target to be checked for transitive dependency
+#       COMPILE_DEPENDENCY                  --> output: is set to ON if the target needs to be compiled with the requirements of DEPENDENT_LIBRARY
+#       TRANSITIVE_COMPILE_DEPENDENCY       --> output: is set to ON if the target infects targets that depend PUBLIC on it to need to be compiled with the requirements of DEPENDENT_LIBRARY
+#       DEPENDENT_LIBRARY                   --> input: The library to search for in the target properties
+#       INVESTIGATED_TARGET                 --> input: target to be checked for transitive dependency
+#       COMPILE_DEPENDENCY_CACHE            --> in/out: cache of targetnames that have a compile dependency on INVESTIGATED_TARGET
+#       TRANSITIVE_COMPILE_DEPENDENCY_CACHE --> in/out: cache of targetnames that have a transient compile dependency on INVESTIGATED_TARGET
 #
 function(
   kokkos_check_compile_dependency
@@ -411,10 +413,8 @@ endfunction()
 
 # this function searches a given directory recursively finding all targets that link to DEPENDENT_LIBRARY
 #
-#       FOUND_TARGETS         --> output: list of all found targets that link to kokkos and need our compiler
-#       DEPENDENT_LIBRARY     --> input: The library to search for in the target properties
-#       SEARCH_DIR            --> input: the root dir to start the recursion from
-#       EXCLUDE_DIRS          --> input: list of directories that should be excluded
+#       GLOBAL         --> input: exclude everything from Kokkos setting build properties
+#       DIRECTORY      --> input: list of directories that should be excluded
 #
 function(kokkos_exclude_from_setting_build_properties)
   cmake_parse_arguments(INP "GLOBAL" "" "DIRECTORY" ${ARGN})
