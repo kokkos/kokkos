@@ -456,8 +456,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
     }
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
-  operator-() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
     return basic_simd(vnegq_f64(m_value));
   }
 
@@ -466,54 +465,54 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vaddq_f64(static_cast<float64x2_t>(lhs),
                                 static_cast<float64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vsubq_f64(static_cast<float64x2_t>(lhs),
                                 static_cast<float64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vmulq_f64(static_cast<float64x2_t>(lhs),
                                 static_cast<float64x2_t>(rhs)));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator/(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vdivq_f64(static_cast<float64x2_t>(lhs),
                                 static_cast<float64x2_t>(rhs)));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator==(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vceqq_f64(static_cast<float64x2_t>(lhs),
                                static_cast<float64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator!=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(operator==(lhs, rhs));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcgeq_f64(static_cast<float64x2_t>(lhs),
                                static_cast<float64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcleq_f64(static_cast<float64x2_t>(lhs),
                                static_cast<float64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcgtq_f64(static_cast<float64x2_t>(lhs),
                                static_cast<float64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcltq_f64(static_cast<float64x2_t>(lhs),
                                static_cast<float64x2_t>(rhs)));
   }
@@ -521,57 +520,57 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
 
 }  // namespace Experimental
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    abs(Experimental::basic_simd<
-        double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+abs(Experimental::basic_simd<
+    double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vabsq_f64(static_cast<float64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    floor(Experimental::basic_simd<
-          double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+floor(Experimental::basic_simd<
+      double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrndmq_f64(static_cast<float64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    ceil(Experimental::basic_simd<
-         double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+ceil(Experimental::basic_simd<
+     double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrndpq_f64(static_cast<float64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    round(Experimental::basic_simd<
-          double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+round(Experimental::basic_simd<
+      double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrndxq_f64(static_cast<float64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    trunc(Experimental::basic_simd<
-          double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+trunc(Experimental::basic_simd<
+      double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrndq_f64(static_cast<float64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    copysign(Experimental::basic_simd<
-                 double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-             Experimental::basic_simd<
-                 double, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+copysign(Experimental::basic_simd<
+             double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+         Experimental::basic_simd<
+             double, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
   uint64x2_t const sign_mask = vreinterpretq_u64_f64(vmovq_n_f64(-0.0));
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
@@ -581,46 +580,46 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
                     vreinterpretq_u64_f64(static_cast<float64x2_t>(b))))));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    sqrt(Experimental::basic_simd<
-         double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+sqrt(Experimental::basic_simd<
+     double, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vsqrtq_f64(static_cast<float64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    fma(Experimental::basic_simd<
-            double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-        Experimental::basic_simd<
-            double, Experimental::simd_abi::neon_fixed_size<2>> const& b,
-        Experimental::basic_simd<
-            double, Experimental::simd_abi::neon_fixed_size<2>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+fma(Experimental::basic_simd<
+        double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+    Experimental::basic_simd<
+        double, Experimental::simd_abi::neon_fixed_size<2>> const& b,
+    Experimental::basic_simd<
+        double, Experimental::simd_abi::neon_fixed_size<2>> const& c) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vfmaq_f64(static_cast<float64x2_t>(c), static_cast<float64x2_t>(b),
                 static_cast<float64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    max(Experimental::basic_simd<
-            double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-        Experimental::basic_simd<
-            double, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+max(Experimental::basic_simd<
+        double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+    Experimental::basic_simd<
+        double, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vmaxq_f64(static_cast<float64x2_t>(a), static_cast<float64x2_t>(b)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
-    min(Experimental::basic_simd<
-            double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-        Experimental::basic_simd<
-            double, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<double, Experimental::simd_abi::neon_fixed_size<2>>
+min(Experimental::basic_simd<
+        double, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+    Experimental::basic_simd<
+        double, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
   return Experimental::basic_simd<double,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vminq_f64(static_cast<float64x2_t>(a), static_cast<float64x2_t>(b)));
@@ -628,11 +627,11 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
 
 namespace Experimental {
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<double, simd_abi::neon_fixed_size<2>>
-    condition(basic_simd_mask<double, simd_abi::neon_fixed_size<2>> const& a,
-              basic_simd<double, simd_abi::neon_fixed_size<2>> const& b,
-              basic_simd<double, simd_abi::neon_fixed_size<2>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<double, simd_abi::neon_fixed_size<2>> condition(
+    basic_simd_mask<double, simd_abi::neon_fixed_size<2>> const& a,
+    basic_simd<double, simd_abi::neon_fixed_size<2>> const& b,
+    basic_simd<double, simd_abi::neon_fixed_size<2>> const& c) {
   return basic_simd<double, simd_abi::neon_fixed_size<2>>(
       vbslq_f64(static_cast<uint64x2_t>(a), static_cast<float64x2_t>(b),
                 static_cast<float64x2_t>(c)));
@@ -709,8 +708,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
     }
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
-  operator-() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
     return basic_simd(vneg_f32(m_value));
   }
 
@@ -719,102 +717,102 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vadd_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vsub_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vmul_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator/(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vdiv_f32(lhs.m_value, rhs.m_value));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator==(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vceq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator!=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(lhs == rhs);
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcge_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcle_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcgt_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vclt_f32(lhs.m_value, rhs.m_value));
   }
 };
 
 }  // namespace Experimental
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    abs(Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>> abs(
+    Experimental::basic_simd<
         float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vabs_f32(static_cast<float32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    floor(Experimental::basic_simd<
-          float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
+floor(Experimental::basic_simd<
+      float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrndm_f32(static_cast<float32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    ceil(Experimental::basic_simd<
-         float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
+ceil(Experimental::basic_simd<
+     float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrndp_f32(static_cast<float32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    round(Experimental::basic_simd<
-          float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
+round(Experimental::basic_simd<
+      float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrndx_f32(static_cast<float32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    trunc(Experimental::basic_simd<
-          float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
+trunc(Experimental::basic_simd<
+      float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vrnd_f32(static_cast<float32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    copysign(Experimental::basic_simd<
-                 float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-             Experimental::basic_simd<
-                 float, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
+copysign(Experimental::basic_simd<
+             float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+         Experimental::basic_simd<
+             float, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
   uint32x2_t const sign_mask = vreinterpret_u32_f32(vmov_n_f32(-0.0));
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
@@ -824,46 +822,46 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
                    vreinterpret_u32_f32(static_cast<float32x2_t>(b))))));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    sqrt(Experimental::basic_simd<
-         float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
+sqrt(Experimental::basic_simd<
+     float, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vsqrt_f32(static_cast<float32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    fma(Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<2>> const& b,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<2>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>> fma(
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<2>> const& b,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<2>> const& c) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vfma_f32(static_cast<float32x2_t>(c), static_cast<float32x2_t>(b),
                static_cast<float32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    max(Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>> max(
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vmax_f32(static_cast<float32x2_t>(a), static_cast<float32x2_t>(b)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>>
-    min(Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<2>> min(
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<2>> const& a,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<2>> const& b) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<2>>(
       vmin_f32(static_cast<float32x2_t>(a), static_cast<float32x2_t>(b)));
@@ -871,11 +869,11 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
 
 namespace Experimental {
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<float, simd_abi::neon_fixed_size<2>>
-    condition(basic_simd_mask<float, simd_abi::neon_fixed_size<2>> const& a,
-              basic_simd<float, simd_abi::neon_fixed_size<2>> const& b,
-              basic_simd<float, simd_abi::neon_fixed_size<2>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<float, simd_abi::neon_fixed_size<2>> condition(
+    basic_simd_mask<float, simd_abi::neon_fixed_size<2>> const& a,
+    basic_simd<float, simd_abi::neon_fixed_size<2>> const& b,
+    basic_simd<float, simd_abi::neon_fixed_size<2>> const& c) {
   return basic_simd<float, simd_abi::neon_fixed_size<2>>(
       vbsl_f32(static_cast<uint32x2_t>(a), static_cast<float32x2_t>(b),
                static_cast<float32x2_t>(c)));
@@ -958,8 +956,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
     }
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
-  operator-() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
     return basic_simd(vnegq_f32(m_value));
   }
 
@@ -968,102 +965,102 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vaddq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vsubq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vmulq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator/(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vdivq_f32(lhs.m_value, rhs.m_value));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator==(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vceqq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator!=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(lhs == rhs);
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcgeq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcleq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcgtq_f32(lhs.m_value, rhs.m_value));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(vcltq_f32(lhs.m_value, rhs.m_value));
   }
 };
 
 }  // namespace Experimental
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    abs(Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>> abs(
+    Experimental::basic_simd<
         float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vabsq_f32(static_cast<float32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    floor(Experimental::basic_simd<
-          float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
+floor(Experimental::basic_simd<
+      float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vrndmq_f32(static_cast<float32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    ceil(Experimental::basic_simd<
-         float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
+ceil(Experimental::basic_simd<
+     float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vrndpq_f32(static_cast<float32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    round(Experimental::basic_simd<
-          float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
+round(Experimental::basic_simd<
+      float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vrndxq_f32(static_cast<float32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    trunc(Experimental::basic_simd<
-          float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
+trunc(Experimental::basic_simd<
+      float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vrndq_f32(static_cast<float32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    copysign(Experimental::basic_simd<
-                 float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
-             Experimental::basic_simd<
-                 float, Experimental::simd_abi::neon_fixed_size<4>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
+copysign(Experimental::basic_simd<
+             float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
+         Experimental::basic_simd<
+             float, Experimental::simd_abi::neon_fixed_size<4>> const& b) {
   uint32x4_t const sign_mask = vreinterpretq_u32_f32(vmovq_n_f32(-0.0));
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
@@ -1073,46 +1070,46 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
                     vreinterpretq_u32_f32(static_cast<float32x4_t>(b))))));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    sqrt(Experimental::basic_simd<
-         float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
+sqrt(Experimental::basic_simd<
+     float, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vsqrtq_f32(static_cast<float32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    fma(Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<4>> const& b,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<4>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>> fma(
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<4>> const& b,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<4>> const& c) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vfmaq_f32(static_cast<float32x4_t>(c), static_cast<float32x4_t>(b),
                 static_cast<float32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    max(Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<4>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>> max(
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<4>> const& b) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vmaxq_f32(static_cast<float32x4_t>(a), static_cast<float32x4_t>(b)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>>
-    min(Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
-        Experimental::basic_simd<
-            float, Experimental::simd_abi::neon_fixed_size<4>> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+Experimental::basic_simd<float, Experimental::simd_abi::neon_fixed_size<4>> min(
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<4>> const& a,
+    Experimental::basic_simd<
+        float, Experimental::simd_abi::neon_fixed_size<4>> const& b) {
   return Experimental::basic_simd<float,
                                   Experimental::simd_abi::neon_fixed_size<4>>(
       vminq_f32(static_cast<float32x4_t>(a), static_cast<float32x4_t>(b)));
@@ -1120,11 +1117,11 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
 
 namespace Experimental {
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<float, simd_abi::neon_fixed_size<4>>
-    condition(basic_simd_mask<float, simd_abi::neon_fixed_size<4>> const& a,
-              basic_simd<float, simd_abi::neon_fixed_size<4>> const& b,
-              basic_simd<float, simd_abi::neon_fixed_size<4>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<float, simd_abi::neon_fixed_size<4>> condition(
+    basic_simd_mask<float, simd_abi::neon_fixed_size<4>> const& a,
+    basic_simd<float, simd_abi::neon_fixed_size<4>> const& b,
+    basic_simd<float, simd_abi::neon_fixed_size<4>> const& c) {
   return basic_simd<float, simd_abi::neon_fixed_size<4>>(
       vbslq_f32(static_cast<uint32x4_t>(a), static_cast<float32x4_t>(b),
                 static_cast<float32x4_t>(c)));
@@ -1204,8 +1201,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
     }
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
-  operator-() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
     return basic_simd(vneg_s32(m_value));
   }
 
@@ -1214,68 +1210,68 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vadd_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vsub_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vmul_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vshl_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vshl_s32(static_cast<int32x2_t>(lhs),
                                vneg_s32(static_cast<int32x2_t>(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(
         vshl_s32(static_cast<int32x2_t>(lhs), vmov_n_s32(std::int32_t(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(vshl_s32(static_cast<int32x2_t>(lhs),
                                vneg_s32(vmov_n_s32(std::int32_t(rhs)))));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator==(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vceq_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator!=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(lhs == rhs);
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcge_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcle_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcgt_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vclt_s32(static_cast<int32x2_t>(lhs), static_cast<int32x2_t>(rhs)));
   }
@@ -1283,7 +1279,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
 
 }  // namespace Experimental
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<2>>
 abs(Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
@@ -1292,28 +1288,28 @@ abs(Experimental::basic_simd<
       vabs_s32(static_cast<int32x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<2>>
 floor(Experimental::basic_simd<
       std::int32_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<2>>
 ceil(Experimental::basic_simd<
      std::int32_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<2>>
 round(Experimental::basic_simd<
       std::int32_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<2>>
 trunc(Experimental::basic_simd<
       std::int32_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
@@ -1322,12 +1318,11 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>>
-    condition(
-        basic_simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& a,
-        basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& b,
-        basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> condition(
+    basic_simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& a,
+    basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& b,
+    basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& c) {
   return basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>>(
       vbsl_s32(static_cast<uint32x2_t>(a), static_cast<int32x2_t>(b),
                static_cast<int32x2_t>(c)));
@@ -1413,8 +1408,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
     }
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
-  operator-() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
     return basic_simd(vnegq_s32(m_value));
   }
 
@@ -1423,68 +1417,68 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vaddq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vsubq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vmulq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vshlq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vshlq_s32(static_cast<int32x4_t>(lhs),
                                 vnegq_s32(static_cast<int32x4_t>(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(
         vshlq_s32(static_cast<int32x4_t>(lhs), vmovq_n_s32(std::int32_t(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(vshlq_s32(static_cast<int32x4_t>(lhs),
                                 vnegq_s32(vmovq_n_s32(std::int32_t(rhs)))));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator==(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vceqq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator!=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(lhs == rhs);
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcgeq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcleq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcgtq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcltq_s32(static_cast<int32x4_t>(lhs), static_cast<int32x4_t>(rhs)));
   }
@@ -1492,7 +1486,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
 
 }  // namespace Experimental
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<4>>
 abs(Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
@@ -1501,28 +1495,28 @@ abs(Experimental::basic_simd<
       vabsq_s32(static_cast<int32x4_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<4>>
 floor(Experimental::basic_simd<
       std::int32_t, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<4>>
 ceil(Experimental::basic_simd<
      std::int32_t, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<4>>
 round(Experimental::basic_simd<
       std::int32_t, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int32_t, Experimental::simd_abi::neon_fixed_size<4>>
 trunc(Experimental::basic_simd<
       std::int32_t, Experimental::simd_abi::neon_fixed_size<4>> const& a) {
@@ -1531,12 +1525,11 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>>
-    condition(
-        basic_simd_mask<std::int32_t, simd_abi::neon_fixed_size<4>> const& a,
-        basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& b,
-        basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> condition(
+    basic_simd_mask<std::int32_t, simd_abi::neon_fixed_size<4>> const& a,
+    basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& b,
+    basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& c) {
   return basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>>(
       vbslq_s32(static_cast<uint32x4_t>(a), static_cast<int32x4_t>(b),
                 static_cast<int32x4_t>(c)));
@@ -1616,8 +1609,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
     }
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
-  operator-() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd operator-() const noexcept {
     return basic_simd(vnegq_s64(m_value));
   }
 
@@ -1626,67 +1618,67 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vaddq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vsubq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd([&](std::size_t i) { return lhs[i] * rhs[i]; });
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vshlq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vshlq_s64(static_cast<int64x2_t>(lhs),
                                 vnegq_s64(static_cast<int64x2_t>(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(
         vshlq_s64(static_cast<int64x2_t>(lhs), vmovq_n_s64(std::int64_t(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(vshlq_s64(static_cast<int64x2_t>(lhs),
                                 vnegq_s64(vmovq_n_s64(std::int64_t(rhs)))));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator==(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vceqq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator!=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(lhs == rhs);
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcgeq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcleq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcgtq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vcltq_s64(static_cast<int64x2_t>(lhs), static_cast<int64x2_t>(rhs)));
   }
@@ -1694,7 +1686,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
 
 }  // namespace Experimental
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int64_t, Experimental::simd_abi::neon_fixed_size<2>>
 abs(Experimental::basic_simd<
     std::int64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
@@ -1703,28 +1695,28 @@ abs(Experimental::basic_simd<
       vabsq_s64(static_cast<int64x2_t>(a)));
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int64_t, Experimental::simd_abi::neon_fixed_size<2>>
 floor(Experimental::basic_simd<
       std::int64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int64_t, Experimental::simd_abi::neon_fixed_size<2>>
 ceil(Experimental::basic_simd<
      std::int64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int64_t, Experimental::simd_abi::neon_fixed_size<2>>
 round(Experimental::basic_simd<
       std::int64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::int64_t, Experimental::simd_abi::neon_fixed_size<2>>
 trunc(Experimental::basic_simd<
       std::int64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
@@ -1733,12 +1725,11 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>>
-    condition(
-        basic_simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> const& a,
-        basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& b,
-        basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> condition(
+    basic_simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> const& a,
+    basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& b,
+    basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& c) {
   return basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>>(
       vbslq_s64(static_cast<uint64x2_t>(a), static_cast<int64x2_t>(b),
                 static_cast<int64x2_t>(c)));
@@ -1820,8 +1811,8 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
     }
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator-(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator-(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vsubq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
   }
@@ -1831,55 +1822,55 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator+(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator+(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vaddq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator*(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator*(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd([&](std::size_t i) { return lhs[i] * rhs[i]; });
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator&(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator&(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vandq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator|(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator|(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vorrq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
         vshlq_u64(static_cast<uint64x2_t>(lhs),
                   vreinterpretq_s64_u64(static_cast<uint64x2_t>(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(vshlq_u64(
         static_cast<uint64x2_t>(lhs),
         vnegq_s64(vreinterpretq_s64_u64(static_cast<uint64x2_t>(rhs)))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator<<(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(vshlq_u64(static_cast<uint64x2_t>(lhs),
                                 vmovq_n_s64(std::int64_t(rhs))));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd
-  operator>>(basic_simd const& lhs, int rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
+      basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(vshlq_u64(static_cast<uint64x2_t>(lhs),
                                 vnegq_s64(vmovq_n_s64(std::int64_t(rhs)))));
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator==(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(
         vceqq_u64(static_cast<uint64x2_t>(lhs), static_cast<uint64x2_t>(rhs)));
   }
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type
-  operator!=(basic_simd const& lhs, basic_simd const& rhs) noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(lhs == rhs);
   }
 };
@@ -1897,36 +1888,36 @@ basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>>::basic_simd(
         other) noexcept
     : m_value(vreinterpretq_s64_u64(static_cast<uint64x2_t>(other))) {}
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>>
-    abs(basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> abs(
+    basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
 }  // namespace Experimental
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>>
 floor(Experimental::basic_simd<
       std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>>
 ceil(Experimental::basic_simd<
      std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>>
 round(Experimental::basic_simd<
       std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
   return a;
 }
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>>
 trunc(Experimental::basic_simd<
       std::uint64_t, Experimental::simd_abi::neon_fixed_size<2>> const& a) {
@@ -1935,12 +1926,11 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>>
-    condition(
-        basic_simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a,
-        basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& b,
-        basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& c) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> condition(
+    basic_simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a,
+    basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& b,
+    basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& c) {
   return basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>>(
       vbslq_u64(static_cast<uint64x2_t>(a), static_cast<uint64x2_t>(b),
                 static_cast<uint64x2_t>(c)));
@@ -1981,13 +1971,12 @@ class const_where_expression<
     if (m_mask[1]) mem[index[1]] = m_value[1];
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const& impl_get_mask() const {
     return m_mask;
   }
 };
@@ -2074,13 +2063,12 @@ class const_where_expression<
     if (m_mask[1]) mem[index[1]] = m_value[1];
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const& impl_get_mask() const {
     return m_mask;
   }
 };
@@ -2172,13 +2160,12 @@ class const_where_expression<
     if (m_mask[3]) mem[index[3]] = m_value[3];
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const& impl_get_mask() const {
     return m_mask;
   }
 };
@@ -2266,13 +2253,12 @@ class const_where_expression<
     if (m_mask[1]) mem[index[1]] = m_value[1];
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const& impl_get_mask() const {
     return m_mask;
   }
 };
@@ -2369,13 +2355,12 @@ class const_where_expression<
     if (m_mask[3]) mem[index[3]] = m_value[3];
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const& impl_get_mask() const {
     return m_mask;
   }
 };
@@ -2465,13 +2450,12 @@ class const_where_expression<
     if (m_mask[1]) mem[index[1]] = m_value[1];
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const& impl_get_mask() const {
     return m_mask;
   }
 };
@@ -2564,13 +2548,12 @@ class const_where_expression<
     if (m_mask[1]) mem[index[1]] = m_value[1];
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const&
-  impl_get_value() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type const& impl_get_value()
+      const {
     return m_value;
   }
 
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const&
-  impl_get_mask() const {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type const& impl_get_mask() const {
     return m_mask;
   }
 };
@@ -2627,7 +2610,7 @@ class where_expression<
   }
 };
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
 // reduce_min(
 //         simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& m)
@@ -2635,7 +2618,7 @@ class where_expression<
 //   return vminv_s32(static_cast<int32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
 // reduce_max(
 //         simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& m)
@@ -2643,7 +2626,7 @@ class where_expression<
 //   return vmaxv_s32(static_cast<int32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
 // reduce(
 //         simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::int32_t, simd_abi::neon_fixed_size<2>> const& m,
@@ -2652,7 +2635,7 @@ class where_expression<
 //   return vaddv_s32(static_cast<int32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
 // reduce_min(
 //         simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& v,
 //         simd_mask<std::int32_t, simd_abi::neon_fixed_size<4>> const& m)
@@ -2660,14 +2643,14 @@ class where_expression<
 //   return vminvq_s32(static_cast<int32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
 // reduce_max(
 //         simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& v,
 //         simd_mask<std::int32_t, simd_abi::neon_fixed_size<4>> m) noexcept {
 //   return vmaxvq_s32(static_cast<int32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int32_t
 // reduce(
 //         simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& v,
 //         simd_mask<std::int32_t, simd_abi::neon_fixed_size<4>> const& m,
@@ -2676,7 +2659,7 @@ class where_expression<
 //   return vaddvq_s32(static_cast<int32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
 // reduce_min(
 //         simd<std::uint32_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& m)
@@ -2684,7 +2667,7 @@ class where_expression<
 //   return vminv_u32(static_cast<uint32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
 // reduce_max(
 //         simd<std::uint32_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& m)
@@ -2692,7 +2675,7 @@ class where_expression<
 //   return vmaxv_u32(static_cast<uint32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
 // reduce(
 //         simd<std::uint32_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& m,
@@ -2701,7 +2684,7 @@ class where_expression<
 //   return vaddv_u32(static_cast<uint32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
 // reduce_min(
 //         simd<std::uint32_t, simd_abi::neon_fixed_size<4>> const& v,
 //         simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& m)
@@ -2709,7 +2692,7 @@ class where_expression<
 //   return vminvq_u32(static_cast<uint32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
 // reduce_max(
 //         simd<std::uint32_t, simd_abi::neon_fixed_size<4>> const& v,
 //         simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& m)
@@ -2717,7 +2700,7 @@ class where_expression<
 //   return vmaxvq_u32(static_cast<uint32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint32_t
 // reduce(
 //         simd<std::uint32_t, simd_abi::neon_fixed_size<4>> const& v,
 //         simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& m,
@@ -2726,7 +2709,7 @@ class where_expression<
 //   return vaddvq_u32(static_cast<uint32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::int64_t
 // reduce(
 //         simd<std::int64_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::int64_t, simd_abi::neon_fixed_size<2>> const& m,
@@ -2735,7 +2718,7 @@ class where_expression<
 //   return vaddvq_s64(static_cast<int64x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION std::uint64_t
 // reduce(
 //         simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& v,
 //         simd_mask<std::uint64_t, simd_abi::neon_fixed_size<2>> const& m,
@@ -2743,14 +2726,14 @@ class where_expression<
 //   return vaddvq_u64(static_cast<uint64x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
 // reduce_min(
 //     simd < double, simd_abi::neon_fixed_size < 2 >> const& v,
 //     simd_mask<double, simd_abi::neon_fixed_size<2>> const& m) noexcept {
 //   return vminvq_f64(static_cast<float64x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double
 // reduce_max(
 //                            simd<double, simd_abi::neon_fixed_size<2>> const&
 //                            v,
@@ -2758,7 +2741,7 @@ class where_expression<
 //   return vmaxvq_f64(static_cast<float64x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION double reduce(
 //                            simd<double, simd_abi::neon_fixed_size<2>> const&
 //                            v,
 //     simd_mask<double, simd_abi::neon_fixed_size<2>> const& m,
@@ -2767,7 +2750,7 @@ class where_expression<
 //   return vaddvq_f64(static_cast<float64x2_t>(x.impl_get_value()));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
 // reduce_min(
 //                            simd<float, simd_abi::neon_fixed_size<2>> const&
 //                            v,
@@ -2775,7 +2758,7 @@ class where_expression<
 //   return vminv_f32(static_cast<float32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
 // reduce_max(
 //                            simd<float, simd_abi::neon_fixed_size<2>> const&
 //                            v,
@@ -2783,7 +2766,7 @@ class where_expression<
 //   return vmaxv_f32(static_cast<float32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
 //                            simd<float, simd_abi::neon_fixed_size<2>> const&
 //                            v,
 //     simd_mask<float, simd_abi::neon_fixed_size<2>> const& m,
@@ -2792,7 +2775,7 @@ class where_expression<
 //   return vaddv_f32(static_cast<float32x2_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
 // reduce_min(
 //                            simd<float, simd_abi::neon_fixed_size<4>> const&
 //                            v,
@@ -2800,7 +2783,7 @@ class where_expression<
 //   return vminvq_f32(static_cast<float32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float
 // reduce_max(
 //                            simd<float, simd_abi::neon_fixed_size<4>> const&
 //                            const& v
@@ -2808,7 +2791,7 @@ class where_expression<
 //   return vmaxvq_f32(static_cast<float32x4_t>(v));
 // }
 
-// [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
+// KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION float reduce(
 //                            simd<float, simd_abi::neon_fixed_size<4>> const&
 //                            v,
 //     simd_mask<float, simd_abi::neon_fixed_size<4>> const& m,
