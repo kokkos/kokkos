@@ -173,8 +173,9 @@ struct HostMirror {
   using memory_space    = typename Device::memory_space;
 
   // Construct mirror type matching the template parameter type
-  using Space = std::conditional_t<is_space::is_exec_space(), execution_space,
-                                   memory_space>;
+  using Space = std::conditional_t<
+      is_space::is_exec_space(), execution_space,
+      std::conditional_t<is_space::is_mem_space(), memory_space, Device>>;
 };
 
 }  // namespace Impl
