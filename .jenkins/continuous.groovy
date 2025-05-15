@@ -582,10 +582,10 @@ pipeline {
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               make install && \
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
-                              cd ../example/build_installed && \
+                              cd ../cmake_test && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=17 -DExamples_CMAKE_LANGUAGE=CUDA .. && make -j8 && ctest --verbose &&  \
-                              cd ../../build_in_tree && \
+                              cmake -DCMAKE_CXX_STANDARD=17 -DKokkos_CMAKE_TESTING_LANGUAGE=CUDA .. &&  make -j8 && \
+                              cd ../../examples/build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
                     }
