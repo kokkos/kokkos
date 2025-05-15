@@ -728,8 +728,6 @@ struct Random_UniqueIndex<
 };
 #endif
 
-enum RandomPoolConstructorIsAsync : bool { no = false, yes = true };
-
 }  // namespace Impl
 
 template <class DeviceType>
@@ -906,19 +904,34 @@ class Random_XorShift64_Pool {
   Random_XorShift64_Pool()   = default;
 #endif
 
-  Random_XorShift64_Pool(uint64_t seed)
-      : Random_XorShift64_Pool(execution_space(), seed,
-                               Impl::RandomPoolConstructorIsAsync::no) {}
-
-  Random_XorShift64_Pool(execution_space const& exec, uint64_t seed,
-                         Impl::RandomPoolConstructorIsAsync is_async =
-                             Impl::RandomPoolConstructorIsAsync::yes)
-      : num_states_(exec.concurrency()) {
-    init(exec, seed);
-    if (!static_cast<bool>(is_async)) exec.fence();
+  Random_XorShift64_Pool(uint64_t seed) {
+    init(execution_space(), seed, execution_space().concurrency());
+    execution_space().fence("Random_XorShift64_Pool: Constructor");
   }
 
-  void init(execution_space const& exec, uint64_t seed) {
+  Random_XorShift64_Pool(uint64_t seed, uint64_t num_states) {
+    init(execution_space(), seed, num_states);
+    execution_space().fence("Random_XorShift64_Pool: Constructor");
+  }
+
+  Random_XorShift64_Pool(const execution_space& exec, uint64_t seed) {
+    init(exec, seed, exec.concurrency());
+  }
+
+  Random_XorShift64_Pool(const execution_space& exec, uint64_t seed,
+                         uint64_t num_states) {
+    init(exec, seed, num_states);
+  }
+
+  void init(uint64_t seed, uint64_t num_states) {
+    init(execution_space(), seed, num_states);
+    execution_space().fence("Random_XorShift64_Pool::init");
+  }
+
+ private:
+  void init(execution_space const& exec, uint64_t seed, uint64_t num_states) {
+    num_states_ = num_states;
+
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
@@ -955,6 +968,7 @@ class Random_XorShift64_Pool {
     deep_copy(exec, locks_, h_lock);
   }
 
+ public:
   KOKKOS_INLINE_FUNCTION
   Random_XorShift64<DeviceType> get_state() const {
     KOKKOS_EXPECTS(num_states_ > 0);
@@ -1161,19 +1175,34 @@ class Random_XorShift1024_Pool {
   Random_XorShift1024_Pool() = default;
 #endif
 
-  Random_XorShift1024_Pool(uint64_t seed)
-      : Random_XorShift1024_Pool(execution_space(), seed,
-                                 Impl::RandomPoolConstructorIsAsync::no) {}
-
-  Random_XorShift1024_Pool(execution_space const& exec, uint64_t seed,
-                           Impl::RandomPoolConstructorIsAsync is_async =
-                               Impl::RandomPoolConstructorIsAsync::yes)
-      : num_states_(exec.concurrency()) {
-    init(exec, seed);
-    if (!static_cast<bool>(is_async)) exec.fence();
+  Random_XorShift1024_Pool(uint64_t seed) {
+    init(execution_space(), seed, execution_space().concurrency());
+    execution_space().fence("Random_XorShift1024_Pool: Constructor");
   }
 
-  void init(execution_space const& exec, uint64_t seed) {
+  Random_XorShift1024_Pool(uint64_t seed, uint64_t num_states) {
+    init(execution_space(), seed, num_states);
+    execution_space().fence("Random_XorShift1024_Pool: Constructor");
+  }
+
+  Random_XorShift1024_Pool(const execution_space& exec, uint64_t seed) {
+    init(exec, seed, exec.concurrency());
+  }
+
+  Random_XorShift1024_Pool(const execution_space& exec, uint64_t seed,
+                           uint64_t num_states) {
+    init(exec, seed, num_states);
+  }
+
+  void init(uint64_t seed, uint64_t num_states) {
+    init(execution_space(), seed, num_states);
+    execution_space().fence("Random_XorShift1024_Pool::init");
+  }
+
+ private:
+  void init(execution_space const& exec, uint64_t seed, uint64_t num_states) {
+    num_states_ = num_states;
+
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
@@ -1215,6 +1244,7 @@ class Random_XorShift1024_Pool {
     deep_copy(exec, locks_, h_lock);
   }
 
+ public:
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024<DeviceType> get_state() const {
     KOKKOS_EXPECTS(num_states_ > 0);
