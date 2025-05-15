@@ -18,6 +18,10 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#ifdef USE_MODULES
+module;
+#endif
+
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
 
@@ -28,6 +32,10 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#ifdef USE_MODULES
+module kokkoscore;
+#endif
 
 namespace Kokkos {
 namespace Impl {

@@ -14,6 +14,10 @@
 //
 //@HEADER
 
+#ifdef KOKKOS_USE_MODULES
+module;
+#endif
+
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -24,6 +28,10 @@
 #include <stdexcept>
 #include <Kokkos_Core.hpp>  // show_warnings
 #include <impl/Kokkos_Error.hpp>
+
+#ifdef KOKKOS_USE_MODULES
+module kokkoscore;
+#endif
 
 void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
   throw std::runtime_error(msg);

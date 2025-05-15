@@ -14,6 +14,10 @@
 //
 //@HEADER
 
+#ifdef KOKKOS_USE_MODULES
+module;
+#endif
+
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -43,6 +47,10 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+
+#ifdef USE_MODULES
+module kokkoscore;
+#endif
 
 namespace {
 void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {

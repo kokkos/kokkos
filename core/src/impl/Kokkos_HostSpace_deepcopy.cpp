@@ -14,12 +14,20 @@
 //
 //@HEADER
 
+#ifdef KOKKOS_USE_MODULES
+module;
+#endif
+
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
 #include "Kokkos_Core.hpp"
 #include "Kokkos_HostSpace_deepcopy.hpp"
+
+#ifdef KOKKOS_USE_MODULES
+module kokkoscore;
+#endif
 
 namespace Kokkos {
 

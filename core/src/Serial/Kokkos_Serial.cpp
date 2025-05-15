@@ -14,6 +14,10 @@
 //
 //@HEADER
 
+#ifdef KOKKOS_USE_MODULES
+module;
+#endif
+
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -31,6 +35,10 @@
 #include <sstream>
 
 /*--------------------------------------------------------------------------*/
+
+#ifdef KOKKOS_USE_MODULES
+module kokkoscore;
+#endif
 
 namespace Kokkos {
 namespace Impl {

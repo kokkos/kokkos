@@ -7,7 +7,7 @@ export
 {
   namespace Kokkos
   {
-    using ::Kokkos::abort;
+//    using ::Kokkos::abort;
     using ::Kokkos::abs;
     using ::Kokkos::ALL;
     using ::Kokkos::Array;

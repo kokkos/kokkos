@@ -12,7 +12,18 @@ add_subdirectory(${Example_SOURCE_DIR}/../.. ${Example_BINARY_DIR}/kokkos)
 add_executable(example cmake_example.cpp)
 
 # This is the only line required to set up all compiler/linker flags
-target_link_libraries(example kokkoscore_module)
+#target_link_libraries(example kokkoscore_module)
+target_link_libraries(example Kokkos::kokkos)
+
+if(NOT TARGET kokkoscore_module)
+  message(FATAL_ERROR "BLA")
+endif()
+
+include(CMakePrintHelpers)
+cmake_print_properties(
+  TARGETS kokkoscore_module
+  PROPERTIES INTERFACE_INCLUDE_DIRECTORIES
+)
 
 # Adds a test for the executable
 enable_testing()
