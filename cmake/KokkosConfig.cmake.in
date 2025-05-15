@@ -99,6 +99,9 @@ else()
         "List of directories Kokkos that are excluded from Kokkos setting build properties on source and target properties via a deferred call"
   )
 
+  #To run the following block only once even if Kokkos is found in different subscopes, we guard it by a cache variable.
+  #Cache vars defined by find_package getting here are already in a valid state thus we can not use them here.
+  #Thus a new cache variable is defined in the Kokkos namespace
   if(NOT DEFINED CACHE{Kokkos_SET_GLOBAL_BUILD_PROPERTIES})
     set(Kokkos_SET_GLOBAL_BUILD_PROPERTIES ON
         CACHE STRING "Whether Kokkos traverses all targets and sets source and target properties"
