@@ -101,10 +101,10 @@ pipeline {
                               make -j16 && ctest --no-compress-output -T Test --verbose && \
                               make install && \
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
-                              cd ../example/build_installed && \
+                              cd ../cmake_test && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=20 -DExamples_CMAKE_LANGUAGE=HIP .. && make -j8 && \
-                              cd ../../build_in_tree && \
+                              cmake -DCMAKE_CXX_STANDARD=20 -DKokkos_CMAKE_TESTING_LANGUAGE=HIP .. && make -j8 && \
+                              cd ../../examples/build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=20 .. && make -j8 && ctest --verbose'''
                     }
@@ -151,6 +151,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON \
                                 \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
@@ -168,12 +169,13 @@ pipeline {
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
-                              cd ../example/build_installed && \
+                              cd ../cmake_test && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=g++-8 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
+                                -DKokkos_CMAKE_TESTING_LANGUAGE=CUDA \
                               .. && \
                               make -j8 && ctest --verbose'''
                     }
