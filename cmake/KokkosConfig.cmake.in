@@ -103,7 +103,7 @@ else()
 
   if(NOT DEFINED CACHE{Kokkos_SET_GLOBAL_BUILD_PROPERTIES})
     set(Kokkos_SET_GLOBAL_BUILD_PROPERTIES ON
-        CACHE STRING "Wether Kokkos traverses all targets and sets source and target properties"
+        CACHE STRING "Whether Kokkos traverses all targets and sets source and target properties"
     )
     cmake_language(
       DEFER
