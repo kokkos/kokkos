@@ -420,7 +420,7 @@ function(kokkos_exclude_from_setting_build_properties)
   cmake_parse_arguments(INP "GLOBAL" "" "DIRECTORY" ${ARGN})
 
   if(INP_GLOBAL)
-    kokkos_exclude_from_setting_build_properties(DIRECTORY ${PROJECT_SOURCE_DIR})
+    kokkos_exclude_from_setting_build_properties(DIRECTORY ${CMAKE_SOURCE_DIR})
   else()
     set(Kokkos_EXCLUDE_BUILD_DIRS
         "${INP_DIRECTORY};${Kokkos_EXCLUDE_DIRS}"
