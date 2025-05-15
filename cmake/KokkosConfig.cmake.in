@@ -92,12 +92,12 @@ if(Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY)
   # new cmake strategy
 else()
   # if not there already, add list of excluded dirs into cache
-    set(Kokkos_EXCLUDE_BUILD_DIRS
-        ""
-        CACHE
-          STRING
-          "List of directories Kokkos that are excluded from Kokkos setting build properties on source and target properties via a deferred call"
-    )
+  set(Kokkos_EXCLUDE_BUILD_DIRS
+      ""
+      CACHE
+        STRING
+        "List of directories Kokkos that are excluded from Kokkos setting build properties on source and target properties via a deferred call"
+  )
 
   if(NOT DEFINED CACHE{Kokkos_SET_GLOBAL_BUILD_PROPERTIES})
     set(Kokkos_SET_GLOBAL_BUILD_PROPERTIES ON
