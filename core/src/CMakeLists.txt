@@ -154,28 +154,24 @@ add_library(kokkoscore_module)
 	 PUBLIC
 		 ${KOKKOS_CORE_SRCS}
                    PUBLIC
-                   FILE_SET kokkoscore_module_sources
+                   FILE_SET kokkoscore_module_sources1
                    TYPE CXX_MODULES
                    FILES
 		   #${KOKKOS_CORE_SRCS}
 		   kokkoscore.ccm
-                    BASE_DIRS
-                     ${CMAKE_CURRENT_SOURCE_DIR}
-                     ${CMAKE_CURRENT_BINARY_DIR}
     )
 
-    target_include_directories(kokkoscore_module PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${KOKKOS_SOURCE_DIR}/tpls/desul/include ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include)
+    target_include_directories(kokkoscore_module PUBLIC  ${CMAKE_BINARY_DIR}/kokkos ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${KOKKOS_SOURCE_DIR}/tpls/desul/include ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include)
 
-    target_compile_definitions(kokkoscore_module PUBLIC USE_MODULES)
+    #target_compile_definitions(kokkoscore_module PUBLIC USE_MODULES)
 
-    #target_sources(
+    #   target_sources(
     #  kokkoscore
     #  PUBLIC
     #  FILE_SET kokkoscore_module_sources
-    # TYPE CXX_MODULES
-    #FILES kokkoscore.ccm
-    #BASE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
-    # )
+    #  TYPE CXX_MODULES
+    # FILES kokkoscore.ccm
+    #)
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
   message(STATUS "Experimental mdspan support is enabled")

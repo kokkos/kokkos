@@ -254,6 +254,8 @@ kokkos_process_subpackages()
 
 kokkos_configure_core()
 
+#message(FATAL_ERROR "BLA")
+
 if(NOT Kokkos_INSTALL_TESTING)
   add_library(kokkos INTERFACE)
   #Make sure in-tree projects can reference this as Kokkos::

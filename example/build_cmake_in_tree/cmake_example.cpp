@@ -14,9 +14,9 @@
 //
 //@HEADER
 
-import kokkoscore;
+import mykokkoscore;
 
-//#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
 #include <cstdio>
 #include <iostream>
 
