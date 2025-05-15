@@ -18,16 +18,7 @@
 #define KOKKOS_SIMD_HPP
 
 #include <Kokkos_SIMD_Common.hpp>
-
-// suppress NVCC warnings with the [[nodiscard]] attribute on overloaded
-// operators implemented as hidden friends
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wattributes"
-#endif
-
 #include <Kokkos_SIMD_Scalar.hpp>
-
 #include <Kokkos_Macros.hpp>
 
 // FIXME_OPENMPTARGET The device pass disables all compiler macros checked
@@ -68,10 +59,6 @@
 #endif
 #include <Kokkos_SIMD_NEON.hpp>
 #endif
-#endif
-
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC < 1130
-#pragma GCC diagnostic pop
 #endif
 
 #include <Kokkos_SIMD_Common_Math.hpp>
