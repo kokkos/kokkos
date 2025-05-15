@@ -152,12 +152,13 @@ endif()
 add_library(kokkoscore_module)
  target_sources(kokkoscore_module
 	 PUBLIC
-	 #	 ${KOKKOS_CORE_SRCS}
+		 ${KOKKOS_CORE_SRCS}
                    PUBLIC
                    FILE_SET kokkoscore_module_sources
                    TYPE CXX_MODULES
                    FILES
-                     kokkoscore.ccm
+		   #${KOKKOS_CORE_SRCS}
+		   kokkoscore.ccm
                     BASE_DIRS
                      ${CMAKE_CURRENT_SOURCE_DIR}
                      ${CMAKE_CURRENT_BINARY_DIR}

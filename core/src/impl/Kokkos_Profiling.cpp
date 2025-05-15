@@ -1,3 +1,7 @@
+#ifdef KOKKOS_USE_MODULES
+module;
+#endif
+
 //@HEADER
 // ************************************************************************
 //
@@ -13,10 +17,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //@HEADER
-
-#ifdef KOKKOS_USE_MODULES
-module;
-#endif
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
