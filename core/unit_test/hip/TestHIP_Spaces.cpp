@@ -227,7 +227,7 @@ TEST(hip, space_access) {
 
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
-                Kokkos::HostSpace>::accessible);
+                Kokkos::HIPManagedSpace>::accessible);
 }
 
 template <class MemSpace, class ExecSpace>
