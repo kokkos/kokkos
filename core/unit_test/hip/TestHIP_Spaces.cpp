@@ -198,11 +198,11 @@ TEST(hip, space_access) {
   static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
                      Kokkos::HostSpace>);
-                     #else
+#else
   static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
                      Kokkos::HIPSpace>);
-                     #endif
+#endif
 
   static_assert(std::is_same_v<
                 Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::memory_space,

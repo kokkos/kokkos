@@ -163,12 +163,11 @@ struct HostMirror {
   using Device = std::conditional_t<
       keep_exe && keep_mem,
       Kokkos::Device<typename S::execution_space, typename S::memory_space>,
-      std::conditional_t<
-          keep_mem,
-              Kokkos::Device<Kokkos::HostSpace::execution_space,
-                             typename S::memory_space>,
-          Kokkos::Device<Kokkos::HostSpace::execution_space,
-                         Kokkos::HostSpace::memory_space>>>;
+      std::conditional_t<keep_mem,
+                         Kokkos::Device<Kokkos::HostSpace::execution_space,
+                                        typename S::memory_space>,
+                         Kokkos::Device<Kokkos::HostSpace::execution_space,
+                                        Kokkos::HostSpace::memory_space>>>;
 
   using execution_space = typename Device::execution_space;
   using memory_space    = typename Device::memory_space;

@@ -188,11 +188,11 @@ TEST(cuda, space_access) {
                      Kokkos::CudaUVMSpace>);
 
 #ifndef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
-static_assert(
+  static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
                      Kokkos::HostSpace>);
 #else
-static_assert(
+  static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
                      Kokkos::CudaSpace>);
 #endif
