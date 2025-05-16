@@ -147,6 +147,8 @@ add_library(
   kokkoscore ${KOKKOS_CORE_SRCS}
 )
 
+kokkos_set_library_properties(kokkoscore)
+
     target_sources(
       kokkoscore
      PUBLIC
