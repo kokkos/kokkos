@@ -17,6 +17,8 @@
 
 import mykokkoscore;
 
+#include <Kokkos_Macros.hpp>
+
 #include <cstdio>
 #include <iostream>
 

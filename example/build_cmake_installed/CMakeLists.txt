@@ -1,6 +1,7 @@
 # Kokkos minimally requires 3.16 right now,
 # but your project can set it higher
 cmake_minimum_required(VERSION 3.28)
+set(CMAKE_CXX_STANDARD 20)
 
 # Projects can safely mix languages - must have C++ support
 # Kokkos flags will only apply to C++ files
@@ -18,7 +19,7 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
 endif()
 
 # This is the only thing required to set up compiler/linker flags
-target_link_libraries(example kokkoscore_module)
+target_link_libraries(example Kokkos::kokkoscore)
 
 enable_testing()
 add_test(NAME KokkosInTree_Verify COMMAND example 10)
