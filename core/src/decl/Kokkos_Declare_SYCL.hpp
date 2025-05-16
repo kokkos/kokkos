@@ -19,7 +19,7 @@
 
 #if defined(KOKKOS_ENABLE_SYCL)
 #include <SYCL/Kokkos_SYCL.hpp>
-#ifdef SYCL_EXT_ONEAPI_GRAPH
+#ifdef KOKKOS_IMPL_GRAPH_SUPPORT
 #include <SYCL/Kokkos_SYCL_GraphNodeKernel.hpp>
 #endif
 #include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>

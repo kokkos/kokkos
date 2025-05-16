@@ -193,7 +193,7 @@ decltype(auto) Graph<ExecutionSpace>::native_graph() {
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
     return m_impl_ptr->hip_graph();
   }
-#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_GRAPH_SUPPORT)
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
     return m_impl_ptr->sycl_graph();
   }
@@ -211,7 +211,7 @@ decltype(auto) Graph<ExecutionSpace>::native_graph_exec() {
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
     return m_impl_ptr->hip_graph_exec();
   }
-#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_GRAPH_SUPPORT)
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
     return m_impl_ptr->sycl_graph_exec();
   }
@@ -235,7 +235,7 @@ decltype(auto) Graph<ExecutionSpace>::native_graph_exec() {
 #include <HIP/Kokkos_HIP_Graph_Impl.hpp>
 #endif
 #endif
-#ifdef SYCL_EXT_ONEAPI_GRAPH
+#ifdef KOKKOS_IMPL_GRAPH_SUPPORT
 #include <SYCL/Kokkos_SYCL_Graph_Impl.hpp>
 #endif
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_GRAPH
