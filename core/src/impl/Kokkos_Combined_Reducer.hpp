@@ -229,9 +229,9 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
   }
 
   template <class ExecutionSpace, int Idx, class View>
-  static void write_one_value_back(
-      const ExecutionSpace& exec_space, View const& view,
-      typename View::const_value_type& value) noexcept {
+  static void write_one_value_back(const ExecutionSpace& exec_space,
+                                   View const& view,
+                                   typename View::const_value_type& value) {
     if (Kokkos::SpaceAccessibility<typename View::memory_space,
                                    Space>::assignable)
       view() = value;
@@ -242,7 +242,7 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
   template <class ExecutionSpace>
   static void write_value_back_to_original_references(
       const ExecutionSpace& exec_space, value_type const& value,
-      Reducers const&... reducers_that_reference_original_values) noexcept {
+      Reducers const&... reducers_that_reference_original_values) {
     (write_one_value_back<ExecutionSpace, Idxs>(
          exec_space, reducers_that_reference_original_values.view(),
          value.template get<Idxs, typename Reducers::value_type>()),
