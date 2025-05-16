@@ -202,8 +202,7 @@ void HIPInternal::initialize(hipStream_t stream) {
 
   m_stream = stream;
 
-  // Allocate a staging buffer for constant mem in pinned host memory
-  // and an event to avoid overwriting driver for previous kernel launches
+  // Allocate a staging buffer for constant mem in pinned host memory.
   if (!constantMemHostStaging[m_hipDev]) {
     void *constant_mem_void_ptr = nullptr;
     KOKKOS_IMPL_HIP_SAFE_CALL(hip_host_malloc_wrapper(
@@ -211,9 +210,10 @@ void HIPInternal::initialize(hipStream_t stream) {
     constantMemHostStaging[m_hipDev] =
         static_cast<unsigned long *>(constant_mem_void_ptr);
   }
-  if (!constantMemReusable[m_hipDev])
-    KOKKOS_IMPL_HIP_SAFE_CALL(hip_event_create_with_flags_wrapper(
-        &constantMemReusable[m_hipDev], hipEventDisableTiming));
+
+  // Initialize the shared resource locking to avoid overwriting the driver of
+  // the previous kernel launch.
+  constantMemReusable[m_hipDev].initialize();
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -371,7 +371,17 @@ void HIPInternal::release_team_scratch_space(int scratch_pool_id) {
 //----------------------------------------------------------------------------
 
 void HIPInternal::finalize() {
+  // First, lock the shared resource locking helper.
+  // Then, fence the stream and check if it was involved in the last constant
+  // memory launch.
+  // Locking is required to avoid a race condition, i.e. it prevents another
+  // thread from launching another kernel in-between the fence
+  // and the 'check_if_involved_and_unlock'.
+  auto lock = HIPInternal::constantMemReusable[m_hipDev].lock();
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
+  HIPInternal::constantMemReusable[m_hipDev].check_if_involved_and_unlock(
+      std::move(lock), m_stream);
+
   was_finalized = true;
 
   auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
@@ -418,8 +428,7 @@ std::mutex HIPInternal::scratchFunctorMutex;
 
 std::set<int> HIPInternal::hip_devices                             = {};
 std::map<int, unsigned long *> HIPInternal::constantMemHostStaging = {};
-std::map<int, hipEvent_t> HIPInternal::constantMemReusable         = {};
-std::map<int, std::mutex> HIPInternal::constantMemMutex            = {};
+std::map<int, SharedResourceLock> HIPInternal::constantMemReusable = {};
 
 //----------------------------------------------------------------------------
 

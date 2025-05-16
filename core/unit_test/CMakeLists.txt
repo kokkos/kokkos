@@ -800,6 +800,7 @@ if(Kokkos_ENABLE_HIP)
     UnitTestMainInit.cpp
     ${HIP_SOURCES}
     hip/TestHIP_ScanUnit.cpp
+    hip/TestHIP_SharedResourceLock.cpp
     hip/TestHIP_Spaces.cpp
     hip/TestHIP_Memory_Requirements.cpp
     hip/TestHIP_TeamScratchStreams.cpp
