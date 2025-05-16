@@ -43,9 +43,6 @@ module kokkoscore;
 namespace Kokkos {
 namespace Impl {
 
-std::vector<SerialInternal*> SerialInternal::all_instances;
-std::mutex SerialInternal::all_instances_mutex;
-
 bool SerialInternal::is_initialized() { return m_is_initialized; }
 
 void SerialInternal::initialize() {

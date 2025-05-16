@@ -21,13 +21,12 @@ import mykokkoscore;
 #include <iostream>
 
 int main(int argc, char* argv[]) {
-  Kokkos::initialize(argc, argv);
+  Kokkos::ScopeGuard scope_guard(argc, argv);
   Kokkos::DefaultExecutionSpace{}.print_configuration(std::cout);
 
   if (argc < 2) {
     fprintf(stderr, "Usage: %s [<kokkos_options>] <size>\n", argv[0]);
-    Kokkos::finalize();
-    exit(1);
+    return 1;
   }
 
   const long n = strtol(argv[1], nullptr, 10);
@@ -36,6 +35,8 @@ int main(int argc, char* argv[]) {
 
   Kokkos::Timer timer;
   timer.reset();
+
+  Kokkos::View<int*> bla("bla", 10);
 
   // Compute the number of even integers from 0 to n-1, in parallel.
   long count = 0;
@@ -56,8 +57,6 @@ int main(int argc, char* argv[]) {
 
   count_time = timer.seconds();
   printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
-
-  Kokkos::finalize();
 
   return (count == seq_count) ? 0 : -1;
 }

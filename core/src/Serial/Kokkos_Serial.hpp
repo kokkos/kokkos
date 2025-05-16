@@ -61,8 +61,8 @@ class SerialInternal {
 
   std::mutex m_instance_mutex;
 
-  static std::vector<SerialInternal*> all_instances;
-  static std::mutex all_instances_mutex;
+  static inline std::vector<SerialInternal*> all_instances;
+  static inline std::mutex all_instances_mutex;
 
   // Resize thread team data scratch memory
   void resize_thread_team_data(size_t pool_reduce_bytes,

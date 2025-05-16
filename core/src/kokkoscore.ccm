@@ -15,6 +15,7 @@ export
     using ::Kokkos::AUTO;
     using ::Kokkos::finalize;
     using ::Kokkos::Timer;
+    using ::Kokkos::ScopeGuard;
 
     using ::Kokkos::MemoryTraits;
 
