@@ -942,10 +942,37 @@ class Random_XorShift64_Pool {
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
 
-    init(seed, execution_space().concurrency());
+    init_impl(seed, execution_space().concurrency());
   }
 
-  void init(uint64_t seed, int num_states) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED void init(uint64_t seed, int num_states) {
+    init_impl(seed, num_states);
+  }
+#endif
+
+  KOKKOS_INLINE_FUNCTION Random_XorShift64<DeviceType> get_state() const {
+    KOKKOS_EXPECTS(num_states_ > 0);
+    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
+    return Random_XorShift64<DeviceType>(state_(i, 0), i);
+  }
+
+  // NOTE: state_idx MUST be unique and less than num_states
+  KOKKOS_INLINE_FUNCTION
+  Random_XorShift64<DeviceType> get_state(const int state_idx) const {
+    return Random_XorShift64<DeviceType>(state_(state_idx, 0), state_idx);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void free_state(const Random_XorShift64<DeviceType>& state) const {
+    state_(state.state_idx_, 0) = state.state_;
+    // Release the lock only after the state has been updated in memory
+    Kokkos::memory_fence();
+    locks_(state.state_idx_, 0) = 0;
+  }
+
+ private:
+  void init_impl(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
@@ -980,26 +1007,6 @@ class Random_XorShift64_Pool {
     }
     deep_copy(state_, h_state);
     deep_copy(locks_, h_lock);
-  }
-
-  KOKKOS_INLINE_FUNCTION Random_XorShift64<DeviceType> get_state() const {
-    KOKKOS_EXPECTS(num_states_ > 0);
-    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
-    return Random_XorShift64<DeviceType>(state_(i, 0), i);
-  }
-
-  // NOTE: state_idx MUST be unique and less than num_states
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64<DeviceType> get_state(const int state_idx) const {
-    return Random_XorShift64<DeviceType>(state_(state_idx, 0), state_idx);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void free_state(const Random_XorShift64<DeviceType>& state) const {
-    state_(state.state_idx_, 0) = state.state_;
-    // Release the lock only after the state has been updated in memory
-    Kokkos::memory_fence();
-    locks_(state.state_idx_, 0) = 0;
   }
 };
 
@@ -1190,10 +1197,39 @@ class Random_XorShift1024_Pool {
   Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
 
-    init(seed, execution_space().concurrency());
+    init_impl(seed, execution_space().concurrency());
   }
 
-  void init(uint64_t seed, int num_states) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEPRECATED void init(uint64_t seed, int num_states) {
+    init_impl(seed, num_states);
+  }
+#endif
+
+  KOKKOS_INLINE_FUNCTION
+  Random_XorShift1024<DeviceType> get_state() const {
+    KOKKOS_EXPECTS(num_states_ > 0);
+    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
+    return Random_XorShift1024<DeviceType>(state_, p_(i, 0), i);
+  };
+
+  // NOTE: state_idx MUST be unique and less than num_states
+  KOKKOS_INLINE_FUNCTION
+  Random_XorShift1024<DeviceType> get_state(const int state_idx) const {
+    return Random_XorShift1024<DeviceType>(state_, p_(state_idx, 0), state_idx);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void free_state(const Random_XorShift1024<DeviceType>& state) const {
+    for (int i = 0; i < 16; i++) state_(state.state_idx_, i) = state.state_[i];
+    p_(state.state_idx_, 0) = state.p_;
+    // Release the lock only after the state has been updated in memory
+    Kokkos::memory_fence();
+    locks_(state.state_idx_, 0) = 0;
+  }
+
+ private:
+  void init_impl(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
@@ -1232,28 +1268,6 @@ class Random_XorShift1024_Pool {
     }
     deep_copy(state_, h_state);
     deep_copy(locks_, h_lock);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024<DeviceType> get_state() const {
-    KOKKOS_EXPECTS(num_states_ > 0);
-    const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
-    return Random_XorShift1024<DeviceType>(state_, p_(i, 0), i);
-  };
-
-  // NOTE: state_idx MUST be unique and less than num_states
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024<DeviceType> get_state(const int state_idx) const {
-    return Random_XorShift1024<DeviceType>(state_, p_(state_idx, 0), state_idx);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void free_state(const Random_XorShift1024<DeviceType>& state) const {
-    for (int i = 0; i < 16; i++) state_(state.state_idx_, i) = state.state_[i];
-    p_(state.state_idx_, 0) = state.p_;
-    // Release the lock only after the state has been updated in memory
-    Kokkos::memory_fence();
-    locks_(state.state_idx_, 0) = 0;
   }
 };
 
