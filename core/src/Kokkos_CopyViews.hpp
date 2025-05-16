@@ -805,7 +805,7 @@ inline void contiguous_fill(
                      std::conditional_t<ViewType::rank == 0,
                                         typename ViewType::memory_space,
                                         Kokkos::AnonymousSpace>>,
-      Kokkos::MemoryTraits<0>>;
+      Kokkos::MemoryTraits<>>;
 
   ViewTypeFlat dst_flat(dst.data(), dst.size());
   if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
