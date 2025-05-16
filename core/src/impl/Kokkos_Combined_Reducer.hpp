@@ -534,8 +534,7 @@ template <class PolicyType, class Functor, class ReturnType1, class ReturnType2,
           class... ReturnTypes>
 auto parallel_reduce(std::string const& label, PolicyType const& policy,
                      Functor const& functor, ReturnType1&& returnType1,
-                     ReturnType2&& returnType2,
-                     ReturnTypes&&... returnTypes) noexcept
+                     ReturnType2&& returnType2, ReturnTypes&&... returnTypes)
     -> std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value> {
   //----------------------------------------
   // Since we don't support asynchronous combined reducers yet for various
@@ -585,7 +584,7 @@ template <class PolicyType, class Functor, class ReturnType1, class ReturnType2,
           class... ReturnTypes>
 auto parallel_reduce(PolicyType const& policy, Functor const& functor,
                      ReturnType1&& returnType1, ReturnType2&& returnType2,
-                     ReturnTypes&&... returnTypes) noexcept
+                     ReturnTypes&&... returnTypes)
     -> std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value> {
   //----------------------------------------
   Kokkos::parallel_reduce("", policy, functor,
@@ -599,7 +598,7 @@ template <class Functor, class ReturnType1, class ReturnType2,
           class... ReturnTypes>
 void parallel_reduce(std::string const& label, size_t n, Functor const& functor,
                      ReturnType1&& returnType1, ReturnType2&& returnType2,
-                     ReturnTypes&&... returnTypes) noexcept {
+                     ReturnTypes&&... returnTypes) {
   Kokkos::parallel_reduce(label,
                           RangePolicy<Kokkos::DefaultExecutionSpace>(0, n),
                           functor, std::forward<ReturnType1>(returnType1),
@@ -611,7 +610,7 @@ template <class Functor, class ReturnType1, class ReturnType2,
           class... ReturnTypes>
 void parallel_reduce(size_t n, Functor const& functor,
                      ReturnType1&& returnType1, ReturnType2&& returnType2,
-                     ReturnTypes&&... returnTypes) noexcept {
+                     ReturnTypes&&... returnTypes) {
   Kokkos::parallel_reduce("", n, functor,
                           std::forward<ReturnType1>(returnType1),
                           std::forward<ReturnType2>(returnType2),
