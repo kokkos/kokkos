@@ -137,6 +137,12 @@ else()
   message(STATUS "  " ${desul_DIR})
 endif()
 
+#kokkos_add_library(
+#  kokkoscore SOURCES ${KOKKOS_CORE_SRCS} HEADERS ${KOKKOS_CORE_HEADERS}
+#  ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
+#)
+
+
 add_library(
   kokkoscore ${KOKKOS_CORE_SRCS}
 )
@@ -192,18 +198,27 @@ add_library(kokkoscore_module)
 
     #target_compile_definitions(kokkoscore_module PUBLIC USE_MODULES)
 
-    #target_sources(
-    #  kokkoscore
-    # PUBLIC
-    # FILE_SET blub TYPE CXX_MODULES
-    # FILES kokkoscore.ccm
-    #)
-
-    install(TARGETS kokkoscore
-	    EXPORT KokkosTargets
-    FILE_SET
-        blub DESTINATION include # Export the HEADERS file set to the 'include' directory
+    target_sources(
+      kokkoscore
+     PUBLIC
+     FILE_SET blub TYPE CXX_MODULES
+     FILES kokkoscore.ccm
     )
+
+  install(
+    TARGETS kokkoscore
+    EXPORT KokkosTargets #my_package-targets
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    FILE_SET blub DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/my_package/src
+  )
+
+    #install(TARGETS kokkoscore
+    #	    EXPORT KokkosTargets
+    #FILE_SET
+    #    blub DESTINATION include # Export the HEADERS file set to the 'include' directory
+    #)
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
   message(STATUS "Experimental mdspan support is enabled")

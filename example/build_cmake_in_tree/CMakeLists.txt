@@ -14,7 +14,7 @@ add_executable(example cmake_example.cpp)
 
 # This is the only line required to set up all compiler/linker flags
 #target_link_libraries(example kokkoscore_module)
-target_link_libraries(example kokkoscore_module)
+target_link_libraries(example kokkoscore)
 
 if(NOT TARGET kokkoscore_module)
   message(FATAL_ERROR "BLA")
