@@ -54,6 +54,33 @@ DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(sub)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(min)
 DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT(max)
 
+// clang-format off
+#define DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC_GENERAL(OPER, OPER_STRING, TYPE)          \
+  template <class MemoryOrder>                                                         \
+  TYPE device_atomic_fetch_##OPER_STRING(TYPE* dest, MemoryOrder, MemoryScopeDevice) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeDevice> dest_ref(*dest);             \
+    return dest_ref OPER;                                                              \
+  }                                                                                    \
+  template <class MemoryOrder>                                                         \
+  TYPE device_atomic_fetch_##OPER_STRING(TYPE* dest, MemoryOrder, MemoryScopeCore  ) { \
+    sycl_atomic_ref<TYPE, MemoryOrder, MemoryScopeCore> dest_ref(*dest);               \
+    return dest_ref OPER;                                                              \
+  }
+
+#define DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC(TYPE)            \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC_GENERAL(++, inc, TYPE) \
+  DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC_GENERAL(--, dec, TYPE)
+// clang-format on
+
+DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC(int)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC(unsigned int)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC(long)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC(unsigned long)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC(long long)
+DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC(unsigned long long)
+
+#undef DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC_GENERAL
+#undef DESUL_IMPL_SYCL_ATOMIC_FETCH_INC_DEC
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_FLOATING_POINT
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER_INTEGRAL
 #undef DESUL_IMPL_SYCL_ATOMIC_FETCH_OPER
