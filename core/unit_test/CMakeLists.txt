@@ -862,8 +862,8 @@ if(Kokkos_ENABLE_SYCL)
   )
 
   kokkos_add_executable_and_test(
-      CoreUnitTest_SYCLInterOpGraph SOURCES UnitTestMainInit.cpp sycl/TestSYCL_InterOp_Graph.cpp
-    )
+    CoreUnitTest_SYCLInterOpGraph SOURCES UnitTestMainInit.cpp sycl/TestSYCL_InterOp_Graph.cpp
+  )
 endif()
 
 set(DEFAULT_DEVICE_SOURCES
