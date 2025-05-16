@@ -813,8 +813,6 @@ if(KOKKOS_ENABLE_SYCL)
       endif()
     endif()
   endif()
-
-  check_cxx_symbol_exists(SYCL_EXT_ONEAPI_GRAPH "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_GRAPH)
 endif()
 
 set(CUDA_ARCH_ALREADY_SPECIFIED "")

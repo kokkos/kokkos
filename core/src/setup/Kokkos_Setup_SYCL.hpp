@@ -17,10 +17,6 @@
 #ifndef KOKKOS_SETUP_SYCL_HPP_
 #define KOKKOS_SETUP_SYCL_HPP_
 
-#ifndef KOKKOS_ENABLE_SYCL_OUT_OF_ORDER_QUEUES
-#define KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-#endif
-
 // FIXME_SYCL the fallback assert is temporarily disabled by default in the
 // compiler so we need to force it
 #ifndef SYCL_ENABLE_FALLBACK_ASSERT
@@ -35,6 +31,15 @@
 #include <sycl/sycl.hpp>
 #else
 #include <CL/sycl.hpp>
+#endif
+
+#ifndef KOKKOS_ENABLE_SYCL_OUT_OF_ORDER_QUEUES
+#define KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+#endif
+
+#if defined(SYCL_EXT_ONEAPI_GRAPH) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+#define KOKKOS_IMPL_GRAPH_SUPPORT
 #endif
 
 // FIXME_SYCL Use type directly once it has stabilized in SYCL.

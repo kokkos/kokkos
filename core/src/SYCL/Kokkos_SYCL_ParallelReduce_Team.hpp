@@ -140,7 +140,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 reducer.copy(device_accessible_result_ptr, &results_ptr[0]);
             });
       };
-#ifdef SYCL_EXT_ONEAPI_GRAPH
+#ifdef KOKKOS_IMPL_GRAPH_SUPPORT
       if constexpr (Policy::is_graph_kernel::value) {
         sycl_attach_kernel_to_node(*this, cgh_lambda);
       } else
@@ -362,7 +362,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                 sycl::range<2>(m_team_size, m_vector_size)),
             reduction_lambda);
       };
-#ifdef SYCL_EXT_ONEAPI_GRAPH
+#ifdef KOKKOS_IMPL_GRAPH_SUPPORT
       if constexpr (Policy::is_graph_kernel::value) {
         sycl_attach_kernel_to_node(*this, cgh_lambda);
       } else

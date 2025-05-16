@@ -30,6 +30,8 @@
 
 namespace {
 
+#ifdef KOKKOS_IMPL_GRAPH_SUPPORT
+
 template <typename ViewType>
 struct Increment {
   ViewType data;
@@ -142,5 +144,6 @@ TEST(TEST_CATEGORY, graph_construct_from_native) {
 
   ASSERT_EQ(data(), 1);
 }
+#endif
 
 }  // namespace

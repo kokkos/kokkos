@@ -249,7 +249,7 @@ class GraphNodeRef {
 
 #if defined(KOKKOS_ENABLE_CUDA) ||                                           \
     (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)) || \
-    (defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH))
+    (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_GRAPH_SUPPORT))
   template <class Functor,
             typename = std::enable_if_t<std::is_invocable_r_v<
                 void, const Kokkos::Impl::remove_cvref_t<Functor>,
@@ -260,7 +260,7 @@ class GraphNodeRef {
 #elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
   auto hip_capture(const ExecutionSpace& exec, Functor&& functor) const {
     if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
-#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_GRAPH_SUPPORT)
   auto sycl_capture(const ExecutionSpace& exec, Functor&& functor) const {
     if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
 #endif
