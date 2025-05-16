@@ -123,6 +123,14 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
         m_granularity(0),
         m_granularity_mask(0) {}
 
+  KOKKOS_FUNCTION inline RangePolicy(
+      const Impl::InternalTag&, const typename traits::execution_space& exec)
+      : m_space(exec),
+        m_begin(0),
+        m_end(0),
+        m_granularity(0),
+        m_granularity_mask(0) {}
+
   /** \brief  Total range */
   template <typename IndexType1, typename IndexType2,
             std::enable_if_t<(std::is_convertible_v<IndexType1, member_type> &&
@@ -178,6 +186,8 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
                     chunk_size) {}
 
  public:
+  KOKKOS_FUNCTION member_type impl_member_type() const { return 0; }
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED_WITH_COMMENT("Use set_chunk_size instead")
   inline void set(ChunkSize chunksize) {
