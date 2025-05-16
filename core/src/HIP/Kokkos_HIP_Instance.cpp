@@ -202,8 +202,7 @@ void HIPInternal::initialize(hipStream_t stream) {
 
   m_stream = stream;
 
-  // Allocate a staging buffer for constant mem in pinned host memory
-  // and an event to avoid overwriting driver for previous kernel launches
+  // Allocate a staging buffer for constant mem in pinned host memory.
   if (!constantMemHostStaging[m_hipDev]) {
     void *constant_mem_void_ptr = nullptr;
     KOKKOS_IMPL_HIP_SAFE_CALL(hip_host_malloc_wrapper(
@@ -211,9 +210,6 @@ void HIPInternal::initialize(hipStream_t stream) {
     constantMemHostStaging[m_hipDev] =
         static_cast<unsigned long *>(constant_mem_void_ptr);
   }
-  if (!constantMemReusable[m_hipDev])
-    KOKKOS_IMPL_HIP_SAFE_CALL(hip_event_create_with_flags_wrapper(
-        &constantMemReusable[m_hipDev], hipEventDisableTiming));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -374,6 +370,10 @@ void HIPInternal::finalize() {
   this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
   was_finalized = true;
 
+  // Once the underlying stream has been synchronized, check if it's still
+  // the one used for the recorded event.
+  HIPInternal::constantMemReusable[m_hipDev].check_if_involved(m_stream);
+
   auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     device_mem_space.deallocate(m_scratchFlags,
@@ -416,10 +416,9 @@ hipDeviceProp_t HIPInternal::m_deviceProp;
 
 std::mutex HIPInternal::scratchFunctorMutex;
 
-std::set<int> HIPInternal::hip_devices                             = {};
-std::map<int, unsigned long *> HIPInternal::constantMemHostStaging = {};
-std::map<int, hipEvent_t> HIPInternal::constantMemReusable         = {};
-std::map<int, std::mutex> HIPInternal::constantMemMutex            = {};
+std::set<int> HIPInternal::hip_devices                                = {};
+std::map<int, unsigned long *> HIPInternal::constantMemHostStaging    = {};
+std::map<int, SharedResourceLocking> HIPInternal::constantMemReusable = {};
 
 //----------------------------------------------------------------------------
 
