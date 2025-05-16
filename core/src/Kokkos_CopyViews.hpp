@@ -1711,9 +1711,11 @@ local_deep_copy_barrier(const Kokkos::Impl::ThreadVectorRangeBoundariesStruct<
 //----------------------------------------------------------------------------
 
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(const Impl::CopySeqTag&,
-                                      const View<DT, DP...>& dst,
-                                      const View<ST, SP...>& src) {
+void KOKKOS_INLINE_FUNCTION
+deep_copy(const Impl::CopySeqTag&, const View<DT, DP...>& dst,
+          const View<ST, SP...>& src,
+          std::enable_if_t<unsigned(ViewTraits<DT, DP...>::rank) ==
+                           unsigned(ViewTraits<ST, SP...>::rank)>* = nullptr) {
   Impl::local_deep_copy_sequential(dst, src);
 }
 //----------------------------------------------------------------------------
@@ -2762,8 +2764,8 @@ struct MirrorViewType {
       std::is_same_v<memory_space, typename src_view_type::memory_space>;
   // The array_layout
   using array_layout = typename src_view_type::array_layout;
-  // The data type (we probably want it non-const since otherwise we can't even
-  // deep_copy to it.
+  // The data type (we probably want it non-const since otherwise we can't
+  // even deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
   using dest_view_type = Kokkos::View<data_type, array_layout, Space>;
@@ -2875,9 +2877,8 @@ inline auto choose_create_mirror(
     const View& src, const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   // Due to the fact that users can overload `Kokkos::create_mirror`, but also
   // that they may not have implemented all of its different possible
-  // variations, this function chooses the correct private or public version of
-  // it to call.
-  // This helper should be used by any overload of
+  // variations, this function chooses the correct private or public version
+  // of it to call. This helper should be used by any overload of
   // `Kokkos::Impl::create_mirror_view`.
 
   if constexpr (std::is_void_v<typename View::traits::specialize>) {
@@ -2905,13 +2906,13 @@ inline auto choose_create_mirror(
       return create_mirror(typename ViewProp::memory_space{}, src);
     } else if constexpr (sizeof...(ViewCtorArgs) == 1 &&
                          !ViewProp::initialize) {
-      // if there is one view constructor arg and it has a without initializing
-      // mark, call the specific public function
+      // if there is one view constructor arg and it has a without
+      // initializing mark, call the specific public function
       return create_mirror(typename Kokkos::Impl::WithoutInitializing_t{}, src);
     } else if constexpr (sizeof...(ViewCtorArgs) == 2 &&
                          ViewProp::has_memory_space && !ViewProp::initialize) {
-      // if there is two view constructor args and they have a memory space and
-      // a without initializing mark, call the specific public function
+      // if there is two view constructor args and they have a memory space
+      // and a without initializing mark, call the specific public function
       return create_mirror(typename Kokkos::Impl::WithoutInitializing_t{},
                            typename ViewProp::memory_space{}, src);
     } else {
