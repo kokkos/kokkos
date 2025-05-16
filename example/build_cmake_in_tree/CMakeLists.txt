@@ -14,7 +14,7 @@ add_executable(example cmake_example.cpp)
 
 # This is the only line required to set up all compiler/linker flags
 #target_link_libraries(example kokkoscore_module)
-target_link_libraries(example kokkoscore)
+target_link_libraries(example Kokkos::kokkos)
 
 # Get all propreties that cmake supports
 if(NOT CMAKE_PROPERTY_LIST)

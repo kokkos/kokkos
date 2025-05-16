@@ -137,34 +137,10 @@ else()
   message(STATUS "  " ${desul_DIR})
 endif()
 
-#kokkos_add_library(
-#  kokkoscore SOURCES ${KOKKOS_CORE_SRCS} HEADERS ${KOKKOS_CORE_HEADERS}
-#  ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
-#)
-
-
-add_library(
-  kokkoscore ${KOKKOS_CORE_SRCS}
+kokkos_add_library(
+  kokkoscore SOURCES ${KOKKOS_CORE_SRCS} MODULE_FILES kokkoscore.ccm HEADERS ${KOKKOS_CORE_HEADERS}
+  ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
 )
-
-kokkos_set_library_properties(kokkoscore)
-
-    target_sources(
-      kokkoscore
-     PUBLIC
-     FILE_SET blub TYPE CXX_MODULES
-     FILES kokkoscore.ccm
-    )
-
-  install(
-    TARGETS kokkoscore
-    EXPORT KokkosTargets #my_package-targets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    FILE_SET blub DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/my_package/src
-  )
-
 
 kokkos_lib_include_directories(
   kokkoscore ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
