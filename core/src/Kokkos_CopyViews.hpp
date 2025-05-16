@@ -1251,19 +1251,20 @@ inline void deep_copy(
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+/** \brief  A local deep copy between views of the default specialization,
+ * compatible type, same non-zero rank.
+ */
+
 namespace Experimental {
 
 namespace Impl {
 struct CopySeqTag {};
 }  // namespace Impl
 
-Impl::CopySeqTag KOKKOS_INLINE_FUNCTION copy_seq() {
+Impl::CopySeqTag KOKKOS_FORCEINLINE_FUNCTION copy_seq() {
   return Impl::CopySeqTag{};
 }
-
-/** \brief  A local deep copy between views of the default specialization,
- * compatible type, same non-zero rank.
- */
 
 namespace Impl {
 template <class DT, class... DP, class ST, class... SP>
@@ -1563,11 +1564,9 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
                   dst(i0, i1, i2, i3, i4, i5, i6) = value;
   }
 }
-}  // namespace Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-namespace Impl {
 template <typename iType, class TeamMemberType>
 Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType>
     KOKKOS_INLINE_FUNCTION
@@ -1685,19 +1684,39 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
   Kokkos::parallel_for(Impl::local_deep_copy_policy(policy, dst.span()),
                        [=](const int i) { dst.data()[i] = value; });
 }
+//----------------------------------------------------------------------------
+template <class iType, class TeamMemberType>
+void KOKKOS_FORCEINLINE_FUNCTION local_deep_copy_barrier(
+    const Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType>&
+        policy) {
+  policy.member.team_barrier();
+}
 
+template <class iType, class TeamMemberType>
+void KOKKOS_FORCEINLINE_FUNCTION local_deep_copy_barrier(
+    const Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType, TeamMemberType>&
+        policy) {
+  policy.member.team_barrier();
+}
+
+template <class iType, class TeamMemberType>
+void KOKKOS_FORCEINLINE_FUNCTION
+local_deep_copy_barrier(const Kokkos::Impl::ThreadVectorRangeBoundariesStruct<
+                        iType, TeamMemberType>& /* policy */) {
+  // We shouldn't use barriers at ThreadVector level
+}
 }  // namespace Impl
-//----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
+
 template <class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION deep_copy(const Impl::CopySeqTag&,
                                       const View<DT, DP...>& dst,
                                       const View<ST, SP...>& src) {
   Impl::local_deep_copy_sequential(dst, src);
 }
-
-// FIXME: ADL errors with nvcc and nvc++
+//----------------------------------------------------------------------------
 template <class PolicyType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION deep_copy(
     const PolicyType& policy, const View<DT, DP...>& dst,
@@ -1708,13 +1727,10 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
     return;
   }
 
-  const size_t N = dst.extent(0);
-
-  auto const local_policy = Impl::local_deep_copy_policy(policy, N);
-
-  local_policy.member.team_barrier();
-  Kokkos::parallel_for(local_policy, [=](const int i) { dst(i) = src(i); });
-  local_policy.member.team_barrier();
+  Impl::local_deep_copy_barrier(policy);
+  Kokkos::parallel_for(Impl::local_deep_copy_policy(policy, dst.extent(0)),
+                       [=](const int i) { dst(i) = src(i); });
+  Impl::local_deep_copy_barrier(policy);
 }
 //----------------------------------------------------------------------------
 template <class PolicyType, class DT, class... DP, class ST, class... SP>
@@ -1728,17 +1744,14 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
     return;
   }
 
-  auto const local_policy = Impl::md_local_deep_copy_policy(policy, dst);
-
+  Impl::local_deep_copy_barrier(policy);
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
-    local_policy.team.team_barrier();
     Impl::local_deep_copy_contiguous(policy, dst, src);
-    local_policy.team.team_barrier();
   } else {
-    local_policy.team.team_barrier();
-    Kokkos::parallel_for(local_policy, Impl::MDCopyFunctor(dst, src));
-    local_policy.team.team_barrier();
+    Kokkos::parallel_for(Impl::md_local_deep_copy_policy(policy, dst),
+                         Impl::MDCopyFunctor(dst, src));
   }
+  Impl::local_deep_copy_barrier(policy);
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
@@ -1757,13 +1770,10 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
     return;
   }
 
-  const size_t N = dst.extent(0);
-
-  auto const local_policy = Impl::local_deep_copy_policy(policy, N);
-
-  local_policy.member.team_barrier();
-  Kokkos::parallel_for(local_policy, [=](const int i) { dst(i) = value; });
-  local_policy.member.team_barrier();
+  Impl::local_deep_copy_barrier(policy);
+  Kokkos::parallel_for(Impl::local_deep_copy_policy(policy, dst.extent(0)),
+                       [=](const int i) { dst(i) = value; });
+  Impl::local_deep_copy_barrier(policy);
 }
 //----------------------------------------------------------------------------
 template <class PolicyType, class DT, class... DP>
@@ -1775,17 +1785,14 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
     return;
   }
 
-  auto const local_policy = Impl::md_local_deep_copy_policy(policy, dst);
-
+  Impl::local_deep_copy_barrier(policy);
   if (dst.span_is_contiguous()) {
-    local_policy.team.team_barrier();
     Impl::local_deep_copy_contiguous(policy, dst, value);
-    local_policy.team.team_barrier();
   } else {
-    local_policy.team.team_barrier();
-    Kokkos::parallel_for(local_policy, Impl::MDValueCopyFunctor(dst, value));
-    local_policy.team.team_barrier();
+    Kokkos::parallel_for(Impl::md_local_deep_copy_policy(policy, dst),
+                         Impl::MDValueCopyFunctor(dst, value));
   }
+  Impl::local_deep_copy_barrier(policy);
 }
 
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)

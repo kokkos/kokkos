@@ -308,13 +308,7 @@ void run_range_policy(const int N) {
 
 TEST(TEST_CATEGORY, local_deep_copy_teampolicy_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutLeft;
+  using Layout    = Kokkos::LayoutLeft;
 
   run_team_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_team_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -328,13 +322,7 @@ TEST(TEST_CATEGORY, local_deep_copy_teampolicy_layoutleft) {
 //-------------------------------------------------------------------------------------------------------------
 TEST(TEST_CATEGORY, local_deep_copy_threadpolicy_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutLeft;
+  using Layout    = Kokkos::LayoutLeft;
 
   run_thread_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_thread_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -350,13 +338,7 @@ TEST(TEST_CATEGORY, local_deep_copy_threadpolicy_layoutleft) {
 //-------------------------------------------------------------------------------------------------------------
 TEST(TEST_CATEGORY, local_deep_copy_rangepolicy_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutLeft;
+  using Layout    = Kokkos::LayoutLeft;
 
   run_range_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_range_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -371,13 +353,7 @@ TEST(TEST_CATEGORY, local_deep_copy_rangepolicy_layoutleft) {
 //-------------------------------------------------------------------------------------------------------------
 TEST(TEST_CATEGORY, local_deep_copy_teampolicy_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutRight;
+  using Layout    = Kokkos::LayoutRight;
 
   run_team_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_team_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -391,13 +367,7 @@ TEST(TEST_CATEGORY, local_deep_copy_teampolicy_layoutright) {
 //-------------------------------------------------------------------------------------------------------------
 TEST(TEST_CATEGORY, local_deep_copy_threadpolicy_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutRight;
+  using Layout    = Kokkos::LayoutRight;
 
   run_thread_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_thread_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -413,13 +383,7 @@ TEST(TEST_CATEGORY, local_deep_copy_threadpolicy_layoutright) {
 //-------------------------------------------------------------------------------------------------------------
 TEST(TEST_CATEGORY, local_deep_copy_rangepolicy_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutRight;
+  using Layout    = Kokkos::LayoutRight;
 
   run_range_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_range_policy<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -532,13 +496,7 @@ void run_sequential(const int N) {
 
 TEST(TEST_CATEGORY, local_deep_copy_team_member_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutLeft;
+  using Layout    = Kokkos::LayoutLeft;
 
   run_team_member<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_team_member<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -552,13 +510,7 @@ TEST(TEST_CATEGORY, local_deep_copy_team_member_layoutleft) {
 
 TEST(TEST_CATEGORY, local_deep_copy_team_member_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutRight;
+  using Layout    = Kokkos::LayoutRight;
 
   run_team_member<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_team_member<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -572,13 +524,7 @@ TEST(TEST_CATEGORY, local_deep_copy_team_member_layoutright) {
 
 TEST(TEST_CATEGORY, local_deep_copy_sequential_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutLeft;
+  using Layout    = Kokkos::LayoutLeft;
 
   run_sequential<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_sequential<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -591,13 +537,7 @@ TEST(TEST_CATEGORY, local_deep_copy_sequential_layoutleft) {
 
 TEST(TEST_CATEGORY, local_deep_copy_sequential_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
-#if defined(KOKKOS_ENABLE_CUDA) && \
-    defined(KOKKOS_COMPILER_NVHPC)  // FIXME_NVHPC 23.7
-  if (std::is_same_v<ExecSpace, Kokkos::Cuda>)
-    GTEST_SKIP()
-        << "FIXME_NVHPC : Compiler bug affecting subviews of high rank Views";
-#endif
-  using Layout = Kokkos::LayoutRight;
+  using Layout    = Kokkos::LayoutRight;
 
   run_sequential<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);
   run_sequential<Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);
@@ -638,19 +578,19 @@ struct DeepCopyScratchFunctor {
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, N_), KOKKOS_LAMBDA(const size_t& index) {
           auto thread_shview = Kokkos::subview(shview, index, Kokkos::ALL());
-          Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(),
+          Kokkos::Experimental::deep_copy(Kokkos::ThreadVectorRange(team, 0),
                                           thread_shview, index);
         });
 
     if (scratch_level_ == 0) {
       Kokkos::Experimental::deep_copy(
-          Kokkos::ThreadVectorRange(team, 0), check_view_1_,
+          Kokkos::TeamThreadRange(team, 0), check_view_1_,
           Kokkos::subview(shview, Kokkos::ALL(), 0));
 
-      Kokkos::Experimental::deep_copy(Kokkos::ThreadVectorRange(team, 0),
-                                      shview, 6.);
+      Kokkos::Experimental::deep_copy(Kokkos::TeamThreadRange(team, 0), shview,
+                                      6.);
       Kokkos::Experimental::deep_copy(
-          Kokkos::ThreadVectorRange(team, 0), check_view_2_,
+          Kokkos::TeamThreadRange(team, 0), check_view_2_,
           Kokkos::subview(shview, Kokkos::ALL(), 0));
     } else {
       Kokkos::Experimental::deep_copy(
