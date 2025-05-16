@@ -57,22 +57,11 @@ function(print_target_properties target)
 endfunction()
 
 print_target_properties(kokkoscore_module)
-
-include(CMakePrintHelpers)
-cmake_print_properties(
-  TARGETS kokkoscore_module
-  PROPERTIES INTERFACE_INCLUDE_DIRECTORIES MODULES FILE_SETS
-)
+print_target_properties(kokkoscore)
 
 if(NOT TARGET kokkoscore)
   message(FATAL_ERROR "BLA")
 endif()
-
-include(CMakePrintHelpers)
-cmake_print_properties(
-  TARGETS kokkoscore
-  PROPERTIES INTERFACE_INCLUDE_DIRECTORIES 
-)
 
 # Adds a test for the executable
 enable_testing()

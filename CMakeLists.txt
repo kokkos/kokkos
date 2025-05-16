@@ -225,7 +225,7 @@ kokkos_setup_build_environment()
 
 option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
-set(KOKKOS_COMPONENT_LIBRARIES kokkoscore kokkoscontainers kokkosalgorithms kokkossimd)
+set(KOKKOS_COMPONENT_LIBRARIES kokkoscore_modules kokkoscore kokkosalgorithms kokkossimd)
 set_property(GLOBAL PROPERTY KOKKOS_INT_LIBRARIES kokkos ${KOKKOS_COMPONENT_LIBRARIES})
 
 if(HAS_PARENT)
