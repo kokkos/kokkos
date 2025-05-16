@@ -1252,6 +1252,15 @@ inline void deep_copy(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 namespace Experimental {
+
+namespace Impl {
+struct CopySeqTag {};
+}  // namespace Impl
+
+Impl::CopySeqTag KOKKOS_INLINE_FUNCTION copy_seq() {
+  return Impl::CopySeqTag{};
+}
+
 /** \brief  A local deep copy between views of the default specialization,
  * compatible type, same non-zero rank.
  */
@@ -1264,10 +1273,10 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
     dst.data()[i] = src.data()[i];
   }
 }
-}  // namespace Impl
+
 //----------------------------------------------------------------------------
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
@@ -1283,7 +1292,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 2)>* = nullptr) {
@@ -1300,7 +1309,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 3)>* = nullptr) {
@@ -1319,7 +1328,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 4)>* = nullptr) {
@@ -1339,7 +1348,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 5)>* = nullptr) {
@@ -1360,7 +1369,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 6)>* = nullptr) {
@@ -1382,7 +1391,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 7)>* = nullptr) {
@@ -1406,7 +1415,6 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-namespace Impl {
 /** \brief  Deep copy a value into a view.  */
 template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
@@ -1418,10 +1426,9 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
     dst.data()[i] = value;
   }
 }
-}  // namespace Impl
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
@@ -1437,7 +1444,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
@@ -1454,7 +1461,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
@@ -1472,7 +1479,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
@@ -1492,7 +1499,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
@@ -1513,7 +1520,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
@@ -1535,7 +1542,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
 }
 //----------------------------------------------------------------------------
 template <class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
@@ -1556,6 +1563,7 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
                   dst(i0, i1, i2, i3, i4, i5, i6) = value;
   }
 }
+}  // namespace Impl
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -1682,6 +1690,13 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
 //----------------------------------------------------------------------------
 
 //----------------------------------------------------------------------------
+template <class DT, class... DP, class ST, class... SP>
+void KOKKOS_INLINE_FUNCTION deep_copy(const Impl::CopySeqTag&,
+                                      const View<DT, DP...>& dst,
+                                      const View<ST, SP...>& src) {
+  Impl::local_deep_copy_sequential(dst, src);
+}
+
 // FIXME: ADL errors with nvcc and nvc++
 template <class PolicyType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION deep_copy(
@@ -1724,6 +1739,13 @@ void KOKKOS_INLINE_FUNCTION deep_copy(
     Kokkos::parallel_for(local_policy, Impl::MDCopyFunctor(dst, src));
     local_policy.team.team_barrier();
   }
+}
+//----------------------------------------------------------------------------
+template <class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION
+deep_copy(const Impl::CopySeqTag&, const View<DT, DP...>& dst,
+          typename ViewTraits<DT, DP...>::const_value_type& value) {
+  Impl::local_deep_copy_sequential(dst, value);
 }
 //----------------------------------------------------------------------------
 template <class PolicyType, class DT, class... DP>
@@ -1780,12 +1802,13 @@ KOKKOS_FORCEINLINE_FUNCTION
 
 template <class DT, class... DP, class ST, class... SP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(dst, src) with contiguous views "
+    "use Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(), "
+    "dst, src) with contiguous views "
     "instead")
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const Kokkos::View<DT, DP...>& dst,
                                     const Kokkos::View<ST, SP...>& src) {
-  Impl::local_deep_copy_contiguous(dst, src);
+  Impl::local_deep_copy_contiguous(copy_seq(), dst, src);
 }
 
 template <class TeamType, class DT, class... DP, class ST, class... SP>
@@ -1801,11 +1824,12 @@ KOKKOS_FORCEINLINE_FUNCTION
 
 template <class DT, class... DP, class ST, class... SP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(dst, src) instead")
+    "use Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(), "
+    "dst, src) instead")
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy(const Kokkos::View<DT, DP...>& dst,
                          const Kokkos::View<ST, SP...>& src) {
-  Kokkos::Experimental::deep_copy(dst, src);
+  Kokkos::Experimental::deep_copy(copy_seq(), dst, src);
 }
 
 //----------------------------------------------------------------------------
@@ -1822,12 +1846,13 @@ KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
 
 template <class DT, class... DP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(dst, value) with a contiguous view "
+    "use Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(), "
+    "dst, value) with a contiguous view "
     "instead")
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
     const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
-  Impl::local_deep_copy_contiguous(dst, value);
+  Impl::local_deep_copy_contiguous(copy_seq(), dst, value);
 }
 
 template <class TeamType, class DT, class... DP>
@@ -1842,11 +1867,12 @@ KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy(
 
 template <class DT, class... DP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(dst, value) instead")
+    "use Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(), "
+    "dst, value) instead")
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy(
     const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
-  Kokkos::Experimental::deep_copy(dst, value);
+  Kokkos::Experimental::deep_copy(copy_seq(), dst, value);
 }
 
 #endif

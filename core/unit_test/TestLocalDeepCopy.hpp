@@ -174,7 +174,8 @@ void test_local_deepcopy_range(ViewType A, ViewType B, const int N) {
       Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& lid) {
         auto subSrc = extract_subview(A, lid, Kokkos::ALL);
         auto subDst = extract_subview(B, lid, Kokkos::ALL);
-        Kokkos::Experimental::deep_copy(subDst, subSrc);
+        Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(),
+                                        subDst, subSrc);
       });
 
   Kokkos::fence();
@@ -244,7 +245,8 @@ void test_local_deepcopy_scalar_range(
   Kokkos::parallel_for(
       Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& lid) {
         auto subDst = extract_subview(B, lid, Kokkos::ALL);
-        Kokkos::Experimental::deep_copy(subDst, fill_value);
+        Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(),
+                                        subDst, fill_value);
       });
 
   double sum_all = 0.0;
@@ -636,7 +638,8 @@ struct DeepCopyScratchFunctor {
     Kokkos::parallel_for(
         Kokkos::TeamThreadRange(team, N_), KOKKOS_LAMBDA(const size_t& index) {
           auto thread_shview = Kokkos::subview(shview, index, Kokkos::ALL());
-          Kokkos::Experimental::deep_copy(thread_shview, index);
+          Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(),
+                                          thread_shview, index);
         });
 
     if (scratch_level_ == 0) {
