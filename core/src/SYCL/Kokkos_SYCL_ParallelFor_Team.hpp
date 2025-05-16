@@ -110,6 +110,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
               sycl::range<2>(m_team_size, static_cast<size_t>(m_league_size) *
                                               final_vector_size),
               sycl::range<2>(m_team_size, final_vector_size)),
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+          sycl::ext::oneapi::experimental::properties{
+              sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
           lambda);
     };
 

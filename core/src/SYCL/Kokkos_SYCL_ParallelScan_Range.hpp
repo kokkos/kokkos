@@ -314,8 +314,13 @@ class ParallelScanSYCLBase {
 
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
-      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-                       scan_lambda);
+      cgh.parallel_for(
+          sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+          sycl::ext::oneapi::experimental::properties{
+              sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+          scan_lambda);
     });
 
     // Write results to global memory
@@ -332,6 +337,10 @@ class ParallelScanSYCLBase {
 
       cgh.parallel_for(
           sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+          sycl::ext::oneapi::experimental::properties{
+              sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
           [=](sycl::nd_item<1> item) {
             const index_type global_id = item.get_global_linear_id();
             const CombinedFunctorReducer<
