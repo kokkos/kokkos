@@ -47,7 +47,7 @@ struct TestRangeRequire {
         N(N_) {}
 
   void test_for() {
-    typename view_type::HostMirror host_flags =
+    typename view_type::host_mirror_type host_flags =
         Kokkos::create_mirror_view(m_flags);
 
     Kokkos::parallel_for(

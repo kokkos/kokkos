@@ -100,7 +100,7 @@ void test_offsetview_construction() {
   }
   {  // test deep copy of scalar const value into mirro
     const int constVal = 6;
-    typename offset_view_type::HostMirror hostOffsetView =
+    typename offset_view_type::host_mirror_type hostOffsetView =
         Kokkos::create_mirror_view(ov);
 
     Kokkos::deep_copy(hostOffsetView, constVal);
@@ -131,7 +131,7 @@ void test_offsetview_construction() {
       KOKKOS_LAMBDA(const int i, const int j) { ov(i, j) = constValue; });
 
   // test offsetview to offsetviewmirror deep copy
-  typename offset_view_type::HostMirror hostOffsetView =
+  typename offset_view_type::host_mirror_type hostOffsetView =
       Kokkos::create_mirror_view(ov);
 
   Kokkos::deep_copy(hostOffsetView, ov);

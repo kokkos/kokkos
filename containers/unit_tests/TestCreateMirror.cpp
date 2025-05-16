@@ -40,7 +40,7 @@ void test_create_mirror_properties(const View& view) {
   // clang-format off
   
   // create_mirror
-  // FIXME DynamicView: HostMirror is the same type
+  // FIXME DynamicView: host_mirror_type is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror(WithoutInitializing,                        view), host_mirror_test_space(view));
     check_memory_space(create_mirror(                                            view), host_mirror_test_space(view));
@@ -49,7 +49,7 @@ void test_create_mirror_properties(const View& view) {
   check_memory_space(create_mirror(                     DefaultExecutionSpace{}, view), DeviceMemorySpace{});
 
   // create_mirror_view
-  // FIXME DynamicView: HostMirror is the same type
+  // FIXME DynamicView: host_mirror_type is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror_view(WithoutInitializing,                        view), host_mirror_test_space(view));
     check_memory_space(create_mirror_view(                                            view), host_mirror_test_space(view));
@@ -58,7 +58,7 @@ void test_create_mirror_properties(const View& view) {
   check_memory_space(create_mirror_view(                     DefaultExecutionSpace{}, view), DeviceMemorySpace{});
 
   // create_mirror view_alloc
-  // FIXME DynamicView: HostMirror is the same type
+  // FIXME DynamicView: host_mirror_type is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror(view_alloc(WithoutInitializing),                    view), host_mirror_test_space(view));
     check_memory_space(create_mirror(view_alloc(),                                       view), host_mirror_test_space(view));
@@ -67,7 +67,7 @@ void test_create_mirror_properties(const View& view) {
   check_memory_space(create_mirror(view_alloc(                     DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view view_alloc
-  // FIXME DynamicView: HostMirror is the same type
+  // FIXME DynamicView: host_mirror_type is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror_view(view_alloc(WithoutInitializing),                    view), host_mirror_test_space(view));
     check_memory_space(create_mirror_view(view_alloc(),                                       view), host_mirror_test_space(view));
@@ -76,7 +76,7 @@ void test_create_mirror_properties(const View& view) {
   check_memory_space(create_mirror_view(view_alloc(                     DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror view_alloc + execution space
-  // FIXME DynamicView: HostMirror is the same type
+  // FIXME DynamicView: host_mirror_type is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror(view_alloc(DefaultHostExecutionSpace{}, WithoutInitializing),                      view), host_mirror_test_space(view));
     check_memory_space(create_mirror(view_alloc(DefaultHostExecutionSpace{}),                                           view), host_mirror_test_space(view));
@@ -85,7 +85,7 @@ void test_create_mirror_properties(const View& view) {
   check_memory_space(create_mirror(view_alloc(DefaultExecutionSpace{},                            DeviceMemorySpace{}), view), DeviceMemorySpace{});
 
   // create_mirror_view view_alloc + execution space
-  // FIXME DynamicView: HostMirror is the same type
+  // FIXME DynamicView: host_mirror_type is the same type
   if constexpr (!is_dynamic_view<View>::value) {
     check_memory_space(create_mirror_view(view_alloc(DefaultHostExecutionSpace{}, WithoutInitializing),                      view), host_mirror_test_space(view));
     check_memory_space(create_mirror_view(view_alloc(DefaultHostExecutionSpace{}),                                           view), host_mirror_test_space(view));
