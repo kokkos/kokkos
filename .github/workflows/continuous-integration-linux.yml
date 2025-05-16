@@ -178,7 +178,7 @@ jobs:
         run: sudo cmake --build builddir --target install
       - name: Test install
         if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
-        working-directory: example/build_cmake_installed
+        working-directory: cmake_test
         run: |
           cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
           cmake --build builddir
