@@ -241,9 +241,9 @@ void sort_onedpl(const Kokkos::SYCL& space,
 #else
   static_assert(
       (ViewType::rank == 1) &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+          (std::is_same_v<typename ViewType::layout_type, LayoutRight> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutLeft> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutStride>),
       "SYCL sort only supports contiguous rank-1 Views with LayoutLeft, "
       "LayoutRight or LayoutStride"
       "For the latter, this means the View must have stride(0) = 1, enforced "
@@ -284,7 +284,7 @@ void copy_to_host_run_stdsort_copy_back(
   namespace KE = ::Kokkos::Experimental;
 
   using ViewType = Kokkos::View<DataType, Properties...>;
-  using layout   = typename ViewType::array_layout;
+  using layout   = typename ViewType::layout_type;
   if constexpr (std::is_same_v<LayoutStride, layout>) {
     // for strided views we cannot just deep_copy from device to host,
     // so we need to do a few more jumps
@@ -342,9 +342,9 @@ void sort_device_view_without_comparator(
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
       (ViewType::rank == 1) &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+          (std::is_same_v<typename ViewType::layout_type, LayoutRight> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutLeft> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutStride>),
       "sort_device_view_without_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
@@ -401,9 +401,9 @@ void sort_device_view_with_comparator(
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
       (ViewType::rank == 1) &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+          (std::is_same_v<typename ViewType::layout_type, LayoutRight> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutLeft> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutStride>),
       "sort_device_view_with_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 

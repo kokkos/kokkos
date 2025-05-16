@@ -26,7 +26,7 @@ namespace Test {
 
 // Unit test for Execution Space
 // Test1 - testing for memory_space, execution_space, scratch space and
-// array_layout of an execution space
+// layout_type of an execution space
 // Test2 - Test if the is_execution_space evaluation is working correctly
 
 template <class ExecSpace>
@@ -36,7 +36,7 @@ struct TestIncrExecSpaceTypedef {
         (!std::is_void_v<typename ExecSpace::memory_space>)&&std::is_same_v<
             ExecSpace, typename ExecSpace::execution_space> &&
         !std::is_void_v<typename ExecSpace::scratch_memory_space> &&
-        !std::is_void_v<typename ExecSpace::array_layout>;
+        !std::is_void_v<typename ExecSpace::layout_type>;
     static_assert(passed == true,
                   "The memory and execution spaces are defined");
   }

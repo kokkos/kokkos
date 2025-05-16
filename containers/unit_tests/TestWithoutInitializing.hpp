@@ -283,7 +283,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_init_scatterview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::ScatterView<
-      int**** [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      int**** [1][2][3], typename TEST_EXECSPACE::layout_type, TEST_EXECSPACE>
       bla("bla", 4, 5, 6, 7);
 
   auto success = validate_absence(
@@ -315,7 +315,7 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc_scatterview) {
   listen_tool_events(Config::DisableAll(), Config::EnableKernels(),
                      Config::EnableAllocs());
   Kokkos::Experimental::ScatterView<
-      int**** [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      int**** [1][2][3], typename TEST_EXECSPACE::layout_type, TEST_EXECSPACE>
       bla("bla", 7, 6, 5, 4);
 
   auto success = validate_absence(
@@ -346,7 +346,7 @@ TEST(TEST_CATEGORY, resize_exec_space_scatterview) {
   listen_tool_events(Config::DisableAll(), Config::EnableFences(),
                      Config::EnableKernels());
   Kokkos::Experimental::ScatterView<
-      int**** [1][2][3], typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>
+      int**** [1][2][3], typename TEST_EXECSPACE::layout_type, TEST_EXECSPACE>
       bla("bla", 7, 6, 5, 4);
 
   auto success = validate_absence(
@@ -400,7 +400,7 @@ TEST(TEST_CATEGORY, realloc_exec_space_scatterview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
   using view_type = Kokkos::Experimental::ScatterView<
-      int*, typename TEST_EXECSPACE::array_layout, TEST_EXECSPACE>;
+      int*, typename TEST_EXECSPACE::layout_type, TEST_EXECSPACE>;
   view_type outer_view, outer_view2;
 
   auto success = validate_absence(

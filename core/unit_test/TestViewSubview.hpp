@@ -1003,7 +1003,7 @@ struct CheckSubviewCorrectness_1D_2D {
 template <class View, class SubView>
 struct CheckSubviewCorrectness_2D_3D {
   using policy_t = Kokkos::RangePolicy<typename View::execution_space>;
-  using layout   = typename View::array_layout;
+  using layout   = typename View::layout_type;
   View a;
   SubView b;
   int i0;
@@ -1039,7 +1039,7 @@ struct CheckSubviewCorrectness_2D_3D {
 template <class View, class SubView>
 struct CheckSubviewCorrectness_3D_3D {
   using policy_t = Kokkos::RangePolicy<typename View::execution_space>;
-  using layout   = typename View::array_layout;
+  using layout   = typename View::layout_type;
   View a;
   SubView b;
   int offset_0;
@@ -1078,7 +1078,7 @@ struct CheckSubviewCorrectness_3D_3D {
 template <class View, class SubView>
 struct CheckSubviewCorrectness_3D_4D {
   using policy_t = Kokkos::RangePolicy<typename View::execution_space>;
-  using layout   = typename View::array_layout;
+  using layout   = typename View::layout_type;
   View a;
   SubView b;
   int index;
@@ -1129,7 +1129,7 @@ struct CheckSubviewCorrectness_3D_4D {
 template <class View, class SubView>
 struct CheckSubviewCorrectness_3D_5D {
   using policy_t = Kokkos::RangePolicy<typename View::execution_space>;
-  using layout   = typename View::array_layout;
+  using layout   = typename View::layout_type;
   View a;
   SubView b;
   int i0, i1;

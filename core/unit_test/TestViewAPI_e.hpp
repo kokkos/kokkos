@@ -233,19 +233,19 @@ struct TestViewOverloadResolution {
   static int bar(Kokkos::View<double* [4], ExecSpace> /*a*/) { return 5; }
 
   static void test_function_overload() {
-    Kokkos::View<double**, typename ExecSpace::execution_space::array_layout,
+    Kokkos::View<double**, typename ExecSpace::execution_space::layout_type,
                  ExecSpace>
         a("A", 10, 3);
     int data_type_1 = foo(a);
     int data_type_3 =
         foo(Kokkos::View<const double**,
-                         typename ExecSpace::execution_space::array_layout,
+                         typename ExecSpace::execution_space::layout_type,
                          ExecSpace>(a));
-    Kokkos::View<double***, typename ExecSpace::execution_space::array_layout,
+    Kokkos::View<double***, typename ExecSpace::execution_space::layout_type,
                  ExecSpace>
         b("B", 10, 3, 4);
     int data_type_2 = foo(b);
-    Kokkos::View<double* [3], typename ExecSpace::execution_space::array_layout,
+    Kokkos::View<double* [3], typename ExecSpace::execution_space::layout_type,
                  ExecSpace>
         c(a);
     int static_extent = bar(c);

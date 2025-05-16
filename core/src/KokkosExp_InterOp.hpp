@@ -105,8 +105,7 @@ struct python_view_type {
       "Error! python_view_type only supports Kokkos::View and "
       "Kokkos::DynRankView");
 
-  using type =
-      Kokkos::Impl::python_view_type_impl_t<typename ViewT::array_type>;
+  using type = Kokkos::Impl::python_view_type_impl_t<typename ViewT::type>;
 };
 
 template <typename ViewT>

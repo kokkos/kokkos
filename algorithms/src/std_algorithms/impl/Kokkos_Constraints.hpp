@@ -32,14 +32,13 @@ struct is_admissible_to_kokkos_std_algorithms : std::false_type {};
 
 template <typename T>
 struct is_admissible_to_kokkos_std_algorithms<
-    T, std::enable_if_t<::Kokkos::is_view<T>::value && T::rank() == 1 &&
-                        (std::is_same_v<typename T::traits::array_layout,
-                                        Kokkos::LayoutLeft> ||
-                         std::is_same_v<typename T::traits::array_layout,
-                                        Kokkos::LayoutRight> ||
-                         std::is_same_v<typename T::traits::array_layout,
-                                        Kokkos::LayoutStride>)>>
-    : std::true_type {};
+    T,
+    std::enable_if_t<
+        ::Kokkos::is_view<T>::value && T::rank() == 1 &&
+        (std::is_same_v<typename T::traits::layout_type, Kokkos::LayoutLeft> ||
+         std::is_same_v<typename T::traits::layout_type, Kokkos::LayoutRight> ||
+         std::is_same_v<typename T::traits::layout_type,
+                        Kokkos::LayoutStride>)>> : std::true_type {};
 
 template <class ViewType>
 KOKKOS_INLINE_FUNCTION constexpr void

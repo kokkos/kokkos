@@ -24,7 +24,7 @@ namespace Kokkos {
 
 struct LayoutSelective {
   //! Tag this class as a kokkos array layout
-  using array_layout = LayoutSelective;
+  using layout_type = LayoutSelective;
 
   size_t offset_list[OFFSET_LIST_MAX_SIZE];
   size_t list_size;
@@ -88,11 +88,11 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
 
   using size_type      = size_t;
   using dimension_type = Dimension;
-  using array_layout   = Kokkos::LayoutSelective;
+  using layout_type    = Kokkos::LayoutSelective;
 
   //----------------------------------------
   dimension_type m_dim;
-  array_layout m_selective;
+  layout_type m_selective;
 
   // rank 1
   template <typename I0>
@@ -105,7 +105,7 @@ struct ViewOffset<Dimension, Kokkos::LayoutSelective, void> {
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  array_layout layout() const { return array_layout(); }
+  layout_type layout() const { return layout_type(); }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
     return m_dim.N0;

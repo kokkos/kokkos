@@ -71,7 +71,18 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
 #endif
 
   static_assert(view_type::rank == 1 &&
+<<<<<<< HEAD
                 is_always_strided<::Kokkos::View<DataType, Args...>>::value);
+=======
+                    (std::is_same_v<typename view_type::traits::layout_type,
+                                    Kokkos::LayoutLeft> ||
+                     std::is_same_v<typename view_type::traits::layout_type,
+                                    Kokkos::LayoutRight> ||
+                     std::is_same_v<typename view_type::traits::layout_type,
+                                    Kokkos::LayoutStride>),
+                "RandomAccessIterator only supports 1D Views with LayoutLeft, "
+                "LayoutRight, LayoutStride.");
+>>>>>>> 86c5f1e38 (Depracate array_layout in favor of layout_type)
 
   KOKKOS_DEFAULTED_FUNCTION RandomAccessIterator() = default;
 

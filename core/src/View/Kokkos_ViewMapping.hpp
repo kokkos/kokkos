@@ -452,7 +452,7 @@ struct ViewOffset<
 
   using size_type      = size_t;
   using dimension_type = Dimension;
-  using array_layout   = Kokkos::LayoutLeft;
+  using layout_type    = Kokkos::LayoutLeft;
 
   dimension_type m_dim;
 
@@ -548,16 +548,16 @@ struct ViewOffset<
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr array_layout layout() const {
+  constexpr layout_type layout() const {
     constexpr auto r = dimension_type::rank;
-    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
-                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
-                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
-                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
-                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
-                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
-                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
-                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    return layout_type((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                       (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                       (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                       (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                       (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                       (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                       (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                       (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -766,7 +766,7 @@ struct ViewOffset<
 
   using size_type      = size_t;
   using dimension_type = Dimension;
-  using array_layout   = Kokkos::LayoutLeft;
+  using layout_type    = Kokkos::LayoutLeft;
 
   dimension_type m_dim;
   size_type m_stride;
@@ -863,16 +863,16 @@ struct ViewOffset<
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr array_layout layout() const {
+  constexpr layout_type layout() const {
     constexpr auto r = dimension_type::rank;
-    array_layout l((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
-                   (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
-                   (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
-                   (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
-                   (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
-                   (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
-                   (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
-                   (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    layout_type l((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                  (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                  (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                  (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                  (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                  (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                  (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                  (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
     // Without span_is_contiguous Sacado hidden dimensions get messed up
     l.stride = span_is_contiguous() ? KOKKOS_IMPL_CTOR_DEFAULT_ARG : m_stride;
     return l;
@@ -1148,7 +1148,7 @@ struct ViewOffset<
 
   using size_type      = size_t;
   using dimension_type = Dimension;
-  using array_layout   = Kokkos::LayoutRight;
+  using layout_type    = Kokkos::LayoutRight;
 
   dimension_type m_dim;
 
@@ -1246,16 +1246,16 @@ struct ViewOffset<
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr array_layout layout() const {
+  constexpr layout_type layout() const {
     constexpr auto r = dimension_type::rank;
-    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
-                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
-                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
-                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
-                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
-                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
-                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
-                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    return layout_type((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                       (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                       (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                       (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                       (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                       (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                       (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                       (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -1456,7 +1456,7 @@ struct ViewOffset<
 
   using size_type      = size_t;
   using dimension_type = Dimension;
-  using array_layout   = Kokkos::LayoutRight;
+  using layout_type    = Kokkos::LayoutRight;
 
   dimension_type m_dim;
   size_type m_stride;
@@ -1550,16 +1550,16 @@ struct ViewOffset<
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr array_layout layout() const {
+  constexpr layout_type layout() const {
     constexpr auto r = dimension_type::rank;
-    array_layout l((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
-                   (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
-                   (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
-                   (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
-                   (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
-                   (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
-                   (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
-                   (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
+    layout_type l((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX),
+                  (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX),
+                  (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX),
+                  (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX),
+                  (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX),
+                  (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX),
+                  (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX),
+                  (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX));
     // Without span_is_contiguous Sacado hidden dimensions get messed up
     l.stride = span_is_contiguous() ? KOKKOS_IMPL_CTOR_DEFAULT_ARG : m_stride;
     return l;
@@ -2013,7 +2013,7 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
 
   using size_type      = size_t;
   using dimension_type = Dimension;
-  using array_layout   = Kokkos::LayoutStride;
+  using layout_type    = Kokkos::LayoutStride;
 
   dimension_type m_dim;
   stride_type m_stride;
@@ -2097,16 +2097,16 @@ struct ViewOffset<Dimension, Kokkos::LayoutStride, void> {
   //----------------------------------------
 
   KOKKOS_INLINE_FUNCTION
-  constexpr array_layout layout() const {
+  constexpr layout_type layout() const {
     constexpr auto r = dimension_type::rank;
-    return array_layout((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX), m_stride.S0,
-                        (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX), m_stride.S1,
-                        (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX), m_stride.S2,
-                        (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX), m_stride.S3,
-                        (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX), m_stride.S4,
-                        (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX), m_stride.S5,
-                        (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX), m_stride.S6,
-                        (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX), m_stride.S7);
+    return layout_type((r > 0 ? m_dim.N0 : KOKKOS_INVALID_INDEX), m_stride.S0,
+                       (r > 1 ? m_dim.N1 : KOKKOS_INVALID_INDEX), m_stride.S1,
+                       (r > 2 ? m_dim.N2 : KOKKOS_INVALID_INDEX), m_stride.S2,
+                       (r > 3 ? m_dim.N3 : KOKKOS_INVALID_INDEX), m_stride.S3,
+                       (r > 4 ? m_dim.N4 : KOKKOS_INVALID_INDEX), m_stride.S4,
+                       (r > 5 ? m_dim.N5 : KOKKOS_INVALID_INDEX), m_stride.S5,
+                       (r > 6 ? m_dim.N6 : KOKKOS_INVALID_INDEX), m_stride.S6,
+                       (r > 7 ? m_dim.N7 : KOKKOS_INVALID_INDEX), m_stride.S7);
   }
 
   KOKKOS_INLINE_FUNCTION constexpr size_type dimension_0() const {
@@ -2510,11 +2510,11 @@ template <class Traits>
 class ViewMapping<
     Traits, std::enable_if_t<(std::is_void_v<typename Traits::specialize> &&
                               ViewOffset<typename Traits::dimension,
-                                         typename Traits::array_layout,
+                                         typename Traits::layout_type,
                                          void>::is_mapping_plugin::value)>> {
  public:
   using offset_type = ViewOffset<typename Traits::dimension,
-                                 typename Traits::array_layout, void>;
+                                 typename Traits::layout_type, void>;
 
   using handle_type = typename ViewDataHandle<Traits>::handle_type;
 
@@ -2549,8 +2549,7 @@ class ViewMapping<
     return dim_type::static_extent(r);
   }
 
-  KOKKOS_INLINE_FUNCTION constexpr typename Traits::array_layout layout()
-      const {
+  KOKKOS_INLINE_FUNCTION constexpr typename Traits::layout_type layout() const {
     return m_impl_offset.layout();
   }
 
@@ -2658,7 +2657,7 @@ class ViewMapping<
       (std::is_integral_v<I0> &&
        // if layout is neither stride nor irregular,
        // then just use the handle directly
-       !(std::is_same_v<typename Traits::array_layout, Kokkos::LayoutStride> ||
+       !(std::is_same_v<typename Traits::layout_type, Kokkos::LayoutStride> ||
          !is_regular::value)),
       reference_type>
   reference(const I0& i0) const {
@@ -2670,7 +2669,7 @@ class ViewMapping<
       (std::is_integral_v<I0> &&
        // if the layout is strided or irregular, then
        // we have to use the offset
-       (std::is_same_v<typename Traits::array_layout, Kokkos::LayoutStride> ||
+       (std::is_same_v<typename Traits::layout_type, Kokkos::LayoutStride> ||
         !is_regular::value)),
       reference_type>
   reference(const I0& i0) const {
@@ -2760,7 +2759,7 @@ class ViewMapping<
   /**\brief  Span, in bytes, of the required memory */
   KOKKOS_INLINE_FUNCTION
   static constexpr size_t memory_span(
-      typename Traits::array_layout const& arg_layout) {
+      typename Traits::layout_type const& arg_layout) {
     using padding = std::integral_constant<unsigned int, 0>;
     return (offset_type(padding(), arg_layout).span() * MemorySpanSize +
             MemorySpanMask) &
@@ -2771,7 +2770,7 @@ class ViewMapping<
   template <class... P>
   KOKKOS_INLINE_FUNCTION ViewMapping(
       Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
-      typename Traits::array_layout const& arg_layout)
+      typename Traits::layout_type const& arg_layout)
       : m_impl_handle(Impl::get_property<Impl::PointerTag>(arg_prop)),
         m_impl_offset(std::integral_constant<unsigned, 0>(), arg_layout) {}
 
@@ -2789,7 +2788,7 @@ class ViewMapping<
   template <class... P>
   Kokkos::Impl::SharedAllocationRecord<>* allocate_shared(
       Kokkos::Impl::ViewCtorProp<P...> const& arg_prop,
-      typename Traits::array_layout const& arg_layout,
+      typename Traits::layout_type const& arg_layout,
       bool execution_space_specified) {
     using alloc_prop = Kokkos::Impl::ViewCtorProp<P...>;
 
@@ -2866,7 +2865,7 @@ template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
     std::enable_if_t<(
-        !(std::is_same_v<typename SrcTraits::array_layout,
+        !(std::is_same_v<typename SrcTraits::layout_type,
                          LayoutStride>)&&  // Added to have a new
                                            // specialization for
                                            // SrcType of
@@ -2876,23 +2875,23 @@ class ViewMapping<
         std::is_void_v<typename SrcTraits::specialize> &&
         (
             // same layout
-            std::is_same_v<typename DstTraits::array_layout,
-                           typename SrcTraits::array_layout> ||
+            std::is_same_v<typename DstTraits::layout_type,
+                           typename SrcTraits::layout_type> ||
             // known layout
-            ((std::is_same_v<typename DstTraits::array_layout,
+            ((std::is_same_v<typename DstTraits::layout_type,
                              Kokkos::LayoutLeft> ||
-              std::is_same_v<typename DstTraits::array_layout,
+              std::is_same_v<typename DstTraits::layout_type,
                              Kokkos::LayoutRight> ||
               std::is_same_v<
-                  typename DstTraits::array_layout,
+                  typename DstTraits::layout_type,
                   Kokkos::LayoutStride>)&&(std::is_same_v<typename SrcTraits::
-                                                              array_layout,
+                                                              layout_type,
                                                           Kokkos::LayoutLeft> ||
                                            std::is_same_v<
-                                               typename SrcTraits::array_layout,
+                                               typename SrcTraits::layout_type,
                                                Kokkos::LayoutRight> ||
                                            std::is_same_v<
-                                               typename SrcTraits::array_layout,
+                                               typename SrcTraits::layout_type,
                                                Kokkos::LayoutStride>))))>> {
  private:
   enum {
@@ -2916,12 +2915,11 @@ class ViewMapping<
   };
 
   enum {
-    is_assignable_layout = std::is_same_v<typename DstTraits::array_layout,
-                                          typename SrcTraits::array_layout> ||
-                           std::is_same_v<typename DstTraits::array_layout,
-                                          Kokkos::LayoutStride> ||
-                           (DstTraits::dimension::rank == 0) ||
-                           (DstTraits::dimension::rank == 1)
+    is_assignable_layout =
+        std::is_same_v<typename DstTraits::layout_type,
+                       typename SrcTraits::layout_type> ||
+        std::is_same_v<typename DstTraits::layout_type, Kokkos::LayoutStride> ||
+        (DstTraits::dimension::rank == 0) || (DstTraits::dimension::rank == 1)
   };
 
  public:
@@ -3009,21 +3007,21 @@ class ViewMapping<
 template <class DstTraits, class SrcTraits>
 class ViewMapping<
     DstTraits, SrcTraits,
-    std::enable_if_t<(std::is_same_v<typename SrcTraits::array_layout,
-                                     Kokkos::LayoutStride> &&
-                      std::is_void_v<typename DstTraits::specialize> &&
-                      std::is_void_v<typename SrcTraits::specialize> &&
-                      (
-                          // same layout
-                          std::is_same_v<typename DstTraits::array_layout,
-                                         typename SrcTraits::array_layout> ||
-                          // known layout
-                          (std::is_same_v<typename DstTraits::array_layout,
-                                          Kokkos::LayoutLeft> ||
-                           std::is_same_v<typename DstTraits::array_layout,
-                                          Kokkos::LayoutRight> ||
-                           std::is_same_v<typename DstTraits::array_layout,
-                                          Kokkos::LayoutStride>)))>> {
+    std::enable_if_t<(
+        std::is_same_v<typename SrcTraits::layout_type, Kokkos::LayoutStride> &&
+        std::is_void_v<typename DstTraits::specialize> &&
+        std::is_void_v<typename SrcTraits::specialize> &&
+        (
+            // same layout
+            std::is_same_v<typename DstTraits::layout_type,
+                           typename SrcTraits::layout_type> ||
+            // known layout
+            (std::is_same_v<typename DstTraits::layout_type,
+                            Kokkos::LayoutLeft> ||
+             std::is_same_v<typename DstTraits::layout_type,
+                            Kokkos::LayoutRight> ||
+             std::is_same_v<typename DstTraits::layout_type,
+                            Kokkos::LayoutStride>)))>> {
  private:
   enum {
     is_assignable_space = Kokkos::Impl::MemorySpaceAccess<
@@ -3067,7 +3065,7 @@ class ViewMapping<
     bool assignable = true;
     src.stride(strides);
     size_t exp_stride = 1;
-    if (std::is_same_v<typename DstTraits::array_layout, Kokkos::LayoutLeft>) {
+    if (std::is_same_v<typename DstTraits::layout_type, Kokkos::LayoutLeft>) {
       for (int i = 0; i < (int)src.Rank; i++) {
         if (i > 0) exp_stride *= src.extent(i - 1);
         if (strides[i] != exp_stride) {
@@ -3075,7 +3073,7 @@ class ViewMapping<
           break;
         }
       }
-    } else if (std::is_same_v<typename DstTraits::array_layout,
+    } else if (std::is_same_v<typename DstTraits::layout_type,
                               Kokkos::LayoutRight>) {
       for (int i = 0; i < (int)src.Rank; i++) {
         if (i > 0) exp_stride *= src.extent(src.Rank - i);
@@ -3207,10 +3205,9 @@ template <class SrcTraits, class... Args>
 class ViewMapping<
     std::enable_if_t<(
         std::is_void_v<typename SrcTraits::specialize> &&
-        (std::is_same_v<typename SrcTraits::array_layout, Kokkos::LayoutLeft> ||
-         std::is_same_v<typename SrcTraits::array_layout,
-                        Kokkos::LayoutRight> ||
-         std::is_same_v<typename SrcTraits::array_layout,
+        (std::is_same_v<typename SrcTraits::layout_type, Kokkos::LayoutLeft> ||
+         std::is_same_v<typename SrcTraits::layout_type, Kokkos::LayoutRight> ||
+         std::is_same_v<typename SrcTraits::layout_type,
                         Kokkos::LayoutStride>))>,
     SrcTraits, Args...> {
  private:
@@ -3258,25 +3255,25 @@ class ViewMapping<
   };
 
   // Subview's layout
-  using array_layout = std::conditional_t<
+  using layout_type = std::conditional_t<
       (            /* Same array layout IF */
        (rank == 0) /* output rank zero */
-       || SubviewLegalArgsCompileTime<typename SrcTraits::array_layout,
-                                      typename SrcTraits::array_layout, rank,
+       || SubviewLegalArgsCompileTime<typename SrcTraits::layout_type,
+                                      typename SrcTraits::layout_type, rank,
                                       SrcTraits::rank, 0, Args...>::value ||
        // OutputRank 1 or 2, InputLayout Left, Interval 0
        // because single stride one or second index has a stride.
        (rank <= 2 && R0 &&
-        std::is_same_v<typename SrcTraits::array_layout,
+        std::is_same_v<typename SrcTraits::layout_type,
                        Kokkos::LayoutLeft>)  // replace with input rank
        ||
        // OutputRank 1 or 2, InputLayout Right, Interval [InputRank-1]
        // because single stride one or second index has a stride.
        (rank <= 2 && R0_rev &&
-        std::is_same_v<typename SrcTraits::array_layout,
+        std::is_same_v<typename SrcTraits::layout_type,
                        Kokkos::LayoutRight>)  // replace input rank
        ),
-      typename SrcTraits::array_layout, Kokkos::LayoutStride>;
+      typename SrcTraits::layout_type, Kokkos::LayoutStride>;
 
   using value_type = typename SrcTraits::value_type;
 
@@ -3287,12 +3284,12 @@ class ViewMapping<
                                Args...>::type;
 
  public:
-  using traits_type = Kokkos::ViewTraits<data_type, array_layout,
+  using traits_type = Kokkos::ViewTraits<data_type, layout_type,
                                          typename SrcTraits::device_type,
                                          typename SrcTraits::memory_traits>;
 
   using type =
-      Kokkos::View<data_type, array_layout, typename SrcTraits::device_type,
+      Kokkos::View<data_type, layout_type, typename SrcTraits::device_type,
                    typename SrcTraits::memory_traits>;
 
   template <class MemoryTraits>
@@ -3300,10 +3297,10 @@ class ViewMapping<
     static_assert(Kokkos::is_memory_traits<MemoryTraits>::value);
 
     using traits_type =
-        Kokkos::ViewTraits<data_type, array_layout,
+        Kokkos::ViewTraits<data_type, layout_type,
                            typename SrcTraits::device_type, MemoryTraits>;
 
-    using type = Kokkos::View<data_type, array_layout,
+    using type = Kokkos::View<data_type, layout_type,
                               typename SrcTraits::device_type, MemoryTraits>;
   };
 
