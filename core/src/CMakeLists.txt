@@ -147,13 +147,6 @@ add_library(
   kokkoscore ${KOKKOS_CORE_SRCS}
 )
 
-kokkos_lib_include_directories(
-  kokkoscore ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
-)
-if(NOT desul_FOUND)
-  kokkos_lib_include_directories(kokkoscore ${KOKKOS_SOURCE_DIR}/tpls/desul/include)
-endif()
-
     target_sources(
       kokkoscore
      PUBLIC
@@ -170,11 +163,13 @@ endif()
     FILE_SET blub DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/my_package/src
   )
 
-    #install(TARGETS kokkoscore
-    #	    EXPORT KokkosTargets
-    #FILE_SET
-    #    blub DESTINATION include # Export the HEADERS file set to the 'include' directory
-    #)
+
+kokkos_lib_include_directories(
+  kokkoscore ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
+)
+if(NOT desul_FOUND)
+  kokkos_lib_include_directories(kokkoscore ${KOKKOS_SOURCE_DIR}/tpls/desul/include)
+endif()
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
   message(STATUS "Experimental mdspan support is enabled")
