@@ -16,10 +16,6 @@ add_executable(example cmake_example.cpp)
 #target_link_libraries(example kokkoscore_module)
 target_link_libraries(example kokkoscore)
 
-if(NOT TARGET kokkoscore_module)
-  message(FATAL_ERROR "BLA")
-endif()
-
 # Get all propreties that cmake supports
 if(NOT CMAKE_PROPERTY_LIST)
     execute_process(COMMAND cmake --help-property-list OUTPUT_VARIABLE CMAKE_PROPERTY_LIST)

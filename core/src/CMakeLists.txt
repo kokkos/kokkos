@@ -154,50 +154,6 @@ if(NOT desul_FOUND)
   kokkos_lib_include_directories(kokkoscore ${KOKKOS_SOURCE_DIR}/tpls/desul/include)
 endif()
 
-add_library(kokkoscore_module)
- target_sources(kokkoscore_module
-	 PUBLIC
-		 ${KOKKOS_CORE_SRCS}
-    )
-
- target_sources(kokkoscore_module
-                   PUBLIC
-                   FILE_SET bla TYPE CXX_MODULES
-                   FILES
-                   #${KOKKOS_CORE_SRCS}
-                   kokkoscore.ccm
-    )
-
-
-    kokkos_lib_include_directories(kokkoscore_module ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include ${KOKKOS_SOURCE_DIR}/tpls/desul/include )
-   add_library(Kokkos::kokkoscore_module ALIAS kokkoscore_module)
-
-     kokkos_lib_type(kokkoscore_module INCTYPE)
-  message(STATUS "kokkoscore_module: ${INCTYPE}")
-  target_include_directories(kokkoscore_module ${INCTYPE} $<INSTALL_INTERFACE:${KOKKOS_HEADER_DIR}>)
-
-  install(
-    TARGETS kokkoscore_module
-    EXPORT KokkosTargets #my_package-targets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    FILE_SET bla DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/my_package/src
-  )
-
-  #install(EXPORT my_package-targets
-  #  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/my_package
-  #   CXX_MODULES_DIRECTORY .
-  #)
-# The following file includes the my_package-targets.cmake file
-#install(FILES my_package-config.cmake
-#    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/my_package
-#)
-
-    #target_include_directories(kokkoscore_module PUBLIC  ${CMAKE_BINARY_DIR}/kokkos ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR} ${KOKKOS_SOURCE_DIR}/tpls/desul/include ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include)
-
-    #target_compile_definitions(kokkoscore_module PUBLIC USE_MODULES)
-
     target_sources(
       kokkoscore
      PUBLIC
