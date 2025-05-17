@@ -235,7 +235,7 @@ int run_benchmark() {
   return rc;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {  // NOLINT(bugprone-exception-escape)
   printf(HLINE);
   printf("Kokkos STREAM Benchmark\n");
   printf(HLINE);

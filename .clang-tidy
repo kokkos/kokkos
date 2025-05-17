@@ -4,7 +4,6 @@ Checks: >
   -bugprone-argument-comment,
   -bugprone-branch-clone,
   -bugprone-easily-swappable-parameters,
-  -bugprone-exception-escape,
   -bugprone-macro-parentheses,
   -bugprone-narrowing-conversions,
   -bugprone-suspicious-include,
