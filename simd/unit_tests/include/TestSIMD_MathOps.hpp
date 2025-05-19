@@ -230,7 +230,7 @@ inline void host_check_abi_size() {
 
 template <typename Abi, typename DataType>
 inline void host_check_math_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
     constexpr size_t alignment =
         Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
         sizeof(DataType);
