@@ -30,7 +30,7 @@
 
 namespace {
 
-#ifdef KOKKOS_IMPL_GRAPH_SUPPORT
+#ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
 
 template <typename ViewType>
 struct Increment {

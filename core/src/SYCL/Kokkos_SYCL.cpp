@@ -114,10 +114,10 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
 #endif
-#ifdef KOKKOS_IMPL_GRAPH_SUPPORT
-  os << "macro  KOKKOS_IMPL_GRAPH_SUPPORT : defined\n";
+#ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
+  os << "macro  KOKKOS_IMPL_SYCL_GRAPH_SUPPORT : defined\n";
 #else
-  os << "macro  KOKKOS_IMPL_GRAPH_SUPPORT : undefined\n";
+  os << "macro  KOKKOS_IMPL_SYCL_GRAPH_SUPPORT : undefined\n";
 #endif
 #ifdef SYCL_EXT_ONEAPI_BFLOAT16
   os << "macro  SYCL_EXT_ONEAPI_BFLOAT16 : defined\n";
