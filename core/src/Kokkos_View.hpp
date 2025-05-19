@@ -174,25 +174,35 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // FIXME: these are overriden so that their types are identical when using
   // BasicView or Legacy we will need to obtain these from base_t in the future
   // and deprecate old behavior
-  using size_type    = typename memory_space::size_type;
-  using value_type   = typename traits::value_type;
-  using pointer_type = typename traits::value_type*;
+  using size_type               = typename memory_space::size_type;
+  using value_type              = typename traits::value_type;
+  using pointer_type            = typename traits::value_type*;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using scalar_array_type       = typename traits::scalar_array_type;
   using const_scalar_array_type = typename traits::const_scalar_array_type;
   using non_const_scalar_array_type =
       typename traits::non_const_scalar_array_type;
+#endif
 
   // typedefs from BasicView
   using typename base_t::mdspan_type;
   using reference_type = typename base_t::reference;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   //----------------------------------------
   // Compatible view of array of scalar types
   using array_type =
       View<typename traits::scalar_array_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
+
+#endif
+  //----------------------------------------
+  // Compatible view of array of scalar types
+  using type = View<typename traits::data_type, typename traits::array_layout,
+                    typename traits::device_type, typename traits::hooks_policy,
+                    typename traits::memory_traits>;
 
   // Compatible view of const data type
   using const_type =
