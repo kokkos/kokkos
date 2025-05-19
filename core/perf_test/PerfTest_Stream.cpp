@@ -88,7 +88,7 @@ void perform_triad(const V& a, const V& b, const V& c, const double scalar) {
 
 template <typename V>
 int validate_array(V& a_dev, const double expected) {
-  auto a = Kokkos::create_mirror_view(a_dev);
+  const auto a = Kokkos::create_mirror_view(a_dev);
   Kokkos::deep_copy(a, a_dev);
 
   double error = 0.0;
