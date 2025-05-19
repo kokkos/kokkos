@@ -99,7 +99,7 @@ int validate_array(V& a_dev, const double expected) {
   for (size_t i = 0; i < a.size(); ++i) {
     error += std::abs(a[i] - expected);
   }
-  double avgError = error / (double)a.size();
+  const double avgError = error / (double)a.size();
 
   constexpr double epsilon = 1.0e-13;
   return std::abs(avgError / expected) > epsilon;
