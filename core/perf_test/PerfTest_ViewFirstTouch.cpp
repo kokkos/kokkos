@@ -16,18 +16,35 @@
 
 #include "PerfTest_ViewFirstTouch.hpp"
 
+#define BENCHMARK_SET_ARG_PARALLEL_FOR(FUNCTION, DATA_TYPE) \
+  BENCHMARK_TEMPLATE(FUNCTION, DATA_TYPE)                   \
+      ->ArgName("N")                                        \
+      ->RangeMultiplier(4)                                  \
+      ->Range(int64_t(1) << 1, int64_t(1) << 30)            \
+      ->UseManualTime();
+
+#define BENCHMARK_SET_ARG_DEEP_COPY(FUNCTION, DATA_TYPE)      \
+  BENCHMARK_TEMPLATE(FUNCTION, DATA_TYPE)                     \
+      ->ArgNames({"N", "init_value"})                         \
+      ->RangeMultiplier(4)                                    \
+      ->Ranges({{int64_t(1) << 1, int64_t(1) << 30}, {0, 1}}) \
+      ->UseManualTime();
+
 namespace Test {
 
-BENCHMARK(ViewFirstTouch)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 1, int64_t(1) << 30)
-    ->UseManualTime();
+BENCHMARK_SET_ARG_PARALLEL_FOR(ViewFirstTouch_Initialize, double)
+BENCHMARK_SET_ARG_PARALLEL_FOR(ViewFirstTouch_Initialize, int)
+BENCHMARK_SET_ARG_PARALLEL_FOR(ViewFirstTouch_Initialize, float)
 
-BENCHMARK(ViewFirstTouch_deepcopy)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 1, int64_t(1) << 30)
-    ->UseManualTime();
+BENCHMARK_SET_ARG_PARALLEL_FOR(ViewFirstTouch_ParallelFor, double)
+BENCHMARK_SET_ARG_PARALLEL_FOR(ViewFirstTouch_ParallelFor, int)
+BENCHMARK_SET_ARG_PARALLEL_FOR(ViewFirstTouch_ParallelFor, float)
+
+BENCHMARK_SET_ARG_DEEP_COPY(ViewFirstTouch_DeepCopy, double)
+BENCHMARK_SET_ARG_DEEP_COPY(ViewFirstTouch_DeepCopy, int)
+BENCHMARK_SET_ARG_DEEP_COPY(ViewFirstTouch_DeepCopy, float)
 
 }  // namespace Test
+
+#undef BENCHMARK_SET_ARG_PARALLEL_FOR
+#undef BENCHMARK_SET_ARG_DEEP_COPY

@@ -16,9 +16,10 @@
 
 #include "Benchmark_Context.hpp"
 
-void ViewFirstTouch(benchmark::State& state) {
+template <typename DataType>
+void ViewFirstTouch_Initialize(benchmark::State& state) {
   const int N    = state.range(0);
-  using ViewType = Kokkos::View<double*>;
+  using ViewType = Kokkos::View<DataType*>;
 
   for (auto _ : state) {
     Kokkos::fence();
@@ -29,16 +30,36 @@ void ViewFirstTouch(benchmark::State& state) {
   }
 }
 
-void ViewFirstTouch_deepcopy(benchmark::State& state) {
+template <typename DataType>
+void ViewFirstTouch_ParallelFor(benchmark::State& state) {
   const int N    = state.range(0);
-  using ViewType = Kokkos::View<double*>;
+  using ViewType = Kokkos::View<DataType*>;
 
   for (auto _ : state) {
     Kokkos::fence();
 
+    ViewType v_a("A", N);
     Kokkos::Timer timer;
-    ViewType v_a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "A"), N);
-    Kokkos::deep_copy(v_a, 0.0);
-    KokkosBenchmark::report_results(state, v_a, 1, timer.seconds());
+    Kokkos::parallel_for(
+        "ViewFirstTouch_ParallelFor", N, KOKKOS_LAMBDA(const int i) {
+          v_a(i) = static_cast<DataType>(2) * v_a(i) + static_cast<DataType>(1);
+        });
+    KokkosBenchmark::report_results(state, v_a, 2, timer.seconds());
+  }
+}
+
+template <typename DataType>
+void ViewFirstTouch_DeepCopy(benchmark::State& state) {
+  const int N               = state.range(0);
+  const DataType init_value = static_cast<DataType>(state.range(1));
+  using ViewType            = Kokkos::View<DataType*>;
+
+  for (auto _ : state) {
+    Kokkos::fence();
+
+    ViewType v_a("A", N);
+    Kokkos::Timer timer;
+    Kokkos::deep_copy(v_a, init_value);
+    KokkosBenchmark::report_results(state, v_a, 2, timer.seconds());
   }
 }
