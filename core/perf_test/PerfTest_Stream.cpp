@@ -101,7 +101,7 @@ int validate_array(V& a_dev, const double expected) {
   }
   double avgError = error / (double)a.size();
 
-  const double epsilon = 1.0e-13;
+  constexpr double epsilon = 1.0e-13;
   return std::abs(avgError / expected) > epsilon;
 }
 
