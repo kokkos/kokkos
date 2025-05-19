@@ -439,11 +439,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using const_value_type     = typename view_type::const_value_type;
   using non_const_value_type = typename view_type::non_const_value_type;
   using traits               = typename view_type::traits;
+  using layout_type          = typename view_type::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = typename view_type::array_layout;
+      "Use layout_type instead.") = layout_type;
 #endif
-  using layout_type = typename view_type::layout_type;
 
   using execution_space = typename view_type::execution_space;
   using memory_space    = typename view_type::memory_space;
@@ -721,14 +721,14 @@ class DynRankView : private View<DataType*******, Properties...> {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_FUNCTION reference_type operator[](index_type i0) const {
     if constexpr (std::is_same_v<typename drvtraits::value_type,
-                                 typename drvtraits::scalar_array_type>) {
+                                 typename drvtraits::data_type>) {
       return view_type::data()[i0];
     } else {
       const size_t dim_scalar = view_type::impl_map().dimension_scalar();
       const size_t bytes      = view_type::span() / dim_scalar;
 
       using tmp_view_type =
-          Kokkos::View<DataType*, typename traits::array_layout,
+          Kokkos::View<DataType*, typename traits::layout_type,
                        typename traits::device_type,
                        Kokkos::MemoryTraits<traits::memory_traits::impl_value |
                                             unsigned(Kokkos::Unmanaged)>>;
@@ -1461,13 +1461,13 @@ struct MirrorDRViewType {
         std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
 
+  // The layout type
+  using layout_type = typename src_view_type::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // The array_layout
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = typename src_view_type::array_layout;
+      "Use layout_type instead.") = layout_type;
 #endif
-  // The layout type
-  using layout_type = typename src_view_type::layout_type;
 
   // The data type (we probably want it non-const since otherwise we can't even
   // deep_copy to it.

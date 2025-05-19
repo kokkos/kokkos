@@ -266,16 +266,15 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   unsigned m_chunk_size;  // 2 << (m_chunk_shift - 1)
 
  public:
-//----------------------------------------------------------------------
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible view of array of scalar types */
-  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") =
-      DynamicView<typename traits::scalar_array_type,
-                  typename traits::device_type>;
-#endif
+  //----------------------------------------------------------------------
   /** \brief  Compatible view of data type */
   using type =
       DynamicView<typename traits::data_type, typename traits::device_type>;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  /** \brief  Compatible view of array of scalar types */
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") = type;
+#endif
+
   /** \brief  Compatible view of const data type */
   using const_type = DynamicView<typename traits::const_data_type,
                                  typename traits::device_type>;
@@ -293,7 +292,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
                      Kokkos::AnonymousSpace>;
   using uniform_type               = type;
   using uniform_const_type         = const_type;
-  using uniform_runtime_type       = type;
+  using uniform_runtime_type       = uniform_type;
   using uniform_runtime_const_type = const_type;
   using uniform_nomemspace_type =
       DynamicView<typename traits::data_type, uniform_device>;
@@ -581,13 +580,14 @@ struct MirrorDynamicViewType {
     is_same_memspace =
         std::is_same_v<memory_space, typename src_view_type::memory_space>
   };
+  // The layout type
+  using layout_type = typename src_view_type::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // The array_layout
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = typename src_view_type::array_layout;
+      "Use layout_type instead.") = layout_type;
 #endif
-  // The layout type
-  using layout_type = typename src_view_type::layout_type;
+
   // The data type (we probably want it non-const since otherwise we can't even
   // deep_copy to it.)
   using data_type = typename src_view_type::non_const_data_type;

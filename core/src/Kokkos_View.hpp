@@ -160,13 +160,18 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using const_data_type      = typename traits::const_data_type;
   using non_const_data_type  = typename traits::non_const_data_type;
   using view_tracker_type    = Impl::ViewTracker<View>;
-  using array_layout         = typename traits::array_layout;
+  using layout_type          = typename traits::layout_type;
   using device_type          = typename traits::device_type;
   using execution_space      = typename traits::execution_space;
   using memory_space         = typename traits::memory_space;
   using memory_traits        = typename traits::memory_traits;
   using host_mirror_space    = typename traits::host_mirror_space;
   using typename base_t::index_type;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = layout_type;
+#endif
 
   // aliases from BasicView
 
@@ -190,25 +195,25 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   //----------------------------------------
   // Compatible view of array of scalar types
   using array_type =
-      View<typename traits::scalar_array_type, typename traits::array_layout,
+      View<typename traits::scalar_array_type, typename traits::layout_type,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
   // Compatible view of const data type
   using const_type =
-      View<typename traits::const_data_type, typename traits::array_layout,
+      View<typename traits::const_data_type, typename traits::layout_type,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
   // Compatible view of non-const data type
   using non_const_type =
-      View<typename traits::non_const_data_type, typename traits::array_layout,
+      View<typename traits::non_const_data_type, typename traits::layout_type,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
   // Compatible HostMirror view
   using host_mirror_type =
-      View<typename traits::non_const_data_type, typename traits::array_layout,
+      View<typename traits::non_const_data_type, typename traits::layout_type,
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>,
            typename traits::hooks_policy>;
@@ -243,8 +248,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   enum {Rank KOKKOS_DEPRECATED_WITH_COMMENT("Use rank instead.") = rank()};
 #endif
 
-  KOKKOS_INLINE_FUNCTION constexpr array_layout layout() const {
-    return Impl::array_layout_from_mapping<array_layout, mdspan_type>(
+  KOKKOS_INLINE_FUNCTION constexpr layout_type layout() const {
+    return Impl::layout_type_from_mapping<layout_type, mdspan_type>(
         base_t::mapping());
   }
 
@@ -555,22 +560,22 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   template <class... P>
   explicit View(const Impl::ViewCtorProp<P...>& arg_prop,
                 std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
-                                 const typename traits::array_layout&>
+                                 const typename traits::layout_type&>
                     arg_layout)
       : base_t(
             arg_prop,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
   template <class... P>
   KOKKOS_FUNCTION explicit View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
-                       const typename traits::array_layout&>
+                       const typename traits::layout_type&>
           arg_layout)
       : base_t(
             arg_prop,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
 #ifdef KOKKOS_ENABLE_CXX17
@@ -593,7 +598,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
           void*> = nullptr)
       : base_t(
             handle,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 #else
   // Constructors from legacy layouts when using Views of the new layouts
@@ -606,7 +611,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     requires(std::is_same_v<typename base_t::layout_type, layout_stride>)
       : base_t(
             handle,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
@@ -616,7 +621,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                             Experimental::layout_left_padded<> >)
       : base_t(
             handle,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
@@ -626,7 +631,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                             Experimental::layout_right_padded<> >)
       : base_t(
             handle,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
@@ -635,7 +640,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     requires(std::is_same_v<typename base_t::layout_type, layout_left>)
       : base_t(
             handle,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 
   KOKKOS_FUNCTION
@@ -644,7 +649,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     requires(std::is_same_v<typename base_t::layout_type, layout_right>)
       : base_t(
             handle,
-            Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
+            Impl::mapping_from_layout_type<typename mdspan_type::mapping_type>(
                 arg_layout)) {}
 #endif
 
@@ -721,7 +726,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                    typename mdspan_type::mapping_type, sizeof(value_type)>(
                    arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
                    arg_N6, arg_N7)) {
-    static_assert(traits::array_layout::is_extent_constructible,
+    static_assert(traits::layout_type::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
   }
@@ -743,7 +748,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                    typename mdspan_type::mapping_type, sizeof(value_type)>(
                    arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5,
                    arg_N6, arg_N7)) {
-    static_assert(traits::array_layout::is_extent_constructible,
+    static_assert(traits::layout_type::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
   }
@@ -753,7 +758,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   explicit View(
       const Label& arg_label,
       std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
-                       typename traits::array_layout> const& arg_layout)
+                       typename traits::layout_type> const& arg_layout)
       : View(Impl::ViewCtorProp<std::string>(arg_label), arg_layout) {}
 
   // Allocate label and layout, must disambiguate from subview constructor.
@@ -767,9 +772,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                 const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
                 const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<std::string>(arg_label),
-             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    static_assert(traits::array_layout::is_extent_constructible,
+             typename traits::layout_type(arg_N0, arg_N1, arg_N2, arg_N3,
+                                          arg_N4, arg_N5, arg_N6, arg_N7)) {
+    static_assert(traits::layout_type::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
   }
@@ -778,9 +783,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Memory span required to wrap these dimensions.
   KOKKOS_FUNCTION
   static constexpr size_t required_allocation_size(
-      typename traits::array_layout const& layout) {
-    return Impl::mapping_from_array_layout<typename base_t::mapping_type>(
-               layout)
+      typename traits::layout_type const& layout) {
+    return Impl::mapping_from_layout_type<typename base_t::mapping_type>(layout)
                .required_span_size() *
            sizeof(value_type);
   }
@@ -790,10 +794,10 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       const size_t arg_N0 = 0, const size_t arg_N1 = 0, const size_t arg_N2 = 0,
       const size_t arg_N3 = 0, const size_t arg_N4 = 0, const size_t arg_N5 = 0,
       const size_t arg_N6 = 0, const size_t arg_N7 = 0) {
-    static_assert(traits::array_layout::is_extent_constructible,
+    static_assert(traits::layout_type::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
-    return required_allocation_size(typename traits::array_layout(
+    return required_allocation_size(typename traits::layout_type(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
   }
 
@@ -809,7 +813,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
              const size_t arg_N5 = KOKKOS_INVALID_INDEX,
              const size_t arg_N6 = KOKKOS_INVALID_INDEX,
              const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    static_assert(traits::array_layout::is_extent_constructible,
+    static_assert(traits::layout_type::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
     const size_t num_passed_args = Impl::count_valid_integers(
@@ -821,7 +825,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
           "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n");
     }
 
-    return View::shmem_size(typename traits::array_layout(
+    return View::shmem_size(typename traits::layout_type(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
   }
 
@@ -836,8 +840,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
  public:
   static KOKKOS_INLINE_FUNCTION size_t
-  shmem_size(typename traits::array_layout const& arg_layout) {
-    return Impl::mapping_from_array_layout<typename base_t::mapping_type>(
+  shmem_size(typename traits::layout_type const& arg_layout) {
+    return Impl::mapping_from_layout_type<typename base_t::mapping_type>(
                arg_layout)
                    .required_span_size() *
                sizeof(value_type) +
@@ -846,7 +850,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   explicit KOKKOS_INLINE_FUNCTION View(
       const typename traits::execution_space::scratch_memory_space& arg_space,
-      const typename traits::array_layout& arg_layout)
+      const typename traits::layout_type& arg_layout)
       : View(Impl::ViewCtorProp<pointer_type>(
                  static_cast<pointer_type>(arg_space.get_shmem_aligned(
                      Kokkos::Impl::ViewMapping<
@@ -867,13 +871,13 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
       : View(Impl::ViewCtorProp<pointer_type>(
                  static_cast<pointer_type>(arg_space.get_shmem_aligned(
-                     required_allocation_size(typename traits::array_layout(
+                     required_allocation_size(typename traits::layout_type(
                          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
                          arg_N7)),
                      scratch_value_alignment))),
-             typename traits::array_layout(arg_N0, arg_N1, arg_N2, arg_N3,
-                                           arg_N4, arg_N5, arg_N6, arg_N7)) {
-    static_assert(traits::array_layout::is_extent_constructible,
+             typename traits::layout_type(arg_N0, arg_N1, arg_N2, arg_N3,
+                                          arg_N4, arg_N5, arg_N6, arg_N7)) {
+    static_assert(traits::layout_type::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
   }
@@ -1012,8 +1016,8 @@ KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
 
   return std::is_same_v<typename lhs_traits::const_value_type,
                         typename rhs_traits::const_value_type> &&
-         std::is_same_v<typename lhs_traits::array_layout,
-                        typename rhs_traits::array_layout> &&
+         std::is_same_v<typename lhs_traits::layout_type,
+                        typename rhs_traits::layout_type> &&
          std::is_same_v<typename lhs_traits::memory_space,
                         typename rhs_traits::memory_space> &&
          View<LT, LP...>::rank() == View<RT, RP...>::rank() &&

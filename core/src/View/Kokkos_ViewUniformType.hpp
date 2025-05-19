@@ -36,11 +36,11 @@ struct ViewScalarToDataType<ScalarType, 0> {
 
 template <class LayoutType, int Rank>
 struct ViewUniformLayout {
+  using layout_type = LayoutType;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = LayoutType;
+      "Use layout_type instead.") = layout_type;
 #endif
-  using layout_type = LayoutType;
 };
 
 template <class LayoutType>
@@ -78,7 +78,7 @@ struct ViewUniformType {
       std::add_const_t<typename ViewType::value_type>, rank>::type;
 
   using layout_type = typename ViewUniformLayout<typename ViewType::layout_type,
-                                                 ViewType::rank>::layout_type;
+                                                 rank>::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use layout_type instead.") = layout_type;

@@ -280,11 +280,11 @@ struct ViewTraits<void> {
   using execution_space = void;
   using memory_space    = void;
   using HostMirrorSpace = void;
+  using layout_type     = void;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = void;
+      "Use layout_type instead.") = layout_type;
 #endif
-  using layout_type   = void;
   using memory_traits = void;
   using specialize    = void;
   using hooks_policy  = void;
@@ -296,10 +296,10 @@ struct ViewTraits<void, void, Prop...> {
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
   using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
+  using layout_type     = typename ViewTraits<void, Prop...>::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using array_layout = typename ViewTraits<void, Prop...>::array_layout;
+  using array_layout = layout_type;
 #endif
-  using layout_type   = typename ViewTraits<void, Prop...>::layout_type;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
@@ -312,12 +312,11 @@ struct ViewTraits<
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
   using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
+  using layout_type     = typename ViewTraits<void, Prop...>::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") =
-      typename ViewTraits<void, Prop...>::array_layout;
+      "Use layout_type instead.") = layout_type;
 #endif
-  using layout_type   = typename ViewTraits<void, Prop...>::layout_type;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = HooksPolicy;
@@ -331,12 +330,11 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_layout_type<LayoutType>::value>,
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
   using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
-
+  using layout_type     = LayoutType;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = LayoutType;
+      "Use layout_type instead.") = layout_type;
 #endif
-  using layout_type   = LayoutType;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
@@ -361,11 +359,11 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
   using memory_space    = typename Space::memory_space;
   using HostMirrorSpace =
       typename Kokkos::Impl::HostMirror<Space>::Space::memory_space;
+  using layout_type = typename execution_space::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = typename execution_space::array_layout;
+      "Use layout_type instead.") = layout_type;
 #endif
-  using layout_type   = typename execution_space::layout_type;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
@@ -419,18 +417,16 @@ struct ViewTraits {
                          typename prop::memory_space,
                          typename ExecutionSpace::memory_space>;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using ArrayLayout KOKKOS_DEPRECATED_WITH_COMMENT("Use LayoutType instead.") =
-      std::conditional_t<!std::is_void_v<typename prop::array_layout>,
-                         typename prop::array_layout,
-                         typename ExecutionSpace::array_layout>;
-
-#endif
-
   using LayoutType =
       std::conditional_t<!std::is_void_v<typename prop::layout_type>,
                          typename prop::layout_type,
                          typename ExecutionSpace::layout_type>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using ArrayLayout KOKKOS_DEPRECATED_WITH_COMMENT("Use LayoutType instead.") =
+      LayoutType;
+
+#endif
 
   using HostMirrorSpace = std::conditional_t<
       !std::is_void_v<typename prop::HostMirrorSpace>,

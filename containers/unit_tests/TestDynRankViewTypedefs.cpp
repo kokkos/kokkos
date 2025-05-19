@@ -98,14 +98,9 @@ constexpr bool test_view_typedefs_impl() {
 
   // FIXME: in contrast to View, hooks_policy is not propagated
   static_assert(std::is_same_v<typename ViewType::traits, ViewTraitsType>);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+
   static_assert(std::is_same_v<typename ViewType::array_type,
                                Kokkos::DynRankView<typename ViewType::scalar_array_type, typename ViewType::array_layout,
-                                            typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
-                                            typename ViewType::memory_traits>>);
-#endif
-  static_assert(std::is_same_v<typename ViewType::type,
-                               Kokkos::DynRankView<typename ViewType::data_type, typename ViewType::layout_type,
                                             typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
   static_assert(std::is_same_v<typename ViewType::const_type,

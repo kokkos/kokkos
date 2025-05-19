@@ -543,19 +543,19 @@ Kokkos::Iterate get_iteration_order(const DstType& dst) {
   int64_t strides[DstType::rank + 1];
   dst.stride(strides);
   Kokkos::Iterate iterate;
-  if (std::is_same_v<typename DstType::array_layout, Kokkos::LayoutRight>) {
+  if (std::is_same_v<typename DstType::layout_type, Kokkos::LayoutRight>) {
     iterate = Kokkos::Iterate::Right;
-  } else if (std::is_same_v<typename DstType::array_layout,
+  } else if (std::is_same_v<typename DstType::layout_type,
                             Kokkos::LayoutLeft>) {
     iterate = Kokkos::Iterate::Left;
-  } else if (std::is_same_v<typename DstType::array_layout,
+  } else if (std::is_same_v<typename DstType::layout_type,
                             Kokkos::LayoutStride>) {
     if (strides[0] > strides[DstType::rank - 1])
       iterate = Kokkos::Iterate::Right;
     else
       iterate = Kokkos::Iterate::Left;
   } else {
-    if (std::is_same_v<typename DstType::execution_space::array_layout,
+    if (std::is_same_v<typename DstType::execution_space::layout_type,
                        Kokkos::LayoutRight>)
       iterate = Kokkos::Iterate::Right;
     else
@@ -2865,13 +2865,14 @@ struct MirrorViewType {
   // Check whether it is the same memory space
   static constexpr bool is_same_memspace =
       std::is_same_v<memory_space, typename src_view_type::memory_space>;
+  using layout_type = typename src_view_type::layout_type;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   // The array_layout
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use layout_type instead.") = typename src_view_type::layout_type;
+      "Use layout_type instead.") = layout_type;
 #endif
   // The layout type
-  using layout_type = typename src_view_type::layout_type;
+
   // The data type (we probably want it non-const since otherwise we can't even
   // deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
