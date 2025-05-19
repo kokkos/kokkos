@@ -20,7 +20,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Abort.hpp>
 
-#define KOKKOS_EXPECTS_CRITICAL(...)                                           \
+#define KOKKOS_IMPL_EXPECTS_CRITICAL(...)                                           \
   {                                                                            \
     if (!bool(__VA_ARGS__)) {                                                  \
       ::Kokkos::abort(                                                         \
