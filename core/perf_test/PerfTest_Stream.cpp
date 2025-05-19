@@ -88,7 +88,7 @@ void perform_triad(const V& a, const V& b, const V& c, const double scalar) {
 
 template <typename V>
 int validate_array(V& a_dev, const double expected) {
-  const auto a = Kokkos::create_mirror_view(a_dev);
+  const auto a = Kokkos::create_mirror_view(Kokkos::WithoutInitializing, a_dev);
   Kokkos::deep_copy(a, a_dev);
 
   double error = 0.0;
@@ -106,7 +106,8 @@ static void StreamSet(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 1;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
@@ -124,8 +125,10 @@ static void StreamCopy(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
 
   perform_set(a, A_INIT);
 
@@ -145,8 +148,10 @@ static void StreamScale(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
 
   perform_set(b, B_INIT);
 
@@ -166,9 +171,12 @@ static void StreamAdd(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c("c", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"), N8);
 
   perform_set(a, A_INIT);
   perform_set(b, B_INIT);
@@ -190,9 +198,12 @@ static void StreamTriad(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c("c", N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
+  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"), N8);
 
   perform_set(a, A_INIT);
   perform_set(b, B_INIT);
