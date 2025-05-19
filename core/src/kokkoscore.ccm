@@ -3,6 +3,10 @@ module;
 #  include <Kokkos_Core.hpp>
 
 export module mykokkoscore;
+
+export import : kokkos_concepts;
+export import : kokkos_min_max;
+
 export
 {
   namespace Kokkos
@@ -17,9 +21,6 @@ export
     using ::Kokkos::Timer;
     using ::Kokkos::ScopeGuard;
     using ::Kokkos::printf;
-    using ::Kokkos::Schedule;
-    using ::Kokkos::Dynamic;
-    using ::Kokkos::Static;
     using ::Kokkos::Serial;
   
     using ::Kokkos::MemoryTraits;
@@ -36,7 +37,6 @@ export
     using ::Kokkos::finalize;
     using ::Kokkos::fmax;
     using ::Kokkos::HostSpace;
-    using ::Kokkos::IndexType;
     using ::Kokkos::InitializationSettings;
     using ::Kokkos::initialize;
     using ::Kokkos::is_finalized;
@@ -62,6 +62,8 @@ export
     using ::Kokkos::TeamVectorRange;
     using ::Kokkos::Unmanaged;
     using ::Kokkos::View;
+        using ::Kokkos::ViewTraits;
+
     using ::Kokkos::view_alloc;
     using ::Kokkos::WithoutInitializing;
 
@@ -77,6 +79,15 @@ export
 
     using ::Kokkos::LayoutRight;
         using ::Kokkos::LayoutLeft;
+	using ::Kokkos::LayoutStride;
+	using ::Kokkos::Iterate;
+
+	using ::Kokkos::show_warnings;
+
+	namespace Profiling {
+          using ::Kokkos::Profiling::popRegion;
+	  using ::Kokkos::Profiling::pushRegion;
+	}
 
     using ::Kokkos::SharedHostPinnedSpace;
     using ::Kokkos::TeamThreadMDRange;

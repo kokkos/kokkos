@@ -27,6 +27,8 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 #include <desul/atomics.hpp>
 
+#include <impl/Kokkos_RuntimeCheckMemoryAccessViolation.hpp>
+
 namespace Kokkos {
 
 // For now use the accessors in Impl namespace, as an

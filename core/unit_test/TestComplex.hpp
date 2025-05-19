@@ -33,6 +33,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <complex>
 #include <sstream>
 
 namespace {

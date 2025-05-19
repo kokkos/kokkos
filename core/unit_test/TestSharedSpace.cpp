@@ -17,6 +17,8 @@
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
 
+#include <impl/Kokkos_ClockTic.hpp>
+
 #if defined(_WIN32)
 #include <windows.h>
 unsigned getBytesPerPage() {
