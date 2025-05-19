@@ -1,49 +1,41 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_VECTOR_HPP
 #define KOKKOS_VECTOR_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
+#endif
+
+#include <Kokkos_Macros.hpp>
+
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+namespace {
+[[deprecated("Deprecated <Kokkos_Vector.hpp> header is included")]] int
+emit_warning_kokkos_vector_deprecated() {
+  return 0;
+}
+static auto do_not_include = emit_warning_kokkos_vector_deprecated();
+}  // namespace
+#endif
+#else
+#error "Deprecated <Kokkos_Vector.hpp> header is included"
+#endif
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DualView.hpp>
@@ -55,8 +47,10 @@
  */
 namespace Kokkos {
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class Scalar, class Arg1Type = void>
-class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
+class KOKKOS_DEPRECATED vector
+    : public DualView<Scalar*, LayoutLeft, Arg1Type> {
  public:
   using value_type      = Scalar;
   using pointer         = Scalar*;
@@ -75,14 +69,14 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
  public:
 #ifdef KOKKOS_ENABLE_CUDA_UVM
   KOKKOS_INLINE_FUNCTION reference operator()(int i) const {
-    return DV::h_view(i);
+    return DV::view_host()(i);
   };
   KOKKOS_INLINE_FUNCTION reference operator[](int i) const {
-    return DV::h_view(i);
+    return DV::view_host()(i);
   };
 #else
-  inline reference operator()(int i) const { return DV::h_view(i); };
-  inline reference operator[](int i) const { return DV::h_view(i); };
+  inline reference operator()(int i) const { return DV::view_host()(i); };
+  inline reference operator[](int i) const { return DV::view_host()(i); };
 #endif
 
   /* Member functions which behave like std::vector functions */
@@ -117,13 +111,13 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     /* Assign value either on host or on device */
 
     if (DV::template need_sync<typename DV::t_dev::device_type>()) {
-      set_functor_host f(DV::h_view, val);
+      set_functor_host f(DV::view_host(), val);
       parallel_for("Kokkos::vector::assign", n, f);
       typename DV::t_host::execution_space().fence(
           "Kokkos::vector::assign: fence after assigning values");
       DV::template modify<typename DV::t_host::device_type>();
     } else {
-      set_functor f(DV::d_view, val);
+      set_functor f(DV::view_device(), val);
       parallel_for("Kokkos::vector::assign", n, f);
       typename DV::t_dev::execution_space().fence(
           "Kokkos::vector::assign: fence after assigning values");
@@ -134,16 +128,16 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   void reserve(size_t n) { DV::resize(size_t(n * _extra_storage)); }
 
   void push_back(Scalar val) {
-    DV::template sync<typename DV::t_host::device_type>();
-    DV::template modify<typename DV::t_host::device_type>();
     if (_size == span()) {
       size_t new_size = _size * _extra_storage;
       if (new_size == _size) new_size++;
       DV::resize(new_size);
     }
 
-    DV::h_view(_size) = val;
+    DV::sync_host();
+    DV::view_host()(_size) = val;
     _size++;
+    DV::modify_host();
   }
 
   void pop_back() { _size--; }
@@ -162,7 +156,7 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     }
     DV::sync_host();
     DV::modify_host();
-    if (it < begin() || it > end())
+    if (std::less<>()(it, begin()) || std::less<>()(end(), it))
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
     if (count == 0) return it;
     ptrdiff_t start = std::distance(begin(), it);
@@ -178,38 +172,30 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
 
  private:
   template <class T>
-  struct impl_is_input_iterator
-      : /* TODO replace this */ std::integral_constant<
-            bool, !std::is_convertible<T, size_type>::value> {};
+  struct impl_is_input_iterator : /* TODO replace this */ std::bool_constant<
+                                      !std::is_convertible_v<T, size_type>> {};
 
  public:
   // TODO: can use detection idiom to generate better error message here later
   template <typename InputIterator>
-  typename std::enable_if<impl_is_input_iterator<InputIterator>::value,
-                          iterator>::type
+  std::enable_if_t<impl_is_input_iterator<InputIterator>::value, iterator>
   insert(iterator it, InputIterator b, InputIterator e) {
     ptrdiff_t count = std::distance(b, e);
-    if (count == 0) return it;
 
     DV::sync_host();
     DV::modify_host();
-    if (it < begin() || it > end())
+    if (std::less<>()(it, begin()) || std::less<>()(end(), it))
       Kokkos::abort("Kokkos::vector::insert : invalid insert iterator");
 
-    bool resized = false;
-    if ((size() == 0) && (it == begin())) {
-      resize(count);
-      it      = begin();
-      resized = true;
-    }
     ptrdiff_t start = std::distance(begin(), it);
     auto org_size   = size();
-    if (!resized) resize(size() + count);
-    it = begin() + start;
+
+    // Note: resize(...) invalidates it; use begin() + start instead
+    resize(size() + count);
 
     std::copy_backward(begin() + start, begin() + org_size,
                        begin() + org_size + count);
-    std::copy(b, e, it);
+    std::copy(b, e, begin() + start);
 
     return begin() + start;
   }
@@ -223,21 +209,27 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
   size_type span() const { return DV::span(); }
   bool empty() const { return _size == 0; }
 
-  pointer data() const { return DV::h_view.data(); }
+  pointer data() const { return DV::view_host().data(); }
 
-  iterator begin() const { return DV::h_view.data(); }
+  iterator begin() const { return DV::view_host().data(); }
+
+  const_iterator cbegin() const { return DV::view_host().data(); }
 
   iterator end() const {
-    return _size > 0 ? DV::h_view.data() + _size : DV::h_view.data();
+    return _size > 0 ? DV::view_host().data() + _size : DV::view_host().data();
   }
 
-  reference front() { return DV::h_view(0); }
+  const_iterator cend() const {
+    return _size > 0 ? DV::view_host().data() + _size : DV::view_host().data();
+  }
 
-  reference back() { return DV::h_view(_size - 1); }
+  reference front() { return DV::view_host()(0); }
 
-  const_reference front() const { return DV::h_view(0); }
+  reference back() { return DV::view_host()(_size - 1); }
 
-  const_reference back() const { return DV::h_view(_size - 1); }
+  const_reference front() const { return DV::view_host()(0); }
+
+  const_reference back() const { return DV::view_host()(_size - 1); }
 
   /* std::algorithms which work originally with iterators, here they are
    * implemented as member functions */
@@ -253,10 +245,10 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
       return theEnd;
     }
 
-    Scalar lower_val = DV::h_view(lower);
-    Scalar upper_val = DV::h_view(upper);
+    Scalar lower_val = DV::view_host()(lower);
+    Scalar upper_val = DV::view_host()(upper);
     size_t idx       = (upper + lower) / 2;
-    Scalar val       = DV::h_view(idx);
+    Scalar val       = DV::view_host()(idx);
     if (val > upper_val) return upper;
     if (val < lower_val) return start;
 
@@ -267,14 +259,14 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
         upper = idx;
       }
       idx = (upper + lower) / 2;
-      val = DV::h_view(idx);
+      val = DV::view_host()(idx);
     }
     return idx;
   }
 
   bool is_sorted() {
     for (int i = 0; i < _size - 1; i++) {
-      if (DV::h_view(i) > DV::h_view(i + 1)) return false;
+      if (DV::view_host()(i) > DV::view_host()(i + 1)) return false;
     }
     return true;
   }
@@ -287,26 +279,27 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     upper   = _size - 1;
     lower   = 0;
 
-    if ((val < DV::h_view(0)) || (val > DV::h_view(_size - 1))) return end();
+    if ((val < DV::view_host()(0)) || (val > DV::view_host()(_size - 1)))
+      return end();
 
     while (upper > lower) {
-      if (val > DV::h_view(current))
+      if (val > DV::view_host()(current))
         lower = current + 1;
       else
         upper = current;
       current = (upper + lower) / 2;
     }
 
-    if (val == DV::h_view(current))
-      return &DV::h_view(current);
+    if (val == DV::view_host()(current))
+      return &DV::view_host()(current);
     else
       return end();
   }
 
   /* Additional functions for data management */
 
-  void device_to_host() { deep_copy(DV::h_view, DV::d_view); }
-  void host_to_device() const { deep_copy(DV::d_view, DV::h_view); }
+  void device_to_host() { deep_copy(DV::view_host(), DV::view_device()); }
+  void host_to_device() const { deep_copy(DV::view_device(), DV::view_host()); }
 
   void on_host() { DV::template modify<typename DV::t_host::device_type>(); }
   void on_device() { DV::template modify<typename DV::t_dev::device_type>(); }
@@ -337,6 +330,11 @@ class vector : public DualView<Scalar*, LayoutLeft, Arg1Type> {
     void operator()(const int& i) const { _data(i) = _val; }
   };
 };
+#endif
 
 }  // namespace Kokkos
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_VECTOR
+#endif
 #endif

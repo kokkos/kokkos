@@ -1,50 +1,27 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 /// \file Kokkos_Parallel.hpp
 /// \brief Declaration of parallel operators
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <Kokkos_Macros.hpp>
+static_assert(false,
+              "Including non-public Kokkos header files is not allowed.");
+#endif
 #ifndef KOKKOS_PARALLEL_HPP
 #define KOKKOS_PARALLEL_HPP
 
@@ -58,7 +35,6 @@
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
-#include <impl/Kokkos_FunctorAdapter.hpp>
 
 #include <cstddef>
 #include <type_traits>
@@ -96,19 +72,19 @@ struct FunctorPolicyExecutionSpace {
   static_assert(
       !is_detected<execution_space_t, Policy>::value ||
           !is_detected<execution_space_t, Functor>::value ||
-          std::is_same<policy_execution_space, functor_execution_space>::value,
+          std::is_same_v<policy_execution_space, functor_execution_space>,
       "A policy with an execution space and a functor with an execution space "
       "are given but the execution space types do not match!");
   static_assert(!is_detected<execution_space_t, Policy>::value ||
                     !is_detected<device_type_t, Functor>::value ||
-                    std::is_same<policy_execution_space,
-                                 functor_device_type_execution_space>::value,
+                    std::is_same_v<policy_execution_space,
+                                   functor_device_type_execution_space>,
                 "A policy with an execution space and a functor with a device "
                 "type are given but the execution space types do not match!");
   static_assert(!is_detected<device_type_t, Functor>::value ||
                     !is_detected<execution_space_t, Functor>::value ||
-                    std::is_same<functor_device_type_execution_space,
-                                 functor_execution_space>::value,
+                    std::is_same_v<functor_device_type_execution_space,
+                                   functor_execution_space>,
                 "A functor with both an execution space and device type is "
                 "given but their execution space types do not match!");
 
@@ -151,53 +127,49 @@ namespace Kokkos {
  * This compares to a single iteration \c iwork of a \c for loop.
  * If \c execution_space is not defined DefaultExecutionSpace will be used.
  */
-template <class ExecPolicy, class FunctorType>
-inline void parallel_for(
-    const ExecPolicy& policy, const FunctorType& functor,
-    const std::string& str = "",
-    typename std::enable_if<
-        Kokkos::is_execution_policy<ExecPolicy>::value>::type* = nullptr) {
+template <
+    class ExecPolicy, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_policy<ExecPolicy>::value>>
+inline void parallel_for(const std::string& str, const ExecPolicy& policy,
+                         const FunctorType& functor) {
   uint64_t kpID = 0;
 
-  ExecPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::begin_parallel_for(inner_policy, functor, str, kpID);
+  /** Request a tuned policy from the tools subsystem */
+  const auto& response =
+      Kokkos::Tools::Impl::begin_parallel_for(policy, functor, str, kpID);
+  const auto& inner_policy = response.policy;
 
-  Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelFor<FunctorType, ExecPolicy> closure(functor, inner_policy);
-  Kokkos::Impl::shared_allocation_tracking_enable();
+  auto closure =
+      Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
+          Impl::ParallelFor<FunctorType, ExecPolicy>>(functor, inner_policy);
 
   closure.execute();
 
   Kokkos::Tools::Impl::end_parallel_for(inner_policy, functor, str, kpID);
 }
 
+template <class ExecPolicy, class FunctorType>
+inline void parallel_for(
+    const ExecPolicy& policy, const FunctorType& functor,
+    std::enable_if_t<is_execution_policy<ExecPolicy>::value>* = nullptr) {
+  Kokkos::parallel_for("", policy, functor);
+}
+
 template <class FunctorType>
-inline void parallel_for(const size_t work_count, const FunctorType& functor,
-                         const std::string& str = "") {
+inline void parallel_for(const std::string& str, const size_t work_count,
+                         const FunctorType& functor) {
   using execution_space =
       typename Impl::FunctorPolicyExecutionSpace<FunctorType,
                                                  void>::execution_space;
   using policy = RangePolicy<execution_space>;
 
-  uint64_t kpID = 0;
-
   policy execution_policy = policy(0, work_count);
-
-  Kokkos::Tools::Impl::begin_parallel_for(execution_policy, functor, str, kpID);
-
-  Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelFor<FunctorType, policy> closure(functor, execution_policy);
-  Kokkos::Impl::shared_allocation_tracking_enable();
-
-  closure.execute();
-
-  Kokkos::Tools::Impl::end_parallel_for(execution_policy, functor, str, kpID);
+  ::Kokkos::parallel_for(str, execution_policy, functor);
 }
 
-template <class ExecPolicy, class FunctorType>
-inline void parallel_for(const std::string& str, const ExecPolicy& policy,
-                         const FunctorType& functor) {
-  ::Kokkos::parallel_for(policy, functor, str);
+template <class FunctorType>
+inline void parallel_for(const size_t work_count, const FunctorType& functor) {
+  ::Kokkos::parallel_for("", work_count, functor);
 }
 
 }  // namespace Kokkos
@@ -245,8 +217,8 @@ namespace Kokkos {
 ///                     value_type& update,
 ///                     const bool final_pass) const;
 ///   void init (value_type& update) const;
-///   void join (volatile value_type& update,
-//               volatile const value_type& input) const
+///   void join (value_type& update,
+//               const value_type& input) const
 /// };
 /// \endcode
 ///
@@ -276,7 +248,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -314,7 +286,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -361,7 +333,7 @@ namespace Kokkos {
 ///   void init (value_type& update) const {
 ///     update = 0;
 ///   }
-///   void join (volatile value_type& update, volatile const value_type& input)
+///   void join (value_type& update, const value_type& input)
 ///   const {
 ///     update += input;
 ///   }
@@ -373,110 +345,112 @@ namespace Kokkos {
 /// };
 /// \endcode
 ///
-template <class ExecutionPolicy, class FunctorType>
-inline void parallel_scan(
-    const ExecutionPolicy& policy, const FunctorType& functor,
-    const std::string& str = "",
-    typename std::enable_if<
-        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
-  uint64_t kpID                = 0;
-  ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
+template <class ExecutionPolicy, class FunctorType,
+          class Enable =
+              std::enable_if_t<is_execution_policy<ExecutionPolicy>::value>>
+inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
+                          const FunctorType& functor) {
+  uint64_t kpID = 0;
+  /** Request a tuned policy from the tools subsystem */
+  const auto& response =
+      Kokkos::Tools::Impl::begin_parallel_scan(policy, functor, str, kpID);
+  const auto& inner_policy = response.policy;
 
-  Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScan<FunctorType, ExecutionPolicy> closure(functor,
-                                                           inner_policy);
-  Kokkos::Impl::shared_allocation_tracking_enable();
+  auto closure =
+      Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
+          Impl::ParallelScan<FunctorType, ExecutionPolicy>>(functor,
+                                                            inner_policy);
 
   closure.execute();
 
   Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
 }
 
+template <class ExecutionPolicy, class FunctorType>
+inline void parallel_scan(
+    const ExecutionPolicy& policy, const FunctorType& functor,
+    std::enable_if_t<is_execution_policy<ExecutionPolicy>::value>* = nullptr) {
+  ::Kokkos::parallel_scan("", policy, functor);
+}
+
 template <class FunctorType>
-inline void parallel_scan(const size_t work_count, const FunctorType& functor,
-                          const std::string& str = "") {
+inline void parallel_scan(const std::string& str, const size_t work_count,
+                          const FunctorType& functor) {
   using execution_space =
       typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
                                                          void>::execution_space;
 
   using policy = Kokkos::RangePolicy<execution_space>;
 
-  uint64_t kpID = 0;
   policy execution_policy(0, work_count);
-  Kokkos::Tools::Impl::begin_parallel_scan(execution_policy, functor, str,
-                                           kpID);
-  Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScan<FunctorType, policy> closure(functor, execution_policy);
-  Kokkos::Impl::shared_allocation_tracking_enable();
-
-  closure.execute();
-
-  Kokkos::Tools::Impl::end_parallel_scan(execution_policy, functor, str, kpID);
+  parallel_scan(str, execution_policy, functor);
 }
 
-template <class ExecutionPolicy, class FunctorType>
+template <class FunctorType>
+inline void parallel_scan(const size_t work_count, const FunctorType& functor) {
+  ::Kokkos::parallel_scan("", work_count, functor);
+}
+
+template <class ExecutionPolicy, class FunctorType, class ReturnType,
+          class Enable =
+              std::enable_if_t<is_execution_policy<ExecutionPolicy>::value>>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
-                          const FunctorType& functor) {
-  ::Kokkos::parallel_scan(policy, functor, str);
+                          const FunctorType& functor,
+                          ReturnType& return_value) {
+  uint64_t kpID                = 0;
+  ExecutionPolicy inner_policy = policy;
+  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
+
+  if constexpr (Kokkos::is_view<ReturnType>::value) {
+    auto closure =
+        Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
+            Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy,
+                                        typename ReturnType::value_type>>(
+            functor, inner_policy, return_value);
+    closure.execute();
+  } else {
+    Kokkos::View<ReturnType, Kokkos::HostSpace> view(&return_value);
+    auto closure =
+        Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
+            Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy,
+                                        ReturnType>>(functor, inner_policy,
+                                                     view);
+    closure.execute();
+  }
+
+  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
+
+  if (!Kokkos::is_view<ReturnType>::value)
+    policy.space().fence(
+        "Kokkos::parallel_scan: fence due to result being a value, not a view");
 }
 
 template <class ExecutionPolicy, class FunctorType, class ReturnType>
 inline void parallel_scan(
     const ExecutionPolicy& policy, const FunctorType& functor,
-    ReturnType& return_value, const std::string& str = "",
-    typename std::enable_if<
-        Kokkos::is_execution_policy<ExecutionPolicy>::value>::type* = nullptr) {
-  uint64_t kpID                = 0;
-  ExecutionPolicy inner_policy = policy;
-  Kokkos::Tools::Impl::begin_parallel_scan(inner_policy, functor, str, kpID);
+    ReturnType& return_value,
+    std::enable_if_t<is_execution_policy<ExecutionPolicy>::value>* = nullptr) {
+  ::Kokkos::parallel_scan("", policy, functor, return_value);
+}
 
-  Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScanWithTotal<FunctorType, ExecutionPolicy, ReturnType> closure(
-      functor, inner_policy, return_value);
-  Kokkos::Impl::shared_allocation_tracking_enable();
+template <class FunctorType, class ReturnType>
+inline void parallel_scan(const std::string& str, const size_t work_count,
+                          const FunctorType& functor,
+                          ReturnType& return_value) {
+  using execution_space =
+      typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                         void>::execution_space;
 
-  closure.execute();
+  using policy = Kokkos::RangePolicy<execution_space>;
 
-  Kokkos::Tools::Impl::end_parallel_scan(inner_policy, functor, str, kpID);
-
-  policy.space().fence(
-      "Kokkos::parallel_scan: fence due to result being a value, not a view");
+  policy execution_policy(0, work_count);
+  parallel_scan(str, execution_policy, functor, return_value);
 }
 
 template <class FunctorType, class ReturnType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor,
-                          ReturnType& return_value,
-                          const std::string& str = "") {
-  using execution_space =
-      typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
-                                                         void>::execution_space;
-
-  using policy = Kokkos::RangePolicy<execution_space>;
-
-  policy execution_policy(0, work_count);
-  uint64_t kpID = 0;
-  Kokkos::Tools::Impl::begin_parallel_scan(execution_policy, functor, str,
-                                           kpID);
-
-  Kokkos::Impl::shared_allocation_tracking_disable();
-  Impl::ParallelScanWithTotal<FunctorType, policy, ReturnType> closure(
-      functor, execution_policy, return_value);
-  Kokkos::Impl::shared_allocation_tracking_enable();
-
-  closure.execute();
-
-  Kokkos::Tools::Impl::end_parallel_scan(execution_policy, functor, str, kpID);
-
-  execution_space().fence(
-      "Kokkos::parallel_scan: fence after scan with return value");
-}
-
-template <class ExecutionPolicy, class FunctorType, class ReturnType>
-inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
-                          const FunctorType& functor,
                           ReturnType& return_value) {
-  ::Kokkos::parallel_scan(policy, functor, return_value, str);
+  ::Kokkos::parallel_scan("", work_count, functor, return_value);
 }
 
 }  // namespace Kokkos

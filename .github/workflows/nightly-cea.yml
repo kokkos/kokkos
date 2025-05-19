@@ -1,0 +1,137 @@
+name: Nightly CEA builds
+
+on:
+  schedule:
+    - cron: "0 0 * * 1-5" # every weekday at midnight UTC
+
+permissions: read-all
+
+jobs:
+  build_and_test:
+    # only run on original repo
+    if: github.repository == 'kokkos/kokkos'
+
+    strategy:
+      # allow all matrix jobs to perform even if errors occur
+      fail-fast: false
+      matrix:
+        build_type:
+          - Release
+        cxx_standard:
+          - 17
+          - 20
+        backend:
+          - name: OpenMP-x86_64-GCC/10.3-Shared
+            configure: -DKokkos_ENABLE_OPENMP=ON -DBUILD_SHARED_LIBS=ON
+            test: -e cpu OMP_PROC_BIND=spread OMP_PLACES=threads
+            modules: gcc/10.3.0/gcc-4.8.5 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-A100-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g a100
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-A100-UVM-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_UVM=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g a100
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-V100-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g v100
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+
+          - name: Cuda-V100-UVM-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_UVM=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g v100
+            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
+        exclude:
+          # note: GCC 10.3 does not support C++ 20 well enough
+          - backend:
+              name: OpenMP-x86_64-GCC/10.3-Shared
+            cxx_standard: 20
+
+    runs-on: [self-hosted, cuda]
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Initialize the build tree
+        # note: BUILDNAME sets the name of the build on the Dashboard
+        # note: SITE sets the name of the site on the Dashboard
+        # note: run is a Ruche command
+        run: |
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            -e local \
+            cmake \
+              -B build \
+              -DBUILDNAME=${{ matrix.backend.name }}-C++${{ matrix.cxx_standard }}-${{ matrix.build_type }} \
+              -DSITE=cea-ruche \
+              -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+              -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }} \
+              -DCMAKE_COMPILE_WARNING_AS_ERROR=ON \
+              -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+              -DKokkos_ENABLE_TESTS=ON \
+              -DKokkos_ENABLE_EXAMPLES=ON \
+              -DKokkos_ENABLE_BENCHMARKS=ON \
+              ${{ matrix.backend.configure }}
+
+      - name: Start, update and configure
+        id: start_update_configure
+        continue-on-error: true
+        run: |
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            -e local \
+            ctest \
+              -V \
+              --test-dir build \
+              -D NightlyStart \
+              -D NightlyUpdate \
+              -D NightlyConfigure
+
+      - name: Build
+        id: build
+        continue-on-error: true
+        run: |
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            -e cpu \
+            CMAKE_BUILD_PARALLEL_LEVEL=40 \
+            ctest \
+              -V \
+              --test-dir build \
+              -D NightlyBuild
+
+      - name: Test
+        id: test
+        continue-on-error: true
+        run: |
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            ${{ matrix.backend.test }} \
+            ctest \
+              --output-on-failure \
+              --test-dir build \
+              -D NightlyTest
+
+      - name: Submit
+        run: |
+          run \
+            -m "${{ matrix.backend.modules }}" \
+            -e local \
+            ctest \
+              --test-dir build \
+              -D NightlySubmit
+
+      # note: this marks the job as failed if any of the mentionned steps (that
+      # have `continue-on-error`) has failed
+      - name: Failure outcome
+        if: |-
+          ${{
+            steps.start_update_configure.outcome == 'failure' ||
+            steps.build.outcome == 'failure' ||
+            steps.test.outcome == 'failure'
+          }}
+        run: exit 1

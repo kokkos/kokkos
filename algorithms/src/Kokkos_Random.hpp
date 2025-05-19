@@ -1,49 +1,25 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_RANDOM_HPP
 #define KOKKOS_RANDOM_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_RANDOM
+#endif
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Complex.hpp>
@@ -611,11 +587,13 @@ struct Random_XorShift1024_State<false> {
                                             int state_idx)
       : state_(&v(state_idx, 0)), stride_(v.stride_1()) {}
 
+  // NOLINTBEGIN(bugprone-implicit-widening-of-multiplication-result)
   KOKKOS_FUNCTION
   uint64_t operator[](const int i) const { return state_[i * stride_]; }
 
   KOKKOS_FUNCTION
   uint64_t& operator[](const int i) { return state_[i * stride_]; }
+  // NOLINTEND(bugprone-implicit-widening-of-multiplication-result)
 };
 
 template <class ExecutionSpace>
@@ -627,12 +605,16 @@ struct Random_XorShift1024_UseCArrayState<Kokkos::Cuda> : std::false_type {};
 #endif
 #ifdef KOKKOS_ENABLE_HIP
 template <>
-struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::HIP>
-    : std::false_type {};
+struct Random_XorShift1024_UseCArrayState<Kokkos::HIP> : std::false_type {};
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 template <>
 struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::OpenMPTarget>
+    : std::false_type {};
+#endif
+#ifdef KOKKOS_ENABLE_OPENACC
+template <>
+struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::OpenACC>
     : std::false_type {};
 #endif
 
@@ -640,7 +622,7 @@ template <class DeviceType>
 struct Random_UniqueIndex {
   using locks_view_type = View<int**, DeviceType>;
   KOKKOS_FUNCTION
-  static int get_state_idx(const locks_view_type) {
+  static int get_state_idx(const locks_view_type&) {
     KOKKOS_IF_ON_HOST(
         (return DeviceType::execution_space::impl_hardware_thread_id();))
 
@@ -648,78 +630,63 @@ struct Random_UniqueIndex {
   }
 };
 
-#ifdef KOKKOS_ENABLE_CUDA
-template <class MemorySpace>
-struct Random_UniqueIndex<Kokkos::Device<Kokkos::Cuda, MemorySpace>> {
-  using locks_view_type =
-      View<int**, Kokkos::Device<Kokkos::Cuda, MemorySpace>>;
-  KOKKOS_FUNCTION
-  static int get_state_idx(const locks_view_type& locks_) {
-#ifdef __CUDA_ARCH__
-    const int i_offset =
-        (threadIdx.x * blockDim.y + threadIdx.y) * blockDim.z + threadIdx.z;
-    int i = (((blockIdx.x * gridDim.y + blockIdx.y) * gridDim.z + blockIdx.z) *
-                 blockDim.x * blockDim.y * blockDim.z +
-             i_offset) %
-            locks_.extent(0);
-    while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
-      i += blockDim.x * blockDim.y * blockDim.z;
-      if (i >= static_cast<int>(locks_.extent(0))) {
-        i = i_offset;
-      }
-    }
-    return i;
-#else
-    (void)locks_;
-    return 0;
-#endif
-  }
-};
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+
+#if defined(KOKKOS_ENABLE_CUDA)
+#define KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP Kokkos::Cuda
+#elif defined(KOKKOS_ENABLE_HIP)
+#define KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP Kokkos::HIP
 #endif
 
-#ifdef KOKKOS_ENABLE_HIP
 template <class MemorySpace>
 struct Random_UniqueIndex<
-    Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>> {
+    Kokkos::Device<KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP, MemorySpace>> {
   using locks_view_type =
-      View<int**, Kokkos::Device<Kokkos::Experimental::HIP, MemorySpace>>;
+      View<int**, Kokkos::Device<KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP,
+                                 MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
-#ifdef __HIP_DEVICE_COMPILE__
-    const int i_offset =
-        (threadIdx.x * blockDim.y + threadIdx.y) * blockDim.z + threadIdx.z;
-    int i = (((blockIdx.x * gridDim.y + blockIdx.y) * gridDim.z + blockIdx.z) *
+    KOKKOS_IF_ON_DEVICE((
+        const int i_offset =
+            (threadIdx.x * blockDim.y + threadIdx.y) * blockDim.z + threadIdx.z;
+        int i =
+            (((blockIdx.x * gridDim.y + blockIdx.y) * gridDim.z + blockIdx.z) *
                  blockDim.x * blockDim.y * blockDim.z +
              i_offset) %
             locks_.extent(0);
-    while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
-      i += blockDim.x * blockDim.y * blockDim.z;
-      if (i >= static_cast<int>(locks_.extent(0))) {
-        i = i_offset;
-      }
-    }
-    return i;
-#else
-    (void)locks_;
-    return 0;
-#endif
+        while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
+          i += blockDim.x * blockDim.y * blockDim.z;
+          if (i >= static_cast<int>(locks_.extent(0))) {
+            i = i_offset;
+          }
+        }
+
+        return i;))
+    KOKKOS_IF_ON_HOST(((void)locks_; return 0;))
   }
 };
+
+#undef KOKKOS_IMPL_EXECUTION_SPACE_CUDA_OR_HIP
+
 #endif
 
 #ifdef KOKKOS_ENABLE_SYCL
 template <class MemorySpace>
-struct Random_UniqueIndex<
-    Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>> {
+struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
   using locks_view_type =
-      View<int**, Kokkos::Device<Kokkos::Experimental::SYCL, MemorySpace>>;
+      View<int**, Kokkos::Device<Kokkos::SYCL, MemorySpace>>;
   KOKKOS_FUNCTION
   static int get_state_idx(const locks_view_type& locks_) {
-    auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();
+#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+    KOKKOS_COMPILER_INTEL_LLVM >= 20250000
+    auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+#else
+    auto item           = sycl::ext::oneapi::experimental::this_nd_item<3>();
+#endif
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
     std::size_t blockIdx[3]  = {item.get_group(2), item.get_group(1),
-                               item.get_group(0)};
+                                item.get_group(0)};
     std::size_t blockDim[3] = {item.get_local_range(2), item.get_local_range(1),
                                item.get_local_range(0)};
     std::size_t gridDim[3]  = {
@@ -758,6 +725,37 @@ struct Random_UniqueIndex<
     int i               = omp_get_team_num() * team_size + omp_get_thread_num();
     const int lock_size = locks.extent_int(0);
 
+    i %= lock_size;
+    while (Kokkos::atomic_compare_exchange(&locks(i, 0), 0, 1)) {
+      i = (i + 1) % lock_size;
+    }
+    return i;
+  }
+};
+#endif
+
+#ifdef KOKKOS_ENABLE_OPENACC
+template <class MemorySpace>
+struct Random_UniqueIndex<
+    Kokkos::Device<Kokkos::Experimental::OpenACC, MemorySpace>> {
+  using locks_view_type =
+      View<int**, Kokkos::Device<Kokkos::Experimental::OpenACC, MemorySpace>>;
+  KOKKOS_FUNCTION
+  static int get_state_idx(const locks_view_type& locks) {
+#ifdef KOKKOS_COMPILER_NVHPC
+    const int team_size =
+        Kokkos::Impl::OpenACCTeamMember::DEFAULT_TEAM_SIZE_REC;
+    int i = __pgi_gangidx() * team_size + __pgi_vectoridx();
+#elif defined(KOKKOS_COMPILER_CLANG)
+    const int team_size = omp_get_num_threads();
+    int i               = omp_get_team_num() * team_size + omp_get_thread_num();
+#else
+    static_assert(false,
+                  "The current OpenACC backend implementation supports "
+                  "Random_UniqueIndex only when compiled with NVHPC or CLACC.");
+#endif
+    const int lock_size = locks.extent_int(0);
+    i %= lock_size;
     while (Kokkos::atomic_compare_exchange(&locks(i, 0), 0, 1)) {
       i = (i + 1) % lock_size;
     }
@@ -893,18 +891,17 @@ class Random_XorShift64 {
     return drand(end - start) + start;
   }
 
-  // Marsaglia polar method for drawing a standard normal distributed random
+  // Box-muller method for drawing a standard normal distributed random
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-    double S = 2.0;
-    double U;
-    while (S >= 1.0) {
-      U              = 2.0 * drand() - 1.0;
-      const double V = 2.0 * drand() - 1.0;
-      S              = U * U + V * V;
-    }
-    return U * std::sqrt(-2.0 * std::log(S) / S);
+    constexpr auto two_pi = 2 * Kokkos::numbers::pi_v<double>;
+
+    const double u     = drand();
+    const double v     = drand();
+    const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
+    const double theta = v * two_pi;
+    return r * Kokkos::cos(theta);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -922,36 +919,30 @@ class Random_XorShift64_Pool {
   using execution_space = typename device_type::execution_space;
   using locks_type      = View<int**, device_type>;
   using state_data_type = View<uint64_t**, device_type>;
-  locks_type locks_;
-  state_data_type state_;
-  int num_states_;
-  int padding_;
+
+  locks_type locks_      = {};
+  state_data_type state_ = {};
+  int num_states_        = {};
+  int padding_           = {};
 
  public:
   using generator_type = Random_XorShift64<DeviceType>;
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool() {
-    num_states_ = 0;
-    padding_    = 0;
-  }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool() = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool(
+      Random_XorShift64_Pool const&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool& operator=(
+      Random_XorShift64_Pool const&) = default;
+#else
+  Random_XorShift64_Pool()   = default;
+#endif
   Random_XorShift64_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool(const Random_XorShift64_Pool& src)
-      : locks_(src.locks_), state_(src.state_), num_states_(src.num_states_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64_Pool operator=(const Random_XorShift64_Pool& src) {
-    locks_      = src.locks_;
-    state_      = src.state_;
-    num_states_ = src.num_states_;
-    padding_    = src.padding_;
-    return *this;
   }
 
   void init(uint64_t seed, int num_states) {
@@ -991,8 +982,8 @@ class Random_XorShift64_Pool {
     deep_copy(locks_, h_lock);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift64<DeviceType> get_state() const {
+  KOKKOS_INLINE_FUNCTION Random_XorShift64<DeviceType> get_state() const {
+    KOKKOS_EXPECTS(num_states_ > 0);
     const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift64<DeviceType>(state_(i, 0), i);
   }
@@ -1006,6 +997,8 @@ class Random_XorShift64_Pool {
   KOKKOS_INLINE_FUNCTION
   void free_state(const Random_XorShift64<DeviceType>& state) const {
     state_(state.state_idx_, 0) = state.state_;
+    // Release the lock only after the state has been updated in memory
+    Kokkos::memory_fence();
     locks_(state.state_idx_, 0) = 0;
   }
 };
@@ -1142,18 +1135,17 @@ class Random_XorShift1024 {
     return drand(end - start) + start;
   }
 
-  // Marsaglia polar method for drawing a standard normal distributed random
+  // Box-muller method for drawing a standard normal distributed random
   // number
   KOKKOS_INLINE_FUNCTION
   double normal() {
-    double S = 2.0;
-    double U;
-    while (S >= 1.0) {
-      U              = 2.0 * drand() - 1.0;
-      const double V = 2.0 * drand() - 1.0;
-      S              = U * U + V * V;
-    }
-    return U * std::sqrt(-2.0 * std::log(S) / S);
+    constexpr auto two_pi = 2 * Kokkos::numbers::pi_v<double>;
+
+    const double u     = drand();
+    const double v     = drand();
+    const double r     = Kokkos::sqrt(-2.0 * Kokkos::log(u));
+    const double theta = v * two_pi;
+    return r * Kokkos::cos(theta);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1171,45 +1163,37 @@ class Random_XorShift1024_Pool {
   using execution_space = typename device_type::execution_space;
   using locks_type      = View<int**, device_type>;
   using int_view_type   = View<int**, device_type>;
-  using state_data_type = View<uint64_t * [16], device_type>;
+  using state_data_type = View<uint64_t* [16], device_type>;
 
-  locks_type locks_;
-  state_data_type state_;
-  int_view_type p_;
-  int num_states_;
-  int padding_;
+  locks_type locks_      = {};
+  state_data_type state_ = {};
+  int_view_type p_       = {};
+  int num_states_        = {};
+  int padding_           = {};
   friend class Random_XorShift1024<DeviceType>;
 
  public:
   using generator_type = Random_XorShift1024<DeviceType>;
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool() { num_states_ = 0; }
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool() = default;
 
-  inline Random_XorShift1024_Pool(uint64_t seed) {
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool(
+      Random_XorShift1024_Pool const&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION Random_XorShift1024_Pool& operator=(
+      Random_XorShift1024_Pool const&) = default;
+#else
+  Random_XorShift1024_Pool() = default;
+#endif
+
+  Random_XorShift1024_Pool(uint64_t seed) {
     num_states_ = 0;
 
     init(seed, execution_space().concurrency());
   }
 
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool(const Random_XorShift1024_Pool& src)
-      : locks_(src.locks_),
-        state_(src.state_),
-        p_(src.p_),
-        num_states_(src.num_states_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  Random_XorShift1024_Pool operator=(const Random_XorShift1024_Pool& src) {
-    locks_      = src.locks_;
-    state_      = src.state_;
-    p_          = src.p_;
-    num_states_ = src.num_states_;
-    padding_    = src.padding_;
-    return *this;
-  }
-
-  inline void init(uint64_t seed, int num_states) {
+  void init(uint64_t seed, int num_states) {
     if (seed == 0) seed = uint64_t(1318319);
     // I only want to pad on CPU like archs (less than 1000 threads). 64 is a
     // magic number, or random number I just wanted something not too large and
@@ -1252,6 +1236,7 @@ class Random_XorShift1024_Pool {
 
   KOKKOS_INLINE_FUNCTION
   Random_XorShift1024<DeviceType> get_state() const {
+    KOKKOS_EXPECTS(num_states_ > 0);
     const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift1024<DeviceType>(state_, p_(i, 0), i);
   };
@@ -1265,7 +1250,9 @@ class Random_XorShift1024_Pool {
   KOKKOS_INLINE_FUNCTION
   void free_state(const Random_XorShift1024<DeviceType>& state) const {
     for (int i = 0; i < 16; i++) state_(state.state_idx_, i) = state.state_[i];
-    p_(state.state_idx_, 0)     = state.p_;
+    p_(state.state_idx_, 0) = state.p_;
+    // Release the lock only after the state has been updated in memory
+    Kokkos::memory_fence();
     locks_(state.state_idx_, 0) = 0;
   }
 };
@@ -1279,7 +1266,6 @@ struct fill_random_functor_begin_end;
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 0,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1303,7 +1289,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 0,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 1,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1331,7 +1316,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 1,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 2,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1361,7 +1345,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 2,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 3,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1392,7 +1375,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 3,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 4,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1424,7 +1406,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 4,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 5,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1458,7 +1439,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 5,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 6,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1494,7 +1474,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 6,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 7,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1532,7 +1511,6 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 7,
 template <class ViewType, class RandomPool, int loops, class IndexType>
 struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 8,
                                      IndexType> {
-  using execution_space = typename ViewType::execution_space;
   ViewType a;
   RandomPool rand_pool;
   typename ViewType::const_value_type begin, end;
@@ -1569,34 +1547,67 @@ struct fill_random_functor_begin_end<ViewType, RandomPool, loops, 8,
   }
 };
 
-template <class ViewType, class RandomPool, class IndexType = int64_t>
-void fill_random(ViewType a, RandomPool g,
+template <class ExecutionSpace, class ViewType, class RandomPool,
+          class IndexType = int64_t>
+void fill_random(const ExecutionSpace& exec, ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
   int64_t LDA = a.extent(0);
   if (LDA > 0)
-    parallel_for("Kokkos::fill_random", (LDA + 127) / 128,
-                 Impl::fill_random_functor_begin_end<ViewType, RandomPool, 128,
-                                                     ViewType::Rank, IndexType>(
-                     a, g, begin, end));
+    parallel_for(
+        "Kokkos::fill_random",
+        Kokkos::RangePolicy<ExecutionSpace>(exec, 0, (LDA + 127) / 128),
+        Impl::fill_random_functor_begin_end<ViewType, RandomPool, 128,
+                                            ViewType::rank, IndexType>(
+            a, g, begin, end));
 }
 
 }  // namespace Impl
+
+template <class ExecutionSpace, class ViewType, class RandomPool,
+          class IndexType = int64_t>
+void fill_random(const ExecutionSpace& exec, ViewType a, RandomPool g,
+                 typename ViewType::const_value_type begin,
+                 typename ViewType::const_value_type end) {
+  Impl::apply_to_view_of_static_rank(
+      [&](auto dst) { Kokkos::Impl::fill_random(exec, dst, g, begin, end); },
+      a);
+}
+
+template <class ExecutionSpace, class ViewType, class RandomPool,
+          class IndexType = int64_t>
+void fill_random(const ExecutionSpace& exec, ViewType a, RandomPool g,
+                 typename ViewType::const_value_type range) {
+  fill_random(exec, a, g, 0, range);
+}
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
-  Impl::apply_to_view_of_static_rank(
-      [&](auto dst) { Impl::fill_random(dst, g, begin, end); }, a);
+  Kokkos::fence(
+      "fill_random: fence before since no execution space instance provided");
+  typename ViewType::execution_space exec;
+  fill_random(exec, a, g, begin, end);
+  exec.fence(
+      "fill_random: fence after since no execution space instance provided");
 }
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type range) {
-  fill_random(a, g, 0, range);
+  Kokkos::fence(
+      "fill_random: fence before since no execution space instance provided");
+  typename ViewType::execution_space exec;
+  fill_random(exec, a, g, 0, range);
+  exec.fence(
+      "fill_random: fence after since no execution space instance provided");
 }
 
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_RANDOM
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_RANDOM
+#endif
 #endif

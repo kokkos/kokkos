@@ -1,0 +1,70 @@
+name: github-benchmarks
+on:
+  push:
+    branches:
+      - develop
+  workflow_call:
+
+permissions: read-all
+
+jobs:
+  CI:
+    continue-on-error: true
+    strategy:
+      # We must avoid pushing to the benchmark repository concurrently.
+      max-parallel: 1
+      matrix:
+        distro: ['ubuntu:latest']
+        cxx: ['g++', 'clang++']
+        backend: ['OPENMP']
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
+    env:
+      BUILD_ID: ${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/ccache
+          key: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.backend }}-${{ github.ref }}
+      - name: Configure Kokkos
+        run: |
+          cmake -B builddir \
+            -DKokkos_ENABLE_HWLOC=ON \
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
+            -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: |
+          ccache -z
+          NUM_CPU=$(grep -c processor /proc/cpuinfo)
+          cmake --build builddir --parallel ${NUM_CPU}
+          ccache -s
+      - name: Tests
+        working-directory: builddir
+        run: ctest --output-on-failure
+      - name: Gather benchmark results
+        run: |
+          mkdir ${{ env.BUILD_ID }}
+          find builddir/core/perf_test/ -name "*.json" -exec mv {} ${{ env.BUILD_ID }}/  \;
+      - name: Archive benchmark results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ${{ matrix.cxx }}-${{ matrix.backend }}
+          path: ${{ env.BUILD_ID }}
+      - name: Push benchmark results
+        if: ${{ github.ref == 'refs/heads/develop' }}
+        uses: dmnemec/copy_file_to_another_repo_action@bbebd3da22e4a37d04dca5f782edd5201cb97083 # main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.DALG24_PUSH_BENCHMARK_RESULTS }}
+        with:
+          source_file: ${{ env.BUILD_ID }}
+          destination_repo: 'kokkos/kokkos-benchmark-results'
+          destination_branch: 'main'
+          user_email: 'kokkos@users.noreply.github.com'
+          user_name: 'Kokkos Developers'

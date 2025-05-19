@@ -1,51 +1,22 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
-#include <stdexcept>
 #include <sstream>
 #include <iostream>
 
@@ -55,19 +26,17 @@ TEST(TEST_CATEGORY, view_remap) {
   enum { N0 = 3, N1 = 2, N2 = 8, N3 = 9 };
 
 #if defined(KOKKOS_ENABLE_CUDA)
-#define EXECSPACE                                                     \
-  std::conditional<std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value, \
-                   Kokkos::CudaHostPinnedSpace, TEST_EXECSPACE>::type
+#define EXECSPACE                                                  \
+  std::conditional_t<std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>, \
+                     Kokkos::CudaHostPinnedSpace, TEST_EXECSPACE>
 #elif defined(KOKKOS_ENABLE_HIP)
-#define EXECSPACE                                                     \
-  std::conditional<                                                   \
-      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::HIP>::value, \
-      Kokkos::Experimental::HIPHostPinnedSpace, TEST_EXECSPACE>::type
+#define EXECSPACE                                                 \
+  std::conditional_t<std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>, \
+                     Kokkos::HIPHostPinnedSpace, TEST_EXECSPACE>
 #elif defined(KOKKOS_ENABLE_SYCL)
-#define EXECSPACE                                                      \
-  std::conditional<                                                    \
-      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::SYCL>::value, \
-      Kokkos::Experimental::SYCLHostUSMSpace, TEST_EXECSPACE>::type
+#define EXECSPACE                                                  \
+  std::conditional_t<std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>, \
+                     Kokkos::SYCLHostUSMSpace, TEST_EXECSPACE>
 #elif defined(KOKKOS_ENABLE_OPENMPTARGET)
 #define EXECSPACE Kokkos::HostSpace
 #else
@@ -75,13 +44,13 @@ TEST(TEST_CATEGORY, view_remap) {
 #endif
 
   using output_type =
-      Kokkos::View<double * [N1][N2][N3], Kokkos::LayoutRight, EXECSPACE>;
+      Kokkos::View<double* [N1][N2][N3], Kokkos::LayoutRight, EXECSPACE>;
 
   using input_type =
-      Kokkos::View<int* * [N2][N3], Kokkos::LayoutLeft, EXECSPACE>;
+      Kokkos::View<int** [N2][N3], Kokkos::LayoutLeft, EXECSPACE>;
 
   using diff_type =
-      Kokkos::View<int * [N0][N2][N3], Kokkos::LayoutLeft, EXECSPACE>;
+      Kokkos::View<int* [N0][N2][N3], Kokkos::LayoutLeft, EXECSPACE>;
 
   output_type output("output", N0);
   input_type input("input", N0, N1);
@@ -130,11 +99,18 @@ void test_left_stride(Extents... extents) {
   size_t expected_stride = 1;
   size_t all_strides[view_type::rank + 1];
   view.stride(all_strides);
-  for (int i = 0; i < view_type::rank; ++i) {
+  for (size_t i = 0; i < view_type::rank; ++i) {
     ASSERT_EQ(view.stride(i), expected_stride);
     ASSERT_EQ(all_strides[i], expected_stride);
     expected_stride *= view.extent(i);
   }
+  ASSERT_EQ(all_strides[view_type::rank()], expected_stride);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  for (size_t i = view_type::rank(); i < size_t(8); ++i) {
+    ASSERT_EQ(view.stride(i), view.stride(view_type::rank() - 1) *
+                                  view.extent(view_type::rank() - 1));
+  }
+#endif
 }
 
 template <typename DataType, typename... Extents>
@@ -145,18 +121,63 @@ void test_right_stride(Extents... extents) {
   size_t expected_stride = 1;
   size_t all_strides[view_type::rank + 1];
   view.stride(all_strides);
-  for (int ri = 0; ri < view_type::rank; ++ri) {
+  for (size_t ri = 0; ri < view_type::rank; ++ri) {
     auto i = view_type::rank - 1 - ri;
     ASSERT_EQ(view.stride(i), expected_stride);
     ASSERT_EQ(all_strides[i], expected_stride);
     expected_stride *= view.extent(i);
   }
+  ASSERT_EQ(all_strides[view_type::rank()], expected_stride);
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  for (size_t i = view_type::rank(); i < size_t(8); ++i) {
+    ASSERT_EQ(view.stride(i), size_t(1));
+  }
+#endif
+}
+
+template <typename DataType, typename... Extents>
+void test_stride_stride(Extents... extents) {
+  using view_type =
+      Kokkos::View<DataType, Kokkos::LayoutStride, Kokkos::HostSpace>;
+
+  auto test = [](auto view_org) {
+    view_type view(view_org);
+
+    size_t all_strides[view_type::rank() + 1];
+    view.stride(all_strides);
+
+    size_t max_stride     = 0;
+    size_t max_stride_idx = 0;
+    for (size_t i = 0; i < view_type::rank(); ++i) {
+      ASSERT_EQ(view.stride(i), view_org.stride(i));
+      ASSERT_EQ(all_strides[i], view_org.stride(i));
+      if (view.stride(i) > max_stride) {
+        max_stride     = view.stride(i);
+        max_stride_idx = i;
+      }
+    }
+    ASSERT_EQ(all_strides[view_type::rank()],
+              max_stride * view.extent(max_stride_idx));
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    for (size_t i = view_type::rank(); i < size_t(8); ++i) {
+      ASSERT_EQ(view.stride(i), size_t(0));
+    }
+#endif
+  };
+
+  Kokkos::View<DataType, Kokkos::LayoutRight, Kokkos::HostSpace> view_right(
+      "view", extents...);
+  test(view_right);
+  Kokkos::View<DataType, Kokkos::LayoutRight, Kokkos::HostSpace> view_left(
+      "view", extents...);
+  test(view_left);
 }
 
 template <typename DataType, typename... Extents>
 void test_stride(Extents... extents) {
   test_right_stride<DataType>(extents...);
   test_left_stride<DataType>(extents...);
+  test_stride_stride<DataType>(extents...);
 }
 
 TEST(TEST_CATEGORY, view_stride_method) {
@@ -182,7 +203,6 @@ inline void test_anonymous_space() {
     host_anon_assign_view(i)                       = 142;
   }
   Kokkos::View<int**, Kokkos::LayoutRight, ExecSpace> d_view("d_view", 100, 10);
-#ifdef KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA
   Kokkos::parallel_for(
       Kokkos::RangePolicy<ExecSpace, int>(0, 100), KOKKOS_LAMBDA(int i) {
         int* ptr = &(d_view(i, 0));
@@ -197,7 +217,6 @@ inline void test_anonymous_space() {
         }
       });
   Kokkos::fence();
-#endif
 }
 
 TEST(TEST_CATEGORY, anonymous_space) { test_anonymous_space(); }
@@ -210,8 +229,8 @@ struct TestViewOverloadResolution {
   static int foo(Kokkos::View<const double***, ExecSpace> /*a*/) { return 3; }
 
   // Overload based on compile time dimensions
-  static int bar(Kokkos::View<double * [3], ExecSpace> /*a*/) { return 4; }
-  static int bar(Kokkos::View<double * [4], ExecSpace> /*a*/) { return 5; }
+  static int bar(Kokkos::View<double* [3], ExecSpace> /*a*/) { return 4; }
+  static int bar(Kokkos::View<double* [4], ExecSpace> /*a*/) { return 5; }
 
   static void test_function_overload() {
     Kokkos::View<double**, typename ExecSpace::execution_space::array_layout,
@@ -226,8 +245,8 @@ struct TestViewOverloadResolution {
                  ExecSpace>
         b("B", 10, 3, 4);
     int data_type_2 = foo(b);
-    Kokkos::View<double * [3],
-                 typename ExecSpace::execution_space::array_layout, ExecSpace>
+    Kokkos::View<double* [3], typename ExecSpace::execution_space::array_layout,
+                 ExecSpace>
         c(a);
     int static_extent = bar(c);
     ASSERT_EQ(1, data_type_1);
@@ -240,6 +259,72 @@ struct TestViewOverloadResolution {
 TEST(TEST_CATEGORY, view_overload_resolution) {
   TestViewOverloadResolution<TEST_EXECSPACE>::test_function_overload();
 }
+
+template <typename MemorySpace>
+struct TestViewAllocationLargeRank {
+  using ViewType = Kokkos::View<char********, MemorySpace>;
+
+  KOKKOS_FUNCTION void operator()(int) const {
+    size_t idx = v.extent(0) - 1;
+    auto& lhs  = v(idx, idx, idx, idx, idx, idx, idx, idx);
+    lhs        = 42;  // This is where it segfaulted
+  }
+
+  ViewType v;
+};
+
+TEST(TEST_CATEGORY, view_allocation_large_rank) {
+  using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
+  using MemorySpace    = typename TEST_EXECSPACE::memory_space;
+  constexpr int dim    = 16;
+  using FunctorType    = TestViewAllocationLargeRank<MemorySpace>;
+  typename FunctorType::ViewType v("v", dim, dim, dim, dim, dim, dim, dim, dim);
+
+  Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
+                       FunctorType{v});
+  typename FunctorType::ViewType v_single(v.data() + v.size() - 1, 1, 1, 1, 1,
+                                          1, 1, 1, 1);
+  auto result =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, v_single);
+  ASSERT_EQ(result(0, 0, 0, 0, 0, 0, 0, 0), 42);
+}
+
+template <typename ExecSpace, typename ViewType>
+struct TestViewShmemSizeOnDevice {
+  using ViewTestType = Kokkos::View<size_t, ExecSpace>;
+
+  TestViewShmemSizeOnDevice(size_t d1_, size_t d2_, size_t d3_)
+      : d1(d1_), d2(d2_), d3(d3_), shmemSize("shmemSize") {}
+
+  KOKKOS_FUNCTION void operator()(const int&) const {
+    auto shmem  = ViewType::shmem_size(d1, d2, d3);
+    shmemSize() = shmem;
+  }
+
+  size_t d1, d2, d3;
+  ViewTestType shmemSize;
+};
+
+TEST(TEST_CATEGORY, view_shmem_size_on_device) {
+  using ExecSpace = typename TEST_EXECSPACE::execution_space;
+  using ViewType  = Kokkos::View<int64_t***, ExecSpace>;
+
+  constexpr size_t d1 = 5;
+  constexpr size_t d2 = 7;
+  constexpr size_t d3 = 11;
+
+  TestViewShmemSizeOnDevice<ExecSpace, ViewType> testShmemSize(d1, d2, d3);
+
+  Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), testShmemSize);
+
+  auto size = ViewType::shmem_size(d1, d2, d3);
+
+  auto shmemSizeHost = Kokkos::create_mirror_view_and_copy(
+      Kokkos::HostSpace(), testShmemSize.shmemSize);
+
+  ASSERT_EQ(size, shmemSizeHost());
+}
+
 }  // namespace Test
 
 #include <TestViewIsAssignable.hpp>

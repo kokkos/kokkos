@@ -1,0 +1,55 @@
+name: github-OSX
+
+on:
+  workflow_call:
+
+concurrency:
+  group: ${ {github.event_name }}-${{ github.workflow }}-${{ github.ref }}-osx-x64
+  cancel-in-progress: ${{github.event_name == 'pull_request'}}
+
+permissions: read-all
+
+jobs:
+  osxci:
+    name: osx-ci
+    runs-on: [macos-latest]
+
+    strategy:
+      matrix:
+        include:
+          - backend: "SERIAL"
+            cmake_build_type: "RelWithDebInfo"
+          - backend: "THREADS"
+            cmake_build_type: "RelWithDebInfo"
+          - backend: "SERIAL"
+            cmake_build_type: "Debug"
+          - backend: "SERIAL"
+            cmake_build_type: "Release"
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Install ccache
+        run: |
+          brew update
+          brew install ccache
+      - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: ~/.cache/ccache
+          key: kokkos-osx-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-osx-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}
+      - name: configure
+        run:
+          cmake -B build .
+            -DKokkos_ENABLE_${{ matrix.backend }}=On
+            -DCMAKE_CXX_FLAGS="-Werror"
+            -DCMAKE_CXX_STANDARD=17
+            -DKokkos_ARCH_NATIVE=ON
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
+            -DKokkos_ENABLE_TESTS=On
+            -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      - name: build
+        run: cmake --build build --parallel $(sysctl -n hw.ncpu)
+      - name: test
+        run: ctest --test-dir build -j$(sysctl -n hw.ncpu) --output-on-failure

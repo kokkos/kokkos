@@ -1,3 +1,18 @@
-Checks: '-*,kokkos-*,modernize-use-using,modernize-use-nullptr,cppcoreguidelines-pro-type-cstyle-cast'
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-argument-comment,
+  -bugprone-branch-clone,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  -bugprone-macro-parentheses,
+  -bugprone-narrowing-conversions,
+  -bugprone-suspicious-include,
+  cppcoreguidelines-pro-type-cstyle-cast,
+  modernize-type-traits,
+  modernize-use-nullptr,
+  modernize-use-using,
+  kokkos-*
+
 FormatStyle: file
-HeaderFilterRegex: '.*/*.hpp'
+HeaderFilterRegex: '(algorithms|benchmarks|containers|core|example|simd).*\.hpp'

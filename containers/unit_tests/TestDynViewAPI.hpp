@@ -1,51 +1,22 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
-#include <stdexcept>
 #include <sstream>
 #include <iostream>
 #include <Kokkos_DynRankView.hpp>
@@ -108,8 +79,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 7> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   const volatile value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update |= input;
   }
 
@@ -160,7 +130,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 7> {
                 for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
                   const long j = &left(i0, i1, i2, i3, i4, i5, i6) -
                                  &left(0, 0, 0, 0, 0, 0, 0);
-                  if (j <= offset || left_alloc <= j) {
+                  if (j < offset || left_alloc <= j) {
                     update |= 1;
                   }
                   offset = j;
@@ -176,7 +146,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 7> {
                 for (unsigned i6 = 0; i6 < unsigned(right.extent(6)); ++i6) {
                   const long j = &right(i0, i1, i2, i3, i4, i5, i6) -
                                  &right(0, 0, 0, 0, 0, 0, 0);
-                  if (j <= offset || right_alloc <= j) {
+                  if (j < offset || right_alloc <= j) {
                     update |= 2;
                   }
                   offset = j;
@@ -193,8 +163,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 6> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   const volatile value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update |= input;
   }
 
@@ -243,7 +212,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 6> {
               for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
                 const long j =
                     &left(i0, i1, i2, i3, i4, i5) - &left(0, 0, 0, 0, 0, 0);
-                if (j <= offset || left_alloc <= j) {
+                if (j < offset || left_alloc <= j) {
                   update |= 1;
                 }
                 offset = j;
@@ -258,7 +227,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 6> {
               for (unsigned i5 = 0; i5 < unsigned(right.extent(5)); ++i5) {
                 const long j =
                     &right(i0, i1, i2, i3, i4, i5) - &right(0, 0, 0, 0, 0, 0);
-                if (j <= offset || right_alloc <= j) {
+                if (j < offset || right_alloc <= j) {
                   update |= 2;
                 }
                 offset = j;
@@ -275,8 +244,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 5> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   const volatile value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update |= input;
   }
 
@@ -330,7 +298,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 5> {
           for (unsigned i1 = 0; i1 < unsigned(left.extent(1)); ++i1)
             for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
               const long j = &left(i0, i1, i2, i3, i4) - &left(0, 0, 0, 0, 0);
-              if (j <= offset || left_alloc <= j) {
+              if (j < offset || left_alloc <= j) {
                 update |= 1;
               }
               offset = j;
@@ -348,7 +316,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 5> {
           for (unsigned i3 = 0; i3 < unsigned(right.extent(3)); ++i3)
             for (unsigned i4 = 0; i4 < unsigned(right.extent(4)); ++i4) {
               const long j = &right(i0, i1, i2, i3, i4) - &right(0, 0, 0, 0, 0);
-              if (j <= offset || right_alloc <= j) {
+              if (j < offset || right_alloc <= j) {
                 update |= 2;
               }
               offset = j;
@@ -370,8 +338,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 4> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   const volatile value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update |= input;
   }
 
@@ -416,7 +383,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 4> {
         for (unsigned i1 = 0; i1 < unsigned(left.extent(1)); ++i1)
           for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
             const long j = &left(i0, i1, i2, i3) - &left(0, 0, 0, 0);
-            if (j <= offset || left_alloc <= j) {
+            if (j < offset || left_alloc <= j) {
               update |= 1;
             }
             offset = j;
@@ -428,7 +395,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 4> {
         for (unsigned i2 = 0; i2 < unsigned(right.extent(2)); ++i2)
           for (unsigned i3 = 0; i3 < unsigned(right.extent(3)); ++i3) {
             const long j = &right(i0, i1, i2, i3) - &right(0, 0, 0, 0);
-            if (j <= offset || right_alloc <= j) {
+            if (j < offset || right_alloc <= j) {
               update |= 2;
             }
             offset = j;
@@ -445,8 +412,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   const volatile value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update |= input;
   }
 
@@ -496,7 +462,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
       for (unsigned i1 = 0; i1 < unsigned(left.extent(1)); ++i1)
         for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
           const long j = &left(i0, i1, i2) - &left(0, 0, 0);
-          if (j <= offset || left_alloc <= j) {
+          if (j < offset || left_alloc <= j) {
             update |= 1;
           }
           offset = j;
@@ -511,7 +477,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 3> {
       for (unsigned i1 = 0; i1 < unsigned(right.extent(1)); ++i1)
         for (unsigned i2 = 0; i2 < unsigned(right.extent(2)); ++i2) {
           const long j = &right(i0, i1, i2) - &right(0, 0, 0);
-          if (j <= offset || right_alloc <= j) {
+          if (j < offset || right_alloc <= j) {
             update |= 2;
           }
           offset = j;
@@ -543,8 +509,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   const volatile value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update |= input;
   }
 
@@ -586,7 +551,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
     for (unsigned i1 = 0; i1 < unsigned(left.extent(1)); ++i1)
       for (unsigned i0 = 0; i0 < unsigned(left.extent(0)); ++i0) {
         const long j = &left(i0, i1) - &left(0, 0);
-        if (j <= offset || left_alloc <= j) {
+        if (j < offset || left_alloc <= j) {
           update |= 1;
         }
         offset = j;
@@ -596,7 +561,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 2> {
     for (unsigned i0 = 0; i0 < unsigned(right.extent(0)); ++i0)
       for (unsigned i1 = 0; i1 < unsigned(right.extent(1)); ++i1) {
         const long j = &right(i0, i1) - &right(0, 0);
-        if (j <= offset || right_alloc <= j) {
+        if (j < offset || right_alloc <= j) {
           update |= 2;
         }
         offset = j;
@@ -623,8 +588,7 @@ struct TestViewOperator_LeftAndRight<DataType, DeviceType, 1> {
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
-  static void join(volatile value_type& update,
-                   const volatile value_type& input) {
+  static void join(value_type& update, const value_type& input) {
     update |= input;
   }
 
@@ -724,6 +688,7 @@ class TestDynViewAPI {
     run_test_subview_strided();
     run_test_vector();
     run_test_as_view_of_rank_n();
+    run_test_layout();
   }
 
   static void run_operator_test_rank12345() {
@@ -827,9 +792,8 @@ class TestDynViewAPI {
       int equal_ptr_h2_d = a_h2.data() == a_d.data() ? 1 : 0;
 
       int is_same_memspace =
-          std::is_same<Kokkos::HostSpace, typename device::memory_space>::value
-              ? 1
-              : 0;
+          std::is_same_v<Kokkos::HostSpace, typename device::memory_space> ? 1
+                                                                           : 0;
       ASSERT_EQ(equal_ptr_h_h2, 1);
       ASSERT_EQ(equal_ptr_h_d, is_same_memspace);
       ASSERT_EQ(equal_ptr_h2_d, is_same_memspace);
@@ -852,9 +816,8 @@ class TestDynViewAPI {
       int equal_ptr_h2_d = a_h2.data() == a_d.data() ? 1 : 0;
 
       int is_same_memspace =
-          std::is_same<Kokkos::HostSpace, typename device::memory_space>::value
-              ? 1
-              : 0;
+          std::is_same_v<Kokkos::HostSpace, typename device::memory_space> ? 1
+                                                                           : 0;
       ASSERT_EQ(equal_ptr_h_h2, 1);
       ASSERT_EQ(equal_ptr_h_d, is_same_memspace);
       ASSERT_EQ(equal_ptr_h2_d, is_same_memspace);
@@ -881,9 +844,8 @@ class TestDynViewAPI {
       int equal_ptr_h2_d = a_h2.data() == a_d.data() ? 1 : 0;
 
       int is_same_memspace =
-          std::is_same<Kokkos::HostSpace, typename device::memory_space>::value
-              ? 1
-              : 0;
+          std::is_same_v<Kokkos::HostSpace, typename device::memory_space> ? 1
+                                                                           : 0;
       ASSERT_EQ(equal_ptr_h_h2, 1);
       ASSERT_EQ(equal_ptr_h_d, is_same_memspace);
       ASSERT_EQ(equal_ptr_h2_d, is_same_memspace);
@@ -914,8 +876,7 @@ class TestDynViewAPI {
       int equal_ptr_h3_d = a_h3.data() == a_d.data() ? 1 : 0;
 
       int is_same_memspace =
-          std::is_same<Kokkos::HostSpace,
-                       typename DeviceType::memory_space>::value
+          std::is_same_v<Kokkos::HostSpace, typename DeviceType::memory_space>
               ? 1
               : 0;
       ASSERT_EQ(equal_ptr_h_h2, 1);
@@ -950,8 +911,7 @@ class TestDynViewAPI {
       int equal_ptr_h3_d = a_h3.data() == a_d.data() ? 1 : 0;
 
       int is_same_memspace =
-          std::is_same<Kokkos::HostSpace,
-                       typename DeviceType::memory_space>::value
+          std::is_same_v<Kokkos::HostSpace, typename DeviceType::memory_space>
               ? 1
               : 0;
       ASSERT_EQ(equal_ptr_h_h2, 1);
@@ -977,8 +937,6 @@ class TestDynViewAPI {
         Kokkos::create_mirror_view_and_copy(DeviceType(), error_flag_host);
 
     dView0 d("d");
-
-#if defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
 
     // Rank 0
     Kokkos::resize(d);
@@ -1156,11 +1114,6 @@ class TestDynViewAPI {
     Kokkos::deep_copy(error_flag_host, error_flag);
     ASSERT_EQ(error_flag_host(), 0);
 #endif  // MDRangePolict Rank < 7
-
-#endif  // defined(KOKKOS_ENABLE_CXX11_DISPATCH_LAMBDA)
-
-    // Error checking test
-    EXPECT_ANY_THROW({ auto v_copy = Kokkos::Impl::as_view_of_rank_n<2>(d); });
   }
 
   static void run_test_scalar() {
@@ -1238,19 +1191,19 @@ class TestDynViewAPI {
 
     View7 vtest1("vtest1", 2, 2, 2, 2, 2, 2, 2);
     dView0 dfromv1(vtest1);
-    ASSERT_EQ(dfromv1.rank(), vtest1.Rank);
+    ASSERT_EQ(dfromv1.rank(), vtest1.rank);
     ASSERT_EQ(dfromv1.extent(0), vtest1.extent(0));
     ASSERT_EQ(dfromv1.extent(1), vtest1.extent(1));
     ASSERT_EQ(dfromv1.use_count(), vtest1.use_count());
 
     dView0 dfromv2(vcast);
-    ASSERT_EQ(dfromv2.rank(), vcast.Rank);
+    ASSERT_EQ(dfromv2.rank(), vcast.rank);
     ASSERT_EQ(dfromv2.extent(0), vcast.extent(0));
     ASSERT_EQ(dfromv2.extent(1), vcast.extent(1));
     ASSERT_EQ(dfromv2.use_count(), vcast.use_count());
 
     dView0 dfromv3 = vcast1;
-    ASSERT_EQ(dfromv3.rank(), vcast1.Rank);
+    ASSERT_EQ(dfromv3.rank(), vcast1.rank);
     ASSERT_EQ(dfromv3.extent(0), vcast1.extent(0));
     ASSERT_EQ(dfromv3.extent(1), vcast1.extent(1));
     ASSERT_EQ(dfromv3.use_count(), vcast1.use_count());
@@ -1610,7 +1563,7 @@ class TestDynViewAPI {
     // an lvalue reference due to retrieving through texture cache
     // therefore not allowed to query the underlying pointer.
 #if defined(KOKKOS_ENABLE_CUDA)
-    if (!std::is_same<typename device::execution_space, Kokkos::Cuda>::value)
+    if (!std::is_same_v<typename device::execution_space, Kokkos::Cuda>)
 #endif
     {
       ASSERT_EQ(x.data(), xr.data());
@@ -1897,6 +1850,28 @@ class TestDynViewAPI {
     const_smultivector_type cmv(mv);
     typename smultivector_type::const_type cmvX(cmv);
     typename const_smultivector_type::const_type ccmvX(cmv);
+  }
+
+  static void run_test_layout() {
+    Kokkos::DynRankView<double> d("source", 1, 2, 3, 4);
+    Kokkos::DynRankView<double> e("dest");
+
+    auto props = Kokkos::view_alloc(Kokkos::WithoutInitializing, d.label());
+    e          = Kokkos::DynRankView<double>(props, d.layout());
+
+    ASSERT_EQ(d.rank(), 4u);
+    ASSERT_EQ(e.rank(), 4u);
+    ASSERT_EQ(e.label(), "source");
+
+    auto ulayout = e.layout();
+    ASSERT_EQ(ulayout.dimension[0], 1u);
+    ASSERT_EQ(ulayout.dimension[1], 2u);
+    ASSERT_EQ(ulayout.dimension[2], 3u);
+    ASSERT_EQ(ulayout.dimension[3], 4u);
+    ASSERT_EQ(ulayout.dimension[4], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(ulayout.dimension[5], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(ulayout.dimension[6], KOKKOS_INVALID_INDEX);
+    ASSERT_EQ(ulayout.dimension[7], KOKKOS_INVALID_INDEX);
   }
 };
 

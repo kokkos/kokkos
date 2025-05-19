@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_CUDA_HALF_HPP_
 #define KOKKOS_CUDA_HALF_HPP_
@@ -48,7 +20,11 @@
 #ifdef KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
 
 #include <Kokkos_Half.hpp>
-#include <Kokkos_NumericTraits.hpp>  // reduction_identity
+#include <Kokkos_ReductionIdentity.hpp>
+
+#if CUDA_VERSION >= 11000
+#include <cuda_bf16.h>
+#endif
 
 namespace Kokkos {
 namespace Experimental {
@@ -60,7 +36,7 @@ half_t cast_to_half(half_t val) { return val; }
 // CUDA before 11.1 only has the half <-> float conversions marked host device
 // So we will largely convert to float on the host for conversion
 // But still call the correct functions on the device
-#if (CUDA_VERSION < 11100)
+#if (CUDA_VERSION < 11010)
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val) { return half_t(__float2half(val)); }
@@ -76,56 +52,38 @@ half_t cast_to_half(double val) {
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(short val) {
-#ifdef __CUDA_ARCH__
-  return half_t(__short2half_rn(val));
-#else
-  return half_t(__float2half(static_cast<float>(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return half_t(__short2half_rn(val));))
+  KOKKOS_IF_ON_HOST((return half_t(__float2half(static_cast<float>(val)));))
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned short val) {
-#ifdef __CUDA_ARCH__
-  return half_t(__ushort2half_rn(val));
-#else
-  return half_t(__float2half(static_cast<float>(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return half_t(__ushort2half_rn(val));))
+  KOKKOS_IF_ON_HOST((return half_t(__float2half(static_cast<float>(val)));))
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(int val) {
-#ifdef __CUDA_ARCH__
-  return half_t(__int2half_rn(val));
-#else
-  return half_t(__float2half(static_cast<float>(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return half_t(__int2half_rn(val));))
+  KOKKOS_IF_ON_HOST((return half_t(__float2half(static_cast<float>(val)));))
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned int val) {
-#ifdef __CUDA_ARCH__
-  return half_t(__uint2half_rn(val));
-#else
-  return half_t(__float2half(static_cast<float>(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return half_t(__uint2half_rn(val));))
+  KOKKOS_IF_ON_HOST((return half_t(__float2half(static_cast<float>(val)));))
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(long long val) {
-#ifdef __CUDA_ARCH__
-  return half_t(__ll2half_rn(val));
-#else
-  return half_t(__float2half(static_cast<float>(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return half_t(__ll2half_rn(val));))
+  KOKKOS_IF_ON_HOST((return half_t(__float2half(static_cast<float>(val)));))
 }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned long long val) {
-#ifdef __CUDA_ARCH__
-  return half_t(__ull2half_rn(val));
-#else
-  return half_t(__float2half(static_cast<float>(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return half_t(__ull2half_rn(val));))
+  KOKKOS_IF_ON_HOST((return half_t(__float2half(static_cast<float>(val)));))
 }
 
 KOKKOS_INLINE_FUNCTION
@@ -139,94 +97,80 @@ half_t cast_to_half(unsigned long val) {
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, float>, T>
 cast_from_half(half_t val) {
   return __half2float(half_t::impl_type(val));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, bool>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, bool>, T>
 cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<float>(val));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, double>, T>
 cast_from_half(half_t val) {
   return static_cast<T>(__half2float(half_t::impl_type(val)));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, short>, T>
 cast_from_half(half_t val) {
-#ifdef __CUDA_ARCH__
-  return __half2short_rz(half_t::impl_type(val));
-#else
-  return static_cast<T>(__half2float(half_t::impl_type(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return __half2short_rz(half_t::impl_type(val));))
+  KOKKOS_IF_ON_HOST(
+      (return static_cast<T>(__half2float(half_t::impl_type(val)));))
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned short>, T>
+cast_from_half(half_t val) {
+  KOKKOS_IF_ON_DEVICE((return __half2ushort_rz(half_t::impl_type(val));))
+  KOKKOS_IF_ON_HOST(
+      (return static_cast<T>(__half2float(half_t::impl_type(val)));))
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, int>, T>
+cast_from_half(half_t val) {
+  KOKKOS_IF_ON_DEVICE((return __half2int_rz(half_t::impl_type(val));))
+  KOKKOS_IF_ON_HOST(
+      (return static_cast<T>(__half2float(half_t::impl_type(val)));))
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned>, T>
+cast_from_half(half_t val) {
+  KOKKOS_IF_ON_DEVICE((return __half2uint_rz(half_t::impl_type(val));))
+  KOKKOS_IF_ON_HOST(
+      (return static_cast<T>(__half2float(half_t::impl_type(val)));))
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long long>, T>
+cast_from_half(half_t val) {
+  KOKKOS_IF_ON_DEVICE((return __half2ll_rz(half_t::impl_type(val));))
+  KOKKOS_IF_ON_HOST(
+      (return static_cast<T>(__half2float(half_t::impl_type(val)));))
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned short>::value, T>
+    std::enable_if_t<std::is_same_v<T, unsigned long long>, T>
     cast_from_half(half_t val) {
-#ifdef __CUDA_ARCH__
-  return __half2ushort_rz(half_t::impl_type(val));
-#else
-  return static_cast<T>(__half2float(half_t::impl_type(val)));
-#endif
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
-cast_from_half(half_t val) {
-#ifdef __CUDA_ARCH__
-  return __half2int_rz(half_t::impl_type(val));
-#else
-  return static_cast<T>(__half2float(half_t::impl_type(val)));
-#endif
+  KOKKOS_IF_ON_DEVICE((return __half2ull_rz(half_t::impl_type(val));))
+  KOKKOS_IF_ON_HOST(
+      (return static_cast<T>(__half2float(half_t::impl_type(val)));))
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned>::value, T>
-cast_from_half(half_t val) {
-#ifdef __CUDA_ARCH__
-  return __half2uint_rz(half_t::impl_type(val));
-#else
-  return static_cast<T>(__half2float(half_t::impl_type(val)));
-#endif
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
-cast_from_half(half_t val) {
-#ifdef __CUDA_ARCH__
-  return __half2ll_rz(half_t::impl_type(val));
-#else
-  return static_cast<T>(__half2float(half_t::impl_type(val)));
-#endif
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
-    cast_from_half(half_t val) {
-#ifdef __CUDA_ARCH__
-  return __half2ull_rz(half_t::impl_type(val));
-#else
-  return static_cast<T>(__half2float(half_t::impl_type(val)));
-#endif
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long>, T>
 cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<long long>(val));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long>::value, T>
-    cast_from_half(half_t val) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned long>, T>
+cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<unsigned long long>(val));
 }
 
@@ -258,62 +202,70 @@ half_t cast_to_half(unsigned long val) {
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, float>, T>
 cast_from_half(half_t val) {
-  return __half2float(val);
+  return __half2float(__half(val));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, double>, T>
 cast_from_half(half_t val) {
-  return __half2double(val);
+  return static_cast<double>(__half2float(__half(val)));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, short>, T>
 cast_from_half(half_t val) {
-  return __half2short_rz(val);
+  return __half2short_rz(__half(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned short>, T>
+cast_from_half(half_t val) {
+  return __half2ushort_rz(__half(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, int>, T>
+cast_from_half(half_t val) {
+  return __half2int_rz(__half(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned int>, T>
+cast_from_half(half_t val) {
+  return __half2uint_rz(__half(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long long>, T>
+cast_from_half(half_t val) {
+  return __half2ll_rz(__half(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned short>::value, T>
+    std::enable_if_t<std::is_same_v<T, unsigned long long>, T>
     cast_from_half(half_t val) {
-  return __half2ushort_rz(val);
+  return __half2ull_rz(__half(val));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
-cast_from_half(half_t val) {
-  return __half2int_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned int>::value, T>
-cast_from_half(half_t val) {
-  return __half2uint_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
-cast_from_half(half_t val) {
-  return __half2ll_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
-    cast_from_half(half_t val) {
-  return __half2ull_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long>, T>
 cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<long long>(val));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long>::value, T>
-    cast_from_half(half_t val) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned long>, T>
+cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<unsigned long long>(val));
 }
 #endif
 
 /************************** bhalf conversions *********************************/
-#if CUDA_VERSION >= 11000 && CUDA_VERISON < 11200
+// Go in this branch if CUDA version is >= 11.0.0 and less than 11.1.0 or if the
+// architecture is older than Ampere
+#if !defined(KOKKOS_ARCH_KEPLER) && !defined(KOKKOS_ARCH_MAXWELL) && \
+    !defined(KOKKOS_ARCH_PASCAL) && !defined(KOKKOS_ARCH_VOLTA) &&   \
+    !defined(KOKKOS_ARCH_TURING75)
+#define KOKKOS_IMPL_NVIDIA_GPU_ARCH_SUPPORT_BHALF
+#endif
+
+#if CUDA_VERSION >= 11000 && \
+    (CUDA_VERSION < 11010 || \
+     !defined(KOKKOS_IMPL_NVIDIA_GPU_ARCH_SUPPORT_BHALF))
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 
@@ -372,75 +324,73 @@ bhalf_t cast_to_bhalf(unsigned long val) {
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, float>, T>
 cast_from_bhalf(bhalf_t val) {
   return __bfloat162float(bhalf_t::impl_type(val));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, bool>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, bool>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<float>(val));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, double>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, short>, T>
+cast_from_bhalf(bhalf_t val) {
+  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned short>, T>
+cast_from_bhalf(bhalf_t val) {
+  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, int>, T>
+cast_from_bhalf(bhalf_t val) {
+  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned>, T>
+cast_from_bhalf(bhalf_t val) {
+  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long long>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
 }
 
 template <class T>
 KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned short>::value, T>
-    cast_from_bhalf(bhalf_t val) {
-  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
-cast_from_bhalf(bhalf_t val) {
-  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned>::value, T>
-cast_from_bhalf(bhalf_t val) {
-  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
-cast_from_bhalf(bhalf_t val) {
-  return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
+    std::enable_if_t<std::is_same_v<T, unsigned long long>, T>
     cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(__bfloat162float(bhalf_t::impl_type(val)));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<long long>(val));
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long>::value, T>
-    cast_from_bhalf(bhalf_t val) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned long>, T>
+cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
-#endif  // CUDA_VERSION >= 11000 && CUDA_VERISON < 11200
+#endif  // CUDA_VERSION >= 11000 && CUDA_VERSION < 11010
 
-#if CUDA_VERISON >= 11200
+#if CUDA_VERSION >= 11010 && defined(KOKKOS_IMPL_NVIDIA_GPU_ARCH_SUPPORT_BHALF)
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 KOKKOS_INLINE_FUNCTION
@@ -469,59 +419,59 @@ bhalf_t cast_to_bhalf(unsigned long val) {
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, float>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, float>, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162float(val);
+  return __bfloat162float(__nv_bfloat16(val));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, double>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, double>, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162double(val);
+  return static_cast<double>(__bfloat162float(__nv_bfloat16(val)));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, short>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, short>, T>
 cast_from_bhalf(bhalf_t val) {
-  return __bfloat162short_rz(val);
+  return __bfloat162short_rz(__nv_bfloat16(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned short>, T>
+cast_from_bhalf(bhalf_t val) {
+  return __bfloat162ushort_rz(__nv_bfloat16(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, int>, T>
+cast_from_bhalf(bhalf_t val) {
+  return __bfloat162int_rz(__nv_bfloat16(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned int>, T>
+cast_from_bhalf(bhalf_t val) {
+  return __bfloat162uint_rz(__nv_bfloat16(val));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long long>, T>
+cast_from_bhalf(bhalf_t val) {
+  return __bfloat162ll_rz(__nv_bfloat16(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned short>::value, T>
+    std::enable_if_t<std::is_same_v<T, unsigned long long>, T>
     cast_from_bhalf(bhalf_t val) {
-  return __bfloat162ushort_rz(val);
+  return __bfloat162ull_rz(__nv_bfloat16(val));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, int>::value, T>
-cast_from_bhalf(bhalf_t val) {
-  return __bfloat162int_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, unsigned int>::value, T>
-cast_from_bhalf(bhalf_t val) {
-  return __bfloat162uint_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long long>::value, T>
-cast_from_bhalf(bhalf_t val) {
-  return __bfloat162ll_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long long>::value, T>
-    cast_from_bhalf(bhalf_t val) {
-  return __bfloat162ull_rz(val);
-}
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same<T, long>::value, T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, long>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<long long>(val));
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION
-    std::enable_if_t<std::is_same<T, unsigned long>::value, T>
-    cast_from_bhalf(bhalf_t val) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned long>, T>
+cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
-#endif  // CUDA_VERSION >= 11200
+#endif  // CUDA_VERSION >= 11010
+
+#undef KOKKOS_IMPL_NVIDIA_GPU_ARCH_SUPPORT_BHALF
 }  // namespace Experimental
 
 #if (CUDA_VERSION >= 11000)

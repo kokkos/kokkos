@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #include <Kokkos_Core.hpp>
 
@@ -49,13 +21,13 @@ struct ParallelScanFunctor {
   using value_type = double;
   ViewType v;
 
-  ParallelScanFunctor(const ViewType& v_) : v(v_) {}
+  explicit ParallelScanFunctor(const ViewType& v_) : v(v_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int idx, value_type& val, const bool& final) const {
+  void operator()(const int idx, value_type& val, const bool& is_final) const {
     // inclusive scan
     val += v(idx);
-    if (final) {
+    if (is_final) {
       v(idx) = val;
     }
   }
@@ -137,7 +109,7 @@ void test_policy(int team_range, int thread_range, int vector_range,
                       vector_result = 0.0;
                       Kokkos::parallel_reduce(
                           Kokkos::ThreadVectorRange(team, vector_range),
-                          [&](const int vi, double& vval) { vval += 1; },
+                          [&](const int, double& vval) { vval += 1; },
                           vector_result);
                     }
                     v2(idx, t) = vector_result;
@@ -156,7 +128,7 @@ void test_policy(int team_range, int thread_range, int vector_range,
               team_result = 0.0;
               Kokkos::parallel_reduce(
                   Kokkos::TeamThreadRange(team, thread_range),
-                  [&](const int t, double& lval) { lval += 1; }, team_result);
+                  [&](const int, double& lval) { lval += 1; }, team_result);
             }
             v1(idx) = team_result;
             // prevent compiler optimizing loop away
@@ -198,13 +170,13 @@ void test_policy(int team_range, int thread_range, int vector_range,
             for (int tr = 0; tr < thread_repeat; ++tr) {
               Kokkos::parallel_reduce(
                   Kokkos::TeamThreadRange(team, thread_range),
-                  [&](const int t, double& lval) {
+                  [&](const int, double& lval) {
                     double vector_result = 0.0;
                     for (int vr = 0; vr < inner_repeat; ++vr) {
                       vector_result = 0.0;
                       Kokkos::parallel_reduce(
                           Kokkos::ThreadVectorRange(team, vector_range),
-                          [&](const int vi, double& vval) { vval += 1; },
+                          [&](const int, double& vval) { vval += 1; },
                           vector_result);
                       lval += vector_result;
                     }
@@ -395,7 +367,7 @@ void test_policy(int team_range, int thread_range, int vector_range,
     // parallel_for RangePolicy: range = team_size*team_range
     if (test_type == 300) {
       Kokkos::parallel_for(
-          "300 outer for", team_size * team_range,
+          "300 outer for", static_cast<size_t>(team_size) * team_range,
           KOKKOS_LAMBDA(const int idx) {
             v1(idx) = idx;
             // prevent compiler from optimizing away the loop
@@ -404,14 +376,15 @@ void test_policy(int team_range, int thread_range, int vector_range,
     // parallel_reduce RangePolicy: range = team_size*team_range
     if (test_type == 400) {
       Kokkos::parallel_reduce(
-          "400 outer reduce", team_size * team_range,
+          "400 outer reduce", static_cast<size_t>(team_size) * team_range,
           KOKKOS_LAMBDA(const int idx, double& val) { val += idx; }, result);
       result_expect =
           0.5 * (team_size * team_range) * (team_size * team_range - 1);
     }
     // parallel_scan RangePolicy: range = team_size*team_range
     if (test_type == 500) {
-      Kokkos::parallel_scan("500 outer scan", team_size * team_range,
+      Kokkos::parallel_scan("500 outer scan",
+                            static_cast<size_t>(team_size) * team_range,
                             ParallelScanFunctor<ViewType1>(v1)
 #if 0
         // This does not compile with pre Cuda 8.0 - see Github Issue #913 for explanation

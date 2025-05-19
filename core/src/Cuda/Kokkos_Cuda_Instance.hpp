@@ -1,3 +1,19 @@
+//@HEADER
+// ************************************************************************
+//
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
+//               Solutions of Sandia, LLC (NTESS).
+//
+// Under the terms of Contract DE-NA0003525 with NTESS,
+// the U.S. Government retains certain rights in this software.
+//
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+//
+//@HEADER
+
 #ifndef KOKKOS_CUDA_INSTANCE_HPP_
 #define KOKKOS_CUDA_INSTANCE_HPP_
 
@@ -5,6 +21,11 @@
 #include <impl/Kokkos_Tools.hpp>
 #include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
+#include <cuda_runtime_api.h>
+#include "Kokkos_CudaSpace.hpp"
+
+#include <set>
+#include <map>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -38,27 +59,9 @@ struct CudaTraits {
       unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
   static constexpr int ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */;
-
-  KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_count(
-      CudaSpace::size_type i) {
-    return (i + WarpIndexMask) >> WarpIndexShift;
-  }
-
-  KOKKOS_INLINE_FUNCTION static CudaSpace::size_type warp_align(
-      CudaSpace::size_type i) {
-    constexpr CudaSpace::size_type Mask = ~WarpIndexMask;
-    return (i + WarpIndexMask) & Mask;
-  }
 };
 
 //----------------------------------------------------------------------------
-
-CudaSpace::size_type cuda_internal_multiprocessor_count();
-CudaSpace::size_type cuda_internal_maximum_warp_count();
-std::array<CudaSpace::size_type, 3> cuda_internal_maximum_grid_count();
-CudaSpace::size_type cuda_internal_maximum_shared_words();
-
-CudaSpace::size_type cuda_internal_maximum_concurrent_block_count();
 
 CudaSpace::size_type* cuda_internal_scratch_flags(const Cuda&,
                                                   const std::size_t size);
@@ -85,23 +88,13 @@ class CudaInternal {
  public:
   using size_type = Cuda::size_type;
 
-  int m_cudaDev;
+  int m_cudaDev = -1;
 
   // Device Properties
-  int m_cudaArch;
-  unsigned m_multiProcCount;
-  unsigned m_maxWarpCount;
-  std::array<size_type, 3> m_maxBlock;
-  unsigned m_maxSharedWords;
-  uint32_t m_maxConcurrency;
-  int m_shmemPerSM;
-  int m_maxShmemPerBlock;
-  int m_regsPerSM;
-  int m_maxBlocksPerSM;
-  int m_maxThreadsPerSM;
-  int m_maxThreadsPerBlock;
+  static int m_cudaArch;
+  static int concurrency();
 
-  cudaDeviceProp m_deviceProp;
+  static cudaDeviceProp m_deviceProp;
 
   // Scratch Spaces for Reductions
   mutable std::size_t m_scratchSpaceCount;
@@ -109,31 +102,28 @@ class CudaInternal {
   mutable std::size_t m_scratchUnifiedCount;
   mutable std::size_t m_scratchFunctorSize;
 
-  size_type m_scratchUnifiedSupported;
-  size_type m_streamCount;
   mutable size_type* m_scratchSpace;
   mutable size_type* m_scratchFlags;
   mutable size_type* m_scratchUnified;
   mutable size_type* m_scratchFunctor;
   cudaStream_t m_stream;
   uint32_t m_instance_id;
-  bool m_manage_stream;
 
   // Team Scratch Level 1 Space
   int m_n_team_scratch = 10;
   mutable int64_t m_team_scratch_current_size[10];
   mutable void* m_team_scratch_ptr[10];
   mutable std::atomic_int m_team_scratch_pool[10];
-  std::int32_t* m_scratch_locks;
+  int32_t* m_scratch_locks;
+  size_t m_num_scratch_locks;
 
   bool was_initialized = false;
   bool was_finalized   = false;
 
-  // FIXME_CUDA: these want to be per-device, not per-stream...  use of 'static'
-  //  here will break once there are multiple devices though
-  static unsigned long* constantMemHostStaging;
-  static cudaEvent_t constantMemReusable;
-  static std::mutex constantMemMutex;
+  static std::set<int> cuda_devices;
+  static std::map<int, unsigned long*> constantMemHostStagingPerDevice;
+  static std::map<int, cudaEvent_t> constantMemReusablePerDevice;
+  static std::map<int, std::mutex> constantMemMutexPerDevice;
 
   static CudaInternal& singleton();
 
@@ -143,8 +133,7 @@ class CudaInternal {
     return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
   }
 
-  void initialize(int cuda_device_id, cudaStream_t stream = nullptr,
-                  bool manage_stream = false);
+  void initialize(cudaStream_t stream);
   void finalize();
 
   void print_configuration(std::ostream&) const;
@@ -160,25 +149,10 @@ class CudaInternal {
   ~CudaInternal();
 
   CudaInternal()
-      : m_cudaDev(-1),
-        m_cudaArch(-1),
-        m_multiProcCount(0),
-        m_maxWarpCount(0),
-        m_maxBlock({0, 0, 0}),
-        m_maxSharedWords(0),
-        m_maxConcurrency(0),
-        m_shmemPerSM(0),
-        m_maxShmemPerBlock(0),
-        m_regsPerSM(0),
-        m_maxBlocksPerSM(0),
-        m_maxThreadsPerSM(0),
-        m_maxThreadsPerBlock(0),
-        m_scratchSpaceCount(0),
+      : m_scratchSpaceCount(0),
         m_scratchFlagsCount(0),
         m_scratchUnifiedCount(0),
         m_scratchFunctorSize(0),
-        m_scratchUnifiedSupported(0),
-        m_streamCount(0),
         m_scratchSpace(nullptr),
         m_scratchFlags(nullptr),
         m_scratchUnified(nullptr),
@@ -194,17 +168,203 @@ class CudaInternal {
     }
   }
 
+  // Using CUDA API function/objects will be w.r.t. device 0 unless
+  // cudaSetDevice(device_id) is called with the correct device_id.
+  // The correct device_id is stored in the variable
+  // CudaInternal::m_cudaDev set in Cuda::impl_initialize(). In the case
+  // where multiple CUDA instances are used, or threads are launched
+  // using non-default CUDA execution space after initialization, all CUDA
+  // API calls must follow a call to cudaSetDevice(device_id) when an
+  // execution space or CudaInternal object is provided to ensure all
+  // computation is done on the correct device.
+
+  // FIXME: Not all CUDA API calls require us to set device. Potential
+  // performance gain by selectively setting device.
+
+  // Set the device to the one stored by this instance for CUDA API calls.
+  void set_cuda_device() const {
+    verify_is_initialized("set_cuda_device");
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
+  }
+
+  // CUDA API wrappers
+
+  // C API routines
+  cudaError_t cuda_device_get_limit_wrapper(size_t* pValue,
+                                            cudaLimit limit) const {
+    set_cuda_device();
+    return cudaDeviceGetLimit(pValue, limit);
+  }
+
+  cudaError_t cuda_device_set_limit_wrapper(cudaLimit limit,
+                                            size_t value) const {
+    set_cuda_device();
+    return cudaDeviceSetLimit(limit, value);
+  }
+
+  cudaError_t cuda_event_create_with_flags_wrapper(
+      cudaEvent_t* event, const unsigned int flags) const {
+    set_cuda_device();
+    return cudaEventCreateWithFlags(event, flags);
+  }
+
+  cudaError_t cuda_event_record_wrapper(cudaEvent_t event) const {
+    set_cuda_device();
+    return cudaEventRecord(event, m_stream);
+  }
+
+  cudaError_t cuda_free_wrapper(void* devPtr) const {
+    set_cuda_device();
+    return cudaFree(devPtr);
+  }
+
+  cudaError_t cuda_graph_add_dependencies_wrapper(
+      cudaGraph_t graph, const cudaGraphNode_t* from, const cudaGraphNode_t* to,
+      size_t numDependencies) const {
+    set_cuda_device();
+    return cudaGraphAddDependencies(graph, from, to, numDependencies);
+  }
+
+  cudaError_t cuda_graph_add_empty_node_wrapper(
+      cudaGraphNode_t* pGraphNode, cudaGraph_t graph,
+      const cudaGraphNode_t* pDependencies, size_t numDependencies) const {
+    set_cuda_device();
+    return cudaGraphAddEmptyNode(pGraphNode, graph, pDependencies,
+                                 numDependencies);
+  }
+
+  cudaError_t cuda_graph_add_kernel_node_wrapper(
+      cudaGraphNode_t* pGraphNode, cudaGraph_t graph,
+      const cudaGraphNode_t* pDependencies, size_t numDependencies,
+      const cudaKernelNodeParams* pNodeParams) const {
+    set_cuda_device();
+    return cudaGraphAddKernelNode(pGraphNode, graph, pDependencies,
+                                  numDependencies, pNodeParams);
+  }
+
+  cudaError_t cuda_graph_create_wrapper(cudaGraph_t* pGraph,
+                                        unsigned int flags) const {
+    set_cuda_device();
+    return cudaGraphCreate(pGraph, flags);
+  }
+
+  cudaError_t cuda_graph_destroy_wrapper(cudaGraph_t graph) const {
+    set_cuda_device();
+    return cudaGraphDestroy(graph);
+  }
+
+  cudaError_t cuda_graph_exec_destroy_wrapper(cudaGraphExec_t graphExec) const {
+    set_cuda_device();
+    return cudaGraphExecDestroy(graphExec);
+  }
+
+  cudaError_t cuda_graph_launch_wrapper(cudaGraphExec_t graphExec) const {
+    set_cuda_device();
+    return cudaGraphLaunch(graphExec, m_stream);
+  }
+
+  cudaError_t cuda_malloc_wrapper(void** devPtr, size_t size) const {
+    set_cuda_device();
+    return cudaMalloc(devPtr, size);
+  }
+
+  cudaError_t cuda_malloc_host_wrapper(void** ptr, size_t size) const {
+    set_cuda_device();
+    return cudaMallocHost(ptr, size);
+  }
+
+  cudaError_t cuda_mem_prefetch_async_wrapper(const void* devPtr, size_t count,
+                                              int dstDevice) const {
+    set_cuda_device();
+    return cudaMemPrefetchAsync(devPtr, count, dstDevice, m_stream);
+  }
+
+  cudaError_t cuda_memcpy_wrapper(void* dst, const void* src, size_t count,
+                                  cudaMemcpyKind kind) const {
+    set_cuda_device();
+    return cudaMemcpy(dst, src, count, kind);
+  }
+
+  cudaError_t cuda_memcpy_async_wrapper(void* dst, const void* src,
+                                        size_t count,
+                                        cudaMemcpyKind kind) const {
+    set_cuda_device();
+    return cudaMemcpyAsync(dst, src, count, kind, m_stream);
+  }
+
+  cudaError_t cuda_memcpy_to_symbol_async_wrapper(const void* symbol,
+                                                  const void* src, size_t count,
+                                                  size_t offset,
+                                                  cudaMemcpyKind kind) const {
+    set_cuda_device();
+    return cudaMemcpyToSymbolAsync(symbol, src, count, offset, kind, m_stream);
+  }
+
+  cudaError_t cuda_memset_wrapper(void* devPtr, int value, size_t count) const {
+    set_cuda_device();
+    return cudaMemset(devPtr, value, count);
+  }
+
+  cudaError_t cuda_memset_async_wrapper(void* devPtr, int value,
+                                        size_t count) const {
+    set_cuda_device();
+    return cudaMemsetAsync(devPtr, value, count, m_stream);
+  }
+
+  cudaError_t cuda_pointer_get_attributes_wrapper(
+      cudaPointerAttributes* attributes, const void* ptr) const {
+    set_cuda_device();
+    return cudaPointerGetAttributes(attributes, ptr);
+  }
+
+  cudaError_t cuda_stream_create_wrapper(cudaStream_t* pStream) const {
+    set_cuda_device();
+    return cudaStreamCreate(pStream);
+  }
+
+  // C++ API routines
+  template <typename T>
+  cudaError_t cuda_func_get_attributes_wrapper(cudaFuncAttributes* attr,
+                                               T* entry) const {
+    set_cuda_device();
+    return cudaFuncGetAttributes(attr, entry);
+  }
+
+  template <typename T>
+  cudaError_t cuda_func_set_attribute_wrapper(T* entry, cudaFuncAttribute attr,
+                                              int value) const {
+    set_cuda_device();
+    return cudaFuncSetAttribute(entry, attr, value);
+  }
+
+  cudaError_t cuda_graph_instantiate_wrapper(cudaGraphExec_t* pGraphExec,
+                                             cudaGraph_t graph) const {
+    set_cuda_device();
+#if CUDA_VERSION < 12000
+    constexpr size_t error_log_size = 256;
+    cudaGraphNode_t error_node      = nullptr;
+    char error_log[error_log_size];
+    return cudaGraphInstantiate(pGraphExec, graph, &error_node, error_log,
+                                error_log_size);
+#else
+    return cudaGraphInstantiate(pGraphExec, graph);
+#endif
+  }
+
   // Resizing of reduction related scratch spaces
   size_type* scratch_space(const std::size_t size) const;
   size_type* scratch_flags(const std::size_t size) const;
   size_type* scratch_unified(const std::size_t size) const;
   size_type* scratch_functor(const std::size_t size) const;
   uint32_t impl_get_instance_id() const;
+  int acquire_team_scratch_space();
   // Resizing of team level 1 scratch
-  std::pair<void*, int> resize_team_scratch_space(std::int64_t bytes,
-                                                  bool force_shrink = false);
+  void* resize_team_scratch_space(int scratch_pool_id, std::int64_t bytes,
+                                  bool force_shrink = false);
+  void release_team_scratch_space(int scratch_pool_id);
 };
 
+void create_Cuda_instances(std::vector<Cuda>& instances);
 }  // Namespace Impl
 
 namespace Experimental {
@@ -213,36 +373,26 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 
-namespace Impl {
-inline void create_Cuda_instances(std::vector<Cuda>& instances) {
-  for (int s = 0; s < int(instances.size()); s++) {
-    cudaStream_t stream;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamCreate(&stream));
-    instances[s] = Cuda(stream, true);
-  }
-}
-}  // namespace Impl
-
 template <class... Args>
 std::vector<Cuda> partition_space(const Cuda&, Args...) {
-#ifdef __cpp_fold_expressions
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-#endif
   std::vector<Cuda> instances(sizeof...(Args));
-  Impl::create_Cuda_instances(instances);
+  Kokkos::Impl::create_Cuda_instances(instances);
   return instances;
 }
 
 template <class T>
-std::vector<Cuda> partition_space(const Cuda&, std::vector<T>& weights) {
+std::vector<Cuda> partition_space(const Cuda&, std::vector<T> const& weights) {
   static_assert(
-      std::is_arithmetic<T>::value,
+      std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
+  // We only care about the number of instances to create and ignore weights
+  // otherwise.
   std::vector<Cuda> instances(weights.size());
-  Impl::create_Cuda_instances(instances);
+  Kokkos::Impl::create_Cuda_instances(instances);
   return instances;
 }
 }  // namespace Experimental

@@ -12,6 +12,7 @@ testing/
 /out/build
 /CMakeSettings.json
 /out/mytest
+CMakeUserPresets.json
 
 # build directories in source tree
 /build*

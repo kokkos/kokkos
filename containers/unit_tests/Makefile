@@ -24,6 +24,8 @@ LINK ?= $(CXX)
 LDFLAGS ?=
 override LDFLAGS += -lpthread
 
+KOKKOS_USE_DEPRECATED_MAKEFILES=1
+
 include $(KOKKOS_PATH)/Makefile.kokkos
 
 KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/containers/unit_tests -I${KOKKOS_PATH}/core/unit_test/category_files
@@ -31,12 +33,12 @@ KOKKOS_CXXFLAGS += -I$(GTEST_PATH) -I${KOKKOS_PATH}/containers/unit_tests -I${KO
 TEST_TARGETS =
 TARGETS =
 
-TESTS = Bitset DualView DynamicView DynViewAPI_generic DynViewAPI_rank12345 DynViewAPI_rank67 ErrorReporter OffsetView ScatterView StaticCrsGraph UnorderedMap Vector ViewCtorPropEmbeddedDim
+TESTS = Bitset DualView DynamicView DynViewAPI_generic DynViewAPI_rank12345 DynViewAPI_rank67 ErrorReporter OffsetView ScatterView UnorderedMap ViewCtorPropEmbeddedDim
 tmp := $(foreach device, $(KOKKOS_DEVICELIST), \
   tmp2 := $(foreach test, $(TESTS), \
     $(if $(filter Test$(device)_$(test).cpp, $(shell ls Test$(device)_$(test).cpp 2>/dev/null)),,\
-      $(shell echo "\#include<Test"$(device)"_Category.hpp>" > Test$(device)_$(test).cpp); \
-      $(shell echo "\#include<Test"$(test)".hpp>" >> Test$(device)_$(test).cpp); \
+      $(shell echo "$(H)include<Test"$(device)"_Category.hpp>" > Test$(device)_$(test).cpp); \
+      $(shell echo "$(H)include<Test"$(test)".hpp>" >> Test$(device)_$(test).cpp); \
      )\
   ) \
 )
@@ -52,9 +54,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 	OBJ_CUDA += TestCuda_ErrorReporter.o
 	OBJ_CUDA += TestCuda_OffsetView.o
 	OBJ_CUDA += TestCuda_ScatterView.o
-	OBJ_CUDA += TestCuda_StaticCrsGraph.o
 	OBJ_CUDA += TestCuda_UnorderedMap.o
-	OBJ_CUDA += TestCuda_Vector.o
 	OBJ_CUDA += TestCuda_ViewCtorPropEmbeddedDim.o
 	TARGETS += KokkosContainers_UnitTest_Cuda
 	TEST_TARGETS += test-cuda
@@ -71,9 +71,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_THREADS), 1)
 	OBJ_THREADS += TestThreads_ErrorReporter.o
 	OBJ_THREADS += TestThreads_OffsetView.o
 	OBJ_THREADS += TestThreads_ScatterView.o
-	OBJ_THREADS += TestThreads_StaticCrsGraph.o
 	OBJ_THREADS += TestThreads_UnorderedMap.o
-	OBJ_THREADS += TestThreads_Vector.o
 	OBJ_THREADS += TestThreads_ViewCtorPropEmbeddedDim.o
 	TARGETS += KokkosContainers_UnitTest_Threads
 	TEST_TARGETS += test-threads
@@ -90,9 +88,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_OPENMP), 1)
 	OBJ_OPENMP += TestOpenMP_ErrorReporter.o
 	OBJ_OPENMP += TestOpenMP_OffsetView.o
 	OBJ_OPENMP += TestOpenMP_ScatterView.o
-	OBJ_OPENMP += TestOpenMP_StaticCrsGraph.o
 	OBJ_OPENMP += TestOpenMP_UnorderedMap.o
-	OBJ_OPENMP += TestOpenMP_Vector.o
 	OBJ_OPENMP += TestOpenMP_ViewCtorPropEmbeddedDim.o
 	TARGETS += KokkosContainers_UnitTest_OpenMP
 	TEST_TARGETS += test-openmp
@@ -109,9 +105,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_HPX), 1)
 	OBJ_HPX += TestHPX_ErrorReporter.o
 	OBJ_HPX += TestHPX_OffsetView.o
 	OBJ_HPX += TestHPX_ScatterView.o
-	OBJ_HPX += TestHPX_StaticCrsGraph.o
 	OBJ_HPX += TestHPX_UnorderedMap.o
-	OBJ_HPX += TestHPX_Vector.o
 	OBJ_HPX += TestHPX_ViewCtorPropEmbeddedDim.o
 	TARGETS += KokkosContainers_UnitTest_HPX
 	TEST_TARGETS += test-hpx
@@ -128,9 +122,7 @@ ifeq ($(KOKKOS_INTERNAL_USE_SERIAL), 1)
 	OBJ_SERIAL += TestSerial_ErrorReporter.o
 	OBJ_SERIAL += TestSerial_OffsetView.o
 	OBJ_SERIAL += TestSerial_ScatterView.o
-	OBJ_SERIAL += TestSerial_StaticCrsGraph.o
 	OBJ_SERIAL += TestSerial_UnorderedMap.o
-	OBJ_SERIAL += TestSerial_Vector.o
 	OBJ_SERIAL += TestSerial_ViewCtorPropEmbeddedDim.o
 	TARGETS += KokkosContainers_UnitTest_Serial
 	TEST_TARGETS += test-serial

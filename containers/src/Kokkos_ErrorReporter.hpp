@@ -1,49 +1,25 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_EXPERIMENTAL_ERROR_REPORTER_HPP
 #define KOKKOS_EXPERIMENTAL_ERROR_REPORTER_HPP
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ERRORREPORTER
+#endif
 
 #include <vector>
 #include <Kokkos_Core.hpp>
@@ -67,7 +43,7 @@ class ErrorReporter {
     clear();
   }
 
-  int getCapacity() const { return m_reports.h_view.extent(0); }
+  int getCapacity() const { return m_reports.view_host().extent(0); }
 
   int getNumReports();
 
@@ -93,9 +69,10 @@ class ErrorReporter {
   bool add_report(int reporter_id, report_type report) const {
     int idx = Kokkos::atomic_fetch_add(&m_numReportsAttempted(), 1);
 
-    if (idx >= 0 && (idx < static_cast<int>(m_reports.d_view.extent(0)))) {
-      m_reporters.d_view(idx) = reporter_id;
-      m_reports.d_view(idx)   = report;
+    if (idx >= 0 &&
+        (idx < static_cast<int>(m_reports.view_device().extent(0)))) {
+      m_reporters.view_device()(idx) = reporter_id;
+      m_reports.view_device()(idx)   = report;
       return true;
     } else {
       return false;
@@ -116,8 +93,8 @@ template <typename ReportType, typename DeviceType>
 inline int ErrorReporter<ReportType, DeviceType>::getNumReports() {
   int num_reports = 0;
   Kokkos::deep_copy(num_reports, m_numReportsAttempted);
-  if (num_reports > static_cast<int>(m_reports.h_view.extent(0))) {
-    num_reports = m_reports.h_view.extent(0);
+  if (num_reports > static_cast<int>(m_reports.view_host().extent(0))) {
+    num_reports = m_reports.view_host().extent(0);
   }
   return num_reports;
 }
@@ -143,8 +120,8 @@ void ErrorReporter<ReportType, DeviceType>::getReports(
     m_reporters.template sync<host_mirror_space>();
 
     for (int i = 0; i < num_reports; ++i) {
-      reporters_out.push_back(m_reporters.h_view(i));
-      reports_out.push_back(m_reports.h_view(i));
+      reporters_out.push_back(m_reporters.view_host()(i));
+      reports_out.push_back(m_reports.view_host()(i));
     }
   }
 }
@@ -167,8 +144,8 @@ void ErrorReporter<ReportType, DeviceType>::getReports(
     m_reporters.template sync<host_mirror_space>();
 
     for (int i = 0; i < num_reports; ++i) {
-      reporters_out(i) = m_reporters.h_view(i);
-      reports_out(i)   = m_reports.h_view(i);
+      reporters_out(i) = m_reporters.view_host()(i);
+      reports_out(i)   = m_reports.view_host()(i);
     }
   }
 }
@@ -192,4 +169,8 @@ void ErrorReporter<ReportType, DeviceType>::resize(const size_t new_size) {
 }  // namespace Experimental
 }  // namespace Kokkos
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ERRORREPORTER
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ERRORREPORTER
+#endif
 #endif

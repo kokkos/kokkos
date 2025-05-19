@@ -2189,7 +2189,7 @@ inline bool IsUpper(char ch) {
 inline bool IsXDigit(char ch) {
   return isxdigit(static_cast<unsigned char>(ch)) != 0;
 }
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 inline bool IsXDigit(char8_t ch) {
   return isxdigit(static_cast<unsigned char>(ch)) != 0;
 }
@@ -4770,11 +4770,10 @@ class NeverThrown {
 #endif  // GTEST_HAS_RTTI
 
 #define GTEST_TEST_THROW_CATCH_STD_EXCEPTION_(statement, expected_exception)   \
-  catch (typename std::conditional<                                            \
-         std::is_same<typename std::remove_cv<typename std::remove_reference<  \
-                          expected_exception>::type>::type,                    \
-                      std::exception>::value,                                  \
-         const ::testing::internal::NeverThrown&, const std::exception&>::type \
+  catch (std::conditional_t<                                                   \
+         std::is_same_v<std::remove_cv_t<std::remove_reference_t<              \
+                          expected_exception>>, std::exception>,               \
+         const ::testing::internal::NeverThrown&, const std::exception&>       \
              e) {                                                              \
     gtest_msg.value = "Expected: " #statement                                  \
                       " throws an exception of type " #expected_exception      \
@@ -4910,7 +4909,7 @@ class NeverThrown {
   class GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)                    \
       : public parent_class {                                                 \
    public:                                                                    \
-    GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() = default;           \
+    GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() { (void)test_info_; }\
     ~GTEST_TEST_CLASS_NAME_(test_suite_name, test_name)() override = default; \
     GTEST_DISALLOW_COPY_AND_ASSIGN_(GTEST_TEST_CLASS_NAME_(test_suite_name,   \
                                                            test_name));       \
@@ -5417,7 +5416,7 @@ GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(char);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(const char);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(wchar_t);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(const wchar_t);
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(char8_t);
 GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(const char8_t);
 #endif
@@ -5442,7 +5441,7 @@ GTEST_IMPL_FORMAT_C_STRING_AS_POINTER_(const char32_t);
 
 GTEST_IMPL_FORMAT_C_STRING_AS_STRING_(char, ::std::string);
 GTEST_IMPL_FORMAT_C_STRING_AS_STRING_(const char, ::std::string);
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 GTEST_IMPL_FORMAT_C_STRING_AS_STRING_(char8_t, ::std::u8string);
 GTEST_IMPL_FORMAT_C_STRING_AS_STRING_(const char8_t, ::std::u8string);
 #endif
@@ -5530,7 +5529,7 @@ GTEST_API_ void PrintTo(char32_t c, ::std::ostream* os);
 inline void PrintTo(char16_t c, ::std::ostream* os) {
   PrintTo(ImplicitCast_<char32_t>(c), os);
 }
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 inline void PrintTo(char8_t c, ::std::ostream* os) {
   PrintTo(ImplicitCast_<char32_t>(c), os);
 }
@@ -5556,7 +5555,7 @@ inline void PrintTo(const unsigned char* s, ::std::ostream* os) {
 inline void PrintTo(unsigned char* s, ::std::ostream* os) {
   PrintTo(ImplicitCast_<const void*>(s), os);
 }
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 // Overloads for u8 strings.
 GTEST_API_ void PrintTo(const char8_t* s, ::std::ostream* os);
 inline void PrintTo(char8_t* s, ::std::ostream* os) {
@@ -5608,7 +5607,7 @@ inline void PrintTo(const ::std::string& s, ::std::ostream* os) {
 }
 
 // Overloads for ::std::u8string
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 GTEST_API_ void PrintU8StringTo(const ::std::u8string& s, ::std::ostream* os);
 inline void PrintTo(const ::std::u8string& s, ::std::ostream* os) {
   PrintU8StringTo(s, os);
@@ -5862,7 +5861,7 @@ void UniversalPrintArray(const T* begin, size_t len, ::std::ostream* os) {
 GTEST_API_ void UniversalPrintArray(
     const char* begin, size_t len, ::std::ostream* os);
 
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 // This overload prints a (const) char8_t array compactly.
 GTEST_API_ void UniversalPrintArray(const char8_t* begin, size_t len,
                                     ::std::ostream* os);
@@ -5951,7 +5950,7 @@ template <>
 class UniversalTersePrinter<char*> : public UniversalTersePrinter<const char*> {
 };
 
-#ifdef __cpp_char8_t
+#ifdef __cpp_lib_char8_t
 template <>
 class UniversalTersePrinter<const char8_t*> {
  public:

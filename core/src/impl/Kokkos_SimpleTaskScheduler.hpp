@@ -1,46 +1,18 @@
-/*
 //@HEADER
 // ************************************************************************
 //
-//                        Kokkos v. 3.0
-//       Copyright (2020) National Technology & Engineering
+//                        Kokkos v. 4.0
+//       Copyright (2022) National Technology & Engineering
 //               Solutions of Sandia, LLC (NTESS).
 //
 // Under the terms of Contract DE-NA0003525 with NTESS,
 // the U.S. Government retains certain rights in this software.
 //
-// Redistribution and use in source and binary forms, with or without
-// modification, are permitted provided that the following conditions are
-// met:
+// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
+// See https://kokkos.org/LICENSE for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
-// 1. Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// 2. Redistributions in binary form must reproduce the above copyright
-// notice, this list of conditions and the following disclaimer in the
-// documentation and/or other materials provided with the distribution.
-//
-// 3. Neither the name of the Corporation nor the names of the
-// contributors may be used to endorse or promote products derived from
-// this software without specific prior written permission.
-//
-// THIS SOFTWARE IS PROVIDED BY NTESS "AS IS" AND ANY
-// EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
-// PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL NTESS OR THE
-// CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
-// EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
-// PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
-// PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
-// LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-// NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-// SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-//
-// Questions? Contact Christian R. Trott (crtrott@sandia.gov)
-//
-// ************************************************************************
 //@HEADER
-*/
 
 #ifndef KOKKOS_SIMPLETASKSCHEDULER_HPP
 #define KOKKOS_SIMPLETASKSCHEDULER_HPP
@@ -67,6 +39,11 @@
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+// We allow using deprecated classes in this file
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
 
 namespace Kokkos {
 
@@ -153,8 +130,7 @@ class SimpleTaskScheduler
   }
 
   template <int TaskEnum, class DepTaskType, class FunctorType>
-  KOKKOS_FUNCTION future_type_for_functor<
-      typename std::decay<FunctorType>::type>
+  KOKKOS_FUNCTION future_type_for_functor<std::decay_t<FunctorType>>
   _spawn_impl(
       DepTaskType arg_predecessor_task, TaskPriority arg_priority,
       typename runnable_task_base_type::function_type apply_function_ptr,
@@ -163,7 +139,7 @@ class SimpleTaskScheduler
     KOKKOS_EXPECTS(m_queue != nullptr);
 
     using functor_future_type =
-        future_type_for_functor<typename std::decay<FunctorType>::type>;
+        future_type_for_functor<std::decay_t<FunctorType>>;
     using task_type =
         typename task_queue_type::template runnable_task_type<FunctorType,
                                                               scheduler_type>;
@@ -221,7 +197,7 @@ class SimpleTaskScheduler
     // SharedAllocationRecord pattern
     using record_type =
         Impl::SharedAllocationRecord<memory_space,
-                                     Impl::DefaultDestroy<task_queue_type> >;
+                                     Impl::DefaultDestroy<task_queue_type>>;
 
     // Allocate space for the task queue
     auto* record = record_type::allocate(memory_space(), "Kokkos::TaskQueue",
@@ -313,17 +289,18 @@ class SimpleTaskScheduler
                                       scheduler_type>
   spawn(Impl::TaskPolicyWithPredecessor<TaskEnum, DepFutureType>&& arg_policy,
         FunctorType&& arg_functor) {
-    static_assert(std::is_same<typename DepFutureType::scheduler_type,
-                               scheduler_type>::value,
-                  "Can't create a task policy from a scheduler and a future "
-                  "from a different scheduler");
+    static_assert(
+        std::is_same_v<typename DepFutureType::scheduler_type, scheduler_type>,
+        "Can't create a task policy from a scheduler and a future "
+        "from a different scheduler");
 
     using task_type = runnable_task_type<FunctorType>;
     typename task_type::function_type const ptr = task_type::apply;
     typename task_type::destroy_type const dtor = task_type::destroy;
 
+    auto const priority = arg_policy.priority();
     return _spawn_impl<TaskEnum>(std::move(arg_policy).predecessor().m_task,
-                                 arg_policy.priority(), ptr, dtor,
+                                 priority, ptr, dtor,
                                  std::forward<FunctorType>(arg_functor));
   }
 
@@ -440,11 +417,18 @@ class SimpleTaskScheduler
     static_assert(is_future<generated_type>::value,
                   "when_all function must return a Kokkos future (an instance "
                   "of Kokkos::BasicFuture)");
+
+    // see #7779
+    // There are issues with the implementation of std::is_base_of in NVCC
+    // <= 12.5 for C++ 20
+#if defined(KOKKOS_ENABLE_CXX17) || \
+    (!defined(KOKKOS_COMPILER_NVCC) || KOKKOS_COMPILER_NVCC >= 1250)
     static_assert(
-        std::is_base_of<scheduler_type,
-                        typename generated_type::scheduler_type>::value,
+        std::is_base_of_v<scheduler_type,
+                          typename generated_type::scheduler_type>,
         "when_all function must return a Kokkos::BasicFuture of a compatible "
         "scheduler type");
+#endif
 
     auto* aggregate_task =
         m_queue->template allocate_and_construct_with_vla_emulation<
@@ -486,6 +470,10 @@ inline void wait(SimpleTaskScheduler<ExecSpace, QueueType> const& scheduler) {
 }
 
 }  // namespace Kokkos
+
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 //----------------------------------------------------------------------------
 //---------------------------------------------------------------------------#endif
