@@ -31,10 +31,10 @@
 #include <benchmark/benchmark.h>
 #include "Benchmark_Context.hpp"
 
-constexpr static double aInit  = 1.0;
-constexpr static double bInit  = 2.0;
-constexpr static double cInit  = 3.0;
-constexpr static double scalar = 4.0;
+constexpr static double A_INIT = 1.0;
+constexpr static double B_INIT = 2.0;
+constexpr static double C_INIT = 3.0;
+constexpr static double SCALAR = 4.0;
 
 using StreamDeviceArray =
     Kokkos::View<double*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
@@ -46,10 +46,10 @@ using StreamIndex = int64_t;
 using Policy      = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
 
 template <typename V>
-void perform_set(V& a, const double scalar_) {
+void perform_set(V& a, const double scalar) {
   Kokkos::parallel_for(
       "set", Policy(0, a.extent(0)),
-      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar_; });
+      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar; });
 
   Kokkos::fence();
 }
@@ -64,10 +64,10 @@ void perform_copy(V& a, V& b) {
 }
 
 template <typename V>
-void perform_scale(V& b, V& c, const double scalar_) {
+void perform_scale(V& b, V& c, const double scalar) {
   Kokkos::parallel_for(
       "scale", Policy(0, b.extent(0)),
-      KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar_ * c[i]; });
+      KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar * c[i]; });
 
   Kokkos::fence();
 }
@@ -82,10 +82,10 @@ void perform_add(V& a, V& b, V& c) {
 }
 
 template <typename V>
-void perform_triad(V& a, V& b, V& c, const double scalar_) {
+void perform_triad(V& a, V& b, V& c, const double scalar) {
   Kokkos::parallel_for(
       "triad", Policy(0, a.extent(0)),
-      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar_ * c[i]; });
+      KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar * c[i]; });
 
   Kokkos::fence();
 }
@@ -114,11 +114,11 @@ static void StreamSet(benchmark::State& state) {
 
   for (auto _ : state) {
     Kokkos::Timer timer;
-    perform_set(a, scalar);
+    perform_set(a, SCALAR);
     KokkosBenchmark::report_results(state, a, DATA_RATIO, timer.seconds());
   }
 
-  if (validate_array(a, scalar)) {
+  if (validate_array(a, SCALAR)) {
     state.SkipWithError("validation failure");
   }
 }
@@ -131,7 +131,7 @@ static void StreamCopy(benchmark::State& state) {
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
 
-  perform_set(a, aInit);
+  perform_set(a, A_INIT);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
@@ -139,7 +139,7 @@ static void StreamCopy(benchmark::State& state) {
     KokkosBenchmark::report_results(state, a, DATA_RATIO, timer.seconds());
   }
 
-  if (validate_array(b, aInit)) {
+  if (validate_array(b, A_INIT)) {
     state.SkipWithError("validation failure");
   }
 }
@@ -152,15 +152,15 @@ static void StreamScale(benchmark::State& state) {
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a("a", N8);
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
 
-  perform_set(b, bInit);
+  perform_set(b, B_INIT);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
-    perform_scale(a, b, scalar);
+    perform_scale(a, b, SCALAR);
     KokkosBenchmark::report_results(state, b, DATA_RATIO, timer.seconds());
   }
 
-  if (validate_array(a, bInit * scalar)) {
+  if (validate_array(a, B_INIT * SCALAR)) {
     state.SkipWithError("validation failure");
   }
 }
@@ -174,9 +174,9 @@ static void StreamAdd(benchmark::State& state) {
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c("c", N8);
 
-  perform_set(a, aInit);
-  perform_set(b, bInit);
-  perform_set(c, cInit);
+  perform_set(a, A_INIT);
+  perform_set(b, B_INIT);
+  perform_set(c, C_INIT);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
@@ -184,7 +184,7 @@ static void StreamAdd(benchmark::State& state) {
     KokkosBenchmark::report_results(state, c, DATA_RATIO, timer.seconds());
   }
 
-  if (validate_array(c, aInit + bInit)) {
+  if (validate_array(c, A_INIT + B_INIT)) {
     state.SkipWithError("validation failure");
   }
 }
@@ -198,17 +198,17 @@ static void StreamTriad(benchmark::State& state) {
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b("b", N8);
   Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c("c", N8);
 
-  perform_set(a, aInit);
-  perform_set(b, bInit);
-  perform_set(c, cInit);
+  perform_set(a, A_INIT);
+  perform_set(b, B_INIT);
+  perform_set(c, C_INIT);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
-    perform_triad(a, b, c, scalar);
+    perform_triad(a, b, c, SCALAR);
     KokkosBenchmark::report_results(state, a, DATA_RATIO, timer.seconds());
   }
 
-  if (validate_array(a, bInit + scalar * cInit)) {
+  if (validate_array(a, B_INIT + SCALAR * C_INIT)) {
     state.SkipWithError("validation failure");
   }
 }
