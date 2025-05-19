@@ -20,6 +20,7 @@
 #include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 
 namespace Kokkos {
+namespace Impl {
 #ifdef KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 
 #define KOKKOS_SYCL_HALF_UNARY_FUNCTION(OP)              \
@@ -201,6 +202,7 @@ KOKKOS_SYCL_BHALF_UNARY_PREDICATE(isnan)
 
 #endif
 
+}  // namespace Impl
 }  // namespace Kokkos
 
 #endif

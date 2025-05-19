@@ -20,6 +20,7 @@
 #include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 
 namespace Kokkos {
+namespace Impl {
 
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
 #define KOKKOS_CUDA_HALF_UNARY_FUNCTION(OP, CUDA_NAME, HALF_TYPE) \
@@ -172,6 +173,7 @@ KOKKOS_CUDA_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isnan, __hisnan)
 
 #endif  // KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
 
+}  // namespace Impl
 }  // namespace Kokkos
 
 #endif
