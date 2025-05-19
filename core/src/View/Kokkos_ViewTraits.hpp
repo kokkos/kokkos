@@ -289,7 +289,7 @@ struct MDSpanViewTraits {
                              mdspan_layout_type, accessor_type>;
 };
 
-// Usupported View Layout
+// Unsupported View Layout
 template <class Traits>
 struct MDSpanViewTraits<Traits, void, void> {
   using mdspan_type = UnsupportedKokkosArrayLayout;
