@@ -46,7 +46,7 @@ using StreamIndex = int64_t;
 using Policy      = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
 
 template <typename V>
-void perform_set(V& a, const double scalar) {
+void perform_set(const V& a, const double scalar) {
   Kokkos::parallel_for(
       "set", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar; });
@@ -55,7 +55,7 @@ void perform_set(V& a, const double scalar) {
 }
 
 template <typename V>
-void perform_copy(V& a, V& b) {
+void perform_copy(const V& a, const V& b) {
   Kokkos::parallel_for(
       "copy", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { b[i] = a[i]; });
@@ -64,7 +64,7 @@ void perform_copy(V& a, V& b) {
 }
 
 template <typename V>
-void perform_scale(V& b, V& c, const double scalar) {
+void perform_scale(const V& b, const V& c, const double scalar) {
   Kokkos::parallel_for(
       "scale", Policy(0, b.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar * c[i]; });
@@ -73,7 +73,7 @@ void perform_scale(V& b, V& c, const double scalar) {
 }
 
 template <typename V>
-void perform_add(V& a, V& b, V& c) {
+void perform_add(const V& a, const V& b, const V& c) {
   Kokkos::parallel_for(
       "add", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { c[i] = a[i] + b[i]; });
@@ -82,7 +82,7 @@ void perform_add(V& a, V& b, V& c) {
 }
 
 template <typename V>
-void perform_triad(V& a, V& b, V& c, const double scalar) {
+void perform_triad(const V& a, const V& b, const V& c, const double scalar) {
   Kokkos::parallel_for(
       "triad", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar * c[i]; });
