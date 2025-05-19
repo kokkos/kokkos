@@ -36,10 +36,6 @@ constexpr static double B_INIT = 2.0;
 constexpr static double C_INIT = 3.0;
 constexpr static double SCALAR = 4.0;
 
-using StreamDeviceArray =
-    Kokkos::View<double*, Kokkos::MemoryTraits<Kokkos::Restrict>>;
-using StreamHostArray = typename StreamDeviceArray::HostMirror;
-
 // different than benchmarks/stream, which uses int
 // wide index types are common as GPU memory grows
 using StreamIndex = int64_t;
