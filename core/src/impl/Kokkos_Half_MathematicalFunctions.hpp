@@ -24,7 +24,7 @@
 // functions implementation so that specific functions can be found if they
 // exist.
 // If these includes are removed, this mechanism will silently fall back to the
-// general implementation.
+// generic fallback implementation that uses single-precision fp .
 #ifdef KOKKOS_ENABLE_CUDA
 #include <Cuda/Kokkos_Cuda_Half_MathematicalFunctions.hpp>
 #endif
