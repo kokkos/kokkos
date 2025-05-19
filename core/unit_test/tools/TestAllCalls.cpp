@@ -19,6 +19,7 @@
 // mechanisms work
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <iostream>
 #include <sstream>
 

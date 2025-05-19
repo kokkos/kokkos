@@ -14,6 +14,7 @@
 //
 //@HEADER
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
 using ExecSpace  = Kokkos::DefaultHostExecutionSpace;
 using TeamMember = Kokkos::TeamPolicy<ExecSpace>::member_type;

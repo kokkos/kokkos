@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #include "include/ToolTestingUtilities.hpp"
 

@@ -15,6 +15,7 @@
 //@HEADER
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <TestOpenMP_Category.hpp>
 #include <omp.h>
 

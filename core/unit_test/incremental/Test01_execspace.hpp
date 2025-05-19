@@ -17,6 +17,7 @@
 /// @Kokkos_Feature_Level_Required:1
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <cstdio>
 #include <sstream>
 #include <type_traits>

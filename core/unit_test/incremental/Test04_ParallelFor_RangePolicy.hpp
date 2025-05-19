@@ -15,6 +15,7 @@
 //@HEADER
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <gtest/gtest.h>
 
 /// @Kokkos_Feature_Level_Required:4

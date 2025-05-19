@@ -18,6 +18,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Macros.hpp>
 
 template <class ExecutionSpace>
 void test_kokkos_printf() {

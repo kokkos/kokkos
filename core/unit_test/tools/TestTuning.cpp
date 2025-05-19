@@ -18,6 +18,7 @@
 
 #include <iostream>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>

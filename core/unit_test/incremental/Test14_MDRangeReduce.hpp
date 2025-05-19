@@ -19,6 +19,7 @@
 // Reduction is tested with scalar, view and a customized reduction.
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <gtest/gtest.h>
 
 namespace Test {

@@ -16,6 +16,7 @@
 
 #include <TestSYCL_Category.hpp>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <Kokkos_Graph.hpp>
 
 #include <gtest/gtest.h>

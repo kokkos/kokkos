@@ -18,6 +18,7 @@
 #include <type_traits>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include "experimental/__p0009_bits/layout_stride.hpp"
 
 namespace {

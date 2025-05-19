@@ -16,6 +16,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Macros.hpp>
 #include <gtest/gtest.h>
 
 template <class MemorySpace, class ExecutionSpace>

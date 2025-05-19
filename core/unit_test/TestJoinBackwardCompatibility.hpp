@@ -15,6 +15,7 @@
 //@HEADER
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <gtest/gtest.h>
 
 #ifndef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC - temporarily disabled due to

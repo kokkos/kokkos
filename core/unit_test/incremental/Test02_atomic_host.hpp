@@ -22,6 +22,7 @@
 // correctmess.
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <gtest/gtest.h>
 
 namespace Test {

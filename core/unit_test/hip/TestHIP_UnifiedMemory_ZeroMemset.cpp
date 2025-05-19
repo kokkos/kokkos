@@ -16,6 +16,7 @@
 
 #include <TestHIP_Category.hpp>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 namespace Test {
 

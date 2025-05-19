@@ -15,6 +15,7 @@
 //@HEADER
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #ifndef TESTCXX11DEDUCTION_HPP
 #define TESTCXX11DEDUCTION_HPP

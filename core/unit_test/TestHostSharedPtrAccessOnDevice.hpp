@@ -17,6 +17,7 @@
 #include <impl/Kokkos_StringManipulation.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #include <gtest/gtest.h>
 

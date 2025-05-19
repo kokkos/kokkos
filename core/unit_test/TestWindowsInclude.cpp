@@ -19,3 +19,4 @@
 // Kokkos_Core and pop them back into existence at the end.
 #include <windows.h>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>

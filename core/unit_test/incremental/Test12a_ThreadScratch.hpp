@@ -21,6 +21,7 @@
 // Use a scratch pad memory for each team
 #include <gtest/gtest.h>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 namespace Test {
 

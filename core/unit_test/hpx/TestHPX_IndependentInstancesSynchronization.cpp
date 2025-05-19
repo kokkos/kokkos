@@ -15,6 +15,7 @@
 //@HEADER
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <TestHPX_Category.hpp>
 
 // These tests specifically check that work dispatched to independent instances

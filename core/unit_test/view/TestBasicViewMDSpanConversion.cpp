@@ -15,6 +15,7 @@
 //@HEADER
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <type_traits>
 
 using Kokkos::Impl::BV::BasicView;

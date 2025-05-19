@@ -19,6 +19,7 @@
 #include <limits>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <TestNonTrivialScalarTypes.hpp>
 
 //--------------------------------------------------------------------------

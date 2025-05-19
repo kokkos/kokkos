@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 template <class T>
 KOKKOS_FUNCTION T *take_address_of(T &arg) {

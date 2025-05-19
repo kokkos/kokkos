@@ -19,6 +19,7 @@
 
 #include <impl/Kokkos_QuadPrecisionMath.hpp>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #include <gtest/gtest.h>
 

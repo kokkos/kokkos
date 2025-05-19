@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <algorithm>
 #include <initializer_list>
 #include <type_traits>

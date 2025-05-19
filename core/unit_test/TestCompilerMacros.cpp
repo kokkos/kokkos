@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #if 1 != ((defined(KOKKOS_COMPILER_INTEL_LLVM) ? 1 : 0) + \
           (defined(KOKKOS_COMPILER_CRAYC) ? 1 : 0) +      \

@@ -18,6 +18,7 @@
 
 #include <regex>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 TEST(TEST_CATEGORY_DEATH, abort_from_host) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";

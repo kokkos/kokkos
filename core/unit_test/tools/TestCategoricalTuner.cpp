@@ -17,6 +17,7 @@
 // This file tests the categorical tuner
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <unistd.h>
 struct point {
   float x;

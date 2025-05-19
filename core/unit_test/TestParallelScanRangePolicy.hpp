@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <cstdio>
 
 // This test checks parallel_scan() calls which use RangePolicy.

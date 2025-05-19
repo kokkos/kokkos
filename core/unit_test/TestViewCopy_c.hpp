@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 namespace {
 // Do not rely on deep_copy(0) as we want to test it!

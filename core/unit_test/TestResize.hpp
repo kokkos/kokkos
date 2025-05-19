@@ -18,7 +18,10 @@
 
 #include <gtest/gtest.h>
 import mykokkoscore;
-#include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
+import mykokkoscore;
+#include <Kokkos_Macros.hpp>
+#include <Kokkos_Macros.hpp>
 
 namespace TestViewResize {
 

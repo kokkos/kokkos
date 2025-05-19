@@ -16,6 +16,7 @@
 
 #include <gtest/gtest.h>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()

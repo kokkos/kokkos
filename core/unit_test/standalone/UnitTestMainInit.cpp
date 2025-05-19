@@ -18,6 +18,7 @@
 #include <cstdlib>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #ifdef KOKKOS_ENABLE_CUDA
 #include <TestCuda_Category.hpp>

@@ -18,6 +18,7 @@
 #define TESTNONTRIVIALSCALARTYPES_HPP_
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Timer.hpp>
 #include <iostream>

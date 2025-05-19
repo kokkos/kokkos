@@ -20,6 +20,7 @@
 #include <iostream>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 /*--------------------------------------------------------------------------*/
 

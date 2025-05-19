@@ -17,6 +17,7 @@
 #include <gtest/gtest.h>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 /**
  * Fixture that checks Kokkos is neither initialized nor finalized before and

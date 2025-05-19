@@ -32,6 +32,7 @@
 #endif
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <sstream>
 
 namespace {

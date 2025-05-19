@@ -21,6 +21,7 @@
 
 #include <gtest/gtest.h>
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 // Degrees of concurrency per nesting level
 

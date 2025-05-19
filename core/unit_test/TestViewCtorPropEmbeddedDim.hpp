@@ -19,6 +19,7 @@
 #include <gtest/gtest.h>
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #include <type_traits>
 #include <typeinfo>

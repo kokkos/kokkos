@@ -15,6 +15,7 @@
 //@HEADER
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 #include <TestReducers.hpp>
 #include <TestNonTrivialScalarTypes.hpp>
 

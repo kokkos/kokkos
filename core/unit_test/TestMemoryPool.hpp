@@ -18,6 +18,7 @@
 #define KOKKOS_UNITTEST_MEMPOOL_HPP
 
 import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 namespace TestMemoryPool {
 
