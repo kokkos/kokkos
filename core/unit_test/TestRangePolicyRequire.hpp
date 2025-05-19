@@ -16,7 +16,7 @@
 
 #include <cstdio>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 // This file is largely duplicating TestRange.hpp but it applies
 // Kokkos::Experimental require at every place where a parallel

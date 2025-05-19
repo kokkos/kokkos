@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <cstdlib>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #ifdef KOKKOS_ENABLE_CUDA
 #include <TestCuda_Category.hpp>

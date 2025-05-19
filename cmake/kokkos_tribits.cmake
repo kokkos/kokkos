@@ -60,6 +60,7 @@ function(KOKKOS_ADD_EXECUTABLE ROOT_NAME)
   #All executables must link to all the kokkos targets
   #This is just private linkage because exe is final
   target_link_libraries(${EXE_NAME} PRIVATE Kokkos::kokkos)
+  set_target_properties(${EXE_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
 endfunction()
 
 function(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
@@ -67,7 +68,6 @@ function(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
   verify_empty(KOKKOS_ADD_EXECUTABLE_AND_TEST ${PARSE_UNPARSED_ARGUMENTS})
 
   kokkos_add_test_executable(${ROOT_NAME} SOURCES ${PARSE_SOURCES})
-  set_target_properties(${EXE_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
 
   if(PARSE_ARGS)
     set(TEST_NUMBER 0)

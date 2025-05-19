@@ -37,7 +37,7 @@
  * Current examples are in TestEventCorrectness.hpp
  */
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <sstream>
 #include <iostream>
 #include <utility>

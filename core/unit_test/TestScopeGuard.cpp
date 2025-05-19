@@ -16,7 +16,7 @@
 
 #include <cstdlib>
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #include "KokkosExecutionEnvironmentNeverInitializedFixture.hpp"
 

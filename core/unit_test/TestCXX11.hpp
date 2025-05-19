@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace TestCXX11 {
 

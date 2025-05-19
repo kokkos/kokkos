@@ -17,7 +17,7 @@
 #include <gtest/gtest.h>
 #include <type_traits>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include "experimental/__p0009_bits/layout_stride.hpp"
 
 namespace {

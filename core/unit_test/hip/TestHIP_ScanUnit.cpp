@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <TestHIP_Category.hpp>
 
 struct DummyFunctor {

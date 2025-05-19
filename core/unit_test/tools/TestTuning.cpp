@@ -17,7 +17,7 @@
 // This file tests the primitives of the Tuning system
 
 #include <iostream>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <stdexcept>
 #include <string>
 #include <unordered_map>

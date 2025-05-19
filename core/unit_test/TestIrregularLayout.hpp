@@ -15,7 +15,7 @@
 //@HEADER
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <sstream>
 #include <iostream>
 #define OFFSET_LIST_MAX_SIZE 100

@@ -14,7 +14,8 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 #ifndef KOKKOS_VERSION
 static_assert(false, "KOKKOS_VERSION macro is not defined!");

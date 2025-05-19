@@ -20,7 +20,7 @@
 // contributions of paticipating processing units corresponds to expected value
 // Use a scratch pad memory for each team
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace Test {
 

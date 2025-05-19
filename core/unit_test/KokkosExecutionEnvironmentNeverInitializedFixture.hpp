@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 /**
  * Fixture that checks Kokkos is neither initialized nor finalized before and

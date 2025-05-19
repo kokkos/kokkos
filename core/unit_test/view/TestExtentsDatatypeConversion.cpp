@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <type_traits>
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN

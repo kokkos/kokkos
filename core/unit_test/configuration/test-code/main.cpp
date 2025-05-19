@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);

@@ -47,6 +47,7 @@ export
     using ::Kokkos::pair;
     using ::Kokkos::parallel_for;
     using ::Kokkos::parallel_reduce;
+    using ::Kokkos::parallel_scan;
     using ::Kokkos::PerTeam;
     using ::Kokkos::pow;
     using ::Kokkos::push_finalize_hook;
@@ -63,6 +64,19 @@ export
     using ::Kokkos::View;
     using ::Kokkos::view_alloc;
     using ::Kokkos::WithoutInitializing;
+
+    using ::Kokkos::kokkos_malloc;
+    using ::Kokkos::kokkos_free;
+    using ::Kokkos::kokkos_realloc;
+
+    using ::Kokkos::SpaceAccessibility;
+
+    using ::Kokkos::num_devices;
+
+    using ::Kokkos::atomic_fetch_add;
+
+    using ::Kokkos::LayoutRight;
+        using ::Kokkos::LayoutLeft;
 
     using ::Kokkos::SharedHostPinnedSpace;
     using ::Kokkos::TeamThreadMDRange;

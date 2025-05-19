@@ -14,7 +14,7 @@
 //
 //@HEADER
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #if defined(_WIN32)
 #include <windows.h>

@@ -17,7 +17,7 @@
 #ifndef TEST_BLOCK_SIZE_DEDUCTION_HPP
 #define TEST_BLOCK_SIZE_DEDUCTION_HPP
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <gtest/gtest.h>
 
 // NOTE kokkos/kokkos#3103 introduced a bug that was accidentally fixed in #3124

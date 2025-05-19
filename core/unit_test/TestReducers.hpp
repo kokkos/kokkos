@@ -18,7 +18,7 @@
 #include <iostream>
 #include <limits>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <TestNonTrivialScalarTypes.hpp>
 
 //--------------------------------------------------------------------------

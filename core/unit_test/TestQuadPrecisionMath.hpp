@@ -18,7 +18,7 @@
 #ifdef KOKKOS_ENABLE_LIBQUADMATH
 
 #include <impl/Kokkos_QuadPrecisionMath.hpp>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #include <gtest/gtest.h>
 

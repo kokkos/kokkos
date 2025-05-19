@@ -19,7 +19,7 @@
 #include <regex>
 
 #include <TestCuda_Category.hpp>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <Kokkos_Graph.hpp>
 
 #include <gtest/gtest.h>

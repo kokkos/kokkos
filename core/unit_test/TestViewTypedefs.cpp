@@ -14,7 +14,9 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
+#include <type_traits>
+#include <Kokkos_Macros.hpp>
 
 namespace {
 

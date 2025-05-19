@@ -19,7 +19,7 @@
 #include <iostream>
 #include <thread>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace Test {
 namespace {

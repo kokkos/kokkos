@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
 

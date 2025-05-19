@@ -14,6 +14,7 @@
 //
 //@HEADER
 
+import mykokkoscore;
 #include <Kokkos_Core.hpp>
 
 namespace Test {

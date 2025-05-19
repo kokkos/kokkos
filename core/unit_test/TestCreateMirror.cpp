@@ -14,7 +14,8 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
+#include <type_traits>
 
 template <typename TestView, typename MemorySpace>
 void check_memory_space(TestView, MemorySpace) {

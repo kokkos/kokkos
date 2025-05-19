@@ -16,7 +16,7 @@
 
 #include <vector>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace Test {
 

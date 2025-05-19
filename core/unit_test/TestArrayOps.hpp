@@ -15,7 +15,7 @@
 //@HEADER
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <numeric>
 
 namespace {

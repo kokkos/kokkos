@@ -17,7 +17,7 @@
 #ifndef KOKKOS_UNITTEST_MDSPAN_HPP
 #define KOKKOS_UNITTEST_MDSPAN_HPP
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <gtest/gtest.h>
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN

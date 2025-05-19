@@ -19,7 +19,7 @@
 #include <sstream>
 #include <iostream>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 /*--------------------------------------------------------------------------*/
 

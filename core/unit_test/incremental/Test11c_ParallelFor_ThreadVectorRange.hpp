@@ -20,7 +20,7 @@
 // contributions of paticipating processing units corresponds to expected value
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace Test {
 

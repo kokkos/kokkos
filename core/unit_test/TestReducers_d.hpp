@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <TestReducers.hpp>
 #include <TestNonTrivialScalarTypes.hpp>
 

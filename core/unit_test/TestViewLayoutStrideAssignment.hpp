@@ -20,7 +20,7 @@
 #include <iostream>
 #include <time.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace Test {
 

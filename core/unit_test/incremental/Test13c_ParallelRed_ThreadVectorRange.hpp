@@ -20,7 +20,7 @@
 // sum of created processing units corresponds to expected value
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 using SCALAR_TYPE = int;
 

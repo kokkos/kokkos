@@ -19,7 +19,7 @@
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <cstdio>
 #include <iostream>
 #include <cmath>

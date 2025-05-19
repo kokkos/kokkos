@@ -21,7 +21,7 @@
 // correctness. Atomic sub test : we subtract value2 from value1 and check for
 // correctmess.
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <gtest/gtest.h>
 
 namespace Test {

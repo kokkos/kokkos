@@ -16,7 +16,9 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
+#include <Kokkos_Macros.hpp>
+
 #include <sstream>
 #include <iostream>
 

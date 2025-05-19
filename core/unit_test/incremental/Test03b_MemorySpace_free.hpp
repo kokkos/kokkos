@@ -20,7 +20,7 @@
 // If the kokkos_free does not free the allocated memory,
 // we will exceed the available space.
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <gtest/gtest.h>
 
 namespace Test {

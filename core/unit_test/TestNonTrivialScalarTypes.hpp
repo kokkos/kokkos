@@ -17,7 +17,7 @@
 #ifndef TESTNONTRIVIALSCALARTYPES_HPP_
 #define TESTNONTRIVIALSCALARTYPES_HPP_
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #include <Kokkos_Timer.hpp>
 #include <iostream>

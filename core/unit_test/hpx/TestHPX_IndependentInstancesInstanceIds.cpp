@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <TestHPX_Category.hpp>
 
 #include <hpx/execution.hpp>

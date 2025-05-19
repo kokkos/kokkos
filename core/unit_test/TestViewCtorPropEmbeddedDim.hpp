@@ -18,7 +18,7 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #include <type_traits>
 #include <typeinfo>

@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <TestDefaultDeviceType_Category.hpp>
 #include <TestHalfConversion.hpp>
 #include <TestHalfOperators.hpp>

@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #include <Kokkos_Timer.hpp>
 #include <iostream>

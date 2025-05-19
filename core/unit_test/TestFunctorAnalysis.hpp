@@ -18,7 +18,7 @@
 #define TEST_FUNCTOR_ANALYSIS_HPP
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 /*--------------------------------------------------------------------------*/
 

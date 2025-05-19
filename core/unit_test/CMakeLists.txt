@@ -1148,6 +1148,8 @@ kokkos_add_test(NAME CoreUnitTest_CMakeTriBITSCompatibilityEnvironment EXE CoreU
 set_source_files_properties(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
 add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
 target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
+set_target_properties(Kokkos_CoreUnitTest_DeviceAndThreads PROPERTIES CXX_SCAN_FOR_MODULES ON)
+
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
   if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)

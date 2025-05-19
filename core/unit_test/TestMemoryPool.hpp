@@ -17,7 +17,7 @@
 #ifndef KOKKOS_UNITTEST_MEMPOOL_HPP
 #define KOKKOS_UNITTEST_MEMPOOL_HPP
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace TestMemoryPool {
 

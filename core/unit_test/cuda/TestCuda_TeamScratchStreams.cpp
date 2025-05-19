@@ -15,7 +15,7 @@
 //@HEADER
 
 #include <TestCuda_Category.hpp>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace Test {
 

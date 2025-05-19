@@ -31,7 +31,7 @@
 #endif
 #endif
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <sstream>
 
 namespace {

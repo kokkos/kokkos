@@ -16,7 +16,8 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
+#include <Kokkos_Macros.hpp>
 
 template <class ExecutionSpace>
 void test_kokkos_printf() {

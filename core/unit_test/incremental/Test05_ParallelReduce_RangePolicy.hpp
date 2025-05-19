@@ -14,7 +14,7 @@
 //
 //@HEADER
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <gtest/gtest.h>
 
 /// @Kokkos_Feature_Level_Required:5

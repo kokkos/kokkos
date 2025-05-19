@@ -15,7 +15,7 @@
 //@HEADER
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 #ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()

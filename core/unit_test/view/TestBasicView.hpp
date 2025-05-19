@@ -16,7 +16,7 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <type_traits>
 
 using ExecutionSpace = TEST_EXECSPACE;

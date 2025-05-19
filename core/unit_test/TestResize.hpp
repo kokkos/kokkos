@@ -17,6 +17,7 @@
 #define TESTRESIZE_HPP_
 
 #include <gtest/gtest.h>
+import mykokkoscore;
 #include <Kokkos_Core.hpp>
 
 namespace TestViewResize {

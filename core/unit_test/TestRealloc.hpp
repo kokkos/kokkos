@@ -17,7 +17,7 @@
 #define TESTREALLOC_HPP_
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 
 namespace TestViewRealloc {
 

@@ -18,7 +18,7 @@
 // testing library this tests that our shared-library loading based profiling
 // mechanisms work
 
-#include <Kokkos_Core.hpp>
+import mykokkoscore;
 #include <iostream>
 #include <sstream>
 
