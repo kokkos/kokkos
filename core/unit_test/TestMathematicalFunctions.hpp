@@ -1795,23 +1795,27 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
 
 KE::half_t ref_test_fallback_half(KE::half_t) {
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED)
+  // When SYCL is enabled, half_t is available on both the GPU and the CPU.
   return KE::half_t(0.f);
-#else
-  if (std::string(KOKKOS_IMPL_TOSTRING(TEST_EXECSPACE)) ==
-      std::string("Kokkos::Cuda")) {
+#elif defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     return KE::half_t(0.f);
   } else {
     return KE::half_t(1.f);
   }
+#else
+  return KE::half_t(1.f);
 #endif
 }
 
 KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED)
+  // When SYCL is enabled, bhalf_t is available on both the GPU and the CPU.
   return KE::bhalf_t(0.f);
-#elif KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80
-  if (std::string(KOKKOS_IMPL_TOSTRING(TEST_EXECSPACE)) ==
-      std::string("Kokkos::Cuda")) {
+#elif defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && \
+    (KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80)
+  // bhalf_t support for CUDA is only available starting with Volta (80)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     return KE::bhalf_t(0.f);
   } else {
     return KE::bhalf_t(1.f);
