@@ -1812,7 +1812,7 @@ KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED)
   // When SYCL is enabled, bhalf_t is available on both the GPU and the CPU.
   return KE::bhalf_t(0.f);
-#elif defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && \
+#elif defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && \
     (KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80)
   // bhalf_t support for CUDA is only available starting with Volta (80)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
