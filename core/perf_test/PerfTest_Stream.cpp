@@ -23,8 +23,8 @@
  * Copy, Scale, Add, and Triad) using Kokkos parallel primitives. It includes
  * validation.
  *
- * The implementation strives to use as few Kokkos features as possible, and so
- * validation is performed on the host rather than via parallel_reduce
+ * The implementation strives to use as few Kokkos features as possible, thus
+ * validation is performed on the host rather than via parallel_reduce.
  */
 
 #include <Kokkos_Core.hpp>
