@@ -36,6 +36,9 @@ constexpr static double B_INIT = 2.0;
 constexpr static double C_INIT = 3.0;
 constexpr static double SCALAR = 4.0;
 
+template <unsigned MemTraits>
+using StreamView = Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>>;
+
 // different than benchmarks/stream, which uses int
 // wide index types are common as GPU memory grows
 using StreamIndex = int64_t;
@@ -106,8 +109,8 @@ static void StreamSet(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 1;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
+  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
+                          N8);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
@@ -125,10 +128,10 @@ static void StreamCopy(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
+  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
+                          N8);
+  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
+                          N8);
 
   perform_set(a, A_INIT);
 
@@ -148,10 +151,10 @@ static void StreamScale(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
+  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
+                          N8);
+  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
+                          N8);
 
   perform_set(b, B_INIT);
 
@@ -171,12 +174,12 @@ static void StreamAdd(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"), N8);
+  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
+                          N8);
+  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
+                          N8);
+  StreamView<MemTraits> c(Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"),
+                          N8);
 
   perform_set(a, A_INIT);
   perform_set(b, B_INIT);
@@ -198,12 +201,12 @@ static void StreamTriad(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> a(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"), N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> b(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"), N8);
-  Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>> c(
-      Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"), N8);
+  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
+                          N8);
+  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
+                          N8);
+  StreamView<MemTraits> c(Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"),
+                          N8);
 
   perform_set(a, A_INIT);
   perform_set(b, B_INIT);
