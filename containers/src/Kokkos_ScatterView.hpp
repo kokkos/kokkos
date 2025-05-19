@@ -677,7 +677,7 @@ namespace Kokkos {
 namespace Experimental {
 
 template <typename DataType,
-          typename Layout      = Kokkos::DefaultExecutionSpace::array_layout,
+          typename Layout      = Kokkos::DefaultExecutionSpace::layout_type,
           typename DeviceType  = Kokkos::DefaultExecutionSpace,
           typename Op          = Kokkos::Experimental::ScatterSum,
           typename Duplication = typename Kokkos::Impl::Experimental::
@@ -788,7 +788,7 @@ class ScatterView<DataType, Layout, DeviceType, Op, ScatterNonDuplicated,
   void contribute_into(execution_space const& exec_space,
                        View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
-    static_assert(std::is_same_v<typename dest_type::array_layout, Layout>,
+    static_assert(std::is_same_v<typename dest_type::layout_type, Layout>,
                   "ScatterView contribute destination has different layout");
     static_assert(
         Kokkos::SpaceAccessibility<
@@ -1072,7 +1072,7 @@ class ScatterView<DataType, Kokkos::LayoutRight, DeviceType, Op,
                        View<DT, RP...> const& dest) const {
     using dest_type = View<DT, RP...>;
     static_assert(
-        std::is_same_v<typename dest_type::array_layout, Kokkos::LayoutRight>,
+        std::is_same_v<typename dest_type::layout_type, Kokkos::LayoutRight>,
         "ScatterView deep_copy destination has different layout");
     static_assert(
         Kokkos::SpaceAccessibility<
@@ -1355,7 +1355,7 @@ class ScatterView<DataType, Kokkos::LayoutLeft, DeviceType, Op,
                        typename original_view_type::non_const_value_type>,
         "ScatterView deep_copy destination has wrong value_type");
     static_assert(
-        std::is_same_v<typename dest_type::array_layout, Kokkos::LayoutLeft>,
+        std::is_same_v<typename dest_type::layout_type, Kokkos::LayoutLeft>,
         "ScatterView deep_copy destination has different layout");
     static_assert(
         Kokkos::SpaceAccessibility<
@@ -1512,7 +1512,7 @@ template <typename Op          = Kokkos::Experimental::ScatterSum,
           typename Duplication = void, typename Contribution = void,
           typename RT, typename... RP>
 ScatterView<
-    RT, typename ViewTraits<RT, RP...>::array_layout,
+    RT, typename ViewTraits<RT, RP...>::layout_type,
     typename ViewTraits<RT, RP...>::device_type, Op,
     std::conditional_t<
         std::is_void_v<Duplication>,
@@ -1535,7 +1535,7 @@ create_scatter_view(View<RT, RP...> const& original_view) {
 
 template <typename Op, typename RT, typename... RP>
 ScatterView<
-    RT, typename ViewTraits<RT, RP...>::array_layout,
+    RT, typename ViewTraits<RT, RP...>::layout_type,
     typename ViewTraits<RT, RP...>::device_type, Op,
     typename Kokkos::Impl::Experimental::DefaultDuplication<
         typename ViewTraits<RT, RP...>::execution_space>::type,
@@ -1549,7 +1549,7 @@ create_scatter_view(Op, View<RT, RP...> const& original_view) {
 
 template <typename Op, typename Duplication, typename Contribution, typename RT,
           typename... RP>
-ScatterView<RT, typename ViewTraits<RT, RP...>::array_layout,
+ScatterView<RT, typename ViewTraits<RT, RP...>::layout_type,
             typename ViewTraits<RT, RP...>::device_type, Op, Duplication,
             Contribution>
 create_scatter_view(Op, Duplication, Contribution,

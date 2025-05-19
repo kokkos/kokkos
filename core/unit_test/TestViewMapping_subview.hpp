@@ -55,7 +55,7 @@ struct TestViewMappingSubview {
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 1000
   static_assert(
       DLS1::rank == 1 &&
-          std::is_same<typename DLS1::array_layout, Kokkos::LayoutLeft>::value,
+          std::is_same<typename DLS1::layout_type, Kokkos::LayoutLeft>::value,
       "Subview layout error for rank 1 subview of left-most range of "
       "LayoutLeft");
 #endif
@@ -66,7 +66,7 @@ struct TestViewMappingSubview {
 #if defined(__CUDA_ARCH__) && __CUDA_ARCH__ >= 1000
   static_assert(
       DRS1::rank == 1 &&
-          std::is_same<typename DRS1::array_layout, Kokkos::LayoutRight>::value,
+          std::is_same<typename DRS1::layout_type, Kokkos::LayoutRight>::value,
       "Subview layout error for rank 1 subview of right-most range of "
       "LayoutRight");
 #endif

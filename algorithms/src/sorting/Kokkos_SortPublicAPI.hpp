@@ -36,9 +36,9 @@ void sort(const ExecutionSpace& exec,
   using MemSpace = typename ViewType::memory_space;
   static_assert(
       ViewType::rank == 1 &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+          (std::is_same_v<typename ViewType::layout_type, LayoutRight> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutLeft> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutStride>),
       "Kokkos::sort without comparator: supports 1D Views with LayoutRight, "
       "LayoutLeft or LayoutStride.");
 
@@ -91,9 +91,9 @@ void sort(const ExecutionSpace& exec,
   using MemSpace = typename ViewType::memory_space;
   static_assert(
       ViewType::rank == 1 &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+          (std::is_same_v<typename ViewType::layout_type, LayoutRight> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutLeft> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutStride>),
       "Kokkos::sort with comparator: supports 1D Views with LayoutRight, "
       "LayoutLeft or LayoutStride.");
 
@@ -121,9 +121,9 @@ void sort(const Kokkos::View<DataType, Properties...>& view,
   using ViewType = Kokkos::View<DataType, Properties...>;
   static_assert(
       ViewType::rank == 1 &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+          (std::is_same_v<typename ViewType::layout_type, LayoutRight> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutLeft> ||
+           std::is_same_v<typename ViewType::layout_type, LayoutStride>),
       "Kokkos::sort with comparator: supports 1D Views with LayoutRight, "
       "LayoutLeft or LayoutStride.");
 

@@ -115,7 +115,11 @@ class Cuda {
   using size_type = memory_space::size_type;
 
   //! This execution space's preferred array layout.
-  using array_layout = LayoutLeft;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use layout_type instead.") = LayoutLeft;
+#endif
+  using layout_type = LayoutLeft;
 
   //!
   using scratch_memory_space = ScratchMemorySpace<Cuda>;
