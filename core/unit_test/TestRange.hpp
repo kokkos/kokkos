@@ -14,9 +14,10 @@
 //
 //@HEADER
 
-#include <cstdio>
+import mykokkoscore;
 
-#include <Kokkos_Core.hpp>
+#include <cstdio>
+#include <Kokkos_Macros.hpp>
 
 namespace Test {
 

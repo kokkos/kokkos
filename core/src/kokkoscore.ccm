@@ -16,7 +16,12 @@ export
     using ::Kokkos::finalize;
     using ::Kokkos::Timer;
     using ::Kokkos::ScopeGuard;
-
+    using ::Kokkos::printf;
+    using ::Kokkos::Schedule;
+    using ::Kokkos::Dynamic;
+    using ::Kokkos::Static;
+    using ::Kokkos::Serial;
+  
     using ::Kokkos::MemoryTraits;
 
     using ::Kokkos::complex;
