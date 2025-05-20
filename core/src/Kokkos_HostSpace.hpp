@@ -138,22 +138,20 @@ namespace Kokkos {
 
 namespace Impl {
 
-static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
-                                              Kokkos::HostSpace>::assignable);
-
-template <typename S>
+template <class S>
 struct HostMirror {
  private:
+  using is_space = typename Kokkos::is_space<S>;
+  static_assert(is_space());
+
   // If input execution space can access HostSpace then keep it.
   // Example: Kokkos::OpenMP can access, Kokkos::Cuda cannot
   enum {
-    keep_exe = Kokkos::Impl::MemorySpaceAccess<
-        typename S::execution_space::memory_space,
-        Kokkos::HostSpace>::accessible
+    keep_exe = Kokkos::SpaceAccessibility<typename S::execution_space,
+                                          Kokkos::HostSpace>::accessible
   };
-
   // If HostSpace can access memory space then keep it.
-  // Example:  Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
+  // Example: Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
   enum {
     keep_mem =
         Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
@@ -161,16 +159,26 @@ struct HostMirror {
   };
 
  public:
-  using Space = std::conditional_t<
-      keep_exe && keep_mem, S,
+  // Construct a device mirror type
+  using Device = std::conditional_t<
+      keep_exe && keep_mem,
+      Kokkos::Device<typename S::execution_space, typename S::memory_space>,
       std::conditional_t<keep_mem,
                          Kokkos::Device<Kokkos::HostSpace::execution_space,
                                         typename S::memory_space>,
-                         Kokkos::HostSpace>>;
+                         Kokkos::Device<Kokkos::HostSpace::execution_space,
+                                        Kokkos::HostSpace::memory_space>>>;
+
+  using execution_space = typename Device::execution_space;
+  using memory_space    = typename Device::memory_space;
+
+  // Construct mirror type matching the template parameter type
+  using Space = std::conditional_t<
+      is_space::is_exec_space(), execution_space,
+      std::conditional_t<is_space::is_mem_space(), memory_space, Device>>;
 };
 
 }  // namespace Impl
-
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

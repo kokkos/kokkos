@@ -90,7 +90,7 @@ class TestUniqueToken {
       Kokkos::fence();
     }
 
-    typename view_type::HostMirror host_counts =
+    typename view_type::host_mirror_type host_counts =
         Kokkos::create_mirror_view(self.counts);
 
     Kokkos::deep_copy(host_counts, self.counts);
@@ -124,7 +124,7 @@ class TestUniqueToken {
     }
 #endif
 
-    typename view_type::HostMirror host_errors =
+    typename view_type::host_mirror_type host_errors =
         Kokkos::create_mirror_view(self.errors);
 
     Kokkos::deep_copy(host_errors, self.errors);
@@ -224,7 +224,7 @@ class TestAcquireTeamUniqueToken {
       Kokkos::fence();
     }
 
-    typename view_type::HostMirror host_counts =
+    typename view_type::host_mirror_type host_counts =
         Kokkos::create_mirror_view(self.counts);
 
     Kokkos::deep_copy(host_counts, self.counts);
@@ -238,7 +238,7 @@ class TestAcquireTeamUniqueToken {
       }
     }
 
-    typename view_type::HostMirror host_errors =
+    typename view_type::host_mirror_type host_errors =
         Kokkos::create_mirror_view(self.errors);
 
     Kokkos::deep_copy(host_errors, self.errors);

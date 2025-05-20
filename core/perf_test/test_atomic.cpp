@@ -30,7 +30,7 @@ template <class T, class DEVICE_TYPE>
 struct ZeroFunctor {
   using execution_space = DEVICE_TYPE;
   using type            = typename Kokkos::View<T, execution_space>;
-  using h_type          = typename Kokkos::View<T, execution_space>::HostMirror;
+  using h_type = typename Kokkos::View<T, execution_space>::host_mirror_type;
   type data;
   KOKKOS_INLINE_FUNCTION
   void operator()(int) const { data() = 0; }

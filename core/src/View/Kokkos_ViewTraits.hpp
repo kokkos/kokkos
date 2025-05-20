@@ -335,13 +335,13 @@ struct ViewTraits;
 
 template <>
 struct ViewTraits<void> {
-  using execution_space = void;
-  using memory_space    = void;
-  using HostMirrorSpace = void;
-  using array_layout    = void;
-  using memory_traits   = void;
-  using specialize      = void;
-  using hooks_policy    = void;
+  using execution_space    = void;
+  using memory_space       = void;
+  using host_mirror_device = void;
+  using array_layout       = void;
+  using memory_traits      = void;
+  using specialize         = void;
+  using hooks_policy       = void;
 };
 
 template <class... Prop>
@@ -349,11 +349,12 @@ struct ViewTraits<void, void, Prop...> {
   // Ignore an extraneous 'void'
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
-  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
-  using array_layout    = typename ViewTraits<void, Prop...>::array_layout;
-  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
-  using specialize      = typename ViewTraits<void, Prop...>::specialize;
-  using hooks_policy    = typename ViewTraits<void, Prop...>::hooks_policy;
+  using host_mirror_device =
+      typename ViewTraits<void, Prop...>::host_mirror_device;
+  using array_layout  = typename ViewTraits<void, Prop...>::array_layout;
+  using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize    = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
 template <class HooksPolicy, class... Prop>
@@ -362,11 +363,12 @@ struct ViewTraits<
     HooksPolicy, Prop...> {
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
-  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
-  using array_layout    = typename ViewTraits<void, Prop...>::array_layout;
-  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
-  using specialize      = typename ViewTraits<void, Prop...>::specialize;
-  using hooks_policy    = HooksPolicy;
+  using host_mirror_device =
+      typename ViewTraits<void, Prop...>::host_mirror_device;
+  using array_layout  = typename ViewTraits<void, Prop...>::array_layout;
+  using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize    = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy  = HooksPolicy;
 };
 
 template <class ArrayLayout, class... Prop>
@@ -376,11 +378,12 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_array_layout<ArrayLayout>::value>,
 
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
-  using HostMirrorSpace = typename ViewTraits<void, Prop...>::HostMirrorSpace;
-  using array_layout    = ArrayLayout;
-  using memory_traits   = typename ViewTraits<void, Prop...>::memory_traits;
-  using specialize      = typename ViewTraits<void, Prop...>::specialize;
-  using hooks_policy    = typename ViewTraits<void, Prop...>::hooks_policy;
+  using host_mirror_device =
+      typename ViewTraits<void, Prop...>::host_mirror_device;
+  using array_layout  = ArrayLayout;
+  using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
+  using specialize    = typename ViewTraits<void, Prop...>::specialize;
+  using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
 template <class Space, class... Prop>
@@ -393,16 +396,16 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
                      void> &&
           std::is_same_v<typename ViewTraits<void, Prop...>::memory_space,
                          void> &&
-          std::is_same_v<typename ViewTraits<void, Prop...>::HostMirrorSpace,
-                         void> &&
+          // std::is_same_v<typename ViewTraits<void, Prop...>::HostMirrorSpace,
+          // void> &&
           std::is_same_v<typename ViewTraits<void, Prop...>::array_layout,
                          void>,
       "Only one View Execution or Memory Space template argument");
 
-  using execution_space = typename Space::execution_space;
-  using memory_space    = typename Space::memory_space;
-  using HostMirrorSpace =
-      typename Kokkos::Impl::HostMirror<Space>::Space::memory_space;
+  using execution_space    = typename Space::execution_space;
+  using memory_space       = typename Space::memory_space;
+  using host_mirror_device = typename Kokkos::Impl::HostMirror<
+      Kokkos::Device<execution_space, memory_space>>::Device;
   using array_layout  = typename execution_space::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
@@ -428,13 +431,13 @@ struct ViewTraits<
                          void>,
       "MemoryTrait is the final optional template argument for a View");
 
-  using execution_space = void;
-  using memory_space    = void;
-  using HostMirrorSpace = void;
-  using array_layout    = void;
-  using memory_traits   = MemoryTraits;
-  using specialize      = void;
-  using hooks_policy    = void;
+  using execution_space    = void;
+  using memory_space       = void;
+  using host_mirror_device = void;
+  using array_layout       = void;
+  using memory_traits      = MemoryTraits;
+  using specialize         = void;
+  using hooks_policy       = void;
 };
 
 template <class DataType, class... Properties>
@@ -458,10 +461,11 @@ struct ViewTraits {
                          typename prop::array_layout,
                          typename ExecutionSpace::array_layout>;
 
-  using HostMirrorSpace = std::conditional_t<
-      !std::is_void_v<typename prop::HostMirrorSpace>,
-      typename prop::HostMirrorSpace,
-      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>;
+  using HostMirrorDevice =
+      std::conditional_t<!std::is_void_v<typename prop::host_mirror_device>,
+                         typename prop::host_mirror_device,
+                         typename Kokkos::Impl::HostMirror<Kokkos::Device<
+                             ExecutionSpace, MemorySpace>>::Device>;
 
   using MemoryTraits =
       std::conditional_t<!std::is_void_v<typename prop::memory_traits>,
@@ -518,12 +522,12 @@ struct ViewTraits {
   //------------------------------------
   // Execution space, memory space, memory access traits, and host mirror space.
 
-  using execution_space   = ExecutionSpace;
-  using memory_space      = MemorySpace;
-  using device_type       = Kokkos::Device<ExecutionSpace, MemorySpace>;
-  using memory_traits     = MemoryTraits;
-  using host_mirror_space = HostMirrorSpace;
-  using hooks_policy      = HooksPolicy;
+  using execution_space    = ExecutionSpace;
+  using memory_space       = MemorySpace;
+  using device_type        = Kokkos::Device<ExecutionSpace, MemorySpace>;
+  using host_mirror_device = HostMirrorDevice;
+  using memory_traits      = MemoryTraits;
+  using hooks_policy       = HooksPolicy;
 
   using size_type = typename MemorySpace::size_type;
 

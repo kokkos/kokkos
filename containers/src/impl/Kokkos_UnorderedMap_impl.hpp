@@ -132,7 +132,7 @@ struct UnorderedMapHistogram {
   using size_type       = typename map_type::size_type;
 
   using histogram_view      = View<int[100], typename map_type::device_type>;
-  using host_histogram_view = typename histogram_view::HostMirror;
+  using host_histogram_view = typename histogram_view::host_mirror_type;
 
   map_type m_map;
   histogram_view m_length;

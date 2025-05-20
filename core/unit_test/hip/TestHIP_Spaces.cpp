@@ -176,7 +176,7 @@ TEST(hip, space_access) {
                      Kokkos::HostSpace>);
 #else
   static_assert(
-      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Device,
                      Kokkos::Device<Kokkos::HostSpace::execution_space,
                                     Kokkos::HIPSpace>>);
 #endif
@@ -186,17 +186,46 @@ TEST(hip, space_access) {
                 Kokkos::HIPHostPinnedSpace>);
 
   static_assert(
-      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Device,
                      Kokkos::Device<Kokkos::HostSpace::execution_space,
                                     Kokkos::HIPManagedSpace>>);
+
+  static_assert(
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
+                     Kokkos::HIPManagedSpace>);
+
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
+  static_assert(
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+                     Kokkos::HostSpace>);
+#else
+  static_assert(
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+                     Kokkos::HIPSpace>);
+#endif
+
+  static_assert(std::is_same_v<
+                Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::memory_space,
+                Kokkos::HIPManagedSpace>);
+
+  static_assert(
+      std::is_same_v<
+          Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::execution_space,
+          Kokkos::DefaultHostExecutionSpace>);
 
   static_assert(
       Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::HIP>::Space,
                                  Kokkos::HostSpace>::accessible);
 
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
                 Kokkos::HostSpace>::accessible);
+#else
+  static_assert(Kokkos::SpaceAccessibility<
+                Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+                Kokkos::HIPSpace>::accessible);
+#endif
 
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::HIPHostPinnedSpace>::Space,
@@ -204,7 +233,7 @@ TEST(hip, space_access) {
 
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::HIPManagedSpace>::Space,
-                Kokkos::HostSpace>::accessible);
+                Kokkos::HIPManagedSpace>::accessible);
 }
 
 template <class MemSpace, class ExecSpace>

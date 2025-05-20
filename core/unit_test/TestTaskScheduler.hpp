@@ -212,7 +212,7 @@ struct TestTaskDependence {
 
     accum_type accum("accum");
 
-    typename accum_type::HostMirror host_accum =
+    typename accum_type::host_mirror_type host_accum =
         Kokkos::create_mirror_view(accum);
 
     Kokkos::host_spawn(Kokkos::TaskSingle(sched), TestTaskDependence(n, accum));
@@ -402,13 +402,13 @@ struct TestTaskTeam {
     view_type root_parscan_result("parscan_result", n + 1);
     view_type root_parscan_check("parscan_check", n + 1);
 
-    typename view_type::HostMirror host_parfor_result =
+    typename view_type::host_mirror_type host_parfor_result =
         Kokkos::create_mirror_view(root_parfor_result);
-    typename view_type::HostMirror host_parreduce_check =
+    typename view_type::host_mirror_type host_parreduce_check =
         Kokkos::create_mirror_view(root_parreduce_check);
-    typename view_type::HostMirror host_parscan_result =
+    typename view_type::host_mirror_type host_parscan_result =
         Kokkos::create_mirror_view(root_parscan_result);
-    typename view_type::HostMirror host_parscan_check =
+    typename view_type::host_mirror_type host_parscan_check =
         Kokkos::create_mirror_view(root_parscan_check);
 
     future_type f = Kokkos::host_spawn(
@@ -516,7 +516,7 @@ struct TestTaskTeamValue {
 
     view_type root_result("result", n + 1);
 
-    typename view_type::HostMirror host_result =
+    typename view_type::host_mirror_type host_result =
         Kokkos::create_mirror_view(root_result);
 
     future_type fv = root_sched.host_spawn(TestTaskTeamValue(root_result, n),
