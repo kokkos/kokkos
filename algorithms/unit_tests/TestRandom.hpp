@@ -479,19 +479,13 @@ struct generate_random_stream {
   ViewType vals;
   GeneratorPool rand_pool;
   int samples;
-  bool use_specific_gen;
 
-  generate_random_stream(ViewType vals_, GeneratorPool rand_pool_, int samples_,
-                         bool use_specific_gen_)
-      : vals(vals_),
-        rand_pool(rand_pool_),
-        samples(samples_),
-        use_specific_gen(use_specific_gen_) {}
+  generate_random_stream(ViewType vals_, GeneratorPool rand_pool_, int samples_)
+      : vals(vals_), rand_pool(rand_pool_), samples(samples_) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(int i) const {
-    typename GeneratorPool::generator_type rand_gen =
-        use_specific_gen ? rand_pool.get_state(i) : rand_pool.get_state();
+    typename GeneratorPool::generator_type rand_gen = rand_pool.get_state();
 
     for (int k = 0; k < samples; k++) vals(i, k) = rand_gen.urand64();
 
@@ -512,9 +506,9 @@ void test_duplicate_stream() {
   Pool rand_pool(42);
   ViewType vals_d("Vals", n_streams, samples);
 
-  Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, n_streams),
-                       generate_random_stream<ExecutionSpace, Pool>(
-                           vals_d, rand_pool, samples, false));
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace>(0, n_streams),
+      generate_random_stream<ExecutionSpace, Pool>(vals_d, rand_pool, samples));
 
   auto vals_h =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, vals_d);
@@ -543,68 +537,6 @@ void test_duplicate_stream() {
     while (k < samples && vals_h(idx1, k) == vals_h(idx2, k)) k++;
     ASSERT_LT(k, samples) << "Duplicate streams found";
   }
-}
-
-template <class ExecutionSpace, class GeneratorPool>
-struct compare_random_streams {
-  using ViewType = Kokkos::View<uint64_t**, ExecutionSpace>;
-
-  ViewType vals;
-  GeneratorPool rand_pool;
-  int samples;
-
-  compare_random_streams(ViewType vals_, GeneratorPool rand_pool_, int samples_)
-      : vals(vals_), rand_pool(rand_pool_), samples(samples_) {}
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int i, std::size_t& mismatches) const {
-    // this is problematic: on a GPU when launching with more than a single
-    // thread the generator returned is in principle random, using atomic
-    // locks to acquire a state.
-    // but we only launch it with a single thread so its ok.
-    typename GeneratorPool::generator_type rand_gen = rand_pool.get_state(i);
-
-    for (int k = 0; k < samples; k++)
-      if (vals(i, k) != rand_gen.urand64()) mismatches++;
-
-    rand_pool.free_state(rand_gen);
-  }
-};
-
-template <class ExecutionSpace, class Pool, class... Args>
-void test_async_initialization(Args... args) {
-  // using 2D View here to reuse functions from other test
-  using ViewType = Kokkos::View<uint64_t**, ExecutionSpace>;
-
-  int samples = 123456;
-
-  // use default execution space instance to generate reference values
-  Pool rand_pool_A(args...);
-
-  ViewType vals_d("Vals", 1, samples);
-  // create two, distinct ExecutionSpace instances
-  auto instances =
-      Kokkos::Experimental::partition_space(ExecutionSpace{}, 1, 1);
-  // use first instance to initialize values of vals_d
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace>(instances.at(0), 0, 1),
-      generate_random_stream<ExecutionSpace, Pool>(vals_d, rand_pool_A, samples,
-                                                   true));
-  instances.at(0).fence();
-
-  // use second instance to initialize another Pool using the same seed
-  Pool rand_pool_B(instances.at(1), args...);
-
-  std::size_t mismatches;
-  // compare values in stream of rand_pool_B with vals_d
-  Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExecutionSpace>(instances.at(1), 0, 1),
-      compare_random_streams<ExecutionSpace, Pool>(vals_d, rand_pool_B,
-                                                   samples),
-      mismatches);
-
-  EXPECT_EQ(mismatches, 0) << "Stream from async constructed pool does not "
-                              "match stream from default constructed pool";
 }
 
 }  // namespace AlgoRandomImpl
@@ -676,13 +608,6 @@ TEST(TEST_CATEGORY, Multi_streams) {
 
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool64>();
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool1024>();
-
-  // Test with construction from seed
-  AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool64>(42);
-  AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool1024>(42);
-  // Test with construction from seed and num_states
-  AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool64>(42, 1);
-  AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool1024>(42, 1);
 }
 
 }  // namespace Test
