@@ -93,11 +93,16 @@ set(COMPILE_ONLY_SOURCES
     TestTeamMDRangePolicyCTAD.cpp
     TestNestedReducerCTAD.cpp
     view/TestBasicViewMDSpanConversion.cpp
+    view/TestViewCustomization.cpp
     view/TestExtentsDatatypeConversion.cpp
 )
 
 if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
+endif()
+
+if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewCustomization.cpp)
 endif()
 
 #testing if windows.h and Kokkos_Core.hpp can be included
