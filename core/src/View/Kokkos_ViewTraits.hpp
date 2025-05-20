@@ -466,7 +466,7 @@ struct ViewTraits {
   using MemoryTraits =
       std::conditional_t<!std::is_void_v<typename prop::memory_traits>,
                          typename prop::memory_traits,
-                         typename Kokkos::MemoryManaged>;
+                         typename Kokkos::MemoryTraits<>>;
 
   using HooksPolicy =
       std::conditional_t<!std::is_void_v<typename prop::hooks_policy>,
