@@ -375,6 +375,22 @@ using ::Kokkos::ParallelScanTag;
 	}
 
 
+namespace Tools::Experimental {
+using ::Kokkos::Tools::Experimental::set_begin_parallel_for_callback;
+using ::Kokkos::Tools::Experimental::set_begin_parallel_reduce_callback;
+using ::Kokkos::Tools::Experimental::set_begin_parallel_scan_callback;
+using ::Kokkos::Tools::Experimental::set_create_profile_section_callback;
+using ::Kokkos::Tools::Experimental::set_destroy_profile_section_callback;
+using ::Kokkos::Tools::Experimental::set_end_parallel_for_callback;
+using ::Kokkos::Tools::Experimental::set_end_parallel_reduce_callback;
+using ::Kokkos::Tools::Experimental::set_end_parallel_scan_callback;
+using ::Kokkos::Tools::Experimental::set_finalize_callback;
+using ::Kokkos::Tools::Experimental::set_pop_region_callback;
+using ::Kokkos::Tools::Experimental::set_push_region_callback;
+using ::Kokkos::Tools::Experimental::set_start_profile_section_callback;
+using ::Kokkos::Tools::Experimental::set_begin_fence_callback;
+}
+namespace Profiling::Experimental {
 using ::Kokkos::Profiling::Experimental::set_begin_parallel_for_callback;
 using ::Kokkos::Profiling::Experimental::set_begin_parallel_reduce_callback;
 using ::Kokkos::Profiling::Experimental::set_begin_parallel_scan_callback;
@@ -387,6 +403,7 @@ using ::Kokkos::Profiling::Experimental::set_finalize_callback;
 using ::Kokkos::Profiling::Experimental::set_pop_region_callback;
 using ::Kokkos::Profiling::Experimental::set_push_region_callback;
 using ::Kokkos::Profiling::Experimental::set_start_profile_section_callback;
+}
 
     using ::Kokkos::SharedHostPinnedSpace;
     using ::Kokkos::TeamThreadMDRange;
@@ -400,7 +417,11 @@ using ::Kokkos::Profiling::Experimental::set_start_profile_section_callback;
        using ::Kokkos::default_accessor;
            using ::Kokkos::extents;
     using ::Kokkos::dextents;
-  
+    using ::Kokkos::Experimental::layout_right_padded;
+    namespace Experimental {
+        using ::Kokkos::Experimental::layout_left_padded;
+    }
+
     using ::Kokkos::AllowPadding;
 
     using ::Kokkos::real;
