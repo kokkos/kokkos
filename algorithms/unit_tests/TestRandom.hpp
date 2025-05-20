@@ -603,8 +603,8 @@ void test_async_initialization(Args... args) {
                                                    samples),
       mismatches);
 
-  EXPECT_EQ(mismatches, 0) << "Stream from async constructed pool does not "
-                              "match stream from default constructed pool";
+  EXPECT_EQ(mismatches, 0lu) << "Stream from async constructed pool does not "
+                                "match stream from default constructed pool";
 }
 
 }  // namespace AlgoRandomImpl
