@@ -985,6 +985,11 @@ class Random_XorShift64_Pool {
     typename locks_type::HostMirror h_lock =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, locks_);
 
+    // if the host mirror is the device view, need to fence here
+    // since the init was async.
+    if (state_.data() == h_state.data())
+      exec.fence("Random_XorShift64_Pool::init UnifiedMemory");
+
     // Execute on the HostMirror's default execution space.
     Random_XorShift64<typename state_data_type::HostMirror::execution_space>
         gen(seed, 0);
@@ -1257,6 +1262,11 @@ class Random_XorShift1024_Pool {
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, locks_);
     typename int_view_type::HostMirror h_p =
         Kokkos::create_mirror_view(Kokkos::WithoutInitializing, p_);
+
+    // if the host mirror is the device view, need to fence here
+    // since the init was async.
+    if (state_.data() == h_state.data())
+      exec.fence("Random_XorShift1024_Pool::init UnifiedMemory");
 
     // Execute on the HostMirror's default execution space.
     Random_XorShift64<typename state_data_type::HostMirror::execution_space>
