@@ -4,14 +4,14 @@ module;
 
 export module mykokkoscore;
 
-export import : kokkos_concepts;
-export import : kokkos_min_max;
+//export import : kokkos_concepts;
+//export import : kokkos_min_max;
 
 export
 {
   namespace Kokkos
   {
-//    using ::Kokkos::abort;
+    using ::Kokkos::abort;
     using ::Kokkos::abs;
     using ::Kokkos::ALL;
     using ::Kokkos::Array;
@@ -22,14 +22,175 @@ export
     using ::Kokkos::ScopeGuard;
     using ::Kokkos::printf;
     using ::Kokkos::Serial;
-  
+    using ::Kokkos::NewInstance;
+    using ::Kokkos::LaunchBounds;
+
+using ::Kokkos::Schedule;
+namespace Experimental {
+        using ::Kokkos::Experimental::partition_space;
+	using ::Kokkos::Experimental::WorkItemProperty;
+}
+
+namespace Impl {
+	using ::Kokkos::Impl::MemorySpaceAccess;
+}
+
+    using ::Kokkos::IndexType;
+
+    using ::Kokkos::is_detected;
+        using ::Kokkos::is_detected_v;
+	    using ::Kokkos::is_detected_exact_v;
+	    using ::Kokkos::detected_t;
+
+    using ::Kokkos::is_execution_space;
+ using ::Kokkos::is_execution_space_v;
+    using ::Kokkos::is_memory_space;
+        using ::Kokkos::is_memory_space_v;
+    using ::Kokkos::is_device;
+    using ::Kokkos::is_device_v;
+    using ::Kokkos::is_team_handle;
+    using ::Kokkos::is_team_handle_v;
+    using ::Kokkos::is_space;
+
+    using ::Kokkos::clamp;
+  using ::Kokkos::min;
+    using ::Kokkos::fmin;
+  using ::Kokkos::max;
+  using ::Kokkos::minmax;
+
+  using ::Kokkos::reduction_identity;
+    using ::Kokkos::Min;
+    using ::Kokkos::MinMax;
+    using ::Kokkos::Max;
+    using ::Kokkos::MinLoc;
+        using ::Kokkos::MinFirstLoc;
+    using ::Kokkos::MinMaxLoc;
+    using ::Kokkos::MaxLoc;
+        using ::Kokkos::MaxFirstLoc;
+    using ::Kokkos::Sum;
+    using ::Kokkos::Prod;
+using ::Kokkos::BAnd;
+using ::Kokkos::BOr;
+using ::Kokkos::LAnd;
+using ::Kokkos::LOr;
+using ::Kokkos::MaxFirstLocCustomComparator;
+using ::Kokkos::FirstLoc;
+using ::Kokkos::FirstLocScalar;
+using ::Kokkos::LastLocScalar;
+using ::Kokkos::MinFirstLocCustomComparator;
+using ::Kokkos::MinMaxFirstLastLocCustomComparator;
+
+namespace Impl {
+using ::Kokkos::Impl::SpaceAwareAccessor;
+using ::Kokkos::Impl::WorkTagTrait;
+using ::Kokkos::Impl::AtomicAccessorRelaxed;
+using ::Kokkos::Impl::MDSpanViewTraits;
+}
+using ::Kokkos::MinMaxFirstLastLoc;
+using ::Kokkos::MinMaxLocScalar;
+using ::Kokkos::MinMaxScalar;
+using ::Kokkos::ValLocScalar;
+namespace Experimental {
+using ::Kokkos::Experimental::DesiredOccupancy;
+using ::Kokkos::Experimental::MaximizeOccupancy;
+using ::Kokkos::Experimental::prefer;
+using ::Kokkos::Experimental::require;
+}
+
+namespace Experimental {
+using ::Kokkos::Experimental::half_t;
+using ::Kokkos::Experimental::bhalf_t;
+}
+
+using Kokkos::LastLoc;
+using Kokkos::StdIsPartitioned;
+using Kokkos::StdIsPartScalar;
+using Kokkos::StdPartitionPoint;
+using Kokkos::StdPartPointScalar;
+
+
+    namespace Experimental {
+      using ::Kokkos::Experimental::bit_floor_builtin;
+            using ::Kokkos::Experimental::countl_zero_builtin;
+      using ::Kokkos::Experimental::countl_one_builtin;
+      using ::Kokkos::Experimental::countr_zero_builtin;
+      using ::Kokkos::Experimental::countr_one_builtin;
+      using ::Kokkos::Experimental::bit_ceil_builtin;
+      using ::Kokkos::Experimental::bit_width_builtin;
+      using ::Kokkos::Experimental::has_single_bit_builtin;
+using ::Kokkos::Experimental::popcount_builtin;
+using ::Kokkos::Experimental::rotl_builtin;
+    using ::Kokkos::Experimental::bit_cast_builtin;
+using ::Kokkos::Experimental::byteswap_builtin;
+using ::Kokkos::Experimental::rotr_builtin;
+using ::Kokkos::Experimental::rotl_builtin;
+    }
+     using ::Kokkos::countr_zero;
+    using ::Kokkos::countr_one;
+    using ::Kokkos::countl_zero;
+    using ::Kokkos::countl_one;
+    using ::Kokkos::rotr;
+        using ::Kokkos::rotl;
+        using ::Kokkos::bit_ceil;
+    using ::Kokkos::bit_floor;
+    using ::Kokkos::bit_width;
+using ::Kokkos::bit_cast;
+using ::Kokkos::popcount;
+using ::Kokkos::has_single_bit;
+
+using ::Kokkos::MemoryPool;
+
+namespace Experimental {
+using ::Kokkos::Experimental::infinity;
+using ::Kokkos::Experimental::finite_min;
+using ::Kokkos::Experimental::finite_max;
+using ::Kokkos::Experimental::epsilon;
+using ::Kokkos::Experimental::round_error;
+using ::Kokkos::Experimental::norm_min;
+using ::Kokkos::Experimental::denorm_min;
+using ::Kokkos::Experimental::quiet_NaN;
+using ::Kokkos::Experimental::signaling_NaN;
+
+using ::Kokkos::Experimental::infinity_v;
+using ::Kokkos::Experimental::finite_min_v;
+using ::Kokkos::Experimental::finite_max_v;
+using ::Kokkos::Experimental::epsilon_v;
+using ::Kokkos::Experimental::round_error_v;
+using ::Kokkos::Experimental::norm_min_v;
+using ::Kokkos::Experimental::denorm_min_v;
+using ::Kokkos::Experimental::quiet_NaN_v;
+using ::Kokkos::Experimental::signaling_NaN_v;
+
+using ::Kokkos::Experimental::digits;
+using ::Kokkos::Experimental::digits10;
+using ::Kokkos::Experimental::max_digits10;
+using ::Kokkos::Experimental::radix;
+using ::Kokkos::Experimental::min_exponent;
+using ::Kokkos::Experimental::min_exponent10;
+using ::Kokkos::Experimental::max_exponent;
+using ::Kokkos::Experimental::max_exponent10;
+
+using ::Kokkos::Experimental::digits_v;
+using ::Kokkos::Experimental::digits10_v;
+using ::Kokkos::Experimental::max_digits10_v;
+using ::Kokkos::Experimental::radix_v;
+using ::Kokkos::Experimental::min_exponent_v;
+using ::Kokkos::Experimental::min_exponent10_v;
+using ::Kokkos::Experimental::max_exponent_v;
+using ::Kokkos::Experimental::max_exponent10_v;
+}
+
     using ::Kokkos::MemoryTraits;
+    using ::Kokkos::MemoryUnmanaged;
 
     using ::Kokkos::complex;
     using ::Kokkos::create_mirror;
     using ::Kokkos::create_mirror_view;
     using ::Kokkos::create_mirror_view_and_copy;
     using ::Kokkos::deep_copy;
+  namespace Experimental {
+    using ::Kokkos::Experimental::local_deep_copy;
+    }
     using ::Kokkos::DefaultExecutionSpace;
     using ::Kokkos::DefaultHostExecutionSpace;
 
@@ -75,12 +236,129 @@ export
 
     using ::Kokkos::num_devices;
 
+    using ::Kokkos::memory_fence;
     using ::Kokkos::atomic_fetch_add;
+    using ::Kokkos::atomic_inc;
+        using ::Kokkos::atomic_dec;
+    using ::Kokkos::atomic_load;
+    using ::Kokkos::atomic_store;
+    using ::Kokkos::atomic_add_fetch;
+using ::Kokkos::atomic_compare_exchange;
+using ::Kokkos::atomic_dec_fetch;
+using ::Kokkos::atomic_div;
+using ::Kokkos::atomic_exchange;
+using ::Kokkos::atomic_fetch_dec;
+using ::Kokkos::atomic_fetch_inc;
+using ::Kokkos::atomic_fetch_max;
+using ::Kokkos::atomic_fetch_min;
+using ::Kokkos::atomic_fetch_mul;
+using ::Kokkos::atomic_fetch_sub;
+using ::Kokkos::atomic_inc_fetch;
+using ::Kokkos::atomic_max_fetch;
+using ::Kokkos::atomic_max;
+using ::Kokkos::atomic_min_fetch;
+using ::Kokkos::atomic_min;
+using ::Kokkos::atomic_mul_fetch;
+using ::Kokkos::atomic_mul;
+using ::Kokkos::atomic_sub_fetch;
+using ::Kokkos::atomic_sub;
+using ::Kokkos::atomic_and_fetch;
+using ::Kokkos::atomic_and;
+using ::Kokkos::atomic_div_fetch;
+using ::Kokkos::atomic_fetch_and;
+using ::Kokkos::atomic_fetch_div;
+using ::Kokkos::atomic_fetch_mod;
+using ::Kokkos::atomic_fetch_nand;
+using ::Kokkos::atomic_fetch_or;
+using ::Kokkos::atomic_fetch_xor;
+using ::Kokkos::atomic_lshift;
+using ::Kokkos::atomic_mod_fetch;
+using ::Kokkos::atomic_mod;
+using ::Kokkos::atomic_nand_fetch;
+using ::Kokkos::atomic_nand;
+using ::Kokkos::atomic_or_fetch;
+using ::Kokkos::atomic_or;
+using ::Kokkos::atomic_xor_fetch;
+using ::Kokkos::atomic_xor;
+using ::Kokkos::atomic_fetch_lshift;
+using ::Kokkos::atomic_fetch_rshift;
+using ::Kokkos::atomic_lshift_fetch;
+using ::Kokkos::atomic_rshift_fetch;
+using ::Kokkos::atomic_rshift;
+
+
+using ::Kokkos::cbrt;
+using ::Kokkos::acos;
+using ::Kokkos::asin;
+using ::Kokkos::cos;
+using ::Kokkos::erfc;
+using ::Kokkos::erf;
+using ::Kokkos::sinh;
+using ::Kokkos::sin;
+using ::Kokkos::tanh;
+using ::Kokkos::trunc;
+using ::Kokkos::asinh;
+using ::Kokkos::acosh;
+using ::Kokkos::sqrt;
+using ::Kokkos::tan;
+using ::Kokkos::tgamma;
+using ::Kokkos::log;
+using ::Kokkos::expm1;
+using ::Kokkos::exp;
+using ::Kokkos::floor;
+using ::Kokkos::atan;
+using ::Kokkos::ceil;
+using ::Kokkos::cosh;
+using ::Kokkos::exp2;
+using ::Kokkos::lgamma;
+using ::Kokkos::log10;
+using ::Kokkos::log1p;
+using ::Kokkos::log2;
+using ::Kokkos::logb;
+using ::Kokkos::nearbyint;
+using ::Kokkos::nextafter;
+using ::Kokkos::round;
+using ::Kokkos::rsqrt;
+using ::Kokkos::atanh;
+using ::Kokkos::copysign;
+using ::Kokkos::fabs;
+using ::Kokkos::fmod;
+using ::Kokkos::isfinite;
+using ::Kokkos::isinf;
+using ::Kokkos::isnan;
+using ::Kokkos::fma;
+using ::Kokkos::hypot;
+
+
+namespace numbers {
+using ::Kokkos::numbers::sqrt2_v;
+using ::Kokkos::numbers::sqrt3_v;
+	using ::Kokkos::numbers::e_v;
+	using ::Kokkos::numbers::egamma_v;
+        using ::Kokkos::numbers::pi_v;
+        using ::Kokkos::numbers::phi_v;
+	using ::Kokkos::numbers::ln10_v;
+using ::Kokkos::numbers::ln2_v;
+using ::Kokkos::numbers::log10e_v;
+using ::Kokkos::numbers::log10e;
+using ::Kokkos::numbers::log2e_v;
+using ::Kokkos::numbers::inv_pi_v;
+using ::Kokkos::numbers::inv_sqrt3_v;
+using ::Kokkos::numbers::inv_sqrtpi_v;
+}
+
+using ::Kokkos::kokkos_swap;
 
     using ::Kokkos::LayoutRight;
         using ::Kokkos::LayoutLeft;
 	using ::Kokkos::LayoutStride;
 	using ::Kokkos::Iterate;
+
+using ::Kokkos::Static;
+using ::Kokkos::Dynamic;
+using ::Kokkos::ParallelForTag;
+using ::Kokkos::ParallelReduceTag;
+using ::Kokkos::ParallelScanTag;
 
 	using ::Kokkos::show_warnings;
 
@@ -91,6 +369,20 @@ export
 
     using ::Kokkos::SharedHostPinnedSpace;
     using ::Kokkos::TeamThreadMDRange;
-  } // namespace Kokkos
+
+   using ::Kokkos::ChunkSize;
+
+    using ::Kokkos::Crs;
+    using ::Kokkos::count_and_fill_crs;
+  
+    using ::Kokkos::mdspan;
+       using ::Kokkos::default_accessor;
+           using ::Kokkos::extents;
+    using ::Kokkos::dextents;
+  
+    using ::Kokkos::AllowPadding;
+
+    using ::Kokkos::operator==; 
+    } // namespace Kokkos
 }
 

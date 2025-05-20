@@ -18,6 +18,8 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <KokkosExp_MDRangePolicy.hpp>
 
 #include <regex>
 

@@ -16,8 +16,10 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_TypeInfo.hpp>
 #include <Kokkos_Pair.hpp>
 #include <iostream>
+#include <desul/atomics.hpp>
 
 namespace TestAtomicOperations {
 

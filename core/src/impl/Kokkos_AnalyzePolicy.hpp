@@ -17,6 +17,11 @@
 #ifndef KOKKOS_IMPL_ANALYZE_POLICY_HPP
 #define KOKKOS_IMPL_ANALYZE_POLICY_HPP
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_ANALYZE_POLICY
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#endif
+
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>  // IndexType
 #include <traits/Kokkos_Traits_fwd.hpp>
@@ -31,6 +36,11 @@
 #include <traits/Kokkos_ScheduleTrait.hpp>
 #include <traits/Kokkos_WorkItemPropertyTrait.hpp>
 #include <traits/Kokkos_WorkTagTrait.hpp>
+
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_ANALYZE_POLICY 
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_ANALYZE_POLICY
+#endif
 
 namespace Kokkos {
 namespace Impl {

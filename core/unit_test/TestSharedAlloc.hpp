@@ -21,6 +21,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_SharedAlloc.hpp>
 
 /*--------------------------------------------------------------------------*/
 

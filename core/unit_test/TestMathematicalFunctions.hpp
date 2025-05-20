@@ -18,11 +18,13 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 #include <algorithm>
 #include <initializer_list>
 #include <type_traits>
 
 #include <cfloat>
+#include <cmath>
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \

@@ -19,7 +19,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
-#include "experimental/__p0009_bits/layout_stride.hpp"
+#include <mdspan/mdspan.hpp>
 
 namespace {
 

@@ -17,6 +17,7 @@
 #include <sstream>
 #include <iostream>
 #include <limits>
+#include <cmath>
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>

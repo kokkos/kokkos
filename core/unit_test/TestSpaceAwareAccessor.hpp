@@ -16,7 +16,11 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
+
 #include <type_traits>
+#include <mdspan/mdspan.hpp>
 
 #include <gtest/gtest.h>
 #ifndef KOKKOS_ENABLE_CXX17

@@ -16,7 +16,8 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Macros.hpp>
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
 #include <gtest/gtest.h>
 
 template <class MemorySpace, class ExecutionSpace>
