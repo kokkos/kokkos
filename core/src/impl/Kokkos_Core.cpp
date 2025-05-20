@@ -174,6 +174,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   return devices;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 [[nodiscard]] int Kokkos::device_id() noexcept {
 #if defined(KOKKOS_ENABLE_CUDA)
   int device = Cuda().cuda_device();
@@ -765,6 +766,7 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
 
 // declared noexcept such that std::terminate is called if any of the registered
 // function throws
+// NOLINTNEXTLINE(bugprone-exception-escape)
 void call_registered_finalize_hook_functions() noexcept {
   while (!finalize_hooks.empty()) {
     auto const& func = finalize_hooks.top();
