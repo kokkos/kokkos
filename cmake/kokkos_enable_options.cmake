@@ -158,6 +158,8 @@ if(NOT KOKKOS_ENABLE_TESTS AND KOKKOS_ENABLE_HEADER_SELF_CONTAINMENT_TESTS)
   )
 endif()
 
+kokkos_enable_option(DEPRECATED_BUILD_STRATEGY ON "Whether to only set properties on targets/files that link to kokkos")
+
 if(KOKKOS_ENABLE_CUDA AND (KOKKOS_CXX_COMPILER_ID STREQUAL Clang))
   set(CUDA_CONSTEXPR_DEFAULT ON)
 else()

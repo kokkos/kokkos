@@ -1,4 +1,8 @@
-cmake_minimum_required(VERSION 3.21)
+if(@Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY@)
+  cmake_minimum_required(VERSION 3.16)
+else()
+  cmake_minimum_required(VERSION 3.21)
+endif()
 # No need for policy push/pop. CMake also manages a new entry for scripts
 # loaded by include() and find_package() commands except when invoked with
 # the NO_POLICY_SCOPE option
@@ -22,7 +26,7 @@ set(Kokkos_FOUND_INSTALL_DIR ${Kokkos_CMAKE_DIR}/../../..)
 unset(Kokkos_CMAKE_DIR)
 
 # components deprecation message
-if(NOT Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY)
+if(NOT @Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY@)
   if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS)
     message(
       FATAL_ERROR
@@ -37,7 +41,7 @@ if(NOT Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY)
 endif()
 
 # deprecated build strategy with components
-if(Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY)
+if(@Kokkos_ENABLE_DEPRECATED_BUILD_STRATEGY@)
   if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS AND "separable_compilation" IN_LIST Kokkos_FIND_COMPONENTS)
     message(
       STATUS "'launch_compiler' implies global redirection of targets depending on Kokkos to appropriate compiler."
