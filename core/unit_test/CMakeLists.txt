@@ -158,7 +158,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       CheckedIntegerOps
       CommonPolicyConstructors
       CommonPolicyInterface
-      #Complex
+      Complex
       Concepts
       Crs
       DeepCopyAlignment

@@ -382,7 +382,19 @@ using ::Kokkos::ParallelScanTag;
   
     using ::Kokkos::AllowPadding;
 
-    using ::Kokkos::operator==; 
+    using ::Kokkos::real;
+    using ::Kokkos::imag;
+    using ::Kokkos::conj;
+
+    using ::Kokkos::get;
+
+    using ::Kokkos::operator+;
+     using ::Kokkos::operator-;
+      using ::Kokkos::operator*;
+       using ::Kokkos::operator/;
+       using ::Kokkos::operator<<;
+              using ::Kokkos::operator>>;
+       using ::Kokkos::operator==; 
     } // namespace Kokkos
 }
 
