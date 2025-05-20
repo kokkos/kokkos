@@ -39,7 +39,7 @@
 
 #if defined(SYCL_EXT_ONEAPI_GRAPH) && \
     defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
-#define KOKKOS_IMPL_GRAPH_SUPPORT
+#define KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
 #endif
 
 // FIXME_SYCL Use type directly once it has stabilized in SYCL.
