@@ -16,9 +16,11 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Assert.hpp>
 #include <iostream>
 #include <string>
 #include <thread>
+#include <vector>
 
 int get_num_devices() {
   int num_devices;

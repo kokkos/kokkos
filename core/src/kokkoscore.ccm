@@ -33,6 +33,7 @@ namespace Experimental {
 
 namespace Impl {
 	using ::Kokkos::Impl::MemorySpaceAccess;
+      using ::Kokkos::Impl::DeepCopy;
 }
 
     using ::Kokkos::IndexType;
@@ -197,6 +198,7 @@ using ::Kokkos::Experimental::max_exponent10_v;
     using ::Kokkos::fence;
     using ::Kokkos::finalize;
     using ::Kokkos::fmax;
+        using ::Kokkos::Device;
     using ::Kokkos::HostSpace;
     using ::Kokkos::InitializationSettings;
     using ::Kokkos::initialize;
@@ -210,6 +212,7 @@ using ::Kokkos::Experimental::max_exponent10_v;
     using ::Kokkos::parallel_reduce;
     using ::Kokkos::parallel_scan;
     using ::Kokkos::PerTeam;
+        using ::Kokkos::PerThread;
     using ::Kokkos::pow;
     using ::Kokkos::push_finalize_hook;
     using ::Kokkos::RangePolicy;
@@ -220,7 +223,11 @@ using ::Kokkos::Experimental::max_exponent10_v;
     using ::Kokkos::subview;
     using ::Kokkos::TeamPolicy;
     using ::Kokkos::TeamThreadRange;
+    using ::Kokkos::TeamThreadMDRange;
+    using ::Kokkos::TeamVectorMDRange;
     using ::Kokkos::TeamVectorRange;
+        using ::Kokkos::ThreadVectorMDRange;
+    using ::Kokkos::ThreadVectorRange;
     using ::Kokkos::Unmanaged;
     using ::Kokkos::View;
         using ::Kokkos::ViewTraits;
@@ -367,6 +374,20 @@ using ::Kokkos::ParallelScanTag;
 	  using ::Kokkos::Profiling::pushRegion;
 	}
 
+
+using ::Kokkos::Profiling::Experimental::set_begin_parallel_for_callback;
+using ::Kokkos::Profiling::Experimental::set_begin_parallel_reduce_callback;
+using ::Kokkos::Profiling::Experimental::set_begin_parallel_scan_callback;
+using ::Kokkos::Profiling::Experimental::set_create_profile_section_callback;
+using ::Kokkos::Profiling::Experimental::set_destroy_profile_section_callback;
+using ::Kokkos::Profiling::Experimental::set_end_parallel_for_callback;
+using ::Kokkos::Profiling::Experimental::set_end_parallel_reduce_callback;
+using ::Kokkos::Profiling::Experimental::set_end_parallel_scan_callback;
+using ::Kokkos::Profiling::Experimental::set_finalize_callback;
+using ::Kokkos::Profiling::Experimental::set_pop_region_callback;
+using ::Kokkos::Profiling::Experimental::set_push_region_callback;
+using ::Kokkos::Profiling::Experimental::set_start_profile_section_callback;
+
     using ::Kokkos::SharedHostPinnedSpace;
     using ::Kokkos::TeamThreadMDRange;
 
@@ -387,6 +408,8 @@ using ::Kokkos::ParallelScanTag;
     using ::Kokkos::conj;
 
     using ::Kokkos::get;
+
+   using ::Kokkos::ALL_t;
 
     using ::Kokkos::operator+;
      using ::Kokkos::operator-;

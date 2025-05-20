@@ -17,6 +17,7 @@
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
 #include <type_traits>
+#include <cstddef>
 
 using Kokkos::Impl::BV::BasicView;
 #if 0  // TODO: after View is using BasicView this should be true

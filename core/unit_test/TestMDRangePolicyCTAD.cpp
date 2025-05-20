@@ -16,7 +16,10 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <cstdint>
 #include <cstddef>
+#include <iterator>
+#include <type_traits>
 
 namespace {
 
