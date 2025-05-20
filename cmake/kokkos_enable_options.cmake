@@ -54,6 +54,7 @@ endif()
 kokkos_enable_option(
   SYCL_RELOCATABLE_DEVICE_CODE ${SYCL_RDC_DEFAULT} "Whether to enable relocatable device code (RDC) for SYCL"
 )
+kokkos_enable_option(IMPL_SYCL_OUT_OF_ORDER_QUEUES OFF "Whether to make Kokkos use out-of-order queues internally")
 kokkos_enable_option(TESTS OFF "Whether to build the unit tests")
 kokkos_enable_option(BENCHMARKS OFF "Whether to build the benchmarks")
 kokkos_enable_option(EXAMPLES OFF "Whether to build the examples")

@@ -144,6 +144,43 @@ INTEL-DATA-CENTER-MAX-1100:
     reports:
       junit: build/result_pvc1100.xml
 
+INTEL-DATA-CENTER-MAX-1100-OUT-OF-ORDER:
+  extends: .common-setup
+  tags: [intel-data-center-max-1100]
+  image: intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
+  script:
+    - apt-get update && apt-get install -y git
+    - sycl-ls
+    - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
+    - export CLANG_TIDY_EXE=$(dirname $(which icpx))/compiler/clang-tidy
+    - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=icpx"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_EXE_LINKER_FLAGS=-fsycl -flink-huge-device-code"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_PVC=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - export CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1100-OUT-ORDER"
+    - ctest -VV
+        -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_pvc1100_out_of_order.xml
+        -S scripts/CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+  artifacts:
+    when: always
+    paths:
+      - build/result_pvc1100_out_of_order.xml
+    reports:
+      junit: build/result_pvc1100_out_of_order.xml
+
 AMD-MI300A:
   extends: .common-setup
   tags: [uo-gpu, odyssey, amd-mi300]
