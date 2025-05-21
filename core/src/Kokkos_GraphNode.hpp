@@ -86,6 +86,7 @@ class GraphNodeRef {
   template <class, class, class>
   friend class GraphNodeRef;
   friend struct Kokkos::Impl::GraphAccess;
+  friend struct Graph<execution_space>;
 
   // </editor-fold> end Friends }}}2
   //----------------------------------------------------------------------------
