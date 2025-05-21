@@ -354,6 +354,7 @@ template <class T, class BinaryOperation>
 struct Identity {
   KOKKOS_FORCEINLINE_FUNCTION
   operator T() {
+    // NOLINTNEXTLINE(bugprone-branch-clone)
     if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
       return T();
     } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
@@ -367,6 +368,7 @@ struct Identity {
     } else {
       return T();
     }
+    // NOLINTNEXTLINE(bugprone-branch-clone)
   }
 };
 
