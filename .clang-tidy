@@ -2,7 +2,6 @@ Checks: >
   -*,
   bugprone-*,
   -bugprone-argument-comment,
-  -bugprone-branch-clone,
   -bugprone-easily-swappable-parameters,
   -bugprone-macro-parentheses,
   -bugprone-narrowing-conversions,
