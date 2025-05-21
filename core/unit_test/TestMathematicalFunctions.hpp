@@ -1814,7 +1814,7 @@ KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
   return KE::bhalf_t(0.f);
 #elif defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && \
     (KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80)
-  // bhalf_t support for CUDA is only available starting with Volta (80)
+  // bhalf_t support for CUDA is only available starting with Ampere (80)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     return KE::bhalf_t(0.f);
   } else {
