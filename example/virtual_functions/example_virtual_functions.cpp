@@ -24,11 +24,11 @@ class Foo {
   KOKKOS_FUNCTION
   Foo() { val = 0; }
 
-  KOKKOS_FUNCTION KOKKOS_VIRTUAL int value() { return 0; };
+  KOKKOS_FUNCTION KOKKOS_EXPERIMENTAL_VIRTUAL int value() { return 0; };
 
 // FIXME_SYCL Virtual destructors aren't supported yet.
 #ifndef KOKKOS_ENABLE_SYCL
-  KOKKOS_FUNCTION KOKKOS_VIRTUAL ~Foo() {}
+  KOKKOS_FUNCTION KOKKOS_EXPERIMENTAL_VIRTUAL ~Foo() {}
 #endif
 };
 
@@ -37,7 +37,9 @@ class Foo_1 : public Foo {
   KOKKOS_FUNCTION
   Foo_1() { val = 1; }
 
-  KOKKOS_FUNCTION KOKKOS_VIRTUAL int value() override { return val + 10; };
+  KOKKOS_FUNCTION KOKKOS_EXPERIMENTAL_VIRTUAL int value() override {
+    return val + 10;
+  };
 };
 
 class Foo_2 : public Foo {
@@ -45,7 +47,9 @@ class Foo_2 : public Foo {
   KOKKOS_FUNCTION
   Foo_2() { val = 2; }
 
-  KOKKOS_FUNCTION KOKKOS_VIRTUAL int value() override { return val + 20; };
+  KOKKOS_FUNCTION KOKKOS_EXPERIMENTAL_VIRTUAL int value() override {
+    return val + 20;
+  };
 };
 
 int main(int argc, char* argv[]) {
