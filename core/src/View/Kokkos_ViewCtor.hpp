@@ -27,6 +27,22 @@ struct SequentialHostInit_t {};
 struct WithoutInitializing_t {};
 struct AllowPadding_t {};
 
+// FIXME: AccessorArg_t needs to be templated
+// This really needs to be templated on the argument type
+// But that adds some more complication, preventing simply
+// copying the code from the above properties.
+// For Sacado we only need a size_t for fad_size
+// We can template this later in a separate change.
+struct AccessorArg_t {
+ private:
+  size_t val{};
+
+ public:
+  KOKKOS_FUNCTION AccessorArg_t() = default;
+  KOKKOS_FUNCTION AccessorArg_t(size_t val_) : val{val_} {}
+  KOKKOS_FUNCTION auto value() const { return val; }
+};
+
 template <typename>
 struct is_view_ctor_property : public std::false_type {};
 
@@ -38,6 +54,9 @@ struct is_view_ctor_property<WithoutInitializing_t> : public std::true_type {};
 
 template <>
 struct is_view_ctor_property<AllowPadding_t> : public std::true_type {};
+
+template <>
+struct is_view_ctor_property<AccessorArg_t> : public std::true_type {};
 
 //----------------------------------------------------------------------------
 /**\brief Whether a type can be used for a view label */
@@ -72,9 +91,7 @@ struct ViewCtorProp<void> {};
  */
 template <typename Specialize, typename T>
 struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = CommonViewAllocProp<Specialize, T>;
 
@@ -127,6 +144,18 @@ struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
   type value;
 };
 
+template <>
+struct ViewCtorProp<void, AccessorArg_t> {
+  ViewCtorProp() = default;
+
+  using type = AccessorArg_t;
+
+  KOKKOS_FUNCTION
+  ViewCtorProp(const type arg) : value(arg) {}
+
+  type value;
+};
+
 template <typename T>
 struct ViewCtorProp<void, T *> {
   ViewCtorProp() = default;
@@ -150,6 +179,7 @@ struct ViewCtorProp<T *> : public ViewCtorProp<void, T *> {
   static constexpr bool allow_padding        = false;
   static constexpr bool initialize           = true;
   static constexpr bool sequential_host_init = false;
+  static constexpr bool has_accessor_arg     = false;
 
   using memory_space    = void;
   using execution_space = void;
@@ -198,6 +228,8 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
       !Kokkos::Impl::has_type<WithoutInitializing_t, P...>::value;
   static constexpr bool sequential_host_init =
       Kokkos::Impl::has_type<SequentialHostInit_t, P...>::value;
+  static constexpr bool has_accessor_arg =
+      Kokkos::Impl::has_type<AccessorArg_t, P...>::value;
   static_assert(initialize || !sequential_host_init,
                 "Incompatible WithoutInitializing and SequentialHostInit view "
                 "alloc properties");
@@ -259,6 +291,8 @@ auto with_properties_if_unset(const ViewCtorProp<P...> &view_ctor_prop,
                  !ViewCtorProp<P...>::has_memory_space) ||
                 (is_view_label<Property>::value &&
                  !ViewCtorProp<P...>::has_label) ||
+                (std::is_same_v<Property, AccessorArg_t> &&
+                 !ViewCtorProp<P...>::has_accessor_arg) ||
                 (std::is_same_v<Property, WithoutInitializing_t> &&
                  ViewCtorProp<P...>::initialize) ||
                 (std::is_same_v<Property, SequentialHostInit_t> &&
@@ -308,6 +342,8 @@ struct WithPropertiesIfUnset<ViewCtorProp<P...>, Property, Properties...> {
                    !ViewCtorProp<P...>::has_memory_space) ||
                   (is_view_label<Property>::value &&
                    !ViewCtorProp<P...>::has_label) ||
+                  (std::is_same_v<Property, AccessorArg_t> &&
+                   !ViewCtorProp<P...>::has_accessor_arg) ||
                   (std::is_same_v<Property, WithoutInitializing_t> &&
                    ViewCtorProp<P...>::initialize) ||
                   (std::is_same_v<Property, SequentialHostInit_t> &&
@@ -338,6 +374,7 @@ struct ExecutionSpaceTag {};
 struct MemorySpaceTag {};
 struct LabelTag {};
 struct PointerTag {};
+struct AccessorArgTag {};
 
 template <typename Tag, typename... P>
 KOKKOS_FUNCTION const auto &get_property(
@@ -362,6 +399,11 @@ KOKKOS_FUNCTION const auto &get_property(
     static_assert(ViewCtorProp<P...>::has_pointer);
     using pointer_type = typename ViewCtorProp<P...>::pointer_type;
     return static_cast<const ViewCtorProp<void, pointer_type> &>(view_ctor_prop)
+        .value;
+  } else if constexpr (std::is_same_v<Tag, AccessorArgTag>) {
+    static_assert(ViewCtorProp<P...>::has_accessor_arg);
+    return static_cast<const ViewCtorProp<void, AccessorArg_t> &>(
+               view_ctor_prop)
         .value;
   } else {
     static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");
