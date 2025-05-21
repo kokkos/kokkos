@@ -1222,14 +1222,14 @@ inline void deep_copy(
                       typename src_type::array_layout> ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
       dst.span_is_contiguous() && src.span_is_contiguous() &&
-      ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0())) &&
-      ((dst_type::rank < 2) || (dst.stride_1() == src.stride_1())) &&
-      ((dst_type::rank < 3) || (dst.stride_2() == src.stride_2())) &&
-      ((dst_type::rank < 4) || (dst.stride_3() == src.stride_3())) &&
-      ((dst_type::rank < 5) || (dst.stride_4() == src.stride_4())) &&
-      ((dst_type::rank < 6) || (dst.stride_5() == src.stride_5())) &&
-      ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
-      ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))) {
+      ((dst_type::rank < 1) || (dst.stride(0) == src.stride(0))) &&
+      ((dst_type::rank < 2) || (dst.stride(1) == src.stride(1))) &&
+      ((dst_type::rank < 3) || (dst.stride(2) == src.stride(2))) &&
+      ((dst_type::rank < 4) || (dst.stride(3) == src.stride(3))) &&
+      ((dst_type::rank < 5) || (dst.stride(4) == src.stride(4))) &&
+      ((dst_type::rank < 6) || (dst.stride(5) == src.stride(5))) &&
+      ((dst_type::rank < 7) || (dst.stride(6) == src.stride(6))) &&
+      ((dst_type::rank < 8) || (dst.stride(7) == src.stride(7)))) {
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     const size_t nbytes = allocation_size_from_mapping_and_accessor(
                               src.mapping(), src.accessor()) *
@@ -2422,14 +2422,14 @@ inline void deep_copy(
                       typename src_type::array_layout> ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
       dst.span_is_contiguous() && src.span_is_contiguous() &&
-      ((dst_type::rank < 1) || (dst.stride_0() == src.stride_0())) &&
-      ((dst_type::rank < 2) || (dst.stride_1() == src.stride_1())) &&
-      ((dst_type::rank < 3) || (dst.stride_2() == src.stride_2())) &&
-      ((dst_type::rank < 4) || (dst.stride_3() == src.stride_3())) &&
-      ((dst_type::rank < 5) || (dst.stride_4() == src.stride_4())) &&
-      ((dst_type::rank < 6) || (dst.stride_5() == src.stride_5())) &&
-      ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
-      ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))) {
+      ((dst_type::rank < 1) || (dst.stride(0) == src.stride(0))) &&
+      ((dst_type::rank < 2) || (dst.stride(1) == src.stride(1))) &&
+      ((dst_type::rank < 3) || (dst.stride(2) == src.stride(2))) &&
+      ((dst_type::rank < 4) || (dst.stride(3) == src.stride(3))) &&
+      ((dst_type::rank < 5) || (dst.stride(4) == src.stride(4))) &&
+      ((dst_type::rank < 6) || (dst.stride(5) == src.stride(5))) &&
+      ((dst_type::rank < 7) || (dst.stride(6) == src.stride(6))) &&
+      ((dst_type::rank < 8) || (dst.stride(7) == src.stride(7)))) {
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
     if ((void*)dst.data() != (void*)src.data() && 0 < nbytes) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space, ExecSpace>(
