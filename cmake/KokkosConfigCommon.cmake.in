@@ -673,6 +673,7 @@ function(kokkos_set_source_and_target_properties)
     )
 
     foreach(directory_target IN LISTS DIRECTORY_TARGETS)
+      #FIXME the list of libs "Kokkos::..." that is hardcoded below should be automatically generated to reduce mainteneance burden
       kokkos_check_compile_dependency(
         compile_dependency
         transitive_compile_dependency
