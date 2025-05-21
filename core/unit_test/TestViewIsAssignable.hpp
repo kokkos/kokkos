@@ -16,7 +16,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
-
+#include <Kokkos_TypeInfo.hpp>
 #include <gtest/gtest.h>
 
 namespace Test {

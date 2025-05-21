@@ -16,8 +16,9 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <desul/atomics.hpp>
 #include <type_traits>
-#include <Kokkos_Macros.hpp>
+#include <cstddef>
 
 namespace {
 

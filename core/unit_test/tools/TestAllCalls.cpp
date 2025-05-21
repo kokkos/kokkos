@@ -22,6 +22,7 @@ import mykokkoscore;
 #include <Kokkos_Macros.hpp>
 #include <iostream>
 #include <sstream>
+#include <cstdint>
 
 int main(int argc, char** argv) {
   Kokkos::initialize(argc, argv);

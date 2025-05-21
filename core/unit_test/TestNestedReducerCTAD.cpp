@@ -16,6 +16,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <type_traits>
 
 namespace {
 

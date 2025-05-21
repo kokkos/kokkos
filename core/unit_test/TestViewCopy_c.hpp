@@ -18,6 +18,7 @@
 
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Assert.hpp>
 
 namespace {
 // Do not rely on deep_copy(0) as we want to test it!

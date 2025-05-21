@@ -17,6 +17,7 @@
 import mykokkoscore;
 #include <Kokkos_Macros.hpp>
 
+#include <Kokkos_TypeInfo.hpp>
 #include <Kokkos_Timer.hpp>
 #include <iostream>
 #include <cstdlib>
