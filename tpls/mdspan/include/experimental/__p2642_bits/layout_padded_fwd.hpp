@@ -18,18 +18,17 @@
 #include <cassert>
 #include "../__p0009_bits/dynamic_extent.hpp"
 #include "../__p0009_bits/utility.hpp"
-#include "experimental/__p0009_bits/dynamic_extent.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 namespace MDSPAN_IMPL_PROPOSED_NAMESPACE {
 
-template <size_t padding_value = MDSPAN_IMPL_STANDARD_NAMESPACE::dynamic_extent>
+template <size_t padding_value = dynamic_extent>
 struct layout_left_padded {
   template <class Extents>
   class mapping;
 };
 
-template <size_t padding_value = MDSPAN_IMPL_STANDARD_NAMESPACE::dynamic_extent>
+template <size_t padding_value = dynamic_extent>
 struct layout_right_padded {
   template <class Extents>
   class mapping;
