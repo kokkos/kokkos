@@ -46,8 +46,8 @@ export {
   namespace Impl {
   using ::Kokkos::Impl::DeepCopy;
   using ::Kokkos::Impl::MemorySpaceAccess;
-  using ::Kokkos::Impl::ViewCtorProp;
   using ::Kokkos::Impl::PolicyTraits;
+  using ::Kokkos::Impl::ViewCtorProp;
   }  // namespace Impl
 
   using ::Kokkos::IndexType;
