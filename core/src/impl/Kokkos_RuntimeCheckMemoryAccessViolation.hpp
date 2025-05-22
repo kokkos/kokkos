@@ -72,6 +72,6 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
 }
 
 }  // namespace Impl
-} //  namespace Kokkos
+}  //  namespace Kokkos
 
-#endif //  KOKKOS_RUNTIME_CHECK_MEMORY_ACCESS_VIOLATION_HPP
+#endif  //  KOKKOS_RUNTIME_CHECK_MEMORY_ACCESS_VIOLATION_HPP

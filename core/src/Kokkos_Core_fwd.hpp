@@ -65,8 +65,8 @@ namespace Kokkos {
 class HostSpace;  ///< Memory space for main process and CPU execution spaces
 class AnonymousSpace;
 
-//template <class ExecutionSpace, class MemorySpace>
-//struct Device;
+// template <class ExecutionSpace, class MemorySpace>
+// struct Device;
 
 // forward declare here so that backend initializer calls can use it.
 class InitializationSettings;

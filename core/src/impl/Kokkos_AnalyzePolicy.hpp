@@ -37,7 +37,7 @@
 #include <traits/Kokkos_WorkItemPropertyTrait.hpp>
 #include <traits/Kokkos_WorkTagTrait.hpp>
 
-#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_ANALYZE_POLICY 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_ANALYZE_POLICY
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_ANALYZE_POLICY
 #endif

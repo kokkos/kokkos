@@ -138,7 +138,13 @@ else()
 endif()
 
 kokkos_add_library(
-	kokkoscore SOURCES ${KOKKOS_CORE_SRCS} MODULE_FILES kokkoscore.ccm HEADERS ${KOKKOS_CORE_HEADERS}
+  kokkoscore
+  SOURCES
+  ${KOKKOS_CORE_SRCS}
+  MODULE_FILES
+  kokkoscore.ccm
+  HEADERS
+  ${KOKKOS_CORE_HEADERS}
   ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
 )
 
