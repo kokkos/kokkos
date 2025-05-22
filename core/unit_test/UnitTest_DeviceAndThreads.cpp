@@ -14,7 +14,11 @@
 //
 //@HEADER
 
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import mykokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Assert.hpp>
 #include <iostream>
