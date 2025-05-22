@@ -151,7 +151,11 @@ KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(nearbyint, hrint)
 // nextafter
 // copysign
 // isfinite
+#if (KOKKOS_COMPILER_NVCC <= 1210 || KOKKOS_COMPILER_NVCC >= 1300) || \
+    defined(KOKKOS_ENABLE_CXX17)
+// __hisinf always returns false with nvcc 12.2 when compiling with cxx20
 KOKKOS_CUDA_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isinf, __hisinf)
+#endif
 KOKKOS_CUDA_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isnan, __hisnan)
 // signbit
 
