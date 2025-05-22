@@ -44,17 +44,29 @@ pipeline {
                         sh '''wget https://github.com/Kitware/CMake/releases/download/v4.0.2/cmake-4.0.2-linux-x86_64.sh && \
                               chmod +x cmake-4.0.2-linux-x86_64.sh && \
                               ./cmake-4.0.2-linux-x86_64.sh --skip-license'''
-                        sh '''rm -rf build && mkdir -p build && cd build && \
-                              cmake \
+                        sh '''cmake
+                                -B build \
                                 -GNinja \
+                                -DCMAKE_CXX_COMPILER=clang++-19 \
+                                -DCMAKE_CXX_FLAGS="-Werror" \
                                 -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
-                                -DKokkos_ENABLE_SERIAL=ON \
-                              .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                                -DKokkos_ENABLE_SERIAL=ON && \
+                              cmake --build build --target install -j 8 && \
+                              ctest --test-dir build --no-compress-output -T Test --verbose && \
+                              cd example/build_cmake_installed && \
+                              cmake \
+                                -B build \
+                                -DCMAKE_CXX_COMPILER=clang++-19 \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=20 && \
+                              cmake --build build -j 8 \
+                              ctest --test-dir build --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
