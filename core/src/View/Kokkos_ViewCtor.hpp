@@ -34,13 +34,7 @@ struct AllowPadding_t {};
 // For Sacado we only need a size_t for fad_size
 // We can template this later in a separate change.
 struct AccessorArg_t {
- private:
-  size_t val{};
-
- public:
-  KOKKOS_FUNCTION AccessorArg_t() = default;
-  KOKKOS_FUNCTION AccessorArg_t(size_t val_) : val{val_} {}
-  KOKKOS_FUNCTION auto value() const { return val; }
+  size_t value{};
 };
 
 template <typename>
