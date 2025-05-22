@@ -16,12 +16,12 @@
 
 /// @Kokkos_Feature_Level_Required:1
 
+#include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_Macros.hpp>
 #include <cstdio>
 #include <sstream>
 #include <type_traits>
