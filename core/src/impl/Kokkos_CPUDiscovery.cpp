@@ -14,10 +14,6 @@
 //
 //@HEADER
 
-#ifdef USE_MODULES
-module;
-#endif
-
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -26,10 +22,6 @@ module;
 
 #include <cstdlib>  // getenv
 #include <string>
-
-#ifdef USE_MODULES
-module kokkoscore;
-#endif
 
 int Kokkos::Impl::mpi_ranks_per_node() {
   for (char const* env_var : {

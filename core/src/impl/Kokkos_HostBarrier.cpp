@@ -14,10 +14,6 @@
 //
 //@HEADER
 
-#ifdef USE_MODULES
-module;
-#endif
-
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -34,10 +30,6 @@ module;
 #include <process.h>
 #include <winsock2.h>
 #include <windows.h>
-#endif
-
-#ifdef USE_MODULES
-module kokkoscore;
 #endif
 
 namespace Kokkos {

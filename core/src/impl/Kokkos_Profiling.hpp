@@ -46,8 +46,7 @@ struct InitArguments {
   // NOTE DZP: PossiblyUnsetOption was introduced
   // before C++17, std::optional is a better choice
   // for this long-term
-  inline static const std::string unset_string_option =
-      "kokkos_tools_impl_unset_option";
+  static const std::string unset_string_option;
   enum PossiblyUnsetOption { unset, off, on };
   PossiblyUnsetOption help = unset;
   std::string lib          = unset_string_option;

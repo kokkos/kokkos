@@ -1,7 +1,3 @@
-#ifdef KOKKOS_USE_MODULES
-module;
-#endif
-
 //@HEADER
 // ************************************************************************
 //
@@ -48,10 +44,6 @@ module;
 #include <sstream>
 #include <iostream>
 
-#ifdef USE_MODULES
-module kokkoscore;
-#endif
-
 namespace {
 void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
 #ifndef KOKKOS_TOOLS_ENABLE_LIBDL
@@ -82,6 +74,9 @@ void warn_env_var_ignored_when_kokkos_tools_disabled(char const* env_var,
 namespace Kokkos {
 
 namespace Tools {
+
+const std::string InitArguments::unset_string_option = {
+    "kokkos_tools_impl_unset_option"};
 
 namespace Impl {
 void parse_command_line_arguments(int& argc, char* argv[],

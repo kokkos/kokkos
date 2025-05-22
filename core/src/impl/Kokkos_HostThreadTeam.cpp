@@ -14,10 +14,6 @@
 //
 //@HEADER
 
-#ifdef USE_MODULES
-module;
-#endif
-
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -26,10 +22,6 @@ module;
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_Error.hpp>
-
-#ifdef USE_MODULES
-module kokkoscore;
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

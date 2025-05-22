@@ -14,10 +14,6 @@
 //
 //@HEADER
 
-#ifdef USE_MODULES
-module;
-#endif
-
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -27,10 +23,6 @@ module;
 #include <ostream>
 #include <sstream>
 #include <cstdint>
-
-#ifdef USE_MODULES
-module kokkoscore;
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------

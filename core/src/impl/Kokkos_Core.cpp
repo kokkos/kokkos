@@ -14,10 +14,6 @@
 //
 //@HEADER
 
-#ifdef USE_MODULES
-module;
-#endif
-
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -46,10 +42,6 @@ module;
 #include <unistd.h>
 #else
 #include <windows.h>
-#endif
-
-#ifdef USE_MODULES
-module kokkoscore;
 #endif
 
 //----------------------------------------------------------------------------

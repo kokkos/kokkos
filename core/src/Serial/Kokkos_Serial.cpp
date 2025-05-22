@@ -14,10 +14,6 @@
 //
 //@HEADER
 
-#ifdef KOKKOS_USE_MODULES
-module;
-#endif
-
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
@@ -36,12 +32,11 @@ module;
 
 /*--------------------------------------------------------------------------*/
 
-#ifdef KOKKOS_USE_MODULES
-module kokkoscore;
-#endif
-
 namespace Kokkos {
 namespace Impl {
+
+std::vector<SerialInternal*> SerialInternal::all_instances;
+std::mutex SerialInternal::all_instances_mutex;
 
 bool SerialInternal::is_initialized() { return m_is_initialized; }
 

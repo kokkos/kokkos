@@ -65,8 +65,8 @@ namespace Kokkos {
 class HostSpace;  ///< Memory space for main process and CPU execution spaces
 class AnonymousSpace;
 
-// template <class ExecutionSpace, class MemorySpace>
-// struct Device;
+template <class ExecutionSpace, class MemorySpace>
+struct Device;
 
 // forward declare here so that backend initializer calls can use it.
 class InitializationSettings;
@@ -204,7 +204,7 @@ inline constexpr bool has_shared_host_pinned_space =
 
 namespace Kokkos {
 
-/*template <class AccessSpace, class MemorySpace>
+template <class AccessSpace, class MemorySpace>
 struct SpaceAccessibility;
 
 namespace Impl {
@@ -251,7 +251,7 @@ KOKKOS_FUNCTION void runtime_check_memory_access_violation(
               msg);))
 }
 
-}  // namespace Impl*/
+}  // namespace Impl
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
