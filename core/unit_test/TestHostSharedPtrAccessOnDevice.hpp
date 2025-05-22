@@ -16,7 +16,11 @@
 
 #include <impl/Kokkos_StringManipulation.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
-import mykokkoscore;
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Macros.hpp>
 
 #include <gtest/gtest.h>

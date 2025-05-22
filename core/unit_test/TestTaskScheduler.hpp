@@ -19,7 +19,11 @@
 
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_TASKDAG)
-import mykokkoscore;
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Macros.hpp>
 #include <cstdio>
 #include <iostream>

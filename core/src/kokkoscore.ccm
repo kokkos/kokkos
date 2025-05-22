@@ -18,10 +18,7 @@ module;
 
 #include <Kokkos_Core.hpp>
 
-export module mykokkoscore;
-
-// export import : kokkos_concepts;
-// export import : kokkos_min_max;
+export module kokkoscore;
 
 export {
   namespace Kokkos {

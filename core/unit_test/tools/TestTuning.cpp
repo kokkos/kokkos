@@ -17,7 +17,11 @@
 // This file tests the primitives of the Tuning system
 
 #include <iostream>
-import mykokkoscore;
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Macros.hpp>
 #include <stdexcept>
 #include <string>

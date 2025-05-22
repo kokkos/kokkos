@@ -18,7 +18,11 @@
 // Incremental test for MDRange reduction .
 // Reduction is tested with scalar, view and a customized reduction.
 
-import mykokkoscore;
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Macros.hpp>
 #include <gtest/gtest.h>
 

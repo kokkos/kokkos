@@ -17,7 +17,11 @@
 #include <gtest/gtest.h>
 #include <type_traits>
 
-import mykokkoscore;
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Macros.hpp>
 #include <mdspan/mdspan.hpp>
 

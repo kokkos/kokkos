@@ -13,7 +13,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //@HEADER
-import mykokkoscore;
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Macros.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
 using ExecSpace  = Kokkos::DefaultHostExecutionSpace;
