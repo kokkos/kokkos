@@ -174,6 +174,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   return devices;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 [[nodiscard]] int Kokkos::device_id() noexcept {
 #if defined(KOKKOS_ENABLE_CUDA)
   int device = Cuda().cuda_device();
@@ -604,6 +605,10 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV80");
 #elif defined(KOKKOS_ARCH_ARMV81)
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV81");
+#elif defined(KOKKOS_ARCH_ARMV84)
+  declare_configuration_metadata("architecture", "CPU architecture", "ARMV84");
+#elif defined(KOKKOS_ARCH_ARMV84_SVE)
+  declare_configuration_metadata("architecture", "CPU architecture", "ARMV84_SVE");
 #elif defined(KOKKOS_ARCH_ARMV8_THUNDERX)
   declare_configuration_metadata("architecture", "CPU architecture", "ARMV8_THUNDERX");
 #elif defined(KOKKOS_ARCH_ARMV8_THUNDERX2)
@@ -759,6 +764,7 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
 
 // declared noexcept such that std::terminate is called if any of the registered
 // function throws
+// NOLINTNEXTLINE(bugprone-exception-escape)
 void call_registered_finalize_hook_functions() noexcept {
   while (!finalize_hooks.empty()) {
     auto const& func = finalize_hooks.top();

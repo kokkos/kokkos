@@ -274,8 +274,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
     GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
 #endif
-#if defined(KOKKOS_ENABLE_SYCL) &&      \
-    (!defined(SYCL_EXT_ONEAPI_GRAPH) || \
+#if defined(KOKKOS_ENABLE_SYCL) &&               \
+    (!defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT) || \
      !defined(KOKKOS_ARCH_INTEL_GPU))  // FIXME_SYCL
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
     GTEST_SKIP() << "skipping since test case is known to fail with SYCL";
@@ -384,7 +384,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
         root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
                                   no_op_functor, count)
 #if !defined(KOKKOS_ENABLE_SYCL) || \
-    defined(SYCL_EXT_ONEAPI_GRAPH)  // FIXME_SYCL
+    defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)  // FIXME_SYCL
 #if !defined(KOKKOS_ENABLE_CUDA) && \
     !defined(KOKKOS_ENABLE_HIP)  // FIXME_CUDA FIXME_HIP
             .then_parallel_reduce(
@@ -817,7 +817,7 @@ struct GraphNodeTypes {
   static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::Cuda>;
 #elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
     static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::HIP>;
-#elif defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)
   static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::SYCL>;
 #else
   static constexpr bool support_capture = false;
@@ -915,7 +915,7 @@ template <typename Exec>
 struct ExternalCapture {
 #if defined(KOKKOS_ENABLE_CUDA) ||                                           \
     (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)) || \
-    (defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH))
+    (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
   // clang-format off
   template <typename Pred, typename DstType, typename... SrcTypes>
   static auto add(const Pred& pred, const Exec& exec, const DstType& dst, SrcTypes&&... srcs) {
@@ -951,7 +951,7 @@ struct ExternalCapture {
         <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.hip_stream()>>>(dst, srcs...);
   }
 #endif
-#if defined(KOKKOS_ENABLE_SYCL) && defined(SYCL_EXT_ONEAPI_GRAPH)
+#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)
   template <typename DstType, typename... SrcTypes>
   static void compute(const Kokkos::SYCL& exec, DstType* const dst,
                       const SrcTypes* const... srcs) {

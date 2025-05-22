@@ -92,9 +92,7 @@ struct ViewCtorProp<std::enable_if_t<std::is_same_v<P, AllowPadding_t> ||
                                      std::is_same_v<P, WithoutInitializing_t> ||
                                      std::is_same_v<P, SequentialHostInit_t>>,
                     P> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = P;
 
@@ -106,9 +104,7 @@ struct ViewCtorProp<std::enable_if_t<std::is_same_v<P, AllowPadding_t> ||
 /* Map input label type to std::string */
 template <typename Label>
 struct ViewCtorProp<std::enable_if_t<is_view_label<Label>::value>, Label> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = std::string;
 
@@ -122,9 +118,7 @@ template <typename Space>
 struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
                                      Kokkos::is_execution_space<Space>::value>,
                     Space> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = Space;
 
@@ -135,9 +129,7 @@ struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
 
 template <typename T>
 struct ViewCtorProp<void, T *> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = T *;
 

@@ -48,6 +48,8 @@ declare_and_check_host_arch(NATIVE "local machine")
 declare_and_check_host_arch(AMDAVX "AMD chip")
 declare_and_check_host_arch(ARMV80 "ARMv8.0 Compatible CPU")
 declare_and_check_host_arch(ARMV81 "ARMv8.1 Compatible CPU")
+declare_and_check_host_arch(ARMV84 "ARMv8.4 Compatible CPU")
+declare_and_check_host_arch(ARMV84_SVE "Generic ARMv8.4 with SVE support (-march=armv8.4-a+sve)")
 declare_and_check_host_arch(ARMV8_THUNDERX "ARMv8 Cavium ThunderX CPU")
 declare_and_check_host_arch(ARMV8_THUNDERX2 "ARMv8 Cavium ThunderX2 CPU")
 declare_and_check_host_arch(A64FX "ARMv8.2 with SVE Support")
@@ -257,7 +259,12 @@ if(KOKKOS_ARCH_NATIVE)
   else()
     set(KOKKOS_NATIVE_FLAGS "-mcpu=native")
   endif()
-  compiler_specific_flags(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID NVHPC -tp=native DEFAULT ${KOKKOS_NATIVE_FLAGS})
+
+  if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL "NVHPC")
+    set(KOKKOS_NATIVE_FLAGS "-tp=native")
+  endif()
+
+  compiler_specific_flags(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID DEFAULT ${KOKKOS_NATIVE_FLAGS})
 endif()
 
 if(KOKKOS_ARCH_ARMV80)
@@ -310,6 +317,22 @@ if(KOKKOS_ARCH_ARMV8_THUNDERX)
   )
 endif()
 
+if(KOKKOS_ARCH_ARMV84)
+  set(KOKKOS_ARCH_ARM_NEON ON)
+  compiler_specific_flags(
+    COMPILER_ID
+    KOKKOS_CXX_HOST_COMPILER_ID
+    Cray
+    NO-VALUE-SPECIFIED
+    MSVC
+    /arch:armv8.4
+    NVHPC
+    NO-VALUE-SPECIFIED
+    DEFAULT
+    -march=armv8.4-a
+  )
+endif()
+
 if(KOKKOS_ARCH_ARMV8_THUNDERX2)
   set(KOKKOS_ARCH_ARM_NEON ON)
   set(KOKKOS_ARCH_ARMV81 ON) #Not a cache variable
@@ -326,6 +349,56 @@ if(KOKKOS_ARCH_ARMV8_THUNDERX2)
     -mcpu=thunderx2t99
     -mtune=thunderx2t99
   )
+endif()
+
+# SVE helper function to query bitwise HW SVE length
+function(GET_SVE_HW_VL FLAG)
+  # if env var SVE_HW_VL is set, use it
+  if(DEFINED ENV{SVE_HW_VL})
+    set(SVE_HW_VL $ENV{SVE_HW_VL})
+    message(STATUS "Using SVE_HW_VL from ENV{SVE_HW_VL} = ${SVE_HW_VL}")
+  else()
+    try_run(
+      RUN_GET_SVE_HW_VL COMPILE_GET_SVE_HW_VL ${CMAKE_CURRENT_BINARY_DIR}
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/compile_tests/get_sve_hw_vl.cpp
+      COMPILE_DEFINITIONS ${FLAG}
+      COMPILE_OUTPUT_VARIABLE COMPILE_OUTPUT_GET_SVE_HW_VL
+      RUN_OUTPUT_VARIABLE SVE_HW_VL
+    )
+
+    if(RUN_GET_SVE_HW_VL EQUAL 0)
+      # match the output SVE_HW_VL=<VL>
+      string(REGEX MATCH "SVE_HW_VL=([0-9]+)" SVE_HW_VL "${SVE_HW_VL}")
+      # remove "SVE_HW_VL="
+      string(REPLACE "SVE_HW_VL=" "" SVE_HW_VL "${SVE_HW_VL}")
+      message(STATUS "Performing Test GET_SVE_HW_VL = ${SVE_HW_VL} -- success")
+    else()
+      if(NOT COMPILE_GET_SVE_HW_VL)
+        message(
+          WARNING
+            "Performing Test GET_SVE_HW_VL -- failed to compile with flag ${FLAG}: ${COMPILE_OUTPUT_GET_SVE_HW_VL}"
+        )
+      else()
+        message(WARNING "Performing Test GET_SVE_HW_VL -- compiled with flag ${FLAG} but failed to run: ${SVE_HW_VL}")
+      endif()
+    endif()
+  endif()
+  set(SVE_HW_VL ${SVE_HW_VL} PARENT_SCOPE)
+endfunction()
+
+if(KOKKOS_ARCH_ARMV84_SVE)
+  set(KOKKOS_ARCH_ARM_NEON ON)
+  set(KOKKOS_ARCH_ARMV84_SVE_FLAG -march=armv8.4-a+sve)
+  check_cxx_compiler_flag(${KOKKOS_ARCH_ARMV84_SVE_FLAG} COMPILER_SUPPORTS_ARMV84_SVE)
+
+  if(COMPILER_SUPPORTS_ARMV84_SVE)
+    set(KOKKOS_ARCH_ARM_SVE ON)
+    get_sve_hw_vl(${KOKKOS_ARCH_ARMV84_SVE_FLAG})
+    set(KOKKOS_ARCH_ARMV84_SVE_FLAG ${KOKKOS_ARCH_ARMV84_SVE_FLAG};-msve-vector-bits=${SVE_HW_VL})
+    compiler_specific_flags(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID DEFAULT ${KOKKOS_ARCH_ARMV84_SVE_FLAG})
+  else()
+    message(WARNING "Compiler does not support ARMv8.4-a+SVE architecture")
+  endif()
 endif()
 
 if(KOKKOS_ARCH_A64FX)
@@ -353,17 +426,18 @@ if(KOKKOS_ARCH_ARMV9_GRACE)
   if(KOKKOS_CXX_HOST_COMPILER_ID STREQUAL NVHPC)
     check_cxx_compiler_flag("-tp=grace" COMPILER_SUPPORTS_GRACE_AS_TARGET_PROCESSOR)
   else()
-    check_cxx_compiler_flag("-mcpu=neoverse-n2" COMPILER_SUPPORTS_NEOVERSE_N2)
+    check_cxx_compiler_flag("-mcpu=neoverse-v2" COMPILER_SUPPORTS_NEOVERSE_V2)
     check_cxx_compiler_flag("-msve-vector-bits=128" COMPILER_SUPPORTS_SVE_VECTOR_BITS)
   endif()
-  if(COMPILER_SUPPORTS_NEOVERSE_N2 AND COMPILER_SUPPORTS_SVE_VECTOR_BITS OR COMPILER_SUPPORTS_GRACE_AS_TARGET_PROCESSOR)
+  if(COMPILER_SUPPORTS_NEOVERSE_V2 AND COMPILER_SUPPORTS_SVE_VECTOR_BITS OR COMPILER_SUPPORTS_GRACE_AS_TARGET_PROCESSOR)
+    set(KOKKOS_ARCH_ARM_SVE ON)
     compiler_specific_flags(
       COMPILER_ID
       KOKKOS_CXX_HOST_COMPILER_ID
       NVHPC
       -tp=grace
       DEFAULT
-      -mcpu=neoverse-n2
+      -mcpu=neoverse-v2
       -msve-vector-bits=128
     )
   else()
@@ -686,6 +760,8 @@ if(KOKKOS_ARCH_NATIVE)
     check_cxx_symbol_exists(__AVX512F__ "" KOKKOS_COMPILER_HAS_AVX512)
     unset(KOKKOS_COMPILER_HAS_AVX2 CACHE)
     check_cxx_symbol_exists(__AVX2__ "" KOKKOS_COMPILER_HAS_AVX2)
+    unset(KOKKOS_COMPILER_HAS_ARM_SVE CACHE)
+    check_cxx_symbol_exists(__ARM_FEATURE_SVE "" KOKKOS_COMPILER_HAS_ARM_SVE)
     unset(KOKKOS_COMPILER_HAS_ARM_NEON CACHE)
     check_cxx_symbol_exists(__ARM_NEON "" KOKKOS_COMPILER_HAS_ARM_NEON)
     unset(KOKKOS_COMPILER_HAS_AVX CACHE)
@@ -704,6 +780,26 @@ if(KOKKOS_ARCH_NATIVE)
   elseif(KOKKOS_COMPILER_HAS_AVX2)
     message(STATUS "SIMD: AVX2 detected")
     set(KOKKOS_ARCH_AVX2 ON)
+  elseif(KOKKOS_COMPILER_HAS_ARM_SVE)
+    message(STATUS "SIMD: ARM_SVE detected")
+    set(KOKKOS_ARCH_ARM_SVE ON)
+    get_sve_hw_vl("${KOKKOS_NATIVE_FLAGS}")
+    compiler_specific_flags(
+      COMPILER_ID
+      KOKKOS_CXX_HOST_COMPILER_ID
+      Clang
+      ${KOKKOS_NATIVE_FLAGS}
+      -msve-vector-bits=${SVE_HW_VL}
+      GNU
+      ${KOKKOS_NATIVE_FLAGS}
+      -msve-vector-bits=${SVE_HW_VL}
+      NVHPC
+      ${KOKKOS_NATIVE_FLAGS}
+      -msve-vector-bits=${SVE_HW_VL}
+      DEFAULT
+      ${KOKKOS_NATIVE_FLAGS}
+      -msve-vector-bits=${SVE_HW_VL}
+    )
   elseif(KOKKOS_COMPILER_HAS_ARM_NEON)
     message(STATUS "SIMD: ARM_NEON detected")
     set(KOKKOS_ARCH_ARM_NEON ON)
