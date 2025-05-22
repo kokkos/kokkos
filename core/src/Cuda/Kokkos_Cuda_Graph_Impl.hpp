@@ -158,6 +158,21 @@ struct GraphImpl<Kokkos::Cuda> {
     m_nodes.push_back(std::move(arg_node_ptr));
   }
 
+  template <class NodeImpl>
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_memset_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> arg_node_ptr) {
+    static_assert(
+        Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+    KOKKOS_EXPECTS(bool(arg_node_ptr));
+
+    auto& kernel = arg_node_ptr->get_kernel();
+    kernel.add(m_graph);
+    static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
+
+    m_nodes.push_back(std::move(arg_node_ptr));
+  }
+
   template <class NodeImplPtr, class PredecessorRef>
   // requires PredecessorRef is a specialization of GraphNodeRef that has
   // already been added to this graph and NodeImpl is a specialization of

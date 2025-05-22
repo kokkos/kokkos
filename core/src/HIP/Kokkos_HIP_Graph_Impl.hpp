@@ -67,6 +67,11 @@ class GraphImpl<Kokkos::HIP> {
       Kokkos::Impl::is_graph_capture_v<typename NodeImpl::kernel_type>>
   add_node(const Kokkos::HIP& exec, std::shared_ptr<NodeImpl> arg_node_ptr);
 
+  template <class NodeImpl>
+  std::enable_if_t<
+      Kokkos::Impl::is_graph_memset_v<typename NodeImpl::kernel_type>>
+  add_node(std::shared_ptr<NodeImpl> arg_node_ptr);
+
   template <class NodeImplPtr, class PredecessorRef>
   void add_predecessor(NodeImplPtr arg_node_ptr, PredecessorRef arg_pred_ref);
 
@@ -168,6 +173,20 @@ GraphImpl<Kokkos::HIP>::add_node(const Kokkos::HIP& exec,
 
   auto& kernel = arg_node_ptr->get_kernel();
   kernel.capture(exec, m_graph);
+  static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
+
+  m_nodes.push_back(std::move(arg_node_ptr));
+}
+
+template <class NodeImpl>
+inline std::enable_if_t<
+    Kokkos::Impl::is_graph_memset_v<typename NodeImpl::kernel_type>>
+GraphImpl<Kokkos::HIP>::add_node(std::shared_ptr<NodeImpl> arg_node_ptr) {
+  static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+  KOKKOS_EXPECTS(bool(arg_node_ptr));
+
+  auto& kernel = arg_node_ptr->get_kernel();
+  kernel.add(m_graph);
   static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
 
   m_nodes.push_back(std::move(arg_node_ptr));

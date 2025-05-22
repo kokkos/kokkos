@@ -34,6 +34,37 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename ViewType>
+struct GraphNodeMemsetImpl<Kokkos::Cuda, ViewType> {
+  using value_t = typename ViewType::value_type;
+
+  // TODO Check the documentation for what restrictions apply w.r.t. execution
+  //      space instance. List restrictions.
+  GraphNodeMemsetImpl(const Kokkos::Cuda&, ViewType dst_, const int value_,
+                      const size_t count_)
+      : dst(std::move(dst_)), value(value_), count(count_) {}
+
+  ViewType dst;
+  int value;
+  size_t count;
+  cudaGraphNode_t m_node = nullptr;
+
+  void add(cudaGraph_t graph) {
+    cudaMemsetParams params = {};
+
+    params.dst   = static_cast<void*>(dst.data());
+    params.value = static_cast<unsigned char>(value);
+
+    params.elementSize = 1;
+    params.width       = count;
+    params.height      = 1;
+    params.pitch       = 0;
+
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaGraphAddMemsetNode(&m_node, graph, nullptr, 0, &params));
+  }
+};
+
 template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::Cuda, Functor> {
   Functor m_functor;

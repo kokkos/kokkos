@@ -30,6 +30,37 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename ViewType>
+struct GraphNodeMemsetImpl<Kokkos::HIP, ViewType> {
+  using value_t = typename ViewType::value_type;
+
+  // TODO Check the documentation for what restrictions apply w.r.t. execution
+  //      space instance. List restrictions.
+  GraphNodeMemsetImpl(const Kokkos::HIP&, ViewType dst_, const int value_,
+                      const size_t count_)
+      : dst(std::move(dst_)), value(value_), count(count_) {}
+
+  ViewType dst;
+  int value;
+  size_t count;
+  hipGraphNode_t m_node = nullptr;
+
+  void add(hipGraph_t graph) {
+    hipMemsetParams params = {};
+
+    params.dst   = static_cast<void*>(dst.data());
+    params.value = static_cast<unsigned char>(value);
+
+    params.elementSize = 1;
+    params.width       = count;
+    params.height      = 1;
+    params.pitch       = 0;
+
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        hipGraphAddMemsetNode(&m_node, graph, nullptr, 0, &params));
+  }
+};
+
 template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::HIP, Functor> {
   Functor m_functor;

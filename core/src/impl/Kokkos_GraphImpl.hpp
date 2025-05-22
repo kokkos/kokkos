@@ -37,6 +37,11 @@ struct is_graph_capture<
            Kokkos::Impl::is_specialization_of_v<T, GraphNodeCaptureImpl>>>
     : public std::true_type {};
 
+template <typename T>
+struct is_graph_memset<T, std::enable_if_t<Kokkos::Impl::is_specialization_of_v<
+                              T, GraphNodeMemsetImpl>>>
+    : public std::true_type {};
+
 struct GraphAccess {
   template <class ExecutionSpace>
   static Kokkos::Experimental::Graph<ExecutionSpace> construct_graph(

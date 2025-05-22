@@ -45,6 +45,57 @@ struct GraphNodeKernelDefaultImpl {
   ExecutionSpace m_execution_space;
 };
 
+// Assume it's better to use std::memset on host.
+// Probably a bad assumption.
+// Let's see what is done for e.g. ZeroMemset.
+template <typename ViewType>
+struct Memset {
+  static constexpr bool accessible =
+      Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename ViewType::memory_space>::accessible;
+
+  template <typename Exec>
+  void apply(const Exec &exec) const {
+    if constexpr (accessible) {
+      exec.fence("fence before 'std::memset'");
+      std::memset(dst.data(), value, count);
+    } else {
+      Kokkos::parallel_for(Kokkos::RangePolicy(exec, 0, count), *this);
+    }
+  }
+
+  template <typename T>
+  KOKKOS_FUNCTION void operator()(const T index) const {
+    reinterpret_cast<unsigned char *>(dst.data())[index] =
+        static_cast<unsigned char>(value);
+  }
+
+  ViewType dst;
+  int value;
+  size_t count;
+};
+
+template <typename ExecutionSpace, typename ViewType>
+struct GraphNodeMemsetImpl : public GraphNodeKernelDefaultImpl<ExecutionSpace> {
+ public:
+  using execute_kernel_vtable_base_t =
+      GraphNodeKernelDefaultImpl<ExecutionSpace>;
+
+  using memset_t = Memset<ViewType>;
+
+  template <typename... Args>
+  GraphNodeMemsetImpl(ExecutionSpace exec, Args &&...args)
+      : execute_kernel_vtable_base_t{std::move(exec)},
+        memset{std::forward<Args>(args)...} {}
+
+  void execute_kernel() override final {
+    memset.apply(this->m_execution_space);
+  }
+
+ private:
+  memset_t memset;
+};
+
 // TODO Indicate that this kernel specialization is only for the Host somehow?
 template <class ExecutionSpace, class PolicyType, class Functor,
           class PatternTag, class... Args>

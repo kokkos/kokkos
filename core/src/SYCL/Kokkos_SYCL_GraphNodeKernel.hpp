@@ -30,6 +30,30 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename ViewType>
+struct GraphNodeMemsetImpl<Kokkos::SYCL, ViewType> {
+  using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::modifiable>;
+
+  std::optional<sycl::ext::oneapi::experimental::node> m_node = std::nullopt;
+
+  // TODO Check the documentation for what restrictions apply w.r.t. execution
+  //      space instance. List restrictions.
+  GraphNodeMemsetImpl(const Kokkos::SYCL&, ViewType dst_, const int value_,
+                      const size_t count_)
+      : dst(std::move(dst_)), value(value_), count(count_) {}
+
+  ViewType dst;
+  int value;
+  size_t count;
+
+  void add(native_graph_t& graph) {
+    m_node = graph.add([&](sycl::handler& cgh) {
+      cgh.memset(dst.data(), static_cast<unsigned char>(value), count);
+    });
+  }
+};
+
 template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::SYCL, Functor> {
   using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
