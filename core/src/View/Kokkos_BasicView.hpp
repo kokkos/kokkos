@@ -413,9 +413,7 @@ class BasicView {
                 Impl::get_property<Impl::AccessorArgTag>(arg_prop).value}) {}
 
   // Private Ctors coming from the case where we dealt with AccessorArg_t
-  // These are made private with different overload in case we need
-  // later ctors in BasicView which take CtorProp, Mapping and Accessor
-  // We don't have those right now.
+  // We don't have public ctors which take ViewCtorProp and accessor.
   // I don't want to create the data handle above, because in a subsequent PR
   // the data handle creation itself will depend on the constructed accessor.
  private:
