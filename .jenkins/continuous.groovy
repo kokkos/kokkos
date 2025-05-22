@@ -41,6 +41,9 @@ pipeline {
                         }
                     }
                     steps {
+                        sh '''wget https://github.com/Kitware/CMake/releases/download/v4.0.2/cmake-4.0.2-linux-x86_64.sh && \
+                              chmod +x cmake-4.0.2-linux-x86_64.sh && \
+                              ./cmake-4.0.2-linux-x86_64.sh --skip-license'''
                         sh '''rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -GNinja \
