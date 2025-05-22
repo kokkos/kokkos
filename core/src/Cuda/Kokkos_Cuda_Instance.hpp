@@ -364,7 +364,7 @@ class CudaInternal {
   void release_team_scratch_space(int scratch_pool_id);
 };
 
-void create_Cuda_instances(std::vector<Cuda>& instances);
+void create_Cuda_instance(Cuda& instance);
 }  // Namespace Impl
 
 namespace Experimental {
@@ -374,12 +374,14 @@ namespace Experimental {
 //   Default behavior is to return the passed in instance
 
 template <class... Args>
-std::vector<Cuda> partition_space(const Cuda&, Args...) {
+std::array<Cuda, sizeof...(Args)> partition_space(const Cuda&, Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-  std::vector<Cuda> instances(sizeof...(Args));
-  Kokkos::Impl::create_Cuda_instances(instances);
+  std::array<Cuda, sizeof...(Args)> instances;
+  for (auto& instance : instances) {
+    Kokkos::Impl::create_Cuda_instance(instance);
+  }
   return instances;
 }
 
@@ -392,7 +394,9 @@ std::vector<Cuda> partition_space(const Cuda&, std::vector<T> const& weights) {
   // We only care about the number of instances to create and ignore weights
   // otherwise.
   std::vector<Cuda> instances(weights.size());
-  Kokkos::Impl::create_Cuda_instances(instances);
+  for (auto& instance : instances) {
+    Kokkos::Impl::create_Cuda_instance(instance);
+  }
   return instances;
 }
 }  // namespace Experimental

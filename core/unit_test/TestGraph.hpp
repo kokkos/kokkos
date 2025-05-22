@@ -208,22 +208,19 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph),
     GTEST_SKIP() << "insufficient number of supported concurrent threads";
 #endif
 
-  const auto execution_space_instances =
-      Kokkos::Experimental::partition_space(ex, 1, 1);
+  const auto [exec_0, exec_1] = Kokkos::Experimental::partition_space(ex, 1, 1);
 
-  auto graph = Kokkos::Experimental::create_graph(
-      execution_space_instances.at(0), [&](auto root) {
-        root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
-      });
+  auto graph = Kokkos::Experimental::create_graph(exec_0, [&](auto root) {
+    root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+  });
   graph.instantiate();
 
-  execution_space_instances.at(0).fence(
-      "The graph might make async copies to device.");
+  exec_0.fence("The graph might make async copies to device.");
 
-  graph.submit(execution_space_instances.at(1));
+  graph.submit(exec_1);
 
-  ASSERT_TRUE(contains(execution_space_instances.at(1), count, 1));
-  ASSERT_TRUE(contains(execution_space_instances.at(1), bugs, 0));
+  ASSERT_TRUE(contains(exec_1, count, 1));
+  ASSERT_TRUE(contains(exec_1, bugs, 0));
 }
 
 // This test ensures that it's possible to build a Kokkos::Graph using
@@ -632,13 +629,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
     GTEST_SKIP() << "test needs at least 4 OpenMP threads";
 #endif
 
-  const auto execution_space_instances =
+  const auto [exec_0, exec_1, exec_2, exec_3] =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
-
-  const auto exec_0 = execution_space_instances.at(0);
-  const auto exec_1 = execution_space_instances.at(1);
-  const auto exec_2 = execution_space_instances.at(2);
-  const auto exec_3 = execution_space_instances.at(3);
 
   using policy_t = Kokkos::RangePolicy<TEST_EXECSPACE>;
   using view_t   = Kokkos::View<int*, TEST_EXECSPACE>;
@@ -709,13 +701,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
     GTEST_SKIP() << "insufficient number of supported concurrent threads";
 #endif
 
-  const auto execution_space_instances =
+  const auto [exec_0, exec_1, exec_2, exec_3] =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
-
-  const auto exec_0 = execution_space_instances.at(0);
-  const auto exec_1 = execution_space_instances.at(1);
-  const auto exec_2 = execution_space_instances.at(2);
-  const auto exec_3 = execution_space_instances.at(3);
 
   using policy_t = Kokkos::RangePolicy<TEST_EXECSPACE>;
   using view_t   = Kokkos::View<int*, TEST_EXECSPACE>;

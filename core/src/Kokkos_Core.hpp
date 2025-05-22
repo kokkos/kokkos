@@ -293,15 +293,16 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 template <class ExecSpace, class... Args>
-std::vector<ExecSpace> partition_space(ExecSpace const& space, Args...) {
+std::array<ExecSpace, sizeof...(Args)> partition_space(ExecSpace const& space,
+                                                       Args...) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-  std::vector<ExecSpace> instances(sizeof...(Args));
-  for (int s = 0; s < int(sizeof...(Args)); s++) instances[s] = space;
+  std::array<ExecSpace, sizeof...(Args)> instances;
+  for (auto& instance : instances) instance = space;
   return instances;
 }
 

@@ -105,23 +105,23 @@ void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
 }
 #endif
 
-void test_partitioning(std::vector<TEST_EXECSPACE>& instances) {
-  check_distinctive(instances[0], instances[1]);
-  check_space_member_for_policies(instances[0]);
-  check_space_member_for_policies(instances[1]);
+void test_partitioning(TEST_EXECSPACE& instance0, TEST_EXECSPACE& instance1) {
+  check_distinctive(instance0, instance1);
+  check_space_member_for_policies(instance0);
+  check_space_member_for_policies(instance1);
 
   int sum1, sum2;
   int N = 3910;
   run_threaded_test(
       [&]() {
         Kokkos::parallel_reduce(
-            Kokkos::RangePolicy<TEST_EXECSPACE>(instances[0], 0, N),
-            SumFunctor(), sum1);
+            Kokkos::RangePolicy<TEST_EXECSPACE>(instance0, 0, N), SumFunctor(),
+            sum1);
       },
       [&]() {
         Kokkos::parallel_reduce(
-            Kokkos::RangePolicy<TEST_EXECSPACE>(instances[1], 0, N),
-            SumFunctor(), sum2);
+            Kokkos::RangePolicy<TEST_EXECSPACE>(instance1, 0, N), SumFunctor(),
+            sum2);
       });
   ASSERT_EQ(sum1, sum2);
   ASSERT_EQ(sum1, N * (N - 1) / 2);
@@ -131,7 +131,7 @@ TEST(TEST_CATEGORY, partitioning_by_args) {
   auto instances =
       Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
   ASSERT_EQ(int(instances.size()), 2);
-  test_partitioning(instances);
+  test_partitioning(instances[0], instances[1]);
 }
 
 TEST(TEST_CATEGORY, partitioning_by_vector) {
@@ -139,6 +139,6 @@ TEST(TEST_CATEGORY, partitioning_by_vector) {
   auto instances = Kokkos::Experimental::partition_space(
       TEST_EXECSPACE(), std::vector<int> /*weights*/ {1, 1});
   ASSERT_EQ(int(instances.size()), 2);
-  test_partitioning(instances);
+  test_partitioning(instances[0], instances[1]);
 }
 }  // namespace Test
