@@ -19,7 +19,12 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
 endif()
 
 # This is the only thing required to set up compiler/linker flags
+# FIXME we should be able to use Kokkos::kokkos
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 target_link_libraries(example Kokkos::kokkoscore)
+#else
+target_link_libraries(example Kokkos::kokkos)
+#endif
 
 enable_testing()
 add_test(NAME KokkosInTree_Verify COMMAND example 10)

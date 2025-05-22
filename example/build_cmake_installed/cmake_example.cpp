@@ -14,10 +14,12 @@
 //
 //@HEADER
 
-import mykokkoscore;
-
 #include <Kokkos_Macros.hpp>
-
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <KokkosCore.hpp>
+#endif
 #include <cstdio>
 #include <iostream>
 
