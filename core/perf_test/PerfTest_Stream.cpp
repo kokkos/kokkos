@@ -31,13 +31,14 @@
 #include <benchmark/benchmark.h>
 #include "Benchmark_Context.hpp"
 
-constexpr static double A_INIT = 1.0;
-constexpr static double B_INIT = 2.0;
-constexpr static double C_INIT = 3.0;
-constexpr static double SCALAR = 4.0;
+using StreamType                   = double;
+constexpr static StreamType A_INIT = 1.0;
+constexpr static StreamType B_INIT = 2.0;
+constexpr static StreamType C_INIT = 3.0;
+constexpr static StreamType SCALAR = 4.0;
 
 template <unsigned MemTraits>
-using StreamView = Kokkos::View<double*, Kokkos::MemoryTraits<MemTraits>>;
+using StreamView = Kokkos::View<StreamType*, Kokkos::MemoryTraits<MemTraits>>;
 
 // different than benchmarks/stream, which uses int
 // wide index types are common as GPU memory grows
@@ -45,7 +46,7 @@ using StreamIndex = int64_t;
 using Policy      = Kokkos::RangePolicy<Kokkos::IndexType<StreamIndex>>;
 
 template <typename V>
-void perform_set(const V& a, const double scalar) {
+void perform_set(const V& a, typename V::const_value_type scalar) {
   Kokkos::parallel_for(
       "set", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = scalar; });
@@ -63,7 +64,8 @@ void perform_copy(const V& a, const V& b) {
 }
 
 template <typename V>
-void perform_scale(const V& b, const V& c, const double scalar) {
+void perform_scale(const V& b, const V& c,
+                   typename V::const_value_type scalar) {
   Kokkos::parallel_for(
       "scale", Policy(0, b.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { b[i] = scalar * c[i]; });
@@ -81,7 +83,8 @@ void perform_add(const V& a, const V& b, const V& c) {
 }
 
 template <typename V>
-void perform_triad(const V& a, const V& b, const V& c, const double scalar) {
+void perform_triad(const V& a, const V& b, const V& c,
+                   typename V::const_value_type scalar) {
   Kokkos::parallel_for(
       "triad", Policy(0, a.extent(0)),
       KOKKOS_LAMBDA(const StreamIndex i) { a[i] = b[i] + scalar * c[i]; });
@@ -90,7 +93,7 @@ void perform_triad(const V& a, const V& b, const V& c, const double scalar) {
 }
 
 template <typename V>
-int validate_array(V& a_dev, const double expected) {
+int validate_array(V& a_dev, typename V::const_value_type expected) {
   const auto a = Kokkos::create_mirror_view(Kokkos::WithoutInitializing, a_dev);
   Kokkos::deep_copy(a, a_dev);
 
