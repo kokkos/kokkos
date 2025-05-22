@@ -1,0 +1,25 @@
+ARG BASE=gcc:15.1.0-bookworm
+FROM $BASE
+
+RUN apt-get update && apt-get install -y \
+        vim \
+        lsb-release \
+        wget \
+        software-properties-common \
+        gnupg \ 
+        bc \
+        ninja-build \
+        git
+
+RUN add-apt-repository deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-19 main
+RUN apt-get update && apt-cache search clang-scan-deps && apt-get install -y clang-tools-19 clang-19 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+#RUN wget https://github.com/Kitware/CMake/releases/download/v4.0.2/cmake-4.0.2-linux-x86_64.sh && \
+#    chmod +x cmake-4.0.2-linux-x86_64.sh && \
+#    ./cmake-4.0.2-linux-x86_64.sh --skip-license
+
+#RUN wget https://apt.llvm.org/llvm.sh && \
+#    chmod +x llvm.sh && \
+#    ./llvm.sh 20
