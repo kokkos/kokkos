@@ -32,6 +32,33 @@ pipeline {
         }
         stage('Build-1') {
             parallel {
+                stage('C++20-Modules-Clang-19') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.modules'
+                            dir 'scripts/docker'
+                            label 'docker'
+                        }
+                    }
+                    steps {
+                        sh '''rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -GNinja \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_EXAMPLES=ON \
+                                -DKokkos_ENABLE_SERIAL=ON \
+                              .. && \
+                              make -j8 && ctest --no-compress-output -T Test --verbose'''
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }
                 stage('GCC-8.4.0') {
                     agent {
                         dockerfile {
