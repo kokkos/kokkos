@@ -457,8 +457,8 @@ class HPX {
 };
 
 template <typename... Args>
-std::vector<HPX> partition_space(HPX const &, Args... args) {
-  std::vector<HPX> instances(sizeof...(args));
+std::array<HPX, sizeof...(Args)> partition_space(HPX const &, Args...) {
+  std::array<HPX, sizeof...(Args)> instances;
   for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
   return instances;
 }

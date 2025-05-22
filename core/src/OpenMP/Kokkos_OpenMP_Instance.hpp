@@ -135,7 +135,7 @@ namespace Impl {
 // Partitioning an Execution Space: expects space and integer arguments for
 // relative weight
 template <typename T>
-inline std::vector<OpenMP> create_OpenMP_instances(
+inline std::vector<int> calculate_omp_pool_sizes(
     OpenMP const& main_instance, std::vector<T> const& weights) {
   static_assert(
       std::is_arithmetic_v<T>,
@@ -143,7 +143,7 @@ inline std::vector<OpenMP> create_OpenMP_instances(
   if (weights.size() == 0) {
     Kokkos::abort("Kokkos::abort: Partition weights vector is empty.");
   }
-  std::vector<OpenMP> instances(weights.size());
+  std::vector<int> pool_sizes(weights.size());
   double total_weight = std::accumulate(weights.begin(), weights.end(), 0.);
   int const main_pool_size =
       main_instance.impl_internal_space_instance()->thread_pool_size();
@@ -154,7 +154,7 @@ inline std::vector<OpenMP> create_OpenMP_instances(
     if (instance_pool_size == 0) {
       Kokkos::abort("Kokkos::abort: Instance has no resource allocated to it");
     }
-    instances[i] = OpenMP(instance_pool_size);
+    pool_sizes[i] = instance_pool_size;
     resources_left -= instance_pool_size;
   }
   // Last instance get all resources left
@@ -163,24 +163,46 @@ inline std::vector<OpenMP> create_OpenMP_instances(
         "Kokkos::abort: Partition not enough resources left to create the last "
         "instance.");
   }
-  instances[weights.size() - 1] = OpenMP(resources_left);
+  pool_sizes[weights.size() - 1] = resources_left;
 
-  return instances;
+  return pool_sizes;
 }
 }  // namespace Impl
 
 template <typename... Args>
-std::vector<OpenMP> partition_space(OpenMP const& main_instance, Args... args) {
+std::array<OpenMP, sizeof...(Args)> partition_space(OpenMP const& main_instance,
+                                                    Args... args) {
   // Unpack the arguments and create the weight vector. Note that if not all of
   // the types are the same, you will get a narrowing warning.
   std::vector<std::common_type_t<Args...>> const weights = {args...};
-  return Impl::create_OpenMP_instances(main_instance, weights);
+
+  // Calculate pool size for each OpenMP instance
+  const auto pool_sizes =
+      Impl::calculate_omp_pool_sizes(main_instance, weights);
+
+  // Create array of OpenMP instances from pool sizes
+  std::array<OpenMP, sizeof...(Args)> instances;
+  for (int i = 0; i < int(pool_sizes.size()); ++i) {
+    instances[i] = OpenMP(pool_sizes[i]);
+  }
+
+  return instances;
 }
 
 template <typename T>
 std::vector<OpenMP> partition_space(OpenMP const& main_instance,
                                     std::vector<T> const& weights) {
-  return Impl::create_OpenMP_instances(main_instance, weights);
+  // Calculate pool size for each OpenMP instance
+  const auto pool_sizes =
+      Impl::calculate_omp_pool_sizes(main_instance, weights);
+
+  // Create array of OpenMP instances from pool sizes
+  std::vector<OpenMP> instances(weights.size());
+  for (int i = 0; i < int(pool_sizes.size()); ++i) {
+    instances[i] = OpenMP(pool_sizes[i]);
+  }
+
+  return instances;
 }
 }  // namespace Experimental
 }  // namespace Kokkos
