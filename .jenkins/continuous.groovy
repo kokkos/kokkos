@@ -41,7 +41,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh '''cmake
+                        sh '''cmake \
                                 -B build \
                                 -GNinja \
                                 -DCMAKE_CXX_COMPILER=clang++-19 \
