@@ -149,10 +149,22 @@ inline void parallel_for(const std::string& str, const ExecPolicy& policy,
 }
 
 template <class ExecPolicy, class FunctorType>
-inline void parallel_for(
+KOKKOS_INLINE_FUNCTION void parallel_for(
     const ExecPolicy& policy, const FunctorType& functor,
     std::enable_if_t<is_execution_policy<ExecPolicy>::value>* = nullptr) {
+#if 0
+  // attempt to silence warnings but doesn't work. crashes with:
+  // terminate called after throwing an instance of 'std::runtime_error'
+  //   what():  cudaFuncGetAttributes(&attr, func) error(
+  //   cudaErrorInvalidResourceHandle): invalid resource handle
+  //   /ascldap/users/crtrott/Kokkos/kokkos/core/src/Cuda/Kokkos_Cuda_KernelLaunch.hpp:140
+  KOKKOS_IF_ON_HOST(Kokkos::parallel_for("", policy, functor);)
+  KOKKOS_IF_ON_DEVICE(functor(policy.impl_member_type());)
+#else
+#pragma nv_diag_suppress 20011,20013,20014,20015
   Kokkos::parallel_for("", policy, functor);
+#pragma nv_diag_default 20011,20013,20014,20015
+#endif
 }
 
 template <class FunctorType>
