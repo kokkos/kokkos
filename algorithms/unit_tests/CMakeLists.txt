@@ -6,7 +6,7 @@ kokkos_include_directories(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
 set(ALGORITHM UnitTestMain.cpp)
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget;OpenACC)
   string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
 
