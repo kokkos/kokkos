@@ -1,7 +1,6 @@
 # Kokkos minimally requires 3.16 right now,
 # but your project can set it higher
-cmake_minimum_required(VERSION 3.28)
-set(CMAKE_CXX_STANDARD 20)
+cmake_minimum_required(VERSION 3.16)
 
 # Projects can safely mix languages - must have C++ support
 # Kokkos flags will only apply to C++ files
@@ -20,7 +19,8 @@ endif()
 
 # This is the only thing required to set up compiler/linker flags
 # FIXME we should be able to use Kokkos::kokkos
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+#ifdef Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE
+set_target_properties(example PROPERTIES CXX_SCAN_FOR_MODULES ON)
 target_link_libraries(example Kokkos::kokkoscore)
 #else
 target_link_libraries(example Kokkos::kokkos)

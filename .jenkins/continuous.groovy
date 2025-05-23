@@ -59,6 +59,7 @@ pipeline {
                               cd example/build_cmake_installed && \
                               cmake \
                                 -B build \
+                                -GNinja \
                                 -DCMAKE_CXX_COMPILER=clang++-19 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=20 && \
