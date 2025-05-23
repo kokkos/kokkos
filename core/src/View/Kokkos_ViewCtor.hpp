@@ -245,10 +245,16 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   ViewCtorProp(Args &&...args)
       : ViewCtorProp<void, P>(std::forward<Args>(args))... {}
 
+  // If we use `ViewCtorProp<void, Args>...` here MSVC gets confused
+  // error C3528: 'args': the number of elements in this pack expansion
+  // does not match the number of elements in 'P'
+  // Using the alias view_ctor_prop_base here as below fixes the issue.
+  // Encountered with MSVC 17 and CUDA 12.6
   template <typename... Args>
   KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0, Args const &...args)
-      : ViewCtorProp<void, pointer_type>(arg0),
-        ViewCtorProp<void, typename ViewCtorProp<void, Args>::type>(args)... {}
+      : view_ctor_prop_base<pointer_type>(arg0),
+        view_ctor_prop_base<typename view_ctor_prop_base<Args>::type>(args)... {
+  }
 
   /* Copy from a matching property subset */
   KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0)
