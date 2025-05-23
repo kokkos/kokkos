@@ -58,7 +58,8 @@ class GraphNodeRef {
 
   static_assert(std::is_same_v<Predecessor, TypeErasedTag> ||
                     Kokkos::Impl::is_graph_kernel<Kernel>::value ||
-                    Kokkos::Impl::is_graph_capture<Kernel>::value,
+                    Kokkos::Impl::is_graph_capture<Kernel>::value ||
+                    Kokkos::Impl::is_graph_memset<Kernel>::value,
                 "Invalid kernel template parameter given to GraphNodeRef");
 
   static_assert(!Kokkos::Impl::is_more_type_erased<Kernel, Predecessor>::value,
@@ -243,8 +244,46 @@ class GraphNodeRef {
             typename = std::enable_if_t<std::is_invocable_r_v<
                 void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
   auto then(Label&& label, Functor&& functor) const {
-    return this->then(std::forward<Label>(label), ExecutionSpace{},
+    return this->then(std::forward<Label>(label),
+                      m_graph_impl.lock()->get_execution_space(),
                       std::forward<Functor>(functor));
+  }
+
+  template <typename Label, typename ViewType>
+  auto then_memset(Label&&, const ExecutionSpace& exec, ViewType&& dst,
+                   const int value, const size_t count) const {
+    using memset_t = Kokkos::Impl::GraphNodeMemsetImpl<
+        ExecutionSpace, Kokkos::Impl::remove_cvref_t<ViewType>>;
+    using return_t = GraphNodeRef<ExecutionSpace, memset_t, GraphNodeRef>;
+
+    auto graph_ptr = m_graph_impl.lock();
+    KOKKOS_EXPECTS(bool(graph_ptr))
+
+    auto rv = Kokkos::Impl::GraphAccess::make_graph_node_ref(
+        m_graph_impl,
+        Kokkos::Impl::GraphAccess::make_node_shared_ptr<
+            typename return_t::node_impl_t>(
+            m_node_impl->execution_space_instance(),
+            Kokkos::Impl::_graph_node_memset_ctor_tag{},
+            memset_t{exec, std::forward<ViewType>(dst), value, count},
+            Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
+
+    // Add the node itself to the backend's graph data structure, now that
+    // everything is set up.
+    graph_ptr->add_node(rv.m_node_impl);
+    // Add the predecessor we stored in the constructor above in the
+    // backend's data structure, now that everything is set up.
+    graph_ptr->add_predecessor(rv.m_node_impl, *this);
+    KOKKOS_ENSURES(bool(rv.m_node_impl))
+    return rv;
+  }
+
+  template <typename Label, typename ViewType>
+  auto then_memset(Label&& label, ViewType&& dst, const int value,
+                   const size_t count) const {
+    return this->then_memset(std::forward<Label>(label),
+                             m_graph_impl.lock()->get_execution_space(),
+                             std::forward<ViewType>(dst), value, count);
   }
 
 #if defined(KOKKOS_ENABLE_CUDA) ||                                           \

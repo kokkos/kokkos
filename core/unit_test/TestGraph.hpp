@@ -14,6 +14,8 @@
 //
 //@HEADER
 
+#include <numeric>
+
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
 
@@ -838,6 +840,9 @@ struct GraphNodeTypes {
   // Type of a capture node.
   using capture_t =
       Kokkos::Impl::GraphNodeCaptureImpl<Exec, CountTestFunctor<Exec>>;
+
+  // Type of a memset node.
+  using memset_t = Kokkos::Impl::GraphNodeMemsetImpl<Exec, Kokkos::View<int>>;
 };
 
 template <typename Exec>
@@ -848,6 +853,7 @@ constexpr bool test_is_graph_kernel() {
   static_assert(Kokkos::Impl::is_graph_kernel_v<typename types::then_t>,
                 "This should be verified until the 'then' has its own path to "
                 "the driver.");
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::memset_t>);
   if constexpr (types::support_capture)
     static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::capture_t>);
   return true;
@@ -859,11 +865,24 @@ constexpr bool test_is_graph_capture() {
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::kernel_t>);
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::aggregate_t>);
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::then_t>);
+  static_assert(!Kokkos::Impl::is_graph_capture_v<types::memset_t>);
   if constexpr (types::support_capture)
     static_assert(Kokkos::Impl::is_graph_capture_v<types::capture_t>);
   return true;
 }
 static_assert(test_is_graph_capture());
+
+constexpr bool test_is_graph_memset() {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+  static_assert(!Kokkos::Impl::is_graph_memset_v<types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_memset_v<types::aggregate_t>);
+  static_assert(!Kokkos::Impl::is_graph_memset_v<types::then_t>);
+  static_assert(Kokkos::Impl::is_graph_memset_v<types::memset_t>);
+  if constexpr (types::support_capture)
+    static_assert(!Kokkos::Impl::is_graph_memset_v<types::capture_t>);
+  return true;
+}
+static_assert(test_is_graph_memset());
 
 // This test checks the node types before/after a 'when_all'.
 TEST(TEST_CATEGORY, when_all_type) {
@@ -1105,6 +1124,48 @@ TEST(TEST_CATEGORY, graph_then) {
   graph.submit(exec);
 
   ASSERT_TRUE(contains(exec, data, value_memset + value_then));
+}
+
+template <typename ViewType>
+struct MakeASum {
+  ViewType src;
+
+  template <typename T, typename U>
+  KOKKOS_FUNCTION void operator()(const T index, U& accu) const noexcept {
+    accu += src(index);
+  }
+};
+
+TEST(TEST_CATEGORY, graph_memset) {
+  using value_t      = size_t;
+  using memory_space = typename TEST_EXECSPACE::memory_space;
+  using view_t       = Kokkos::View<value_t*, memory_space>;
+  using view_r0_t    = Kokkos::View<value_t, memory_space>;
+
+  constexpr size_t size         = 7;
+  constexpr unsigned char value = 42;
+
+  const TEST_EXECSPACE exec{};
+
+  const view_t data(Kokkos::view_alloc(exec, "data"), size);
+  const view_r0_t sum(Kokkos::view_alloc(exec, "sum"));
+
+  auto graph = Kokkos::Experimental::create_graph(exec, [&](const auto& root) {
+    auto memset = root.then_memset("memset", data, static_cast<int>(value),
+                                   size * sizeof(value_t));
+    auto reduce = memset.then_parallel_reduce(
+        "reduce", Kokkos::RangePolicy<TEST_EXECSPACE>(0, size),
+        MakeASum<view_t>{data}, Kokkos::Sum(sum));
+  });
+
+  graph.submit(exec);
+
+  std::array<value_t, size> witness;
+  std::memset(witness.data(), value, size * sizeof(value_t));
+
+  ASSERT_TRUE(
+      contains(exec, sum,
+               std::accumulate(witness.cbegin(), witness.cend(), value_t(0))));
 }
 
 }  // end namespace Test
