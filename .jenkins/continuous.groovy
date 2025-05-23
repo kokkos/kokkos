@@ -65,7 +65,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=clang++-19 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=20 && \
-                              cmake --build build -j 8 \
+                              cmake --build build -j 8 && \
                               ctest --test-dir build --no-compress-output -T Test --verbose'''
                     }
                     post {
