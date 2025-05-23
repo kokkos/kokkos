@@ -344,7 +344,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.2-complete@sha256:sha256:e5df8c7787939b5319a02481affb5356198a9365b37a2b8719dba42590fd1812'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.2-complete@sha256:e5df8c7787939b5319a02481affb5356198a9365b37a2b8719dba42590fd1812'
                             label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
