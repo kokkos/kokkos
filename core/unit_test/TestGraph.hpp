@@ -541,10 +541,10 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph_default_host_exec) {
   graph.get_execution_space().fence();
 }
 
-template <typename ViewType>
+template <typename DataViewType, typename BufferViewType>
 struct IncrementAndCombineFunctor {
-  ViewType data;
-  ViewType buffer;
+  DataViewType data;
+  BufferViewType buffer;
 
   template <typename T>
   KOKKOS_FUNCTION void operator()(const T index) const {
@@ -559,7 +559,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), node_lifetime) {
   constexpr size_t size = 128;
 
   using view_t    = Kokkos::View<int[size], TEST_EXECSPACE>;
-  using functor_t = IncrementAndCombineFunctor<view_t>;
+  using functor_t = IncrementAndCombineFunctor<view_t, view_t>;
 
   view_t data(Kokkos::view_alloc("data", ex));
 
@@ -801,6 +801,7 @@ enum class GraphNodeType {
   KERNEL    = 12,
   AGGREGATE = 42,
   THEN      = 66,
+  HOST      = 77,
   CAPTURE   = 666
 };
 
@@ -835,6 +836,10 @@ struct GraphNodeTypes {
   using then_t =
       Kokkos::Impl::GraphNodeThenImpl<Exec, ThenFunctor<Kokkos::View<int>>>;
 
+  // Type of a host node.
+  using host_t =
+      Kokkos::Impl::GraphNodeHostImpl<Exec, ThenFunctor<Kokkos::View<int>>>;
+
   // Type of a capture node.
   using capture_t =
       Kokkos::Impl::GraphNodeCaptureImpl<Exec, CountTestFunctor<Exec>>;
@@ -848,17 +853,31 @@ constexpr bool test_is_graph_kernel() {
   static_assert(Kokkos::Impl::is_graph_kernel_v<typename types::then_t>,
                 "This should be verified until the 'then' has its own path to "
                 "the driver.");
+  static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::host_t>);
   if constexpr (types::support_capture)
     static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::capture_t>);
   return true;
 }
 static_assert(test_is_graph_kernel<TEST_EXECSPACE>());
 
+constexpr bool test_is_graph_host() {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+  static_assert(!Kokkos::Impl::is_graph_host_v<types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_host_v<types::aggregate_t>);
+  static_assert(!Kokkos::Impl::is_graph_host_v<types::then_t>);
+  static_assert(Kokkos::Impl::is_graph_host_v<types::host_t>);
+  if constexpr (types::support_capture)
+    static_assert(!Kokkos::Impl::is_graph_host_v<types::capture_t>);
+  return true;
+}
+static_assert(test_is_graph_host());
+
 constexpr bool test_is_graph_capture() {
   using types = GraphNodeTypes<TEST_EXECSPACE>;
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::kernel_t>);
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::aggregate_t>);
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::then_t>);
+  static_assert(!Kokkos::Impl::is_graph_capture_v<types::host_t>);
   if constexpr (types::support_capture)
     static_assert(Kokkos::Impl::is_graph_capture_v<types::capture_t>);
   return true;
@@ -1105,6 +1124,43 @@ TEST(TEST_CATEGORY, graph_then) {
   graph.submit(exec);
 
   ASSERT_TRUE(contains(exec, data, value_memset + value_then));
+}
+
+template <typename DataViewType, typename BufferViewType>
+struct ThenIncrementAndCombineFunctor
+    : public IncrementAndCombineFunctor<DataViewType, BufferViewType> {
+  using base_t = IncrementAndCombineFunctor<DataViewType, BufferViewType>;
+
+  KOKKOS_FUNCTION void operator()() const { base_t::operator()(0); }
+};
+
+// Add a host node to the graph.
+TEST(TEST_CATEGORY, host_node) {
+  // clang-format off
+  using view_h_t  = Kokkos::View<unsigned int[1], Kokkos::HostSpace>;
+  using view_d_t  = Kokkos::View<unsigned int[1], typename TEST_EXECSPACE::memory_space>;
+  using counter_t = Kokkos::View<unsigned int[1], Kokkos::SharedSpace>;
+  // clang-format on
+
+  using functor_h_t = ThenIncrementAndCombineFunctor<counter_t, view_h_t>;
+  using functor_d_t = ThenIncrementAndCombineFunctor<counter_t, view_d_t>;
+
+  const TEST_EXECSPACE exec{};
+
+  const counter_t counter(Kokkos::view_alloc("counter", exec));
+
+  auto graph = Kokkos::Experimental::create_graph(exec, [&](const auto& root) {
+    // clang-format off
+    root.then     ("node A", exec, functor_d_t{{counter, view_d_t(Kokkos::view_alloc("internal buffer - node A - device", exec))}})
+        .then_host("node B",       functor_h_t{{counter, view_h_t(Kokkos::view_alloc("internal buffer - node B - host"))}})
+        .then     ("node C", exec, functor_d_t{{counter, view_d_t(Kokkos::view_alloc("internal buffer - node C - device", exec))}});
+    // clang-format on
+  });
+
+  graph.submit(exec);
+  exec.fence();
+
+  ASSERT_EQ(counter(0), 6);
 }
 
 }  // end namespace Test

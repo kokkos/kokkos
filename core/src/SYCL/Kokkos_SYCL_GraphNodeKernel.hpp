@@ -31,6 +31,21 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename Functor>
+struct GraphNodeHostImpl<Kokkos::SYCL, Functor> {
+  using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::modifiable>;
+
+  Functor functor;
+
+  void add(native_graph_t& graph) {
+    auto node = graph.add([&](sycl::handler& cgh) {
+      // TODO can we move the functor in ?
+      cgh.host_task(functor);
+    });
+  }
+};
+
+template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::SYCL, Functor> {
   using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::modifiable>;
