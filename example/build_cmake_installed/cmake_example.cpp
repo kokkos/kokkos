@@ -23,7 +23,9 @@ import kokkoscore;
 #include <cstdio>
 #include <iostream>
 
+#ifndef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 extern "C" void print_fortran_();
+#endif
 
 struct CountFunctor {
   KOKKOS_FUNCTION void operator()(const long i, long& lcount) const {
@@ -67,7 +69,9 @@ int main(int argc, char* argv[]) {
   count_time = timer.seconds();
   printf("Sequential: %ld    %10.6f\n", seq_count, count_time);
 
+#ifndef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
   print_fortran_();
+#endif
 
   Kokkos::finalize();
 
