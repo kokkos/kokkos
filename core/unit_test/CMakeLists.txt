@@ -878,6 +878,7 @@ set(DEFAULT_DEVICE_SOURCES
     TestCStyleMemoryManagement.cpp
     TestSharedSpace.cpp
     TestSharedHostPinnedSpace.cpp
+    TestViewMemorySpaceViolation.cpp
     TestCompilerMacros.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a1.cpp
