@@ -1926,7 +1926,7 @@ struct TestNextAfter {
     const FP16Type after_pos_one = Kokkos::bit_cast<FP16Type>(
         std::uint16_t(Kokkos::bit_cast<std::uint16_t>(pos_one) + 1));
     const FP16Type before_pos_one = Kokkos::bit_cast<FP16Type>(
-        std::uint16_t(Kokkos::bit_cast<std::uint16_t>(neg_one) - 1));
+        std::uint16_t(Kokkos::bit_cast<std::uint16_t>(pos_one) - 1));
     if (nextafter(pos_smallest, neg_zero) != pos_zero ||
         nextafter(pos_one, neg_one) != before_pos_one ||
         nextafter(pos_one, pos_two) != after_pos_one ||
@@ -1937,7 +1937,9 @@ struct TestNextAfter {
 
     // From Inf Handling
     if (nextafter(pos_inf, pos_one) != pos_max ||
-        nextafter(neg_inf, neg_one) != neg_max) {
+        nextafter(neg_inf, neg_one) != neg_max ||
+        nextafter(pos_inf, pos_inf) != pos_inf ||
+        nextafter(neg_inf, neg_inf) != neg_inf) {
       ++e;
       Kokkos::printf("failed nextafter(inf)\n");
     }
