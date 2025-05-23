@@ -74,7 +74,7 @@ int OpenMPTargetInternal::concurrency() const {
   max_threads = max_threads_sm * 84;
 #elif defined(KOKKOS_ARCH_AMPERE87)
   max_threads_sm = 1024;
-  max_threads    = max_threads_sm * 32; // Orin Nano cores
+  max_threads    = max_threads_sm * 32;  // Orin Nano cores
 #elif defined(KOKKOS_ARCH_AMPERE80)
   max_threads = max_threads_sm * 108;
 #elif defined(KOKKOS_ARCH_VOLTA72)
