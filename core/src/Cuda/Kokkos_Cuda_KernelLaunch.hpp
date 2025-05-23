@@ -187,7 +187,8 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
   // don't undershoot by much but also don't allocate a whole new block just
   // because one is a few threads over otherwise.
   size_t num_blocks_desired =
-      (num_threads_desired + block_size * 0.8) / block_size;
+      (num_threads_desired + static_cast<size_t>(block_size * 0.8)) /
+      block_size;
   num_blocks_desired = ::std::min(max_blocks_regs, num_blocks_desired);
   if (num_blocks_desired == 0) num_blocks_desired = 1;
 

@@ -126,6 +126,7 @@ struct MultipleTaskQueueTeamEntry {
  public:
   KOKKOS_INLINE_FUNCTION
   MultipleTaskQueueTeamEntry() {
+    // NOLINTNEXTLINE(modernize-loop-convert)
     for (int iPriority = 0; iPriority < NumPriorities; ++iPriority) {
       for (int iType = 0; iType < 2; ++iType) {
         m_failed_heads[iPriority][iType] = nullptr;
