@@ -41,7 +41,8 @@ pipeline {
                         }
                     }
                     steps {
-                        sh '''cmake \
+                        sh '''rm -rf build && \
+                              cmake \
                                 -B build \
                                 -GNinja \
                                 -DCMAKE_CXX_COMPILER=clang++-19 \
@@ -57,6 +58,7 @@ pipeline {
                               cmake --build build --target install -j 8 && \
                               ctest --test-dir build --no-compress-output -T Test --verbose && \
                               cd example/build_cmake_installed && \
+                              rm -rf build && \
                               cmake \
                                 -B build \
                                 -GNinja \
