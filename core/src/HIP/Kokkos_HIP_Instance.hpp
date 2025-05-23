@@ -276,7 +276,7 @@ class HIPInternal {
   void release_team_scratch_space(int scratch_pool_id);
 };
 
-void create_HIP_instances(std::vector<HIP> &instances);
+void create_HIP_instance(HIP &instance);
 }  // namespace Impl
 
 namespace Experimental {
@@ -286,13 +286,15 @@ namespace Experimental {
 //   Default behavior is to return the passed in instance
 
 template <class... Args>
-std::vector<HIP> partition_space(const HIP &, Args...) {
+std::array<HIP, sizeof...(Args)> partition_space(const HIP &, Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
 
-  std::vector<HIP> instances(sizeof...(Args));
-  Kokkos::Impl::create_HIP_instances(instances);
+  std::array<HIP, sizeof...(Args)> instances;
+  for (auto &instance : instances) {
+    Kokkos::Impl::create_HIP_instance(instance);
+  }
   return instances;
 }
 
@@ -305,7 +307,9 @@ std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
   // We only care about the number of instances to create and ignore weights
   // otherwise.
   std::vector<HIP> instances(weights.size());
-  Kokkos::Impl::create_HIP_instances(instances);
+  for (auto &instance : instances) {
+    Kokkos::Impl::create_HIP_instance(instance);
+  }
   return instances;
 }
 }  // namespace Experimental

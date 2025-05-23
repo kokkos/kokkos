@@ -145,18 +145,18 @@ struct DeviceTypeTraits<Kokkos::SYCL> {
 
 namespace Experimental {
 template <class... Args>
-std::vector<SYCL> partition_space(const SYCL& sycl_space, Args...) {
+std::array<SYCL, sizeof...(Args)> partition_space(const SYCL& sycl_space,
+                                                  Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   sycl::context context = sycl_space.sycl_queue().get_context();
   sycl::device device   = sycl_space.sycl_queue().get_device();
-  std::vector<SYCL> instances;
-  instances.reserve(sizeof...(Args));
-  for (unsigned int i = 0; i < sizeof...(Args); ++i)
-    instances.emplace_back(
-        sycl::queue(context, device, sycl::property::queue::in_order()));
+  std::array<SYCL, sizeof...(Args)> instances;
+  for (auto& instance : instances) {
+    instance = sycl::queue(context, device, sycl::property::queue::in_order());
+  }
   return instances;
 }
 
