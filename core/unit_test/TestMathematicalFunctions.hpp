@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <initializer_list>
 #include <type_traits>
-
+#include <cstdint>
 #include <cfloat>
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
