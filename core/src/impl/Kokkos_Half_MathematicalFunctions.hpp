@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 #define KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 
+#include <cstdint>                           // For std::uint16_t
 #include <Kokkos_MathematicalFunctions.hpp>  // For the float overloads
 #include <Kokkos_BitManipulation.hpp>        // bit_cast
 
