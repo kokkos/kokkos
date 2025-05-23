@@ -24,10 +24,29 @@
 
 #include <utility>  // pair
 
+#if defined(KOKKOS_ENABLE_ONEDPL)
+#define KOKKOS_IMPL_ONEDPL_VERSION                            \
+  ONEDPL_VERSION_MAJOR * 10000 + ONEDPL_VERSION_MINOR * 100 + \
+      ONEDPL_VERSION_PATCH
+#define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
+  (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+#endif
+
+#ifndef KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL
+#define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATH) 0
+#endif
+
 namespace Test {
 namespace SortImpl {
 
 struct Less {
+#if !defined(KOKKOS_ENABLE_ONEDPL) || \
+    KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
+  // Make sure that the comparator isn't device copyable, this caused problems
+  // with SYCL/oneDPL
+  Kokkos::View<int *> dummy;
+#endif
+
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION bool operator()(const ValueType &lhs,
                                          const ValueType &rhs) const {
@@ -36,6 +55,13 @@ struct Less {
 };
 
 struct Greater {
+#if !defined(KOKKOS_ENABLE_ONEDPL) || \
+    KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
+  // Make sure that the comparator isn't device copyable, this caused problems
+  // with SYCL/oneDPL
+  Kokkos::View<int *> dummy;
+#endif
+
   template <class ValueType>
   KOKKOS_INLINE_FUNCTION bool operator()(const ValueType &lhs,
                                          const ValueType &rhs) const {
@@ -252,4 +278,8 @@ TEST(TEST_CATEGORY_DEATH, SortByKeyKeysLargerThanValues) {
 }
 
 }  // namespace Test
+
+#undef KOKKOS_IMPL_ONEDPL_VERSION
+#undef KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL
+
 #endif
