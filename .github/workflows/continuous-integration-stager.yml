@@ -53,3 +53,7 @@ jobs:
   performance-test:
     needs: [initial-check, clang-format-check, cmake-format-check]
     uses: ./.github/workflows/performance-benchmark.yml
+
+  docker-build:
+    needs: [linux, osx-x64, performance-test]
+    uses: ./.github/workflows/docker-build.yml
