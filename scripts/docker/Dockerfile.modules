@@ -15,3 +15,13 @@ RUN add-apt-repository deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm
 RUN apt-get update && apt-cache search clang-scan-deps && apt-get install -y clang-tools-19 clang-19 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+ARG CMAKE_VERSION=4.0.2
+ENV CMAKE_DIR=/opt/cmake
+RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
+    CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
+    mkdir -p ${CMAKE_DIR} && \
+    sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
+    rm cmake*
+ENV PATH=${CMAKE_DIR}/bin:$PATH

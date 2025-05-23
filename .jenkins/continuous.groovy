@@ -41,11 +41,7 @@ pipeline {
                         }
                     }
                     steps {
-                        sh '''wget https://github.com/Kitware/CMake/releases/download/v4.0.2/cmake-4.0.2-linux-x86_64.sh && \
-                              chmod +x cmake-4.0.2-linux-x86_64.sh && \
-                              ./cmake-4.0.2-linux-x86_64.sh --skip-license --prefix=.'''
-                        sh '''export PATH=${PWD}/cmake-4.0.2-linux-x86_64/bin:$PATH && \
-                              cmake
+                        sh '''cmake
                                 -B build \
                                 -GNinja \
                                 -DCMAKE_CXX_COMPILER=clang++-19 \
