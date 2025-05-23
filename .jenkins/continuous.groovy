@@ -70,7 +70,7 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-5.7-C++20') {
+                stage('HIP-ROCm-5.7-CXX20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
@@ -339,12 +339,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-6.0-amdclang') {
+                stage('HIP-ROCm-6.2-amdclang-CXX20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.0-complete@sha256:29582288ec330d1c915091eb2be7857327fe71a73a174c4173b0bb4794dce7c8'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.2-complete@sha256:sha256:e5df8c7787939b5319a02481affb5356198a9365b37a2b8719dba42590fd1812'
                             label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -363,6 +363,7 @@ pipeline {
                                 -DCMAKE_CXX_CLANG_TIDY="/opt/rocm/llvm/bin/clang-tidy;-warnings-as-errors=*" \
                                 -DCMAKE_PREFIX_PATH=/opt/rocm/lib \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
