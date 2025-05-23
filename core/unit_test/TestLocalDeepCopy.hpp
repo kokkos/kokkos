@@ -183,6 +183,102 @@ void test_local_deepcopy_range(ViewType A, ViewType B, const int N) {
 }
 
 template <typename ViewType, typename ExecSpace>
+void test_local_deepcopy_thread_extents_mismatch(ViewType A, ViewType B,
+                                                 const int N) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  ASSERT_DEATH(
+      {
+        Kokkos::parallel_for(
+            team_policy(N, Kokkos::AUTO),
+            KOKKOS_LAMBDA(const member_type& teamMember) {
+              int lid =
+                  teamMember.league_rank();  // returns a number between 0 and N
+
+              // Compute the number of units of work per thread
+              auto thread_number = teamMember.league_size();
+              auto unitsOfWork   = N / thread_number;
+              if (N % thread_number) {
+                unitsOfWork += 1;
+              }
+              auto numberOfBatches = N / unitsOfWork;
+
+              Kokkos::parallel_for(
+                  Kokkos::TeamThreadRange(teamMember, numberOfBatches),
+                  [=](const int indexWithinBatch) {
+                    const int idx = indexWithinBatch;
+
+                    auto start = idx * unitsOfWork;
+                    auto stop  = (idx + 1) * unitsOfWork;
+                    stop       = Kokkos::clamp(stop, 0, N);
+                    auto subSrc =
+                        extract_subview(A, lid, Kokkos::make_pair(start, stop));
+                    auto subDst =
+                        extract_subview(B, lid, Kokkos::make_pair(0, stop));
+                    Kokkos::Experimental::deep_copy(
+                        Kokkos::ThreadVectorRange(teamMember, 0), subDst,
+                        subSrc);
+                  });
+            });
+
+        Kokkos::fence();
+      },
+      "Error: Kokkos::deep_copy extents of views don't match");
+}
+
+template <typename ViewType, typename ExecSpace>
+void test_local_deepcopy_team_extents_mismatch(ViewType A, ViewType B,
+                                               const int N) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  ASSERT_DEATH(
+      {
+        Kokkos::parallel_for(
+            team_policy(N, Kokkos::AUTO),
+            KOKKOS_LAMBDA(const member_type& teamMember) {
+              int lid =
+                  teamMember.league_rank();  // returns a number between 0 and N
+              auto subSrc = extract_subview(A, lid, Kokkos::ALL);
+              auto subDst =
+                  extract_subview(B, lid, Kokkos::make_pair(0, N - 1));
+              Kokkos::Experimental::deep_copy(
+                  Kokkos::TeamVectorRange(teamMember, 0), subDst, subSrc);
+            });
+
+        Kokkos::fence();
+      },
+      "Error: Kokkos::deep_copy extents of views don't match");
+}
+
+template <typename ViewType, typename ExecSpace>
+void test_local_deepcopy_range_extents_mismatch(ViewType A, ViewType B,
+                                                const int N) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  ASSERT_DEATH(
+      {
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecSpace>(0, N),
+            KOKKOS_LAMBDA(const int& lid) {
+              auto subSrc = extract_subview(A, lid, Kokkos::ALL);
+              auto subDst =
+                  extract_subview(B, lid, Kokkos::make_pair(0, N - 1));
+              Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(),
+                                              subDst, subSrc);
+            });
+
+        Kokkos::fence();
+      },
+      "Error: Kokkos::deep_copy extents of views don't match");
+}
+
+template <typename ViewType, typename ExecSpace>
 void test_local_deepcopy_scalar_thread(
     ViewType B, const int N, typename ViewType::value_type fill_value) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
@@ -302,6 +398,30 @@ void run_range_policy(const int N) {
   test_local_deepcopy_scalar_range<ViewType, ExecSpace>(B, N, 20);
 }
 
+template <typename ViewType, typename ExecSpace>
+void run_team_policy_extents_mismatch(const int N) {
+  ViewType A = view_create<ViewType>("A", N);
+  ViewType B = view_create<ViewType>("B", N);
+
+  test_local_deepcopy_team_extents_mismatch<ViewType, ExecSpace>(A, B, N);
+}
+
+template <typename ViewType, typename ExecSpace>
+void run_thread_policy_extents_mismatch(const int N) {
+  ViewType A = view_create<ViewType>("A", N);
+  ViewType B = view_create<ViewType>("B", N);
+
+  test_local_deepcopy_thread_extents_mismatch<ViewType, ExecSpace>(A, B, N);
+}
+
+template <typename ViewType, typename ExecSpace>
+void run_range_policy_extents_mismatch(const int N) {
+  ViewType A = view_create<ViewType>("A", N);
+  ViewType B = view_create<ViewType>("B", N);
+
+  test_local_deepcopy_range_extents_mismatch<ViewType, ExecSpace>(A, B, N);
+}
+
 //-------------------------------------------------------------------------------------------------------------
 // Test definitions
 //-------------------------------------------------------------------------------------------------------------
@@ -395,6 +515,82 @@ TEST(TEST_CATEGORY, local_deep_copy_rangepolicy_layoutright) {
   run_range_policy<Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(
       8);
 }
+//-------------------------------------------------------------------------------------------------------------
+TEST(TEST_CATEGORY, local_deep_copy_teampolicy_extents_mismatch) {
+#if (defined(KOKKOS_ENABLE_SYCL) && defined(NDEBUG)) || \
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  GTEST_SKIP() << "Kokkos::abort() does not terminate the program on sycl (in "
+                  "release mode), openmptarget and openacc";
+#endif
+  using ExecSpace = TEST_EXECSPACE;
+  using Layout    = Kokkos::LayoutRight;
+
+  run_team_policy_extents_mismatch<Kokkos::View<double**, Layout, ExecSpace>,
+                                   ExecSpace>(8);
+  run_team_policy_extents_mismatch<Kokkos::View<double***, Layout, ExecSpace>,
+                                   ExecSpace>(8);
+  run_team_policy_extents_mismatch<Kokkos::View<double****, Layout, ExecSpace>,
+                                   ExecSpace>(8);
+  run_team_policy_extents_mismatch<Kokkos::View<double*****, Layout, ExecSpace>,
+                                   ExecSpace>(8);
+  run_team_policy_extents_mismatch<
+      Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(8);
+  run_team_policy_extents_mismatch<
+      Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(8);
+  run_team_policy_extents_mismatch<
+      Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(8);
+}
+//-------------------------------------------------------------------------------------------------------------
+TEST(TEST_CATEGORY, local_deep_copy_threadpolicy_extents_mismatch) {
+#if (defined(KOKKOS_ENABLE_SYCL) && defined(NDEBUG)) || \
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  GTEST_SKIP() << "Kokkos::abort() does not terminate the program on sycl (in "
+                  "release mode), openmptarget and openacc";
+#endif
+  using ExecSpace = TEST_EXECSPACE;
+  using Layout    = Kokkos::LayoutRight;
+
+  run_thread_policy_extents_mismatch<Kokkos::View<double**, Layout, ExecSpace>,
+                                     ExecSpace>(8);
+  run_thread_policy_extents_mismatch<Kokkos::View<double***, Layout, ExecSpace>,
+                                     ExecSpace>(8);
+  run_thread_policy_extents_mismatch<
+      Kokkos::View<double****, Layout, ExecSpace>, ExecSpace>(8);
+  run_thread_policy_extents_mismatch<
+      Kokkos::View<double*****, Layout, ExecSpace>, ExecSpace>(8);
+  run_thread_policy_extents_mismatch<
+      Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(8);
+  run_thread_policy_extents_mismatch<
+      Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(8);
+  run_thread_policy_extents_mismatch<
+      Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(8);
+}
+//-------------------------------------------------------------------------------------------------------------
+TEST(TEST_CATEGORY, local_deep_copy_rangepolicy_extents_mismatch) {
+#if (defined(KOKKOS_ENABLE_SYCL) && defined(NDEBUG)) || \
+    defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
+  GTEST_SKIP() << "Kokkos::abort() does not terminate the program on sycl (in "
+                  "release mode), openmptarget and openacc";
+#endif
+  using ExecSpace = TEST_EXECSPACE;
+  using Layout    = Kokkos::LayoutRight;
+
+  run_range_policy_extents_mismatch<Kokkos::View<double**, Layout, ExecSpace>,
+                                    ExecSpace>(8);
+  run_range_policy_extents_mismatch<Kokkos::View<double***, Layout, ExecSpace>,
+                                    ExecSpace>(8);
+  run_range_policy_extents_mismatch<Kokkos::View<double****, Layout, ExecSpace>,
+                                    ExecSpace>(8);
+  run_range_policy_extents_mismatch<
+      Kokkos::View<double*****, Layout, ExecSpace>, ExecSpace>(8);
+  run_range_policy_extents_mismatch<
+      Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(8);
+  run_range_policy_extents_mismatch<
+      Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(8);
+  run_range_policy_extents_mismatch<
+      Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(8);
+}
+//-------------------------------------------------------------------------------------------------------------
 
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
 
@@ -553,9 +749,9 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
 namespace Impl {
-template <typename T, typename SHMEMTYPE>
+template <typename T, typename ShMemType>
 using ShMemView =
-    Kokkos::View<T, Kokkos::LayoutRight, SHMEMTYPE, Kokkos::MemoryUnmanaged>;
+    Kokkos::View<T, Kokkos::LayoutRight, ShMemType, Kokkos::MemoryUnmanaged>;
 
 struct DeepCopyScratchFunctor {
   DeepCopyScratchFunctor(
