@@ -18,4 +18,9 @@
 // in windows.h, we added a pragma push to disable them at the beginning of
 // Kokkos_Core and pop them back into existence at the end.
 #include <windows.h>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif

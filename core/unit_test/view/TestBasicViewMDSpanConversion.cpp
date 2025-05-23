@@ -14,8 +14,14 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <type_traits>
+#include <cstddef>
 
 using Kokkos::Impl::BV::BasicView;
 #if 0  // TODO: after View is using BasicView this should be true

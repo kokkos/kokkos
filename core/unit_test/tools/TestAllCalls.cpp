@@ -18,9 +18,15 @@
 // testing library this tests that our shared-library loading based profiling
 // mechanisms work
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <iostream>
 #include <sstream>
+#include <cstdint>
 
 int main(int argc, char** argv) {  // NOLINT(bugprone-exception-escape)
   Kokkos::initialize(argc, argv);
