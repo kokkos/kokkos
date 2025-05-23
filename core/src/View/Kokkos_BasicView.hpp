@@ -385,19 +385,74 @@ class BasicView {
   }
 
  public:
+  // Ctors to pull out AccessorArg_t
+  // Need also the other ones to keep the overload set consistent and all the
+  // constraints mutually exclusive. Delegate to private ctors
+  // We need to explicitly distinguish between the has_pointer and !has_pointer
+  // versions since only the ones with a pointer can be marked host/device
   template <class... P>
-  // requires(!Impl::ViewCtorProp<P...>::has_pointer)
+  explicit BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(
+            arg_prop, arg_mapping,
+            accessor_type{
+                Impl::get_property<Impl::AccessorArgTag>(arg_prop).value}) {}
+
+  template <class... P>
+  KOKKOS_FUNCTION explicit BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(
+            arg_prop, arg_mapping,
+            accessor_type{
+                Impl::get_property<Impl::AccessorArgTag>(arg_prop).value}) {}
+
+  // Private Ctors coming from the case where we dealt with AccessorArg_t
+  // We don't have public ctors which take ViewCtorProp and accessor.
+  // I don't want to create the data handle above, because in a subsequent PR
+  // the data handle creation itself will depend on the constructed accessor.
+ private:
+  template <class... P>
+  explicit BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping,
+      const accessor_type &arg_accessor)
+      : BasicView(create_data_handle(arg_prop, arg_mapping), arg_mapping,
+                  arg_accessor) {}
+
+  template <class... P>
+  KOKKOS_FUNCTION explicit BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping,
+      const accessor_type &arg_accessor)
+      : BasicView(
+            data_handle_type{Impl::get_property<Impl::PointerTag>(arg_prop)},
+            arg_mapping, arg_accessor) {}
+
+  // Ctors taking CtorProp that don't have AccessorArg_t in it
+ public:
+  template <class... P>
   explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           !Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
       : BasicView(create_data_handle(arg_prop, arg_mapping), arg_mapping) {}
 
   template <class... P>
-  // requires(Impl::ViewCtorProp<P...>::has_pointer)
   KOKKOS_FUNCTION explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer &&
+                           !Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
       : BasicView(
             data_handle_type{Impl::get_property<Impl::PointerTag>(arg_prop)},
