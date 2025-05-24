@@ -230,11 +230,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph),
 // Kokkos::Experimental::create_graph without providing a closure, but giving an
 // execution space instance.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), create_graph_no_closure_with_exec) {
-  auto graph = Kokkos::Experimental::create_graph(ex);
+  Kokkos::Experimental::Graph graph{ex};
 
-  auto root = Kokkos::Impl::GraphAccess::create_root_ref(graph);
-
-  auto node = root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+  graph.root_node().then_parallel_for(1, count_functor{count, bugs, 0, 0});
 
   graph.submit(ex);
 
@@ -253,14 +251,12 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), create_graph_no_arg) {
                     "default execution space.";
   }
 
-  auto graph = Kokkos::Experimental::create_graph();
+  Kokkos::Experimental::Graph graph{};
 
   static_assert(std::is_same_v<typename decltype(graph)::execution_space,
                                Kokkos::DefaultExecutionSpace>);
 
-  auto root = Kokkos::Impl::GraphAccess::create_root_ref(graph);
-
-  auto node = root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
+  graph.root_node().then_parallel_for(1, count_functor{count, bugs, 0, 0});
 
   graph.submit(graph.get_execution_space());
 
@@ -534,8 +530,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
 // Ensure that an empty graph on the default host execution space
 // can be submitted.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph_default_host_exec) {
-  auto graph =
-      Kokkos::Experimental::create_graph(Kokkos::DefaultHostExecutionSpace{});
+  Kokkos::Experimental::Graph graph{Kokkos::DefaultHostExecutionSpace{}};
   graph.instantiate();
   graph.submit();
   graph.get_execution_space().fence();
@@ -887,8 +882,9 @@ TEST(TEST_CATEGORY, when_all_type) {
       Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE, node_kernel_impl_t,
                                          node_ref_agg_t>;
 
-  auto graph  = Kokkos::Experimental::create_graph(TEST_EXECSPACE{});
-  auto root   = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+  Kokkos::Experimental::Graph graph{TEST_EXECSPACE{}};
+
+  auto root   = graph.root_node();
   auto node_A = root.then_parallel_for(1, kernel_functor_t{});
   auto node_B = root.then_parallel_for(1, kernel_functor_t{});
   auto agg    = Kokkos::Experimental::when_all(node_A, node_B);
@@ -985,8 +981,9 @@ void test_graph_capture() {
   const auto data_3(Kokkos::subview(data, 3));
   const auto data_4(Kokkos::subview(data, 4));
 
-  auto graph = Kokkos::Experimental::create_graph<Exec>(exec_graph);
-  auto root  = Kokkos::Impl::GraphAccess::create_root_ref(graph);
+  // FIXME nvcc 11.0 cannot use CTAD.
+  Kokkos::Experimental::Graph<Exec> graph{exec_graph};
+  auto root = graph.root_node();
 
   auto memset_left = root.then_parallel_for(
       Kokkos::RangePolicy<Exec>(exec_left, 0, 1),
