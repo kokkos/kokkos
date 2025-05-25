@@ -335,7 +335,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
    if (from == to) return to;
 
    // Get unsigned integer representation of from
-   std::uint16_t uint_from = bit_cast<std::uint16_t>(from);
+   std::uint16_t uint_from = bit_cast<std::uint16_t, fp16_t>(from);
 
    // Handle zeros
    if (uint_from == FP16_POS_ZERO) {  // from is +0.0
@@ -343,14 +343,14 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
      // Return smallest magnitude number with the sign of 'to'.
      // However, standard nextafter(+0, negative) -> smallest_negative
      // And nextafter(+0, positive) -> smallest_positive
-     return bit_cast<fp16_t>((to > from) ? FP16_SMALLEST_POS_DN
+     return bit_cast<fp16_t, std::uint16_t>((to > from) ? FP16_SMALLEST_POS_DN
                                                  : FP16_SMALLEST_NEG_DN);
    }
    if (uint_from == FP16_NEG_ZERO) {  // from is -0.0
      // Return smallest magnitude number with the sign of 'to'.
      // Standard nextafter(-0, negative) -> smallest_negative
      // And nextafter(-0, positive) -> smallest_positive
-     return bit_cast<fp16_t>((to > from) ? FP16_SMALLEST_POS_DN
+     return bit_cast<fp16_t, std::uint16_t>((to > from) ? FP16_SMALLEST_POS_DN
                                                  : FP16_SMALLEST_NEG_DN);
    }
 
@@ -383,7 +383,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
        uint_result = uint_from - 1;
      }
    }
-   return bit_cast<fp16_t>(uint_result);
+   return bit_cast<fp16_t, std::uint16_t>(uint_result);
 }
 
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
