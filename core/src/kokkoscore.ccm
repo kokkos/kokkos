@@ -488,6 +488,7 @@ export {
   using ::Kokkos::Impl::ParallelConstructName;
   using ::Kokkos::Impl::SubviewLegalArgsCompileTime;
   using ::Kokkos::Impl::with_properties_if_unset;
+  using ::Kokkos::Impl::apply_to_view_of_static_rank;
   }  // namespace Impl
 
   using ::Kokkos::SharedHostPinnedSpace;

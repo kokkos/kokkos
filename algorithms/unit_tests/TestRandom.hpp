@@ -23,7 +23,12 @@
 #include <cstdio>
 #include <Kokkos_DynRankView.hpp>
 #include <Kokkos_Timer.hpp>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Random.hpp>
 #include <cmath>
 #include <chrono>

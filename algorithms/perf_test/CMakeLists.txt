@@ -47,6 +47,9 @@ function(KOKKOS_ADD_BENCHMARK NAME)
   add_executable(${BENCHMARK_NAME} ${BENCHMARK_SOURCES})
   target_link_libraries(${BENCHMARK_NAME} PRIVATE benchmark::benchmark Kokkos::kokkos impl_git_version)
   target_include_directories(${BENCHMARK_NAME} SYSTEM PRIVATE ${benchmark_SOURCE_DIR}/include)
+  if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
+    set_target_properties(${BENCHMARK_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
+  endif()
 
   # FIXME: This alone will not work. It might need an architecture and standard which need to be defined on target level.
   # It will potentially go away with #7582.

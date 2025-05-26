@@ -21,7 +21,12 @@
 
 #include <benchmark/benchmark.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 // FIXME: Benchmark_Context.hpp should be moved to a common location
