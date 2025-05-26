@@ -21,7 +21,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <Kokkos_DynamicView.hpp>
 #include <Kokkos_Timer.hpp>
