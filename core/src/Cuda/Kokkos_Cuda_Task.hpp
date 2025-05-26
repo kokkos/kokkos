@@ -674,7 +674,7 @@ struct TeamThreadRangeBoundariesStruct<iType,
   const iType start;
   const iType end;
   const iType increment;
-  member_type const& thread;
+  member_type const& member;
 
 #if defined(__CUDA_ARCH__)
 
@@ -683,7 +683,7 @@ struct TeamThreadRangeBoundariesStruct<iType,
       : start(threadIdx.y),
         end(arg_count),
         increment(blockDim.y),
-        thread(arg_thread) {}
+        member(arg_thread) {}
 
   __device__ inline TeamThreadRangeBoundariesStruct(
       member_type const& arg_thread, const iType& arg_start,
@@ -691,7 +691,7 @@ struct TeamThreadRangeBoundariesStruct<iType,
       : start(arg_start + threadIdx.y),
         end(arg_end),
         increment(blockDim.y),
-        thread(arg_thread) {}
+        member(arg_thread) {}
 
 #else
 
@@ -715,7 +715,7 @@ struct ThreadVectorRangeBoundariesStruct<iType,
   const index_type start;
   const index_type end;
   const index_type increment;
-  const member_type& thread;
+  const member_type& member;
 
 #if defined(__CUDA_ARCH__)
 
@@ -724,7 +724,7 @@ struct ThreadVectorRangeBoundariesStruct<iType,
       : start(threadIdx.x),
         end(arg_count),
         increment(blockDim.x),
-        thread(arg_thread) {}
+        member(arg_thread) {}
 
   __device__ inline ThreadVectorRangeBoundariesStruct(
       member_type const& arg_thread, const index_type& arg_begin,
@@ -732,7 +732,7 @@ struct ThreadVectorRangeBoundariesStruct<iType,
       : start(arg_begin + threadIdx.x),
         end(arg_end),
         increment(blockDim.x),
-        thread(arg_thread) {}
+        member(arg_thread) {}
 
 #else
 
