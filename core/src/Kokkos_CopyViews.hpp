@@ -1282,10 +1282,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   const size_t N = dst.extent(0);
 
   for (size_t i = 0; i < N; ++i) {
@@ -1298,10 +1294,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 2)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, src);
   } else {
@@ -1315,10 +1307,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 3)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, src);
   } else {
@@ -1334,10 +1322,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 4)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, src);
   } else {
@@ -1354,10 +1338,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 5)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, src);
   } else {
@@ -1375,10 +1355,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 6)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, src);
   } else {
@@ -1397,10 +1373,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst, const View<ST, SP...>& src,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 7)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, src);
   } else {
@@ -1413,6 +1385,27 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
                 for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
                   dst(i0, i1, i2, i3, i4, i5, i6) =
                       src(i0, i1, i2, i3, i4, i5, i6);
+  }
+}
+//----------------------------------------------------------------------------
+template <class DT, class... DP, class ST, class... SP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
+    const View<DT, DP...>& dst, const View<ST, SP...>& src,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 8 &&
+                      unsigned(ViewTraits<ST, SP...>::rank) == 8)>* = nullptr) {
+  if (dst.span_is_contiguous() && src.span_is_contiguous()) {
+    Impl::local_deep_copy_contiguous(dst, src);
+  } else {
+    for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
+      for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
+        for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
+          for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
+            for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
+              for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
+                for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
+                  for (size_t i7 = 0; i7 < dst.extent(7); ++i7)
+                    dst(i0, i1, i2, i3, i4, i5, i6, i7) =
+                        src(i0, i1, i2, i3, i4, i5, i6, i7);
   }
 }
 //----------------------------------------------------------------------------
@@ -1434,10 +1427,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   const size_t N = dst.extent(0);
 
   for (size_t i = 0; i < N; ++i) {
@@ -1450,10 +1439,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, value);
   } else {
@@ -1467,10 +1452,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, value);
   } else {
@@ -1485,10 +1466,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, value);
   } else {
@@ -1505,10 +1482,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, value);
   } else {
@@ -1526,10 +1499,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, value);
   } else {
@@ -1548,10 +1517,6 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
     const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(dst, value);
   } else {
@@ -1563,6 +1528,26 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
               for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
                 for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
                   dst(i0, i1, i2, i3, i4, i5, i6) = value;
+  }
+}
+//----------------------------------------------------------------------------
+template <class DT, class... DP>
+void KOKKOS_INLINE_FUNCTION local_deep_copy_sequential(
+    const View<DT, DP...>& dst,
+    typename ViewTraits<DT, DP...>::const_value_type& value,
+    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 8)>* = nullptr) {
+  if (dst.span_is_contiguous()) {
+    Impl::local_deep_copy_contiguous(dst, value);
+  } else {
+    for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
+      for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
+        for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
+          for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
+            for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
+              for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
+                for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
+                  for (size_t i7 = 0; i7 < dst.extent(7); ++i7)
+                    dst(i0, i1, i2, i3, i4, i5, i6, i7) = value;
   }
 }
 
@@ -1600,10 +1585,9 @@ template <Kokkos::Iterate IterOrder, typename iType, class TeamMemberType,
           class ViewType, std::size_t... Idx>
 KOKKOS_INLINE_FUNCTION Kokkos::TeamVectorMDRange<
     Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>
-md_local_deep_copy_policy_impl(
-    Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType> const&
-        policy,
-    ViewType const& view, std::index_sequence<Idx...>) {
+md_local_deep_copy_policy(Kokkos::Impl::TeamVectorRangeBoundariesStruct<
+                              iType, TeamMemberType> const& policy,
+                          ViewType const& view, std::index_sequence<Idx...>) {
   return Kokkos::TeamVectorMDRange<
       Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
       policy.member, view.extent(Idx)...);
@@ -1613,10 +1597,9 @@ template <Kokkos::Iterate IterOrder, typename iType, class TeamMemberType,
           class ViewType, std::size_t... Idx>
 KOKKOS_INLINE_FUNCTION Kokkos::TeamThreadMDRange<
     Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>
-md_local_deep_copy_policy_impl(
-    Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType, TeamMemberType> const&
-        policy,
-    ViewType const& view, std::index_sequence<Idx...>) {
+md_local_deep_copy_policy(Kokkos::Impl::TeamThreadRangeBoundariesStruct<
+                              iType, TeamMemberType> const& policy,
+                          ViewType const& view, std::index_sequence<Idx...>) {
   return Kokkos::TeamThreadMDRange<
       Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
       policy.member, view.extent(Idx)...);
@@ -1626,10 +1609,9 @@ template <Kokkos::Iterate IterOrder, typename iType, class TeamMemberType,
           class ViewType, std::size_t... Idx>
 KOKKOS_INLINE_FUNCTION Kokkos::ThreadVectorMDRange<
     Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>
-md_local_deep_copy_policy_impl(Kokkos::Impl::ThreadVectorRangeBoundariesStruct<
-                                   iType, TeamMemberType> const& policy,
-                               ViewType const& view,
-                               std::index_sequence<Idx...>) {
+md_local_deep_copy_policy(Kokkos::Impl::ThreadVectorRangeBoundariesStruct<
+                              iType, TeamMemberType> const& policy,
+                          ViewType const& view, std::index_sequence<Idx...>) {
   return Kokkos::ThreadVectorMDRange<
       Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
       policy.member, view.extent(Idx)...);
@@ -1643,18 +1625,17 @@ void KOKKOS_INLINE_FUNCTION md_local_deep_copy(
 
   Kokkos::Iterate iterate = Kokkos::Impl::get_iteration_order(dst);
   if (iterate == Kokkos::Iterate::Right) {
-    Kokkos::parallel_for(md_local_deep_copy_policy_impl<Kokkos::Iterate::Right>(
+    Kokkos::parallel_for(md_local_deep_copy_policy<Kokkos::Iterate::Right>(
                              policy, dst, std::make_index_sequence<rank>{}),
                          functor);
   } else if (iterate == Kokkos::Iterate::Left) {
-    Kokkos::parallel_for(md_local_deep_copy_policy_impl<Kokkos::Iterate::Left>(
+    Kokkos::parallel_for(md_local_deep_copy_policy<Kokkos::Iterate::Left>(
                              policy, dst, std::make_index_sequence<rank>{}),
                          functor);
   } else {
-    Kokkos::parallel_for(
-        md_local_deep_copy_policy_impl<Kokkos::Iterate::Default>(
-            policy, dst, std::make_index_sequence<rank>{}),
-        functor);
+    Kokkos::parallel_for(md_local_deep_copy_policy<Kokkos::Iterate::Default>(
+                             policy, dst, std::make_index_sequence<rank>{}),
+                         functor);
   }
 }
 
@@ -1746,6 +1727,10 @@ deep_copy(const Impl::CopySeqTag&, const View<DT, DP...>& dst,
           const View<ST, SP...>& src,
           std::enable_if_t<unsigned(ViewTraits<DT, DP...>::rank) ==
                            unsigned(ViewTraits<ST, SP...>::rank)>* = nullptr) {
+  if (dst.data() == nullptr) {
+    return;
+  }
+
   if (!Impl::views_have_same_extents(dst, src)) {
     Kokkos::abort("Error: Kokkos::deep_copy extents of views don't match");
   }
@@ -1809,6 +1794,10 @@ template <class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION
 deep_copy(const Impl::CopySeqTag&, const View<DT, DP...>& dst,
           typename ViewTraits<DT, DP...>::const_value_type& value) {
+  if (dst.data() == nullptr) {
+    return;
+  }
+
   Impl::local_deep_copy_sequential(dst, value);
 }
 //----------------------------------------------------------------------------
@@ -1862,6 +1851,10 @@ KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const TeamType& team,
                                     const View<DT, DP...>& dst,
                                     const View<ST, SP...>& src) {
+  if (dst.data() == nullptr) {
+    return;
+  }
+
   Impl::local_deep_copy_contiguous(Kokkos::TeamVectorRange(team, 0), dst, src);
 }
 
@@ -1873,6 +1866,10 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const Kokkos::View<DT, DP...>& dst,
                                     const Kokkos::View<ST, SP...>& src) {
+  if (dst.data() == nullptr) {
+    return;
+  }
+
   Impl::local_deep_copy_contiguous(copy_seq(), dst, src);
 }
 
@@ -1905,6 +1902,10 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
     const TeamType& team, const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
+  if (dst.data() == nullptr) {
+    return;
+  }
+
   Impl::local_deep_copy_contiguous(Kokkos::TeamVectorRange(team, 0), dst,
                                    value);
 }
@@ -1917,6 +1918,10 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
     const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
+  if (dst.data() == nullptr) {
+    return;
+  }
+
   Impl::local_deep_copy_contiguous(copy_seq(), dst, value);
 }
 
