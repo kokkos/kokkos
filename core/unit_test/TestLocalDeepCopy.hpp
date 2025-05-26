@@ -513,8 +513,7 @@ void test_local_deep_copy_scratch(int scratch_level) {
             team.team_scratch(scratch_level), N, 1);
 
         Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(team, N),
-            KOKKOS_LAMBDA(const size_t& index) {
+            Kokkos::TeamThreadRange(team, N), [=](const size_t index) {
               auto thread_shview =
                   Kokkos::subview(shview, index, Kokkos::ALL());
               Kokkos::Experimental::deep_copy(
