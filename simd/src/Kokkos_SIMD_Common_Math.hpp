@@ -17,7 +17,12 @@
 #ifndef KOKKOS_SIMD_COMMON_MATH_HPP
 #define KOKKOS_SIMD_COMMON_MATH_HPP
 
-#include <Kokkos_Core.hpp>  // Kokkos::min, etc.
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif  // Kokkos::min, etc.
 
 namespace Kokkos {
 

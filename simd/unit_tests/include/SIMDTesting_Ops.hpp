@@ -18,6 +18,7 @@
 #define KOKKOS_SIMD_TESTING_OPS_HPP
 
 #include <Kokkos_SIMD.hpp>
+#include <cmath>
 
 class plus {
  public:

@@ -79,6 +79,7 @@ export {
   using ::Kokkos::max;
   using ::Kokkos::min;
   using ::Kokkos::minmax;
+  using ::Kokkos::remainder;
 
   using ::Kokkos::BAnd;
   using ::Kokkos::BOr;
@@ -334,6 +335,7 @@ export {
   using ::Kokkos::asin;
   using ::Kokkos::asinh;
   using ::Kokkos::atan;
+  using ::Kokkos::atan2;
   using ::Kokkos::atanh;
   using ::Kokkos::cbrt;
   using ::Kokkos::ceil;
