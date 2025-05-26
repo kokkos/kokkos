@@ -650,7 +650,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // NOLINTBEGIN(modernize-type-traits)
   template <class P, class... Args,
             std::enable_if_t<!std::is_null_pointer_v<P> &&
-                                 std::is_constructible_v<typename base_t::data_handle_type, P>,
+                                 std::is_constructible_v<typename base_t::data_handle_type, P> &&
+                             sizeof...(Args) != rank()+1,
                              size_t> = 0ul>
   // NOLINTEND(modernize-type-traits)
   KOKKOS_FUNCTION View(P ptr_, Args... args)
@@ -788,6 +789,14 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                  arg_label,
                  std::make_index_sequence<sizeof...(Args)>(), args...),
              args...) {}
+  
+  template <class... Args>
+  View(const std::enable_if_t<(sizeof...(Args) == rank() + 1) &&
+                                  (std::is_constructible_v<size_t, Args> && ... && true),
+                              pointer_type>& arg_ptr,
+       const Args... args)
+      : View(Kokkos::view_wrap(arg_ptr, Kokkos::Impl::AccessorArg_t{Kokkos::Array<size_t, sizeof...(Args)>{args...}[rank()]}), args...) {
+  }
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
@@ -797,7 +806,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return Impl::mapping_from_array_layout<typename base_t::mapping_type>(
                layout)
                .required_span_size() *
-           sizeof(value_type);
+           sizeof(std::decay_t<pointer_type>);
   }
 
   KOKKOS_FUNCTION
@@ -830,22 +839,36 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     const size_t num_passed_args = Impl::count_valid_integers(
         arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
 
-    if (std::is_void_v<typename traits::specialize> &&
-        num_passed_args != rank_dynamic) {
-      Kokkos::abort(
-          "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n");
+    if (traits::impl_is_customized && num_passed_args == rank_dynamic + 1) {
+      size_t extra_dim = 0;
+      switch (rank_dynamic) {
+        case 0: extra_dim = arg_N0; break;
+        case 1: extra_dim = arg_N1; break;
+        case 2: extra_dim = arg_N2; break;
+        case 3: extra_dim = arg_N3; break;
+        case 4: extra_dim = arg_N4; break;
+        case 5: extra_dim = arg_N5; break;
+        case 6: extra_dim = arg_N6; break;
+        case 7: extra_dim = arg_N7; break;
+      }
+      return View::shmem_size(typename traits::array_layout(
+          arg_N0 * extra_dim, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
+    } else {
+      if (num_passed_args != rank_dynamic) {
+        Kokkos::abort(
+            "Kokkos::View::shmem_size() rank_dynamic != number of arguments.\n");
+      }
+      return View::shmem_size(typename traits::array_layout(
+          arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
     }
-
-    return View::shmem_size(typename traits::array_layout(
-        arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
   }
 
  private:
   // Want to be able to align to minimum scratch alignment or sizeof or alignof
   // elements
   static constexpr size_t scratch_value_alignment =
-      max({sizeof(typename traits::value_type),
-           alignof(typename traits::value_type),
+      max({sizeof(std::decay_t<pointer_type>),
+           alignof(std::decay_t<pointer_type>),
            static_cast<size_t>(
                traits::execution_space::scratch_memory_space::ALIGN)});
 
@@ -855,7 +878,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return Impl::mapping_from_array_layout<typename base_t::mapping_type>(
                arg_layout)
                    .required_span_size() *
-               sizeof(value_type) +
+               sizeof(std::decay_t<pointer_type>) +
            scratch_value_alignment;
   }
 

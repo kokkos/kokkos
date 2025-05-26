@@ -377,34 +377,67 @@ class BasicView {
 
  public:
   template <class... P>
-  // requires(!Impl::ViewCtorProp<P...>::has_pointer)
   explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer && Impl::ViewCtorProp<P...>::has_accessor_arg,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           !Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
-      : BasicView(create_data_handle(arg_prop, arg_mapping, accessor_from_mapping_and_accessor_args(
-                   Kokkos::Impl::AccessorTypeTag<accessor_type>(), arg_mapping, Impl::get_property<Impl::AccessorArgTag>(arg_prop))),
-                  arg_mapping, accessor_from_mapping_and_accessor_args(
-                   Kokkos::Impl::AccessorTypeTag<accessor_type>(), arg_mapping, Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
+      : BasicView(arg_prop, arg_mapping, accessor_type{}) {}
+
+  template <class... P>
+
+  explicit inline BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(
+            arg_prop, arg_mapping,
+            accessor_from_mapping_and_accessor_args(
+              Impl::AccessorTypeTag<accessor_type>(), arg_mapping,
+                Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
+
+  // check for accessor_arg for unmanaged view ctors
+  template <class... P>
+  explicit KOKKOS_FUNCTION BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer &&
+                           !Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(arg_prop, arg_mapping, accessor_type{}) {}
+
+  template <class... P>
+  explicit KOKKOS_FUNCTION BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(
+            arg_prop, arg_mapping,
+            accessor_from_mapping_and_accessor_args(
+              Impl::AccessorTypeTag<accessor_type>(), arg_mapping, 
+                Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
 
   template <class... P>
   // requires(!Impl::ViewCtorProp<P...>::has_pointer)
   explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer && !Impl::ViewCtorProp<P...>::has_accessor_arg,
-                       typename mdspan_type::mapping_type> const &arg_mapping)
-      : BasicView(create_data_handle(arg_prop, arg_mapping, accessor_type()),
-                  arg_mapping) {}
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+                       typename mdspan_type::mapping_type> const &arg_mapping,
+      const accessor_type &arg_accessor)
+      : BasicView(create_data_handle(arg_prop, arg_mapping, arg_accessor), arg_mapping,
+                  arg_accessor) {}
 
   template <class... P>
   // requires(Impl::ViewCtorProp<P...>::has_pointer)
   KOKKOS_FUNCTION explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
-                       typename mdspan_type::mapping_type> const &arg_mapping)
+                       typename mdspan_type::mapping_type> const &arg_mapping,
+      const accessor_type &arg_accessor)
       : BasicView(
-            data_handle_type(Impl::get_property<Impl::PointerTag>(arg_prop)),
-            arg_mapping) {}
+            data_handle_type{Impl::get_property<Impl::PointerTag>(arg_prop)},
+            arg_mapping, arg_accessor) {}
 
  protected:
   template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,

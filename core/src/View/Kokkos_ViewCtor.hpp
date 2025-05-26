@@ -32,8 +32,15 @@ struct AllowPadding_t {};
 // copying the code from the above properties.
 // For Sacado we only need a size_t for fad_size
 struct AccessorArg_t {
-  size_t value;
+ private:
+  size_t val{};
+
+ public:
+  KOKKOS_FUNCTION AccessorArg_t() = default;
+  KOKKOS_FUNCTION AccessorArg_t(size_t val_) : val{val_} {}
+  KOKKOS_FUNCTION auto value() const { return val; }
 };
+
 
 template <typename>
 struct is_view_ctor_property : public std::false_type {};
