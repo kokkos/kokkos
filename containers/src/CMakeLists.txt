@@ -17,7 +17,19 @@ install(
   PATTERN "*.hpp"
 )
 
-kokkos_add_library(kokkoscontainers SOURCES ${KOKKOS_CONTAINERS_SRCS} HEADERS ${KOKKOS_CONTAINERS_HEADERS})
+if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
+	# set(KOKKOS_CONTAINERS_MODULE_FILES kokkoscontainers.ccm)
+endif()
+
+kokkos_add_library(
+  kokkoscontainers
+  SOURCES
+  ${KOKKOS_CONTAINERS_SRCS}
+  MODULE_FILES
+  ${KOKKOS_CONTAINERS_MODULE_FILES}
+  HEADERS
+  ${KOKKOS_CONTAINERS_HEADERS}
+)
 
 kokkos_lib_include_directories(
   kokkoscontainers ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
