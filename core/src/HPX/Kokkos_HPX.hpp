@@ -1943,7 +1943,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   }
 
   // 'scan_val' output is the exclusive prefix sum
-  scan_val = loop_boundaries.thread.team_scan(scan_val);
+  scan_val = loop_boundaries.member.team_scan(scan_val);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {

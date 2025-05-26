@@ -884,7 +884,7 @@ Impl::TeamThreadRangeBoundariesStruct<iType,Impl::HostThreadTeamMember<Space> >
     closure( i , reducer.reference() );
   }
 
-  loop_boundaries.thread.team_reduce( reducer );
+  loop_boundaries.member.team_reduce( reducer );
 }*/
 
 //----------------------------------------------------------------------------
