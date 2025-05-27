@@ -15,5 +15,6 @@ static_assert(false,
 #include <Kokkos_Parallel_For.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 #include <Kokkos_Parallel_Scan.hpp>
+#include <Kokkos_Single.hpp>
 
 #endif /* KOKKOS_PARALLEL_HPP */

@@ -111,5 +111,22 @@ struct IntegerComparison {
   }
 };
 
+// Check if a rank-0 view contains a given value.
+template <typename Exec, typename ViewType>
+::testing::AssertionResult contains(
+    const Exec& exec, const ViewType& view,
+    const typename ViewType::value_type& expected) {
+  static_assert(ViewType::rank() == 0);
+  typename ViewType::non_const_value_type value;
+  Kokkos::deep_copy(exec, value, view);
+  exec.fence();
+  if (value != expected)
+    return ::testing::AssertionFailure()
+           << expected << " is not in " << view.label() << ", got " << value;
+  else
+    return ::testing::AssertionSuccess()
+           << expected << " is in " << view.label() << ", got " << value;
+}
+
 }  // namespace KokkosTest
 #endif

@@ -21,6 +21,8 @@ bool begin_parallel_reduce_callback              = false;
 bool end_parallel_reduce_callback                = false;
 bool begin_parallel_scan_callback                = false;
 bool end_parallel_scan_callback                  = false;
+bool begin_single_callback                       = false;
+bool end_single_callback                         = false;
 bool push_region_callback                        = false;
 bool pop_region_callback                         = false;
 bool allocate_data_callback                      = false;
@@ -65,6 +67,12 @@ void test_tools_initialization_with_callbacks() {
       });
   Kokkos::Tools::Experimental::set_end_parallel_scan_callback(
       [](const uint64_t /*k*/) { end_parallel_scan_callback = true; });
+  Kokkos::Tools::Experimental::set_begin_single_callback(
+      [](const char* /*n*/, const uint32_t /*d*/, uint64_t* /*k*/) {
+        begin_single_callback = true;
+      });
+  Kokkos::Tools::Experimental::set_end_single_callback(
+      [](const uint64_t /*k*/) { end_single_callback = true; });
   Kokkos::Tools::Experimental::set_push_region_callback(
       [](const char* /*name*/) { push_region_callback = true; });
   Kokkos::Tools::Experimental::set_pop_region_callback(
@@ -164,6 +172,9 @@ void test_tools_initialization_with_callbacks() {
             hold_result += i;
           }
         });
+    Kokkos::single(
+        "single", Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(),
+        KOKKOS_LAMBDA(int& res) { res *= 2; }, result);
     Kokkos::Profiling::pushRegion("push_region");
     Kokkos::Profiling::popRegion();
     uint32_t sectionId;
@@ -184,6 +195,8 @@ void test_tools_initialization_with_callbacks() {
     ASSERT_TRUE(end_parallel_reduce_callback);
     ASSERT_TRUE(begin_parallel_scan_callback);
     ASSERT_TRUE(end_parallel_scan_callback);
+    ASSERT_TRUE(begin_single_callback);
+    ASSERT_TRUE(end_single_callback);
     ASSERT_TRUE(push_region_callback);
     ASSERT_TRUE(pop_region_callback);
     ASSERT_TRUE(allocate_data_callback);
