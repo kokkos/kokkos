@@ -27,6 +27,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW
 #endif
 
+module;
+
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
@@ -36,6 +38,10 @@ import kokkoscore;
 #include <string>
 #include <utility>
 #include <cstddef>
+
+export module kokkosscatterview;
+
+export {
 
 namespace Kokkos {
 namespace Experimental {
@@ -1645,6 +1651,8 @@ std::enable_if_t<Kokkos::Impl::is_view_ctor_property<I>::value> resize(
 }
 
 }  // namespace Kokkos
+
+}
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
