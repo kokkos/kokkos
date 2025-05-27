@@ -44,20 +44,20 @@ export {
   }  // namespace Experimental
 
   namespace Impl {
+  using ::Kokkos::Impl::check_view_ctor_args_create_mirror;
+  using ::Kokkos::Impl::check_view_ctor_args_create_mirror_view_and_copy;
+  using ::Kokkos::Impl::CommonSubview;
   using ::Kokkos::Impl::DeepCopy;
+  using ::Kokkos::Impl::ExecutionSpaceTag;
   using ::Kokkos::Impl::MemorySpaceAccess;
   using ::Kokkos::Impl::PolicyTraits;
-  using ::Kokkos::Impl::CommonSubview;
-  using ::Kokkos::Impl::ViewCtorProp;
+  using ::Kokkos::Impl::runtime_check_memory_access_violation;
   using ::Kokkos::Impl::SharedAllocationRecord;
   using ::Kokkos::Impl::SharedAllocationTracker;
   using ::Kokkos::Impl::throw_runtime_exception;
-  using ::Kokkos::Impl::runtime_check_memory_access_violation;
-  using ::Kokkos::Impl::check_view_ctor_args_create_mirror_view_and_copy;
-  using ::Kokkos::Impl::check_view_ctor_args_create_mirror;
+  using ::Kokkos::Impl::ViewCtorProp;
   using ::Kokkos::Impl::WithoutInitializing_t;
-  using ::Kokkos::Impl::ExecutionSpaceTag;  
-}  // namespace Impl
+  }  // namespace Impl
 
   using ::Kokkos::IndexType;
 
@@ -432,9 +432,9 @@ export {
   using ::Kokkos::tune_internals;
 
   namespace Tools::Experimental {
+  using ::Kokkos::Tools::Experimental::get_callbacks;
   using ::Kokkos::Tools::Experimental::OptimizationGoal;
   using ::Kokkos::Tools::Experimental::pause_tools;
-  using ::Kokkos::Tools::Experimental::get_callbacks;
   using ::Kokkos::Tools::Experimental::set_allocate_data_callback;
   using ::Kokkos::Tools::Experimental::set_begin_context_callback;
   using ::Kokkos::Tools::Experimental::set_begin_deep_copy_callback;
@@ -490,8 +490,8 @@ export {
 
   namespace Tools {
   using ::Kokkos::Tools::declareMetadata;
-  using ::Kokkos::Tools::SpaceHandle;
   using ::Kokkos::Tools::modifyDualView;
+  using ::Kokkos::Tools::SpaceHandle;
   using ::Kokkos::Tools::syncDualView;
   namespace Experimental {
   using ::Kokkos::Tools::Experimental::ToolProgrammingInterface;
@@ -500,16 +500,16 @@ export {
   }  // namespace Tools
 
   namespace Impl {
-  using ::Kokkos::Impl::as_view_of_rank_n;
-  using ::Kokkos::Impl::is_view_ctor_property;
+  using ::Kokkos::Impl::apply_to_view_of_static_rank;
   using ::Kokkos::Impl::are_integral;
+  using ::Kokkos::Impl::as_view_of_rank_n;
+  using ::Kokkos::Impl::choose_create_mirror;
   using ::Kokkos::Impl::has_type;
-  using ::Kokkos::Impl::size_mismatch;
+  using ::Kokkos::Impl::is_view_ctor_property;
   using ::Kokkos::Impl::ParallelConstructName;
+  using ::Kokkos::Impl::size_mismatch;
   using ::Kokkos::Impl::SubviewLegalArgsCompileTime;
   using ::Kokkos::Impl::with_properties_if_unset;
-  using ::Kokkos::Impl::apply_to_view_of_static_rank;
-  using ::Kokkos::Impl::choose_create_mirror;
   }  // namespace Impl
 
   using ::Kokkos::SharedHostPinnedSpace;
@@ -521,14 +521,14 @@ export {
   using ::Kokkos::Crs;
   using ::Kokkos::transpose_crs;
 
-  using ::Kokkos::rank;
   using ::Kokkos::default_accessor;
   using ::Kokkos::dextents;
   using ::Kokkos::dynamic_extent;
   using ::Kokkos::extents;
-  using ::Kokkos::mdspan;
-  using ::Kokkos::layout_right;
   using ::Kokkos::layout_left;
+  using ::Kokkos::layout_right;
+  using ::Kokkos::mdspan;
+  using ::Kokkos::rank;
   namespace Experimental {
   using ::Kokkos::Experimental::Extents;
   using ::Kokkos::Experimental::layout_left_padded;
@@ -549,13 +549,13 @@ export {
   using ::Kokkos::Impl::rank_dynamic;
 
   using ::Kokkos::Impl::ViewArrayAnalysis;
+  using ::Kokkos::Impl::ViewCopy;
   using ::Kokkos::Impl::ViewDataAnalysis;
   using ::Kokkos::Impl::ViewDataHandle;
   using ::Kokkos::Impl::ViewDimension;
-  using ::Kokkos::Impl::ViewRemap;
   using ::Kokkos::Impl::ViewMapping;
   using ::Kokkos::Impl::ViewOffset;
-  using ::Kokkos::Impl::ViewCopy;
+  using ::Kokkos::Impl::ViewRemap;
 
   using ::Kokkos::Impl::RankDataType;
 

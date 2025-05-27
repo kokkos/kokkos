@@ -143,4 +143,3 @@ static_assert(
             Kokkos::MemoryTraits<Kokkos::Atomic>>>,
     "Error! Unexpected python_view_type for: DynRankView + Layout + Execution "
     "space  + Memory trait");
-    

@@ -23,7 +23,6 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 
-
 #include <desul/atomics.hpp>
 #ifdef KOKKOS_SIMD_COMMON_MATH_HPP
 #error \
