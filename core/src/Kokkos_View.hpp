@@ -116,6 +116,18 @@ struct BasicViewFromTraits {
   using type =
       BV::BasicView<element_type, extents_type, layout_type, accessor_type>;
 };
+
+// Helper function to deal with cases where the data handle is
+// not convertible to element_type* such as in Sacado.
+// An overload for our reference counted data handle is next to its
+// implementation. This one covers Unmanaged views with raw pointers.
+template <class HandleType>
+KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
+    const HandleType& handle) {
+  // This should only be internally invoked in Kokkos with raw pointers.
+  static_assert(std::is_pointer_v<HandleType>);
+  return handle;
+}
 }  // namespace Impl
 
 template <class DataType, class... Properties>
@@ -174,9 +186,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // FIXME: these are overriden so that their types are identical when using
   // BasicView or Legacy we will need to obtain these from base_t in the future
   // and deprecate old behavior
-  using size_type    = typename memory_space::size_type;
-  using value_type   = typename traits::value_type;
-  using pointer_type = typename traits::value_type*;
+  using size_type  = typename memory_space::size_type;
+  using value_type = typename traits::value_type;
+  // pointer_type can be different from element_type*
+  using pointer_type = decltype(Impl::ptr_from_data_handle(
+      std::declval<typename base_t::data_handle_type>()));
 
   using scalar_array_type       = typename traits::scalar_array_type;
   using const_scalar_array_type = typename traits::const_scalar_array_type;
@@ -318,7 +332,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return data() != nullptr;
   }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const {
-    return static_cast<pointer_type>(base_t::data_handle());
+    return Impl::ptr_from_data_handle(base_t::data_handle());
   }
 
   KOKKOS_INLINE_FUNCTION constexpr int extent_int(size_t r) const {

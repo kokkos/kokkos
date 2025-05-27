@@ -347,6 +347,13 @@ class ReferenceCountedDataHandle {
   pointer m_handle = nullptr;
 };
 
+// Helper function used by View to extract raw pointer from data_handle
+template <class ElementType, class MemorySpace>
+KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
+    const ReferenceCountedDataHandle<ElementType, MemorySpace>& handle) {
+  return handle.get();
+}
+
 template <class T>
 struct IsReferenceCountedDataHandle : std::false_type {};
 
