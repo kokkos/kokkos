@@ -29,7 +29,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 #include <Kokkos_View.hpp>
-#include <Kokkos_DualView.hpp>
+import kokkosdualview;
 
 namespace Kokkos {
 namespace Experimental {

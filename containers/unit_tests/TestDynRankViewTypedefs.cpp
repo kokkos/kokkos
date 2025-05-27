@@ -21,6 +21,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 #include <Kokkos_DynRankView.hpp>
+#include <desul/atomics.hpp>
 
 namespace {
 

@@ -20,7 +20,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_DualView.hpp>
+import kokkosdualview;
 #include <Kokkos_DynRankView.hpp>
 #include <Kokkos_DynamicView.hpp>
 #include <Kokkos_OffsetView.hpp>

@@ -22,7 +22,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <Kokkos_Timer.hpp>
-#include <Kokkos_DualView.hpp>
+import kokkoscore;
+import kokkosdualview;
 
 namespace Test {
 
