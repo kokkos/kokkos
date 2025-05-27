@@ -17,14 +17,19 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
-#else
-#include <Kokkos_Core.hpp>
-#endif
 import kokkosdualview;
 import kokkosdynrankview;
 import kokkosdynamicview;
 import kokkosoffsetview;
 import kokkosscatterview;
+#else
+#include <Kokkos_Core.hpp>
+#include <Kokkos_DualView.hpp>
+#include <Kokkos_DynRankView.hpp>
+#include <Kokkos_DynamicView.hpp>
+#include <Kokkos_OffsetView.hpp>
+#include <Kokkos_ScatterView.hpp>
+#endif
 
 namespace {
 

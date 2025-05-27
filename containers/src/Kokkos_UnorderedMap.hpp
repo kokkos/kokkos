@@ -30,13 +30,15 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+import kokkosfunctional;
+import kokkosbitset;
 #else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Functional.hpp>
+#include <Kokkos_Bitset.hpp>
 #endif
-import kokkosfunctional;
 
 #include <Kokkos_Assert.hpp>
-import kokkosbitset;
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_UnorderedMap_impl.hpp>

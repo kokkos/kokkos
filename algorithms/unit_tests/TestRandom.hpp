@@ -21,13 +21,14 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
-import kokkosdynrankview;
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+import kokkosdynrankview;
 #else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_DynRankView.hpp>
 #endif
 #include <Kokkos_Random.hpp>
 #include <cmath>

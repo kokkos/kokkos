@@ -21,10 +21,11 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+import kokkosdynrankview;
 #else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_DynRankView.hpp>
 #endif
-import kokkosdynrankview;
 
 #include <type_traits>
 #include <typeinfo>

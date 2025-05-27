@@ -22,10 +22,11 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+import kokkoserrorreporter;
 #else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_ErrorReporter.hpp>
 #endif
-import kokkoserrorreporter;
 
 namespace Test {
 
