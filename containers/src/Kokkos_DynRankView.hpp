@@ -164,7 +164,7 @@ struct DynRankDimTraits {
       typename Traits::array_layout>
   createLayout(const Kokkos::Impl::ViewCtorProp<P...>& prop,
                typename Traits::array_layout layout) {
-    if constexpr (Traits::impl_is_customized) {
+    if constexpr (Traits::impl_is_customized && !Kokkos::Impl::ViewCtorProp<P...>::has_accessor_arg) {
       auto rank = computeRank(prop, layout) - 1;
       layout.dimension[rank] = unspecified;
       return createLayout(layout);
@@ -879,7 +879,7 @@ class DynRankView : private View<DataType*******, Properties...> {
       if constexpr (traits::impl_is_customized) {
         int r=0;
         while( r<7 && layout.dimension[r] != KOKKOS_INVALID_INDEX) r++;
-        return Impl::with_properties_if_unset(arg_prop, Impl::AccessorArg_t{size_t(layout.dimension[r-1])}); 
+        return Impl::with_properties_if_unset(arg_prop, Impl::AccessorArg_t{ r > 0 ? size_t(layout.dimension[r-1]) : 0ul}); 
       } else {
         return arg_prop;
       }
@@ -910,7 +910,7 @@ class DynRankView : private View<DataType*******, Properties...> {
           arg_layout)
       : view_type(attach_accessor_arg_if_needed(arg_prop, arg_layout), drdtraits::template createLayout<traits, P...>(
                                 arg_prop, arg_layout)),
-        m_rank(drdtraits::computeRank(arg_prop, arg_layout) - (traits::impl_is_customized ? 1 : 0)) {}
+        m_rank(drdtraits::computeRank(arg_prop, arg_layout) - (traits::impl_is_customized && !Kokkos::Impl::ViewCtorProp<P...>::has_accessor_arg ? 1 : 0)) {}
 #ifdef KOKKOS_IMPL_SKIP_OPTIMIZATION
 #pragma GCC pop_options
 #pragma pop
