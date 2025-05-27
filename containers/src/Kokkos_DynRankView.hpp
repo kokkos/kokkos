@@ -127,7 +127,7 @@ struct DynRankDimTraits {
         layout.dimension[5] != unspecified ? layout.dimension[5] : 1,
         layout.dimension[6] != unspecified ? layout.dimension[6] : 1,
         layout.dimension[7] != unspecified ? layout.dimension[7] : unspecified);
-    new_layout.stride = layout.stride;
+    new_layout.stride = layout.dimension[6];
     return new_layout;
   }
 
@@ -797,7 +797,7 @@ class DynRankView : private View<DataType*******, Properties...> {
                                      size_t new_rank)
       : view_type(rhs.data_handle(),
                   Impl::mapping_from_array_layout<typename view_type::mdspan_type::mapping_type>(
-                  rhs.layout()),
+                  drdtraits::createLayout(rhs.layout())),
                   rhs.accessor()),
         m_rank(new_rank) {
     if (new_rank > View<RT, RP...>::rank())
@@ -811,7 +811,7 @@ class DynRankView : private View<DataType*******, Properties...> {
     view_type::operator=(view_type(
         rhs.data_handle(),
         Impl::mapping_from_array_layout<typename view_type::mdspan_type::mapping_type>(
-          rhs.layout()),
+          drdtraits::createLayout(rhs.layout())),
         rhs.accessor()));
     m_rank = rhs.rank();
     return *this;
@@ -1274,11 +1274,15 @@ as_view_of_rank_n(
   if constexpr (std::is_same_v<decltype(layout), Kokkos::LayoutLeft> ||
                 std::is_same_v<decltype(layout), Kokkos::LayoutRight> ||
                 std::is_same_v<decltype(layout), Kokkos::LayoutStride>) {
-    for (int i = N; i < 7; ++i)
-      layout.dimension[i] = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
+      for (int i = N; i < 7; ++i)
+        layout.dimension[i] = 1;//KOKKOS_IMPL_CTOR_DEFAULT_ARG;
   }
 
-  return View<typename RankDataType<T, N>::type, Args...>(v.data(), layout);
+  if constexpr (ViewTraits<T, Args...>::impl_is_customized) {
+    return View<typename RankDataType<T, N>::type, Args...>(Kokkos::view_wrap(v.data(), Kokkos::Impl::AccessorArg_t{v.accessor().fad_size()+1}), layout);
+  } else {
+    return View<typename RankDataType<T, N>::type, Args...>(v.data(), layout);
+  }
 }
 
 template <typename Function, typename... Args>
