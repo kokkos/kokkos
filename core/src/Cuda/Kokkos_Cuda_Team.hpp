@@ -414,8 +414,8 @@ struct ThreadVectorRangeBoundariesStruct<iType, CudaTeamMember> {
 
   KOKKOS_INLINE_FUNCTION
   ThreadVectorRangeBoundariesStruct(const CudaTeamMember& thread_,
-                                    index_type arg_begin, index_type arg_end)
-      : member(thread_), start(arg_begin), end(arg_end) {}
+                                    index_type begin_, index_type end_)
+      : member(thread_), start(begin_), end(end_) {}
 };
 
 }  // namespace Impl
