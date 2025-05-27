@@ -453,6 +453,119 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
   ::Kokkos::parallel_scan("", work_count, functor, return_value);
 }
 
+
+/** \brief Execute \c functor on a specific ExecutionSpace in a single thread.
+ *
+ */
+
+// Generate a lambda wrapper to call the functor from a standard parallel_for
+template <class WorkTag, class FunctorType>
+auto generate_wrapper(FunctorType functor) {
+  if constexpr(std::is_same_v<WorkTag, void>) {
+    return KOKKOS_LAMBDA(int){functor();};
+  } else {
+    return KOKKOS_LAMBDA(const WorkTag &w, int){functor(w);};
+  }
+}
+
+template <
+    class ExecSpace, class WorkTag, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const std::string& str, const ExecSpace& space,
+                         const FunctorType& functor) {
+  uint64_t kpID = 0;
+
+  // We need a lambda and a policy usable in a parallel_for
+  auto policy = RangePolicy<ExecSpace, WorkTag>(0, 1);
+  auto functor_wrapper = generate_wrapper<WorkTag>(functor);
+
+  using WrapperType = decltype(functor_wrapper);
+  using ExecPolicy = decltype(policy);
+
+  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType> (policy, str, kpID);
+
+  // Use a simple parallel_for
+  auto closure =
+      Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
+          Impl::ParallelFor<WrapperType, ExecPolicy>>(functor_wrapper, policy);
+
+  closure.execute();
+
+  Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
+}
+
+template <class WorkTag, class FunctorType>
+inline void single(const std::string& str, const FunctorType& functor) {
+  using execution_space = Kokkos::DefaultExecutionSpace;
+  ::Kokkos::single<execution_space, WorkTag>(str, execution_space{}, functor);
+}
+
+template <class WorkTag, class FunctorType>
+inline void single(const FunctorType& functor) {
+  ::Kokkos::single<WorkTag>("", functor);
+}
+
+template <class WorkTag, class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const std::string& str, const ExecSpace& space, const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, WorkTag, FunctorType>(str, space, functor);
+}
+
+template <class WorkTag, class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const ExecSpace& space, const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, WorkTag, FunctorType>("", space, functor);
+}
+
+template <class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const std::string& str, const ExecSpace& space,
+                         const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, void, FunctorType>(str, space, functor);
+}
+
+template <
+    class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const ExecSpace& space, const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, void, FunctorType>("", space, functor);
+}
+
+template <class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const std::string& str, const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, void, FunctorType>(str, ExecSpace{}, functor);
+}
+
+template <class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, void, FunctorType>("", ExecSpace{}, functor);
+}
+
+template <class WorkTag, class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const std::string& str, const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, WorkTag, FunctorType>(str, ExecSpace{}, functor);
+}
+
+template <class WorkTag, class ExecSpace, class FunctorType,
+    class Enable = std::enable_if_t<is_execution_space<ExecSpace>::value>>
+inline void single(const FunctorType& functor) {
+  ::Kokkos::single<ExecSpace, WorkTag, FunctorType>("", ExecSpace{}, functor);
+}
+
+template <class FunctorType>
+inline void single(const std::string& str, const FunctorType& functor) {
+  ::Kokkos::single(str, Kokkos::DefaultExecutionSpace{}, functor);
+}
+
+template <class FunctorType>
+inline void single(const FunctorType& functor) {
+  ::Kokkos::single<void, FunctorType>("", functor);
+}
+
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

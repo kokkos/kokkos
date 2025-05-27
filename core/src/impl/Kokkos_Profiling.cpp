@@ -251,6 +251,8 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.end_parallel_reduce == r.end_parallel_reduce &&
          l.begin_parallel_scan == r.begin_parallel_scan &&
          l.end_parallel_scan == r.end_parallel_scan &&
+         l.begin_single == r.begin_single &&
+         l.end_single == r.end_single &&
          l.push_region == r.push_region && l.pop_region == r.pop_region &&
          l.allocate_data == r.allocate_data &&
          l.deallocate_data == r.deallocate_data &&
@@ -396,6 +398,20 @@ void endParallelReduce(const uint64_t kernelID) {
     Experimental::end_context(Experimental::get_current_context_id());
   }
 #endif
+}
+
+void beginSingle(const std::string& kernelPrefix, const uint32_t devID,
+                      uint64_t* kernelID) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::Yes,
+      Experimental::current_callbacks.begin_single, kernelPrefix.c_str(),
+      devID, kernelID);
+}
+
+void endSingle(const uint64_t kernelID) {
+  Experimental::invoke_kokkosp_callback(
+      Experimental::MayRequireGlobalFencing::Yes,
+      Experimental::current_callbacks.end_single, kernelID);
 }
 
 void pushRegion(const std::string& kName) {
@@ -649,12 +665,16 @@ void initialize(const std::string& profileLibrary) {
                       Experimental::current_callbacks.begin_parallel_for);
       lookup_function(firstProfileLibrary, "kokkosp_begin_parallel_reduce",
                       Experimental::current_callbacks.begin_parallel_reduce);
+      lookup_function(firstProfileLibrary, "kokkosp_begin_single",
+                      Experimental::current_callbacks.begin_single);
       lookup_function(firstProfileLibrary, "kokkosp_end_parallel_scan",
                       Experimental::current_callbacks.end_parallel_scan);
       lookup_function(firstProfileLibrary, "kokkosp_end_parallel_for",
                       Experimental::current_callbacks.end_parallel_for);
       lookup_function(firstProfileLibrary, "kokkosp_end_parallel_reduce",
                       Experimental::current_callbacks.end_parallel_reduce);
+      lookup_function(firstProfileLibrary, "kokkosp_end_single",
+                      Experimental::current_callbacks.end_single);
 
       lookup_function(firstProfileLibrary, "kokkosp_init_library",
                       Experimental::current_callbacks.init);
@@ -887,6 +907,14 @@ void set_begin_parallel_scan_callback(beginFunction callback) {
 }
 void set_end_parallel_scan_callback(endFunction callback) {
   current_callbacks.end_parallel_scan = callback;
+  updateProfileLibraryState();
+}
+void set_begin_single_callback(beginFunction callback) {
+  current_callbacks.begin_single = callback;
+  updateProfileLibraryState();
+}
+void set_end_single_callback(endFunction callback) {
+  current_callbacks.end_single = callback;
   updateProfileLibraryState();
 }
 void set_push_region_callback(pushFunction callback) {
