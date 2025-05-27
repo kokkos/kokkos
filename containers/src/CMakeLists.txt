@@ -69,10 +69,6 @@ kokkos_add_library(
   ${KOKKOS_CONTAINERS_HEADERS}
 )
 
-if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
-  set_target_properties(kokkoscontainers PROPERTIES CXX_SCAN_FOR_MODULES ON)
-endif()
-
 kokkos_lib_include_directories(
   kokkoscontainers ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 )

@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
+# scan source files for importing C++20 modules
+if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+  cmake_policy(SET CMP0155 NEW)
+endif()
+
 # Disable in-source builds to prevent source tree corruption.
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   message(

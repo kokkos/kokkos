@@ -69,9 +69,6 @@ function(KOKKOS_ADD_EXECUTABLE ROOT_NAME)
   #All executables must link to all the kokkos targets
   #This is just private linkage because exe is final
   target_link_libraries(${EXE_NAME} PRIVATE Kokkos::kokkos)
-  if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
-    set_target_properties(${EXE_NAME} PROPERTIES CXX_SCAN_FOR_MODULES ON)
-  endif()
 endfunction()
 
 function(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)

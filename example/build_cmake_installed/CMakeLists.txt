@@ -12,7 +12,6 @@ find_package(Kokkos REQUIRED)
 # FIXME we should be able to use Kokkos::kokkos
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
   add_executable(example cmake_example.cpp)
-  set_target_properties(example PROPERTIES CXX_SCAN_FOR_MODULES ON)
   # This is the only thing required to set up compiler/linker flags
   target_link_libraries(example Kokkos::kokkoscore)
 else()
