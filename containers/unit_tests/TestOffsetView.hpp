@@ -25,7 +25,8 @@
 #include <cstdlib>
 #include <cstdio>
 #include <Kokkos_Timer.hpp>
-#include <Kokkos_OffsetView.hpp>
+import kokkoscore;
+import kokkosoffsetview;
 
 using std::cout;
 using std::endl;

@@ -20,9 +20,11 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_DynamicView.hpp>
-#include <Kokkos_DynRankView.hpp>
-#include <Kokkos_OffsetView.hpp>
+import kokkosdynamicview;
+import kokkosdynrankview;
+import kokkosoffsetview;
+
+#include <type_traits>
 
 template <typename TestView, typename MemorySpace>
 void check_memory_space(TestView, MemorySpace) {

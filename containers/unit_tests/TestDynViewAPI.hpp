@@ -24,7 +24,7 @@ import kokkoscore;
 #endif
 #include <sstream>
 #include <iostream>
-#include <Kokkos_DynRankView.hpp>
+import kokkosdynrankview;
 
 /*--------------------------------------------------------------------------*/
 

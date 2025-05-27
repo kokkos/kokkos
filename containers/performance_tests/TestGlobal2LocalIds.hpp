@@ -23,7 +23,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_UnorderedMap.hpp>
+import kokkosunorderedmap;
 #include <vector>
 #include <algorithm>
 

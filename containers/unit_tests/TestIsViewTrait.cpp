@@ -21,10 +21,10 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 import kokkosdualview;
-#include <Kokkos_DynRankView.hpp>
-#include <Kokkos_DynamicView.hpp>
-#include <Kokkos_OffsetView.hpp>
-#include <Kokkos_ScatterView.hpp>
+import kokkosdynrankview;
+import kokkosdynamicview;
+import kokkosoffsetview;
+import kokkosscatterview;
 
 namespace {
 

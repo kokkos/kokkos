@@ -16,7 +16,9 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_DynRankView.hpp>
+import kokkoscore;
+import kokkosdynrankview;
+#include <Kokkos_Macros.hpp>
 
 namespace {
 

@@ -34,7 +34,7 @@ import kokkoscore;
 
 #include <TestDynRankView.hpp>
 
-#include <Kokkos_UnorderedMap.hpp>
+import kokkosunorderedmap;
 
 #include <TestGlobal2LocalIds.hpp>
 

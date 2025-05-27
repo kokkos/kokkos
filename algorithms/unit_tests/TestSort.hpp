@@ -24,7 +24,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_DynamicView.hpp>
+import kokkosdynamicview;
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
 

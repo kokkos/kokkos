@@ -25,7 +25,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 
-#include <Kokkos_UnorderedMap.hpp>
+import kokkosunorderedmap;
 
 #include <TestGlobal2LocalIds.hpp>
 #include <TestUnorderedMapPerformance.hpp>

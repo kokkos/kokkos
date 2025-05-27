@@ -1646,6 +1646,8 @@ std::enable_if_t<Kokkos::Impl::is_view_ctor_property<I>::value> resize(
 
 }  // namespace Kokkos
 
+}
+
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW

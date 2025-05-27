@@ -25,7 +25,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_ErrorReporter.hpp>
+import kokkoserrorreporter;
 
 namespace Test {
 

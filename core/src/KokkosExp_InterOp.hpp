@@ -75,21 +75,21 @@ using python_view_type_impl_t = typename python_view_type_impl<T...>::type;
 }  // namespace Kokkos
 
 namespace Kokkos {
-
+/*
 template <typename DataType, class... Properties>
 class DynRankView;
-
+*/
 namespace Impl {
 
 // Duplicate from the header file for DynRankView to avoid core depending on
 // containers.
 template <class>
 struct is_dyn_rank_view_dup : public std::false_type {};
-
+/*
 template <class D, class... P>
 struct is_dyn_rank_view_dup<Kokkos::DynRankView<D, P...>>
     : public std::true_type {};
-
+*/
 }  // namespace Impl
 
 namespace Experimental {

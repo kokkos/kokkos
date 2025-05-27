@@ -21,7 +21,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
-#include <Kokkos_DynRankView.hpp>
+import kokkosdynrankview;
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE

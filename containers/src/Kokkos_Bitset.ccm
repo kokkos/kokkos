@@ -30,7 +30,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 #include <Kokkos_BitManipulation.hpp>
-#include <Kokkos_Functional.hpp>
+import kokkosfunctional;
 
 #include <impl/Kokkos_Bitset_impl.hpp>
 

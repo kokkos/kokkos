@@ -18,7 +18,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
-#include <Kokkos_UnorderedMap.hpp>
+import kokkosunorderedmap;
+#include <cstdint>
 
 namespace Kokkos {
 namespace Impl {

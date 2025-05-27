@@ -25,7 +25,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_Bitset.hpp>
+import kokkosbitset;
 #include <array>
 
 #include <../../core/unit_test/tools/include/ToolTestingUtilities.hpp>

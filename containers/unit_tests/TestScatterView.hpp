@@ -17,8 +17,10 @@
 #ifndef KOKKOS_TEST_SCATTER_VIEW_HPP
 #define KOKKOS_TEST_SCATTER_VIEW_HPP
 
-#include <Kokkos_ScatterView.hpp>
+import kokkoscore;
+import kokkosscatterview;
 #include <gtest/gtest.h>
+#include <Kokkos_Macros.hpp>
 
 namespace Test {
 

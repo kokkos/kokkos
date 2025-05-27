@@ -35,10 +35,10 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_Functional.hpp>
+import kokkosfunctional;
 
 #include <Kokkos_Assert.hpp>
-#include <Kokkos_Bitset.hpp>
+import kokkosbitset;
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_UnorderedMap_impl.hpp>

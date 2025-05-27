@@ -23,7 +23,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_DynRankView.hpp>
+import kokkosdynrankview;
 #include <vector>
 
 #include <Kokkos_Timer.hpp>

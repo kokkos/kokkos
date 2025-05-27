@@ -20,8 +20,9 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <Kokkos_DynRankView.hpp>
+import kokkosdynrankview;
 #include <desul/atomics.hpp>
+#include <cstddef>
 
 namespace {
 

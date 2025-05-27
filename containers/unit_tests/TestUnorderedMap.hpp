@@ -19,7 +19,11 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include <Kokkos_UnorderedMap.hpp>
+import kokkoscore;
+import kokkosfunctional;
+import kokkosunorderedmap;
+#include <Kokkos_Macros.hpp>
+#include "impl/Kokkos_UnorderedMap_impl.hpp"
 
 namespace Test {
 

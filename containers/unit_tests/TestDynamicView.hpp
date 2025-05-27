@@ -28,7 +28,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 
-#include <Kokkos_DynamicView.hpp>
+import kokkosdynamicview;
 #include <Kokkos_Timer.hpp>
 
 namespace Test {
