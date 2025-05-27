@@ -20,33 +20,24 @@
 
 #include <TestDefaultDeviceType_Category.hpp>
 
-struct TimeTwo{};
-struct PlusOne{};
+struct TimeTwo {};
+struct PlusOne {};
 
 struct Funct {
   Kokkos::View<double*> v;
 
-  KOKKOS_FUNCTION void operator() (const TimeTwo) const {
-    v(0) *= 2;
-  }
+  KOKKOS_FUNCTION void operator()(const TimeTwo) const { v(0) *= 2; }
 
-  KOKKOS_FUNCTION void operator() (const PlusOne) const {
-    ++v(0);
-  }
+  KOKKOS_FUNCTION void operator()(const PlusOne) const { ++v(0); }
 };
 
-namespace Test {
-
-TEST(defaultdevicetype, development_test) {
-
+void test_func() {
   Kokkos::View<double*> v("v", 1);
   auto mirror = Kokkos::create_mirror_view(v);
-  mirror(0) = 5;
+  mirror(0)   = 5;
   Kokkos::deep_copy(v, mirror);
 
-  auto l = KOKKOS_LAMBDA() {
-         v(0) *= 2;
-       };
+  auto l = KOKKOS_LAMBDA() { v(0) *= 2; };
 
   Funct f;
   f.v = v;
@@ -54,8 +45,11 @@ TEST(defaultdevicetype, development_test) {
   double res = 5;
 
   // Full signature
-  Kokkos::single<Kokkos::DefaultExecutionSpace, TimeTwo>("Single",
-      Kokkos::DefaultExecutionSpace{}, f);
+  Kokkos::single<Kokkos::DefaultExecutionSpace, TimeTwo>("Single", f);
+  Kokkos::deep_copy(mirror, v);
+  res *= 2;
+  EXPECT_EQ(res, mirror(0));
+  Kokkos::single<Kokkos::DefaultExecutionSpace, void>("Single", l);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
@@ -75,7 +69,7 @@ TEST(defaultdevicetype, development_test) {
   // +WorkTag
   Kokkos::single<PlusOne>(f);
   Kokkos::deep_copy(mirror, v);
-  res +=1;
+  res += 1;
   EXPECT_EQ(res, mirror(0));
 
   // +WorkTag +kernel_name
@@ -91,37 +85,38 @@ TEST(defaultdevicetype, development_test) {
   EXPECT_EQ(res, mirror(0));
 
   // +WorkTag +ExecSpace +kernel_name
-  Kokkos::single<TimeTwo, Kokkos::DefaultExecutionSpace>("", f);
+  Kokkos::single<TimeTwo, Kokkos::DefaultExecutionSpace>("test", f);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 
   // +ExecSpace
-  Kokkos::single(Kokkos::DefaultExecutionSpace{}, l);
-  // Can't use:
-  //Kokkos::single<Kokkos::DefaultExecutionSpace>(l);
-  // ambiguous with Kokkos::single<WorkTag>(l)
+  Kokkos::single<Kokkos::DefaultExecutionSpace>(l);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 
   // +ExecSpace +kernel_name
-  Kokkos::single("test", Kokkos::DefaultExecutionSpace{}, l);
+  Kokkos::single<Kokkos::DefaultExecutionSpace>("test", l);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 
   // +ExecSpace +WorkTag
-  Kokkos::single<TimeTwo, Kokkos::DefaultExecutionSpace>(Kokkos::DefaultExecutionSpace{}, f);
+  Kokkos::single<Kokkos::DefaultExecutionSpace, TimeTwo>(f);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 
   // +ExecSpace +WorkTag +kernel_name
-  Kokkos::single<TimeTwo, Kokkos::DefaultExecutionSpace>("", Kokkos::DefaultExecutionSpace{}, f);
+  Kokkos::single<Kokkos::DefaultExecutionSpace, TimeTwo>("test", f);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 }
+
+namespace Test {
+
+TEST(defaultdevicetype, development_test) { test_func(); }
 
 }  // namespace Test

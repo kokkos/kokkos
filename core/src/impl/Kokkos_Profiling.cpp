@@ -251,8 +251,7 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.end_parallel_reduce == r.end_parallel_reduce &&
          l.begin_parallel_scan == r.begin_parallel_scan &&
          l.end_parallel_scan == r.end_parallel_scan &&
-         l.begin_single == r.begin_single &&
-         l.end_single == r.end_single &&
+         l.begin_single == r.begin_single && l.end_single == r.end_single &&
          l.push_region == r.push_region && l.pop_region == r.pop_region &&
          l.allocate_data == r.allocate_data &&
          l.deallocate_data == r.deallocate_data &&
@@ -401,11 +400,11 @@ void endParallelReduce(const uint64_t kernelID) {
 }
 
 void beginSingle(const std::string& kernelPrefix, const uint32_t devID,
-                      uint64_t* kernelID) {
+                 uint64_t* kernelID) {
   Experimental::invoke_kokkosp_callback(
       Experimental::MayRequireGlobalFencing::Yes,
-      Experimental::current_callbacks.begin_single, kernelPrefix.c_str(),
-      devID, kernelID);
+      Experimental::current_callbacks.begin_single, kernelPrefix.c_str(), devID,
+      kernelID);
 }
 
 void endSingle(const uint64_t kernelID) {
