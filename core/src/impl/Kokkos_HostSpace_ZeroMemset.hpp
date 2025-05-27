@@ -24,7 +24,6 @@
 namespace Kokkos {
 namespace Impl {
 
-#ifndef KOKKOS_ENABLE_OPENMP
 template <>
 struct ZeroMemset<HostSpace::execution_space> {
   ZeroMemset(const HostSpace::execution_space& exec, void* dst, size_t cnt) {
@@ -36,7 +35,6 @@ struct ZeroMemset<HostSpace::execution_space> {
     std::memset(dst, 0, cnt);
   }
 };
-#endif  // KOKKOS_ENABLE_OPENMP
 
 }  // end namespace Impl
 }  // end namespace Kokkos

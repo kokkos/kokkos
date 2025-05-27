@@ -20,19 +20,19 @@ namespace Test {
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, double)
     ->ArgName("N")
-    ->RangeMultiplier(4)
+    ->RangeMultiplier(8)
     ->Range(int64_t(1) << 4, int64_t(1) << 28)
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, float)
     ->ArgName("N")
-    ->RangeMultiplier(4)
+    ->RangeMultiplier(8)
     ->Range(int64_t(1) << 4, int64_t(1) << 28)
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, int)
     ->ArgName("N")
-    ->RangeMultiplier(4)
+    ->RangeMultiplier(8)
     ->Range(int64_t(1) << 4, int64_t(1) << 28)
     ->UseManualTime();
 

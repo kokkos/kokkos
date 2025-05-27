@@ -19,21 +19,21 @@
 namespace Test {
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, double)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 28)
+    ->ArgNames({"N", "init_value"})
+    ->RangeMultiplier(8)
+    ->Ranges({{int64_t(1) << 4, int64_t(1) << 28}, {0, 1}})
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, float)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 28)
+    ->ArgNames({"N", "init_value"})
+    ->RangeMultiplier(8)
+    ->Ranges({{int64_t(1) << 4, int64_t(1) << 28}, {0, 1}})
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, int)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 28)
+    ->ArgNames({"N", "init_value"})
+    ->RangeMultiplier(8)
+    ->Ranges({{int64_t(1) << 4, int64_t(1) << 28}, {0, 1}})
     ->UseManualTime();
 
 }  // namespace Test
