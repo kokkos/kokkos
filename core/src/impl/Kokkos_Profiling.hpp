@@ -92,7 +92,7 @@ void beginParallelReduce(const std::string& kernelPrefix, const uint32_t devID,
                          uint64_t* kernelID);
 void endParallelReduce(const uint64_t kernelID);
 void beginSingle(const std::string& kernelPrefix, const uint32_t devID,
-                      uint64_t* kernelID);
+                 uint64_t* kernelID);
 void endSingle(const uint64_t kernelID);
 
 void pushRegion(const std::string& kName);
