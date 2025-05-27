@@ -243,7 +243,9 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tools_provideToolProgrammingInterfaceFunction
       provide_tool_programming_interface;
   Kokkos_Tools_requestToolSettingsFunction request_tool_settings;
-  char profiling_padding[9 * sizeof(Kokkos_Tools_functionPointer)];
+  Kokkos_Profiling_beginFunction begin_single;
+  Kokkos_Profiling_endFunction end_single;
+  char profiling_padding[7 * sizeof(Kokkos_Tools_functionPointer)];
   Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
   Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
   Kokkos_Tools_requestValueFunction request_output_values;

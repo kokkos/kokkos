@@ -29,6 +29,7 @@ std::string typeid_name(T const&) {
 std::string last_parallel_for;
 std::string last_parallel_reduce;
 std::string last_parallel_scan;
+std::string last_single;
 
 void get_parallel_for_kernel_name(char const* kernelName, uint32_t /*deviceID*/,
                                   uint64_t* /*kernelID*/) {
@@ -45,6 +46,11 @@ void get_parallel_scan_kernel_name(char const* kernelName,
                                    uint32_t /*deviceID*/,
                                    uint64_t* /*kernelID*/) {
   last_parallel_scan = kernelName;
+}
+
+void get_single_kernel_name(char const* kernelName, uint32_t /*deviceID*/,
+                            uint64_t* /*kernelID*/) {
+  last_single = kernelName;
 }
 
 struct WorkTag {};
@@ -168,6 +174,39 @@ void test_kernel_name_parallel_scan() {
   Kokkos::Tools::Experimental::set_begin_parallel_scan_callback(nullptr);
 }
 
+void test_kernel_name_single() {
+  Kokkos::Tools::Experimental::set_begin_single_callback(
+      get_single_kernel_name);
+
+  using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+  {
+    std::string const my_label = "my_single_single_policy";
+
+    auto const my_lambda = KOKKOS_LAMBDA(){};
+    Kokkos::single(my_label, Kokkos::SinglePolicy<ExecutionSpace>(), my_lambda);
+    ASSERT_EQ(last_single, my_label);
+
+    Kokkos::single(Kokkos::SinglePolicy<ExecutionSpace>(), my_lambda);
+    ASSERT_EQ(last_single, typeid_name(my_lambda));
+    ASSERT_FALSE(last_single.starts_with("const "))
+        << last_single << " is const-qualified";
+
+    auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag){};
+    Kokkos::single(my_label, Kokkos::SinglePolicy<ExecutionSpace, WorkTag>(),
+                   my_lambda_with_tag);
+    ASSERT_EQ(last_single, my_label);
+
+    Kokkos::single(Kokkos::SinglePolicy<ExecutionSpace, WorkTag>(),
+                   my_lambda_with_tag);
+    ASSERT_EQ(last_single,
+              typeid_name(my_lambda_with_tag) + "/" + typeid_name(WorkTag{}));
+    ASSERT_FALSE(last_single.starts_with("const "))
+        << last_single << " is const-qualified";
+  }
+
+  Kokkos::Tools::Experimental::set_begin_single_callback(nullptr);
+}
+
 TEST(kokkosp, kernel_name_parallel_for) { test_kernel_name_parallel_for(); }
 
 TEST(kokkosp, kernel_name_parallel_reduce) {
@@ -175,6 +214,8 @@ TEST(kokkosp, kernel_name_parallel_reduce) {
 }
 
 TEST(kokkosp, kernel_name_parallel_scan) { test_kernel_name_parallel_scan(); }
+
+TEST(kokkosp, kernel_name_single) { test_kernel_name_single(); }
 
 TEST(kokkosp, kernel_name_internal) {
   struct ThisType {};

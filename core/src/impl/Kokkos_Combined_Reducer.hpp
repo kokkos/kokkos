@@ -210,7 +210,6 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
     (write_one_value_back<ExecutionSpace, Idxs>(
          exec_space, reducers_that_reference_original_values.view(),
          value.template get<Idxs, typename Reducers::value_type>()),
-
      ...);
   }
 
@@ -567,6 +566,77 @@ void parallel_reduce(size_t n, Functor const& functor,
                           std::forward<ReturnType1>(returnType1),
                           std::forward<ReturnType2>(returnType2),
                           std::forward<ReturnTypes>(returnTypes)...);
+}
+
+template <class PolicyType, class Functor, class ReturnType1, class ReturnType2,
+          class... ReturnTypes>
+auto single(std::string const& label, PolicyType const& policy,
+            Functor const& functor, ReturnType1&& returnType1,
+            ReturnType2&& returnType2, ReturnTypes&&... returnTypes)
+    -> std::enable_if_t<Kokkos::Impl::is_specialization_of_v<
+                            PolicyType, ::Kokkos::SinglePolicy> &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            PolicyType, Kokkos::Impl::ThreadSingleStruct> &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            PolicyType, Kokkos::Impl::VectorSingleStruct>> {
+  ::Kokkos::Impl::IndexlessReductionFunctorWrapper<
+      Functor, typename PolicyType::work_tag>
+      functor_wrapper{functor};
+
+  Kokkos::parallel_reduce(label, policy, functor_wrapper,
+                          std::forward<ReturnType1>(returnType1),
+                          std::forward<ReturnType2>(returnType2),
+                          std::forward<ReturnTypes>(returnTypes)...);
+}
+
+template <class PolicyType, class Functor, class ReturnType1, class ReturnType2,
+          class... ReturnTypes>
+auto single(PolicyType const& policy, Functor const& functor,
+            ReturnType1&& returnType1, ReturnType2&& returnType2,
+            ReturnTypes&&... returnTypes)
+    -> std::enable_if_t<Kokkos::Impl::is_specialization_of_v<
+                            PolicyType, ::Kokkos::SinglePolicy> &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            PolicyType, Kokkos::Impl::ThreadSingleStruct> &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            PolicyType, Kokkos::Impl::VectorSingleStruct>> {
+  Kokkos::single("", policy, functor, std::forward<ReturnType1>(returnType1),
+                 std::forward<ReturnType2>(returnType2),
+                 std::forward<ReturnTypes>(returnTypes)...);
+}
+
+template <class Functor, class ReturnType1, class ReturnType2,
+          class... ReturnTypes>
+auto single(std::string const& label, Functor const& functor,
+            ReturnType1&& returnType1, ReturnType2&& returnType2,
+            ReturnTypes&&... returnTypes)
+    -> std::enable_if_t<!Kokkos::is_execution_policy<Functor>::value &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            Functor, Kokkos::Impl::ThreadSingleStruct> &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            Functor, Kokkos::Impl::VectorSingleStruct>> {
+  Kokkos::single(label, SinglePolicy<Kokkos::DefaultExecutionSpace>(), functor,
+                 std::forward<ReturnType1>(returnType1),
+                 std::forward<ReturnType2>(returnType2),
+                 std::forward<ReturnTypes>(returnTypes)...);
+}
+
+template <class Functor, class ReturnType1, class ReturnType2,
+          class... ReturnTypes>
+auto single(Functor const& functor, ReturnType1&& returnType1,
+            ReturnType2&& returnType2, ReturnTypes&&... returnTypes)
+    -> std::enable_if_t<!Kokkos::is_execution_policy_v<ReturnType1> &&
+                        !Kokkos::is_execution_policy_v<Functor> &&
+                        !std::is_same_v<std::string, Functor> &&
+                        !std::is_same_v<char*, std::decay_t<Functor>> &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            Functor, Kokkos::Impl::ThreadSingleStruct> &&
+                        !Kokkos::Impl::is_specialization_of_v<
+                            Functor, Kokkos::Impl::VectorSingleStruct>> {
+  Kokkos::single("", SinglePolicy<Kokkos::DefaultExecutionSpace>(), functor,
+                 std::forward<ReturnType1>(returnType1),
+                 std::forward<ReturnType2>(returnType2),
+                 std::forward<ReturnTypes>(returnTypes)...);
 }
 
 //------------------------------------------------------------------------------
