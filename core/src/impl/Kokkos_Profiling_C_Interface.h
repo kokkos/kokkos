@@ -237,6 +237,8 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Profiling_endFunction end_parallel_reduce;
   Kokkos_Profiling_beginFunction begin_parallel_scan;
   Kokkos_Profiling_endFunction end_parallel_scan;
+  Kokkos_Profiling_beginFunction begin_single;
+  Kokkos_Profiling_endFunction end_single;
   Kokkos_Profiling_pushFunction push_region;
   Kokkos_Profiling_popFunction pop_region;
   Kokkos_Profiling_allocateDataFunction allocate_data;
@@ -263,7 +265,7 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tools_contextBeginFunction begin_tuning_context;
   Kokkos_Tools_contextEndFunction end_tuning_context;
   Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
-  char padding[232 *
+  char padding[230 *
                sizeof(
                    Kokkos_Tools_functionPointer)];  // allows us to add another
                                                     // 256 events to the Tools
