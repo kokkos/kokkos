@@ -23,6 +23,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <type_traits>
 
 namespace Kokkos {
 namespace Experimental {
