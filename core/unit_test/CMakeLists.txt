@@ -359,7 +359,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     # detail tests for the mdspan based View
     if(Kokkos_ENABLE_IMPL_MDSPAN)
       set(BV_TestNames BasicView ReferenceCountedAccessor ReferenceCountedDataHandle)
-      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
         list(APPEND BV_TestNames ViewCustomizationAccessorArg)
       endif()
       set(${Tag}_VIEWSUPPORT)
