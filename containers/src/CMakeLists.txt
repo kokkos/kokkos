@@ -18,7 +18,7 @@ install(
 )
 
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
-  set(KOKKOS_CONTAINERS_MODULE_FILES Kokkos_DualView.ccm)
+	set(KOKKOS_CONTAINERS_MODULE_FILES Kokkos_DualView.ccm Kokkos_DynRankView.ccm)
 endif()
 
 kokkos_add_library(

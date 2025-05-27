@@ -27,6 +27,8 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNRANKVIEW
 #endif
 
+module;
+
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
@@ -35,6 +37,10 @@ import kokkoscore;
 #endif
 #include <impl/Kokkos_Error.hpp>
 #include <type_traits>
+
+export module kokkosdynrankview;
+
+export {
 
 namespace Kokkos {
 
@@ -1853,6 +1859,8 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
 }
 
 }  // namespace Kokkos
+
+}
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNRANKVIEW
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
