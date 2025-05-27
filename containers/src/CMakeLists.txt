@@ -17,19 +17,19 @@ install(
   PATTERN "*.hpp"
 )
 
-
+if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
 set(KOKKOS_HEADERS_TO_CONVERT
 	 Kokkos_Bitset    Kokkos_DynRankView  Kokkos_ErrorReporter  Kokkos_OffsetView
 Kokkos_DualView  Kokkos_DynamicView  Kokkos_Functional     Kokkos_ScatterView  Kokkos_UnorderedMap
 	)
 
+set(KOKKOS_CONTAINERS_MODULE_FILES)
 foreach(file ${KOKKOS_HEADERS_TO_CONVERT})
   file(READ "${file}.hpp" FILE_CONTENTS)
   string(PREPEND FILE_CONTENTS "module;\n")
 
   string(REPLACE "_" "" MODULE_NAME ${file})
   string(TOLOWER ${MODULE_NAME} MODULE_NAME_LC) 
-  message(STATUS "XXX: ${MODULE_NAME_LC}")
 
   string(FIND "${FILE_CONTENTS}" "namespace Kokkos {" find_result)
   string(SUBSTRING "${FILE_CONTENTS}" 0 "${find_result}" before_substring)
@@ -39,16 +39,13 @@ foreach(file ${KOKKOS_HEADERS_TO_CONVERT})
   set(FILE_CONTENTS_EXPORT_MODULE "${before_substring}export module ${MODULE_NAME_LC};\n${after_substring}")
 
   string(REPLACE "namespace Kokkos {" "export {\nnamespace Kokkos {" FILE_CONTENTS_EXPORT "${FILE_CONTENTS_EXPORT_MODULE}")
-  string(REGEX REPLACE "} [^\n]* namespace Kokkos\n" "} // namespace Kokkos\n}" FILE_CONTENTS_MODULE "${FILE_CONTENTS_EXPORT}")
+  string(REGEX REPLACE "} [^\n]* namespace Kokkos[^\n]*\n" "} // namespace Kokkos\n}" FILE_CONTENTS_MODULE "${FILE_CONTENTS_EXPORT}")
 
-  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${file}.ccm" "${FILE_CONTENTS_MODULE}")
+  #file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${file}.ccm" "${FILE_CONTENTS_MODULE}")
+  file(WRITE "${file}.ccm" "${FILE_CONTENTS_MODULE}")
+  #list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${CMAKE_CURRENT_BINARY_DIR}/${file}.ccm") 
+  list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${file}.ccm")
 endforeach()
-
-if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
-	set(KOKKOS_CONTAINERS_MODULE_FILES
-		Kokkos_Bitset.ccm    Kokkos_DynRankView.ccm  Kokkos_ErrorReporter.ccm  Kokkos_OffsetView.ccm 
-Kokkos_DualView.ccm  Kokkos_DynamicView.ccm  Kokkos_Functional.ccm     Kokkos_ScatterView.ccm  Kokkos_UnorderedMap.ccm
-		)
 endif()
 
 kokkos_add_library(

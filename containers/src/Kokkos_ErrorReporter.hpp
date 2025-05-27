@@ -30,6 +30,7 @@ import kokkosdualview;
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
 #endif
+#include <cstddef>
 
 namespace Kokkos {
 namespace Experimental {

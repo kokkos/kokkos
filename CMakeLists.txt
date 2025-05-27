@@ -66,7 +66,7 @@ endfunction()
 
 list(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
-set(CMAKE_DISABLE_SOURCE_CHANGES ON)
+#set(CMAKE_DISABLE_SOURCE_CHANGES ON)
 set(CMAKE_DISABLE_IN_SOURCE_BUILD ON)
 
 # What language are we compiling Kokkos as
