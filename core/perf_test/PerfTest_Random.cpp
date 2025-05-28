@@ -26,8 +26,8 @@ namespace Benchmark {
 // * with the sum of K random numbers
 template <typename Pool>
 static void Random(benchmark::State &state) {
-  const size_t N = state.range(0);
-  const size_t K = state.range(1);
+  const size_t N     = state.range(0);
+  const size_t K     = state.range(1);
   constexpr double I = 1024;
 
   Kokkos::View<double *> out("out", N);
@@ -38,7 +38,6 @@ static void Random(benchmark::State &state) {
         N, KOKKOS_LAMBDA(const int i) {
           auto generator = random_pool.get_state();
           double acc     = 0;
-          
 
           for (size_t k = 0; k < K; ++k) {
             acc += generator.drand(I);
@@ -61,10 +60,10 @@ static void Random1024(benchmark::State &state) {
   return Random<Kokkos::Random_XorShift1024_Pool<>>(state);
 }
 
-#define RANDOM_ARGS()                                                   \
-  ArgNames({"N", "K"})                                             \
-      ->ArgsProduct({{1 << 15}, {1, 256}}) \
-      ->UseRealTime()                                                   \
+#define RANDOM_ARGS()                      \
+  ArgNames({"N", "K"})                     \
+      ->ArgsProduct({{1 << 21}, {1, 256}}) \
+      ->UseRealTime()                      \
       ->Unit(benchmark::kMicrosecond)
 
 BENCHMARK(Random64)->RANDOM_ARGS();
