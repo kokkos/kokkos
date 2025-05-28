@@ -26,6 +26,7 @@ void ViewFirstTouch_Initialize(benchmark::State& state) {
 
     Kokkos::Timer timer;
     ViewType v_a("A", N);
+    Kokkos::fence();
     KokkosBenchmark::report_results(state, v_a, 1, timer.seconds());
   }
 }
@@ -39,11 +40,13 @@ void ViewFirstTouch_ParallelFor(benchmark::State& state) {
     Kokkos::fence();
 
     ViewType v_a("A", N);
+    Kokkos::fence();
     Kokkos::Timer timer;
     Kokkos::parallel_for(
         "ViewFirstTouch_ParallelFor", N, KOKKOS_LAMBDA(const int i) {
           v_a(i) = static_cast<DataType>(2) * v_a(i) + static_cast<DataType>(1);
         });
+    Kokkos::fence();
     KokkosBenchmark::report_results(state, v_a, 2, timer.seconds());
   }
 }
@@ -58,6 +61,7 @@ void ViewFirstTouch_DeepCopy(benchmark::State& state) {
     Kokkos::fence();
 
     ViewType v_a("A", N);
+    Kokkos::fence();
     Kokkos::Timer timer;
     Kokkos::deep_copy(v_a, init_value);
     KokkosBenchmark::report_results(state, v_a, 2, timer.seconds());
