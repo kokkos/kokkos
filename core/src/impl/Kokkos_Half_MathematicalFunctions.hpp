@@ -200,7 +200,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, lo
 
 // FIXME nextafter for fp16 is unavailable for MSVC CUDA builds
 #if (defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
-KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, nextafter)
+KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, nextafter)
 #endif
 // nexttoward
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, copysign)
@@ -345,26 +345,19 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
    std::uint16_t uint_from = bit_cast<std::uint16_t, fp16_t>(from);
 
    // Handle zeros
-   if (uint_from == FP16_POS_ZERO) {  // from is +0.0
-     // Direction is to a non-zero number.
+   if (uint_from == FP16_POS_ZERO || uint_from == FP16_NEG_ZERO) {
+     // from is +0.0 or -0.0
      // Return smallest magnitude number with the sign of 'to'.
-     // However, standard nextafter(+0, negative) -> smallest_negative
-     // And nextafter(+0, positive) -> smallest_positive
+     // nextafter(±0, negative) -> smallest_negative
+     // nextafter(±0, positive) -> smallest_positive
      return bit_cast<fp16_t, std::uint16_t>((to > from) ? FP16_SMALLEST_POS_DN
-                                                 : FP16_SMALLEST_NEG_DN);
-   }
-   if (uint_from == FP16_NEG_ZERO) {  // from is -0.0
-     // Return smallest magnitude number with the sign of 'to'.
-     // Standard nextafter(-0, negative) -> smallest_negative
-     // And nextafter(-0, positive) -> smallest_positive
-     return bit_cast<fp16_t, std::uint16_t>((to > from) ? FP16_SMALLEST_POS_DN
-                                                 : FP16_SMALLEST_NEG_DN);
+                                                        : FP16_SMALLEST_NEG_DN);
    }
 
    // Determine direction and sign of 'from'
    // True if moving to positive infinity
    bool to_positive_infinity = (to > from);
-   bool from_is_negative      = ((uint_from & FP16_SIGN_MASK) != 0);
+   bool from_is_negative     = ((uint_from & FP16_SIGN_MASK) != 0);
 
    std::uint16_t uint_result;
    if (from_is_negative) {
