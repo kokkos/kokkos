@@ -358,7 +358,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
 
    // Determine direction and sign of 'from'
    // True if moving to positive infinity
-   bool to_poisitive_infinity = (to > from);
+   bool to_positive_infinity = (to > from);
    bool from_is_negative      = ((uint_from & FP16_SIGN_MASK) != 0);
 
    std::uint16_t uint_result;
@@ -366,7 +366,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
      // For negative numbers, increasing magnitude means moving towards -inf
      // (larger uint value) Decreasing magnitude means moving towards zero
      // (smaller uint value)
-     if (to_poisitive_infinity) {
+     if (to_positive_infinity) {
        // Moving toward zero or positive
        uint_result = uint_from - 1;
      } else {
@@ -377,7 +377,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
      // For positive numbers, increasing magnitude means moving towards +inf
      // (larger uint value) Decreasing magnitude means moving towards zero
      // (smaller uint value)
-     if (to_poisitive_infinity) {
+     if (to_positive_infinity) {
        // Moving toward positive infinity
        uint_result = uint_from + 1;
      } else {
