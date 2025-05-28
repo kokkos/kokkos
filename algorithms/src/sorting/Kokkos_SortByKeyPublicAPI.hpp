@@ -25,6 +25,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 #include <algorithm>
+#include <string>
 
 namespace Kokkos::Experimental {
 

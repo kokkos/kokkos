@@ -27,7 +27,7 @@ foreach(file ${MODULE_HEADER_SOURCES})
     math(EXPR after_start "${find_result} + ${substring_len}")
     message(STATUS "${MODULE_NAME_LC}")
     string(SUBSTRING "${FILE_CONTENTS}" "${after_start}" -1 after_substring)
-    set(FILE_CONTENTS_EXPORT_MODULE "${before_substring}export module ${MODULE_NAME_LC};\n${after_substring}")
+    set(FILE_CONTENTS_EXPORT_MODULE "${before_substring}export module kokkossort:${MODULE_NAME_LC};\n${after_substring}")
 
     string(REGEX REPLACE "namespace Kokkos([^{]*){" "export {\nnamespace Kokkos\\1{" FILE_CONTENTS_EXPORT
                    "${FILE_CONTENTS_EXPORT_MODULE}"
@@ -37,9 +37,9 @@ foreach(file ${MODULE_HEADER_SOURCES})
     )
 
     file(WRITE "${MODULE_FILE_NAME}" "${FILE_CONTENTS_MODULE}")
-    list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${MODULE_FILE_NAME}")
+    list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES "${MODULE_FILE_NAME}")
   endforeach()
-  list(APPEND KOKKOS_CONTAINERS_MODULE_FILES Kokkos_Sort.ccm)
+  list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES Kokkos_Sort.ccm)
 
 install(
   DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
@@ -58,5 +58,6 @@ kokkos_lib_include_directories(
   kokkosalgorithms ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-kokkos_link_tpl(kokkoscontainers PUBLIC ROCTHRUST)
-kokkos_link_tpl(kokkoscore PUBLIC ONEDPL)
+kokkos_link_internal_library(kokkosalgorithms kokkoscore)
+kokkos_link_tpl(kokkosalgorithms PUBLIC ROCTHRUST)
+kokkos_link_tpl(kokkosalgorithms PUBLIC ONEDPL)

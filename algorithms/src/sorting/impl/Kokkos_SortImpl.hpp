@@ -17,8 +17,7 @@
 #ifndef KOKKOS_SORT_FREE_FUNCS_IMPL_HPP_
 #define KOKKOS_SORT_FREE_FUNCS_IMPL_HPP_
 
-#include "../Kokkos_BinOpsPublicAPI.hpp"
-#include "../Kokkos_BinSortPublicAPI.hpp"
+#include <Kokkos_Sort_fwd.hpp>
 #include <std_algorithms/Kokkos_BeginEnd.hpp>
 #include <std_algorithms/Kokkos_Copy.hpp>
 #include <Kokkos_Macros.hpp>
@@ -27,6 +26,10 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+
+#include <Kokkos_Assert.hpp>
+#include <cmath>
+#include <algorithm>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 

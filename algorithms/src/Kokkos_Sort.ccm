@@ -15,10 +15,10 @@
 //@HEADER
 
 module;
-module kokkossort;
+export module kokkossort;
 
-export import kokkosbinopspublicapi;
-export import kokkosbinsortpublicapi;
-export import kokkosnestedsortpublicapi;
-export import kokkossortbykeypublicapi;
-export import kokkossortpublicapi;
+export import :kokkosbinopspublicapi;
+export import :kokkosbinsortpublicapi;
+export import :kokkosnestedsortpublicapi;
+export import :kokkossortbykeypublicapi;
+export import :kokkossortpublicapi;

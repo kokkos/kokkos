@@ -26,6 +26,7 @@ import kokkoscore;
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include "Kokkos_ReducerWithArbitraryJoinerNoNeutralElement.hpp"
+#include <impl/Kokkos_Utilities.hpp>
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 

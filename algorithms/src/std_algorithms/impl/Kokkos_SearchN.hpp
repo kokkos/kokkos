@@ -23,6 +23,7 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <Kokkos_Assert.hpp>
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include "Kokkos_AllOfAnyOfNoneOf.hpp"

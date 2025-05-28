@@ -22,12 +22,13 @@
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
 import kokkosdynamicview;
+import kokkossort;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynamicView.hpp>
+#include <Kokkos_Sort.hpp>
 #endif
 #include <Kokkos_Random.hpp>
-#include <Kokkos_Sort.hpp>
 
 namespace Test {
 namespace SortImpl {

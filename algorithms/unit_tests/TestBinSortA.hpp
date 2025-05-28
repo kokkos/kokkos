@@ -21,11 +21,12 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+import kokkossort;
 #else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Sort.hpp>
 #endif
 #include <Kokkos_Random.hpp>
-#include <Kokkos_Sort.hpp>
 #include <random>
 
 namespace Test {

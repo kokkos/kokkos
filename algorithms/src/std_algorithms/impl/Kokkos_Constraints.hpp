@@ -18,7 +18,10 @@
 #define KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 
 #include <Kokkos_DetectionIdiom.hpp>
-#include <Kokkos_View.hpp>
+import kokkoscore; 
+
+#include <Kokkos_Assert.hpp>
+#include <iterator>
 
 namespace Kokkos {
 namespace Experimental {
