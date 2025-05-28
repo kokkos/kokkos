@@ -17,7 +17,11 @@
 #ifndef KOKKOS_TEST_SIMD_MATH_OPS_HPP
 #define KOKKOS_TEST_SIMD_MATH_OPS_HPP
 
-#include <Kokkos_SIMD.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkossimd;
+#else
+//#include <Kokkos_SIMD.hpp>
+#endif
 #include <SIMDTesting_Utilities.hpp>
 
 template <class Abi, class Loader, class TernaryOp, class T>
