@@ -319,7 +319,9 @@ KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
 
 template <typename fp16_t>
 KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
-  static_assert(sizeof(fp16_t) == 2, "nextafter_impl only supports half_t and bhalf_t");
+  static_assert((std::is_same_v<fp16_t, Kokkos::Experimental::half_t> ||
+                 std::is_same_v<fp16_t, Kokkos::Experimental::bhalf_t>)
+                 && sizeof(fp16_t) == 2, "nextafter_impl only supports half_t and bhalf_t");
   constexpr std::uint16_t FP16_SIGN_MASK = 0x8000;
   constexpr std::uint16_t FP16_POS_ZERO  = 0x0000;
   constexpr std::uint16_t FP16_NEG_ZERO  = 0x8000;
@@ -356,15 +358,15 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
 
    // Determine direction and sign of 'from'
    // True if moving to positive infinity
-   bool increase_magnitude = (to > from);
-   bool from_is_negative   = ((uint_from & FP16_SIGN_MASK) != 0);
+   bool to_poisitive_infinity = (to > from);
+   bool from_is_negative      = ((uint_from & FP16_SIGN_MASK) != 0);
 
    std::uint16_t uint_result;
    if (from_is_negative) {
      // For negative numbers, increasing magnitude means moving towards -inf
      // (larger uint value) Decreasing magnitude means moving towards zero
      // (smaller uint value)
-     if (increase_magnitude) {
+     if (to_poisitive_infinity) {
        // Moving toward zero or positive
        uint_result = uint_from - 1;
      } else {
@@ -375,7 +377,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
      // For positive numbers, increasing magnitude means moving towards +inf
      // (larger uint value) Decreasing magnitude means moving towards zero
      // (smaller uint value)
-     if (increase_magnitude) {
+     if (to_poisitive_infinity) {
        // Moving toward positive infinity
        uint_result = uint_from + 1;
      } else {
@@ -395,7 +397,7 @@ KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t nextafter(Kokkos::Experiment
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t nextafter(Kokkos::Experimental::bhalf_t from,
-                                                                 Kokkos::Experimental::bhalf_t to) {
+                                                               Kokkos::Experimental::bhalf_t to) {
   return nextafter_impl(from, to);
 }
 #endif
