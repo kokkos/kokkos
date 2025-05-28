@@ -24,41 +24,24 @@ namespace Benchmark {
 // Fills each entry of
 // * a view of size N
 // * with the sum of K random numbers
-// * between 0 and I
-template <typename Pool, typename Scalar>
+template <typename Pool>
 static void Random(benchmark::State &state) {
   const size_t N = state.range(0);
   const size_t K = state.range(1);
-  const size_t I = state.range(2);
+  constexpr double I = 1024;
 
-  Kokkos::View<Scalar *> out("out", N);
+  Kokkos::View<double *> out("out", N);
   Pool random_pool(/*seed=*/12345);
 
   for ([[maybe_unused]] auto _ : state) {
     Kokkos::parallel_for(
         N, KOKKOS_LAMBDA(const int i) {
           auto generator = random_pool.get_state();
-          Scalar acc     = 0;
+          double acc     = 0;
+          
 
-          // work around "cannot first-capture I in a constexpr-if context"
-          auto SI = Scalar(I);
           for (size_t k = 0; k < K; ++k) {
-            if constexpr (std::is_same_v<Scalar, double>) {
-              acc += generator.drand(SI);
-            } else if constexpr (std::is_same_v<Scalar, float>) {
-              acc += generator.frand(SI);
-            } else if constexpr (std::is_same_v<Scalar, uint64_t>) {
-              acc += generator.urand64(SI);
-            } else if constexpr (std::is_same_v<Scalar, uint32_t>) {
-              acc += generator.urand(SI);
-            } else if constexpr (std::is_same_v<Scalar, int64_t>) {
-              acc += generator.rand64(SI);
-            } else if constexpr (std::is_same_v<Scalar, int32_t>) {
-              acc += static_cast<uint32_t>(
-                  generator.rand(SI));  // avoid signed overflow UB
-            } else {
-              static_assert(std::is_void_v<Scalar>, "unhandled Scalar type");
-            }
+            acc += generator.drand(I);
           }
           random_pool.free_state(generator);
           out(i) = acc;
@@ -70,35 +53,22 @@ static void Random(benchmark::State &state) {
       state.iterations() * N * K, benchmark::Counter::kIsRate);
 }
 
-template <typename Scalar>
 static void Random64(benchmark::State &state) {
-  return Random<Kokkos::Random_XorShift64_Pool<>, Scalar>(state);
+  return Random<Kokkos::Random_XorShift64_Pool<>>(state);
 }
 
-template <typename Scalar>
 static void Random1024(benchmark::State &state) {
-  return Random<Kokkos::Random_XorShift1024_Pool<>, Scalar>(state);
+  return Random<Kokkos::Random_XorShift1024_Pool<>>(state);
 }
 
 #define RANDOM_ARGS()                                                   \
-  ArgNames({"N", "K", "I"})                                             \
-      ->ArgsProduct({{1 << 15, 1 << 21}, {1, 256}, {1, 1'000'000'000}}) \
+  ArgNames({"N", "K"})                                             \
+      ->ArgsProduct({{1 << 15}, {1, 256}}) \
       ->UseRealTime()                                                   \
       ->Unit(benchmark::kMicrosecond)
 
-BENCHMARK(Random64<double>)->RANDOM_ARGS();
-BENCHMARK(Random64<float>)->RANDOM_ARGS();
-BENCHMARK(Random64<uint64_t>)->RANDOM_ARGS();
-BENCHMARK(Random64<uint32_t>)->RANDOM_ARGS();
-BENCHMARK(Random64<int64_t>)->RANDOM_ARGS();
-BENCHMARK(Random64<int32_t>)->RANDOM_ARGS();
-
-BENCHMARK(Random1024<double>)->RANDOM_ARGS();
-BENCHMARK(Random1024<float>)->RANDOM_ARGS();
-BENCHMARK(Random1024<uint64_t>)->RANDOM_ARGS();
-BENCHMARK(Random1024<uint32_t>)->RANDOM_ARGS();
-BENCHMARK(Random1024<int64_t>)->RANDOM_ARGS();
-BENCHMARK(Random1024<int32_t>)->RANDOM_ARGS();
+BENCHMARK(Random64)->RANDOM_ARGS();
+BENCHMARK(Random1024)->RANDOM_ARGS();
 
 #undef RANDOM_ARGS
 
