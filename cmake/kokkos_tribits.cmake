@@ -402,8 +402,9 @@ function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
 endfunction()
 
 function(KOKKOS_ADD_INTERFACE_LIBRARY NAME)
+  cmake_parse_arguments(PARSE "ADD_BUILD_OPTIONS" "" "HEADERS" ${ARGN})
   add_library(${NAME} INTERFACE)
-  kokkos_internal_add_library_install(${NAME})
+  kokkos_internal_add_library_install(${NAME} ${PARSE_UNPARSED_ARGUMENTS})
 endfunction()
 
 function(KOKKOS_LIB_INCLUDE_DIRECTORIES TARGET)

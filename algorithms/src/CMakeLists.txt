@@ -39,6 +39,7 @@ foreach(file ${MODULE_HEADER_SOURCES})
     file(WRITE "${MODULE_FILE_NAME}" "${FILE_CONTENTS_MODULE}")
     list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${MODULE_FILE_NAME}")
   endforeach()
+  list(APPEND KOKKOS_CONTAINERS_MODULE_FILES Kokkos_Sort.ccm)
 
 install(
   DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
@@ -51,7 +52,7 @@ install(
 
 # We have to pass the sources in here for Tribits
 # These will get ignored for standalone CMake and a true interface library made
-kokkos_add_interface_library(kokkosalgorithms NOINSTALLHEADERS ${ALGO_HEADERS}  MODULE_FILES
+kokkos_add_library(kokkosalgorithms HEADERS ${ALGO_HEADERS}  MODULE_FILES
 	${KOKKOS_ALGORITHMS_MODULE_FILES} SOURCES ${ALGO_SOURCES})
 kokkos_lib_include_directories(
   kokkosalgorithms ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
