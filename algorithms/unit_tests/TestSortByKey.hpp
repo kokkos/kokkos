@@ -42,8 +42,7 @@ namespace SortImpl {
 struct Less {
 #if !defined(KOKKOS_ENABLE_ONEDPL) || \
     KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
-  // Make sure that the comparator isn't device copyable, this caused problems
-  // with SYCL/oneDPL
+  // Test with a comparator that isn't trivially copyable if oneDPL is not enabled or if oneDPL version >= 2022.8.0
   Kokkos::View<int *> dummy;
 #endif
 
@@ -57,8 +56,7 @@ struct Less {
 struct Greater {
 #if !defined(KOKKOS_ENABLE_ONEDPL) || \
     KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
-  // Make sure that the comparator isn't device copyable, this caused problems
-  // with SYCL/oneDPL
+  // Test with a comparator that isn't trivially copyable if oneDPL is not enabled or if oneDPL version >= 2022.8.0
   Kokkos::View<int *> dummy;
 #endif
 
