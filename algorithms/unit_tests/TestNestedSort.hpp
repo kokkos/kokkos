@@ -21,10 +21,11 @@
 #include <unordered_set>
 #include <random>
 #include <Kokkos_Random.hpp>
-#if 0
-#include <Kokkos_NestedSort.hpp>
-#else
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkossort;
+#else
+#include <Kokkos_NestedSort.hpp>
 #endif
 
 namespace Test {

@@ -15,12 +15,12 @@
 //@HEADER
 
 #include <Kokkos_Macros.hpp>
-#if 0
-#inlcude <Kokkos_Core.hpp>
-#include <Kokkos_StdAlgorithms.hpp>
-#else
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
 import kokkosstdalgorithms;
+#else
+#include <Kokkos_Core.hpp>
+#include <Kokkos_StdAlgorithms.hpp>
 #endif
 #include <string>
 

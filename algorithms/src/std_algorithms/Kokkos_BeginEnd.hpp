@@ -17,7 +17,12 @@
 #ifndef KOKKOS_BEGIN_END_HPP
 #define KOKKOS_BEGIN_END_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+#else
+#include <Kokkos_Core.hpp>
+#endif
 #include "impl/Kokkos_RandomAccessIterator.hpp"
 #include "impl/Kokkos_Constraints.hpp"
 
