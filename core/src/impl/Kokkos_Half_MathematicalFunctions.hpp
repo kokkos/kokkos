@@ -197,7 +197,11 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, ne
 // scalbln
 // ilog
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, logb)
-// nextafter
+
+// FIXME nextafter for fp16 is unavailable for MSVC CUDA builds
+#if (defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
+KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, nextafter)
+#endif
 // nexttoward
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, copysign)
 // Classification and comparison functions
@@ -317,8 +321,9 @@ KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
 }
 #endif
 
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
 template <typename fp16_t>
-KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
+KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
   static_assert((std::is_same_v<fp16_t, Kokkos::Experimental::half_t> ||
                  std::is_same_v<fp16_t, Kokkos::Experimental::bhalf_t>)
                  && sizeof(fp16_t) == 2, "nextafter_impl only supports half_t and bhalf_t");
@@ -391,16 +396,17 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_impl(fp16_t from, fp16_t to) {
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t nextafter(Kokkos::Experimental::half_t from,
                                                               Kokkos::Experimental::half_t to) {
-  return nextafter_impl(from, to);
+  return nextafter_half_impl(from, to);
 }
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t nextafter(Kokkos::Experimental::bhalf_t from,
                                                                Kokkos::Experimental::bhalf_t to) {
-  return nextafter_impl(from, to);
+  return nextafter_half_impl(from, to);
 }
 #endif
+#endif  // !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
 
 // isnormal
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, signbit)

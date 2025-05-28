@@ -1841,8 +1841,8 @@ TEST(TEST_CATEGORY, mathematical_functions_impl_half_fallback) {
 }
 
 template <class Space, class FP16Type>
-struct TestNextAfter {
-  TestNextAfter() { run(); }
+struct TestNextAfterHalf {
+  TestNextAfterHalf() { run(); }
   void run() const {
     int errors = 0;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
@@ -1887,7 +1887,7 @@ struct TestNextAfter {
         !isnan(nextafter(signaling_NaN<FP16Type>::value,
                          signaling_NaN<FP16Type>::value))) {
       ++e;
-      Kokkos::printf("failed nextafter(NaN)\n");
+      Kokkos::printf("failed half precision nextafter(NaN)\n");
     }
 
     // Equality (from==toward) Handling
@@ -1897,7 +1897,7 @@ struct TestNextAfter {
         nextafter(pos_inf, pos_inf) != pos_inf ||
         nextafter(neg_inf, neg_inf) != neg_inf) {
       ++e;
-      Kokkos::printf("failed nextafter(equality)\n");
+      Kokkos::printf("failed half precision nextafter(equality)\n");
     }
 
     // Zero Handling
@@ -1906,7 +1906,7 @@ struct TestNextAfter {
         nextafter(neg_zero, pos_one) != pos_smallest ||
         nextafter(neg_zero, neg_one) != neg_smallest) {
       ++e;
-      Kokkos::printf("failed nextafter(zero)\n");
+      Kokkos::printf("failed half precision nextafter(zero)\n");
     }
 
     // From Negative Non Zero Handling
@@ -1919,7 +1919,7 @@ struct TestNextAfter {
         nextafter(neg_one, neg_two) != before_neg_one ||
         nextafter(neg_max, neg_inf) != neg_inf) {
       ++e;
-      Kokkos::printf("failed nextafter(negative)\n");
+      Kokkos::printf("failed half precision nextafter(negative)\n");
     }
 
     // From Positive Non Zero Handling
@@ -1932,7 +1932,7 @@ struct TestNextAfter {
         nextafter(pos_one, pos_two) != after_pos_one ||
         nextafter(pos_max, pos_inf) != pos_inf) {
       ++e;
-      Kokkos::printf("failed nextafter(positive)\n");
+      Kokkos::printf("failed half precision nextafter(positive)\n");
     }
 
     // From Inf Handling
@@ -1941,17 +1941,22 @@ struct TestNextAfter {
         nextafter(pos_inf, pos_inf) != pos_inf ||
         nextafter(neg_inf, neg_inf) != neg_inf) {
       ++e;
-      Kokkos::printf("failed nextafter(inf)\n");
+      Kokkos::printf("failed half precision nextafter(inf)\n");
     }
   }
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-  TestNextAfter<TEST_EXECSPACE, Kokkos::Experimental::half_t>();
+  TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::half_t>();
 #endif
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-  TestNextAfter<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t>();
+  TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t>();
+#endif
+#else
+  GTEST_SKIP() << "FIXME MSVC nextafter for half precision "
+                  "not implemented yet";
 #endif
 }
 #endif
