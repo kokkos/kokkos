@@ -22,12 +22,13 @@
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
 import kokkossort;
+import kokkosstdalgorithms;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Sort.hpp>
+#include <Kokkos_StdAlgorithms.hpp>
 #endif
 #include <Kokkos_Random.hpp>
-#include <Kokkos_StdAlgorithms.hpp>
 #include <TestStdAlgorithmsCommon.hpp>
 #include <random>
 #include <numeric>  //needed for iota

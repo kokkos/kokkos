@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
+#include <std_algorithms/impl/Kokkos_FunctorsForExclusiveScan.hpp>
 #include <utility>
 #include <iomanip>
 

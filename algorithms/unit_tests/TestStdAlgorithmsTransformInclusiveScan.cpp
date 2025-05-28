@@ -15,6 +15,9 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
+#include <std_algorithms/impl/Kokkos_IdentityReferenceUnaryFunctor.hpp>
+#include <std_algorithms/impl/Kokkos_TransformInclusiveScan.hpp>
+#include <std_algorithms/impl/Kokkos_ValueWrapperForNoNeutralElement.hpp>
 #include <utility>
 #include <iomanip>
 

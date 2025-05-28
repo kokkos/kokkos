@@ -14,7 +14,15 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#if 0
+#inlcude <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
+#else
+import kokkoscore;
+import kokkosstdalgorithms;
+#endif
+#include <string>
 
 namespace Test {
 namespace stdalgos {
