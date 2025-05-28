@@ -403,19 +403,17 @@ struct TeamVectorRangeBoundariesStruct<iType, CudaTeamMember> {
 template <typename iType>
 struct ThreadVectorRangeBoundariesStruct<iType, CudaTeamMember> {
   using index_type = iType;
-  const CudaTeamMember& member;
   const index_type start;
   const index_type end;
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(const CudaTeamMember& thread_,
-                                    index_type count)
-      : member(thread_), start(static_cast<index_type>(0)), end(count) {}
+  ThreadVectorRangeBoundariesStruct(const CudaTeamMember, index_type count)
+      : start(static_cast<index_type>(0)), end(count) {}
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(const CudaTeamMember& thread_,
-                                    index_type begin_, index_type end_)
-      : member(thread_), start(begin_), end(end_) {}
+  ThreadVectorRangeBoundariesStruct(const CudaTeamMember, index_type arg_begin,
+                                    index_type arg_end)
+      : start(arg_begin), end(arg_end) {}
 };
 
 }  // namespace Impl
