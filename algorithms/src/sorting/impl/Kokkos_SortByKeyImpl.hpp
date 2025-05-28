@@ -93,35 +93,7 @@ import kokkoscore;
 #endif
 
 #include <tuple>
-#include <type_traits>
-#include <cstddef>
-#include <Kokkos_Sort_fwd.hpp>
 
-/*
-namespace Kokkos {
-template <class ExecutionSpace, class DataType, class... Properties>
-void sort(const ExecutionSpace& exec,
-          const Kokkos::View<DataType, Properties...>& view);
-
-template <class DataType, class... Properties>
-void sort(const Kokkos::View<DataType, Properties...>& view);
-
-template <class ExecutionSpace, class ComparatorType, class DataType,
-          class... Properties>
-void sort(const ExecutionSpace& exec,
-          const Kokkos::View<DataType, Properties...>& view,
-          const ComparatorType& comparator);
-
-template <class ComparatorType, class DataType, class... Properties>
-void sort(const Kokkos::View<DataType, Properties...>& view,
-          const ComparatorType& comparator);
-
-template <class ExecutionSpace, class ViewType>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
-    const ExecutionSpace& exec, ViewType view, size_t const begin,
-    size_t const end);
-}  // namespace Kokkos
-*/
 namespace Kokkos::Impl {
 
 template <typename T>

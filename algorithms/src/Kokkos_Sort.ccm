@@ -15,10 +15,22 @@
 //@HEADER
 
 module;
+
+#include <Kokkos_NestedSort.hpp>
+#include <Kokkos_Sort.hpp> 
+
 export module kokkossort;
 
-export import :kokkosbinopspublicapi;
-export import :kokkosbinsortpublicapi;
-export import :kokkosnestedsortpublicapi;
-export import :kokkossortbykeypublicapi;
-export import :kokkossortpublicapi;
+export {
+namespace Kokkos {
+  using ::Kokkos::BinOp1D;
+  using ::Kokkos::BinOp3D;
+  using ::Kokkos::BinSort;
+
+  using ::Kokkos::sort;
+
+namespace Experimental {
+  using ::Kokkos::Experimental::sort_by_key;
+}
+}
+}
