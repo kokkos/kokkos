@@ -83,7 +83,8 @@ namespace Kokkos::Impl {
 template <typename Comparator, typename ValueType>
 struct ComparatorWrapper {
   Comparator comparator;
-  KOKKOS_FUNCTION bool operator()(const ValueType& i, const ValueType& j) const {
+  KOKKOS_FUNCTION bool operator()(const ValueType& i,
+                                  const ValueType& j) const {
     return comparator(i, j);
   }
 };
