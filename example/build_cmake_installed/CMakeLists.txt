@@ -8,6 +8,9 @@ project(Example CXX Fortran)
 
 # Look for an installed Kokkos
 find_package(Kokkos REQUIRED)
+if (Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
+  set(CMAKE_CXX_SCAN_FOR_MODULES ON)
+endif()
 
 # FIXME we should be able to use Kokkos::kokkos
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)

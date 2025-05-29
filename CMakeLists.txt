@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
 
 # scan source files for importing C++20 modules
-if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.28)
+if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
   cmake_policy(SET CMP0155 NEW)
 endif()
 
