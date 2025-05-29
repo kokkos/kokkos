@@ -22,7 +22,6 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#define KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
 #include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 #include <algorithm>
 #include <initializer_list>

@@ -42,12 +42,10 @@ namespace Impl {
     return sycl::OP(Experimental::half_t::impl_type(x));          \
   }
 
-#ifdef KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
     Kokkos::Experimental::half_t) {
   return Kokkos::Experimental::half_t(0.f);
 }
-#endif
 
 // Basic operations
 // abs
