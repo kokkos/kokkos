@@ -486,43 +486,6 @@ function(kokkos_set_dependent_library_properties)
   endforeach()
 
   if(library_transitive_compile_dependency)
-    # set all cpp,cxx sources in the found targets to the correct language
-    if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
-      foreach(target IN LISTS COMPILE_TARGETS)
-        get_target_property(target_sources ${target} SOURCES)
-        get_target_property(target_src_dir ${target} SOURCE_DIR)
-        get_target_property(target_bin_dir ${target} BINARY_DIR)
-        foreach(source IN LISTS target_sources)
-          if(source)
-            cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_src_dir} OUTPUT_VARIABLE source_abs_path)
-            if(NOT EXISTS ${source_abs_path})
-              message(
-                DEBUG
-                "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}"
-              )
-              cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_bin_dir} OUTPUT_VARIABLE source_abs_path)
-              if(NOT EXISTS ${source_abs_path})
-                message(
-                  FATAL_ERROR
-                    "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}."
-                )
-              endif()
-            endif()
-            cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
-            string(REGEX REPLACE "^\\." "" extension_no_dot "${extension}")
-            if(${extension_no_dot} IN_LIST CMAKE_CXX_SOURCE_FILE_EXTENSIONS)
-              message(
-                DEBUG
-                "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for source ${source_abs_path}"
-              )
-              set_property(
-                SOURCE ${source_abs_path} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
-              )
-            endif()
-          endif()
-        endforeach()
-      endforeach()
-    endif()
     kokkos_set_source_and_target_properties(
       USE_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER} TARGET
       ${COMPILE_TARGETS}
@@ -586,22 +549,19 @@ function(kokkos_set_source_and_target_properties)
     )
   endif()
 
-  #only do something if we are compiling with the language feature or need kokkos_launch_compiler
-  if(NOT (@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@ OR (@Kokkos_ENABLE_CUDA@ AND NOT ("${CMAKE_CXX_COMPILER}" MATCHES
-                                                                                      "nvcc_wrapper")))
-  )
+  if(@Kokkos_ENABLE_CUDA@)
+    kokkos_cxx_compiler_cuda_test(CXX_COMPILER_COMPILES_CUDA ${CMAKE_CXX_COMPILER})
+    if(CXX_COMPILER_COMPILES_CUDA)
+      return()
+    endif()
+  else()
     return()
   endif()
 
   #if you passed a launcher, we will just take it without modification. If not we still use our launcher for CUDA if nvcc is not the global cxx compiler
   if((NOT INP_USE_COMPILER_LAUNCHER) AND (NOT INP_USE_LINKER_LAUNCHER))
-    #if nvcc is not the CXX_COMPILER we go through the launcher
-    kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
-    if(NOT IS_NVCC)
-      #if use kokkos_launch_compiler to launch nvcc_wrapper
-      if(@Kokkos_ENABLE_CUDA@ AND NOT ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
-         AND NOT @Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@
-      )
+    if(NOT CXX_COMPILER_COMPILES_CUDA)
+      #use kokkos_launch_compiler to launch nvcc_wrapper
         if(NOT Kokkos_COMPILE_LAUNCHER)
           # find kokkos_launch_compiler
           find_program(
@@ -644,17 +604,6 @@ function(kokkos_set_source_and_target_properties)
         set(INP_USE_LINKER_LAUNCHER
             ${CMAKE_CXX_LINKER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
         )
-      endif()
-    endif()
-  endif()
-
-  # check if the required language is enabled
-  if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
-    if(NOT DEFINED CMAKE_@KOKKOS_COMPILE_LANGUAGE@_COMPILER_LOADED)
-      message(
-        FATAL_ERROR
-          "The used Kokkos needs @KOKKOS_COMPILE_LANGUAGE@ to be enabled to use the Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE feature"
-      )
     endif()
   endif()
 
@@ -694,80 +643,20 @@ function(kokkos_set_source_and_target_properties)
         list(APPEND LINK_TARGETS ${directory_target})
       endif()
     endforeach()
-
-    # set all cpp,cxx sources in the found targets to the correct language
-    if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
-      foreach(target IN LISTS DIRECTORY_COMPILE_TARGETS)
-        get_target_property(target_sources ${target} SOURCES)
-        get_target_property(target_src_dir ${target} SOURCE_DIR)
-        get_target_property(target_bin_dir ${target} BINARY_DIR)
-        foreach(source IN LISTS target_sources)
-          if(source)
-            cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_src_dir} OUTPUT_VARIABLE source_abs_path)
-            if(NOT EXISTS ${source_abs_path})
-              message(
-                DEBUG
-                "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}"
-              )
-              cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_bin_dir} OUTPUT_VARIABLE source_abs_path)
-              if(NOT EXISTS ${source_abs_path})
-                message(
-                  FATAL_ERROR
-                    "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}."
-                )
-              endif()
-            endif()
-            cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
-            string(REGEX REPLACE "^\\." "" extension_no_dot "${extension}")
-            if(${extension_no_dot} IN_LIST CMAKE_CXX_SOURCE_FILE_EXTENSIONS)
-              message(
-                DEBUG
-                "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for source ${source_abs_path}"
-              )
-              set_property(
-                SOURCE ${source_abs_path} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
-              )
-            endif()
-          endif()
-        endforeach()
-      endforeach()
-    endif()
-
-  endforeach()
-
-  #set properties on sources
-  foreach(source IN LISTS INP_SOURCE)
-    message(DEBUG "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ for source ${source}")
-    set_property(SOURCE ${source} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
   endforeach()
 
   if(INP_USE_COMPILER_LAUNCHER)
     foreach(target IN LISTS COMPILE_TARGETS)
       message(DEBUG "Kokkos setting compiler launcher ${INP_USE_COMPILER_LAUNCHER} on target ${target}")
-      set_property(TARGET ${target} PROPERTY @KOKKOS_COMPILE_LANGUAGE@_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER})
+      set_property(TARGET ${target} PROPERTY CXX_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER})
     endforeach()
   endif()
 
   foreach(target IN LISTS LINK_TARGETS)
-    # use the language feature on targets
-    if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
-      message(
-        DEBUG
-        "Kokkos setting @KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES and @KOKKOS_COMPILE_LANGUAGE@_STANDARD on target ${target}"
-      )
-      if(@Kokkos_ENABLE_CUDA@)
-        set_property(TARGET ${target} PROPERTY CUDA_ARCHITECTURES @KOKKOS_CUDA_ARCHITECTURES@)
-        set_property(TARGET ${target} PROPERTY CUDA_STANDARD @KOKKOS_CXX_STANDARD@)
-      elseif(@Kokkos_ENABLE_HIP@)
-        set_property(TARGET ${target} PROPERTY HIP_ARCHITECTURES @KOKKOS_HIP_ARCHITECTURES@)
-        set_property(TARGET ${target} PROPERTY HIP_STANDARD @KOKKOS_CXX_STANDARD@)
-      endif()
-    endif()
-
     # use launcher on targets
     if(INP_USE_LINKER_LAUNCHER)
       message(DEBUG "Kokkos setting linker launcher ${INP_USE_LINKER_LAUNCHER} on target ${target}")
-      set_property(TARGET ${target} PROPERTY @KOKKOS_COMPILE_LANGUAGE@_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER})
+      set_property(TARGET ${target} PROPERTY CXX_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER})
     endif()
 
     # do nothing if the CXX compiler is capable of consuming kokkos directly
