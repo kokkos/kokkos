@@ -44,11 +44,9 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<analysis_value_type, ValueType>,
                 "Non-matching value types of functor and return type");
 
-  const auto start = loop_bounds.start;
-  const auto end   = loop_bounds.end;
-  //   Note this thing is called .member in the CUDA specialization of
-  //   TeamThreadRangeBoundariesStruct
-  auto& member         = loop_bounds.team;
+  const auto start     = loop_bounds.start;
+  const auto end       = loop_bounds.end;
+  auto& member         = loop_bounds.member;
   const auto team_rank = member.team_rank();
 
 #if defined(KOKKOS_IMPL_TEAM_SCAN_WORKAROUND)
