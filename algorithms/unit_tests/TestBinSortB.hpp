@@ -23,12 +23,13 @@
 import kokkoscore;
 import kokkossort;
 import kokkosstdalgorithms;
+import kokkosrandom;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Sort.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
-#endif
 #include <Kokkos_Random.hpp>
+#endif
 #include <TestStdAlgorithmsCommon.hpp>
 #include <random>
 #include <numeric>  //needed for iota

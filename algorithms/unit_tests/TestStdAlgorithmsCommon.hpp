@@ -22,11 +22,12 @@
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
 import kokkosstdalgorithms;
+import kokkosrandom;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
-#endif
 #include <Kokkos_Random.hpp>
+#endif
 #include <TestStdAlgorithmsHelperFunctors.hpp>
 #include <std_algorithms/impl/Kokkos_Constraints.hpp>
 #include <utility>

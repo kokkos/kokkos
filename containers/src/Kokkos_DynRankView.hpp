@@ -1263,6 +1263,11 @@ as_view_of_rank_n(
 }
 
 template <typename Function, typename... Args>
+void apply_to_view_of_static_rank(Function&& f, View<Args...> a) {
+  f(a);
+}
+
+template <typename Function, typename... Args>
 void apply_to_view_of_static_rank(Function&& f, DynRankView<Args...> a) {
   switch (rank(a)) {
     case 0: f(as_view_of_rank_n<0>(a)); break;

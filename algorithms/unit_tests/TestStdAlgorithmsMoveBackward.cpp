@@ -16,7 +16,11 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
+#if 1
+import kokkosrandom;
+#else
 #include <Kokkos_Random.hpp>
+#endif
 
 namespace Test {
 namespace stdalgos {

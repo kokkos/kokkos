@@ -26,11 +26,12 @@
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
 import kokkosdynrankview;
+import kokkosrandom;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynRankView.hpp>
-#endif
 #include <Kokkos_Random.hpp>
+#endif
 #include <cmath>
 #include <chrono>
 #include <vector>

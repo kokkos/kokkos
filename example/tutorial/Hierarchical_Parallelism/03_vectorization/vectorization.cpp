@@ -14,8 +14,13 @@
 //
 //@HEADER
 
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosrandom;
+#else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#endif
 #include <cstdio>
 
 // The TeamPolicy actually supports 3D parallelism: Teams, Threads, Vector

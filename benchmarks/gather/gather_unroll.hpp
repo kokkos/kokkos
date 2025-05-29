@@ -14,8 +14,14 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#if 1
+import kokkoscore;
+import kokkosrandom;
+#else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
+#endif
 
 template <class Scalar>
 struct RunGather<Scalar, UNROLL> {

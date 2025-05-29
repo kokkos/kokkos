@@ -38,7 +38,7 @@ set(KOKKOS_ALGORITHMS_MODULE_FILES)
 #    file(WRITE "${MODULE_FILE_NAME}" "${FILE_CONTENTS_MODULE}")
 #    list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES "${MODULE_FILE_NAME}")
 #  endforeach()
-list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES Kokkos_Sort.ccm Kokkos_StdAlgorithms.ccm)
+list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES Kokkos_Random.ccm Kokkos_Sort.ccm Kokkos_StdAlgorithms.ccm)
 
 install(
   DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
@@ -57,6 +57,6 @@ kokkos_lib_include_directories(
   kokkosalgorithms ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-kokkos_link_internal_library(kokkosalgorithms kokkoscore)
+target_link_libraries(kokkosalgorithms PRIVATE kokkoscore kokkoscontainers)
 kokkos_link_tpl(kokkosalgorithms PUBLIC ROCTHRUST)
 kokkos_link_tpl(kokkosalgorithms PUBLIC ONEDPL)

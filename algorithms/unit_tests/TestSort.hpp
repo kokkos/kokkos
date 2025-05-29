@@ -23,12 +23,13 @@
 import kokkoscore;
 import kokkosdynamicview;
 import kokkossort;
+import kokkosrandom;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynamicView.hpp>
 #include <Kokkos_Sort.hpp>
-#endif
 #include <Kokkos_Random.hpp>
+#endif
 
 namespace Test {
 namespace SortImpl {
