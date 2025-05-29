@@ -454,16 +454,6 @@ function(kokkos_set_dependent_library_properties)
     message(FATAL_ERROR "'kokkos_set_dependent_library_properties' needs a LIBRARY argument")
   endif()
 
-  kokkos_check_compile_dependency(
-    library_compile_dependency
-    library_transitive_compile_dependency
-    library_link_dependency
-    "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
-    ${INP_LIBRARY}
-    KOKKOS_LINK_DEPENDENCY_CACHE
-    KOKKOS_PUBLIC_DEPENDENCY_CACHE
-  )
-
   kokkos_get_directory_targets(FOUND_TARGETS DIRECTORY_TARGETS SEARCH_DIR ${CMAKE_SOURCE_DIR})
 
   foreach(directory_target IN LISTS DIRECTORY_TARGETS)
