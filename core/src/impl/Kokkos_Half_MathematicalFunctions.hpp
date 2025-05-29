@@ -20,6 +20,19 @@
 #include <Kokkos_MathematicalFunctions.hpp>  // For the float overloads
 #include <Kokkos_BitManipulation.hpp>        // bit_cast
 
+// Backend specific half implementation needs to be declared prior to the math
+// functions implementation so that specific functions can be found if they
+// exist.
+// If these includes are removed, this mechanism will silently fall back to the
+// generic fallback implementation that uses single-precision fp .
+#ifdef KOKKOS_ENABLE_CUDA
+#include <Cuda/Kokkos_Cuda_Half_MathematicalFunctions.hpp>
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+#include <SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp>
+#endif
+
 // clang-format off
 namespace Kokkos {
 // BEGIN macro definitions
@@ -41,49 +54,81 @@ namespace Kokkos {
   KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC)          \
   KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC)
 
-
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE(FUNC, HALF_TYPE)      \
-  KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x) {                  \
+  namespace Impl { \
+  template <bool fallback = true>                                       \
+  KOKKOS_INLINE_FUNCTION HALF_TYPE impl_##FUNC(HALF_TYPE x) {           \
     return static_cast<HALF_TYPE>(Kokkos::FUNC(static_cast<float>(x))); \
+  }                                                                     \
+  }  /* namespace Impl */                                               \
+  KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x) {                  \
+    return Kokkos::Impl::impl_##FUNC(x);                                \
   }
 
 #define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, MIXED_TYPE) \
-  KOKKOS_INLINE_FUNCTION double FUNC(HALF_TYPE x, MIXED_TYPE y) {  \
-    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
-  } \
-  KOKKOS_INLINE_FUNCTION double FUNC(MIXED_TYPE x, HALF_TYPE y) {  \
-    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y)); \
+  namespace Impl {                                                               \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION double impl_##FUNC(HALF_TYPE x, MIXED_TYPE y) {         \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y));         \
+  }                                                                              \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION double impl_##FUNC(MIXED_TYPE x, HALF_TYPE y) {         \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y));         \
+  }                                                                              \
+  }  /* namespace Impl */                                                        \
+  KOKKOS_INLINE_FUNCTION double FUNC(HALF_TYPE x, MIXED_TYPE y) {                \
+    return Kokkos::Impl::impl_##FUNC(x, y);                                      \
+  }                                                                              \
+  KOKKOS_INLINE_FUNCTION double FUNC(MIXED_TYPE x, HALF_TYPE y) {                \
+    return Kokkos::Impl::impl_##FUNC(x, y);                                      \
   }
 
-#define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF(FUNC, HALF_TYPE)       \
-  KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x, HALF_TYPE y) {  \
-    return static_cast<HALF_TYPE>(                                   \
-        Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y))); \
-  } \
-  KOKKOS_INLINE_FUNCTION float FUNC(float x, HALF_TYPE y) {  \
-    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y)); \
-  } \
-  KOKKOS_INLINE_FUNCTION float FUNC(HALF_TYPE x, float y) {  \
-    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y)); \
-  } \
-  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, double) \
-  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, short) \
+#define KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF(FUNC, HALF_TYPE)                 \
+  namespace Impl {                                                             \
+  template <bool fallback = true>                                              \
+  KOKKOS_INLINE_FUNCTION HALF_TYPE impl_##FUNC(HALF_TYPE x, HALF_TYPE y) {     \
+    return static_cast<HALF_TYPE>(                                             \
+        Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y)));           \
+  }                                                                            \
+  template <bool fallback = true>                                              \
+  KOKKOS_INLINE_FUNCTION float impl_##FUNC(float x, HALF_TYPE y) {             \
+    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y));         \
+  }                                                                            \
+  template <bool fallback = true>                                              \
+  KOKKOS_INLINE_FUNCTION float impl_##FUNC(HALF_TYPE x, float y) {             \
+    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y));         \
+  }                                                                            \
+  }  /* namespace Impl */                                                      \
+  KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x, HALF_TYPE y) {            \
+    return Kokkos::Impl::impl_##FUNC(x, y);                                    \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, HALF_TYPE y) {                    \
+    return Kokkos::Impl::impl_##FUNC(x, y);                                    \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION float FUNC(HALF_TYPE x, float y) {                    \
+    return Kokkos::Impl::impl_##FUNC(x, y);                                    \
+  }                                                                            \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, double)         \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, short)          \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned short) \
-  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, int) \
-  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned int) \
-  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long) \
-  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long) \
-  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long long) \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, int)            \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned int)   \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long)           \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long)  \
+  KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long long)      \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long long)
 
 
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF(FUNC, HALF_TYPE) \
-  KOKKOS_INLINE_FUNCTION bool FUNC(HALF_TYPE x) {              \
+  namespace Impl {                                             \
+  template <bool fallback = true>                              \
+  KOKKOS_INLINE_FUNCTION bool impl_##FUNC(HALF_TYPE x) {       \
     return Kokkos::FUNC(static_cast<float>(x));                \
-  }
+  }                                                            \
+  }  /* namespace Impl */                                      \
+  KOKKOS_INLINE_FUNCTION bool FUNC(HALF_TYPE x) { return Impl::impl_##FUNC(x); }
 
 // END macros definitions
-
 
 // Basic operations
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, abs)
@@ -137,7 +182,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, ro
 // lround
 // llround
 // FIXME_SYCL not available as of current SYCL 2020 specification (revision 4)
-#ifndef KOKKOS_ENABLE_SYCL // FIXME_SYCL
+#ifndef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, nearbyint)
 #endif
 // rint
@@ -158,40 +203,63 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, copysi
 // fpclassify
 
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+namespace Impl {
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION bool impl_isfinite(Kokkos::Experimental::half_t x) {
+  using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::half_t::impl_type>(x));
+  return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
+}
+} // namespace Impl
+
 KOKKOS_INLINE_FUNCTION bool isfinite(Kokkos::Experimental::half_t x) {
-  using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
-  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
-  const bit_type bit_pattern_x = bit_cast<bit_type>(
-      static_cast<Kokkos::Experimental::half_t::impl_type>(x));
-  return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
+  return Impl::impl_isfinite(x);
 }
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+namespace Impl {
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION bool impl_isfinite(Kokkos::Experimental::bhalf_t x) {
+  using bit_type = Kokkos::Experimental::bhalf_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::bhalf_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::bhalf_t::impl_type>(x));
+  return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
+}
+} // namespace Impl
+
 KOKKOS_INLINE_FUNCTION bool isfinite(Kokkos::Experimental::bhalf_t x) {
-  using bit_type = Kokkos::Experimental::bhalf_t::bit_comparison_type;
-  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::bhalf_t>;
-  const bit_type bit_pattern_x = bit_cast<bit_type>(
-      static_cast<Kokkos::Experimental::bhalf_t::impl_type>(x));
-  return (bit_pattern_x.value & exponent_mask.value) != exponent_mask.value;
+  return Impl::impl_isfinite(x);
 }
 #endif
 
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+namespace Impl {
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION bool impl_isinf(Kokkos::Experimental::half_t x) {
+  using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
+  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
+  constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::half_t>;
+  const bit_type bit_pattern_x = bit_cast<bit_type>(
+      static_cast<Kokkos::Experimental::half_t::impl_type>(x));
+  return (
+      ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
+      ((bit_pattern_x.value & fraction_mask.value) == 0));
+}
+} // namespace Impl
+
 KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::half_t x) {
-  using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
-  constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
-  constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::half_t>;
-  const bit_type bit_pattern_x = bit_cast<bit_type>(
-      static_cast<Kokkos::Experimental::half_t::impl_type>(x));
-  return (
-      ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
-      ((bit_pattern_x.value & fraction_mask.value) == 0));
+  return Impl::impl_isinf(x);
 }
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::bhalf_t x) {
+namespace Impl {
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION bool impl_isinf(Kokkos::Experimental::bhalf_t x) {
   using bit_type = Kokkos::Experimental::bhalf_t::bit_comparison_type;
   constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::bhalf_t>;
   constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::bhalf_t>;
@@ -200,11 +268,18 @@ KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::bhalf_t x) {
   return (
       ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
       ((bit_pattern_x.value & fraction_mask.value) == 0));
+}
+} // namespace Impl
+
+KOKKOS_INLINE_FUNCTION bool isinf(Kokkos::Experimental::bhalf_t x) {
+  return Impl::impl_isinf(x);
 }
 #endif
 
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::half_t x) {
+namespace Impl {
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION bool impl_isnan(Kokkos::Experimental::half_t x) {
   using bit_type = Kokkos::Experimental::half_t::bit_comparison_type;
   constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::half_t>;
   constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::half_t>;
@@ -214,10 +289,17 @@ KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::half_t x) {
       ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
       ((bit_pattern_x.value & fraction_mask.value) != 0));
 }
+} // namespace Impl
+
+KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::half_t x) {
+  return Impl::impl_isnan(x);
+}
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
+namespace Impl {
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION bool impl_isnan(Kokkos::Experimental::bhalf_t x) {
   using bit_type = Kokkos::Experimental::bhalf_t::bit_comparison_type;
   constexpr bit_type exponent_mask = Kokkos::Experimental::Impl::exponent_mask<Kokkos::Experimental::bhalf_t>;
   constexpr bit_type fraction_mask = Kokkos::Experimental::Impl::fraction_mask<Kokkos::Experimental::bhalf_t>;
@@ -226,6 +308,11 @@ KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
   return (
       ((bit_pattern_x.value & exponent_mask.value) == exponent_mask.value) &&
       ((bit_pattern_x.value & fraction_mask.value) != 0));
+}
+} // namespace Impl
+
+KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
+  return Impl::impl_isnan(x);
 }
 #endif
 // isnormal
@@ -236,6 +323,28 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, signbi
 // islessequal
 // islessgreater
 // isunordered
+
+// Implementation test function: check if fallback for half and bhalf type are used
+#if defined(KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION)
+namespace Impl {
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(Kokkos::Experimental::half_t) {
+  return Kokkos::Experimental::half_t(1.f);
+}
+template <bool fallback = true>
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(Kokkos::Experimental::bhalf_t) {
+  return Kokkos::Experimental::bhalf_t(1.f);
+}
+}  // namespace Impl
+
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t test_fallback_half(Kokkos::Experimental::half_t x) {
+  return Impl::impl_test_fallback_half(x);
+}
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t test_fallback_bhalf(Kokkos::Experimental::bhalf_t x) {
+  return Impl::impl_test_fallback_bhalf(x);
+}
+#endif
+
 // Complex number functions
 #define KOKKOS_IMPL_MATH_COMPLEX_REAL_HALF(FUNC, HALF_TYPE) \
   KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x) { return x; }
