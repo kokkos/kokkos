@@ -15,7 +15,7 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
-#include <std_algorithms/impl/Kokkos_InclusiveScan.hpp>
+import kokkosstdalgorithmsimpl;
 #include <utility>
 #include <iomanip>
 

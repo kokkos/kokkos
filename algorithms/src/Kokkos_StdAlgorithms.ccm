@@ -90,12 +90,5 @@ export {
   using ::Kokkos::Experimental::rotate;
   using ::Kokkos::Experimental::rotate_copy;
   using ::Kokkos::Experimental::unique;
-
-  namespace Impl {
-  using ::Kokkos::Experimental::Impl::are_iterators_v;
-  using ::Kokkos::Experimental::Impl::are_random_access_iterators_v;
-  using ::Kokkos::Experimental::Impl::expect_no_overlap;
-  using ::Kokkos::Experimental::Impl::RandomAccessIterator;
-  }  // namespace Impl
   }  // namespace Kokkos::Experimental
 }

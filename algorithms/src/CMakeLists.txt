@@ -38,7 +38,7 @@ set(KOKKOS_ALGORITHMS_MODULE_FILES)
 #    file(WRITE "${MODULE_FILE_NAME}" "${FILE_CONTENTS_MODULE}")
 #    list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES "${MODULE_FILE_NAME}")
 #  endforeach()
-list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES Kokkos_Random.ccm Kokkos_Sort.ccm Kokkos_StdAlgorithms.ccm)
+list(APPEND KOKKOS_ALGORITHMS_MODULE_FILES Kokkos_Random.ccm Kokkos_Sort.ccm Kokkos_StdAlgorithms.ccm Kokkos_StdAlgorithmsImpl.ccm)
 
 install(
   DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"

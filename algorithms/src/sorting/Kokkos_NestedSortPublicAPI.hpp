@@ -21,10 +21,10 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+import kokkosstdalgorithmsimpl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
 
 namespace Kokkos {
 namespace Experimental {
