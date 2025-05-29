@@ -96,6 +96,18 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
   return KokkosSliceToMDSpanSliceImpl<T>::transform(s);
 }
 
+// Default implementation for computing allocation size (in #of elements)
+// from mapping and accessor.
+// This is used to figure out how much data to allocate, with this particular
+// overload suitable for situations where the allocation element type is
+// the element type of the View (something which is not true for example for
+// Sacado).
+template <class MappingType, class AccessorType>
+KOKKOS_INLINE_FUNCTION size_t allocation_size_from_mapping_and_accessor(
+    const MappingType &map, const AccessorType &) {
+  return map.required_span_size();
+}
+
 // FIXME_HPX spurious warnings like
 // error: 'SR.14123' may be used uninitialized [-Werror=maybe-uninitialized]
 #if defined(KOKKOS_ENABLE_HPX)
@@ -134,11 +146,6 @@ class BasicView {
   using reference        = typename mdspan_type::reference;
   using memory_space     = typename accessor_type::memory_space;
   using execution_space  = typename memory_space::execution_space;
-
-  // For now View and BasicView will have a restriction that the data handle
-  // needs to be convertible to element_type* and vice versa
-  static_assert(std::is_constructible_v<element_type *, data_handle_type>);
-  static_assert(std::is_constructible_v<data_handle_type, element_type *>);
 
   KOKKOS_FUNCTION static constexpr rank_type rank() noexcept {
     return extents_type::rank();
@@ -346,8 +353,10 @@ class BasicView {
   template <class... P>
   data_handle_type create_data_handle(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      const typename mdspan_type::mapping_type &arg_mapping) {
-    constexpr bool has_exec = Impl::ViewCtorProp<P...>::has_execution_space;
+      const typename mdspan_type::mapping_type &arg_mapping,
+      const typename mdspan_type::accessor_type &arg_accessor) {
+    using storage_value_type = typename data_handle_type::value_type;
+    constexpr bool has_exec  = Impl::ViewCtorProp<P...>::has_execution_space;
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =
@@ -364,40 +373,101 @@ class BasicView {
           "Constructing View and initializing data with uninitialized "
           "execution space");
     }
+
+    // get allocation size: may be different from
+    // arg_mapping.required_span_size()
+    size_t allocation_size =
+        allocation_size_from_mapping_and_accessor(arg_mapping, arg_accessor);
     if constexpr (has_exec) {
-      return data_handle_type{Impl::make_shared_allocation_record<ElementType>(
-          arg_mapping.required_span_size(),
-          Impl::get_property<Impl::LabelTag>(prop_copy),
-          Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-          std::make_optional(
-              Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
-          std::bool_constant<alloc_prop::initialize>(),
-          std::bool_constant<alloc_prop::sequential_host_init>())};
+      return data_handle_type{
+          Impl::make_shared_allocation_record<storage_value_type>(
+              allocation_size, Impl::get_property<Impl::LabelTag>(prop_copy),
+              Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
+              std::make_optional(
+                  Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
+              std::bool_constant<alloc_prop::initialize>(),
+              std::bool_constant<alloc_prop::sequential_host_init>())};
     } else {
-      return data_handle_type{Impl::make_shared_allocation_record<ElementType>(
-          arg_mapping.required_span_size(),
-          Impl::get_property<Impl::LabelTag>(prop_copy),
-          Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
-          std::optional<execution_space>{},
-          std::bool_constant<alloc_prop::initialize>(),
-          std::bool_constant<alloc_prop::sequential_host_init>())};
+      return data_handle_type{
+          Impl::make_shared_allocation_record<storage_value_type>(
+              allocation_size, Impl::get_property<Impl::LabelTag>(prop_copy),
+              Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
+              std::optional<execution_space>{},
+              std::bool_constant<alloc_prop::initialize>(),
+              std::bool_constant<alloc_prop::sequential_host_init>())};
     }
   }
 
  public:
+  // Ctors to pull out AccessorArg_t
+  // Need also the other ones to keep the overload set consistent and all the
+  // constraints mutually exclusive. Delegate to private ctors
+  // We need to explicitly distinguish between the has_pointer and !has_pointer
+  // versions since only the ones with a pointer can be marked host/device
   template <class... P>
-  // requires(!Impl::ViewCtorProp<P...>::has_pointer)
-  explicit inline BasicView(
+  explicit BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
-      : BasicView(create_data_handle(arg_prop, arg_mapping), arg_mapping) {}
+      : BasicView(
+            arg_prop, arg_mapping,
+            accessor_type{
+                Impl::get_property<Impl::AccessorArgTag>(arg_prop).value}) {}
 
   template <class... P>
-  // requires(Impl::ViewCtorProp<P...>::has_pointer)
+  KOKKOS_FUNCTION explicit BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(
+            arg_prop, arg_mapping,
+            accessor_type{
+                Impl::get_property<Impl::AccessorArgTag>(arg_prop).value}) {}
+
+  // Private Ctors coming from the case where we dealt with AccessorArg_t
+  // We don't have public ctors which take ViewCtorProp and accessor.
+  // I don't want to create the data handle above, because in a subsequent PR
+  // the data handle creation itself will depend on the constructed accessor.
+ private:
+  template <class... P>
+  explicit BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping,
+      const accessor_type &arg_accessor)
+      : BasicView(create_data_handle(arg_prop, arg_mapping, arg_accessor),
+                  arg_mapping, arg_accessor) {}
+
+  template <class... P>
+  KOKKOS_FUNCTION explicit BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<ViewCtorProp<P...>::has_pointer &&
+                           Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping,
+      const accessor_type &arg_accessor)
+      : BasicView(
+            data_handle_type{Impl::get_property<Impl::PointerTag>(arg_prop)},
+            arg_mapping, arg_accessor) {}
+
+  // Ctors taking CtorProp that don't have AccessorArg_t in it
+ public:
+  template <class... P>
+  explicit inline BasicView(
+      const Impl::ViewCtorProp<P...> &arg_prop,
+      std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
+                           !Impl::ViewCtorProp<P...>::has_accessor_arg,
+                       typename mdspan_type::mapping_type> const &arg_mapping)
+      : BasicView(create_data_handle(arg_prop, arg_mapping, accessor_type{}),
+                  arg_mapping) {}
+
+  template <class... P>
   KOKKOS_FUNCTION explicit inline BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
-      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer,
+      std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer &&
+                           !Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
       : BasicView(
             data_handle_type{Impl::get_property<Impl::PointerTag>(arg_prop)},
