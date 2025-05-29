@@ -21,75 +21,75 @@ module;
 export module kokkossimd;
 
 export {
-namespace Kokkos {
+  namespace Kokkos {
   using ::Kokkos::abs;
+  using ::Kokkos::acos;
+  using ::Kokkos::acosh;
+  using ::Kokkos::asin;
+  using ::Kokkos::asinh;
+  using ::Kokkos::atan;
+  using ::Kokkos::atan2;
+  using ::Kokkos::atanh;
+  using ::Kokkos::cbrt;
+  using ::Kokkos::ceil;
+  using ::Kokkos::copysign;
+  using ::Kokkos::cos;
+  using ::Kokkos::cosh;
+  using ::Kokkos::erf;
+  using ::Kokkos::erfc;
+  using ::Kokkos::exp;
+  using ::Kokkos::exp2;
   using ::Kokkos::floor;
-using ::Kokkos::ceil;
-using ::Kokkos::exp;
-using ::Kokkos::exp2;
-using ::Kokkos::round;
-using ::Kokkos::trunc;
-using ::Kokkos::cbrt;
-using ::Kokkos::log;
-using ::Kokkos::log10;
-using ::Kokkos::log2;
-using ::Kokkos::sqrt;
-using ::Kokkos::acos;
-using ::Kokkos::asin;
-using ::Kokkos::cos;
-using ::Kokkos::sin;
-using ::Kokkos::tan;
-using ::Kokkos::asinh;
-using ::Kokkos::atan;
-using ::Kokkos::cosh;
-using ::Kokkos::sinh;
-using ::Kokkos::tanh;
-using ::Kokkos::acosh;
-using ::Kokkos::atanh;
-using ::Kokkos::erf;
-using ::Kokkos::erfc;
-using ::Kokkos::tgamma;
-using ::Kokkos::atan2;
-using ::Kokkos::copysign;
-using ::Kokkos::hypot;
-using ::Kokkos::lgamma;
-using ::Kokkos::fma;
-using ::Kokkos::pow;
-}
+  using ::Kokkos::fma;
+  using ::Kokkos::hypot;
+  using ::Kokkos::lgamma;
+  using ::Kokkos::log;
+  using ::Kokkos::log10;
+  using ::Kokkos::log2;
+  using ::Kokkos::pow;
+  using ::Kokkos::round;
+  using ::Kokkos::sin;
+  using ::Kokkos::sinh;
+  using ::Kokkos::sqrt;
+  using ::Kokkos::tan;
+  using ::Kokkos::tanh;
+  using ::Kokkos::tgamma;
+  using ::Kokkos::trunc;
+  }  // namespace Kokkos
 
-namespace Kokkos::Experimental {
-using ::Kokkos::Experimental::round_half_to_nearest_even;
-using ::Kokkos::Experimental::reduce_min;
-using ::Kokkos::Experimental::any_of;
-using ::Kokkos::Experimental::none_of;
-using ::Kokkos::Experimental::reduce;
-using ::Kokkos::Experimental::reduce_max;
-using ::Kokkos::Experimental::where;
-using ::Kokkos::Experimental::simd_flag_aligned;
-using ::Kokkos::Experimental::simd_flag_default;
-using ::Kokkos::Experimental::basic_simd;
-using ::Kokkos::Experimental::basic_simd_mask;
-using ::Kokkos::Experimental::all_of;
-using ::Kokkos::Experimental::condition;
-using ::Kokkos::Experimental::simd;
-using ::Kokkos::Experimental::simd_mask;
+  namespace Kokkos::Experimental {
+  using ::Kokkos::Experimental::all_of;
+  using ::Kokkos::Experimental::any_of;
+  using ::Kokkos::Experimental::basic_simd;
+  using ::Kokkos::Experimental::basic_simd_mask;
+  using ::Kokkos::Experimental::condition;
+  using ::Kokkos::Experimental::none_of;
+  using ::Kokkos::Experimental::reduce;
+  using ::Kokkos::Experimental::reduce_max;
+  using ::Kokkos::Experimental::reduce_min;
+  using ::Kokkos::Experimental::round_half_to_nearest_even;
+  using ::Kokkos::Experimental::simd;
+  using ::Kokkos::Experimental::simd_flag_aligned;
+  using ::Kokkos::Experimental::simd_flag_default;
+  using ::Kokkos::Experimental::simd_mask;
+  using ::Kokkos::Experimental::where;
 
-namespace simd_abi::Impl {
-using ::Kokkos::Experimental::simd_abi::Impl::native_abi;
-using ::Kokkos::Experimental::simd_abi::Impl::native_fixed_abi;
-}
+  namespace simd_abi::Impl {
+  using ::Kokkos::Experimental::simd_abi::Impl::native_abi;
+  using ::Kokkos::Experimental::simd_abi::Impl::native_fixed_abi;
+  }  // namespace simd_abi::Impl
 
-namespace simd_abi{
-using ::Kokkos::Experimental::simd_abi::scalar;
-}
+  namespace simd_abi {
+  using ::Kokkos::Experimental::simd_abi::scalar;
+  }
 
-namespace Impl {
-using ::Kokkos::Experimental::Impl::Identity;
-using ::Kokkos::Experimental::Impl::abi_set;
-using ::Kokkos::Experimental::Impl::host_abi_set;
-using ::Kokkos::Experimental::Impl::device_abi_set;
-using ::Kokkos::Experimental::Impl::data_type_set;
-using ::Kokkos::Experimental::Impl::data_types;
-}
-}
+  namespace Impl {
+  using ::Kokkos::Experimental::Impl::abi_set;
+  using ::Kokkos::Experimental::Impl::data_type_set;
+  using ::Kokkos::Experimental::Impl::data_types;
+  using ::Kokkos::Experimental::Impl::device_abi_set;
+  using ::Kokkos::Experimental::Impl::host_abi_set;
+  using ::Kokkos::Experimental::Impl::Identity;
+  }  // namespace Impl
+  }  // namespace Kokkos::Experimental
 }

@@ -22,7 +22,7 @@ import kokkossimd;
 #else
 #include <Kokkos_SIMD.hpp>
 #endif
-//#include <SIMDTesting_Utilities.hpp>
+// #include <SIMDTesting_Utilities.hpp>
 
 using Kokkos::Experimental::all_of;
 

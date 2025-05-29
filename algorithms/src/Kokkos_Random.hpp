@@ -24,7 +24,7 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
-import kokkosdynrankview; // apply_to_view_of_static_rank 
+import kokkosdynrankview; // apply_to_view_of_static_rank
 #else
 #include <Kokkos_Core.hpp>
 #endif
