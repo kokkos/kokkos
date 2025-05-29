@@ -24,6 +24,7 @@
 #endif
 #include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
 #include <SYCL/Kokkos_SYCL_Half_Conversion.hpp>
+#include <SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp>
 #include <SYCL/Kokkos_SYCL_DeepCopy.hpp>
 #include <SYCL/Kokkos_SYCL_MDRangePolicy.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelFor_Range.hpp>
