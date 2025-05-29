@@ -91,6 +91,21 @@ import kokkoscore;
       ONEDPL_VERSION_PATCH
 #define KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(MAJOR, MINOR, PATCH) \
   (KOKKOS_IMPL_ONEDPL_VERSION >= ((MAJOR)*10000 + (MINOR)*100 + (PATCH)))
+
+namespace Kokkos::Impl {
+template <typename Comparator, typename ValueType>
+struct ComparatorWrapper {
+  Comparator comparator;
+  KOKKOS_FUNCTION bool operator()(const ValueType& i,
+                                  const ValueType& j) const {
+    return comparator(i, j);
+  }
+};
+}  // namespace Kokkos::Impl
+
+template <typename Comparator, typename ValueType>
+struct sycl::is_device_copyable<
+    Kokkos::Impl::ComparatorWrapper<Comparator, ValueType>> : std::true_type {};
 #endif
 
 namespace Kokkos {
@@ -240,7 +255,7 @@ void sort_onedpl(const Kokkos::SYCL& space,
                 "SYCL execution space is not able to access the memory space "
                 "of the View argument!");
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   static_assert(ViewType::rank == 1,
                 "Kokkos::sort currently only supports rank-1 Views.");
 #else
@@ -266,17 +281,28 @@ void sort_onedpl(const Kokkos::SYCL& space,
   auto queue  = space.sycl_queue();
   auto policy = oneapi::dpl::execution::make_device_policy(queue);
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
-  oneapi::dpl::sort(policy, ::Kokkos::Experimental::begin(view),
-                    ::Kokkos::Experimental::end(view),
-                    std::forward<MaybeComparator>(maybeComparator)...);
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
+  auto view_begin = ::Kokkos::Experimental::begin(view);
+  auto view_end   = ::Kokkos::Experimental::end(view);
 #else
   // Can't use Experimental::begin/end here since the oneDPL then assumes that
   // the data is on the host.
-  const int n = view.extent(0);
-  oneapi::dpl::sort(policy, view.data(), view.data() + n,
-                    std::forward<MaybeComparator>(maybeComparator)...);
+  const int n     = view.extent(0);
+  auto view_begin = view.data();
+  auto view_end   = view.data() + n;
 #endif
+
+  if constexpr (sizeof...(MaybeComparator) == 0)
+    oneapi::dpl::sort(policy, view_begin, view_end);
+  else {
+    using value_type =
+        typename Kokkos::View<DataType, Properties...>::value_type;
+    auto comparator =
+        std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
+    oneapi::dpl::sort(
+        policy, view_begin, view_end,
+        ComparatorWrapper<decltype(comparator), value_type>{comparator});
+  }
 }
 #endif
 
@@ -353,7 +379,7 @@ void sort_device_view_without_comparator(
       "sort_device_view_without_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   sort_onedpl(exec, view);
 #else
   if (view.stride(0) == 1) {
@@ -412,7 +438,7 @@ void sort_device_view_with_comparator(
       "sort_device_view_with_comparator: supports rank-1 Views "
       "with LayoutLeft, LayoutRight or LayoutStride");
 
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 7, 1)
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
   sort_onedpl(exec, view, comparator);
 #else
   if (view.stride(0) == 1) {
