@@ -16,15 +16,15 @@
 
 module;
 
-#include <Kokkos_Random.hpp> 
+#include <Kokkos_Random.hpp>
 
 export module kokkosrandom;
 
 export {
-namespace Kokkos {
-  using ::Kokkos::Random_XorShift64_Pool;
-  using ::Kokkos::Random_XorShift1024_Pool;
+  namespace Kokkos {
   using ::Kokkos::fill_random;
   using ::Kokkos::rand;
-}
+  using ::Kokkos::Random_XorShift1024_Pool;
+  using ::Kokkos::Random_XorShift64_Pool;
+  }  // namespace Kokkos
 }

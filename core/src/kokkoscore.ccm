@@ -137,8 +137,8 @@ export {
   using ::Kokkos::Experimental::require;
   }  // namespace Experimental
 
+  using ::Kokkos::test_fallback_bhalf;
   using ::Kokkos::test_fallback_half;
-  using ::Kokkos::test_fallback_bhalf;  
   namespace Experimental {
   using ::Kokkos::Experimental::bhalf_t;
   using ::Kokkos::Experimental::cast_from_bhalf;
