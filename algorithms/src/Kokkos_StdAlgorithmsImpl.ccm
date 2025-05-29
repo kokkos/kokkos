@@ -24,15 +24,20 @@ export {
   namespace Kokkos::Experimental::Impl {
   using ::Kokkos::Experimental::Impl::are_iterators_v;
   using ::Kokkos::Experimental::Impl::are_random_access_iterators_v;
+  using ::Kokkos::Experimental::Impl::
+      ExclusiveScanDefaultFunctorWithValueWrapper;
+  using ::Kokkos::Experimental::Impl::
+      ExeSpaceTransformInclusiveScanNoInitValueFunctor;
+  using ::Kokkos::Experimental::Impl::
+      ExeSpaceTransformInclusiveScanWithInitValueFunctor;
   using ::Kokkos::Experimental::Impl::expect_no_overlap;
-  using ::Kokkos::Experimental::Impl::RandomAccessIterator;
-  using ::Kokkos::Experimental::Impl::StdNumericScanIdentityReferenceUnaryFunctor;
-  using ::Kokkos::Experimental::Impl::TransformExclusiveScanFunctorWithValueWrapper;
-  using ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement; 
-  using ::Kokkos::Experimental::Impl::ExeSpaceTransformInclusiveScanNoInitValueFunctor;
-  using ::Kokkos::Experimental::Impl::ExeSpaceTransformInclusiveScanWithInitValueFunctor;
-  using ::Kokkos::Experimental::Impl::StdAlgoLessThanBinaryPredicate;
-  using ::Kokkos::Experimental::Impl::ExclusiveScanDefaultFunctorWithValueWrapper;
   using ::Kokkos::Experimental::Impl::InclusiveScanDefaultFunctor;
- }
+  using ::Kokkos::Experimental::Impl::RandomAccessIterator;
+  using ::Kokkos::Experimental::Impl::StdAlgoLessThanBinaryPredicate;
+  using ::Kokkos::Experimental::Impl::
+      StdNumericScanIdentityReferenceUnaryFunctor;
+  using ::Kokkos::Experimental::Impl::
+      TransformExclusiveScanFunctorWithValueWrapper;
+  using ::Kokkos::Experimental::Impl::ValueWrapperForNoNeutralElement;
+  }  // namespace Kokkos::Experimental::Impl
 }
