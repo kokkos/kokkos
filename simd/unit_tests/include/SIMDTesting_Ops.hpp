@@ -22,7 +22,7 @@
 import kokkoscore;
 import kokkossimd;
 #else
-//#include <Kokkos_SIMD.hpp>
+#include <Kokkos_SIMD.hpp>
 #endif
 #include <cmath>
 

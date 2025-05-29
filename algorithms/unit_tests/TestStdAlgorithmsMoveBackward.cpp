@@ -16,7 +16,7 @@
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
-#if 1
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkosrandom;
 #else
 #include <Kokkos_Random.hpp>

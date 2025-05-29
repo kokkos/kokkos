@@ -15,7 +15,7 @@
 //@HEADER
 
 #include <Kokkos_Macros.hpp>
-#if 1
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
 import kokkosrandom;
 #else
