@@ -552,48 +552,48 @@ function(kokkos_set_source_and_target_properties)
   if((NOT INP_USE_COMPILER_LAUNCHER) AND (NOT INP_USE_LINKER_LAUNCHER))
     if(NOT CXX_COMPILER_COMPILES_CUDA)
       #use kokkos_launch_compiler to launch nvcc_wrapper
-        if(NOT Kokkos_COMPILE_LAUNCHER)
-          # find kokkos_launch_compiler
-          find_program(
-            Kokkos_COMPILE_LAUNCHER
-            NAMES kokkos_launch_compiler
-            HINTS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
-            PATHS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
-            PATH_SUFFIXES bin
-          )
-        endif()
-
-        if(NOT Kokkos_COMPILE_LAUNCHER)
-          message(
-            FATAL_ERROR
-              "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher' or '-DKokkos_ROOT=/path/to/install'"
-          )
-        endif()
-
-        if(NOT Kokkos_NVCC_WRAPPER)
-          # find nvcc_wrapper
-          find_program(
-            Kokkos_NVCC_WRAPPER
-            NAMES nvcc_wrapper
-            HINTS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
-            PATHS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
-            PATH_SUFFIXES bin
-          )
-        endif()
-        # fatal if we can't nvcc_wrapper
-        if(NOT Kokkos_NVCC_WRAPPER)
-          message(
-            FATAL_ERROR
-              "Kokkos could not find nvcc_wrapper. Please set '-DKokkos_NVCC_WRAPPER=/path/to/nvcc_wrapper' or '-DKokkos_ROOT=/path/to/install'"
-          )
-        endif()
-
-        set(INP_USE_COMPILER_LAUNCHER
-            ${CMAKE_CXX_COMPILER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+      if(NOT Kokkos_COMPILE_LAUNCHER)
+        # find kokkos_launch_compiler
+        find_program(
+          Kokkos_COMPILE_LAUNCHER
+          NAMES kokkos_launch_compiler
+          HINTS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATHS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATH_SUFFIXES bin
         )
-        set(INP_USE_LINKER_LAUNCHER
-            ${CMAKE_CXX_LINKER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+      endif()
+
+      if(NOT Kokkos_COMPILE_LAUNCHER)
+        message(
+          FATAL_ERROR
+            "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher' or '-DKokkos_ROOT=/path/to/install'"
         )
+      endif()
+
+      if(NOT Kokkos_NVCC_WRAPPER)
+        # find nvcc_wrapper
+        find_program(
+          Kokkos_NVCC_WRAPPER
+          NAMES nvcc_wrapper
+          HINTS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATHS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+          PATH_SUFFIXES bin
+        )
+      endif()
+      # fatal if we can't nvcc_wrapper
+      if(NOT Kokkos_NVCC_WRAPPER)
+        message(
+          FATAL_ERROR
+            "Kokkos could not find nvcc_wrapper. Please set '-DKokkos_NVCC_WRAPPER=/path/to/nvcc_wrapper' or '-DKokkos_ROOT=/path/to/install'"
+        )
+      endif()
+
+      set(INP_USE_COMPILER_LAUNCHER
+          ${CMAKE_CXX_COMPILER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+      )
+      set(INP_USE_LINKER_LAUNCHER
+          ${CMAKE_CXX_LINKER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+      )
     endif()
   endif()
 
