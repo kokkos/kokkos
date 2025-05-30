@@ -294,16 +294,14 @@ namespace Experimental {
 //   Default behavior is to return the passed in instance
 template <class ExecSpace, class... Args>
 std::array<ExecSpace, sizeof...(Args)> partition_space(ExecSpace const& space,
-                                                       Args...) {
+                                                       Args... ignored) {
   static_assert(is_execution_space<ExecSpace>::value,
                 "Kokkos Error: partition_space expects an Execution Space as "
                 "first argument");
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-  std::array<ExecSpace, sizeof...(Args)> instances;
-  for (auto& instance : instances) instance = space;
-  return instances;
+  return {((ignored, space), ...)};
 }
 
 template <class ExecSpace, class T>
@@ -316,8 +314,9 @@ std::vector<ExecSpace> partition_space(ExecSpace const& space,
       std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
-  std::vector<ExecSpace> instances(weights.size());
-  for (int s = 0; s < int(weights.size()); s++) instances[s] = space;
+  std::vector<ExecSpace> instances;
+  instances.reserve(weights.size());
+  for (int s = 0; s < int(weights.size()); s++) instances.emplace_back(space);
   return instances;
 }
 }  // namespace Experimental

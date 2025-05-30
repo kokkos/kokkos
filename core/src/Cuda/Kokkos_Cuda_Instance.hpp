@@ -364,7 +364,7 @@ class CudaInternal {
   void release_team_scratch_space(int scratch_pool_id);
 };
 
-void create_Cuda_instance(Cuda& instance);
+Cuda create_Cuda_instance(const Cuda& cuda_space);
 }  // Namespace Impl
 
 namespace Experimental {
@@ -374,28 +374,27 @@ namespace Experimental {
 //   Default behavior is to return the passed in instance
 
 template <class... Args>
-std::array<Cuda, sizeof...(Args)> partition_space(const Cuda&, Args...) {
+std::array<Cuda, sizeof...(Args)> partition_space(const Cuda& cuda_space,
+                                                  Args... ignored) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-  std::array<Cuda, sizeof...(Args)> instances;
-  for (auto& instance : instances) {
-    Kokkos::Impl::create_Cuda_instance(instance);
-  }
-  return instances;
+  return {((ignored, Kokkos::Impl::create_Cuda_instance(cuda_space)), ...)};
 }
 
 template <class T>
-std::vector<Cuda> partition_space(const Cuda&, std::vector<T> const& weights) {
+std::vector<Cuda> partition_space(const Cuda& cuda_space,
+                                  std::vector<T> const& weights) {
   static_assert(
       std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   // We only care about the number of instances to create and ignore weights
   // otherwise.
-  std::vector<Cuda> instances(weights.size());
-  for (auto& instance : instances) {
-    Kokkos::Impl::create_Cuda_instance(instance);
+  std::vector<Cuda> instances;
+  instances.reserve(weights.size());
+  for (int i = 0; i < int(weights.size()); ++i) {
+    instances.emplace_back(Kokkos::Impl::create_Cuda_instance(cuda_space));
   }
   return instances;
 }
