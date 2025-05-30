@@ -45,7 +45,7 @@ enum MemoryTraitsFlags {
   Aligned      = 0x10
 };
 
-template <unsigned T>
+template <unsigned T = 0>
 struct MemoryTraits {
   //! Tag this class as a kokkos memory traits:
   using memory_traits = MemoryTraits<T>;
@@ -70,7 +70,9 @@ struct MemoryTraits {
 
 namespace Kokkos {
 
-using MemoryManaged   = Kokkos::MemoryTraits<0>;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+using MemoryManaged KOKKOS_DEPRECATED = Kokkos::MemoryTraits<>;
+#endif
 using MemoryUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
 using MemoryRandomAccess =
     Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>;
@@ -106,7 +108,7 @@ template <typename Tp>
 struct is_default_memory_trait : std::false_type {};
 
 template <>
-struct is_default_memory_trait<Kokkos::MemoryTraits<0>> : std::true_type {};
+struct is_default_memory_trait<Kokkos::MemoryTraits<>> : std::true_type {};
 
 }  // namespace Impl
 }  // namespace Kokkos
