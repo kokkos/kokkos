@@ -458,16 +458,3 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
-
-namespace Kokkos {
-namespace Impl {
-
-HIP create_HIP_instance(HIP &hip_space) {
-  hipStream_t stream;
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hip_space.impl_internal_space_instance()->hip_stream_create_wrapper(
-          &stream));
-  return HIP(stream, ManageStream::yes);
-}
-}  // namespace Impl
-}  // namespace Kokkos
