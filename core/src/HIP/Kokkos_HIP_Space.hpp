@@ -39,6 +39,11 @@
 namespace Kokkos {
 namespace Impl {
 
+hipStream_t hip_get_deep_copy_stream();
+
+const std::unique_ptr<Kokkos::HIP>& hip_get_deep_copy_space(
+    bool initialize = true);
+
 template <typename T>
 struct is_hip_type_space : public std::false_type {};
 

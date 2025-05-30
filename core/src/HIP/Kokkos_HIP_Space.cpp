@@ -51,6 +51,28 @@ static std::atomic<bool> is_first_hip_managed_allocation(true);
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
+namespace Impl {
+hipStream_t hip_get_deep_copy_stream() {
+  static hipStream_t s = nullptr;
+  if (s == nullptr) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&s));
+  }
+  return s;
+}
+
+const std::unique_ptr<Kokkos::HIP>& hip_get_deep_copy_space(bool initialize) {
+  static std::unique_ptr<HIP> space = nullptr;
+  if (!space && initialize)
+    space = std::make_unique<HIP>(Kokkos::Impl::hip_get_deep_copy_stream());
+  return space;
+}
+}  // namespace Impl
+}  // namespace Kokkos
+
+/*--------------------------------------------------------------------------*/
+/*--------------------------------------------------------------------------*/
+
+namespace Kokkos {
 
 HIPSpace::HIPSpace()
     : m_device(HIP().hip_device()), m_stream(HIP().hip_stream()) {}
@@ -318,5 +340,25 @@ void HIPManagedSpace::impl_deallocate(
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));
 }
+
+namespace Impl {
+
+void hip_prefetch_pointer(const HIP& space, const void* ptr, size_t bytes,
+                          bool to_device) {
+  if ((ptr == nullptr) || (bytes == 0)) return;
+  hipPointerAttribute_t attr;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipPointerGetAttributes(&attr, ptr));
+  // TODO need to measure stuff
+  // I measured this and it turns out prefetching
+  // towards the host slows DualView syncs down. Probably because the latency is
+  // not too bad in the first place for the pull down. If we want to change that
+  // provde cudaCpuDeviceId as the device if to_device is false
+  if (to_device && attr.isManaged &&
+      space.hip_device_prop().concurrentManagedAccess) {
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipMemPrefetchAsync(
+        ptr, bytes, space.hip_device(), space.hip_stream()));
+  }
+}
+}  // namespace Impl
 
 }  // namespace Kokkos
