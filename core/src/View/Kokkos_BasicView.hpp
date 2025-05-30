@@ -103,9 +103,28 @@ transform_kokkos_slice_to_mdspan_slice(const T &s) {
 // the element type of the View (something which is not true for example for
 // Sacado).
 template <class MappingType, class AccessorType>
-KOKKOS_INLINE_FUNCTION size_t allocation_size_from_mapping_and_accessor(
-    const MappingType &map, const AccessorType &) {
+KOKKOS_INLINE_FUNCTION constexpr size_t
+allocation_size_from_mapping_and_accessor(const MappingType &map,
+                                          const AccessorType &) {
   return map.required_span_size();
+}
+
+// Tag type to enable ADL for accessor_from_mapping_and_accessor_arg
+// customization point
+template <class AccessorType>
+struct AccessorTypeTag {};
+
+// Default implementation for creating an accessor from a mapping
+// and an AccessorArg_t.
+// In Sacado the accessor construction may require information from
+// the mapping (specifically the span size) in some cases.
+// Specifically it needs it if the elements of a FAD type are not
+// consecutive but strided by the span size.
+template <class AccessorType, class MappingType>
+KOKKOS_INLINE_FUNCTION constexpr auto accessor_from_mapping_and_accessor_arg(
+    const Kokkos::Impl::AccessorTypeTag<AccessorType> &, const MappingType &,
+    const AccessorArg_t &arg) {
+  return AccessorType(arg.value);
 }
 
 // FIXME_HPX spurious warnings like
@@ -410,10 +429,10 @@ class BasicView {
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer &&
                            Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
-      : BasicView(
-            arg_prop, arg_mapping,
-            accessor_type{
-                Impl::get_property<Impl::AccessorArgTag>(arg_prop).value}) {}
+      : BasicView(arg_prop, arg_mapping,
+                  accessor_from_mapping_and_accessor_arg(
+                      Impl::AccessorTypeTag<accessor_type>(), arg_mapping,
+                      Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
 
   template <class... P>
   KOKKOS_FUNCTION explicit BasicView(
@@ -421,10 +440,10 @@ class BasicView {
       std::enable_if_t<Impl::ViewCtorProp<P...>::has_pointer &&
                            Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
-      : BasicView(
-            arg_prop, arg_mapping,
-            accessor_type{
-                Impl::get_property<Impl::AccessorArgTag>(arg_prop).value}) {}
+      : BasicView(arg_prop, arg_mapping,
+                  accessor_from_mapping_and_accessor_arg(
+                      Impl::AccessorTypeTag<accessor_type>(), arg_mapping,
+                      Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
 
   // Private Ctors coming from the case where we dealt with AccessorArg_t
   // We don't have public ctors which take ViewCtorProp and accessor.
