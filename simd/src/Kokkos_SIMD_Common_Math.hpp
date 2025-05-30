@@ -97,17 +97,31 @@ template <
     std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce(basic_simd<T, Abi> const& v,
-       typename basic_simd<T, Abi>::mask_type const& m, T identity,
-       BinaryOperation op = {}) {
+       typename basic_simd<T, Abi>::mask_type const& m, BinaryOperation op = {},
+       T identity = Impl::Identity<T, BinaryOperation>()) {
   if (none_of(m)) {
     return identity;
   }
-  T result = Impl::Identity<T, BinaryOperation>();
+  T result = identity;
   for (std::size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = op(result, v[i]);
   }
   return result;
 }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+template <
+    class T, class Abi, class BinaryOperation = std::plus<>,
+    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
+KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use reduce(basic_simd, basic_simd_mask, op, identity) instead")
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+    reduce(basic_simd<T, Abi> const& v,
+           typename basic_simd<T, Abi>::mask_type const& m, T identity,
+           BinaryOperation op = {}) {
+  return reduce(v, m, op, identity);
+}
+#endif
 
 }  // namespace Experimental
 
