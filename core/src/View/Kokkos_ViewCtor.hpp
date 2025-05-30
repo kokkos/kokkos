@@ -26,21 +26,16 @@ namespace Impl {
 struct SequentialHostInit_t {};
 struct WithoutInitializing_t {};
 struct AllowPadding_t {};
+
 // FIXME: AccessorArg_t needs to be templated
 // This really needs to be templated on the argument type
 // But that adds some more complication, preventing simply
 // copying the code from the above properties.
 // For Sacado we only need a size_t for fad_size
+// We can template this later in a separate change.
 struct AccessorArg_t {
- private:
-  size_t val{};
-
- public:
-  KOKKOS_FUNCTION AccessorArg_t() = default;
-  KOKKOS_FUNCTION AccessorArg_t(size_t val_) : val{val_} {}
-  KOKKOS_FUNCTION auto value() const { return val; }
+  size_t value{};
 };
-
 
 template <typename>
 struct is_view_ctor_property : public std::false_type {};
@@ -90,9 +85,7 @@ struct ViewCtorProp<void> {};
  */
 template <typename Specialize, typename T>
 struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = CommonViewAllocProp<Specialize, T>;
 
@@ -110,9 +103,7 @@ struct ViewCtorProp<std::enable_if_t<std::is_same_v<P, AllowPadding_t> ||
                                      std::is_same_v<P, WithoutInitializing_t> ||
                                      std::is_same_v<P, SequentialHostInit_t>>,
                     P> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = P;
 
@@ -124,9 +115,7 @@ struct ViewCtorProp<std::enable_if_t<std::is_same_v<P, AllowPadding_t> ||
 /* Map input label type to std::string */
 template <typename Label>
 struct ViewCtorProp<std::enable_if_t<is_view_label<Label>::value>, Label> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = std::string;
 
@@ -140,9 +129,7 @@ template <typename Space>
 struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
                                      Kokkos::is_execution_space<Space>::value>,
                     Space> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = Space;
 
@@ -151,11 +138,9 @@ struct ViewCtorProp<std::enable_if_t<Kokkos::is_memory_space<Space>::value ||
   type value;
 };
 
-template<>
+template <>
 struct ViewCtorProp<void, AccessorArg_t> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = AccessorArg_t;
 
@@ -167,9 +152,7 @@ struct ViewCtorProp<void, AccessorArg_t> {
 
 template <typename T>
 struct ViewCtorProp<void, T *> {
-  ViewCtorProp()                                = default;
-  ViewCtorProp(const ViewCtorProp &)            = default;
-  ViewCtorProp &operator=(const ViewCtorProp &) = default;
+  ViewCtorProp() = default;
 
   using type = T *;
 
@@ -262,10 +245,16 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
   ViewCtorProp(Args &&...args)
       : ViewCtorProp<void, P>(std::forward<Args>(args))... {}
 
+  // If we use `ViewCtorProp<void, Args>...` here MSVC gets confused
+  // error C3528: 'args': the number of elements in this pack expansion
+  // does not match the number of elements in 'P'
+  // Using the alias view_ctor_prop_base here as below fixes the issue.
+  // Encountered with MSVC 17 and CUDA 12.6
   template <typename... Args>
   KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0, Args const &...args)
-      : ViewCtorProp<void, pointer_type>(arg0),
-        ViewCtorProp<void, typename ViewCtorProp<void, Args>::type>(args)... {}
+      : view_ctor_prop_base<pointer_type>(arg0),
+        view_ctor_prop_base<typename view_ctor_prop_base<Args>::type>(args)... {
+  }
 
   /* Copy from a matching property subset */
   KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0)
@@ -413,7 +402,8 @@ KOKKOS_FUNCTION const auto &get_property(
         .value;
   } else if constexpr (std::is_same_v<Tag, AccessorArgTag>) {
     static_assert(ViewCtorProp<P...>::has_accessor_arg);
-    return static_cast<const ViewCtorProp<void, AccessorArg_t> &>(view_ctor_prop)
+    return static_cast<const ViewCtorProp<void, AccessorArg_t> &>(
+               view_ctor_prop)
         .value;
   } else {
     static_assert(std::is_same_v<Tag, void>, "Invalid property tag!");

@@ -136,6 +136,13 @@ struct is_view<const View<D, P...> > : public std::true_type {};
 template <class T>
 inline constexpr bool is_view_v = is_view<T>::value;
 
+template <class PointerType> 
+KOKKOS_INLINE_FUNCTION
+constexpr auto ptr_from_data_handle(const PointerType& handle) {
+  static_assert(std::is_pointer_v<PointerType>);
+  return handle;
+}
+
 template <class DataType, class... Properties>
 class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // We are deriving from BasicView, but need a helper to translate
@@ -176,7 +183,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // and deprecate old behavior
   using size_type    = typename memory_space::size_type;
   using value_type   = typename traits::value_type;
-  using pointer_type = decltype(Impl::ptr_from_data_handle(std::declval<typename base_t::data_handle_type>()));
+  using pointer_type = decltype(ptr_from_data_handle(std::declval<typename base_t::data_handle_type>()));
 
   using scalar_array_type       = typename traits::scalar_array_type;
   using const_scalar_array_type = typename traits::const_scalar_array_type;
