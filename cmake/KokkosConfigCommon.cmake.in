@@ -3,6 +3,7 @@ set(Kokkos_OPTIONS @KOKKOS_ENABLED_OPTIONS@)
 set(Kokkos_TPLS @KOKKOS_ENABLED_TPLS@)
 set(Kokkos_ARCH @KOKKOS_ENABLED_ARCH_LIST@)
 set(Kokkos_CXX_COMPILER "@CMAKE_CXX_COMPILER@")
+set(Kokkos_BACKEND_COMPILER "@KOKKOS_BACKEND_COMPILER@")
 set(Kokkos_CXX_COMPILER_ID "@KOKKOS_CXX_COMPILER_ID@")
 set(Kokkos_CXX_COMPILER_VERSION "@KOKKOS_CXX_COMPILER_VERSION@")
 set(Kokkos_CXX_STANDARD @KOKKOS_CXX_STANDARD@)
@@ -203,6 +204,572 @@ int main()
   set(${_VAR} ${_RET} PARENT_SCOPE)
 endfunction()
 
+# this function finds the kokkos_launch_compiler script and prepends it to the compiler and linker launcher
+#
+#       SEARCH_PATH --> input: search path for kokkos_launch_compiler (optional)
+#
+function(kokkos_use_launch_compiler)
+  cmake_parse_arguments(INP "" "SEARCH_PATH;BACKEND_COMPILER" "" ${ARGN})
+  if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+    message(
+      FATAL_ERROR "Setting kokkos_launch_compiler works only with `-DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=OFF`"
+    )
+  endif()
+  find_program(
+    Kokkos_COMPILE_LAUNCHER
+    NAMES kokkos_launch_compiler
+    HINTS ${Kokkos_ROOT};${INP_SEARCH_PATH}
+    PATHS ${Kokkos_ROOT};${INP_SEARCH_PATH}
+    PATH_SUFFIXES bin
+  )
+  if(NOT Kokkos_COMPILE_LAUNCHER)
+    message(
+      FATAL_ERROR
+        "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher' or '-DKokkos_ROOT=/path/to/install'"
+    )
+  endif()
+  if(NOT INP_BACKEND_COMPILER)
+    set(INP_BACKEND_COMPILER ${Kokkos_BACKEND_COMPILER})
+  endif()
+  set(CMAKE_CXX_COMPILER_LAUNCHER
+      ${CMAKE_CXX_COMPILER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${INP_BACKEND_COMPILER};${CMAKE_CXX_COMPILER}
+      PARENT_SCOPE
+  )
+  set(CMAKE_CXX_LINKER_LAUNCHER
+      ${CMAKE_CXX_LINKER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${INP_BACKEND_COMPILER};${CMAKE_CXX_COMPILER}
+      PARENT_SCOPE
+  )
+
+endfunction()
+
+# this function searches a list and checks if any of a given list of items is contained
+#
+#       LIST         --> input: the list to search
+#       ITEMLIST     --> input: the list of items to find
+#       RETURN_VAR   --> output: ON if any of the items in itemlist are contained in list
+#
+function(kokkos_any_item_in_list)
+  cmake_parse_arguments(ARG "" "RETURN_VAR" "LIST;ITEMLIST" ${ARGN})
+  if(ARG_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "'kokkos_any_item_in_list' has unrecognized arguments: ${ARG_UNPARSED_ARGUMENTS}")
+  endif()
+
+  set(${ARG_RETURN_VAR} OFF PARENT_SCOPE)
+  foreach(ITEM IN LISTS ARG_ITEMLIST)
+    if(${ITEM} IN_LIST ARG_LIST)
+      set(${ARG_RETURN_VAR} ON PARENT_SCOPE)
+      return()
+    endif()
+  endforeach()
+endfunction()
+
+# this function searches a given target recursively looking for a transitive compile dependency to DEPENDENT_LIBRARY
+#
+#       COMPILE_DEPENDENCY                --> output: is set to ON if the target needs to be compiled with the requirements of DEPENDENT_LIBRARY
+#       TRANSITIVE_COMPILE_DEPENDENCY     --> output: is set to ON if the target infects targets that depend PUBLIC on it to need to be compiled with the requirements of DEPENDENT_LIBRARY
+#       DEPENDENT_LIBRARY                 --> input: The library to search for in the target properties
+#       INVESTIGATED_TARGET               --> input: target to be checked for transitive dependency
+#
+function(
+  kokkos_check_compile_dependency
+  COMPILE_DEPENDENCY
+  TRANSITIVE_COMPILE_DEPENDENCY
+  LINK_DEPENDENCY
+  DEPENDENT_LIBRARY
+  INVESTIGATED_TARGET
+  COMPILE_DEPENDENCY_CACHE
+  TRANSITIVE_COMPILE_DEPENDENCY_CACHE
+)
+  set(transitive_dependency OFF)
+  set(compile_dependency OFF)
+  set(link_dependency OFF)
+  if(TARGET ${INVESTIGATED_TARGET})
+    set(dependencies "")
+    get_target_property(target_link_dependencies ${INVESTIGATED_TARGET} LINK_LIBRARIES)
+    if(target_link_dependencies)
+      list(APPEND dependencies ${target_link_dependencies})
+    endif()
+    get_target_property(target_interface_dependencies ${INVESTIGATED_TARGET} INTERFACE_LINK_LIBRARIES)
+    if(target_interface_dependencies)
+      list(APPEND dependencies ${target_interface_dependencies})
+    endif()
+    list(REMOVE_DUPLICATES dependencies)
+    if(dependencies)
+      #check the target directly
+      kokkos_any_item_in_list(LIST ${dependencies} ITEMLIST ${DEPENDENT_LIBRARY} RETURN_VAR MATCH_FOUND)
+      if(MATCH_FOUND)
+        set(compile_dependency ON)
+        set(link_dependency ON)
+        if(target_interface_dependencies)
+          kokkos_any_item_in_list(
+            LIST ${target_interface_dependencies} ITEMLIST ${DEPENDENT_LIBRARY} RETURN_VAR MATCH_FOUND
+          )
+          if(MATCH_FOUND)
+            set(transitive_dependency ON)
+          endif()
+        endif()
+        #if no direct dependency is found check all dependencies
+      else()
+        # check cache
+        set(cache_hit OFF)
+        foreach(dependency IN LISTS dependencies)
+          if(${dependency} IN_LIST ${COMPILE_DEPENDENCY_CACHE})
+            set(link_dependency ON)
+          endif()
+          if(${dependency} IN_LIST ${TRANSITIVE_COMPILE_DEPENDENCY_CACHE})
+            set(compile_dependency ON)
+            #and if we link PUBLIC to it we get infectious, too
+            if(target_interface_dependencies)
+              if(${dependency} IN_LIST target_interface_dependencies)
+                set(transitive_dependency ON)
+                set(cache_hit ON)
+                break() #we can end the cache checking
+              endif()
+            endif()
+          endif()
+        endforeach()
+        # do recursion
+        if(NOT cache_hit)
+          foreach(dependency IN LISTS dependencies)
+            kokkos_check_compile_dependency(
+              depends_direct
+              depends_transitively
+              depends_linking
+              "${DEPENDENT_LIBRARY}"
+              ${dependency}
+              ${COMPILE_DEPENDENCY_CACHE}
+              ${TRANSITIVE_COMPILE_DEPENDENCY_CACHE}
+            )
+            if(depends_linking)
+              set(link_dependency ON)
+            endif()
+
+            #if a dependency is infectious
+            if(depends_transitively)
+              set(compile_dependency ON)
+              #and if we link PUBLIC to it we get infectious, too
+              if(target_interface_dependencies)
+                if(${dependency} IN_LIST target_interface_dependencies)
+                  set(transitive_dependency ON)
+                endif()
+              endif()
+            endif()
+          endforeach()
+        endif()
+      endif()
+    endif()
+  endif()
+
+  set(${COMPILE_DEPENDENCY} ${compile_dependency} PARENT_SCOPE)
+  set(${TRANSITIVE_COMPILE_DEPENDENCY} ${transitive_dependency} PARENT_SCOPE)
+  set(${LINK_DEPENDENCY} ${link_dependency} PARENT_SCOPE)
+
+  if(link_dependency)
+    list(APPEND ${COMPILE_DEPENDENCY_CACHE} ${INVESTIGATED_TARGET})
+  endif()
+  set(${COMPILE_DEPENDENCY_CACHE} "${${COMPILE_DEPENDENCY_CACHE}}" PARENT_SCOPE)
+
+  if(transitive_dependency)
+    list(APPEND ${TRANSITIVE_COMPILE_DEPENDENCY_CACHE} ${INVESTIGATED_TARGET})
+  endif()
+  set(${TRANSITIVE_COMPILE_DEPENDENCY_CACHE} "${${TRANSITIVE_COMPILE_DEPENDENCY_CACHE}}" PARENT_SCOPE)
+endfunction()
+
+# this function searches a given directory recursively finding all targets that link to DEPENDENT_LIBRARY
+#
+#       FOUND_TARGETS         --> output: list of all found targets that link to kokkos and need our compiler
+#       DEPENDENT_LIBRARY     --> input: The library to search for in the target properties
+#       SEARCH_DIR            --> input: the root dir to start the recursion from
+#       EXCLUDE_DIRS          --> input: list of directories that should be excluded
+#
+function(kokkos_get_directory_targets)
+  cmake_parse_arguments(INP "" "SEARCH_DIR" "FOUND_TARGETS;EXCLUDE_DIRS" ${ARGN})
+  set(targets "")
+  set(subdirs "")
+
+  if(${INP_SEARCH_DIR} IN_LIST INP_EXCLUDE_DIRS)
+    message(
+      DEBUG
+      "Kokkos excludes dir ${INP_SEARCH_DIR} from setting build options as it was marked to be excluded by `kokkos_exclude_from_setting_build_properties`"
+    )
+  else()
+    get_property(targets DIRECTORY ${INP_SEARCH_DIR} PROPERTY BUILDSYSTEM_TARGETS)
+    get_property(subdirs DIRECTORY ${INP_SEARCH_DIR} PROPERTY SUBDIRECTORIES)
+  endif()
+
+  # recursively visit subdirs
+  if(subdirs)
+    foreach(subdir ${subdirs})
+      kokkos_get_directory_targets(FOUND_TARGETS subdir_targets SEARCH_DIR ${subdir} EXCLUDE_DIRS ${INP_EXCLUDE_DIRS})
+      list(APPEND targets ${subdir_targets})
+    endforeach()
+  endif()
+
+  # push results out of recursive function
+  set(${INP_FOUND_TARGETS} ${targets} PARENT_SCOPE)
+endfunction()
+
+# this function searches a given directory recursively finding all targets that link to DEPENDENT_LIBRARY
+#
+#       FOUND_TARGETS         --> output: list of all found targets that link to kokkos and need our compiler
+#       DEPENDENT_LIBRARY     --> input: The library to search for in the target properties
+#       SEARCH_DIR            --> input: the root dir to start the recursion from
+#       EXCLUDE_DIRS          --> input: list of directories that should be excluded
+#
+function(kokkos_exclude_from_setting_build_properties)
+  cmake_parse_arguments(INP "GLOBAL" "" "DIRECTORY" ${ARGN})
+
+  if(INP_GLOBAL)
+    kokkos_exclude_from_setting_build_properties(DIRECTORY ${PROJECT_SOURCE_DIR})
+  else()
+    set(Kokkos_EXCLUDE_BUILD_DIRS
+        "${INP_DIRECTORY};${Kokkos_EXCLUDE_DIRS}"
+        CACHE
+          STRING
+          "List of directories Kokkos that are excluded from Kokkos setting build properties on source and target properties via a deferred call"
+          FORCE
+    )
+  endif()
+endfunction()
+
+# this function sets the source and target properties for all targets that link to a given library
+#
+#       LIBRARY                 --> input: name of the library downstream targets need to link to for this function to set the properties.
+#       USE_COMPILER_LAUNCHER   --> input: Command for a compiler launcher to use
+#       USE_LINKER_LAUNCHER     --> input: Command for a linker launcher to use
+#
+function(kokkos_set_dependent_library_properties)
+  cmake_parse_arguments(INP "" "" "LIBRARY;USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER" ${ARGN})
+
+  if(INP_UNPARSED_ARGUMENTS)
+    message(
+      FATAL_ERROR "'kokkos_set_dependent_library_properties' has unrecognized arguments: ${INP_UNPARSED_ARGUMENTS}"
+    )
+  endif()
+
+  if(NOT INP_LIBRARY)
+    message(FATAL_ERROR "'kokkos_set_dependent_library_properties' needs a LIBRARY argument")
+  endif()
+
+  kokkos_check_compile_dependency(
+    library_compile_dependency
+    library_transitive_compile_dependency
+    library_link_dependency
+    "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
+    ${INP_LIBRARY}
+    KOKKOS_LINK_DEPENDENCY_CACHE
+    KOKKOS_PUBLIC_DEPENDENCY_CACHE
+  )
+
+  kokkos_get_directory_targets(FOUND_TARGETS DIRECTORY_TARGETS SEARCH_DIR ${CMAKE_SOURCE_DIR})
+
+  foreach(directory_target IN LISTS DIRECTORY_TARGETS)
+    kokkos_check_compile_dependency(
+      compile_dependency
+      transitive_compile_dependency
+      link_dependency
+      "${INP_LIBRARY}"
+      ${directory_target}
+      ${INP_LIBRARY}_LINK_DEPENDENCY_CACHE
+      ${INP_LIBRARY}_PUBLIC_DEPENDENCY_CACHE
+    )
+    if(compile_dependency)
+      list(APPEND COMPILE_TARGETS ${directory_target})
+    endif()
+
+    if(link_dependency)
+      list(APPEND LINK_TARGETS ${directory_target})
+    endif()
+  endforeach()
+
+  if(library_transitive_compile_dependency)
+    # set all cpp,cxx sources in the found targets to the correct language
+    if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+      foreach(target IN LISTS COMPILE_TARGETS)
+        get_target_property(target_sources ${target} SOURCES)
+        get_target_property(target_src_dir ${target} SOURCE_DIR)
+        get_target_property(target_bin_dir ${target} BINARY_DIR)
+        foreach(source IN LISTS target_sources)
+          if(source)
+            cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_src_dir} OUTPUT_VARIABLE source_abs_path)
+            if(NOT EXISTS ${source_abs_path})
+              message(
+                DEBUG
+                "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}"
+              )
+              cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_bin_dir} OUTPUT_VARIABLE source_abs_path)
+              if(NOT EXISTS ${source_abs_path})
+                message(
+                  FATAL_ERROR
+                    "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}."
+                )
+              endif()
+            endif()
+            cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
+            string(REGEX REPLACE "^\\." "" extension_no_dot "${extension}")
+            if(${extension_no_dot} IN_LIST CMAKE_CXX_SOURCE_FILE_EXTENSIONS)
+              message(
+                DEBUG
+                "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for source ${source_abs_path}"
+              )
+              set_property(
+                SOURCE ${source_abs_path} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
+              )
+            endif()
+          endif()
+        endforeach()
+      endforeach()
+    endif()
+    kokkos_set_source_and_target_properties(
+      USE_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER} TARGET
+      ${COMPILE_TARGETS}
+    )
+  endif()
+
+  kokkos_set_source_and_target_properties(
+    USE_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER} LINK_ONLY_TARGET
+    ${LINK_TARGETS}
+  )
+endfunction()
+
+# this function sets the source and target properties for all targets that link to a given library but deferred to the end of the CMake setup
+#
+#       LIBRARY                 --> input: name of the library downstream targets need to link to for this function to set the properties.
+#       USE_COMPILER_LAUNCHER   --> input: Command for a compiler launcher to use
+#       USE_LINKER_LAUNCHER     --> input: Command for a linker launcher to use
+#
+function(kokkos_defer_set_dependent_library_properties)
+  cmake_parse_arguments(ARG "" "" "LIBRARY;USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER" ${ARGN})
+
+  if(ARG_UNPARSED_ARGUMENTS)
+    message(
+      FATAL_ERROR
+        "'kokkos_defer_set_dependent_library_properties' has unrecognized arguments: ${ARG_UNPARSED_ARGUMENTS}"
+    )
+  endif()
+
+  if(NOT ARG_LIBRARY)
+    message(FATAL_ERROR "'kokkos_defer_set_dependent_library_properties' needs a LIBRARY argument")
+  endif()
+
+  cmake_language(
+    EVAL
+    CODE
+    "cmake_language(DEFER DIRECTORY ${CMAKE_SOURCE_DIR} CALL kokkos_set_dependent_library_properties USE_COMPILER_LAUNCHER ${ARG_USE_COMPILER_LAUNCHER} USE_LINKER_LAUNCHER ${ARG_USE_LINKER_LAUNCHER} LIBRARY ${ARG_LIBRARY})"
+  )
+
+endfunction()
+
+# this function sets the source and target properties that Kokkos requires
+#
+#       GLOBAL                  --> all cpp,cxx files for targets that link to kokkos in the project
+#       DIRECTORY               --> all cpp,cxx files for targets that link to kokkos in given directories
+#       TARGET                  --> on the given targets (that need compilation and link settings)
+#       LINK_ONLY_TARGET        --> on the given targets (that only need link settings)
+#       SOURCE                  --> on the given source files
+#       USE_COMPILER_LAUNCHER   --> use given compiler launcher
+#       USE_LINKER_LAUNCHER     --> use given linker launcher
+#       Kokkos_FOUND_DIR        --> hint on where Kokkos was installed (important for CMake contexts that don't know this but depend on Kokkos)
+#
+function(kokkos_set_source_and_target_properties)
+  cmake_parse_arguments(
+    INP "GLOBAL" "Kokkos_FOUND_DIR"
+    "USE_COMPILER_LAUNCHER;USE_LINKER_LAUNCHER;DIRECTORY;TARGET;LINK_ONLY_TARGET;SOURCE" ${ARGN}
+  )
+
+  if(INP_UNPARSED_ARGUMENTS)
+    message(
+      FATAL_ERROR "'kokkos_set_source_and_target_properties' has unrecognized arguments: ${INP_UNPARSED_ARGUMENTS}"
+    )
+  endif()
+
+  #only do something if we are compiling with the language feature or need kokkos_launch_compiler
+  if(NOT (@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@ OR (@Kokkos_ENABLE_CUDA@ AND NOT ("${CMAKE_CXX_COMPILER}" MATCHES
+                                                                                      "nvcc_wrapper")))
+  )
+    return()
+  endif()
+
+  #if you passed a launcher, we will just take it without modification. If not we still use our launcher for CUDA if nvcc is not the global cxx compiler
+  if((NOT INP_USE_COMPILER_LAUNCHER) AND (NOT INP_USE_LINKER_LAUNCHER))
+    #if nvcc is not the CXX_COMPILER we go through the launcher
+    kokkos_compiler_is_nvcc(IS_NVCC ${CMAKE_CXX_COMPILER})
+    if(NOT IS_NVCC)
+      #if use kokkos_launch_compiler to launch nvcc_wrapper
+      if(@Kokkos_ENABLE_CUDA@ AND NOT ("${CMAKE_CXX_COMPILER}" MATCHES "nvcc_wrapper")
+         AND NOT @Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@
+      )
+        if(NOT Kokkos_COMPILE_LAUNCHER)
+          # find kokkos_launch_compiler
+          find_program(
+            Kokkos_COMPILE_LAUNCHER
+            NAMES kokkos_launch_compiler
+            HINTS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+            PATHS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+            PATH_SUFFIXES bin
+          )
+        endif()
+
+        if(NOT Kokkos_COMPILE_LAUNCHER)
+          message(
+            FATAL_ERROR
+              "Kokkos could not find 'kokkos_launch_compiler'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/launcher' or '-DKokkos_ROOT=/path/to/install'"
+          )
+        endif()
+
+        if(NOT Kokkos_NVCC_WRAPPER)
+          # find nvcc_wrapper
+          find_program(
+            Kokkos_NVCC_WRAPPER
+            NAMES nvcc_wrapper
+            HINTS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+            PATHS ${INP_Kokkos_FOUND_DIR};${Kokkos_ROOT}
+            PATH_SUFFIXES bin
+          )
+        endif()
+        # fatal if we can't nvcc_wrapper
+        if(NOT Kokkos_NVCC_WRAPPER)
+          message(
+            FATAL_ERROR
+              "Kokkos could not find nvcc_wrapper. Please set '-DKokkos_NVCC_WRAPPER=/path/to/nvcc_wrapper' or '-DKokkos_ROOT=/path/to/install'"
+          )
+        endif()
+
+        set(INP_USE_COMPILER_LAUNCHER
+            ${CMAKE_CXX_COMPILER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+        )
+        set(INP_USE_LINKER_LAUNCHER
+            ${CMAKE_CXX_LINKER_LAUNCHER};${Kokkos_COMPILE_LAUNCHER};${Kokkos_NVCC_WRAPPER};${CMAKE_CXX_COMPILER}
+        )
+      endif()
+    endif()
+  endif()
+
+  # check if the required language is enabled
+  if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+    if(NOT DEFINED CMAKE_@KOKKOS_COMPILE_LANGUAGE@_COMPILER_LOADED)
+      message(
+        FATAL_ERROR
+          "The used Kokkos needs @KOKKOS_COMPILE_LANGUAGE@ to be enabled to use the Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE feature"
+      )
+    endif()
+  endif()
+
+  set(COMPILE_TARGETS ${INP_TARGET})
+  set(LINK_TARGETS ${INP_TARGET};${INP_LINK_ONLY_TARGET})
+
+  #resolve projects to directory
+  if(INP_GLOBAL)
+    message(DEBUG "Kokkos marking directory ${PROJECT_SOURCE_DIR} to contain kokkos targets")
+    list(APPEND INP_DIRECTORY ${CMAKE_SOURCE_DIR})
+    unset(INP_GLOBAL)
+  endif()
+
+  #set properties on directories
+  foreach(directory IN LISTS INP_DIRECTORY)
+    kokkos_get_directory_targets(
+      FOUND_TARGETS DIRECTORY_TARGETS SEARCH_DIR ${directory} EXCLUDE_DIRS ${Kokkos_EXCLUDE_BUILD_DIRS}
+    )
+
+    foreach(directory_target IN LISTS DIRECTORY_TARGETS)
+      kokkos_check_compile_dependency(
+        compile_dependency
+        transitive_compile_dependency
+        link_dependency
+        "Kokkos::kokkoscore;Kokkos::kokkoscontainers;Kokkos::kokkosalgorithms;Kokkos::kokkossimd;Kokkos::kokkos"
+        ${directory_target}
+        KOKKOS_LINK_DEPENDENCY_CACHE
+        KOKKOS_PUBLIC_DEPENDENCY_CACHE
+      )
+      if(compile_dependency)
+        list(APPEND DIRECTORY_COMPILE_TARGETS ${directory_target})
+        list(APPEND COMPILE_TARGETS ${directory_target})
+      endif()
+
+      if(link_dependency)
+        list(APPEND LINK_TARGETS ${directory_target})
+      endif()
+    endforeach()
+
+    # set all cpp,cxx sources in the found targets to the correct language
+    if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+      foreach(target IN LISTS DIRECTORY_COMPILE_TARGETS)
+        get_target_property(target_sources ${target} SOURCES)
+        get_target_property(target_src_dir ${target} SOURCE_DIR)
+        get_target_property(target_bin_dir ${target} BINARY_DIR)
+        foreach(source IN LISTS target_sources)
+          if(source)
+            cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_src_dir} OUTPUT_VARIABLE source_abs_path)
+            if(NOT EXISTS ${source_abs_path})
+              message(
+                DEBUG
+                "Kokkos assumes that file ${source} for target ${target} is a generated file written into the binary directory ${target_bin_dir}"
+              )
+              cmake_path(ABSOLUTE_PATH source BASE_DIRECTORY ${target_bin_dir} OUTPUT_VARIABLE source_abs_path)
+              if(NOT EXISTS ${source_abs_path})
+                message(
+                  FATAL_ERROR
+                    "Kokkos could not find the file ${source} for target ${target} at location ${source_abs_path}."
+                )
+              endif()
+            endif()
+            cmake_path(GET source_abs_path EXTENSION LAST_ONLY extension)
+            string(REGEX REPLACE "^\\." "" extension_no_dot "${extension}")
+            if(${extension_no_dot} IN_LIST CMAKE_CXX_SOURCE_FILE_EXTENSIONS)
+              message(
+                DEBUG
+                "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ on target ${target} for source ${source_abs_path}"
+              )
+              set_property(
+                SOURCE ${source_abs_path} TARGET_DIRECTORY ${target} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@
+              )
+            endif()
+          endif()
+        endforeach()
+      endforeach()
+    endif()
+
+  endforeach()
+
+  #set properties on sources
+  foreach(source IN LISTS INP_SOURCE)
+    message(DEBUG "Kokkos setting language to @KOKKOS_COMPILE_LANGUAGE@ for source ${source}")
+    set_property(SOURCE ${source} PROPERTY LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
+  endforeach()
+
+  if(INP_USE_COMPILER_LAUNCHER)
+    foreach(target IN LISTS COMPILE_TARGETS)
+      message(DEBUG "Kokkos setting compiler launcher ${INP_USE_COMPILER_LAUNCHER} on target ${target}")
+      set_property(TARGET ${target} PROPERTY @KOKKOS_COMPILE_LANGUAGE@_COMPILER_LAUNCHER ${INP_USE_COMPILER_LAUNCHER})
+    endforeach()
+  endif()
+
+  foreach(target IN LISTS LINK_TARGETS)
+    # use the language feature on targets
+    if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
+      message(
+        DEBUG
+        "Kokkos setting @KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES and @KOKKOS_COMPILE_LANGUAGE@_STANDARD on target ${target}"
+      )
+      if(@Kokkos_ENABLE_CUDA@)
+        set_property(TARGET ${target} PROPERTY CUDA_ARCHITECTURES @KOKKOS_CUDA_ARCHITECTURES@)
+        set_property(TARGET ${target} PROPERTY CUDA_STANDARD @KOKKOS_CXX_STANDARD@)
+      elseif(@Kokkos_ENABLE_HIP@)
+        set_property(TARGET ${target} PROPERTY HIP_ARCHITECTURES @KOKKOS_HIP_ARCHITECTURES@)
+        set_property(TARGET ${target} PROPERTY HIP_STANDARD @KOKKOS_CXX_STANDARD@)
+      endif()
+    endif()
+
+    # use launcher on targets
+    if(INP_USE_LINKER_LAUNCHER)
+      message(DEBUG "Kokkos setting linker launcher ${INP_USE_LINKER_LAUNCHER} on target ${target}")
+      set_property(TARGET ${target} PROPERTY @KOKKOS_COMPILE_LANGUAGE@_LINKER_LAUNCHER ${INP_USE_LINKER_LAUNCHER})
+    endif()
+
+    # do nothing if the CXX compiler is capable of consuming kokkos directly
+  endforeach()
+endfunction()
+
 # this function is provided to easily select which files use the same compiler as Kokkos
 # when it was installed (or nvcc_wrapper):
 #
@@ -221,6 +788,11 @@ endfunction()
 function(kokkos_compilation)
   cmake_parse_arguments(
     COMP "GLOBAL;PROJECT;CHECK_CUDA_COMPILES" "COMPILER" "DIRECTORY;TARGET;SOURCE;COMMAND_PREFIX" ${ARGN}
+  )
+
+  message(
+    WARNING
+      "'kokkos_compilation' is deprecated and will be removed in the future. Use `kokkos_set_source_and_target_properties` instead"
   )
 
   # if built w/o CUDA support, we want to basically make this a no-op
