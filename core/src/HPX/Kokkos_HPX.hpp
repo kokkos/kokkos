@@ -457,16 +457,24 @@ class HPX {
 };
 
 template <typename... Args>
-std::vector<HPX> partition_space(HPX const &, Args... args) {
-  std::vector<HPX> instances(sizeof...(args));
-  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
-  return instances;
+std::array<HPX, sizeof...(Args)> partition_space(HPX const &, Args... ignored) {
+  static_assert(
+      (... && std::is_arithmetic_v<Args>),
+      "Kokkos Error: partitioning arguments must be integers or floats");
+  return {((ignored, HPX(HPX::instance_mode::independent)), ...)};
 }
 
 template <typename T>
 std::vector<HPX> partition_space(HPX const &, std::vector<T> const &weights) {
-  std::vector<HPX> instances(weights.size());
-  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
+  static_assert(
+      std::is_arithmetic_v<T>,
+      "Kokkos Error: partitioning arguments must be integers or floats");
+
+  std::vector<HPX> instances;
+  instances.reserve(weights.size());
+  for (int i = 0; i < int(weights.size()); ++i) {
+    instances.emplace_back(HPX(HPX::instance_mode::independent));
+  }
   return instances;
 }
 

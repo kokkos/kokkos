@@ -275,8 +275,6 @@ class HIPInternal {
                                   bool force_shrink = false);
   void release_team_scratch_space(int scratch_pool_id);
 };
-
-void create_HIP_instances(std::vector<HIP> &instances);
 }  // namespace Impl
 
 namespace Experimental {
@@ -285,27 +283,40 @@ namespace Experimental {
 //   Customization point for backends
 //   Default behavior is to return the passed in instance
 
+namespace Impl {
+// Create new HIP space on the device of base_space
+inline HIP create_hip_space(const HIP &base_space) {
+  hipStream_t stream;
+  KOKKOS_IMPL_HIP_SAFE_CALL(
+      (base_space.impl_internal_space_instance()->hip_stream_create_wrapper(
+          &stream)));
+  return HIP(stream, Kokkos::Impl::ManageStream::yes);
+}
+}  // namespace Impl
+
 template <class... Args>
-std::vector<HIP> partition_space(const HIP &, Args...) {
+std::array<HIP, sizeof...(Args)> partition_space(const HIP &hip_space,
+                                                 Args... ignored) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-
-  std::vector<HIP> instances(sizeof...(Args));
-  Kokkos::Impl::create_HIP_instances(instances);
-  return instances;
+  return {((ignored, Impl::create_hip_space(hip_space)), ...)};
 }
 
 template <class T>
-std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
+std::vector<HIP> partition_space(const HIP &hip_space,
+                                 std::vector<T> const &weights) {
   static_assert(
       std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   // We only care about the number of instances to create and ignore weights
   // otherwise.
-  std::vector<HIP> instances(weights.size());
-  Kokkos::Impl::create_HIP_instances(instances);
+  std::vector<HIP> instances;
+  instances.reserve(weights.size());
+  for (int i = 0; i < int(weights.size()); ++i) {
+    instances.emplace_back(Impl::create_hip_space(hip_space));
+  }
   return instances;
 }
 }  // namespace Experimental
