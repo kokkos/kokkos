@@ -21,4 +21,4 @@ endif()
 target_link_libraries(example Kokkos::kokkos)
 
 enable_testing()
-add_test(NAME KokkosInTree_Verify COMMAND example 10)
+add_test(NAME KokkosInstalled_Verify COMMAND example 10)
