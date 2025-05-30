@@ -1261,6 +1261,24 @@ namespace Experimental {
 
 namespace Impl {
 struct CopySeqTag {};
+
+template <typename T>
+inline constexpr bool is_team_policy_v = false;
+
+template <typename iType, typename TeamMemberType>
+inline constexpr bool is_team_policy_v<
+    Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType>> =
+    true;
+
+template <typename iType, typename TeamMemberType>
+inline constexpr bool is_team_policy_v<
+    Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType, TeamMemberType>> =
+    true;
+
+template <typename iType, typename TeamMemberType>
+inline constexpr bool is_team_policy_v<
+    Kokkos::Impl::ThreadVectorRangeBoundariesStruct<iType, TeamMemberType>> =
+    true;
 }  // namespace Impl
 
 Impl::CopySeqTag KOKKOS_FORCEINLINE_FUNCTION copy_seq() {
@@ -1742,7 +1760,8 @@ template <class PolicyType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION deep_copy(
     const PolicyType& policy, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
+    std::enable_if_t<Impl::is_team_policy_v<PolicyType> &&
+                     (unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
                       unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
@@ -1770,7 +1789,8 @@ template <class PolicyType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION deep_copy(
     const PolicyType& policy, const View<DT, DP...>& dst,
     const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) > 1 &&
+    std::enable_if_t<Impl::is_team_policy_v<PolicyType> &&
+                     (unsigned(ViewTraits<DT, DP...>::rank) > 1 &&
                       unsigned(ViewTraits<DT, DP...>::rank) ==
                           unsigned(ViewTraits<ST, SP...>::rank))>* = nullptr) {
   if (dst.data() == nullptr) {
@@ -1802,10 +1822,11 @@ deep_copy(const Impl::CopySeqTag&, const View<DT, DP...>& dst,
 }
 //----------------------------------------------------------------------------
 template <class PolicyType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION deep_copy(
-    const PolicyType& policy, const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<unsigned(ViewTraits<DT, DP...>::rank) == 1>* = nullptr) {
+void KOKKOS_INLINE_FUNCTION
+deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
+          typename ViewTraits<DT, DP...>::const_value_type& value,
+          std::enable_if_t<Impl::is_team_policy_v<PolicyType>&& unsigned(
+                               ViewTraits<DT, DP...>::rank) == 1>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1828,7 +1849,8 @@ template <class PolicyType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION deep_copy(
     const PolicyType& policy, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) > 1)>* = nullptr) {
+    std::enable_if_t<Impl::is_team_policy_v<PolicyType> &&
+                     (unsigned(ViewTraits<DT, DP...>::rank) > 1)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
