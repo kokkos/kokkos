@@ -237,7 +237,7 @@ template <class ValueType, class LayoutType, class DeviceType,
           class MemoryTraits>
 struct ViewArguments {};
 
-template<class AccessorType>
+template <class AccessorType>
 struct AccessorTypeTag {};
 
 // Customization point to control mdspan arguments from view arguments
@@ -245,19 +245,6 @@ template <class ValueType, class LayoutType, class DeviceType,
           class MemoryTraits>
 constexpr void mdspan_from_view_arguments(
     ViewArguments<ValueType, LayoutType, DeviceType, MemoryTraits>) {}
-
-// Compute allocation size from mapping and accessor
-// This is necessary in particular if the pointer type is not ElementType*
-template <class MappingType, class AccessorType>
-constexpr size_t allocation_size_from_mapping_and_accessor(const MappingType& mapping,
-                                                 const AccessorType&) {
-  return mapping.required_span_size();
-}
-
-template<class AccessorType, class MappingType>
-constexpr auto accessor_from_mapping_and_accessor_args(const Kokkos::Impl::AccessorTypeTag<AccessorType>&, const MappingType&, const AccessorArg_t&) {
-  return AccessorType{};
-}
 
 // "Natural" mdspan for a view if the View's ArrayLayout is supported.
 template <class Traits, class Enabled = decltype(mdspan_from_view_arguments(
@@ -507,9 +494,11 @@ struct ViewTraits {
   using host_mirror_space = HostMirrorSpace;
   using hooks_policy      = HooksPolicy;
 
-  using size_type = typename MemorySpace::size_type;
-  static constexpr bool impl_is_customized =
-    !std::is_same_v<void, decltype(mdspan_from_view_arguments(std::declval<Impl::ViewArguments<value_type, array_layout, device_type, memory_traits>>()))>;
+  using size_type                          = typename MemorySpace::size_type;
+  static constexpr bool impl_is_customized = !std::is_same_v<
+      void, decltype(mdspan_from_view_arguments(
+                std::declval<Impl::ViewArguments<
+                    value_type, array_layout, device_type, memory_traits>>()))>;
 
   enum { is_hostspace = std::is_same_v<MemorySpace, HostSpace> };
   enum { is_managed = MemoryTraits::is_unmanaged == 0 };
