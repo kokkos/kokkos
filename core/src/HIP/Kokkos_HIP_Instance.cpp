@@ -459,10 +459,15 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 
 //----------------------------------------------------------------------------
 
-void Kokkos::Impl::create_HIP_instance(HIP &instance) {
+namespace Kokkos {
+namespace Impl {
+
+HIP create_HIP_instance(HIP &hip_space) {
   hipStream_t stream;
   KOKKOS_IMPL_HIP_SAFE_CALL(
-      instance.impl_internal_space_instance()->hip_stream_create_wrapper(
+      hip_space.impl_internal_space_instance()->hip_stream_create_wrapper(
           &stream));
-  instance = HIP(stream, ManageStream::yes);
+  return HIP(stream, ManageStream::yes);
 }
+}  // namespace Impl
+}  // namespace Kokkos

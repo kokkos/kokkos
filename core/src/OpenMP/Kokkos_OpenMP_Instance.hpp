@@ -181,12 +181,12 @@ std::array<OpenMP, sizeof...(Args)> partition_space(OpenMP const& main_instance,
       Impl::calculate_omp_pool_sizes(main_instance, weights);
 
   // Create array of OpenMP instances from pool sizes
-  std::array<OpenMP, sizeof...(Args)> instances;
-  for (int i = 0; i < int(pool_sizes.size()); ++i) {
-    instances[i] = OpenMP(pool_sizes[i]);
-  }
+  auto create_partitions = [&pool_sizes]<std::size_t... Indices>(
+                               std::index_sequence<Indices...>) {
+    return std::array<OpenMP, sizeof...(Args)>{OpenMP(pool_sizes[Indices])...};
+  };
 
-  return instances;
+  return create_partitions(std::make_index_sequence<sizeof...(Args)>{});
 }
 
 template <typename T>
@@ -196,10 +196,11 @@ std::vector<OpenMP> partition_space(OpenMP const& main_instance,
   const auto pool_sizes =
       Impl::calculate_omp_pool_sizes(main_instance, weights);
 
-  // Create array of OpenMP instances from pool sizes
-  std::vector<OpenMP> instances(weights.size());
+  // Create vector of OpenMP instances from pool sizes
+  std::vector<OpenMP> instances;
+  instances.reserve(pool_sizes.size());
   for (int i = 0; i < int(pool_sizes.size()); ++i) {
-    instances[i] = OpenMP(pool_sizes[i]);
+    instances.emplace_back(OpenMP(pool_sizes[i]));
   }
 
   return instances;
