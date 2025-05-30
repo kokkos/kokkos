@@ -758,20 +758,6 @@ std::map<int, std::mutex> CudaInternal::constantMemMutexPerDevice     = {};
 
 }  // namespace Kokkos
 
-namespace Kokkos {
-namespace Impl {
-
-Cuda create_Cuda_instance(Cuda &cuda_space) {
-  cudaStream_t stream;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (cuda_space.impl_internal_space_instance()->cuda_stream_create_wrapper(
-          &stream)));
-  return Cuda(stream, ManageStream::yes);
-}
-
-}  // namespace Impl
-}  // namespace Kokkos
-
 #else
 
 void KOKKOS_CORE_SRC_CUDA_IMPL_PREVENT_LINK_ERROR() {}
