@@ -14,11 +14,21 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosrandom;
+import kokkosdualview;
+#else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
 #include <Kokkos_DualView.hpp>
 #include <Kokkos_Timer.hpp>
+#endif
 #include <cstdlib>
+#include <cstdint>
+#include <cstdio>
+#include <string>
 
 using DefaultHostType = Kokkos::HostSpace::execution_space;
 

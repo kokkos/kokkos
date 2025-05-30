@@ -27,7 +27,12 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNRANKVIEW
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <impl/Kokkos_Error.hpp>
 #include <type_traits>
 
@@ -185,7 +190,7 @@ struct DynRankDimTraits {
 
 // Non-strided Layout
 template <typename Layout, typename iType>
-KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
     (std::is_same_v<Layout, Kokkos::LayoutRight> ||
      std::is_same_v<Layout, Kokkos::LayoutLeft>)&&std::is_integral_v<iType>,
     Layout>
@@ -202,7 +207,7 @@ reconstructLayout(const Layout& layout, iType dynrank) {
 
 // LayoutStride
 template <typename Layout, typename iType>
-KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
     (std::is_same_v<Layout, Kokkos::LayoutStride>)&&std::is_integral_v<iType>,
     Layout>
 reconstructLayout(const Layout& layout, iType dynrank) {

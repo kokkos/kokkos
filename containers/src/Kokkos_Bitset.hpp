@@ -21,9 +21,15 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_BITSET
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosfunctional;
+#else
 #include <Kokkos_Core.hpp>
-#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_Functional.hpp>
+#endif
+#include <Kokkos_BitManipulation.hpp>
 
 #include <impl/Kokkos_Bitset_impl.hpp>
 

@@ -17,9 +17,14 @@
 #ifndef KOKKOS_BIN_SORT_PUBLIC_API_HPP_
 #define KOKKOS_BIN_SORT_PUBLIC_API_HPP_
 
-#include "Kokkos_BinOpsPublicAPI.hpp"
 #include "impl/Kokkos_CopyOpsForBinSortImpl.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#include "Kokkos_BinOpsPublicAPI.hpp"
+#endif
 #include <algorithm>
 
 namespace Kokkos {

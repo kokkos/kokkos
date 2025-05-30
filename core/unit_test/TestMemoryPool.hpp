@@ -17,7 +17,12 @@
 #ifndef KOKKOS_UNITTEST_MEMPOOL_HPP
 #define KOKKOS_UNITTEST_MEMPOOL_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 namespace TestMemoryPool {
 

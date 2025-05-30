@@ -17,10 +17,16 @@
 #ifndef KOKKOS_STD_ALGORITHMS_REDUCE_IMPL_HPP
 #define KOKKOS_STD_ALGORITHMS_REDUCE_IMPL_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include "Kokkos_ReducerWithArbitraryJoinerNoNeutralElement.hpp"
+#include <impl/Kokkos_Utilities.hpp>
 #include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 

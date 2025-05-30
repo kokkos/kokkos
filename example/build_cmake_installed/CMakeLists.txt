@@ -8,17 +8,26 @@ project(Example CXX Fortran)
 
 # Look for an installed Kokkos
 find_package(Kokkos REQUIRED)
-
-add_executable(example cmake_example.cpp foo.f)
-if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
-  set_target_properties(example PROPERTIES LINKER_LANGUAGE Fortran)
-  if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
-    target_link_options(example PRIVATE -fno-fortran-main)
-  endif()
+if (Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
+  set(CMAKE_CXX_SCAN_FOR_MODULES ON)
 endif()
 
-# This is the only thing required to set up compiler/linker flags
-target_link_libraries(example Kokkos::kokkos)
+# FIXME we should be able to use Kokkos::kokkos
+if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
+  add_executable(example cmake_example.cpp)
+  # This is the only thing required to set up compiler/linker flags
+  target_link_libraries(example Kokkos::kokkoscore)
+else()
+  add_executable(example cmake_example.cpp foo.f)
+  if(CMAKE_Fortran_COMPILER_ID STREQUAL LLVMFlang)
+    set_target_properties(example PROPERTIES LINKER_LANGUAGE Fortran)
+    if(CMAKE_Fortran_COMPILER_VERSION VERSION_LESS 19)
+      target_link_options(example PRIVATE -fno-fortran-main)
+    endif()
+  endif()
+  # This is the only thing required to set up compiler/linker flags
+  target_link_libraries(example Kokkos::kokkos)
+endif()
 
 enable_testing()
 add_test(NAME KokkosInTree_Verify COMMAND example 10)

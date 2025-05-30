@@ -20,8 +20,15 @@
 #include <gtest/gtest.h>
 #include <unordered_set>
 #include <random>
-#include <Kokkos_Random.hpp>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkossort;
+import kokkosrandom;
+#else
 #include <Kokkos_NestedSort.hpp>
+#include <Kokkos_Random.hpp>
+#endif
 
 namespace Test {
 namespace NestedSortImpl {

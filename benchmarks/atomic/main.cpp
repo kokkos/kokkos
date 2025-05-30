@@ -14,9 +14,17 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosrandom;
+#else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Timer.hpp>
 #include <Kokkos_Random.hpp>
+#endif
+#include <cstdio>
+#include <string>
 
 template <class Scalar>
 double test_atomic(int L, int N, int M, int K, int R,

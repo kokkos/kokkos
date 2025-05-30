@@ -47,12 +47,10 @@ namespace Impl {
 #define KOKKOS_CUDA_HALF_UNARY_PREDICATE_IMPL(OP, CUDA_NAME) \
   KOKKOS_CUDA_HALF_UNARY_PREDICATE(OP, CUDA_NAME, Kokkos::Experimental::half_t)
 
-#ifdef KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
     Kokkos::Experimental::half_t) {
   return Kokkos::Experimental::half_t(0.f);
 }
-#endif
 
 #else
 #define KOKKOS_CUDA_HALF_UNARY_FUNCTION_IMPL(OP, CUDA_NAME)

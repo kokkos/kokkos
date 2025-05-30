@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
+import kokkosstdalgorithmsimpl;
 #include <utility>
 #include <iomanip>
 

@@ -27,16 +27,37 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_UNORDEREDMAP
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosfunctional;
+import kokkosbitset;
+#else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Functional.hpp>
-
 #include <Kokkos_Bitset.hpp>
+#endif
+
+#include <Kokkos_Assert.hpp>
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_UnorderedMap_impl.hpp>
 #include <View/Kokkos_ViewCtor.hpp>
 
 #include <cstdint>
+
+#if defined(KOKKOS_COMPILER_GNU) && !defined(__PGIC__) && \
+    !defined(__CUDA_ARCH__)
+
+#define KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr) __builtin_prefetch(addr, 0, 0)
+#define KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr) __builtin_prefetch(addr, 1, 0)
+
+#else
+
+#define KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr) ((void)0)
+#define KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr) ((void)0)
+
+#endif
 
 namespace Kokkos {
 
