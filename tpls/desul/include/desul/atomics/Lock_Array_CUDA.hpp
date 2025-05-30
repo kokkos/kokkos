@@ -117,10 +117,10 @@ inline static
     copy_cuda_lock_arrays_to_device() {
   static bool once = []() {
     cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_DEVICE,
-                       &CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
+                       (void*)&CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h,
                        sizeof(int32_t*));
     cudaMemcpyToSymbol(CUDA_SPACE_ATOMIC_LOCKS_NODE,
-                       &CUDA_SPACE_ATOMIC_LOCKS_NODE_h,
+                       (void*)&CUDA_SPACE_ATOMIC_LOCKS_NODE_h,
                        sizeof(int32_t*));
     return true;
   }();

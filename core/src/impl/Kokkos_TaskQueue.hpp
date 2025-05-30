@@ -96,6 +96,7 @@ class TaskQueue : public TaskQueueBase {
 
   //----------------------------------------
 
+ public:
   ~TaskQueue();
   TaskQueue()                            = delete;
   TaskQueue(TaskQueue&&)                 = delete;
@@ -103,6 +104,7 @@ class TaskQueue : public TaskQueueBase {
   TaskQueue& operator=(TaskQueue&&)      = delete;
   TaskQueue& operator=(TaskQueue const&) = delete;
 
+ protected:
   TaskQueue(const memory_pool& arg_memory_pool);
 
   // Schedule a task
