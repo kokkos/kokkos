@@ -55,11 +55,15 @@ void check_distinctive([[maybe_unused]] ExecSpace exec1,
 #ifdef KOKKOS_ENABLE_CUDA
   if constexpr (std::is_same_v<ExecSpace, Kokkos::Cuda>) {
     ASSERT_NE(exec1.cuda_stream(), exec2.cuda_stream());
+    ASSERT_EQ(exec1.cuda_device(), ExecSpace().cuda_device());
+    ASSERT_EQ(exec2.cuda_device(), ExecSpace().cuda_device());
   }
 #endif
 #ifdef KOKKOS_ENABLE_HIP
   if constexpr (std::is_same_v<ExecSpace, Kokkos::HIP>) {
     ASSERT_NE(exec1.hip_stream(), exec2.hip_stream());
+    ASSERT_EQ(exec1.hip_device(), ExecSpace().hip_device());
+    ASSERT_EQ(exec2.hip_device(), ExecSpace().hip_device());
   }
 #endif
 #ifdef KOKKOS_ENABLE_SYCL
@@ -131,13 +135,23 @@ TEST(TEST_CATEGORY, partitioning_by_args) {
   auto instances =
       Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
   ASSERT_EQ(int(instances.size()), 2);
+  static_assert(
+      std::is_same_v<decltype(instances), std::array<TEST_EXECSPACE, 2>>);
   test_partitioning(instances[0], instances[1]);
+}
+
+TEST(TEST_CATEGORY, partitioning_by_args_with_structured_bindings) {
+  auto [instance0, instance1] =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
+  test_partitioning(instance0, instance1);
 }
 
 TEST(TEST_CATEGORY, partitioning_by_vector) {
   // Make sure we can use a temporary as argument for weights
   auto instances = Kokkos::Experimental::partition_space(
       TEST_EXECSPACE(), std::vector<int> /*weights*/ {1, 1});
+  static_assert(
+      std::is_same_v<decltype(instances), std::vector<TEST_EXECSPACE>>);
   ASSERT_EQ(int(instances.size()), 2);
   test_partitioning(instances[0], instances[1]);
 }
