@@ -37,6 +37,9 @@ void warn_deprecated_command_line_argument(std::string deprecated,
                                            std::string use_instead);
 void warn_not_recognized_command_line_argument(std::string not_recognized);
 void do_not_warn_not_recognized_command_line_argument(std::regex ignore);
+void warn_not_recognized_environment_variable(std::string not_recognized);
+void do_not_warn_not_recognized_environment_variable(std::regex ignore);
+char** get_envp();
 }  // namespace Impl
 }  // namespace Kokkos
 
