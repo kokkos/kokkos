@@ -72,6 +72,11 @@ void check_distinctive([[maybe_unused]] ExecSpace exec1,
     ASSERT_NE(exec1.impl_instance_id(), exec2.impl_instance_id());
   }
 #endif
+#ifdef KOKKOS_ENABLE_OPENACC
+  if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::OpenACC>) {
+    ASSERT_NE(exec1.acc_async_queue(), exec2.acc_async_queue());
+  }
+#endif
 }
 }  // namespace
 
