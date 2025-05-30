@@ -542,15 +542,12 @@ class masked_reduce {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
-    bool init     = true;
-    U result      = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
+    U result =
+        (Kokkos::Experimental::Impl::is_basic_reduction_op_v<BinaryOperation>)
+            ? Kokkos::Experimental::Impl::Identity<U, BinaryOperation>()
+            : identity;
     for (std::size_t i = 0; i < v.size(); ++i) {
-      if (init && m[i]) {
-        result = a[i];
-        init   = false;
-      } else {
-        if (m[i]) result = BinaryOperation()(result, v[i]);
-      }
+      if (m[i]) result = BinaryOperation()(result, v[i]);
     }
     return result;
   }
@@ -567,27 +564,23 @@ class masked_reduce {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
-    bool init     = true;
-    U result      = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
+    U result =
+        (Kokkos::Experimental::Impl::is_basic_reduction_op_v<BinaryOperation>)
+            ? Kokkos::Experimental::Impl::Identity<U, BinaryOperation>()
+            : identity;
     for (std::size_t i = 0; i < v.size(); ++i) {
-      if (init && m[i]) {
-        result = a[i];
-        init   = false;
+      if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
+        if (m[i]) result = result + v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
+        if (m[i]) result = result * v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::bit_and<>>) {
+        if (m[i]) result = result & v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::bit_or<>>) {
+        if (m[i]) result = result | v[i];
+      } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
+        if (m[i]) result = result ^ v[i];
       } else {
-        if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
-          if (m[i]) result = result + v[i];
-        } else if constexpr (std::is_same_v<BinaryOperation,
-                                            std::multiplies<>>) {
-          if (m[i]) result = result * v[i];
-        } else if constexpr (std::is_same_v<BinaryOperation, std::bit_and<>>) {
-          if (m[i]) result = result & v[i];
-        } else if constexpr (std::is_same_v<BinaryOperation, std::bit_or<>>) {
-          if (m[i]) result = result | v[i];
-        } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
-          if (m[i]) result = result ^ v[i];
-        } else {
-          if (m[i]) result = BinaryOperation()(result, v[i]);
-        }
+        if (m[i]) result = BinaryOperation()(result, v[i]);
       }
     }
     return result;

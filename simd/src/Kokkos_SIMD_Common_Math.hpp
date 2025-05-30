@@ -102,15 +102,9 @@ reduce(basic_simd<T, Abi> const& v,
   if (none_of(m)) {
     return identity;
   }
-  bool init = true;
-  T result  = Impl::Identity<T, BinaryOperation>();
+  T result = identity;
   for (std::size_t i = 0; i < v.size(); ++i) {
-    if (init && m[i]) {
-      result = v[i];
-      init   = false;
-    } else {
-      if (m[i]) result = op(result, v[i]);
-    }
+    if (m[i]) result = op(result, v[i]);
   }
   return result;
 }

@@ -440,6 +440,13 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar> condition(
 template <class T, class BinaryOperation = std::plus<>>
 KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
     Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
+    BinaryOperation binary_op = {}) noexcept {
+  return x[0];
+}
+
+template <class T, class BinaryOperation = std::plus<>>
+KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
     Experimental::basic_simd_mask<T, Experimental::simd_abi::scalar> const&
         mask,
     BinaryOperation = {},
@@ -460,13 +467,6 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
   return reduce(x, mask);
 }
 #endif
-
-template <class T, class BinaryOperation = std::plus<>>
-KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
-    Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
-    BinaryOperation binary_op = {}) noexcept {
-  return x[0];
-}
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(

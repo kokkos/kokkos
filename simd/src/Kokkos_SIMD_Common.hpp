@@ -350,6 +350,20 @@ KOKKOS_FORCEINLINE_FUNCTION auto round_half_to_nearest_even(T const& x) {
 
 namespace Impl {
 
+template <class BinaryOperation>
+struct is_basic_reduction_op {
+  static constexpr bool value =
+      std::is_same_v<BinaryOperation, std::plus<>> ||
+      std::is_same_v<BinaryOperation, std::multiplies<>> ||
+      std::is_same_v<BinaryOperation, std::bit_and<>> ||
+      std::is_same_v<BinaryOperation, std::bit_or<>> ||
+      std::is_same_v<BinaryOperation, std::bit_xor<>>;
+};
+
+template <class BinaryOperation>
+constexpr bool is_basic_reduction_op_v =
+    is_basic_reduction_op<BinaryOperation>::value;
+
 template <class T, class BinaryOperation>
 struct Identity {
   KOKKOS_FORCEINLINE_FUNCTION

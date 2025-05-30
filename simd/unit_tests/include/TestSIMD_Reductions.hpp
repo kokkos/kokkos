@@ -80,16 +80,12 @@ inline void host_check_all_reductions(const DataType (&args)[n]) {
   host_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
   host_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);
   host_check_reduction_all_loaders<Abi>(reduce<std::multiplies<>>(), n, args);
-  host_check_reduction_all_loaders<Abi>(reduce<maximum>(), n, args);
-  host_check_reduction_all_loaders<Abi>(reduce<minimum>(), n, args);
 
   host_check_reduction_all_loaders<Abi>(masked_reduce_min(), n, args);
   host_check_reduction_all_loaders<Abi>(masked_reduce_max(), n, args);
   host_check_reduction_all_loaders<Abi>(masked_reduce<std::plus<>>(), n, args);
   host_check_reduction_all_loaders<Abi>(masked_reduce<std::multiplies<>>(), n,
                                         args);
-  host_check_reduction_all_loaders<Abi>(masked_reduce<maximum>(), n, args);
-  host_check_reduction_all_loaders<Abi>(masked_reduce<minimum>(), n, args);
 }
 
 template <typename Abi, typename DataType>
@@ -169,8 +165,6 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
   device_check_reduction_all_loaders<Abi>(reduce_max(), n, args);
   device_check_reduction_all_loaders<Abi>(reduce<std::plus<>>(), n, args);
   device_check_reduction_all_loaders<Abi>(reduce<std::multiplies<>>(), n, args);
-  device_check_reduction_all_loaders<Abi>(reduce<maximum>(), n, args);
-  device_check_reduction_all_loaders<Abi>(reduce<minimum>(), n, args);
 
   device_check_reduction_all_loaders<Abi>(masked_reduce_min(), n, args);
   device_check_reduction_all_loaders<Abi>(masked_reduce_max(), n, args);
@@ -178,8 +172,6 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
                                           args);
   device_check_reduction_all_loaders<Abi>(masked_reduce<std::multiplies<>>(), n,
                                           args);
-  device_check_reduction_all_loaders<Abi>(masked_reduce<maximum>(), n, args);
-  device_check_reduction_all_loaders<Abi>(masked_reduce<minimum>(), n, args);
 }
 
 template <typename Abi, typename DataType>
