@@ -109,8 +109,19 @@ allocation_size_from_mapping_and_accessor(const MappingType &map,
   return map.required_span_size();
 }
 
+// Tag type to enable ADL for accessor_from_mapping_and_accessor_arg
+// customization point
+template <class AccessorType>
+struct AccessorTypeTag {};
+
+// Default implementation for creating an accessor from a mapping
+// and an AccessorArg_t.
+// In Sacado the accessor construction may require information from
+// the mapping (specifically the span size) in some cases.
+// Specifically it needs it if the elements of a FAD type are not
+// consecutive but strided by the span size.
 template <class AccessorType, class MappingType>
-constexpr auto accessor_from_mapping_and_accessor_args(
+KOKKOS_INLINE_FUNCTION constexpr auto accessor_from_mapping_and_accessor_arg(
     const Kokkos::Impl::AccessorTypeTag<AccessorType> &, const MappingType &,
     const AccessorArg_t &arg) {
   return AccessorType(arg.value);
@@ -419,7 +430,7 @@ class BasicView {
                            Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
       : BasicView(arg_prop, arg_mapping,
-                  accessor_from_mapping_and_accessor_args(
+                  accessor_from_mapping_and_accessor_arg(
                       Impl::AccessorTypeTag<accessor_type>(), arg_mapping,
                       Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
 
@@ -430,7 +441,7 @@ class BasicView {
                            Impl::ViewCtorProp<P...>::has_accessor_arg,
                        typename mdspan_type::mapping_type> const &arg_mapping)
       : BasicView(arg_prop, arg_mapping,
-                  accessor_from_mapping_and_accessor_args(
+                  accessor_from_mapping_and_accessor_arg(
                       Impl::AccessorTypeTag<accessor_type>(), arg_mapping,
                       Impl::get_property<Impl::AccessorArgTag>(arg_prop))) {}
 

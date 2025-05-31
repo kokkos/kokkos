@@ -200,15 +200,18 @@ struct ViewCustomArguments {
   static_assert(std::is_integral_v<IndexType>);
 };
 
-template <class AccessorType>
-struct AccessorTypeTag {};
-
 // Customization point to control mdspan arguments from view arguments
 // Default implementation returns void to indicate no customization
 template <class ValueType, class ArrayLayout, class DeviceType,
           class MemoryTraits>
 constexpr void customize_view_arguments(
     ViewArguments<ValueType, ArrayLayout, DeviceType, MemoryTraits>) {}
+
+// Customization points located in Kokkos_BasicView.hpp
+//  - accessor_from_mapping_and_accessor_arg(AccessorTypeTag<AccessorType>,
+//  MappingType, AccessorArg_t)
+//  - allocation_size_from_mapping_and_accessor(MappingType, AccessorType)
+
 }  // namespace Impl
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN

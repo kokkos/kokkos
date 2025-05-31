@@ -1232,7 +1232,7 @@ inline void deep_copy(
       ((dst_type::rank < 6) || (dst.stride_5() == src.stride_5())) &&
       ((dst_type::rank < 7) || (dst.stride_6() == src.stride_6())) &&
       ((dst_type::rank < 8) || (dst.stride_7() == src.stride_7()))) {
-    const size_t nbytes = allocation_size_from_mapping_and_accessor(src.mapping(), src.accessor()) * sizeof(std::decay_t<decltype(dst.data())>);
+    const size_t nbytes = allocation_size_from_mapping_and_accessor(src.mapping(), src.accessor()) * sizeof(std::remove_pointer_t<decltype(dst.data())>);
     Kokkos::fence(
         "Kokkos::deep_copy: copy between contiguous views, pre view equality "
         "check");
@@ -2474,7 +2474,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     view_type v_resized;
     if constexpr (!view_type::traits::impl_is_customized) {
       // FIXME: this should be forbidden anyway
-      v_resized = (prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
+      v_resized = view_type(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
     } else {
       // FIXME SACADO: this is specializing for sacado, might need a better thing
       Kokkos::Impl::AccessorArg_t acc_arg{new_extents[view_type::rank()]};
@@ -2597,8 +2597,6 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     auto prop_copy = Impl::with_properties_if_unset(arg_prop, v.label());
 
     view_type v_resized(prop_copy, layout);
-    for(int i=0; i<4; i++) printf("%i ",layout.dimension(i));
-    printf("\n");
 
     if constexpr (alloc_prop_input::has_execution_space)
       Kokkos::Impl::ViewRemap<view_type, view_type>(

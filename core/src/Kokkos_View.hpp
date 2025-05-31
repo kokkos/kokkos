@@ -813,7 +813,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return Impl::mapping_from_array_layout<typename base_t::mapping_type>(
                layout)
                .required_span_size() *
-           sizeof(std::decay_t<pointer_type>);
+           sizeof(std::remove_pointer_t<pointer_type>);
   }
 
   KOKKOS_FUNCTION
@@ -874,8 +874,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Want to be able to align to minimum scratch alignment or sizeof or alignof
   // elements
   static constexpr size_t scratch_value_alignment =
-      max({sizeof(std::decay_t<pointer_type>),
-           alignof(std::decay_t<pointer_type>),
+      max({sizeof(std::remove_pointer_t<pointer_type>),
+           alignof(std::remove_pointer_t<pointer_type>),
            static_cast<size_t>(
                traits::execution_space::scratch_memory_space::ALIGN)});
 
@@ -885,7 +885,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return Impl::mapping_from_array_layout<typename base_t::mapping_type>(
                arg_layout)
                    .required_span_size() *
-               sizeof(std::decay_t<pointer_type>) +
+               sizeof(std::remove_pointer_t<pointer_type>) +
            scratch_value_alignment;
   }
 
