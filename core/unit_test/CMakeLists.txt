@@ -787,7 +787,7 @@ if(Kokkos_ENABLE_CUDA)
   # Do not run this test on Jetson devices since this architecture has shared memory
   if(NOT KOKKOS_ARCH_AMPERE87)
       kokkos_add_executable_and_test(
-      CoreUnitTest_CudaTimingBased2 SOURCES cuda/TestCuda_DebugPinUVMSpace.cpp
+      CoreUnitTest_CudaTimingBased2 SOURCES UnitTestMainInit.cpp cuda/TestCuda_DebugPinUVMSpace.cpp
     )
   endif()
 
