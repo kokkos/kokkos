@@ -52,10 +52,10 @@ if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
                          "${FILE_CONTENTS_EXPORT}"
     )
 
-    #file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${file}.ccm" "${FILE_CONTENTS_MODULE}")
-    file(WRITE "${file}.ccm" "${FILE_CONTENTS_MODULE}")
-    #list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${CMAKE_CURRENT_BINARY_DIR}/${file}.ccm")
-    list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${file}.ccm")
+    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${file}.ccm" "${FILE_CONTENTS_MODULE}")
+    #file(WRITE "${file}.ccm" "${FILE_CONTENTS_MODULE}")
+    list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${CMAKE_CURRENT_BINARY_DIR}/${file}.ccm")
+    #list(APPEND KOKKOS_CONTAINERS_MODULE_FILES "${file}.ccm")
   endforeach()
 endif()
 
