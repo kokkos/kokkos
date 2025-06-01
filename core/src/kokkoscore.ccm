@@ -22,6 +22,13 @@ export module kokkoscore;
 
 export {
   namespace Kokkos {
+namespace hwloc {
+using ::Kokkos::hwloc::available;
+using ::Kokkos::hwloc::get_available_numa_count;
+using ::Kokkos::hwloc::get_available_cores_per_numa;
+using ::Kokkos::hwloc::get_available_threads_per_core;
+}
+
   using ::Kokkos::abort;
   using ::Kokkos::abs;
   using ::Kokkos::ALL;
@@ -35,6 +42,12 @@ export {
   using ::Kokkos::ScopeGuard;
   using ::Kokkos::SequentialHostInit;
   using ::Kokkos::Serial;
+#ifdef KOKKOS_EMABLE_OPENMP
+  using ::Kokkos::OpenMP;
+#endif
+#ifdef KOKKOS_ENABLE_THREADS
+  using ::Kokkos::Threads;
+#endif
   using ::Kokkos::Timer;
 
   using ::Kokkos::Schedule;
