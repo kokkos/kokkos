@@ -273,6 +273,8 @@ struct TestViewAllocationLargeRank {
   ViewType v;
 };
 
+#ifndef KOKKOS_ARCH_AMPERE87
+// Orin and other Jetson devices come with smaller memory capacity, 8GB total
 TEST(TEST_CATEGORY, view_allocation_large_rank) {
   using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
   using MemorySpace    = typename TEST_EXECSPACE::memory_space;
@@ -288,6 +290,7 @@ TEST(TEST_CATEGORY, view_allocation_large_rank) {
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, v_single);
   ASSERT_EQ(result(0, 0, 0, 0, 0, 0, 0, 0), 42);
 }
+#endif
 
 template <typename ExecSpace, typename ViewType>
 struct TestViewShmemSizeOnDevice {
