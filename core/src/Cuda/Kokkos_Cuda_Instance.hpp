@@ -384,11 +384,14 @@ inline Cuda create_cuda_space(const Cuda& base_space) {
 
 template <class... Args>
 std::array<Cuda, sizeof...(Args)> partition_space(const Cuda& cuda_space,
-                                                  Args... ignored) {
+                                                  Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-  return {((ignored, Impl::create_cuda_space(cuda_space)), ...)};
+
+  std::array<Cuda, sizeof...(Args)> instances;
+  for (auto& in : instances) in = Impl::create_cuda_space(cuda_space);
+  return instances;
 }
 
 template <class T>

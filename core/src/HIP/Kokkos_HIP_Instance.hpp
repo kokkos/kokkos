@@ -296,11 +296,14 @@ inline HIP create_hip_space(const HIP &base_space) {
 
 template <class... Args>
 std::array<HIP, sizeof...(Args)> partition_space(const HIP &hip_space,
-                                                 Args... ignored) {
+                                                 Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-  return {((ignored, Impl::create_hip_space(hip_space)), ...)};
+
+  std::array<HIP, sizeof...(Args)> instances;
+  for (auto &in : instances) in = Impl::create_hip_space(hip_space);
+  return instances;
 }
 
 template <class T>

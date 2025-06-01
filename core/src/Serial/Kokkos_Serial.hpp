@@ -273,12 +273,14 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
 namespace Kokkos::Experimental {
 
 template <class... Args>
-std::array<Serial, sizeof...(Args)> partition_space(const Serial&,
-                                                    Args... ignored) {
+std::array<Serial, sizeof...(Args)> partition_space(const Serial&, Args...) {
   static_assert(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
-  return {((ignored, Serial(NewInstance{})), ...)};
+
+  std::array<Serial, sizeof...(Args)> instances;
+  for (auto& in : instances) in = Serial(NewInstance{});
+  return instances;
 }
 
 template <class T>
