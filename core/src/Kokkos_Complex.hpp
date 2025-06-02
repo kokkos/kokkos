@@ -554,7 +554,9 @@ KOKKOS_INLINE_FUNCTION bool operator==(RealType1 const& x,
 }
 
 //! Binary != operator for complex complex.
-template <class RealType1, class RealType2>
+template <class RealType1, class RealType2,
+         std::enable_if_t<std::is_arithmetic_v<RealType1> &&
+         std::is_arithmetic_v<RealType2>, int> = 0>
 KOKKOS_INLINE_FUNCTION bool operator!=(complex<RealType1> const& x,
                                        complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
@@ -563,7 +565,9 @@ KOKKOS_INLINE_FUNCTION bool operator!=(complex<RealType1> const& x,
 }
 
 //! Binary != operator for std::complex complex.
-template <class RealType1, class RealType2>
+template <class RealType1, class RealType2,
+         std::enable_if_t<std::is_arithmetic_v<RealType1> &&
+         std::is_arithmetic_v<RealType2>, int> = 0>
 inline bool operator!=(std::complex<RealType1> const& x,
                        complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
@@ -572,7 +576,9 @@ inline bool operator!=(std::complex<RealType1> const& x,
 }
 
 //! Binary != operator for complex std::complex.
-template <class RealType1, class RealType2>
+template <class RealType1, class RealType2,
+         std::enable_if_t<std::is_arithmetic_v<RealType1> &&
+         std::is_arithmetic_v<RealType2>, int> = 0>
 inline bool operator!=(complex<RealType1> const& x,
                        std::complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
