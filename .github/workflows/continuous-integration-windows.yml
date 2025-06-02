@@ -31,7 +31,7 @@ jobs:
         cmake --build build --parallel 4 --config Release
   windows-serial:
     # Serial build on Windows
-    name: Serial VS-2025
+    name: Serial VS-2022
     runs-on: windows-2025
 
     steps:
