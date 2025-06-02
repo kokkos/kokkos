@@ -275,9 +275,9 @@ struct TestViewAllocationLargeRank {
 
 // Orin and other Jetson devices come with smaller memory capacity, 8GB total
 TEST(TEST_CATEGORY, view_allocation_large_rank) {
-  #ifdef KOKKOS_ARCH_AMPERE87
-    GTEST_SKIP() << "skipping for Jetson devices that have only 8GB memory";
-  #endif
+#ifdef KOKKOS_ARCH_AMPERE87
+  GTEST_SKIP() << "skipping for Jetson devices that have only 8GB memory";
+#endif
   using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
   using MemorySpace    = typename TEST_EXECSPACE::memory_space;
   constexpr int dim    = 16;
