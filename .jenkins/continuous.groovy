@@ -95,8 +95,17 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
-                              make -j16 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 && ctest --no-compress-output -T Test --verbose && \
+                              make install && \
+                              export CMAKE_PREFIX_PATH=${PWD}/../install && \
+                              cd ../cmake_test && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=20 -DCMAKE_CXX_COMPILER=hipcc .. && make -j8 && ctest --verbose && \
+                              cd ../../../examples/build_in_tree && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=20 .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -158,18 +167,14 @@ pipeline {
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
-                              cd ../example/build_cmake_installed && \
+                              cd ../cmake_test && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=g++-8 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=17 \
                               .. && \
-                              make -j8 && ctest --verbose && \
-                              cd ../.. && \
-                              cmake -B build_cmake_installed_different_compiler/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=17 build_cmake_installed_different_compiler && \
-                              cmake --build build_cmake_installed_different_compiler/build --target all && \
-                              cmake --build build_cmake_installed_different_compiler/build --target test'''
+                              make -j8 && ctest --verbose '''
                     }
                     post {
                         always {
@@ -570,9 +575,15 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
-                              cd ../example/build_cmake_in_tree && \
+                              make install && \
+                              export CMAKE_PREFIX_PATH=${PWD}/../install && \
+                              cd ../cmake_test && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake -DCMAKE_CXX_STANDARD=17 .. &&  make -j8 && ctest --verbose && \
+                              cd ../../../examples/build_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
                     }
