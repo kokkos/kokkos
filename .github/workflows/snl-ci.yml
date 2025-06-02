@@ -191,3 +191,50 @@ jobs:
         working-directory: kokkos/build
         run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure --timeout 3600
 
+# FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
+  HPX_GCC_15_1_1:
+    name: SNL_HPX_GCC_15_1_1
+    runs-on: [ci-containersfedora-latest-latest]
+    continue-on-error: true
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: set_hpx_vars
+        run: echo "HPX_HANDLE_FAILED_NEW=0" >> $GITHUB_ENV
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -B build \
+            -DBUILD_SHARED_LIBS=ON \
+            -DKokkos_ENABLE_HWLOC=ON \
+            -DKokkos_ENABLE_HPX=ON \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DCMAKE_CXX_STANDARD="17" \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          ccache -z
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+          ccache -s
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: KOKKOS_NUM_THREADS=32 ctest --output-on-failure --timeout 3600
+
