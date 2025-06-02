@@ -1850,8 +1850,8 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
     "dst, src) with contiguous views instead")
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const TeamType& team,
-                                    const View<DT, DP...>& dst,
-                                    const View<ST, SP...>& src) {
+                                    const Kokkos::View<DT, DP...>& dst,
+                                    const Kokkos::View<ST, SP...>& src) {
   Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), dst, src);
 }
 
@@ -2809,8 +2809,8 @@ struct MirrorViewType {
       std::is_same_v<memory_space, typename src_view_type::memory_space>;
   // The array_layout
   using array_layout = typename src_view_type::array_layout;
-  // The data type (we probably want it non-const since otherwise we can't
-  // even deep_copy to it.
+  // The data type (we probably want it non-const since otherwise we can't even
+  // deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
   using dest_view_type = Kokkos::View<data_type, array_layout, Space>;
@@ -2923,7 +2923,8 @@ inline auto choose_create_mirror(
   // Due to the fact that users can overload `Kokkos::create_mirror`, but also
   // that they may not have implemented all of its different possible
   // variations, this function chooses the correct private or public version
-  // of it to call. This helper should be used by any overload of
+  // of it to call.
+  // This helper should be used by any overload of
   // `Kokkos::Impl::create_mirror_view`.
 
   if constexpr (std::is_void_v<typename View::traits::specialize>) {
@@ -2951,13 +2952,13 @@ inline auto choose_create_mirror(
       return create_mirror(typename ViewProp::memory_space{}, src);
     } else if constexpr (sizeof...(ViewCtorArgs) == 1 &&
                          !ViewProp::initialize) {
-      // if there is one view constructor arg and it has a without
-      // initializing mark, call the specific public function
+      // if there is one view constructor arg and it has a without initializing
+      // mark, call the specific public function
       return create_mirror(typename Kokkos::Impl::WithoutInitializing_t{}, src);
     } else if constexpr (sizeof...(ViewCtorArgs) == 2 &&
                          ViewProp::has_memory_space && !ViewProp::initialize) {
-      // if there is two view constructor args and they have a memory space
-      // and a without initializing mark, call the specific public function
+      // if there is two view constructor args and they have a memory space and
+      // a without initializing mark, call the specific public function
       return create_mirror(typename Kokkos::Impl::WithoutInitializing_t{},
                            typename ViewProp::memory_space{}, src);
     } else {
