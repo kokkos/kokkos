@@ -1253,32 +1253,32 @@ inline void deep_copy(
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-/** \brief  A local deep copy between views of the default specialization,
- * compatible type, same non-zero rank.
- */
-
 namespace Experimental {
 
 namespace Impl {
-struct CopySeqTag {};
+template <typename T>
+struct is_team_policy : std::false_type {};
+
+template <typename iType, typename TeamMemberType>
+struct is_team_policy<
+    Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType>>
+    : std::true_type {};
+
+template <typename iType, typename TeamMemberType>
+struct is_team_policy<
+    Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType, TeamMemberType>>
+    : std::true_type {};
+
+template <typename iType, typename TeamMemberType>
+struct is_team_policy<
+    Kokkos::Impl::ThreadVectorRangeBoundariesStruct<iType, TeamMemberType>>
+    : std::true_type {};
 
 template <typename T>
-inline constexpr bool is_team_policy_v = false;
+inline constexpr bool is_team_policy_v = is_team_policy<T>::value;
 
-template <typename iType, typename TeamMemberType>
-inline constexpr bool is_team_policy_v<
-    Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType>> =
-    true;
-
-template <typename iType, typename TeamMemberType>
-inline constexpr bool is_team_policy_v<
-    Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType, TeamMemberType>> =
-    true;
-
-template <typename iType, typename TeamMemberType>
-inline constexpr bool is_team_policy_v<
-    Kokkos::Impl::ThreadVectorRangeBoundariesStruct<iType, TeamMemberType>> =
-    true;
+// Tag used to call a sequential deep copy
+struct CopySeqTag {};
 }  // namespace Impl
 
 Impl::CopySeqTag KOKKOS_FORCEINLINE_FUNCTION copy_seq() {
