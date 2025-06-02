@@ -2922,8 +2922,8 @@ inline auto choose_create_mirror(
     const View& src, const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   // Due to the fact that users can overload `Kokkos::create_mirror`, but also
   // that they may not have implemented all of its different possible
-  // variations, this function chooses the correct private or public version
-  // of it to call.
+  // variations, this function chooses the correct private or public version of
+  // it to call.
   // This helper should be used by any overload of
   // `Kokkos::Impl::create_mirror_view`.
 
