@@ -21,7 +21,6 @@ static_assert(false,
 #endif
 #ifndef KOKKOS_COPYVIEWS_HPP_
 #define KOKKOS_COPYVIEWS_HPP_
-#include <climits>
 #include <utility>
 #include <string>
 #include <sstream>
@@ -1839,11 +1838,7 @@ KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const TeamType& team,
                                     const View<DT, DP...>& dst,
                                     const View<ST, SP...>& src) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  Impl::local_deep_copy_contiguous(Kokkos::TeamVectorRange(team, 0), dst, src);
+  Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), dst, src);
 }
 
 template <class DT, class... DP, class ST, class... SP>
@@ -1854,11 +1849,7 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const Kokkos::View<DT, DP...>& dst,
                                     const Kokkos::View<ST, SP...>& src) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  Impl::local_deep_copy_contiguous(copy_seq(), dst, src);
+  Kokkos::Experimental::deep_copy(copy_seq(), dst, src);
 }
 
 template <class TeamType, class DT, class... DP, class ST, class... SP>
@@ -1890,12 +1881,7 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
     const TeamType& team, const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  Impl::local_deep_copy_contiguous(Kokkos::TeamVectorRange(team, 0), dst,
-                                   value);
+  Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), dst, value);
 }
 
 template <class DT, class... DP>
@@ -1906,11 +1892,7 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
     const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  Impl::local_deep_copy_contiguous(copy_seq(), dst, value);
+  Kokkos::Experimental::deep_copy(copy_seq(), dst, value);
 }
 
 template <class TeamType, class DT, class... DP>
