@@ -156,7 +156,7 @@ std::array<SYCL, sizeof...(Args)> partition_space(const SYCL& sycl_space,
 
   std::array<SYCL, sizeof...(Args)> instances;
   for (auto& in : instances) {
-    in = sycl::queue(context, device, sycl::property::queue::in_order());
+    in = SYCL(sycl::queue(context, device, sycl::property::queue::in_order()));
   }
   return instances;
 }
