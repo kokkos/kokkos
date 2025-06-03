@@ -49,6 +49,7 @@ struct bin3d_is_sorted_struct {
     int iy2 = int((keys(i + 1, 1) - min) / max * max_bins);
     int iz2 = int((keys(i + 1, 2) - min) / max * max_bins);
 
+    // NOLINTBEGIN(bugprone-branch-clone)
     if (ix1 > ix2)
       count++;
     else if (ix1 == ix2) {
@@ -57,6 +58,7 @@ struct bin3d_is_sorted_struct {
       else if ((iy1 == iy2) && (iz1 > iz2))
         count++;
     }
+    // NOLINTEND(bugprone-branch-clone)
   }
 };
 

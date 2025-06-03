@@ -918,7 +918,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
     lambda(i, value);
   }
 
-  loop_boundaries.thread.impl_team_reduce(wrapped_reducer, value);
+  loop_boundaries.member.impl_team_reduce(wrapped_reducer, value);
   wrapped_reducer.final(&value);
   result = value;
 }
@@ -944,7 +944,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
     lambda(i, value);
   }
 
-  loop_boundaries.thread.impl_team_reduce(wrapped_reducer, value);
+  loop_boundaries.member.impl_team_reduce(wrapped_reducer, value);
   wrapped_reducer.final(&value);
   reducer.reference() = value;
 }
@@ -1053,7 +1053,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     lambda(i, scan_val, false);
   }
 
-  auto& team_member = loop_bounds.thread;
+  auto& team_member = loop_bounds.member;
 
   // 'scan_val' output is the exclusive prefix sum
   scan_val = team_member.team_scan(scan_val);

@@ -90,7 +90,7 @@ inline void host_check_all_reductions(const DataType (&args)[n]) {
 
 template <typename Abi, typename DataType>
 inline void host_check_reductions() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
     constexpr size_t n = 16;
 
     if constexpr (std::is_signed_v<DataType>) {

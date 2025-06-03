@@ -82,7 +82,7 @@ class hpx_thread_buffer {
   hpx_thread_buffer &operator=(hpx_thread_buffer)         = delete;
 
   void resize(const std::size_t num_threads, const std::size_t size_per_thread,
-              const std::size_t extra_space = 0) noexcept;
+              const std::size_t extra_space = 0);
   void *get(std::size_t thread_num) const noexcept;
   void *get_extra_space() const noexcept;
 };
@@ -163,9 +163,17 @@ class HPX {
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 
+// FIXME_HPX spurious warnings like
+// error: 'SR.14123' may be used uninitialized [-Werror=uninitialized]
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+
   HPX()
       : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
             &m_default_instance_data, &default_instance_deleter)) {}
+
+#pragma GCC diagnostic pop
+
   ~HPX() = default;
   explicit HPX(instance_mode mode)
       : m_instance_data(
@@ -1935,7 +1943,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   }
 
   // 'scan_val' output is the exclusive prefix sum
-  scan_val = loop_boundaries.thread.team_scan(scan_val);
+  scan_val = loop_boundaries.member.team_scan(scan_val);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {

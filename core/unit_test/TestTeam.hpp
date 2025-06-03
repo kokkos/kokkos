@@ -474,7 +474,7 @@ class ScanTeamFunctor {
     }
 
     // Team max:
-    int64_t m = (int64_t)(ind.league_rank() + ind.team_rank());
+    int64_t m = static_cast<int64_t>(ind.league_rank()) + ind.team_rank();
     ind.team_reduce(Kokkos::Max<int64_t>(m));
 
     if (m != ind.league_rank() + (ind.team_size() - 1)) {
@@ -485,7 +485,7 @@ class ScanTeamFunctor {
           static_cast<int>(ind.team_rank()),
           static_cast<int>(ind.league_size()),
           static_cast<int>(ind.team_size()),
-          static_cast<long>(ind.league_rank() + (ind.team_size() - 1)),
+          static_cast<long>(ind.league_rank()) + ind.team_size() - 1,
           static_cast<long>(m));
     }
 
@@ -815,7 +815,7 @@ struct ScratchTeamFunctor {
       ind.team_barrier();
 
       for (int i = 0; i < SHARED_TEAM_COUNT; i++) {
-        if (scratch_A[i] != size_t(i + ind.league_rank())) ++update;
+        if (scratch_A[i] != size_t(i) + ind.league_rank()) ++update;
       }
 
       for (int i = 0; i < ind.team_size(); i++) {

@@ -805,7 +805,7 @@ inline void contiguous_fill(
                      std::conditional_t<ViewType::rank == 0,
                                         typename ViewType::memory_space,
                                         Kokkos::AnonymousSpace>>,
-      Kokkos::MemoryTraits<0>>;
+      Kokkos::MemoryTraits<>>;
 
   ViewTypeFlat dst_flat(dst.data(), dst.size());
   if (dst.span() < static_cast<size_t>(std::numeric_limits<int>::max())) {
@@ -830,6 +830,28 @@ struct ZeroMemset {
   }
 };
 
+// Returns true when we can safely determine that the object has all 0 bits,
+// false otherwise.  It is intended to determine whether to perform zero memset
+// as an optimization.
+template <typename T>
+bool has_all_zero_bits(const T& value) {
+  static_assert(std::is_trivial_v<T>);
+
+  if constexpr (std::is_scalar_v<T>) {
+    return value == T();
+  }
+
+  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
+  if constexpr (std::is_standard_layout_v<T> &&
+                std::has_unique_object_representations_v<T>) {
+    constexpr std::byte all_zeroes[sizeof(T)] = {};
+    return std::memcmp(&value, all_zeroes, sizeof(T)) == 0;
+  }
+
+  return false;
+  KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
+}
+
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
     std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type>>
@@ -837,18 +859,13 @@ contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
     typename ViewTraits<DT, DP...>::const_value_type& value) {
   // With OpenMP, using memset has significant performance issues.
-  if (Impl::is_zero_byte(value)
+  if (has_all_zero_bits(value)
 #ifdef KOKKOS_ENABLE_OPENMP
       && !std::is_same_v<ExecutionSpace, Kokkos::OpenMP>
 #endif
   )
-    // FIXME intel/19 icpc fails to deduce template parameter here,
-    // resulting in compilation errors; explicitly passing the template
-    // parameter to ZeroMemset helps workaround the issue.
-    // See https://github.com/kokkos/kokkos/issues/7273.
-    ZeroMemset<ExecutionSpace>(
-        exec_space, dst.data(),
-        dst.size() * sizeof(typename ViewTraits<DT, DP...>::value_type));
+    ZeroMemset(exec_space, dst.data(),
+               dst.size() * sizeof(typename ViewTraits<DT, DP...>::value_type));
   else
     contiguous_fill(exec_space, dst, value);
 }

@@ -645,6 +645,9 @@ struct functor_vec_scan_ret_val {
         },
         return_val);
 
+    // Suppressing diagnostic and not casting since that test is being
+    // instantantiated with user-defined types such as array_reduce
+    // NOLINTNEXTLINE(bugprone-integer-division)
     Scalar sum_ref = ((upper_bound - 1) * (upper_bound)) / 2;
 
     if (flag() == 0 && return_val != sum_ref) {

@@ -36,12 +36,6 @@ static_assert(false,
 
 namespace Kokkos::Impl {
 
-template <typename T>
-bool is_zero_byte(const T& x) {
-  constexpr std::byte all_zeroes[sizeof(T)] = {};
-  return std::memcmp(&x, all_zeroes, sizeof(T)) == 0;
-}
-
 template <class DeviceType, class ValueType>
 struct ViewValueFunctor {
   using ExecSpace = typename DeviceType::execution_space;

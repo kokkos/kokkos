@@ -54,17 +54,30 @@ endif()
 kokkos_enable_option(
   SYCL_RELOCATABLE_DEVICE_CODE ${SYCL_RDC_DEFAULT} "Whether to enable relocatable device code (RDC) for SYCL"
 )
+kokkos_enable_option(IMPL_SYCL_OUT_OF_ORDER_QUEUES OFF "Whether to make Kokkos use out-of-order queues internally")
 kokkos_enable_option(TESTS OFF "Whether to build the unit tests")
 kokkos_enable_option(BENCHMARKS OFF "Whether to build the benchmarks")
 kokkos_enable_option(EXAMPLES OFF "Whether to build the examples")
 string(TOUPPER "${CMAKE_BUILD_TYPE}" UPPERCASE_CMAKE_BUILD_TYPE)
 if(UPPERCASE_CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-  kokkos_enable_option(DEBUG ON "Whether to activate extra debug features - may increase compile times")
-  kokkos_enable_option(DEBUG_DUALVIEW_MODIFY_CHECK ON "Debug check on dual views")
+  set(DEBUG_DEFAULT ON)
 else()
-  kokkos_enable_option(DEBUG OFF "Whether to activate extra debug features - may increase compile times")
-  kokkos_enable_option(DEBUG_DUALVIEW_MODIFY_CHECK OFF "Debug check on dual views")
+  set(DEBUG_DEFAULT OFF)
 endif()
+kokkos_enable_option(DEBUG ${DEBUG_DEFAULT} "Whether to activate extra debug features - may increase compile times")
+kokkos_enable_option(DEBUG_DUALVIEW_MODIFY_CHECK ON "Debug check on dual views")
+if(NOT Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK)
+  if(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+    message(
+      DEPRECATION
+        "Setting Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK is deprecated. DualView modify is always checked. Forcing -DKokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=ON"
+    )
+    set(Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK ON CACHE BOOL "Kokkos turned debug dualview modify check ON!" FORCE)
+  else()
+    message(FATAL_ERROR "Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK has been removed and is always enabled")
+  endif()
+endif()
+
 unset(_UPPERCASE_CMAKE_BUILD_TYPE)
 kokkos_enable_option(LARGE_MEM_TESTS OFF "Whether to perform extra large memory tests")
 kokkos_enable_option(DEBUG_BOUNDS_CHECK OFF "Whether to use bounds checking - will increase runtime")
@@ -95,9 +108,9 @@ kokkos_enable_option(
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
 kokkos_enable_option(IMPL_MDSPAN ON "Whether to enable experimental mdspan support")
-kokkos_enable_option(MDSPAN_EXTERNAL OFF BOOL "Whether to use an external version of mdspan")
+kokkos_enable_option(MDSPAN_EXTERNAL OFF "Whether to use an external version of mdspan")
 kokkos_enable_option(
-  IMPL_SKIP_COMPILER_MDSPAN ON BOOL "Whether to use an internal version of mdspan even if the compiler supports mdspan"
+  IMPL_SKIP_COMPILER_MDSPAN ON "Whether to use an internal version of mdspan even if the compiler provides mdspan"
 )
 kokkos_enable_option(
   IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS
@@ -108,6 +121,27 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
 mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
+
+if(Kokkos_ENABLE_IMPL_MDSPAN)
+  # Older CUDA versions work with mdspan but *not* our mdspan-based view implementation due
+  # to various compiler bugs. So we will disable it here
+  # Similarly GCC 8 and 9 have excessive memory usage so we default to legacy view, though the
+  # user can enable the new implementation if they wish
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9)
+    set(VIEW_LEGACY_DEFAULT ON)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
+    set(VIEW_LEGACY_DEFAULT ON)
+  else()
+    set(VIEW_LEGACY_DEFAULT OFF)
+  endif()
+else()
+  set(VIEW_LEGACY_DEFAULT ON)
+endif()
+kokkos_enable_option(IMPL_VIEW_LEGACY ${VIEW_LEGACY_DEFAULT} "Whether to use the legacy implementation of View")
+mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
+  message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
+endif()
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 

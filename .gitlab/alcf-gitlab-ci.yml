@@ -46,7 +46,7 @@ Aurora:
   variables:
     ANL_AURORA_SCHEDULER_PARAMETERS: "-q debug -A kokkos_math -l select=1,walltime=60:00,filesystems=flare"
   script:
-    - module load cmake oneapi/eng-compiler
+    - module load cmake oneapi
     - module list
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
@@ -57,7 +57,7 @@ Aurora:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_PVC=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-pass-failed -fsycl-device-code-split=per_kernel -fp-model=precise'"
     - ctest -VV
         -D CDASH_MODEL=Nightly
         -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
