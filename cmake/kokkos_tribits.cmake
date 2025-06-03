@@ -326,8 +326,8 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   endif()
 endfunction()
 
-function(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
-  cmake_parse_arguments(PARSE "STATIC;SHARED" "" "HEADERS;SOURCES" ${ARGN})
+function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
+  cmake_parse_arguments(PARSE "ADD_BUILD_OPTIONS;STATIC;SHARED" "" "HEADERS;SOURCES" ${ARGN})
 
   if(PARSE_HEADERS)
     list(REMOVE_DUPLICATES PARSE_HEADERS)
@@ -347,9 +347,7 @@ function(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     set(LINK_TYPE SHARED)
   endif()
 
-  # MSVC and other platforms want to have
-  # the headers included as source files
-  # for better dependency detection
+  # MSVC and other platforms want to have the headers included as source files for better dependency detection
   add_library(${LIBRARY_NAME} ${LINK_TYPE} ${PARSE_HEADERS} ${PARSE_SOURCES})
 
   if(PARSE_SHARED OR BUILD_SHARED_LIBS)
@@ -363,21 +361,10 @@ function(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
   #In case we are building in-tree, add an alias name
   #that matches the install Kokkos:: name
   add_library(Kokkos::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
-endfunction()
 
-function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
-  cmake_parse_arguments(PARSE "ADD_BUILD_OPTIONS" "" "HEADERS" ${ARGN})
-  # Forward the headers, we want to know about all headers
-  # to make sure they appear correctly in IDEs
-  kokkos_internal_add_library(${LIBRARY_NAME} ${PARSE_UNPARSED_ARGUMENTS} HEADERS ${PARSE_HEADERS})
   if(PARSE_ADD_BUILD_OPTIONS)
     kokkos_set_library_properties(${LIBRARY_NAME})
   endif()
-endfunction()
-
-function(KOKKOS_ADD_INTERFACE_LIBRARY NAME)
-  add_library(${NAME} INTERFACE)
-  kokkos_internal_add_library_install(${NAME})
 endfunction()
 
 function(KOKKOS_LIB_INCLUDE_DIRECTORIES TARGET)
