@@ -301,7 +301,6 @@ class masked_reduce_max {
     return Kokkos::Experimental::reduce_max(a, mask);
   }
 };
-;
 
 #define KOKKOS_IMPL_SIMD_PERFTEST_UNARY_OPERATOR(name)        \
   class name##_op {                                           \
