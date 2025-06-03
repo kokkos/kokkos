@@ -72,6 +72,13 @@ constexpr const char* abi_name() {
     return "neon x2";
   } else if constexpr (std::is_same_v<Abi, neon_fixed_size<4>>) {
     return "neon x4";
+#elif defined(KOKKOS_ARCH_ARM_SVE)
+  } else if constexpr (std::is_same_v<Abi,
+                                      sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>) {
+    return "sve x" KOKKOS_IMPL_TOSTRING(SVE_DOUBLES_IN_VECTOR);
+  } else if constexpr (std::is_same_v<Abi,
+                                      sve_fixed_size<SVE_WORDS_IN_VECTOR>>) {
+    return "sve x" KOKKOS_IMPL_TOSTRING(SVE_WORDS_IN_VECTOR);
 #endif
   }
 }
