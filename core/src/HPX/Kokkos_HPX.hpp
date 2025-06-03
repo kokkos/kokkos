@@ -1545,8 +1545,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   void setup() const {
     const int num_worker_threads = m_policy.space().concurrency();
-    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    auto nchunks = get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
+    hpx_thread_buffer &buffer    = m_policy.space().impl_get_buffer();
+    auto nchunks =
+        get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
     const auto buffer_size = std::min(nchunks, num_worker_threads);
     buffer.resize(buffer_size, m_shared);
   }
@@ -1563,10 +1564,11 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     const int buffer_t = num_chunks > num_worker_threads ? t : i;
     for (int league_rank = r.begin; league_rank < r.end; ++league_rank) {
       if constexpr (std::is_same_v<WorkTag, void>) {
-        m_functor(Member(m_policy, 0, league_rank, buffer.get(buffer_t), m_shared));
+        m_functor(
+            Member(m_policy, 0, league_rank, buffer.get(buffer_t), m_shared));
       } else {
-        m_functor(WorkTag{},
-                  Member(m_policy, 0, league_rank, buffer.get(buffer_t), m_shared));
+        m_functor(WorkTag{}, Member(m_policy, 0, league_rank,
+                                    buffer.get(buffer_t), m_shared));
       }
     }
   }
