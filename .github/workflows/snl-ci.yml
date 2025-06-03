@@ -105,6 +105,47 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
+  HIP_6_2_1:
+    name: SNL_HIP_ROCM_6_2_1
+    runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
+    continue-on-error: true
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+            -DCMAKE_CXX_COMPILER=hipcc \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DKokkos_ENABLE_HIP=ON \
+            -DKokkos_ARCH_AMD_GFX90A=ON \
+            -DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=ON \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DCMAKE_CXX_EXTENSIONS=OFF \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DBUILD_SHARED_LIBS=OFF \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_BENCHMARKS=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
   INTEL_2024_2_1_SPR:
     name: SNL_OPENMP_SERIAL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-spr]
