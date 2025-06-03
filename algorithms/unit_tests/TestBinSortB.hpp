@@ -18,10 +18,18 @@
 #define KOKKOS_ALGORITHMS_UNITTESTS_TEST_BINSORTB_HPP
 
 #include <gtest/gtest.h>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkossort;
+import kokkosstdalgorithms;
+import kokkosrandom;
+#else
 #include <Kokkos_Core.hpp>
-#include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
+#include <Kokkos_Random.hpp>
+#endif
 #include <TestStdAlgorithmsCommon.hpp>
 #include <random>
 #include <numeric>  //needed for iota

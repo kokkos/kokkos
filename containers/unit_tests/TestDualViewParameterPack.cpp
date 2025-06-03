@@ -14,8 +14,16 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosdualview;
+#else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
+#endif
+
+#include <type_traits>
 
 namespace {
 

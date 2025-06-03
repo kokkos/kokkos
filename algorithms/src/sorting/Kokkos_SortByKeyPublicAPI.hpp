@@ -18,8 +18,14 @@
 #define KOKKOS_SORT_BY_KEY_PUBLIC_API_HPP_
 
 #include "./impl/Kokkos_SortByKeyImpl.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <algorithm>
+#include <string>
 
 namespace Kokkos::Experimental {
 

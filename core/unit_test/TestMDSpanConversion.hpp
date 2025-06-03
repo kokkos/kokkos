@@ -17,8 +17,13 @@
 #include <gtest/gtest.h>
 #include <type_traits>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
-#include "experimental/__p0009_bits/layout_stride.hpp"
+#endif
+#include <mdspan/mdspan.hpp>
 
 namespace {
 

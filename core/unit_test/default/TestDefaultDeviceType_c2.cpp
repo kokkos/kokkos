@@ -16,7 +16,12 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #if !defined(KOKKOS_ENABLE_CUDA) || defined(__CUDACC__)
 

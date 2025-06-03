@@ -17,7 +17,12 @@
 #ifndef KOKKOS_UNITTEST_MDSPAN_HPP
 #define KOKKOS_UNITTEST_MDSPAN_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <gtest/gtest.h>
 
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN

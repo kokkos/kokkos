@@ -17,6 +17,7 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 #include <iomanip>
+import kokkosstdalgorithmsimpl;
 
 namespace Test {
 namespace stdalgos {

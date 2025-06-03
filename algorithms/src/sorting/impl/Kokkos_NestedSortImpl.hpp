@@ -17,7 +17,13 @@
 #ifndef KOKKOS_NESTED_SORT_IMPL_HPP_
 #define KOKKOS_NESTED_SORT_IMPL_HPP_
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#include <type_traits>
 
 namespace Kokkos {
 namespace Experimental {

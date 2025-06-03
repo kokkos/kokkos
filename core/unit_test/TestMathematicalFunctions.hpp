@@ -16,13 +16,19 @@
 
 #include <gtest/gtest.h>
 
-#define KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 #include <algorithm>
 #include <initializer_list>
 #include <type_traits>
 
 #include <cfloat>
+#include <cmath>
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \

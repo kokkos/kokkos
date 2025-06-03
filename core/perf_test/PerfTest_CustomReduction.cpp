@@ -14,11 +14,17 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosrandom;
+#else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Random.hpp>
+#endif
 #include <benchmark/benchmark.h>
 #include "Benchmark_Context.hpp"
 #include "PerfTest_Category.hpp"
-#include <Kokkos_Random.hpp>
 #include <utility>
 
 namespace Test {

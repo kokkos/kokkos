@@ -18,7 +18,11 @@
 #define KOKKOS_SIMD_TESTING_UTILITIES_HPP
 
 #include <gtest/gtest.h>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkossimd;
+#else
 #include <Kokkos_SIMD.hpp>
+#endif
 #include <SIMDTesting_Ops.hpp>
 
 class gtest_checker {

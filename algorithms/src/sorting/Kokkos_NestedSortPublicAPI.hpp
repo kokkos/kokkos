@@ -18,8 +18,13 @@
 #define KOKKOS_NESTED_SORT_PUBLIC_API_HPP_
 
 #include "impl/Kokkos_NestedSortImpl.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosstdalgorithmsimpl;
+#else
 #include <Kokkos_Core.hpp>
-#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
+#endif
 
 namespace Kokkos {
 namespace Experimental {

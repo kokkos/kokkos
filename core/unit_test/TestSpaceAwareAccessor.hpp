@@ -14,8 +14,17 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
+
 #include <type_traits>
+#include <mdspan/mdspan.hpp>
 
 #include <gtest/gtest.h>
 #ifndef KOKKOS_ENABLE_CXX17

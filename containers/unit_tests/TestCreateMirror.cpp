@@ -14,10 +14,20 @@
 //
 //@HEADER
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+import kokkosdynamicview;
+import kokkosdynrankview;
+import kokkosoffsetview;
+#else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynamicView.hpp>
 #include <Kokkos_DynRankView.hpp>
 #include <Kokkos_OffsetView.hpp>
+#endif
+
+#include <type_traits>
 
 template <typename TestView, typename MemorySpace>
 void check_memory_space(TestView, MemorySpace) {

@@ -17,8 +17,13 @@
 #ifndef KOKKOS_TEST_GLOBAL_TO_LOCAL_IDS_HPP
 #define KOKKOS_TEST_GLOBAL_TO_LOCAL_IDS_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
-#include <Kokkos_UnorderedMap.hpp>
+#endif
+import kokkosunorderedmap;
 #include <vector>
 #include <algorithm>
 

@@ -16,6 +16,9 @@
 
 #ifndef TESTHALFCONVERSION_HPP_
 #define TESTHALFCONVERSION_HPP_
+
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
+
 namespace Test {
 
 template <class T>

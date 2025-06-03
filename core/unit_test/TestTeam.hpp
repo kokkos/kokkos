@@ -17,8 +17,14 @@
 #include <cstdio>
 #include <sstream>
 #include <iostream>
+#include <cmath>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkoscore;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 namespace Test {
 

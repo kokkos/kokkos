@@ -16,6 +16,9 @@
 
 #ifndef TESTHALFOPERATOR_HPP_
 #define TESTHALFOPERATOR_HPP_
+
+#include <cstring>
+
 namespace Test {
 using namespace Kokkos::Experimental;
 using ExecutionSpace = TEST_EXECSPACE;
