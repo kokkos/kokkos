@@ -152,19 +152,15 @@ class HIPInternal {
 
   // HIP API wrappers where we set the correct device id before calling the HIP
   // API functions.
-  hipError_t hip_event_create_wrapper(hipEvent_t *event) const {
+  hipError_t hip_event_create_with_flags_wrapper(
+      hipEvent_t *event, const unsigned int flags) const {
     set_hip_device();
-    return hipEventCreate(event);
+    return hipEventCreateWithFlags(event, flags);
   }
 
   hipError_t hip_event_record_wrapper(hipEvent_t event) const {
     set_hip_device();
     return hipEventRecord(event, m_stream);
-  }
-
-  hipError_t hip_event_synchronize_wrapper(hipEvent_t event) const {
-    set_hip_device();
-    return hipEventSynchronize(event);
   }
 
   hipError_t hip_free_wrapper(void *ptr) const {

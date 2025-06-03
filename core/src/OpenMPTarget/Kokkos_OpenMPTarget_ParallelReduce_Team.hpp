@@ -44,7 +44,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
   ValueType* TeamThread_scratch =
-      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+      static_cast<ValueType*>(loop_boundaries.member.impl_reduce_scratch());
 
 #pragma omp barrier
   TeamThread_scratch[0] = ValueType();
@@ -93,7 +93,7 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
   ValueType* TeamThread_scratch =
-      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+      static_cast<ValueType*>(loop_boundaries.member.impl_reduce_scratch());
 
 #pragma omp barrier
   Impl::OpenMPTargetReducerWrapper<ReducerType>::init(TeamThread_scratch[0]);
@@ -122,7 +122,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
         iType, Impl::OpenMPTargetExecTeamMember>& loop_boundaries,
     const Lambda& lambda, const JoinType& join, ValueType& init_result) {
   ValueType* TeamThread_scratch =
-      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+      static_cast<ValueType*>(loop_boundaries.member.impl_reduce_scratch());
 
   // FIXME_OPENMPTARGET - Make sure that if its an array reduction, number of
   // elements in the array <= 32. For reduction we allocate, 16 bytes per
@@ -259,7 +259,7 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
                 Impl::OpenMPTargetExecTeamMember::TEAM_REDUCE_SIZE);
 
   ValueType* TeamVector_scratch =
-      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+      static_cast<ValueType*>(loop_boundaries.member.impl_reduce_scratch());
 
 #pragma omp barrier
   TeamVector_scratch[0] = ValueType();
@@ -305,7 +305,7 @@ parallel_reduce(const Impl::TeamVectorRangeBoundariesStruct<
     initializer(Impl::OpenMPTargetReducerWrapper<ReducerType>::init(omp_priv))
 
   ValueType* TeamVector_scratch =
-      static_cast<ValueType*>(loop_boundaries.team.impl_reduce_scratch());
+      static_cast<ValueType*>(loop_boundaries.member.impl_reduce_scratch());
 
 #pragma omp barrier
   Impl::OpenMPTargetReducerWrapper<ReducerType>::init(TeamVector_scratch[0]);

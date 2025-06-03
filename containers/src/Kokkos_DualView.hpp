@@ -806,7 +806,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
         impl_report_host_modification();
       }
 
-#ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
       if (modified_flags(0) && modified_flags(1)) {
         std::string msg = "Kokkos::DualView::modify ERROR: ";
         msg += "Concurrent modification of host and device views ";
@@ -815,7 +814,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
         msg += "\"\n";
         Kokkos::abort(msg.c_str());
       }
-#endif
     }
   }
 
@@ -829,7 +827,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
                                                    : modified_flags(0)) +
             1;
         impl_report_host_modification();
-#ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
         if (modified_flags(0) && modified_flags(1)) {
           std::string msg = "Kokkos::DualView::modify_host ERROR: ";
           msg += "Concurrent modification of host and device views ";
@@ -838,7 +835,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
           msg += "\"\n";
           Kokkos::abort(msg.c_str());
         }
-#endif
       }
     }
   }
@@ -853,7 +849,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
                                                    : modified_flags(0)) +
             1;
         impl_report_device_modification();
-#ifdef KOKKOS_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK
         if (modified_flags(0) && modified_flags(1)) {
           std::string msg = "Kokkos::DualView::modify_device ERROR: ";
           msg += "Concurrent modification of host and device views ";
@@ -862,7 +857,6 @@ class DualView : public ViewTraits<DataType, Properties...> {
           msg += "\"\n";
           Kokkos::abort(msg.c_str());
         }
-#endif
       }
     }
   }

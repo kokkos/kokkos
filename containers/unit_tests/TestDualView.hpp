@@ -760,10 +760,10 @@ TEST(TEST_CATEGORY, dualview_sequential_host_init) {
 TEST(TEST_CATEGORY, dualview_default_constructed) {
   DualViewType dv;
 
-  dv.modify<TEST_EXECSPACE>();
+  dv.modify<DualViewType::t_dev>();
   ASSERT_FALSE(dv.need_sync_host());
   ASSERT_FALSE(dv.need_sync_device());
-  dv.sync<TEST_EXECSPACE>();
+  dv.sync<DualViewType::t_dev>();
 
   dv.modify_host();
   ASSERT_FALSE(dv.need_sync_host());

@@ -40,13 +40,12 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=$PWD/../install \
             -DCMAKE_CXX_COMPILER=clang++ \
             -DCMAKE_CXX_FLAGS="-Werror" \
-            -DKokkos_ENABLE_COMPILER_WARNINGS=OFF \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_TESTS=ON \
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-            ..
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
 
       - name: build_and_install_kokkos
         run:  |

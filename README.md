@@ -32,12 +32,12 @@ To start learning about Kokkos:
 
 The latest release of Kokkos can be obtained from the [GitHub releases page](https://github.com/kokkos/kokkos/releases/latest).
 
-The current release is [4.6.00](https://github.com/kokkos/kokkos/releases/tag/4.6.00).
+The current release is [4.6.01](https://github.com/kokkos/kokkos/releases/tag/4.6.01).
 
 ```bash
-curl -OJ -L https://github.com/kokkos/kokkos/releases/download/4.6.00/kokkos-4.6.00.tar.gz
+curl -OJ -L https://github.com/kokkos/kokkos/releases/download/4.6.01/kokkos-4.6.01.tar.gz
 # Or with wget
-wget https://github.com/kokkos/kokkos/releases/download/4.6.00/kokkos-4.6.00.tar.gz
+wget https://github.com/kokkos/kokkos/releases/download/4.6.01/kokkos-4.6.01.tar.gz
 ```
 
 To clone the latest development version of Kokkos from GitHub:
@@ -51,7 +51,7 @@ git clone -b develop  https://github.com/kokkos/kokkos.git
 To build Kokkos, you will need to have a C++ compiler that supports C++17 or later.
 All requirements including minimum and primary tested compiler versions can be found [here](https://kokkos.org/kokkos-core-wiki/get-started/requirements.html).
 
-Building and installation instructions are described [here](https://kokkos.org/kokkos-core-wiki/building.html).
+Building and installation instructions are described [here](https://kokkos.org/kokkos-core-wiki/get-started/building-from-source.html#configuring-and-building-kokkos).
 
 You can also install Kokkos using [Spack](https://spack.io/): `spack install kokkos`. [Available configuration options](https://packages.spack.io/package.html?name=kokkos) can be displayed using `spack info kokkos`.
 

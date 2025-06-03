@@ -116,6 +116,18 @@ struct BasicViewFromTraits {
   using type =
       BV::BasicView<element_type, extents_type, layout_type, accessor_type>;
 };
+
+// Helper function to deal with cases where the data handle is
+// not convertible to element_type* such as in Sacado.
+// An overload for our reference counted data handle is next to its
+// implementation. This one covers Unmanaged views with raw pointers.
+template <class HandleType>
+KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
+    const HandleType& handle) {
+  // This should only be internally invoked in Kokkos with raw pointers.
+  static_assert(std::is_pointer_v<HandleType>);
+  return handle;
+}
 }  // namespace Impl
 
 template <class DataType, class... Properties>
@@ -174,9 +186,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // FIXME: these are overriden so that their types are identical when using
   // BasicView or Legacy we will need to obtain these from base_t in the future
   // and deprecate old behavior
-  using size_type    = typename memory_space::size_type;
-  using value_type   = typename traits::value_type;
-  using pointer_type = typename traits::value_type*;
+  using size_type  = typename memory_space::size_type;
+  using value_type = typename traits::value_type;
+  // pointer_type can be different from element_type*
+  using pointer_type = decltype(Impl::ptr_from_data_handle(
+      std::declval<typename base_t::data_handle_type>()));
 
   using scalar_array_type       = typename traits::scalar_array_type;
   using const_scalar_array_type = typename traits::const_scalar_array_type;
@@ -264,14 +278,41 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     // base class doesn't have constraint
     // FIXME: Eventually we need to deprecate this behavior and just use
     // BasicView implementation
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+    using LayoutType = typename mdspan_type::layout_type;
+    if (r >= static_cast<iType>(rank())) {
+      if constexpr (rank() == 0) return 1;
+      if constexpr (std::is_same_v<LayoutType, layout_right> ||
+                    Impl::IsLayoutRightPadded<LayoutType>::value) {
+        return 1;
+      }
+      if constexpr (std::is_same_v<LayoutType, layout_left> ||
+                    Impl::IsLayoutLeftPadded<LayoutType>::value) {
+        return base_t::stride(rank() - 1) * extent(rank() - 1);
+      }
+      if constexpr (std::is_same_v<LayoutType, layout_stride>) {
+        return 0;
+      }
+    }
+#else
+    KOKKOS_ASSERT(r < static_cast<iType>(rank()));
+#endif
     return base_t::stride(r);
   }
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride([[maybe_unused]] iType* const s) const {
     if constexpr (rank() > 0) {
-      for (size_t r = 0; r < rank(); r++) s[r] = base_t::stride(r);
-      s[rank()] = s[rank() - 1] * base_t::extent(rank() - 1);
+      size_t max_stride     = 0;
+      size_t max_stride_idx = 0;
+      for (size_t r = 0; r < rank(); r++) {
+        s[r] = base_t::stride(r);
+        if (s[r] > static_cast<iType>(max_stride)) {
+          max_stride     = s[r];
+          max_stride_idx = r;
+        }
+      }
+      s[rank()] = max_stride * base_t::extent(max_stride_idx);
     }
   }
 
@@ -291,7 +332,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return data() != nullptr;
   }
   KOKKOS_INLINE_FUNCTION constexpr pointer_type data() const {
-    return static_cast<pointer_type>(base_t::data_handle());
+    return Impl::ptr_from_data_handle(base_t::data_handle());
   }
 
   KOKKOS_INLINE_FUNCTION constexpr int extent_int(size_t r) const {
@@ -331,7 +372,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   template <typename... Is>
   static KOKKOS_FUNCTION void check_access_member_function_valid_args(
       Is... is) {
-    static_assert(sizeof...(Is) <= 8 - rank);
+    // cast to int to work around pointless comparison of unsigned to 0 warning
+    static_assert(static_cast<int>(sizeof...(Is)) <=
+                  static_cast<int>(8 - rank));
     static_assert(Kokkos::Impl::are_integral<Is...>::value);
     if (!((is == static_cast<Is>(0)) && ... && true))
       Kokkos::abort("Extra arguments to Kokkos::access must be zero");
@@ -531,7 +574,10 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       : base_t(
             arg_prop,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
-                arg_layout)) {}
+                arg_layout)) {
+    static_assert(traits::is_managed,
+                  "Can't construct managed View with unmanaged memory trait!");
+  }
 
   template <class... P>
   KOKKOS_FUNCTION explicit View(
@@ -695,6 +741,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
+    static_assert(traits::is_managed,
+                  "Can't construct managed View with unmanaged memory trait!");
   }
 
   template <class... P>

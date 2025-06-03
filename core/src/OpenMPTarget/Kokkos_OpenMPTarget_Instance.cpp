@@ -67,10 +67,13 @@ void OpenMPTargetInternal::fence(const std::string& name,
   }
 }
 int OpenMPTargetInternal::concurrency() const {
-  int max_threads    = 2048 * 80;
   int max_threads_sm = 2048;
+  int max_threads    = max_threads_sm * 80;
 #if defined(KOKKOS_ARCH_AMPERE86)
-  return max_threads_sm * 84;
+  max_threads = max_threads_sm * 84;
+#elif defined(KOKKOS_ARCH_AMPERE87)
+  max_threads_sm = 1024;
+  max_threads    = max_threads_sm * 32;  // Orin Nano cores
 #elif defined(KOKKOS_ARCH_AMPERE80)
   return max_threads_sm * 108;
 #elif defined(KOKKOS_ARCH_VOLTA72)
