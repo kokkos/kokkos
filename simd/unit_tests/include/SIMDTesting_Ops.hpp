@@ -542,10 +542,7 @@ class masked_reduce {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
-    U result =
-        Kokkos::Experimental::Impl::is_basic_reduction_op_v<BinaryOperation>
-            ? Kokkos::Experimental::Impl::Identity<U, BinaryOperation>()
-            : identity;
+    U result      = identity;
     for (std::size_t i = 0; i < v.size(); ++i) {
       if (m[i]) result = BinaryOperation()(result, v[i]);
     }
@@ -564,10 +561,7 @@ class masked_reduce {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
-    U result =
-        Kokkos::Experimental::Impl::is_basic_reduction_op_v<BinaryOperation>
-            ? Kokkos::Experimental::Impl::Identity<U, BinaryOperation>()
-            : identity;
+    U result      = identity;
     for (std::size_t i = 0; i < v.size(); ++i) {
       if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
         if (m[i]) result = result + v[i];
