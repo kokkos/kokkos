@@ -1545,9 +1545,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
  public:
   void setup() const {
     const int num_worker_threads = m_policy.space().concurrency();
-
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
-    buffer.resize(num_worker_threads, m_shared);
+    auto nchunks = get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
+    const auto buffer_size = std::min(nchunks, num_worker_threads);
+    buffer.resize(buffer_size, m_shared);
   }
 
   void execute_range(const int i) const {
@@ -1555,12 +1556,17 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     const auto r =
         get_chunk_range(i, 0, m_policy.chunk_size(), m_policy.league_size());
+    const int num_chunks =
+        get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
+    const int num_worker_threads = m_policy.space().concurrency();
+    // if num_chunks > num hw threads, use hw threadid t; else use chunkid i
+    const int buffer_t = num_chunks > num_worker_threads ? t : i;
     for (int league_rank = r.begin; league_rank < r.end; ++league_rank) {
       if constexpr (std::is_same_v<WorkTag, void>) {
-        m_functor(Member(m_policy, 0, league_rank, buffer.get(t), m_shared));
+        m_functor(Member(m_policy, 0, league_rank, buffer.get(buffer_t), m_shared));
       } else {
         m_functor(WorkTag{},
-                  Member(m_policy, 0, league_rank, buffer.get(t), m_shared));
+                  Member(m_policy, 0, league_rank, buffer.get(buffer_t), m_shared));
       }
     }
   }
