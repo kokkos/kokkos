@@ -1901,10 +1901,12 @@ struct TestNextAfterHalf {
     }
 
     // Zero Handling
-    if (nextafter(pos_zero, pos_one) != pos_smallest ||
-        nextafter(pos_zero, neg_one) != neg_smallest ||
-        nextafter(neg_zero, pos_one) != pos_smallest ||
-        nextafter(neg_zero, neg_one) != neg_smallest) {
+    if (nextafter(pos_zero, pos_one)  != pos_smallest ||
+        nextafter(pos_zero, neg_one)  != neg_smallest ||
+        nextafter(pos_zero, neg_zero) != neg_zero     ||
+        nextafter(neg_zero, pos_one)  != pos_smallest ||
+        nextafter(neg_zero, neg_one)  != neg_smallest ||
+        nextafter(neg_zero, pos_zero) != pos_zero) {
       ++e;
       Kokkos::printf("failed half precision nextafter(zero)\n");
     }
