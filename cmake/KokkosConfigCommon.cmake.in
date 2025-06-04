@@ -203,15 +203,14 @@ int main()
   set(${_VAR} ${_RET} PARENT_SCOPE)
 endfunction()
 
-# this function checks whether the current CXX compiler supports building Kokkos
+# this function checks whether the current CXX compiler supports building Kokkos and sets KOKKOS_CXX_COMPILER_IS_COMPATIBLE
 #
-#       RESULT      --> result (bool)
 #
-function(kokkos_cxx_compiler_is_compatible)
-  cmake_parse_arguments(INP "" "RESULT" "" ${ARGN})
+function(kokkos_check_cxx_compiler_is_compatible)
 
-  file(
-    WRITE ${PROJECT_BINARY_DIR}/compile_tests/compiles_kokkos.cpp
+  set(CMAKE_REQUIRED_LIBRARIES "Kokkos::kokkos")
+
+  check_cxx_source_compiles(
     "
 // include Kokkos_Core to check if header is working with the compiler
 #include <Kokkos_Core.hpp>
@@ -230,16 +229,8 @@ Kokkos::finalize();
 return EXIT_SUCCESS;
 }
 "
+    KOKKOS_CXX_COMPILER_IS_COMPATIBLE
   )
-
-  try_compile(
-    COMPILER_CAN_COMPILE_KOKKOS ${PROJECT_BINARY_DIR}/compile_tests
-    ${PROJECT_BINARY_DIR}/compile_tests/compiles_kokkos.cpp
-    OUTPUT_VARIABLE COMPILER_ERROR_MESSAGE
-    LINK_LIBRARIES Kokkos::kokkos
-  )
-
-  set(${INP_RESULT} ${COMPILER_CAN_COMPILE_KOKKOS} PARENT_SCOPE)
 endfunction()
 
 # this function is provided to easily select which files use the same compiler as Kokkos

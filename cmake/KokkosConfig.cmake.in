@@ -30,37 +30,33 @@ if("launch_compiler" IN_LIST Kokkos_FIND_COMPONENTS AND "separable_compilation" 
 endif()
 
 if(NOT @Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
-  if(NOT KOKKOS_CXX_COMPILER_IS_COMPATIBLE)
-    #we compile a small test program using kokkos to check if the flags and ABI the CXX compiler uses is compatible with the library
-    kokkos_cxx_compiler_is_compatible(RESULT KOKKOS_COMPILER_IS_COMPATIBLE)
-    set(KOKKOS_CXX_COMPILER_IS_COMPATIBLE ${KOKKOS_COMPILER_IS_COMPATIBLE}
-        CACHE STRING "CMAKE_CXX_COMPILER can compile Kokkos code"
-    )
+  #we compile a small test program using kokkos to check if the flags and ABI the CXX compiler uses is compatible with the library
+  kokkos_check_cxx_compiler_is_compatible()
 
-    if((@KOKKOS_ENABLE_CUDA@ AND NOT KOKKOS_CXX_COMPILER_IS_COMPATIBLE) OR "launch_compiler" IN_LIST
-                                                                           Kokkos_FIND_COMPONENTS
-    )
-      #
-      # if find_package(Kokkos COMPONENTS launch_compiler) then rely on the
-      # RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK to always redirect to the
-      # appropriate compiler for Kokkos
-      #
+  if((@KOKKOS_ENABLE_CUDA@ AND NOT KOKKOS_CXX_COMPILER_IS_COMPATIBLE) OR "launch_compiler" IN_LIST
+                                                                         Kokkos_FIND_COMPONENTS
+  )
+    #
+    # if find_package(Kokkos COMPONENTS launch_compiler) then rely on the
+    # RULE_LAUNCH_COMPILE and RULE_LAUNCH_LINK to always redirect to the
+    # appropriate compiler for Kokkos
+    #
 
+    message(
+      STATUS
+        "kokkos_launch_compiler is enabled globally. C++ compiler commands with -DKOKKOS_DEPENDENCE will be redirected to the appropriate compiler for Kokkos"
+    )
+    kokkos_compilation(GLOBAL)
+
+  else()
+    if(NOT KOKKOS_CXX_COMPILER_IS_COMPATIBLE)
       message(
-        STATUS
-          "kokkos_launch_compiler is enabled globally. C++ compiler commands with -DKOKKOS_DEPENDENCE will be redirected to the appropriate compiler for Kokkos"
+        WARNING
+          "Kokkos can not compile a simple test program with the given CXX compiler ${CMAKE_CXX_COMPILER}. This might be due to incompatible flags or ABI."
       )
-      kokkos_compilation(GLOBAL)
-
-    else()
-      if(NOT KOKKOS_CXX_COMPILER_IS_COMPATIBLE)
-        message(
-          WARNING
-            "Kokkos can not compile a simple test program with the given CXX compiler ${CMAKE_CXX_COMPILER}. This might be due to incompatible flags or ABI."
-        )
-      endif()
     endif()
   endif()
+endif()
 endif()
 
 set(Kokkos_COMPILE_LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
