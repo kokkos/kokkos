@@ -270,36 +270,14 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
 }  // namespace Impl
 }  // namespace Kokkos
 
-namespace Kokkos::Experimental {
-
-template <class... Args>
-std::array<Serial, sizeof...(Args)> partition_space(const Serial&, Args...) {
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  std::array<Serial, sizeof...(Args)> instances;
+namespace Kokkos::Experimental::Impl {
+// Create new instance of Serial execution space for each partition
+template <class T, class Container>
+void impl_partition_space(const Serial&, const std::vector<T>&,
+                          Container& instances) {
   for (auto& in : instances) in = Serial(NewInstance{});
-  return instances;
 }
-
-template <class T>
-std::vector<Serial> partition_space(const Serial&,
-                                    std::vector<T> const& weights) {
-  static_assert(
-      std::is_arithmetic_v<T>,
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  // We only care about the number of instances to create and ignore weights
-  // otherwise.
-  std::vector<Serial> instances;
-  instances.reserve(weights.size());
-  std::generate_n(std::back_inserter(instances), weights.size(),
-                  []() { return Serial{NewInstance{}}; });
-  return instances;
-}
-
-}  // namespace Kokkos::Experimental
+}  // namespace Kokkos::Experimental::Impl
 
 #include <Serial/Kokkos_Serial_Parallel_Range.hpp>
 #include <Serial/Kokkos_Serial_Parallel_MDRange.hpp>

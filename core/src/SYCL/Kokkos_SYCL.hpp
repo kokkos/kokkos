@@ -143,45 +143,19 @@ struct DeviceTypeTraits<Kokkos::SYCL> {
 }  // namespace Experimental
 }  // namespace Tools
 
-namespace Experimental {
-template <class... Args>
-std::array<SYCL, sizeof...(Args)> partition_space(const SYCL& sycl_space,
-                                                  Args...) {
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  sycl::context context = sycl_space.sycl_queue().get_context();
-  sycl::device device   = sycl_space.sycl_queue().get_device();
-
-  std::array<SYCL, sizeof...(Args)> instances;
+namespace Experimental::Impl {
+// For each space in partition, create new queue on the same device as
+// base_instance
+template <class T, class Container>
+void impl_partition_space(const SYCL& base_instance, const std::vector<T>&,
+                          Container& instances) {
+  sycl::context context = base_instance.sycl_queue().get_context();
+  sycl::device device   = base_instance.sycl_queue().get_device();
   for (auto& in : instances) {
     in = SYCL(sycl::queue(context, device, sycl::property::queue::in_order()));
   }
-  return instances;
 }
-
-template <class T>
-std::vector<SYCL> partition_space(const SYCL& sycl_space,
-                                  std::vector<T> const& weights) {
-  static_assert(
-      std::is_arithmetic_v<T>,
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  sycl::context context = sycl_space.sycl_queue().get_context();
-  sycl::device device   = sycl_space.sycl_queue().get_device();
-  std::vector<SYCL> instances;
-
-  // We only care about the number of instances to create and ignore weights
-  // otherwise.
-  instances.reserve(weights.size());
-  for (unsigned int i = 0; i < weights.size(); ++i)
-    instances.emplace_back(
-        sycl::queue(context, device, sycl::property::queue::in_order()));
-  return instances;
-}
-
-}  // namespace Experimental
+}  // namespace Experimental::Impl
 
 namespace Impl {
 std::vector<sycl::device> get_sycl_devices();

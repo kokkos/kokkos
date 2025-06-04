@@ -365,52 +365,20 @@ class CudaInternal {
 };
 }  // Namespace Impl
 
-namespace Experimental {
-// Partitioning an Execution Space: expects space and integer arguments for
-// relative weight
-//   Customization point for backends
-//   Default behavior is to return the passed in instance
-
-namespace Impl {
-// Create new Cuda space on the device of base_space
-inline Cuda create_cuda_space(const Cuda& base_space) {
-  cudaStream_t stream;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(
-      (base_space.impl_internal_space_instance()->cuda_stream_create_wrapper(
-          &stream)));
-  return Cuda(stream, Kokkos::Impl::ManageStream::yes);
-}
-}  // namespace Impl
-
-template <class... Args>
-std::array<Cuda, sizeof...(Args)> partition_space(const Cuda& cuda_space,
-                                                  Args...) {
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  std::array<Cuda, sizeof...(Args)> instances;
-  for (auto& in : instances) in = Impl::create_cuda_space(cuda_space);
-  return instances;
-}
-
-template <class T>
-std::vector<Cuda> partition_space(const Cuda& cuda_space,
-                                  std::vector<T> const& weights) {
-  static_assert(
-      std::is_arithmetic_v<T>,
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  // We only care about the number of instances to create and ignore weights
-  // otherwise.
-  std::vector<Cuda> instances;
-  instances.reserve(weights.size());
-  for (int i = 0; i < int(weights.size()); ++i) {
-    instances.emplace_back(Impl::create_cuda_space(cuda_space));
+namespace Experimental::Impl {
+// For each space in partition, create new cudaStream_t on the same device as
+// base_instance
+template <class T, class Container>
+void impl_partition_space(const Cuda& base_instance, const std::vector<T>&,
+                          Container& instances) {
+  for (auto& in : instances) {
+    cudaStream_t stream;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(base_instance.impl_internal_space_instance()
+                                   ->cuda_stream_create_wrapper(&stream));
+    in = Cuda(stream, Kokkos::Impl::ManageStream::yes);
   }
-  return instances;
 }
-}  // namespace Experimental
+}  // namespace Experimental::Impl
 
 }  // Namespace Kokkos
 #endif

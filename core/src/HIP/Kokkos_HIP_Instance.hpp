@@ -277,52 +277,21 @@ class HIPInternal {
 };
 }  // namespace Impl
 
-namespace Experimental {
-// Partitioning an Execution Space: expects space and integer arguments for
-// relative weight
-//   Customization point for backends
-//   Default behavior is to return the passed in instance
-
-namespace Impl {
-// Create new HIP space on the device of base_space
-inline HIP create_hip_space(const HIP &base_space) {
-  hipStream_t stream;
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      (base_space.impl_internal_space_instance()->hip_stream_create_wrapper(
-          &stream)));
-  return HIP(stream, Kokkos::Impl::ManageStream::yes);
-}
-}  // namespace Impl
-
-template <class... Args>
-std::array<HIP, sizeof...(Args)> partition_space(const HIP &hip_space,
-                                                 Args...) {
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  std::array<HIP, sizeof...(Args)> instances;
-  for (auto &in : instances) in = Impl::create_hip_space(hip_space);
-  return instances;
-}
-
-template <class T>
-std::vector<HIP> partition_space(const HIP &hip_space,
-                                 std::vector<T> const &weights) {
-  static_assert(
-      std::is_arithmetic_v<T>,
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  // We only care about the number of instances to create and ignore weights
-  // otherwise.
-  std::vector<HIP> instances;
-  instances.reserve(weights.size());
-  for (int i = 0; i < int(weights.size()); ++i) {
-    instances.emplace_back(Impl::create_hip_space(hip_space));
+namespace Experimental::Impl {
+// For each space in partition, create new hipStream_t on the same device as
+// base_instance
+template <class T, class Container>
+void impl_partition_space(const HIP &base_instance, const std::vector<T> &,
+                          Container &instances) {
+  for (auto &in : instances) {
+    hipStream_t stream;
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        base_instance.impl_internal_space_instance()->hip_stream_create_wrapper(
+            &stream));
+    in = HIP(stream, Kokkos::Impl::ManageStream::yes);
   }
-  return instances;
 }
-}  // namespace Experimental
+}  // namespace Experimental::Impl
 }  // namespace Kokkos
 
 #endif

@@ -130,10 +130,8 @@ inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
 
 }  // namespace Impl
 
-namespace Experimental {
-namespace Impl {
-// Partitioning an Execution Space: expects space and integer arguments for
-// relative weight
+namespace Experimental::Impl {
+// Calculate pool sizes for partitioned OpenMP spaces
 template <typename T>
 inline std::vector<int> calculate_omp_pool_sizes(
     OpenMP const& main_instance, std::vector<T> const& weights) {
@@ -167,44 +165,19 @@ inline std::vector<int> calculate_omp_pool_sizes(
 
   return pool_sizes;
 }
-}  // namespace Impl
 
-template <typename... Args>
-std::array<OpenMP, sizeof...(Args)> partition_space(OpenMP const& main_instance,
-                                                    Args... args) {
-  // Unpack the arguments and create the weight vector. Note that if not all of
-  // the types are the same, you will get a narrowing warning.
-  std::vector<std::common_type_t<Args...>> const weights = {args...};
-
-  // Calculate pool size for each OpenMP instance
+// Create new OpenMP instances with pool sizes relative to
+// input weights
+template <class T, class Container>
+void impl_partition_space(const OpenMP& base_instance,
+                          const std::vector<T>& weights, Container& instances) {
   const auto pool_sizes =
-      Impl::calculate_omp_pool_sizes(main_instance, weights);
-
-  // Create array of OpenMP instances from pool sizes
-  std::array<OpenMP, sizeof...(Args)> instances;
-  for (int i = 0; i < int(pool_sizes.size()); ++i) {
+      Impl::calculate_omp_pool_sizes(base_instance, weights);
+  for (size_t i = 0; i < pool_sizes.size(); ++i) {
     instances[i] = OpenMP(pool_sizes[i]);
   }
-  return instances;
 }
-
-template <typename T>
-std::vector<OpenMP> partition_space(OpenMP const& main_instance,
-                                    std::vector<T> const& weights) {
-  // Calculate pool size for each OpenMP instance
-  const auto pool_sizes =
-      Impl::calculate_omp_pool_sizes(main_instance, weights);
-
-  // Create vector of OpenMP instances from pool sizes
-  std::vector<OpenMP> instances;
-  instances.reserve(pool_sizes.size());
-  for (int i = 0; i < int(pool_sizes.size()); ++i) {
-    instances.emplace_back(OpenMP(pool_sizes[i]));
-  }
-
-  return instances;
-}
-}  // namespace Experimental
+}  // namespace Experimental::Impl
 }  // namespace Kokkos
 
 #endif
