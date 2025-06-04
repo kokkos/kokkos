@@ -519,10 +519,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                             dim3 const &block, int shmem,
                             HIPInternal const *hip_instance) {
     const auto hip_device = hip_instance->m_hipDev;
-    // Wait until the previous kernel that uses the constant buffer is done
-    std::lock_guard<std::mutex> lock(HIPInternal::constantMemMutex[hip_device]);
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        hipEventSynchronize(HIPInternal::constantMemReusable[hip_device]));
+
+    auto lock = HIPInternal::constantMemReusable[hip_device].acquire();
 
     // Copy functor (synchronously) to staging buffer in pinned host memory
     unsigned long *staging = hip_instance->constantMemHostStaging[hip_device];
@@ -541,9 +539,8 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     (base_t::
          get_kernel_func())<<<grid, block, shmem, hip_instance->m_stream>>>();
 
-    // Record an event that says when the constant buffer can be reused
-    KOKKOS_IMPL_HIP_SAFE_CALL(hip_instance->hip_event_record_wrapper(
-        HIPInternal::constantMemReusable[hip_device]));
+    HIPInternal::constantMemReusable[hip_device].release(
+        std::move(lock), hip_instance->m_stream);
   }
 };
 

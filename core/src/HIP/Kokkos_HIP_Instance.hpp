@@ -65,6 +65,96 @@ HIP::size_type *hip_internal_scratch_flags(const HIP &instance,
 
 //----------------------------------------------------------------------------
 
+// Helper to protect a shared resource from being used by multiple streams
+// simultaneously.
+// If used properly, only one stream at a time will be able to use the shared
+// resource.
+// This helper should be used in a thread-safe way.
+//
+// Typical usage:
+// @code
+// auto lock_for_acquisition = shared_resource.acquire();
+//
+// ... do stuff on the shared resource ...
+//
+// shared_resource.release(std::move(lock_for_acquisition), stream);
+//
+// ...
+//
+// auto lock_for_involvement = shared_resource.lock();
+// hipStreamSynchronize(stream);
+// shared_resource.check_if_involved_and_unlock(std::move(lock_for_involvement),
+//                                              stream);
+// hipStreamDestroy(stream);
+// @endcode
+struct SharedResourceLock {
+  bool m_need_sync = false;
+  std::mutex m_mutex{};
+  hipEvent_t m_event   = nullptr;
+  hipStream_t m_stream = nullptr;
+
+  // Acquire the right to interact in a thread-safe way.
+  [[nodiscard]] auto lock() { return std::unique_lock<std::mutex>{m_mutex}; }
+
+  // The event is created for the current device. The instance is locked first.
+  void initialize() {
+    auto lock = this->lock();
+    if (!m_event) {
+      KOKKOS_IMPL_HIP_SAFE_CALL(
+          hipEventCreateWithFlags(&m_event, hipEventDisableTiming));
+    }
+  }
+
+  // Destroying an event can be done even if it is not bound to the current
+  // device.
+  void finalize() {
+    auto lock = this->lock();
+    if (m_event) {
+      KOKKOS_IMPL_HIP_SAFE_CALL(hipEventDestroy(m_event));
+    }
+  }
+
+  SharedResourceLock() = default;
+
+  SharedResourceLock(SharedResourceLock const &other)            = delete;
+  SharedResourceLock(SharedResourceLock &&other)                 = delete;
+  SharedResourceLock &operator=(SharedResourceLock const &other) = delete;
+  SharedResourceLock &operator=(SharedResourceLock &&other)      = delete;
+
+  // Acquire the right to use the shared resource. The instance is locked first.
+  [[nodiscard]] auto acquire() {
+    auto lock = this->lock();
+    if (m_need_sync) KOKKOS_IMPL_HIP_SAFE_CALL(hipEventSynchronize(m_event));
+    return lock;
+  }
+
+  // Record an event in a stream to signal when it's done with the shared
+  // resource.
+  void release(std::unique_lock<std::mutex> lock, hipStream_t stream) {
+    KOKKOS_ENSURES(lock.owns_lock());
+    KOKKOS_ENSURES((lock.mutex() == std::addressof(m_mutex)));
+    m_stream = stream;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipEventRecord(m_event, m_stream));
+    m_need_sync = true;
+    lock.unlock();
+  }
+
+  // Check if the stream is the one that was used for the event recording.
+  // We assume that this function is called once the stream has been
+  // synchronized, and we mark that the shared resource lock does not need to
+  // synchronize the next time it is acquired.
+  // Doing so allows the current stream to be properly destroyed, while ensuring
+  // that the next constant memory launch will work fine.
+  // See https://github.com/kokkos/kokkos/issues/8006 for more details.
+  void check_if_involved_and_unlock(std::unique_lock<std::mutex> lock,
+                                    hipStream_t stream) {
+    KOKKOS_ENSURES(lock.owns_lock());
+    KOKKOS_ENSURES((lock.mutex() == std::addressof(m_mutex)));
+    if (m_stream == stream) m_need_sync = false;
+    lock.unlock();
+  }
+};
+
 class HIPInternal {
  private:
   HIPInternal(const HIPInternal &);
@@ -108,8 +198,7 @@ class HIPInternal {
 
   static std::set<int> hip_devices;
   static std::map<int, unsigned long *> constantMemHostStaging;
-  static std::map<int, hipEvent_t> constantMemReusable;
-  static std::map<int, std::mutex> constantMemMutex;
+  static std::map<int, SharedResourceLock> constantMemReusable;
 
   static HIPInternal &singleton();
 
@@ -148,19 +237,6 @@ class HIPInternal {
   void set_hip_device() const {
     verify_is_initialized("set_hip_device");
     KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
-  }
-
-  // HIP API wrappers where we set the correct device id before calling the HIP
-  // API functions.
-  hipError_t hip_event_create_with_flags_wrapper(
-      hipEvent_t *event, const unsigned int flags) const {
-    set_hip_device();
-    return hipEventCreateWithFlags(event, flags);
-  }
-
-  hipError_t hip_event_record_wrapper(hipEvent_t event) const {
-    set_hip_device();
-    return hipEventRecord(event, m_stream);
   }
 
   hipError_t hip_free_wrapper(void *ptr) const {
