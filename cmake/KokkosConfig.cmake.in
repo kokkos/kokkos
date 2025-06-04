@@ -57,6 +57,5 @@ if(NOT @Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
     endif()
   endif()
 endif()
-endif()
 
 set(Kokkos_COMPILE_LANGUAGE @KOKKOS_COMPILE_LANGUAGE@)
