@@ -326,7 +326,7 @@ template <typename fp16_t>
 KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
   static_assert((std::is_same_v<fp16_t, Kokkos::Experimental::half_t> ||
                  std::is_same_v<fp16_t, Kokkos::Experimental::bhalf_t>)
-                 && sizeof(fp16_t) == 2, "nextafter_impl only supports half_t and bhalf_t");
+                 && sizeof(fp16_t) == 2, "nextafter_half_impl only supports half_t and bhalf_t");
   constexpr std::uint16_t FP16_SIGN_MASK = 0x8000;
   constexpr std::uint16_t FP16_POS_ZERO  = 0x0000;
   constexpr std::uint16_t FP16_NEG_ZERO  = 0x8000;
@@ -342,7 +342,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
    if (from == to) return to;
 
    // Get unsigned integer representation of from
-   std::uint16_t uint_from = bit_cast<std::uint16_t, fp16_t>(from);
+   std::uint16_t uint_from = bit_cast<std::uint16_t>(from);
 
    // Handle zeros
    if (uint_from == FP16_POS_ZERO || uint_from == FP16_NEG_ZERO) {
@@ -350,8 +350,8 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
      // Return smallest magnitude number with the sign of 'to'.
      // nextafter(±0, negative) -> smallest_negative
      // nextafter(±0, positive) -> smallest_positive
-     return bit_cast<fp16_t, std::uint16_t>((to > from) ? FP16_SMALLEST_POS_DN
-                                                        : FP16_SMALLEST_NEG_DN);
+     return bit_cast<fp16_t>((to > from) ? FP16_SMALLEST_POS_DN
+                                         : FP16_SMALLEST_NEG_DN);
    }
 
    // Determine direction and sign of 'from'
@@ -383,7 +383,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
        uint_result = uint_from - 1;
      }
    }
-   return bit_cast<fp16_t, std::uint16_t>(uint_result);
+   return bit_cast<fp16_t>(uint_result);
 }
 
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
