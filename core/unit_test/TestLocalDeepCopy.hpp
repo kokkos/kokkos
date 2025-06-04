@@ -238,8 +238,45 @@ struct copy_value {
   bool success() const { return check_value_copy(dst, value); }
 };
 
+//-------------------------------------------------------------------------------------------------------------
+// Testing code
+//-------------------------------------------------------------------------------------------------------------
+
 template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_thread(const int N, const Functor& functor) {
+void test_local_deep_copy_team_vector_range(const int N,
+                                            const Functor& functor) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        functor(Kokkos::TeamVectorRange(teamMember, 0), 0, N);
+      });
+
+  Kokkos::fence();
+  ASSERT_TRUE(functor.success());
+}
+
+template <typename ExecSpace, typename Functor>
+void test_local_deep_copy_team_thread_range(const int N,
+                                            const Functor& functor) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        functor(Kokkos::TeamThreadRange(teamMember, 0), 0, N);
+      });
+
+  Kokkos::fence();
+  ASSERT_TRUE(functor.success());
+}
+
+template <typename ExecSpace, typename Functor>
+void test_local_deep_copy_thread_vector_range(const int N,
+                                              const Functor& functor) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
@@ -270,27 +307,8 @@ void test_local_deep_copy_thread(const int N, const Functor& functor) {
   ASSERT_TRUE(functor.success());
 }
 
-//-------------------------------------------------------------------------------------------------------------
-// Testing code
-//-------------------------------------------------------------------------------------------------------------
-
 template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_team(const int N, const Functor& functor) {
-  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
-  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        functor(Kokkos::TeamVectorRange(teamMember, 0), 0, N);
-      });
-
-  Kokkos::fence();
-  ASSERT_TRUE(functor.success());
-}
-
-template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_range(const int N, const Functor& functor) {
+void test_local_deep_copy_sequential(const int N, const Functor& functor) {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& idx) {
         functor(Kokkos::Experimental::copy_seq(), idx, N);
@@ -354,9 +372,10 @@ void test_local_deep_copy_range(const int N, const Functor& functor) {
                         ExecSpace>(8);                                         \
   }
 
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(thread)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_vector_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_thread_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(thread_vector_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
 
 #if (defined(KOKKOS_ENABLE_SYCL) && defined(NDEBUG)) || \
     defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
@@ -401,9 +420,10 @@ KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(range)
         Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(8);    \
   }
 
-KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(team)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(thread)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(team_vector_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(team_thread_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(thread_vector_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(sequential)
 
 //-------------------------------------------------------------------------------------------------------------
 
@@ -414,7 +434,8 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #endif
 
 template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_team_member(const int N, const Functor& functor) {
+void test_local_deep_copy_deprecated_team_member(const int N,
+                                                 const Functor& functor) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
@@ -429,7 +450,8 @@ void test_local_deep_copy_team_member(const int N, const Functor& functor) {
 }
 
 template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_sequential(const int N, const Functor& functor) {
+void test_local_deep_copy_deprecated_sequential(const int N,
+                                                const Functor& functor) {
   Kokkos::parallel_for(
       Kokkos::RangePolicy<ExecSpace>(0, N),
       KOKKOS_LAMBDA(const int& idx) { functor(idx, N); });
@@ -438,8 +460,8 @@ void test_local_deep_copy_sequential(const int N, const Functor& functor) {
   ASSERT_TRUE(functor.success());
 }
 
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_member)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(deprecated_team_member)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(deprecated_sequential)
 
 #if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
