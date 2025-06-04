@@ -1521,64 +1521,118 @@ Kokkos::Impl::ThreadVectorRangeBoundariesStruct<iTypeOut, TeamMemberType>
                            iTypeOut N) {
   return Kokkos::ThreadVectorRange(policy.member, N);
 }
+
+/** \brief  Deep copy with 1D views.  */
+template <class PolicyType, class ViewType, class Functor>
+void KOKKOS_INLINE_FUNCTION flat_local_deep_copy(const PolicyType& policy,
+                                                 const ViewType& dst,
+                                                 const Functor& functor) {
+  const size_t N = dst.extent(0);
+  if (N >= static_cast<size_t>(finite_max_v<int>)) {
+    Kokkos::parallel_for(local_deep_copy_policy(policy, N), functor);
+  } else {
+    Kokkos::parallel_for(local_deep_copy_policy(policy, static_cast<int>(N)),
+                         functor);
+  }
+}
 //----------------------------------------------------------------------------
 
-template <Kokkos::Iterate IterOrder, typename iType, class TeamMemberType,
-          class ViewType, std::size_t... Idx>
+template <Kokkos::Iterate IterOrder, bool UseSizeT, typename iType,
+          class TeamMemberType, class ViewType, std::size_t... Idx>
 KOKKOS_INLINE_FUNCTION Kokkos::TeamVectorMDRange<
     Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>
 md_local_deep_copy_policy(Kokkos::Impl::TeamVectorRangeBoundariesStruct<
                               iType, TeamMemberType> const& policy,
                           ViewType const& view, std::index_sequence<Idx...>) {
-  return Kokkos::TeamVectorMDRange<
-      Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
-      policy.member, view.extent(Idx)...);
+  if constexpr (UseSizeT) {
+    return Kokkos::TeamVectorMDRange<
+        Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
+        policy.member, view.extent(Idx)...);
+  } else {
+    return Kokkos::TeamVectorMDRange<
+        Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
+        policy.member, view.extent_int(Idx)...);
+  }
 }
 
-template <Kokkos::Iterate IterOrder, typename iType, class TeamMemberType,
-          class ViewType, std::size_t... Idx>
+template <Kokkos::Iterate IterOrder, bool UseSizeT, typename iType,
+          class TeamMemberType, class ViewType, std::size_t... Idx>
 KOKKOS_INLINE_FUNCTION Kokkos::TeamThreadMDRange<
     Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>
 md_local_deep_copy_policy(Kokkos::Impl::TeamThreadRangeBoundariesStruct<
                               iType, TeamMemberType> const& policy,
                           ViewType const& view, std::index_sequence<Idx...>) {
-  return Kokkos::TeamThreadMDRange<
-      Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
-      policy.member, view.extent(Idx)...);
+  if constexpr (UseSizeT) {
+    return Kokkos::TeamThreadMDRange<
+        Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
+        policy.member, view.extent(Idx)...);
+  } else {
+    return Kokkos::TeamThreadMDRange<
+        Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
+        policy.member, view.extent_int(Idx)...);
+  }
 }
 
-template <Kokkos::Iterate IterOrder, typename iType, class TeamMemberType,
-          class ViewType, std::size_t... Idx>
+template <Kokkos::Iterate IterOrder, bool UseSizeT, typename iType,
+          class TeamMemberType, class ViewType, std::size_t... Idx>
 KOKKOS_INLINE_FUNCTION Kokkos::ThreadVectorMDRange<
     Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>
 md_local_deep_copy_policy(Kokkos::Impl::ThreadVectorRangeBoundariesStruct<
                               iType, TeamMemberType> const& policy,
                           ViewType const& view, std::index_sequence<Idx...>) {
-  return Kokkos::ThreadVectorMDRange<
-      Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
-      policy.member, view.extent(Idx)...);
+  if constexpr (UseSizeT) {
+    return Kokkos::ThreadVectorMDRange<
+        Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
+        policy.member, view.extent(Idx)...);
+  } else {
+    return Kokkos::ThreadVectorMDRange<
+        Kokkos::Rank<sizeof...(Idx), IterOrder, IterOrder>, TeamMemberType>(
+        policy.member, view.extent_int(Idx)...);
+  }
 }
 
-/** \brief  Deep copy between multidimensional views.  */
+/** \brief  Deep copy with multidimensional views.  */
 template <class PolicyType, class Functor, class DataType, class... Properties>
 void KOKKOS_INLINE_FUNCTION md_local_deep_copy(
     const PolicyType& policy, const Kokkos::View<DataType, Properties...>& dst,
     const Functor& functor) {
   constexpr std::size_t rank = ViewTraits<DataType, Properties...>::rank;
 
-  Kokkos::Iterate iterate = Kokkos::Impl::get_iteration_order(dst);
-  if (iterate == Kokkos::Iterate::Right) {
-    Kokkos::parallel_for(md_local_deep_copy_policy<Kokkos::Iterate::Right>(
-                             policy, dst, std::make_index_sequence<rank>{}),
-                         functor);
-  } else if (iterate == Kokkos::Iterate::Left) {
-    Kokkos::parallel_for(md_local_deep_copy_policy<Kokkos::Iterate::Left>(
-                             policy, dst, std::make_index_sequence<rank>{}),
-                         functor);
+  const Kokkos::Iterate iterate = Kokkos::Impl::get_iteration_order(dst);
+  if (dst.span() >= static_cast<size_t>(finite_max_v<int>)) {
+    if (iterate == Kokkos::Iterate::Right) {
+      Kokkos::parallel_for(
+          md_local_deep_copy_policy<Kokkos::Iterate::Right, true>(
+              policy, dst, std::make_index_sequence<rank>{}),
+          functor);
+    } else if (iterate == Kokkos::Iterate::Left) {
+      Kokkos::parallel_for(
+          md_local_deep_copy_policy<Kokkos::Iterate::Left, true>(
+              policy, dst, std::make_index_sequence<rank>{}),
+          functor);
+    } else {
+      Kokkos::parallel_for(
+          md_local_deep_copy_policy<Kokkos::Iterate::Default, true>(
+              policy, dst, std::make_index_sequence<rank>{}),
+          functor);
+    }
   } else {
-    Kokkos::parallel_for(md_local_deep_copy_policy<Kokkos::Iterate::Default>(
-                             policy, dst, std::make_index_sequence<rank>{}),
-                         functor);
+    if (iterate == Kokkos::Iterate::Right) {
+      Kokkos::parallel_for(
+          md_local_deep_copy_policy<Kokkos::Iterate::Right, false>(
+              policy, dst, std::make_index_sequence<rank>{}),
+          functor);
+    } else if (iterate == Kokkos::Iterate::Left) {
+      Kokkos::parallel_for(
+          md_local_deep_copy_policy<Kokkos::Iterate::Left, false>(
+              policy, dst, std::make_index_sequence<rank>{}),
+          functor);
+    } else {
+      Kokkos::parallel_for(
+          md_local_deep_copy_policy<Kokkos::Iterate::Default, false>(
+              policy, dst, std::make_index_sequence<rank>{}),
+          functor);
+    }
   }
 }
 
@@ -1711,7 +1765,7 @@ deep_copy(const Impl::CopySeqTag&, const View<DT, DP...>& dst,
   }
 }
 
-/** \brief  Deep copy between two 1D views */
+/** \brief  Deep copy between two views */
 template <class PolicyType, class DT, class... DP, class ST, class... SP>
 void KOKKOS_INLINE_FUNCTION
 deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
@@ -1720,40 +1774,7 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
               (Impl::is_team_policy_v<PolicyType> &&
                std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
                std::is_void_v<typename ViewTraits<ST, SP...>::specialize> &&
-               (unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
-                unsigned(ViewTraits<ST, SP...>::rank) == 1))>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  if (!Impl::views_have_same_extents(dst, src)) {
-    Kokkos::abort("Error: Kokkos::deep_copy extents of views don't match");
-  }
-
-  const size_t N = dst.extent(0);
-
-  Impl::local_deep_copy_barrier(policy);
-  if (N < static_cast<size_t>(finite_max_v<int>)) {
-    Kokkos::parallel_for(
-        Impl::local_deep_copy_policy(policy, static_cast<int>(N)),
-        [=](const int i) { dst(i) = src(i); });
-  } else {
-    Kokkos::parallel_for(Impl::local_deep_copy_policy(policy, N),
-                         [=](const size_t i) { dst(i) = src(i); });
-  }
-  Impl::local_deep_copy_barrier(policy);
-}
-
-/** \brief  Deep copy between two multidimensional views */
-template <class PolicyType, class DT, class... DP, class ST, class... SP>
-void KOKKOS_INLINE_FUNCTION
-deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
-          const View<ST, SP...>& src,
-          std::enable_if_t<
-              (Impl::is_team_policy_v<PolicyType> &&
-               std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
-               std::is_void_v<typename ViewTraits<ST, SP...>::specialize> &&
-               unsigned(ViewTraits<DT, DP...>::rank) > 1 &&
+               unsigned(ViewTraits<DT, DP...>::rank) >= 1 &&
                unsigned(ViewTraits<DT, DP...>::rank) ==
                    unsigned(ViewTraits<ST, SP...>::rank))>* = nullptr) {
   if (dst.data() == nullptr) {
@@ -1768,7 +1789,11 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(policy, dst, src);
   } else {
-    Impl::md_local_deep_copy(policy, dst, Impl::MDCopyFunctor(dst, src));
+    if constexpr (ViewTraits<DT, DP...>::rank == 1) {
+      Impl::flat_local_deep_copy(policy, dst, Impl::MDCopyFunctor(dst, src));
+    } else {
+      Impl::md_local_deep_copy(policy, dst, Impl::MDCopyFunctor(dst, src));
+    }
   }
   Impl::local_deep_copy_barrier(policy);
 }
@@ -1792,7 +1817,7 @@ deep_copy(const Impl::CopySeqTag&, const View<DT, DP...>& dst,
   }
 }
 
-/** \brief  Deep copy a value into a 1D view */
+/** \brief  Deep copy a value into a view */
 template <class PolicyType, class DT, class... DP>
 void KOKKOS_INLINE_FUNCTION
 deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
@@ -1800,34 +1825,7 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
           std::enable_if_t<
               (Impl::is_team_policy_v<PolicyType> &&
                std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
-               unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
-  if (dst.data() == nullptr) {
-    return;
-  }
-
-  const size_t N = dst.extent(0);
-
-  Impl::local_deep_copy_barrier(policy);
-  if (N < static_cast<size_t>(finite_max_v<int>)) {
-    Kokkos::parallel_for(
-        Impl::local_deep_copy_policy(policy, static_cast<int>(N)),
-        [=](const int i) { dst(i) = value; });
-  } else {
-    Kokkos::parallel_for(Impl::local_deep_copy_policy(policy, N),
-                         [=](const size_t i) { dst(i) = value; });
-  }
-  Impl::local_deep_copy_barrier(policy);
-}
-
-/** \brief  Deep copy a value into a multidimensional view */
-template <class PolicyType, class DT, class... DP>
-void KOKKOS_INLINE_FUNCTION
-deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
-          typename ViewTraits<DT, DP...>::const_value_type& value,
-          std::enable_if_t<
-              (Impl::is_team_policy_v<PolicyType> &&
-               std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
-               unsigned(ViewTraits<DT, DP...>::rank) > 1)>* = nullptr) {
+               unsigned(ViewTraits<DT, DP...>::rank) >= 1)>* = nullptr) {
   if (dst.data() == nullptr) {
     return;
   }
@@ -1836,7 +1834,13 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(policy, dst, value);
   } else {
-    Impl::md_local_deep_copy(policy, dst, Impl::MDValueCopyFunctor(dst, value));
+    if constexpr (ViewTraits<DT, DP...>::rank == 1) {
+      Impl::flat_local_deep_copy(policy, dst,
+                                 Impl::MDValueCopyFunctor(dst, value));
+    } else {
+      Impl::md_local_deep_copy(policy, dst,
+                               Impl::MDValueCopyFunctor(dst, value));
+    }
   }
   Impl::local_deep_copy_barrier(policy);
 }
