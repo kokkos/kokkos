@@ -28,6 +28,7 @@
 #endif
 
 #include <Kokkos_Core.hpp>
+#include <KokkosExp_InterOp.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <type_traits>
 
@@ -1846,6 +1847,14 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
     const size_t n7 = KOKKOS_INVALID_INDEX) {
   impl_realloc(v, n0, n1, n2, n3, n4, n5, n6, n7, Kokkos::view_alloc(arg_prop));
 }
+
+namespace Experimental {
+template <class T, class... P>
+struct python_view_type<DynRankView<T, P...>> {
+  using type = Kokkos::Impl::python_view_type_impl_t<
+      typename DynRankView<T, P...>::array_type>;
+};
+}  // namespace Experimental
 
 }  // namespace Kokkos
 
