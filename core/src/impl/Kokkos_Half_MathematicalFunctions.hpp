@@ -328,8 +328,6 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
                  std::is_same_v<fp16_t, Kokkos::Experimental::bhalf_t>)
                  && sizeof(fp16_t) == 2, "nextafter_half_impl only supports half_t and bhalf_t");
   constexpr std::uint16_t FP16_SIGN_MASK = 0x8000;
-  constexpr std::uint16_t FP16_POS_ZERO  = 0x0000;
-  constexpr std::uint16_t FP16_NEG_ZERO  = 0x8000;
   constexpr std::uint16_t FP16_SMALLEST_POS_DN = 0x0001;  // Smallest positive denormal
   constexpr std::uint16_t FP16_SMALLEST_NEG_DN = 0x8001;  // Smallest negative denormal (magnitude)
 
@@ -345,7 +343,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
    std::uint16_t uint_from = bit_cast<std::uint16_t>(from);
 
    // Handle zeros
-   if (uint_from == FP16_POS_ZERO || uint_from == FP16_NEG_ZERO) {
+   if (from == fp16_t(0)) {
      // from is +0.0 or -0.0
      // Return smallest magnitude number with the sign of 'to'.
      // nextafter(±0, negative) -> smallest_negative
@@ -361,31 +359,31 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
 
    std::uint16_t uint_result = uint_from + 2 * (to_positive_infinity ^ from_is_negative) - 1;
    // This is equivalent to the following operations.
-   //std::uint16_t uint_result;
+   // std::uint16_t uint_result;
    //
-   //if (from_is_negative) {
-   //  // For negative numbers, increasing magnitude means moving towards -inf
-   //  // (larger uint value) Decreasing magnitude means moving towards zero
-   //  // (smaller uint value)
-   //  if (to_positive_infinity) {
-   //    // Moving toward zero or positive
-   //    uint_result = uint_from - 1;
-   //  } else {
-   //    // Moving toward negative infinity
-   //    uint_result = uint_from + 1;
-   //  }
-   //} else {
-   //  // For positive numbers, increasing magnitude means moving towards +inf
-   //  // (larger uint value) Decreasing magnitude means moving towards zero
-   //  // (smaller uint value)
-   //  if (to_positive_infinity) {
-   //    // Moving toward positive infinity
-   //    uint_result = uint_from + 1;
-   //  } else {
-   //    // Moving toward zero or negative infinity
-   //    uint_result = uint_from - 1;
-   //  }
-   //}
+   // if (from_is_negative) {
+   //   // For negative numbers, increasing magnitude means moving towards -inf
+   //   // (larger uint value) Decreasing magnitude means moving towards zero
+   //   // (smaller uint value)
+   //   if (to_positive_infinity) {
+   //     // Moving toward zero or positive
+   //     uint_result = uint_from - 1;
+   //   } else {
+   //     // Moving toward negative infinity
+   //     uint_result = uint_from + 1;
+   //   }
+   // } else {
+   //   // For positive numbers, increasing magnitude means moving towards +inf
+   //   // (larger uint value) Decreasing magnitude means moving towards zero
+   //   // (smaller uint value)
+   //   if (to_positive_infinity) {
+   //     // Moving toward positive infinity
+   //     uint_result = uint_from + 1;
+   //   } else {
+   //     // Moving toward zero or negative infinity
+   //     uint_result = uint_from - 1;
+   //   }
+   // }
    return bit_cast<fp16_t>(uint_result);
 }
 
