@@ -17,6 +17,7 @@
 module;
 
 #include <Kokkos_Core.hpp>
+#include <KokkosExp_InterOp.hpp>
 
 export module kokkoscore;
 
@@ -54,6 +55,7 @@ using ::Kokkos::hwloc::get_available_threads_per_core;
   namespace Experimental {
   using ::Kokkos::Experimental::partition_space;
   using ::Kokkos::Experimental::WorkItemProperty;
+  using ::Kokkos::Experimental::python_view_type;
   }  // namespace Experimental
 
   namespace Impl {
@@ -70,6 +72,8 @@ using ::Kokkos::hwloc::get_available_threads_per_core;
   using ::Kokkos::Impl::throw_runtime_exception;
   using ::Kokkos::Impl::ViewCtorProp;
   using ::Kokkos::Impl::WithoutInitializing_t;
+
+  using ::Kokkos::Impl::python_view_type_impl_t;
   }  // namespace Impl
 
   using ::Kokkos::IndexType;
