@@ -23,10 +23,12 @@ namespace Kokkos::Impl {
 
 template <class ElementType>
 struct RestrictAccessor {
-  using offset_policy    = RestrictAccessor;
-  using element_type     = ElementType;
-  using reference        = ElementType& KOKKOS_RESTRICT;
-  using data_handle_type = ElementType* KOKKOS_RESTRICT;
+  using offset_policy         = RestrictAccessor;
+  using element_type          = ElementType;
+  using bare_reference        = ElementType&;
+  using bare_data_handle_type = ElementType*;
+  using reference             = bare_reference KOKKOS_RESTRICT;
+  using data_handle_type      = bare_data_handle_type KOKKOS_RESTRICT;
 
   KOKKOS_DEFAULTED_FUNCTION constexpr RestrictAccessor() noexcept = default;
 
@@ -54,14 +56,17 @@ struct RestrictAccessor {
     return default_accessor<OtherElementType>{};
   }
 
+  // technically this is supposed to return data_handle_type but qualifiers are
+  // ignored on return types and compilers may issue a warning
   KOKKOS_INLINE_FUNCTION
-  constexpr data_handle_type offset(data_handle_type p,
-                                    size_t i) const noexcept {
+  constexpr bare_data_handle_type offset(data_handle_type p,
+                                         size_t i) const noexcept {
     return p + i;
   }
 
+  // technically this is supposed to return reference
   KOKKOS_FORCEINLINE_FUNCTION
-  constexpr reference access(data_handle_type p, size_t i) const noexcept {
+  constexpr bare_reference access(data_handle_type p, size_t i) const noexcept {
     return p[i];
   }
 };
