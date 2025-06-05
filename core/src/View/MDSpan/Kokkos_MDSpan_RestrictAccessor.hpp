@@ -22,21 +22,21 @@
 namespace Kokkos::Impl {
 
 template <class ElementType>
-struct restrict_accessor {
-  using offset_policy    = restrict_accessor;
+struct RestrictAccessor {
+  using offset_policy    = RestrictAccessor;
   using element_type     = ElementType;
   using reference        = ElementType& KOKKOS_RESTRICT;
   using data_handle_type = ElementType* KOKKOS_RESTRICT;
 
-  KOKKOS_DEFAULTED_FUNCTION constexpr restrict_accessor() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION constexpr RestrictAccessor() noexcept = default;
 
   template <
       class OtherElementType,
       typename ::std::enable_if<
           (std::is_convertible_v<OtherElementType (*)[], element_type (*)[]>),
           int>::type = 0>
-  KOKKOS_INLINE_FUNCTION constexpr restrict_accessor(
-      restrict_accessor<OtherElementType>) noexcept {}
+  KOKKOS_INLINE_FUNCTION constexpr RestrictAccessor(
+      RestrictAccessor<OtherElementType>) noexcept {}
 
   KOKKOS_INLINE_FUNCTION
   constexpr data_handle_type offset(data_handle_type p,
