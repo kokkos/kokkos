@@ -185,7 +185,7 @@ struct DynRankDimTraits {
 
 // Non-strided Layout
 template <typename Layout, typename iType>
-KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
     (std::is_same_v<Layout, Kokkos::LayoutRight> ||
      std::is_same_v<Layout, Kokkos::LayoutLeft>)&&std::is_integral_v<iType>,
     Layout>
@@ -202,7 +202,7 @@ reconstructLayout(const Layout& layout, iType dynrank) {
 
 // LayoutStride
 template <typename Layout, typename iType>
-KOKKOS_INLINE_FUNCTION static std::enable_if_t<
+KOKKOS_INLINE_FUNCTION std::enable_if_t<
     (std::is_same_v<Layout, Kokkos::LayoutStride>)&&std::is_integral_v<iType>,
     Layout>
 reconstructLayout(const Layout& layout, iType dynrank) {
