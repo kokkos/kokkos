@@ -367,16 +367,21 @@ class CudaInternal {
 
 namespace Experimental::Impl {
 // For each space in partition, create new cudaStream_t on the same device as
-// base_instance
-template <class T, class Container>
-void impl_partition_space(const Cuda& base_instance, const std::vector<T>&,
-                          Container& instances) {
-  for (auto& in : instances) {
-    cudaStream_t stream;
-    KOKKOS_IMPL_CUDA_SAFE_CALL(base_instance.impl_internal_space_instance()
-                                   ->cuda_stream_create_wrapper(&stream));
-    in = Cuda(stream, Kokkos::Impl::ManageStream::yes);
-  }
+// base_instance, ignoring weights
+template <class T>
+std::vector<Cuda> impl_partition_space(const Cuda& base_instance,
+                                       const std::vector<T>& weights) {
+  std::vector<Cuda> instances;
+  instances.reserve(weights.size());
+  std::generate_n(
+      std::back_inserter(instances), weights.size(), [&base_instance]() {
+        cudaStream_t stream;
+        KOKKOS_IMPL_CUDA_SAFE_CALL(base_instance.impl_internal_space_instance()
+                                       ->cuda_stream_create_wrapper(&stream));
+        return Cuda(stream, Kokkos::Impl::ManageStream::yes);
+      });
+
+  return instances;
 }
 }  // namespace Experimental::Impl
 

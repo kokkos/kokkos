@@ -290,11 +290,16 @@ namespace Kokkos {
 namespace Experimental {
 namespace Impl {
 // Customization point for backends. Default behavior is to return the passed in
-// instance
-template <class ExecSpace, class T, class Container>
-void impl_partition_space(const ExecSpace& base_instance, const std::vector<T>&,
-                          Container& instances) {
-  for (auto& in : instances) in = base_instance;
+// instance, ignoring weights
+template <class ExecSpace, class T>
+std::vector<ExecSpace> impl_partition_space(const ExecSpace& base_instance,
+                                            const std::vector<T>& weights) {
+  std::vector<ExecSpace> instances;
+  instances.reserve(weights.size());
+  std::generate_n(std::back_inserter(instances), weights.size(),
+                  [&base_instance]() { return base_instance; });
+
+  return instances;
 }
 }  // namespace Impl
 
@@ -316,8 +321,10 @@ std::array<ExecSpace, sizeof...(Args)> partition_space(
       "Kokkos Error: partitioning arguments must be integers or floats");
 
   std::vector<std::common_type_t<Args...>> weights = {args...};
+  auto instances_vec = Impl::impl_partition_space(base_instance, weights);
+
   std::array<ExecSpace, sizeof...(Args)> instances;
-  Impl::impl_partition_space(base_instance, weights, instances);
+  std::copy(instances_vec.begin(), instances_vec.end(), instances.begin());
   return instances;
 }
 
@@ -331,9 +338,7 @@ std::vector<ExecSpace> partition_space(ExecSpace const& base_instance,
       std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
-  std::vector<ExecSpace> instances(weights.size());
-  Impl::impl_partition_space(base_instance, weights, instances);
-  return instances;
+  return Impl::impl_partition_space(base_instance, weights);
 }
 }  // namespace Experimental
 }  // namespace Kokkos

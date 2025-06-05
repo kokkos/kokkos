@@ -457,11 +457,17 @@ class HPX {
 };
 
 namespace Impl {
-// Create new, independent of HPX execution space for each partition
-template <class T, class Container>
-void impl_partition_space(const Serial &, const std::vector<T> &,
-                          Container &instances) {
-  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
+// Create new, independent instance of HPX execution space for each partition,
+// ignoring weights
+template <class T>
+std::vector<HPX> impl_partition_space(const HPX &,
+                                      const std::vector<T> &weights) {
+  std::vector<HPX> instances;
+  instances.reserve(weights.size());
+  std::generate_n(std::back_inserter(instances), weights.size(),
+                  []() { return HPX(HPX::instance_mode::independent); });
+
+  return instances;
 }
 }  // namespace Impl
 

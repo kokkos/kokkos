@@ -166,16 +166,20 @@ inline std::vector<int> calculate_omp_pool_sizes(
   return pool_sizes;
 }
 
-// Create new OpenMP instances with pool sizes relative to
-// input weights
-template <class T, class Container>
-void impl_partition_space(const OpenMP& base_instance,
-                          const std::vector<T>& weights, Container& instances) {
+// Create new OpenMP instances with pool sizes relative to input weights
+template <class T>
+std::vector<OpenMP> impl_partition_space(const OpenMP& base_instance,
+                                         const std::vector<T>& weights) {
   const auto pool_sizes =
       Impl::calculate_omp_pool_sizes(base_instance, weights);
+
+  std::vector<OpenMP> instances;
+  instances.reserve(pool_sizes.size());
   for (size_t i = 0; i < pool_sizes.size(); ++i) {
-    instances[i] = OpenMP(pool_sizes[i]);
+    instances.emplace_back(OpenMP(pool_sizes[i]));
   }
+
+  return instances;
 }
 }  // namespace Experimental::Impl
 }  // namespace Kokkos
