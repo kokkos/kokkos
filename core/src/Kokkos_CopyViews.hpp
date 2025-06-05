@@ -1092,8 +1092,6 @@ inline void deep_copy(
   using src_type         = View<ST, SP...>;
   using dst_memory_space = typename dst_type::memory_space;
   using src_memory_space = typename src_type::memory_space;
-  using dst_value_type   = typename dst_type::value_type;
-  using src_value_type   = typename src_type::value_type;
   using dst_ptr_type     = decltype(dst.data());
   using src_ptr_type     = decltype(src.data());
 
@@ -1240,7 +1238,7 @@ inline void deep_copy(
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     const size_t nbytes = allocation_size_from_mapping_and_accessor(
                               src.mapping(), src.accessor()) *
-                          sizeof(std::remove_pointer_t<decltype(dst.data())>);
+                          sizeof(std::remove_pointer_t<dst_ptr_type>);
 #else
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
 #endif
@@ -2517,37 +2515,39 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-    auto prop_copy = Impl::with_properties_if_unset(
-        arg_prop, typename view_type::execution_space{}, v.label());
+    auto prop_copy = [&]() {
+      if constexpr (view_type::traits::impl_is_customized) {
+        // FIXME SACADO: this is specializing for sacado, might need a better
+        // thing
+        Kokkos::Impl::AccessorArg_t acc_arg{new_extents[view_type::rank()]};
+        return Impl::with_properties_if_unset(
+            arg_prop, acc_arg, typename view_type::execution_space{},
+            v.label());
+      } else
+        return Impl::with_properties_if_unset(
+            arg_prop, typename view_type::execution_space{}, v.label());
+      ;
+    }();
 
     view_type v_resized;
-    if constexpr (!view_type::traits::impl_is_customized) {
-      // FIXME: this should be forbidden anyway
-      v_resized = view_type(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
+    if constexpr (view_type::rank() == 0) {
+      v_resized = view_type(prop_copy);
+    } else if constexpr (view_type::rank() == 1) {
+      v_resized = view_type(prop_copy, n0);
+    } else if constexpr (view_type::rank() == 2) {
+      v_resized = view_type(prop_copy, n0, n1);
+    } else if constexpr (view_type::rank() == 3) {
+      v_resized = view_type(prop_copy, n0, n1, n2);
+    } else if constexpr (view_type::rank() == 4) {
+      v_resized = view_type(prop_copy, n0, n1, n2, n3);
+    } else if constexpr (view_type::rank() == 5) {
+      v_resized = view_type(prop_copy, n0, n1, n2, n3, n4);
+    } else if constexpr (view_type::rank() == 6) {
+      v_resized = view_type(prop_copy, n0, n1, n2, n3, n4, n5);
+    } else if constexpr (view_type::rank() == 7) {
+      v_resized = view_type(prop_copy, n0, n1, n2, n3, n4, n5, n6);
     } else {
-      // FIXME SACADO: this is specializing for sacado, might need a better
-      // thing
-      Kokkos::Impl::AccessorArg_t acc_arg{new_extents[view_type::rank()]};
-      auto prop_copy2 = Impl::with_properties_if_unset(prop_copy, acc_arg);
-      if constexpr (view_type::rank() == 0) {
-        v_resized = view_type(prop_copy2);
-      } else if constexpr (view_type::rank() == 1) {
-        v_resized = view_type(prop_copy2, n0);
-      } else if constexpr (view_type::rank() == 2) {
-        v_resized = view_type(prop_copy2, n0, n1);
-      } else if constexpr (view_type::rank() == 3) {
-        v_resized = view_type(prop_copy2, n0, n1, n2);
-      } else if constexpr (view_type::rank() == 4) {
-        v_resized = view_type(prop_copy2, n0, n1, n2, n3);
-      } else if constexpr (view_type::rank() == 5) {
-        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4);
-      } else if constexpr (view_type::rank() == 6) {
-        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4, n5);
-      } else if constexpr (view_type::rank() == 7) {
-        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4, n5, n6);
-      } else {
-        v_resized = view_type(prop_copy2, n0, n1, n2, n3, n4, n5, n6, n7);
-      }
+      v_resized = view_type(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
     }
 
     if constexpr (alloc_prop_input::has_execution_space)
@@ -2999,9 +2999,8 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     using dst_type =
         typename Impl::MirrorViewType<memory_space, T, P...>::dest_view_type;
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-    // This is necessary because of constructing non-const element type from
-    // const element type views Accessors are not generally constructible const
-    // -> non-const element_type
+    // This is necessary because constructing non-const element type from
+    // const element type accessors is not generally supported
     if constexpr (std::is_constructible_v<
                       typename dst_type::accessor_type,
                       typename Kokkos::View<T, P...>::accessor_type>)
@@ -3014,9 +3013,8 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
   } else {
     using dst_type = typename View<T, P...>::HostMirror;
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-    // This is necessary because of constructing non-const element type from
-    // const element type views Accessors are not generally constructible const
-    // -> non-const element_type
+    // This is necessary because constructing non-const element type from
+    // const element type accessors is not generally supported
     if constexpr (std::is_constructible_v<
                       typename dst_type::accessor_type,
                       typename Kokkos::View<T, P...>::accessor_type>)
