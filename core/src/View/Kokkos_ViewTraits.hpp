@@ -246,7 +246,8 @@ struct AccessorFromViewTraits<
 template <class Traits>
 struct AccessorFromViewTraits<
     Traits,
-    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic>> {
+    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic &&
+                     !Traits::memory_traits::is_restrict>> {
   using type = CheckedReferenceCountedAccessor<typename Traits::value_type,
                                                typename Traits::memory_space>;
 };
