@@ -1938,6 +1938,9 @@ struct TestNextAfterHalf {
     }
 
     // From Inf Handling
+    // Note: The behavior of nextafter with infinities is
+    // implementation-defined, but in Kokkos it returns the maximum
+    // finite value when moving towards a finite value.
     if (nextafter(pos_inf, pos_one) != pos_max ||
         nextafter(neg_inf, neg_one) != neg_max ||
         nextafter(pos_inf, pos_inf) != pos_inf ||
@@ -1952,8 +1955,7 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC)
   GTEST_SKIP() << "FIXME MSVC nextafter for half precision "
                   "not implemented yet";
-#endif
-
+#else
   bool skipped = true;
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
   skipped = false;
@@ -1964,6 +1966,7 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
   TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t>();
 #endif
   if (skipped) GTEST_SKIP() << "no 16-bit floating-point precision support";
+#endif
 }
 #endif
 
