@@ -21,14 +21,36 @@
 namespace Foo {
 
 // ElementType which is actually just a tag type
-struct Bar {};
+struct Bar {
+  float vals[5];
+  KOKKOS_FUNCTION
+  float& operator[](size_t idx) { return vals[idx % 5]; }
+  KOKKOS_FUNCTION
+  const float& operator[](size_t idx) const { return vals[idx % 5]; }
+};
 
 // Reference type for Bar
+template <class T>
 struct BarRef {
-  double* ptr{nullptr};
+  T* ptr{nullptr};
   size_t size{0ul};
+
   KOKKOS_FUNCTION
-  double& operator[](size_t idx) const { return ptr[idx]; }
+  T& operator[](size_t idx) const { return ptr[idx]; }
+
+  // assignment from value type should work for deep_copy from scalar!
+  // Just will some defined values so we know we did it.
+  KOKKOS_FUNCTION
+  operator Bar() const {
+    Bar val;
+    for (size_t i = 0; i < size; i++) val[i] = ptr[i];
+    return val;
+  }
+
+  KOKKOS_FUNCTION
+  auto operator=(const Bar&) {
+    for (size_t i = 0; i < size; i++) ptr[i] = i;
+  }
 };
 
 // A TestAccessor mimicking some of what Sacado does
@@ -40,11 +62,13 @@ struct BarRef {
 template <class ElementType, class MemorySpace>
 struct TestAccessor {
   static_assert(std::is_same_v<std::remove_cv_t<ElementType>, Bar>);
-  using element_type     = ElementType;
-  using reference        = BarRef;
-  using data_handle_type = Kokkos::Impl::ReferenceCountedDataHandle<
-      std::conditional_t<std::is_const_v<ElementType>, const double, double>,
-      MemorySpace>;
+  using value_type =
+      std::conditional_t<std::is_const_v<ElementType>, const double, double>;
+
+  using element_type = ElementType;
+  using reference    = BarRef<value_type>;
+  using data_handle_type =
+      Kokkos::Impl::ReferenceCountedDataHandle<value_type, MemorySpace>;
   using offset_policy = TestAccessor;
 
   // View expects this from accessors right now
@@ -53,13 +77,12 @@ struct TestAccessor {
   KOKKOS_DEFAULTED_FUNCTION
   constexpr TestAccessor() = default;
 
-  template <class OtherElementType,
-            std::enable_if_t<std::is_constructible_v<
-                                 Kokkos::default_accessor<element_type>,
-                                 Kokkos::default_accessor<OtherElementType>>,
-                             int> = 0>
+  template <
+      class OtherElementType, class OtherMemorySpace,
+      std::enable_if_t<std::is_constructible_v<element_type, OtherElementType>,
+                       int> = 0>
   KOKKOS_FUNCTION constexpr TestAccessor(
-      const TestAccessor<OtherElementType, MemorySpace>& other) noexcept
+      const TestAccessor<OtherElementType, OtherMemorySpace>& other) noexcept
       : size(other.size) {}
 
   KOKKOS_FUNCTION
@@ -74,7 +97,7 @@ struct TestAccessor {
       data_handle_type p,
 #endif
       size_t i) const noexcept {
-    return BarRef{(p.get() + i * size), size};
+    return reference{(p.get() + i * size), size};
   }
 
   KOKKOS_FUNCTION
@@ -118,7 +141,7 @@ size_t allocation_size_from_mapping_and_accessor(
 
 void test_allocation_type() {
   size_t ext0 = 10;
-  size_t ext1 = 10;
+  size_t ext1 = 11;
   size_t size = 5;
 
   using view_t = Kokkos::View<Foo::Bar**, TEST_EXECSPACE>;
@@ -187,3 +210,98 @@ void test_allocation_type() {
 TEST(TEST_CATEGORY, view_customization_allocation_type) {
   test_allocation_type();
 }
+
+void test_create_mirror() {
+  size_t ext0 = 10;
+  size_t ext1 = 11;
+  size_t size = 5;
+
+  using view_t = Kokkos::View<Foo::Bar**, TEST_EXECSPACE>;
+
+  view_t a(Kokkos::view_alloc("A", Kokkos::Impl::AccessorArg_t{size}), ext0,
+           ext1);
+
+  auto host_a1 = Kokkos::create_mirror_view(a);
+  ASSERT_EQ(host_a1.accessor().size, size);
+  static_assert(std::is_same_v<decltype(host_a1.data()), double*>);
+
+  auto host_a2 = Kokkos::create_mirror(a);
+  ASSERT_EQ(host_a2.accessor().size, size);
+  static_assert(std::is_same_v<decltype(host_a2.data()), double*>);
+}
+
+TEST(TEST_CATEGORY, view_customization_mirror) { test_create_mirror(); }
+
+void test_deep_copy() {
+  size_t ext0 = 10;
+  size_t ext1 = 11;
+  size_t size = 5;
+
+  using view_t = Kokkos::View<Foo::Bar**, TEST_EXECSPACE>;
+
+  view_t a(Kokkos::view_alloc("A", Kokkos::Impl::AccessorArg_t{size}), ext0,
+           ext1);
+
+  auto host_a = Kokkos::create_mirror_view(a);
+
+  for (size_t i = 0; i < ext0; i++)
+    for (size_t j = 0; j < ext1; j++)
+      for (size_t k = 0; k < size; k++) host_a(i, j)[k] = i * 100 + j + 0.1 * k;
+
+  // Contiguous deep_copy, potentially host to device
+  Kokkos::deep_copy(a, host_a);
+
+  Kokkos::MDRangePolicy<Kokkos::Rank<2>, TEST_EXECSPACE> policy2d({0, 0},
+                                                                  {ext0, ext1});
+
+  int num_errors = 0;
+  Kokkos::parallel_reduce(
+      "view_customization_deep_copy_a", policy2d,
+      KOKKOS_LAMBDA(int i, int j, int& error) {
+        for (size_t k = 0; k < size; k++) {
+          if (a(i, j)[k] != i * 100 + j + 0.1 * k) error++;
+          a(i, j)[k] = i * 200 + j + 0.1 * k;
+        }
+      },
+      num_errors);
+  ASSERT_EQ(num_errors, 0);
+
+  // Contiguous deep_copy, potentially device to host
+  Kokkos::deep_copy(host_a, a);
+  for (size_t i = 0; i < ext0; i++)
+    for (size_t j = 0; j < ext1; j++)
+      for (size_t k = 0; k < size; k++)
+        ASSERT_EQ(host_a(i, j)[k], i * 200 + j + 0.1 * k);
+  auto b = Kokkos::create_mirror(TEST_EXECSPACE::memory_space(), a);
+
+  num_errors = 0;
+  Kokkos::parallel_reduce(
+      "view_customization_check_pre_deep_copy_b", policy2d,
+      KOKKOS_LAMBDA(int i, int j, int& error) {
+        for (size_t k = 0; k < size; k++) {
+          // Note b is value initalized for the scalar value type for the
+          // allocation
+          if (b(i, j)[k] != 0) {
+            error++;
+          }
+        }
+      },
+      num_errors);
+  ASSERT_EQ(num_errors, 0);
+
+  // Contiguous deep_copy, same execspace
+  Kokkos::deep_copy(b, a);
+
+  num_errors = 0;
+  Kokkos::parallel_reduce(
+      "view_customization_check_pre_deep_copy_b", policy2d,
+      KOKKOS_LAMBDA(int i, int j, int& error) {
+        for (size_t k = 0; k < size; k++) {
+          if (b(i, j)[k] != i * 200 + j + 0.1 * k) error++;
+        }
+      },
+      num_errors);
+  ASSERT_EQ(num_errors, 0);
+}
+
+TEST(TEST_CATEGORY, view_customization_deep_copy) { test_deep_copy(); }
