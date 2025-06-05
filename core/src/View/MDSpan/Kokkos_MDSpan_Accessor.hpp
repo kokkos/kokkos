@@ -27,6 +27,8 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 #include <desul/atomics.hpp>
 
+#include <View/MDSpan/Kokkos_MDSpan_RestrictAccessor.hpp>
+
 namespace Kokkos {
 
 // For now use the accessors in Impl namespace, as an
@@ -477,9 +479,20 @@ using CheckedRelaxedAtomicAccessor =
 
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
+using CheckedRestrictAccessor =
+    SpaceAwareAccessor<MemorySpace, RestrictAccessor<ElementType>>;
+
+template <class ElementType, class MemorySpace,
+          class MemoryScope = desul::MemoryScopeDevice>
 using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
     MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
                                           AtomicAccessorRelaxed<ElementType>>>;
+
+template <class ElementType, class MemorySpace>
+using CheckedReferenceCountedRestrictAccessor =
+    SpaceAwareAccessor<MemorySpace,
+                       ReferenceCountedAccessor<ElementType, MemorySpace,
+                                                RestrictAccessor<ElementType>>>;
 
 }  // namespace Impl
 }  // namespace Kokkos

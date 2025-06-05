@@ -254,6 +254,16 @@ struct AccessorFromViewTraits<
 template <class Traits>
 struct AccessorFromViewTraits<
     Traits,
+    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic &&
+                     Traits::memory_traits::is_restrict>> {
+  using type =
+      CheckedReferenceCountedRestrictAccessor<typename Traits::value_type,
+                                              typename Traits::memory_space>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
     std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic>> {
   using type = CheckedReferenceCountedRelaxedAtomicAccessor<
       typename Traits::value_type, typename Traits::memory_space>;
@@ -266,6 +276,15 @@ struct AccessorFromViewTraits<
     std::enable_if_t<!Traits::is_managed && Traits::memory_traits::is_atomic>> {
   using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
                                             typename Traits::memory_space>;
+};
+
+template <class Traits>
+struct AccessorFromViewTraits<
+    Traits,
+    std::enable_if_t<!Traits::is_managed && !Traits::memory_traits::is_atomic &&
+                     Traits::is_restrict>> {
+  using type = CheckedRestrictAccessor<typename Traits::value_type,
+                                       typename Traits::memory_space>;
 };
 
 template <class Traits>
