@@ -301,6 +301,15 @@ std::vector<ExecSpace> impl_partition_space(const ExecSpace& base_instance,
 
   return instances;
 }
+
+// Helper function for converting std::vector -> std::array that avoids
+// declaring an std::array which is default constructed.
+template <class ExecSpace, size_t... Indices>
+std::array<ExecSpace, sizeof...(Indices)> create_partitions_array(
+    const std::vector<ExecSpace>& instances_vec,
+    std::index_sequence<Indices...>) {
+  return std::array<ExecSpace, sizeof...(Indices)>{instances_vec[Indices]...};
+}
 }  // namespace Impl
 
 // Partitioning an Execution Space
@@ -320,12 +329,13 @@ std::array<ExecSpace, sizeof...(Args)> partition_space(
       (... && std::is_arithmetic_v<Args>),
       "Kokkos Error: partitioning arguments must be integers or floats");
 
+  // Get vector of instances from backend specific impl
   std::vector<std::common_type_t<Args...>> weights = {args...};
   auto instances_vec = Impl::impl_partition_space(base_instance, weights);
 
-  std::array<ExecSpace, sizeof...(Args)> instances;
-  std::copy(instances_vec.begin(), instances_vec.end(), instances.begin());
-  return instances;
+  // Convert to std::array and return
+  return Impl::create_partitions_array(
+      instances_vec, std::make_index_sequence<sizeof...(Args)>{});
 }
 
 template <class ExecSpace, class T>
@@ -338,6 +348,7 @@ std::vector<ExecSpace> partition_space(ExecSpace const& base_instance,
       std::is_arithmetic_v<T>,
       "Kokkos Error: partitioning arguments must be integers or floats");
 
+  // Return vector of instances from backend specific impl
   return Impl::impl_partition_space(base_instance, weights);
 }
 }  // namespace Experimental
