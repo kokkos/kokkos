@@ -30,6 +30,7 @@ struct RestrictAccessor {
 
   KOKKOS_DEFAULTED_FUNCTION constexpr RestrictAccessor() noexcept = default;
 
+  // (incl. non-const to const)
   template <
       class OtherElementType,
       typename ::std::enable_if<
@@ -37,6 +38,21 @@ struct RestrictAccessor {
           int>::type = 0>
   KOKKOS_INLINE_FUNCTION constexpr RestrictAccessor(
       RestrictAccessor<OtherElementType>) noexcept {}
+
+  // Conversion from default_accessor (incl. non-const to const)
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr RestrictAccessor(
+      Kokkos::default_accessor<OtherElementType>) noexcept {}
+
+  // Conversion to default_accessor (incl. non-const to const)
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                element_type (*)[], OtherElementType (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION explicit operator default_accessor<OtherElementType>() const {
+    return default_accessor<OtherElementType>{};
+  }
 
   KOKKOS_INLINE_FUNCTION
   constexpr data_handle_type offset(data_handle_type p,
