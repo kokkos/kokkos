@@ -209,19 +209,21 @@ struct AtomicAccessorRelaxed {
   KOKKOS_DEFAULTED_FUNCTION
   AtomicAccessorRelaxed() = default;
 
-  // Conversions from non-const to const element type
+  // Conversion from default_accessor (incl. non-const to const)
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
                 OtherElementType (*)[], element_type (*)[]>>* = nullptr>
   KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
       Kokkos::default_accessor<OtherElementType>) noexcept {}
 
+  // (incl. non-const to const)
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
                 OtherElementType (*)[], element_type (*)[]>>* = nullptr>
   KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
       AtomicAccessorRelaxed<OtherElementType, MemoryScope>) noexcept {}
 
+  // Conversion to default_accessor (incl. non-const to const)
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
                 element_type (*)[], OtherElementType (*)[]>>* = nullptr>
