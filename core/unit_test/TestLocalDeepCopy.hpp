@@ -28,7 +28,7 @@ namespace Test {
 //-------------------------------------------------------------------------------------------------------------
 
 template <typename ViewType>
-bool check_view_copy(const ViewType& lhs, const ViewType& rhs) {
+bool check_copy(const ViewType& lhs, const ViewType& rhs) {
   using exec_space = typename ViewType::execution_space;
 
   bool result = true;
@@ -45,8 +45,8 @@ bool check_view_copy(const ViewType& lhs, const ViewType& rhs) {
 }
 
 template <typename ViewType>
-bool check_value_copy(const ViewType& view,
-                      typename ViewType::const_value_type& value) {
+bool check_copy(const ViewType& view,
+                typename ViewType::const_value_type& value) {
   using exec_space = typename ViewType::execution_space;
 
   bool result = true;
@@ -85,19 +85,19 @@ ViewType view_create(std::string label, const int N) {
                                std::make_index_sequence<ViewType::rank>{});
 }
 
-template <typename ViewType, typename Bounds, std::size_t... Ints>
-KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int lid,
-                                            Bounds bounds,
+template <typename ViewType, std::size_t... Ints>
+KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int start, int stop,
                                             std::index_sequence<Ints...>) {
-  return Kokkos::subview(src, lid, bounds, ((void)Ints, Kokkos::ALL)...);
+  return Kokkos::subview(src, Kokkos::make_pair(start, stop),
+                         ((void)Ints, Kokkos::ALL)...);
 }
 
 // Extract a subview from a view to run our tests
-template <typename ViewType, typename Bounds>
-KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int lid,
-                                            Bounds bounds) {
-  return extract_subview(src, lid, bounds,
-                         std::make_index_sequence<ViewType::rank - 2>{});
+template <typename ViewType>
+KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int start,
+                                            int stop) {
+  return extract_subview(src, start, stop,
+                         std::make_index_sequence<ViewType::rank - 1>{});
 }
 
 template <typename ViewType>
@@ -105,217 +105,145 @@ void reset(ViewType B) {
   Kokkos::deep_copy(B, 0);
 }
 
-//-------------------------------------------------------------------------------------------------------------
-// Helper functor
-//-------------------------------------------------------------------------------------------------------------
-
-/** \brief  Functor used to call the different local deep copy overloads in the
- * tests */
-template <typename Base>
-struct copy_functor {
- private:
-  Base base;
-
- public:
-  template <typename... Args>
-  copy_functor(Args... args) : base(args...) {}
-
-  template <typename PolicyType,
-            typename = std::enable_if_t<
-                Kokkos::Experimental::Impl::is_team_policy_v<PolicyType>>>
-  void KOKKOS_INLINE_FUNCTION operator()(PolicyType policy, int start,
-                                         int stop) const {
-    base.copy(policy, policy.member.league_rank(), start, stop);
-  }
-
-  void KOKKOS_INLINE_FUNCTION
-  operator()(const Kokkos::Experimental::Impl::CopySeqTag policy, int idx,
-             int stop) const {
-    base.copy(policy, idx, 0, stop);
-  }
+// local deep copy on a subview
+template <typename PolicyType, typename ViewType>
+void KOKKOS_INLINE_FUNCTION copy_view_helper(const PolicyType& policy, int idx,
+                                             const ViewType& dst,
+                                             const ViewType& src,
+                                             bool mismatch = false) {
+  const int start = 2 * idx;
+  const int stop  = 2 * (idx + 1);
+  auto subSrc     = extract_subview(src, start, stop);
+  auto subDst     = extract_subview(dst, start, mismatch ? stop - 1 : stop);
 
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-  template <typename MemberType,
-            typename = std::enable_if_t<
-                !Kokkos::Experimental::Impl::is_team_policy_v<MemberType>>>
-  void KOKKOS_INLINE_FUNCTION operator()(const MemberType& member, int start,
-                                         int stop) const {
-    base.copy(member, member.league_rank(), start, stop);
-  }
-
-  void KOKKOS_INLINE_FUNCTION operator()(int idx, int stop) const {
-    base.copy(nullptr, idx, 0, stop);
-  }
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #endif
+  if constexpr (std::is_null_pointer_v<PolicyType>) {
+    Kokkos::Experimental::local_deep_copy(subDst, subSrc);
+  } else {
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+#else
+  {
+#endif
+    Kokkos::Experimental::deep_copy(policy, subDst, subSrc);
+  }
+}
 
-  bool success() const { return base.success(); }
-};
+template <typename PolicyType, typename ViewType>
+void KOKKOS_INLINE_FUNCTION
+copy_view_helper(const PolicyType& policy, int idx, const ViewType& dst,
+                 typename ViewType::const_value_type& value, bool mismatch) {
+  const int start = 2 * idx;
+  const int stop  = 2 * (idx + 1);
+  auto subDst     = extract_subview(dst, start, mismatch ? stop - 1 : stop);
 
-template <typename ViewType>
-struct copy_view {
- private:
-  ViewType src;
-  ViewType dst;
-  bool mismatch;
-
- public:
-  template <typename PolicyType>
-  void KOKKOS_INLINE_FUNCTION copy(const PolicyType& policy, int first_dim,
-                                   int start, int stop) const {
-    auto subSrc =
-        extract_subview(src, first_dim, Kokkos::make_pair(start, stop));
-    // modify the range [start, stop) to make the extents mismatched
-    if (mismatch) {
-      if (stop < dst.extent_int(1)) {
-        stop++;
-      } else if (start > 0) {
-        start--;
-      } else {
-        start++;
-      }
-    }
-    auto subDst =
-        extract_subview(dst, first_dim, Kokkos::make_pair(start, stop));
-    if constexpr (Kokkos::Experimental::Impl::is_team_policy_v<PolicyType> ||
-                  std::is_same_v<PolicyType,
-                                 Kokkos::Experimental::Impl::CopySeqTag>) {
-      Kokkos::Experimental::deep_copy(policy, subDst, subSrc);
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
 #if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-      KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #endif
-    } else if constexpr (!std::is_null_pointer_v<PolicyType>) {
-      Kokkos::Experimental::local_deep_copy(policy, subDst, subSrc);
-    } else {
-      Kokkos::Experimental::local_deep_copy(subDst, subSrc);
+  if constexpr (std::is_null_pointer_v<PolicyType>) {
+    Kokkos::Experimental::local_deep_copy(subDst, value);
+  } else {
 #if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-      KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
+#else
+  {
 #endif
-    }
+    Kokkos::Experimental::deep_copy(policy, subDst, value);
   }
-
-  copy_view(ViewType src_, ViewType dst_, bool mismatch_ = false)
-      : src(src_), dst(dst_), mismatch(mismatch_) {}
-
-  bool success() const { return check_view_copy(src, dst); }
-};
-
-template <typename ViewType>
-struct copy_value {
- private:
-  ViewType dst;
-  typename ViewType::const_value_type value;
-
- public:
-  template <typename PolicyType>
-  void KOKKOS_INLINE_FUNCTION copy(const PolicyType& policy, int first_dim,
-                                   int start, int stop) const {
-    auto subDst =
-        extract_subview(dst, first_dim, Kokkos::make_pair(start, stop));
-    if constexpr (Kokkos::Experimental::Impl::is_team_policy_v<PolicyType> ||
-                  std::is_same_v<PolicyType,
-                                 Kokkos::Experimental::Impl::CopySeqTag>) {
-      Kokkos::Experimental::deep_copy(policy, subDst, value);
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-      KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
-    } else if constexpr (!std::is_null_pointer_v<PolicyType>) {
-      Kokkos::Experimental::local_deep_copy(policy, subDst, value);
-    } else {
-      Kokkos::Experimental::local_deep_copy(subDst, value);
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-      KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
-#endif
-    }
-  }
-
-  copy_value(ViewType dst_, typename ViewType::const_value_type value_)
-      : dst(dst_), value(value_) {}
-
-  bool success() const { return check_value_copy(dst, value); }
-};
+}
 
 //-------------------------------------------------------------------------------------------------------------
 // Testing code
 //-------------------------------------------------------------------------------------------------------------
 
-template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_team_vector_range(const int N,
-                                            const Functor& functor) {
+template <typename ExecSpace, typename ViewType, typename ValueType>
+void test_local_deep_copy_team_vector_range(const int N, const ViewType& dst,
+                                            const ValueType& src,
+                                            bool mismatch = false) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   Kokkos::parallel_for(
       team_policy(N, Kokkos::AUTO),
       KOKKOS_LAMBDA(const member_type& teamMember) {
-        functor(Kokkos::TeamVectorRange(teamMember, 0), 0, N);
-      });
-
-  Kokkos::fence();
-  ASSERT_TRUE(functor.success());
-}
-
-template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_team_thread_range(const int N,
-                                            const Functor& functor) {
-  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
-  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        functor(Kokkos::TeamThreadRange(teamMember, 0), 0, N);
-      });
-
-  Kokkos::fence();
-  ASSERT_TRUE(functor.success());
-}
-
-template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_thread_vector_range(const int N,
-                                              const Functor& functor) {
-  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
-  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        // Compute the number of units of work per thread
-        auto thread_number = teamMember.league_size();
-        auto unitsOfWork   = N / thread_number;
-        if (N % thread_number) {
-          unitsOfWork += 1;
+        if (mismatch) {
+          Kokkos::Experimental::deep_copy(
+              Kokkos::TeamVectorRange(teamMember, 0),
+              extract_subview(dst, 0, dst.extent_int(0) - 1), src);
+        } else {
+          Kokkos::Experimental::deep_copy(
+              Kokkos::TeamVectorRange(teamMember, 0), dst, src);
         }
-        auto numberOfBatches = N / unitsOfWork;
+      });
 
+  Kokkos::fence();
+  ASSERT_TRUE(check_copy(dst, src));
+}
+
+template <typename ExecSpace, typename ViewType, typename ValueType>
+void test_local_deep_copy_team_thread_range(const int N, const ViewType& dst,
+                                            const ValueType& src,
+                                            bool mismatch = false) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        if (mismatch) {
+          Kokkos::Experimental::deep_copy(
+              Kokkos::TeamThreadRange(teamMember, 0),
+              extract_subview(dst, 0, dst.extent_int(0) - 1), src);
+        } else {
+          Kokkos::Experimental::deep_copy(
+              Kokkos::TeamThreadRange(teamMember, 0), dst, src);
+        }
+      });
+
+  Kokkos::fence();
+  ASSERT_TRUE(check_copy(dst, src));
+}
+
+template <typename ExecSpace, typename ViewType, typename ValueType>
+void test_local_deep_copy_thread_vector_range(const int N, const ViewType& dst,
+                                              const ValueType& src,
+                                              bool mismatch = false) {
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  // each thread processes 2 indices in the leading dimension
+  Kokkos::parallel_for(
+      team_policy(N / 2, 1), KOKKOS_LAMBDA(const member_type& teamMember) {
         Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(teamMember, numberOfBatches),
-            [=](const int indexWithinBatch) {
-              const int idx = indexWithinBatch;
-
-              auto start = idx * unitsOfWork;
-              auto stop  = (idx + 1) * unitsOfWork;
-              stop       = Kokkos::clamp(stop, 0, N);
-              functor(Kokkos::ThreadVectorRange(teamMember, 0), start, stop);
+            Kokkos::TeamThreadRange(teamMember, N / 2), [=](const int idx) {
+              copy_view_helper(Kokkos::ThreadVectorRange(teamMember, 0), idx,
+                               dst, src, mismatch);
             });
       });
 
   Kokkos::fence();
-  ASSERT_TRUE(functor.success());
+  ASSERT_TRUE(check_copy(dst, src));
 }
 
-template <typename ExecSpace, typename Functor>
-void test_local_deep_copy_sequential(const int N, const Functor& functor) {
+template <typename ExecSpace, typename ViewType, typename ValueType>
+void test_local_deep_copy_sequential(const int N, const ViewType& dst,
+                                     const ValueType& src,
+                                     bool mismatch = false) {
+  // each thread processes 2 indices in the leading dimension
   Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& idx) {
-        functor(Kokkos::Experimental::copy_seq(), idx, N);
+      Kokkos::RangePolicy<ExecSpace>(0, N / 2), KOKKOS_LAMBDA(const int& idx) {
+        copy_view_helper(Kokkos::Experimental::copy_seq(), idx, dst, src,
+                         mismatch);
       });
 
   Kokkos::fence();
-  ASSERT_TRUE(functor.success());
+  ASSERT_TRUE(check_copy(dst, src));
 }
 
 #define KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(name)                                 \
@@ -326,17 +254,17 @@ void test_local_deep_copy_sequential(const int N, const Functor& functor) {
                                                                                \
     view_init(A);                                                              \
                                                                                \
-    test_local_deep_copy_##name<ExecSpace>(                                    \
-        N, copy_functor<copy_view<ViewType>>(B, A));                           \
+    test_local_deep_copy_##name<ExecSpace>(N, B, A);                           \
     reset(B);                                                                  \
-    test_local_deep_copy_##name<ExecSpace>(                                    \
-        N, copy_functor<copy_value<ViewType>>(B, 20));                         \
+    test_local_deep_copy_##name<ExecSpace>(N, B, 20.0);                        \
   }                                                                            \
                                                                                \
   TEST(TEST_CATEGORY, local_deep_copy_##name##_layoutleft) {                   \
     using ExecSpace = TEST_EXECSPACE;                                          \
     using Layout    = Kokkos::LayoutLeft;                                      \
                                                                                \
+    run_##name##_policy<Kokkos::View<double*, Layout, ExecSpace>, ExecSpace>(  \
+        8);                                                                    \
     run_##name##_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>( \
         8);                                                                    \
     run_##name##_policy<Kokkos::View<double***, Layout, ExecSpace>,            \
@@ -356,6 +284,8 @@ void test_local_deep_copy_sequential(const int N, const Functor& functor) {
     using ExecSpace = TEST_EXECSPACE;                                          \
     using Layout    = Kokkos::LayoutRight;                                     \
                                                                                \
+    run_##name##_policy<Kokkos::View<double*, Layout, ExecSpace>, ExecSpace>(  \
+        8);                                                                    \
     run_##name##_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>( \
         8);                                                                    \
     run_##name##_policy<Kokkos::View<double***, Layout, ExecSpace>,            \
@@ -395,8 +325,7 @@ KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
     ViewType A = view_create<ViewType>("A", N);                            \
     ViewType B = view_create<ViewType>("B", N);                            \
                                                                            \
-    ASSERT_DEATH((test_local_deep_copy_##name<ExecSpace>(                  \
-                     N, copy_functor<copy_view<ViewType>>(B, A, true))),   \
+    ASSERT_DEATH((test_local_deep_copy_##name<ExecSpace>(N, B, A, true)),  \
                  "Error: Kokkos::deep_copy extents of views don't match"); \
   }                                                                        \
                                                                            \
@@ -404,6 +333,8 @@ KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
     using ExecSpace = TEST_EXECSPACE;                                      \
     using Layout    = Kokkos::LayoutRight;                                 \
     KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_SKIP                                 \
+    run_##name##_policy_extents_mismatch<                                  \
+        Kokkos::View<double*, Layout, ExecSpace>, ExecSpace>(8);           \
     run_##name##_policy_extents_mismatch<                                  \
         Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);          \
     run_##name##_policy_extents_mismatch<                                  \
@@ -433,31 +364,34 @@ KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(sequential)
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #endif
 
-template <typename ExecSpace, typename Functor>
+template <typename ExecSpace, typename ViewType, typename ValueType>
 void test_local_deep_copy_deprecated_team_member(const int N,
-                                                 const Functor& functor) {
+                                                 const ViewType& dst,
+                                                 const ValueType& src) {
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
 
   Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        functor(teamMember, 0, N);
+      team_policy(N, 1), KOKKOS_LAMBDA(const member_type& teamMember) {
+        Kokkos::Experimental::local_deep_copy(teamMember, dst, src);
       });
 
   Kokkos::fence();
-  ASSERT_TRUE(functor.success());
+  ASSERT_TRUE(check_copy(dst, src));
 }
 
-template <typename ExecSpace, typename Functor>
+template <typename ExecSpace, typename ViewType, typename ValueType>
 void test_local_deep_copy_deprecated_sequential(const int N,
-                                                const Functor& functor) {
+                                                const ViewType& dst,
+                                                const ValueType& src) {
+  // each thread processes 2 indices in the leading dimension
   Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N),
-      KOKKOS_LAMBDA(const int& idx) { functor(idx, N); });
+      Kokkos::RangePolicy<ExecSpace>(0, N / 2), KOKKOS_LAMBDA(const int& idx) {
+        copy_view_helper(nullptr, idx, dst, src, false);
+      });
 
   Kokkos::fence();
-  ASSERT_TRUE(functor.success());
+  ASSERT_TRUE(check_copy(dst, src));
 }
 
 KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(deprecated_team_member)
