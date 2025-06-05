@@ -1949,17 +1949,21 @@ struct TestNextAfterHalf {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
-#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-  TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::half_t>();
-#endif
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-  TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t>();
-#endif
-#else
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC)
   GTEST_SKIP() << "FIXME MSVC nextafter for half precision "
                   "not implemented yet";
 #endif
+
+  bool skipped = true;
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+  skipped = false;
+  TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::half_t>();
+#endif
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+  skipped = false;
+  TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t>();
+#endif
+  if (skipped) GTEST_SKIP() << "no 16-bit floating-point precision support";
 }
 #endif
 
