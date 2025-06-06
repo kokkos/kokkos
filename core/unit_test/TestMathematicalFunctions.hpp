@@ -1962,7 +1962,7 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
   TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::half_t>();
 #endif
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-  skipped      = false;
+  skipped = false;
   TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t>();
 #endif
   if (skipped) GTEST_SKIP() << "no 16-bit floating-point precision support";
