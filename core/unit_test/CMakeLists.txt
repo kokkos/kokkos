@@ -84,6 +84,7 @@ set(COMPILE_ONLY_SOURCES
     TestRangePolicyCTAD.cpp
     TestStringManipulation.cpp
     TestVersionMacros.cpp
+    TestViewMemoryTraitsAssign.cpp
     TestViewRank.cpp
     TestViewTypeTraits.cpp
     TestViewTypedefs.cpp

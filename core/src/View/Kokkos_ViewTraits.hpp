@@ -226,11 +226,10 @@ struct AccessorFromViewTraits {
 
   static auto nested_accessor_instance() {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-    if constexpr (Traits::memory_traits::is_atomic) {
+    if constexpr (Traits::memory_traits::is_atomic)
       return AtomicAccessorRelaxed<ElementType>{};
-    } else {
+    else
       return default_accessor<ElementType>{};
-    }
 #else
     if constexpr (Traits::memory_traits::is_atomic)
       return AtomicAccessorRelaxed<ElementType>{};
@@ -244,10 +243,15 @@ struct AccessorFromViewTraits {
  public:
   using type = std::conditional_t<
       Traits::is_managed,
-      SpaceAwareAccessor<
-          MemorySpace,
-          ReferenceCountedAccessor<ElementType, MemorySpace,
-                                   decltype(nested_accessor_instance())>>,
+      SpaceAwareAccessor<MemorySpace,
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+                         decltype(nested_accessor_instance())>
+#else
+                         ReferenceCountedAccessor<
+                             ElementType, MemorySpace,
+                             decltype(nested_accessor_instance())>>
+#endif
+      ,
       SpaceAwareAccessor<MemorySpace, decltype(nested_accessor_instance())>>;
 };
 
