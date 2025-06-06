@@ -20,7 +20,7 @@ install(
 
 # We have to pass the sources in here for Tribits
 # These will get ignored for standalone CMake and a true interface library made
-kokkos_add_interface_library(kokkosalgorithms NOINSTALLHEADERS ${ALGO_HEADERS} SOURCES ${ALGO_SOURCES})
+kokkos_add_library(kokkosalgorithms HEADERS ${ALGO_HEADERS} SOURCES ${ALGO_SOURCES})
 kokkos_lib_include_directories(
   kokkosalgorithms ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 )

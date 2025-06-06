@@ -360,7 +360,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     if(Kokkos_ENABLE_IMPL_MDSPAN)
       set(BV_TestNames BasicView ReferenceCountedAccessor ReferenceCountedDataHandle)
       if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
-        list(APPEND BV_TestNames ViewCustomizationAccessorArg ViewCustomizationAllocationType)
+        list(APPEND BV_TestNames ViewCustomizationAccessorArg ViewCustomizationAllocationType
+             ViewCustomizationAccessorFromMapping
+        )
       endif()
       set(${Tag}_VIEWSUPPORT)
       foreach(Name IN LISTS BV_TestNames)
@@ -806,6 +808,7 @@ if(Kokkos_ENABLE_HIP)
     UnitTestMainInit.cpp
     ${HIP_SOURCES}
     hip/TestHIP_ScanUnit.cpp
+    hip/TestHIP_SharedResourceLock.cpp
     hip/TestHIP_Spaces.cpp
     hip/TestHIP_Memory_Requirements.cpp
     hip/TestHIP_TeamScratchStreams.cpp

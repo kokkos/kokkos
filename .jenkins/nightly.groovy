@@ -70,10 +70,10 @@ pipeline {
                           '''
                     }      
                 }   
-                stage('GCC-14') {
+                stage('GCC-15-CXX26') {
                     agent {
                         docker {
-                            image 'gcc:14.1'
+                            image 'gcc:15.1'
                             label 'docker'
                         }
                     }
@@ -104,12 +104,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCM-6.3-MI100-RDC') {
+                stage('HIP-ROCM-6.4-MI100-RDC-CXX20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.3.1-complete'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.4.1-complete'
                             label 'rocm-docker && AMD_Radeon_Instinct_MI100'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -124,6 +124,7 @@ pipeline {
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=hipcc \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
                                 -DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ARCH_NATIVE=ON \
@@ -143,12 +144,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCM-6.3-MI210-CXX23') {
+                stage('HIP-ROCM-6.4-MI210-CXX23') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.3.1-complete --build-arg CMAKE_VERSION=3.31.3'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.4.1-complete --build-arg CMAKE_VERSION=3.31.3'
                             label 'rocm-docker && AMD_Radeon_Instinct_MI210'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }

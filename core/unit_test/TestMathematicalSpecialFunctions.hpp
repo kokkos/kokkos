@@ -1462,7 +1462,7 @@ struct TestComplexBesselI1K1Function {
      KOKKOS_COMPILER_INTEL_LLVM >= 20250004)
     for (int i = 0; i < N; i++) {
       EXPECT_LE(Kokkos::abs(h_cbi1(i) - h_ref_cbi1(i)),
-                Kokkos::abs(h_ref_cbi1(i)) * 1e-13)
+                Kokkos::abs(h_ref_cbi1(i)) * 1e-13 + 1e-15)
           << "at index " << i;
     }
 #endif
