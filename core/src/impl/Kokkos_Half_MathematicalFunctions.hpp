@@ -355,7 +355,7 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
    // Determine direction and sign of 'from'
    // True if moving to positive infinity
    bool to_positive_infinity = (to > from);
-   bool from_is_negative     = ((uint_from & FP16_SIGN_MASK) != 0);
+   bool from_is_negative     = (uint_from & FP16_SIGN_MASK);
 
    std::uint16_t uint_result = uint_from + 2 * (to_positive_infinity ^ from_is_negative) - 1;
    // This is equivalent to the following operations.
