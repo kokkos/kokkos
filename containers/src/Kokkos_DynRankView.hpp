@@ -34,6 +34,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 #include <impl/Kokkos_Error.hpp>
+#include <KokkosExp_InterOp.hpp>
 #include <type_traits>
 
 namespace Kokkos {

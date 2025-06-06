@@ -30,6 +30,7 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 #include <impl/Kokkos_Error.hpp>
+#include <cstdint>
 
 namespace Kokkos {
 namespace Experimental {

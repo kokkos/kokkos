@@ -17,7 +17,9 @@
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
 #include <iomanip>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkosstdalgorithmsimpl;
+#endif
 
 namespace Test {
 namespace stdalgos {

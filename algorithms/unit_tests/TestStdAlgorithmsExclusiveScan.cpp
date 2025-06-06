@@ -15,7 +15,9 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkosstdalgorithmsimpl;
+#endif
 #include <utility>
 #include <iomanip>
 

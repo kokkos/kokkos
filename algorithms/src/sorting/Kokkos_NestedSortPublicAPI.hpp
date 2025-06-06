@@ -24,6 +24,7 @@ import kokkoscore;
 import kokkosstdalgorithmsimpl;
 #else
 #include <Kokkos_Core.hpp>
+#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
 #endif
 
 namespace Kokkos {
