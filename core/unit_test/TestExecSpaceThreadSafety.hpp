@@ -20,6 +20,11 @@ import kokkoscore;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+
+#ifdef KOKKOS_ENABLE_OPENMP
+#include <omp.h>
+#endif
+
 #include <thread>
 
 namespace {

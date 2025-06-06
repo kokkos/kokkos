@@ -21,11 +21,11 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkoscore;
+import kokkosunorderedmap;
 #else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_UnorderedMap.hpp>
 #endif
-
-import kokkosunorderedmap;
 
 #include <TestGlobal2LocalIds.hpp>
 #include <TestUnorderedMapPerformance.hpp>

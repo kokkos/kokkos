@@ -26,6 +26,10 @@ import kokkoscore;
 #include <Kokkos_Core.hpp>
 #endif
 
+#ifdef KOKKOS_ENABLE_OPENMP
+#include <omp.h>
+#endif
+
 namespace Test {
 namespace {
 struct SumFunctor {

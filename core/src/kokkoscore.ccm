@@ -38,12 +38,16 @@ using ::Kokkos::hwloc::get_available_threads_per_core;
   using ::Kokkos::AUTO;
   using ::Kokkos::finalize;
   using ::Kokkos::LaunchBounds;
+#ifdef KOKKOS_ENABLE_SERIAL
   using ::Kokkos::NewInstance;
+#endif
   using ::Kokkos::printf;
   using ::Kokkos::ScopeGuard;
   using ::Kokkos::SequentialHostInit;
+#ifdef KOKKOS_ENABLE_SERIAL
   using ::Kokkos::Serial;
-#ifdef KOKKOS_EMABLE_OPENMP
+#endif
+#ifdef KOKKOS_ENABLE_OPENMP
   using ::Kokkos::OpenMP;
 #endif
 #ifdef KOKKOS_ENABLE_THREADS

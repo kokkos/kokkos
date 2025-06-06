@@ -17,7 +17,11 @@
 #ifndef KOKKOS_TEST_SCATTER_VIEW_HPP
 #define KOKKOS_TEST_SCATTER_VIEW_HPP
 
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
 import kokkosscatterview;
+#else
+#include <Kokkos_ScatterView.hpp>
+#endif
 #include <Kokkos_Timer.hpp>
 
 namespace Perf {
