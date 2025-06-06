@@ -325,6 +325,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, signbi
 // isunordered
 
 // Implementation test function: check if fallback for half and bhalf type are used
+namespace Impl {
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(Kokkos::Experimental::half_t) {
   return Kokkos::Experimental::half_t(1.f);
@@ -332,6 +333,14 @@ KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(Kokk
 template <bool fallback = true>
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(Kokkos::Experimental::bhalf_t) {
   return Kokkos::Experimental::bhalf_t(1.f);
+}
+}  // namespace Impl
+
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t test_fallback_half(Kokkos::Experimental::half_t x) {
+  return Impl::impl_test_fallback_half(x);
+}
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t test_fallback_bhalf(Kokkos::Experimental::bhalf_t x) {
+  return Impl::impl_test_fallback_bhalf(x);
 }
 
 // Complex number functions

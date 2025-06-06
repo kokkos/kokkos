@@ -20,23 +20,6 @@
 #include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 
 namespace Kokkos {
-#ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
-#ifdef KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
-    Kokkos::Experimental::half_t) {
-  return Kokkos::Experimental::half_t(0.f);
-}
-#endif
-
-#if defined(KOKKOS_IMPL_BHALF_TYPE_DEFINED) && \
-    (KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 80)
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(
-    Kokkos::Experimental::bhalf_t) {
-  return Kokkos::Experimental::bhalf_t(0.f);
-}
-#endif
-#endif
-
 namespace Impl {
 
 #ifdef KOKKOS_HALF_IS_FULL_TYPE_ON_ARCH
@@ -64,6 +47,11 @@ namespace Impl {
 #define KOKKOS_CUDA_HALF_UNARY_PREDICATE_IMPL(OP, CUDA_NAME) \
   KOKKOS_CUDA_HALF_UNARY_PREDICATE(OP, CUDA_NAME, Kokkos::Experimental::half_t)
 
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
+    Kokkos::Experimental::half_t) {
+  return Kokkos::Experimental::half_t(0.f);
+}
+
 #else
 #define KOKKOS_CUDA_HALF_UNARY_FUNCTION_IMPL(OP, CUDA_NAME)
 #define KOKKOS_CUDA_HALF_BINARY_FUNCTION_IMPL(OP, CUDA_NAME)
@@ -80,6 +68,11 @@ namespace Impl {
   KOKKOS_CUDA_HALF_BINARY_FUNCTION(OP, CUDA_NAME, Kokkos::Experimental::bhalf_t)
 #define KOKKOS_CUDA_BHALF_UNARY_PREDICATE_IMPL(OP, CUDA_NAME) \
   KOKKOS_CUDA_HALF_UNARY_PREDICATE(OP, CUDA_NAME, Kokkos::Experimental::bhalf_t)
+
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(
+    Kokkos::Experimental::bhalf_t) {
+  return Kokkos::Experimental::bhalf_t(0.f);
+}
 
 #else
 #define KOKKOS_CUDA_BHALF_UNARY_FUNCTION_IMPL(OP, CUDA_NAME)
