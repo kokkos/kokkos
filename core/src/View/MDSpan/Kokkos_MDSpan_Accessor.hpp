@@ -562,20 +562,9 @@ using CheckedRelaxedAtomicAccessor =
 
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
-using CheckedRestrictAccessor =
-    SpaceAwareAccessor<MemorySpace, RestrictAccessor<ElementType>>;
-
-template <class ElementType, class MemorySpace,
-          class MemoryScope = desul::MemoryScopeDevice>
 using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
     MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
                                           AtomicAccessorRelaxed<ElementType>>>;
-
-template <class ElementType, class MemorySpace>
-using CheckedReferenceCountedRestrictAccessor =
-    SpaceAwareAccessor<MemorySpace,
-                       ReferenceCountedAccessor<ElementType, MemorySpace,
-                                                RestrictAccessor<ElementType>>>;
 
 }  // namespace Impl
 }  // namespace Kokkos
