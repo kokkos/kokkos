@@ -456,19 +456,20 @@ class HPX {
   }
 };
 
-template <typename... Args>
-std::vector<HPX> partition_space(HPX const &, Args... args) {
-  std::vector<HPX> instances(sizeof...(args));
-  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
-  return instances;
-}
+namespace Impl {
+// Create new, independent instance of HPX execution space for each partition,
+// ignoring weights
+template <class T>
+std::vector<HPX> impl_partition_space(const HPX &,
+                                      const std::vector<T> &weights) {
+  std::vector<HPX> instances;
+  instances.reserve(weights.size());
+  std::generate_n(std::back_inserter(instances), weights.size(),
+                  []() { return HPX(HPX::instance_mode::independent); });
 
-template <typename T>
-std::vector<HPX> partition_space(HPX const &, std::vector<T> const &weights) {
-  std::vector<HPX> instances(weights.size());
-  for (auto &in : instances) in = HPX(HPX::instance_mode::independent);
   return instances;
 }
+}  // namespace Impl
 
 extern template void HPX::impl_bulk_plain_erased<int>(
     bool, bool, std::function<void(int)> &&, int const,
