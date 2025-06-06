@@ -143,8 +143,6 @@ void device_bench_reduction_op(benchmark::State& state) {
   View<typename simd_type::value_type*, ExecSpace> res("res",
                                                        BENCH_SIZE / width);
 
-  const T identity = Kokkos::Experimental::Impl::Identity<T, std::plus<>>();
-
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::parallel_for(
@@ -153,7 +151,7 @@ void device_bench_reduction_op(benchmark::State& state) {
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
             a.copy_from(args.arg1.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
-            res(i / width) = op.on_device(a, identity, masks(i / width));
+            res(i / width) = op.on_device(a, masks(i / width));
           }
         });
     Kokkos::fence("After simd loop");
@@ -214,13 +212,13 @@ inline void device_register_common_benchmarks() {
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, hmax, hmax);
 #endif
 
-    KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, reduce, reduce_);
+    KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, reduce, reduce);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, reduce_min,
                                                      reduce_min);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, reduce_max,
                                                      reduce_max);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, masked_reduce,
-                                                     masked_reduce_);
+                                                     masked_reduce);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, masked_reduce_min,
                                                      masked_reduce_min);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, masked_reduce_max,
