@@ -18,6 +18,7 @@
 #define KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 
 #include <cstdint>                           // For std::uint16_t
+#include <cfenv>                             // For std::feraiseexcept
 #include <Kokkos_MathematicalFunctions.hpp>  // For the float overloads
 #include <Kokkos_BitManipulation.hpp>        // bit_cast
 
@@ -348,6 +349,9 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
      // Return smallest magnitude number with the sign of 'to'.
      // nextafter(±0, negative) -> smallest_negative
      // nextafter(±0, positive) -> smallest_positive
+     KOKKOS_IF_ON_HOST((
+         // if from does not equal to and the result is subnormal or zero, raises FE_INEXACT and FE_UNDERFLOW.
+         std::feraiseexcept(FE_INEXACT | FE_UNDERFLOW);))
      return bit_cast<fp16_t>((to > from) ? FP16_SMALLEST_POS_DN
                                          : FP16_SMALLEST_NEG_DN);
    }
@@ -384,7 +388,19 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
    //     uint_result = uint_from - 1;
    //   }
    // }
-   return bit_cast<fp16_t>(uint_result);
+   fp16_t result = bit_cast<fp16_t>(uint_result);
+   KOKKOS_IF_ON_HOST((
+       if (isinf(result)) {
+         // if from is finite, but the expected result is an infinity, raises FE_INEXACT and FE_OVERFLOW.
+         std::feraiseexcept(FE_INEXACT | FE_OVERFLOW);
+       };
+       if (result == fp16_t(0) || uint_result == FP16_SMALLEST_POS_DN ||
+           uint_result == FP16_SMALLEST_NEG_DN) {
+         // if from does not equal to and the result is subnormal or zero, raises FE_INEXACT and FE_UNDERFLOW.
+         std::feraiseexcept(FE_INEXACT | FE_UNDERFLOW);
+       };))
+
+   return result;
 }
 
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
