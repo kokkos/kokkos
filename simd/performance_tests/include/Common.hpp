@@ -109,19 +109,23 @@ std::string benchmark_name(const char* prefix, const char* name) {
 
 constexpr std::size_t BENCH_SIZE = 1'600'000;
 
-// Simple check to loosely test that T is a complete type.
-// Some capabilities are only defined for specific data type and abi pairs
-// (i.e. extended vector width); this is used to exclude pairs that are not
-// defined from being tested.
+// TODO: is_type_v and is_simd_avail_v are duplicated from
+// SIMDTesting_Utilities.hpp, we should probably find a cleaner solution in the
+// future
 template <typename T, typename = void>
 constexpr bool is_type_v = false;
 
 template <typename T>
 constexpr bool is_type_v<T, decltype(void(sizeof(T)))> = true;
 
+template <typename DataType, typename Abi>
+constexpr bool is_simd_avail_v =
+    is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>> &&
+    is_type_v<Kokkos::Experimental::basic_simd_mask<DataType, Abi>>;
+
 template <typename T, typename Abi>
-constexpr bool is_simd_type_v = is_type_v<Kokkos::Experimental::basic_simd<
+constexpr bool is_simd_type_v = is_simd_avail_v<
     T, std::conditional_t<std::is_same_v<Abi, simd_abi_force_serial>,
-                          Kokkos::Experimental::simd_abi::scalar, Abi>>>;
+                          Kokkos::Experimental::simd_abi::scalar, Abi>>;
 
 #endif
