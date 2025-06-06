@@ -55,6 +55,9 @@ inline constexpr AUTO_t AUTO{};
 
 struct InvalidType {};
 
+namespace Impl {
+struct InternalTag {};
+}  // namespace Impl
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
