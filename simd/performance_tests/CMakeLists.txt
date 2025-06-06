@@ -31,6 +31,7 @@ endif()
 kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
 kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/include)
 kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/../../core/perf_test)
+kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/../unit_tests/include)
 
 # We cannot use the kokkos_add_benchmark function defined in core/perf_test/CMakeLists.txt
 # because we need our own BenchmarMain.cpp file in order to register the benchmarks at runtime.
