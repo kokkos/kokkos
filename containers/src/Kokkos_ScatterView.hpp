@@ -1487,12 +1487,12 @@ class ScatterAccess<DataType, Op, DeviceType, Layout, ScatterDuplicated,
  private:
   view_type const& view;
 
+ public:
   // simplify RAII by disallowing copies
   ScatterAccess(ScatterAccess const& other)            = delete;
   ScatterAccess& operator=(ScatterAccess const& other) = delete;
   ScatterAccess& operator=(ScatterAccess&& other)      = delete;
 
- public:
   // do need to allow moves though, for the common
   // auto b = a.access();
   // that assignments turns into a move constructor call

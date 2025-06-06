@@ -52,16 +52,16 @@ struct RuntimeCheckBasicViewMemoryAccessViolation<MemorySpace, AccessSpace,
       if (tracker.has_record()) {
         strncat(err, tracker.template get_label<void>().c_str(), 128);
       } else {
-        strcat(err, "**UNMANAGED**");
+        strncat(err, "**UNMANAGED**", 24);
       }
     }))
 
     KOKKOS_IF_ON_DEVICE(({
-      strcat(err, "**UNAVAILABLE**");
+      strncat(err, "**UNAVAILABLE**", 24);
       (void)tracker;
     }))
 
-    strcat(err, "\")");
+    strncat(err, "\")", 4);
 
     Kokkos::abort(err);
   }

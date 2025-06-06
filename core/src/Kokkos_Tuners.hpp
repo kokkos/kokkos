@@ -197,7 +197,9 @@ template <class RootType, class Subtype>
 struct DimensionValueExtractor<ValueHierarchyNode<RootType, Subtype>> {
   static RootType get(const ValueHierarchyNode<RootType, Subtype>& dimension,
                       double fraction_to_traverse) {
-    size_t index = dimension.root_values.size() * fraction_to_traverse;
+    auto index =
+        static_cast<size_t>(static_cast<double>(dimension.root_values.size()) *
+                            fraction_to_traverse);
     return dimension.get_root_value(index);
   }
 };
@@ -233,7 +235,8 @@ struct GetMultidimensionalPoint<ValueHierarchyNode<ValueType, Subtype>, double,
       std::declval<std::tuple<ValueType>>(), std::declval<sub_tuple>()));
   static return_type build(const node_type& in, double fraction_to_traverse,
                            Indices... indices) {
-    size_t index         = in.sub_values.size() * fraction_to_traverse;
+    auto index = static_cast<size_t>(static_cast<double>(in.sub_values.size()) *
+                                     fraction_to_traverse);
     auto dimension_value = std::make_tuple(
         DimensionValueExtractor<node_type>::get(in, fraction_to_traverse));
     return std::tuple_cat(dimension_value,
