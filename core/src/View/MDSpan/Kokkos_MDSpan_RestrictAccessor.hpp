@@ -33,11 +33,9 @@ struct RestrictAccessor {
   KOKKOS_DEFAULTED_FUNCTION constexpr RestrictAccessor() noexcept = default;
 
   // (incl. non-const to const)
-  template <
-      class OtherElementType,
-      typename ::std::enable_if<
-          (std::is_convertible_v<OtherElementType (*)[], element_type (*)[]>),
-          int>::type = 0>
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
   KOKKOS_INLINE_FUNCTION constexpr RestrictAccessor(
       RestrictAccessor<OtherElementType>) noexcept {}
 
