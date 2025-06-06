@@ -218,74 +218,37 @@ constexpr void customize_view_arguments(
 namespace Impl {
 struct UnsupportedKokkosArrayLayout;
 
-template <class Traits, class Enabled = void>
+template <class Traits>
 struct AccessorFromViewTraits {
-  using type =
-      SpaceAwareAccessor<typename Traits::memory_space,
-                         default_accessor<typename Traits::value_type>>;
-};
+ private:
+  using MemorySpace = typename Traits::memory_space;
+  using ElementType = typename Traits::value_type;
 
+  static auto nested_accessor_instance() {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic>> {
-  using type =
-      SpaceAwareAccessor<typename Traits::memory_space,
-                         default_accessor<typename Traits::value_type>>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic>> {
-  using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
-                                            typename Traits::memory_space>;
-};
+    if constexpr (Traits::memory_traits::is_atomic) {
+      return AtomicAccessorRelaxed<ElementType>{};
+    } else {
+      return default_accessor<ElementType>{};
+    }
 #else
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic &&
-                     !Traits::memory_traits::is_restrict>> {
-  using type = CheckedReferenceCountedAccessor<typename Traits::value_type,
-                                               typename Traits::memory_space>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic &&
-                     Traits::memory_traits::is_restrict>> {
-  using type =
-      CheckedReferenceCountedRestrictAccessor<typename Traits::value_type,
-                                              typename Traits::memory_space>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic>> {
-  using type = CheckedReferenceCountedRelaxedAtomicAccessor<
-      typename Traits::value_type, typename Traits::memory_space>;
-};
+    if constexpr (Traits::memory_traits::is_atomic)
+      return AtomicAccessorRelaxed<ElementType>{};
+    else if constexpr (Traits::memory_traits::is_restrict)
+      return RestrictAccessor<ElementType>{};
+    else
+      return default_accessor<ElementType>{};
 #endif
+  }
 
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<!Traits::is_managed && Traits::memory_traits::is_atomic>> {
-  using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
-                                            typename Traits::memory_space>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<!Traits::is_managed && !Traits::memory_traits::is_atomic &&
-                     Traits::is_restrict>> {
-  using type = CheckedRestrictAccessor<typename Traits::value_type,
-                                       typename Traits::memory_space>;
+ public:
+  using type = std::conditional_t<
+      Traits::is_managed,
+      SpaceAwareAccessor<
+          MemorySpace,
+          ReferenceCountedAccessor<ElementType, MemorySpace,
+                                   decltype(nested_accessor_instance())>>,
+      SpaceAwareAccessor<MemorySpace, decltype(nested_accessor_instance())>>;
 };
 
 template <class Traits>
