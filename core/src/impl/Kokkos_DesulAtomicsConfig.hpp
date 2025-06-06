@@ -21,9 +21,14 @@
 #define DESUL_CUDA_ARCH_IS_PRE_PASCAL
 #endif
 
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
-    defined(KOKKOS_ARCH_PASCAL)
+#if defined(DESUL_CUDA_ARCH_IS_PRE_PASCAL) || defined(KOKKOS_ARCH_PASCAL)
 #define DESUL_CUDA_ARCH_IS_PRE_VOLTA
+#endif
+
+#if defined(DESUL_CUDA_ARCH_IS_PRE_VOLTA) || defined(KOKKOS_ARCH_VOLTA) || \
+    defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE) ||        \
+    defined(KOKKOS_ARCH_ADA89)
+#define DESUL_CUDA_ARCH_IS_PRE_HOPPER
 #endif
 
 #endif
