@@ -17,6 +17,8 @@
 #include <Kokkos_Core.hpp>
 #include <type_traits>
 
+#include <view/AccessorAliases.hpp>
+
 namespace Foo {
 
 struct FooVal {
@@ -64,9 +66,9 @@ static_assert(std::is_same_v<typename view_cbarval_t::extents_type::index_type,
                              unsigned>);
 
 using mem_space_t = typename Kokkos::DefaultExecutionSpace::memory_space;
-static_assert(std::is_same_v<typename view_fooval_t::accessor_type,
-                             Kokkos::Impl::CheckedReferenceCountedAccessor<
-                                 Foo::FooVal, mem_space_t>>);
+static_assert(
+    std::is_same_v<typename view_fooval_t::accessor_type,
+                   CheckedReferenceCountedAccessor<Foo::FooVal, mem_space_t>>);
 static_assert(
     std::is_same_v<typename view_barval_t::accessor_type,
                    Kokkos::Impl::SpaceAwareAccessor<

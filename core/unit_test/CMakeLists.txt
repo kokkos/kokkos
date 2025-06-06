@@ -80,9 +80,11 @@ set(COMPILE_ONLY_SOURCES
     TestDetectionIdiom.cpp
     TestBitManipulation.cpp
     TestInterOp.cpp
+    TestIsPointer.cpp
     TestRangePolicyCTAD.cpp
     TestStringManipulation.cpp
     TestVersionMacros.cpp
+    TestViewMemoryTraitsAssign.cpp
     TestViewRank.cpp
     TestViewTypeTraits.cpp
     TestViewTypedefs.cpp
