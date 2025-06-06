@@ -349,9 +349,6 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_impl(fp16_t from, fp16_t to) {
      // Return smallest magnitude number with the sign of 'to'.
      // nextafter(±0, negative) -> smallest_negative
      // nextafter(±0, positive) -> smallest_positive
-     KOKKOS_IF_ON_HOST((
-         // if from does not equal to and the result is subnormal or zero, raises FE_INEXACT and FE_UNDERFLOW.
-         std::feraiseexcept(FE_INEXACT | FE_UNDERFLOW);))
      return bit_cast<fp16_t>((to > from) ? FP16_SMALLEST_POS_DN
                                          : FP16_SMALLEST_NEG_DN);
    }
