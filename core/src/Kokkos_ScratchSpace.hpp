@@ -66,6 +66,7 @@ class ScratchMemorySpace {
   using device_type = Kokkos::Device<execution_space, memory_space>;
 
   using array_layout = typename ExecSpace::array_layout;
+  using index_type   = typename ExecSpace::index_type;
   using size_type    = typename ExecSpace::size_type;
 
   static constexpr const char* name() { return "ScratchMemorySpace"; }

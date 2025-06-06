@@ -62,8 +62,8 @@ class CudaSpace {
   using memory_space    = CudaSpace;
   using execution_space = Kokkos::Cuda;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-
-  using size_type = unsigned int;
+  using index_type      = unsigned int;
+  using size_type       = index_type;
 
   /*--------------------------------*/
 
@@ -157,7 +157,8 @@ class CudaUVMSpace {
   using memory_space    = CudaUVMSpace;
   using execution_space = Cuda;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using index_type      = unsigned int;
+  using size_type       = index_type;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  If UVM capability is available */
@@ -256,7 +257,8 @@ class CudaHostPinnedSpace {
   using execution_space = HostSpace::execution_space;
   using memory_space    = CudaHostPinnedSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using index_type      = unsigned int;
+  using size_type       = index_type;
 
   /*--------------------------------*/
 

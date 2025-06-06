@@ -52,8 +52,8 @@ class HIPSpace {
   using memory_space    = HIPSpace;
   using execution_space = HIP;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-
-  using size_type = unsigned int;
+  using index_type      = unsigned int;
+  using size_type       = index_type;
 
   /*--------------------------------*/
 
@@ -139,7 +139,8 @@ class HIPHostPinnedSpace {
   using execution_space = HostSpace::execution_space;
   using memory_space    = HIPHostPinnedSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using index_type      = unsigned int;
+  using size_type       = index_type;
 
   /*--------------------------------*/
 
@@ -224,7 +225,8 @@ class HIPManagedSpace {
   using memory_space    = HIPManagedSpace;
   using execution_space = HIP;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-  using size_type       = unsigned int;
+  using index_type      = unsigned int;
+  using size_type       = index_type;
 
   /*--------------------------------*/
 

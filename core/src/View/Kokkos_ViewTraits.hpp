@@ -531,7 +531,8 @@ struct ViewTraits {
   using host_mirror_space = HostMirrorSpace;
   using hooks_policy      = HooksPolicy;
 
-  using size_type = typename MemorySpace::size_type;
+  using size_type  = typename MemorySpace::size_type;
+  using index_type = typename MemorySpace::index_type;
 
   static constexpr bool impl_is_customized =
       !std::is_same_v<void,
