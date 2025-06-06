@@ -53,6 +53,11 @@ using ::Kokkos::hwloc::get_available_threads_per_core;
 #ifdef KOKKOS_ENABLE_THREADS
   using ::Kokkos::Threads;
 #endif
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+namespace Experimental {
+  using ::Kokkos::Experimental::OpenMPTarget;
+}
+#endif
   using ::Kokkos::Timer;
 
   using ::Kokkos::Schedule;
@@ -286,7 +291,9 @@ using ::Kokkos::hwloc::get_available_threads_per_core;
   using ::Kokkos::Rank;
   using ::Kokkos::realloc;
   using ::Kokkos::resize;
+#ifdef KOKKOS_HAS_SHARED_SPACE
   using ::Kokkos::SharedSpace;
+#endif
   using ::Kokkos::single;
   using ::Kokkos::subview;
   using ::Kokkos::Subview;
@@ -535,7 +542,9 @@ using ::Kokkos::hwloc::get_available_threads_per_core;
   using ::Kokkos::Impl::with_properties_if_unset;
   }  // namespace Impl
 
+#ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
   using ::Kokkos::SharedHostPinnedSpace;
+#endif
   using ::Kokkos::TeamThreadMDRange;
 
   using ::Kokkos::ChunkSize;
