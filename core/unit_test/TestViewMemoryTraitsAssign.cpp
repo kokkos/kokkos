@@ -20,7 +20,7 @@ namespace Test {
 
 template <typename DstTraits, typename SrcTraits>
 void impl_view_memory_trait_assign() {
-  Kokkos::View<double *, DstTraits> a =
+  [[maybe_unused]] Kokkos::View<double *, DstTraits> a =
       Kokkos::View<double *, SrcTraits>("a", 1);
 }
 
