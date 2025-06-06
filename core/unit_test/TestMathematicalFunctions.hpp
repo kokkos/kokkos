@@ -16,7 +16,6 @@
 
 #include <gtest/gtest.h>
 
-#define KOKKOS_TEST_HALF_INTERNAL_IMPLEMENTATION
 #include <Kokkos_Core.hpp>
 #include <algorithm>
 #include <initializer_list>
