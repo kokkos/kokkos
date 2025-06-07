@@ -23,12 +23,12 @@ export module kokkoscore;
 
 export {
   namespace Kokkos {
-namespace hwloc {
-using ::Kokkos::hwloc::available;
-using ::Kokkos::hwloc::get_available_numa_count;
-using ::Kokkos::hwloc::get_available_cores_per_numa;
-using ::Kokkos::hwloc::get_available_threads_per_core;
-}
+  namespace hwloc {
+  using ::Kokkos::hwloc::available;
+  using ::Kokkos::hwloc::get_available_cores_per_numa;
+  using ::Kokkos::hwloc::get_available_numa_count;
+  using ::Kokkos::hwloc::get_available_threads_per_core;
+  }  // namespace hwloc
 
   using ::Kokkos::abort;
   using ::Kokkos::abs;
@@ -54,17 +54,17 @@ using ::Kokkos::hwloc::get_available_threads_per_core;
   using ::Kokkos::Threads;
 #endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
-namespace Experimental {
+  namespace Experimental {
   using ::Kokkos::Experimental::OpenMPTarget;
-}
+  }
 #endif
   using ::Kokkos::Timer;
 
   using ::Kokkos::Schedule;
   namespace Experimental {
   using ::Kokkos::Experimental::partition_space;
-  using ::Kokkos::Experimental::WorkItemProperty;
   using ::Kokkos::Experimental::python_view_type;
+  using ::Kokkos::Experimental::WorkItemProperty;
   }  // namespace Experimental
 
   namespace Impl {

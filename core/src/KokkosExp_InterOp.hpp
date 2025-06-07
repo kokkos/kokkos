@@ -82,12 +82,11 @@ namespace Experimental {
 //
 template <typename ViewT>
 struct python_view_type {
-  static_assert(
-      Kokkos::is_view<std::decay_t<ViewT>>::value
-      ,"Error! python_view_type only supports Kokkos::View and "
-      "Kokkos::DynRankView");
-      
-	using type =
+  static_assert(Kokkos::is_view<std::decay_t<ViewT>>::value,
+                "Error! python_view_type only supports Kokkos::View and "
+                "Kokkos::DynRankView");
+
+  using type =
       Kokkos::Impl::python_view_type_impl_t<typename ViewT::array_type>;
 };
 

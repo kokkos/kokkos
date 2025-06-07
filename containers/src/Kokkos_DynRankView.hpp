@@ -1856,10 +1856,10 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> realloc(
 namespace Experimental {
 template <class T, class... P>
 struct python_view_type<DynRankView<T, P...>> {
-	using type =
-      Kokkos::Impl::python_view_type_impl_t<typename DynRankView<T, P...>::array_type>;
+  using type = Kokkos::Impl::python_view_type_impl_t<
+      typename DynRankView<T, P...>::array_type>;
 };
-}
+}  // namespace Experimental
 
 }  // namespace Kokkos
 
