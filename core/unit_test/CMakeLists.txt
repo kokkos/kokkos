@@ -97,6 +97,7 @@ set(COMPILE_ONLY_SOURCES
     view/TestBasicViewMDSpanConversion.cpp
     view/TestViewCustomization.cpp
     view/TestExtentsDatatypeConversion.cpp
+    view/TestRestrictViewAccessor.cpp
 )
 
 if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")

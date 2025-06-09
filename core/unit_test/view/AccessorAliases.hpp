@@ -39,4 +39,11 @@ using CheckedReferenceCountedRelaxedAtomicAccessor =
                          ElementType, MemorySpace,
                          Kokkos::Impl::AtomicAccessorRelaxed<ElementType>>>;
 
+template <class ElementType, class MemorySpace>
+using CheckedReferenceCountedRestrictAccessor =
+    Kokkos::Impl::SpaceAwareAccessor<
+        MemorySpace, Kokkos::Impl::ReferenceCountedAccessor<
+                         ElementType, MemorySpace,
+                         Kokkos::Impl::RestrictAccessor<ElementType>>>;
+
 #endif
