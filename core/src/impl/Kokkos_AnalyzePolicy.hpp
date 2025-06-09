@@ -31,6 +31,7 @@
 #include <traits/Kokkos_ScheduleTrait.hpp>
 #include <traits/Kokkos_WorkItemPropertyTrait.hpp>
 #include <traits/Kokkos_WorkTagTrait.hpp>
+#include <traits/Kokkos_LoopUnrollTrait.hpp>
 
 namespace Kokkos {
 namespace Impl {
