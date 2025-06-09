@@ -27,13 +27,18 @@ pipeline {
                           && \
                           apt-get clean && rm -rf /var/lib/apt/lists/*
 
+                          export SPACK_CDASH_ARGS="" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-upload-url=https://my.cdash.org/submit.php?project=Kokkos" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-track=Nightly" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-site=ornl-jenkins" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-build=spack-serial" && \
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack install --only=depencies kokkos@develop+tests && \
-                          spack install --only=package --cdash-upload-url="https://my.cdash.org/submit.php?project=Kokkos" --cdash-track=Nightly --cdash-site="ornl-jenkins" --cdash-build="spack-serial" kokkos@develop+tests && \
+                          spack install --only=package ${SPACK_CDASH_ARGS} kokkos@develop+tests && \
                           spack load cmake && \
-                          spack test run --cdash-upload-url="https://my.cdash.org/submit.php?project=Kokkos" --cdash-track=Nightly --cdash-site="ornl-jenkins" --cdash-build="spack-serial" kokkos && \
+                          spack test run ${SPACK_CDASH_ARGS} kokkos && \
                           spack test results -l
                           '''
                     }      
@@ -58,16 +63,21 @@ pipeline {
                           && \
                           apt-get clean && rm -rf /var/lib/apt/lists/*
 
+                          export SPACK_CDASH_ARGS="" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-upload-url=https://my.cdash.org/submit.php?project=Kokkos" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-track=Nightly" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-site=ornl-jenkins" && \
+                          export SPACK_CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-build=spack-cuda" && \
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack install --only=dependencies kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.1.0 && \
-                          spack install --only=package --cdash-upload-url="https://my.cdash.org/submit.php?project=Kokkos" --cdash-track=Nightly --cdash-site="ornl-jenkins" --cdash-build="spack-cuda" kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.1.0 && \
+                          spack install --only=package ${SPACK_CDASH_ARGS} kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.1.0 && \
                           spack load cmake  && \
                           spack load kokkos-nvcc-wrapper && \
                           spack load cuda && \
                           spack load kokkos && \
-                          spack test run --cdash-upload-url="https://my.cdash.org/submit.php?project=Kokkos" --cdash-track=Nightly --cdash-site="ornl-jenkins" --cdash-build="spack-cuda" kokkos && \
+                          spack test run ${SPACK_CDASH_ARGS} kokkos && \
                           spack test results -l
                           '''
                     }      
