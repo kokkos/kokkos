@@ -234,19 +234,12 @@ struct AtomicAccessorRelaxed {
   }
 
   // Conversion from RestrictAccessor (incl. non-const to const)
+  // RestrictAccessor knows how to convert to AtomicAccessorRelaxed
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
                 OtherElementType (*)[], element_type (*)[]>>* = nullptr>
   KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
       RestrictAccessor<OtherElementType>) noexcept {}
-
-  // Conversion to RestrictAccessor (incl. non-const to const)
-  template <class OtherElementType,
-            std::enable_if_t<std::is_convertible_v<
-                element_type (*)[], OtherElementType (*)[]>>* = nullptr>
-  KOKKOS_FUNCTION explicit operator RestrictAccessor<OtherElementType>() const {
-    return RestrictAccessor<OtherElementType>{};
-  }
 
   KOKKOS_FUNCTION
   reference access(
@@ -307,20 +300,12 @@ struct RestrictAccessor {
   }
 
   // Conversion from AtomicAccessorRelaxed (incl. non-const to const)
+  // AtomicAccessorRelaxed knows how to convert from RestrictAccessor
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
                 OtherElementType (*)[], element_type (*)[]>>* = nullptr>
   KOKKOS_FUNCTION constexpr RestrictAccessor(
       AtomicAccessorRelaxed<OtherElementType>) noexcept {}
-
-  // Conversion to AtomicAccessorRelaxed (incl. non-const to const)
-  template <class OtherElementType,
-            std::enable_if_t<std::is_convertible_v<
-                element_type (*)[], OtherElementType (*)[]>>* = nullptr>
-  KOKKOS_FUNCTION explicit operator AtomicAccessorRelaxed<OtherElementType>()
-      const {
-    return AtomicAccessorRelaxed<OtherElementType>{};
-  }
 
   // technically this is supposed to return data_handle_type but qualifiers are
   // ignored on return types and compilers may issue a warning
