@@ -1725,10 +1725,10 @@ local_deep_copy_barrier(const Kokkos::Impl::ThreadVectorRangeBoundariesStruct<
   // We shouldn't use barriers at ThreadVector level
 }
 //----------------------------------------------------------------------------
-template <class ViewTypeDst, class ViewTypeSrc>
-bool KOKKOS_INLINE_FUNCTION views_have_same_extents(const ViewTypeDst& dst,
-                                                    const ViewTypeSrc& src) {
-  for (size_t i = 0; i < dst.rank(); i++) {
+template <class DT, class... DP, class ST, class... SP>
+bool KOKKOS_INLINE_FUNCTION views_have_same_extents(
+    const View<DT, DP...>& dst, const View<ST, SP...>& src) {
+  for (unsigned i = 0; i < ViewTraits<DT, DP...>::rank; i++) {
     if (src.extent(i) != dst.extent(i)) {
       return false;
     }
@@ -1790,9 +1790,11 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
     Impl::local_deep_copy_contiguous(policy, dst, src);
   } else {
     if constexpr (ViewTraits<DT, DP...>::rank == 1) {
-      Impl::flat_local_deep_copy(policy, dst, Impl::MDCopyFunctor(dst, src));
+      Impl::flat_local_deep_copy(
+          policy, dst, Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
     } else {
-      Impl::md_local_deep_copy(policy, dst, Impl::MDCopyFunctor(dst, src));
+      Impl::md_local_deep_copy(
+          policy, dst, Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
     }
   }
   Impl::local_deep_copy_barrier(policy);
@@ -1835,11 +1837,13 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
     Impl::local_deep_copy_contiguous(policy, dst, value);
   } else {
     if constexpr (ViewTraits<DT, DP...>::rank == 1) {
-      Impl::flat_local_deep_copy(policy, dst,
-                                 Impl::MDValueCopyFunctor(dst, value));
+      Impl::flat_local_deep_copy(
+          policy, dst,
+          Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
     } else {
-      Impl::md_local_deep_copy(policy, dst,
-                               Impl::MDValueCopyFunctor(dst, value));
+      Impl::md_local_deep_copy(
+          policy, dst,
+          Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
     }
   }
   Impl::local_deep_copy_barrier(policy);
