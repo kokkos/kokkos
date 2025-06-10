@@ -21,9 +21,7 @@
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 
-namespace Kokkos {
-
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 template <unsigned int LoopUnrollFactor = 1>
 struct LoopUnroll {
@@ -33,9 +31,9 @@ struct LoopUnroll {
       LoopUnrollFactor};  // Default unroll factor is 1
 };
 
-}  // namespace Experimental
+}  // end namespace Kokkos::Experimental
 
-namespace Impl {
+namespace Kokkos::Impl {
 
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
@@ -56,12 +54,12 @@ struct LoopUnrollTrait : TraitSpecificationBase<LoopUnrollTrait> {
     static constexpr bool loop_unroll_is_defaulted = false;
 
     static_assert(base_t::loop_unroll_is_defaulted,
-                  "Kokkos Error: More than one launch_bounds given");
+                  "Kokkos Error: More than one loop_unroll trait given");
 
     using loop_unroll = LoopUnrollParam;
   };
 };
-}  // namespace Impl
+}  // end namespace Kokkos::Impl
 
 // </editor-fold> end trait specification }}}1
 //==============================================================================
@@ -69,7 +67,7 @@ struct LoopUnrollTrait : TraitSpecificationBase<LoopUnrollTrait> {
 //==============================================================================
 // <editor-fold desc="PolicyTraitMatcher specialization"> {{{1
 
-namespace Impl {
+namespace Kokkos::Impl {
 
 template <unsigned int LoopUnrollFactor>
 struct PolicyTraitMatcher<LoopUnrollTrait,
@@ -79,8 +77,6 @@ struct PolicyTraitMatcher<LoopUnrollTrait,
 // </editor-fold> end PolicyTraitMatcher specialization }}}1
 //==============================================================================
 
-}  // end namespace Impl
+}  // end namespace Kokkos::Impl
 
-}  // end namespace Kokkos
-
-#endif  // KOKKOS_KOKKOS_LAUNCHBOUNDSTRAIT_HPP
+#endif  // KOKKOS_KOKKOS_LOOPUNROLLTRAIT_HPP

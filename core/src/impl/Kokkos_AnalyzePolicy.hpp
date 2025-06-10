@@ -27,11 +27,11 @@
 #include <traits/Kokkos_IndexTypeTrait.hpp>
 #include <traits/Kokkos_IterationPatternTrait.hpp>
 #include <traits/Kokkos_LaunchBoundsTrait.hpp>
+#include <traits/Kokkos_LoopUnrollTrait.hpp>
 #include <traits/Kokkos_OccupancyControlTrait.hpp>
 #include <traits/Kokkos_ScheduleTrait.hpp>
 #include <traits/Kokkos_WorkItemPropertyTrait.hpp>
 #include <traits/Kokkos_WorkTagTrait.hpp>
-#include <traits/Kokkos_LoopUnrollTrait.hpp>
 
 namespace Kokkos {
 namespace Impl {
