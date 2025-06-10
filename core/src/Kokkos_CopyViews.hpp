@@ -1791,10 +1791,10 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
   } else {
     if constexpr (ViewTraits<DT, DP...>::rank == 1) {
       Impl::flat_local_deep_copy(
-          policy, dst, Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
+          policy, dst, ::Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
     } else {
       Impl::md_local_deep_copy(
-          policy, dst, Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
+          policy, dst, ::Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
     }
   }
   Impl::local_deep_copy_barrier(policy);
@@ -1839,11 +1839,11 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
     if constexpr (ViewTraits<DT, DP...>::rank == 1) {
       Impl::flat_local_deep_copy(
           policy, dst,
-          Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
+          ::Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
     } else {
       Impl::md_local_deep_copy(
           policy, dst,
-          Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
+          ::Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
     }
   }
   Impl::local_deep_copy_barrier(policy);
