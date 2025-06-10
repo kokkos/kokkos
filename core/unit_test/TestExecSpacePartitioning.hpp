@@ -51,7 +51,8 @@ void check_distinctive([[maybe_unused]] ExecSpace exec1,
   if constexpr (std::is_same_v<ExecSpace, Kokkos::OpenMP>) {
     ASSERT_NE(exec1, exec2);
     ASSERT_EQ(ExecSpace().concurrency(),
-              exec1.concurrency() + exec2.concurrency());
+              exec1.impl_internal_space_instance()->thread_pool_size() +
+                  exec2.impl_internal_space_instance()->thread_pool_size());
   }
 #endif
 #ifdef KOKKOS_ENABLE_CUDA
