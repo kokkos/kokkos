@@ -17,6 +17,7 @@
 #ifndef KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 #define KOKKOS_HALF_MATHEMATICAL_FUNCTIONS_HPP_
 
+#include <cstdint>                           // For std::uint16_t
 #include <Kokkos_MathematicalFunctions.hpp>  // For the float overloads
 #include <Kokkos_BitManipulation.hpp>        // bit_cast
 
@@ -196,7 +197,11 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, ne
 // scalbln
 // ilog
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, logb)
+
+// FIXME nextafter for fp16 is unavailable for MSVC CUDA builds
+#if (defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, nextafter)
+#endif
 // nexttoward
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, copysign)
 // Classification and comparison functions
@@ -315,6 +320,90 @@ KOKKOS_INLINE_FUNCTION bool isnan(Kokkos::Experimental::bhalf_t x) {
   return Impl::impl_isnan(x);
 }
 #endif
+
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
+namespace Impl {
+template <typename fp16_t>
+KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_helper(fp16_t from, fp16_t to) {
+  static_assert((std::is_same_v<fp16_t, Kokkos::Experimental::half_t> ||
+                 std::is_same_v<fp16_t, Kokkos::Experimental::bhalf_t>)
+                 && sizeof(fp16_t) == 2, "nextafter_half_impl only supports half_t and bhalf_t");
+  constexpr std::uint16_t FP16_SIGN_MASK = 0x8000;
+  constexpr std::uint16_t FP16_SMALLEST_POS_DN = 0x0001;  // Smallest positive denormal
+  constexpr std::uint16_t FP16_SMALLEST_NEG_DN = 0x8001;  // Smallest negative denormal (magnitude)
+
+   // Handle Nans
+   if (isnan(from) || isnan(to)) {
+     return Kokkos::Experimental::quiet_NaN<fp16_t>::value;
+   }
+
+   // Handle equality
+   if (from == to) return to;
+
+   // Get unsigned integer representation of from
+   std::uint16_t uint_from = bit_cast<std::uint16_t>(from);
+
+   // Handle zeros
+   if (from == fp16_t(0)) {
+     // from is +0.0 or -0.0
+     // Return smallest magnitude number with the sign of 'to'.
+     // nextafter(±0, negative) -> smallest_negative
+     // nextafter(±0, positive) -> smallest_positive
+     return bit_cast<fp16_t>((to > from) ? FP16_SMALLEST_POS_DN
+                                         : FP16_SMALLEST_NEG_DN);
+   }
+
+   // Determine direction and sign of 'from'
+   // True if moving to positive infinity
+   bool to_positive_infinity = (to > from);
+   bool from_is_negative     = (uint_from & FP16_SIGN_MASK);
+
+   std::uint16_t uint_result = uint_from + 2 * (to_positive_infinity ^ from_is_negative) - 1;
+   // This is equivalent to the following operations.
+   // std::uint16_t uint_result;
+   //
+   // if (from_is_negative) {
+   //   // For negative numbers, increasing magnitude means moving towards -inf
+   //   // (larger uint value) Decreasing magnitude means moving towards zero
+   //   // (smaller uint value)
+   //   if (to_positive_infinity) {
+   //     // Moving toward zero or positive
+   //     uint_result = uint_from - 1;
+   //   } else {
+   //     // Moving toward negative infinity
+   //     uint_result = uint_from + 1;
+   //   }
+   // } else {
+   //   // For positive numbers, increasing magnitude means moving towards +inf
+   //   // (larger uint value) Decreasing magnitude means moving towards zero
+   //   // (smaller uint value)
+   //   if (to_positive_infinity) {
+   //     // Moving toward positive infinity
+   //     uint_result = uint_from + 1;
+   //   } else {
+   //     // Moving toward zero or negative infinity
+   //     uint_result = uint_from - 1;
+   //   }
+   // }
+   return bit_cast<fp16_t>(uint_result);
+}
+} // namespace Impl
+
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t nextafter(Kokkos::Experimental::half_t from,
+                                                              Kokkos::Experimental::half_t to) {
+  return Impl::nextafter_half_helper(from, to);
+}
+#endif
+
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t nextafter(Kokkos::Experimental::bhalf_t from,
+                                                               Kokkos::Experimental::bhalf_t to) {
+  return Impl::nextafter_half_helper(from, to);
+}
+#endif
+#endif  // !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
+
 // isnormal
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, signbit)
 // isgreater
