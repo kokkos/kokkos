@@ -71,9 +71,9 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   Policy const& get_policy() const { return m_policy; }
 
   inline __device__ void operator()() const {
-    constexpr unsigned int loop_unroll_factor = LoopUnroll::unroll_factor;
-    const auto work_stride                    = Member(blockDim.y) * gridDim.x;
-    const Member work_end                     = m_policy.end();
+    constexpr auto loop_unroll_factor = Member(LoopUnroll::unroll_factor);
+    const auto work_stride            = Member(blockDim.y) * gridDim.x;
+    const Member work_end             = m_policy.end();
 
     for (Member iwork = m_policy.begin() + threadIdx.y +
                         static_cast<Member>(blockDim.y) * blockIdx.x;
@@ -84,10 +84,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
                      : work_end) {
 // Unroll the loop
 #pragma unroll
-      for (unsigned int i = 0;
-           i < work_stride * loop_unroll_factor && iwork + i < work_end;
+      for (unsigned int i = 0; i < work_stride * loop_unroll_factor &&
+                               iwork + static_cast<Member>(i) < work_end;
            i += work_stride) {
-        this->template exec_range<WorkTag>(iwork + i);
+        this->template exec_range<WorkTag>(iwork + static_cast<Member>(i));
       }
     }
   }
