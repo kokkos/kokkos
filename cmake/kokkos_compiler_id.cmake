@@ -35,12 +35,12 @@ if(Kokkos_ENABLE_CUDA)
     PATHS ${PROJECT_SOURCE_DIR}
     PATH_SUFFIXES bin
   )
+  # Check if compiler was set to nvcc_wrapper
+  kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
 
   # kokkos_enable_options is not yet called so use lower case here
   if(Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
 
-    # Check if compiler was set to nvcc_wrapper
-    kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
     #if cuda compiler is nvcc we want to store nvcc_wrapper as backend compiler to allow redirection of cxx files to nvcc
     if(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
       set(KOKKOS_BACKEND_COMPILER ${Kokkos_NVCC_WRAPPER})
@@ -49,8 +49,7 @@ if(Kokkos_ENABLE_CUDA)
     kokkos_internal_have_compiler_nvcc(${CMAKE_CUDA_COMPILER})
 
   else()
-    # Check if compiler was set to nvcc_wrapper
-    kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
+
     # If launcher was found and nvcc_wrapper was not specified as
     # compiler and `CMAKE_CXX_COMPILIER_LAUNCHER` is not set, set to use launcher.
     # Will ensure CMAKE_CXX_COMPILER is replaced by nvcc_wrapper
