@@ -1789,12 +1789,11 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(policy, dst, src);
   } else {
+    Impl::MDCopyFunctor<View<DT, DP...>, View<ST, SP...>> functor(dst, src);
     if constexpr (ViewTraits<DT, DP...>::rank == 1) {
-      Impl::flat_local_deep_copy(
-          policy, dst, ::Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
+      Impl::flat_local_deep_copy(policy, dst, functor);
     } else {
-      Impl::md_local_deep_copy(
-          policy, dst, ::Kokkos::Experimental::Impl::MDCopyFunctor(dst, src));
+      Impl::md_local_deep_copy(policy, dst, functor);
     }
   }
   Impl::local_deep_copy_barrier(policy);
@@ -1836,14 +1835,13 @@ deep_copy(const PolicyType& policy, const View<DT, DP...>& dst,
   if (dst.span_is_contiguous()) {
     Impl::local_deep_copy_contiguous(policy, dst, value);
   } else {
+    Impl::MDValueCopyFunctor<View<DT, DP...>,
+                             typename ViewTraits<DT, DP...>::const_value_type>
+        functor(dst, value);
     if constexpr (ViewTraits<DT, DP...>::rank == 1) {
-      Impl::flat_local_deep_copy(
-          policy, dst,
-          ::Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
+      Impl::flat_local_deep_copy(policy, dst, functor);
     } else {
-      Impl::md_local_deep_copy(
-          policy, dst,
-          ::Kokkos::Experimental::Impl::MDValueCopyFunctor(dst, value));
+      Impl::md_local_deep_copy(policy, dst, functor);
     }
   }
   Impl::local_deep_copy_barrier(policy);
