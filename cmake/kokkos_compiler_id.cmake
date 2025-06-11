@@ -19,22 +19,22 @@ macro(kokkos_internal_have_compiler_nvcc)
 endmacro()
 
 if(Kokkos_ENABLE_CUDA)
-    # find kokkos_launch_compiler
-    find_program(
-      Kokkos_COMPILE_LAUNCHER
-      NAMES kokkos_launch_compiler
-      HINTS ${PROJECT_SOURCE_DIR}
-      PATHS ${PROJECT_SOURCE_DIR}
-      PATH_SUFFIXES bin
-    )
+  # find kokkos_launch_compiler
+  find_program(
+    Kokkos_COMPILE_LAUNCHER
+    NAMES kokkos_launch_compiler
+    HINTS ${PROJECT_SOURCE_DIR}
+    PATHS ${PROJECT_SOURCE_DIR}
+    PATH_SUFFIXES bin
+  )
 
-    find_program(
-      Kokkos_NVCC_WRAPPER
-      NAMES nvcc_wrapper
-      HINTS ${PROJECT_SOURCE_DIR}
-      PATHS ${PROJECT_SOURCE_DIR}
-      PATH_SUFFIXES bin
-    )
+  find_program(
+    Kokkos_NVCC_WRAPPER
+    NAMES nvcc_wrapper
+    HINTS ${PROJECT_SOURCE_DIR}
+    PATHS ${PROJECT_SOURCE_DIR}
+    PATH_SUFFIXES bin
+  )
 
   # kokkos_enable_options is not yet called so use lower case here
   if(Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
@@ -47,7 +47,7 @@ if(Kokkos_ENABLE_CUDA)
     endif()
 
     kokkos_internal_have_compiler_nvcc(${CMAKE_CUDA_COMPILER})
-    
+
   else()
     # Check if compiler was set to nvcc_wrapper
     kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
