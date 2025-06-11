@@ -29,6 +29,9 @@ struct LoopUnroll {
   using type        = LoopUnroll<LoopUnrollFactor>;
   constexpr static unsigned int unroll_factor{
       LoopUnrollFactor};  // Default unroll factor is 1
+
+  static_assert(LoopUnrollFactor > 0,
+                "Kokkos Error: LoopUnroll factor must be greater than zero");
 };
 
 }  // end namespace Kokkos::Experimental
