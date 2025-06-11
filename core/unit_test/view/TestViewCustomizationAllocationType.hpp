@@ -259,7 +259,9 @@ void test_deep_copy() {
       "view_customization_deep_copy_a", policy2d,
       KOKKOS_LAMBDA(int i, int j, int& error) {
         for (size_t k = 0; k < size; k++) {
-          if (a(i, j)[k] != i * 100 + j + 0.1 * k) error++;
+          if (Kokkos::abs(a(i, j)[k] - (i * 100 + j + 0.1 * k)) >
+              Kokkos::Experimental::epsilon_v<float>)
+            error++;
           a(i, j)[k] = i * 200 + j + 0.1 * k;
         }
       },
@@ -271,7 +273,7 @@ void test_deep_copy() {
   for (size_t i = 0; i < ext0; i++)
     for (size_t j = 0; j < ext1; j++)
       for (size_t k = 0; k < size; k++)
-        ASSERT_EQ(host_a(i, j)[k], i * 200 + j + 0.1 * k);
+        ASSERT_FLOAT_EQ(host_a(i, j)[k], i * 200 + j + 0.1 * k);
   auto b = Kokkos::create_mirror(TEST_EXECSPACE::memory_space(), a);
 
   num_errors = 0;
@@ -297,7 +299,9 @@ void test_deep_copy() {
       "view_customization_check_pre_deep_copy_b", policy2d,
       KOKKOS_LAMBDA(int i, int j, int& error) {
         for (size_t k = 0; k < size; k++) {
-          if (b(i, j)[k] != i * 200 + j + 0.1 * k) error++;
+          if (Kokkos::abs(b(i, j)[k] - (i * 200 + j + 0.1 * k)) >
+              Kokkos::Experimental::epsilon_v<float>)
+            error++;
         }
       },
       num_errors);
