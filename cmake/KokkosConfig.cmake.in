@@ -73,7 +73,7 @@ if(@Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE@)
   if(NOT (${CMAKE_@KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES} STREQUAL ${Kokkos_@KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES}))
     message(
       WARNING
-        "Kokkos enabled the architecture '${CMAKE_@KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES}' which is not the same the  is not the same architecture as the architectures enabled in CMake "${CMAKE_@KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES}'.
+        "Kokkos enabled the architecture '${CMAKE_@KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES}' which is not the same the  is not the same architecture as the architectures enabled in CMake '${CMAKE_@KOKKOS_COMPILE_LANGUAGE@_ARCHITECTURES}'.
         This
         can
         lead
