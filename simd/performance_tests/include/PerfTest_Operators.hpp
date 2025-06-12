@@ -261,18 +261,18 @@ class masked_reduce {
   auto on_host(T const& a, MaskType const& mask) const {
     using DataType = typename T::value_type;
     return Kokkos::Experimental::reduce(
-        a, mask,
-        DataType(Kokkos::Experimental::Impl::Identity<DataType, std::plus<>>()),
-        std::plus<>());
+        a, mask, std::plus<>(),
+        DataType(
+            Kokkos::Experimental::Impl::Identity<DataType, std::plus<>>()));
   }
   template <typename T, typename MaskType>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
                                         MaskType const& mask) const {
     using DataType = typename T::value_type;
     return Kokkos::Experimental::reduce(
-        a, mask,
-        DataType(Kokkos::Experimental::Impl::Identity<DataType, std::plus<>>()),
-        std::plus<>());
+        a, mask, std::plus<>(),
+        DataType(
+            Kokkos::Experimental::Impl::Identity<DataType, std::plus<>>()));
   }
 };
 
