@@ -50,7 +50,9 @@ void check_distinctive([[maybe_unused]] ExecSpace exec1,
 #ifdef KOKKOS_ENABLE_OPENMP
   if constexpr (std::is_same_v<ExecSpace, Kokkos::OpenMP>) {
     ASSERT_NE(exec1, exec2);
-    ASSERT_EQ(ExecSpace().concurrency(),
+    // FIXME_OPENMP exec.concurrency() does not return thread pool size outside
+    // of parallel regions
+    ASSERT_EQ(ExecSpace().impl_internal_space_instance()->thread_pool_size(),
               exec1.impl_internal_space_instance()->thread_pool_size() +
                   exec2.impl_internal_space_instance()->thread_pool_size());
   }
