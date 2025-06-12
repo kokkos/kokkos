@@ -302,17 +302,14 @@ void test_local_deep_copy_sequential(const int N, const ViewType& dst,
                         ExecSpace>(8);                                         \
   }
 
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_vector_range)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_thread_range)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(thread_vector_range)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
-
 #if (defined(KOKKOS_ENABLE_SYCL) && defined(NDEBUG)) || \
     defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
-#define KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_SKIP                         \
-  GTEST_SKIP()                                                         \
-      << "Kokkos::abort() does not terminate the program on sycl (in " \
-         "release mode), openmptarget and openacc";
+#define KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_SKIP                               \
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,                              \
+                                Kokkos::DefaultHostExecutionSpace>) {        \
+    GTEST_SKIP() << "device Kokkos::abort() does not terminate the program " \
+                    "on sycl (in release mode), openmptarget and openacc";   \
+  }
 #else
 #define KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_SKIP
 #endif
@@ -351,6 +348,14 @@ KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
         Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(8);    \
   }
 
+#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_1)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_vector_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_thread_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(thread_vector_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
+#endif
+
+#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_2)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(team_vector_range)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(team_thread_range)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(thread_vector_range)
@@ -402,7 +407,9 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
 #endif
+#endif
 
+#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_1)
 namespace Impl {
 template <typename T, typename ShMemType>
 using ShMemView =
@@ -480,6 +487,8 @@ TEST(TEST_CATEGORY, local_deep_copy_team_scratch) {
 TEST(TEST_CATEGORY, local_deep_copy_thread_scratch) {
   test_local_deep_copy_scratch(0);
 }
+
+#endif
 
 }  // namespace Test
 
