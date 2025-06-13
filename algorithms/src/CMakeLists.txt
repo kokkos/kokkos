@@ -9,7 +9,7 @@ file(GLOB ALGO_SOURCES *.cpp)
 append_glob(ALGO_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/std_algorithms/*.hpp)
 append_glob(ALGO_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/std_algorithms/impl/*.hpp)
 
-set(KOKKOS_ALGORITHMS_MODULE_FILES Kokkos_StdAlgorithms.ccm Kokkos_StdAlgorithmsImpl.ccm)
+set(ALGO_MODULES Kokkos_StdAlgorithms.ccm Kokkos_StdAlgorithmsImpl.ccm)
 
 install(
   DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/"
@@ -25,7 +25,7 @@ kokkos_add_library(
   HEADERS
   ${ALGO_HEADERS}
   MODULE_FILES
-  ${KOKKOS_ALGORITHMS_MODULE_FILES}
+  ${ALGO_MODULES}
   SOURCES
   ${ALGO_SOURCES}
 )
