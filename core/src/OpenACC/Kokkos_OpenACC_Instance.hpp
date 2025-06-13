@@ -36,6 +36,7 @@ class OpenACCInternal {
  public:
   static int m_acc_device_num;
   static int m_concurrency;
+  static int m_num_user_asyncs;
   int m_async_arg = acc_async_noval;
 
   OpenACCInternal() = default;
@@ -55,6 +56,40 @@ class OpenACCInternal {
   uint32_t instance_id() const noexcept;
 };
 
+void create_OpenACC_instances(std::vector<OpenACC>& instances);
+
 }  // namespace Kokkos::Experimental::Impl
+
+namespace Kokkos::Experimental {
+// Partitioning an Execution Space: expects space and integer arguments for
+// relative weight
+//   Customization point for backends
+//   Default behavior is to return the passed in instance
+
+template <class... Args>
+std::vector<OpenACC> partition_space(const OpenACC&, Args...) {
+  static_assert(
+      (... && std::is_arithmetic_v<Args>),
+      "Kokkos Error: partitioning arguments must be integers or floats");
+  std::vector<OpenACC> instances(sizeof...(Args));
+  Kokkos::Experimental::Impl::create_OpenACC_instances(instances);
+  return instances;
+}
+
+template <class T>
+std::vector<OpenACC> partition_space(const OpenACC&,
+                                     std::vector<T> const& weights) {
+  static_assert(
+      std::is_arithmetic_v<T>,
+      "Kokkos Error: partitioning arguments must be integers or floats");
+
+  // We only care about the number of instances to create and ignore weights
+  // otherwise.
+  std::vector<OpenACC> instances(weights.size());
+  Kokkos::Experimental::Impl::create_OpenACC_instances(instances);
+  return instances;
+}
+
+}  // namespace Kokkos::Experimental
 
 #endif
