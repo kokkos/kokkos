@@ -3,6 +3,7 @@ kokkos_cfg_depends(COMPILER_ID NONE)
 set(KOKKOS_CXX_COMPILER ${CMAKE_CXX_COMPILER})
 set(KOKKOS_CXX_COMPILER_ID ${CMAKE_CXX_COMPILER_ID})
 set(KOKKOS_CXX_COMPILER_VERSION ${CMAKE_CXX_COMPILER_VERSION})
+set(KOKKOS_BACKEND_COMPILER ${CMAKE_CXX_COMPILER})
 
 macro(kokkos_internal_have_compiler_nvcc)
   # Check if the compiler is nvcc (which really means nvcc_wrapper).
@@ -18,29 +19,37 @@ macro(kokkos_internal_have_compiler_nvcc)
 endmacro()
 
 if(Kokkos_ENABLE_CUDA)
+  # find kokkos_launch_compiler
+  find_program(
+    Kokkos_COMPILE_LAUNCHER
+    NAMES kokkos_launch_compiler
+    HINTS ${PROJECT_SOURCE_DIR}
+    PATHS ${PROJECT_SOURCE_DIR}
+    PATH_SUFFIXES bin
+  )
+
+  find_program(
+    Kokkos_NVCC_WRAPPER
+    NAMES nvcc_wrapper
+    HINTS ${PROJECT_SOURCE_DIR}
+    PATHS ${PROJECT_SOURCE_DIR}
+    PATH_SUFFIXES bin
+  )
+  # Check if compiler was set to nvcc_wrapper
+  kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
+
   # kokkos_enable_options is not yet called so use lower case here
   if(Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+
+    #if cuda compiler is nvcc we want to store nvcc_wrapper as backend compiler to allow redirection of cxx files to nvcc
+    if(Kokkos_COMPILE_LAUNCHER AND NOT INTERNAL_HAVE_COMPILER_NVCC AND NOT KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+      set(KOKKOS_BACKEND_COMPILER ${Kokkos_NVCC_WRAPPER})
+    endif()
+
     kokkos_internal_have_compiler_nvcc(${CMAKE_CUDA_COMPILER})
+
   else()
-    # find kokkos_launch_compiler
-    find_program(
-      Kokkos_COMPILE_LAUNCHER
-      NAMES kokkos_launch_compiler
-      HINTS ${PROJECT_SOURCE_DIR}
-      PATHS ${PROJECT_SOURCE_DIR}
-      PATH_SUFFIXES bin
-    )
 
-    find_program(
-      Kokkos_NVCC_WRAPPER
-      NAMES nvcc_wrapper
-      HINTS ${PROJECT_SOURCE_DIR}
-      PATHS ${PROJECT_SOURCE_DIR}
-      PATH_SUFFIXES bin
-    )
-
-    # Check if compiler was set to nvcc_wrapper
-    kokkos_internal_have_compiler_nvcc(${CMAKE_CXX_COMPILER})
     # If launcher was found and nvcc_wrapper was not specified as
     # compiler and `CMAKE_CXX_COMPILIER_LAUNCHER` is not set, set to use launcher.
     # Will ensure CMAKE_CXX_COMPILER is replaced by nvcc_wrapper
@@ -59,6 +68,7 @@ if(Kokkos_ENABLE_CUDA)
         -DKOKKOS_DEPENDENCE
       )
       set(INTERNAL_USE_COMPILER_LAUNCHER true)
+      set(KOKKOS_BACKEND_COMPILER ${Kokkos_NVCC_WRAPPER})
     endif()
   endif()
 endif()
