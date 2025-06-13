@@ -26,7 +26,7 @@
 #include <string>
 #include <utility>
 
-namespace {
+namespace Kokkos::Impl {
 
 template <class T>
 using public_member_types_t = std::enable_if_t<
@@ -106,7 +106,7 @@ constexpr bool check_valid_execution_space() {
   return true;
 }
 
-}  // namespace
+}  // namespace Kokkos::Impl
 
 namespace Kokkos {
 namespace Impl {
