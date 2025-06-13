@@ -58,6 +58,13 @@ jobs:
             distro: 'ubuntu:latest'
             cxx: 'g++'
             cmake_build_type: 'RelWithDebInfo'
+            backend: 'SERIAL'
+            stdcxx: '20'
+            use_valgrind: true
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++'
+            cmake_build_type: 'RelWithDebInfo'
             backend: 'THREADS'
             stdcxx: '23'
           - arch: 'arm64'
@@ -163,8 +170,18 @@ jobs:
           cmake --build builddir --parallel $(nproc)
           ccache -s
       - name: Tests
+        if: ${{ !matrix.use_valgrind }}
         working-directory: builddir
         run: ctest --output-on-failure
+      - name: Install valgrind
+        if: ${{ matrix.use_valgrind }}
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install valgrind
+      - name: Run Tests under valgrind
+        if: ${{ matrix.use_valgrind }}
+        working-directory: builddir
+        run: ../scripts/valgrind/valgrind_ci_check.sh
       - name: Test linking against build dir
         if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
