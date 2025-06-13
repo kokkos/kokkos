@@ -17,6 +17,8 @@
 #include <cstdio>
 #include <sstream>
 
+#include <limits>
+
 #include <gtest/gtest.h>
 
 #include <Kokkos_Core.hpp>
@@ -2118,6 +2120,77 @@ struct TestMDRange_4D {
     ASSERT_EQ(min_max_value.max_val, 1) << message.str();
     ASSERT_EQ(sum_value, N0 * N1 * N2 * N3) << message.str();
   }  // end test_for4_eval_once_iterate
+
+ public:
+  // test API limits
+  // see #8103
+  static void test_for4_limits(const int N) {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+    using range_type =
+        typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<4>>;
+    using range_type_bounds =
+        typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<4>,
+                                       Kokkos::LaunchBounds<32, 1>>;
+
+    TestMDRange_4D functor(N, N, N, N);
+
+#if defined(KOKKOS_ENABLE_CUDA)
+    const int max_threads_per_block =
+        ExecSpace().cuda_device_prop().maxThreadsPerBlock;
+#elif defined(KOKKOS_ENABLE_HIP)
+    const int max_threads_per_block = HIPTraits::MaxThreadsPerBlock;
+#elif defined(KOKKOS_ENABLE_SYCL)
+    const int max_threads_per_block =
+        ExecSpace().impl_internal_space_instance()->m_maxWorkGroupSize;
+#else
+    const int max_threads_per_block = std::numeric_limits<int>();
+#endif
+
+    // request a very large tiling that exceeds tile product limits
+    EXPECT_DEATH(
+        {
+          range_type range(
+              {0, 0, 0, 0}, {N, N, N, N},
+              {max_threads_per_block, max_threads_per_block, 1, 1});
+          Kokkos::parallel_for(range, functor);
+          Kokkos::fence();
+        },
+        "MDRange tile dims exceed maximum number of threads per block - choose "
+        "smaller tile dims");  // TODO check if this is the error we want
+
+    // request a very large tiling in one dimension
+    EXPECT_DEATH(
+        {
+          range_type range({0, 0, 0, 0}, {N, N, N, N},
+                           {2 * max_threads_per_block, 1, 1, 1});
+          Kokkos::parallel_for(range, functor);
+          Kokkos::fence();
+        },
+        "MDRange tile dims exceed maximum number of threads per block - choose "
+        "smaller tile dims");  // TODO check if this is the error we want
+
+    // request a slightly too large tiling in one dimension
+    EXPECT_DEATH(
+        {
+          range_type range({0, 0, 0, 0}, {N, N, N, N},
+                           {max_threads_per_block + 2, 1, 1, 1});
+          Kokkos::parallel_for(range, functor);
+          Kokkos::fence();
+        },
+        "Kokkos contract violation");  // TODO check if this is the error we
+                                       // want
+
+    // request an invalid tiling
+    EXPECT_THROW(
+        {
+          range_type_bounds range({0, 0, 0, 0}, {N, N, N, N}, {32, 2, 1, 1});
+          Kokkos::parallel_for(range, functor);
+          Kokkos::fence();
+        },
+        std::runtime_error);  // TODO check if this is the error we want
+
+  }  // test_for4_limits
 };
 
 template <typename ExecSpace>
