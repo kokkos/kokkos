@@ -1058,6 +1058,16 @@ class View : public ViewTraits<DataType, Properties...> {
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
 
+#ifdef KOKKOS_ENABLE_DEBUG
+    KOKKOS_IF_ON_HOST((if (span() > 0) {
+      auto prop_copy = Impl::with_properties_if_unset(
+          arg_prop, typename traits::memory_space{});
+      Impl::runtime_check_memory_space_assignability(
+          Impl::get_property<Impl::PointerTag>(prop_copy),
+          Impl::get_property<Impl::MemorySpaceTag>(prop_copy));
+    }))
+#endif
+
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (std::is_same_v<typename traits::array_layout,
                                  Kokkos::LayoutLeft> ||
@@ -1120,6 +1130,16 @@ class View : public ViewTraits<DataType, Properties...> {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
+
+#ifdef KOKKOS_ENABLE_DEBUG
+    KOKKOS_IF_ON_HOST((if (span() > 0) {
+      auto prop_copy = Impl::with_properties_if_unset(
+          arg_prop, typename traits::memory_space{});
+      Impl::runtime_check_memory_space_assignability(
+          Impl::get_property<Impl::PointerTag>(prop_copy),
+          Impl::get_property<Impl::MemorySpaceTag>(prop_copy));
+    }))
+#endif
   }
 
   // Allocate with label and layout
