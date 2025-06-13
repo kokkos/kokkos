@@ -31,13 +31,14 @@ pipeline {
                           && \
                           apt-get clean && rm -rf /var/lib/apt/lists/*
 
+                          export CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-build=spack-serial"
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack install --only=depencies kokkos@develop+tests && \
-                          spack install --only=package ${SPACK_CDASH_ARGS} --cdash-build=spack-serial kokkos@develop+tests && \
+                          spack install --only=dependencies kokkos@develop+tests && \
+                          spack install --only=package ${CDASH_ARGS} kokkos@develop+tests && \
                           spack load cmake && \
-                          spack test run ${SPACK_CDASH_ARGS} kokkos && \
+                          spack test run ${CDASH_ARGS} kokkos && \
                           spack test results -l
                           '''
                     }      
@@ -62,16 +63,17 @@ pipeline {
                           && \
                           apt-get clean && rm -rf /var/lib/apt/lists/*
 
+                          export CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-build=spack-cuda"
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
                           spack install --only=dependencies kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.1.0 && \
-                          spack install --only=package ${SPACK_CDASH_ARGS} --cdash-build=spack-cuda kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.1.0 && \
+                          spack install --only=package ${CDASH_ARGS} kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.1.0 && \
                           spack load cmake  && \
                           spack load kokkos-nvcc-wrapper && \
                           spack load cuda && \
                           spack load kokkos && \
-                          spack test run ${SPACK_CDASH_ARGS} kokkos && \
+                          spack test run ${CDASH_ARGS} kokkos && \
                           spack test results -l
                           '''
                     }      
@@ -91,6 +93,7 @@ pipeline {
                           export CMAKE_BUILD_PARALLEL_LEVEL=8 && \
                           export ENV_CMAKE_OPTIONS="" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=Release" && \
+                          export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=26" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS=-Werror" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
@@ -128,7 +131,8 @@ pipeline {
                         sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
-                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=20" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=20" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS='-Werror -Wno-unused-command-line-argument'" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
