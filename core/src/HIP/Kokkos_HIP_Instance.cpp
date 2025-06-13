@@ -467,13 +467,3 @@ void hip_internal_error_throw(hipError_t e, const char *name, const char *file,
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
-
-void Kokkos::Impl::create_HIP_instances(std::vector<HIP> &instances) {
-  for (int s = 0; s < int(instances.size()); s++) {
-    hipStream_t stream;
-    KOKKOS_IMPL_HIP_SAFE_CALL(
-        instances[s].impl_internal_space_instance()->hip_stream_create_wrapper(
-            &stream));
-    instances[s] = HIP(stream, ManageStream::yes);
-  }
-}
