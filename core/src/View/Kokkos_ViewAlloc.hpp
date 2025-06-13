@@ -186,6 +186,7 @@ struct ViewValueFunctor {
   void functor_instantiate_workaround() {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    // NOLINTNEXTLINE(readability-simplify-boolean-expr)
     if (false) {
       parallel_for_implementation<DestroyTag>();
     }
