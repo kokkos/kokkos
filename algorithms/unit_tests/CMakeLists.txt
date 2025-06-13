@@ -1,30 +1,10 @@
 #Leave these here for now - I don't need transitive deps anyway
 kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
+kokkos_include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 kokkos_include_directories(${KOKKOS_SOURCE_DIR}/core/unit_test/category_files)
 
-file(GLOB TEST_HEADERS "*.hpp")
-if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE)
-  # If we build with module support, we provide an explicit map from headers to module files and use that to modify the test files to use modules.
-  set(MODULE_MAP)
-  list(APPEND MODULE_MAP "#include <Kokkos_StdAlgorithms.hpp>:import kokkos.std_algorithms")
-
-  foreach(FILE ${TEST_HEADERS})
-    file(READ ${FILE} HEADER_CONTENT)
-    foreach(PAIR IN LISTS MODULE_MAP)
-      if(PAIR MATCHES "^([^:]+):(.*)$")
-        set(HEADER "${CMAKE_MATCH_1}")
-        set(MODULE "${CMAKE_MATCH_2}")
-        string(REPLACE "${HEADER}" "#include <Kokkos_Macros.hpp>\n${MODULE};\n${MODULE}_impl;" HEADER_CONTENT
-                       "${HEADER_CONTENT}"
-        )
-      endif()
-    endforeach()
-    get_filename_component(FILE_NAME ${FILE} NAME)
-    file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${FILE_NAME}" "${HEADER_CONTENT}")
-  endforeach()
-else()
-  file(COPY ${TEST_HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-endif()
+set(ALGORITHM UnitTestMain.cpp)
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;HIP;SYCL;OpenMPTarget)
   string(TOUPPER ${Tag} DEVICE)
