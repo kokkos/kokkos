@@ -177,6 +177,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       JoinBackwardCompatibility
       LocalDeepCopy1
       LocalDeepCopy2
+      LocalDeepCopy3
       MathematicalConstants
       MathematicalFunctions1
       MathematicalFunctions2

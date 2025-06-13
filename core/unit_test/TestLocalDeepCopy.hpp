@@ -62,16 +62,6 @@ bool check_copy(const ViewType& view,
   return result;
 }
 
-template <typename ViewType>
-void view_init(ViewType& view) {
-  using exec_space = typename ViewType::execution_space;
-
-  Kokkos::parallel_for(
-      "initialize array", Kokkos::RangePolicy<exec_space>(0, view.span()),
-      KOKKOS_LAMBDA(int i) { view.data()[i] = i; });
-  Kokkos::fence();
-}
-
 template <typename ViewType, std::size_t... Ints>
 ViewType view_create(std::string label, const int N,
                      std::index_sequence<Ints...>) {
@@ -98,11 +88,6 @@ KOKKOS_INLINE_FUNCTION auto extract_subview(ViewType& src, int start,
                                             int stop) {
   return extract_subview(src, start, stop,
                          std::make_index_sequence<ViewType::rank - 1>{});
-}
-
-template <typename ViewType>
-void reset(ViewType B) {
-  Kokkos::deep_copy(B, 0);
 }
 
 // local deep copy on a subview
@@ -246,60 +231,47 @@ void test_local_deep_copy_sequential(const int N, const ViewType& dst,
   ASSERT_TRUE(check_copy(dst, src));
 }
 
-#define KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(name)                                 \
-  template <typename ViewType, typename ExecSpace>                             \
-  void run_##name##_policy(const int N) {                                      \
-    ViewType A = view_create<ViewType>("A", N);                                \
-    ViewType B = view_create<ViewType>("B", N);                                \
-                                                                               \
-    view_init(A);                                                              \
-                                                                               \
-    test_local_deep_copy_##name<ExecSpace>(N, B, A);                           \
-    reset(B);                                                                  \
-    test_local_deep_copy_##name<ExecSpace>(N, B, 20.0);                        \
-  }                                                                            \
-                                                                               \
-  TEST(TEST_CATEGORY, local_deep_copy_##name##_layoutleft) {                   \
-    using ExecSpace = TEST_EXECSPACE;                                          \
-    using Layout    = Kokkos::LayoutLeft;                                      \
-                                                                               \
-    run_##name##_policy<Kokkos::View<double*, Layout, ExecSpace>, ExecSpace>(  \
-        8);                                                                    \
-    run_##name##_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>( \
-        8);                                                                    \
-    run_##name##_policy<Kokkos::View<double***, Layout, ExecSpace>,            \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double****, Layout, ExecSpace>,           \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double*****, Layout, ExecSpace>,          \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double******, Layout, ExecSpace>,         \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double*******, Layout, ExecSpace>,        \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double********, Layout, ExecSpace>,       \
-                        ExecSpace>(8);                                         \
-  }                                                                            \
-  TEST(TEST_CATEGORY, local_deep_copy_##name##_layoutright) {                  \
-    using ExecSpace = TEST_EXECSPACE;                                          \
-    using Layout    = Kokkos::LayoutRight;                                     \
-                                                                               \
-    run_##name##_policy<Kokkos::View<double*, Layout, ExecSpace>, ExecSpace>(  \
-        8);                                                                    \
-    run_##name##_policy<Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>( \
-        8);                                                                    \
-    run_##name##_policy<Kokkos::View<double***, Layout, ExecSpace>,            \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double****, Layout, ExecSpace>,           \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double*****, Layout, ExecSpace>,          \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double******, Layout, ExecSpace>,         \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double*******, Layout, ExecSpace>,        \
-                        ExecSpace>(8);                                         \
-    run_##name##_policy<Kokkos::View<double********, Layout, ExecSpace>,       \
-                        ExecSpace>(8);                                         \
+#define KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(name)                               \
+  template <typename ViewType>                                               \
+  void run_##name##_policy(const int N) {                                    \
+    using ExecSpace = TEST_EXECSPACE;                                        \
+    ViewType A      = view_create<ViewType>("A", N);                         \
+    ViewType B      = view_create<ViewType>("B", N);                         \
+                                                                             \
+    Kokkos::parallel_for(                                                    \
+        "initialize A", Kokkos::RangePolicy<ExecSpace>(0, A.span()),         \
+        KOKKOS_LAMBDA(int i) { A.data()[i] = i; });                          \
+    Kokkos::fence();                                                         \
+                                                                             \
+    test_local_deep_copy_##name<ExecSpace>(N, B, A);                         \
+    test_local_deep_copy_##name<ExecSpace>(N, B, 20.0);                      \
+  }                                                                          \
+                                                                             \
+  TEST(TEST_CATEGORY, local_deep_copy_##name##_layoutleft) {                 \
+    using ExecSpace = TEST_EXECSPACE;                                        \
+    using Layout    = Kokkos::LayoutLeft;                                    \
+                                                                             \
+    run_##name##_policy<Kokkos::View<double*, Layout, ExecSpace>>(8);        \
+    run_##name##_policy<Kokkos::View<double**, Layout, ExecSpace>>(8);       \
+    run_##name##_policy<Kokkos::View<double***, Layout, ExecSpace>>(8);      \
+    run_##name##_policy<Kokkos::View<double****, Layout, ExecSpace>>(8);     \
+    run_##name##_policy<Kokkos::View<double*****, Layout, ExecSpace>>(8);    \
+    run_##name##_policy<Kokkos::View<double******, Layout, ExecSpace>>(8);   \
+    run_##name##_policy<Kokkos::View<double*******, Layout, ExecSpace>>(8);  \
+    run_##name##_policy<Kokkos::View<double********, Layout, ExecSpace>>(8); \
+  }                                                                          \
+  TEST(TEST_CATEGORY, local_deep_copy_##name##_layoutright) {                \
+    using ExecSpace = TEST_EXECSPACE;                                        \
+    using Layout    = Kokkos::LayoutRight;                                   \
+                                                                             \
+    run_##name##_policy<Kokkos::View<double*, Layout, ExecSpace>>(8);        \
+    run_##name##_policy<Kokkos::View<double**, Layout, ExecSpace>>(8);       \
+    run_##name##_policy<Kokkos::View<double***, Layout, ExecSpace>>(8);      \
+    run_##name##_policy<Kokkos::View<double****, Layout, ExecSpace>>(8);     \
+    run_##name##_policy<Kokkos::View<double*****, Layout, ExecSpace>>(8);    \
+    run_##name##_policy<Kokkos::View<double******, Layout, ExecSpace>>(8);   \
+    run_##name##_policy<Kokkos::View<double*******, Layout, ExecSpace>>(8);  \
+    run_##name##_policy<Kokkos::View<double********, Layout, ExecSpace>>(8); \
   }
 
 #if (defined(KOKKOS_ENABLE_SYCL) && defined(NDEBUG)) || \
@@ -314,52 +286,54 @@ void test_local_deep_copy_sequential(const int N, const ViewType& dst,
 #define KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_SKIP
 #endif
 
-#define KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(name)                       \
-  template <typename ViewType, typename ExecSpace>                         \
-  void run_##name##_policy_extents_mismatch(const int N) {                 \
-    ::testing::FLAGS_gtest_death_test_style = "threadsafe";                \
-                                                                           \
-    ViewType A = view_create<ViewType>("A", N);                            \
-    ViewType B = view_create<ViewType>("B", N);                            \
-                                                                           \
-    ASSERT_DEATH((test_local_deep_copy_##name<ExecSpace>(N, B, A, true)),  \
-                 "Error: Kokkos::deep_copy extents of views don't match"); \
-  }                                                                        \
-                                                                           \
-  TEST(TEST_CATEGORY, local_deep_copy_##name##_extents_mismatch) {         \
-    using ExecSpace = TEST_EXECSPACE;                                      \
-    using Layout    = Kokkos::LayoutRight;                                 \
-    KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_SKIP                                 \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double*, Layout, ExecSpace>, ExecSpace>(8);           \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double**, Layout, ExecSpace>, ExecSpace>(8);          \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double***, Layout, ExecSpace>, ExecSpace>(8);         \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double****, Layout, ExecSpace>, ExecSpace>(8);        \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double*****, Layout, ExecSpace>, ExecSpace>(8);       \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double******, Layout, ExecSpace>, ExecSpace>(8);      \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double*******, Layout, ExecSpace>, ExecSpace>(8);     \
-    run_##name##_policy_extents_mismatch<                                  \
-        Kokkos::View<double********, Layout, ExecSpace>, ExecSpace>(8);    \
+#define KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(name)                           \
+  template <typename ViewType>                                                 \
+  void run_##name##_policy_extents_mismatch(const int N) {                     \
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";                    \
+                                                                               \
+    ViewType A = view_create<ViewType>("A", N);                                \
+    ViewType B = view_create<ViewType>("B", N);                                \
+                                                                               \
+    ASSERT_DEATH((test_local_deep_copy_##name<TEST_EXECSPACE>(N, B, A, true)), \
+                 "Error: Kokkos::deep_copy extents of views don't match");     \
+  }                                                                            \
+                                                                               \
+  TEST(TEST_CATEGORY, local_deep_copy_##name##_extents_mismatch) {             \
+    using ExecSpace = TEST_EXECSPACE;                                          \
+    using Layout    = Kokkos::LayoutRight;                                     \
+    KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_SKIP                                     \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double*, Layout, ExecSpace>>(8);                          \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double**, Layout, ExecSpace>>(8);                         \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double***, Layout, ExecSpace>>(8);                        \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double****, Layout, ExecSpace>>(8);                       \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double*****, Layout, ExecSpace>>(8);                      \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double******, Layout, ExecSpace>>(8);                     \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double*******, Layout, ExecSpace>>(8);                    \
+    run_##name##_policy_extents_mismatch<                                      \
+        Kokkos::View<double********, Layout, ExecSpace>>(8);                   \
   }
 
 #if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_1)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_vector_range)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_thread_range)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(thread_vector_range)
-KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
-#endif
-
-#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_2)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(team_vector_range)
+#endif
+#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_2)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(team_thread_range)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(team_thread_range)
+#endif
+#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_3)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(thread_vector_range)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(thread_vector_range)
+KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(sequential)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_DEATH_TEST(sequential)
+#endif
 
 //-------------------------------------------------------------------------------------------------------------
 
@@ -399,14 +373,17 @@ void test_local_deep_copy_deprecated_sequential(const int N,
   ASSERT_TRUE(check_copy(dst, src));
 }
 
+#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_1)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(deprecated_team_member)
+#endif
+#if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_2)
 KOKKOS_IMPL_LOCAL_DEEP_COPY_TEST(deprecated_sequential)
+#endif
 
 #if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
-#endif
 #endif
 
 #if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_1)
