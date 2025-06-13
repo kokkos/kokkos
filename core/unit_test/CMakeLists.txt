@@ -80,9 +80,11 @@ set(COMPILE_ONLY_SOURCES
     TestDetectionIdiom.cpp
     TestBitManipulation.cpp
     TestInterOp.cpp
+    TestIsPointer.cpp
     TestRangePolicyCTAD.cpp
     TestStringManipulation.cpp
     TestVersionMacros.cpp
+    TestViewMemoryTraitsAssign.cpp
     TestViewRank.cpp
     TestViewTypeTraits.cpp
     TestViewTypedefs.cpp
@@ -95,6 +97,7 @@ set(COMPILE_ONLY_SOURCES
     view/TestBasicViewMDSpanConversion.cpp
     view/TestViewCustomization.cpp
     view/TestExtentsDatatypeConversion.cpp
+    view/TestRestrictViewAccessor.cpp
 )
 
 if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")

@@ -194,6 +194,10 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   friend struct SpaceAwareAccessor;
 };
 
+// forward declataion of Accessors for conversion operations
+template <class ElementType>
+struct RestrictAccessor;
+
 // Like atomic_accessor_relaxed proposed for ISO C++26 but with
 // defaulted memory scope - similar to how desul's AtomicRef has a memory scope
 template <class ElementType, class MemoryScope = desul::MemoryScopeDevice>
@@ -207,25 +211,35 @@ struct AtomicAccessorRelaxed {
   KOKKOS_DEFAULTED_FUNCTION
   AtomicAccessorRelaxed() = default;
 
-  // Conversions from non-const to const element type
-  template <class OtherElementType,
-            std::enable_if_t<std::is_convertible_v<
-                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
-  KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
-      Kokkos::default_accessor<OtherElementType>) noexcept {}
-
+  // (incl. non-const to const)
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
                 OtherElementType (*)[], element_type (*)[]>>* = nullptr>
   KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
       AtomicAccessorRelaxed<OtherElementType, MemoryScope>) noexcept {}
 
+  // Conversion from default_accessor (incl. non-const to const)
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
+      Kokkos::default_accessor<OtherElementType>) noexcept {}
+
+  // Conversion to default_accessor (incl. non-const to const)
   template <class OtherElementType,
             std::enable_if_t<std::is_convertible_v<
                 element_type (*)[], OtherElementType (*)[]>>* = nullptr>
   KOKKOS_FUNCTION explicit operator default_accessor<OtherElementType>() const {
     return default_accessor<OtherElementType>{};
   }
+
+  // Conversion from RestrictAccessor (incl. non-const to const)
+  // RestrictAccessor knows how to convert to AtomicAccessorRelaxed
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr AtomicAccessorRelaxed(
+      RestrictAccessor<OtherElementType>) noexcept {}
 
   KOKKOS_FUNCTION
   reference access(
@@ -249,6 +263,62 @@ struct AtomicAccessorRelaxed {
 #endif
       size_t i) const noexcept {
     return p + i;
+  }
+};
+
+template <class ElementType>
+struct RestrictAccessor {
+  using offset_policy         = RestrictAccessor;
+  using element_type          = ElementType;
+  using bare_reference        = ElementType&;
+  using bare_data_handle_type = ElementType*;
+  using reference             = bare_reference KOKKOS_RESTRICT;
+  using data_handle_type      = bare_data_handle_type KOKKOS_RESTRICT;
+
+  KOKKOS_DEFAULTED_FUNCTION constexpr RestrictAccessor() noexcept = default;
+
+  // (incl. non-const to const)
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_INLINE_FUNCTION constexpr RestrictAccessor(
+      RestrictAccessor<OtherElementType>) noexcept {}
+
+  // Conversion from default_accessor (incl. non-const to const)
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr RestrictAccessor(
+      Kokkos::default_accessor<OtherElementType>) noexcept {}
+
+  // Conversion to default_accessor (incl. non-const to const)
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                element_type (*)[], OtherElementType (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION explicit operator default_accessor<OtherElementType>() const {
+    return default_accessor<OtherElementType>{};
+  }
+
+  // Conversion from AtomicAccessorRelaxed (incl. non-const to const)
+  // AtomicAccessorRelaxed knows how to convert from RestrictAccessor
+  template <class OtherElementType,
+            std::enable_if_t<std::is_convertible_v<
+                OtherElementType (*)[], element_type (*)[]>>* = nullptr>
+  KOKKOS_FUNCTION constexpr RestrictAccessor(
+      AtomicAccessorRelaxed<OtherElementType>) noexcept {}
+
+  // technically this is supposed to return data_handle_type but qualifiers are
+  // ignored on return types and compilers may issue a warning
+  KOKKOS_INLINE_FUNCTION
+  constexpr bare_data_handle_type offset(data_handle_type p,
+                                         size_t i) const noexcept {
+    return p + i;
+  }
+
+  // technically this is supposed to return reference
+  KOKKOS_FORCEINLINE_FUNCTION
+  constexpr bare_reference access(data_handle_type p, size_t i) const noexcept {
+    return p[i];
   }
 };
 
@@ -463,23 +533,6 @@ class ReferenceCountedAccessor {
 #endif
   NestedAccessor m_nested_acc;
 };
-
-template <class ElementType, class MemorySpace>
-using CheckedReferenceCountedAccessor =
-    SpaceAwareAccessor<MemorySpace,
-                       ReferenceCountedAccessor<ElementType, MemorySpace,
-                                                default_accessor<ElementType>>>;
-
-template <class ElementType, class MemorySpace,
-          class MemoryScope = desul::MemoryScopeDevice>
-using CheckedRelaxedAtomicAccessor =
-    SpaceAwareAccessor<MemorySpace, AtomicAccessorRelaxed<ElementType>>;
-
-template <class ElementType, class MemorySpace,
-          class MemoryScope = desul::MemoryScopeDevice>
-using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
-    MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
-                                          AtomicAccessorRelaxed<ElementType>>>;
 
 }  // namespace Impl
 }  // namespace Kokkos

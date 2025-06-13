@@ -24,6 +24,7 @@ static_assert(false,
 #define KOKKOS_VIEW_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_IsPointer.hpp>
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/Kokkos_BasicView.hpp>
 #endif
@@ -125,7 +126,7 @@ template <class HandleType>
 KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
     const HandleType& handle) {
   // This should only be internally invoked in Kokkos with raw pointers.
-  static_assert(std::is_pointer_v<HandleType>);
+  static_assert(Kokkos::Impl::is_pointer_v<HandleType>);
   return handle;
 }
 }  // namespace Impl
