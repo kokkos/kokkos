@@ -118,6 +118,12 @@ struct ViewValueFunctor {
                                           true);
     }
 #endif
+#ifdef KOKKOS_ENABLE_HIP
+    if (std::is_same<ExecSpace, Kokkos::HIP>::value) {
+      Kokkos::Impl::hip_prefetch_pointer(space, ptr, sizeof(ValueType) * n,
+                                         true);
+    }
+#endif
     const Kokkos::Impl::ParallelFor<ViewValueFunctor, PolicyType> closure(
         *this, policy);
     closure.execute();

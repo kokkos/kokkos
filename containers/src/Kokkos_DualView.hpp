@@ -85,6 +85,21 @@ inline const Kokkos::Cuda& get_cuda_space(const NonCudaExecSpace&) {
 
 #endif  // KOKKOS_ENABLE_CUDA
 
+#ifdef KOKKOS_ENABLE_HIP
+
+inline const Kokkos::HIP& get_hip_space(const Kokkos::HIP& in) { return in; }
+
+inline const Kokkos::HIP& get_hip_space() {
+  return *Kokkos::Impl::hip_get_deep_copy_space();
+}
+
+template <typename NonHIPExecSpace>
+inline const Kokkos::HIP& get_hip_space(const NonHIPExecSpace&) {
+  return get_hip_space();
+}
+
+#endif  // KOKKOS_ENABLE_HIP
+
 }  // namespace Impl
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -560,6 +575,15 @@ class DualView : public ViewTraits<DataType, Properties...> {
                 sizeof(typename t_dev::value_type) * d_view.span(), true);
         }
 #endif
+#ifdef KOKKOS_ENABLE_HIP
+        if (std::is_same<typename t_dev::memory_space,
+                         Kokkos::HIPManagedSpace>::value) {
+          if (d_view.data() == h_view.data())
+            Kokkos::Impl::hip_prefetch_pointer(
+                Impl::get_hip_space(args...), d_view.data(),
+                sizeof(typename t_dev::value_type) * d_view.span(), true);
+        }
+#endif
 
         deep_copy(args..., d_view, h_view);
         modified_flags(0) = modified_flags(1) = 0;
@@ -574,6 +598,15 @@ class DualView : public ViewTraits<DataType, Properties...> {
           if (d_view.data() == h_view.data())
             Kokkos::Impl::cuda_prefetch_pointer(
                 Impl::get_cuda_space(args...), d_view.data(),
+                sizeof(typename t_dev::value_type) * d_view.span(), false);
+        }
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+        if (std::is_same<typename t_dev::memory_space,
+                         Kokkos::HIPManagedSpace>::value) {
+          if (d_view.data() == h_view.data())
+            Kokkos::Impl::hip_prefetch_pointer(
+                Impl::get_hip_space(args...), d_view.data(),
                 sizeof(typename t_dev::value_type) * d_view.span(), false);
         }
 #endif
@@ -660,6 +693,15 @@ class DualView : public ViewTraits<DataType, Properties...> {
               sizeof(typename t_dev::value_type) * d_view.span(), false);
       }
 #endif
+#ifdef KOKKOS_ENABLE_HIP
+      if (std::is_same<typename t_dev::memory_space,
+                       Kokkos::HIPManagedSpace>::value) {
+        if (d_view.data() == h_view.data())
+          Kokkos::Impl::hip_prefetch_pointer(
+              Impl::get_hip_space(args...), d_view.data(),
+              sizeof(typename t_dev::value_type) * d_view.span(), false);
+      }
+#endif
 
       deep_copy(args..., h_view, d_view);
       modified_flags(1) = modified_flags(0) = 0;
@@ -700,6 +742,15 @@ class DualView : public ViewTraits<DataType, Properties...> {
         if (d_view.data() == h_view.data())
           Kokkos::Impl::cuda_prefetch_pointer(
               Impl::get_cuda_space(args...), d_view.data(),
+              sizeof(typename t_dev::value_type) * d_view.span(), true);
+      }
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+      if (std::is_same<typename t_dev::memory_space,
+                       Kokkos::HIPManagedSpace>::value) {
+        if (d_view.data() == h_view.data())
+          Kokkos::Impl::hip_prefetch_pointer(
+              Impl::get_hip_space(args...), d_view.data(),
               sizeof(typename t_dev::value_type) * d_view.span(), true);
       }
 #endif
