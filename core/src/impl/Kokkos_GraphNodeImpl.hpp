@@ -142,7 +142,8 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
   template <class KernelDeduced, class Tag,
             typename = std::enable_if_t<
                 std::is_same_v<Tag, _graph_node_kernel_ctor_tag> ||
-                std::is_same_v<Tag, _graph_node_capture_ctor_tag>>>
+                std::is_same_v<Tag, _graph_node_capture_ctor_tag> ||
+                std::is_same_v<Tag, _graph_node_deep_copy_ctor_tag>>>
   GraphNodeImpl(ExecutionSpace const& ex, Tag, KernelDeduced&& arg_kernel)
       : base_t(ex), m_kernel{(KernelDeduced&&)arg_kernel} {}
 
@@ -239,7 +240,8 @@ struct GraphNodeImpl
   template <class KernelDeduced, class PredecessorPtrDeduced, class Tag,
             typename = std::enable_if_t<
                 std::is_same_v<Tag, _graph_node_kernel_ctor_tag> ||
-                std::is_same_v<Tag, _graph_node_capture_ctor_tag>>>
+                std::is_same_v<Tag, _graph_node_capture_ctor_tag> ||
+                std::is_same_v<Tag, _graph_node_deep_copy_ctor_tag>>>
   GraphNodeImpl(ExecutionSpace const& ex, Tag, KernelDeduced&& arg_kernel,
                 _graph_node_predecessor_ctor_tag,
                 PredecessorPtrDeduced&& arg_predecessor)

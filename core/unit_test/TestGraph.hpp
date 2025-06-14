@@ -14,6 +14,8 @@
 //
 //@HEADER
 
+#include <numeric>
+
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
 
@@ -833,6 +835,9 @@ struct GraphNodeTypes {
   // Type of a capture node.
   using capture_t =
       Kokkos::Impl::GraphNodeCaptureImpl<Exec, CountTestFunctor<Exec>>;
+
+  // Type of a deep-copy node.
+  using deep_copy_t = Kokkos::Impl::GraphNodeDeepCopyImpl<Exec, Kokkos::View<int*>, int>;
 };
 
 template <typename Exec>
@@ -842,6 +847,9 @@ constexpr bool test_is_graph_kernel() {
   static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::aggregate_t>);
   static_assert(Kokkos::Impl::is_graph_kernel_v<typename types::then_t>,
                 "This should be verified until the 'then' has its own path to "
+                "the driver.");
+  static_assert(Kokkos::Impl::is_graph_kernel_v<typename types::deep_copy_t>,
+                "This should be verified until the 'then' has its own path to"
                 "the driver.");
   if constexpr (types::support_capture)
     static_assert(!Kokkos::Impl::is_graph_kernel_v<typename types::capture_t>);
@@ -854,11 +862,24 @@ constexpr bool test_is_graph_capture() {
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::kernel_t>);
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::aggregate_t>);
   static_assert(!Kokkos::Impl::is_graph_capture_v<types::then_t>);
+  static_assert(!Kokkos::Impl::is_graph_capture_v<types::deep_copy_t>);
   if constexpr (types::support_capture)
     static_assert(Kokkos::Impl::is_graph_capture_v<types::capture_t>);
   return true;
 }
 static_assert(test_is_graph_capture());
+
+constexpr bool test_is_graph_deep_copy() {
+  using types = GraphNodeTypes<TEST_EXECSPACE>;
+  static_assert(!Kokkos::Impl::is_graph_deep_copy_v<types::kernel_t>);
+  static_assert(!Kokkos::Impl::is_graph_deep_copy_v<types::aggregate_t>);
+  static_assert(!Kokkos::Impl::is_graph_deep_copy_v<types::then_t>);
+  static_assert(Kokkos::Impl::is_graph_deep_copy_v<types::deep_copy_t>);
+  if constexpr (types::support_capture)
+    static_assert(!Kokkos::Impl::is_graph_deep_copy_v<types::capture_t>);
+  return true;
+}
+static_assert(test_is_graph_deep_copy());
 
 // This test checks the node types before/after a 'when_all'.
 TEST(TEST_CATEGORY, when_all_type) {
@@ -1102,6 +1123,97 @@ TEST(TEST_CATEGORY, graph_then) {
   graph.submit(exec);
 
   ASSERT_TRUE(contains(exec, data, value_memset + value_then));
+}
+
+template <typename>
+struct TestGraphDeepCopy;
+
+template <typename DstType, typename SrcType>
+struct TestGraphDeepCopy<std::tuple<DstType, SrcType>> : public ::testing::Test {
+public:
+  using graph_t      = Kokkos::Experimental::Graph<TEST_EXECSPACE>;
+  using memory_space = typename TEST_EXECSPACE::memory_space;
+
+  using dst_t = DstType;
+  using src_t = SrcType;
+
+public:
+  template <typename T, typename U>
+  auto run_graph(T&& dst, U&& src) const {
+    auto deep_copy = graph.root_node().then_deep_copy(std::forward<T>(dst), std::forward<U>(src));
+    graph.submit(exec);
+    return deep_copy;
+  }
+
+protected:
+  TEST_EXECSPACE exec{};
+  graph_t graph {exec};
+};
+
+template <typename ViewType, typename ValueType>
+struct CheckValue {
+  ViewType data;
+  ValueType value;
+
+  template <typename T>
+  KOKKOS_FUNCTION void operator()(const T index, bool& current) const {
+    current = current && data(index) == value;
+  }
+};
+
+// A simple, non-trivial type.
+struct Point {
+  double x;
+
+  Point(const double x_) : x(x_) {}
+
+  KOKKOS_FUNCTION
+  Point& operator+=(const Point& other) { x += other.x; return *this; }
+
+  KOKKOS_FUNCTION
+  bool operator==(const Point& other) const { return x == other.x; }
+};
+
+static_assert(!std::is_trivial_v<Point>);
+
+using TestGraphDeepCopyScalarIntoViewTypes = ::testing::Types<
+  std::tuple<Kokkos::View<char *, TEST_EXECSPACE>, char>,
+  std::tuple<Kokkos::View<int  *, TEST_EXECSPACE>, int>,
+  std::tuple<Kokkos::View<Point*, TEST_EXECSPACE>, Point>
+>;
+
+TYPED_TEST_SUITE(TestGraphDeepCopy, TestGraphDeepCopyScalarIntoViewTypes);
+
+TYPED_TEST(TestGraphDeepCopy, run) {
+  using dst_t = typename TestFixture::dst_t;
+  using src_t = typename TestFixture::src_t;
+
+  static_assert(Kokkos::is_view_v<dst_t>);
+
+  const dst_t dst(Kokkos::view_alloc(Kokkos::WithoutInitializing, "dst", this->exec), 42);
+
+  const auto deep_copy_node = this->run_graph(dst, src_t(17));
+
+  if constexpr (!std::is_trivial_v<typename dst_t::value_type>) {
+    ::testing::StaticAssertTypeEq<
+      typename std::remove_const_t<decltype(deep_copy_node)>::graph_kernel,
+      Kokkos::Impl::GraphNodeDeepCopyImpl<Kokkos::Cuda, dst_t, src_t>>();
+  } else {
+    // to do, depends on the value (0 like memset or not)
+    ::testing::StaticAssertTypeEq<
+      typename std::remove_const_t<decltype(deep_copy_node)>::graph_kernel,
+      Kokkos::Impl::GraphNodeDeepCopyImpl<Kokkos::Cuda, dst_t, src_t>>();
+  }
+
+  bool success = true;
+
+  Kokkos::parallel_reduce(
+    Kokkos::RangePolicy(this->exec, 0, dst.size()),
+    CheckValue<dst_t, src_t>{dst, 17},
+    Kokkos::LAnd<bool>(success)
+  );
+
+  ASSERT_TRUE(success);
 }
 
 }  // end namespace Test
