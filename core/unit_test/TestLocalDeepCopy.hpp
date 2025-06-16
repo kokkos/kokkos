@@ -458,6 +458,13 @@ void test_local_deep_copy_scratch(int scratch_level) {
 }
 
 TEST(TEST_CATEGORY, local_deep_copy_team_scratch) {
+#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                Kokkos::DefaultHostExecutionSpace>) {
+    GTEST_SKIP()
+        << "The team scratch local deep copy test timeouts on SYCL+CUDA";
+  }
+#endif
   test_local_deep_copy_scratch(1);
 }
 
