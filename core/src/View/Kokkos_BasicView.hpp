@@ -177,7 +177,7 @@ class BasicView {
   }
   KOKKOS_FUNCTION constexpr index_type extent(rank_type r) const noexcept {
     return m_map.extents().extent(r);
-  };
+  }
 
  protected:
   // These are pre-condition checks which are unconditionally (i.e. in release
@@ -253,11 +253,11 @@ class BasicView {
   KOKKOS_FUNCTION constexpr BasicView(const mdspan_type &other)
       : m_ptr(other.data_handle()),
         m_map(other.mapping()),
-        m_acc(other.accessor()){};
+        m_acc(other.accessor()) {}
   KOKKOS_FUNCTION constexpr BasicView(mdspan_type &&other)
       : m_ptr(std::move(other.data_handle())),
         m_map(std::move(other.mapping())),
-        m_acc(std::move(other.accessor())){};
+        m_acc(std::move(other.accessor())) {}
 
   template <class OtherIndexType, size_t Size>
   // When doing C++20 we should switch to this, the conditional explicit we
@@ -669,40 +669,38 @@ class BasicView {
 
   KOKKOS_FUNCTION constexpr const extents_type &extents() const noexcept {
     return m_map.extents();
-  };
+  }
   KOKKOS_FUNCTION constexpr const data_handle_type &data_handle()
       const noexcept {
     return m_ptr;
-  };
+  }
   KOKKOS_FUNCTION constexpr const mapping_type &mapping() const noexcept {
     return m_map;
-  };
+  }
   KOKKOS_FUNCTION constexpr const accessor_type &accessor() const noexcept {
     return m_acc;
-  };
+  }
 
   KOKKOS_FUNCTION static constexpr bool is_always_unique() noexcept {
     return mapping_type::is_always_unique();
-  };
+  }
   KOKKOS_FUNCTION static constexpr bool is_always_exhaustive() noexcept {
     return mapping_type::is_always_exhaustive();
-  };
+  }
   KOKKOS_FUNCTION static constexpr bool is_always_strided() noexcept {
     return mapping_type::is_always_strided();
-  };
+  }
 
-  KOKKOS_FUNCTION constexpr bool is_unique() const {
-    return m_map.is_unique();
-  };
+  KOKKOS_FUNCTION constexpr bool is_unique() const { return m_map.is_unique(); }
   KOKKOS_FUNCTION constexpr bool is_exhaustive() const {
     return m_map.is_exhaustive();
-  };
+  }
   KOKKOS_FUNCTION constexpr bool is_strided() const {
     return m_map.is_strided();
-  };
+  }
   KOKKOS_FUNCTION constexpr index_type stride(rank_type r) const {
     return m_map.stride(r);
-  };
+  }
 
  protected:
 #ifndef __NVCC__

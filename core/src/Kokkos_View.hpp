@@ -531,7 +531,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   KOKKOS_FUNCTION
   View(typename base_t::data_handle_type p,
        const typename base_t::mapping_type& m)
-      : base_t(p, m){};
+      : base_t(p, m) {}
 
   //----------------------------------------
   // Compatible view copy constructor and assignment

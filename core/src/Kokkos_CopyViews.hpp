@@ -77,7 +77,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 1, iType> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i) const { a(i) = val; };
+  void operator()(const iType& i) const { a(i) = val; }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -99,7 +99,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 2, iType> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0, const iType& i1) const { a(i0, i1) = val; };
+  void operator()(const iType& i0, const iType& i1) const { a(i0, i1) = val; }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -124,7 +124,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 3, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2) const {
     a(i0, i1, i2) = val;
-  };
+  }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -151,7 +151,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 4, iType> {
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3) const {
     a(i0, i1, i2, i3) = val;
-  };
+  }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -178,7 +178,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 5, iType> {
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4) const {
     a(i0, i1, i2, i3, i4) = val;
-  };
+  }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -205,7 +205,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 6, iType> {
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4, const iType& i5) const {
     a(i0, i1, i2, i3, i4, i5) = val;
-  };
+  }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -235,7 +235,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 7, iType> {
                   const iType& i4, const iType& i5, const iType& i6) const {
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
       a(i0, i1, i2, i3, i4, i5, i6) = val;
-  };
+  }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -266,7 +266,7 @@ struct ViewFill<ViewType, Layout, ExecSpace, 8, iType> {
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
       for (iType i4 = 0; i4 < iType(a.extent(4)); i4++)
         a(i0, i1, i2, i3, i4, i5, i6, i7) = val;
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -288,7 +288,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0) const {
     a(i0) = static_cast<value_type>(b(i0));
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -319,7 +319,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1) const {
     a(i0, i1) = static_cast<value_type>(b(i0, i1));
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -352,7 +352,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2) const {
     a(i0, i1, i2) = static_cast<value_type>(b(i0, i1, i2));
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -386,7 +386,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType> {
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3) const {
     a(i0, i1, i2, i3) = b(i0, i1, i2, i3);
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -420,7 +420,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType> {
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4) const {
     a(i0, i1, i2, i3, i4) = b(i0, i1, i2, i3, i4);
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -454,7 +454,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType> {
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4, const iType& i5) const {
     a(i0, i1, i2, i3, i4, i5) = b(i0, i1, i2, i3, i4, i5);
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -491,7 +491,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType> {
                   const iType& i4, const iType& i5, const iType& i6) const {
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
       a(i0, i1, i2, i3, i4, i5, i6) = b(i0, i1, i2, i3, i4, i5, i6);
-  };
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -529,7 +529,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
       for (iType i4 = 0; i4 < iType(a.extent(4)); i4++)
         a(i0, i1, i2, i3, i4, i5, i6, i7) = b(i0, i1, i2, i3, i4, i5, i6, i7);
-  };
+  }
 };
 
 }  // namespace Impl

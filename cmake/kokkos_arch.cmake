@@ -172,6 +172,11 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     endif()
   endif()
 
+  # nvcc raises internal warnings about extra semicolons
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+    list(REMOVE_ITEM COMMON_WARNINGS "-Wextra-semi")
+  endif()
+
   if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     list(APPEND COMMON_WARNINGS "-Wimplicit-fallthrough")
   endif()

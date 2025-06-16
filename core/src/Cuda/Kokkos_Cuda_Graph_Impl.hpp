@@ -96,7 +96,7 @@ struct GraphImpl<Kokkos::Cuda> {
           (m_execution_space.impl_internal_space_instance()
                ->cuda_graph_destroy_wrapper(m_graph)));
     }
-  };
+  }
 
   explicit GraphImpl(Kokkos::Cuda arg_instance)
       : m_execution_space(std::move(arg_instance)), m_graph_owning(true) {
