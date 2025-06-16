@@ -181,44 +181,6 @@ class maximum {
   }
 };
 
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
-
-class hmin {
- public:
-  template <typename T, typename MaskType>
-  auto on_host(T const& a, MaskType const& mask) const {
-    return Kokkos::Experimental::hmin(where(mask, a));
-  }
-
-  template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
-                                        MaskType const& mask) const {
-    return Kokkos::Experimental::hmin(where(mask, a));
-  }
-};
-
-class hmax {
- public:
-  template <typename T, typename MaskType>
-  auto on_host(T const& a, MaskType const& mask) const {
-    return Kokkos::Experimental::hmax(where(mask, a));
-  }
-
-  template <typename T, typename MaskType>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a,
-                                        MaskType const& mask) const {
-    return Kokkos::Experimental::hmax(where(mask, a));
-  }
-};
-
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
-#endif
-
 class reduce {
  public:
   template <typename T, typename MaskType>

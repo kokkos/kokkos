@@ -207,11 +207,6 @@ inline void device_register_common_benchmarks() {
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_BINARY_BENCH(common, min, minimum);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_BINARY_BENCH(common, max, maximum);
 
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-    KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, hmin, hmin);
-    KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, hmax, hmax);
-#endif
-
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, reduce, reduce);
     KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(common, reduce_min,
                                                      reduce_min);
