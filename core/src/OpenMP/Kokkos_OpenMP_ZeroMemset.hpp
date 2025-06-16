@@ -28,7 +28,7 @@ namespace Impl {
 template <>
 struct ZeroMemset<OpenMP> {
   ZeroMemset(const OpenMP& exec_space, void* dst, size_t cnt) {
-    if (cnt < 0x2000ul) {  // 2^13
+    if (cnt < 0x20000ul) {  // 2^17
       std::memset(dst, 0, cnt);
     } else {
       Kokkos::parallel_for(
