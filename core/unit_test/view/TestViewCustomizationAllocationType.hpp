@@ -38,8 +38,6 @@ struct BarRef {
   KOKKOS_FUNCTION
   T& operator[](size_t idx) const { return ptr[idx]; }
 
-  // assignment from value type should work for deep_copy from scalar!
-  // Just will some defined values so we know we did it.
   KOKKOS_FUNCTION
   operator Bar() const {
     Bar val;
@@ -48,8 +46,8 @@ struct BarRef {
   }
 
   KOKKOS_FUNCTION
-  auto operator=(const Bar&) {
-    for (size_t i = 0; i < size; i++) ptr[i] = i;
+  auto operator=(const Bar& val) {
+    for (size_t i = 0; i < size; i++) ptr[i] = val[i];
   }
 };
 
