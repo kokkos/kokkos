@@ -354,8 +354,6 @@ class UnorderedMap {
     /// properties.
     const auto prop_copy =
         Impl::with_properties_if_unset(arg_prop, std::string("UnorderedMap"));
-    const auto prop_copy_noinit = Impl::with_properties_if_unset_and_compatible(
-        prop_copy, Kokkos::WithoutInitializing);
 
     //! Initialize member views.
     m_size = shared_size_t(Kokkos::view_alloc(
@@ -366,14 +364,27 @@ class UnorderedMap {
         bitset_type(Kokkos::Impl::append_to_label(prop_copy, " - bitset"),
                     calculate_capacity(capacity_hint));
 
-    m_hash_lists = size_type_view(
-        Kokkos::Impl::append_to_label(prop_copy_noinit, " - hash list"),
-        Impl::find_hash_size(capacity()));
+    if constexpr (alloc_prop_t::sequential_host_init) {
+      m_hash_lists = size_type_view(
+          Kokkos::Impl::append_to_label(prop_copy, " - hash list"),
+          Impl::find_hash_size(capacity()));
 
-    m_next_index = size_type_view(
-        Kokkos::Impl::append_to_label(prop_copy_noinit, " - next index"),
-        capacity() + 1);  // +1 so that the *_at functions can always return a
-                          // valid reference
+      m_next_index = size_type_view(
+          Kokkos::Impl::append_to_label(prop_copy, " - next index"),
+          capacity() + 1);  // +1 so that the *_at functions can always return a
+                            // valid reference
+    } else {
+      const auto prop_copy_noinit = Impl::with_properties_if_unset(
+          prop_copy, Kokkos::WithoutInitializing);
+      m_hash_lists = size_type_view(
+          Kokkos::Impl::append_to_label(prop_copy_noinit, " - hash list"),
+          Impl::find_hash_size(capacity()));
+
+      m_next_index = size_type_view(
+          Kokkos::Impl::append_to_label(prop_copy_noinit, " - next index"),
+          capacity() + 1);  // +1 so that the *_at functions can always return a
+                            // valid reference
+    }
 
     m_keys = key_type_view(Kokkos::Impl::append_to_label(prop_copy, " - keys"),
                            capacity());
