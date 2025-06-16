@@ -84,10 +84,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
                      : work_end) {
 // Unroll the loop
 #pragma unroll
-      for (unsigned int i = 0; i < work_stride * loop_unroll_factor &&
-                               iwork + static_cast<Member>(i) < work_end;
+      for (Member i = 0;
+           i < work_stride * static_cast<Member>(loop_unroll_factor) &&
+           iwork + i < work_end;
            i += work_stride) {
-        this->template exec_range<WorkTag>(iwork + static_cast<Member>(i));
+        this->template exec_range<WorkTag>(iwork + i);
       }
     }
   }
