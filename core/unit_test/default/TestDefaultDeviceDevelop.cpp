@@ -25,93 +25,80 @@ struct PlusOne {};
 
 struct Funct {
   Kokkos::View<double*> v;
-
+  KOKKOS_FUNCTION void operator()() const { v(0) *= 3; }
   KOKKOS_FUNCTION void operator()(const TimeTwo) const { v(0) *= 2; }
-
   KOKKOS_FUNCTION void operator()(const PlusOne) const { ++v(0); }
 };
 
 void test_func() {
+  Kokkos::DefaultExecutionSpace space;
+
   Kokkos::View<double*> v("v", 1);
   auto mirror = Kokkos::create_mirror_view(v);
   mirror(0)   = 5;
   Kokkos::deep_copy(v, mirror);
-
-  auto l = KOKKOS_LAMBDA() { v(0) *= 2; };
 
   Funct f;
   f.v = v;
 
   double res = 5;
 
-  // Full signature
-  Kokkos::single<Kokkos::DefaultExecutionSpace, TimeTwo>("Single", f);
+  // Minimal
+  Kokkos::single(f);
   Kokkos::deep_copy(mirror, v);
-  res *= 2;
-  EXPECT_EQ(res, mirror(0));
-  Kokkos::single<Kokkos::DefaultExecutionSpace, void>("Single", l);
-  Kokkos::deep_copy(mirror, v);
-  res *= 2;
+  res *= 3;
   EXPECT_EQ(res, mirror(0));
 
-  // Minimal
-  Kokkos::single(l);
+  // Minimal lambda
+  Kokkos::single(KOKKOS_LAMBDA() { v(0) += 2; });
+  Kokkos::deep_copy(mirror, v);
+  res += 2;
+  EXPECT_EQ(res, mirror(0));
+
+  // +kernal_name +WorkTag +ExecSpace
+  Kokkos::single("Single",
+                 Kokkos::SinglePolicy<TimeTwo, Kokkos::DefaultExecutionSpace>(),
+                 f);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 
   // +kernel_name
-  Kokkos::single("test", l);
+  Kokkos::single("test", f);
   Kokkos::deep_copy(mirror, v);
-  res *= 2;
+  res *= 3;
   EXPECT_EQ(res, mirror(0));
 
   // +WorkTag
-  Kokkos::single<PlusOne>(f);
+  Kokkos::single(Kokkos::SinglePolicy<PlusOne>(), f);
   Kokkos::deep_copy(mirror, v);
   res += 1;
   EXPECT_EQ(res, mirror(0));
 
   // +WorkTag +kernel_name
-  Kokkos::single<TimeTwo>("test", f);
+  Kokkos::single("Single", Kokkos::SinglePolicy<TimeTwo>(), f);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 
   // +WorkTag +ExecSpace
-  Kokkos::single<TimeTwo, Kokkos::DefaultExecutionSpace>(f);
-  Kokkos::deep_copy(mirror, v);
-  res *= 2;
-  EXPECT_EQ(res, mirror(0));
-
-  // +WorkTag +ExecSpace +kernel_name
-  Kokkos::single<TimeTwo, Kokkos::DefaultExecutionSpace>("test", f);
+  Kokkos::single(Kokkos::SinglePolicy<TimeTwo, Kokkos::DefaultExecutionSpace>(),
+                 f);
   Kokkos::deep_copy(mirror, v);
   res *= 2;
   EXPECT_EQ(res, mirror(0));
 
   // +ExecSpace
-  Kokkos::single<Kokkos::DefaultExecutionSpace>(l);
+  Kokkos::single(Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(), f);
   Kokkos::deep_copy(mirror, v);
-  res *= 2;
+  res *= 3;
   EXPECT_EQ(res, mirror(0));
 
-  // +ExecSpace +kernel_name
-  Kokkos::single<Kokkos::DefaultExecutionSpace>("test", l);
+  // +Policy +kernel_name
+  Kokkos::single("Single",
+                 Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(), f);
   Kokkos::deep_copy(mirror, v);
-  res *= 2;
-  EXPECT_EQ(res, mirror(0));
-
-  // +ExecSpace +WorkTag
-  Kokkos::single<Kokkos::DefaultExecutionSpace, TimeTwo>(f);
-  Kokkos::deep_copy(mirror, v);
-  res *= 2;
-  EXPECT_EQ(res, mirror(0));
-
-  // +ExecSpace +WorkTag +kernel_name
-  Kokkos::single<Kokkos::DefaultExecutionSpace, TimeTwo>("test", f);
-  Kokkos::deep_copy(mirror, v);
-  res *= 2;
+  res *= 3;
   EXPECT_EQ(res, mirror(0));
 }
 

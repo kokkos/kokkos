@@ -354,6 +354,18 @@ RangePolicy(ES const&, int64_t, int64_t) -> RangePolicy<ES>;
 template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
 RangePolicy(ES const&, int64_t, int64_t, ChunkSize const&) -> RangePolicy<ES>;
 
+/** \brief  Execution policy for work over a single thread
+ */
+template <class... Properties>
+class SinglePolicy : public RangePolicy<Properties...> {
+ public:
+  template <class... OtherProperties>
+  SinglePolicy(const SinglePolicy<OtherProperties...>& p)
+      : RangePolicy<Properties...>(p) {}
+
+  inline SinglePolicy() : RangePolicy<Properties...>(0, 1) {}
+};
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
