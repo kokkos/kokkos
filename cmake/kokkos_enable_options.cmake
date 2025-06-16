@@ -85,6 +85,7 @@ kokkos_enable_option(COMPILER_WARNINGS OFF "Whether to print all compiler warnin
 kokkos_enable_option(TUNING OFF "Whether to create bindings for tuning tools")
 kokkos_enable_option(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")
 kokkos_enable_option(COMPILE_AS_CMAKE_LANGUAGE OFF "Whether to use native cmake language support")
+kokkos_enable_option(MULTIPLE_CMAKE_LANGUAGES OFF "Whether to allow Kokkos to be used with multiple CMake languages")
 kokkos_enable_option(
   HIP_MULTIPLE_KERNEL_INSTANTIATIONS OFF
   "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time"
