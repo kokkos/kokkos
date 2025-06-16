@@ -3004,8 +3004,9 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     // We don't construct from the src accessor generally because our accessors
     // aren't generally constructible from each other.
     // We could change that, but all our internal accessors are stateless anyway
-    // right now. So for now if you have custom accessors that need to carry forward
-    // information you just have to make the conversion constructors work.
+    // right now. So for now if you have custom accessors that need to carry
+    // forward information you just have to make the conversion constructors
+    // work.
     if constexpr (std::is_constructible_v<
                       typename dst_type::accessor_type,
                       typename Kokkos::View<T, P...>::accessor_type>)
