@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: Jimver/cuda-toolkit@9b993a72d35b5634a69ca7e34b39a002a87c367c # v0.2.23
+    - uses: Jimver/cuda-toolkit@c35baa1a18fd1fc9dcf47c5bd839bf30559c0bc3 # v0.2.24
       id: cuda-toolkit
       with:
         cuda: '12.4.1'
