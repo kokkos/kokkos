@@ -94,7 +94,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() const {
-    constexpr unsigned int loop_unroll_factor = LoopUnroll::unroll_factor;
+    constexpr typename Policy::index_type loop_unroll_factor =
+        LoopUnroll::unroll_factor;
     const typename Policy::index_type nwork =
         (m_policy.end() - m_policy.begin()) / loop_unroll_factor;
     cudaFuncAttributes attr =
