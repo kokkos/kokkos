@@ -868,35 +868,24 @@ class UnorderedMap {
     tmp.m_SequentialHostInit = src.m_SequentialHostInit;
     tmp.m_available_indexes  = bitset_type(src.capacity());
 
-    if (src.m_SequentialHostInit) {
-      tmp.m_hash_lists = size_type_view(
-          view_alloc(WithoutInitializing, "UnorderedMap hash list"),
-          src.m_hash_lists.extent(0));
-      tmp.m_next_index = size_type_view(
-          view_alloc(WithoutInitializing, "UnorderedMap next index"),
-          src.m_next_index.extent(0));
-      tmp.m_keys =
-          key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
-                        src.m_keys.extent(0));
-      tmp.m_values =
-          value_type_view(view_alloc(SequentialHostInit, "UnorderedMap values"),
-                          src.m_values.extent(0));
-      tmp.m_scalars = scalars_view("UnorderedMap scalars");
-    } else {
-      tmp.m_hash_lists = size_type_view(
-          view_alloc(WithoutInitializing, "UnorderedMap hash list"),
-          src.m_hash_lists.extent(0));
-      tmp.m_next_index = size_type_view(
-          view_alloc(WithoutInitializing, "UnorderedMap next index"),
-          src.m_next_index.extent(0));
-      tmp.m_keys =
-          key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
-                        src.m_keys.extent(0));
-      tmp.m_values = value_type_view(
-          view_alloc(WithoutInitializing, "UnorderedMap values"),
-          src.m_values.extent(0));
-      tmp.m_scalars = scalars_view("UnorderedMap scalars");
-    }
+    tmp.m_hash_lists = size_type_view(
+        view_alloc(WithoutInitializing, "UnorderedMap hash list"),
+        src.m_hash_lists.extent(0));
+    tmp.m_next_index = size_type_view(
+        view_alloc(WithoutInitializing, "UnorderedMap next index"),
+        src.m_next_index.extent(0));
+    tmp.m_keys =
+        key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
+                      src.m_keys.extent(0));
+    tmp.m_values =
+        src.m_SequentialHostInit
+            ? value_type_view(
+                  view_alloc(SequentialHostInit, "UnorderedMap values"),
+                  src.m_values.extent(0))
+            : value_type_view(
+                  view_alloc(WithoutInitializing, "UnorderedMap values"),
+                  src.m_values.extent(0));
+    tmp.m_scalars = scalars_view("UnorderedMap scalars");
 
     *this = tmp;
   }
