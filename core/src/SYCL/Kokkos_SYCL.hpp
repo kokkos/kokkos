@@ -154,11 +154,15 @@ std::vector<SYCL> impl_partition_space(const SYCL& base_instance,
 
   std::vector<SYCL> instances;
   instances.reserve(weights.size());
-  std::generate_n(
-      std::back_inserter(instances), weights.size(), [&context, &device]() {
-        return SYCL(
-            sycl::queue(context, device, sycl::property::queue::in_order()));
-      });
+  std::generate_n(std::back_inserter(instances), weights.size(),
+                  [&context, &device]() {
+                    return SYCL(sycl::queue(context, device
+#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+                                            ,
+                                            sycl::property::queue::in_order()
+#endif
+                                                ));
+                  });
 
   return instances;
 }
