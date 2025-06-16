@@ -146,7 +146,7 @@ kokkos_lib_include_directories(
   kokkoscore ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 )
 if(NOT desul_FOUND)
-  kokkos_lib_include_directories(kokkoscore ${KOKKOS_SOURCE_DIR}/tpls/desul/include)
+  target_include_directories(kokkoscore SYSTEM PUBLIC $<BUILD_INTERFACE:${KOKKOS_SOURCE_DIR}/tpls/desul/include>)
 endif()
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
@@ -166,7 +166,7 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
   elseif(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN AND NOT Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
     message(STATUS "Using compiler-supplied experimental/mdspan")
   else()
-    kokkos_lib_include_directories(kokkoscore ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include)
+    target_include_directories(kokkoscore SYSTEM PUBLIC $<BUILD_INTERFACE:${KOKKOS_SOURCE_DIR}/tpls/mdspan/include>)
 
     append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/__p0009_bits/*.hpp)
     append_glob(KOKKOS_CORE_HEADERS ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include/experimental/mdspan)
