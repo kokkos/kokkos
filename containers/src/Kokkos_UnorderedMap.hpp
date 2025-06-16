@@ -331,7 +331,11 @@ class UnorderedMap {
   UnorderedMap(const Impl::ViewCtorProp<P...> &arg_prop,
                size_type capacity_hint = 0, hasher_type hasher = hasher_type(),
                equal_to_type equal_to = equal_to_type())
-      : m_bounded_insert(true), m_hasher(hasher), m_equal_to(equal_to) {
+      : m_bounded_insert(true),
+        m_hasher(hasher),
+        m_equal_to(equal_to),
+        m_SequentialHostInit(
+            std::decay_t<decltype(arg_prop)>::sequential_host_init) {
     if (!is_insertable_map) {
       Kokkos::Impl::throw_runtime_exception(
           "Cannot construct a non-insertable (i.e. const key_type) "
@@ -350,8 +354,8 @@ class UnorderedMap {
     /// properties.
     const auto prop_copy =
         Impl::with_properties_if_unset(arg_prop, std::string("UnorderedMap"));
-    const auto prop_copy_noinit =
-        Impl::with_properties_if_unset(prop_copy, Kokkos::WithoutInitializing);
+    const auto prop_copy_noinit = Impl::with_properties_if_unset_and_compatible(
+        prop_copy, Kokkos::WithoutInitializing);
 
     //! Initialize member views.
     m_size = shared_size_t(Kokkos::view_alloc(
@@ -446,7 +450,12 @@ class UnorderedMap {
     requested_capacity =
         (requested_capacity < curr_size) ? curr_size : requested_capacity;
 
-    insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to);
+    auto tmp =
+        m_SequentialHostInit
+            ? insertable_map_type(view_alloc(SequentialHostInit),
+                                  requested_capacity, m_hasher, m_equal_to)
+            : insertable_map_type(view_alloc(), requested_capacity, m_hasher,
+                                  m_equal_to);
 
     if (curr_size) {
       tmp.m_bounded_insert = false;
@@ -807,7 +816,8 @@ class UnorderedMap {
         m_next_index(src.m_next_index),
         m_keys(src.m_keys),
         m_values(src.m_values),
-        m_scalars(src.m_scalars) {}
+        m_scalars(src.m_scalars),
+        m_SequentialHostInit(src.m_SequentialHostInit) {}
 
   template <typename SKey, typename SValue>
   std::enable_if_t<
@@ -815,16 +825,17 @@ class UnorderedMap {
                                   SValue>::value,
       declared_map_type &>
   operator=(UnorderedMap<SKey, SValue, Device, Hasher, EqualTo> const &src) {
-    m_bounded_insert    = src.m_bounded_insert;
-    m_hasher            = src.m_hasher;
-    m_equal_to          = src.m_equal_to;
-    m_size              = src.m_size;
-    m_available_indexes = src.m_available_indexes;
-    m_hash_lists        = src.m_hash_lists;
-    m_next_index        = src.m_next_index;
-    m_keys              = src.m_keys;
-    m_values            = src.m_values;
-    m_scalars           = src.m_scalars;
+    m_bounded_insert     = src.m_bounded_insert;
+    m_hasher             = src.m_hasher;
+    m_equal_to           = src.m_equal_to;
+    m_size               = src.m_size;
+    m_available_indexes  = src.m_available_indexes;
+    m_hash_lists         = src.m_hash_lists;
+    m_next_index         = src.m_next_index;
+    m_keys               = src.m_keys;
+    m_values             = src.m_values;
+    m_scalars            = src.m_scalars;
+    m_SequentialHostInit = src.m_SequentialHostInit;
     return *this;
   }
 
@@ -850,24 +861,42 @@ class UnorderedMap {
       UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo> const &src) {
     insertable_map_type tmp;
 
-    tmp.m_bounded_insert    = src.m_bounded_insert;
-    tmp.m_hasher            = src.m_hasher;
-    tmp.m_equal_to          = src.m_equal_to;
-    tmp.m_size()            = src.m_size();
-    tmp.m_available_indexes = bitset_type(src.capacity());
-    tmp.m_hash_lists        = size_type_view(
-        view_alloc(WithoutInitializing, "UnorderedMap hash list"),
-        src.m_hash_lists.extent(0));
-    tmp.m_next_index = size_type_view(
-        view_alloc(WithoutInitializing, "UnorderedMap next index"),
-        src.m_next_index.extent(0));
-    tmp.m_keys =
-        key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
-                      src.m_keys.extent(0));
-    tmp.m_values =
-        value_type_view(view_alloc(WithoutInitializing, "UnorderedMap values"),
-                        src.m_values.extent(0));
-    tmp.m_scalars = scalars_view("UnorderedMap scalars");
+    tmp.m_bounded_insert     = src.m_bounded_insert;
+    tmp.m_hasher             = src.m_hasher;
+    tmp.m_equal_to           = src.m_equal_to;
+    tmp.m_size()             = src.m_size();
+    tmp.m_SequentialHostInit = src.m_SequentialHostInit;
+    tmp.m_available_indexes  = bitset_type(src.capacity());
+
+    if (src.m_SequentialHostInit) {
+      tmp.m_hash_lists = size_type_view(
+          view_alloc(WithoutInitializing, "UnorderedMap hash list"),
+          src.m_hash_lists.extent(0));
+      tmp.m_next_index = size_type_view(
+          view_alloc(WithoutInitializing, "UnorderedMap next index"),
+          src.m_next_index.extent(0));
+      tmp.m_keys =
+          key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
+                        src.m_keys.extent(0));
+      tmp.m_values =
+          value_type_view(view_alloc(SequentialHostInit, "UnorderedMap values"),
+                          src.m_values.extent(0));
+      tmp.m_scalars = scalars_view("UnorderedMap scalars");
+    } else {
+      tmp.m_hash_lists = size_type_view(
+          view_alloc(WithoutInitializing, "UnorderedMap hash list"),
+          src.m_hash_lists.extent(0));
+      tmp.m_next_index = size_type_view(
+          view_alloc(WithoutInitializing, "UnorderedMap next index"),
+          src.m_next_index.extent(0));
+      tmp.m_keys =
+          key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
+                        src.m_keys.extent(0));
+      tmp.m_values = value_type_view(
+          view_alloc(WithoutInitializing, "UnorderedMap values"),
+          src.m_values.extent(0));
+      tmp.m_scalars = scalars_view("UnorderedMap scalars");
+    }
 
     *this = tmp;
   }
@@ -966,6 +995,7 @@ class UnorderedMap {
   key_type_view m_keys;
   value_type_view m_values;
   scalars_view m_scalars;
+  bool m_SequentialHostInit = false;
 
   template <typename KKey, typename VValue, typename DDevice, typename HHash,
             typename EEqualTo>
