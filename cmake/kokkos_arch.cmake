@@ -150,6 +150,7 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
   set(COMMON_WARNINGS
       "-Wall"
       "-Wextra"
+      "-Wextra-semi"
       "-Wunused-parameter"
       "-Wshadow"
       "-pedantic"
