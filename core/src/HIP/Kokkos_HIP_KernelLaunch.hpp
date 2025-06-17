@@ -542,6 +542,25 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     HIPInternal::constantMemReusable[hip_device].release(
         std::move(lock), hip_instance->m_stream);
   }
+
+  inline static void create_parallel_launch_graph_node(
+      DriverType const &driver, dim3 const &grid, dim3 const &block, int shmem,
+      HIPInternal const *hip_instance) {
+    // Just use global memory; coordinating through events to share constant
+    // memory with the non-graph interface is not really reasonable since
+    // events don't work with Graphs directly, and this would anyway require
+    // a much more complicated structure that finds previous nodes in the
+    // dependency structure of the graph and creates an implicit dependence
+    // based on the need for constant memory (which we would then have to
+    // somehow go and prove was not creating a dependency cycle, and I don't
+    // even know if there's an efficient way to do that, let alone in the
+    // structure we currenty have).
+    using global_launch_impl_t =
+        HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
+                                       HIPLaunchMechanism::GlobalMemory>;
+    global_launch_impl_t::create_parallel_launch_graph_node(
+        driver, grid, block, shmem, hip_instance);
+  }
 };
 
 //-----------------------------//
