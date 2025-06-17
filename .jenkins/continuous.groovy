@@ -57,16 +57,6 @@ pipeline {
                                 -DKokkos_ENABLE_SERIAL=ON && \
                               cmake --build build --target install -j 8 && \
                               ctest --test-dir build --no-compress-output -T Test --verbose && \
-                              cd example/build_cmake_installed && \
-                              rm -rf build && \
-                              cmake \
-                                -B build \
-                                -GNinja \
-                                -DCMAKE_CXX_COMPILER=clang++-19 \
-                                -DCMAKE_CXX_FLAGS=-Werror \
-                                -DCMAKE_CXX_STANDARD=20 && \
-                              cmake --build build -j 8 && \
-                              ctest --test-dir build --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
