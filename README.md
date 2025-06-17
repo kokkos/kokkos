@@ -12,7 +12,7 @@ hierarchies and multiple types of execution resources. It currently can use
 CUDA, HIP, SYCL, HPX, OpenMP and C++ threads as backend programming models with several other
 backends in development.
 
-**Kokkos Core is part of the [Kokkos C++ Performance Portability Programming Ecosystem](https://kokkos.org/about/abstract/).**
+**Kokkos Core is part of the [Kokkos C++ Performance Portability Programming Ecosystem](https://kokkos.org).**
 
 Kokkos is a [Linux Foundation](https://linuxfoundation.org) project.
 
