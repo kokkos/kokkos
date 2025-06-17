@@ -108,7 +108,9 @@ set(BENCHMARK_SOURCES
     PerfTest_ViewFill_7.cpp
     PerfTest_ViewFill_8.cpp
     PerfTest_ViewFill_Raw.cpp
-    PerfTest_ViewFirstTouch.cpp
+    PerfTest_ViewFirstTouch_Initialize.cpp
+    PerfTest_ViewFirstTouch_ParallelFor.cpp
+    PerfTest_ViewFirstTouch_DeepCopy.cpp
     PerfTest_ViewResize_123.cpp
     PerfTest_ViewResize_45.cpp
     PerfTest_ViewResize_6.cpp

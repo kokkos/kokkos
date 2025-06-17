@@ -36,7 +36,7 @@ struct ZeroMemset<HostSpace::execution_space> {
     std::memset(dst, 0, cnt);
   }
 };
-#endif  // KOKKOS_ENABLE_OPENMP
+#endif
 
 }  // end namespace Impl
 }  // end namespace Kokkos
