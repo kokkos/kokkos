@@ -1,5 +1,7 @@
-ARG BASE=gcc:15.1.0-bookworm
+ARG BASE=gcc:15.1.0-bookworm@sha256:0a7989a3828096f97fd62feb896699e151544e0cfc5fdc0f30ace70cdcf003e6
 FROM $BASE
+
+ARG ADDITIONAL_PACKAGES
 
 RUN apt-get update && apt-get install -y \
         vim \
@@ -9,7 +11,8 @@ RUN apt-get update && apt-get install -y \
         gnupg \ 
         bc \
         ninja-build \
-        git
+        git \
+        ${ADDITIONAL_PACKAGES}
 
 RUN add-apt-repository deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-19 main
 RUN apt-get update && apt-cache search clang-scan-deps && apt-get install -y clang-tools-19 clang-19 && \
