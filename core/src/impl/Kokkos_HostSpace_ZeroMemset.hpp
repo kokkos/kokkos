@@ -24,6 +24,7 @@
 namespace Kokkos {
 namespace Impl {
 
+// OpenMP has its own specialization of ZeroMemset
 #ifndef KOKKOS_ENABLE_OPENMP
 template <>
 struct ZeroMemset<HostSpace::execution_space> {
