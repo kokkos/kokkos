@@ -1692,6 +1692,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   const size_t N = dst.extent(0) * dst.extent(1);
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       team.team_barrier();
@@ -1721,6 +1723,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2);
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       team.team_barrier();
@@ -1753,6 +1757,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
       dst.extent(0) * dst.extent(1) * dst.extent(2) * dst.extent(3);
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       team.team_barrier();
@@ -1787,6 +1793,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
                    dst.extent(3) * dst.extent(4);
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       team.team_barrier();
@@ -1823,6 +1831,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
                    dst.extent(3) * dst.extent(4) * dst.extent(5);
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       team.team_barrier();
@@ -1862,6 +1872,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
                    dst.extent(6);
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       team.team_barrier();
@@ -1915,6 +1927,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   }
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       local_deep_copy_contiguous(dst, value);
@@ -1935,6 +1949,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   }
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       local_deep_copy_contiguous(dst, value);
@@ -1956,6 +1972,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   }
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       local_deep_copy_contiguous(dst, value);
@@ -1979,6 +1997,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   }
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       local_deep_copy_contiguous(dst, value);
@@ -2003,6 +2023,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   }
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       local_deep_copy_contiguous(dst, value);
@@ -2028,6 +2050,8 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy(
   }
 
   if (dst.span_is_contiguous()) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
                                  typename View<DT, DP...>::element_type*>) {
       local_deep_copy_contiguous(dst, value);
