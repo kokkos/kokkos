@@ -1704,6 +1704,18 @@ void KOKKOS_INLINE_FUNCTION local_deep_copy_contiguous(
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
+#if defined(KOKKOS_ENABLE_OPENACC)
+// FIXME OpenACC: The OpenACC backend does not support team barriers
+template <class iType, class TeamMemberType>
+void KOKKOS_FORCEINLINE_FUNCTION local_deep_copy_barrier(
+    const Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType,
+                                                        TeamMemberType>&) {}
+
+template <class iType, class TeamMemberType>
+void KOKKOS_FORCEINLINE_FUNCTION local_deep_copy_barrier(
+    const Kokkos::Impl::TeamThreadRangeBoundariesStruct<iType,
+                                                        TeamMemberType>&) {}
+#else
 template <class iType, class TeamMemberType>
 void KOKKOS_FORCEINLINE_FUNCTION local_deep_copy_barrier(
     const Kokkos::Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType>&
@@ -1717,6 +1729,7 @@ void KOKKOS_FORCEINLINE_FUNCTION local_deep_copy_barrier(
         policy) {
   policy.member.team_barrier();
 }
+#endif
 
 template <class iType, class TeamMemberType>
 void KOKKOS_FORCEINLINE_FUNCTION
