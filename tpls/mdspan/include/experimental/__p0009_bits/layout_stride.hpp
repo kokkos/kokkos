@@ -196,6 +196,11 @@ struct layout_stride {
         return s;
       }
 
+      MDSPAN_INLINE_FUNCTION
+      static constexpr const strides_storage_t&& fill_strides(const strides_storage_t&& s) {
+        return std::move(s);
+      }
+
       template<class IntegralType>
       static constexpr const strides_storage_t fill_strides(const std::array<IntegralType,extents_type::rank()>& s) {
         return strides_storage_t{static_cast<index_type>(s[Idxs])...};
@@ -270,6 +275,7 @@ struct layout_stride {
 
     //--------------------------------------------------------------------------------
 
+    // NOLINTNEXTLINE(modernize-use-equals-default)
     MDSPAN_INLINE_FUNCTION constexpr mapping() noexcept
 #if defined(MDSPAN_IMPL_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS)
       : m_members{

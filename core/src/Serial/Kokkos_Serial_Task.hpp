@@ -155,7 +155,7 @@ class TaskQueueSpecializationConstrained<
 
       queue->complete(task);
 
-    } while (1);
+    } while (true);
   }
 
   static void execute(scheduler_type const& scheduler) {

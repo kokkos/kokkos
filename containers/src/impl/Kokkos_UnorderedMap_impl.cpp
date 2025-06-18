@@ -69,9 +69,9 @@ uint32_t find_hash_size(uint32_t size) {
   const uint32_t num_primes = sizeof(primes) / sizeof(uint32_t);
 
   uint32_t hsize = primes[num_primes - 1];
-  for (uint32_t i = 0; i < num_primes; ++i) {
-    if (size <= primes[i]) {
-      hsize = primes[i];
+  for (auto prime : primes) {
+    if (size <= prime) {
+      hsize = prime;
       break;
     }
   }
