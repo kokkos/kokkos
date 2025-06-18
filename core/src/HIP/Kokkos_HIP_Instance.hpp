@@ -351,40 +351,27 @@ class HIPInternal {
                                   bool force_shrink = false);
   void release_team_scratch_space(int scratch_pool_id);
 };
-
-void create_HIP_instances(std::vector<HIP> &instances);
 }  // namespace Impl
 
-namespace Experimental {
-// Partitioning an Execution Space: expects space and integer arguments for
-// relative weight
-//   Customization point for backends
-//   Default behavior is to return the passed in instance
-
-template <class... Args>
-std::vector<HIP> partition_space(const HIP &, Args...) {
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  std::vector<HIP> instances(sizeof...(Args));
-  Kokkos::Impl::create_HIP_instances(instances);
-  return instances;
-}
-
+namespace Experimental::Impl {
+// For each space in partition, create new hipStream_t on the same device as
+// base_instance, ignoring weights
 template <class T>
-std::vector<HIP> partition_space(const HIP &, std::vector<T> const &weights) {
-  static_assert(
-      std::is_arithmetic_v<T>,
-      "Kokkos Error: partitioning arguments must be integers or floats");
+std::vector<HIP> impl_partition_space(const HIP &base_instance,
+                                      const std::vector<T> &weights) {
+  std::vector<HIP> instances;
+  instances.reserve(weights.size());
+  std::generate_n(
+      std::back_inserter(instances), weights.size(), [&base_instance]() {
+        hipStream_t stream;
+        KOKKOS_IMPL_HIP_SAFE_CALL(base_instance.impl_internal_space_instance()
+                                      ->hip_stream_create_wrapper(&stream));
+        return HIP(stream, Kokkos::Impl::ManageStream::yes);
+      });
 
-  // We only care about the number of instances to create and ignore weights
-  // otherwise.
-  std::vector<HIP> instances(weights.size());
-  Kokkos::Impl::create_HIP_instances(instances);
   return instances;
 }
-}  // namespace Experimental
+}  // namespace Experimental::Impl
 }  // namespace Kokkos
 
 #endif

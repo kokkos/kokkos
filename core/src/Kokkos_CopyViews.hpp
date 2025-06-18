@@ -835,7 +835,7 @@ struct ZeroMemset {
 // as an optimization.
 template <typename T>
 bool has_all_zero_bits(const T& value) {
-  static_assert(std::is_trivial_v<T>);
+  static_assert(std::is_trivially_copyable_v<T>);
 
   if constexpr (std::is_scalar_v<T>) {
     return value == T();
@@ -854,7 +854,7 @@ bool has_all_zero_bits(const T& value) {
 
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
-    std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type> &&
+    std::is_trivially_copyable_v<typename ViewTraits<DT, DP...>::value_type> &&
     !ViewTraits<DT, DP...>::impl_is_customized>
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,
@@ -873,7 +873,7 @@ contiguous_fill_or_memset(
 
 template <typename ExecutionSpace, class DT, class... DP>
 inline std::enable_if_t<
-    !std::is_trivial_v<typename ViewTraits<DT, DP...>::value_type> ||
+    !std::is_trivially_copyable_v<typename ViewTraits<DT, DP...>::value_type> ||
     ViewTraits<DT, DP...>::impl_is_customized>
 contiguous_fill_or_memset(
     const ExecutionSpace& exec_space, const View<DT, DP...>& dst,

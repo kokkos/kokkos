@@ -311,6 +311,11 @@ class minimum {
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
     return Kokkos::min(a, b);
   }
+
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION T operator()(T const& a, T const& b) const {
+    return Kokkos::min(a, b);
+  }
 };
 
 class maximum {
@@ -335,6 +340,11 @@ class maximum {
   }
   template <typename T>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return Kokkos::max(a, b);
+  }
+
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION T operator()(T const& a, T const& b) const {
     return Kokkos::max(a, b);
   }
 };
@@ -406,8 +416,8 @@ class reduce {
   }
   template <typename T, typename U, typename MaskType>
   auto on_host_serial(T const& a, U, MaskType) const {
-    U result = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
-    for (std::size_t i = 0; i < a.size(); ++i) {
+    U result = a[0];
+    for (std::size_t i = 1; i < a.size(); ++i) {
       result = BinaryOperation()(result, a[i]);
     }
     return result;
@@ -419,8 +429,8 @@ class reduce {
   }
   template <typename T, typename U, typename MaskType>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a, U, MaskType) const {
-    U result = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
-    for (std::size_t i = 0; i < a.size(); ++i) {
+    U result = a[0];
+    for (std::size_t i = 1; i < a.size(); ++i) {
       if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
         result = result + a[i];
       } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
@@ -432,7 +442,7 @@ class reduce {
       } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
         result = result ^ a[i];
       } else {
-        Kokkos::abort("Unsupported reduce operation");
+        result = BinaryOperation()(result, a[i]);
       }
     }
     return result;
@@ -524,7 +534,7 @@ class masked_reduce {
  public:
   template <typename T, typename U, typename MaskType>
   auto on_host(T const& a, U const& identity, MaskType mask) const {
-    return Kokkos::Experimental::reduce(a, mask, identity, BinaryOperation());
+    return Kokkos::Experimental::reduce(a, mask, BinaryOperation(), identity);
   }
   template <typename T, typename U, typename MaskType>
   auto on_host_serial(T const& a, U const& identity, MaskType mask) const {
@@ -532,7 +542,7 @@ class masked_reduce {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
-    U result      = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
+    U result      = identity;
     for (std::size_t i = 0; i < v.size(); ++i) {
       if (m[i]) result = BinaryOperation()(result, v[i]);
     }
@@ -542,7 +552,7 @@ class masked_reduce {
   template <typename T, typename U, typename MaskType>
   KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& identity,
                                         MaskType mask) const {
-    return Kokkos::Experimental::reduce(a, mask, identity, BinaryOperation());
+    return Kokkos::Experimental::reduce(a, mask, BinaryOperation(), identity);
   }
   template <typename T, typename U, typename MaskType>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a, U const& identity,
@@ -551,7 +561,7 @@ class masked_reduce {
     auto w        = Kokkos::Experimental::where(mask, a);
     auto const& v = w.impl_get_value();
     auto const& m = w.impl_get_mask();
-    U result      = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
+    U result      = identity;
     for (std::size_t i = 0; i < v.size(); ++i) {
       if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
         if (m[i]) result = result + v[i];
@@ -564,7 +574,7 @@ class masked_reduce {
       } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
         if (m[i]) result = result ^ v[i];
       } else {
-        Kokkos::abort("Unsupported reduce operation");
+        if (m[i]) result = BinaryOperation()(result, v[i]);
       }
     }
     return result;
