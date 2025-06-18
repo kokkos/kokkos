@@ -223,10 +223,13 @@ endmacro()
 function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   cmake_parse_arguments(PARSE "PLAIN_STYLE" "" "" ${ARGN})
 
+  #allow multiple languages to be used downstream
+  set(Kokkos_LANGUAGES "${KOKKOS_COMPILE_LANGUAGE}")
   if(Kokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES)
-    set(Kokkos_LANGUAGES "${KOKKOS_COMPILE_LANGUAGE},CXX")
-  else()
-    set(Kokkos_LANGUAGES "${KOKKOS_COMPILE_LANGUAGE}")
+    if(Kokkos_ENABLE_HIP)
+      set(Kokkos_LANGUAGES "HIP,CXX")
+    elseif(Kokkos_ENABLE_CUDA)
+      set(Kokkos_LANGUAGES "CUDA,CXX")
   endif()
 
   if((NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE) AND (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.18"))
