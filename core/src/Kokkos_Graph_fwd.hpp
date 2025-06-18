@@ -35,6 +35,9 @@ template <class ExecutionSpace, class Kernel = TypeErasedTag,
           class Predecessor = TypeErasedTag>
 class GraphNodeRef;
 
+template <class Worktag = void>
+struct ThenPolicy;
+
 }  // end namespace Experimental
 }  // end namespace Kokkos
 

@@ -18,38 +18,48 @@
 #define KOKKOS_IMPL_KOKKOS_GRAPHNODETHENIMPL_HPP
 
 #include <Kokkos_ExecPolicy.hpp>
-#include <impl/Kokkos_GraphImpl_fwd.hpp>
+#include <impl/Kokkos_GraphNodeThenPolicy.hpp>
 
 namespace Kokkos::Impl {
-
 // Helper for the 'then', such that the user can indeed pass a callable that
-// takes no argument.
-template <typename Functor>
+// takes no index.
+template <typename Functor, typename WorkTag>
 struct ThenWrapper {
   Functor functor;
-  template <typename T>
-  KOKKOS_FUNCTION void operator()(const T) const {
-    functor();
+
+  template <typename Ignored, typename... Args>
+  KOKKOS_FUNCTION void operator()(Ignored, Args...) const {
+    static_assert(sizeof...(Args) <= 1);
+    if constexpr (sizeof...(Args) == 0) {
+      functor();
+    } else {
+      static_assert(is_tag_class_v<Ignored>);
+      functor(Ignored{});
+    }
   }
 };
 
-template <typename ExecutionSpace, typename Functor>
+template <typename ExecutionSpace, typename Policy, typename Functor>
 struct GraphNodeThenImpl
     : public GraphNodeKernelImpl<
           ExecutionSpace,
           Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag,
-                              Kokkos::LaunchBounds<1>>,
-          ThenWrapper<Functor>, ParallelForTag> {
-  using policy_t  = Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag,
-                                       Kokkos::LaunchBounds<1>>;
-  using base_t    = GraphNodeKernelImpl<ExecutionSpace, policy_t,
-                                     ThenWrapper<Functor>, ParallelForTag>;
-  using wrapper_t = ThenWrapper<Functor>;
+                              Kokkos::LaunchBounds<1>,
+                              typename Policy::work_tag>,
+          ThenWrapper<Functor, typename Policy::work_tag>, ParallelForTag> {
+  using inner_policy_t =
+      Kokkos::RangePolicy<ExecutionSpace, IsGraphKernelTag,
+                          Kokkos::LaunchBounds<1>, typename Policy::work_tag>;
+  using wrapper_t = ThenWrapper<Functor, typename Policy::work_tag>;
+  using base_t = GraphNodeKernelImpl<ExecutionSpace, inner_policy_t, wrapper_t,
+                                     ParallelForTag>;
 
   template <typename Label, typename T>
-  GraphNodeThenImpl(Label&& label_, const ExecutionSpace& exec, T&& functor)
-      : base_t(std::forward<Label>(label_), exec,
-               wrapper_t{std::forward<T>(functor)}, policy_t(exec, 0, 1)) {}
+  GraphNodeThenImpl(Label&& label, const ExecutionSpace& exec, Policy,
+                    T&& functor)
+      : base_t(std::forward<Label>(label), exec,
+               wrapper_t{std::forward<T>(functor)},
+               inner_policy_t(exec, 0, 1)) {}
 };
 
 }  // namespace Kokkos::Impl
