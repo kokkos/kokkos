@@ -1117,7 +1117,7 @@ struct ClassNoShmemSizeFunction {
 
       ASSERT_EQ(error, 0);
     }
-  };
+  }
 };
 
 template <class ExecSpace, class ScheduleType>
@@ -1186,7 +1186,7 @@ struct ClassWithShmemSizeFunction {
 
       ASSERT_EQ(error, 0);
     }
-  };
+  }
 
   unsigned team_shmem_size(int team_size) const {
     const int per_team0 =
@@ -1918,21 +1918,21 @@ class TestTeamNestedReducerFunctor {
       return Kokkos::TeamThreadRange(member, count);
     };
     run_test_team_policies(policy);
-  };
+  }
 
   void run_test_thread_vector() {
     auto policy = KOKKOS_LAMBDA(member_type const &member, index_type count) {
       return Kokkos::ThreadVectorRange(member, count);
     };
     run_test_team_policies(policy);
-  };
+  }
 
   void run_test_team_vector() {
     auto policy = KOKKOS_LAMBDA(member_type const &member, index_type count) {
       return Kokkos::TeamVectorRange(member, count);
     };
     run_test_team_policies(policy);
-  };
+  }
 
   template <typename Policy>
   void run_test_team_policies(Policy &policy) {

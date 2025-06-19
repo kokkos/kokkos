@@ -679,10 +679,10 @@ struct std_algorithms_test : public ::testing::Test {
 
 struct CustomValueType {
   KOKKOS_INLINE_FUNCTION
-  CustomValueType(){};
+  CustomValueType() {}
 
   KOKKOS_INLINE_FUNCTION
-  CustomValueType(value_type val) : value(val){};
+  CustomValueType(value_type val) : value(val) {}
 
   KOKKOS_INLINE_FUNCTION
   CustomValueType(const CustomValueType& other) { this->value = other.value; }

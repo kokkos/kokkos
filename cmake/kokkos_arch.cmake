@@ -150,6 +150,7 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
   set(COMMON_WARNINGS
       "-Wall"
       "-Wextra"
+      "-Wextra-semi"
       "-Wunused-parameter"
       "-Wshadow"
       "-pedantic"
@@ -170,6 +171,11 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
     if(KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
       list(REMOVE_ITEM COMMON_WARNINGS "-Wtype-limits")
     endif()
+  endif()
+
+  # nvcc raises internal warnings about extra semicolons
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+    list(REMOVE_ITEM COMMON_WARNINGS "-Wextra-semi")
   endif()
 
   if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
