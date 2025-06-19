@@ -14,25 +14,33 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SERIAL_ZEROMEMSET_HPP
-#define KOKKOS_SERIAL_ZEROMEMSET_HPP
+#ifndef KOKKOS_THREADS_ZEROMEMSET_HPP
+#define KOKKOS_THREADS_ZEROMEMSET_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Threads/Kokkos_Threads.hpp>
+#include <Threads/Kokkos_Threads_Instance.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
-#include <Serial/Kokkos_Serial.hpp>
-
-#include <type_traits>
-#include <cstring>
 
 namespace Kokkos {
 namespace Impl {
 
 template <>
-struct ZeroMemset<Serial> {
-  ZeroMemset(const Serial&, void* dst, size_t cnt) { std::memset(dst, 0, cnt); }
+struct ZeroMemset<Threads> {
+  ZeroMemset(const Threads& exec_space, void* dst, size_t cnt) {
+    if (cnt < 0x20000ul) {  // 2^17
+      std::memset(dst, 0, cnt);
+    } else {
+      Kokkos::parallel_for(
+          "Kokkos::ZeroMemset via parallel_for",
+          Kokkos::RangePolicy<Kokkos::Threads, Kokkos::IndexType<size_t>>(
+              exec_space, 0, cnt),
+          KOKKOS_LAMBDA(size_t i) { static_cast<char*>(dst)[i] = 0; });
+    }
+  }
 };
 
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // !defined(KOKKOS_SERIAL_ZEROMEMSET_HPP)
+#endif  // KOKKOS_THREADS_ZEROMEMSET_HPP

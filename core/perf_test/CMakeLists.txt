@@ -108,9 +108,6 @@ set(BENCHMARK_SOURCES
     PerfTest_ViewFill_7.cpp
     PerfTest_ViewFill_8.cpp
     PerfTest_ViewFill_Raw.cpp
-    PerfTest_ViewFirstTouch_Initialize.cpp
-    PerfTest_ViewFirstTouch_ParallelFor.cpp
-    PerfTest_ViewFirstTouch_DeepCopy.cpp
     PerfTest_ViewResize_123.cpp
     PerfTest_ViewResize_45.cpp
     PerfTest_ViewResize_6.cpp
@@ -129,6 +126,11 @@ endif()
 kokkos_add_benchmark(PerformanceTest_Benchmark SOURCES ${BENCHMARK_SOURCES})
 
 kokkos_add_benchmark(Benchmark_Atomic_MinMax SOURCES test_atomic_minmax_simple.cpp)
+
+kokkos_add_benchmark(
+  PerformanceTest_ViewFirstTouch SOURCES PerfTest_ViewFirstTouch_Initialize.cpp PerfTest_ViewFirstTouch_ParallelFor.cpp
+  PerfTest_ViewFirstTouch_DeepCopy.cpp
+)
 
 # FIXME_NVHPC
 if(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)

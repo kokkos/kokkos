@@ -14,7 +14,24 @@
 //
 //@HEADER
 
-#include "PerfTest_ViewFirstTouch.hpp"
+#include "Benchmark_Context.hpp"
+
+template <typename DataType>
+void ViewFirstTouch_DeepCopy(benchmark::State& state) {
+  const int N               = state.range(0);
+  const DataType init_value = static_cast<DataType>(state.range(1));
+  using ViewType            = Kokkos::View<DataType*>;
+
+  for (auto _ : state) {
+    Kokkos::fence();
+
+    ViewType v_a("A", N);
+    Kokkos::fence();
+    Kokkos::Timer timer;
+    Kokkos::deep_copy(v_a, init_value);
+    KokkosBenchmark::report_results(state, v_a, 2, timer.seconds());
+  }
+}
 
 namespace Test {
 

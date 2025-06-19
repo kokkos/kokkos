@@ -14,7 +14,27 @@
 //
 //@HEADER
 
-#include "PerfTest_ViewFirstTouch.hpp"
+#include "Benchmark_Context.hpp"
+
+template <typename DataType>
+void ViewFirstTouch_ParallelFor(benchmark::State& state) {
+  const int N    = state.range(0);
+  using ViewType = Kokkos::View<DataType*>;
+
+  for (auto _ : state) {
+    Kokkos::fence();
+
+    ViewType v_a("A", N);
+    Kokkos::fence();
+    Kokkos::Timer timer;
+    Kokkos::parallel_for(
+        "ViewFirstTouch_ParallelFor", N, KOKKOS_LAMBDA(const int i) {
+          v_a(i) = static_cast<DataType>(2) * v_a(i) + static_cast<DataType>(1);
+        });
+    Kokkos::fence();
+    KokkosBenchmark::report_results(state, v_a, 2, timer.seconds());
+  }
+}
 
 namespace Test {
 
