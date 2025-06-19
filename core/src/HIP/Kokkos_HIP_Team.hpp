@@ -393,17 +393,19 @@ struct TeamVectorRangeBoundariesStruct<iType, HIPTeamMember> {
 template <typename iType>
 struct ThreadVectorRangeBoundariesStruct<iType, HIPTeamMember> {
   using index_type = iType;
+  const HIPTeamMember& member;
   const index_type start;
   const index_type end;
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(const HIPTeamMember, index_type arg_count)
-      : start(static_cast<index_type>(0)), end(arg_count) {}
+  ThreadVectorRangeBoundariesStruct(const HIPTeamMember& arg_thread,
+                                    index_type arg_count)
+      : member(arg_thread), start(static_cast<index_type>(0)), end(arg_count) {}
 
   KOKKOS_INLINE_FUNCTION
-  ThreadVectorRangeBoundariesStruct(const HIPTeamMember, index_type arg_begin,
-                                    index_type arg_end)
-      : start(arg_begin), end(arg_end) {}
+  ThreadVectorRangeBoundariesStruct(const HIPTeamMember& arg_thread,
+                                    index_type arg_begin, index_type arg_end)
+      : member(arg_thread), start(arg_begin), end(arg_end) {}
 };
 
 }  // namespace Impl

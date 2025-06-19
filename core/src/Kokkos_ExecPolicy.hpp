@@ -876,17 +876,20 @@ struct ThreadVectorRangeBoundariesStruct {
   const index_type start;
   const index_type end;
   enum { increment = 1 };
+  const TeamMemberType& member;
 
   KOKKOS_INLINE_FUNCTION
-  constexpr ThreadVectorRangeBoundariesStruct(
-      const TeamMemberType, const index_type& arg_count) noexcept
-      : start(static_cast<index_type>(0)), end(arg_count) {}
+  ThreadVectorRangeBoundariesStruct(const TeamMemberType& arg_thread,
+                                    const index_type& arg_count) noexcept
+      : start(static_cast<index_type>(0)), end(arg_count), member(arg_thread) {}
 
   KOKKOS_INLINE_FUNCTION
-  constexpr ThreadVectorRangeBoundariesStruct(
-      const TeamMemberType, const index_type& arg_begin,
-      const index_type& arg_end) noexcept
-      : start(static_cast<index_type>(arg_begin)), end(arg_end) {}
+  ThreadVectorRangeBoundariesStruct(const TeamMemberType& arg_thread,
+                                    const index_type& arg_begin,
+                                    const index_type& arg_end) noexcept
+      : start(static_cast<index_type>(arg_begin)),
+        end(arg_end),
+        member(arg_thread) {}
 };
 
 template <class TeamMemberType>
