@@ -373,7 +373,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), repeat_chain) {
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
-#ifdef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+#ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT  // FIXME_SYCL
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
     GTEST_SKIP() << "The SYCL implementation always tries to allocate memory "
                     "for parallel-reduce which doesn't work reliably with the "
