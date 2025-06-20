@@ -127,9 +127,15 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
   # to various compiler bugs. So we will disable it here
   # Similarly GCC 8 and 9 have excessive memory usage so we default to legacy view, though the
   # user can enable the new implementation if they wish
+  # CUDA 12.9 has a bug that causes it to segfault when mdspan-based view is used:
+  #   see https://github.com/kokkos/kokkos/issues/8126
   if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9)
     set(VIEW_LEGACY_DEFAULT ON)
   elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
+    set(VIEW_LEGACY_DEFAULT ON)
+  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.9
+         AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 13
+  )
     set(VIEW_LEGACY_DEFAULT ON)
   else()
     set(VIEW_LEGACY_DEFAULT OFF)
