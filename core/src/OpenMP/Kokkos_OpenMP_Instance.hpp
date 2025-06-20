@@ -53,8 +53,7 @@ struct OpenMPTraits {
 
 class OpenMPInternal {
  private:
-  OpenMPInternal(int arg_pool_size)
-      : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {
+  OpenMPInternal(int arg_pool_size) : m_pool_size{arg_pool_size}, m_pool() {
     // guard pushing to all_instances
     {
       std::scoped_lock lock(all_instances_mutex);
@@ -71,7 +70,6 @@ class OpenMPInternal {
   bool m_initialized = false;
 
   int m_pool_size;
-  int m_level;
 
   HostThreadTeamData* m_pool[OpenMPTraits::MAX_THREAD_COUNT];
 
@@ -93,15 +91,23 @@ class OpenMPInternal {
   void resize_thread_data(size_t pool_reduce_bytes, size_t team_reduce_bytes,
                           size_t team_shared_bytes, size_t thread_local_bytes);
 
+  bool execute_in_serial() const {
+#if (!defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_GNU >= 1110) && \
+    _OPENMP >= 201511
+    bool is_nested = omp_get_max_active_levels() > 1;
+#else
+    bool is_nested = static_cast<bool>(omp_get_nested());
+#endif
+    return (0 < omp_get_level() && !(is_nested && (omp_get_level() == 1)));
+  }
+
   HostThreadTeamData* get_thread_data() const noexcept {
-    return m_pool[m_level == omp_get_level() ? 0 : omp_get_thread_num()];
+    return m_pool[execute_in_serial() ? 0 : omp_get_thread_num()];
   }
 
   HostThreadTeamData* get_thread_data(int i) const noexcept {
     return m_pool[i];
   }
-
-  int get_level() const { return m_level; }
 
   bool is_initialized() const { return m_initialized; }
 
@@ -116,16 +122,7 @@ class OpenMPInternal {
 };
 
 inline bool execute_in_serial(OpenMP const& space = OpenMP()) {
-// The default value returned by `omp_get_max_active_levels` with gcc version
-// lower than 11.1.0 is 2147483647 instead of 1.
-#if (!defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_GNU >= 1110) && \
-    _OPENMP >= 201511
-  bool is_nested = omp_get_max_active_levels() > 1;
-#else
-  bool is_nested = static_cast<bool>(omp_get_nested());
-#endif
-  return (space.impl_internal_space_instance()->get_level() < omp_get_level() &&
-          !(is_nested && (omp_get_level() == 1)));
+  return space.impl_internal_space_instance()->execute_in_serial();
 }
 
 }  // namespace Impl

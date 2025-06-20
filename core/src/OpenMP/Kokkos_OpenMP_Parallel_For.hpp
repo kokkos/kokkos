@@ -338,7 +338,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     if (execute_in_serial(m_policy.space())) {
       ParallelFor::template exec_team<WorkTag>(
-          m_functor, *(m_instance->get_thread_data()), 0,
+          m_functor, *(m_instance->get_thread_data(0)), 0,
           m_policy.league_size(), m_policy.league_size());
 
       return;
