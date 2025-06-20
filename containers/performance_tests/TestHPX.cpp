@@ -27,6 +27,7 @@
 
 #include <TestDynRankView.hpp>
 #include <TestScatterView.hpp>
+#include <TestDualView.hpp>
 
 #include <iomanip>
 #include <sstream>
@@ -39,6 +40,12 @@ TEST(TEST_CATEGORY, dynrankview_perf) {
   std::cout << "HPX" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
   test_dynrankview_op_perf<Kokkos::Experimental::HPX>(8192);
+}
+
+TEST(TEST_CATEGORY, dualview_perf) {
+  std::cout << "HPX" << std::endl;
+  std::cout << " DualView Access Performance " << std::endl;
+  test_dualview<size_t, Kokkos::Experimental::HPX>();
 }
 
 TEST(TEST_CATEGORY, global_2_local) {
