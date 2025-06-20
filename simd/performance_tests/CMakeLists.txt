@@ -1,5 +1,3 @@
-# FIXME: The following logic should be moved from here and also from `core/perf_test/CMakeLists.txt` and
-# `simd/performance_tests/CMakeLists.txt` to the root `CMakeLists.txt` in the form of a macro
 # Find or download google/benchmark library
 find_package(benchmark QUIET 1.5.6)
 if(benchmark_FOUND)
@@ -30,23 +28,21 @@ else()
   target_compile_options(benchmark_main PRIVATE -w)
 endif()
 
-# FIXME: This function should be moved from here and also from `core/perf_test/CMakeLists.txt` to
-# the root `CMakeLists.txt`
-# FIXME: Could NAME be a one_value_keyword specified in cmake_parse_arguments?
-function(KOKKOS_ADD_BENCHMARK NAME)
-  cmake_parse_arguments(BENCHMARK "" "" "SOURCES" ${ARGN})
-  if(DEFINED BENCHMARK_UNPARSED_ARGUMENTS)
-    message(WARNING "Unexpected arguments when adding a benchmark: " ${BENCHMARK_UNPARSED_ARGUMENTS})
-  endif()
+kokkos_include_directories(${CMAKE_CURRENT_BINARY_DIR})
+kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/include)
+kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR}/../../core/perf_test)
 
-  set(BENCHMARK_NAME Kokkos_${NAME})
-  # FIXME: BenchmarkMain.cpp and Benchmark_Context.cpp should be moved to a common location from which
-  # they can be used by all performance tests.
-  list(APPEND BENCHMARK_SOURCES ../../core/perf_test/BenchmarkMain.cpp ../../core/perf_test/Benchmark_Context.cpp)
+# We cannot use the kokkos_add_benchmark function defined in core/perf_test/CMakeLists.txt
+# because we need our own BenchmarMain.cpp file in order to register the benchmarks at runtime.
+foreach(BENCH_TYPE Host Device)
+  set(BENCHMARK_NAME Kokkos_Simd${BENCH_TYPE}PerformanceTest)
+  set(BENCHMARK_SOURCES BenchmarkMain.cpp ../../core/perf_test/Benchmark_Context.cpp)
 
   add_executable(${BENCHMARK_NAME} ${BENCHMARK_SOURCES})
   target_link_libraries(${BENCHMARK_NAME} PRIVATE benchmark::benchmark Kokkos::kokkos impl_git_version)
   target_include_directories(${BENCHMARK_NAME} SYSTEM PRIVATE ${benchmark_SOURCE_DIR}/include)
+  string(TOUPPER "KOKKOS_IMPL_SIMD_${BENCH_TYPE}_PERFTEST" BENCH_TYPE_MACRO)
+  target_compile_definitions(${BENCHMARK_NAME} PRIVATE ${BENCH_TYPE_MACRO})
 
   # FIXME: This alone will not work. It might need an architecture and standard which need to be defined on target level.
   # It will potentially go away with #7582.
@@ -58,6 +54,4 @@ function(KOKKOS_ADD_BENCHMARK NAME)
   set(BENCHMARK_ARGS --benchmark_counters_tabular=true --benchmark_out=${BENCHMARK_NAME}_${BENCHMARK_TIME}.json)
 
   add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
-endfunction()
-
-kokkos_add_benchmark(PerformanceTest_InclusiveScan SOURCES test_inclusive_scan.cpp)
+endforeach()
