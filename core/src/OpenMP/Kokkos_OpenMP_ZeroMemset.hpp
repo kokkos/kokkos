@@ -14,25 +14,30 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_SERIAL_ZEROMEMSET_HPP
-#define KOKKOS_SERIAL_ZEROMEMSET_HPP
+#ifndef KOKKOS_OPENMP_ZEROMEMSET_HPP
+#define KOKKOS_OPENMP_ZEROMEMSET_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <OpenMP/Kokkos_OpenMP.hpp>
+#include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
-#include <Serial/Kokkos_Serial.hpp>
-
-#include <type_traits>
-#include <cstring>
 
 namespace Kokkos {
 namespace Impl {
 
 template <>
-struct ZeroMemset<Serial> {
-  ZeroMemset(const Serial&, void* dst, size_t cnt) { std::memset(dst, 0, cnt); }
+struct ZeroMemset<OpenMP> {
+  ZeroMemset(const OpenMP& exec_space, void* dst, size_t cnt) {
+    constexpr size_t host_memset_limit = 0x20000ul;  // 2^17
+    if (cnt < host_memset_limit) {
+      std::memset(dst, 0, cnt);
+    } else {
+      hostspace_parallel_zeromemset(exec_space, dst, cnt);
+    }
+  }
 };
 
 }  // namespace Impl
 }  // namespace Kokkos
 
-#endif  // !defined(KOKKOS_SERIAL_ZEROMEMSET_HPP)
+#endif  // KOKKOS_OPENMP_ZEROMEMSET_HPP

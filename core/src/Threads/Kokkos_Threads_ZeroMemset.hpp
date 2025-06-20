@@ -14,29 +14,30 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
-#define KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
+#ifndef KOKKOS_THREADS_ZEROMEMSET_HPP
+#define KOKKOS_THREADS_ZEROMEMSET_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_HostSpace.hpp>
+#include <Threads/Kokkos_Threads.hpp>
+#include <Threads/Kokkos_Threads_Instance.hpp>
 #include <impl/Kokkos_ZeroMemset_fwd.hpp>
 
 namespace Kokkos {
 namespace Impl {
 
 template <>
-struct ZeroMemset<HostSpace::execution_space> {
-  ZeroMemset(const HostSpace::execution_space& exec, void* dst, size_t cnt) {
-    // Host spaces, except for HPX, are synchronous and we need to fence for HPX
-    // since we can't properly enqueue a std::memset otherwise.
-    // We can't use exec.fence() directly since we don't have a full definition
-    // of HostSpace here.
-    hostspace_fence(exec);
-    std::memset(dst, 0, cnt);
+struct ZeroMemset<Threads> {
+  ZeroMemset(const Threads& exec_space, void* dst, size_t cnt) {
+    constexpr size_t host_memset_limit = 0x20000ul;  // 2^17
+    if (cnt < host_memset_limit) {
+      std::memset(dst, 0, cnt);
+    } else {
+      hostspace_parallel_zeromemset(exec_space, dst, cnt);
+    }
   }
 };
 
-}  // end namespace Impl
-}  // end namespace Kokkos
+}  // namespace Impl
+}  // namespace Kokkos
 
-#endif  // KOKKOS_HOSTSPACE_ZEROMEMSET_HPP
+#endif  // KOKKOS_THREADS_ZEROMEMSET_HPP
