@@ -44,6 +44,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   using Member       = typename Policy::member_type;
   using WorkTag      = typename Policy::work_tag;
   using LaunchBounds = typename Policy::launch_bounds;
+  using LoopUnroll   = typename Policy::loop_unroll;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -70,22 +71,32 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   Policy const& get_policy() const { return m_policy; }
 
   inline __device__ void operator()() const {
-    const auto work_stride = Member(blockDim.y) * gridDim.x;
-    const Member work_end  = m_policy.end();
+    constexpr auto loop_unroll_factor = Member(LoopUnroll::unroll_factor);
+    const auto work_stride            = Member(blockDim.y) * gridDim.x;
+    const Member work_end             = m_policy.end();
 
     for (Member iwork = m_policy.begin() + threadIdx.y +
                         static_cast<Member>(blockDim.y) * blockIdx.x;
          iwork < work_end;
-         iwork = iwork < static_cast<Member>(work_end - work_stride)
-                     ? iwork + work_stride
+         iwork = iwork < static_cast<Member>(work_end -
+                                             work_stride * loop_unroll_factor)
+                     ? iwork + work_stride * loop_unroll_factor
                      : work_end) {
-      this->template exec_range<WorkTag>(iwork);
+// Unroll the loop
+#pragma unroll
+      for (Member i = 0;
+           i < work_stride * loop_unroll_factor && iwork + i < work_end;
+           i += work_stride) {
+        this->template exec_range<WorkTag>(iwork + i);
+      }
     }
   }
 
   inline void execute() const {
-    const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
-
+    constexpr typename Policy::index_type loop_unroll_factor =
+        LoopUnroll::unroll_factor;
+    const typename Policy::index_type nwork =
+        (m_policy.end() - m_policy.begin()) / loop_unroll_factor;
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
             m_policy.space().impl_internal_space_instance());
