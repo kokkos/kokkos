@@ -62,6 +62,39 @@
 
 namespace Kokkos {
 
+namespace {
+
+template <typename ViewType, typename... P, typename Property, typename... Args>
+auto allocate_with_property_if_compatible(
+    const Impl::ViewCtorProp<P...> &alloc_prop,
+    [[maybe_unused]] const Property &property, Args &&...args) {
+  using alloc_prop_t = std::decay_t<decltype(alloc_prop)>;
+
+  if constexpr (!(std::is_same_v<Property, Impl::SequentialHostInit_t> ||
+                  std::is_same_v<Property, Impl::WithoutInitializing_t>))
+    return ViewType(Impl::with_properties_if_unset(alloc_prop, property),
+                    std::forward<Args>(args)...);
+  else {
+    if constexpr (std::is_same_v<Property, Impl::WithoutInitializing_t>) {
+      if constexpr (!alloc_prop_t::sequential_host_init)
+        return ViewType(Impl::with_properties_if_unset(alloc_prop, property),
+                        std::forward<Args>(args)...);
+      else
+        return ViewType(alloc_prop, std::forward<Args>(args)...);
+    }
+    // SequentialHostInit path
+    else {
+      if constexpr (SpaceAccessibility<typename ViewType::memory_space,
+                                       HostSpace>::accessible)
+        return ViewType(Impl::with_properties_if_unset(alloc_prop, property),
+                        std::forward<Args>(args)...);
+      else
+        return ViewType(alloc_prop, std::forward<Args>(args)...);
+    }
+  }
+}
+}  // namespace
+
 enum : unsigned { UnorderedMapInvalidIndex = ~0u };
 
 /// \brief First element of the return value of UnorderedMap::insert().
