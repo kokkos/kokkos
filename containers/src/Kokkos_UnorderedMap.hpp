@@ -62,6 +62,39 @@
 
 namespace Kokkos {
 
+namespace {
+
+template <typename ViewType, typename... P, typename Property, typename... Args>
+auto allocate_with_property_if_compatible(
+    const Impl::ViewCtorProp<P...> &alloc_prop,
+    [[maybe_unused]] const Property &property, Args &&...args) {
+  using alloc_prop_t = std::decay_t<decltype(alloc_prop)>;
+
+  if constexpr (!(std::is_same_v<Property, Impl::SequentialHostInit_t> ||
+                  std::is_same_v<Property, Impl::WithoutInitializing_t>))
+    return ViewType(Impl::with_properties_if_unset(alloc_prop, property),
+                    std::forward<Args>(args)...);
+  else {
+    if constexpr (std::is_same_v<Property, Impl::WithoutInitializing_t>) {
+      if constexpr (!alloc_prop_t::sequential_host_init)
+        return ViewType(Impl::with_properties_if_unset(alloc_prop, property),
+                        std::forward<Args>(args)...);
+      else
+        return ViewType(alloc_prop, std::forward<Args>(args)...);
+    }
+    // SequentialHostInit path
+    else {
+      if constexpr (SpaceAccessibility<typename ViewType::memory_space,
+                                       HostSpace>::accessible)
+        return ViewType(Impl::with_properties_if_unset(alloc_prop, property),
+                        std::forward<Args>(args)...);
+      else
+        return ViewType(alloc_prop, std::forward<Args>(args)...);
+    }
+  }
+}
+}  // namespace
+
 enum : unsigned { UnorderedMapInvalidIndex = ~0u };
 
 /// \brief First element of the return value of UnorderedMap::insert().
@@ -331,7 +364,11 @@ class UnorderedMap {
   UnorderedMap(const Impl::ViewCtorProp<P...> &arg_prop,
                size_type capacity_hint = 0, hasher_type hasher = hasher_type(),
                equal_to_type equal_to = equal_to_type())
-      : m_bounded_insert(true), m_hasher(hasher), m_equal_to(equal_to) {
+      : m_bounded_insert(true),
+        m_hasher(hasher),
+        m_equal_to(equal_to),
+        m_SequentialHostInit(
+            std::decay_t<decltype(arg_prop)>::sequential_host_init) {
     if (!is_insertable_map) {
       Kokkos::Impl::throw_runtime_exception(
           "Cannot construct a non-insertable (i.e. const key_type) "
@@ -345,13 +382,17 @@ class UnorderedMap {
     static_assert(
         !alloc_prop_t::has_pointer,
         "Allocation properties should not contain the 'pointer' property.");
+    static_assert(
+        alloc_prop_t::sequential_host_init &&
+            (SpaceAccessibility<
+                HostSpace, typename execution_space::memory_space>::accessible),
+        "SequentialHostInit only allowed if the UnorderedMap's MemorySpace is "
+        "accesible to the host.");
 
     /// Update allocation properties with 'label' and 'without initializing'
     /// properties.
     const auto prop_copy =
         Impl::with_properties_if_unset(arg_prop, std::string("UnorderedMap"));
-    const auto prop_copy_noinit =
-        Impl::with_properties_if_unset(prop_copy, Kokkos::WithoutInitializing);
 
     //! Initialize member views.
     m_size = shared_size_t(Kokkos::view_alloc(
@@ -362,14 +403,15 @@ class UnorderedMap {
         bitset_type(Kokkos::Impl::append_to_label(prop_copy, " - bitset"),
                     calculate_capacity(capacity_hint));
 
-    m_hash_lists = size_type_view(
-        Kokkos::Impl::append_to_label(prop_copy_noinit, " - hash list"),
-        Impl::find_hash_size(capacity()));
+    m_hash_lists = allocate_with_property_if_compatible<size_type_view>(
+        Kokkos::Impl::append_to_label(prop_copy, " - hash list"),
+        WithoutInitializing, Impl::find_hash_size(capacity()));
 
-    m_next_index = size_type_view(
-        Kokkos::Impl::append_to_label(prop_copy_noinit, " - next index"),
-        capacity() + 1);  // +1 so that the *_at functions can always return a
-                          // valid reference
+    m_next_index = allocate_with_property_if_compatible<size_type_view>(
+        Kokkos::Impl::append_to_label(prop_copy, " - next index"),
+        WithoutInitializing,
+        capacity() + 1);  // +1 so that the *_at functions can always return
+                          // a valid reference
 
     m_keys = key_type_view(Kokkos::Impl::append_to_label(prop_copy, " - keys"),
                            capacity());
@@ -446,7 +488,12 @@ class UnorderedMap {
     requested_capacity =
         (requested_capacity < curr_size) ? curr_size : requested_capacity;
 
-    insertable_map_type tmp(requested_capacity, m_hasher, m_equal_to);
+    auto tmp = m_SequentialHostInit
+                   ? allocate_with_property_if_compatible<insertable_map_type>(
+                         view_alloc(), SequentialHostInit, requested_capacity,
+                         m_hasher, m_equal_to)
+                   : insertable_map_type(view_alloc(), requested_capacity,
+                                         m_hasher, m_equal_to);
 
     if (curr_size) {
       tmp.m_bounded_insert = false;
@@ -807,7 +854,8 @@ class UnorderedMap {
         m_next_index(src.m_next_index),
         m_keys(src.m_keys),
         m_values(src.m_values),
-        m_scalars(src.m_scalars) {}
+        m_scalars(src.m_scalars),
+        m_SequentialHostInit(src.m_SequentialHostInit) {}
 
   template <typename SKey, typename SValue>
   std::enable_if_t<
@@ -815,16 +863,17 @@ class UnorderedMap {
                                   SValue>::value,
       declared_map_type &>
   operator=(UnorderedMap<SKey, SValue, Device, Hasher, EqualTo> const &src) {
-    m_bounded_insert    = src.m_bounded_insert;
-    m_hasher            = src.m_hasher;
-    m_equal_to          = src.m_equal_to;
-    m_size              = src.m_size;
-    m_available_indexes = src.m_available_indexes;
-    m_hash_lists        = src.m_hash_lists;
-    m_next_index        = src.m_next_index;
-    m_keys              = src.m_keys;
-    m_values            = src.m_values;
-    m_scalars           = src.m_scalars;
+    m_bounded_insert     = src.m_bounded_insert;
+    m_hasher             = src.m_hasher;
+    m_equal_to           = src.m_equal_to;
+    m_size               = src.m_size;
+    m_available_indexes  = src.m_available_indexes;
+    m_hash_lists         = src.m_hash_lists;
+    m_next_index         = src.m_next_index;
+    m_keys               = src.m_keys;
+    m_values             = src.m_values;
+    m_scalars            = src.m_scalars;
+    m_SequentialHostInit = src.m_SequentialHostInit;
     return *this;
   }
 
@@ -850,12 +899,14 @@ class UnorderedMap {
       UnorderedMap<SKey, SValue, SDevice, Hasher, EqualTo> const &src) {
     insertable_map_type tmp;
 
-    tmp.m_bounded_insert    = src.m_bounded_insert;
-    tmp.m_hasher            = src.m_hasher;
-    tmp.m_equal_to          = src.m_equal_to;
-    tmp.m_size()            = src.m_size();
-    tmp.m_available_indexes = bitset_type(src.capacity());
-    tmp.m_hash_lists        = size_type_view(
+    tmp.m_bounded_insert     = src.m_bounded_insert;
+    tmp.m_hasher             = src.m_hasher;
+    tmp.m_equal_to           = src.m_equal_to;
+    tmp.m_size()             = src.m_size();
+    tmp.m_SequentialHostInit = src.m_SequentialHostInit;
+    tmp.m_available_indexes  = bitset_type(src.capacity());
+
+    tmp.m_hash_lists = size_type_view(
         view_alloc(WithoutInitializing, "UnorderedMap hash list"),
         src.m_hash_lists.extent(0));
     tmp.m_next_index = size_type_view(
@@ -864,9 +915,14 @@ class UnorderedMap {
     tmp.m_keys =
         key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
                       src.m_keys.extent(0));
-    tmp.m_values =
-        value_type_view(view_alloc(WithoutInitializing, "UnorderedMap values"),
-                        src.m_values.extent(0));
+    tmp.m_values = src.m_SequentialHostInit
+                       ? allocate_with_property_if_compatible<value_type_view>(
+                             view_alloc("UnorderedMap values"),
+                             SequentialHostInit, src.m_values.extent(0))
+                       : allocate_with_property_if_compatible<value_type_view>(
+                             view_alloc("UnorderedMap values"),
+                             WithoutInitializing, src.m_values.extent(0));
+
     tmp.m_scalars = scalars_view("UnorderedMap scalars");
 
     *this = tmp;
@@ -966,6 +1022,7 @@ class UnorderedMap {
   key_type_view m_keys;
   value_type_view m_values;
   scalars_view m_scalars;
+  bool m_SequentialHostInit = false;
 
   template <typename KKey, typename VValue, typename DDevice, typename HHash,
             typename EEqualTo>
