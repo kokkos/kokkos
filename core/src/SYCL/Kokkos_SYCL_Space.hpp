@@ -66,6 +66,8 @@ class SYCLDeviceUSMSpace {
 
   static constexpr const char* name() { return "SYCLDeviceUSM"; }
 
+  sycl::queue impl_get_queue() const { return m_queue; }
+
  private:
   sycl::queue m_queue;
 };
@@ -107,6 +109,8 @@ class SYCLSharedUSMSpace {
 
   static constexpr const char* name() { return "SYCLSharedUSM"; }
 
+  sycl::queue impl_get_queue() const { return m_queue; }
+
  private:
   sycl::queue m_queue;
 };
@@ -147,6 +151,8 @@ class SYCLHostUSMSpace {
                   const size_t arg_logical_size = 0) const;
 
   static constexpr const char* name() { return "SYCLHostUSM"; }
+
+  sycl::queue impl_get_queue() const { return m_queue; }
 
  private:
   sycl::queue m_queue;
@@ -289,8 +295,32 @@ struct MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
 };
 
 }  // namespace Impl
-
 }  // namespace Kokkos
+
+namespace Kokkos::Impl {
+template <class MemorySpace>
+void runtime_check_memory_space_assignability(const void* ptr,
+                                              const MemorySpace& space);
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLHostUSMSpace>(const void* ptr,
+                              const Kokkos::SYCLHostUSMSpace& space);
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLSharedUSMSpace>(const void* ptr,
+                                const Kokkos::SYCLSharedUSMSpace& space);
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::SYCLDeviceUSMSpace>(const void* ptr,
+                                const Kokkos::SYCLDeviceUSMSpace& space);
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
+    const void* ptr, const Kokkos::HostSpace& space);
 
 KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_SPECIALIZATION(
     Kokkos::SYCLDeviceUSMSpace);

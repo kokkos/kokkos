@@ -765,6 +765,17 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
+#if defined(KOKKOS_ENABLE_DEBUG) &&                      \
+    !(defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY) || \
+      defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY))
+    KOKKOS_IF_ON_HOST((if (span() > 0) {
+      auto prop_copy = Impl::with_properties_if_unset(
+          arg_prop, typename traits::memory_space{});
+      Impl::runtime_check_memory_space_assignability(
+          Impl::get_property<Impl::PointerTag>(prop_copy),
+          Impl::get_property<Impl::MemorySpaceTag>(prop_copy));
+    }))
+#endif
   }
 
   // Allocate with label and layout
