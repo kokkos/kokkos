@@ -28,14 +28,11 @@ namespace Impl {
 template <>
 struct ZeroMemset<Threads> {
   ZeroMemset(const Threads& exec_space, void* dst, size_t cnt) {
-    if (cnt < 0x20000ul) {  // 2^17
+    constexpr size_t host_memset_limit = 0x20000ul;  // 2^17
+    if (cnt < host_memset_limit) {
       std::memset(dst, 0, cnt);
     } else {
-      Kokkos::parallel_for(
-          "Kokkos::ZeroMemset via parallel_for",
-          Kokkos::RangePolicy<Kokkos::Threads, Kokkos::IndexType<size_t>>(
-              exec_space, 0, cnt),
-          KOKKOS_LAMBDA(size_t i) { static_cast<char*>(dst)[i] = 0; });
+      hostspace_parallel_zeromemset(exec_space, dst, cnt);
     }
   }
 };

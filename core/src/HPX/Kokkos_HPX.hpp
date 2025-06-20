@@ -528,6 +528,14 @@ struct MemorySpaceAccess<Kokkos::Experimental::HPX::memory_space,
   enum : bool { deepcopy = false };
 };
 
+template <>
+struct ZeroMemset<Kokkos::Experimental::HPX> {
+  ZeroMemset(const Kokkos::Experimental::HPX &exec, void *dst, size_t cnt) {
+    exec.fence("ZeroMemset");
+    std::memset(dst, 0, cnt);
+  }
+};
+
 }  // namespace Impl
 }  // namespace Kokkos
 

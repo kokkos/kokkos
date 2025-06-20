@@ -137,9 +137,29 @@ void hostspace_parallel_deepcopy_async(const ExecutionSpace& exec, void* dst,
   }
 }
 
+template <typename ExecutionSpace>
+void hostspace_parallel_zeromemset(const ExecutionSpace& exec, void* dst,
+                                   size_t cnt) {
+  using policy_t =
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<size_t>>;
+
+  Kokkos::parallel_for("Kokkos::Impl::hostspace_parallel_zeromemset",
+                       policy_t(exec, 0, cnt),
+                       [=](const size_t i) { static_cast<char*>(dst)[i] = 0; });
+
+#if (defined(KOKKOS_ENABLE_HPX) && \
+     defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH))
+  exec.fence(
+      "Kokkos::Impl::hostspace_parallel_zeromemset: fence after zeromemset");
+#endif
+}
+
 // Explicit instantiation
 template void hostspace_parallel_deepcopy_async<DefaultHostExecutionSpace>(
     const DefaultHostExecutionSpace&, void*, const void*, ptrdiff_t);
+
+template void hostspace_parallel_zeromemset<DefaultHostExecutionSpace>(
+    const DefaultHostExecutionSpace&, void*, size_t);
 
 #if defined(KOKKOS_ENABLE_SERIAL) &&                                    \
     (defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_THREADS) || \
@@ -148,6 +168,8 @@ template void hostspace_parallel_deepcopy_async<DefaultHostExecutionSpace>(
 // backend are enabled
 template void hostspace_parallel_deepcopy_async<Kokkos::Serial>(
     const Kokkos::Serial&, void*, const void*, ptrdiff_t);
+template void hostspace_parallel_zeromemset<Kokkos::Serial>(
+    const Kokkos::Serial&, void*, size_t);
 #endif
 }  // namespace Impl
 
