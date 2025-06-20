@@ -45,6 +45,27 @@ struct GraphNodeKernelDefaultImpl {
   ExecutionSpace m_execution_space;
 };
 
+template <typename ExecutionSpace, typename DstType, typename SrcType>
+struct GraphNodeDeepCopyImpl : public GraphNodeKernelDefaultImpl<ExecutionSpace> {
+ public:
+  using execute_kernel_vtable_base_t =
+      GraphNodeKernelDefaultImpl<ExecutionSpace>;
+
+  template <typename... Args>
+  GraphNodeDeepCopyImpl(ExecutionSpace exec, DstType dst_, SrcType src_)
+      : execute_kernel_vtable_base_t{std::move(exec)},
+        dst{std::forward<DstType>(dst_)},
+        src{std::forward<SrcType>(src_)} {}
+
+  void execute_kernel() override final {
+    Kokkos::deep_copy(this->m_execution_space, dst, src);
+  }
+
+ private:
+  DstType dst;
+  SrcType src;
+};
+
 // TODO Indicate that this kernel specialization is only for the Host somehow?
 template <class ExecutionSpace, class PolicyType, class Functor,
           class PatternTag, class... Args>

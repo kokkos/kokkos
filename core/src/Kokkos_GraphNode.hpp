@@ -58,7 +58,8 @@ class GraphNodeRef {
 
   static_assert(std::is_same_v<Predecessor, TypeErasedTag> ||
                     Kokkos::Impl::is_graph_kernel<Kernel>::value ||
-                    Kokkos::Impl::is_graph_capture<Kernel>::value,
+                    Kokkos::Impl::is_graph_capture<Kernel>::value ||
+                    Kokkos::Impl::is_graph_deep_copy<Kernel>::value,
                 "Invalid kernel template parameter given to GraphNodeRef");
 
   static_assert(!Kokkos::Impl::is_more_type_erased<Kernel, Predecessor>::value,
@@ -244,8 +245,27 @@ class GraphNodeRef {
             typename = std::enable_if_t<std::is_invocable_r_v<
                 void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
   auto then(Label&& label, Functor&& functor) const {
-    return this->then(std::forward<Label>(label), ExecutionSpace{},
+    return this->then(std::forward<Label>(label),
+                      m_graph_impl.lock()->get_execution_space(),
                       std::forward<Functor>(functor));
+  }
+
+  template <typename DstType, typename SrcType>
+  auto then_deep_copy(const ExecutionSpace& exec, DstType&& dst,
+                   SrcType&& src) const {
+    using next_kernel_t =
+        Kokkos::Impl::GraphNodeDeepCopyImpl<ExecutionSpace,
+                                        Kokkos::Impl::remove_cvref_t<DstType>,
+                                        Kokkos::Impl::remove_cvref_t<SrcType>>;
+    return this->_then_kernel(next_kernel_t{exec,
+                                            std::forward<DstType>(dst), std::forward<SrcType>(src)});
+  }
+
+  template <typename DstType, typename SrcType>
+  auto then_deep_copy(DstType&& dst, SrcType&& src) const {
+    return this->then_deep_copy(
+                             m_graph_impl.lock()->get_execution_space(),
+                             std::forward<DstType>(dst), std::forward<SrcType>(src));
   }
 
 #if defined(KOKKOS_ENABLE_CUDA) ||                                           \

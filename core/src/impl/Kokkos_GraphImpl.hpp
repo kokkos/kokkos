@@ -37,6 +37,11 @@ struct is_graph_capture<
            Kokkos::Impl::is_specialization_of_v<T, GraphNodeCaptureImpl>>>
     : public std::true_type {};
 
+template <typename T>
+struct is_graph_deep_copy<T, std::enable_if_t<Kokkos::Impl::is_specialization_of_v<
+                              T, GraphNodeDeepCopyImpl>>>
+    : public std::true_type {};
+
 struct GraphAccess {
   template <class NodeType, class... Args>
   static auto make_node_shared_ptr(Args&&... args) {
