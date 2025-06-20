@@ -244,7 +244,8 @@ class GraphNodeRef {
             typename = std::enable_if_t<std::is_invocable_r_v<
                 void, const Kokkos::Impl::remove_cvref_t<Functor>>>>
   auto then(Label&& label, Functor&& functor) const {
-    return this->then(std::forward<Label>(label), ExecutionSpace{},
+    return this->then(std::forward<Label>(label),
+                      this->m_graph_impl.lock()->get_execution_space(),
                       std::forward<Functor>(functor));
   }
 
