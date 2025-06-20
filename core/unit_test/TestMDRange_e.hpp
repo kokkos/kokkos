@@ -31,6 +31,8 @@ TEST(TEST_CATEGORY, mdrange_4d) {
   TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, size_x, 1, 1);
   TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, 1, size_x, 1);
   TestMDRange_4D<TEST_EXECSPACE>::test_for4_eval_once(1, 1, 1, size_x);
+
+  TestMDRange_4D<TEST_EXECSPACE>::test_for4_limits(100);
 #endif
 }
 
