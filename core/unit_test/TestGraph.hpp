@@ -378,8 +378,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
         NoOpReduceFunctor<TEST_EXECSPACE, int> no_op_functor;
         root.then_parallel_reduce(Kokkos::RangePolicy<TEST_EXECSPACE>(0, 0),
                                   no_op_functor, count)
-#if !defined(KOKKOS_ENABLE_SYCL) || \
-    defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)  // FIXME_SYCL
 #if !defined(KOKKOS_ENABLE_CUDA) && \
     !defined(KOKKOS_ENABLE_HIP)  // FIXME_CUDA FIXME_HIP
             .then_parallel_reduce(
@@ -389,9 +387,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 #endif
             .then_parallel_reduce(
                 Kokkos::TeamPolicy<TEST_EXECSPACE>{0, Kokkos::AUTO},
-                no_op_functor, count)
-#endif
-            ;
+                no_op_functor, count);
       });
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
