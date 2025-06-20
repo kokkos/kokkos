@@ -30,7 +30,6 @@ namespace Impl {
 
 template <class functor_type, class execution_space, class... policy_args>
 class WorkGraphExec;
-
 }
 }  // namespace Kokkos
 
@@ -233,6 +232,10 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
 #ifdef KOKKOS_ENABLE_HIP
 #include "HIP/Kokkos_HIP_WorkGraphPolicy.hpp"
+#endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+#include "SYCL/Kokkos_SYCL_WorkGraphPolicy.hpp"
 #endif
 
 #ifdef KOKKOS_ENABLE_THREADS
