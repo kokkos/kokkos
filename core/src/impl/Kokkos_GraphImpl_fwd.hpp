@@ -32,7 +32,7 @@ template <class ExecutionSpace, class Policy, class Functor,
           class KernelTypeTag, class... Args>
 class GraphNodeKernelImpl;
 
-template <class ExecutionSpace, class Functor>
+template <class ExecutionSpace, class Policy, class Functor>
 struct GraphNodeThenImpl;
 
 template <typename ExecutionSpace, typename Functor>

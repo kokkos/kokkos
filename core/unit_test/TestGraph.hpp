@@ -785,10 +785,14 @@ template <typename ViewType>
 struct ThenFunctor {
   static_assert(ViewType::rank() == 0);
 
+  struct TimesTwo {};
+
   ViewType data;
   typename ViewType::value_type value;
 
   KOKKOS_FUNCTION void operator()() const { data() += value; }
+
+  KOKKOS_FUNCTION void operator()(const TimesTwo) const { data() += 2 * value; }
 };
 
 // Supported graph node types.
@@ -828,7 +832,8 @@ struct GraphNodeTypes {
 
   // Type of a then node.
   using then_t =
-      Kokkos::Impl::GraphNodeThenImpl<Exec, ThenFunctor<Kokkos::View<int>>>;
+      Kokkos::Impl::GraphNodeThenImpl<Exec, Kokkos::Experimental::ThenPolicy<>,
+                                      ThenFunctor<Kokkos::View<int>>>;
 
   // Type of a capture node.
   using capture_t =
@@ -1069,7 +1074,8 @@ TEST(TEST_CATEGORY, graph_then) {
   using node_ref_memset_t =
       Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE, node_memset_t,
                                          typename types::node_ref_root_t>;
-  using node_then_t = Kokkos::Impl::GraphNodeThenImpl<TEST_EXECSPACE, then_t>;
+  using node_then_t = Kokkos::Impl::GraphNodeThenImpl<
+      TEST_EXECSPACE, Kokkos::Experimental::ThenPolicy<>, then_t>;
   using node_ref_then_t =
       Kokkos::Experimental::GraphNodeRef<TEST_EXECSPACE, node_then_t,
                                          node_ref_memset_t>;
@@ -1102,6 +1108,34 @@ TEST(TEST_CATEGORY, graph_then) {
   graph.submit(exec);
 
   ASSERT_TRUE(contains(exec, data, value_memset + value_then));
+}
+
+// Ensure that a then can be given a work tag.
+TEST(TEST_CATEGORY, graph_then_tag) {
+  using view_t = Kokkos::View<int, TEST_EXECSPACE>;
+  using then_t = ThenFunctor<view_t>;
+
+  constexpr int value_then = 456;
+
+  const TEST_EXECSPACE exec{};
+
+  const view_t data(Kokkos::view_alloc(exec, "data used in 'then'"));
+
+  auto graph = Kokkos::Experimental::create_graph(exec, [&](const auto& root) {
+    const auto notag           = root.then("no tag", then_t{data, value_then});
+    const auto tagged_labelled = notag.then(
+        "tag and label", Kokkos::Experimental::ThenPolicy<then_t::TimesTwo>{},
+        then_t{data, value_then});
+    const auto tagged = tagged_labelled.then(
+        Kokkos::Experimental::ThenPolicy<then_t::TimesTwo>{},
+        then_t{data, value_then});
+  });
+
+  ASSERT_TRUE(contains(exec, data, 0));
+
+  graph.submit(exec);
+
+  ASSERT_TRUE(contains(exec, data, 5 * value_then));
 }
 
 }  // end namespace Test
