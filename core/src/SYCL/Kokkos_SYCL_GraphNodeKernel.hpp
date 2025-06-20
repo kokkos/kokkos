@@ -31,6 +31,23 @@ namespace Kokkos {
 namespace Impl {
 
 template <typename Functor>
+struct GraphNodeHostImpl<Kokkos::SYCL, Functor> {
+  using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::modifiable>;
+
+  Functor functor;
+  std::optional<sycl::ext::oneapi::experimental::node> m_node = std::nullopt;
+
+  void add_to_graph(native_graph_t& graph) {
+    KOKKOS_ENSURES(!m_node);
+    m_node = graph.add([&](sycl::handler& cgh) {
+      // https://github.com/intel/llvm/blob/d33426f92e885dce30700b7327a44e039d656962/sycl/include/sycl/handler.hpp#L1942-L1949
+      cgh.host_task(std::move(functor));
+    });
+  }
+};
+
+template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::SYCL, Functor> {
   using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::modifiable>;
