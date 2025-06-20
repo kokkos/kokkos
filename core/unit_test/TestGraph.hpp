@@ -420,20 +420,17 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph) {
   ex.fence();
 }
 
-template <typename ViewType>
-struct ForceGlobalLaunchFunctor {
+template <typename ViewType, size_t Size>
+struct SizedFunctor {
  public:
-  static constexpr size_t count =
-#if defined(KOKKOS_ENABLE_CUDA)
-      Kokkos::Impl::CudaTraits::ConstantMemoryUsage +
-#elif defined(KOKKOS_ENABLE_HIP)
-      Kokkos::Impl::HIPTraits::ConstantMemoryUsage +
-#endif
-      1;
+  static_assert(sizeof(ViewType) <= Size,
+                "ViewType must fit in the target size.");
+
+  static constexpr size_t padding = Size - sizeof(ViewType);
 
   ViewType data;
 
-  ForceGlobalLaunchFunctor(ViewType data_) : data(std::move(data_)) {}
+  SizedFunctor(ViewType data_) : data(std::move(data_)) {}
 
   template <typename T>
   KOKKOS_FUNCTION void operator()(const T) const {
@@ -441,91 +438,229 @@ struct ForceGlobalLaunchFunctor {
   }
 
  private:
-  std::byte unused[count] = {};
+  std::byte unused[padding] = {};
 };
 
-// Ensure that "global memory launch" path works.
-TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
 #if defined(KOKKOS_ENABLE_CUDA)
-  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
-  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+template <Kokkos::Impl::Experimental::CudaLaunchMechanism LaunchMechanism>
+struct TestGraphSizedFunctorLaunchTraits;
+
+template <>
+struct TestGraphSizedFunctorLaunchTraits<
+    Kokkos::Impl::Experimental::CudaLaunchMechanism::LocalMemory> {
+  static_assert(Kokkos::Impl::CudaTraits::ConstantMemoryUseThreshold >= 64);
+  static constexpr size_t size =
+      Kokkos::Impl::CudaTraits::ConstantMemoryUseThreshold - 64;
+  static constexpr bool allocates_driver_memory_buffer = false;
+};
+
+template <>
+struct TestGraphSizedFunctorLaunchTraits<
+    Kokkos::Impl::Experimental::CudaLaunchMechanism::ConstantMemory> {
+  static constexpr size_t size =
+      Kokkos::Impl::CudaTraits::ConstantMemoryUseThreshold + 1;
+  static constexpr bool allocates_driver_memory_buffer = true;
+};
+
+template <>
+struct TestGraphSizedFunctorLaunchTraits<
+    Kokkos::Impl::Experimental::CudaLaunchMechanism::GlobalMemory> {
+  static constexpr size_t size =
+      Kokkos::Impl::CudaTraits::ConstantMemoryUsage + 1;
+  static constexpr bool allocates_driver_memory_buffer = true;
+};
 #endif
-    GTEST_SKIP() << "This execution space does not support global launch.";
+
+#if defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+template <Kokkos::Impl::HIPLaunchMechanism LaunchMechanism>
+struct TestGraphSizedFunctorLaunchTraits;
+
+template <>
+struct TestGraphSizedFunctorLaunchTraits<
+    Kokkos::Impl::HIPLaunchMechanism::LocalMemory> {
+  static_assert(Kokkos::Impl::HIPTraits::ConstantMemoryUseThreshold >= 64);
+  static constexpr size_t size =
+      Kokkos::Impl::HIPTraits::ConstantMemoryUseThreshold - 64;
+  static constexpr bool allocates_driver_memory_buffer = false;
+};
+
+template <>
+struct TestGraphSizedFunctorLaunchTraits<
+    Kokkos::Impl::HIPLaunchMechanism::ConstantMemory> {
+  static constexpr size_t size =
+      Kokkos::Impl::HIPTraits::ConstantMemoryUseThreshold + 1;
+  static constexpr bool allocates_driver_memory_buffer = true;
+};
+
+template <>
+struct TestGraphSizedFunctorLaunchTraits<
+    Kokkos::Impl::HIPLaunchMechanism::GlobalMemory> {
+  static constexpr size_t size =
+      Kokkos::Impl::HIPTraits::ConstantMemoryUsage + 1;
+  static constexpr bool allocates_driver_memory_buffer = true;
+};
+#endif
 
 #if defined(KOKKOS_ENABLE_CUDA) || \
     (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH))
-  }
-  using value_t   = int;
-  using view_t    = Kokkos::View<value_t, TEST_EXECSPACE,
-                              Kokkos::MemoryTraits<Kokkos::Atomic>>;
-  using functor_t = ForceGlobalLaunchFunctor<view_t>;
+template <typename T>
+struct TestGraphSizedFunctorLaunch : public ::testing::Test {
+  static constexpr auto launch_mechanism = T::value;
 
-  const std::string kernel_name = "Let's make it a huge kernel";
-  const std::string alloc_label =
-      kernel_name + " - GraphNodeKernel global memory functor storage";
+  static constexpr size_t size =
+      TestGraphSizedFunctorLaunchTraits<launch_mechanism>::size;
+  static constexpr bool allocates_driver_memory_buffer =
+      TestGraphSizedFunctorLaunchTraits<
+          launch_mechanism>::allocates_driver_memory_buffer;
 
-  view_t data(Kokkos::view_alloc("witness", ex));
+  // Ensure that the launch mechanism chosen for a given functor size works.
+  template <typename ExecSpace>
+  void test_sized_functor_launch(const ExecSpace& exec) {
+    using view_t =
+        Kokkos::View<int, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>;
+    using functor_t = SizedFunctor<view_t, size>;
 
-  using namespace Kokkos::Test::Tools;
-  listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
-
-  std::optional<Kokkos::Experimental::Graph<TEST_EXECSPACE>> graph;
-
-  const void* ptr   = nullptr;
-  uint64_t ptr_size = 0;
-
-  ASSERT_TRUE(validate_existence(
-      [&]() {
-        graph = Kokkos::Experimental::create_graph(ex, [&](const auto& root) {
-          auto node = root.then_parallel_for(
-              kernel_name,
-              Kokkos::Experimental::require(
-                  Kokkos::RangePolicy<TEST_EXECSPACE>(0, functor_t::count),
-                  Kokkos::Experimental::WorkItemProperty::HintHeavyWeight),
-              functor_t(data));
-        });
-      },
-      [&](AllocateDataEvent alloc) {
-        if (alloc.name != alloc_label)
-          return MatchDiagnostic{
-              false, {"Allocation name mismatch (got " + alloc.name + ')'}};
-        if (alloc.size < functor_t::count)
-          return MatchDiagnostic{
-              false,
-              {"Allocation size mismatch (expected at least " +
-               std::to_string(functor_t::count) + " but got " +
-               std::to_string(alloc.size) + ')'}};
-        ptr      = alloc.ptr;
-        ptr_size = alloc.size;
-        return MatchDiagnostic{true};
-      }));
-
-  EXPECT_TRUE(static_cast<bool>(graph));
-  graph->instantiate();  // NOLINT(bugprone-unchecked-optional-access)
-
-  // Fencing the default execution space instance, as the node policy
-  // was created without giving an instance (it used the default one).
-  TEST_EXECSPACE{}.fence(
-      "Ensure that kernel dispatch to global memory is finished "
-      "before submission.");
-
-  graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
-  ASSERT_TRUE(contains(ex, data, functor_t::count));
-
-  ASSERT_TRUE(validate_event_set(
-      [&]() { graph.reset(); },
-      [&](DeallocateDataEvent dealloc) {
-        if (dealloc.name == alloc_label && dealloc.ptr == ptr &&
-            dealloc.size == ptr_size)
-          return MatchDiagnostic{true};
-        return MatchDiagnostic{
-            false, {"Either the name or pointer or size did not match"}};
-      }));
-
-  listen_tool_events(Config::DisableAll());
+#if defined(KOKKOS_ENABLE_CUDA)
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::Cuda>) {
+      using driver_t = Kokkos::Impl::ParallelFor<
+          functor_t,
+          Kokkos::RangePolicy<Kokkos::Cuda, Kokkos::Impl::IsGraphKernelTag>,
+          Kokkos::Cuda>;
+      static_assert(
+          Kokkos::Impl::DeduceCudaLaunchMechanism<driver_t>::launch_mechanism ==
+          launch_mechanism);
+    }
 #endif
+
+#if defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::HIP>) {
+      using driver_t = Kokkos::Impl::ParallelFor<
+          functor_t,
+          Kokkos::RangePolicy<Kokkos::HIP, Kokkos::Impl::IsGraphKernelTag>,
+          Kokkos::HIP>;
+      static_assert(
+          Kokkos::Impl::DeduceHIPLaunchMechanism<driver_t>::launch_mechanism ==
+          launch_mechanism);
+    }
+#endif
+
+    const std::string kernel_name = "Let's make it a huge kernel";
+    const std::string alloc_label =
+        kernel_name + " - GraphNodeKernel global memory functor storage";
+
+    view_t data(Kokkos::view_alloc("witness", exec));
+
+    using namespace Kokkos::Test::Tools;
+    listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
+
+    std::optional<Kokkos::Experimental::Graph<ExecSpace>> graph;
+
+    const void* ptr   = nullptr;
+    uint64_t ptr_size = 0;
+
+    auto lam_create = [&]() {
+      graph = Kokkos::Experimental::create_graph(exec, [&](const auto& root) {
+        auto node = root.then_parallel_for(
+            kernel_name, Kokkos::RangePolicy<ExecSpace>(0, size),
+            functor_t(data));
+      });
+    };
+
+    auto matcher_create = [&](AllocateDataEvent alloc) {
+      if (alloc.name != alloc_label)
+        return MatchDiagnostic{
+            false, {"Allocation name mismatch (got " + alloc.name + ')'}};
+      if (alloc.size < size)
+        return MatchDiagnostic{false,
+                               {"Allocation size mismatch (expected at least " +
+                                std::to_string(size) + " but got " +
+                                std::to_string(alloc.size) + ')'}};
+      ptr      = alloc.ptr;
+      ptr_size = alloc.size;
+      return MatchDiagnostic{true};
+    };
+
+    if constexpr (allocates_driver_memory_buffer) {
+      ASSERT_TRUE(
+          validate_existence(std::move(lam_create), std::move(matcher_create)));
+    } else {
+      ASSERT_TRUE(
+          validate_absence(std::move(lam_create), std::move(matcher_create)));
+    }
+
+    EXPECT_TRUE(static_cast<bool>(graph));
+    graph->instantiate();  // NOLINT(bugprone-unchecked-optional-access)
+
+    // Fencing the default execution space instance, as the node policy
+    // was created without giving an instance (it used the default one).
+    ExecSpace{}.fence(
+        "Ensure that kernel dispatch to global memory is finished "
+        "before submission.");
+
+    graph->submit(exec);  // NOLINT(bugprone-unchecked-optional-access)
+    ASSERT_TRUE(contains(exec, data, size));
+
+    auto lam_reset = [&]() { graph.reset(); };
+
+    auto matcher_reset = [&](DeallocateDataEvent dealloc) {
+      if (dealloc.name == alloc_label && dealloc.ptr == ptr &&
+          dealloc.size == ptr_size)
+        return MatchDiagnostic{true};
+      return MatchDiagnostic{
+          false, {"Either the name or pointer or size did not match"}};
+    };
+
+    if constexpr (allocates_driver_memory_buffer) {
+      ASSERT_TRUE(
+          validate_existence(std::move(lam_reset), std::move(matcher_reset)));
+    } else {
+      ASSERT_TRUE(
+          validate_absence(std::move(lam_reset), std::move(matcher_reset)));
+    }
+
+    listen_tool_events(Config::DisableAll());
+  }
+};
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA)
+using TestGraphSizedFunctorLaunchTypes = ::testing::Types<
+    std::integral_constant<
+        Kokkos::Impl::Experimental::CudaLaunchMechanism,
+        Kokkos::Impl::Experimental::CudaLaunchMechanism::LocalMemory>,
+    std::integral_constant<
+        Kokkos::Impl::Experimental::CudaLaunchMechanism,
+        Kokkos::Impl::Experimental::CudaLaunchMechanism::ConstantMemory>,
+    std::integral_constant<
+        Kokkos::Impl::Experimental::CudaLaunchMechanism,
+        Kokkos::Impl::Experimental::CudaLaunchMechanism::GlobalMemory>>;
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+using TestGraphSizedFunctorLaunchTypes = ::testing::Types<
+    std::integral_constant<Kokkos::Impl::HIPLaunchMechanism,
+                           Kokkos::Impl::HIPLaunchMechanism::LocalMemory>,
+    std::integral_constant<Kokkos::Impl::HIPLaunchMechanism,
+                           Kokkos::Impl::HIPLaunchMechanism::ConstantMemory>,
+    std::integral_constant<Kokkos::Impl::HIPLaunchMechanism,
+                           Kokkos::Impl::HIPLaunchMechanism::GlobalMemory>>;
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA) || \
+    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH))
+TYPED_TEST_SUITE(TestGraphSizedFunctorLaunch,
+                 TestGraphSizedFunctorLaunchTypes, );
+
+TYPED_TEST(TestGraphSizedFunctorLaunch, run) {
+  if constexpr (!std::is_same_v<TEST_EXECSPACE,
+                                Kokkos::DefaultExecutionSpace>) {
+    GTEST_SKIP() << "This execution space does not support launch mechanisms.";
+  } else {
+    const TEST_EXECSPACE exec{};
+    this->test_sized_functor_launch(exec);
+  }
 }
+#endif
 
 // Ensure that an empty graph on the default host execution space
 // can be submitted.
@@ -810,7 +945,7 @@ struct GraphNodeTypes {
 #if defined(KOKKOS_ENABLE_CUDA)
   static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::Cuda>;
 #elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
-    static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::HIP>;
+  static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::HIP>;
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)
   static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::SYCL>;
 #else
