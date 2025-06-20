@@ -496,11 +496,6 @@ endif()
 if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang AND KOKKOS_AMDGPU_ARCH)
   list(REMOVE_ITEM OpenMPTarget_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_Reducers_e.cpp)
 endif()
-# FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
-# when compiling for Intel's Xe-HP GPUs.
-if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
-  list(REMOVE_ITEM OpenMPTarget_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/openmptarget/TestOpenMPTarget_TeamVectorRange.cpp)
-endif()
 
 # FIXME_OPENMPTARGET - Comment non-passing tests with the NVIDIA HPC compiler nvc++
 if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
@@ -973,12 +968,6 @@ endif()
 set(KOKKOSP_SOURCES UnitTestMainInit.cpp tools/TestEventCorrectness.cpp tools/TestKernelNames.cpp
                     tools/TestProfilingSection.cpp tools/TestScopedRegion.cpp tools/TestWithoutInitializing.cpp
 )
-
-# FIXME_OPENMPTARGET This test causes internal compiler errors as of 09/01/22
-# when compiling for Intel's Xe-HP GPUs.
-if(KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM)
-  list(REMOVE_ITEM KOKKOSP_SOURCES tools/TestEventCorrectness.cpp)
-endif()
 
 kokkos_add_executable_and_test(CoreUnitTest_KokkosP SOURCES ${KOKKOSP_SOURCES})
 if(KOKKOS_ENABLE_LIBDL)
