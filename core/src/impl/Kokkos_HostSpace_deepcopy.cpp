@@ -168,8 +168,6 @@ template void hostspace_parallel_zeromemset<DefaultHostExecutionSpace>(
 // backend are enabled
 template void hostspace_parallel_deepcopy_async<Kokkos::Serial>(
     const Kokkos::Serial&, void*, const void*, ptrdiff_t);
-template void hostspace_parallel_zeromemset<Kokkos::Serial>(
-    const Kokkos::Serial&, void*, size_t);
 #endif
 }  // namespace Impl
 
