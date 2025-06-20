@@ -1171,13 +1171,19 @@ SetOrRange make_candidate_set(size_t size, std::string* data) {
 SetOrRange make_candidate_set(size_t size, int64_t* data) {
   SetOrRange value_set;
   value_set.set.size             = size;
-  value_set.set.values.int_value = data;
+  value_set.set.values.int_value = new int64_t[size];
+  for (size_t x = 0; x < size; ++x) {
+    value_set.set.values.int_value[x] = data[x];
+  }
   return value_set;
 }
 SetOrRange make_candidate_set(size_t size, double* data) {
   SetOrRange value_set;
   value_set.set.size                = size;
-  value_set.set.values.double_value = data;
+  value_set.set.values.double_value = new double[size];
+  for (size_t x = 0; x < size; ++x) {
+    value_set.set.values.double_value[x] = data[x];
+  }
   return value_set;
 }
 SetOrRange make_candidate_range(double lower, double upper, double step,
