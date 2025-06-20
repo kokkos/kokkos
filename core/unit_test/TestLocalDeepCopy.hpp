@@ -388,95 +388,123 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
 #if !defined(KOKKOS_LOCAL_DEEP_COPY_SKIP_1)
 namespace Impl {
-template <typename T, typename ShMemType>
+template <typename T>
 using ShMemView =
-    Kokkos::View<T, Kokkos::LayoutRight, ShMemType, Kokkos::MemoryUnmanaged>;
+    Kokkos::View<T, Kokkos::LayoutRight, TEST_EXECSPACE::scratch_memory_space,
+                 Kokkos::MemoryUnmanaged>;
 }  // namespace Impl
 
-void test_local_deep_copy_scratch(int scratch_level) {
-  const int N = 8;
-  const int bytes_per_team =
-      Impl::ShMemView<double**,
-                      TEST_EXECSPACE::scratch_memory_space>::shmem_size(N, 1);
+class TestThreadScratchFunctor {
+ private:
+  using ViewType = Kokkos::View<double*, TEST_EXECSPACE::memory_space>;
+  Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_1;
+  Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_2;
+  const int N;
 
-  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(1, Kokkos::AUTO);
-  auto team_exec =
-      policy.set_scratch_size(scratch_level, Kokkos::PerTeam(bytes_per_team));
+ public:
+  TestThreadScratchFunctor(const ViewType& check_view_1_,
+                           const ViewType& check_view_2_)
+      : check_view_1(check_view_1_),
+        check_view_2(check_view_2_),
+        N(check_view_1.extent(0)) {}
 
+  KOKKOS_FUNCTION void operator()(
+      const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type& team) const {
+    auto shview = Impl::ShMemView<double**>(team.thread_scratch(0), 1, 1);
+
+    const int lid = team.league_rank();
+
+    Kokkos::parallel_for(Kokkos::TeamThreadRange(team, N), [=](const size_t) {
+      Kokkos::Experimental::deep_copy(Kokkos::ThreadVectorRange(team, 0),
+                                      shview, lid);
+    });
+
+    Kokkos::Experimental::deep_copy(
+        Kokkos::TeamThreadRange(team, 0),
+        Kokkos::subview(check_view_1, Kokkos::make_pair(lid, lid + 1)),
+        Kokkos::subview(shview, Kokkos::ALL(), 0));
+
+    Kokkos::Experimental::deep_copy(Kokkos::TeamThreadRange(team, 0), shview,
+                                    6.);
+    Kokkos::Experimental::deep_copy(
+        Kokkos::TeamThreadRange(team, 0),
+        Kokkos::subview(check_view_2, Kokkos::make_pair(lid, lid + 1)),
+        Kokkos::subview(shview, Kokkos::ALL(), 0));
+  }
+};
+
+class TestTeamScratchFunctor {
+ private:
+  using ViewType = Kokkos::View<double*, TEST_EXECSPACE::memory_space>;
+  Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_1;
+  Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_2;
+  const int N;
+
+ public:
+  TestTeamScratchFunctor(const ViewType& check_view_1_,
+                         const ViewType& check_view_2_)
+      : check_view_1(check_view_1_),
+        check_view_2(check_view_2_),
+        N(check_view_1.extent(0)) {}
+
+  KOKKOS_FUNCTION void operator()(
+      const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type& team) const {
+    auto shview = Impl::ShMemView<double**>(team.team_scratch(0), N, 1);
+
+    Kokkos::parallel_for(
+        Kokkos::TeamThreadRange(team, N), [=](const size_t index) {
+          auto thread_shview = Kokkos::subview(shview, index, Kokkos::ALL());
+          Kokkos::Experimental::deep_copy(Kokkos::ThreadVectorRange(team, 0),
+                                          thread_shview, index);
+        });
+
+    Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0),
+                                    check_view_1,
+                                    Kokkos::subview(shview, Kokkos::ALL(), 0));
+
+    Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), shview,
+                                    6.);
+    Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0),
+                                    check_view_2,
+                                    Kokkos::subview(shview, Kokkos::ALL(), 0));
+  }
+};
+
+template <class Functor, class Policy>
+void test_local_deep_copy_scratch(int N, const Policy& policy) {
   Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_1("check_1",
                                                                    N);
   Kokkos::View<double*, TEST_EXECSPACE::memory_space> check_view_2("check_2",
                                                                    N);
-  Kokkos::parallel_for(
-      team_exec,
-      KOKKOS_LAMBDA(
-          const Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type& team) {
-        using ShmemType = TEST_EXECSPACE::scratch_memory_space;
-        auto shview     = Impl::ShMemView<double**, ShmemType>(
-            team.team_scratch(scratch_level), N, 1);
-
-        Kokkos::parallel_for(
-            Kokkos::TeamThreadRange(team, N), [=](const size_t index) {
-              auto thread_shview =
-                  Kokkos::subview(shview, index, Kokkos::ALL());
-              Kokkos::Experimental::deep_copy(
-                  Kokkos::ThreadVectorRange(team, 0), thread_shview, index);
-            });
-
-        if (scratch_level == 0) {
-          Kokkos::Experimental::deep_copy(
-              Kokkos::TeamThreadRange(team, 0), check_view_1,
-              Kokkos::subview(shview, Kokkos::ALL(), 0));
-
-          Kokkos::Experimental::deep_copy(Kokkos::TeamThreadRange(team, 0),
-                                          shview, 6.);
-          Kokkos::Experimental::deep_copy(
-              Kokkos::TeamThreadRange(team, 0), check_view_2,
-              Kokkos::subview(shview, Kokkos::ALL(), 0));
-        } else {
-          Kokkos::Experimental::deep_copy(
-              Kokkos::TeamVectorRange(team, 0), check_view_1,
-              Kokkos::subview(shview, Kokkos::ALL(), 0));
-
-          Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0),
-                                          shview, 6.);
-          Kokkos::Experimental::deep_copy(
-              Kokkos::TeamVectorRange(team, 0), check_view_2,
-              Kokkos::subview(shview, Kokkos::ALL(), 0));
-        }
-      });
+  Kokkos::parallel_for(policy, Functor(check_view_1, check_view_2));
 
   auto host_copy_1 =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), check_view_1);
   auto host_copy_2 =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), check_view_2);
 
-  for (unsigned int i = 0; i < N; ++i) {
+  for (int i = 0; i < N; ++i) {
     ASSERT_EQ(host_copy_1(i), i);
     ASSERT_EQ(host_copy_2(i), 6.0);
   }
 }
 
 TEST(TEST_CATEGORY, local_deep_copy_team_scratch) {
-#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-  if constexpr (!std::is_same_v<TEST_EXECSPACE,
-                                Kokkos::DefaultHostExecutionSpace>) {
-    GTEST_SKIP()
-        << "The team scratch local deep copy test times out on SYCL+CUDA";
-  }
-#endif
-  test_local_deep_copy_scratch(1);
+  const int N = 8;
+  const auto bytes_per_team =
+      Kokkos::PerTeam(Impl::ShMemView<double**>::shmem_size(N, 1));
+  const auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO)
+                          .set_scratch_size(0, bytes_per_team);
+  test_local_deep_copy_scratch<TestTeamScratchFunctor>(N, policy);
 }
 
 TEST(TEST_CATEGORY, local_deep_copy_thread_scratch) {
-#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
-  if constexpr (!std::is_same_v<TEST_EXECSPACE,
-                                Kokkos::DefaultHostExecutionSpace>) {
-    GTEST_SKIP()
-        << "The thread scratch local deep copy test times out on SYCL+CUDA";
-  }
-#endif
-  test_local_deep_copy_scratch(0);
+  const int N = 8;
+  const auto bytes_per_thread =
+      Kokkos::PerThread(Impl::ShMemView<double**>::shmem_size(1, 1));
+  const auto policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(N, 1).set_scratch_size(
+      0, bytes_per_thread);
+  test_local_deep_copy_scratch<TestThreadScratchFunctor>(N, policy);
 }
 
 #endif
