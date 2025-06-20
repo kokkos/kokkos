@@ -55,17 +55,7 @@ using ALL_t KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::ALL_t instead!") =
 }  // namespace Impl
 #endif
 
-// FIXME_OPENMPTARGET - The `declare target` is needed for the Intel GPUs with
-// the OpenMPTarget backend
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
-#pragma omp declare target
-#endif
-
 inline constexpr Kokkos::ALL_t ALL{};
-
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) && defined(KOKKOS_COMPILER_INTEL_LLVM)
-#pragma omp end declare target
-#endif
 
 namespace Impl {
 
