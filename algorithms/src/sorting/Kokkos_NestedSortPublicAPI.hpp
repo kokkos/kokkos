@@ -19,7 +19,12 @@
 
 #include "impl/Kokkos_NestedSortImpl.hpp"
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkos.std_algorithms_impl;
+#else
 #include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
+#endif
 
 namespace Kokkos {
 namespace Experimental {

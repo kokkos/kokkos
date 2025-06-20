@@ -18,6 +18,12 @@
 #define KOKKOS_ALGORITHMS_UNITTESTS_TEST_STD_ALGOS_COMMON_HPP
 
 #include <gtest/gtest.h>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULE
+import kokkos.std_algorithms;
+#else
+#include <Kokkos_StdAlgorithms.hpp>
+#endif
 #include <Kokkos_Core.hpp>
 #include <Kokkos_StdAlgorithms.hpp>
 #include <Kokkos_Random.hpp>

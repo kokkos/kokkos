@@ -32,14 +32,46 @@ pipeline {
         }
         stage('Build-1') {
             parallel {
-                stage('GCC-8.4.0') {
+                stage('C++20-Modules-Clang-19') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.gcc'
+                            filename 'Dockerfile.modules'
                             dir 'scripts/docker'
                             label 'docker'
                         }
                     }
+                    steps {
+                        sh '''rm -rf build && \
+                              cmake \
+                                -B build \
+                                -GNinja \
+                                -DCMAKE_CXX_COMPILER=clang++-19 \
+                                -DCMAKE_CXX_FLAGS="-Werror" \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_EXPERIMENTAL_CXX20_MODULE=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_EXAMPLES=ON \
+                                -DKokkos_ENABLE_SERIAL=ON && \
+                              cmake --build build --target install -j 8 && \
+                              ctest --test-dir build --no-compress-output -T Test --verbose && \
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }
+                stage('GCC-8.4.0') {
+                    agent {
+                         dockerfile {
+                             filename 'Dockerfile.gcc'
+                             dir 'scripts/docker'
+                             label 'docker'
+                         }
+                     }
                     environment {
                         OMP_NUM_THREADS = 8
                         OMP_NESTED = 'true'
