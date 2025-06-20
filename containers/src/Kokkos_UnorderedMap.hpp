@@ -382,6 +382,12 @@ class UnorderedMap {
     static_assert(
         !alloc_prop_t::has_pointer,
         "Allocation properties should not contain the 'pointer' property.");
+    static_assert(
+        alloc_prop_t::sequential_host_init &&
+            (SpaceAccessibility<
+                HostSpace, typename execution_space::memory_space>::accessible),
+        "SequentialHostInit only allowed if the UnorderedMap's MemorySpace is "
+        "accesible to the host.");
 
     /// Update allocation properties with 'label' and 'without initializing'
     /// properties.
