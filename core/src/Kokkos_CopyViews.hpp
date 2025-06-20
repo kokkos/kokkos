@@ -1086,6 +1086,8 @@ inline void deep_copy(
     std::enable_if_t<
         (std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
          std::is_void_v<typename ViewTraits<ST, SP...>::specialize> &&
+         (is_view_v<typename View<DT, DP...>::value_type> ==
+          is_view_v<typename View<ST, SP...>::value_type>)&&  //
          (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
           unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
   using dst_type         = View<DT, DP...>;
@@ -2302,6 +2304,8 @@ inline void deep_copy(
         (Kokkos::is_execution_space<ExecSpace>::value &&
          std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
          std::is_void_v<typename ViewTraits<ST, SP...>::specialize> &&
+         (is_view_v<typename View<DT, DP...>::value_type> ==
+          is_view_v<typename View<ST, SP...>::value_type>)&&  //
          (unsigned(ViewTraits<DT, DP...>::rank) != 0 ||
           unsigned(ViewTraits<ST, SP...>::rank) != 0))>* = nullptr) {
   using dst_type = View<DT, DP...>;
