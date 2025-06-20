@@ -119,6 +119,20 @@ void test_partitioning(TEST_EXECSPACE& instance0, TEST_EXECSPACE& instance1) {
   check_space_member_for_policies(instance0);
   check_space_member_for_policies(instance1);
 
+#ifdef KOKKOS_ENABLE_OPENMP
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) {
+#if (!defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_GNU >= 1110) && \
+    _OPENMP >= 201511
+    bool supports_nested = omp_get_max_active_levels() > 1;
+#else
+    bool supports_nested = static_cast<bool>(omp_get_nested());
+#endif
+    if (!supports_nested)
+      GTEST_SKIP()
+          << "The OpenMP configuration doesn't allow nested parallelism";
+  }
+#endif
+
   int sum1, sum2;
   int N = 3910;
   run_threaded_test(

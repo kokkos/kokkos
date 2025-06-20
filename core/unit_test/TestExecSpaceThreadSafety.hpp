@@ -28,6 +28,18 @@ namespace {
 #ifdef KOKKOS_ENABLE_OPENMP
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) {
+#if (!defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_GNU >= 1110) && \
+    _OPENMP >= 201511
+    bool supports_nested = omp_get_max_active_levels() > 1;
+#else
+    bool supports_nested = static_cast<bool>(omp_get_nested());
+#endif
+    if (!supports_nested)
+      GTEST_SKIP()
+          << "The OpenMP configuration doesn't allow nested parallelism";
+  }
+
   if (omp_get_max_threads() < 2)
     GTEST_SKIP() << "insufficient number of supported concurrent threads";
 
