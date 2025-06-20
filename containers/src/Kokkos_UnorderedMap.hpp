@@ -397,27 +397,15 @@ class UnorderedMap {
         bitset_type(Kokkos::Impl::append_to_label(prop_copy, " - bitset"),
                     calculate_capacity(capacity_hint));
 
-    if constexpr (alloc_prop_t::sequential_host_init) {
-      m_hash_lists = size_type_view(
-          Kokkos::Impl::append_to_label(prop_copy, " - hash list"),
-          Impl::find_hash_size(capacity()));
+    m_hash_lists = allocate_with_property_if_compatible<size_type_view>(
+        Kokkos::Impl::append_to_label(prop_copy, " - hash list"),
+        WithoutInitializing, Impl::find_hash_size(capacity()));
 
-      m_next_index = size_type_view(
-          Kokkos::Impl::append_to_label(prop_copy, " - next index"),
-          capacity() + 1);  // +1 so that the *_at functions can always return a
-                            // valid reference
-    } else {
-      const auto prop_copy_noinit = Impl::with_properties_if_unset(
-          prop_copy, Kokkos::WithoutInitializing);
-      m_hash_lists = size_type_view(
-          Kokkos::Impl::append_to_label(prop_copy_noinit, " - hash list"),
-          Impl::find_hash_size(capacity()));
-
-      m_next_index = size_type_view(
-          Kokkos::Impl::append_to_label(prop_copy_noinit, " - next index"),
-          capacity() + 1);  // +1 so that the *_at functions can always return a
-                            // valid reference
-    }
+    m_next_index = allocate_with_property_if_compatible<size_type_view>(
+        Kokkos::Impl::append_to_label(prop_copy, " - next index"),
+        WithoutInitializing,
+        capacity() + 1);  // +1 so that the *_at functions can always return
+                          // a valid reference
 
     m_keys = key_type_view(Kokkos::Impl::append_to_label(prop_copy, " - keys"),
                            capacity());
@@ -494,12 +482,12 @@ class UnorderedMap {
     requested_capacity =
         (requested_capacity < curr_size) ? curr_size : requested_capacity;
 
-    auto tmp =
-        m_SequentialHostInit
-            ? insertable_map_type(view_alloc(SequentialHostInit),
-                                  requested_capacity, m_hasher, m_equal_to)
-            : insertable_map_type(view_alloc(), requested_capacity, m_hasher,
-                                  m_equal_to);
+    auto tmp = m_SequentialHostInit
+                   ? allocate_with_property_if_compatible<insertable_map_type>(
+                         view_alloc(), SequentialHostInit, requested_capacity,
+                         m_hasher, m_equal_to)
+                   : insertable_map_type(view_alloc(), requested_capacity,
+                                         m_hasher, m_equal_to);
 
     if (curr_size) {
       tmp.m_bounded_insert = false;
@@ -921,14 +909,14 @@ class UnorderedMap {
     tmp.m_keys =
         key_type_view(view_alloc(WithoutInitializing, "UnorderedMap keys"),
                       src.m_keys.extent(0));
-    tmp.m_values =
-        src.m_SequentialHostInit
-            ? value_type_view(
-                  view_alloc(SequentialHostInit, "UnorderedMap values"),
-                  src.m_values.extent(0))
-            : value_type_view(
-                  view_alloc(WithoutInitializing, "UnorderedMap values"),
-                  src.m_values.extent(0));
+    tmp.m_values = src.m_SequentialHostInit
+                       ? allocate_with_property_if_compatible<value_type_view>(
+                             view_alloc("UnorderedMap values"),
+                             SequentialHostInit, src.m_values.extent(0))
+                       : allocate_with_property_if_compatible<value_type_view>(
+                             view_alloc("UnorderedMap values"),
+                             WithoutInitializing, src.m_values.extent(0));
+
     tmp.m_scalars = scalars_view("UnorderedMap scalars");
 
     *this = tmp;
