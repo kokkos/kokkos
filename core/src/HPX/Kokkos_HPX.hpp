@@ -531,7 +531,8 @@ struct MemorySpaceAccess<Kokkos::Experimental::HPX::memory_space,
 template <>
 struct ZeroMemset<Kokkos::Experimental::HPX> {
   ZeroMemset(const Kokkos::Experimental::HPX &exec, void *dst, size_t cnt) {
-    exec.fence("Kokkos::Impl::ZeroMemset: HostSpace fence before calling std::memset");
+    exec.fence(
+        "Kokkos::Impl::ZeroMemset: HostSpace fence before calling std::memset");
     std::memset(dst, 0, cnt);
   }
 };

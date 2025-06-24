@@ -28,7 +28,7 @@ namespace Impl {
 template <>
 struct ZeroMemset<OpenMP> {
   ZeroMemset(const OpenMP& exec_space, void* dst, size_t cnt) {
-    constexpr size_t host_memset_limit = 1lu<<17;
+    constexpr size_t host_memset_limit = 1lu << 17;
     if (cnt < host_memset_limit) {
       std::memset(dst, 0, cnt);
     } else {
