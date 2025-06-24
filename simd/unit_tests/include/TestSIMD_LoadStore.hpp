@@ -104,7 +104,7 @@ inline void host_test_simd_loadstore() {
 
 template <typename Abi, typename DataType>
 inline void host_check_loadstore() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
     host_test_simd_loadstore<Abi, DataType>();
   }
 }
@@ -205,7 +205,7 @@ KOKKOS_INLINE_FUNCTION void device_test_simd_loadstore() {
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_loadstore() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
     device_test_simd_loadstore<Abi, DataType>();
   }
 }

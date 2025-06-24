@@ -568,7 +568,7 @@ class masked_reduce {
       } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
         if (mask[i]) result = result ^ a[i];
       } else {
-        if (m[i]) result = BinaryOperation()(result, v[i]);
+        if (mask[i]) result = BinaryOperation()(result, a[i]);
       }
     }
     return result;
