@@ -1932,19 +1932,6 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
 };
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>>::basic_simd(
-    basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const&
-        other) noexcept
-    : m_value(
-          vmovn_s64(vreinterpretq_s64_u64(static_cast<uint64x2_t>(other)))) {}
-
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>>::basic_simd(
-    basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const&
-        other) noexcept
-    : m_value(vreinterpretq_s64_u64(static_cast<uint64x2_t>(other))) {}
-
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> abs(
     basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const& a) {
   return a;

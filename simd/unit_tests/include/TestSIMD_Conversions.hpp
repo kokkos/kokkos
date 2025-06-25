@@ -79,8 +79,8 @@ inline void host_check_conversions_all_abis(
 
 template <typename Abi, typename DataTypeA, typename DataTypeB>
 KOKKOS_INLINE_FUNCTION void device_check_conversions() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataTypeA, Abi>> &&
-                is_type_v<Kokkos::Experimental::basic_simd<DataTypeB, Abi>>) {
+  if constexpr (is_simd_avail_v<DataTypeA, Abi> &&
+                is_simd_avail_v<DataTypeB, Abi>) {
     DataTypeA test_val =
         (std::is_signed_v<DataTypeA> && std::is_signed_v<DataTypeB>) ? -213
                                                                      : 213;
