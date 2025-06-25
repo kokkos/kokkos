@@ -415,7 +415,7 @@ class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
       : m_value(value_in) {}
   template <typename U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit
-#if __cplusplus >= 202002L
+#ifdef KOKKOS_ENABLE_CXX20
       (Impl::needs_explicit_conversion_v<U, value_type>)
 #endif
           basic_simd(basic_simd<U, abi_type> const& other) noexcept
@@ -720,7 +720,7 @@ class basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
       : m_value(value_in) {}
   template <typename U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit
-#if __cplusplus >= 202002L
+#ifdef KOKKOS_ENABLE_CXX20
       (Impl::needs_explicit_conversion_v<U, value_type>)
 #endif
           basic_simd(basic_simd<U, abi_type> const& other) noexcept
@@ -1030,7 +1030,7 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
       : m_value(value_in) {}
   template <typename U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit
-#if __cplusplus >= 202002L
+#ifdef KOKKOS_ENABLE_CXX20
       (Impl::needs_explicit_conversion_v<U, value_type>)
 #endif
           basic_simd(basic_simd<U, abi_type> const& other) noexcept
@@ -1377,7 +1377,7 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
       : m_value(value_in) {}
   template <typename U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit
-#if __cplusplus >= 202002L
+#ifdef KOKKOS_ENABLE_CXX20
       (Impl::needs_explicit_conversion_v<U, value_type>)
 #endif
           basic_simd(basic_simd<U, abi_type> const& other) noexcept
@@ -1714,7 +1714,7 @@ class basic_simd<std::int64_t,
       : m_value(value_in) {}
   template <typename U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit
-#if __cplusplus >= 202002L
+#ifdef KOKKOS_ENABLE_CXX20
       (Impl::needs_explicit_conversion_v<U, value_type>)
 #endif
           basic_simd(basic_simd<U, abi_type> const& other) noexcept
@@ -2060,7 +2060,7 @@ class basic_simd<std::uint64_t,
       basic_simd<std::int32_t, abi_type> const& other) noexcept;
   template <typename U>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit
-#if __cplusplus >= 202002L
+#ifdef KOKKOS_ENABLE_CXX20
       (Impl::needs_explicit_conversion_v<U, value_type>)
 #endif
           basic_simd(basic_simd<U, abi_type> const& other) noexcept
