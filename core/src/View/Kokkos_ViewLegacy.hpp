@@ -950,18 +950,9 @@ class View : public ViewTraits<DataType, Properties...> {
                               Args... args)
       : m_track(src_view), m_map() {
     using SrcType = View<RT, RP...>;
-
     using Mapping = Kokkos::Impl::ViewMapping<void, typename SrcType::traits,
                                               Arg0, Args...>;
-
-    using DstType = typename Mapping::type;
-
-    static_assert(
-        Kokkos::Impl::ViewMapping<traits, typename DstType::traits,
-                                  typename traits::specialize>::is_assignable,
-        "Subview construction requires compatible view and subview arguments");
-
-    Mapping::assign(m_map, src_view.m_map, arg0, args...);
+    Mapping::assign(m_map, src_view.m_map, m_track.m_tracker, arg0, args...);
   }
 
   //----------------------------------------
