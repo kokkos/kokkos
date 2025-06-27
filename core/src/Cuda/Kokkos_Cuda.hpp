@@ -73,10 +73,6 @@ constexpr inline CudaLaunchMechanism operator&(CudaLaunchMechanism p1,
                                           static_cast<unsigned>(p2));
 }
 
-template <CudaLaunchMechanism l>
-struct CudaDispatchProperties {
-  CudaLaunchMechanism launch_mechanism = l;
-};
 }  // namespace Experimental
 
 enum class ManageStream : bool { no, yes };
