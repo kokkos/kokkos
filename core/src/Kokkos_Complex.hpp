@@ -155,6 +155,16 @@ class
     return *this;
   }
 
+  KOKKOS_FUNCTION friend constexpr complex& operator+=(
+      complex& lhs, const std::complex<RealType>& rhs) {
+    return lhs = lhs + rhs;
+  }
+
+  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator+=(
+      std::complex<RealType>& lhs, const complex& rhs) {
+    return lhs = lhs + rhs;
+  }
+
   constexpr KOKKOS_INLINE_FUNCTION complex& operator-=(
       const complex<RealType>& src) noexcept {
     re_ -= src.re_;
@@ -166,6 +176,16 @@ class
       const RealType& src) noexcept {
     re_ -= src;
     return *this;
+  }
+
+  KOKKOS_FUNCTION friend constexpr complex& operator-=(
+      complex& lhs, const std::complex<RealType>& rhs) {
+    return lhs = lhs - rhs;
+  }
+
+  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator-=(
+      std::complex<RealType>& lhs, const complex& rhs) {
+    return lhs = lhs - rhs;
   }
 
   constexpr KOKKOS_INLINE_FUNCTION complex& operator*=(
@@ -182,6 +202,16 @@ class
     re_ *= src;
     im_ *= src;
     return *this;
+  }
+
+  KOKKOS_FUNCTION friend constexpr complex& operator*=(
+      complex& lhs, const std::complex<RealType>& rhs) {
+    return lhs = lhs * rhs;
+  }
+
+  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator*=(
+      std::complex<RealType>& lhs, const complex& rhs) {
+    return lhs = lhs * rhs;
   }
 
   // Conditional noexcept, just in case RType throws on divide-by-zero
@@ -235,6 +265,11 @@ class
       *this /= y_scaled_abs;
     }
     return *this;
+  }
+
+  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator/=(
+      std::complex<RealType>& lhs, const complex& rhs) {
+    return lhs = lhs / rhs;
   }
 
   constexpr KOKKOS_INLINE_FUNCTION complex& operator/=(
