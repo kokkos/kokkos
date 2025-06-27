@@ -252,10 +252,10 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
 
 template <class DriverType>
 struct DeduceCudaLaunchMechanism {
-  constexpr static Kokkos::Experimental::WorkItemProperty::HintLightWeight_t
-      light_weight = Kokkos::Experimental::WorkItemProperty::HintLightWeight;
-  constexpr static Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t
-      heavy_weight = Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
+  constexpr static auto light_weight =
+      Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+  constexpr static auto heavy_weight =
+      Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
   constexpr static typename DriverType::Policy::work_item_property property =
       typename DriverType::Policy::work_item_property();
 
