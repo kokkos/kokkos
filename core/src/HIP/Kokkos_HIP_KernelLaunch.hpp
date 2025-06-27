@@ -116,11 +116,6 @@ constexpr inline HIPLaunchMechanism operator&(HIPLaunchMechanism p1,
                                          static_cast<unsigned>(p2));
 }
 
-template <HIPLaunchMechanism l>
-struct HIPDispatchProperties {
-  HIPLaunchMechanism launch_mechanism = l;
-};
-
 // Use local memory up to ConstantMemoryUseThreshold
 // Use global memory above ConstantMemoryUsage
 // In between use ConstantMemory
