@@ -430,6 +430,16 @@ class
     return complex(lhs.real() + rhs.real(), lhs.imag() + rhs.imag());
   }
 
+  KOKKOS_FUNCTION friend constexpr complex operator-(
+      const complex& lhs, const std::complex<RealType>& rhs) {
+    return complex(lhs.real() - rhs.real(), lhs.imag() - rhs.imag());
+  }
+
+  KOKKOS_FUNCTION friend constexpr complex operator-(
+      const std::complex<RealType>& lhs, const complex& rhs) {
+    return complex(lhs.real() - rhs.real(), lhs.imag() - rhs.imag());
+  }
+
   KOKKOS_FUNCTION friend constexpr complex operator*(
       const complex& lhs, const std::complex<RealType>& rhs) {
     return complex(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
@@ -677,25 +687,55 @@ KOKKOS_INLINE_FUNCTION complex<RealType> operator+(
 }
 
 //! Binary - operator for complex.
-template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION complex<std::common_type_t<RealType1, RealType2>>
-operator-(const complex<RealType1>& x, const complex<RealType2>& y) noexcept {
+//      Returns: complex<T>(lhs) -= rhs
+template <class T>
+KOKKOS_FUNCTION constexpr complex<T> operator-(const complex<T>& lhs,
+                                               const complex<T>& rhs) {
+  return complex<T>(lhs.real() - rhs.real(), lhs.imag() - rhs.imag());
+}
+
+template <class T>
+KOKKOS_FUNCTION constexpr complex<T> operator-(const complex<T>& lhs,
+                                               const T& rhs) {
+  return complex<T>(lhs.real() - rhs, lhs.imag());
+}
+
+template <class T>
+KOKKOS_FUNCTION constexpr complex<T> operator-(const T& lhs,
+                                               const complex<T>& rhs) {
+  return complex<T>(lhs - rhs.real(), -rhs.imag());
+}
+
+//! Binary - operator for complex.
+template <class RealType1, class RealType2,
+          class = std::enable_if_t<Impl::is_noncv_floating_point_v<
+              std::common_type<RealType1, RealType2>>>>
+KOKKOS_DEPRECATED KOKKOS_FUNCTION
+    complex<std::common_type_t<RealType1, RealType2>>
+    operator-(const complex<RealType1>& x,
+              const complex<RealType2>& y) noexcept {
   return complex<std::common_type_t<RealType1, RealType2>>(x.real() - y.real(),
                                                            x.imag() - y.imag());
 }
 
 //! Binary - operator for complex scalar.
-template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION complex<std::common_type_t<RealType1, RealType2>>
-operator-(const complex<RealType1>& x, const RealType2& y) noexcept {
+template <class RealType1, class RealType2,
+          class = std::enable_if_t<Impl::is_noncv_floating_point_v<
+              std::common_type<RealType1, RealType2>>>>
+KOKKOS_DEPRECATED KOKKOS_FUNCTION
+    complex<std::common_type_t<RealType1, RealType2>>
+    operator-(const complex<RealType1>& x, const RealType2& y) noexcept {
   return complex<std::common_type_t<RealType1, RealType2>>(x.real() - y,
                                                            x.imag());
 }
 
 //! Binary - operator for scalar complex.
-template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION complex<std::common_type_t<RealType1, RealType2>>
-operator-(const RealType1& x, const complex<RealType2>& y) noexcept {
+template <class RealType1, class RealType2,
+          class = std::enable_if_t<Impl::is_noncv_floating_point_v<
+              std::common_type<RealType1, RealType2>>>>
+KOKKOS_DEPRECATED KOKKOS_FUNCTION
+    complex<std::common_type_t<RealType1, RealType2>>
+    operator-(const RealType1& x, const complex<RealType2>& y) noexcept {
   return complex<std::common_type_t<RealType1, RealType2>>(x - y.real(),
                                                            -y.imag());
 }
