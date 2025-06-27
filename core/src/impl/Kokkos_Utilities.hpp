@@ -70,6 +70,15 @@ template <typename E>
 inline constexpr bool is_scoped_enum_v = is_scoped_enum<E>::value;
 #endif
 
+template <typename F>
+struct is_noncv_floating_point
+    : std::bool_constant<std::is_floating_point_v<F> &&
+                         std::is_same_v<F, std::remove_cv_t<F>>> {};
+
+template <typename F>
+inline constexpr bool is_noncv_floating_point_v =
+    is_noncv_floating_point<F>::value;
+
 //==============================================================================
 // <editor-fold desc="is_specialization_of"> {{{1
 

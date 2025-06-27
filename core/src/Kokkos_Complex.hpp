@@ -32,8 +32,7 @@ class
     alignas(2 * sizeof(RealType))
 #endif
         complex {
-  static_assert(std::is_floating_point_v<RealType> &&
-                    std::is_same_v<RealType, std::remove_cv_t<RealType>>,
+  static_assert(Impl::is_noncv_floating_point_v<RealType>,
                 "Kokkos::complex can only be instantiated for a cv-unqualified "
                 "floating point type");
 
@@ -651,9 +650,47 @@ KOKKOS_INLINE_FUNCTION complex<RealType> operator-(
 }
 
 //! Binary * operator for complex.
-template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION complex<std::common_type_t<RealType1, RealType2>>
-operator*(const complex<RealType1>& x, const complex<RealType2>& y) noexcept {
+//      Returns: complex<T>(lhs) *= rhs.
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(
+    const complex<T>& lhs, const std::complex<T>& rhs) {
+  return complex<T>(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
+                    lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(
+    const std::complex<T>& lhs, const complex<T>& rhs) {
+  return complex<T>(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
+                    lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(const complex<T>& lhs,
+                                                      const complex<T>& rhs) {
+  return complex<T>(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
+                    lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(const complex<T>& lhs,
+                                                      const T& rhs) {
+  return complex<T>(lhs.real() * rhs, lhs.imag() * rhs);
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(const T& lhs,
+                                                      const complex<T>& rhs) {
+  return complex<T>(lhs * rhs.real(), lhs * rhs.imag());
+}
+
+template <class RealType1, class RealType2,
+          class = std::enable_if_t<Impl::is_noncv_floating_point_v<
+              std::common_type_t<RealType1, RealType2>>>>
+KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION
+    complex<std::common_type_t<RealType1, RealType2>>
+    operator*(const complex<RealType1>& x,
+              const complex<RealType2>& y) noexcept {
   return complex<std::common_type_t<RealType1, RealType2>>(
       x.real() * y.real() - x.imag() * y.imag(),
       x.real() * y.imag() + x.imag() * y.real());
@@ -667,8 +704,10 @@ operator*(const complex<RealType1>& x, const complex<RealType2>& y) noexcept {
 /// This function cannot be called in a CUDA device function, because
 /// std::complex's methods and nonmember functions are not marked as
 /// CUDA device functions.
-template <class RealType1, class RealType2>
-inline complex<std::common_type_t<RealType1, RealType2>> operator*(
+template <class RealType1, class RealType2,
+          class = std::enable_if_t<Impl::is_noncv_floating_point_v<
+              std::common_type_t<RealType1, RealType2>>>>
+KOKKOS_DEPRECATED complex<std::common_type_t<RealType1, RealType2>> operator*(
     const std::complex<RealType1>& x, const complex<RealType2>& y) {
   return complex<std::common_type_t<RealType1, RealType2>>(
       x.real() * y.real() - x.imag() * y.imag(),
@@ -679,9 +718,12 @@ inline complex<std::common_type_t<RealType1, RealType2>> operator*(
 ///
 /// This function exists because the compiler doesn't know that
 /// RealType and complex<RealType> commute with respect to operator*.
-template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION complex<std::common_type_t<RealType1, RealType2>>
-operator*(const RealType1& x, const complex<RealType2>& y) noexcept {
+template <class RealType1, class RealType2,
+          class = std::enable_if_t<Impl::is_noncv_floating_point_v<
+              std::common_type_t<RealType1, RealType2>>>>
+KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION
+    complex<std::common_type_t<RealType1, RealType2>>
+    operator*(const RealType1& x, const complex<RealType2>& y) noexcept {
   return complex<std::common_type_t<RealType1, RealType2>>(x * y.real(),
                                                            x * y.imag());
 }
@@ -690,9 +732,12 @@ operator*(const RealType1& x, const complex<RealType2>& y) noexcept {
 ///
 /// This function exists because the compiler doesn't know that
 /// RealType and complex<RealType> commute with respect to operator*.
-template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION complex<std::common_type_t<RealType1, RealType2>>
-operator*(const complex<RealType1>& y, const RealType2& x) noexcept {
+template <class RealType1, class RealType2,
+          class = std::enable_if_t<Impl::is_noncv_floating_point_v<
+              std::common_type_t<RealType1, RealType2>>>>
+KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION
+    complex<std::common_type_t<RealType1, RealType2>>
+    operator*(const complex<RealType1>& y, const RealType2& x) noexcept {
   return complex<std::common_type_t<RealType1, RealType2>>(x * y.real(),
                                                            x * y.imag());
 }
