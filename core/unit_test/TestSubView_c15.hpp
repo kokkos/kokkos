@@ -16,13 +16,34 @@
 
 #ifndef KOKKOS_TEST_SUBVIEW_C15_HPP
 #define KOKKOS_TEST_SUBVIEW_C15_HPP
-#include <TestViewSubview.hpp>
+
+#include <gtest/gtest.h>
+#include <Kokkos_Core.hpp>
 
 namespace Test {
 
 TEST(TEST_CATEGORY_DEATH, subview_constructor_types) {
-  TestViewSubview::test_subview_constructor_types();
-}
+  int N=10;
+  using LR = Kokkos::LayoutRight;
+  using LL = Kokkos::LayoutLeft;
+  using LS = Kokkos::LayoutStride;
 
+  Kokkos::View<int**, LL> a("A",N,N);
+  {
+    // Using subview dims (ALL, 1). For a LayoutLeft,
+    // any view layout is appropriate.
+    (void)Kokkos::View<int*, LL>(a, Kokkos::ALL, 1);
+    (void)Kokkos::View<int*, LS>(a, Kokkos::ALL, 1);
+    //(void)Kokkos::View<int*, LR>(a, Kokkos::ALL, 1); // FIXME: This doesn't compile for BasicView?
+  }
+  {
+    // Using subview dims (1, ALL). For a LayoutLeft,
+    // resutling subview must be strided.
+    const std::string msg = "View assignment must have compatible layouts";
+    ASSERT_DEATH(((void)Kokkos::View<int*, LL>(a, 1, Kokkos::ALL)), msg);
+    (void)Kokkos::View<int*, LS>(a, 1, Kokkos::ALL);
+    ASSERT_DEATH(((void)Kokkos::View<int*, LR>(a, 1, Kokkos::ALL)), msg);
+  }
+}
 }  // namespace Test
 #endif
