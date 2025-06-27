@@ -952,7 +952,7 @@ class View : public ViewTraits<DataType, Properties...> {
     using SrcType = View<RT, RP...>;
     using Mapping = Kokkos::Impl::ViewMapping<void, typename SrcType::traits,
                                               Arg0, Args...>;
-    Mapping::assign(m_map, src_view.m_map, m_track.m_tracker, arg0, args...);
+    Mapping::assign(m_map, src_view.m_map, arg0, args...);
   }
 
   //----------------------------------------

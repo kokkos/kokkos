@@ -3313,7 +3313,6 @@ class ViewMapping<
   KOKKOS_INLINE_FUNCTION static void assign(
       ViewMapping<DstTraits, void>& dst,
       ViewMapping<SrcTraits, void> const& src,
-      const Kokkos::Impl::SharedAllocationTracker& src_track,
       Args... args) {
     // Create ViewMapping based on traits_type, which was determined by this class.
     // We cannot assume that aligned src memory implies the subview will be aligned,
@@ -3334,7 +3333,8 @@ class ViewMapping<
                           extents.domain_offset(6), extents.domain_offset(7)));
 
     // Map from base dst to dst requested.
-    ViewMapping<DstTraits, traits_type_wo_align, typename DstTraits::specialize>::assign(dst, base_dst, src_track);
+    Kokkos::Impl::SharedAllocationTracker dummy_track;
+    ViewMapping<DstTraits, traits_type_wo_align, typename DstTraits::specialize>::assign(dst, base_dst, dummy_track);
   }
 };
 
