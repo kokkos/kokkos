@@ -414,6 +414,18 @@ class
     im_ *= src;
   }
 #endif  // KOKKOS_ENABLE_DEPRECATED_CODE_4
+
+  KOKKOS_FUNCTION friend constexpr complex operator*(
+      const complex& lhs, const std::complex<RealType>& rhs) {
+    return complex(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
+                   lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
+  }
+
+  KOKKOS_FUNCTION friend constexpr complex operator*(
+      const std::complex<RealType>& lhs, const complex& rhs) {
+    return complex(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
+                   lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
+  }
 };
 
 }  // namespace Kokkos
@@ -652,35 +664,21 @@ KOKKOS_INLINE_FUNCTION complex<RealType> operator-(
 //! Binary * operator for complex.
 //      Returns: complex<T>(lhs) *= rhs.
 template <class T>
-KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(
-    const complex<T>& lhs, const std::complex<T>& rhs) {
+KOKKOS_FUNCTION constexpr complex<T> operator*(const complex<T>& lhs,
+                                               const complex<T>& rhs) {
   return complex<T>(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
                     lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(
-    const std::complex<T>& lhs, const complex<T>& rhs) {
-  return complex<T>(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
-                    lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(const complex<T>& lhs,
-                                                      const complex<T>& rhs) {
-  return complex<T>(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
-                    lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
-}
-
-template <class T>
-KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(const complex<T>& lhs,
-                                                      const T& rhs) {
+KOKKOS_FUNCTION constexpr complex<T> operator*(const complex<T>& lhs,
+                                               const T& rhs) {
   return complex<T>(lhs.real() * rhs, lhs.imag() * rhs);
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION constexpr complex<T> operator*(const T& lhs,
-                                                      const complex<T>& rhs) {
+KOKKOS_FUNCTION constexpr complex<T> operator*(const T& lhs,
+                                               const complex<T>& rhs) {
   return complex<T>(lhs * rhs.real(), lhs * rhs.imag());
 }
 
