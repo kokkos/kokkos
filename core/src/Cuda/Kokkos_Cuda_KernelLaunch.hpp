@@ -252,18 +252,15 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
 
 template <class DriverType>
 struct DeduceCudaLaunchMechanism {
-  constexpr static const Kokkos::Experimental::WorkItemProperty::
-      HintLightWeight_t light_weight =
-          Kokkos::Experimental::WorkItemProperty::HintLightWeight;
-  constexpr static const Kokkos::Experimental::WorkItemProperty::
-      HintHeavyWeight_t heavy_weight =
-          Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
-  constexpr static const typename DriverType::Policy::work_item_property
-      property = typename DriverType::Policy::work_item_property();
+  constexpr static Kokkos::Experimental::WorkItemProperty::HintLightWeight_t
+      light_weight = Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+  constexpr static Kokkos::Experimental::WorkItemProperty::HintHeavyWeight_t
+      heavy_weight = Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
+  constexpr static typename DriverType::Policy::work_item_property property =
+      typename DriverType::Policy::work_item_property();
 
-  static constexpr const Experimental::CudaLaunchMechanism
-      valid_launch_mechanism =
-          // BuildValidMask
+  static constexpr Experimental::CudaLaunchMechanism valid_launch_mechanism =
+      // BuildValidMask
       (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
            ? Experimental::CudaLaunchMechanism::LocalMemory
            : Experimental::CudaLaunchMechanism::Default) |
@@ -272,16 +269,15 @@ struct DeduceCudaLaunchMechanism {
            : Experimental::CudaLaunchMechanism::Default) |
       Experimental::CudaLaunchMechanism::GlobalMemory;
 
-  static constexpr const Experimental::CudaLaunchMechanism
+  static constexpr Experimental::CudaLaunchMechanism
       requested_launch_mechanism =
           (((property & light_weight) == light_weight)
                ? Experimental::CudaLaunchMechanism::LocalMemory
                : Experimental::CudaLaunchMechanism::ConstantMemory) |
           Experimental::CudaLaunchMechanism::GlobalMemory;
 
-  static constexpr const Experimental::CudaLaunchMechanism
-      default_launch_mechanism =
-          // BuildValidMask
+  static constexpr Experimental::CudaLaunchMechanism default_launch_mechanism =
+      // BuildValidMask
       (sizeof(DriverType) < CudaTraits::ConstantMemoryUseThreshold)
           ? Experimental::CudaLaunchMechanism::LocalMemory
           : ((sizeof(DriverType) < CudaTraits::ConstantMemoryUsage)
@@ -293,7 +289,7 @@ struct DeduceCudaLaunchMechanism {
   // UseT<F<KAL   LCG LCG C  C        LCG  LG C  L    LCG  CG C  C
   // Kal<F<CMU     CG LCG C  C         CG  LG C  G     CG  CG C  C
   // CMU<F          G LCG G  G          G  LG G  G      G  CG G  G
-  static constexpr const Experimental::CudaLaunchMechanism launch_mechanism =
+  static constexpr Experimental::CudaLaunchMechanism launch_mechanism =
       ((property & light_weight) == light_weight)
           ? (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
                  ? Experimental::CudaLaunchMechanism::LocalMemory
