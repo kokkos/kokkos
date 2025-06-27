@@ -70,9 +70,8 @@ function(KOKKOS_ADD_BENCHMARK NAME)
 
   string(TIMESTAMP BENCHMARK_TIME "%Y-%m-%d_T%H-%M-%S" UTC)
   set(BENCHMARK_ARGS --benchmark_counters_tabular=true --benchmark_out=${BENCHMARK_NAME}_${BENCHMARK_TIME}.json)
-  if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
-  endif()
+
+  add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
 endfunction()
 
 set(BENCHMARK_SOURCES

@@ -16,14 +16,14 @@
 
 #include "Benchmark_Context.hpp"
 
+namespace Benchmark {
+
 template <typename DataType>
 void ViewFirstTouch_Initialize(benchmark::State& state) {
   const int N    = state.range(0);
   using ViewType = Kokkos::View<DataType*>;
 
   for (auto _ : state) {
-    Kokkos::fence();
-
     Kokkos::Timer timer;
     ViewType v_a("A", N);
     Kokkos::fence();
@@ -31,24 +31,22 @@ void ViewFirstTouch_Initialize(benchmark::State& state) {
   }
 }
 
-namespace Test {
-
 BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, double)
     ->ArgName("N")
     ->RangeMultiplier(8)
-    ->Range(int64_t(1) << 3, int64_t(1) << 27)
+    ->Range(int64_t(1) << 6, int64_t(1) << 27)
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, float)
     ->ArgName("N")
     ->RangeMultiplier(8)
-    ->Range(int64_t(1) << 3, int64_t(1) << 27)
+    ->Range(int64_t(1) << 6, int64_t(1) << 27)
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, int)
     ->ArgName("N")
     ->RangeMultiplier(8)
-    ->Range(int64_t(1) << 3, int64_t(1) << 27)
+    ->Range(int64_t(1) << 6, int64_t(1) << 27)
     ->UseManualTime();
 
-}  // namespace Test
+}  // namespace Benchmark

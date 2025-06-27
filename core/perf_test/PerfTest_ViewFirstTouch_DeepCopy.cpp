@@ -16,16 +16,16 @@
 
 #include "Benchmark_Context.hpp"
 
+namespace Benchmark {
+
 template <typename DataType>
 void ViewFirstTouch_DeepCopy(benchmark::State& state) {
   const int N               = state.range(0);
   const DataType init_value = static_cast<DataType>(state.range(1));
   using ViewType            = Kokkos::View<DataType*>;
+  ViewType v_a("A", N);
 
   for (auto _ : state) {
-    Kokkos::fence();
-
-    ViewType v_a("A", N);
     Kokkos::fence();
     Kokkos::Timer timer;
     Kokkos::deep_copy(v_a, init_value);
@@ -33,24 +33,22 @@ void ViewFirstTouch_DeepCopy(benchmark::State& state) {
   }
 }
 
-namespace Test {
-
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, double)
     ->ArgNames({"N", "init_value"})
     ->RangeMultiplier(8)
-    ->Ranges({{int64_t(1) << 3, int64_t(1) << 27}, {0, 1}})
+    ->Ranges({{int64_t(1) << 6, int64_t(1) << 27}, {0, 1}})
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, float)
     ->ArgNames({"N", "init_value"})
     ->RangeMultiplier(8)
-    ->Ranges({{int64_t(1) << 3, int64_t(1) << 27}, {0, 1}})
+    ->Ranges({{int64_t(1) << 6, int64_t(1) << 27}, {0, 1}})
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, int)
     ->ArgNames({"N", "init_value"})
     ->RangeMultiplier(8)
-    ->Ranges({{int64_t(1) << 3, int64_t(1) << 27}, {0, 1}})
+    ->Ranges({{int64_t(1) << 6, int64_t(1) << 27}, {0, 1}})
     ->UseManualTime();
 
-}  // namespace Test
+}  // namespace Benchmark

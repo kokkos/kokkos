@@ -16,6 +16,8 @@
 
 #include "Benchmark_Context.hpp"
 
+namespace Benchmark {
+
 template <typename DataType>
 void ViewFirstTouch_ParallelFor(benchmark::State& state) {
   const int N    = state.range(0);
@@ -36,24 +38,22 @@ void ViewFirstTouch_ParallelFor(benchmark::State& state) {
   }
 }
 
-namespace Test {
-
 BENCHMARK_TEMPLATE(ViewFirstTouch_ParallelFor, double)
     ->ArgName("N")
     ->RangeMultiplier(8)
-    ->Range(int64_t(1) << 3, int64_t(1) << 27)
+    ->Range(int64_t(1) << 6, int64_t(1) << 27)
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_ParallelFor, float)
     ->ArgName("N")
     ->RangeMultiplier(8)
-    ->Range(int64_t(1) << 3, int64_t(1) << 27)
+    ->Range(int64_t(1) << 6, int64_t(1) << 27)
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_ParallelFor, int)
     ->ArgName("N")
     ->RangeMultiplier(8)
-    ->Range(int64_t(1) << 3, int64_t(1) << 27)
+    ->Range(int64_t(1) << 6, int64_t(1) << 27)
     ->UseManualTime();
 
-}  // namespace Test
+}  // namespace Benchmark
