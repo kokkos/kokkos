@@ -256,8 +256,7 @@ struct DeduceCudaLaunchMechanism {
       Kokkos::Experimental::WorkItemProperty::HintLightWeight;
   constexpr static auto heavy_weight =
       Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
-  constexpr static typename DriverType::Policy::work_item_property property =
-      typename DriverType::Policy::work_item_property();
+  constexpr static typename DriverType::Policy::work_item_property property{};
 
   static constexpr CudaLaunchMechanism valid_launch_mechanism =
       // BuildValidMask
