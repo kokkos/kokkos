@@ -327,6 +327,71 @@ TEST(TEST_CATEGORY, range_reduce) {
   }
 }
 
+template <typename ExecSpace, typename UnrollFactor>
+struct TestRangeUnroll {
+  using value_type = int;  ///< alias required for the parallel_reduce
+  using view_type  = Kokkos::View<value_type *, ExecSpace>;
+
+  view_type m_flags;
+  view_type result_view;
+
+  struct AtomicAddTag {};
+  struct VerifyAtomicAddTag {};
+
+  int N;
+
+  TestRangeUnroll(const size_t N_)
+      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
+        result_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "results"),
+                    N_),
+        N(N_) {}
+
+  void test_unroll() {
+    typename view_type::HostMirror host_flags =
+        Kokkos::create_mirror_view(m_flags);
+
+    // Initialize the flags
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, AtomicAddTag, UnrollFactor>(0, N),
+        *this);
+
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, VerifyAtomicAddTag>(0, N), *this);
+
+    Kokkos::deep_copy(host_flags, m_flags);
+
+    int error_count = 0;
+    for (int i = 0; i < N; ++i) {
+      if (host_flags(i) != 1) {
+        ++error_count;
+      }
+    }
+    ASSERT_EQ(error_count, 0);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i) const {
+    m_flags(i) = 0;  // Initialize the flags to zero
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicAddTag &, const int i) const {
+    // Use atomic add to increment the flag at index i
+    Kokkos::atomic_add(&m_flags(i), 1);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const VerifyAtomicAddTag &, const int i) const {
+    // Verify that the flag at index i is equal to 1
+    if (m_flags(i) != 1) {
+      Kokkos::printf("TestRangeUnroll::test_unroll_error at %d != %d\n", i,
+                     m_flags(i));
+    }
+  }
+};
+
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, range_dynamic_policy) {
 #if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
@@ -381,5 +446,41 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
   test_large_parallel_for_reduce();
 }
 #endif
+
+TEST(TEST_CATEGORY, check_unroll_factor) {
+  ASSERT(Kokkos::Experimental::Unroll<1>::unroll_factor == 1);
+  ASSERT(Kokkos::Experimental::Unroll<4>::unroll_factor == 4);
+}
+
+TEST(TEST_CATEGORY, range_unroll) {
+
+  ASSERT(Kokkos::)
+
+  {
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::Unroll<1>> f(1024);
+    f.test_unroll();
+  }
+  {
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::Unroll<2>> f(1024);
+    f.test_unroll();
+  }
+  {
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::Unroll<4>> f(1024);
+    f.test_unroll();
+  }
+
+  // Check for loop ranges where the range is not exactly divisible by the
+  // unroll factor.
+  {
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Unroll<4>> f(1025);
+    f.test_unroll();
+  }
+
+  // Check for loop ranges smaller than the unroll factor.
+  {
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Unroll<4>> f(3);
+    f.test_unroll();
+  }
+}
 
 }  // namespace Test
