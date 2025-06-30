@@ -727,7 +727,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator!=(
 //==============================================================================
 
 //! Binary + operator for complex complex.
-//      Returns: complex<T>(lhs) == rhs
+//      Returns: complex<T>(lhs) += rhs
 
 template <class T>
 KOKKOS_FUNCTION constexpr complex<T> operator+(const complex<T>& lhs,
@@ -750,7 +750,7 @@ KOKKOS_FUNCTION constexpr complex<T> operator+(const T& lhs,
 //! Binary + operator for complex complex.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator+(const complex<RealType1>& x,
@@ -762,7 +762,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 //! Binary + operator for complex scalar.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator+(const complex<RealType1>& x, const RealType2& y) noexcept {
@@ -773,7 +773,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 //! Binary + operator for scalar complex.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator+(const RealType1& x, const complex<RealType2>& y) noexcept {
@@ -811,7 +811,7 @@ KOKKOS_FUNCTION constexpr complex<T> operator-(const T& lhs,
 //! Binary - operator for complex.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator-(const complex<RealType1>& x,
@@ -823,7 +823,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 //! Binary - operator for complex scalar.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator-(const complex<RealType1>& x, const RealType2& y) noexcept {
@@ -834,7 +834,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 //! Binary - operator for scalar complex.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator-(const RealType1& x, const complex<RealType2>& y) noexcept {
@@ -1229,7 +1229,7 @@ KOKKOS_FUNCTION constexpr complex<T> operator/(const T& lhs,
 //! Binary operator / for complex and real numbers
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator/(const complex<RealType1>& x,
@@ -1242,7 +1242,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 //! Binary operator / for complex.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator/(const complex<RealType1>& x,
@@ -1274,7 +1274,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 //! Binary operator / for complex and real numbers
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
-              std::common_type<RealType1, RealType2>>>>
+              std::common_type_t<RealType1, RealType2>>>>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION
     complex<std::common_type_t<RealType1, RealType2>>
     operator/(const RealType1& x,
