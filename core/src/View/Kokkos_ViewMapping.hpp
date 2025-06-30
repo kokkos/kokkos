@@ -3312,13 +3312,15 @@ class ViewMapping<
   template <class DstTraits>
   KOKKOS_INLINE_FUNCTION static void assign(
       ViewMapping<DstTraits, void>& dst,
-      ViewMapping<SrcTraits, void> const& src,
-      Args... args) {
-    // Create ViewMapping based on traits_type, which was determined by this class.
-    // We cannot assume that aligned src memory implies the subview will be aligned,
-    // so remove aligned memory trait before mapping.
-    using traits_type_wo_align = typename apply<typename Impl::RemoveAlignedMemoryTrait<typename traits_type::memory_traits>::type::memory_traits>::traits_type;
-    using base_dst_type = ViewMapping<traits_type_wo_align, void>;
+      ViewMapping<SrcTraits, void> const& src, Args... args) {
+    // Create ViewMapping based on traits_type, which was determined by this
+    // class. We cannot assume that aligned src memory implies the subview will
+    // be aligned, so remove aligned memory trait before mapping.
+    using traits_type_wo_align =
+        typename apply<typename Impl::RemoveAlignedMemoryTrait<
+            typename traits_type::memory_traits>::type::memory_traits>::
+            traits_type;
+    using base_dst_type        = ViewMapping<traits_type_wo_align, void>;
     using base_dst_offset_type = typename base_dst_type::offset_type;
 
     base_dst_type base_dst;
@@ -3334,7 +3336,9 @@ class ViewMapping<
 
     // Map from base dst to dst requested.
     Kokkos::Impl::SharedAllocationTracker dummy_track;
-    ViewMapping<DstTraits, traits_type_wo_align, typename DstTraits::specialize>::assign(dst, base_dst, dummy_track);
+    ViewMapping<DstTraits, traits_type_wo_align,
+                typename DstTraits::specialize>::assign(dst, base_dst,
+                                                        dummy_track);
   }
 };
 
