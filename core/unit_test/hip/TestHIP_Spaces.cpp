@@ -35,13 +35,14 @@ TEST(hip, space_access) {
       Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                       Kokkos::HIPHostPinnedSpace>::assignable);
 
+#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
   static_assert(!Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                                  Kokkos::HIPSpace>::assignable);
-
-#if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
   static_assert(!Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                                  Kokkos::HIPSpace>::accessible);
 #else
+  static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
+                                                Kokkos::HIPSpace>::assignable);
   static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                                 Kokkos::HIPSpace>::accessible);
 #endif

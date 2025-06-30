@@ -267,6 +267,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         ViewCopy_a
         ViewCopy_b
         ViewCopy_c
+        ViewCreateMirror
         ViewCtorDimMatch
         ViewCtorProp
         ViewEmptyRuntimeUnmanaged
@@ -391,6 +392,7 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
     foreach(
       Name
       SharedAlloc
+      ViewCreateMirror
       ViewAPI_a
       ViewAPI_b
       ViewAPI_c

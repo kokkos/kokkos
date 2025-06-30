@@ -305,11 +305,12 @@ static_assert(Kokkos::Impl::MemorySpaceAccess<HIPSpace, HIPSpace>::assignable);
 
 template <>
 struct MemorySpaceAccess<HostSpace, HIPSpace> {
-  enum : bool { assignable = false };
 #if !defined(KOKKOS_IMPL_HIP_UNIFIED_MEMORY)
   enum : bool{accessible = false};
+  enum : bool{assignable = false};
 #else
   enum : bool { accessible = true };
+  enum : bool { assignable = true };
 #endif
   enum : bool { deepcopy = true };
 };
