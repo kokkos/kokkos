@@ -2530,7 +2530,7 @@ basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>::
     basic_simd(basic_simd<std::uint32_t,
                           simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const&
                    other) noexcept
-    : m_value(svreinterpret_s32(static_cast<vls_uint32_t>(other))) {}
+    : m_value(svreinterpret_s32_u32(static_cast<vls_uint32_t>(other))) {}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>::
@@ -2544,7 +2544,7 @@ basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>::
     basic_simd(basic_simd<std::int32_t,
                           simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const&
                    other) noexcept
-    : m_value(svreinterpret_u32(static_cast<vls_int32_t>(other))) {}
+    : m_value(svreinterpret_u32_s32(static_cast<vls_int32_t>(other))) {}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>::
@@ -2559,7 +2559,7 @@ basic_simd<std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>::
         basic_simd<std::uint64_t,
                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
             other) noexcept
-    : m_value(svreinterpret_s64(static_cast<vls_uint64_t>(other))) {}
+    : m_value(svreinterpret_s64_u64(static_cast<vls_uint64_t>(other))) {}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::uint64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>::
@@ -2574,7 +2574,7 @@ basic_simd<std::uint64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>::
         basic_simd<std::int64_t,
                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
             other) noexcept
-    : m_value(svreinterpret_u64(static_cast<vls_int64_t>(other))) {}
+    : m_value(svreinterpret_u64_s64(static_cast<vls_int64_t>(other))) {}
 
 template <>
 class const_where_expression<
