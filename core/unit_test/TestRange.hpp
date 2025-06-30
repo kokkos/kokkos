@@ -448,8 +448,8 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
 #endif
 
 TEST(TEST_CATEGORY, check_unroll_factor) {
-  ASSERT(Kokkos::Experimental::LoopUnroll<1>::unroll_factor == 1);
-  ASSERT(Kokkos::Experimental::LoopUnroll<4>::unroll_factor == 4);
+  ASSERT_TRUE(Kokkos::Experimental::LoopUnroll<1>::unroll_factor == 1);
+  ASSERT_TRUE(Kokkos::Experimental::LoopUnroll<4>::unroll_factor == 4);
 }
 
 TEST(TEST_CATEGORY, range_unroll) {
