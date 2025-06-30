@@ -453,9 +453,6 @@ TEST(TEST_CATEGORY, check_unroll_factor) {
 }
 
 TEST(TEST_CATEGORY, range_unroll) {
-
-  ASSERT(Kokkos::)
-
   {
     TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::Unroll<1>> f(1024);
     f.test_unroll();
