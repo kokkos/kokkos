@@ -448,34 +448,38 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
 #endif
 
 TEST(TEST_CATEGORY, check_unroll_factor) {
-  ASSERT(Kokkos::Experimental::Unroll<1>::unroll_factor == 1);
-  ASSERT(Kokkos::Experimental::Unroll<4>::unroll_factor == 4);
+  ASSERT(Kokkos::Experimental::LoopUnroll<1>::unroll_factor == 1);
+  ASSERT(Kokkos::Experimental::LoopUnroll<4>::unroll_factor == 4);
 }
 
 TEST(TEST_CATEGORY, range_unroll) {
   {
-    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::Unroll<1>> f(1024);
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::LoopUnroll<1>> f(
+        1024);
     f.test_unroll();
   }
   {
-    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::Unroll<2>> f(1024);
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::LoopUnroll<2>> f(
+        1024);
     f.test_unroll();
   }
   {
-    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::Unroll<4>> f(1024);
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::LoopUnroll<4>> f(
+        1024);
     f.test_unroll();
   }
 
   // Check for loop ranges where the range is not exactly divisible by the
   // unroll factor.
   {
-    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Unroll<4>> f(1025);
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::LoopUnroll<4>> f(
+        1025);
     f.test_unroll();
   }
 
   // Check for loop ranges smaller than the unroll factor.
   {
-    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Unroll<4>> f(3);
+    TestRangeUnroll<TEST_EXECSPACE, Kokkos::Experimental::LoopUnroll<4>> f(3);
     f.test_unroll();
   }
 }
