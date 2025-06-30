@@ -14,13 +14,10 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_TEST_SUBVIEW_C15_HPP
-#define KOKKOS_TEST_SUBVIEW_C15_HPP
-
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 
-namespace Test {
+namespace {
 
 TEST(TEST_CATEGORY_DEATH, subview_constructor_types) {
   int N    = 10;
@@ -47,5 +44,4 @@ TEST(TEST_CATEGORY_DEATH, subview_constructor_types) {
     ASSERT_DEATH(((void)Kokkos::View<int*, LR>(a, 1, Kokkos::ALL)), msg);
   }
 }
-}  // namespace Test
-#endif
+}  // namespace
