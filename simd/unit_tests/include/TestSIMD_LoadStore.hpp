@@ -80,7 +80,7 @@ inline void host_test_simd_loadstore() {
   mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i % 2 == 0; });
   simd_type expected(KOKKOS_LAMBDA(std::size_t i) { return (i + 1) * 12; });
   simd_type expected_masked(KOKKOS_LAMBDA(std::size_t i) {
-    return (mask[i]) ? (i + 1) * 12 : DataType();
+    return (i % 2 == 0) ? (i + 1) * 12 : DataType();
   });
 
   host_test_simd_store(expected, expected,

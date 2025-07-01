@@ -77,7 +77,6 @@ inline void host_check_shift_by_lanes_on_one_loader(
   simd_type expected_result =
       Kokkos::Experimental::simd_unchecked_load<simd_type>(
           expected_val, Kokkos::Experimental::simd_flag_default);
-  ;
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
 
   host_check_equality(expected_result, computed_result, width);

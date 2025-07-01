@@ -130,10 +130,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 template <class T, class Abi,
           std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,
                            bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<T, Abi>
-    min(Experimental::basic_simd<T, Abi> const& a,
-        Experimental::basic_simd<T, Abi> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> min(
+    Experimental::basic_simd<T, Abi> const& a,
+    Experimental::basic_simd<T, Abi> const& b) {
   using simd_type           = Experimental::basic_simd<T, Abi>;
   T vals[simd_type::size()] = {0};
   for (std::size_t i = 0; i < simd_type::size(); ++i) {
@@ -158,10 +157,9 @@ KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 template <class T, class Abi,
           std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,
                            bool> = false>
-[[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_simd<T, Abi>
-    max(Experimental::basic_simd<T, Abi> const& a,
-        Experimental::basic_simd<T, Abi> const& b) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> max(
+    Experimental::basic_simd<T, Abi> const& a,
+    Experimental::basic_simd<T, Abi> const& b) {
   using simd_type           = Experimental::basic_simd<T, Abi>;
   T vals[simd_type::size()] = {0};
   for (std::size_t i = 0; i < simd_type::size(); ++i) {
@@ -188,64 +186,59 @@ KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 // implementations.
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                                \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>, \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
-      Experimental::basic_simd<T, Abi>                                       \
-      FUNC(Experimental::basic_simd<T, Abi> const& a) {                      \
-    using simd_type           = Experimental::basic_simd<T, Abi>;            \
-    T vals[simd_type::size()] = {0};                                         \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
-      vals[i] = Kokkos::FUNC(a[i]);                                          \
-    }                                                                        \
-    return Experimental::simd_unchecked_load<simd_type>(                     \
-        vals, Experimental::simd_flag_default);                              \
-  }                                                                          \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,  \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::         \
-      basic_simd<T, Abi>                                                     \
-      FUNC(Experimental::basic_simd<T, Abi> const& a) {                      \
-    return Kokkos::FUNC(a[0]);                                               \
-  }                                                                          \
-  namespace Experimental {                                                   \
-  template <class T, class Abi>                                              \
-  [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION      \
-      basic_simd<T, Abi>                                                     \
-      FUNC(basic_simd<T, Abi> const& a) {                                    \
-    return Kokkos::FUNC(a);                                                  \
-  }                                                                          \
+#define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                                  \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,   \
+                       bool> = false>                                          \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a) {                             \
+    using simd_type           = Experimental::basic_simd<T, Abi>;              \
+    T vals[simd_type::size()] = {0};                                           \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+      vals[i] = Kokkos::FUNC(a[i]);                                            \
+    }                                                                          \
+    return Experimental::simd_unchecked_load<simd_type>(                       \
+        vals, Experimental::simd_flag_default);                                \
+  }                                                                            \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,    \
+                       bool> = false>                                          \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a) {                             \
+    return Kokkos::FUNC(a[0]);                                                 \
+  }                                                                            \
+  namespace Experimental {                                                     \
+  template <class T, class Abi>                                                \
+  KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>   \
+  FUNC(basic_simd<T, Abi> const& a) {                                          \
+    return Kokkos::FUNC(a);                                                    \
+  }                                                                            \
   }
 #else
-#define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                                \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>, \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
-      Experimental::basic_simd<T, Abi>                                       \
-      FUNC(Experimental::basic_simd<T, Abi> const& a) {                      \
-    using simd_type           = Experimental::basic_simd<T, Abi>;            \
-    T vals[simd_type::size()] = {0};                                         \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
-      vals[i] = Kokkos::FUNC(a[i]);                                          \
-    }                                                                        \
-    return Experimental::simd_unchecked_load<simd_type>(                     \
-        vals, Experimental::simd_flag_default);                              \
-  }                                                                          \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,  \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::         \
-      basic_simd<T, Abi>                                                     \
-      FUNC(Experimental::basic_simd<T, Abi> const& a) {                      \
-    return Kokkos::FUNC(a[0]);                                               \
+#define KOKKOS_IMPL_SIMD_UNARY_FUNCTION(FUNC)                                  \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,   \
+                       bool> = false>                                          \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a) {                             \
+    using simd_type           = Experimental::basic_simd<T, Abi>;              \
+    T vals[simd_type::size()] = {0};                                           \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+      vals[i] = Kokkos::FUNC(a[i]);                                            \
+    }                                                                          \
+    return Experimental::simd_unchecked_load<simd_type>(                       \
+        vals, Experimental::simd_flag_default);                                \
+  }                                                                            \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,    \
+                       bool> = false>                                          \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a) {                             \
+    return Kokkos::FUNC(a[0]);                                                 \
   }
 #endif
 
@@ -275,68 +268,63 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(tgamma)
 KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#define KOKKOS_IMPL_SIMD_BINARY_FUNCTION(FUNC)                               \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>, \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
-      Experimental::basic_simd<T, Abi>                                       \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b) {                      \
-    using simd_type           = Experimental::basic_simd<T, Abi>;            \
-    T vals[simd_type::size()] = {0};                                         \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
-      vals[i] = Kokkos::FUNC(a[i], b[i]);                                    \
-    }                                                                        \
-    return Experimental::simd_unchecked_load<simd_type>(                     \
-        vals, Experimental::simd_flag_default);                              \
-  }                                                                          \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,  \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::         \
-      basic_simd<T, Abi>                                                     \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b) {                      \
-    return Kokkos::FUNC(a[0], b[0]);                                         \
-  }                                                                          \
-  namespace Experimental {                                                   \
-  template <class T, class Abi>                                              \
-  [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION      \
-      basic_simd<T, Abi>                                                     \
-      FUNC(basic_simd<T, Abi> const& a, basic_simd<T, Abi> const& b) {       \
-    return Kokkos::FUNC(a, b);                                               \
-  }                                                                          \
+#define KOKKOS_IMPL_SIMD_BINARY_FUNCTION(FUNC)                                 \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,   \
+                       bool> = false>                                          \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b) {                             \
+    using simd_type           = Experimental::basic_simd<T, Abi>;              \
+    T vals[simd_type::size()] = {0};                                           \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+      vals[i] = Kokkos::FUNC(a[i], b[i]);                                      \
+    }                                                                          \
+    return Experimental::simd_unchecked_load<simd_type>(                       \
+        vals, Experimental::simd_flag_default);                                \
+  }                                                                            \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,    \
+                       bool> = false>                                          \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b) {                             \
+    return Kokkos::FUNC(a[0], b[0]);                                           \
+  }                                                                            \
+  namespace Experimental {                                                     \
+  template <class T, class Abi>                                                \
+  KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>   \
+  FUNC(basic_simd<T, Abi> const& a, basic_simd<T, Abi> const& b) {             \
+    return Kokkos::FUNC(a, b);                                                 \
+  }                                                                            \
   }
 #else
-#define KOKKOS_IMPL_SIMD_BINARY_FUNCTION(FUNC)                               \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>, \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
-      Experimental::basic_simd<T, Abi>                                       \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b) {                      \
-    using simd_type           = Experimental::basic_simd<T, Abi>;            \
-    T vals[simd_type::size()] = {0};                                         \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
-      vals[i] = Kokkos::FUNC(a[i], b[i]);                                    \
-    }                                                                        \
-    return Experimental::simd_unchecked_load<simd_type>(                     \
-        vals, Experimental::simd_flag_default);                              \
-  }                                                                          \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,  \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::         \
-      basic_simd<T, Abi>                                                     \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b) {                      \
-    return Kokkos::FUNC(a[0], b[0]);                                         \
+#define KOKKOS_IMPL_SIMD_BINARY_FUNCTION(FUNC)                                 \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,   \
+                       bool> = false>                                          \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b) {                             \
+    using simd_type           = Experimental::basic_simd<T, Abi>;              \
+    T vals[simd_type::size()] = {0};                                           \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+      vals[i] = Kokkos::FUNC(a[i], b[i]);                                      \
+    }                                                                          \
+    return Experimental::simd_unchecked_load<simd_type>(                       \
+        vals, Experimental::simd_flag_default);                                \
+  }                                                                            \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,    \
+                       bool> = false>                                          \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b) {                             \
+    return Kokkos::FUNC(a[0], b[0]);                                           \
   }
 #endif
 
@@ -346,73 +334,68 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(atan2)
 KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#define KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(FUNC)                              \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>, \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
-      Experimental::basic_simd<T, Abi>                                       \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b,                        \
-           Experimental::basic_simd<T, Abi> const& c) {                      \
-    using simd_type           = Experimental::basic_simd<T, Abi>;            \
-    T vals[simd_type::size()] = {0};                                         \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
-      vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                              \
-    }                                                                        \
-    return Experimental::simd_unchecked_load<simd_type>(                     \
-        vals, Experimental::simd_flag_default);                              \
-  }                                                                          \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,  \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::         \
-      basic_simd<T, Abi>                                                     \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b,                        \
-           Experimental::basic_simd<T, Abi> const& c) {                      \
-    return Kokkos::FUNC(a[0], b[0], c[0]);                                   \
-  }                                                                          \
-  namespace Experimental {                                                   \
-  template <class T, class Abi>                                              \
-  [[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION      \
-      basic_simd<T, Abi>                                                     \
-      FUNC(basic_simd<T, Abi> const& a, basic_simd<T, Abi> const& b,         \
-           basic_simd<T, Abi> const& c) {                                    \
-    return Kokkos::FUNC(a, b, c);                                            \
-  }                                                                          \
+#define KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(FUNC)                                \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,   \
+                       bool> = false>                                          \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b,                               \
+      Experimental::basic_simd<T, Abi> const& c) {                             \
+    using simd_type           = Experimental::basic_simd<T, Abi>;              \
+    T vals[simd_type::size()] = {0};                                           \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+      vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                                \
+    }                                                                          \
+    return Experimental::simd_unchecked_load<simd_type>(                       \
+        vals, Experimental::simd_flag_default);                                \
+  }                                                                            \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,    \
+                       bool> = false>                                          \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b,                               \
+      Experimental::basic_simd<T, Abi> const& c) {                             \
+    return Kokkos::FUNC(a[0], b[0], c[0]);                                     \
+  }                                                                            \
+  namespace Experimental {                                                     \
+  template <class T, class Abi>                                                \
+  KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>   \
+  FUNC(basic_simd<T, Abi> const& a, basic_simd<T, Abi> const& b,               \
+       basic_simd<T, Abi> const& c) {                                          \
+    return Kokkos::FUNC(a, b, c);                                              \
+  }                                                                            \
   }
 #else
-#define KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(FUNC)                              \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>, \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                        \
-      Experimental::basic_simd<T, Abi>                                       \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b,                        \
-           Experimental::basic_simd<T, Abi> const& c) {                      \
-    using simd_type           = Experimental::basic_simd<T, Abi>;            \
-    T vals[simd_type::size()] = {0};                                         \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                    \
-      vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                              \
-    }                                                                        \
-    return Experimental::simd_unchecked_load<simd_type>(                     \
-        vals, Experimental::simd_flag_default);                              \
-  }                                                                          \
-  template <                                                                 \
-      class T, class Abi,                                                    \
-      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,  \
-                       bool> = false>                                        \
-  [[nodiscard]] KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::         \
-      basic_simd<T, Abi>                                                     \
-      FUNC(Experimental::basic_simd<T, Abi> const& a,                        \
-           Experimental::basic_simd<T, Abi> const& b,                        \
-           Experimental::basic_simd<T, Abi> const& c) {                      \
-    return Kokkos::FUNC(a[0], b[0], c[0]);                                   \
+#define KOKKOS_IMPL_SIMD_TERNARY_FUNCTION(FUNC)                                \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<!std::is_same_v<Abi, Experimental::simd_abi::scalar>,   \
+                       bool> = false>                                          \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b,                               \
+      Experimental::basic_simd<T, Abi> const& c) {                             \
+    using simd_type           = Experimental::basic_simd<T, Abi>;              \
+    T vals[simd_type::size()] = {0};                                           \
+    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+      vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                                \
+    }                                                                          \
+    return Experimental::simd_unchecked_load<simd_type>(                       \
+        vals, Experimental::simd_flag_default);                                \
+  }                                                                            \
+  template <                                                                   \
+      class T, class Abi,                                                      \
+      std::enable_if_t<std::is_same_v<Abi, Experimental::simd_abi::scalar>,    \
+                       bool> = false>                                          \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr Experimental::basic_simd<T, Abi> FUNC( \
+      Experimental::basic_simd<T, Abi> const& a,                               \
+      Experimental::basic_simd<T, Abi> const& b,                               \
+      Experimental::basic_simd<T, Abi> const& c) {                             \
+    return Kokkos::FUNC(a[0], b[0], c[0]);                                     \
   }
 #endif
 

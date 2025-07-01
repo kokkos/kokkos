@@ -107,7 +107,7 @@ class KOKKOS_DEPRECATED where_expression<bool, T>
 };
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     where_expression<basic_simd_mask<T, Abi>, basic_simd<T, Abi>>
     where(typename basic_simd<T, Abi>::mask_type const& mask,
           basic_simd<T, Abi>& value) {
@@ -115,7 +115,7 @@ template <class T, class Abi>
 }
 
 template <class T, class Abi>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     const_where_expression<basic_simd_mask<T, Abi>, basic_simd<T, Abi>>
     where(typename basic_simd<T, Abi>::mask_type const& mask,
           basic_simd<T, Abi> const& value) {
@@ -123,16 +123,14 @@ template <class T, class Abi>
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION
-    where_expression<bool, T>
-    where(bool mask, T& value) {
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION where_expression<bool, T> where(
+    bool mask, T& value) {
   return where_expression(mask, value);
 }
 
 template <class T>
-[[nodiscard]] KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION
-    const_where_expression<bool, T>
-    where(bool mask, T const& value) {
+KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION const_where_expression<bool, T>
+where(bool mask, T const& value) {
   return const_where_expression(mask, value);
 }
 

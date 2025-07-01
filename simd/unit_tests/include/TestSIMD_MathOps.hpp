@@ -140,7 +140,8 @@ void host_check_math_op_one_loader(UnaryOp unary_op, std::size_t n,
       arg = Kokkos::abs(arg) + simd_type(1.0);
     }
 
-    using result_simd_type = decltype(unary_op.on_host(arg));
+    auto unary_op_result   = unary_op.on_host(arg);
+    using result_simd_type = decltype(unary_op_result);
 
     typename result_simd_type::value_type expected_val[width];
     for (std::size_t lane = 0; lane < width; ++lane) {
