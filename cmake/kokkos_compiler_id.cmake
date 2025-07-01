@@ -212,7 +212,7 @@ elseif(KOKKOS_CXX_COMPILER_ID STREQUAL GNU)
     message(FATAL_ERROR "${KOKKOS_MESSAGE_TEXT}")
   elseif(KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 11.0.0 AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.1.0)
     if(CMAKE_CXX_STANDARD EQUAL 20)
-      message(WARNING "GCC 11.0 satisfies Kokkos' minimum compiler version, but does not contain fix for "
+      message(WARNING "GCC 11.0 satisfies Kokkos' minimum compiler version, but does not contain a fix for "
                       "https://cplusplus.github.io/LWG/issue3446. For major version 11, use GCC 11.1 or greater. "
                       "See https://github.com/kokkos/kokkos/pull/8130 for more information.")
     endif()
