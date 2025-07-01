@@ -39,7 +39,7 @@ TEST(TEST_CATEGORY_DEATH, view_subview_constructor_layout_compatibility) {
   }
   {
     // Using subview dims (1, ALL). For a LayoutLeft,
-    // resutling subview must be strided.
+    // resulting subview must be strided.
     const std::string msg = "View assignment must have compatible layouts";
     ASSERT_DEATH(((void)Kokkos::View<int*, LL>(a1, 1, Kokkos::ALL)), msg);
     (void)Kokkos::View<int*, LS>(a1, 1, Kokkos::ALL);
