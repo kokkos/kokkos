@@ -33,22 +33,31 @@ void ViewFirstTouch_DeepCopy(benchmark::State& state) {
   }
 }
 
+// Light benchmark set with smaller data sizes
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, double)
     ->ArgNames({"N", "init_value"})
     ->RangeMultiplier(8)
-    ->Ranges({{int64_t(1) << 6, int64_t(1) << 27}, {0, 1}})
+    ->Ranges({{int64_t(1) << 6, int64_t(1) << 24}, {0, 1}})
+    ->UseManualTime();
+
+#if 0  // Larger benchmark set
+BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, double)
+    ->ArgNames({"N", "init_value"})
+    ->RangeMultiplier(4)
+    ->Ranges({{int64_t(1) << 4, int64_t(1) << 30}, {0, 1}})
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, float)
     ->ArgNames({"N", "init_value"})
-    ->RangeMultiplier(8)
-    ->Ranges({{int64_t(1) << 6, int64_t(1) << 27}, {0, 1}})
+    ->RangeMultiplier(4)
+    ->Ranges({{int64_t(1) << 4, int64_t(1) << 30}, {0, 1}})
     ->UseManualTime();
 
 BENCHMARK_TEMPLATE(ViewFirstTouch_DeepCopy, int)
     ->ArgNames({"N", "init_value"})
-    ->RangeMultiplier(8)
-    ->Ranges({{int64_t(1) << 6, int64_t(1) << 27}, {0, 1}})
+    ->RangeMultiplier(4)
+    ->Ranges({{int64_t(1) << 4, int64_t(1) << 30}, {0, 1}})
     ->UseManualTime();
+#endif
 
 }  // namespace Benchmark
