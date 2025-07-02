@@ -140,16 +140,17 @@ void hostspace_parallel_deepcopy_async(const ExecutionSpace& exec, void* dst,
 template <typename ExecutionSpace>
 void hostspace_parallel_zeromemset(const ExecutionSpace& exec, void* dst,
                                    size_t n) {
-  constexpr uint8_t z_u8   = 0x00;
-  constexpr uint64_t z_u64 = 0x0000000000000000;
+  constexpr uint8_t z_u8 = 0x00;
   using policy_t =
       Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<size_t>>;
 
 #if !(defined(KOKKOS_ENABLE_HPX) && \
       defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH))
+  constexpr uint64_t z_u64 = 0x0000000000000000;
+
   // Align initial bytes to 8-byte boundary
-  size_t count   = 0;
   uint8_t* dst_c = reinterpret_cast<uint8_t*>(dst);
+  size_t count   = 0;
   while (reinterpret_cast<size_t>(dst_c) % 8 != 0) {
     *dst_c = z_u8;
     dst_c++;
