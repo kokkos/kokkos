@@ -96,7 +96,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     constexpr typename Policy::index_type loop_unroll_factor =
         LoopUnroll::unroll_factor;
     const typename Policy::index_type nwork =
-        (m_policy.end() - m_policy.begin()) / loop_unroll_factor;
+        (m_policy.end() - m_policy.begin()) / loop_unroll_factor +
+        ((m_policy.end() - m_policy.begin()) % loop_unroll_factor == 0 ? 0 : 1);
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
             m_policy.space().impl_internal_space_instance());
