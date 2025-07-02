@@ -145,6 +145,8 @@ void hostspace_parallel_zeromemset(const ExecutionSpace& exec, void* dst,
   using policy_t =
       Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<size_t>>;
 
+#if !(defined(KOKKOS_ENABLE_HPX) && \
+      defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH))
   // Align initial bytes to 8-byte boundary
   size_t count   = 0;
   uint8_t* dst_c = reinterpret_cast<uint8_t*>(dst);
@@ -168,10 +170,11 @@ void hostspace_parallel_zeromemset(const ExecutionSpace& exec, void* dst,
     *dst_c = z_u8;
     dst_c++;
   }
-#if (defined(KOKKOS_ENABLE_HPX) && \
-     defined(KOKKOS_ENABLE_IMPL_HPX_ASYNC_DISPATCH))
-  exec.fence(
-      "Kokkos::Impl::hostspace_parallel_zeromemset: fence after zeromemset");
+#else
+  uint8_t* dst_p = reinterpret_cast<uint8_t*>(dst);
+  Kokkos::parallel_for("Kokkos::Impl::hostspace_parallel_zeromemset",
+                       policy_t(exec, 0, n),
+                       [=](const size_t i) { dst_p[i] = z_u8; });
 #endif
 }
 
