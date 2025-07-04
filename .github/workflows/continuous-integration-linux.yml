@@ -96,6 +96,12 @@ jobs:
             backend: 'HPX'
             stdcxx: '17'
             cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"'
+          - arch: 'x64'
+            distro: 'ubuntu:latest'
+            cxx: 'g++-12'
+            cmake_build_type: 'RelWithDebInfo'
+            backend: 'OPENMP'
+            stdcxx: '17'
     runs-on: ${{ matrix.arch == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
     container:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
@@ -136,6 +142,9 @@ jobs:
       - name: maybe_set_hpx_vars
         if: ${{ matrix.backend == 'HPX' }}
         run: echo "HPX_HANDLE_FAILED_NEW=0" >> $GITHUB_ENV
+      - name: maybe_install_gcc_12
+        if: ${{ matrix.cxx == 'g++-12' }}
+        run: sudo apt-get install -y g++-12
       - name: Configure Kokkos
         run: |
           cmake -B builddir \
