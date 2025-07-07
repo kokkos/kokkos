@@ -606,8 +606,14 @@ union SharedAllocationTracker {
   KOKKOS_FORCEINLINE_FUNCTION
   ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
 
-  KOKKOS_FORCEINLINE_FUNCTION SharedAllocationTracker()
-      : m_record_bits(DO_NOT_DEREF_FLAG) {}
+  KOKKOS_FORCEINLINE_FUNCTION
+#if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU < 1220) || \
+    (KOKKOS_COMPILER_GNU > 1240)
+      constexpr
+#endif
+      SharedAllocationTracker()
+      : m_record_bits(DO_NOT_DEREF_FLAG) {
+  }
 
   // Move:
 
