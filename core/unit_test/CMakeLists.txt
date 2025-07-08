@@ -206,6 +206,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         NumericTraits
         OccupancyControlTrait
         Other
+        ParallelRangeInterface
         ParallelScanRangePolicy
         Printf
         QuadPrecisionMath

@@ -148,13 +148,6 @@ inline void parallel_for(const std::string& str, const ExecPolicy& policy,
   Kokkos::Tools::Impl::end_parallel_for(inner_policy, functor, str, kpID);
 }
 
-template <class ExecPolicy, class FunctorType>
-inline void parallel_for(
-    const ExecPolicy& policy, const FunctorType& functor,
-    std::enable_if_t<is_execution_policy<ExecPolicy>::value>* = nullptr) {
-  Kokkos::parallel_for("", policy, functor);
-}
-
 template <class FunctorType>
 inline void parallel_for(const std::string& str, const size_t work_count,
                          const FunctorType& functor) {
@@ -170,6 +163,23 @@ inline void parallel_for(const std::string& str, const size_t work_count,
 template <class FunctorType>
 inline void parallel_for(const size_t work_count, const FunctorType& functor) {
   ::Kokkos::parallel_for("", work_count, functor);
+}
+
+// This overload is used in any self-similar parallel_for(exec_type, ...) call
+// as it takes only a execution type and a functor (like with nested p-fors).
+// So, we must mark it __host__ __device__ and supress warnings for this being
+// a purely host function. Additionally, we assert that this version is only
+// called from host, ensuring no negative impacts from ignoring warnings.
+template <class ExecPolicy, class FunctorType>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const ExecPolicy& policy, const FunctorType& functor,
+    std::enable_if_t<is_execution_policy<ExecPolicy>::value>* = nullptr) {
+  KOKKOS_IF_ON_DEVICE(
+      Kokkos::abort("Kokkos::parallel_for(ExecutionPolicy, functor) cannot be "
+                    "called from device.\n");)
+#pragma nv_diag_suppress 20011, 20013, 20014, 20015
+  Kokkos::parallel_for("", policy, functor);
+#pragma nv_diag_default 20011, 20013, 20014, 20015
 }
 
 }  // namespace Kokkos
