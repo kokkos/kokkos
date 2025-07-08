@@ -108,7 +108,7 @@ constexpr bool test_view_typedefs_impl() {
                                Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::array_layout,
                                             typename ViewType::device_type, //typename ViewTraitsType::hooks_policy,
                                             typename ViewType::memory_traits>>);
-  static_assert(std::is_same_v<typename ViewType::HostMirror,
+  static_assert(std::is_same_v<typename ViewType::host_mirror_type,
                                Kokkos::DynRankView<typename ViewType::non_const_data_type, typename ViewType::array_layout,
                                                    HostMirrorSpace
                                                    /*, typename ViewTraitsType::hooks_policy*/>>);

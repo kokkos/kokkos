@@ -21,7 +21,7 @@
 
 // Type of a one-dimensional length-N array of int.
 using view_type      = Kokkos::View<int*>;
-using host_view_type = view_type::HostMirror;
+using host_view_type = view_type::host_mirror_type;
 // This is a "zero-dimensional" View, that is, a View of a single
 // value (an int, in this case).  Access the value using operator()
 // with no arguments: e.g., 'count()'.
@@ -30,7 +30,7 @@ using host_view_type = view_type::HostMirror;
 // resident in device memory, as well as for irregularly updated
 // shared state.  We use it for the latter in this example.
 using count_type      = Kokkos::View<int>;
-using host_count_type = count_type::HostMirror;
+using host_count_type = count_type::host_mirror_type;
 
 // Functor for finding a list of primes in a given set of numbers.  If
 // run in parallel, the order of results is nondeterministic, because

@@ -281,7 +281,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
                                      typename traits::device_type>;
 
   /** \brief  Must be accessible everywhere */
-  using HostMirror = DynamicView;
+  using host_mirror_type = DynamicView;
 
   /** \brief Unified types */
   using uniform_device =
@@ -617,8 +617,9 @@ inline auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
 
     return ret;
   } else {
-    auto ret = typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(
-        prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
+    auto ret =
+        typename Kokkos::Experimental::DynamicView<T, P...>::host_mirror_type(
+            prop_copy, src.chunk_size(), src.chunk_max() * src.chunk_size());
 
     ret.resize_serial(src.extent(0));
 
@@ -695,16 +696,18 @@ inline auto create_mirror_view(
     const Kokkos::Experimental::DynamicView<T, P...>& src,
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
-    if constexpr (std::is_same_v<typename Kokkos::Experimental::DynamicView<
-                                     T, P...>::memory_space,
-                                 typename Kokkos::Experimental::DynamicView<
-                                     T, P...>::HostMirror::memory_space> &&
+    if constexpr (std::is_same_v<
+                      typename Kokkos::Experimental::DynamicView<
+                          T, P...>::memory_space,
+                      typename Kokkos::Experimental::DynamicView<
+                          T, P...>::host_mirror_type::memory_space> &&
                   std::is_same_v<typename Kokkos::Experimental::DynamicView<
                                      T, P...>::data_type,
                                  typename Kokkos::Experimental::DynamicView<
-                                     T, P...>::HostMirror::data_type>) {
+                                     T, P...>::host_mirror_type::data_type>) {
       return
-          typename Kokkos::Experimental::DynamicView<T, P...>::HostMirror(src);
+          typename Kokkos::Experimental::DynamicView<T, P...>::host_mirror_type(
+              src);
     } else {
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }

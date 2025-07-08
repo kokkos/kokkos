@@ -220,7 +220,8 @@ struct TestDynamicView {
     //   Case 4:
     {
       using device_view_type = Kokkos::View<Scalar*, Space>;
-      using host_view_type = typename Kokkos::View<Scalar*, Space>::HostMirror;
+      using host_view_type =
+          typename Kokkos::View<Scalar*, Space>::host_mirror_type;
 
       view_type device_dynamic_view("on-device DynamicView", 1024,
                                     arg_total_size);

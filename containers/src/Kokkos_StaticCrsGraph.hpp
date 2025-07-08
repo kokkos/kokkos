@@ -288,9 +288,15 @@ class StaticCrsGraph {
 
   using staticcrsgraph_type =
       StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>;
-  using HostMirror = StaticCrsGraph<data_type, array_layout,
-                                    typename traits::host_mirror_space,
-                                    memory_traits, size_type>;
+
+  using host_mirror_type = StaticCrsGraph<data_type, array_layout,
+                                          typename traits::host_mirror_space,
+                                          memory_traits, size_type>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use host_mirror_type instead.") = host_mirror_type;
+#endif
 
   using row_map_type =
       View<const size_type*, array_layout, device_type, memory_traits>;
@@ -401,14 +407,14 @@ typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                        SizeType>::HostMirror
+                        SizeType>::host_mirror_type
 create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                         SizeType>& input);
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                        SizeType>::HostMirror
+                        SizeType>::host_mirror_type
 create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                    SizeType>& input);
 

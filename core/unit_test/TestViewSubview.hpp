@@ -150,7 +150,7 @@ void test_auto_1d() {
   const size_type numCols = 3;
 
   mv_type X = getView<Layout, Space>::get(numRows, numCols);
-  typename mv_type::HostMirror X_h = Kokkos::create_mirror_view(X);
+  typename mv_type::host_mirror_type X_h = Kokkos::create_mirror_view(X);
 
   fill_2D<mv_type, Space> f1(X, ONE);
 #if (HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 3)

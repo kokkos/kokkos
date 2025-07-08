@@ -278,8 +278,13 @@ class UnorderedMap {
 
   using insert_result = UnorderedMapInsertResult;
 
-  using HostMirror =
+  using host_mirror_type =
       UnorderedMap<Key, Value, host_mirror_space, Hasher, EqualTo>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use host_mirror_type instead.") = host_mirror_type;
+#endif
 
   using histogram_type = Impl::UnorderedMapHistogram<const_map_type>;
   //@}
@@ -993,11 +998,11 @@ inline void deep_copy(
 // Specialization of create_mirror() for an UnorderedMap object.
 template <typename Key, typename ValueType, typename Device, typename Hasher,
           typename EqualTo>
-typename UnorderedMap<Key, ValueType, Device, Hasher, EqualTo>::HostMirror
+typename UnorderedMap<Key, ValueType, Device, Hasher, EqualTo>::host_mirror_type
 create_mirror(
     const UnorderedMap<Key, ValueType, Device, Hasher, EqualTo> &src) {
-  typename UnorderedMap<Key, ValueType, Device, Hasher, EqualTo>::HostMirror
-      dst;
+  typename UnorderedMap<Key, ValueType, Device, Hasher,
+                        EqualTo>::host_mirror_type dst;
   dst.allocate_view(src);
   return dst;
 }

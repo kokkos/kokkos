@@ -73,8 +73,16 @@ class Crs {
   using size_type       = SizeType;
 
   using staticcrsgraph_type = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
-  using HostMirror =
+
+  using host_mirror_type =
       Crs<DataType, array_layout, typename traits::host_mirror_space, SizeType>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  /** \brief  Compatible host mirror view */
+  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use host_mirror_type instead.") = host_mirror_type;
+#endif
+
   using row_map_type = View<size_type*, array_layout, device_type>;
   using entries_type = View<DataType*, array_layout, device_type>;
 

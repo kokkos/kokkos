@@ -485,8 +485,8 @@ class DynRankView : private View<DataType*******, Properties...> {
   // KOKKOS_FUNCTION
   // view_type to_view() const { return *this; }
 
-  // Types below - at least the HostMirror requires the value_type, NOT the rank
-  // 7 data_type of the traits
+  // Types below - at least host_mirror_type requires the value_type, NOT the
+  // rank 7 data_type of the traits
 
   /** \brief  Compatible view of array of scalar types */
   using array_type = DynRankView<
@@ -503,12 +503,16 @@ class DynRankView : private View<DataType*******, Properties...> {
       typename drvtraits::non_const_data_type, typename drvtraits::array_layout,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
 
-  /** \brief  Compatible HostMirror view */
-  using HostMirror = DynRankView<typename drvtraits::non_const_data_type,
-                                 typename drvtraits::array_layout,
-                                 typename drvtraits::host_mirror_space>;
+  /** \brief  Compatible host mirror view */
+  using host_mirror_type = DynRankView<typename drvtraits::non_const_data_type,
+                                       typename drvtraits::array_layout,
+                                       typename drvtraits::host_mirror_space>;
 
-  using host_mirror_type = HostMirror;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  /** \brief  Compatible HostMirror view */
+  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use host_mirror_type instead.") = host_mirror_type;
+#endif
   //----------------------------------------
   // Domain rank and extents
 
@@ -1497,7 +1501,7 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
                     Impl::reconstructLayout(src.layout(), src.rank()));
   } else {
     using src_type = DynRankView<T, P...>;
-    using dst_type = typename src_type::HostMirror;
+    using dst_type = typename src_type::host_mirror_type;
 
     return dst_type(prop_copy,
                     Impl::reconstructLayout(src.layout(), src.rank()));
@@ -1571,12 +1575,12 @@ inline auto create_mirror_view(
         arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     if constexpr (std::is_same_v<typename DynRankView<T, P...>::memory_space,
+                                 typename DynRankView<T, P...>::
+                                     host_mirror_type::memory_space> &&
+                  std::is_same_v<typename DynRankView<T, P...>::data_type,
                                  typename DynRankView<
-                                     T, P...>::HostMirror::memory_space> &&
-                  std::is_same_v<
-                      typename DynRankView<T, P...>::data_type,
-                      typename DynRankView<T, P...>::HostMirror::data_type>) {
-      return typename DynRankView<T, P...>::HostMirror(src);
+                                     T, P...>::host_mirror_type::data_type>) {
+      return typename DynRankView<T, P...>::host_mirror_type(src);
     } else {
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }

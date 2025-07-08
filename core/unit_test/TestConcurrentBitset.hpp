@@ -109,7 +109,7 @@ void test_concurrent_bitset(int bit_count) {
 
   view_int_type acquired("acquired", n);
 
-  typename view_unsigned_type::HostMirror bitset_host =
+  typename view_unsigned_type::host_mirror_type bitset_host =
       Kokkos::create_mirror_view(bitset);
 
   Kokkos::deep_copy(bitset, 0u);

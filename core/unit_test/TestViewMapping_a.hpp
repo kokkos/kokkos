@@ -850,7 +850,7 @@ void test_view_mapping() {
 
   {
     using V           = Kokkos::View<int**, Space>;
-    using M           = typename V::HostMirror;
+    using M           = typename V::host_mirror_type;
     using layout_type = typename Kokkos::View<int**, Space>::array_layout;
 
     constexpr size_t N0 = 10;
@@ -924,7 +924,7 @@ void test_view_mapping() {
 
   {
     using V = Kokkos::View<int**, Kokkos::LayoutStride, Space>;
-    using M = typename V::HostMirror;
+    using M = typename V::host_mirror_type;
     using layout_type =
         typename Kokkos::View<int**, Kokkos::LayoutStride, Space>::array_layout;
 

@@ -46,7 +46,7 @@ namespace Test {
 template <class ExecSpace>
 struct TestComplexConstruction {
   Kokkos::View<Kokkos::complex<double> *, ExecSpace> d_results;
-  typename Kokkos::View<Kokkos::complex<double> *, ExecSpace>::HostMirror
+  typename Kokkos::View<Kokkos::complex<double> *, ExecSpace>::host_mirror_type
       h_results;
 
   void testit() {
@@ -127,7 +127,7 @@ TEST(TEST_CATEGORY, complex_construction) {
 template <class ExecSpace>
 struct TestComplexBasicMath {
   Kokkos::View<Kokkos::complex<double> *, ExecSpace> d_results;
-  typename Kokkos::View<Kokkos::complex<double> *, ExecSpace>::HostMirror
+  typename Kokkos::View<Kokkos::complex<double> *, ExecSpace>::host_mirror_type
       h_results;
 
   void testit() {
@@ -279,7 +279,7 @@ TEST(TEST_CATEGORY, complex_basic_math) {
 template <class ExecSpace>
 struct TestComplexSpecialFunctions {
   Kokkos::View<Kokkos::complex<double> *, ExecSpace> d_results;
-  typename Kokkos::View<Kokkos::complex<double> *, ExecSpace>::HostMirror
+  typename Kokkos::View<Kokkos::complex<double> *, ExecSpace>::host_mirror_type
       h_results;
 
   void testit() {
@@ -556,7 +556,7 @@ struct TestComplexStructuredBindings {
   using value_type       = double;
   using complex_type     = Kokkos::complex<double>;
   using device_view_type = Kokkos::View<complex_type *, exec_space>;
-  using host_view_type   = typename device_view_type::HostMirror;
+  using host_view_type   = typename device_view_type::host_mirror_type;
 
   device_view_type d_results;
   host_view_type h_results;

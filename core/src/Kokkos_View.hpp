@@ -224,15 +224,18 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>;
 
-  // Compatible HostMirror view
+  // Compatible host mirror view
   using host_mirror_type =
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>,
            typename traits::hooks_policy>;
 
-  // Compatible HostMirror view
-  using HostMirror = host_mirror_type;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  /** \brief  Compatible HostMirror view */
+  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use host_mirror_type instead.") = host_mirror_type;
+#endif
 
   // Unified types
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;

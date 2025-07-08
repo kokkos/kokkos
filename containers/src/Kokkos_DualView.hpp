@@ -140,7 +140,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   /// \typedef t_host
   /// \brief The type of a Kokkos::View host mirror of \c t_dev.
-  using t_host = typename t_dev::HostMirror;
+  using t_host = typename t_dev::host_mirror_type;
 
   //! The type of a const View on the device.
   //! The type of a Kokkos::View on the device.
@@ -153,7 +153,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
 
   /// \typedef t_host_const
   /// \brief The type of a const View host mirror of \c t_dev_const.
-  using t_host_const = typename t_dev_const::HostMirror;
+  using t_host_const = typename t_dev_const::host_mirror_type;
 
   //! The type of a const, random-access View on the device.
   using t_dev_const_randomread =
@@ -164,7 +164,8 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// \typedef t_host_const_randomread
   /// \brief The type of a const, random-access View host mirror of
   ///   \c t_dev_const_randomread.
-  using t_host_const_randomread = typename t_dev_const_randomread::HostMirror;
+  using t_host_const_randomread =
+      typename t_dev_const_randomread::host_mirror_type;
 
   //! The type of an unmanaged View on the device.
   using t_dev_um =
@@ -196,7 +197,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// \brief The type of a const, random-access View host mirror of
   ///   \c t_dev_const_randomread.
   using t_host_const_randomread_um =
-      typename t_dev_const_randomread_um::HostMirror;
+      typename t_dev_const_randomread_um::host_mirror_type;
 
   //@}
   //! \name Counters to keep track of changes ("modified" flags)
@@ -332,7 +333,7 @@ class DualView : public ViewTraits<DataType, Properties...> {
   /// modify() methods to ensure synchronization of the View objects.
   ///
   /// \param d_view_ Device View
-  /// \param h_view_ Host View (must have type t_host = t_dev::HostMirror)
+  /// \param h_view_ Host View (must have type t_host = t_dev::host_mirror_type)
   DualView(const t_dev& d_view_, const t_host& h_view_)
       : modified_flags(t_modified_flags("DualView::modified_flags")),
         d_view(d_view_),

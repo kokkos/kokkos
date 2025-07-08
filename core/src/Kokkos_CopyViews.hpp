@@ -3041,7 +3041,7 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     return dst_type(prop_copy, src.layout());
 #endif
   } else {
-    using dst_type = typename View<T, P...>::HostMirror;
+    using dst_type = typename View<T, P...>::host_mirror_type;
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     // This is necessary because constructing non-const element type from
     // const element type accessors is not generally supported
@@ -3181,13 +3181,13 @@ inline auto create_mirror_view(
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     if constexpr (std::is_same_v<typename Kokkos::View<T, P...>::memory_space,
+                                 typename Kokkos::View<T, P...>::
+                                     host_mirror_type::memory_space> &&
+                  std::is_same_v<typename Kokkos::View<T, P...>::data_type,
                                  typename Kokkos::View<
-                                     T, P...>::HostMirror::memory_space> &&
-                  std::is_same_v<
-                      typename Kokkos::View<T, P...>::data_type,
-                      typename Kokkos::View<T, P...>::HostMirror::data_type>) {
+                                     T, P...>::host_mirror_type::data_type>) {
       check_view_ctor_args_create_mirror<ViewCtorArgs...>();
-      return typename Kokkos::View<T, P...>::HostMirror(src);
+      return typename Kokkos::View<T, P...>::host_mirror_type(src);
     } else {
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }

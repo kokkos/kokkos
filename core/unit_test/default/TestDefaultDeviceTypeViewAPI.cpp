@@ -40,7 +40,7 @@ struct TestViewAPI<
                          Kokkos::LayoutLeft, layout_type>;
   using d_alloc_type = Kokkos::View<data_type, alloc_layout_type, space_type>;
   using h_alloc_type = typename Kokkos::View<data_type, alloc_layout_type,
-                                             space_type>::HostMirror;
+                                             space_type>::host_mirror_type;
 
   // add a +1 to avoid zero length static array
   size_t dyn_sizes[sizeof...(DynamicSizes) + 1] = {DynamicSizes..., 1};

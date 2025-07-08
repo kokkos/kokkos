@@ -62,7 +62,7 @@ template <class Space>
 void view_nested_view() {
   Kokkos::View<int *, Space> tracking("tracking", 1);
 
-  typename Kokkos::View<int *, Space>::HostMirror host_tracking =
+  typename Kokkos::View<int *, Space>::host_mirror_type host_tracking =
       Kokkos::create_mirror(tracking);
 
   {
