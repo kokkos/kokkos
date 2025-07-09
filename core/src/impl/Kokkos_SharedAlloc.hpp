@@ -607,8 +607,8 @@ union SharedAllocationTracker {
   ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
 
   KOKKOS_FORCEINLINE_FUNCTION
-#if !defined(KOKKOS_COMPILER_GNU) || (KOKKOS_COMPILER_GNU < 1220) || \
-    (KOKKOS_COMPILER_GNU > 1240)
+#if defined(KOKKOS_COMPILER_NVCC) || !defined(KOKKOS_COMPILER_GNU) || \
+    (KOKKOS_COMPILER_GNU < 1220) || (KOKKOS_COMPILER_GNU > 1240)
       // FIXME_GCC: The ViewSupport test fails with gcc 12.2, 12.3 and 12.4
       // because this constructor is optimized out, which leads to a nullptr
       // dereference. Removing the constexpr fixes the issue but nvcc complains,
