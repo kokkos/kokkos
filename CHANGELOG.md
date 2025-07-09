@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## 4.6.02
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.6.01...4.6.02)
+
+### Bug Fixes
+
+#### SYCL
+* Workaround issues with `sycl::select_from_group` for pointers in oneAPI 2025.0.4 [[\#8051](https://github.com/kokkos/kokkos/pull/8051)
+
 ## 4.6.01
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.6.00...4.6.01)
