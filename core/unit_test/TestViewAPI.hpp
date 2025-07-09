@@ -952,8 +952,16 @@ class TestViewAPI {
     using view_type   = Kokkos::View<int, host>;
     using mirror_type = typename view_type::host_mirror_type;
 
-    static_assert(std::is_same_v<typename view_type::host_mirror_type,
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
+    static_assert(std::is_same_v<typename view_type::HostMirror,
                                  typename view_type::host_mirror_type>);
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+#endif
 
     static_assert(std::is_same_v<typename view_type::memory_space,
                                  typename mirror_type::memory_space>);

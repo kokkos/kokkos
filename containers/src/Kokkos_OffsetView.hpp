@@ -242,7 +242,7 @@ class OffsetView : public View<DataType, Properties...> {
                                       typename traits::host_mirror_space>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible HistMirror view */
+  /** \brief  Compatible HostMirror view */
   using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use host_mirror_type instead.") = host_mirror_type;
 #endif
