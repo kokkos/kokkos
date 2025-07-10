@@ -30,26 +30,53 @@ static_assert(false,
 
 namespace Kokkos {
 
+/** \brief Class offering functionalities common to all reducers
+ *
+ * In order to be a valid reducer, a class must implement the functions and
+ * define the types offered in this class.
+ * To facilitate implementation, a new reducer class can simply inherit from
+ * BaseReducer.
+ */
 template <class Scalar, class Space>
 struct BaseReducer {
  public:
+  // Following types need to be available for the reducer to be valid
   using value_type = std::remove_cv_t<Scalar>;
-  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
-
   using result_view_type = Kokkos::View<value_type, Space>;
 
+  static_assert(!std::is_pointer_v<value_type> && !std::is_array_v<value_type>);
+
  protected:
+  // Contains the value of the reduction
   result_view_type value;
+  // Whether the reducer returns its value through a Kokkos::View or a scalar
   bool references_scalar_v;
 
  public:
+  // Construct from a scalar value
   KOKKOS_INLINE_FUNCTION
   BaseReducer(value_type& value_) : value(&value_), references_scalar_v(true) {}
 
+  // Construct from a View
   KOKKOS_INLINE_FUNCTION
   BaseReducer(const result_view_type& value_)
       : value(value_), references_scalar_v(false) {}
 
+  /* Reducers also need to implement the two following functions:
+   *
+   * KOKKOS_INLINE_FUNCTION
+   * void join(value_type& dest, const value_type& src) const {
+   *    // Do reduction here
+   * }
+
+   * KOKKOS_INLINE_FUNCTION
+   * void init(value_type& val) const {
+   *   // Set the initial value for the reduction variable here
+   *   // (for instance FLOAT_MIN if searching for the max).
+   * }
+   */
+
+  // Needed accessors
   KOKKOS_INLINE_FUNCTION
   value_type& reference() const { return *value.data(); }
 
@@ -58,44 +85,6 @@ struct BaseReducer {
 
   KOKKOS_INLINE_FUNCTION
   bool references_scalar() const { return references_scalar_v; }
-};
-
-template <template <class...> class Wrapper, class Scalar, class Space>
-struct WrapperReducer : BaseReducer<Wrapper<std::remove_cv_t<Scalar>>, Space> {
- protected:
-  using scalar_type = std::remove_cv_t<Scalar>;
-  static_assert(!std::is_pointer_v<scalar_type> &&
-                !std::is_array_v<scalar_type>);
-
-  using parent_type = BaseReducer<Wrapper<scalar_type>, Space>;
-
- public:
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
-
-  // Inherit constructors
-  using parent_type::parent_type;
-};
-
-template <template <class...> class Wrapper, class Scalar, class Index,
-          class Space>
-struct IndexWrapperReducer
-    : BaseReducer<Wrapper<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
-                  Space> {
- protected:
-  using scalar_type = std::remove_cv_t<Scalar>;
-  using index_type  = std::remove_cv_t<Index>;
-  static_assert(!std::is_pointer_v<scalar_type> &&
-                !std::is_array_v<scalar_type>);
-
-  using parent_type = BaseReducer<Wrapper<scalar_type, index_type>, Space>;
-
- public:
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
-
-  // Inherit constructors
-  using parent_type::parent_type;
 };
 
 template <class Scalar, class Space>
@@ -325,14 +314,20 @@ struct ValLocScalar {
 };
 
 template <class Scalar, class Index, class Space>
-struct MinLoc : IndexWrapperReducer<ValLocScalar, Scalar, Index, Space> {
+struct MinLoc
+    : BaseReducer<
+          ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
-  using parent_type = IndexWrapperReducer<ValLocScalar, Scalar, Index, Space>;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
+  using parent_type = BaseReducer<ValLocScalar<scalar_type, index_type>, Space>;
+
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   using reducer          = MinLoc<Scalar, Index, Space>;
-  using scalar_type      = typename parent_type::scalar_type;
-  using index_type       = typename parent_type::index_type;
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
 
@@ -363,13 +358,19 @@ MinLoc(View<ValLocScalar<Scalar, Index>, Properties...> const&) -> MinLoc<
     typename View<ValLocScalar<Scalar, Index>, Properties...>::memory_space>;
 
 template <class Scalar, class Index, class Space>
-struct MaxLoc : IndexWrapperReducer<ValLocScalar, Scalar, Index, Space> {
+struct MaxLoc
+    : BaseReducer<
+          ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
-  using parent_type = IndexWrapperReducer<ValLocScalar, Scalar, Index, Space>;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
+  using parent_type = BaseReducer<ValLocScalar<scalar_type, index_type>, Space>;
+
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
-  using scalar_type      = typename parent_type::scalar_type;
-  using index_type       = typename parent_type::index_type;
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
 
@@ -410,10 +411,11 @@ template <class Scalar, class Space>
 struct MinMax : BaseReducer<MinMaxScalar<std::remove_cv_t<Scalar>>, Space> {
  protected:
   using scalar_type = std::remove_cv_t<Scalar>;
-
- protected:
   using parent_type =
       BaseReducer<MinMaxScalar<std::remove_cv_t<Scalar>>, Space>;
+
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   using value_type       = typename parent_type::value_type;
@@ -453,19 +455,24 @@ struct MinMaxLocScalar {
 };
 
 template <class Scalar, class Index, class Space>
-struct MinMaxLoc : IndexWrapperReducer<MinMaxLocScalar, Scalar, Index, Space> {
+struct MinMaxLoc
+    : BaseReducer<
+          MinMaxLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
   using parent_type =
-      IndexWrapperReducer<MinMaxLocScalar, Scalar, Index, Space>;
+      BaseReducer<MinMaxLocScalar<scalar_type, index_type>, Space>;
+
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   using reducer          = MinMaxLoc<Scalar, Index, Space>;
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
-  using scalar_type      = typename parent_type::scalar_type;
-  using index_type       = typename parent_type::index_type;
 
- public:
   // Inherit constructors
   using parent_type::parent_type;
 
@@ -511,11 +518,14 @@ KOKKOS_DEDUCTION_GUIDE MinMaxLoc(
 // MaxFirstLoc
 //
 template <class Scalar, class Index, class Space>
-struct MaxFirstLoc : IndexWrapperReducer<ValLocScalar, Scalar, Index, Space> {
+struct MaxFirstLoc
+    : BaseReducer<
+          ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
-  using parent_type = IndexWrapperReducer<ValLocScalar, Scalar, Index, Space>;
-  using scalar_type = typename parent_type::scalar_type;
-  using index_type  = typename parent_type::index_type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
+  using parent_type = BaseReducer<ValLocScalar<scalar_type, index_type>, Space>;
 
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
@@ -558,11 +568,13 @@ KOKKOS_DEDUCTION_GUIDE MaxFirstLoc(
 //
 template <class Scalar, class Index, class ComparatorType, class Space>
 struct MaxFirstLocCustomComparator
-    : IndexWrapperReducer<ValLocScalar, Scalar, Index, Space> {
+    : BaseReducer<
+          ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
-  using parent_type = IndexWrapperReducer<ValLocScalar, Scalar, Index, Space>;
-  using scalar_type = typename parent_type::scalar_type;
-  using index_type  = typename parent_type::index_type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
+  using parent_type = BaseReducer<ValLocScalar<scalar_type, index_type>, Space>;
 
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
@@ -615,11 +627,15 @@ KOKKOS_DEDUCTION_GUIDE MaxFirstLocCustomComparator(
 // MinFirstLoc
 //
 template <class Scalar, class Index, class Space>
-struct MinFirstLoc : IndexWrapperReducer<ValLocScalar, Scalar, Index, Space> {
+struct MinFirstLoc
+    : BaseReducer<
+          ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
-  using parent_type = IndexWrapperReducer<ValLocScalar, Scalar, Index, Space>;
-  using scalar_type = typename parent_type::scalar_type;
-  using index_type  = typename parent_type::index_type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
+  using parent_type = BaseReducer<ValLocScalar<scalar_type, index_type>, Space>;
+
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
   static_assert(std::is_integral_v<index_type>);
@@ -661,11 +677,13 @@ KOKKOS_DEDUCTION_GUIDE MinFirstLoc(
 //
 template <class Scalar, class Index, class ComparatorType, class Space>
 struct MinFirstLocCustomComparator
-    : IndexWrapperReducer<ValLocScalar, Scalar, Index, Space> {
+    : BaseReducer<
+          ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
-  using parent_type = IndexWrapperReducer<ValLocScalar, Scalar, Index, Space>;
-  using scalar_type = typename parent_type::scalar_type;
-  using index_type  = typename parent_type::index_type;
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
+  using parent_type = BaseReducer<ValLocScalar<scalar_type, index_type>, Space>;
 
   static_assert(!std::is_pointer_v<scalar_type> &&
                 !std::is_array_v<scalar_type>);
@@ -719,15 +737,20 @@ KOKKOS_DEDUCTION_GUIDE MinFirstLocCustomComparator(
 //
 template <class Scalar, class Index, class Space>
 struct MinMaxFirstLastLoc
-    : IndexWrapperReducer<MinMaxLocScalar, Scalar, Index, Space> {
+    : BaseReducer<
+          MinMaxLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
   using parent_type =
-      IndexWrapperReducer<MinMaxLocScalar, Scalar, Index, Space>;
+      BaseReducer<MinMaxLocScalar<scalar_type, index_type>, Space>;
+
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   using reducer          = MinMaxFirstLastLoc<Scalar, Index, Space>;
-  using scalar_type      = typename parent_type::scalar_type;
-  using index_type       = typename parent_type::index_type;
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
 
@@ -773,20 +796,25 @@ KOKKOS_DEDUCTION_GUIDE MinMaxFirstLastLoc(
 //
 template <class Scalar, class Index, class ComparatorType, class Space>
 struct MinMaxFirstLastLocCustomComparator
-    : IndexWrapperReducer<MinMaxLocScalar, Scalar, Index, Space> {
+    : BaseReducer<
+          MinMaxLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
+          Space> {
  protected:
+  using scalar_type = std::remove_cv_t<Scalar>;
+  using index_type  = std::remove_cv_t<Index>;
   using parent_type =
-      IndexWrapperReducer<MinMaxLocScalar, Scalar, Index, Space>;
+      BaseReducer<MinMaxLocScalar<scalar_type, index_type>, Space>;
+
+  static_assert(!std::is_pointer_v<scalar_type> &&
+                !std::is_array_v<scalar_type>);
 
  public:
   using reducer =
       MinMaxFirstLastLocCustomComparator<Scalar, Index, ComparatorType, Space>;
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
-  using scalar_type      = typename parent_type::scalar_type;
-  using index_type       = typename parent_type::index_type;
 
- private:
+ protected:
   ComparatorType m_comp;
 
  public:
@@ -843,12 +871,14 @@ struct FirstLocScalar {
 };
 
 template <class Index, class Space>
-struct FirstLoc
-    : WrapperReducer<FirstLocScalar, std::remove_cv_t<Index>, Space> {
+struct FirstLoc : BaseReducer<FirstLocScalar<std::remove_cv_t<Index>>, Space> {
  protected:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
-  using parent_type = WrapperReducer<FirstLocScalar, index_type, Space>;
+  static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
+
+  using parent_type =
+      BaseReducer<FirstLocScalar<std::remove_cv_t<Index>>, Space>;
 
  public:
   using reducer          = FirstLoc<Index, Space>;
@@ -885,11 +915,13 @@ struct LastLocScalar {
 };
 
 template <class Index, class Space>
-struct LastLoc : WrapperReducer<LastLocScalar, std::remove_cv_t<Index>, Space> {
+struct LastLoc : BaseReducer<LastLocScalar<std::remove_cv_t<Index>>, Space> {
  protected:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
-  using parent_type = WrapperReducer<LastLocScalar, index_type, Space>;
+  static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
+
+  using parent_type = BaseReducer<LastLocScalar<index_type>, Space>;
 
  public:
   using reducer          = LastLoc<Index, Space>;
@@ -927,11 +959,13 @@ struct StdIsPartScalar {
 //
 template <class Index, class Space>
 struct StdIsPartitioned
-    : WrapperReducer<StdIsPartScalar, std::remove_cv_t<Index>, Space> {
+    : BaseReducer<StdIsPartScalar<std::remove_cv_t<Index>>, Space> {
  protected:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
-  using parent_type = WrapperReducer<StdIsPartScalar, index_type, Space>;
+  static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
+
+  using parent_type = BaseReducer<StdIsPartScalar<index_type>, Space>;
 
  public:
   using reducer          = StdIsPartitioned<Index, Space>;
@@ -975,12 +1009,13 @@ struct StdPartPointScalar {
 //
 template <class Index, class Space>
 struct StdPartitionPoint
-    : WrapperReducer<StdPartPointScalar, std::remove_cv_t<Index>, Space> {
- private:
+    : BaseReducer<StdPartPointScalar<std::remove_cv_t<Index>>, Space> {
  protected:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
-  using parent_type = WrapperReducer<StdPartPointScalar, index_type, Space>;
+  static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
+
+  using parent_type = BaseReducer<StdPartPointScalar<index_type>, Space>;
 
  public:
   using reducer          = StdPartitionPoint<Index, Space>;
