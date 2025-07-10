@@ -154,12 +154,15 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
   check_include_file_cxx(experimental/mdspan KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN)
   check_include_file_cxx(mdspan KOKKOS_COMPILER_SUPPORTS_MDSPAN)
 
-  if (KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN OR KOKKOS_COMPILER_SUPPORTS_MDSPAN)
+  if(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN OR KOKKOS_COMPILER_SUPPORTS_MDSPAN)
     # Only use standard library mdspan if we are not running Cuda or HIP.
     # Likely these implementations won't be supported on device, so we should use
     # our own device-compatible version for now.
     if(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP)
-      message(STATUS "A compiler mdspan implementation was provided, but will not be used due to unsupported device compatibility with CUDA or HIP.")
+      message(
+        STATUS
+          "A compiler mdspan implementation was provided, but will not be used due to unsupported device compatibility with CUDA or HIP."
+      )
       set(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN "")
       set(KOKKOS_COMPILER_SUPPORTS_MDSPAN "")
     else()
@@ -168,7 +171,11 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
       kokkos_get_feature_test_macro("__cpp_lib_submdspan" KOKKOS_SUBMDSPAN_LIB_VERSION)
       message(STATUS "__cpp_lib_mdspan version: ${KOKKOS_MDSPAN_LIB_VERSION}")
       message(STATUS "__cpp_lib_submdspan version: ${KOKKOS_SUBMDSPAN_LIB_VERSION}")
-      if (NOT KOKKOS_MDSPAN_LIB_VERSION OR NOT KOKKOS_SUBMDSPAN_LIB_VERSION OR KOKKOS_MDSPAN_LIB_VERSION LESS 202207 OR KOKKOS_SUBMDSPAN_LIB_VERSION LESS 202403)
+      if(NOT KOKKOS_MDSPAN_LIB_VERSION
+         OR NOT KOKKOS_SUBMDSPAN_LIB_VERSION
+         OR KOKKOS_MDSPAN_LIB_VERSION LESS 202207
+         OR KOKKOS_SUBMDSPAN_LIB_VERSION LESS 202403
+      )
         message(STATUS "The compiler-provided mdspan version is not supported.")
         set(KOKKOS_COMPILER_SUPPORTS_EXPERIMENTAL_MDSPAN "")
         set(KOKKOS_COMPILER_SUPPORTS_MDSPAN "")
@@ -176,7 +183,7 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
     endif()
   endif()
 
-  if (Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
+  if(Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN)
     message(STATUS "Skipping using compiler-provided mdspan as Kokkos_ENABLE_IMPL_SKIP_COMPILER_MDSPAN is set")
   endif()
 
