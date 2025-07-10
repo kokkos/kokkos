@@ -2545,7 +2545,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 
     view_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
 #else
-    auto prop_copy = [&]() {
+    auto prop_copy      = [&]() {
       if constexpr (view_type::traits::impl_is_customized) {
         // FIXME SACADO: this is specializing for sacado, might need a better
         // thing
