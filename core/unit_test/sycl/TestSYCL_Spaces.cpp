@@ -154,7 +154,7 @@ TEST(sycl, space_access) {
                 Kokkos::HostSpace>);
 
   static_assert(std::is_same_v<
-                Kokkos::Impl::HostMirror<Kokkos::SYCLSharedUSMSpace>::Space,
+                Kokkos::Impl::HostMirror<Kokkos::SYCLSharedUSMSpace>::Device,
                 Kokkos::Device<Kokkos::HostSpace::execution_space,
                                Kokkos::SYCLSharedUSMSpace>>);
 
@@ -185,11 +185,11 @@ TEST(sycl, space_access) {
 
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::SYCLSharedUSMSpace>::Space,
-                Kokkos::HostSpace>::accessible);
+                Kokkos::SYCLSharedUSMSpace>::accessible);
 
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::SYCLHostUSMSpace>::Space,
-                Kokkos::HostSpace>::accessible);
+                Kokkos::SYCLHostUSMSpace>::accessible);
 }
 
 TEST(sycl, uvm) {

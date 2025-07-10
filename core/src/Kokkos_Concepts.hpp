@@ -283,6 +283,9 @@ struct is_space {
  public:
   static constexpr bool value = is_exe::value || is_mem::value || is_dev::value;
 
+  static constexpr bool is_exec_space() { return is_exe::value; }
+  static constexpr bool is_mem_space() { return is_mem::value; }
+
   constexpr operator bool() const noexcept { return value; }
 
   using execution_space = typename is_exe::space;
