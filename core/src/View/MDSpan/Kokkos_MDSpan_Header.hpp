@@ -27,9 +27,6 @@ static_assert(false,
 #include <version>
 #endif
 
-// Only use standard library mdspan if we are not running Cuda or HIP.
-// Likely these implementations won't be supported on device, so we should use
-// our own device-compatible version for now.
 #ifdef KOKKOS_IMPL_COMPILER_PROVIDED_MDSPAN_HEADER
 #include KOKKOS_IMPL_COMPILER_PROVIDED_MDSPAN_HEADER
 namespace Kokkos {

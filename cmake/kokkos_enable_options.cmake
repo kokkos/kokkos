@@ -155,6 +155,12 @@ if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
   message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
 endif()
 
+if(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+  message(STATUS "Using legacy view implementation")
+else()
+  message(STATUS "Using new view (mdspan-based) implementation")
+endif()
+
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
 if(KOKKOS_ENABLE_TESTS)
