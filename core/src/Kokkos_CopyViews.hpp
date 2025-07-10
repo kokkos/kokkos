@@ -2539,6 +2539,12 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+    auto prop_copy = Impl::with_properties_if_unset(
+        arg_prop, typename view_type::execution_space{}, v.label());
+
+    view_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
+#else
     auto prop_copy = [&]() {
       if constexpr (view_type::traits::impl_is_customized) {
         // FIXME SACADO: this is specializing for sacado, might need a better
@@ -2573,6 +2579,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     } else {
       v_resized = view_type(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
     }
+#endif
 
     if constexpr (alloc_prop_input::has_execution_space)
       Kokkos::Impl::ViewRemap<view_type, view_type>(
