@@ -95,9 +95,8 @@ struct Sum : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = Sum<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = Sum<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -121,9 +120,8 @@ struct Prod : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = Prod<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = Prod<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -147,9 +145,8 @@ struct Min : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = Min<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = Min<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -175,9 +172,8 @@ struct Max : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = Max<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = Max<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -203,9 +199,8 @@ struct LAnd : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = LAnd<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = LAnd<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -231,9 +226,8 @@ struct LOr : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = LOr<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = LOr<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -259,9 +253,8 @@ struct BAnd : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = BAnd<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = BAnd<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -287,9 +280,8 @@ struct BOr : Impl::BaseReducer<Scalar, Space> {
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
-  using reducer          = BOr<Scalar, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = BOr<Scalar, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -330,9 +322,8 @@ struct MinLoc
                 !std::is_array_v<scalar_type>);
 
  public:
-  using reducer          = MinLoc<Scalar, Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = MinLoc<Scalar, Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -375,8 +366,7 @@ struct MaxLoc
                 !std::is_array_v<scalar_type>);
 
  public:
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using value_type = typename parent_type::value_type;
 
   using reducer = MaxLoc<Scalar, Index, Space>;
 
@@ -423,8 +413,7 @@ struct MinMax
                 !std::is_array_v<scalar_type>);
 
  public:
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using value_type = typename parent_type::value_type;
 
   using reducer = MinMax<Scalar, Space>;
 
@@ -474,9 +463,8 @@ struct MinMaxLoc
                 !std::is_array_v<scalar_type>);
 
  public:
-  using reducer          = MinMaxLoc<Scalar, Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = MinMaxLoc<Scalar, Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -538,9 +526,8 @@ struct MaxFirstLoc
   static_assert(std::is_integral_v<index_type>);
 
  public:
-  using reducer          = MaxFirstLoc<Scalar, Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = MaxFirstLoc<Scalar, Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -649,9 +636,8 @@ struct MinFirstLoc
   static_assert(std::is_integral_v<index_type>);
 
  public:
-  using reducer          = MinFirstLoc<Scalar, Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = MinFirstLoc<Scalar, Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -759,9 +745,8 @@ struct MinMaxFirstLastLoc
                 !std::is_array_v<scalar_type>);
 
  public:
-  using reducer          = MinMaxFirstLastLoc<Scalar, Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = MinMaxFirstLastLoc<Scalar, Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -891,9 +876,8 @@ struct FirstLoc
       Impl::BaseReducer<FirstLocScalar<std::remove_cv_t<Index>>, Space>;
 
  public:
-  using reducer          = FirstLoc<Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = FirstLoc<Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -935,9 +919,8 @@ struct LastLoc
   using parent_type = Impl::BaseReducer<LastLocScalar<index_type>, Space>;
 
  public:
-  using reducer          = LastLoc<Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = LastLoc<Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -979,9 +962,8 @@ struct StdIsPartitioned
   using parent_type = Impl::BaseReducer<StdIsPartScalar<index_type>, Space>;
 
  public:
-  using reducer          = StdIsPartitioned<Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = StdIsPartitioned<Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
@@ -1029,9 +1011,8 @@ struct StdPartitionPoint
   using parent_type = Impl::BaseReducer<StdPartPointScalar<index_type>, Space>;
 
  public:
-  using reducer          = StdPartitionPoint<Index, Space>;
-  using value_type       = typename parent_type::value_type;
-  using result_view_type = typename parent_type::result_view_type;
+  using reducer    = StdPartitionPoint<Index, Space>;
+  using value_type = typename parent_type::value_type;
 
   // Inherit constructors
   using parent_type::parent_type;
