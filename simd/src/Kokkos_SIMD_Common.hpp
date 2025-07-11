@@ -23,6 +23,10 @@ namespace simd_abi {
 class scalar;
 }
 
+namespace Impl {
+using simd_size_t = std::int32_t;
+}
+
 template <class T, class Abi>
 class basic_simd;
 
@@ -430,7 +434,7 @@ template <class T, class Abi, class BinaryOperation = std::plus<>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T reduce(const basic_simd<T, Abi>& x,
                                                BinaryOperation binary_op = {}) {
   T result = x[0];
-  for (std::size_t i = 1; i < x.size(); ++i) {
+  for (Impl::simd_size_t i = 1; i < x.size(); ++i) {
     result = binary_op(result, x[i]);
   }
   return result;

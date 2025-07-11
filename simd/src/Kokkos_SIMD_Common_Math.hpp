@@ -38,7 +38,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   auto const& v = x.impl_get_value();
   auto const& m = x.impl_get_mask();
   auto result   = Kokkos::reduction_identity<T>::min();
-  for (std::size_t i = 0; i < v.size(); ++i) {
+  for (Impl::simd_size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::min(result, v[i]);
   }
   return result;
@@ -52,7 +52,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   auto const& v = x.impl_get_value();
   auto const& m = x.impl_get_mask();
   auto result   = Kokkos::reduction_identity<T>::max();
-  for (std::size_t i = 0; i < v.size(); ++i) {
+  for (Impl::simd_size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::max(result, v[i]);
   }
   return result;
@@ -65,7 +65,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce_min(basic_simd<T, Abi> const& v,
            typename basic_simd<T, Abi>::mask_type const& m) {
   auto result = Kokkos::reduction_identity<T>::min();
-  for (std::size_t i = 0; i < v.size(); ++i) {
+  for (Impl::simd_size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::min(result, v[i]);
   }
   return result;
@@ -76,7 +76,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
 reduce_max(basic_simd<T, Abi> const& v,
            typename basic_simd<T, Abi>::mask_type const& m) {
   auto result = Kokkos::reduction_identity<T>::max();
-  for (std::size_t i = 0; i < v.size(); ++i) {
+  for (Impl::simd_size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = Kokkos::max(result, v[i]);
   }
   return result;
@@ -91,7 +91,7 @@ reduce(basic_simd<T, Abi> const& v,
     return identity;
   }
   T result = identity;
-  for (std::size_t i = 0; i < v.size(); ++i) {
+  for (Impl::simd_size_t i = 0; i < v.size(); ++i) {
     if (m[i]) result = op(result, v[i]);
   }
   return result;
@@ -119,7 +119,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> min(
     Experimental::basic_simd<T, Abi> const& b) {
   using simd_type           = Experimental::basic_simd<T, Abi>;
   T vals[simd_type::size()] = {0};
-  for (std::size_t i = 0; i < simd_type::size(); ++i) {
+  for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {
     vals[i] = Kokkos::min(a[i], b[i]);
   }
   return Experimental::simd_unchecked_load<simd_type>(
@@ -144,7 +144,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<T, Abi> max(
     Experimental::basic_simd<T, Abi> const& b) {
   using simd_type           = Experimental::basic_simd<T, Abi>;
   T vals[simd_type::size()] = {0};
-  for (std::size_t i = 0; i < simd_type::size(); ++i) {
+  for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {
     vals[i] = Kokkos::max(a[i], b[i]);
   }
   return Experimental::simd_unchecked_load<simd_type>(
@@ -177,7 +177,7 @@ KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
       Experimental::basic_simd<T, Abi> const& a) {                             \
     using simd_type           = Experimental::basic_simd<T, Abi>;              \
     T vals[simd_type::size()] = {0};                                           \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+    for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {  \
       vals[i] = Kokkos::FUNC(a[i]);                                            \
     }                                                                          \
     return Experimental::simd_unchecked_load<simd_type>(                       \
@@ -205,7 +205,7 @@ KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
       Experimental::basic_simd<T, Abi> const& a) {                             \
     using simd_type           = Experimental::basic_simd<T, Abi>;              \
     T vals[simd_type::size()] = {0};                                           \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+    for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {  \
       vals[i] = Kokkos::FUNC(a[i]);                                            \
     }                                                                          \
     return Experimental::simd_unchecked_load<simd_type>(                       \
@@ -254,7 +254,7 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
       Experimental::basic_simd<T, Abi> const& b) {                             \
     using simd_type           = Experimental::basic_simd<T, Abi>;              \
     T vals[simd_type::size()] = {0};                                           \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+    for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {  \
       vals[i] = Kokkos::FUNC(a[i], b[i]);                                      \
     }                                                                          \
     return Experimental::simd_unchecked_load<simd_type>(                       \
@@ -284,7 +284,7 @@ KOKKOS_IMPL_SIMD_UNARY_FUNCTION(lgamma)
       Experimental::basic_simd<T, Abi> const& b) {                             \
     using simd_type           = Experimental::basic_simd<T, Abi>;              \
     T vals[simd_type::size()] = {0};                                           \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+    for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {  \
       vals[i] = Kokkos::FUNC(a[i], b[i]);                                      \
     }                                                                          \
     return Experimental::simd_unchecked_load<simd_type>(                       \
@@ -315,7 +315,7 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
       Experimental::basic_simd<T, Abi> const& c) {                             \
     using simd_type           = Experimental::basic_simd<T, Abi>;              \
     T vals[simd_type::size()] = {0};                                           \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+    for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {  \
       vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                                \
     }                                                                          \
     return Experimental::simd_unchecked_load<simd_type>(                       \
@@ -348,7 +348,7 @@ KOKKOS_IMPL_SIMD_BINARY_FUNCTION(copysign)
       Experimental::basic_simd<T, Abi> const& c) {                             \
     using simd_type           = Experimental::basic_simd<T, Abi>;              \
     T vals[simd_type::size()] = {0};                                           \
-    for (std::size_t i = 0; i < simd_type::size(); ++i) {                      \
+    for (Experimental::Impl::simd_size_t i = 0; i < simd_type::size(); ++i) {  \
       vals[i] = Kokkos::FUNC(a[i], b[i], c[i]);                                \
     }                                                                          \
     return Experimental::simd_unchecked_load<simd_type>(                       \

@@ -354,7 +354,7 @@ class reduce_min {
   template <typename T, typename U, typename MaskType>
   auto on_host_serial(T const& a, U, MaskType) const {
     auto result = Kokkos::reduction_identity<U>::min();
-    for (std::size_t i = 0; i < a.size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < a.size(); ++i) {
       result = Kokkos::min(result, a[i]);
     }
     return result;
@@ -367,7 +367,7 @@ class reduce_min {
   template <typename T, typename U, typename MaskType>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a, U, MaskType) const {
     auto result = Kokkos::reduction_identity<U>::min();
-    for (std::size_t i = 0; i < a.size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < a.size(); ++i) {
       result = Kokkos::min(result, a[i]);
     }
     return result;
@@ -383,7 +383,7 @@ class reduce_max {
   template <typename T, typename U, typename MaskType>
   auto on_host_serial(T const& a, U, MaskType) const {
     auto result = Kokkos::reduction_identity<U>::max();
-    for (std::size_t i = 0; i < a.size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < a.size(); ++i) {
       result = Kokkos::max(result, a[i]);
     }
     return result;
@@ -396,7 +396,7 @@ class reduce_max {
   template <typename T, typename U, typename MaskType>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a, U, MaskType) const {
     auto result = Kokkos::reduction_identity<U>::max();
-    for (std::size_t i = 0; i < a.size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < a.size(); ++i) {
       result = Kokkos::max(result, a[i]);
     }
     return result;
@@ -413,7 +413,7 @@ class reduce {
   template <typename T, typename U, typename MaskType>
   auto on_host_serial(T const& a, U, MaskType) const {
     U result = a[0];
-    for (std::size_t i = 1; i < a.size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 1; i < a.size(); ++i) {
       result = BinaryOperation()(result, a[i]);
     }
     return result;
@@ -426,7 +426,7 @@ class reduce {
   template <typename T, typename U, typename MaskType>
   KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a, U, MaskType) const {
     U result = a[0];
-    for (std::size_t i = 1; i < a.size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 1; i < a.size(); ++i) {
       if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
         result = result + a[i];
       } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
@@ -457,7 +457,7 @@ class masked_reduce_min {
       return Kokkos::reduction_identity<U>::min();
 
     auto result = Kokkos::reduction_identity<U>::min();
-    for (std::size_t i = 0; i < T::size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
       if (mask[i]) result = Kokkos::min(result, a[i]);
     }
     return result;
@@ -474,7 +474,7 @@ class masked_reduce_min {
       return Kokkos::reduction_identity<U>::min();
 
     auto result = Kokkos::reduction_identity<U>::min();
-    for (std::size_t i = 0; i < T::size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
       if (mask[i]) result = Kokkos::min(result, a[i]);
     }
     return result;
@@ -493,7 +493,7 @@ class masked_reduce_max {
       return Kokkos::reduction_identity<U>::max();
 
     auto result = Kokkos::reduction_identity<U>::max();
-    for (std::size_t i = 0; i < T::size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
       if (mask[i]) result = Kokkos::max(result, a[i]);
     }
     return result;
@@ -510,7 +510,7 @@ class masked_reduce_max {
       return Kokkos::reduction_identity<U>::max();
 
     auto result = Kokkos::reduction_identity<U>::max();
-    for (std::size_t i = 0; i < T::size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
       if (mask[i]) result = Kokkos::max(result, a[i]);
     }
     return result;
@@ -529,7 +529,7 @@ class masked_reduce {
     if (Kokkos::Experimental::none_of(mask)) return identity;
 
     U result = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
-    for (std::size_t i = 0; i < T::size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
       if (mask[i]) result = BinaryOperation()(result, a[i]);
     }
     return result;
@@ -546,7 +546,7 @@ class masked_reduce {
     if (Kokkos::Experimental::none_of(mask)) return identity;
 
     U result = Kokkos::Experimental::Impl::Identity<U, BinaryOperation>();
-    for (std::size_t i = 0; i < T::size(); ++i) {
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
       if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
         if (mask[i]) result = result + a[i];
       } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {

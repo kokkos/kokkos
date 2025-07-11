@@ -16,6 +16,7 @@ template <typename Abi, typename DataType>
 inline void host_check_mask_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
+    using size_type = Kokkos::Experimental::Impl::simd_size_t;
 
     EXPECT_FALSE(none_of(mask_type(true)));
     EXPECT_TRUE(none_of(mask_type(false)));
@@ -24,8 +25,8 @@ inline void host_check_mask_ops() {
     EXPECT_TRUE(any_of(mask_type(true)));
     EXPECT_FALSE(any_of(mask_type(false)));
 
-    for (std::size_t i = 0; i < mask_type::size(); ++i) {
-      mask_type test_mask(KOKKOS_LAMBDA(std::size_t j) { return i == j; });
+    for (size_type i = 0; i < mask_type::size(); ++i) {
+      mask_type test_mask(KOKKOS_LAMBDA(size_type j) { return i == j; });
 
       EXPECT_TRUE(any_of(test_mask));
       EXPECT_FALSE(none_of(test_mask));
@@ -56,6 +57,8 @@ template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
   if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
+    using size_type = Kokkos::Experimental::Impl::simd_size_t;
+
     kokkos_checker checker;
     checker.truth(!none_of(mask_type(true)));
     checker.truth(none_of(mask_type(false)));
@@ -64,8 +67,8 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
     checker.truth(any_of(mask_type(true)));
     checker.truth(!any_of(mask_type(false)));
 
-    for (std::size_t i = 0; i < mask_type::size(); ++i) {
-      mask_type test_mask(KOKKOS_LAMBDA(std::size_t j) { return i == j; });
+    for (size_type i = 0; i < mask_type::size(); ++i) {
+      mask_type test_mask(KOKKOS_LAMBDA(size_type j) { return i == j; });
 
       checker.truth(any_of(test_mask));
       checker.truth(!none_of(test_mask));

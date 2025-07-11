@@ -74,7 +74,7 @@ namespace Impl {
 #if defined(KOKKOS_ARCH_AVX512XEON)
 template <class T>
 using host_fixed_native = avx512_fixed_size<8>;
-template <typename T, int N>
+template <typename T, Experimental::Impl::simd_size_t N>
 using host_native_abi =
     std::conditional_t<N == 0, avx512_fixed_size<512 / sizeof(T)>,
                        avx512_fixed_size<N>>;
@@ -82,7 +82,7 @@ using host_native_abi =
 #elif defined(KOKKOS_ARCH_AVX2)
 template <class T>
 using host_fixed_native = avx2_fixed_size<4>;
-template <typename T, int N>
+template <typename T, Experimental::Impl::simd_size_t N>
 using host_native_abi =
     std::conditional_t<N == 0, avx2_fixed_size<256 / sizeof(T)>,
                        avx2_fixed_size<N>>;
@@ -91,14 +91,14 @@ using host_native_abi =
 template <class T>
 using host_fixed_native =
     sve_fixed_size<(__ARM_FEATURE_SVE_BITS / (8 * sizeof(T)))>;
-template <typename T, int N>
+template <typename T, Experimental::Impl::simd_size_t N>
 using host_native_abi =
     std::conditional_t<N == 0, host_fixed_native<T>, sve_fixed_size<N>>;
 
 #elif defined(KOKKOS_ARCH_ARM_NEON)
 template <class T>
 using host_fixed_native = neon_fixed_size<2>;
-template <typename T, int N>
+template <typename T, Experimental::Impl::simd_size_t N>
 using host_native_abi =
     std::conditional_t<N == 0, neon_fixed_size<128 / sizeof(T)>,
                        neon_fixed_size<N>>;
@@ -106,7 +106,7 @@ using host_native_abi =
 #else
 template <class T>
 using host_fixed_native = scalar;
-template <typename T, int N>
+template <typename T, Experimental::Impl::simd_size_t N>
 using host_native_abi = scalar;
 #endif
 
@@ -119,7 +119,7 @@ struct ForSpace<Kokkos::Serial> {
   template <class T>
   using type = host_fixed_native<T>;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = host_native_abi<T, N>;
 };
 #endif
@@ -130,7 +130,7 @@ struct ForSpace<Kokkos::Cuda> {
   template <class T>
   using type = scalar;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = scalar;
 };
 #endif
@@ -141,7 +141,7 @@ struct ForSpace<Kokkos::Threads> {
   template <class T>
   using type = host_fixed_native<T>;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = host_native_abi<T, N>;
 };
 #endif
@@ -152,7 +152,7 @@ struct ForSpace<Kokkos::Experimental::HPX> {
   template <class T>
   using type = scalar;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = scalar;
 };
 #endif
@@ -163,7 +163,7 @@ struct ForSpace<Kokkos::OpenMP> {
   template <class T>
   using type = host_fixed_native<T>;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = host_native_abi<T, N>;
 };
 #endif
@@ -174,7 +174,7 @@ struct ForSpace<Kokkos::Experimental::OpenMPTarget> {
   template <class T>
   using type = scalar;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = scalar;
 };
 #endif
@@ -185,7 +185,7 @@ struct ForSpace<Kokkos::Experimental::OpenACC> {
   template <class T>
   using type = scalar;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = scalar;
 };
 #endif
@@ -196,7 +196,7 @@ struct ForSpace<Kokkos::HIP> {
   template <class T>
   using type = scalar;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = scalar;
 };
 #endif
@@ -207,7 +207,7 @@ struct ForSpace<Kokkos::SYCL> {
   template <class T>
   using type = scalar;
 
-  template <typename T, int N>
+  template <typename T, Experimental::Impl::simd_size_t N>
   using simd_abi = scalar;
 };
 #endif
@@ -215,7 +215,8 @@ struct ForSpace<Kokkos::SYCL> {
 template <class T, class Space = Kokkos::DefaultExecutionSpace>
 using native_fixed_abi = typename ForSpace<Space>::template type<T>;
 
-template <typename T, int N, class Space = Kokkos::DefaultExecutionSpace>
+template <typename T, Experimental::Impl::simd_size_t N,
+          class Space = Kokkos::DefaultExecutionSpace>
 using native_abi = typename ForSpace<Space>::template simd_abi<T, N>;
 
 }  // namespace Impl
@@ -240,10 +241,10 @@ using native_simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
     "Use simd_mask<T> instead") = basic_simd_mask<T, simd_abi::native<T>>;
 #endif
 
-template <class T, int N = 0>
+template <class T, Impl::simd_size_t N = 0>
 using simd = basic_simd<T, simd_abi::Impl::native_abi<T, N>>;
 
-template <class T, int N = 0>
+template <class T, Impl::simd_size_t N = 0>
 using simd_mask = basic_simd_mask<T, simd_abi::Impl::native_abi<T, N>>;
 
 template <typename T, typename... Flags>

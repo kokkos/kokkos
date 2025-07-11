@@ -78,7 +78,7 @@ namespace Experimental {
 
 namespace simd_abi {
 
-template <int N>
+template <Impl::simd_size_t N>
 class sve_fixed_size {};
 
 }  // namespace simd_abi
@@ -115,9 +115,9 @@ class sve_mask<Derived, 64> {
   using value_type = bool;
   using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_DOUBLES_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_DOUBLES_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION sve_mask() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit sve_mask(
@@ -175,7 +175,7 @@ class sve_mask<Derived, 64> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svptest_last(Impl::get_pred<64>(i), m_value);
   }
 
@@ -216,9 +216,9 @@ class sve_mask<Derived, 32> {
   using value_type = bool;
   using abi_type   = simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_WORDS_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_WORDS_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION sve_mask() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit sve_mask(
@@ -290,7 +290,7 @@ class sve_mask<Derived, 32> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svptest_last(Impl::get_pred<32>(i), m_value);
   }
 
@@ -378,9 +378,9 @@ class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
   using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_DOUBLES_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_DOUBLES_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) noexcept =
@@ -450,7 +450,7 @@ class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svlastb(Impl::get_pred<64>(i), m_value);
   }
 
@@ -796,9 +796,9 @@ class basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   using abi_type   = simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_WORDS_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_WORDS_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) noexcept =
@@ -875,7 +875,7 @@ class basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svlastb(Impl::get_pred<32>(i), m_value);
   }
 
@@ -1214,9 +1214,9 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   using abi_type   = simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_WORDS_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_WORDS_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) noexcept =
@@ -1293,7 +1293,7 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svlastb(Impl::get_pred<32>(i), m_value);
   }
 
@@ -1673,9 +1673,9 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   using abi_type   = simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_WORDS_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_WORDS_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) noexcept =
@@ -1752,7 +1752,7 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svlastb(Impl::get_pred<32>(i), m_value);
   }
 
@@ -2122,9 +2122,9 @@ class basic_simd<std::int64_t,
   using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_DOUBLES_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_DOUBLES_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) noexcept =
@@ -2193,7 +2193,7 @@ class basic_simd<std::int64_t,
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svlastb(Impl::get_pred<64>(i), m_value);
   }
 
@@ -2584,9 +2584,9 @@ class basic_simd<std::uint64_t,
   using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_DOUBLES_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_DOUBLES_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) noexcept =
@@ -2657,7 +2657,7 @@ class basic_simd<std::uint64_t,
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
-  operator[](std::size_t i) const {
+  operator[](Impl::simd_size_t i) const {
     return svlastb(Impl::get_pred<64>(i), m_value);
   }
 
@@ -3073,9 +3073,9 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
  public:
   using abi_type = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static constexpr std::size_t size() {
-    return SVE_DOUBLES_IN_VECTOR;
-  }
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_DOUBLES_IN_VECTOR>
+      size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(basic_simd const&) noexcept =

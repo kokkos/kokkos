@@ -13,14 +13,15 @@ import kokkos.simd;
 #include <SIMDTesting_Utilities.hpp>
 
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
-inline void host_check_shift_on_one_loader(ShiftOp shift_op,
-                                           DataType test_vals[],
-                                           DataType shift_by[], std::size_t n) {
-  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
-  constexpr std::size_t width = simd_type::size();
+inline void host_check_shift_on_one_loader(
+    ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
+    Kokkos::Experimental::Impl::simd_size_t n) {
+  using simd_type           = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using size_type           = Kokkos::Experimental::Impl::simd_size_t;
+  constexpr size_type width = simd_type::size();
   Loader loader;
 
-  for (std::size_t i = 0; i < n; ++i) {
+  for (size_type i = 0; i < n; ++i) {
     simd_type simd_vals;
     bool const loaded_arg = loader.host_load(test_vals, width, simd_vals);
     if (!loaded_arg) {
@@ -28,7 +29,7 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
     }
 
     DataType expected_val[width];
-    for (std::size_t lane = 0; lane < width; ++lane) {
+    for (size_type lane = 0; lane < width; ++lane) {
       expected_val[lane] =
           shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[i]));
     }
@@ -47,8 +48,9 @@ template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 inline void host_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
     Kokkos::Experimental::basic_simd<DataType, Abi>& shift_by) {
-  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
-  constexpr std::size_t width = simd_type::size();
+  using simd_type           = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using size_type           = Kokkos::Experimental::Impl::simd_size_t;
+  constexpr size_type width = simd_type::size();
   Loader loader;
 
   simd_type simd_vals;
@@ -56,7 +58,7 @@ inline void host_check_shift_by_lanes_on_one_loader(
   ASSERT_TRUE(loaded_arg);
 
   DataType expected_val[width];
-  for (std::size_t lane = 0; lane < width; ++lane) {
+  for (size_type lane = 0; lane < width; ++lane) {
     expected_val[lane] =
         shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[lane]));
   }
@@ -70,10 +72,9 @@ inline void host_check_shift_by_lanes_on_one_loader(
 }
 
 template <typename Abi, typename ShiftOp, typename DataType>
-inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
-                                            DataType test_vals[],
-                                            DataType shift_by[],
-                                            std::size_t n) {
+inline void host_check_shift_op_all_loaders(
+    ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
+    Kokkos::Experimental::Impl::simd_size_t n) {
   host_check_shift_on_one_loader<Abi, load_element_aligned>(shift_op, test_vals,
                                                             shift_by, n);
   host_check_shift_on_one_loader<Abi, load_masked>(shift_op, test_vals,
@@ -103,8 +104,9 @@ inline void host_check_shift_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     if constexpr (std::is_integral_v<DataType>) {
       using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
-      constexpr std::size_t width     = simd_type::size();
-      constexpr std::size_t num_cases = 16;
+      using size_type = Kokkos::Experimental::Impl::simd_size_t;
+      constexpr size_type width     = simd_type::size();
+      constexpr size_type num_cases = 16;
       constexpr size_t alignment =
           Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
           sizeof(DataType);
@@ -115,7 +117,7 @@ inline void host_check_shift_ops() {
           0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1,
           0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
       alignas(alignment) DataType test_vals[width];
-      for (std::size_t i = 0; i < width; ++i) {
+      for (size_type i = 0; i < width; ++i) {
         DataType inc = max / width;
         test_vals[i] = i * inc + 1;
       }
@@ -130,7 +132,7 @@ inline void host_check_shift_ops() {
                                            num_cases);
 
       if constexpr (std::is_signed_v<DataType>) {
-        for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+        for (size_type i = 0; i < width; ++i) test_vals[i] *= -1;
         host_check_shift_op_all_loaders<Abi>(shift_right(), test_vals, shift_by,
                                              num_cases);
         host_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
@@ -156,19 +158,20 @@ inline void host_check_shift_ops_all_abis(
 template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_on_one_loader(
     ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
-    std::size_t n) {
-  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
-  constexpr std::size_t width = simd_type::size();
+    Kokkos::Experimental::Impl::simd_size_t n) {
+  using simd_type           = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using size_type           = Kokkos::Experimental::Impl::simd_size_t;
+  constexpr size_type width = simd_type::size();
   Loader loader;
 
-  for (std::size_t i = 0; i < n; ++i) {
+  for (size_type i = 0; i < n; ++i) {
     simd_type simd_vals;
     bool const loaded_arg = loader.device_load(test_vals, width, simd_vals);
     if (!loaded_arg) {
       continue;
     }
 
-    simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+    simd_type expected_result(KOKKOS_LAMBDA(size_type lane) {
       return shift_op.on_device(simd_vals[lane], static_cast<int>(shift_by[i]));
     });
 
@@ -182,13 +185,14 @@ template <typename Abi, typename Loader, typename ShiftOp, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
     ShiftOp shift_op, DataType test_vals[],
     Kokkos::Experimental::basic_simd<DataType, Abi>& shift_by) {
-  using simd_type             = Kokkos::Experimental::basic_simd<DataType, Abi>;
-  constexpr std::size_t width = simd_type::size();
+  using simd_type           = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using size_type           = Kokkos::Experimental::Impl::simd_size_t;
+  constexpr size_type width = simd_type::size();
   Loader loader;
   simd_type simd_vals;
   loader.device_load(test_vals, width, simd_vals);
 
-  simd_type expected_result(KOKKOS_LAMBDA(std::size_t lane) {
+  simd_type expected_result(KOKKOS_LAMBDA(size_type lane) {
     return shift_op.on_device(simd_vals[lane],
                               static_cast<int>(shift_by[lane]));
   });
@@ -200,7 +204,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_by_lanes_on_one_loader(
 template <typename Abi, typename ShiftOp, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
     ShiftOp shift_op, DataType test_vals[], DataType shift_by[],
-    std::size_t n) {
+    Kokkos::Experimental::Impl::simd_size_t n) {
   device_check_shift_on_one_loader<Abi, load_element_aligned>(
       shift_op, test_vals, shift_by, n);
   device_check_shift_on_one_loader<Abi, load_masked>(shift_op, test_vals,
@@ -230,8 +234,9 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
   if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
     if constexpr (std::is_integral_v<DataType>) {
       using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
-      constexpr std::size_t width     = simd_type::size();
-      constexpr std::size_t num_cases = 16;
+      using size_type = Kokkos::Experimental::Impl::simd_size_t;
+      constexpr size_type width     = simd_type::size();
+      constexpr size_type num_cases = 16;
 
       DataType max = Kokkos::reduction_identity<DataType>::max();
 
@@ -240,7 +245,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
           0, 1, 3, width / 2, width / 2 + 1, width - 1, width, width + 1};
       DataType test_vals[width];
 
-      for (std::size_t i = 0; i < width; ++i) {
+      for (size_type i = 0; i < width; ++i) {
         DataType inc = max / width;
         test_vals[i] = i * inc + 1;
       }
@@ -255,7 +260,7 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_ops() {
                                              shift_by, num_cases);
 
       if constexpr (std::is_signed_v<DataType>) {
-        for (std::size_t i = 0; i < width; ++i) test_vals[i] *= -1;
+        for (size_type i = 0; i < width; ++i) test_vals[i] *= -1;
         device_check_shift_op_all_loaders<Abi>(shift_right(), test_vals,
                                                shift_by, num_cases);
         device_check_shift_op_all_loaders<Abi>(shift_right_eq(), test_vals,
