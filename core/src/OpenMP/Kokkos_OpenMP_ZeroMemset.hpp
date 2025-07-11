@@ -28,6 +28,9 @@ namespace Impl {
 template <>
 struct ZeroMemset<OpenMP> {
   ZeroMemset(const OpenMP& exec_space, void* dst, size_t cnt) {
+    // Threshold chosen based on the ViewFirstTouch_ParallelFor benchmark,
+    // run on AMD EPYC Genoa and Intel Xeon Cascade Lake architectures,
+    // which have 8 and 2 NUMA nodes respectively.
     constexpr size_t host_memset_limit = 1lu << 17;
     if (cnt < host_memset_limit || exec_space.concurrency() < 4) {
       std::memset(dst, 0, cnt);

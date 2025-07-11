@@ -24,8 +24,6 @@ void ViewFirstTouch_ParallelFor(benchmark::State& state) {
   using ViewType = Kokkos::View<DataType*>;
 
   for (auto _ : state) {
-    Kokkos::fence();
-
     ViewType v_a("A", N);
     Kokkos::fence();
     Kokkos::Timer timer;
@@ -38,31 +36,10 @@ void ViewFirstTouch_ParallelFor(benchmark::State& state) {
   }
 }
 
-// Light benchmark set with smaller data sizes
 BENCHMARK_TEMPLATE(ViewFirstTouch_ParallelFor, double)
     ->ArgName("N")
     ->RangeMultiplier(8)
     ->Range(int64_t(1) << 6, int64_t(1) << 24)
     ->UseManualTime();
-
-#if 0  // Larger benchmark set
-BENCHMARK_TEMPLATE(ViewFirstTouch_ParallelFor, double)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 30)
-    ->UseManualTime();
-
-BENCHMARK_TEMPLATE(ViewFirstTouch_ParallelFor, float)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 30)
-    ->UseManualTime();
-
-BENCHMARK_TEMPLATE(ViewFirstTouch_ParallelFor, int)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 30)
-    ->UseManualTime();
-#endif
 
 }  // namespace Benchmark

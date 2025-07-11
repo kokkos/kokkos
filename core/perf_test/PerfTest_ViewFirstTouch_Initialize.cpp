@@ -31,31 +31,10 @@ void ViewFirstTouch_Initialize(benchmark::State& state) {
   }
 }
 
-// Light benchmark set with smaller data sizes
 BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, double)
     ->ArgName("N")
     ->RangeMultiplier(8)
     ->Range(int64_t(1) << 6, int64_t(1) << 24)
     ->UseManualTime();
-
-#if 0  // Larger benchmark set
-BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, double)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 30)
-    ->UseManualTime();
-
-BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, float)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 30)
-    ->UseManualTime();
-
-BENCHMARK_TEMPLATE(ViewFirstTouch_Initialize, int)
-    ->ArgName("N")
-    ->RangeMultiplier(4)
-    ->Range(int64_t(1) << 4, int64_t(1) << 30)
-    ->UseManualTime();
-#endif
 
 }  // namespace Benchmark
