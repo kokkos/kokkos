@@ -91,7 +91,7 @@ struct BaseReducer {
 
 template <class Scalar, class Space>
 struct Sum : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -116,7 +116,7 @@ KOKKOS_DEDUCTION_GUIDE Sum(View<Scalar, Properties...> const&)
 
 template <class Scalar, class Space>
 struct Prod : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -141,7 +141,7 @@ KOKKOS_DEDUCTION_GUIDE Prod(View<Scalar, Properties...> const&)
 
 template <class Scalar, class Space>
 struct Min : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -168,7 +168,7 @@ KOKKOS_DEDUCTION_GUIDE Min(View<Scalar, Properties...> const&)
 
 template <class Scalar, class Space>
 struct Max : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -195,7 +195,7 @@ KOKKOS_DEDUCTION_GUIDE Max(View<Scalar, Properties...> const&)
 
 template <class Scalar, class Space>
 struct LAnd : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -222,7 +222,7 @@ KOKKOS_DEDUCTION_GUIDE LAnd(View<Scalar, Properties...> const&)
 
 template <class Scalar, class Space>
 struct LOr : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -249,7 +249,7 @@ KOKKOS_DEDUCTION_GUIDE LOr(View<Scalar, Properties...> const&)
 
 template <class Scalar, class Space>
 struct BAnd : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -276,7 +276,7 @@ KOKKOS_DEDUCTION_GUIDE BAnd(View<Scalar, Properties...> const&)
 
 template <class Scalar, class Space>
 struct BOr : Impl::BaseReducer<Scalar, Space> {
- protected:
+ private:
   using parent_type = Impl::BaseReducer<Scalar, Space>;
 
  public:
@@ -312,7 +312,7 @@ struct MinLoc
     : Impl::BaseReducer<
           ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -356,7 +356,7 @@ struct MaxLoc
     : Impl::BaseReducer<
           ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -404,7 +404,7 @@ struct MinMaxScalar {
 template <class Scalar, class Space>
 struct MinMax
     : Impl::BaseReducer<MinMaxScalar<std::remove_cv_t<Scalar>>, Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using parent_type =
       Impl::BaseReducer<MinMaxScalar<std::remove_cv_t<Scalar>>, Space>;
@@ -453,7 +453,7 @@ struct MinMaxLoc
     : Impl::BaseReducer<
           MinMaxLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -515,7 +515,7 @@ struct MaxFirstLoc
     : Impl::BaseReducer<
           ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -564,7 +564,7 @@ struct MaxFirstLocCustomComparator
     : Impl::BaseReducer<
           ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -580,7 +580,7 @@ struct MaxFirstLocCustomComparator
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
 
- protected:
+ private:
   ComparatorType m_comp;
 
  public:
@@ -625,7 +625,7 @@ struct MinFirstLoc
     : Impl::BaseReducer<
           ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -674,7 +674,7 @@ struct MinFirstLocCustomComparator
     : Impl::BaseReducer<
           ValLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -690,7 +690,7 @@ struct MinFirstLocCustomComparator
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
 
- protected:
+ private:
   ComparatorType m_comp;
 
  public:
@@ -735,7 +735,7 @@ struct MinMaxFirstLastLoc
     : Impl::BaseReducer<
           MinMaxLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -793,7 +793,7 @@ struct MinMaxFirstLastLocCustomComparator
     : Impl::BaseReducer<
           MinMaxLocScalar<std::remove_cv_t<Scalar>, std::remove_cv_t<Index>>,
           Space> {
- protected:
+ private:
   using scalar_type = std::remove_cv_t<Scalar>;
   using index_type  = std::remove_cv_t<Index>;
   using parent_type =
@@ -808,7 +808,7 @@ struct MinMaxFirstLastLocCustomComparator
   using value_type       = typename parent_type::value_type;
   using result_view_type = typename parent_type::result_view_type;
 
- protected:
+ private:
   ComparatorType m_comp;
 
  public:
@@ -867,7 +867,7 @@ struct FirstLocScalar {
 template <class Index, class Space>
 struct FirstLoc
     : Impl::BaseReducer<FirstLocScalar<std::remove_cv_t<Index>>, Space> {
- protected:
+ private:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
   static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
@@ -911,7 +911,7 @@ struct LastLocScalar {
 template <class Index, class Space>
 struct LastLoc
     : Impl::BaseReducer<LastLocScalar<std::remove_cv_t<Index>>, Space> {
- protected:
+ private:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
   static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
@@ -954,7 +954,7 @@ struct StdIsPartScalar {
 template <class Index, class Space>
 struct StdIsPartitioned
     : Impl::BaseReducer<StdIsPartScalar<std::remove_cv_t<Index>>, Space> {
- protected:
+ private:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
   static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
@@ -1003,7 +1003,7 @@ struct StdPartPointScalar {
 template <class Index, class Space>
 struct StdPartitionPoint
     : Impl::BaseReducer<StdPartPointScalar<std::remove_cv_t<Index>>, Space> {
- protected:
+ private:
   using index_type = std::remove_cv_t<Index>;
   static_assert(std::is_integral_v<index_type>);
   static_assert(!std::is_pointer_v<index_type> && !std::is_array_v<index_type>);
