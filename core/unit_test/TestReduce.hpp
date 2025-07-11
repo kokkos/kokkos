@@ -672,4 +672,65 @@ TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
 }
 #endif
 
+/* Test that searching the Max of a View containing only -inf returns -inf and
+   the Min of a View containing only +inf returns +inf. */
+template <typename ScalarType>
+class TestReductionOverInfiniteFloat {
+ public:
+  TestReductionOverInfiniteFloat() { runTest(); }
+
+  void runTest() {
+    const int N = 10;
+
+    ScalarType inf = std::numeric_limits<ScalarType>::infinity();
+    Kokkos::View<ScalarType*> view("view", N);
+
+    Kokkos::deep_copy(view, inf);
+    ScalarType min;
+    Kokkos::parallel_reduce(
+        N,
+        KOKKOS_LAMBDA(const int i, ScalarType& partial_min) {
+          if (view[i] < partial_min) {
+            partial_min = view[i];
+          }
+        },
+        Kokkos::Min<ScalarType>(min));
+    ASSERT_EQ(inf, min);
+
+    Kokkos::deep_copy(view, -inf);
+    ScalarType max;
+    Kokkos::parallel_reduce(
+        N,
+        KOKKOS_LAMBDA(const int i, ScalarType& partial_max) {
+          if (view[i] > partial_max) {
+            partial_max = view[i];
+          }
+        },
+        Kokkos::Max<ScalarType>(min));
+    ASSERT_EQ(-inf, min);
+  }
+};
+
+// We do not run the test if KOKKOS_ENABLE_DEPRECATED_CODE_4 is ON because the
+// fix is only available if it is OFF
+TEST(TEST_CATEGORY, float_reduction_over_infinite) {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  TestReductionOverInfiniteFloat<float>();
+#endif
+}
+
+TEST(TEST_CATEGORY, double_reduction_over_infinite) {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  TestReductionOverInfiniteFloat<double>();
+#endif
+}
+
+TEST(TEST_CATEGORY, longdouble_reduction_over_infinite) {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  // This won't compile if TEST_EXECSPACE is not on host because long double =
+  // double on device.
+  // KOKKOS_IF_ON_HOST(TestReductionOverInfiniteFloat<long double>();)
+#endif
+}
+
 }  // namespace Test

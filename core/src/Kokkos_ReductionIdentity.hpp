@@ -22,6 +22,9 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#include <Kokkos_NumericTraits.hpp>
+#endif
 #include <cfloat>
 #include <climits>
 
@@ -363,8 +366,17 @@ struct reduction_identity<float> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() {
     return static_cast<float>(1.0f);
   }
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() {
+    return -Kokkos::Experimental::infinity_v<float>;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() {
+    return Kokkos::Experimental::infinity_v<float>;
+  }
+#else
   KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() { return -FLT_MAX; }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() { return FLT_MAX; }
+#endif
 };
 
 template <>
@@ -375,8 +387,17 @@ struct reduction_identity<double> {
   KOKKOS_FORCEINLINE_FUNCTION constexpr static double prod() {
     return static_cast<double>(1.0);
   }
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static double max() {
+    return -Kokkos::Experimental::infinity_v<double>;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static double min() {
+    return Kokkos::Experimental::infinity_v<double>;
+  }
+#else
   KOKKOS_FORCEINLINE_FUNCTION constexpr static double max() { return -DBL_MAX; }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static double min() { return DBL_MAX; }
+#endif
 };
 
 // No __host__ __device__ annotation because long double treated as double in
@@ -385,8 +406,17 @@ template <>
 struct reduction_identity<long double> {
   constexpr static long double sum() { return static_cast<long double>(0.0); }
   constexpr static long double prod() { return static_cast<long double>(1.0); }
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  constexpr static long double max() {
+    return -Kokkos::Experimental::infinity_v<long double>;
+  }
+  constexpr static long double min() {
+    return Kokkos::Experimental::infinity_v<long double>;
+  }
+#else
   constexpr static long double max() { return -LDBL_MAX; }
   constexpr static long double min() { return LDBL_MAX; }
+#endif
 };
 
 }  // namespace Kokkos
