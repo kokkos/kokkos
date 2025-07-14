@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <Kokkos_BitManipulation.hpp>
+#include <cstdint>
 
 struct X {
   constexpr bool did_not_match() { return true; }

@@ -51,7 +51,9 @@ struct IsLayoutLeftPadded<Experimental::layout_left_padded<Pad>>
     : std::true_type {};
 
 template <class ArrayLayout>
-struct LayoutFromArrayLayout;
+struct LayoutFromArrayLayout {
+  using type = void;
+};
 
 template <>
 struct LayoutFromArrayLayout<LayoutLeft> {

@@ -189,4 +189,11 @@ constexpr bool is_type_v = false;
 template <typename T>
 constexpr bool is_type_v<T, decltype(void(sizeof(T)))> = true;
 
+// We consider a fully-implemented 'simd' type is always accompanied by the
+// same-capability 'simd_mask' type
+template <typename DataType, typename Abi>
+constexpr bool is_simd_avail_v =
+    is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>> &&
+    is_type_v<Kokkos::Experimental::basic_simd_mask<DataType, Abi>>;
+
 #endif

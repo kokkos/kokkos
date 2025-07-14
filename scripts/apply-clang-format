@@ -26,18 +26,22 @@ if [ ! -f "scripts/apply-clang-format" ]; then
   exit 1
 fi
 
-TRACKED_FILES="$(git ls-files)"
+echo "***   Running clang-format"
+git ls-files | grep "\.\(hpp\|cpp\|cppm\|h\|cc\)$" | xargs ${CLANG_FORMAT_EXECUTABLE} -i
+echo "***   Running clang-format - done"
 
-find ${TRACKED_FILES} \
-  -type f -name '*.cpp' -o -name '*.hpp' -o -name '*.cc' -o -name '*.h' |
-  xargs -n 1 -P 10 ${CLANG_FORMAT_EXECUTABLE} -i
-
-# Now also check for trailing whitspace. Mac OSX creates backup files
-# that we need to delete manually.
-TRACKED_FILES="$(git ls-tree HEAD --name-only)"
-find ${TRACKED_FILES} \
-  -type f \( -name "*.md" -o -name "*.cc" -o -name "*.h" -o -name "*.txt" -o -name "*.cmake" \) |
-  xargs -n 1 -P 10 -I {} bash -c "sed -i -e 's/\s\+$//g' {} && rm -f '{}-e'"
+echo "***   Running trailing whitespaces check"
+# BSD sed does not have a --version flag, while GNU sed does.
+if sed --version >/dev/null 2>&1; then
+  # GNU
+  git ls-files | grep "\.\(md\)$" | xargs sed -i -r 's/[[:blank:]]+$//g'
+else
+  # BSD
+  git ls-files | grep "\.\(md\)$" | xargs sed -i '' -r 's/[[:blank:]]+$//g'
+fi
+echo "***   Running trailing whitespaces check - done"
 
 # Check that we do not introduce any file with the old copyright
+echo "***   Running copyright"
 ./scripts/check-copyright
+echo "***   Running copyright - done"

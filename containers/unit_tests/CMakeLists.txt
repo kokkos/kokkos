@@ -21,6 +21,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       DynViewAPI_rank12345
       DynViewAPI_rank67
       DynRankView_TeamScratch
+      DynRankView_ViewCustomization
       ErrorReporter
       OffsetView
       ScatterView
@@ -50,6 +51,11 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       list(REMOVE_ITEM UnitTestSources ${dir}/TestCuda_WithoutInitializing.cpp)
     endif()
 
+    if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+      list(REMOVE_ITEM UnitTestSources ${dir}/Test${Tag}_ViewCtorPropEmbeddedDim.cpp)
+    else()
+      list(REMOVE_ITEM UnitTestSources ${dir}/Test${Tag}_DynRankView_ViewCustomization.cpp)
+    endif()
     kokkos_add_executable_and_test(ContainersUnitTest_${Tag} SOURCES ${UnitTestSources})
   endif()
 endforeach()

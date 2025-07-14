@@ -3313,25 +3313,32 @@ class ViewMapping<
   KOKKOS_INLINE_FUNCTION static void assign(
       ViewMapping<DstTraits, void>& dst,
       ViewMapping<SrcTraits, void> const& src, Args... args) {
-    static_assert(ViewMapping<DstTraits, traits_type, void>::is_assignable,
-                  "Subview destination type must be compatible with subview "
-                  "derived type");
+    // Create ViewMapping based on traits_type, which was determined by this
+    // class. We cannot assume that aligned src memory implies the subview will
+    // be aligned, so remove aligned memory trait before mapping.
+    using traits_type_wo_align =
+        typename apply<typename Impl::RemoveAlignedMemoryTrait<
+            typename traits_type::memory_traits>::type::memory_traits>::
+            traits_type;
+    using base_dst_type        = ViewMapping<traits_type_wo_align, void>;
+    using base_dst_offset_type = typename base_dst_type::offset_type;
 
-    using DstType = ViewMapping<DstTraits, void>;
-
-    using dst_offset_type = typename DstType::offset_type;
-
+    base_dst_type base_dst;
     const SubviewExtents<SrcTraits::rank, rank> extents(src.m_impl_offset.m_dim,
                                                         args...);
-
-    dst.m_impl_offset = dst_offset_type(src.m_impl_offset, extents);
-
-    dst.m_impl_handle = ViewDataHandle<DstTraits>::assign(
+    base_dst.m_impl_offset = base_dst_offset_type(src.m_impl_offset, extents);
+    base_dst.m_impl_handle = ViewDataHandle<traits_type_wo_align>::assign(
         src.m_impl_handle,
         src.m_impl_offset(extents.domain_offset(0), extents.domain_offset(1),
                           extents.domain_offset(2), extents.domain_offset(3),
                           extents.domain_offset(4), extents.domain_offset(5),
                           extents.domain_offset(6), extents.domain_offset(7)));
+
+    // Map from base dst to dst requested.
+    Kokkos::Impl::SharedAllocationTracker dummy_track;
+    ViewMapping<DstTraits, traits_type_wo_align,
+                typename DstTraits::specialize>::assign(dst, base_dst,
+                                                        dummy_track);
   }
 };
 

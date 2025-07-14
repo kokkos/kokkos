@@ -293,8 +293,8 @@ void CudaInternal::initialize(cudaStream_t stream) {
   }
 
   if (!constantMemReusablePerDevice[m_cudaDev])
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_event_create_wrapper(&constantMemReusablePerDevice[m_cudaDev])));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cuda_event_create_with_flags_wrapper(
+        &constantMemReusablePerDevice[m_cudaDev], cudaEventDisableTiming));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -735,9 +735,7 @@ uint32_t Cuda::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
 
-cudaStream_t Cuda::cuda_stream() const {
-  return m_space_instance->get_stream();
-}
+cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }
 const cudaDeviceProp &Cuda::cuda_device_prop() const {
   return m_space_instance->m_deviceProp;
@@ -759,16 +757,6 @@ std::map<int, std::mutex> CudaInternal::constantMemMutexPerDevice     = {};
 }  // namespace Impl
 
 }  // namespace Kokkos
-
-void Kokkos::Impl::create_Cuda_instances(std::vector<Cuda> &instances) {
-  for (int s = 0; s < int(instances.size()); s++) {
-    cudaStream_t stream;
-    KOKKOS_IMPL_CUDA_SAFE_CALL((
-        instances[s].impl_internal_space_instance()->cuda_stream_create_wrapper(
-            &stream)));
-    instances[s] = Cuda(stream, ManageStream::yes);
-  }
-}
 
 #else
 

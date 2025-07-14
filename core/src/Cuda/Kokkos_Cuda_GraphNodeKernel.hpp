@@ -34,6 +34,35 @@
 namespace Kokkos {
 namespace Impl {
 
+template <typename Functor>
+struct GraphNodeCaptureImpl<Kokkos::Cuda, Functor> {
+  Functor m_functor;
+  cudaGraphNode_t m_node = nullptr;
+
+  void capture(const Kokkos::Cuda& exec, cudaGraph_t graph) {
+    // Set the underlying stream to capture mode.
+    // Note that we could also use cudaStreamBeginCaptureToGraph.
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamBeginCapture(
+        exec.cuda_stream(), cudaStreamCaptureModeGlobal));
+
+    // Launch the user functor. Cuda API calls will be captured.
+    // Beware of restrictions that apply when using a stream in capture mode.
+    // See also
+    // https://docs.nvidia.com/cuda/cuda-c-programming-guide/#prohibited-and-unhandled-operations.
+    m_functor(exec);
+
+    // Retrieve the captured graph, that we will add to our graph as a child
+    // graph node.
+    cudaGraph_t captured_subgraph = nullptr;
+
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        cudaStreamEndCapture(exec.cuda_stream(), &captured_subgraph));
+
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphAddChildGraphNode(
+        &m_node, graph, nullptr, 0, captured_subgraph));
+  }
+};
+
 template <class PolicyType, class Functor, class PatternTag, class... Args>
 class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
                           Args...>

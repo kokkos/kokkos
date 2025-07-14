@@ -372,7 +372,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 :ValueType : OpenMPTargetReducerWrapper<ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper<ReducerType>::init(omp_priv))
 
-#if !defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
     KOKKOS_IMPL_OMPTARGET_PRAGMA(
         teams num_teams(max_active_teams) thread_limit(team_size)
             firstprivate(f) is_device_ptr(scratch_ptr) reduction(custom
@@ -395,23 +394,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         f(team, result);
       }
     }
-#else
-#pragma omp target teams distribute firstprivate(f) is_device_ptr(scratch_ptr) \
-    num_teams(max_active_teams) thread_limit(team_size)                        \
-    reduction(custom : result)
-    for (int i = 0; i < league_size; i++) {
-#pragma omp parallel reduction(custom : result)
-      {
-        if (omp_get_num_teams() > max_active_teams)
-          Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
-
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, i,
-                                              shmem_size_L0, shmem_size_L1);
-        f(team, result);
-      }
-    }
-#endif
 
     // Copy results back to device if `parallel_reduce` is on a device view.
     ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),

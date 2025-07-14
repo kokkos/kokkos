@@ -107,7 +107,7 @@ class SYCLInternal {
     USMObjectMem& operator=(USMObjectMem&&)      = delete;
     USMObjectMem& operator=(USMObjectMem const&) = delete;
 
-    ~USMObjectMem() { reset(); };
+    ~USMObjectMem() { reset(); }
 
     void* data() noexcept { return m_data; }
     const void* data() const noexcept { return m_data; }
@@ -135,11 +135,12 @@ class SYCLInternal {
       fence();
       reserve(sizeof(T));
       if constexpr (sycl::usm::alloc::device == Kind) {
-        std::memcpy(static_cast<void*>(m_staging.get()), std::addressof(t),
-                    sizeof(T));
+        std::memcpy(static_cast<void*>(m_staging.get()),
+                    static_cast<const void*>(std::addressof(t)), sizeof(T));
         m_copy_event = m_q->memcpy(m_data, m_staging.get(), sizeof(T));
       } else
-        std::memcpy(m_data, std::addressof(t), sizeof(T));
+        std::memcpy(static_cast<void*>(m_data),
+                    static_cast<const void*>(std::addressof(t)), sizeof(T));
       return *reinterpret_cast<T*>(m_data);
     }
 
@@ -249,7 +250,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
   // We need a union here so that we can avoid calling a constructor for m_f
   // and can controll all the special member functions.
   union TrivialWrapper {
-    TrivialWrapper(){};
+    TrivialWrapper() {}
 
     TrivialWrapper(const Functor& f) {
       std::memcpy(static_cast<void*>(&m_f), static_cast<const void*>(&f),
@@ -265,7 +266,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
                   static_cast<const void*>(&other.m_f), sizeof(m_f));
       return *this;
     }
-    ~TrivialWrapper(){};
+    ~TrivialWrapper() {}
 
     Functor m_f;
   } m_functor;

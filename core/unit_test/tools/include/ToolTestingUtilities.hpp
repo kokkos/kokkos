@@ -563,7 +563,7 @@ struct ProfileSectionManipulationEvent
   }
 
  private:
-  ProfileSectionManipulationEvent(uint32_t d_i) : id(d_i){};
+  ProfileSectionManipulationEvent(uint32_t d_i) : id(d_i) {}
   friend Derived;
 };
 
@@ -571,19 +571,19 @@ struct StartProfileSectionEvent final
     : public ProfileSectionManipulationEvent<StartProfileSectionEvent> {
   static std::string event_name() { return "StartProfileSectionEvent"; }
   StartProfileSectionEvent(uint32_t d_i)
-      : ProfileSectionManipulationEvent<StartProfileSectionEvent>(d_i){};
+      : ProfileSectionManipulationEvent<StartProfileSectionEvent>(d_i) {}
 };
 struct StopProfileSectionEvent final
     : public ProfileSectionManipulationEvent<StopProfileSectionEvent> {
   static std::string event_name() { return "StopProfileSectionEvent"; }
   StopProfileSectionEvent(uint32_t d_i)
-      : ProfileSectionManipulationEvent<StopProfileSectionEvent>(d_i){};
+      : ProfileSectionManipulationEvent<StopProfileSectionEvent>(d_i) {}
 };
 struct DestroyProfileSectionEvent final
     : public ProfileSectionManipulationEvent<DestroyProfileSectionEvent> {
   static std::string event_name() { return "DestroyProfileSectionEvent"; }
   DestroyProfileSectionEvent(uint32_t d_i)
-      : ProfileSectionManipulationEvent<DestroyProfileSectionEvent>(d_i){};
+      : ProfileSectionManipulationEvent<DestroyProfileSectionEvent>(d_i) {}
 };
 
 struct ProfileEvent final : public UniquelyIdentifiableEventType<ProfileEvent> {

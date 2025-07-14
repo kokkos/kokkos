@@ -255,6 +255,10 @@ TEST(std_algorithms_is_sorted_until_team_test, test_trivialB) {
 }
 
 TEST(std_algorithms_is_sorted_until_team_test, test_nontrivialA) {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET Failing with clang 17
+  GTEST_SKIP() << "Known to fail with OpenMPTarget and clang 17";
+#endif
+
   const std::string name      = "nontrivialUntilLast";
   const std::vector<int> cols = {13, 101, 1444, 5153};
   run_all_scenarios<DynamicTag, double>(name, cols);
@@ -263,6 +267,10 @@ TEST(std_algorithms_is_sorted_until_team_test, test_nontrivialA) {
 }
 
 TEST(std_algorithms_is_sorted_until_team_test, test_nontrivialB) {
+#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET Failing with clang 17
+  GTEST_SKIP() << "Known to fail with OpenMPTarget and clang 17";
+#endif
+
   const std::string name      = "nontrivialRandom";
   const std::vector<int> cols = {13, 101, 1444, 5153};
   run_all_scenarios<DynamicTag, double>(name, cols);

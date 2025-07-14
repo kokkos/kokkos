@@ -129,7 +129,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         });
       };
 
-#ifdef SYCL_EXT_ONEAPI_GRAPH
+#ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
       if constexpr (Policy::is_graph_kernel::value) {
         sycl_attach_kernel_to_node(*this, cgh_lambda);
       } else
@@ -306,7 +306,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               }
             });
       };
-#ifdef SYCL_EXT_ONEAPI_GRAPH
+#ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
       if constexpr (Policy::is_graph_kernel::value) {
         sycl_attach_kernel_to_node(*this, cgh_lambda);
       } else
@@ -370,7 +370,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
  private:
   const CombinedFunctorReducerType m_functor_reducer;
   const BarePolicy m_policy;
-  const Kokkos::SYCL& m_space;
+  const Kokkos::SYCL m_space;
   const pointer_type m_result_ptr;
   const bool m_result_ptr_device_accessible;
 };

@@ -1,0 +1,89 @@
+# Kokkos nightly tests at NERSC machine Perlmutter.
+stages:
+  - test
+  - clean_up
+
+default:
+  tags:
+    - perlmutter-login
+  before_script:
+    - export SOURCE_DIR=$SCRATCH/.nightly/testing/kokkos
+    - if [ ! -d $SOURCE_DIR ]; then
+    - git clone https://github.com/kokkos/kokkos.git ${SOURCE_DIR}
+    - fi
+    - cd ${SOURCE_DIR} && pwd && git pull && git branch
+    - export CMAKE_BUILD_PARALLEL_LEVEL=32
+    - export ENV_KOKKOS_OPTIONS=""
+    - export ENV_KOKKOS_OPTIONS="${ENV_KOKKOS_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
+    - export ENV_KOKKOS_OPTIONS="${ENV_KOKKOS_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export SCRIPT_FILE=${SOURCE_DIR}/scripts/CTestRun.cmake
+    - export OMP_NUM_THREADS=4
+    - export OMP_PROC_BIND=spread
+    - export OMP_PLACES=cores
+
+EPYC-OMP-gcc:
+  stage: test
+  script:
+    - echo "Kokkos-OpenMP tests by $GITLAB_USER_LOGIN using gcc."
+    - module load PrgEnv-gnu gcc/12.2.0
+    - export BUILD_DIR=${SOURCE_DIR}/build_omp_gcc
+    - export ENV_CMAKE_OPTIONS="${ENV_KOKKOS_OPTIONS}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=g++"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_ZEN3=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMP=ON"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="AMD-EPYC-OpenMP-gcc/12.2"
+
+A100-CUDA-nvcc:
+  stage: test
+  script:
+    - echo "Kokkos-CUDA tests by $GITLAB_USER_LOGIN using nvcc."
+    - module load PrgEnv-gnu gcc/12.2.0
+    - export BUILD_DIR=${SOURCE_DIR}/build_cuda_nvcc
+    - export ENV_CMAKE_OPTIONS="${ENV_KOKKOS_OPTIONS}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=${SOURCE_DIR}/bin/nvcc_wrapper"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_AMPERE80=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_CUDA=ON"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="NVIDIA-A100-CUDA-nvcc/12.4"
+
+A100-CUDA-clang:
+  stage: test
+  script:
+    - echo "Kokkos-CUDA tests by $GITLAB_USER_LOGIN using clang."
+    - module load PrgEnv-llvm/1.0
+    - export BUILD_DIR=${SOURCE_DIR}/build_cuda_clang
+    - export ENV_CMAKE_OPTIONS="${ENV_KOKKOS_OPTIONS}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=clang++"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_AMPERE80=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_CUDA=ON"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="NVIDIA-A100-CUDA-clang/18"
+
+EPYC-OMP-clang:
+  stage: test
+  script:
+    - echo "Kokkos-OpenMP tests by $GITLAB_USER_LOGIN using clang."
+    - module load llvm/20.1.3
+    - export BUILD_DIR=${SOURCE_DIR}/build_omp_clang
+    - export ENV_CMAKE_OPTIONS="${ENV_KOKKOS_OPTIONS}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=clang++"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_ZEN3=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMP=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-unknown-cuda-version'"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="AMD-EPYC-OpenMP-clang/20.1.3"
+
+A100-OpenMPTarget-clang:
+  stage: test
+  script:
+    - echo "Kokkos-OpenMPTarget tests by $GITLAB_USER_LOGIN using clang."
+    - module load llvm/20.1.3
+    - export BUILD_DIR=${SOURCE_DIR}/build_ompt_clang
+    - export ENV_CMAKE_OPTIONS="${ENV_KOKKOS_OPTIONS}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=clang++"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_AMPERE80=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMPTARGET=ON"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="NVIDIA-A100-OpenMPTarget-clang/20.1.3"
+
+clear-ci-builds:
+  stage: clean_up
+  script:
+    - rm -rf ${SOURCE_DIR}

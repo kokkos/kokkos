@@ -15,6 +15,10 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+#include <std_algorithms/impl/Kokkos_IdentityReferenceUnaryFunctor.hpp>
+#include <std_algorithms/impl/Kokkos_FunctorsForExclusiveScan.hpp>
+#endif
 #include <utility>
 #include <iomanip>
 
