@@ -167,8 +167,9 @@ TEST(hip, space_access) {
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
                      Kokkos::HostSpace>);
 #else
+  // Memory space stays the same as host can access HIPSpace
   static_assert(
-      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Device,
                      Kokkos::Device<Kokkos::HostSpace::execution_space,
                                     Kokkos::HIPSpace>>);
 #endif
@@ -186,9 +187,16 @@ TEST(hip, space_access) {
       Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::HIP>::Space,
                                  Kokkos::HostSpace>::accessible);
 
+#ifndef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
                 Kokkos::HostSpace>::accessible);
+#else
+  // Memory space stays the same as host can access HIPSpace
+  static_assert(Kokkos::SpaceAccessibility<
+                Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
+                Kokkos::HIPSpace>::accessible);
+#endif
 
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::HIPHostPinnedSpace>::Space,

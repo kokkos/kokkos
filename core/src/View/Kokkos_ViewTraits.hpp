@@ -395,7 +395,7 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
   using execution_space = typename Space::execution_space;
   using memory_space    = typename Space::memory_space;
   using host_mirror_space =
-      typename Kokkos::Impl::HostMirror<Space>::Space::memory_space;
+      typename Kokkos::Impl::HostMirror<memory_space>::Space;
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using HostMirrorSpace KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use host_mirror_space instead.") = host_mirror_space;
@@ -459,10 +459,10 @@ struct ViewTraits {
                          typename prop::array_layout,
                          typename ExecutionSpace::array_layout>;
 
-  using HostMirrorSpace = std::conditional_t<
-      !std::is_void_v<typename prop::host_mirror_space>,
-      typename prop::host_mirror_space,
-      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>;
+  using HostMirrorSpace =
+      std::conditional_t<!std::is_void_v<typename prop::host_mirror_space>,
+                         typename prop::host_mirror_space,
+                         typename Kokkos::Impl::HostMirror<MemorySpace>::Space>;
 
   using MemoryTraits =
       std::conditional_t<!std::is_void_v<typename prop::memory_traits>,

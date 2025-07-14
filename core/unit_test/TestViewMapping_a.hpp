@@ -1032,7 +1032,7 @@ void test_view_mapping() {
 // using nvcc. Replacing the lambda with a functor doesn't show this behavior.
 #if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC))
     using host_exec_space =
-        typename Kokkos::Impl::HostMirror<Space>::Space::execution_space;
+        typename Kokkos::Impl::HostMirror<Space>::execution_space;
 
     int errors = 0;
     Kokkos::parallel_reduce(

@@ -164,6 +164,7 @@ TEST(cuda, space_access) {
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
                      Kokkos::HostSpace>);
 #else
+  // Memory space stays the same as host can access CudaSpace
   static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Device,
                      Kokkos::Device<Kokkos::HostSpace::execution_space,
@@ -194,9 +195,16 @@ TEST(cuda, space_access) {
       Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::Cuda>::Space,
                                  Kokkos::HostSpace>::accessible);
 
+#ifndef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
                 Kokkos::HostSpace>::accessible);
+#else
+  // Memory space stays the same as host can access CudaSpace
+  static_assert(Kokkos::SpaceAccessibility<
+                Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
+                Kokkos::CudaSpace>::accessible);
+#endif
 
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::CudaUVMSpace>::Space,

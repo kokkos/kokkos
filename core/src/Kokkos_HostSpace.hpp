@@ -101,7 +101,7 @@ namespace Impl {
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                               Kokkos::HostSpace>::assignable);
 
-template <class S>
+template <typename S>
 struct HostMirror {
  private:
   using is_space_ = typename Kokkos::is_space<S>;
@@ -133,9 +133,10 @@ struct HostMirror {
   using memory_space    = typename Device::memory_space;
 
   // Construct mirror type matching the template parameter type
-  using Space = std::conditional_t<
-      is_space_::is_exec_space(), execution_space,
-      std::conditional_t<is_space_::is_mem_space(), memory_space, Device>>;
+  using Space =
+      std::conditional_t<Kokkos::is_execution_space<S>::value, execution_space,
+                         std::conditional_t<Kokkos::is_memory_space<S>::value,
+                                            memory_space, Device>>;
 };
 
 }  // namespace Impl
