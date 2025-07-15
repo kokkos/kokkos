@@ -47,8 +47,9 @@ class kokkos_checker {
     if (!x) Kokkos::abort("SIMD unit test truth condition failed on device");
   }
   template <class T>
-  KOKKOS_INLINE_FUNCTION void equality(T const& a, T const& b) const {
 #if defined(KOKKOS_IMPL_32BIT)
+  KOKKOS_FUNCTION __attribute__((noinline)) void equality(T const& a,
+                                                          T const& b) const {
     // This is needed to work around a bug where the comparison fails because it
     // is done on the x87 fpu (which is the default for 32 bit gcc) in long
     // double and a and b end up being different in long double but have the
@@ -58,11 +59,13 @@ class kokkos_checker {
     T const volatile vb = b;
     if (va != vb)
       Kokkos::abort("SIMD unit test equality condition failed on device");
+  }
 #else
+  KOKKOS_INLINE_FUNCTION void equality(T const& a, T const& b) const {
     if (a != b)
       Kokkos::abort("SIMD unit test equality condition failed on device");
-#endif
   }
+#endif
 };
 
 template <class T, class Abi>
