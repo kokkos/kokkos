@@ -373,7 +373,7 @@ void ThreadsInternal::first_touch_allocate_thread_private_scratch(
     unsigned *ptr = reinterpret_cast<unsigned *>(exec.m_scratch);
 
     unsigned *const end =
-        ptr + s_threads_process.m_scratch_thread_end / sizeof(unsigned);
+        ptr + (s_threads_process.m_scratch_thread_end / sizeof(unsigned));
 
     // touch on this thread
     while (ptr < end) *ptr++ = 0;

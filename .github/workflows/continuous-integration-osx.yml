@@ -48,10 +48,10 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Install ccache
+      - name: Install ccache llvm
         run: |
           brew update
-          brew install ccache
+          brew install ccache llvm
       - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.cache/ccache
@@ -65,8 +65,10 @@ jobs:
             -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }}
             -DKokkos_ARCH_NATIVE=ON
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+            -DCMAKE_CXX_CLANG_TIDY="/opt/homebrew/opt/llvm/bin/clang-tidy;-warnings-as-errors=*"
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
             -DKokkos_ENABLE_TESTS=On
+            -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - name: build

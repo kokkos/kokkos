@@ -603,8 +603,9 @@ union SharedAllocationTracker {
   }
 
   // Copy:
-  KOKKOS_FORCEINLINE_FUNCTION
-  ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
+  KOKKOS_FORCEINLINE_FUNCTION  // NOLINTNEXTLINE(bugprone-exception-escape)
+      ~SharedAllocationTracker(){
+          KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
 
   KOKKOS_FORCEINLINE_FUNCTION
 #if defined(KOKKOS_COMPILER_NVCC) || !defined(KOKKOS_COMPILER_GNU) || \
