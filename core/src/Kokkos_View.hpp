@@ -121,11 +121,9 @@ struct BasicViewFromTraits {
 // not convertible to element_type* such as in Sacado.
 // An overload for our reference counted data handle is next to its
 // implementation. This one covers Unmanaged views with raw pointers.
-template <class HandleType>
+template <class ElementType>
 KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
-    const HandleType& handle) {
-  // This should only be internally invoked in Kokkos with raw pointers.
-  static_assert(std::is_pointer_v<HandleType>);
+    ElementType* handle) {
   return handle;
 }
 }  // namespace Impl

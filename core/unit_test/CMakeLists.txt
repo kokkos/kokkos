@@ -361,7 +361,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       set(BV_TestNames BasicView ReferenceCountedAccessor ReferenceCountedDataHandle)
       if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
         list(APPEND BV_TestNames ViewCustomizationAccessorArg ViewCustomizationAllocationType
-             ViewCustomizationAccessorFromMapping
+             ViewCustomizationAccessorFromMapping ViewCustomizationDataHandle
         )
       endif()
       set(${Tag}_VIEWSUPPORT)

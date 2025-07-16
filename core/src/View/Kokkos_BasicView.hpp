@@ -127,6 +127,13 @@ KOKKOS_INLINE_FUNCTION constexpr auto accessor_from_mapping_and_accessor_arg(
   return AccessorType(arg.value);
 }
 
+template <typename DataHandleType, typename MappingType, typename AccessorType>
+KOKKOS_INLINE_FUNCTION constexpr DataHandleType data_handle_from_allocation(
+    SharedAllocationRecord<void, void> *rec, const MappingType & /* mapping */,
+    const AccessorType & /* accessor */) {
+  return DataHandleType(rec);
+}
+
 // FIXME_HPX spurious warnings like
 // error: 'SR.14123' may be used uninitialized [-Werror=maybe-uninitialized]
 #if defined(KOKKOS_ENABLE_HPX)
@@ -398,22 +405,24 @@ class BasicView {
     size_t allocation_size =
         allocation_size_from_mapping_and_accessor(arg_mapping, arg_accessor);
     if constexpr (has_exec) {
-      return data_handle_type{
+      return data_handle_from_allocation<data_handle_type>(
           Impl::make_shared_allocation_record<storage_value_type>(
               allocation_size, Impl::get_property<Impl::LabelTag>(prop_copy),
               Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
               std::make_optional(
                   Impl::get_property<Impl::ExecutionSpaceTag>(prop_copy)),
               std::bool_constant<alloc_prop::initialize>(),
-              std::bool_constant<alloc_prop::sequential_host_init>())};
+              std::bool_constant<alloc_prop::sequential_host_init>()),
+          arg_mapping, arg_accessor);
     } else {
-      return data_handle_type{
+      return data_handle_from_allocation<data_handle_type>(
           Impl::make_shared_allocation_record<storage_value_type>(
               allocation_size, Impl::get_property<Impl::LabelTag>(prop_copy),
               Impl::get_property<Impl::MemorySpaceTag>(prop_copy),
               std::optional<execution_space>{},
               std::bool_constant<alloc_prop::initialize>(),
-              std::bool_constant<alloc_prop::sequential_host_init>())};
+              std::bool_constant<alloc_prop::sequential_host_init>()),
+          arg_mapping, arg_accessor);
     }
   }
 
