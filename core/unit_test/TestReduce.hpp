@@ -695,7 +695,8 @@ class TestReductionOverInfiniteFloat {
           }
         },
         Kokkos::Min<ScalarType>(min));
-    ASSERT_EQ(inf, min);
+    ASSERT_EQ(inf, min) << "For type "
+                        << Kokkos::Impl::TypeInfo<ScalarType>::name() << '\n';
 
     Kokkos::deep_copy(view, -inf);
     ScalarType max;
@@ -707,30 +708,20 @@ class TestReductionOverInfiniteFloat {
           }
         },
         Kokkos::Max<ScalarType>(min));
-    ASSERT_EQ(-inf, min);
+    ASSERT_EQ(-inf, min) << "For type "
+                         << Kokkos::Impl::TypeInfo<ScalarType>::name() << '\n';
   }
 };
 
-// We do not run the test if KOKKOS_ENABLE_DEPRECATED_CODE_4 is ON because the
-// fix is only available if it is OFF
-TEST(TEST_CATEGORY, float_reduction_over_infinite) {
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
+  TestReductionOverInfiniteFloat<Kokkos::Experimental::half_t>();
+  TestReductionOverInfiniteFloat<Kokkos::Experimental::bhalf_t>();
   TestReductionOverInfiniteFloat<float>();
-#endif
-}
-
-TEST(TEST_CATEGORY, double_reduction_over_infinite) {
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
   TestReductionOverInfiniteFloat<double>();
-#endif
-}
-
-TEST(TEST_CATEGORY, longdouble_reduction_over_infinite) {
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  // This won't compile if TEST_EXECSPACE is not on host because long double =
-  // double on device.
-  // KOKKOS_IF_ON_HOST(TestReductionOverInfiniteFloat<long double>();)
-#endif
+  if constexpr (std::is_same_v<TEST_EXECSPACE::memory_space,
+                               Kokkos::HostSpace>) {
+    // TestReductionOverInfiniteFloat<long double>();
+  }
 }
 
 }  // namespace Test
