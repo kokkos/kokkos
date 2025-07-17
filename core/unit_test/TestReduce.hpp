@@ -20,18 +20,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#ifdef KOKKOS_COMPILER_NVCC
-#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
-#pragma nv_diagnostic push
-#pragma nv_diag_suppress 20208
-#else
-#ifdef __CUDA_ARCH__
-#pragma diagnostic push
-#pragma diag_suppress 3245
-#endif
-#endif
-#endif
-
 #include <Kokkos_Core.hpp>
 
 namespace Test {
@@ -742,12 +730,3 @@ TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
 
 }  // namespace Test
 
-#ifdef KOKKOS_COMPILER_NVCC
-#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
-#pragma nv_diagnostic pop
-#else
-#ifdef __CUDA_ARCH__
-#pragma diagnostic pop
-#endif
-#endif
-#endif
