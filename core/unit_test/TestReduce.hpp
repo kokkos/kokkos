@@ -707,8 +707,8 @@ class TestReductionOverInfiniteFloat {
             partial_max = view[i];
           }
         },
-        Kokkos::Max<ScalarType>(min));
-    ASSERT_EQ(-inf, min) << "For type "
+        Kokkos::Max<ScalarType>(max));
+    ASSERT_EQ(-inf, max) << "For type "
                          << Kokkos::Impl::TypeInfo<ScalarType>::name() << '\n';
   }
 };
