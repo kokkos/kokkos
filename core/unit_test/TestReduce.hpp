@@ -18,6 +18,20 @@
 #include <iostream>
 #include <limits>
 
+#include <Kokkos_Macros.hpp>
+
+#ifdef KOKKOS_COMPILER_NVCC
+#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
+#pragma nv_diagnostic push
+#pragma nv_diag_suppress 20208
+#else
+#ifdef __CUDA_ARCH__
+#pragma diagnostic push
+#pragma diag_suppress 3245
+#endif
+#endif
+#endif
+
 #include <Kokkos_Core.hpp>
 
 namespace Test {
@@ -718,10 +732,22 @@ TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
   TestReductionOverInfiniteFloat<Kokkos::Experimental::bhalf_t>();
   TestReductionOverInfiniteFloat<float>();
   TestReductionOverInfiniteFloat<double>();
-  if constexpr (std::is_same_v<TEST_EXECSPACE::memory_space,
-                               Kokkos::HostSpace>) {
-    // TestReductionOverInfiniteFloat<long double>();
-  }
+
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&          \
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
+    !defined(KOKKOS_ENABLE_OPENACC)
+  TestReductionOverInfiniteFloat<long double>();
+#endif
 }
 
 }  // namespace Test
+
+#ifdef KOKKOS_COMPILER_NVCC
+#ifdef __NVCC_DIAG_PRAGMA_SUPPORT__
+#pragma nv_diagnostic pop
+#else
+#ifdef __CUDA_ARCH__
+#pragma diagnostic pop
+#endif
+#endif
+#endif
