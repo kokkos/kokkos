@@ -173,7 +173,7 @@ template <typename DataHandleType, typename MDSpanExtents,
           typename MDSpanLayoutType, typename ElementType, typename MemorySpace>
 KOKKOS_INLINE_FUNCTION constexpr DataHandleType data_handle_from_allocation(
     Kokkos::Impl::SharedAllocationRecord<void, void>* rec,
-    const typename MDSpanLayoutType::template mapping<MDSpanExtents>& mapping,
+    const typename MDSpanLayoutType::template mapping<MDSpanExtents>& /* mapping */,
     const Kokkos::Impl::SpaceAwareAccessor<
         MemorySpace,
         TestCustomDataHandleAccessor<
