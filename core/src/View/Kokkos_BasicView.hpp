@@ -128,7 +128,7 @@ KOKKOS_INLINE_FUNCTION constexpr auto accessor_from_mapping_and_accessor_arg(
 }
 
 template <typename DataHandleType, typename MappingType, typename AccessorType>
-KOKKOS_INLINE_FUNCTION constexpr DataHandleType data_handle_from_allocation(
+constexpr DataHandleType data_handle_from_allocation(
     SharedAllocationRecord<void, void> *rec, const MappingType & /* mapping */,
     const AccessorType & /* accessor */) {
   return DataHandleType(rec);
