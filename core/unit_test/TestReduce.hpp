@@ -694,7 +694,7 @@ class TestReductionOverInfiniteFloat {
   TestReductionOverInfiniteFloat() { runTest(); }
 
   void runTest() {
-    const int N = 10;
+    const unsigned int N = 10;
 
     ScalarType inf = std::numeric_limits<ScalarType>::infinity();
     Kokkos::View<ScalarType*> view("view", N);
