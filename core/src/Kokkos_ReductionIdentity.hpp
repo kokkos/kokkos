@@ -24,6 +24,7 @@
 #include <Kokkos_Macros.hpp>
 #include <cfloat>
 #include <climits>
+#include <cmath>
 
 namespace Kokkos {
 
