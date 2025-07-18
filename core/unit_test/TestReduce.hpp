@@ -684,7 +684,7 @@ class TestReductionOverInfiniteFloat {
 
     ScalarType inf = Kokkos::Experimental::infinity_v<ScalarType>;
     // Ensure that inf correctly correspond to infinity for type `ScalarType`
-    EXPECT_EQ(inf, inf * inf);
+    EXPECT_TRUE((inf == inf * inf) && (inf == inf + 1));
 
     Kokkos::View<ScalarType*> view("view", N);
 
