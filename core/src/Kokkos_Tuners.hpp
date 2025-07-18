@@ -624,17 +624,60 @@ class RangePolicyOccupancyTuner {
 namespace Impl {
 
 template <typename T>
-void fill_tile(std::vector<T>& cont, int tile_size) {
-  for (int x = 1; x < tile_size; x *= 2) {
+void fill_tile(std::vector<T>& cont, int max_value) {
+  for (int x = 1; x <= max_value; x *= 2) {
     cont.push_back(x);
   }
 }
 template <typename T, typename Mapped>
 void fill_tile(std::map<T, Mapped>& cont, int tile_size) {
-  for (int x = 1; x < tile_size; x *= 2) {
+  for (int x = 1; x <= tile_size; x *= 2) {
     fill_tile(cont[x], tile_size / x);
   }
 }
+
+template <typename T>
+void constraint_tile(std::vector<T>& cont,
+                     const Kokkos::Array<int, 3>& hw_tile_limits, int rank) {
+  if (rank > 2) {
+    return;
+  } else {
+    auto it = cont.end();
+    while (it != cont.begin()) {
+      --it;
+      if (*it > hw_tile_limits[rank]) {
+        it = cont.erase(it);
+      } else {
+        break;
+      }
+    }
+  }
+}
+
+template <typename T, typename Mapped>
+void constraint_tile(std::map<T, Mapped>& cont,
+                     const Kokkos::Array<int, 3>& hw_tile_limits, int rank) {
+  if (rank > 2) {
+    return;
+  } else {
+    for (auto it = cont.begin(); it != cont.end();) {
+      T key = it->first;
+      if (key > hw_tile_limits[rank]) {
+        it = cont.erase(it);
+      } else {
+        constraint_tile(it->second, hw_tile_limits, rank + 1);
+        ++it;
+      }
+    }
+  }
+}
+
+template <typename T, typename Mapped>
+void constraint_tile(std::map<T, Mapped>& cont,
+                     const Kokkos::Array<int, 3>& hw_tile_limits) {
+  constraint_tile(cont, hw_tile_limits, 0);
+}
+
 }  // namespace Impl
 
 template <int MDRangeRank>
@@ -660,7 +703,14 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
     SpaceDescription desc;
     int max_tile_size =
         calc.get_mdrange_max_tile_size_product(policy, functor, tag);
+    using ExecSpace =
+        typename Kokkos::MDRangePolicy<Properties...>::execution_space;
+    ExecSpace exec_space = policy.space();
+    Kokkos::Impl::TileSizeProperties tile_properties =
+        Kokkos::Impl::get_tile_size_properties(exec_space);
+
     Impl::fill_tile(desc, max_tile_size);
+    Impl::constraint_tile(desc, tile_properties.max_threads_dimensions);
     std::vector<std::string> feature_names;
     for (int x = 0; x < rank; ++x) {
       feature_names.push_back(name + "_tile_size_" + std::to_string(x));

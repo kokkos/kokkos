@@ -17,7 +17,6 @@ static_assert(false,
 #include <impl/KokkosExp_Host_IterateTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <type_traits>
-#include <array>
 #include <cmath>
 
 namespace Kokkos {
@@ -128,7 +127,7 @@ struct TileSizeProperties {
   int default_tile_size;
   int max_total_tile_size;
   // For GPU backends: hardware limits for block dimensions
-  std::array<int, 3> max_threads_dimensions;
+  Kokkos::Array<int, 3> max_threads_dimensions;
 };
 
 template <typename ExecutionSpace>
