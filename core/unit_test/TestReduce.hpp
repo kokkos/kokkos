@@ -684,7 +684,7 @@ class TestReductionOverInfiniteFloat {
   void runTest() {
     const unsigned int N = 10;
 
-    ScalarType inf = std::numeric_limits<ScalarType>::infinity();
+    ScalarType inf = Kokkos::Experimental::infinity_v<ScalarType>;
     Kokkos::View<ScalarType*> view("view", N);
 
     Kokkos::deep_copy(view, inf);
@@ -697,7 +697,7 @@ class TestReductionOverInfiniteFloat {
           }
         },
         Kokkos::Min<ScalarType>(min));
-    ASSERT_EQ(inf, min) << "For type "
+    EXPECT_EQ(inf, min) << "For type "
                         << Kokkos::Impl::TypeInfo<ScalarType>::name() << '\n';
 
     Kokkos::deep_copy(view, -inf);
@@ -710,7 +710,7 @@ class TestReductionOverInfiniteFloat {
           }
         },
         Kokkos::Max<ScalarType>(max));
-    ASSERT_EQ(-inf, max) << "For type "
+    EXPECT_EQ(-inf, max) << "For type "
                          << Kokkos::Impl::TypeInfo<ScalarType>::name() << '\n';
   }
 };

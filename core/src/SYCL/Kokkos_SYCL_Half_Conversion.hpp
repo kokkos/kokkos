@@ -116,12 +116,11 @@ struct reduction_identity<Kokkos::Experimental::half_t> {
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::Experimental::half_t
   max() noexcept {
-    return std::numeric_limits<
-        Kokkos::Experimental::half_t::impl_type>::lowest();
+    return -Kokkos::Experimental::infinity_v<Kokkos::Experimental::half_t>;
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::Experimental::half_t
   min() noexcept {
-    return std::numeric_limits<Kokkos::Experimental::half_t::impl_type>::max();
+    return Kokkos::Experimental::infinity_v<Kokkos::Experimental::half_t>;
   }
 };
 
@@ -223,10 +222,10 @@ struct reduction_identity<Kokkos::Experimental::bhalf_t> {
     return 1.0f;
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() noexcept {
-    return -0x7f7f;
+    return -Kokkos::Experimental::infinity_v<float>;
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() noexcept {
-    return 0x7f7f;
+    return Kokkos::Experimental::infinity_v<float>;
   }
 };
 
