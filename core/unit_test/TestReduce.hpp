@@ -18,8 +18,6 @@
 #include <iostream>
 #include <limits>
 
-#include <Kokkos_Macros.hpp>
-
 #include <Kokkos_Core.hpp>
 
 namespace Test {
@@ -685,6 +683,9 @@ class TestReductionOverInfiniteFloat {
     const unsigned int N = 10;
 
     ScalarType inf = Kokkos::Experimental::infinity_v<ScalarType>;
+    // Ensure that inf correctly correspond to infinity for type `ScalarType`
+    EXPECT_EQ(inf, inf * inf);
+
     Kokkos::View<ScalarType*> view("view", N);
 
     Kokkos::deep_copy(view, inf);
@@ -729,4 +730,3 @@ TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
 }
 
 }  // namespace Test
-
