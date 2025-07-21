@@ -1,0 +1,12 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+exec_prefix="${prefix}"
+libdir="${exec_prefix}/@CMAKE_INSTALL_LIBDIR@"
+includedir="${prefix}/@CMAKE_INSTALL_INCLUDEDIR@"
+
+Name: @PROJECT_NAME@ Containers
+Description: The Kokkos C++ Performance Portability Ecosystem: containers
+URL: https://github.com/kokkos/kokkos
+Version: @Kokkos_VERSION@
+Cflags: -I"${includedir}"
+Libs: -L"${libdir}" -lkokkoscontainers @DEPS_LIBS@
+Libs.private: @DEPS_PRIVATE_LIBS@

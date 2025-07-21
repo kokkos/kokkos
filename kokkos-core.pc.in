@@ -1,0 +1,14 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+exec_prefix="${prefix}"
+libdir="${exec_prefix}/@CMAKE_INSTALL_LIBDIR@"
+includedir="${prefix}/@CMAKE_INSTALL_INCLUDEDIR@"
+
+kokkos_enabled_devices=@KOKKOS_ENABLED_DEVICES@
+
+Name: @PROJECT_NAME@ Core
+Description: The Kokkos C++ Performance Portability Ecosystem: core
+URL: https://github.com/kokkos/kokkos
+Version: @Kokkos_VERSION@
+Cflags: -I"${includedir}" @OPENMP_FLAGS@ @Kokkos_CXX_STANDARD@
+Libs: -L"${libdir}" -lkokkoscore @DEPS_LIBS@
+Libs.private: @DEPS_PRIVATE_LIBS@
