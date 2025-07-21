@@ -340,55 +340,56 @@ struct TestStaticBatchSize {
 
   int N;
 
-  TestStaticBatchSize{
-    (const size_t N_) :
-        m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
-    result_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "results"), N_),
-    N(N_){}
+  TestStaticBatchSize(const size_t N_)
+      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
+        result_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "results"),
+                    N_),
+        N(N_) {}
 
-    void test_batch_size(){typename view_type::HostMirror host_flags =
-                               Kokkos::create_mirror_view(m_flags);
+  void test_batch_size() {
+    typename view_type::HostMirror host_flags =
+        Kokkos::create_mirror_view(m_flags);
 
-  // Initialize the flags
-  Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+    // Initialize the flags
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
 
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace, AtomicAddTag, StaticBatchSize>(0, N),
-      *this);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, AtomicAddTag, StaticBatchSize>(0, N),
+        *this);
 
-  Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, VerifyAtomicAddTag>(0, N),
-                       *this);
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, VerifyAtomicAddTag>(0, N), *this);
 
-  Kokkos::deep_copy(host_flags, m_flags);
+    Kokkos::deep_copy(host_flags, m_flags);
 
-  int error_count = 0;
-  for (int i = 0; i < N; ++i) {
-    if (host_flags(i) != 1) {
-      ++error_count;
+    int error_count = 0;
+    for (int i = 0; i < N; ++i) {
+      if (host_flags(i) != 1) {
+        ++error_count;
+      }
+    }
+    ASSERT_EQ(error_count, 0);
+  }
+
+  KOKKOS_INLINE_FUNCTION void operator()(const int i) const {
+    m_flags(i) = 0;  // Initialize the flags to zero
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicAddTag &, const int i) const {
+    // Use atomic add to increment the flag at index i
+    Kokkos::atomic_add(&m_flags(i), 1);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const VerifyAtomicAddTag &, const int i) const {
+    // Verify that the flag at index i is equal to 1
+    if (m_flags(i) != 1) {
+      Kokkos::printf(
+          "TestStaticBatchSize {::test_batch_size_error at %d != %d\n", i,
+          m_flags(i));
     }
   }
-  ASSERT_EQ(error_count, 0);
-}
-
-KOKKOS_INLINE_FUNCTION void
-operator()(const int i) const {
-  m_flags(i) = 0;  // Initialize the flags to zero
-}
-
-KOKKOS_INLINE_FUNCTION
-void operator()(const AtomicAddTag &, const int i) const {
-  // Use atomic add to increment the flag at index i
-  Kokkos::atomic_add(&m_flags(i), 1);
-}
-
-KOKKOS_INLINE_FUNCTION
-void operator()(const VerifyAtomicAddTag &, const int i) const {
-  // Verify that the flag at index i is equal to 1
-  if (m_flags(i) != 1) {
-    Kokkos::printf("TestStaticBatchSize {::test_batch_size_error at %d != %d\n",
-                   i, m_flags(i));
-  }
-}
 };
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
