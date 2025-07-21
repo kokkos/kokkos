@@ -1,5 +1,94 @@
 # CHANGELOG
 
+## 4.7.00
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.6.02...4.7.00)
+
+### Features:
+
+### Backend and Architecture Enhancements:
+
+#### CUDA:
+* Support RDC with Clang 17+ and use new offload driver [\#7831](https://github.com/kokkos/kokkos/pull/7831)
+* Add support for AMPERE87 architecture (Jetson Orin Nano) [\#8092](https://github.com/kokkos/kokkos/pull/8092)
+* Directly use fp16 mathematical function when available instead of casting back and forth to fp32 [\#7698](https://github.com/kokkos/kokkos/pull/7698)
+
+#### HIP:
+
+#### SYCL:
+- Allow requesting out-of-order queues [\#8091](https://github.com/kokkos/kokkos/pull/8091)
+- Allow using non-trivially-copyable comparators with oneDPL [\#7538](https://github.com/kokkos/kokkos/pull/7538)
+- Directly use fp16 mathematical function when available instead of casting back and forth to fp32 [\#7698](https://github.com/kokkos/kokkos/pull/7698)
+
+#### OpenMPTarget:
+- Remove support for non-llvm compilers [\7973](https://github.com/kokkos/kokkos/pull/7973)
+
+#### OpenACC:
+
+#### HPX:
+
+#### Threads:
+
+#### OpenMP:
+
+#### Serial:
+
+### General Enhancements
+* Add support for Zen 5 AMD microarchitecture [\#7877](https://github.com/kokkos/kokkos/pull/7877)
+* Add support for NVIDIA's Blackwell GPU architecture [\#7888](https://github.com/kokkos/kokkos/pull/7888)
+* Add support for SiFive Unmatched Rev B (RISC-V)  [\#7921](https://github.com/kokkos/kokkos/pull/7921) 
+* Add support for Intel DG2 GPUs such as the Arc Alchemist GPUs [\#7922](https://github.com/kokkos/kokkos/pull/7922)
+* Add support for graph capture (`Cuda`, `HIP` and `SYCL`) [\#7552](https://github.com/kokkos/kokkos/pull/7552)
+* Improve performance of `atomic_op_fetch()` [\#8014](https://github.com/kokkos/kokkos/pull/8014)
+* Pass label by reference in all `Kokkos::tools` APIs [\#8065](https://github.com/kokkos/kokkos/pull/8065)
+* Compatibility with C+20 modules: Avoid static variables and functions in header files [\#8071](https://github.com/kokkos/kokkos/pull/8071)
+* Exit early at initialize with `--kokkos-help` [\#8079](https://github.com/kokkos/kokkos/pull/8079)
+* Add Kokkos::SIMD::SVE support for 128-bit and 256-bit SVE [#7807](https://github.com/kokkos/kokkos/pull/7807)
+* Add constructors for Random_XorShift*_Pool with execution space argument [\#8039](https://github.com/kokkos/kokkos/pull/8039)
+* Implement `nextafter` for fp16 [\#8118](https://github.com/kokkos/kokkos/pull/8118)
+* Enable structured binding return for `parition_space(ExecSpace, Args...)` [\#8114](https://github.com/kokkos/kokkos/pull/8114)
+* Enforce unit launch bound for graph `then` node [\#8192](https://github.com/kokkos/kokkos/pull/8192)
+* Add `constexpr` specifier to `operator==` and `operator!=` for `Kokkos::complex` [\#8254](https://github.com/kokkos/kokkos/pull/8254)
+* Add `then_host` to graph [\#8075](https://github.com/kokkos/kokkos/pull/8075)
+* Allow building `Kokkos::Experimental::Graph` object directly [\#8108](https://github.com/kokkos/kokkos/pull/8108)
+* Introduce mdspan-based View implementation [\#7427](https://github.com/kokkos/kokkos/pull/7427)
+* Remove `nodiscard` attributes from Kokkos simd interface [\#8084](https://github.com/kokkos/kokkos/pull/8084)
+* Error out for incompatible RDC and BUILD_SHARED_LIBS [\#8196](https://github.com/kokkos/kokkos/pull/8196)
+
+### Build System Changes
+* Check if compiler/linker can consume the flags set [\#7891](https://github.com/kokkos/kokkos/pull/7891)
+* Support more nvcc arguments with nvcc_wrapper [\#7930](https://github.com/kokkos/kokkos/pull/7930)
+* Add NVIDIA Blackwell architecture support to the generated makefiles
+[\#8055](https://github.com/kokkos/kokkos/pull/8055)
+* Add support for building C++20 modules [\#8132](https://github.com/kokkos/kokkos/pull/8132)
+* Set GCC minimum version for cxx 20 [\#8130](https://github.com/kokkos/kokkos/pull/8130)
+
+### Incompatibilities (i.e. breaking changes)
+* Raise IntelLLVM minimum for SYCL to 2024.2.1 [\#7918](https://github.com/kokkos/kokkos/pull/7918)
+* Disallow `Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=OFF` [\#8021](https://github.com/kokkos/kokkos/pull/8021)
+
+### Deprecations
+* Deprecate KOKKOS_MEMORY_ALIGNMENT, KOKKOS_MEMORY_ALIGNMENT_THRESHOLD [\#7873](https://github.com/kokkos/kokkos/pull/7873)
+*  Deprecate Kokkos::MemoryManaged [\#8066](https://github.com/kokkos/kokkos/pull/8066)
+*  Deprecate `KOKKOS_NONTEMPORAL_PREFETCH_[LOAD|STORE]` [\#8146](https://github.com/kokkos/kokkos/pull/8146)
+
+### Bug Fixes
+* Get the concurrency from provided execution space instances [\#7870](https://github.com/kokkos/kokkos/pull/7870)
+* Make sure that AUTO has external linkage for C++20 modules support [\#7898](https://github.com/kokkos/kokkos/pull/7898)
+* Fix simd math functions not compiling when ARCH_NATIVE=ON [\#7912](https://github.com/kokkos/kokkos/pull/7912)
+* HIP and SYCL: fixed a bug where a `MDRangePolicy` of rank 4 or more is incorrectly iterated, leading to some iterations being evaluated more than once for large loops [\#7880](https://github.com/kokkos/kokkos/pull/7880)
+* Building with generated makefiles: add missing HIP XNACK source file [\#8030](https://github.com/kokkos/kokkos/pull/8030)
+* Fix memory leak in internals of the Serial default execution space [\#8042](https://github.com/kokkos/kokkos/pull/8042)
+* Fix memory leak in the initialization functions [\#8074](https://github.com/kokkos/kokkos/pull/8074)
+* HIP: fix a bug a where `ConstantMemory` launch mechanism sporadically fails due to `hipEventSynchronize` error [\#8094](https://github.com/kokkos/kokkos/pull/8094)
+* Fix fallback simd masked reductions using incorrect identity elements [\#8115](https://github.com/kokkos/kokkos/pull/8115)
+* HPX fix to constrain hpx_thread_buffer size used with TeamPolicy setup [\#8147](https://github.com/kokkos/kokkos/pull/8147)
+* Fix subview view constructor to disallow non-strided view types for strided subviews [\#8210](https://github.com/kokkos/kokkos/pull/8210)
+* Work around a compiler bug with GCC 12.{2,3,4} causing segfaults with the View shared allocation tracker [\#8223](https://github.com/kokkos/kokkos/pull/8223)
+* Fix compiling with compilers that provide an mdspan implementation [\#8234](https://github.com/kokkos/kokkos/pull/8234)
+* Fix launch of intermediate size functors in graph on HIP [\#8188](https://github.com/kokkos/kokkos/pull/8188)
+* Add missing fences for async Random init with unified memory [\#8105](https://github.com/kokkos/kokkos/pull/8105)
+
 ## 4.6.02
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.6.01...4.6.02)
