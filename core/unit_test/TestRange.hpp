@@ -453,35 +453,40 @@ TEST(TEST_CATEGORY, check_batch_size) {
 
 TEST(TEST_CATEGORY, range_static_batch_size) {
   {
-    TestStaticBatchSize {
-      <TEST_EXECSPACE, Kokkos::Experimental::StaticBatchSize<1>> f(1024);
-      f.test_batch_size();
-    }
-    {
-      TestStaticBatchSize {
-        <TEST_EXECSPACE, Kokkos::Experimental::StaticBatchSize<2>> f(1024);
-        f.test_batch_size();
-      }
-      {
-        TestStaticBatchSize {
-          <TEST_EXECSPACE, Kokkos::Experimental::StaticBatchSize<4>> f(1024);
-          f.test_batch_size();
-        }
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<1>>
+        f(1024);
+    f.test_batch_size();
+  }
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<2>>
+        f(1024);
+    f.test_batch_size();
+  }
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<4>>
+        f(1024);
+    f.test_batch_size();
+  }
 
-        // Check for loop ranges where the range is not exactly divisible by the
-        // static batch size.
-        {
-          TestStaticBatchSize {
-            <TEST_EXECSPACE, Kokkos::Experimental::StaticBatchSize<4>> f(1025);
-            f.test_batch_size();
-          }
+  // Check for loop ranges where the range is not exactly divisible by the
+  // static batch size.
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<4>>
+        f(1025);
+    f.test_batch_size();
+  }
 
-          // Check for loop ranges smaller than the static batch size.
-          {
-            TestStaticBatchSize {
-              <TEST_EXECSPACE, Kokkos::Experimental::StaticBatchSize<4>> f(3);
-              f.test_batch_size();
-            }
-          }
+  // Check for loop ranges smaller than the static batch size.
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<4>>
+        f(3);
+    f.test_batch_size();
+  }
+}
 
-        }  // namespace Test
+}  // namespace Test
