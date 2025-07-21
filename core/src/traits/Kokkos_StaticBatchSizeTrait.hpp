@@ -14,8 +14,8 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_KOKKOS_LOOPUNROLLTRAIT_HPP
-#define KOKKOS_KOKKOS_LOOPUNROLLTRAIT_HPP
+#ifndef KOKKOS_KOKKOS_STATIC_BATCH_SIZE_TRAIT_HPP
+#define KOKKOS_KOKKOS_STATIC_BATCH_SIZE_TRAIT_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
@@ -23,15 +23,16 @@
 
 namespace Kokkos::Experimental {
 
-template <unsigned int LoopUnrollFactor = 1>
-struct LoopUnroll {
-  using loop_unroll = LoopUnroll;
-  using type        = LoopUnroll<LoopUnrollFactor>;
-  constexpr static unsigned int unroll_factor{
-      LoopUnrollFactor};  // Default unroll factor is 1
+template <unsigned int BatchSize = 1>
+struct StaticBatchSize {
+  using static_batch_size = StaticBatchSize;
+  using type              = StaticBatchSize<BatchSize>;
+  constexpr static unsigned int batch_size{
+      BatchSize};  // Default batch size is 1
 
-  static_assert(LoopUnrollFactor > 0,
-                "Kokkos Error: LoopUnroll factor must be greater than zero");
+  static_assert(
+      BatchSize > 0,
+      "Kokkos Error: StaticBatchSize factor must be greater than zero");
 };
 
 }  // end namespace Kokkos::Experimental
@@ -41,25 +42,26 @@ namespace Kokkos::Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
-struct LoopUnrollTrait : TraitSpecificationBase<LoopUnrollTrait> {
+struct StaticBatchSizeTrait : TraitSpecificationBase<StaticBatchSizeTrait> {
   struct base_traits {
-    static constexpr bool loop_unroll_is_defaulted = true;
+    static constexpr bool batch_size_is_defaulted = true;
 
-    using loop_unroll =
-        Kokkos::Experimental::LoopUnroll<>;  // Default unroll factor is 1
+    using batch_size =
+        Kokkos::Experimental::StaticBatchSize<>;  // Default batch size is 1
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
-  template <class LoopUnrollParam, class AnalyzeNextTrait>
+  template <class StaticBatchSizeParam, class AnalyzeNextTrait>
   struct mixin_matching_trait : AnalyzeNextTrait {
     using base_t = AnalyzeNextTrait;
     using base_t::base_t;
 
-    static constexpr bool loop_unroll_is_defaulted = false;
+    static constexpr bool batch_size_is_defaulted = false;
 
-    static_assert(base_t::loop_unroll_is_defaulted,
-                  "Kokkos Error: More than one loop_unroll trait given");
+    static_assert(
+        base_t::batch_size_is_defaulted,
+        "Kokkos Error: More than one StaticBatchSizeTrait specified is given.");
 
-    using loop_unroll = LoopUnrollParam;
+    using batch_size = StaticBatchSizeParam;
   };
 };
 }  // end namespace Kokkos::Impl
@@ -72,9 +74,9 @@ struct LoopUnrollTrait : TraitSpecificationBase<LoopUnrollTrait> {
 
 namespace Kokkos::Impl {
 
-template <unsigned int LoopUnrollFactor>
-struct PolicyTraitMatcher<LoopUnrollTrait,
-                          Kokkos::Experimental::LoopUnroll<LoopUnrollFactor>>
+template <unsigned int BatchSize>
+struct PolicyTraitMatcher<StaticBatchSizeTrait,
+                          Kokkos::Experimental::StaticBatchSize<BatchSize>>
     : std::true_type {};
 
 // </editor-fold> end PolicyTraitMatcher specialization }}}1
@@ -82,4 +84,4 @@ struct PolicyTraitMatcher<LoopUnrollTrait,
 
 }  // end namespace Kokkos::Impl
 
-#endif  // KOKKOS_KOKKOS_LOOPUNROLLTRAIT_HPP
+#endif  // KOKKOS_KOKKOS_S TATIC_BATCH_SIZE_TRAIT_HPP

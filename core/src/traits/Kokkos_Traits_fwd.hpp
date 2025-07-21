@@ -65,7 +65,7 @@ struct WorkItemPropertyTrait;
 struct LaunchBoundsTrait;
 struct OccupancyControlTrait;
 struct GraphKernelTrait;
-struct LoopUnrollTrait;
+struct StaticBatchSizeTrait;
 struct WorkTagTrait;
 
 // Keep these sorted by frequency of use to reduce compilation time
@@ -81,7 +81,7 @@ using execution_policy_trait_specifications =
     LaunchBoundsTrait,
     OccupancyControlTrait,
     GraphKernelTrait,
-    LoopUnrollTrait,
+    StaticBatchSizeTrait,
     // This one has to be last, unfortunately:
     WorkTagTrait
   >;

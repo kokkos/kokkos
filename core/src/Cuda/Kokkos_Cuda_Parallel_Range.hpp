@@ -41,10 +41,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   using Policy = Kokkos::RangePolicy<Traits...>;
 
  private:
-  using Member       = typename Policy::member_type;
-  using WorkTag      = typename Policy::work_tag;
-  using LaunchBounds = typename Policy::launch_bounds;
-  using LoopUnroll   = typename Policy::loop_unroll;
+  using Member          = typename Policy::member_type;
+  using WorkTag         = typename Policy::work_tag;
+  using LaunchBounds    = typename Policy::launch_bounds;
+  using StaticBatchSize = typename Policy::static_batch_size;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -71,24 +71,23 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   Policy const& get_policy() const { return m_policy; }
 
   inline __device__ void operator()() const {
-    constexpr auto loop_unroll_factor = Member(LoopUnroll::unroll_factor);
-    const auto work_stride            = Member(blockDim.y) * gridDim.x;
-    const Member work_end             = m_policy.end();
+    constexpr auto batch_size = Member(StaticBatchSize::batch_size);
+    const auto work_stride    = Member(blockDim.y) * gridDim.x;
+    const Member work_end     = m_policy.end();
 
     for (Member iwork = m_policy.begin() + threadIdx.y +
                         static_cast<Member>(blockDim.y) * blockIdx.x;
          iwork < work_end;
-         iwork = iwork < static_cast<Member>(work_end -
-                                             work_stride * loop_unroll_factor)
-                     ? iwork + work_stride * loop_unroll_factor
-                     : work_end) {
+         iwork =
+             iwork < static_cast<Member>(work_end - work_stride * batch_size)
+                 ? iwork + work_stride * batch_size
+                 : work_end) {
 // Unroll the loop
 #if defined(KOKKOS_COMPILER_NVCC)
 #pragma unroll
 #endif
-      for (Member i = 0;
-           ((i < static_cast<Member>(work_stride * loop_unroll_factor)) &&
-            (iwork + i < work_end));
+      for (Member i = 0; ((i < static_cast<Member>(work_stride * batch_size)) &&
+                          (iwork + i < work_end));
            i += work_stride) {
         this->template exec_range<WorkTag>(iwork + i);
       }
@@ -96,11 +95,11 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() const {
-    constexpr typename Policy::index_type loop_unroll_factor =
-        LoopUnroll::unroll_factor;
+    constexpr typename Policy::index_type batch_size =
+        StaticBatchSize::batch_size;
     const typename Policy::index_type nwork =
-        (m_policy.end() - m_policy.begin()) / loop_unroll_factor +
-        ((m_policy.end() - m_policy.begin()) % loop_unroll_factor == 0 ? 0 : 1);
+        (m_policy.end() - m_policy.begin()) / batch_size +
+        ((m_policy.end() - m_policy.begin()) % batch_size == 0 ? 0 : 1);
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
             m_policy.space().impl_internal_space_instance());
