@@ -41,11 +41,11 @@
 * Allow building `Kokkos::Experimental::Graph` object directly [\#8108](https://github.com/kokkos/kokkos/pull/8108)
 
 ### Build System Changes
-* Check if compiler/linker can consume the flags set [\#7891](https://github.com/kokkos/kokkos/pull/7891)
+* Check at configuration time that compiler/linker can consume the flags set [\#7891](https://github.com/kokkos/kokkos/pull/7891)
 * Support more nvcc arguments with nvcc_wrapper [\#7930](https://github.com/kokkos/kokkos/pull/7930)
 * Add NVIDIA Blackwell architecture support to the generated makefiles [\#8055](https://github.com/kokkos/kokkos/pull/8055)
 * Add support for building C++20 modules [\#8132](https://github.com/kokkos/kokkos/pull/8132)
-* Set GCC minimum version for cxx 20 [\#8130](https://github.com/kokkos/kokkos/pull/8130)
+* Bump GCC minimum required version for C++20 from 10.1 to 10.4 [\#8130](https://github.com/kokkos/kokkos/pull/8130)
 * Error out for incompatible RDC and BUILD_SHARED_LIBS [\#8196](https://github.com/kokkos/kokkos/pull/8196)
 
 ### Incompatibilities (i.e. breaking changes)
@@ -53,19 +53,19 @@
 * Disallow `Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=OFF` [\#8021](https://github.com/kokkos/kokkos/pull/8021)
 
 ### Deprecations
-* Deprecate KOKKOS_MEMORY_ALIGNMENT, KOKKOS_MEMORY_ALIGNMENT_THRESHOLD [\#7873](https://github.com/kokkos/kokkos/pull/7873)
+* Deprecate `KOKKOS_MEMORY_ALIGNMENT[_THRESHOLD]` macros [\#7873](https://github.com/kokkos/kokkos/pull/7873)
 * Deprecate Kokkos::MemoryManaged [\#8066](https://github.com/kokkos/kokkos/pull/8066)
-* Deprecate `KOKKOS_NONTEMPORAL_PREFETCH_[LOAD|STORE]` [\#8146](https://github.com/kokkos/kokkos/pull/8146)
+* Deprecate `KOKKOS_NONTEMPORAL_PREFETCH_{LOAD,STORE}` macros [\#8146](https://github.com/kokkos/kokkos/pull/8146)
 
 ### Bug Fixes
-* Get the concurrency from provided execution space instances [\#7870](https://github.com/kokkos/kokkos/pull/7870)
+* Get the concurrency from provided execution space instances in CUDA/HIP `parallel_for(TeamPolicy)` and CUDA/HIP/SYCL `UniqueToken` with global scope [\#7870](https://github.com/kokkos/kokkos/pull/7870)
 * Fix simd math functions not compiling when ARCH_NATIVE=ON [\#7912](https://github.com/kokkos/kokkos/pull/7912)
 * HIP and SYCL: fixed a bug where a `MDRangePolicy` of rank 4 or more is incorrectly iterated, leading to some iterations being evaluated more than once for large loops [\#7880](https://github.com/kokkos/kokkos/pull/7880)
 * Fix memory leak in internals of the Serial default execution space [\#8042](https://github.com/kokkos/kokkos/pull/8042)
 * Fix memory leak in the initialization functions [\#8074](https://github.com/kokkos/kokkos/pull/8074)
 * HIP: fix a bug a where `ConstantMemory` launch mechanism sporadically fails due to `hipEventSynchronize` error [\#8094](https://github.com/kokkos/kokkos/pull/8094)
 * Fix fallback simd masked reductions using incorrect identity elements [\#8115](https://github.com/kokkos/kokkos/pull/8115)
-* HPX fix to constrain hpx_thread_buffer size used with TeamPolicy setup [\#8147](https://github.com/kokkos/kokkos/pull/8147)
+* HPX: Corrected an internal TeamPolicy constraint that could cause issues with higher thread counts [\#8147](https://github.com/kokkos/kokkos/pull/8147)
 * Fix subview view constructor to disallow non-strided view types for strided subviews [\#8210](https://github.com/kokkos/kokkos/pull/8210)
 * Work around a compiler bug with GCC 12.{2,3,4} causing segfaults with the View shared allocation tracker [\#8223](https://github.com/kokkos/kokkos/pull/8223)
 * Fix compiling with compilers that provide an mdspan implementation [\#8234](https://github.com/kokkos/kokkos/pull/8234)
