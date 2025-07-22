@@ -636,46 +636,81 @@ void fill_tile(std::map<T, Mapped>& cont, int tile_size) {
   }
 }
 
+// Map MDRangePolicy tile dimensions to hardware tile dimensions
 template <typename T>
-void constraint_tile(std::vector<T>& cont,
-                     const Kokkos::Array<int, 3>& hw_tile_limits, int rank) {
-  if (rank > 2) {
-    return;
+constexpr Kokkos::Array<T, 3> map_to_hw_tile(const Kokkos::Array<T, 6> tile,
+                                             int policy_rank) {
+  Kokkos::Array<T, 3> hw_tile{1, 1, 1};
+  if (policy_rank < 4) {
+    hw_tile[0] = tile[0];
+    hw_tile[1] = tile[1];
+    hw_tile[2] = tile[2];
   } else {
-    auto it = cont.end();
-    while (it != cont.begin()) {
-      --it;
-      if (*it > hw_tile_limits[rank]) {
-        it = cont.erase(it);
-      } else {
-        break;
-      }
+    hw_tile[0] = tile[0] * tile[1];
+    hw_tile[1] = tile[2] * tile[3];
+    hw_tile[2] = tile[4] * tile[5];
+  }
+  return hw_tile;
+}
+
+template <typename T>
+constexpr bool valid_tile(const Kokkos::Array<T, 3> hw_tile_limits,
+                          const Kokkos::Array<T, 6> current_tile,
+                          int policy_rank) {
+  auto hw_tile = map_to_hw_tile(current_tile, policy_rank);
+  return (hw_tile[0] <= hw_tile_limits[0] && hw_tile[1] <= hw_tile_limits[1] &&
+          hw_tile[2] <= hw_tile_limits[2]);
+}
+
+// Prunes invalid tiles dimension from largest to smallest until a valid size is
+// found
+template <typename T>
+void apply_tiles_constraints(std::vector<T>& cont,
+                             const Kokkos::Array<int, 3>& hw_tile_limits,
+                             Kokkos::Array<int, 6>& current_tile,
+                             int current_rank, const int policy_rank) {
+  auto it = cont.end();
+  while (it != cont.begin()) {
+    --it;
+    current_tile[current_rank] = *it;
+    if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
+      it = cont.erase(it);
+    } else {
+      break;
     }
   }
 }
 
-template <typename T, typename Mapped>
-void constraint_tile(std::map<T, Mapped>& cont,
-                     const Kokkos::Array<int, 3>& hw_tile_limits, int rank) {
-  if (rank > 2) {
-    return;
-  } else {
-    for (auto it = cont.begin(); it != cont.end();) {
-      T key = it->first;
-      if (key > hw_tile_limits[rank]) {
-        it = cont.erase(it);
-      } else {
-        constraint_tile(it->second, hw_tile_limits, rank + 1);
-        ++it;
-      }
+// Validate the current tile size and recursively apply constraints to the
+// nested map structure. If a tile exceeds limits, remove the entire branch from
+// the research space.
+template <typename KeyType, typename Mapped>
+void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
+                             const Kokkos::Array<int, 3>& hw_tile_limits,
+                             Kokkos::Array<int, 6>& current_tile,
+                             int current_rank, const int policy_rank) {
+  for (auto it = cont.begin(); it != cont.end();) {
+    KeyType dimension_size     = it->first;
+    current_tile[current_rank] = dimension_size;
+    if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
+      it = cont.erase(it);
+    } else {
+      Kokkos::Array<int, 6> next_tile = current_tile;
+      apply_tiles_constraints(it->second, hw_tile_limits, next_tile,
+                              current_rank + 1, policy_rank);
+      ++it;
     }
   }
 }
 
-template <typename T, typename Mapped>
-void constraint_tile(std::map<T, Mapped>& cont,
-                     const Kokkos::Array<int, 3>& hw_tile_limits) {
-  constraint_tile(cont, hw_tile_limits, 0);
+// Entry point for applying tile constraints. Filters out invalid tiles that
+// exceed hardware limits based on the policy rank.
+template <typename KeyType, typename Mapped>
+void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
+                             const Kokkos::Array<int, 3>& hw_tile_limits,
+                             int policy_rank) {
+  Kokkos::Array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
+  apply_tiles_constraints(cont, hw_tile_limits, current_tile, 0, policy_rank);
 }
 
 }  // namespace Impl
@@ -703,14 +738,13 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
     SpaceDescription desc;
     int max_tile_size =
         calc.get_mdrange_max_tile_size_product(policy, functor, tag);
-    using ExecSpace =
-        typename Kokkos::MDRangePolicy<Properties...>::execution_space;
-    ExecSpace exec_space = policy.space();
     Kokkos::Impl::TileSizeProperties tile_properties =
-        Kokkos::Impl::get_tile_size_properties(exec_space);
+        Kokkos::Impl::get_tile_size_properties(policy.space());
 
     Impl::fill_tile(desc, max_tile_size);
-    Impl::constraint_tile(desc, tile_properties.max_threads_dimensions);
+    Impl::apply_tiles_constraints(desc, tile_properties.max_threads_dimensions,
+                                  rank);
+
     std::vector<std::string> feature_names;
     for (int x = 0; x < rank; ++x) {
       feature_names.push_back(name + "_tile_size_" + std::to_string(x));
