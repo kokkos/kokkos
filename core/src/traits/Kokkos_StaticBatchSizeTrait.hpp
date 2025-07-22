@@ -46,7 +46,7 @@ struct StaticBatchSizeTrait : TraitSpecificationBase<StaticBatchSizeTrait> {
   struct base_traits {
     static constexpr bool batch_size_is_defaulted = true;
 
-    using batch_size =
+    using static_batch_size =
         Kokkos::Experimental::StaticBatchSize<>;  // Default batch size is 1
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
@@ -61,7 +61,7 @@ struct StaticBatchSizeTrait : TraitSpecificationBase<StaticBatchSizeTrait> {
         base_t::batch_size_is_defaulted,
         "Kokkos Error: More than one StaticBatchSizeTrait specified is given.");
 
-    using batch_size = StaticBatchSizeParam;
+    using static_batch_size = StaticBatchSizeParam;
   };
 };
 }  // end namespace Kokkos::Impl
