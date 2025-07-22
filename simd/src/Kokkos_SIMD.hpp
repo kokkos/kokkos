@@ -111,7 +111,7 @@ template <class T>
 using host_fixed_native = neon_fixed_size<2>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, avx512_fixed_size<128 / sizeof(T)>,
+    std::conditional_t<N == 0, neon_fixed_size<128 / sizeof(T)>,
                        neon_fixed_size<N>>;
 
 #else
