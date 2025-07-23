@@ -1054,7 +1054,7 @@ inline void deep_copy(
   using dst_memory_space = typename dst_type::memory_space;
   using src_memory_space = typename src_type::memory_space;
 
-  static_assert(std::is_same_v<typename dst_type::value_type,
+  static_assert(std::is_same_v<value_type,
                                typename src_type::non_const_value_type>,
                 "deep_copy requires matching non-const destination type");
 
