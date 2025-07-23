@@ -308,7 +308,7 @@ void test_deep_copy() {
 
 TEST(TEST_CATEGORY, view_customization_deep_copy) { test_deep_copy(); }
 
-TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
+void test_deep_copy_single_element_view() {
   size_t size = 5;
 
   using view_t = Kokkos::View<Foo::Bar, TEST_EXECSPACE>;
@@ -322,9 +322,11 @@ TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
   // Contiguous deep_copy, potentially host to device
   Kokkos::deep_copy(a, host_a);
 
+  Kokkos::RangePolicy<TEST_EXECSPACE> policy{0, 1};
+
   int num_errors = 0;
   Kokkos::parallel_reduce(
-      "view_customization_deep_copy_a", 1,
+      "view_customization_deep_copy_a", policy,
       KOKKOS_LAMBDA(int, int& error) {
         for (size_t k = 0; k < size; ++k) {
           if (Kokkos::abs(a()[k] - 0.1 * k) >
@@ -343,7 +345,7 @@ TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
 
   num_errors = 0;
   Kokkos::parallel_reduce(
-      "view_customization_check_pre_deep_copy_b", 1,
+      "view_customization_check_pre_deep_copy_b", policy,
       KOKKOS_LAMBDA(int, int& error) {
         for (size_t k = 0; k < size; ++k) {
           // Note b is value initalized for the scalar value type for the
@@ -361,7 +363,7 @@ TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
 
   num_errors = 0;
   Kokkos::parallel_reduce(
-      "view_customization_check_pre_deep_copy_b", 1,
+      "view_customization_check_pre_deep_copy_b", policy,
       KOKKOS_LAMBDA(int, int& error) {
         for (size_t k = 0; k < size; ++k) {
           if (Kokkos::abs(b()[k] - k) > Kokkos::Experimental::epsilon_v<float>)
@@ -370,4 +372,8 @@ TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
       },
       num_errors);
   ASSERT_EQ(num_errors, 0);
+}
+
+TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
+  test_deep_copy_single_element_view();
 }
