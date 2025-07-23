@@ -317,8 +317,7 @@ TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
 
   auto host_a = Kokkos::create_mirror_view(a);
 
-  for (size_t k = 0; k < size; ++k)
-    host_a()[k] = 0.1 * k;
+  for (size_t k = 0; k < size; ++k) host_a()[k] = 0.1 * k;
 
   // Contiguous deep_copy, potentially host to device
   Kokkos::deep_copy(a, host_a);
@@ -339,8 +338,7 @@ TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
 
   // Contiguous deep_copy, potentially device to host
   Kokkos::deep_copy(host_a, a);
-  for (size_t k = 0; k < size; k++)
-    ASSERT_FLOAT_EQ(host_a()[k], k);
+  for (size_t k = 0; k < size; k++) ASSERT_FLOAT_EQ(host_a()[k], k);
   auto b = Kokkos::create_mirror(TEST_EXECSPACE::memory_space(), a);
 
   num_errors = 0;
@@ -366,8 +364,7 @@ TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
       "view_customization_check_pre_deep_copy_b", 1,
       KOKKOS_LAMBDA(int, int& error) {
         for (size_t k = 0; k < size; ++k) {
-          if (Kokkos::abs(b()[k] - k) >
-              Kokkos::Experimental::epsilon_v<float>)
+          if (Kokkos::abs(b()[k] - k) > Kokkos::Experimental::epsilon_v<float>)
             ++error;
         }
       },

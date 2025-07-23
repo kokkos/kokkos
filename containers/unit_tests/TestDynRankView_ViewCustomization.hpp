@@ -221,7 +221,8 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
     // This shouldn't take the last argument given and make it the accessor arg
     // as we provided it explicitly
     // Note that with and without labels are two separate cases
-    view_t a(Kokkos::view_alloc("A", Kokkos::Impl::AccessorArg_t{5ul}), 3, 7, 11);
+    view_t a(Kokkos::view_alloc("A", Kokkos::Impl::AccessorArg_t{5ul}), 3, 7,
+             11);
     ASSERT_EQ(a.rank(), 3lu);
     ASSERT_EQ(a.extent(0), 3lu);
     ASSERT_EQ(a.extent(1), 7lu);
@@ -240,6 +241,5 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
     ASSERT_EQ(b.extent(2), 11lu);
     ASSERT_EQ(b.accessor().size, 5lu);
     ASSERT_EQ(b.accessor().stride, size_t(3 * 7 * 11));
-
   }
 }
