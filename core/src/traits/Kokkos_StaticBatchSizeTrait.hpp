@@ -84,4 +84,4 @@ struct PolicyTraitMatcher<StaticBatchSizeTrait,
 
 }  // end namespace Kokkos::Impl
 
-#endif  // KOKKOS_KOKKOS_S TATIC_BATCH_SIZE_TRAIT_HPP
+#endif  // KOKKOS_STATIC_BATCH_SIZE_TRAIT_HPP
