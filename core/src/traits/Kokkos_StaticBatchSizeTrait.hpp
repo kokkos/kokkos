@@ -15,7 +15,7 @@
 //@HEADER
 
 #ifndef KOKKOS_STATIC_BATCH_SIZE_TRAIT_HPP
-#define KOKKOS_KOKKOS_STATIC_BATCH_SIZE_TRAIT_HPP
+#define KOKKOS_STATIC_BATCH_SIZE_TRAIT_HPP
 
 #include <Kokkos_Macros.hpp>
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
