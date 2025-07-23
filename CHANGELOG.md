@@ -4,6 +4,10 @@
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.6.02...4.7.00)
 
+### Features:
+* Introduce mdspan-based View implementation [\#7427](https://github.com/kokkos/kokkos/pull/7427)
+  * This change should be transparent for most users, but it is a complete reimplementation of `View`
+
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
@@ -22,7 +26,6 @@
 * Remove support for non-llvm compilers [\#7973](https://github.com/kokkos/kokkos/pull/7973)
 
 ### General Enhancements
-* Introduce mdspan-based View implementation [\#7427](https://github.com/kokkos/kokkos/pull/7427)
 * Add support for Zen 5 AMD microarchitecture [\#7877](https://github.com/kokkos/kokkos/pull/7877)
 * Add support for SiFive Unmatched Rev B (RISC-V)  [\#7921](https://github.com/kokkos/kokkos/pull/7921) 
 * Improve performance of `atomic_op_fetch()` [\#8014](https://github.com/kokkos/kokkos/pull/8014)
@@ -41,8 +44,8 @@
 * Allow building `Kokkos::Experimental::Graph` object directly [\#8108](https://github.com/kokkos/kokkos/pull/8108)
 
 ### Build System Changes
-* Set GCC minimum version for cxx 20 [\#8130](https://github.com/kokkos/kokkos/pull/8130)
-* Error out for incompatible RDC and BUILD_SHARED_LIBS [\#8196](https://github.com/kokkos/kokkos/pull/8196)
+* Set GCC minimum version for C++20 to 10.4 [\#8130](https://github.com/kokkos/kokkos/pull/8130)
+* Disallow relocatable device code for shared library build [\#8196](https://github.com/kokkos/kokkos/pull/8196)
 * Check if compiler/linker can consume the flags set [\#7891](https://github.com/kokkos/kokkos/pull/7891)
 * Support more nvcc arguments with nvcc_wrapper [\#7930](https://github.com/kokkos/kokkos/pull/7930)
 * Add NVIDIA Blackwell architecture support to the generated makefiles [\#8055](https://github.com/kokkos/kokkos/pull/8055)
@@ -54,7 +57,7 @@
 
 ### Deprecations
 * Deprecate `KOKKOS_MEMORY_ALIGNMENT[_THRESHOLD]` macros [\#7873](https://github.com/kokkos/kokkos/pull/7873)
-* Deprecate Kokkos::MemoryManaged [\#8066](https://github.com/kokkos/kokkos/pull/8066)
+* Deprecate `Kokkos::MemoryManaged` alias [\#8066](https://github.com/kokkos/kokkos/pull/8066)
 * Deprecate `KOKKOS_NONTEMPORAL_PREFETCH_{LOAD,STORE}` macros [\#8146](https://github.com/kokkos/kokkos/pull/8146)
 
 ### Bug Fixes
@@ -62,7 +65,7 @@
 * Get the concurrency from provided execution space instances [\#7870](https://github.com/kokkos/kokkos/pull/7870)
 * Fix simd math functions not compiling when ARCH_NATIVE=ON [\#7912](https://github.com/kokkos/kokkos/pull/7912)
 * Fix memory leak in internals of the Serial default execution space [\#8042](https://github.com/kokkos/kokkos/pull/8042)
-* Fix memory leak in the initialization functions [\#8074](https://github.com/kokkos/kokkos/pull/8074)
+* Fix memory leaks when initializing with `--kokkos-tools-help` [\#8074](https://github.com/kokkos/kokkos/pull/8074)
 * HIP: fix a bug a where `ConstantMemory` launch mechanism sporadically fails due to `hipEventSynchronize` error [\#8094](https://github.com/kokkos/kokkos/pull/8094)
 * Fix fallback simd masked reductions using incorrect identity elements [\#8115](https://github.com/kokkos/kokkos/pull/8115)
 * HPX: Corrected an internal TeamPolicy constraint that could cause issues with higher thread counts [\#8147](https://github.com/kokkos/kokkos/pull/8147)
