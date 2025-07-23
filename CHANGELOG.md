@@ -7,8 +7,8 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-* Support RDC with Clang 17+ and use new offload driver [\#7831](https://github.com/kokkos/kokkos/pull/7831)
 * Add support for AMPERE87 architecture (Jetson Orin Nano) [\#8092](https://github.com/kokkos/kokkos/pull/8092)
+* Support RDC with Clang 17+ and use new offload driver [\#7831](https://github.com/kokkos/kokkos/pull/7831)
 * Directly use fp16 mathematical function when available instead of casting back and forth to fp32 [\#7698](https://github.com/kokkos/kokkos/pull/7698)
 * Disable `mdspan`-based view for CUDA 12.9 due to compiler incompatibility[\#8169](https://github.com/kokkos/kokkos/pull/8169)
 
@@ -41,12 +41,12 @@
 * Allow building `Kokkos::Experimental::Graph` object directly [\#8108](https://github.com/kokkos/kokkos/pull/8108)
 
 ### Build System Changes
-* Check at configuration time that compiler/linker can consume the flags set [\#7891](https://github.com/kokkos/kokkos/pull/7891)
+* Set GCC minimum version for cxx 20 [\#8130](https://github.com/kokkos/kokkos/pull/8130)
+* Error out for incompatible RDC and BUILD_SHARED_LIBS [\#8196](https://github.com/kokkos/kokkos/pull/8196)
+* Check if compiler/linker can consume the flags set [\#7891](https://github.com/kokkos/kokkos/pull/7891)
 * Support more nvcc arguments with nvcc_wrapper [\#7930](https://github.com/kokkos/kokkos/pull/7930)
 * Add NVIDIA Blackwell architecture support to the generated makefiles [\#8055](https://github.com/kokkos/kokkos/pull/8055)
 * Add support for building C++20 modules [\#8132](https://github.com/kokkos/kokkos/pull/8132)
-* Bump GCC minimum required version for C++20 from 10.1 to 10.4 [\#8130](https://github.com/kokkos/kokkos/pull/8130)
-* Error out for incompatible RDC and BUILD_SHARED_LIBS [\#8196](https://github.com/kokkos/kokkos/pull/8196)
 
 ### Incompatibilities (i.e. breaking changes)
 * Raise IntelLLVM minimum for SYCL to 2024.2.1 [\#7918](https://github.com/kokkos/kokkos/pull/7918)
@@ -58,9 +58,9 @@
 * Deprecate `KOKKOS_NONTEMPORAL_PREFETCH_{LOAD,STORE}` macros [\#8146](https://github.com/kokkos/kokkos/pull/8146)
 
 ### Bug Fixes
-* Get the concurrency from provided execution space instances in CUDA/HIP `parallel_for(TeamPolicy)` and CUDA/HIP/SYCL `UniqueToken` with global scope [\#7870](https://github.com/kokkos/kokkos/pull/7870)
-* Fix simd math functions not compiling when ARCH_NATIVE=ON [\#7912](https://github.com/kokkos/kokkos/pull/7912)
 * HIP and SYCL: fixed a bug where a `MDRangePolicy` of rank 4 or more is incorrectly iterated, leading to some iterations being evaluated more than once for large loops [\#7880](https://github.com/kokkos/kokkos/pull/7880)
+* Get the concurrency from provided execution space instances [\#7870](https://github.com/kokkos/kokkos/pull/7870)
+* Fix simd math functions not compiling when ARCH_NATIVE=ON [\#7912](https://github.com/kokkos/kokkos/pull/7912)
 * Fix memory leak in internals of the Serial default execution space [\#8042](https://github.com/kokkos/kokkos/pull/8042)
 * Fix memory leak in the initialization functions [\#8074](https://github.com/kokkos/kokkos/pull/8074)
 * HIP: fix a bug a where `ConstantMemory` launch mechanism sporadically fails due to `hipEventSynchronize` error [\#8094](https://github.com/kokkos/kokkos/pull/8094)
