@@ -461,6 +461,26 @@ class
       const std::complex<RealType>& lhs, const complex& rhs) {
     return complex(lhs) / rhs;
   }
+
+  KOKKOS_FUNCTION friend constexpr bool operator==(
+      const complex& lhs, const std::complex<RealType>& rhs) {
+    return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
+  }
+
+  KOKKOS_FUNCTION friend constexpr bool operator==(
+      const std::complex<RealType>& lhs, const complex& rhs) {
+    return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
+  }
+
+  KOKKOS_FUNCTION friend constexpr bool operator!=(
+      const complex& lhs, const std::complex<RealType>& rhs) {
+    return !(lhs == rhs);
+  }
+
+  KOKKOS_FUNCTION friend constexpr bool operator!=(
+      const std::complex<RealType>& lhs, const complex& rhs) {
+    return !(lhs == rhs);
+  }
 };
 
 }  // namespace Kokkos
@@ -528,8 +548,27 @@ KOKKOS_FUNCTION constexpr const RealType&& get(
 // to do it this way now.
 
 //! Binary == operator for complex complex.
+//      Returns: complex(lhs).real() == complex(rhs).real() &&
+//      complex(lhs).imag() == complex(rhs).imag()
+template <class T>
+KOKKOS_FUNCTION constexpr bool operator==(const complex<T>& lhs,
+                                          const complex<T>& rhs) {
+  return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
+}
+
+template <class T>
+KOKKOS_FUNCTION constexpr bool operator==(const complex<T>& lhs, const T& rhs) {
+  return lhs.real() == rhs && lhs.imag() == T();
+}
+
+template <class T>
+KOKKOS_FUNCTION constexpr bool operator==(const T& lhs, const complex<T>& rhs) {
+  return lhs == rhs.real() && T() == rhs.imag();
+}
+
+//! Binary == operator for complex complex.
 template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION constexpr bool operator==(
+KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator==(
     complex<RealType1> const& x, complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) == common_type(y.real()) &&
@@ -540,8 +579,8 @@ KOKKOS_INLINE_FUNCTION constexpr bool operator==(
 //      and do the comparison in a device-marked function
 //! Binary == operator for std::complex complex.
 template <class RealType1, class RealType2>
-inline bool operator==(std::complex<RealType1> const& x,
-                       complex<RealType2> const& y) noexcept {
+KOKKOS_DEPRECATED bool operator==(std::complex<RealType1> const& x,
+                                  complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) == common_type(y.real()) &&
          common_type(x.imag()) == common_type(y.imag());
@@ -549,8 +588,8 @@ inline bool operator==(std::complex<RealType1> const& x,
 
 //! Binary == operator for complex std::complex.
 template <class RealType1, class RealType2>
-inline bool operator==(complex<RealType1> const& x,
-                       std::complex<RealType2> const& y) noexcept {
+KOKKOS_DEPRECATED bool operator==(complex<RealType1> const& x,
+                                  std::complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) == common_type(y.real()) &&
          common_type(x.imag()) == common_type(y.imag());
@@ -561,8 +600,8 @@ template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
     std::enable_if_t<std::is_convertible_v<RealType2, RealType1>, int> = 0>
-KOKKOS_INLINE_FUNCTION constexpr bool operator==(complex<RealType1> const& x,
-                                                 RealType2 const& y) noexcept {
+KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator==(complex<RealType1> const& x,
+                                                  RealType2 const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) == common_type(y) &&
          common_type(x.imag()) == common_type(0);
@@ -573,7 +612,7 @@ template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
     std::enable_if_t<std::is_convertible_v<RealType1, RealType2>, int> = 0>
-KOKKOS_INLINE_FUNCTION constexpr bool operator==(
+KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator==(
     RealType1 const& x, complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x) == common_type(y.real()) &&
@@ -581,8 +620,26 @@ KOKKOS_INLINE_FUNCTION constexpr bool operator==(
 }
 
 //! Binary != operator for complex complex.
+//      Returns: !(lhs == rhs)
+template <class T>
+KOKKOS_FUNCTION constexpr bool operator!=(const complex<T>& lhs,
+                                          const complex<T>& rhs) {
+  return !(lhs == rhs);
+}
+
+template <class T>
+KOKKOS_FUNCTION constexpr bool operator!=(const complex<T>& lhs, const T& rhs) {
+  return !(lhs == rhs);
+}
+
+template <class T>
+KOKKOS_FUNCTION constexpr bool operator!=(const T& lhs, const complex<T>& rhs) {
+  return !(lhs == rhs);
+}
+
+//! Binary != operator for complex complex.
 template <class RealType1, class RealType2>
-KOKKOS_INLINE_FUNCTION constexpr bool operator!=(
+KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator!=(
     complex<RealType1> const& x, complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) != common_type(y.real()) ||
@@ -591,8 +648,8 @@ KOKKOS_INLINE_FUNCTION constexpr bool operator!=(
 
 //! Binary != operator for std::complex complex.
 template <class RealType1, class RealType2>
-inline bool operator!=(std::complex<RealType1> const& x,
-                       complex<RealType2> const& y) noexcept {
+KOKKOS_DEPRECATED bool operator!=(std::complex<RealType1> const& x,
+                                  complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) != common_type(y.real()) ||
          common_type(x.imag()) != common_type(y.imag());
@@ -600,8 +657,8 @@ inline bool operator!=(std::complex<RealType1> const& x,
 
 //! Binary != operator for complex std::complex.
 template <class RealType1, class RealType2>
-inline bool operator!=(complex<RealType1> const& x,
-                       std::complex<RealType2> const& y) noexcept {
+KOKKOS_DEPRECATED bool operator!=(complex<RealType1> const& x,
+                                  std::complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) != common_type(y.real()) ||
          common_type(x.imag()) != common_type(y.imag());
@@ -612,8 +669,8 @@ template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
     std::enable_if_t<std::is_convertible_v<RealType2, RealType1>, int> = 0>
-KOKKOS_INLINE_FUNCTION constexpr bool operator!=(complex<RealType1> const& x,
-                                                 RealType2 const& y) noexcept {
+KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator!=(complex<RealType1> const& x,
+                                                  RealType2 const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x.real()) != common_type(y) ||
          common_type(x.imag()) != common_type(0);
@@ -624,7 +681,7 @@ template <
     class RealType1, class RealType2,
     // Constraints to avoid participation in oparator==() for every possible RHS
     std::enable_if_t<std::is_convertible_v<RealType1, RealType2>, int> = 0>
-KOKKOS_INLINE_FUNCTION constexpr bool operator!=(
+KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator!=(
     RealType1 const& x, complex<RealType2> const& y) noexcept {
   using common_type = std::common_type_t<RealType1, RealType2>;
   return common_type(x) != common_type(y.real()) ||
