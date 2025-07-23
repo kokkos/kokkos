@@ -22,6 +22,7 @@
 * Remove support for non-llvm compilers [\#7973](https://github.com/kokkos/kokkos/pull/7973)
 
 ### General Enhancements
+* Introduce mdspan-based View implementation [\#7427](https://github.com/kokkos/kokkos/pull/7427)
 * Add support for Zen 5 AMD microarchitecture [\#7877](https://github.com/kokkos/kokkos/pull/7877)
 * Add support for SiFive Unmatched Rev B (RISC-V)  [\#7921](https://github.com/kokkos/kokkos/pull/7921) 
 * Improve performance of `atomic_op_fetch()` [\#8014](https://github.com/kokkos/kokkos/pull/8014)
@@ -33,7 +34,6 @@
 * Implement `nextafter` for fp16 [\#8118](https://github.com/kokkos/kokkos/pull/8118)
 * Enable structured binding return for `parition_space(ExecSpace, Args...)` [\#8114](https://github.com/kokkos/kokkos/pull/8114)
 * Add `constexpr` specifier to `operator==` and `operator!=` for `Kokkos::complex` [\#8254](https://github.com/kokkos/kokkos/pull/8254)
-* Introduce mdspan-based View implementation [\#7427](https://github.com/kokkos/kokkos/pull/7427)
 * Remove `nodiscard` attributes from Kokkos simd interface [\#8084](https://github.com/kokkos/kokkos/pull/8084)
 * Add support for graph capture (`Cuda`, `HIP` and `SYCL`) [\#7552](https://github.com/kokkos/kokkos/pull/7552)
 * Enforce unit launch bound for graph `then` node [\#8192](https://github.com/kokkos/kokkos/pull/8192)
