@@ -942,7 +942,7 @@ TeamThreadRange(const TeamMemberType&, const iType1& begin,
  */
 template <typename iType, class TeamMemberType, class _never_use_this_overload>
 KOKKOS_INLINE_FUNCTION_DELETED
-    Impl::TeamThreadRangeBoundariesStruct<iType, TeamMemberType>
+    Impl::TeamVectorRangeBoundariesStruct<iType, TeamMemberType>
     TeamVectorRange(const TeamMemberType&, const iType& count) = delete;
 
 /** \brief  Execution policy for parallel work over a threads within a team.
@@ -954,7 +954,7 @@ KOKKOS_INLINE_FUNCTION_DELETED
  */
 template <typename iType1, typename iType2, class TeamMemberType,
           class _never_use_this_overload>
-KOKKOS_INLINE_FUNCTION_DELETED Impl::TeamThreadRangeBoundariesStruct<
+KOKKOS_INLINE_FUNCTION_DELETED Impl::TeamVectorRangeBoundariesStruct<
     std::common_type_t<iType1, iType2>, TeamMemberType>
 TeamVectorRange(const TeamMemberType&, const iType1& begin,
                 const iType2& end) = delete;
