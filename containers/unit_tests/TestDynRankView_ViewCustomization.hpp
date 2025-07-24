@@ -56,12 +56,13 @@ struct TestAccessorStrided {
   constexpr TestAccessorStrided() = default;
 
   template <class OtherElementType,
+            class OtherMemorySpace,
             std::enable_if_t<std::is_constructible_v<
                                  Kokkos::default_accessor<element_type>,
                                  Kokkos::default_accessor<OtherElementType>>,
                              int> = 0>
   KOKKOS_FUNCTION constexpr TestAccessorStrided(
-      const TestAccessorStrided<OtherElementType, MemorySpace>& other) noexcept
+      const TestAccessorStrided<OtherElementType, OtherMemorySpace>& other) noexcept
       : size(other.size), stride(other.stride) {}
 
   KOKKOS_FUNCTION
