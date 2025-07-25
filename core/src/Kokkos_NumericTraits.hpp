@@ -27,6 +27,7 @@
 #endif
 #include <type_traits>
 #include <limits>
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 
 namespace Kokkos::Experimental {
 
