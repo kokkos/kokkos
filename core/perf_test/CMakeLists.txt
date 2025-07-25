@@ -17,6 +17,7 @@ if(KOKKOS_ENABLE_TESTS)
   kokkos_include_directories(REQUIRED_DURING_INSTALLATION_TESTING ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
+# FIXME: remove as it is already tested before calling add_subdirectory
 if(NOT Kokkos_ENABLE_BENCHMARKS)
   return()
 endif()
@@ -49,14 +50,20 @@ else()
   target_compile_options(benchmark_main PRIVATE -w)
 endif()
 
-function(KOKKOS_ADD_BENCHMARK NAME)
-  cmake_parse_arguments(BENCHMARK "" "" "SOURCES" ${ARGN})
+macro(KOKKOS_ADD_BENCHMARK NAME)
+  cmake_parse_arguments(BENCHMARK "" "MAIN_FILE" "SOURCES" ${ARGN})
   if(DEFINED BENCHMARK_UNPARSED_ARGUMENTS)
     message(WARNING "Unexpected arguments when adding a benchmark: " ${BENCHMARK_UNPARSED_ARGUMENTS})
   endif()
 
   set(BENCHMARK_NAME Kokkos_${NAME})
-  list(APPEND BENCHMARK_SOURCES BenchmarkMain.cpp Benchmark_Context.cpp)
+  set(CORE_PERFTEST_DIR ${PROJECT_SOURCE_DIR}/core/perf_test)
+  if(BENCHMARK_MAIN_FILE)
+    set(BENCHMARK_MAIN ${BENCHMARK_MAIN_FILE})
+  else()
+    set(BENCHMARK_MAIN ${CORE_PERFTEST_DIR}/BenchmarkMain.cpp)
+  endif()
+  list(APPEND BENCHMARK_SOURCES ${BENCHMARK_MAIN} ${CORE_PERFTEST_DIR}/Benchmark_Context.cpp)
 
   add_executable(${BENCHMARK_NAME} ${BENCHMARK_SOURCES})
   target_link_libraries(${BENCHMARK_NAME} PRIVATE benchmark::benchmark Kokkos::kokkos impl_git_version)
@@ -70,7 +77,7 @@ function(KOKKOS_ADD_BENCHMARK NAME)
   set(BENCHMARK_ARGS --benchmark_counters_tabular=true --benchmark_out=${BENCHMARK_NAME}_${BENCHMARK_TIME}.json)
 
   add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
-endfunction()
+endmacro()
 
 set(BENCHMARK_SOURCES
     PerfTestGramSchmidt.cpp
