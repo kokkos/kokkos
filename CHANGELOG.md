@@ -25,7 +25,7 @@
 
 ### General Enhancements
 * Add support for Zen 5 AMD microarchitecture [\#7877](https://github.com/kokkos/kokkos/pull/7877)
-* Add support for SiFive Unmatched Rev B (RISC-V)  [\#7921](https://github.com/kokkos/kokkos/pull/7921) 
+* Add support for SiFive Unmatched Rev B (RISC-V)  [\#7921](https://github.com/kokkos/kokkos/pull/7921)
 * Improve performance of `atomic_op_fetch()` [\#8014](https://github.com/kokkos/kokkos/pull/8014)
 * Pass label by reference in all `Kokkos::tools` APIs [\#8065](https://github.com/kokkos/kokkos/pull/8065)
 * Compatibility with C+20 modules: Avoid static variables and functions in header files [\#8071](https://github.com/kokkos/kokkos/pull/8071)
