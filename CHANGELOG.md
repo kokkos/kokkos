@@ -14,11 +14,9 @@
 * Add support for AMPERE87 architecture (Jetson Orin Nano) [\#8092](https://github.com/kokkos/kokkos/pull/8092)
 * Support RDC with Clang 17+ and use new offload driver [\#7831](https://github.com/kokkos/kokkos/pull/7831)
 * Directly use fp16 mathematical function when available instead of casting back and forth to fp32 [\#7698](https://github.com/kokkos/kokkos/pull/7698)
-* Disable `mdspan`-based view for CUDA 12.9 due to compiler incompatibility[\#8169](https://github.com/kokkos/kokkos/pull/8169)
 
 #### SYCL:
 * Add support for Intel DG2 GPUs such as the Arc Alchemist GPUs [\#7922](https://github.com/kokkos/kokkos/pull/7922)
-* Allow requesting out-of-order queues [\#8091](https://github.com/kokkos/kokkos/pull/8091)
 * Allow using non-trivially-copyable comparators with oneDPL [\#7538](https://github.com/kokkos/kokkos/pull/7538)
 * Directly use fp16 mathematical function when available instead of casting back and forth to fp32 [\#7698](https://github.com/kokkos/kokkos/pull/7698)
 
@@ -49,7 +47,7 @@
 * Check if compiler/linker can consume the flags set [\#7891](https://github.com/kokkos/kokkos/pull/7891)
 * Support more nvcc arguments with nvcc_wrapper [\#7930](https://github.com/kokkos/kokkos/pull/7930)
 * Add NVIDIA Blackwell architecture support to the generated makefiles [\#8055](https://github.com/kokkos/kokkos/pull/8055)
-* Add support for building C++20 modules [\#8132](https://github.com/kokkos/kokkos/pull/8132)
+* Add initial C++20 modules configuration support [\#8132](https://github.com/kokkos/kokkos/pull/8132)
 
 ### Incompatibilities (i.e. breaking changes)
 * Raise IntelLLVM minimum for SYCL to 2024.2.1 [\#7918](https://github.com/kokkos/kokkos/pull/7918)
@@ -71,9 +69,8 @@
 * HPX: Corrected an internal TeamPolicy constraint that could cause issues with higher thread counts [\#8147](https://github.com/kokkos/kokkos/pull/8147)
 * Fix subview view constructor to disallow non-strided view types for strided subviews [\#8210](https://github.com/kokkos/kokkos/pull/8210)
 * Work around a compiler bug with GCC 12.{2,3,4} causing segfaults with the View shared allocation tracker [\#8223](https://github.com/kokkos/kokkos/pull/8223)
-* Fix compiling with compilers that provide an mdspan implementation [\#8234](https://github.com/kokkos/kokkos/pull/8234)
 * Fix launch of intermediate size functors in graph on HIP [\#8188](https://github.com/kokkos/kokkos/pull/8188)
-* Add missing fences for async Random init with unified memory [\#8105](https://github.com/kokkos/kokkos/pull/8105)
+* Add missing fences for async random pool init with unified memory [\#8105](https://github.com/kokkos/kokkos/pull/8105)
 * OpenMPTarget / OpenACC: fix out-of-bounds access in `Random_UniqueIndex` under certain circumstances [\#8077](https://github.com/kokkos/kokkos/pull/8077)
 
 ## 4.6.02
