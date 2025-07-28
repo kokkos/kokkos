@@ -56,11 +56,12 @@ struct BaseReducer {
 
  public:
   // Construct from a scalar value
-  KOKKOS_INLINE_FUNCTION
-  BaseReducer(value_type& value_) : value(&value_), references_scalar_v(true) {}
+  KOKKOS_INLINE_FUNCTION  // NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility)
+  BaseReducer(value_type& value_)
+      : value(&value_), references_scalar_v(true) {}
 
   // Construct from a View
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_INLINE_FUNCTION  // NOLINTNEXTLINE(bugprone-crtp-constructor-accessibility)
   BaseReducer(const result_view_type& value_)
       : value(value_), references_scalar_v(false) {}
 
