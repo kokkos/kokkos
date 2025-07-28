@@ -64,14 +64,13 @@ struct BaseReducer {
   BaseReducer(const result_view_type& value_)
       : value(value_), references_scalar_v(false) {}
 
-  // Perform the reduction
+  // Every class implementing this interface must offer a _join and _init
+  // implementation (despite init() being usually optional for reducers).
   KOKKOS_INLINE_FUNCTION
   void join(value_type& dest, const value_type& src) const {
     static_cast<const ImplReducer*>(this)->_join(dest, src);
   }
 
-  // Set the initial value for the reduction variable
-  // (for instance FLOAT_MIN if searching for the max).
   KOKKOS_INLINE_FUNCTION
   void init(value_type& val) const {
     static_cast<const ImplReducer*>(this)->_init(val);
