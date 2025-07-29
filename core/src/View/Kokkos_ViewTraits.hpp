@@ -409,10 +409,6 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
                      void> &&
           std::is_same_v<typename ViewTraits<void, Prop...>::memory_space,
                          void> &&
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-          std::is_same_v<typename ViewTraits<void, Prop...>::HostMirrorSpace,
-                         void> &&
-#endif
           std::is_same_v<typename ViewTraits<void, Prop...>::host_mirror_space,
                          void> &&
           std::is_same_v<typename ViewTraits<void, Prop...>::array_layout,
