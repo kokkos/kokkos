@@ -324,6 +324,10 @@ void test_deep_copy_single_element_view() {
 
   Kokkos::RangePolicy<TEST_EXECSPACE> policy{0, 1};
 
+  // Verify that all "size" subelements in the single view
+  // are correctly copied. This verifies that views with
+  // custom allocated size (e.g. Sacado derivatives embedded in the view)
+  // work with single views.
   int num_errors = 0;
   Kokkos::parallel_reduce(
       "view_customization_deep_copy_a", policy,
