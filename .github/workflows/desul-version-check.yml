@@ -1,0 +1,28 @@
+name: desul version check
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/desul-version-check.yml'
+      - 'tpls/desul/**'
+
+permissions: read-all
+
+jobs:
+  desul-version-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      with:
+        repository: desul/desul
+        ref: fd8da8299519d7ecde91a1c11a3ac8469ce29cac
+        path: desul-atomics
+    - run: |
+        rm tpls/desul/include/desul/.clang-format
+        rm -r desul-atomics/atomics/performance_tests
+        rm -r desul-atomics/atomics/unit_tests
+        rm desul-atomics/atomics/CMakeLists.txt
+        rm desul-atomics/atomics/desul_atomicsConfig.cmake.in
+        rm desul-atomics/atomics/src/common.cpp
+        diff --brief --recursive tpls/desul desul-atomics/atomics
