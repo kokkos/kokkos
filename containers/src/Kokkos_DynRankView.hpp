@@ -513,8 +513,8 @@ class DynRankView : private View<DataType*******, Properties...> {
   const view_type& ConstDownCast() const { return (const view_type&)(*this); }
 
   // FIXME: deprecate DownCast in favor of to_view
-  KOKKOS_FUNCTION
-  view_type to_view() const { return *this; }
+  // KOKKOS_FUNCTION
+  // view_type to_view() const { return *this; }
 
   // Types below - at least the HostMirror requires the value_type, NOT the rank
   // 7 data_type of the traits
@@ -1612,12 +1612,12 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
     using dst_type = typename Impl::MirrorDRViewType<
         typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
         P...>::dest_view_type;
-    return dst_type(create_mirror(arg_prop, src.to_view()), src.rank());
+    return dst_type(create_mirror(arg_prop, src.DownCast()), src.rank());
   } else {
     using src_type = DynRankView<T, P...>;
     using dst_type = typename src_type::HostMirror;
 
-    return dst_type(create_mirror(arg_prop, src.to_view()), src.rank());
+    return dst_type(create_mirror(arg_prop, src.DownCast()), src.rank());
   }
 #if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
     !defined(KOKKOS_COMPILER_MSVC)
