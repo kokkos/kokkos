@@ -585,7 +585,7 @@ struct Random_XorShift1024_State<false> {
   template <class StateViewType>
   KOKKOS_FUNCTION Random_XorShift1024_State(const StateViewType& v,
                                             int state_idx)
-      : state_(&v(state_idx, 0)), stride_(v.stride_1()) {}
+      : state_(&v(state_idx, 0)), stride_(v.stride(1)) {}
 
   // NOLINTBEGIN(bugprone-implicit-widening-of-multiplication-result)
   KOKKOS_FUNCTION

@@ -67,11 +67,11 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
   KOKKOS_DEFAULTED_FUNCTION RandomAccessIterator() = default;
 
   explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view)
-      : m_data(view.data()), m_stride(view.stride_0()) {}
+      : m_data(view.data()), m_stride(view.stride(0)) {}
   explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view,
                                                 ptrdiff_t current_index)
-      : m_data(view.data() + current_index * view.stride_0()),
-        m_stride(view.stride_0()) {}
+      : m_data(view.data() + current_index * view.stride(0)),
+        m_stride(view.stride(0)) {}
 
 #ifndef KOKKOS_ENABLE_CXX17  // C++20 and beyond
   template <class OtherViewType>
