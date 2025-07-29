@@ -56,7 +56,7 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::data_type, DataType>);
   static_assert(std::is_same_v<typename ViewType::const_data_type, typename data_analysis<DataType>::const_data_type>);
   static_assert(std::is_same_v<typename ViewType::non_const_data_type, typename data_analysis<DataType>::non_const_data_type>);
-  
+
   // FIXME: these should be deprecated and for proper testing (I.e. where this is different from data_type)
   // we would need ensemble types which use the hidden View dimension facility of View (i.e. which make
   // "specialize" not void)
@@ -84,12 +84,12 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::memory_traits, MemoryTraitsType>);
   static_assert(std::is_same_v<typename ViewType::host_mirror_space, HostMirrorSpace>);
   static_assert(std::is_same_v<typename ViewType::size_type, typename ViewType::memory_space::size_type>);
- 
+
   // FIXME: should be deprecated in favor of reference
   static_assert(std::is_same_v<typename ViewType::reference_type, ReferenceType>);
   // FIXME: should be deprecated in favor of data_handle_type
   static_assert(std::is_same_v<typename ViewType::pointer_type, ValueType*>);
- 
+
   // =========================================
   // in Legacy View: some helper View variants
   // =========================================
@@ -173,6 +173,14 @@ constexpr bool test_view_typedefs_impl() {
   // FIXME: should come from accessor_type
   static_assert(std::is_same_v<typename ViewType::data_handle_type, typename ViewType::pointer_type>);
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
+
+  #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using base_view_type = typename ViewType::view_type;
+  static_assert(
+      std::is_same_v<typename ViewType::accessor_type, typename base_view_type::accessor_type>);
+  static_assert(
+      std::is_same_v<typename ViewType::mapping_type, typename base_view_type::mapping_type>);
+  #endif
   return true;
 }
 
