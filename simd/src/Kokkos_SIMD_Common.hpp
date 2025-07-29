@@ -350,10 +350,24 @@ KOKKOS_FORCEINLINE_FUNCTION auto round_half_to_nearest_even(T const& x) {
 
 namespace Impl {
 
+template <class BinaryOperation>
+struct is_basic_reduction_op {
+  static constexpr bool value =
+      std::is_same_v<BinaryOperation, std::plus<>> ||
+      std::is_same_v<BinaryOperation, std::multiplies<>> ||
+      std::is_same_v<BinaryOperation, std::bit_and<>> ||
+      std::is_same_v<BinaryOperation, std::bit_or<>> ||
+      std::is_same_v<BinaryOperation, std::bit_xor<>>;
+};
+
+template <class BinaryOperation>
+constexpr bool is_basic_reduction_op_v =
+    is_basic_reduction_op<BinaryOperation>::value;
+
 template <class T, class BinaryOperation>
 struct Identity {
   KOKKOS_FORCEINLINE_FUNCTION
-  operator T() {
+  constexpr operator T() {
     // NOLINTNEXTLINE(bugprone-branch-clone)
     if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
       return T();
@@ -378,8 +392,11 @@ struct Identity {
 template <class T, class Abi, class BinaryOperation = std::plus<>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T reduce(const basic_simd<T, Abi>& x,
                                                BinaryOperation binary_op = {}) {
-  return reduce(x, typename basic_simd<T, Abi>::mask_type(true),
-                T(Impl::Identity<T, BinaryOperation>()), binary_op);
+  T result = x[0];
+  for (std::size_t i = 1; i < x.size(); ++i) {
+    result = binary_op(result, x[i]);
+  }
+  return result;
 }
 
 template <class T, class Abi>

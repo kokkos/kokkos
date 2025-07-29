@@ -31,6 +31,9 @@ void hostspace_parallel_deepcopy_async(void* dst, const void* src, ptrdiff_t n);
 template <typename ExecutionSpace>
 void hostspace_parallel_deepcopy_async(const ExecutionSpace& exec, void* dst,
                                        const void* src, ptrdiff_t n);
+template <typename ExecutionSpace>
+void hostspace_parallel_zeromemset(const ExecutionSpace& exec, void* dst,
+                                   size_t n);
 }  // namespace Impl
 
 }  // namespace Kokkos

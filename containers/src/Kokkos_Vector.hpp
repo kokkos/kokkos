@@ -75,8 +75,8 @@ class KOKKOS_DEPRECATED vector
     return DV::view_host()(i);
   };
 #else
-  inline reference operator()(int i) const { return DV::view_host()(i); };
-  inline reference operator[](int i) const { return DV::view_host()(i); };
+  inline reference operator()(int i) const { return DV::view_host()(i); }
+  inline reference operator[](int i) const { return DV::view_host()(i); }
 #endif
 
   /* Member functions which behave like std::vector functions */

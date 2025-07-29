@@ -580,7 +580,7 @@ struct Random_XorShift1024_State<false> {
   uint64_t* state_;
   const int stride_;
   KOKKOS_FUNCTION
-  Random_XorShift1024_State() : state_(nullptr), stride_(1){};
+  Random_XorShift1024_State() : state_(nullptr), stride_(1) {}
 
   template <class StateViewType>
   KOKKOS_FUNCTION Random_XorShift1024_State(const StateViewType& v,
@@ -1296,7 +1296,7 @@ class Random_XorShift1024_Pool {
     KOKKOS_EXPECTS(num_states_ > 0);
     const int i = Impl::Random_UniqueIndex<device_type>::get_state_idx(locks_);
     return Random_XorShift1024<DeviceType>(state_, p_(i, 0), i);
-  };
+  }
 
   // NOTE: state_idx MUST be unique and less than num_states
   KOKKOS_INLINE_FUNCTION
@@ -1626,7 +1626,9 @@ template <class ExecutionSpace, class ViewType, class RandomPool,
 void fill_random(const ExecutionSpace& exec, ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
-  Impl::apply_to_view_of_static_rank(
+  // Using Impl::apply_to_view_of_static_rank function here
+  // is not compatible with modules. Using the partial specialization works.
+  Impl::ApplyToViewOfStaticRank<ViewType>::apply(
       [&](auto dst) { Kokkos::Impl::fill_random(exec, dst, g, begin, end); },
       a);
 }

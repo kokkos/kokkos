@@ -252,56 +252,50 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
 
 template <class DriverType>
 struct DeduceCudaLaunchMechanism {
-  constexpr static const Kokkos::Experimental::WorkItemProperty::
-      HintLightWeight_t light_weight =
-          Kokkos::Experimental::WorkItemProperty::HintLightWeight;
-  constexpr static const Kokkos::Experimental::WorkItemProperty::
-      HintHeavyWeight_t heavy_weight =
-          Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
-  constexpr static const typename DriverType::Policy::work_item_property
-      property = typename DriverType::Policy::work_item_property();
+  constexpr static auto light_weight =
+      Kokkos::Experimental::WorkItemProperty::HintLightWeight;
+  constexpr static auto heavy_weight =
+      Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
+  constexpr static typename DriverType::Policy::work_item_property property{};
 
-  static constexpr const Experimental::CudaLaunchMechanism
-      valid_launch_mechanism =
-          // BuildValidMask
+  static constexpr CudaLaunchMechanism valid_launch_mechanism =
+      // BuildValidMask
       (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
-           ? Experimental::CudaLaunchMechanism::LocalMemory
-           : Experimental::CudaLaunchMechanism::Default) |
+           ? CudaLaunchMechanism::LocalMemory
+           : CudaLaunchMechanism::Default) |
       (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage
-           ? Experimental::CudaLaunchMechanism::ConstantMemory
-           : Experimental::CudaLaunchMechanism::Default) |
-      Experimental::CudaLaunchMechanism::GlobalMemory;
+           ? CudaLaunchMechanism::ConstantMemory
+           : CudaLaunchMechanism::Default) |
+      CudaLaunchMechanism::GlobalMemory;
 
-  static constexpr const Experimental::CudaLaunchMechanism
-      requested_launch_mechanism =
-          (((property & light_weight) == light_weight)
-               ? Experimental::CudaLaunchMechanism::LocalMemory
-               : Experimental::CudaLaunchMechanism::ConstantMemory) |
-          Experimental::CudaLaunchMechanism::GlobalMemory;
+  static constexpr CudaLaunchMechanism requested_launch_mechanism =
+      (((property & light_weight) == light_weight)
+           ? CudaLaunchMechanism::LocalMemory
+           : CudaLaunchMechanism::ConstantMemory) |
+      CudaLaunchMechanism::GlobalMemory;
 
-  static constexpr const Experimental::CudaLaunchMechanism
-      default_launch_mechanism =
-          // BuildValidMask
+  static constexpr CudaLaunchMechanism default_launch_mechanism =
+      // BuildValidMask
       (sizeof(DriverType) < CudaTraits::ConstantMemoryUseThreshold)
-          ? Experimental::CudaLaunchMechanism::LocalMemory
+          ? CudaLaunchMechanism::LocalMemory
           : ((sizeof(DriverType) < CudaTraits::ConstantMemoryUsage)
-                 ? Experimental::CudaLaunchMechanism::ConstantMemory
-                 : Experimental::CudaLaunchMechanism::GlobalMemory);
+                 ? CudaLaunchMechanism::ConstantMemory
+                 : CudaLaunchMechanism::GlobalMemory);
 
   //              None                LightWeight    HeavyWeight
   // F<UseT       LCG LCG L  L        LCG  LG L  L    LCG  CG L  C
   // UseT<F<KAL   LCG LCG C  C        LCG  LG C  L    LCG  CG C  C
   // Kal<F<CMU     CG LCG C  C         CG  LG C  G     CG  CG C  C
   // CMU<F          G LCG G  G          G  LG G  G      G  CG G  G
-  static constexpr const Experimental::CudaLaunchMechanism launch_mechanism =
+  static constexpr CudaLaunchMechanism launch_mechanism =
       ((property & light_weight) == light_weight)
           ? (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
-                 ? Experimental::CudaLaunchMechanism::LocalMemory
-                 : Experimental::CudaLaunchMechanism::GlobalMemory)
+                 ? CudaLaunchMechanism::LocalMemory
+                 : CudaLaunchMechanism::GlobalMemory)
           : (((property & heavy_weight) == heavy_weight)
                  ? (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage
-                        ? Experimental::CudaLaunchMechanism::ConstantMemory
-                        : Experimental::CudaLaunchMechanism::GlobalMemory)
+                        ? CudaLaunchMechanism::ConstantMemory
+                        : CudaLaunchMechanism::GlobalMemory)
                  : (default_launch_mechanism));
 };
 
@@ -315,11 +309,11 @@ struct DeduceCudaLaunchMechanism {
 // mechanisms
 
 template <class DriverType, class LaunchBounds,
-          Experimental::CudaLaunchMechanism LaunchMechanism>
+          CudaLaunchMechanism LaunchMechanism>
 struct CudaParallelLaunchKernelFunc;
 
 template <class DriverType, class LaunchBounds,
-          Experimental::CudaLaunchMechanism LaunchMechanism>
+          CudaLaunchMechanism LaunchMechanism>
 struct CudaParallelLaunchKernelInvoker;
 
 //------------------------------------------------------------------------------
@@ -329,7 +323,7 @@ template <class DriverType, unsigned int MaxThreadsPerBlock,
           unsigned int MinBlocksPerSM>
 struct CudaParallelLaunchKernelFunc<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    Experimental::CudaLaunchMechanism::LocalMemory> {
+    CudaLaunchMechanism::LocalMemory> {
   static std::decay_t<decltype(cuda_parallel_launch_local_memory<
                                DriverType, MaxThreadsPerBlock, MinBlocksPerSM>)>
   get_kernel_func() {
@@ -339,9 +333,8 @@ struct CudaParallelLaunchKernelFunc<
 };
 
 template <class DriverType>
-struct CudaParallelLaunchKernelFunc<
-    DriverType, Kokkos::LaunchBounds<0, 0>,
-    Experimental::CudaLaunchMechanism::LocalMemory> {
+struct CudaParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
+                                    CudaLaunchMechanism::LocalMemory> {
   static std::decay_t<decltype(cuda_parallel_launch_local_memory<DriverType>)>
   get_kernel_func() {
     return cuda_parallel_launch_local_memory<DriverType>;
@@ -351,13 +344,12 @@ struct CudaParallelLaunchKernelFunc<
 //------------------------------------------------------------------------------
 
 template <class DriverType, class LaunchBounds>
-struct CudaParallelLaunchKernelInvoker<
-    DriverType, LaunchBounds, Experimental::CudaLaunchMechanism::LocalMemory>
-    : CudaParallelLaunchKernelFunc<
-          DriverType, LaunchBounds,
-          Experimental::CudaLaunchMechanism::LocalMemory> {
-  using base_t = CudaParallelLaunchKernelFunc<
-      DriverType, LaunchBounds, Experimental::CudaLaunchMechanism::LocalMemory>;
+struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
+                                       CudaLaunchMechanism::LocalMemory>
+    : CudaParallelLaunchKernelFunc<DriverType, LaunchBounds,
+                                   CudaLaunchMechanism::LocalMemory> {
+  using base_t = CudaParallelLaunchKernelFunc<DriverType, LaunchBounds,
+                                              CudaLaunchMechanism::LocalMemory>;
   static_assert(sizeof(DriverType) < CudaTraits::KernelArgumentLimit,
                 "Kokkos Error: Requested CudaLaunchLocalMemory with a Functor "
                 "larger than 4096 bytes.");
@@ -433,7 +425,7 @@ template <class DriverType, unsigned int MaxThreadsPerBlock,
           unsigned int MinBlocksPerSM>
 struct CudaParallelLaunchKernelFunc<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    Experimental::CudaLaunchMechanism::GlobalMemory> {
+    CudaLaunchMechanism::GlobalMemory> {
   static void* get_kernel_func() {
     return cuda_parallel_launch_global_memory<DriverType, MaxThreadsPerBlock,
                                               MinBlocksPerSM>;
@@ -441,9 +433,8 @@ struct CudaParallelLaunchKernelFunc<
 };
 
 template <class DriverType>
-struct CudaParallelLaunchKernelFunc<
-    DriverType, Kokkos::LaunchBounds<0, 0>,
-    Experimental::CudaLaunchMechanism::GlobalMemory> {
+struct CudaParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
+                                    CudaLaunchMechanism::GlobalMemory> {
   static std::decay_t<decltype(cuda_parallel_launch_global_memory<DriverType>)>
   get_kernel_func() {
     return cuda_parallel_launch_global_memory<DriverType>;
@@ -453,14 +444,13 @@ struct CudaParallelLaunchKernelFunc<
 //------------------------------------------------------------------------------
 
 template <class DriverType, class LaunchBounds>
-struct CudaParallelLaunchKernelInvoker<
-    DriverType, LaunchBounds, Experimental::CudaLaunchMechanism::GlobalMemory>
-    : CudaParallelLaunchKernelFunc<
-          DriverType, LaunchBounds,
-          Experimental::CudaLaunchMechanism::GlobalMemory> {
-  using base_t = CudaParallelLaunchKernelFunc<
-      DriverType, LaunchBounds,
-      Experimental::CudaLaunchMechanism::GlobalMemory>;
+struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
+                                       CudaLaunchMechanism::GlobalMemory>
+    : CudaParallelLaunchKernelFunc<DriverType, LaunchBounds,
+                                   CudaLaunchMechanism::GlobalMemory> {
+  using base_t =
+      CudaParallelLaunchKernelFunc<DriverType, LaunchBounds,
+                                   CudaLaunchMechanism::GlobalMemory>;
 
   static void invoke_kernel(DriverType const& driver, dim3 const& grid,
                             dim3 const& block, int shmem,
@@ -552,7 +542,7 @@ template <class DriverType, unsigned int MaxThreadsPerBlock,
           unsigned int MinBlocksPerSM>
 struct CudaParallelLaunchKernelFunc<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
-    Experimental::CudaLaunchMechanism::ConstantMemory> {
+    CudaLaunchMechanism::ConstantMemory> {
   static std::decay_t<decltype(cuda_parallel_launch_constant_memory<
                                DriverType, MaxThreadsPerBlock, MinBlocksPerSM>)>
   get_kernel_func() {
@@ -562,9 +552,8 @@ struct CudaParallelLaunchKernelFunc<
 };
 
 template <class DriverType>
-struct CudaParallelLaunchKernelFunc<
-    DriverType, Kokkos::LaunchBounds<0, 0>,
-    Experimental::CudaLaunchMechanism::ConstantMemory> {
+struct CudaParallelLaunchKernelFunc<DriverType, Kokkos::LaunchBounds<0, 0>,
+                                    CudaLaunchMechanism::ConstantMemory> {
   static std::decay_t<
       decltype(cuda_parallel_launch_constant_memory<DriverType>)>
   get_kernel_func() {
@@ -575,14 +564,13 @@ struct CudaParallelLaunchKernelFunc<
 //------------------------------------------------------------------------------
 
 template <class DriverType, class LaunchBounds>
-struct CudaParallelLaunchKernelInvoker<
-    DriverType, LaunchBounds, Experimental::CudaLaunchMechanism::ConstantMemory>
-    : CudaParallelLaunchKernelFunc<
-          DriverType, LaunchBounds,
-          Experimental::CudaLaunchMechanism::ConstantMemory> {
-  using base_t = CudaParallelLaunchKernelFunc<
-      DriverType, LaunchBounds,
-      Experimental::CudaLaunchMechanism::ConstantMemory>;
+struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
+                                       CudaLaunchMechanism::ConstantMemory>
+    : CudaParallelLaunchKernelFunc<DriverType, LaunchBounds,
+                                   CudaLaunchMechanism::ConstantMemory> {
+  using base_t =
+      CudaParallelLaunchKernelFunc<DriverType, LaunchBounds,
+                                   CudaLaunchMechanism::ConstantMemory>;
   static_assert(sizeof(DriverType) < CudaTraits::ConstantMemoryUsage,
                 "Kokkos Error: Requested CudaLaunchConstantMemory with a "
                 "Functor larger than 32kB.");
@@ -633,9 +621,9 @@ struct CudaParallelLaunchKernelInvoker<
     // somehow go and prove was not creating a dependency cycle, and I don't
     // even know if there's an efficient way to do that, let alone in the
     // structure we currenty have).
-    using global_launch_impl_t = CudaParallelLaunchKernelInvoker<
-        DriverType, LaunchBounds,
-        Experimental::CudaLaunchMechanism::GlobalMemory>;
+    using global_launch_impl_t =
+        CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
+                                        CudaLaunchMechanism::GlobalMemory>;
     global_launch_impl_t::create_parallel_launch_graph_node(
         driver, grid, block, shmem, cuda_instance);
   }
@@ -651,12 +639,11 @@ struct CudaParallelLaunchKernelInvoker<
 // <editor-fold desc="CudaParallelLaunchImpl"> {{{1
 
 template <class DriverType, class LaunchBounds,
-          Experimental::CudaLaunchMechanism LaunchMechanism>
+          CudaLaunchMechanism LaunchMechanism>
 struct CudaParallelLaunchImpl;
 
 template <class DriverType, unsigned int MaxThreadsPerBlock,
-          unsigned int MinBlocksPerSM,
-          Experimental::CudaLaunchMechanism LaunchMechanism>
+          unsigned int MinBlocksPerSM, CudaLaunchMechanism LaunchMechanism>
 struct CudaParallelLaunchImpl<
     DriverType, Kokkos::LaunchBounds<MaxThreadsPerBlock, MinBlocksPerSM>,
     LaunchMechanism>
@@ -718,14 +705,14 @@ struct CudaParallelLaunchImpl<
 // <editor-fold desc="CudaParallelLaunch"> {{{1
 
 template <class DriverType, class LaunchBounds = Kokkos::LaunchBounds<>,
-          Experimental::CudaLaunchMechanism LaunchMechanism =
+          CudaLaunchMechanism LaunchMechanism =
               DeduceCudaLaunchMechanism<DriverType>::launch_mechanism,
           bool DoGraph = DriverType::Policy::is_graph_kernel::value>
 struct CudaParallelLaunch;
 
 // General launch mechanism
 template <class DriverType, class LaunchBounds,
-          Experimental::CudaLaunchMechanism LaunchMechanism>
+          CudaLaunchMechanism LaunchMechanism>
 struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
                           /* DoGraph = */ false>
     : CudaParallelLaunchImpl<DriverType, LaunchBounds, LaunchMechanism> {
@@ -739,7 +726,7 @@ struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
 
 // Launch mechanism for creating graph nodes
 template <class DriverType, class LaunchBounds,
-          Experimental::CudaLaunchMechanism LaunchMechanism>
+          CudaLaunchMechanism LaunchMechanism>
 struct CudaParallelLaunch<DriverType, LaunchBounds, LaunchMechanism,
                           /* DoGraph = */ true>
     : CudaParallelLaunchImpl<DriverType, LaunchBounds, LaunchMechanism> {

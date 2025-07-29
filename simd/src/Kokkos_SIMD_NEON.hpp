@@ -351,7 +351,7 @@ class neon_mask<Derived, 32, 4> {
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask( \
         G&& gen) noexcept                                                     \
         : base_type(gen) {}                                                   \
-  };
+  }
 
 INSTANTIATE_SIMD_MASK_NEON(std::int32_t, 2);
 INSTANTIATE_SIMD_MASK_NEON(std::int32_t, 4);

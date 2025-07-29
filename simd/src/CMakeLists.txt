@@ -14,14 +14,26 @@ install(
   PATTERN "*.hpp"
 )
 
+set(SIMD_MODULES Kokkos_SIMD.cppm)
+
 #-----------------------------------------------------------------------------
 
 # We have to pass the sources in here for Tribits
 # These will get ignored for standalone CMake and a true interface library made
-kokkos_add_library(kokkossimd SOURCES ${SIMD_SOURCES} HEADERS ${SIMD_HEADERS})
+kokkos_add_library(
+  kokkossimd
+  SOURCES
+  ${SIMD_SOURCES}
+  HEADERS
+  ${SIMD_HEADERS}
+  MODULE_INTERFACE
+  ${SIMD_MODULES}
+)
 kokkos_lib_include_directories(
   kokkossimd ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 )
+
+kokkos_link_internal_library(kokkossimd kokkoscore)
 
 # If ARM-SVE, check and warn for available arm_neon_sve_bridge.h
 if(KOKKOS_ARCH_ARM_SVE)

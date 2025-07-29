@@ -20,7 +20,6 @@
 #include <iterator>
 #include <utility>  // declval
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_View.hpp>
 #include "Kokkos_Constraints.hpp"
 
 namespace Kokkos {
@@ -29,27 +28,6 @@ namespace Impl {
 
 template <class T>
 class RandomAccessIterator;
-
-namespace {
-
-template <typename ViewType>
-struct is_always_strided {
-  static_assert(is_view_v<ViewType>);
-
-  constexpr static bool value =
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-      decltype(std::declval<ViewType>().to_mdspan())::is_always_strided();
-#else
-      (std::is_same_v<typename ViewType::traits::array_layout,
-                      Kokkos::LayoutLeft> ||
-       std::is_same_v<typename ViewType::traits::array_layout,
-                      Kokkos::LayoutRight> ||
-       std::is_same_v<typename ViewType::traits::array_layout,
-                      Kokkos::LayoutStride>);
-#endif
-};
-
-}  // namespace
 
 template <class DataType, class... Args>
 class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
@@ -70,9 +48,22 @@ class RandomAccessIterator<::Kokkos::View<DataType, Args...>> {
   using is_passed_directly = std::true_type;
 #endif
 
-  static_assert(view_type::rank == 1 &&
-                is_always_strided<::Kokkos::View<DataType, Args...>>::value);
+ private:
+  static constexpr bool view_is_always_strided =
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
+      decltype(std::declval<view_type>().to_mdspan())::is_always_strided();
+#else
+      (std::is_same_v<typename view_type::traits::array_layout,
+                      Kokkos::LayoutLeft> ||
+       std::is_same_v<typename view_type::traits::array_layout,
+                      Kokkos::LayoutRight> ||
+       std::is_same_v<typename view_type::traits::array_layout,
+                      Kokkos::LayoutStride>);
+#endif
 
+  static_assert(view_type::rank == 1 && view_is_always_strided);
+
+ public:
   KOKKOS_DEFAULTED_FUNCTION RandomAccessIterator() = default;
 
   explicit KOKKOS_FUNCTION RandomAccessIterator(const view_type view)

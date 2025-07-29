@@ -1,0 +1,43 @@
+ARG BASE=gcc:15.1.0-bookworm@sha256:0a7989a3828096f97fd62feb896699e151544e0cfc5fdc0f30ace70cdcf003e6
+FROM $BASE
+
+ARG ADDITIONAL_PACKAGES
+
+RUN apt-get update && apt-get install -y \
+        vim \
+        lsb-release \
+        wget \
+        software-properties-common \
+        gnupg \ 
+        bc \
+        ninja-build \
+        git \
+        ${ADDITIONAL_PACKAGES}
+
+RUN add-apt-repository deb http://apt.llvm.org/bookworm/ llvm-toolchain-bookworm-19 main
+RUN apt-get update && apt-cache search clang-scan-deps && apt-get install -y clang-tools-19 clang-19 && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN KEYDUMP_URL=https://cloud1.cees.ornl.gov/download && \
+    KEYDUMP_FILE=keydump && \
+    wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE} && \
+    wget --quiet ${KEYDUMP_URL}/${KEYDUMP_FILE}.sig && \
+    gpg --import ${KEYDUMP_FILE} && \
+    gpg --verify ${KEYDUMP_FILE}.sig ${KEYDUMP_FILE} && \
+    rm ${KEYDUMP_FILE}*
+
+ARG CMAKE_VERSION=4.0.2
+ENV CMAKE_DIR=/opt/cmake
+RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION} && \
+    CMAKE_SCRIPT=cmake-${CMAKE_VERSION}-Linux-x86_64.sh && \
+    CMAKE_SHA256=cmake-${CMAKE_VERSION}-SHA-256.txt && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256} && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SHA256}.asc && \
+    wget --quiet ${CMAKE_URL}/${CMAKE_SCRIPT} && \
+    gpg --verify ${CMAKE_SHA256}.asc ${CMAKE_SHA256} && \
+    grep -i ${CMAKE_SCRIPT} ${CMAKE_SHA256} | sed -e s/linux/Linux/ | sha256sum --check && \
+    mkdir -p ${CMAKE_DIR} && \
+    sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
+    rm cmake*
+ENV PATH=${CMAKE_DIR}/bin:$PATH

@@ -17,7 +17,12 @@
 #ifndef KOKKOS_TEST_SIMD_WHERE_EXPRESSIONS_HPP
 #define KOKKOS_TEST_SIMD_WHERE_EXPRESSIONS_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.simd;
+#else
 #include <Kokkos_SIMD.hpp>
+#endif
 #include <SIMDTesting_Utilities.hpp>
 
 template <typename Abi, typename DataType>

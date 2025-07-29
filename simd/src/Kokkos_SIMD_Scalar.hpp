@@ -437,25 +437,36 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar> condition(
       static_cast<bool>(a) ? static_cast<T>(b) : static_cast<T>(c));
 }
 
-template <class T, class BinaryOperation>
+template <class T, class BinaryOperation = std::plus<>>
+KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
+    Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
+    BinaryOperation = {}) noexcept {
+  return x[0];
+}
+
+template <class T, class BinaryOperation = std::plus<>>
 KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
     Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
     Experimental::basic_simd_mask<T, Experimental::simd_abi::scalar> const&
         mask,
-    T identity, BinaryOperation) noexcept {
+    BinaryOperation = {},
+    T identity      = Impl::Identity<T, BinaryOperation>()) noexcept {
   if (!mask) return identity;
   return x[0];
 }
 
-template <class T, class BinaryOperation>
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+template <class T, class BinaryOperation = std::plus<>>
+KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use reduce(basic_simd, basic_simd_mask, op, identity) instead")
 KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce(
     Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& x,
-    BinaryOperation binary_op) noexcept {
-  return reduce(x,
-                typename Experimental::basic_simd<
-                    T, Experimental::simd_abi::scalar>::mask_type(true),
-                T(Impl::Identity<T, BinaryOperation>()), binary_op);
+    Experimental::basic_simd_mask<T, Experimental::simd_abi::scalar> const&
+        mask,
+    T, BinaryOperation = {}) noexcept {
+  return reduce(x, mask);
 }
+#endif
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION constexpr T reduce_min(

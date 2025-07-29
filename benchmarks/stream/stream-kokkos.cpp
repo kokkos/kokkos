@@ -83,7 +83,7 @@ int perform_validation(StreamHostArray& a, StreamHostArray& b,
   double bi = 2.0;
   double ci = 0.0;
 
-  for (StreamIndex i = 0; i < arraySize; ++i) {
+  for (StreamIndex i = 0; i < STREAM_NTIMES; ++i) {
     ci = ai;
     bi = scalar * ci;
     ci = ai + bi;

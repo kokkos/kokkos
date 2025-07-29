@@ -992,6 +992,14 @@ struct checkScan {
                 : (vector == 0 ? identity : host_inputs(i - 1));
         expected(i) = accum;
         reducer.join(expected(i), val);
+// This fence should not be necessary, however MSVC produces the wrong
+// result for expected without it since some version released in mid 2025.
+// Specifically VS 2022 17.12.3 did not have it 17.14.7 does.
+// It doesn't matter where inside this loop over i the fence goes, but it
+// can't be outside the loop.
+#ifdef KOKKOS_COMPILER_MSVC  // FIXME_MSVC
+        Kokkos::memory_fence();
+#endif
       }
     }
     for (int i = 0; i < host_outputs.extent_int(0); ++i)

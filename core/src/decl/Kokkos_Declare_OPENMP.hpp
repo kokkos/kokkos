@@ -24,6 +24,7 @@
 #include <OpenMP/Kokkos_OpenMP_Parallel_For.hpp>
 #include <OpenMP/Kokkos_OpenMP_Parallel_Reduce.hpp>
 #include <OpenMP/Kokkos_OpenMP_Parallel_Scan.hpp>
+#include <OpenMP/Kokkos_OpenMP_ZeroMemset.hpp>
 #endif
 
 #endif

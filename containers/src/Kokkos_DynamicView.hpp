@@ -920,7 +920,7 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>, ViewTypeB, Layout,
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); };
+  void operator()(const iType& i0) const { a(i0) = b(i0); }
 };
 
 template <class... DP, class... SP, class Layout, class ExecSpace,
@@ -941,7 +941,7 @@ struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); };
+  void operator()(const iType& i0) const { a(i0) = b(i0); }
 };
 
 }  // namespace Impl

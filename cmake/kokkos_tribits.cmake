@@ -33,13 +33,24 @@ macro(KOKKOS_INTERNAL_ADD_LIBRARY_INSTALL LIBRARY_NAME)
   kokkos_lib_type(${LIBRARY_NAME} INCTYPE)
   target_include_directories(${LIBRARY_NAME} ${INCTYPE} $<INSTALL_INTERFACE:${KOKKOS_HEADER_DIR}>)
 
-  install(
-    TARGETS ${LIBRARY_NAME}
-    EXPORT KokkosTargets
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  )
+  if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
+    install(
+      TARGETS ${LIBRARY_NAME}
+      EXPORT KokkosTargets
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} FILE_SET ${LIBRARY_NAME}_file_set
+              DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}/src
+    )
+  else()
+    install(
+      TARGETS ${LIBRARY_NAME}
+      EXPORT KokkosTargets
+      RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+      LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+  endif()
 
   verify_empty(KOKKOS_ADD_LIBRARY ${PARSE_UNPARSED_ARGUMENTS})
 endmacro()
@@ -95,6 +106,7 @@ function(KOKKOS_ADD_EXECUTABLE_AND_TEST ROOT_NAME)
   endif()
   if(NOT
      (Kokkos_INSTALL_TESTING
+      OR Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES
       OR Kokkos_ENABLE_SYCL
       OR Kokkos_ENABLE_HPX
       OR Kokkos_ENABLE_IMPL_SKIP_NO_RTTI_FLAG
@@ -326,14 +338,17 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   endif()
 endfunction()
 
-function(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
-  cmake_parse_arguments(PARSE "STATIC;SHARED" "" "HEADERS;SOURCES" ${ARGN})
+function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
+  cmake_parse_arguments(PARSE "ADD_BUILD_OPTIONS;STATIC;SHARED" "" "HEADERS;SOURCES;MODULE_INTERFACE" ${ARGN})
 
   if(PARSE_HEADERS)
     list(REMOVE_DUPLICATES PARSE_HEADERS)
   endif()
   if(PARSE_SOURCES)
     list(REMOVE_DUPLICATES PARSE_SOURCES)
+  endif()
+  if(PARSE_MODULE_INTERFACE)
+    list(REMOVE_DUPLICATES PARSE_MODULE_INTERFACE)
   endif()
   foreach(source ${PARSE_SOURCES})
     set_source_files_properties(${source} PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
@@ -347,10 +362,16 @@ function(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
     set(LINK_TYPE SHARED)
   endif()
 
-  # MSVC and other platforms want to have
-  # the headers included as source files
-  # for better dependency detection
+  # MSVC and other platforms want to have the headers included as source files for better dependency detection
   add_library(${LIBRARY_NAME} ${LINK_TYPE} ${PARSE_HEADERS} ${PARSE_SOURCES})
+
+  if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
+    if(PARSE_MODULE_INTERFACE)
+      target_sources(
+        ${LIBRARY_NAME} PUBLIC FILE_SET ${LIBRARY_NAME}_file_set TYPE CXX_MODULES FILES ${PARSE_MODULE_INTERFACE}
+      )
+    endif()
+  endif()
 
   if(PARSE_SHARED OR BUILD_SHARED_LIBS)
     set_target_properties(
@@ -363,21 +384,10 @@ function(KOKKOS_INTERNAL_ADD_LIBRARY LIBRARY_NAME)
   #In case we are building in-tree, add an alias name
   #that matches the install Kokkos:: name
   add_library(Kokkos::${LIBRARY_NAME} ALIAS ${LIBRARY_NAME})
-endfunction()
 
-function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
-  cmake_parse_arguments(PARSE "ADD_BUILD_OPTIONS" "" "HEADERS" ${ARGN})
-  # Forward the headers, we want to know about all headers
-  # to make sure they appear correctly in IDEs
-  kokkos_internal_add_library(${LIBRARY_NAME} ${PARSE_UNPARSED_ARGUMENTS} HEADERS ${PARSE_HEADERS})
   if(PARSE_ADD_BUILD_OPTIONS)
     kokkos_set_library_properties(${LIBRARY_NAME})
   endif()
-endfunction()
-
-function(KOKKOS_ADD_INTERFACE_LIBRARY NAME)
-  add_library(${NAME} INTERFACE)
-  kokkos_internal_add_library_install(${NAME})
 endfunction()
 
 function(KOKKOS_LIB_INCLUDE_DIRECTORIES TARGET)

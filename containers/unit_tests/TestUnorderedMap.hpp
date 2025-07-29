@@ -560,6 +560,48 @@ TEST(TEST_CATEGORY, UnorderedMap_constructor_view_alloc) {
   ASSERT_TRUE(map.is_allocated());
 }
 
+//////////////////////////Tests for UnorderedMap with View as value_type
+
+/**
+ * @test This test ensures that an @ref UnorderedMap with View as value_type can
+ * be built with SequentialHostInit instance (using @ref view_alloc).
+ */
+TEST(TEST_CATEGORY, UnorderedMap_View_as_value) {
+  using value_type = Kokkos::View<size_t *, TEST_EXECSPACE>;
+  using map_type   = Kokkos::UnorderedMap<int, value_type, Kokkos::HostSpace>;
+  map_type map(Kokkos::view_alloc(Kokkos::SequentialHostInit, "test view umap"),
+               150);
+  // creation
+  ASSERT_EQ(map.size(), 0u);
+  ASSERT_GE(map.capacity(), 150u);
+  ASSERT_TRUE(map.is_allocated());
+
+  // insert
+  ASSERT_TRUE(map.insert(1, Kokkos::View<size_t *, TEST_EXECSPACE>(
+                                "UnorderedMap inserted View one", 10))
+                  .success());
+  ASSERT_TRUE(map.insert(2, Kokkos::View<size_t *, TEST_EXECSPACE>(
+                                "UnorderedMap inserted View two", 20))
+                  .success());
+  ASSERT_EQ(map.size(), 2u);
+
+  // copy
+  map_type map_copy(map);
+  ASSERT_EQ(map_copy.size(), 2u);
+  ASSERT_GE(map_copy.capacity(), 150u);
+  ASSERT_TRUE(map_copy.is_allocated());
+
+  // rehash
+  ASSERT_TRUE(map.rehash(200u));
+  ASSERT_GE(map.capacity(), 200u);
+  ASSERT_TRUE(map.is_allocated());
+
+  // assign
+  map_copy = map;
+  ASSERT_EQ(map_copy.size(), 2u);
+  ASSERT_GE(map_copy.capacity(), 200u);
+  ASSERT_TRUE(map_copy.is_allocated());
+}
 }  // namespace Test
 
 #endif  // KOKKOS_TEST_UNORDERED_MAP_HPP

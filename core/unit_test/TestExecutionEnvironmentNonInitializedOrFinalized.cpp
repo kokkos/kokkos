@@ -31,7 +31,7 @@ using ExecutionEnvironmentNonInitializedOrFinalized_DeathTest =
 struct NonTrivial {
   KOKKOS_FUNCTION NonTrivial() {}
 };
-static_assert(!std::is_trivial_v<NonTrivial>);
+static_assert(!std::is_trivially_default_constructible_v<NonTrivial>);
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
        default_constructed_views) {

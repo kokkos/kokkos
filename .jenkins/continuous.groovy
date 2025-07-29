@@ -32,14 +32,46 @@ pipeline {
         }
         stage('Build-1') {
             parallel {
-                stage('GCC-8.4.0') {
+                stage('C++20-Modules-Clang-19') {
                     agent {
                         dockerfile {
-                            filename 'Dockerfile.gcc'
+                            filename 'Dockerfile.modules'
                             dir 'scripts/docker'
                             label 'docker'
                         }
                     }
+                    steps {
+                        sh '''rm -rf build && \
+                              cmake \
+                                -B build \
+                                -GNinja \
+                                -DCMAKE_CXX_COMPILER=clang++-19 \
+                                -DCMAKE_CXX_FLAGS="-Werror" \
+                                -DCMAKE_CXX_STANDARD=20 \
+                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+                                -DKokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES=ON \
+                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+                                -DKokkos_ENABLE_TESTS=ON \
+                                -DKokkos_ENABLE_BENCHMARKS=ON \
+                                -DKokkos_ENABLE_EXAMPLES=ON \
+                                -DKokkos_ENABLE_SERIAL=ON && \
+                              cmake --build build --target install -j 8 && \
+                              ctest --test-dir build --no-compress-output -T Test --verbose'''
+                    }
+                    post {
+                        always {
+                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                        }
+                    }
+                }
+                stage('GCC-8.4.0') {
+                    agent {
+                         dockerfile {
+                             filename 'Dockerfile.gcc'
+                             dir 'scripts/docker'
+                             label 'docker'
+                         }
+                     }
                     environment {
                         OMP_NUM_THREADS = 8
                         OMP_NESTED = 'true'
@@ -70,7 +102,7 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-5.7-C++20') {
+                stage('HIP-ROCm-5.7-CXX20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
@@ -339,12 +371,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCm-6.0-amdclang') {
+                stage('HIP-ROCm-6.2-amdclang-CXX20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.0-complete@sha256:29582288ec330d1c915091eb2be7857327fe71a73a174c4173b0bb4794dce7c8'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.2-complete@sha256:c7049ac3ae8516c7b230deec6dc6dd678a0b3f7215d5a7f7fe2f2b71880b62f8 --build-arg ADDITIONAL_PACKAGES="clang-tidy"'
                             label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -360,9 +392,10 @@ pipeline {
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=/opt/rocm/llvm/bin/amdclang++ \
-                                -DCMAKE_CXX_CLANG_TIDY="/opt/rocm/llvm/bin/clang-tidy;-warnings-as-errors=*" \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
                                 -DCMAKE_PREFIX_PATH=/opt/rocm/lib \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \

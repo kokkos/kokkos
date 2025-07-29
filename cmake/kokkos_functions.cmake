@@ -37,7 +37,7 @@ function(kokkos_deprecated_list SUFFIX PREFIX)
       string(
         APPEND
         ERROR_MSG
-        "\nRemove CMakeCache.txt and re-run. For a list of valid options, refer to BUILD.md or even look at CMakeCache.txt (before deleting it)."
+        "\nRemove CMakeCache.txt and re-run. For a list of valid options, refer to the configuration guide in the documention or even look at CMakeCache.txt (before deleting it)."
       )
       message(SEND_ERROR ${ERROR_MSG})
     endif()

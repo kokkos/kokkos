@@ -775,6 +775,24 @@ TEST(TEST_CATEGORY, dualview_default_constructed) {
   ASSERT_FALSE(dv.need_sync_device());
   dv.sync_device();
 }
+
+TEST(TEST_CATEGORY, dualview_resize_single_device) {
+  using dv_t = Kokkos::DualView<double*, TEST_EXECSPACE>;
+  dv_t dv("DV", 10);
+  bool is_same_device = std::is_same_v<typename dv_t::t_host::device_type,
+                                       typename dv_t::t_dev::device_type>;
+
+  dv.resize(20);
+  ASSERT_EQ(!is_same_device, dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+
+  dv.sync_host();
+  dv.modify_host();
+  dv.resize(30);
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_EQ(!is_same_device, dv.need_sync_device());
+}
+
 }  // anonymous namespace
 }  // namespace Test
 

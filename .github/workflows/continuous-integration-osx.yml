@@ -12,41 +12,67 @@ permissions: read-all
 jobs:
   osxci:
     name: osx-ci
-    runs-on: [macos-latest]
 
+    continue-on-error: true
     strategy:
       matrix:
         include:
           - backend: "SERIAL"
             cmake_build_type: "RelWithDebInfo"
+            cxx_standard: "17"
+            compiler: "c++"
+            runner: "macos-14"
+            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
           - backend: "THREADS"
             cmake_build_type: "RelWithDebInfo"
+            cxx_standard: "17"
+            compiler: "c++"
+            runner: "macos-14"
           - backend: "SERIAL"
             cmake_build_type: "Debug"
+            cxx_standard: "17"
+            compiler: "c++"
+            runner: "macos-14"
+            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
           - backend: "SERIAL"
             cmake_build_type: "Release"
+            cxx_standard: "17"
+            compiler: "c++"
+            runner: "macos-14"
+            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+          # Testing a compiler with mdspan implementation (clang 18.1.8+libc++)
+          - backend: "SERIAL"
+            cmake_build_type: "RelWithDebInfo"
+            cxx_standard: "23"
+            compiler: "$(brew --prefix llvm@18)/bin/clang++"
+            runner: "macos-15"
+            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
-      - name: Install ccache
+      - name: Install ccache llvm
         run: |
           brew update
-          brew install ccache
+          brew install ccache llvm
       - uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.cache/ccache
-          key: kokkos-osx-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
-          restore-keys: kokkos-osx-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}
+          key: kokkos-osx-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ matrix.cxx_standard }}-${{ github.ref }}-${{ github.sha }}
+          restore-keys: kokkos-osx-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ matrix.cxx_standard }}-${{ github.ref }}
       - name: configure
         run:
           cmake -B build .
             -DKokkos_ENABLE_${{ matrix.backend }}=On
-            -DCMAKE_CXX_FLAGS="-Werror"
-            -DCMAKE_CXX_STANDARD=17
+            -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
+            -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }}
             -DKokkos_ARCH_NATIVE=ON
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON
+            ${{ matrix.cmake_extra_opts }}
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
             -DKokkos_ENABLE_TESTS=On
+            -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       - name: build

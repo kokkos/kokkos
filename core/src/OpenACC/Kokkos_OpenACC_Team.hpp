@@ -428,13 +428,14 @@ struct TeamThreadRangeBoundariesStruct<iType, OpenACCTeamMember> {
   using index_type = iType;
   const iType start;
   const iType end;
-  const OpenACCTeamMember& team;
+  const OpenACCTeamMember& member;
 
-  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_, iType count)
-      : start(0), end(count), team(thread_) {}
-  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                  iType begin_, iType end_)
-      : start(begin_), end(end_), team(thread_) {}
+  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& arg_thread,
+                                  iType arg_count)
+      : start(0), end(arg_count), member(arg_thread) {}
+  TeamThreadRangeBoundariesStruct(const OpenACCTeamMember& arg_thread,
+                                  iType arg_begin, iType arg_end)
+      : start(arg_begin), end(arg_end), member(arg_thread) {}
 };
 
 template <typename iType>
@@ -442,14 +443,14 @@ struct ThreadVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   using index_type = iType;
   const index_type start;
   const index_type end;
-  const OpenACCTeamMember& team;
+  const OpenACCTeamMember& member;
 
-  ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                    index_type count)
-      : start(0), end(count), team(thread_) {}
-  ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                    index_type begin_, index_type end_)
-      : start(begin_), end(end_), team(thread_) {}
+  ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& arg_thread,
+                                    index_type arg_count)
+      : start(0), end(arg_count), member(arg_thread) {}
+  ThreadVectorRangeBoundariesStruct(const OpenACCTeamMember& arg_thread,
+                                    index_type arg_begin, index_type arg_end)
+      : start(arg_begin), end(arg_end), member(arg_thread) {}
 };
 
 template <typename iType>
@@ -457,14 +458,14 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   using index_type = iType;
   const index_type start;
   const index_type end;
-  const OpenACCTeamMember& team;
+  const OpenACCTeamMember& member;
 
-  TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                  index_type count)
-      : start(0), end(count), team(thread_) {}
-  TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& thread_,
-                                  index_type begin_, index_type end_)
-      : start(begin_), end(end_), team(thread_) {}
+  TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& arg_thread,
+                                  index_type arg_count)
+      : start(0), end(arg_count), member(arg_thread) {}
+  TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& arg_thread,
+                                  index_type arg_begin, index_type arg_end)
+      : start(arg_begin), end(arg_end), member(arg_thread) {}
 };
 
 }  // namespace Impl

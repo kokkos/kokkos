@@ -369,7 +369,7 @@ class sve_mask<Derived, 32> {
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask( \
         G&& gen) noexcept                                                     \
         : base_type(gen) {}                                                   \
-  };
+  }
 
 INSTANTIATE_SIMD_MASK_SVE(std::int32_t, SVE_WORDS_IN_VECTOR);
 INSTANTIATE_SIMD_MASK_SVE(std::uint32_t, SVE_WORDS_IN_VECTOR);

@@ -2109,7 +2109,7 @@ void test_unmanaged_subview_reset() {
 
 template <std::underlying_type_t<Kokkos::MemoryTraitsFlags> MTF>
 struct TestSubviewMemoryTraitsConstruction {
-  void operator()() const noexcept {
+  void operator()() const {
     using memory_traits_type = Kokkos::MemoryTraits<MTF>;
     using view_type =
         Kokkos::View<double*, Kokkos::HostSpace, memory_traits_type>;

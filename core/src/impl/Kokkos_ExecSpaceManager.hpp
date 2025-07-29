@@ -26,7 +26,7 @@
 #include <string>
 #include <utility>
 
-namespace {
+namespace Kokkos::Impl {
 
 template <class T>
 using public_member_types_t = std::enable_if_t<
@@ -106,11 +106,6 @@ constexpr bool check_valid_execution_space() {
   return true;
 }
 
-}  // namespace
-
-namespace Kokkos {
-namespace Impl {
-
 struct ExecSpaceBase {
   virtual void initialize(InitializationSettings const&)           = 0;
   virtual void finalize()                                          = 0;
@@ -162,7 +157,6 @@ int initialize_space_factory(std::string name) {
   return 1;
 }
 
-}  // namespace Impl
-}  // namespace Kokkos
+}  // namespace Kokkos::Impl
 
 #endif
