@@ -211,7 +211,7 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
   }
 #elif defined(KOKKOS_ENABLE_HIP)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
-    max_threads_per_block = HIPTraits::MaxThreadsPerBlock;
+    max_threads_per_block = Kokkos::Impl::HIPTraits::MaxThreadsPerBlock;
   } else {
     GTEST_SKIP() << "skipping for this backend";
   }
