@@ -1183,9 +1183,9 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
       : m_value(basic_simd(
             [&](std::size_t i) { return static_cast<value_type>(other[i]); })) {
   }
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::int64_t, abi_type> const& other) noexcept;
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const& other) noexcept;
   template <class G,
             std::enable_if_t<
