@@ -204,7 +204,8 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
   int max_threads_per_block = std::numeric_limits<int>::max();
 #if defined(KOKKOS_ENABLE_CUDA)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    max_threads_per_block = Kokkos::Cuda().cuda_device_prop().maxThreadsPerBlock;
+    max_threads_per_block =
+        Kokkos::Cuda().cuda_device_prop().maxThreadsPerBlock;
   } else {
     GTEST_SKIP() << "skipping for this backend";
   }
@@ -268,13 +269,13 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
                                      // want
 
   // request an invalid tiling
-  EXPECT_THROW(
+  EXPECT_DEATH(
       {
         range_type_bounds range({0, 0, 0, 0}, {N, N, N, N}, {32, 2, 1, 1});
         Kokkos::parallel_for("invalid tiling", range, functor);
         Kokkos::fence("wait invalid tiling");
       },
-      std::runtime_error);  // TODO check if this is the error we want
+      "invalid argument");
 }
 #endif
 

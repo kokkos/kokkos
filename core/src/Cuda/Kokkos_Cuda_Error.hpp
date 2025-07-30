@@ -45,6 +45,7 @@ inline void cuda_internal_safe_call(cudaError e, const char* name,
     case cudaErrorInvalidAddressSpace:
     case cudaErrorInvalidPc:
     case cudaErrorLaunchFailure:
+    case cudaErrorInvalidValue:
       cuda_internal_error_abort(e, name, file, line);
       break;
     default: cuda_internal_error_throw(e, name, file, line); break;

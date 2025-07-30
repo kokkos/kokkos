@@ -658,11 +658,8 @@ struct CudaParallelLaunchImpl<
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, cuda_instance);
 
-#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+      // check any launch error (synchronous check)
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
-      cuda_instance->fence(
-          "Kokkos::Impl::launch_kernel: Debug Only Check for Execution Error");
-#endif
     }
   }
 
