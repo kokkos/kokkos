@@ -210,16 +210,21 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
 
   MDRangePolicyLimitsFunctor functor{};
 
+  // get maximum number of threads per block for each backend
+  int max_threads_per_block = std::numeric_limits<int>::max();
 #if defined(KOKKOS_ENABLE_CUDA)
-  const int max_threads_per_block =
-      TEST_EXECSPACE().cuda_device_prop().maxThreadsPerBlock;
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    max_threads_per_block = Kokkos::Cuda().cuda_device_prop().maxThreadsPerBlock;
+  }
 #elif defined(KOKKOS_ENABLE_HIP)
-  const int max_threads_per_block = HIPTraits::MaxThreadsPerBlock;
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+    max_threads_per_block = HIPTraits::MaxThreadsPerBlock;
+  }
 #elif defined(KOKKOS_ENABLE_SYCL)
-  const int max_threads_per_block =
-      TEST_EXECSPACE().impl_internal_space_instance()->m_maxWorkGroupSize;
-#else
-  const int max_threads_per_block = std::numeric_limits<int>::max();
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) {
+    max_threads_per_block =
+        Kokkos::SYCL().impl_internal_space_instance()->m_maxWorkGroupSize;
+  }
 #endif
 
   // request a very large tiling that exceeds tile product limits
