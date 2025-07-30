@@ -196,7 +196,7 @@ struct MDRangePolicyLimitsFunctor {
   void operator()(const int, const int, const int, const int) const {}
 };
 
-TEST(TEST_CATEGORY, md_range_policy_limits) {
+TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
   // test API limits
   // see #8103
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
@@ -219,7 +219,7 @@ TEST(TEST_CATEGORY, md_range_policy_limits) {
   const int max_threads_per_block =
       TEST_EXECSPACE().impl_internal_space_instance()->m_maxWorkGroupSize;
 #else
-  const int max_threads_per_block = std::numeric_limits<int>();
+  const int max_threads_per_block = std::numeric_limits<int>::max();
 #endif
 
   // request a very large tiling that exceeds tile product limits
