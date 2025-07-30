@@ -199,6 +199,30 @@ struct MDRangePolicyLimitsFunctor {
 TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
   // test API limits
   // see #8103
+
+  // get maximum number of threads per block for each backend
+  int max_threads_per_block = std::numeric_limits<int>::max();
+#if defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    max_threads_per_block = Kokkos::Cuda().cuda_device_prop().maxThreadsPerBlock;
+  } else {
+    GTEST_SKIP() << "skipping for this backend";
+  }
+#elif defined(KOKKOS_ENABLE_HIP)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+    max_threads_per_block = HIPTraits::MaxThreadsPerBlock;
+  } else {
+    GTEST_SKIP() << "skipping for this backend";
+  }
+#elif defined(KOKKOS_ENABLE_SYCL)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) {
+    max_threads_per_block =
+        Kokkos::SYCL().impl_internal_space_instance()->m_maxWorkGroupSize;
+  } else {
+    GTEST_SKIP() << "skipping for this backend";
+  }
+#endif
+
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   const int N                             = 100;
 
@@ -209,23 +233,6 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
                                      Kokkos::LaunchBounds<32, 1>>;
 
   MDRangePolicyLimitsFunctor functor{};
-
-  // get maximum number of threads per block for each backend
-  int max_threads_per_block = std::numeric_limits<int>::max();
-#if defined(KOKKOS_ENABLE_CUDA)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    max_threads_per_block = Kokkos::Cuda().cuda_device_prop().maxThreadsPerBlock;
-  }
-#elif defined(KOKKOS_ENABLE_HIP)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
-    max_threads_per_block = HIPTraits::MaxThreadsPerBlock;
-  }
-#elif defined(KOKKOS_ENABLE_SYCL)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) {
-    max_threads_per_block =
-        Kokkos::SYCL().impl_internal_space_instance()->m_maxWorkGroupSize;
-  }
-#endif
 
   // request a very large tiling that exceeds tile product limits
   EXPECT_DEATH(
