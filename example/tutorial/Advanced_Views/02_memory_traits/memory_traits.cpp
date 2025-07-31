@@ -46,7 +46,7 @@ using view_type = Kokkos::View<double*>;
 using view_type_rnd =
     Kokkos::View<const double*, Kokkos::MemoryTraits<Kokkos::RandomAccess> >;
 using idx_type      = Kokkos::View<int**>;
-using idx_type_host = idx_type::HostMirror;
+using idx_type_host = idx_type::host_mirror_type;
 
 // We template this functor on the ViewTypes to show the effect of the
 // RandomAccess trait.

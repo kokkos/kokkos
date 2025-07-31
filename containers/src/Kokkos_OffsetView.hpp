@@ -236,10 +236,16 @@ class OffsetView : public View<DataType, Properties...> {
                  typename traits::array_layout, typename traits::device_type,
                  typename traits::memory_traits>;
 
+  /** \brief  Compatible host mirror view */
+  using host_mirror_type = OffsetView<typename traits::non_const_data_type,
+                                      typename traits::array_layout,
+                                      typename traits::host_mirror_space>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible HostMirror view */
-  using HostMirror = OffsetView<typename traits::non_const_data_type,
-                                typename traits::array_layout,
-                                typename traits::host_mirror_space>;
+  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use host_mirror_type instead.") = host_mirror_type;
+#endif
 
   template <size_t... I, class... OtherIndexTypes>
   KOKKOS_FUNCTION typename base_t::reference_type offset_operator(
@@ -1309,7 +1315,7 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
                                          src.begin(4), src.begin(5),
                                          src.begin(6), src.begin(7)});
   } else {
-    return typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(
+    return typename Kokkos::Experimental::OffsetView<T, P...>::host_mirror_type(
         Kokkos::create_mirror(arg_prop, src.view()), src.begins());
   }
 #if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
@@ -1383,16 +1389,18 @@ inline auto create_mirror_view(
     const Kokkos::Experimental::OffsetView<T, P...>& src,
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
   if constexpr (!Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
-    if constexpr (std::is_same_v<typename Kokkos::Experimental::OffsetView<
-                                     T, P...>::memory_space,
-                                 typename Kokkos::Experimental::OffsetView<
-                                     T, P...>::HostMirror::memory_space> &&
+    if constexpr (std::is_same_v<
+                      typename Kokkos::Experimental::OffsetView<
+                          T, P...>::memory_space,
+                      typename Kokkos::Experimental::OffsetView<
+                          T, P...>::host_mirror_type::memory_space> &&
                   std::is_same_v<typename Kokkos::Experimental::OffsetView<
                                      T, P...>::data_type,
                                  typename Kokkos::Experimental::OffsetView<
-                                     T, P...>::HostMirror::data_type>) {
+                                     T, P...>::host_mirror_type::data_type>) {
       return
-          typename Kokkos::Experimental::OffsetView<T, P...>::HostMirror(src);
+          typename Kokkos::Experimental::OffsetView<T, P...>::host_mirror_type(
+              src);
     } else {
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }

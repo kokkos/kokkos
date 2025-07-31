@@ -141,7 +141,7 @@ struct ModifiedGramSchmidt {
     multivector_type Q_("Q", length, count);
     multivector_type R_("R", count, count);
 
-    typename multivector_type::HostMirror A = Kokkos::create_mirror(Q_);
+    typename multivector_type::host_mirror_type A = Kokkos::create_mirror(Q_);
 
     // Create and fill A on the host
     for (size_type j = 0; j < count; ++j) {

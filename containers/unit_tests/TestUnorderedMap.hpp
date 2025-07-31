@@ -75,7 +75,7 @@ struct TestInsert {
     ASSERT_EQ(map_h.size(), map.size());
 
     if (!rehash_on_fail && CheckValues) {
-      typename expected_values_type::HostMirror expected_values_h =
+      typename expected_values_type::host_mirror_type expected_values_h =
           create_mirror_view(expected_values);
       Kokkos::deep_copy(expected_values_h, expected_values);
       for (unsigned i = 0; i < map_h.size(); i++) {
@@ -349,7 +349,7 @@ void test_deep_copy(uint32_t num_nodes) {
   using const_map_type =
       Kokkos::UnorderedMap<const uint32_t, const uint32_t, Device>;
 
-  using host_map_type = typename map_type::HostMirror;
+  using host_map_type = typename map_type::host_mirror_type;
 
   map_type map;
   map.rehash(num_nodes, false);

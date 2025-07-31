@@ -24,7 +24,7 @@ struct MultiDimRangePerf3D {
   using iterate_type = Kokkos::Iterate;
 
   using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   view_type A;
   view_type B;
@@ -285,7 +285,7 @@ struct RangePolicyCollapseTwo {
   using iterate_type = Kokkos::Iterate;
 
   using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   view_type A;
   view_type B;
@@ -457,7 +457,7 @@ struct RangePolicyCollapseAll {
   using layout          = TestLayout;
 
   using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   view_type A;
   view_type B;

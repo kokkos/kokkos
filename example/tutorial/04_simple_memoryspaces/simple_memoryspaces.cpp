@@ -21,7 +21,7 @@
 // It lives in Kokkos' default memory space.
 using view_type = Kokkos::View<double *[3]>;
 
-// The "HostMirror" type corresponding to view_type above is also a
+// The "host_mirror_type" type corresponding to view_type above is also a
 // two-dimensional N x 3 array of double.  However, it lives in the
 // host memory space corresponding to view_type's memory space.  For
 // example, if view_type lives in CUDA device memory, host_view_type
@@ -33,7 +33,7 @@ using view_type = Kokkos::View<double *[3]>;
 // performance penalties then it is its own host_mirror_space. This is
 // the case for HostSpace, CudaUVMSpace and CudaHostPinnedSpace.
 
-using host_view_type = view_type::HostMirror;
+using host_view_type = view_type::host_mirror_type;
 
 struct ReduceFunctor {
   view_type a;

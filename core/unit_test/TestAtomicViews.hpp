@@ -377,7 +377,7 @@ struct PlusEqualAtomicViewFunctor {
 template <class T, class execution_space>
 T PlusEqualAtomicView(const int64_t input_length) {
   using view_type      = Kokkos::View<T*, execution_space>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -466,7 +466,7 @@ struct MinusEqualAtomicViewFunctor {
 template <class T, class execution_space>
 T MinusEqualAtomicView(const int64_t input_length) {
   using view_type      = Kokkos::View<T*, execution_space>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -550,7 +550,7 @@ struct TimesEqualAtomicViewFunctor {
 template <class T, class execution_space>
 T TimesEqualAtomicView(const int64_t input_length, const int64_t remainder) {
   using view_type      = Kokkos::View<T*, execution_space>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -634,7 +634,7 @@ template <class T, class execution_space>
 T DivEqualAtomicView(const int64_t input_length, const int64_t remainder) {
   using view_type             = Kokkos::View<T*, execution_space>;
   using scalar_view_type      = Kokkos::View<T, execution_space>;
-  using host_scalar_view_type = typename scalar_view_type::HostMirror;
+  using host_scalar_view_type = typename scalar_view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -716,7 +716,7 @@ template <class T, class execution_space>
 T ModEqualAtomicView(const int64_t input_length, const int64_t remainder) {
   using view_type             = Kokkos::View<T*, execution_space>;
   using scalar_view_type      = Kokkos::View<T, execution_space>;
-  using host_scalar_view_type = typename scalar_view_type::HostMirror;
+  using host_scalar_view_type = typename scalar_view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -812,7 +812,7 @@ T RSEqualAtomicView(const int64_t input_length, const int64_t value,
                     const int64_t remainder) {
   using view_type             = Kokkos::View<T*, execution_space>;
   using result_view_type      = Kokkos::View<T****, execution_space>;
-  using host_scalar_view_type = typename result_view_type::HostMirror;
+  using host_scalar_view_type = typename result_view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -932,7 +932,7 @@ T LSEqualAtomicView(const int64_t input_length, const int64_t value,
                     const int64_t remainder) {
   using view_type             = Kokkos::View<T*, execution_space>;
   using result_view_type      = Kokkos::View<T****, execution_space>;
-  using host_scalar_view_type = typename result_view_type::HostMirror;
+  using host_scalar_view_type = typename result_view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -1044,7 +1044,7 @@ struct AndEqualAtomicViewFunctor {
 template <class T, class execution_space>
 T AndEqualAtomicView(const int64_t input_length) {
   using view_type      = Kokkos::View<T*, execution_space>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -1125,7 +1125,7 @@ struct OrEqualAtomicViewFunctor {
 template <class T, class execution_space>
 T OrEqualAtomicView(const int64_t input_length) {
   using view_type      = Kokkos::View<T*, execution_space>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
@@ -1209,7 +1209,7 @@ struct XOrEqualAtomicViewFunctor {
 template <class T, class execution_space>
 T XOrEqualAtomicView(const int64_t input_length) {
   using view_type      = Kokkos::View<T*, execution_space>;
-  using host_view_type = typename view_type::HostMirror;
+  using host_view_type = typename view_type::host_mirror_type;
 
   const int64_t length = input_length;
 
