@@ -22,7 +22,7 @@ jobs:
             cxx_standard: "17"
             compiler: "c++"
             runner: "macos-14"
-            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm)/bin/clang-tidy;-warnings-as-errors=*"'
           - backend: "THREADS"
             cmake_build_type: "RelWithDebInfo"
             cxx_standard: "17"
@@ -33,20 +33,20 @@ jobs:
             cxx_standard: "17"
             compiler: "c++"
             runner: "macos-14"
-            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm)/bin/clang-tidy;-warnings-as-errors=*"'
           - backend: "SERIAL"
             cmake_build_type: "Release"
             cxx_standard: "17"
             compiler: "c++"
             runner: "macos-14"
-            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm)/bin/clang-tidy;-warnings-as-errors=*"'
           # Testing a compiler with mdspan implementation (clang 18.1.8+libc++)
           - backend: "SERIAL"
             cmake_build_type: "RelWithDebInfo"
             cxx_standard: "23"
             compiler: "$(brew --prefix llvm@18)/bin/clang++"
             runner: "macos-15"
-            cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm@18)/bin/clang-tidy;-warnings-as-errors=*"'
 
     runs-on: ${{ matrix.runner }}
 
@@ -64,14 +64,14 @@ jobs:
       - name: configure
         run:
           cmake -B build .
-            -DKokkos_ENABLE_${{ matrix.backend }}=On
+            -DKokkos_ENABLE_${{ matrix.backend }}=ON
             -DCMAKE_CXX_COMPILER=${{ matrix.compiler }}
             -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }}
             -DKokkos_ARCH_NATIVE=ON
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON
             ${{ matrix.cmake_extra_opts }}
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
-            -DKokkos_ENABLE_TESTS=On
+            -DKokkos_ENABLE_TESTS=ON
             -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON
             -DCMAKE_BUILD_TYPE=${{ matrix.cmake_build_type }}
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
