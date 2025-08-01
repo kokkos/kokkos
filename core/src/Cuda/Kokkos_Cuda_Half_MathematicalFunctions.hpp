@@ -147,9 +147,10 @@ KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(nearbyint, hrint)
 // nextafter
 // copysign
 // isfinite
-#if (KOKKOS_COMPILER_NVCC <= 1210 || KOKKOS_COMPILER_NVCC >= 1300) || \
+#if (KOKKOS_COMPILER_NVCC <= 1210 || KOKKOS_COMPILER_NVCC >= 1230) || \
     defined(KOKKOS_ENABLE_CXX17)
 // __hisinf always returns false with nvcc 12.2 when compiling with cxx20
+// https://docs.nvidia.com/cuda/archive/12.3.2/cuda-toolkit-release-notes/index.html#cuda-math-release-12-3
 KOKKOS_CUDA_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isinf, __hisinf)
 #endif
 KOKKOS_CUDA_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isnan, __hisnan)
