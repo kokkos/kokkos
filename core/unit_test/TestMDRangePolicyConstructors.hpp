@@ -218,7 +218,7 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
 #elif defined(KOKKOS_ENABLE_SYCL)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) {
     max_threads_per_block =
-        Kokkos::SYCL().impl_internal_space_instance()->m_maxWorkGroupSize;
+        Kokkos::SYCL().impl_internal_space_instance()->m_maxWorkgroupSize;
   } else {
     GTEST_SKIP() << "skipping for this backend";
   }
