@@ -361,7 +361,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::SharedAllocationTracker& impl_track() const {
-    if constexpr (traits::is_managed) {
+    if constexpr (!traits::memory_traits::is_unmanaged) {
       return base_t::data_handle().tracker();
     } else {
       static const Kokkos::Impl::SharedAllocationTracker empty_tracker = {};
@@ -586,7 +586,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
             arg_prop,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
                 arg_layout)) {
-    static_assert(traits::is_managed,
+    static_assert(!traits::memory_traits::is_unmanaged,
                   "Can't construct managed View with unmanaged memory trait!");
   }
 
@@ -772,7 +772,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
-    static_assert(traits::is_managed,
+    static_assert(!traits::memory_traits::is_unmanaged,
                   "Can't construct managed View with unmanaged memory trait!");
   }
 
@@ -1074,7 +1074,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   //----------------------------------------
   // Allocation tracking properties
   std::string label() const {
-    if constexpr (traits::is_managed) {
+    if constexpr (!traits::memory_traits::is_unmanaged) {
       return this->data_handle().get_label();
     } else {
       return "";
@@ -1082,7 +1082,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   int use_count() const {
-    if constexpr (traits::is_managed) {
+    if constexpr (!traits::memory_traits::is_unmanaged) {
       return this->data_handle().use_count();
     } else {
       return 0;

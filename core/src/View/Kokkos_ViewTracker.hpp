@@ -47,7 +47,7 @@ struct ViewTracker {
 
   KOKKOS_INLINE_FUNCTION
   ViewTracker(const ViewTracker& vt) noexcept
-      : m_tracker(vt.m_tracker, view_traits::is_managed) {}
+      : m_tracker(vt.m_tracker, !view_traits::memory_traits::is_unmanaged) {}
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const ParentView& vt) noexcept : m_tracker() {
@@ -65,8 +65,9 @@ struct ViewTracker {
   KOKKOS_INLINE_FUNCTION void assign(const View<RT, RP...>& vt) noexcept {
     if (this == reinterpret_cast<const ViewTracker*>(&vt.m_track)) return;
     KOKKOS_IF_ON_HOST((
-        if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
-                                           void, void>::tracking_enabled()) {
+        if (!view_traits::memory_traits::is_unmanaged &&
+            Kokkos::Impl::SharedAllocationRecord<void,
+                                                 void>::tracking_enabled()) {
           m_tracker.assign_direct(vt.m_track.m_tracker);
         } else { m_tracker.assign_force_disable(vt.m_track.m_tracker); }))
 
@@ -77,8 +78,9 @@ struct ViewTracker {
       const ViewTracker& rhs) noexcept {
     if (this == &rhs) return *this;
     KOKKOS_IF_ON_HOST((
-        if (view_traits::is_managed && Kokkos::Impl::SharedAllocationRecord<
-                                           void, void>::tracking_enabled()) {
+        if (!view_traits::memory_traits::is_unmanaged &&
+            Kokkos::Impl::SharedAllocationRecord<void,
+                                                 void>::tracking_enabled()) {
           m_tracker.assign_direct(rhs.m_tracker);
         } else { m_tracker.assign_force_disable(rhs.m_tracker); }))
 
@@ -88,7 +90,7 @@ struct ViewTracker {
 
   KOKKOS_INLINE_FUNCTION
   explicit ViewTracker(const track_type& tt) noexcept
-      : m_tracker(tt, view_traits::is_managed) {}
+      : m_tracker(tt, !view_traits::memory_traits::is_unmanaged) {}
 };
 
 }  // namespace Impl

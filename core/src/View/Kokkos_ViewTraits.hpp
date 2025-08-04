@@ -218,8 +218,8 @@ struct AccessorFromViewTraits {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
 template <class Traits>
 struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic>> {
+    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
+                             !Traits::memory_traits::is_atomic>> {
   using type =
       SpaceAwareAccessor<typename Traits::memory_space,
                          default_accessor<typename Traits::value_type>>;
@@ -227,24 +227,24 @@ struct AccessorFromViewTraits<
 
 template <class Traits>
 struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic>> {
+    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
+                             Traits::memory_traits::is_atomic>> {
   using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
                                             typename Traits::memory_space>;
 };
 #else
 template <class Traits>
 struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && !Traits::memory_traits::is_atomic>> {
+    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
+                             !Traits::memory_traits::is_atomic>> {
   using type = CheckedReferenceCountedAccessor<typename Traits::value_type,
                                                typename Traits::memory_space>;
 };
 
 template <class Traits>
 struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<Traits::is_managed && Traits::memory_traits::is_atomic>> {
+    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
+                             Traits::memory_traits::is_atomic>> {
   using type = CheckedReferenceCountedRelaxedAtomicAccessor<
       typename Traits::value_type, typename Traits::memory_space>;
 };
@@ -252,8 +252,8 @@ struct AccessorFromViewTraits<
 
 template <class Traits>
 struct AccessorFromViewTraits<
-    Traits,
-    std::enable_if_t<!Traits::is_managed && Traits::memory_traits::is_atomic>> {
+    Traits, std::enable_if_t<Traits::memory_traits::is_unmanaged &&
+                             Traits::memory_traits::is_atomic>> {
   using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
                                             typename Traits::memory_space>;
 };
@@ -556,11 +556,21 @@ struct ViewTraits {
                       decltype(customize_view_arguments(
                           Impl::ViewArguments<value_type, array_layout,
                                               device_type, memory_traits>()))>;
-
-  enum { is_hostspace = std::is_same_v<MemorySpace, HostSpace> };
-  enum { is_managed = MemoryTraits::is_unmanaged == 0 };
-  enum { is_random_access = MemoryTraits::is_random_access == 1 };
-
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  enum {
+    is_hostspace KOKKOS_DEPRECATED = std::is_same_v<MemorySpace, HostSpace>
+  };
+  enum {
+    is_managed KOKKOS_DEPRECATED_WITH_COMMENT(
+        "Use !MemoryTraits::is_unmanaged instead.") =
+        MemoryTraits::is_unmanaged == 0
+  };
+  enum {
+    is_random_access KOKKOS_DEPRECATED_WITH_COMMENT(
+        "Use MemoryTraits::is_random_access instead.") =
+        MemoryTraits::is_random_access == 1
+  };
+#endif
   //------------------------------------
 };
 

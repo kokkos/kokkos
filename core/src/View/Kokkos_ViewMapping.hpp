@@ -2531,7 +2531,7 @@ class ViewMapping<
 
  public:
   using printable_label_typedef = void;
-  enum { is_managed = Traits::is_managed };
+  enum { is_managed = !Traits::memory_traits::is_unmanaged };
 
   //----------------------------------------
   // Domain dimensions

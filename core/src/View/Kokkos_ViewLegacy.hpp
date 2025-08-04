@@ -998,7 +998,7 @@ class View : public ViewTraits<DataType, Properties...> {
         typename traits::device_type::execution_space{});
     using alloc_prop = decltype(prop_copy);
 
-    static_assert(traits::is_managed,
+    static_assert(!traits::memory_traits::is_unmanaged,
                   "View allocation constructor requires managed memory");
 
     if (alloc_prop::initialize &&
@@ -1304,7 +1304,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename U = typename Impl::MDSpanViewTraits<traits>::mdspan_type>
   KOKKOS_INLINE_FUNCTION
 #ifndef KOKKOS_ENABLE_CXX17
-      explicit(traits::is_managed)
+      explicit(!traits::memory_traits::is_unmanaged)
 #endif
           View(const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
                std::enable_if_t<

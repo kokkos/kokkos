@@ -394,7 +394,8 @@ class ViewMapping<
         src.layout());  // Check this for integer input1 for padding, etc
     dst.m_map.m_impl_handle = Kokkos::Impl::ViewDataHandle<DstTraits>::assign(
         src.m_map.m_impl_handle, src.m_track.m_tracker);
-    dst.m_track.m_tracker.assign(src.m_track.m_tracker, DstTraits::is_managed);
+    dst.m_track.m_tracker.assign(src.m_track.m_tracker,
+                                 !DstTraits::memory_traits::is_unmanaged);
     dst.m_rank = Kokkos::View<ST, SP...>::rank();
   }
 };
@@ -1835,7 +1836,7 @@ inline void impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   using drview_type      = DynRankView<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
-  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
+  static_assert(!Kokkos::ViewTraits<T, P...>::memory_traits::is_unmanaged,
                 "Can only resize managed views");
   static_assert(!alloc_prop_input::has_label,
                 "The view constructor arguments passed to Kokkos::resize "
@@ -1915,7 +1916,7 @@ inline void impl_realloc(DynRankView<T, P...>& v, const size_t n0,
   using drview_type      = DynRankView<T, P...>;
   using alloc_prop_input = Impl::ViewCtorProp<ViewCtorArgs...>;
 
-  static_assert(Kokkos::ViewTraits<T, P...>::is_managed,
+  static_assert(!Kokkos::ViewTraits<T, P...>::memory_traits::is_unmanaged,
                 "Can only realloc managed views");
   static_assert(!alloc_prop_input::has_label,
                 "The view constructor arguments passed to Kokkos::realloc must "
