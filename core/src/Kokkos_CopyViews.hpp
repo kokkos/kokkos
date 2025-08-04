@@ -56,11 +56,27 @@ namespace Impl {
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
 struct ViewFill<ViewType, Layout, ExecSpace, 0, iType> {
+  ViewType a;
+  typename ViewType::const_value_type val;
   using ST = typename ViewType::non_const_value_type;
-  ViewFill(const ViewType& a, const ST& val, const ExecSpace& space) {
-    Kokkos::Impl::DeepCopy<typename ViewType::memory_space, Kokkos::HostSpace,
-                           ExecSpace>(space, a.data(), &val, sizeof(ST));
+  ViewFill(const ViewType& a_, const ST& val_, const ExecSpace& space)
+      : a(a_), val(val_) {
+    // If the View is not customized and uses one of the trivial accessors
+    // we can deep_copy, otherwise we need to run a kernel so the accessor
+    // side effects take place.
+    if constexpr (!ViewType::traits::impl_is_customized) {
+      Kokkos::Impl::DeepCopy<typename ViewType::memory_space, Kokkos::HostSpace,
+                             ExecSpace>(space, a.data(), &val, sizeof(ST));
+    } else {
+      using policy_type =
+          Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
+      Kokkos::parallel_for("Kokkos::ViewFill-1D", policy_type(space, 0, 1),
+                           *this);
+    }
   }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const iType&) const { a() = val; }
 };
 
 template <class ViewType, class Layout, class ExecSpace, typename iType>
@@ -1043,9 +1059,9 @@ inline void deep_copy(
   using dst_memory_space = typename dst_type::memory_space;
   using src_memory_space = typename src_type::memory_space;
 
-  static_assert(std::is_same_v<typename dst_type::value_type,
-                               typename src_type::non_const_value_type>,
-                "deep_copy requires matching non-const destination type");
+  static_assert(
+      std::is_same_v<value_type, typename src_type::non_const_value_type>,
+      "deep_copy requires matching non-const destination type");
 
   if (Kokkos::Tools::Experimental::get_callbacks().begin_deep_copy != nullptr) {
     Kokkos::Profiling::beginDeepCopy(
@@ -1067,8 +1083,16 @@ inline void deep_copy(
 
   Kokkos::fence("Kokkos::deep_copy: scalar to scalar copy, pre copy fence");
   if (dst.data() != src.data()) {
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+    using dst_ptr_type  = decltype(dst.data());
+    const size_t nbytes = allocation_size_from_mapping_and_accessor(
+                              src.mapping(), src.accessor()) *
+                          sizeof(std::remove_pointer_t<dst_ptr_type>);
+#else
+    const size_t nbytes = sizeof(value_type);
+#endif
     Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
-        dst.data(), src.data(), sizeof(value_type));
+        dst.data(), src.data(), nbytes);
     Kokkos::fence("Kokkos::deep_copy: scalar to scalar copy, post copy fence");
   }
   if (Kokkos::Tools::Experimental::get_callbacks().end_deep_copy != nullptr) {

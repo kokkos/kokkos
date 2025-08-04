@@ -307,3 +307,77 @@ void test_deep_copy() {
 }
 
 TEST(TEST_CATEGORY, view_customization_deep_copy) { test_deep_copy(); }
+
+void test_deep_copy_single_element_view() {
+  size_t size = 5;
+
+  using view_t = Kokkos::View<Foo::Bar, TEST_EXECSPACE>;
+
+  view_t a(Kokkos::view_alloc("A", Kokkos::Impl::AccessorArg_t{size}));
+
+  auto host_a = Kokkos::create_mirror_view(a);
+
+  for (size_t k = 0; k < size; ++k) host_a()[k] = 0.1 * k;
+
+  // Contiguous deep_copy, potentially host to device
+  Kokkos::deep_copy(a, host_a);
+
+  Kokkos::RangePolicy<TEST_EXECSPACE> policy{0, 1};
+
+  // Verify that all "size" subelements in the single view
+  // are correctly copied. This verifies that views with
+  // custom allocated size (e.g. Sacado derivatives embedded in the view)
+  // work with single views.
+  int num_errors = 0;
+  Kokkos::parallel_reduce(
+      "view_customization_deep_copy_a", policy,
+      KOKKOS_LAMBDA(int, int& error) {
+        for (size_t k = 0; k < size; ++k) {
+          if (Kokkos::abs(a()[k] - 0.1 * k) >
+              Kokkos::Experimental::epsilon_v<float>)
+            ++error;
+          a()[k] = k;
+        }
+      },
+      num_errors);
+  ASSERT_EQ(num_errors, 0);
+
+  // Contiguous deep_copy, potentially device to host
+  Kokkos::deep_copy(host_a, a);
+  for (size_t k = 0; k < size; k++) ASSERT_FLOAT_EQ(host_a()[k], k);
+  auto b = Kokkos::create_mirror(TEST_EXECSPACE::memory_space(), a);
+
+  num_errors = 0;
+  Kokkos::parallel_reduce(
+      "view_customization_check_pre_deep_copy_b", policy,
+      KOKKOS_LAMBDA(int, int& error) {
+        for (size_t k = 0; k < size; ++k) {
+          // Note b is value initalized for the scalar value type for the
+          // allocation
+          if (b()[k] != 0) {
+            ++error;
+          }
+        }
+      },
+      num_errors);
+  ASSERT_EQ(num_errors, 0);
+
+  // Contiguous deep_copy, same execspace
+  Kokkos::deep_copy(b, a);
+
+  num_errors = 0;
+  Kokkos::parallel_reduce(
+      "view_customization_check_pre_deep_copy_b", policy,
+      KOKKOS_LAMBDA(int, int& error) {
+        for (size_t k = 0; k < size; ++k) {
+          if (Kokkos::abs(b()[k] - k) > Kokkos::Experimental::epsilon_v<float>)
+            ++error;
+        }
+      },
+      num_errors);
+  ASSERT_EQ(num_errors, 0);
+}
+
+TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
+  test_deep_copy_single_element_view();
+}

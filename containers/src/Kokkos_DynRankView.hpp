@@ -499,6 +499,11 @@ class DynRankView : private View<DataType*******, Properties...> {
   using reference        = reference_type;
   using data_handle_type = pointer_type;
 
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using accessor_type = typename view_type::accessor_type;
+  using mapping_type  = typename view_type::mapping_type;
+#endif
+
   KOKKOS_FUNCTION
   view_type& DownCast() const { return (view_type&)(*this); }
 
@@ -905,7 +910,8 @@ class DynRankView : private View<DataType*******, Properties...> {
       std::enable_if_t<((!std::is_same_v<P, std::string>)&&...),
                        const typename traits::array_layout&>
           layout) {
-    if constexpr (traits::impl_is_customized) {
+    if constexpr (traits::impl_is_customized &&
+                  !Impl::ViewCtorProp<P...>::has_accessor_arg) {
       int r = 0;
       while (r < 7 && layout.dimension[r] != KOKKOS_INVALID_INDEX) r++;
 
@@ -1602,23 +1608,16 @@ namespace Impl {
 template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(const DynRankView<T, P...>& src,
                           const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop) {
-  check_view_ctor_args_create_mirror<ViewCtorArgs...>();
-
-  auto prop_copy = Impl::with_properties_if_unset(
-      arg_prop, std::string(src.label()).append("_mirror"));
-
   if constexpr (Impl::ViewCtorProp<ViewCtorArgs...>::has_memory_space) {
     using dst_type = typename Impl::MirrorDRViewType<
         typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
         P...>::dest_view_type;
-    return dst_type(prop_copy,
-                    Impl::reconstructLayout(src.layout(), src.rank()));
+    return dst_type(create_mirror(arg_prop, src.DownCast()), src.rank());
   } else {
     using src_type = DynRankView<T, P...>;
     using dst_type = typename src_type::HostMirror;
 
-    return dst_type(prop_copy,
-                    Impl::reconstructLayout(src.layout(), src.rank()));
+    return dst_type(create_mirror(arg_prop, src.DownCast()), src.rank());
   }
 #if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
     !defined(KOKKOS_COMPILER_MSVC)
