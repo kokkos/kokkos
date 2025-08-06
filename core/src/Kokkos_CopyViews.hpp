@@ -302,7 +302,13 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); }
+  void operator()(const iType& i0) const {
+    if constexpr (std::is_assignable_v<decltype(a(i0)), decltype(b(i0))> &&
+                  !std::is_arithmetic_v<value_type>)
+      a(i0) = b(i0);
+    else
+      a(i0) = static_cast<value_type>(b(i0));
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -332,7 +338,12 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType> {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1) const {
-    a(i0, i1) = b(i0, i1);
+    if constexpr (std::is_assignable_v<decltype(a(i0, i1)),
+                                       decltype(b(i0, i1))> &&
+                  !std::is_arithmetic_v<value_type>)
+      a(i0, i1) = b(i0, i1);
+    else
+      a(i0, i1) = static_cast<value_type>(b(i0, i1));
   }
 };
 
@@ -365,7 +376,12 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType> {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2) const {
-    a(i0, i1, i2) = b(i0, i1, i2);
+    if constexpr (std::is_assignable_v<decltype(a(i0, i1, i2)),
+                                       decltype(b(i0, i1, i2))> &&
+                  !std::is_arithmetic_v<value_type>)
+      a(i0, i1, i2) = b(i0, i1, i2);
+    else
+      a(i0, i1, i2) = static_cast<value_type>(b(i0, i1, i2));
   }
 };
 
@@ -385,6 +401,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType> {
       Kokkos::Rank<4, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
+  using value_type = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -399,7 +416,12 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 4, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3) const {
-    a(i0, i1, i2, i3) = b(i0, i1, i2, i3);
+    if constexpr (std::is_assignable_v<decltype(a(i0, i1, i2, i3)),
+                                       decltype(b(i0, i1, i2, i3))> &&
+                  !std::is_arithmetic_v<value_type>)
+      a(i0, i1, i2, i3) = b(i0, i1, i2, i3);
+    else
+      a(i0, i1, i2, i3) = static_cast<value_type>(b(i0, i1, i2, i3));
   }
 };
 
@@ -419,6 +441,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType> {
       Kokkos::Rank<5, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
+  using value_type = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -433,7 +456,12 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 5, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4) const {
-    a(i0, i1, i2, i3, i4) = b(i0, i1, i2, i3, i4);
+    if constexpr (std::is_assignable_v<decltype(a(i0, i1, i2, i3, i4)),
+                                       decltype(b(i0, i1, i2, i3, i4))> &&
+                  !std::is_arithmetic_v<value_type>)
+      a(i0, i1, i2, i3, i4) = b(i0, i1, i2, i3, i4);
+    else
+      a(i0, i1, i2, i3, i4) = static_cast<value_type>(b(i0, i1, i2, i3, i4));
   }
 };
 
@@ -453,6 +481,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType> {
       Kokkos::Rank<6, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
+  using value_type = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -467,7 +496,13 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 6, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2,
                   const iType& i3, const iType& i4, const iType& i5) const {
-    a(i0, i1, i2, i3, i4, i5) = b(i0, i1, i2, i3, i4, i5);
+    if constexpr (std::is_assignable_v<decltype(a(i0, i1, i2, i3, i4, i5)),
+                                       decltype(b(i0, i1, i2, i3, i4, i5))> &&
+                  !std::is_arithmetic_v<value_type>)
+      a(i0, i1, i2, i3, i4, i5) = b(i0, i1, i2, i3, i4, i5);
+    else
+      a(i0, i1, i2, i3, i4, i5) =
+          static_cast<value_type>(b(i0, i1, i2, i3, i4, i5));
   }
 };
 
@@ -487,6 +522,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType> {
       Kokkos::Rank<6, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
+  using value_type = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -503,8 +539,16 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 7, iType> {
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i3,
                   const iType& i4, const iType& i5, const iType& i6) const {
-    for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
-      a(i0, i1, i2, i3, i4, i5, i6) = b(i0, i1, i2, i3, i4, i5, i6);
+    for (iType i2 = 0; i2 < iType(a.extent(2)); i2++) {
+      if constexpr (std::is_assignable_v<
+                        decltype(a(i0, i1, i2, i3, i4, i5, i6)),
+                        decltype(b(i0, i1, i2, i3, i4, i5, i6))> &&
+                    !std::is_arithmetic_v<value_type>)
+        a(i0, i1, i2, i3, i4, i5, i6) = b(i0, i1, i2, i3, i4, i5, i6);
+      else
+        a(i0, i1, i2, i3, i4, i5, i6) =
+            static_cast<value_type>(b(i0, i1, i2, i3, i4, i5, i6));
+    }
   }
 };
 
@@ -524,6 +568,7 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
       Kokkos::Rank<6, outer_iteration_pattern, inner_iteration_pattern>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecSpace, iterate_type, Kokkos::IndexType<iType>>;
+  using value_type = typename ViewTypeA::value_type;
 
   ViewCopy(const ViewTypeA& a_, const ViewTypeB& b_,
            const ExecSpace space = ExecSpace())
@@ -541,8 +586,16 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 8, iType> {
   void operator()(const iType& i0, const iType& i1, const iType& i3,
                   const iType& i5, const iType& i6, const iType& i7) const {
     for (iType i2 = 0; i2 < iType(a.extent(2)); i2++)
-      for (iType i4 = 0; i4 < iType(a.extent(4)); i4++)
-        a(i0, i1, i2, i3, i4, i5, i6, i7) = b(i0, i1, i2, i3, i4, i5, i6, i7);
+      for (iType i4 = 0; i4 < iType(a.extent(4)); i4++) {
+        if constexpr (std::is_assignable_v<
+                          decltype(a(i0, i1, i2, i3, i4, i5, i6, i7)),
+                          decltype(b(i0, i1, i2, i3, i4, i5, i6, i7))> &&
+                      !std::is_arithmetic_v<value_type>)
+          a(i0, i1, i2, i3, i4, i5, i6, i7) = b(i0, i1, i2, i3, i4, i5, i6, i7);
+        else
+          a(i0, i1, i2, i3, i4, i5, i6, i7) =
+              static_cast<value_type>(b(i0, i1, i2, i3, i4, i5, i6, i7));
+      }
   }
 };
 
@@ -1041,9 +1094,18 @@ inline void deep_copy(
 namespace Impl {
 template <class ExecSpace, class DstView, class SrcView>
 void deep_copy_rank0(ExecSpace exec_space, DstView dst, SrcView src) {
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(exec_space, 0, 1),
-      KOKKOS_LAMBDA(int) { dst() = src(); });
+  // can't if constexr inside the lambda due to capture rules
+  if constexpr (std::is_assignable_v<decltype(dst()), decltype(src())> &&
+                !std::is_arithmetic_v<typename DstView::value_type>) {
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace>(exec_space, 0, 1),
+        KOKKOS_LAMBDA(int) { dst() = src(); });
+  } else {
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace>(exec_space, 0, 1), KOKKOS_LAMBDA(int) {
+          dst() = static_cast<typename DstView::value_type>(src());
+        });
+  }
 }
 }  // namespace Impl
 

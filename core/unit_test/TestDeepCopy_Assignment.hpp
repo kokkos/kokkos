@@ -15,6 +15,22 @@
 //@HEADER
 
 #include "TestDeepCopy.hpp"
+namespace {
+struct Foo {
+  KOKKOS_FUNCTION Foo() = default;
+  KOKKOS_FUNCTION Foo(double) {
+    Kokkos::abort("This should never be called");
+  }
+  KOKKOS_FUNCTION Foo& operator=(double val_) {
+    val = val_;
+    return *this;
+  }
+  float val;
+  KOKKOS_FUNCTION bool operator==(double val_) {
+    return val_ == static_cast<double>(val);
+  }
+};
+}
 
 TEST(TEST_CATEGORY, deep_copy_assignable_types_rank_0) {
   test_deep_copy_assignable_types<double, Foo>();

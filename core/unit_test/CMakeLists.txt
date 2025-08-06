@@ -170,6 +170,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       Crs
       DeepCopy_Assignment
       DeepCopy_Narrowing
+      DeepCopy_StaticCast
       DeepCopyAlignment
       ExecSpacePartitioning
       ExecSpaceThreadSafety

@@ -18,16 +18,6 @@
 #include <cstddef>
 
 namespace {
-struct Foo {
-  KOKKOS_FUNCTION Foo& operator=(double val_) {
-    val = val_;
-    return *this;
-  }
-  float val;
-  KOKKOS_FUNCTION bool operator==(double val_) {
-    return val_ == static_cast<double>(val);
-  }
-};
 
 template <class D1, class D2, class... Extents>
 void test_deep_copy_assignable_types(Extents... exts) {
