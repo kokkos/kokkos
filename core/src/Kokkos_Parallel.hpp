@@ -458,16 +458,39 @@ inline void parallel_scan(const size_t work_count, const FunctorType& functor,
  */
 
 namespace Impl {
-template <class FunctorType>
+// Helper such that the user can indeed pass a callable that
+// takes no index.
+template <typename Functor>
 struct SingleFunctorWrapper {
-  FunctorType f;
+  Functor m_functor;
 
-  template <class W>
-  void KOKKOS_INLINE_FUNCTION operator()(const W& w, int) const {
-    f(w);
+  template <typename WorkTagOrIndex, typename... MaybeIndex>
+  KOKKOS_FUNCTION void operator()(WorkTagOrIndex, MaybeIndex...) const {
+    static_assert(sizeof...(MaybeIndex) <= 1);
+    if constexpr (sizeof...(MaybeIndex) == 0) {
+      m_functor();
+    } else {
+      static_assert(std::is_empty_v<WorkTagOrIndex>);
+      m_functor(WorkTagOrIndex{});
+    }
   }
+};
 
-  void KOKKOS_INLINE_FUNCTION operator()(int) const { f(); }
+template <typename Functor>
+struct SingleReductorFunctorWrapper {
+  Functor m_functor;
+
+  template <typename WorkTagOrIndex, class IndexOrReturnType, typename... MaybeReturnType>
+  KOKKOS_FUNCTION void operator()(const WorkTagOrIndex, IndexOrReturnType& indexOrRet,
+      MaybeReturnType&... maybeRet) const {
+    static_assert(sizeof...(MaybeReturnType) <= 1);
+    if constexpr (sizeof...(MaybeReturnType) == 0) {
+      m_functor(indexOrRet);
+    } else {
+      static_assert(std::is_empty_v<WorkTagOrIndex>);
+      m_functor(WorkTagOrIndex{}, maybeRet...);
+    }
+  }
 };
 }  // namespace Impl
 
@@ -479,20 +502,18 @@ inline void single(const std::string& str,
 
   // We will use the standard function for parallel_for, so we need a policy
   // and a lambda that are usable in this context
-  auto range_policy =
-      static_cast<RangePolicy<PolicyProperties...>>(single_policy);
   ::Kokkos::Impl::SingleFunctorWrapper<FunctorType> functor_wrapper{functor};
 
   using WrapperType = decltype(functor_wrapper);
-  using ExecPolicy  = decltype(range_policy);
+  using ExecPolicy  = RangePolicy<PolicyProperties...>;
 
-  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(range_policy, str,
+  Kokkos::Tools::Impl::begin_single<ExecPolicy, FunctorType>(single_policy, str,
                                                              kpID);
 
   auto closure =
       Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
           Impl::ParallelFor<WrapperType, ExecPolicy>>(functor_wrapper,
-                                                      range_policy);
+                                                      single_policy);
   closure.execute();
 
   Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
@@ -515,6 +536,67 @@ inline void single(const std::string& str, const FunctorType& functor) {
 template <class FunctorType>
 inline void single(const FunctorType& functor) {
   ::Kokkos::single("", functor);
+}
+
+// Single API based on parallel_reduce
+template <class FunctorType, class ReturnType, class... PolicyProperties>
+inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
+                          Kokkos::is_reducer<ReturnType>::value ||
+                          std::is_pointer_v<ReturnType>)>
+single(const std::string& label,
+       const SinglePolicy<PolicyProperties...>& single_policy,
+       const FunctorType& functor, ReturnType& return_value) {
+  static_assert(
+      !std::is_const_v<ReturnType>,
+      "A const reduction result type is only allowed for a View, pointer or "
+      "reducer return type!");
+
+  ::Kokkos::Impl::SingleReductorFunctorWrapper<FunctorType> functor_wrapper{
+      functor};
+
+  using WrapperType = decltype(functor_wrapper);
+  using ExecPolicy  = RangePolicy<PolicyProperties...>;
+
+  Impl::ParallelReduceAdaptor<ExecPolicy, WrapperType, ReturnType>::execute(
+      label, single_policy, functor_wrapper, return_value, false);
+  Impl::ParallelReduceFence<typename ExecPolicy::execution_space, ReturnType>::
+      fence(
+          single_policy.space(),
+          "Kokkos::parallel_reduce: fence due to result being value, not view",
+          return_value);
+}
+
+template <class FunctorType, class ReturnType, class... PolicyProperties>
+inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
+                          Kokkos::is_reducer<ReturnType>::value ||
+                          std::is_pointer_v<ReturnType>)&&std::
+                            is_invocable_v<FunctorType, ReturnType&>>
+single(const SinglePolicy<PolicyProperties...>& single_policy,
+       const FunctorType& functor, ReturnType& return_value) {
+  ::Kokkos::single("", single_policy, functor, return_value);
+}
+
+template <class FunctorType, class ReturnType>
+inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
+                          Kokkos::is_reducer<ReturnType>::value ||
+                          std::is_pointer_v<ReturnType>)&&std::
+                            is_invocable_v<FunctorType, ReturnType&>>
+single(const std::string label, const FunctorType& functor,
+       ReturnType& return_value) {
+  using execution_space =
+      typename Impl::FunctorPolicyExecutionSpace<FunctorType,
+                                                 void>::execution_space;
+  using policy = SinglePolicy<execution_space>;
+  ::Kokkos::single(label, policy(), functor, return_value);
+}
+
+template <class FunctorType, class ReturnType>
+inline std::enable_if_t<std::is_invocable_v<FunctorType, ReturnType&> &&
+                        !(Kokkos::is_view<ReturnType>::value ||
+                          Kokkos::is_reducer<ReturnType>::value ||
+                          std::is_pointer_v<ReturnType>)>
+single(const FunctorType& functor, ReturnType& return_value) {
+  ::Kokkos::single("", functor, return_value);
 }
 
 }  // namespace Kokkos

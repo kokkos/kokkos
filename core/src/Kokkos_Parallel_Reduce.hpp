@@ -188,7 +188,8 @@ struct ParallelReduceAdaptor {
   static inline void execute_impl(const std::string& label,
                                   const PolicyType& policy,
                                   const FunctorType& functor,
-                                  ReturnType& return_value) {
+                                  ReturnType& return_value, 
+                                  bool reduce) {
     using PassedReducerType = typename return_value_adapter::reducer_type;
     uint64_t kpID           = 0;
 
@@ -207,21 +208,37 @@ struct ParallelReduceAdaptor {
         functor, typename Analysis::Reducer(
                      forwarding_switch<passed_reducer_type_is_invalid>(
                          functor, return_value)));
+
+    if (reduce) {
     const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
         typename return_value_adapter::reducer_type>(policy, functor_reducer,
                                                      label, kpID);
-    const auto& inner_policy = response.policy;
 
-    auto closure = construct_with_shared_allocation_tracking_disabled<
-        Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
-                             typename Impl::FunctorPolicyExecutionSpace<
-                                 FunctorType, PolicyType>::execution_space>>(
-        functor_reducer, inner_policy,
-        return_value_adapter::return_value(return_value, functor));
-    closure.execute();
+      const auto& inner_policy = response.policy;
 
-    Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
-        inner_policy, functor, label, kpID);
+      auto closure = construct_with_shared_allocation_tracking_disabled<
+          Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
+                               typename Impl::FunctorPolicyExecutionSpace<
+                                   FunctorType, PolicyType>::execution_space>>(
+          functor_reducer, inner_policy,
+          return_value_adapter::return_value(return_value, functor));
+      closure.execute();
+
+      Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
+          inner_policy, functor, label, kpID);
+    } else {
+      Kokkos::Tools::Impl::begin_single<PolicyType, FunctorType>(policy, label, kpID);
+
+      auto closure = construct_with_shared_allocation_tracking_disabled<
+          Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
+                               typename Impl::FunctorPolicyExecutionSpace<
+                                   FunctorType, PolicyType>::execution_space>>(
+          functor_reducer, policy,
+          return_value_adapter::return_value(return_value, functor));
+      closure.execute();
+
+      Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
+    }
   }
 
   static constexpr bool is_array_reduction =
@@ -233,8 +250,8 @@ struct ParallelReduceAdaptor {
   static inline std::enable_if_t<!(is_array_reduction &&
                                    std::is_pointer_v<Dummy>)>
   execute(const std::string& label, const PolicyType& policy,
-          const FunctorType& functor, ReturnType& return_value) {
-    execute_impl(label, policy, functor, return_value);
+          const FunctorType& functor, ReturnType& return_value, bool reduce = true) {
+    execute_impl(label, policy, functor, return_value, reduce);
   }
 };
 }  // namespace Impl
