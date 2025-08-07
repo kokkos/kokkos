@@ -75,7 +75,9 @@ export {
   using ::Kokkos::Experimental::simd_flag_aligned;
   using ::Kokkos::Experimental::simd_flag_default;
   using ::Kokkos::Experimental::simd_mask;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using ::Kokkos::Experimental::where;
+#endif
 
   using ::Kokkos::Experimental::operator+=;
   using ::Kokkos::Experimental::operator*=;
