@@ -840,7 +840,8 @@ struct GraphNodeTypes {
 
 #if defined(KOKKOS_ENABLE_CUDA)
 // TODO check range of problematic nvcc/11.4 and gcc/10.x combos
-#if (defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU == 1030)) && \
+#if (defined(KOKKOS_COMPILER_GNU) &&                                 \
+     (KOKKOS_COMPILER_GNU >= 1000 && KOKKOS_COMPILER_GNU < 1100)) && \
     (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC == 1140))
   static constexpr bool support_capture = false;
 #else
