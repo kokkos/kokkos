@@ -32,14 +32,15 @@ namespace Impl {
 //----------------------------------------------------------------------------
 
 template <typename ExecSpace, typename MemorySpace>
-void TaskQueue<ExecSpace, MemorySpace>::Destroy::destroy_shared_allocation() {
+KOKKOSCORE_EXPORT void
+TaskQueue<ExecSpace, MemorySpace>::Destroy::destroy_shared_allocation() {
   m_queue->~TaskQueue();
 }
 
 //----------------------------------------------------------------------------
 
 template <typename ExecSpace, typename MemorySpace>
-TaskQueue<ExecSpace, MemorySpace>::TaskQueue(
+KOKKOSCORE_EXPORT TaskQueue<ExecSpace, MemorySpace>::TaskQueue(
     typename TaskQueue<ExecSpace, MemorySpace>::memory_pool const
         &arg_memory_pool)
     : m_memory(arg_memory_pool),
@@ -58,7 +59,7 @@ TaskQueue<ExecSpace, MemorySpace>::TaskQueue(
 //----------------------------------------------------------------------------
 
 template <typename ExecSpace, typename MemorySpace>
-TaskQueue<ExecSpace, MemorySpace>::~TaskQueue() {
+KOKKOSCORE_EXPORT TaskQueue<ExecSpace, MemorySpace>::~TaskQueue() {
   // Verify that queues are empty and ready count is zero
 
   for (int i = 0; i < NumQueue; ++i) {
@@ -77,7 +78,8 @@ TaskQueue<ExecSpace, MemorySpace>::~TaskQueue() {
 //----------------------------------------------------------------------------
 
 template <typename ExecSpace, typename MemorySpace>
-KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::decrement(
+KOKKOSCORE_EXPORT KOKKOS_FUNCTION void
+TaskQueue<ExecSpace, MemorySpace>::decrement(
     TaskQueue<ExecSpace, MemorySpace>::task_root_type *task) {
   task_root_type volatile &t = *task;
 
@@ -120,7 +122,8 @@ TaskQueue<ExecSpace, MemorySpace>::allocate_block_size(size_t n) {
 }
 
 template <typename ExecSpace, typename MemorySpace>
-KOKKOS_FUNCTION void *TaskQueue<ExecSpace, MemorySpace>::allocate(size_t n) {
+KOKKOSCORE_EXPORT KOKKOS_FUNCTION void *
+TaskQueue<ExecSpace, MemorySpace>::allocate(size_t n) {
   void *const p = m_memory.allocate(n);
 
   if (p) {
@@ -135,8 +138,8 @@ KOKKOS_FUNCTION void *TaskQueue<ExecSpace, MemorySpace>::allocate(size_t n) {
 }
 
 template <typename ExecSpace, typename MemorySpace>
-KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::deallocate(void *p,
-                                                                   size_t n) {
+KOKKOSCORE_EXPORT KOKKOS_FUNCTION void
+TaskQueue<ExecSpace, MemorySpace>::deallocate(void *p,size_t n) {
   m_memory.deallocate(p, n);
   desul::atomic_dec(&m_count_alloc, desul::MemoryOrderSeqCst(),
                     desul::MemoryScopeDevice());  // TODO? memory_order_relaxed
@@ -211,8 +214,9 @@ KOKKOS_FUNCTION bool TaskQueue<ExecSpace, MemorySpace>::push_task(
 //----------------------------------------------------------------------------
 
 template <typename ExecSpace, typename MemorySpace>
-KOKKOS_FUNCTION typename TaskQueue<ExecSpace, MemorySpace>::task_root_type *
-TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
+KOKKOSCORE_EXPORT KOKKOS_FUNCTION
+    typename TaskQueue<ExecSpace, MemorySpace>::task_root_type *
+    TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
     TaskQueue<ExecSpace, MemorySpace>::task_root_type *volatile *const queue) {
   // Pop task from a concurrently pushed and popped ready task queue.
   // The queue is a linked list where 'task->m_next' form the links.
@@ -289,7 +293,8 @@ TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
 //----------------------------------------------------------------------------
 
 template <typename ExecSpace, typename MemorySpace>
-KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
+KOKKOSCORE_EXPORT KOKKOS_FUNCTION void
+TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
     TaskQueue<ExecSpace, MemorySpace>::task_root_type *const task) {
   // Schedule a runnable task upon construction / spawn
   // and upon completion of other tasks that 'task' is waiting on.
@@ -413,7 +418,8 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_runnable(
 }
 
 template <typename ExecSpace, typename MemorySpace>
-KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::schedule_aggregate(
+KOKKOSCORE_EXPORT KOKKOS_FUNCTION void
+TaskQueue<ExecSpace, MemorySpace>::schedule_aggregate(
     TaskQueue<ExecSpace, MemorySpace>::task_root_type *const task) {
   // Schedule an aggregate task upon construction
   // and upon completion of other tasks that 'task' is waiting on.
@@ -552,7 +558,8 @@ KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::reschedule(
 //----------------------------------------------------------------------------
 
 template <typename ExecSpace, typename MemorySpace>
-KOKKOS_FUNCTION void TaskQueue<ExecSpace, MemorySpace>::complete(
+KOKKOSCORE_EXPORT KOKKOS_FUNCTION void
+TaskQueue<ExecSpace, MemorySpace>::complete(
     TaskQueue<ExecSpace, MemorySpace>::task_root_type *task) {
   // Complete a runnable task that has finished executing
   // or a when_all task when all of its dependeneces are complete.

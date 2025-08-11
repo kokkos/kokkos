@@ -22,6 +22,7 @@ install(
 
 kokkos_add_library(
   kokkosalgorithms
+  STATIC
   HEADERS
   ${ALGO_HEADERS}
   MODULE_INTERFACE

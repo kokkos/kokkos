@@ -29,6 +29,7 @@
 
 #include <Kokkos_TaskScheduler_fwd.hpp>
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Core_Export.h>
 
 #include <Kokkos_MemoryPool.hpp>
 
@@ -77,7 +78,7 @@ class TaskQueue : public TaskQueueBase {
 
   struct Destroy {
     TaskQueue* m_queue;
-    void destroy_shared_allocation();
+    KOKKOSCORE_EXPORT void destroy_shared_allocation();
   };
 
   //----------------------------------------
@@ -96,14 +97,14 @@ class TaskQueue : public TaskQueueBase {
 
   //----------------------------------------
 
-  ~TaskQueue();
+  KOKKOSCORE_EXPORT ~TaskQueue();
   TaskQueue()                            = delete;
   TaskQueue(TaskQueue&&)                 = delete;
   TaskQueue(TaskQueue const&)            = delete;
   TaskQueue& operator=(TaskQueue&&)      = delete;
   TaskQueue& operator=(TaskQueue const&) = delete;
 
-  TaskQueue(const memory_pool& arg_memory_pool);
+  KOKKOSCORE_EXPORT TaskQueue(const memory_pool& arg_memory_pool);
 
   // Schedule a task
   //   Precondition:
@@ -111,8 +112,8 @@ class TaskQueue : public TaskQueueBase {
   //     task->m_next is the dependence or zero
   //   Postcondition:
   //     task->m_next is linked list membership
-  KOKKOS_FUNCTION void schedule_runnable(task_root_type*);
-  KOKKOS_FUNCTION void schedule_aggregate(task_root_type*);
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION void schedule_runnable(task_root_type*);
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION void schedule_aggregate(task_root_type*);
 
   // Reschedule a task
   //   Precondition:
@@ -132,16 +133,16 @@ class TaskQueue : public TaskQueueBase {
   //   Postcondition:
   //     task->m_wait == LockTag  =>  task is complete
   //     task->m_wait != LockTag  =>  task is waiting
-  KOKKOS_FUNCTION
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
   void complete(task_root_type*);
 
   KOKKOS_FUNCTION
   static bool push_task(task_root_type* volatile* const, task_root_type* const);
 
-  KOKKOS_FUNCTION
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
   static task_root_type* pop_ready_task(task_root_type* volatile* const);
 
-  KOKKOS_FUNCTION static void decrement(task_root_type* task);
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION static void decrement(task_root_type* task);
 
  public:
   KOKKOS_INLINE_FUNCTION
@@ -184,10 +185,10 @@ class TaskQueue : public TaskQueueBase {
   KOKKOS_FUNCTION
   size_t allocate_block_size(size_t n);  ///< Actual block size allocated
 
-  KOKKOS_FUNCTION
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
   void* allocate(size_t n);  ///< Allocate from the memory pool
 
-  KOKKOS_FUNCTION
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
   void deallocate(void* p, size_t n);  ///< Deallocate to the memory pool
 
   //----------------------------------------

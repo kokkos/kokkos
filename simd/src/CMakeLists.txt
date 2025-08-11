@@ -22,6 +22,7 @@ set(SIMD_MODULES Kokkos_SIMD.cppm)
 # These will get ignored for standalone CMake and a true interface library made
 kokkos_add_library(
   kokkossimd
+  STATIC
   SOURCES
   ${SIMD_SOURCES}
   HEADERS
