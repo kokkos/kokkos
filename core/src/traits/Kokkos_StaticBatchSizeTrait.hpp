@@ -27,8 +27,7 @@ template <unsigned int BatchSize = 1>
 struct StaticBatchSize {
   using static_batch_size = StaticBatchSize;
   using type              = StaticBatchSize<BatchSize>;
-  constexpr static unsigned int batch_size{
-      BatchSize};  // Default batch size is 1
+  constexpr static unsigned int batch_size{BatchSize};
 
   static_assert(
       BatchSize > 0,
@@ -46,8 +45,7 @@ struct StaticBatchSizeTrait : TraitSpecificationBase<StaticBatchSizeTrait> {
   struct base_traits {
     static constexpr bool batch_size_is_defaulted = true;
 
-    using static_batch_size =
-        Kokkos::Experimental::StaticBatchSize<>;  // Default batch size is 1
+    using static_batch_size = Kokkos::Experimental::StaticBatchSize<>;
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
   template <class StaticBatchSizeParam, class AnalyzeNextTrait>

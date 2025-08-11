@@ -329,8 +329,7 @@ TEST(TEST_CATEGORY, range_reduce) {
 
 template <typename ExecSpace, typename StaticBatchSize>
 struct TestStaticBatchSize {
-  using value_type = int;  ///< alias required for the parallel_reduce
-  using view_type  = Kokkos::View<value_type *, ExecSpace>;
+  using view_type = Kokkos::View<int *, ExecSpace>;
 
   view_type m_flags;
   view_type result_view;
@@ -350,8 +349,7 @@ struct TestStaticBatchSize {
     typename view_type::HostMirror host_flags =
         Kokkos::create_mirror_view(m_flags);
 
-    // Initialize the flags
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, N), *this);
+    Kokkos::deep_copy(m_flags, 0);
 
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecSpace, AtomicAddTag, StaticBatchSize>(0, N),
@@ -360,30 +358,25 @@ struct TestStaticBatchSize {
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecSpace, VerifyAtomicAddTag>(0, N), *this);
 
-    Kokkos::deep_copy(host_flags, m_flags);
+    // Verify that each flag has been incremented exactly once
+    bool success = true;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecSpace>(0, N),
+        KOKKOS_LAMBDA(const int i, bool &local_success) {
+          local_success = local_success && (m_flags(i) == 1);
+        },
+        Kokkos::LAnd<bool>(success));
 
-    int error_count = 0;
-    for (int i = 0; i < N; ++i) {
-      if (host_flags(i) != 1) {
-        ++error_count;
-      }
-    }
-    ASSERT_EQ(error_count, 0);
-  }
-
-  KOKKOS_INLINE_FUNCTION void operator()(const int i) const {
-    m_flags(i) = 0;  // Initialize the flags to zero
+    ASSERT_TRUE(success);
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const AtomicAddTag &, const int i) const {
-    // Use atomic add to increment the flag at index i
+  void operator()(const AtomicAddTag, const int i) const {
     Kokkos::atomic_add(&m_flags(i), 1);
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const VerifyAtomicAddTag &, const int i) const {
-    // Verify that the flag at index i is equal to 1
+  void operator()(const VerifyAtomicAddTag, const int i) const {
     if (m_flags(i) != 1) {
       Kokkos::printf(
           "TestStaticBatchSize {::test_batch_size_error at %d != %d\n", i,
