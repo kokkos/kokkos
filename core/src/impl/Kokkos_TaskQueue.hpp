@@ -133,14 +133,13 @@ class TaskQueue : public TaskQueueBase {
   //   Postcondition:
   //     task->m_wait == LockTag  =>  task is complete
   //     task->m_wait != LockTag  =>  task is waiting
-  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
-  void complete(task_root_type*);
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION void complete(task_root_type*);
 
   KOKKOS_FUNCTION
   static bool push_task(task_root_type* volatile* const, task_root_type* const);
 
-  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
-  static task_root_type* pop_ready_task(task_root_type* volatile* const);
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION static task_root_type* pop_ready_task(
+      task_root_type* volatile* const);
 
   KOKKOSCORE_EXPORT KOKKOS_FUNCTION static void decrement(task_root_type* task);
 
@@ -185,11 +184,11 @@ class TaskQueue : public TaskQueueBase {
   KOKKOS_FUNCTION
   size_t allocate_block_size(size_t n);  ///< Actual block size allocated
 
-  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
-  void* allocate(size_t n);  ///< Allocate from the memory pool
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION void* allocate(
+      size_t n);  ///< Allocate from the memory poo
 
-  KOKKOSCORE_EXPORT KOKKOS_FUNCTION
-  void deallocate(void* p, size_t n);  ///< Deallocate to the memory pool
+  KOKKOSCORE_EXPORT KOKKOS_FUNCTION void deallocate(
+      void* p, size_t n);  ///< Deallocate to the memory pool
 
   //----------------------------------------
   /**\brief  Allocation size for a spawned task */

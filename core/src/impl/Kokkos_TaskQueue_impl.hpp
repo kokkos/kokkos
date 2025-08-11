@@ -139,7 +139,7 @@ TaskQueue<ExecSpace, MemorySpace>::allocate(size_t n) {
 
 template <typename ExecSpace, typename MemorySpace>
 KOKKOSCORE_EXPORT KOKKOS_FUNCTION void
-TaskQueue<ExecSpace, MemorySpace>::deallocate(void *p,size_t n) {
+TaskQueue<ExecSpace, MemorySpace>::deallocate(void *p, size_t n) {
   m_memory.deallocate(p, n);
   desul::atomic_dec(&m_count_alloc, desul::MemoryOrderSeqCst(),
                     desul::MemoryScopeDevice());  // TODO? memory_order_relaxed
@@ -217,7 +217,8 @@ template <typename ExecSpace, typename MemorySpace>
 KOKKOSCORE_EXPORT KOKKOS_FUNCTION
     typename TaskQueue<ExecSpace, MemorySpace>::task_root_type *
     TaskQueue<ExecSpace, MemorySpace>::pop_ready_task(
-    TaskQueue<ExecSpace, MemorySpace>::task_root_type *volatile *const queue) {
+        TaskQueue<ExecSpace, MemorySpace>::task_root_type *volatile
+            *const queue) {
   // Pop task from a concurrently pushed and popped ready task queue.
   // The queue is a linked list where 'task->m_next' form the links.
 
