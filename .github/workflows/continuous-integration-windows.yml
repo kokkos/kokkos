@@ -39,7 +39,7 @@ jobs:
     - name: configure
       shell: bash
       run: |
-        cmake -B build -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_DEPRECATED_CODE_4=ON
+        cmake -B build -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_DEPRECATED_CODE_4=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON -DBUILD_SHARED_LIBS=ON
     - name: build library
       shell: bash
       run: |
