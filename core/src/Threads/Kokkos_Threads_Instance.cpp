@@ -246,7 +246,7 @@ void ThreadsInternal::verify_is_process(const std::string &name,
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-KOKKOSCORE_EXPORT KOKKOS_DEPRECATED int ThreadsInternal::in_parallel() {
+KOKKOS_DEPRECATED KOKKOSCORE_EXPORT int ThreadsInternal::in_parallel() {
   // A thread function is in execution and
   // the function argument is not the special threads process argument and
   // the master process is a worker or is not the master process.
