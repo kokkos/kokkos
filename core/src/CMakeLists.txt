@@ -138,9 +138,8 @@ kokkos_add_library(
   ADD_BUILD_OPTIONS # core should be given all the necessary compiler/linker flags
 )
 
-if(NOT BUILD_SHARED_LIBS OR UNIX)
-  target_compile_definitions(kokkoscore PRIVATE KOKKOSCORE_STATIC_DEFINE)
-endif()
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 
 include(GenerateExportHeader)
 generate_export_header(kokkoscore EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/Kokkos_Core_Export.h")

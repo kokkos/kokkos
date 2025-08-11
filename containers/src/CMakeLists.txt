@@ -19,9 +19,8 @@ install(
 
 kokkos_add_library(kokkoscontainers SOURCES ${KOKKOS_CONTAINERS_SRCS} HEADERS ${KOKKOS_CONTAINERS_HEADERS})
 
-if(NOT BUILD_SHARED_LIBS OR UNIX)
-  target_compile_definitions(kokkoscontainers PRIVATE KOKKOSCONTAINERS_STATIC_DEFINE)
-endif()
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN TRUE)
 
 include(GenerateExportHeader)
 generate_export_header(kokkoscontainers EXPORT_FILE_NAME "${CMAKE_CURRENT_BINARY_DIR}/Kokkos_Containers_Export.h")
