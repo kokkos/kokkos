@@ -22,7 +22,7 @@ set(SIMD_MODULES Kokkos_SIMD.cppm)
 # These will get ignored for standalone CMake and a true interface library made
 kokkos_add_library(
   kokkossimd
-  INTERFACE
+  STATIC
   SOURCES
   ${SIMD_SOURCES}
   HEADERS
@@ -34,7 +34,7 @@ kokkos_lib_include_directories(
   kokkossimd ${KOKKOS_TOP_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-kokkos_link_internal_library(kokkossimd INTERFACE kokkoscore)
+kokkos_link_internal_library(kokkossimd kokkoscore)
 
 # If ARM-SVE, check and warn for available arm_neon_sve_bridge.h
 if(KOKKOS_ARCH_ARM_SVE)
