@@ -346,9 +346,6 @@ struct TestStaticBatchSize {
         N(N_) {}
 
   void test_batch_size() {
-    typename view_type::HostMirror host_flags =
-        Kokkos::create_mirror_view(m_flags);
-
     Kokkos::deep_copy(m_flags, 0);
 
     Kokkos::parallel_for(
