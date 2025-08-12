@@ -339,7 +339,7 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
 endfunction()
 
 function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
-  cmake_parse_arguments(PARSE "ADD_BUILD_OPTIONS;STATIC;SHARED" "" "HEADERS;SOURCES;MODULE_INTERFACE" ${ARGN})
+  cmake_parse_arguments(PARSE "ADD_BUILD_OPTIONS;STATIC;SHARED;INTERFACE" "" "HEADERS;SOURCES;MODULE_INTERFACE" ${ARGN})
 
   if(PARSE_HEADERS)
     list(REMOVE_DUPLICATES PARSE_HEADERS)
@@ -360,6 +360,10 @@ function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
 
   if(PARSE_SHARED)
     set(LINK_TYPE SHARED)
+  endif()
+
+  if(PARSE_INTERFACE)
+    set(LINK_TYPE INTERFACE)
   endif()
 
   # MSVC and other platforms want to have the headers included as source files for better dependency detection
