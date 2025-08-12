@@ -362,7 +362,7 @@ struct TestStaticBatchSize {
     bool success = true;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<ExecSpace>(0, N),
-        KOKKOS_LAMBDA(const int i, bool &local_success) {
+        KOKKOS_CLASS_LAMBDA(const int i, bool &local_success) {
           local_success = local_success && (m_flags(i) == 1);
         },
         Kokkos::LAnd<bool>(success));
