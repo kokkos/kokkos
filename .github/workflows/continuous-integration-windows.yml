@@ -28,7 +28,7 @@ jobs:
     - name: build library
       shell: bash
       run: |
-        export PATH="$(pwd)/core/src:$(pwd)/containers/src:$PATH"
+        export PATH="$(pwd)/build/core/src/Release:$(pwd)/build/containers/src/Release:$PATH"
         cmake --build build --parallel 4 --config Release
   windows-serial:
     # Serial build on Windows
@@ -48,5 +48,5 @@ jobs:
     - name: run tests
       shell: bash
       run: |
-        export PATH="$(pwd)/core/src:$(pwd)/containers/src:$PATH"
+        export PATH="$(pwd)/build/core/src/Release:$(pwd)/build/containers/src/Release:$PATH"
         ctest --test-dir build -C Release -j 4 --output-on-failure
