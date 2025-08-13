@@ -33,8 +33,6 @@ if(CMAKE_PROJECT_NAME STREQUAL "Trilinos")
 
   set(Kokkos_ENABLE_COMPLEX_ALIGN OFF CACHE BOOL "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
-  set(Kokkos_ENABLE_IMPL_VIEW_LEGACY ON CACHE BOOL "Whether to use the legacy implementation of View" FORCE)
-
   # FIXME_TRILINOS We run into problems when trying to use an external GTest in Trilinos CI
   set(CMAKE_DISABLE_FIND_PACKAGE_GTest ON)
 endif()
