@@ -524,7 +524,7 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.6-NVCC-DEBUG') {
+                stage('CUDA-13.0-NVCC-DEBUG') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
