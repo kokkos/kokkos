@@ -82,7 +82,6 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
              iwork < static_cast<Member>(work_end - work_stride * batch_size)
                  ? iwork + work_stride * batch_size
                  : work_end) {
-// Unroll the loop
 #if defined(KOKKOS_COMPILER_NVCC)
 #pragma unroll
 #endif

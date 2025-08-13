@@ -337,7 +337,7 @@ struct TestStaticBatchSize {
   struct AtomicAddTag {};
   struct VerifyAtomicAddTag {};
 
-  int N;
+  size_t N;
 
   TestStaticBatchSize(const size_t N_)
       : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
@@ -352,14 +352,16 @@ struct TestStaticBatchSize {
         Kokkos::RangePolicy<ExecSpace, AtomicAddTag, StaticBatchSize>(0, N),
         *this);
 
-    Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace, VerifyAtomicAddTag>(0, N), *this);
-
     // Verify that each flag has been incremented exactly once
     bool success = true;
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<ExecSpace>(0, N),
         KOKKOS_CLASS_LAMBDA(const int i, bool &local_success) {
+          if (m_flags(i) != 1) {
+            Kokkos::printf(
+                "TestStaticBatchSize {::test_batch_size_error at %d != %d\n", i,
+                m_flags(i));
+          }
           local_success = local_success && (m_flags(i) == 1);
         },
         Kokkos::LAnd<bool>(success));
