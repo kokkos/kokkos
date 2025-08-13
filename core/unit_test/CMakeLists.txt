@@ -166,6 +166,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
       Complex
       Concepts
       Crs
+      DeepCopy_Assignment
+      DeepCopy_Narrowing
       DeepCopyAlignment
       ExecSpacePartitioning
       ExecSpaceThreadSafety
