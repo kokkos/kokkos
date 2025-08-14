@@ -53,3 +53,18 @@ TEST(TEST_CATEGORY, deep_copy_assignable_types_rank_8) {
   test_deep_copy_assignable_types<double********, Foo********>(1, 1, 1, 1, 1, 1,
                                                                1, 1);
 }
+
+// Half types used to work just for rank 1-3
+TEST(TEST_CATEGORY, deep_copy_assignable_types_rank_1_half) {
+  test_deep_copy_assignable_types<double*, Kokkos::Experimental::half_t*>(1);
+}
+
+TEST(TEST_CATEGORY, deep_copy_assignable_types_rank_2_half) {
+  test_deep_copy_assignable_types<double**, Kokkos::Experimental::half_t**>(1,
+                                                                            1);
+}
+
+TEST(TEST_CATEGORY, deep_copy_assignable_types_rank_3_half) {
+  test_deep_copy_assignable_types<double***, Kokkos::Experimental::half_t***>(
+      1, 1, 1);
+}

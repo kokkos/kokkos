@@ -302,7 +302,14 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 1, iType> {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); }
+  void operator()(const iType& i0) const {
+    // backwards compatible fix for allowing deep_copy between
+    // non-assignable types for rank 0-3
+    if constexpr (std::is_assignable_v<decltype(a(i0)), decltype(b(i0))>)
+      a(i0) = b(i0);
+    else
+      a(i0) = static_cast<value_type>(b(i0));
+  }
 };
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
@@ -332,7 +339,13 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 2, iType> {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1) const {
-    a(i0, i1) = b(i0, i1);
+    // backwards compatible fix for allowing deep_copy between
+    // non-assignable types for rank 0-3
+    if constexpr (std::is_assignable_v<decltype(a(i0, i1)),
+                                       decltype(b(i0, i1))>)
+      a(i0, i1) = b(i0, i1);
+    else
+      a(i0, i1) = static_cast<value_type>(b(i0, i1));
   }
 };
 
@@ -365,7 +378,13 @@ struct ViewCopy<ViewTypeA, ViewTypeB, Layout, ExecSpace, 3, iType> {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const iType& i0, const iType& i1, const iType& i2) const {
-    a(i0, i1, i2) = b(i0, i1, i2);
+    // backwards compatible fix for allowing deep_copy between
+    // non-assignable types for rank 0-3
+    if constexpr (std::is_assignable_v<decltype(a(i0, i1, i2)),
+                                       decltype(b(i0, i1, i2))>)
+      a(i0, i1, i2) = b(i0, i1, i2);
+    else
+      a(i0, i1, i2) = static_cast<value_type>(b(i0, i1, i2));
   }
 };
 
