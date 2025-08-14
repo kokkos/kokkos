@@ -353,8 +353,9 @@ struct TestStaticBatchSize {
         *this);
 
     bool success = true;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecSpace>(0, N), *this,
-                            Kokkos::LAnd<bool>(success));
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecSpace, VerifyAtomicAddTag>(0, N), *this,
+        Kokkos::LAnd<bool>(success));
 
     ASSERT_TRUE(success);
   }
