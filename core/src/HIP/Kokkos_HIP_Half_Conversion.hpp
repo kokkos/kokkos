@@ -22,8 +22,7 @@
 #include <Kokkos_Half.hpp>
 #include <Kokkos_ReductionIdentity.hpp>
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 /************************** half conversions **********************************/
 KOKKOS_INLINE_FUNCTION
@@ -193,26 +192,16 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned long>, T>
 cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<unsigned long long>(val));
 }
-}  // namespace Experimental
+}  // namespace Kokkos::Experimental
 
-// use float as the return type for sum and prod since hip_fp16.h
-// has no constexpr functions for casting to __half
 template <>
-struct reduction_identity<Kokkos::Experimental::half_t> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float sum() noexcept {
-    return 0.0F;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() noexcept {
-    return 1.0F;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() noexcept {
-    return -Kokkos::Experimental::infinity_v<float>;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() noexcept {
-    return Kokkos::Experimental::infinity_v<float>;
-  }
+struct Kokkos::reduction_identity<Kokkos::Experimental::half_t> {
+  static constexpr auto inf = Experimental::infinity_v<float>;
+  KOKKOS_FUNCTION static float sum() noexcept { return 0; }
+  KOKKOS_FUNCTION static float prod() noexcept { return 1; }
+  KOKKOS_FUNCTION static float max() noexcept { return -inf; }
+  KOKKOS_FUNCTION static float min() noexcept { return inf; }
 };
 
-}  // namespace Kokkos
 #endif
 #endif

@@ -134,8 +134,7 @@ struct reduction_identity<Kokkos::Experimental::half_t> {
 
 #ifdef KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 /************************** bhalf conversions *********************************/
 KOKKOS_INLINE_FUNCTION
@@ -215,26 +214,17 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned long>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(bhalf_t::impl_type(val));
 }
-}  // namespace Experimental
+}  // namespace Kokkos::Experimental
 
-// sycl::bfloat16 doesn't have constexpr constructors so we return float
 template <>
-struct reduction_identity<Kokkos::Experimental::bhalf_t> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float sum() noexcept {
-    return 0.f;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() noexcept {
-    return 1.0f;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() noexcept {
-    return -Kokkos::Experimental::infinity_v<float>;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() noexcept {
-    return Kokkos::Experimental::infinity_v<float>;
-  }
+struct Kokkos::reduction_identity<Kokkos::Experimental::bhalf_t> {
+  static constexpr auto inf = Experimental::infinity_v<float>;
+  KOKKOS_FUNCTION static Experimental::bhalf_t sum() { return 0; }
+  KOKKOS_FUNCTION static Experimental::bhalf_t prod() { return 1; }
+  KOKKOS_FUNCTION static Experimental::bhalf_t max() { return -inf; }
+  KOKKOS_FUNCTION static Experimental::bhalf_t min() { return inf; }
 };
 
-}  // namespace Kokkos
 #endif  // KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED
 
 #endif
