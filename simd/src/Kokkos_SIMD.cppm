@@ -78,6 +78,7 @@ export {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using ::Kokkos::Experimental::where;
 #endif
+  using ::Kokkos::Experimental::simd_unchecked_load;
 
   using ::Kokkos::Experimental::operator+=;
   using ::Kokkos::Experimental::operator*=;
