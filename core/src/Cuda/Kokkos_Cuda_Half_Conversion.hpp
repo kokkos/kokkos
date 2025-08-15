@@ -20,7 +20,6 @@
 #ifdef KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
 
 #include <Kokkos_Half.hpp>
-#include <Kokkos_ReductionIdentity.hpp>
 
 #if CUDA_VERSION >= 11000
 #include <cuda_bf16.h>
@@ -472,26 +471,6 @@ cast_from_bhalf(bhalf_t val) {
 
 #undef KOKKOS_IMPL_NVIDIA_GPU_ARCH_SUPPORT_BHALF
 }  // namespace Kokkos::Experimental
-
-#if (CUDA_VERSION >= 11000)
-template <>
-struct Kokkos::reduction_identity<Kokkos::Experimental::bhalf_t> {
-  static constexpr auto inf = Experimental::infinity_v<float>;
-  KOKKOS_FUNCTION static Experimental::bhalf_t sum() noexcept { return 0; }
-  KOKKOS_FUNCTION static Experimental::bhalf_t prod() noexcept { return 1; }
-  KOKKOS_FUNCTION static Experimental::bhalf_t max() noexcept { return -inf; }
-  KOKKOS_FUNCTION static Experimental::bhalf_t min() noexcept { return inf; }
-};
-#endif  // CUDA_VERSION >= 11000
-
-template <>
-struct Kokkos::reduction_identity<Kokkos::Experimental::half_t> {
-  static constexpr auto inf = Experimental::infinity_v<float>;
-  KOKKOS_FUNCTION static Experimental::half_t sum() noexcept { return 0; }
-  KOKKOS_FUNCTION static Experimental::half_t prod() noexcept { return 1; }
-  KOKKOS_FUNCTION static Experimental::half_t max() noexcept { return -inf; }
-  KOKKOS_FUNCTION static Experimental::half_t min() noexcept { return inf; }
-};
 
 #endif  // KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
 #endif

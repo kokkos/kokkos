@@ -20,7 +20,6 @@
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
 
 #include <Kokkos_Half.hpp>
-#include <Kokkos_ReductionIdentity.hpp>
 
 namespace Kokkos::Experimental {
 
@@ -193,15 +192,6 @@ cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<unsigned long long>(val));
 }
 }  // namespace Kokkos::Experimental
-
-template <>
-struct Kokkos::reduction_identity<Kokkos::Experimental::half_t> {
-  static constexpr auto inf = Experimental::infinity_v<float>;
-  KOKKOS_FUNCTION static float sum() noexcept { return 0; }
-  KOKKOS_FUNCTION static float prod() noexcept { return 1; }
-  KOKKOS_FUNCTION static float max() noexcept { return -inf; }
-  KOKKOS_FUNCTION static float min() noexcept { return inf; }
-};
 
 #endif
 #endif
