@@ -11,8 +11,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <sstream>
 #include <string>
 
-#include <Kokkos_Core_Export.h>
-
 #ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
 namespace desul {
 namespace Impl {
@@ -38,8 +36,8 @@ __global__ void init_lock_arrays_cuda_kernel() {
 
 namespace Impl {
 
-KOKKOSCORE_EXPORT int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
-KOKKOSCORE_EXPORT int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
+int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h = nullptr;
+int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE_h = nullptr;
 
 // Putting this into anonymous namespace so we don't have multiple defined symbols
 // When linking in more than one copy of the object file

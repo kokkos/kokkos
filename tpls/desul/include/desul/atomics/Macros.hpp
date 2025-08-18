@@ -167,4 +167,14 @@ static constexpr bool desul_impl_omp_on_host() { return false; }
 #endif
 #endif
 
+#if defined(DESUL_BUILD_SHARED_LIBS) && defined(_WIN32)
+#ifdef DESUL_EXPORT_SYMBOLS
+#define DESUL_EXPORT __declspec(dllexport)
+#else
+#define DESUL_EXPORT __declspec(dllimport)
+#endif
+#else
+#define DESUL_EXPORT
+#endif
+
 #endif  // DESUL_ATOMICS_MACROS_HPP_
