@@ -74,10 +74,14 @@ KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_exponent10, __float128,        int, FLT
 namespace Kokkos {
 template <>
 struct reduction_identity<__float128> {
-  KOKKOS_FUNCTION constexpr static __float128 sum() { return 0; }
-  KOKKOS_FUNCTION constexpr static __float128 prod() { return 1; }
-  KOKKOS_FUNCTION constexpr static __float128 max() { return -FLT128_MAX; }
-  KOKKOS_FUNCTION constexpr static __float128 min() { return FLT128_MAX; }
+  KOKKOS_FUNCTION constexpr static __float128 sum() noexcept { return 0; }
+  KOKKOS_FUNCTION constexpr static __float128 prod() noexcept { return 1; }
+  KOKKOS_FUNCTION constexpr static __float128 max() noexcept {
+    return -FLT128_MAX;
+  }
+  KOKKOS_FUNCTION constexpr static __float128 min() noexcept {
+    return FLT128_MAX;
+  }
 };
 }  // namespace Kokkos
 
