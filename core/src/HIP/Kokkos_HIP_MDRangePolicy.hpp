@@ -39,11 +39,14 @@ namespace Impl {
 template <>
 inline TileSizeProperties get_tile_size_properties<HIP>(const HIP& space) {
   TileSizeProperties properties;
-  properties.max_threads =
-      space.impl_internal_space_instance()->m_maxThreadsPerSM;
+  const auto& device_prop = space.impl_internal_space_instance()->m_deviceProp;
+  properties.max_threads  = device_prop.maxThreadsPerBlock;
   properties.default_largest_tile_size = 16;
   properties.default_tile_size         = 4;
   properties.max_total_tile_size       = HIPTraits::MaxThreadsPerBlock;
+  properties.max_threads_dimensions[0] = device_prop.maxThreadsDim[0];
+  properties.max_threads_dimensions[1] = device_prop.maxThreadsDim[1];
+  properties.max_threads_dimensions[2] = device_prop.maxThreadsDim[2];
   return properties;
 }
 
