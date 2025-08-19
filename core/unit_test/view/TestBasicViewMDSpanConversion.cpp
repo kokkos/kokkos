@@ -17,6 +17,8 @@
 #include <Kokkos_Core.hpp>
 #include <type_traits>
 
+#include <view/AccessorAliases.hpp>
+
 using Kokkos::Impl::BV::BasicView;
 #if 0  // TODO: after View is using BasicView this should be true
 static_assert(
@@ -24,26 +26,26 @@ static_assert(
         Kokkos::View<long long ****, Kokkos::LayoutRight, Kokkos::Serial>,
         BasicView<long long, Kokkos::dextents<size_t, 4>,
                   Kokkos::Experimental::layout_right_padded<>,
-                  Kokkos::Impl::CheckedReferenceCountedAccessor<
+                  CheckedReferenceCountedAccessor<
                     long long, Kokkos::HostSpace>>>);
 #endif
 
 static_assert(std::is_convertible_v<
               BasicView<long long, Kokkos::dextents<size_t, 4>,
                         Kokkos::Experimental::layout_right_padded<>,
-                        Kokkos::Impl::CheckedReferenceCountedAccessor<
-                            long long, Kokkos::HostSpace>>,
+                        CheckedReferenceCountedAccessor<long long,
+                                                        Kokkos::HostSpace>>,
               BasicView<const long long, Kokkos::dextents<size_t, 4>,
                         Kokkos::Experimental::layout_right_padded<>,
-                        Kokkos::Impl::CheckedReferenceCountedAccessor<
-                            const long long, Kokkos::HostSpace>>>);
+                        CheckedReferenceCountedAccessor<const long long,
+                                                        Kokkos::HostSpace>>>);
 #if 0  // TODO: after View is using BasicView this should be true
 static_assert(
     std::is_convertible_v<
         Kokkos::View<long long ****, Kokkos::LayoutRight, Kokkos::Serial>,
         BasicView<const long long, Kokkos::dextents<size_t, 4>,
                   Kokkos::Experimental::layout_right_padded<>,
-                  Kokkos::Impl::CheckedReferenceCountedAccessor<
+                  CheckedReferenceCountedAccessor<
                     const long long, Kokkos::HostSpace>>>);
 
 using test_atomic_view = Kokkos::View<double *, Kokkos::Serial,

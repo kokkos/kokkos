@@ -95,3 +95,12 @@ void test() {
   test_create_mirror_properties(device_view);
   test_create_mirror_properties(host_view);
 }
+
+/* Compile-only test that we can create a mirror view of a Kokkos::Restrict
+ * view*/
+void test_mirror_of_restrict() {
+  Kokkos::View<int*, Kokkos::DefaultExecutionSpace,
+               Kokkos::MemoryTraits<Kokkos::Restrict>>
+      device_view;
+  auto host_view = Kokkos::create_mirror_view(device_view);
+}
