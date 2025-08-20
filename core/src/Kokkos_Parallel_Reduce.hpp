@@ -30,13 +30,12 @@ static_assert(false,
 
 namespace Kokkos {
 
-/** \brief Class offering functionalities common to all reducers
- *
- * In order to be a valid reducer, a class must implement the functions and
- * define the types offered in this class.
- * To facilitate implementation, a new reducer class can simply inherit from
- * BaseReducer.
- */
+// \brief Class offering functionalities common to all reducers
+//
+// In order to be a valid reducer, a class must implement the functions and
+// define the types offered in this class.
+// To facilitate implementation, a new reducer class can simply inherit from
+// BaseReducer.
 namespace Impl {
 
 template <class ImplReducer, class Scalar, class Space>
