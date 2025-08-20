@@ -49,7 +49,7 @@ jobs:
           - arch: 'x64'
             distro: 'ubuntu:latest'
             cxx: 'clang++'
-            cxx_extra_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
+            cxx_extra_flags: '-ffinite-math-only -Wno-nan-infinity-disabled -fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             extra_linker_flags: '-fsanitize=address,undefined -fno-sanitize=function -fno-sanitize=vptr -fno-sanitize-recover=all'
             cmake_build_type: 'RelWithDebInfo'
             backend: 'SERIAL'

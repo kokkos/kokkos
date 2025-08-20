@@ -365,9 +365,19 @@ struct reduction_identity<float> {
     return static_cast<float>(1.0f);
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() {
+#if __FINITE_MATH_ONLY__
+    return -FLT_MAX;
+#else
     return -HUGE_VALF;
+#endif
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() { return HUGE_VALF; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() {
+#if __FINITE_MATH_ONLY__
+    return FLT_MAX;
+#else
+    return HUGE_VALF;
+#endif
+  }
 };
 
 template <>
@@ -379,9 +389,19 @@ struct reduction_identity<double> {
     return static_cast<double>(1.0);
   }
   KOKKOS_FORCEINLINE_FUNCTION constexpr static double max() {
+#if __FINITE_MATH_ONLY__
+    return -DBL_MAX;
+#else
     return -HUGE_VAL;
+#endif
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static double min() { return HUGE_VAL; }
+  KOKKOS_FORCEINLINE_FUNCTION constexpr static double min() {
+#if __FINITE_MATH_ONLY__
+    return DBL_MAX;
+#else
+    return HUGE_VAL;
+#endif
+  }
 };
 
 // No __host__ __device__ annotation because long double treated as double in
@@ -390,8 +410,21 @@ template <>
 struct reduction_identity<long double> {
   constexpr static long double sum() { return static_cast<long double>(0.0); }
   constexpr static long double prod() { return static_cast<long double>(1.0); }
-  constexpr static long double max() { return -HUGE_VALL; }
-  constexpr static long double min() { return HUGE_VALL; }
+
+  constexpr static long double max() {
+#if __FINITE_MATH_ONLY__
+    return -LDBL_MAX;
+#else
+    return -HUGE_VALL;
+#endif
+  }
+  constexpr static long double min() {
+#if __FINITE_MATH_ONLY__
+    return LDBL_MAX;
+#else
+    return HUGE_VALL;
+#endif
+  }
 };
 
 }  // namespace Kokkos

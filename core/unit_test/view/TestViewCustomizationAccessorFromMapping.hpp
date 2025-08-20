@@ -216,6 +216,21 @@ TEST(TEST_CATEGORY, view_customization_accessor_from_mapping) {
 
 // This tests the ability to pass in the accessor arg
 // as an additional integral argument to constructor and shmem_size
+
+template <class ViewType, size_t... Idx>
+bool test_device_side_ctor(ViewType a, std::index_sequence<Idx...>) {
+  int error = 0;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+      KOKKOS_LAMBDA(int, int& errors) {
+        ViewType a2(a.data(), a.extent(Idx)..., a.accessor().size);
+        if (a2.accessor().size != a.accessor().size) errors++;
+        if (a2.accessor().stride != a.accessor().stride) errors++;
+      },
+      error);
+  return error == 0;
+}
+
 TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
   // Rank 0
   {
@@ -229,6 +244,7 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
     size_t shmem               = view_t::shmem_size(5);
     size_t expected_shmem_size = 5lu * sizeof(double) + sizeof(double);
     ASSERT_EQ(shmem, expected_shmem_size);
+    ASSERT_TRUE(test_device_side_ctor(a, std::make_index_sequence<0>()));
   }
   // Rank 3
   {
@@ -243,6 +259,7 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
     size_t expected_shmem_size =
         3lu * 7lu * 11lu * 5lu * sizeof(double) + sizeof(double);
     ASSERT_EQ(shmem, expected_shmem_size);
+    ASSERT_TRUE(test_device_side_ctor(a, std::make_index_sequence<3>()));
   }
   // Rank 6
   {
@@ -258,6 +275,7 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
         2lu * 3lu * 2lu * 7lu * 2lu * 11lu * 5lu * sizeof(double) +
         sizeof(double);
     ASSERT_EQ(shmem, expected_shmem_size);
+    ASSERT_TRUE(test_device_side_ctor(a, std::make_index_sequence<6>()));
   }
   // Rank 3
   {
@@ -272,6 +290,7 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
     size_t expected_shmem_size =
         3lu * 7lu * 11lu * 5lu * sizeof(double) + sizeof(double);
     ASSERT_EQ(shmem, expected_shmem_size);
+    ASSERT_TRUE(test_device_side_ctor(a, std::make_index_sequence<3>()));
   }
   // Rank 6
   {
@@ -287,5 +306,6 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
         2lu * 3lu * 2lu * 7lu * 2lu * 11lu * 5lu * sizeof(double) +
         sizeof(double);
     ASSERT_EQ(shmem, expected_shmem_size);
+    ASSERT_TRUE(test_device_side_ctor(a, std::make_index_sequence<6>()));
   }
 }

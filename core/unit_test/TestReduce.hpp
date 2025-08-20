@@ -717,9 +717,14 @@ class TestReductionOverInfiniteFloat {
 };
 
 TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
-  // nvhpc on device doesn't use the correct neutral value for the min and max
-  // reducers
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
+// nvhpc on device doesn't use the correct neutral value for the min and max
+// reducers
 #if !(defined(KOKKOS_COMPILER_NVHPC) && defined(KOKKOS_ENABLE_OPENACC))
+  GTEST_SKIP() << "skipping for NVHPC and OPENACC due to wrong neutral value";
+#else
   TestReductionOverInfiniteFloat<Kokkos::Experimental::half_t>();
   TestReductionOverInfiniteFloat<Kokkos::Experimental::bhalf_t>();
   TestReductionOverInfiniteFloat<float>();

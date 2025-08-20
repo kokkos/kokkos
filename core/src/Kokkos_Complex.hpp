@@ -1030,15 +1030,8 @@ std::istream& operator>>(std::istream& is, complex<RealType>& x) {
 
 template <class T>
 struct reduction_identity<Kokkos::complex<T>> {
-  using t_red_ident = reduction_identity<T>;
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::complex<T>
-  sum() noexcept {
-    return Kokkos::complex<T>(t_red_ident::sum(), t_red_ident::sum());
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static Kokkos::complex<T>
-  prod() noexcept {
-    return Kokkos::complex<T>(t_red_ident::prod(), t_red_ident::sum());
-  }
+  KOKKOS_FUNCTION static Kokkos::complex<T> sum() noexcept { return 0; }
+  KOKKOS_FUNCTION static Kokkos::complex<T> prod() noexcept { return 1; }
 };
 
 }  // namespace Kokkos

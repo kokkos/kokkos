@@ -20,14 +20,12 @@
 #ifdef KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
 
 #include <Kokkos_Half.hpp>
-#include <Kokkos_ReductionIdentity.hpp>
 
 #if CUDA_VERSION >= 11000
 #include <cuda_bf16.h>
 #endif
 
-namespace Kokkos {
-namespace Experimental {
+namespace Kokkos::Experimental {
 
 /************************** half conversions **********************************/
 KOKKOS_INLINE_FUNCTION
@@ -472,44 +470,7 @@ cast_from_bhalf(bhalf_t val) {
 #endif  // CUDA_VERSION >= 11010
 
 #undef KOKKOS_IMPL_NVIDIA_GPU_ARCH_SUPPORT_BHALF
-}  // namespace Experimental
+}  // namespace Kokkos::Experimental
 
-#if (CUDA_VERSION >= 11000)
-template <>
-struct reduction_identity<Kokkos::Experimental::bhalf_t> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float sum() noexcept {
-    return 0.0F;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() noexcept {
-    return 1.0F;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() noexcept {
-    return -Kokkos::Experimental::infinity_v<float>;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() noexcept {
-    return Kokkos::Experimental::infinity_v<float>;
-  }
-};
-#endif  // CUDA_VERSION >= 11000
-
-// use float as the return type for sum and prod since cuda_fp16.h
-// has no constexpr functions for casting to __half
-template <>
-struct reduction_identity<Kokkos::Experimental::half_t> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float sum() noexcept {
-    return 0.0F;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() noexcept {
-    return 1.0F;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() noexcept {
-    return -Kokkos::Experimental::infinity_v<float>;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() noexcept {
-    return Kokkos::Experimental::infinity_v<float>;
-  }
-};
-
-}  // namespace Kokkos
 #endif  // KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
 #endif

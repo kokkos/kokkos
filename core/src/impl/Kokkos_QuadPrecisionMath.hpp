@@ -32,55 +32,26 @@
 #error __float128 not supported on this host
 #endif
 
-//<editor-fold desc="numeric traits __float128 specializations">
-namespace Kokkos {
-namespace Experimental {
-#define KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(TRAIT, TYPE, VALUE_TYPE, VALUE) \
-  template <>                                                                \
-  struct TRAIT<TYPE> {                                                       \
-    static constexpr VALUE_TYPE value = VALUE;                               \
-  };                                                                         \
-  template <>                                                                \
-  inline constexpr auto TRAIT##_v<TYPE> = TRAIT<TYPE>::value;
-
-// clang-format off
-// Numeric distinguished value traits
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(infinity,       __float128, __float128, HUGE_VALQ)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(finite_min,     __float128, __float128, -FLT128_MAX)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(finite_max,     __float128, __float128, FLT128_MAX)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(epsilon,        __float128, __float128, FLT128_EPSILON)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(round_error,    __float128, __float128, static_cast<__float128>(0.5))
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(norm_min,       __float128, __float128, FLT128_MIN)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(denorm_min,     __float128, __float128, FLT128_DENORM_MIN)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(quiet_NaN,      __float128, __float128, __builtin_nanq(""))
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(signaling_NaN,  __float128, __float128, __builtin_nansq(""))
-
-// Numeric characteristics traits
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(digits,         __float128,        int, FLT128_MANT_DIG)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(digits10,       __float128,        int, FLT128_DIG)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_digits10,   __float128,        int, 36)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(radix,          __float128,        int, 2)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(min_exponent,   __float128,        int, FLT128_MIN_EXP)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_exponent,   __float128,        int, FLT128_MAX_EXP)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(min_exponent10, __float128,        int, FLT128_MIN_10_EXP)
-KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT(max_exponent10, __float128,        int, FLT128_MAX_10_EXP)
-// clang-format on
-
-#undef KOKKOS_IMPL_SPECIALIZE_NUMERIC_TRAIT
-}  // namespace Experimental
-}  // namespace Kokkos
-//</editor-fold>
-
 namespace Kokkos {
 template <>
 struct reduction_identity<__float128> {
   KOKKOS_FUNCTION constexpr static __float128 sum() noexcept { return 0; }
   KOKKOS_FUNCTION constexpr static __float128 prod() noexcept { return 1; }
   KOKKOS_FUNCTION constexpr static __float128 max() noexcept {
-    return -FLT128_MAX;
+    using namespace Kokkos::Experimental;
+#if __FINITE_MATH_ONLY__
+    return finite_min_v<__float128>;
+#else
+    return -infinity_v<__float128>;
+#endif
   }
   KOKKOS_FUNCTION constexpr static __float128 min() noexcept {
-    return FLT128_MAX;
+    using namespace Kokkos::Experimental;
+#if __FINITE_MATH_ONLY__
+    return finite_max_v<__float128>;
+#else
+    return infinity_v<__float128>;
+#endif
   }
 };
 }  // namespace Kokkos

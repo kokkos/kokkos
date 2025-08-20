@@ -1344,6 +1344,7 @@ struct TestAbsoluteValueFunction {
       Kokkos::printf("failed abs(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1351,6 +1352,7 @@ struct TestAbsoluteValueFunction {
       ++e;
       Kokkos::printf("failed abs(floating_point) special values\n");
     }
+#endif
 
     static_assert(std::is_same_v<decltype(abs(1)), int>);
     static_assert(std::is_same_v<decltype(abs(2l)), long>);
@@ -1405,6 +1407,7 @@ struct TestFloatingPointAbsoluteValueFunction {
       Kokkos::printf("failed fabs(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1412,6 +1415,7 @@ struct TestFloatingPointAbsoluteValueFunction {
       ++e;
       Kokkos::printf("failed fabs(floating_point) special values\n");
     }
+#endif
 
     static_assert(std::is_same_v<decltype(fabs(static_cast<KE::half_t>(4.f))),
                                  KE::half_t>);
@@ -1473,6 +1477,7 @@ struct TestFloatingPointRemainderFunction : FloatingPointComparison {
       Kokkos::printf("failed fmod(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1481,6 +1486,7 @@ struct TestFloatingPointRemainderFunction : FloatingPointComparison {
       ++e;
       Kokkos::printf("failed fmod(floating_point) special values\n");
     }
+#endif
 
     static_assert(std::is_same_v<decltype(fmod(static_cast<KE::half_t>(4.f),
                                                static_cast<KE::half_t>(4.f))),
@@ -1547,6 +1553,7 @@ struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
       Kokkos::printf("failed remainder(long double)\n");
     }
 #endif
+#if !__FINITE_MATH_ONLY__
     // special values
     using Kokkos::isinf;
     using Kokkos::isnan;
@@ -1556,6 +1563,7 @@ struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
       Kokkos::printf(
           "failed remainder(floating_point) special values\n");
     }
+#endif
 
     static_assert(
         std::is_same<decltype(remainder(static_cast<KE::half_t>(4.f),
@@ -1651,6 +1659,9 @@ struct TestIsFinite {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_isfinite) {
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
   TestIsFinite<TEST_EXECSPACE>();
 }
 
@@ -1722,6 +1733,9 @@ struct TestIsInf {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_isinf) {
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
   TestIsInf<TEST_EXECSPACE>();
 }
 
@@ -1793,6 +1807,9 @@ struct TestIsNaN {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_isnan) {
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
   TestIsNaN<TEST_EXECSPACE>();
 }
 

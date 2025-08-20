@@ -914,16 +914,17 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   template <class... Args>
-  View(std::enable_if_t<
+  KOKKOS_FUNCTION View(
+      std::enable_if_t<
 #ifndef KOKKOS_COMPILER_MSVC
-           ((sizeof...(Args)) == rank() + 1) &&
-               (std::is_constructible_v<size_t, Args> && ... && true),
+          ((sizeof...(Args)) == rank() + 1) &&
+              (std::is_constructible_v<size_t, Args> && ... && true),
 #else
            msvc_workaround_ctor_condition_2<Args...>(),
 #endif
-           const pointer_type&>
-           arg_ptr,
-       const Args... args)
+          const pointer_type&>
+          arg_ptr,
+      const Args... args)
       : View(
             Kokkos::view_wrap(arg_ptr,
                               Kokkos::Impl::AccessorArg_t{
