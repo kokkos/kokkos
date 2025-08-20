@@ -361,11 +361,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::SharedAllocationTracker& impl_track() const {
-    if constexpr (!traits::memory_traits::is_unmanaged) {
-      return base_t::data_handle().tracker();
-    } else {
+    if constexpr (traits::memory_traits::is_unmanaged) {
       static const Kokkos::Impl::SharedAllocationTracker empty_tracker = {};
       return empty_tracker;
+    } else {
+      return base_t::data_handle().tracker();
     }
   }
   //----------------------------------------
@@ -1074,18 +1074,18 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   //----------------------------------------
   // Allocation tracking properties
   std::string label() const {
-    if constexpr (!traits::memory_traits::is_unmanaged) {
-      return this->data_handle().get_label();
-    } else {
+    if constexpr (traits::memory_traits::is_unmanaged) {
       return "";
+    } else {
+      return this->data_handle().get_label();
     }
   }
 
   int use_count() const {
-    if constexpr (!traits::memory_traits::is_unmanaged) {
-      return this->data_handle().use_count();
-    } else {
+    if constexpr (traits::memory_traits::is_unmanaged) {
       return 0;
+    } else {
+      return this->data_handle().use_count();
     }
   }
 
