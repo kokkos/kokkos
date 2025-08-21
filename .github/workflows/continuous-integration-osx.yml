@@ -19,24 +19,24 @@ jobs:
         include:
           - backend: "SERIAL"
             cmake_build_type: "RelWithDebInfo"
-            cxx_standard: "17"
+            cxx_standard: "20"
             compiler: "c++"
             runner: "macos-14"
             cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm)/bin/clang-tidy;-warnings-as-errors=*"'
           - backend: "THREADS"
             cmake_build_type: "RelWithDebInfo"
-            cxx_standard: "17"
+            cxx_standard: "20"
             compiler: "c++"
             runner: "macos-14"
           - backend: "SERIAL"
             cmake_build_type: "Debug"
-            cxx_standard: "17"
+            cxx_standard: "20"
             compiler: "c++"
             runner: "macos-14"
             cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm)/bin/clang-tidy;-warnings-as-errors=*"'
           - backend: "SERIAL"
             cmake_build_type: "Release"
-            cxx_standard: "17"
+            cxx_standard: "20"
             compiler: "c++"
             runner: "macos-14"
             cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm)/bin/clang-tidy;-warnings-as-errors=*"'

@@ -24,7 +24,7 @@ jobs:
     - name: configure
       shell: bash
       run: |
-        cmake -B build -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
+        cmake -B build -DCMAKE_CXX_STANDARD=20 -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
     - name: build library
       shell: bash
       run: |
@@ -39,7 +39,7 @@ jobs:
     - name: configure
       shell: bash
       run: |
-        cmake -B build -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_DEPRECATED_CODE_4=ON
+        cmake -B build -DCMAKE_CXX_STANDARD=20 -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_DEPRECATED_CODE_4=ON
     - name: build library
       shell: bash
       run: |
