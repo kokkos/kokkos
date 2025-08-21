@@ -39,7 +39,7 @@ namespace Impl {
 template <>
 inline TileSizeProperties get_tile_size_properties<HIP>(const HIP& space) {
   TileSizeProperties properties;
-  const auto& device_prop = space.impl_internal_space_instance()->m_deviceProp;
+  const auto& device_prop = space.hip_device_prop();
   properties.max_threads  = device_prop.maxThreadsPerBlock;
   properties.default_largest_tile_size = 16;
   properties.default_tile_size         = 4;

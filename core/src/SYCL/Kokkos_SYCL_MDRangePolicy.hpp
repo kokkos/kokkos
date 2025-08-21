@@ -49,7 +49,6 @@ inline TileSizeProperties get_tile_size_properties<Kokkos::SYCL>(
   auto device = space.sycl_queue().get_device();
   auto max_work_item_sizes =
       device.get_info<sycl::info::device::max_work_item_sizes<3>>();
-  properties.max_threads_dimensions    = Kokkos::Array<int, 3>{1, 1, 1};
   properties.max_threads_dimensions[0] = max_work_item_sizes[0];
   properties.max_threads_dimensions[1] = max_work_item_sizes[1];
   properties.max_threads_dimensions[2] = max_work_item_sizes[2];
