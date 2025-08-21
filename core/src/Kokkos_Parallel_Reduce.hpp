@@ -28,7 +28,6 @@ static_assert(false,
 #include <impl/Kokkos_Tools_Generic.hpp>
 #include <type_traits>
 
-
 namespace Kokkos {
 namespace Impl {
 
