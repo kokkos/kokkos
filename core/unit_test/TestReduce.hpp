@@ -716,6 +716,7 @@ class TestReductionOverInfiniteFloat {
   }
 };
 
+KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_PUSH()
 TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
 #if __FINITE_MATH_ONLY__
   GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
@@ -737,5 +738,6 @@ TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
   TestReductionOverInfiniteFloat<long double>();
 #endif
 }
+KOKKOS_IMPL_DISABLE_UNREACHABLE_WARNINGS_POP()
 
 }  // namespace Test
