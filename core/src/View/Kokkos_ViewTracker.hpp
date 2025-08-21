@@ -62,7 +62,7 @@ struct ViewTracker {
   }
 
   template <class RT, class... RP>
-  KOKKOS_INLINE_FUNCTION void assign(const View<RT, RP...>& vt) noexcept {
+  KOKKOS_INLINE_FUNCTION void assign(const View<RT, RP...>& vt) {
     if (this == reinterpret_cast<const ViewTracker*>(&vt.m_track)) return;
     KOKKOS_IF_ON_HOST((
         if (!view_traits::memory_traits::is_unmanaged &&
@@ -74,8 +74,7 @@ struct ViewTracker {
     KOKKOS_IF_ON_DEVICE((m_tracker.assign_force_disable(vt.m_track.m_tracker);))
   }
 
-  KOKKOS_INLINE_FUNCTION ViewTracker& operator=(
-      const ViewTracker& rhs) noexcept {
+  KOKKOS_INLINE_FUNCTION ViewTracker& operator=(const ViewTracker& rhs) {
     if (this == &rhs) return *this;
     KOKKOS_IF_ON_HOST((
         if (!view_traits::memory_traits::is_unmanaged &&
