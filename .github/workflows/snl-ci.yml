@@ -277,5 +277,5 @@ jobs:
 
       - name: test_kokkos
         working-directory: kokkos/build
-        run: ctest --output-on-failure --timeout 3600
+        run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
 
