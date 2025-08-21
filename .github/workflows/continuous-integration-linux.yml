@@ -160,7 +160,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
-            -DCMAKE_CXX_STANDARD="${{ matrix.stdcxx }}" \
+            -DCMAKE_CXX_STANDARD=${{ matrix.stdcxx }} \
             -DCMAKE_EXE_LINKER_FLAGS="${{ matrix.extra_linker_flags }}" \
             -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -178,7 +178,7 @@ jobs:
         if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
         run: |
-          cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DKokkos_ROOT=../../builddir
+          cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DCMAKE_CXX_STANDARD=${{ matrix.stdcxx }} -DKokkos_ROOT=../../builddir
           cmake --build builddir_buildtree
           cmake --build builddir_buildtree --target test
       - name: Test DESTDIR Install
@@ -189,6 +189,6 @@ jobs:
         if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
         run: |
-          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }}
+          cmake -B builddir -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DCMAKE_CXX_STANDARD=${{ matrix.stdcxx }}
           cmake --build builddir
           cmake --build builddir --target test
