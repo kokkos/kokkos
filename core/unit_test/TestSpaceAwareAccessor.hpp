@@ -96,7 +96,9 @@ void test_space_aware_accessor() {
             std::is_same_v<typename acc_t::nested_accessor_type, FunkyAcc<T>>);
 #ifndef KOKKOS_ENABLE_CXX17
         static_assert(std::copyable<acc_t>);
+#ifndef _WIN32  // Windows does not treat no-unique-address correctly by default
         static_assert(std::is_empty_v<acc_t>);
+#endif
 #endif
       },
       errors);
