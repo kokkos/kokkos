@@ -61,9 +61,9 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
-  HIP_5_6_1:
-    name: SNL_HIP_ROCM_5_6_1
-    runs-on: [snl-kk-env-openblas-0.3.23-hip-5.6.1-latest]
+  HIP_6_2_1_CPP23:
+    name: SNL_HIP_ROCM_6_2_1_CPP23
+    runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
     continue-on-error: true
 
     strategy:
@@ -82,6 +82,7 @@ jobs:
           cd kokkos
           cmake -S . -B build \
             -DCMAKE_CXX_COMPILER=hipcc \
+            -DCMAKE_CXX_STANDARD=23 \
             -DKokkos_ENABLE_HIP=ON \
             -DKokkos_ARCH_AMD_GFX90A=ON \
             -DKokkos_ARCH_NATIVE=ON \
@@ -261,7 +262,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_CXX_FLAGS="-Werror" \
-            -DCMAKE_CXX_STANDARD="17" \
+            -DCMAKE_CXX_STANDARD=23 \
             -DCMAKE_CXX_COMPILER=g++ \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" \
