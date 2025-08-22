@@ -107,7 +107,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.2.4-complete@sha256:6604a97283a218fc62ab59e23c54ec34ad634be9201b001435844a59ba1b8eb5
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-22.04:6.2.4-complete@sha256:6604a97283a218fc62ab59e23c54ec34ad634be9201b001435844a59ba1b8eb5'
                             label 'rocm-docker'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -332,7 +332,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.3.4-complete@ha256:76e99e263ef6ce69ba5d32905623c801fff3f85a6108e931820f6eb1d13eac67
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.3.4-complete@ha256:76e99e263ef6ce69ba5d32905623c801fff3f85a6108e931820f6eb1d13eac67'
                             label 'rocm-docker '
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
