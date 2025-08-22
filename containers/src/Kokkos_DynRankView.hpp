@@ -65,31 +65,10 @@ struct DynRankDimTraits {
   KOKKOS_INLINE_FUNCTION
   static size_t computeRank(const size_t N0, const size_t N1, const size_t N2,
                             const size_t N3, const size_t N4, const size_t N5,
-                            const size_t N6, const size_t /* N7 */) {
-    return (
-        (N6 == unspecified && N5 == unspecified && N4 == unspecified &&
-         N3 == unspecified && N2 == unspecified && N1 == unspecified &&
-         N0 == unspecified)
-            ? 0
-            : ((N6 == unspecified && N5 == unspecified && N4 == unspecified &&
-                N3 == unspecified && N2 == unspecified && N1 == unspecified)
-                   ? 1
-                   : ((N6 == unspecified && N5 == unspecified &&
-                       N4 == unspecified && N3 == unspecified &&
-                       N2 == unspecified)
-                          ? 2
-                          : ((N6 == unspecified && N5 == unspecified &&
-                              N4 == unspecified && N3 == unspecified)
-                                 ? 3
-                                 : ((N6 == unspecified && N5 == unspecified &&
-                                     N4 == unspecified)
-                                        ? 4
-                                        : ((N6 == unspecified &&
-                                            N5 == unspecified)
-                                               ? 5
-                                               : ((N6 == unspecified)
-                                                      ? 6
-                                                      : 7)))))));
+                            const size_t N6, const size_t N7) {
+    return (N0 != unspecified) + (N1 != unspecified) + (N2 != unspecified) +
+           (N3 != unspecified) + (N4 != unspecified) + (N5 != unspecified) +
+           (N6 != unspecified) + (N7 != unspecified);
   }
 
   // Compute the rank of the view from the nonzero layout arguments.
@@ -937,7 +916,7 @@ class DynRankView : private View<DataType*******, Properties...> {
     if constexpr (traits::impl_is_customized &&
                   !Impl::ViewCtorProp<P...>::has_accessor_arg) {
       int r = 0;
-      while (r < 7 && layout.dimension[r] != KOKKOS_INVALID_INDEX) r++;
+      while (r < 8 && layout.dimension[r] != KOKKOS_INVALID_INDEX) r++;
 
       // Can't use with_properties_if_unset since its a host only function!
       return view_wrap(
@@ -956,7 +935,7 @@ class DynRankView : private View<DataType*******, Properties...> {
     if constexpr (traits::impl_is_customized &&
                   !Impl::ViewCtorProp<P...>::has_accessor_arg) {
       int r = 0;
-      while (r < 7 && layout.dimension[r] != KOKKOS_INVALID_INDEX) r++;
+      while (r < 8 && layout.dimension[r] != KOKKOS_INVALID_INDEX) r++;
       // Could use with_properties_if_unset, but rather keep same as above.
       return view_alloc(
           static_cast<const Impl::ViewCtorProp<void, P>&>(arg_prop).value...,

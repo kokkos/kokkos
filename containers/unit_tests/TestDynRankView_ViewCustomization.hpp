@@ -204,6 +204,36 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
         sizeof(double);
     ASSERT_EQ(shmem, expected_shmem_size);
   }
+  // Rank 7
+  {
+    view_t a("A", 2, 3, 2, 7, 2, 11, 2, 5);
+    ASSERT_EQ(a.rank(), 7lu);
+    ASSERT_EQ(a.extent(0), 2lu);
+    ASSERT_EQ(a.extent(1), 3lu);
+    ASSERT_EQ(a.extent(2), 2lu);
+    ASSERT_EQ(a.extent(3), 7lu);
+    ASSERT_EQ(a.extent(4), 2lu);
+    ASSERT_EQ(a.extent(5), 11lu);
+    ASSERT_EQ(a.extent(2), 2lu);
+    ASSERT_EQ(a.accessor().size, 5lu);
+    ASSERT_EQ(a.accessor().stride, size_t(16 * 3 * 7 * 11));
+    view_t b(a.data(), 2, 3, 2, 7, 2, 11, 2, 5);
+    ASSERT_EQ(b.rank(), 7lu);
+    ASSERT_EQ(b.extent(0), 2lu);
+    ASSERT_EQ(b.extent(1), 3lu);
+    ASSERT_EQ(b.extent(2), 2lu);
+    ASSERT_EQ(b.extent(3), 7lu);
+    ASSERT_EQ(b.extent(4), 2lu);
+    ASSERT_EQ(b.extent(5), 11lu);
+    ASSERT_EQ(b.extent(6), 2lu);
+    ASSERT_EQ(b.accessor().size, 5lu);
+    ASSERT_EQ(b.accessor().stride, size_t(16 * 3 * 7 * 11));
+    size_t shmem = view_t::shmem_size(2, 3, 2, 7, 2, 11, 2, 5);
+    size_t expected_shmem_size =
+        2lu * 3lu * 2lu * 7lu * 2lu * 11lu * 2lu * 5lu * sizeof(double) +
+        sizeof(double);
+    ASSERT_EQ(shmem, expected_shmem_size);
+  }
   // With accessor arg and no label
   {
     // This should not interpret the last argument (11) as an accessor arg since
