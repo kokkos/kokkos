@@ -332,7 +332,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.3.4-complete@ha256:76e99e263ef6ce69ba5d32905623c801fff3f85a6108e931820f6eb1d13eac67'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.3.4-complete@sha256:76e99e263ef6ce69ba5d32905623c801fff3f85a6108e931820f6eb1d13eac67'
                             label 'rocm-docker '
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
@@ -447,14 +447,14 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.8-Clang-16') {
+                stage('CUDA-11.8-Clang-15') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
                             label 'nvidia-docker && volta'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04 --build-arg ADDITIONAL_PACKAGES="clang-16 clang-tidy-16"'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.8.0-devel-ubuntu22.04 --build-arg ADDITIONAL_PACKAGES="clang-15 clang-tidy-15"'
                         }
                     }
                     steps {
@@ -463,8 +463,8 @@ pipeline {
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-                                -DCMAKE_CXX_COMPILER=clang++-16 \
-                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-16;-warnings-as-errors=*" \
+                                -DCMAKE_CXX_COMPILER=clang++-15 \
+                                -DCMAKE_CXX_CLANG_TIDY="clang-tidy-15;-warnings-as-errors=*" \
                                 -DCMAKE_CXX_FLAGS="-Werror -Wno-unknown-cuda-version -Wno-pass-failed" \
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
