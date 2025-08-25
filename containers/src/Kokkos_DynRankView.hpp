@@ -119,7 +119,7 @@ struct DynRankDimTraits {
       (std::is_same_v<Layout, Kokkos::LayoutRight> ||
        std::is_same_v<Layout, Kokkos::LayoutLeft>),
       Layout>
-  createLayout(const Layout& layout) {
+  createLayout(const Layout& layout, [[maybe_unused]] int new_rank = -1) {
     Layout new_layout(
         layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
         layout.dimension[1] != unspecified ? layout.dimension[1] : 1,
@@ -146,6 +146,10 @@ struct DynRankDimTraits {
     } else
 #endif
       new_layout.stride = layout.stride;
+    if constexpr (std::is_same_v<Layout, Kokkos::LayoutRight>) {
+      if (new_rank != -1 && layout.dimension[new_rank - 1] == layout.stride)
+        new_layout.stride = unspecified;
+    }
     return new_layout;
   }
 
@@ -153,7 +157,7 @@ struct DynRankDimTraits {
   template <typename Layout>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
       (std::is_same_v<Layout, Kokkos::LayoutStride>), Layout>
-  createLayout(const Layout& layout) {
+  createLayout(const Layout& layout, [[maybe_unused]] int new_rank = -1) {
     return Layout(
         layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
         layout.stride[0],
@@ -853,7 +857,7 @@ class DynRankView : private View<DataType*******, Properties...> {
       : view_type(rhs.data_handle(),
                   Impl::mapping_from_array_layout<
                       typename view_type::mdspan_type::mapping_type>(
-                      drdtraits::createLayout(rhs.layout())),
+                      drdtraits::createLayout(rhs.layout(), new_rank)),
                   rhs.accessor()),
         m_rank(new_rank) {
     if (new_rank > View<RT, RP...>::rank())
@@ -868,7 +872,7 @@ class DynRankView : private View<DataType*******, Properties...> {
         view_type(rhs.data_handle(),
                   Impl::mapping_from_array_layout<
                       typename view_type::mdspan_type::mapping_type>(
-                      drdtraits::createLayout(rhs.layout())),
+                      drdtraits::createLayout(rhs.layout(), rhs.rank())),
                   rhs.accessor()));
     m_rank = rhs.rank();
     return *this;
