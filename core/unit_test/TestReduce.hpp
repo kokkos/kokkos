@@ -727,8 +727,12 @@ TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
   GTEST_SKIP() << "skipping for NVHPC and OPENACC due to wrong neutral value";
 #endif
 
+  // FIXME_CUDA cuda-clang 17 cannot compile the max parallel_reduce for half_t
+  // and bhalf_t. The min parallel_reduce works correctly.
+#if !defined(KOKKOS_ENABLE_CUDA) || !defined(KOKKOS_COMPILER_CLANG)
   TestReductionOverInfiniteFloat<Kokkos::Experimental::half_t>();
   TestReductionOverInfiniteFloat<Kokkos::Experimental::bhalf_t>();
+#endif
   TestReductionOverInfiniteFloat<float>();
   TestReductionOverInfiniteFloat<double>();
 
