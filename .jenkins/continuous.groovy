@@ -186,7 +186,7 @@ pipeline {
                                 -DCMAKE_CXX_COMPILER=$WORKSPACE/bin/nvcc_wrapper \
                                 -DCMAKE_CXX_FLAGS="-Werror --Werror=all-warnings -Xcudafe --diag_suppress=940" \
                                 -DCMAKE_EXE_LINKER_FLAGS="-Xnvlink -suppress-stack-size-warning" \
-                                -DCMAKE_CXX_STANDARD=17 \
+                                -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
@@ -560,7 +560,7 @@ pipeline {
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=17 .. && make -j8 && ctest --verbose'''
+                              cmake -DCMAKE_CXX_STANDARD=20 .. && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
