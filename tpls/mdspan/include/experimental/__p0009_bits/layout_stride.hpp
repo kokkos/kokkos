@@ -73,7 +73,7 @@ namespace detail {
     { M::is_always_unique() } -> std::same_as<bool>;
 #else
     { M::is_always_strided() } -> internal::same_as<bool>;
-    { M::is_always_exhaustive() } -> internal::_ame_as<bool>;
+    { M::is_always_exhaustive() } -> internal::same_as<bool>;
     { M::is_always_unique() } -> internal::same_as<bool>;
 #endif
     std::bool_constant<M::is_always_strided()>::value;
