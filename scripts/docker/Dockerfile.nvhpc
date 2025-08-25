@@ -1,4 +1,4 @@
-ARG BASE=nvcr.io/nvidia/nvhpc:23.7-devel-cuda12.2-ubuntu20.04@sha256:4f344e501d63c902a3f51c1783b88be5c9f5093641fc15b51b7d387f16d6d7bb
+ARG BASE=nvcr.io/nvidia/nvhpc:23.7-devel-cuda12.2-ubuntu22.04@sha256:d06b3185fe53e8d2d31482c974dcf6023efe857ebf2c1d9625a29b394560ac91
 FROM $BASE
 
 ARG ADDITIONAL_PACKAGES
