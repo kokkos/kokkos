@@ -223,6 +223,11 @@ struct BitComparisonWrapper {
   }
 
   template <typename Number>
+  KOKKOS_FUNCTION friend bool operator==(Number b, BitComparisonWrapper a) {
+      return static_cast<FloatType>(a) == b;
+  }
+
+  template <typename Number>
   KOKKOS_FUNCTION friend bool operator!=(BitComparisonWrapper a, Number b) {
     return static_cast<FloatType>(a) != b;
   }

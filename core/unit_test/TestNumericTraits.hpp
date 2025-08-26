@@ -110,7 +110,7 @@ struct TestNumericTraits {
 
   KOKKOS_FUNCTION void operator()(Infinity, int, int& e) const {
     using Kokkos::Experimental::infinity;
-    constexpr auto inf = infinity<T>::value;
+    auto inf = static_cast<T>(infinity<T>::value);
     auto const zero    = T(0);
     e += (int)!(inf + inf == inf);
     e += (int)!(inf != zero);
