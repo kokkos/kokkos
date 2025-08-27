@@ -74,8 +74,12 @@ namespace Kokkos {
 using MemoryManaged KOKKOS_DEPRECATED = Kokkos::MemoryTraits<>;
 #endif
 using MemoryUnmanaged = Kokkos::MemoryTraits<Kokkos::Unmanaged>;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 using MemoryRandomAccess =
     Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::RandomAccess>;
+#else
+using MemoryRandomAccess = Kokkos::MemoryTraits<Kokkos::RandomAccess>;
+#endif
 
 }  // namespace Kokkos
 
