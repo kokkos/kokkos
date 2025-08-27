@@ -109,12 +109,10 @@ struct [[nodiscard]] Graph {
 
   auto root_node() const { return root_t{m_impl_ptr, m_root}; }
 
-  void submit(const execution_space& exec) const {
+  void submit(const execution_space& exec = execution_space{}) const {
     KOKKOS_EXPECTS(bool(m_impl_ptr))
     (*m_impl_ptr).submit(exec);
   }
-
-  void submit() const { submit(get_execution_space()); }
 
   decltype(auto) native_graph();
 

@@ -128,14 +128,14 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once) {
       });
   graph.submit();
 
-  ASSERT_TRUE(contains(graph.get_execution_space(), count, 1));
-  ASSERT_TRUE(contains(graph.get_execution_space(), bugs, 0));
+  ASSERT_TRUE(contains(TEST_EXECSPACE{}, count, 1));
+  ASSERT_TRUE(contains(TEST_EXECSPACE{}, bugs, 0));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once_rvalue) {
   Kokkos::Experimental::create_graph(ex, [&](auto root) {
     root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
-  }).submit();
+  }).submit(ex);
 
   ASSERT_TRUE(contains(ex, count, 1));
   ASSERT_TRUE(contains(ex, bugs, 0));
@@ -149,7 +149,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), instantiate_and_submit_once) {
     root.then_parallel_for(1, count_functor{count, bugs, 0, 0});
   });
   graph.instantiate();
-  graph.submit();
+  graph.submit(ex);
 
   ASSERT_TRUE(contains(ex, count, 1));
   ASSERT_TRUE(contains(ex, bugs, 0));
@@ -299,7 +299,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
     ready.then_parallel_for(2, count_functor{count, bugs, 0, 6});
     //----------------------------------------
   });
-  graph.submit();
+  graph.submit(ex);
 
   ASSERT_TRUE(contains(ex, count, 6));
   ASSERT_TRUE(contains(ex, bugs, 0));
@@ -319,7 +319,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
     Kokkos::Experimental::when_all(f1, f4, f3)
         .then_parallel_reduce(6, set_result_functor{count}, reduction_out);
     //----------------------------------------
-  }).submit();
+  }).submit(ex);
 
   ASSERT_TRUE(contains(ex, bugs, 0));
   ASSERT_TRUE(contains(ex, count, 7));
@@ -363,7 +363,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), repeat_chain) {
     constexpr int repeats = 10;
 
     for (int i = 0; i < repeats; ++i) {
-      graph.submit();
+      graph.submit(ex);
       ex.fence();
       EXPECT_EQ(2, count_host());
       EXPECT_EQ(0, bugs_host());
@@ -395,7 +395,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
     (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
   Kokkos::fence();
 #endif
-  graph.submit();
+  graph.submit(ex);
   Kokkos::deep_copy(ex, count, 1);
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
@@ -403,7 +403,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
     (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
-  graph.submit();
+  graph.submit(ex);
 
   ASSERT_TRUE(contains(ex, count, 0));
 }
@@ -561,10 +561,11 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), sized_functor_launch) {
 // Ensure that an empty graph on the default host execution space
 // can be submitted.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), empty_graph_default_host_exec) {
-  Kokkos::Experimental::Graph graph{Kokkos::DefaultHostExecutionSpace{}};
+  const Kokkos::DefaultHostExecutionSpace exec{};
+  Kokkos::Experimental::Graph graph{exec};
   graph.instantiate();
-  graph.submit();
-  graph.get_execution_space().fence();
+  graph.submit(exec);
+  exec.fence();
 }
 
 template <typename DataViewType, typename BufferViewType>
