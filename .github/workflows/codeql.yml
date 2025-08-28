@@ -29,7 +29,7 @@ jobs:
       run:
         cmake -B build .
           -DKokkos_ENABLE_OPENMP=ON
-          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_CXX_FLAGS=-Werror
           -DKokkos_ENABLE_COMPILER_WARNINGS=ON
           -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF
