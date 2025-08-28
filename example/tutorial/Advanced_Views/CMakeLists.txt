@@ -6,3 +6,5 @@ kokkos_add_example_directories(04_dualviews)
 if(Kokkos_ENABLE_CUDA_UVM)
   kokkos_add_example_directories(05_NVIDIA_UVM)
 endif()
+
+kokkos_add_example_directories(07_Overlapping_DeepCopy)

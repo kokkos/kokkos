@@ -1,4 +1,5 @@
 kokkos_add_example_directories(query_device)
+kokkos_add_example_directories(virtual_functions)
 if(_DEVICE_PARALLEL STREQUAL "NoTypeDefined"
    OR KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
    OR KOKKOS_ENABLE_HIP_RELOCATABLE_DEVICE_CODE
