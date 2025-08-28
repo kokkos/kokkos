@@ -18,7 +18,7 @@
 
 // consteval specifier
 consteval int sqr(int n) { return n * n; }
-constexpr int r = sqr(100);
+static_assert(sqr(100) == 10000);
 
 // conditional explicit
 struct S {

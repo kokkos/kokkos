@@ -34,7 +34,7 @@ function(kokkos_set_cxx_standard_feature standard)
       if(${KOKKOS_CXX_COMPILER_VERSION} VERSION_LESS 13.0.0)
         set(SUPPORTED_NVCC_FLAGS "-std=c++20")
       else()
-        set(SUPPORTED_NVCC_FLAGS "-std=c++20" "-std=c++23")
+        set(SUPPORTED_NVCC_FLAGS "-std=c++20")
       endif()
       if(NOT ${${STANDARD_NAME}} IN_LIST SUPPORTED_NVCC_FLAGS)
         message(

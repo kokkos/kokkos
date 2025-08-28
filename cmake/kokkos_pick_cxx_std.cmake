@@ -5,7 +5,7 @@ kokkos_option(
   CXX_STANDARD
   ""
   STRING
-  "[[DEPRECATED - USE CMAKE_CXX_STANDARD INSTEAD]] The C++ standard for Kokkos to use: 20 or 23. If empty, this will default to CMAKE_CXX_STANDARD. If both CMAKE_CXX_STANDARD and Kokkos_CXX_STANDARD are empty, this will default to 20"
+  "[[DEPRECATED - USE CMAKE_CXX_STANDARD INSTEAD]] The C++ standard for Kokkos to use: 20, 23, and 26. If empty, this will default to CMAKE_CXX_STANDARD. If both CMAKE_CXX_STANDARD and Kokkos_CXX_STANDARD are empty, this will default to 20"
 )
 
 # Set CXX standard flags
