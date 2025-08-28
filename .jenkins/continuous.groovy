@@ -569,35 +569,6 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-12.2-NVCC') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.nvcc'
-                            dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:12.2.2-devel-ubuntu22.04@sha256:5f603101462baa721ff6ddc44af82f6e9ba7cbd92a424c9f9f348e6e9d6d64c3'
-                            label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
-                        }
-                    }
-                    steps {
-                        sh 'ccache --zero-stats'
-                        sh '''rm -rf build && mkdir -p build && cd build && \
-                              ../gnu_generate_makefile.bash \
-                                --with-options=compiler_warnings \
-                                --cxxflags="-Werror -Werror=all-warnings" \
-                                --cxxstandard=c++20 \
-                                --with-cuda \
-                                --with-cuda-options=enable_lambda \
-                                --arch=Volta70 \
-                              && \
-                              make test -j8'''
-                    }
-                    post {
-                        always {
-                            sh 'ccache --show-stats'
-                        }
-                    }
-                }
             }
         }
     }
