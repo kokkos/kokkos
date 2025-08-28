@@ -28,7 +28,6 @@
 #cmakedefine KOKKOS_ENABLE_SYCL
 
 /* General Settings */
-#cmakedefine KOKKOS_ENABLE_CXX17
 #cmakedefine KOKKOS_ENABLE_CXX20
 #cmakedefine KOKKOS_ENABLE_CXX23
 #cmakedefine KOKKOS_ENABLE_CXX26

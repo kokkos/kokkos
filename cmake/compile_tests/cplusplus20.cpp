@@ -14,12 +14,21 @@
 //
 //@HEADER
 
-#include <type_traits>
+#include <concepts>
 
-int main() {
-  // _v versions of type traits were added in C++17
-  if constexpr (std::is_same_v<double, int>)
-    return 0;
-  else
-    return 1;
+// consteval specifier
+consteval int sqr(int n) { return n * n; }
+constexpr int r = sqr(100);
+
+// conditional explicit
+struct S {
+  explicit(sizeof(int) > 0) S(int) {}
+};
+
+// concepts library
+constexpr std::floating_point auto x2(std::floating_point auto x) {
+  return x + x;
 }
+constexpr std::integral auto x2(std::integral auto x) { return x << 1; }
+
+int main() { return 0; }
