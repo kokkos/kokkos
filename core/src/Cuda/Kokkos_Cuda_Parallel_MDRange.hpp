@@ -120,7 +120,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
     dim3 grid(1, 1, 1);
     dim3 block(1, 1, 1);
-    if (RP::rank == 2) {
+    if constexpr (RP::rank == 2) {
       // id0 to threadIdx.x; id1 to threadIdx.y
       block = dim3(m_rp.m_tile[0], m_rp.m_tile[1], 1);
       grid =
@@ -131,7 +131,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                    (m_rp.m_upper[1] - m_rp.m_lower[1] + block.y - 1) / block.y,
                    m_max_grid_size[1]),
                1);
-    } else if (RP::rank == 3) {
+    } else if constexpr (RP::rank == 3) {
       // id0 to threadIdx.x; id1 to threadIdx.y; id2 to threadIdx.z
       block = dim3(m_rp.m_tile[0], m_rp.m_tile[1], m_rp.m_tile[2]);
       grid =
@@ -144,7 +144,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                std::min<array_index_type>(
                    (m_rp.m_upper[2] - m_rp.m_lower[2] + block.z - 1) / block.z,
                    m_max_grid_size[2]));
-    } else if (RP::rank == 4) {
+    } else if constexpr (RP::rank == 4) {
       // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to
       // threadIdx.z
       block =
@@ -158,7 +158,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                std::min<array_index_type>(
                    (m_rp.m_upper[3] - m_rp.m_lower[3] + block.z - 1) / block.z,
                    m_max_grid_size[2]));
-    } else if (RP::rank == 5) {
+    } else if constexpr (RP::rank == 5) {
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4 to
       // threadIdx.z
       block = dim3(m_rp.m_tile[0] * m_rp.m_tile[1],
@@ -171,7 +171,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                std::min<array_index_type>(
                    (m_rp.m_upper[4] - m_rp.m_lower[4] + block.z - 1) / block.z,
                    m_max_grid_size[2]));
-    } else if (RP::rank == 6) {
+    } else if constexpr (RP::rank == 6) {
       // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4,id5 to
       // threadIdx.z
       block =

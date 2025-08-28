@@ -20,10 +20,6 @@ struct TestMDFunctor {
   KOKKOS_FUNCTION void operator()(const int, const int) const {}
 };
 
-struct TestRangeFunctor {
-  KOKKOS_FUNCTION void operator()(const int) const {}
-};
-
 TEST(kokkosp, builtin_tuner) {
   Kokkos::TeamPolicy<ExecSpace> teamp(1, Kokkos::AUTO, Kokkos::AUTO);
   Kokkos::MDRangePolicy<Kokkos::Rank<2>> mdp({0, 0}, {1, 1});
@@ -91,8 +87,8 @@ TEST(kokkosp, builtin_tuner) {
 
 template <typename T>
 void validate_tile_sizes(const std::vector<T>& cont,
-                         Kokkos::Array<int, 6>& current_tile,
-                         const Kokkos::Array<int, 3>& hw_tile_limits,
+                         std::array<int, 6>& current_tile,
+                         const std::array<int, 3>& hw_tile_limits,
                          int current_rank, const int policy_rank) {
   namespace Impl = Kokkos::Tools::Experimental::Impl;
   for (const auto& size : cont) {
@@ -103,23 +99,25 @@ void validate_tile_sizes(const std::vector<T>& cont,
 
 template <typename KeyType, typename Mapped>
 void validate_tile_sizes(std::map<KeyType, Mapped>& cont,
-                         Kokkos::Array<int, 6>& current_tile,
-                         const Kokkos::Array<int, 3>& hw_tile_limits,
+                         std::array<int, 6>& current_tile,
+                         const std::array<int, 3>& hw_tile_limits,
                          int current_rank, const int policy_rank) {
   for (auto it = cont.begin(); it != cont.end(); it++) {
-    KeyType key                     = it->first;
-    current_tile[current_rank]      = key;
-    Kokkos::Array<int, 6> next_tile = current_tile;
+    KeyType key                  = it->first;
+    current_tile[current_rank]   = key;
+    std::array<int, 6> next_tile = current_tile;
     validate_tile_sizes(it->second, next_tile, hw_tile_limits, current_rank + 1,
                         policy_rank);
   }
 }
 
+// Test helper function that verifies all tiles in the configuration space
+// satisfy hardware constraints.
 template <typename KeyType, typename Mapped>
 void validate_tile_sizes(std::map<KeyType, Mapped>& cont,
-                         const Kokkos::Array<int, 3>& hw_tile_limits,
+                         const std::array<int, 3>& hw_tile_limits,
                          int policy_rank) {
-  Kokkos::Array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
+  std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
   validate_tile_sizes(cont, current_tile, hw_tile_limits, 0, policy_rank);
 }
 
@@ -129,7 +127,7 @@ void test_tile_constraints() {
   using SpaceDescription =
       typename n_dimensional_sparse_structure<int, test_policy_rank>::type;
 
-  Kokkos::Array<int, 3> hw_const{128, 128, 128};
+  std::array<int, 3> hw_const{128, 128, 128};
   SpaceDescription tile_configuration_space;
   const int max_total_tile_size = 512;
 
@@ -141,11 +139,16 @@ void test_tile_constraints() {
 TEST(kokkosp, constraint_tiles) {
   namespace Impl = Kokkos::Tools::Experimental::Impl;
 
-  Kokkos::Array<int, 3> hw_const{128, 128, 128};
-  Kokkos::Array<int, 6> valid_tile{4, 2, 8, 4, 2, 8};
-  Kokkos::Array<int, 6> invalid_tile{256, 256, 256, 1, 1, 1};
+  std::array<int, 3> hw_const{128, 128, 128};
+  std::array<int, 6> valid_tile{4, 2, 4, 4, 2, 4};
+  std::array<int, 3> valid_tile_max{128, 128, 128};
+  std::array<int, 3> tile_with_zero{128, 0, 1};
+  std::array<int, 3> invalid_tile{256, 1, 1};
 
+  // Impl::valid_tile checks each dimension but not the total product
   EXPECT_TRUE(Impl::valid_tile(hw_const, valid_tile, 6));
+  EXPECT_TRUE(Impl::valid_tile(hw_const, valid_tile_max, 3));
+  EXPECT_FALSE(Impl::valid_tile(hw_const, tile_with_zero, 3));
   EXPECT_FALSE(Impl::valid_tile(hw_const, invalid_tile, 3));
 
   test_tile_constraints<2>();

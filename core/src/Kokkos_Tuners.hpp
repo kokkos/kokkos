@@ -637,28 +637,24 @@ void fill_tile(std::map<T, Mapped>& cont, int tile_size) {
 }
 
 // Map MDRangePolicy tile dimensions to hardware tile dimensions
-template <typename T>
-constexpr Kokkos::Array<T, 3> map_to_hw_tile(const Kokkos::Array<T, 6> tile,
-                                             int policy_rank) {
-  Kokkos::Array<T, 3> hw_tile{1, 1, 1};
-  if (policy_rank < 4) {
-    hw_tile[0] = tile[0];
-    hw_tile[1] = tile[1];
-    hw_tile[2] = tile[2];
-  } else {
-    hw_tile[0] = tile[0] * tile[1];
-    hw_tile[1] = tile[2] * tile[3];
-    hw_tile[2] = tile[4] * tile[5];
+template <typename T, size_t N>
+constexpr std::array<T, 3> map_to_hw_tile(const std::array<T, N> tile,
+                                          int policy_rank) {
+  std::array<T, 3> hw_tile{1, 1, 1};
+  for (size_t i = 0; i < N; ++i) {
+    hw_tile[(i * 3) / policy_rank] *= tile[i];
   }
   return hw_tile;
 }
 
-template <typename T>
-constexpr bool valid_tile(const Kokkos::Array<T, 3> hw_tile_limits,
-                          const Kokkos::Array<T, 6> current_tile,
+template <typename T, size_t N>
+constexpr bool valid_tile(const std::array<T, 3> hw_tile_limits,
+                          const std::array<T, N> current_tile,
                           int policy_rank) {
   auto hw_tile = map_to_hw_tile(current_tile, policy_rank);
-  return (hw_tile[0] <= hw_tile_limits[0] && hw_tile[1] <= hw_tile_limits[1] &&
+
+  return (0 < hw_tile[0] && hw_tile[0] <= hw_tile_limits[0] && 0 < hw_tile[1] &&
+          hw_tile[1] <= hw_tile_limits[1] && 0 < hw_tile[2] &&
           hw_tile[2] <= hw_tile_limits[2]);
 }
 
@@ -666,9 +662,9 @@ constexpr bool valid_tile(const Kokkos::Array<T, 3> hw_tile_limits,
 // found
 template <typename T>
 void apply_tiles_constraints(std::vector<T>& cont,
-                             const Kokkos::Array<int, 3>& hw_tile_limits,
-                             Kokkos::Array<int, 6>& current_tile,
-                             int current_rank, const int policy_rank) {
+                             const std::array<int, 3>& hw_tile_limits,
+                             std::array<int, 6>& current_tile, int current_rank,
+                             const int policy_rank) {
   auto it = cont.end();
   while (it != cont.begin()) {
     --it;
@@ -686,16 +682,16 @@ void apply_tiles_constraints(std::vector<T>& cont,
 // the research space.
 template <typename KeyType, typename Mapped>
 void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
-                             const Kokkos::Array<int, 3>& hw_tile_limits,
-                             Kokkos::Array<int, 6>& current_tile,
-                             int current_rank, const int policy_rank) {
+                             const std::array<int, 3>& hw_tile_limits,
+                             std::array<int, 6>& current_tile, int current_rank,
+                             const int policy_rank) {
   for (auto it = cont.begin(); it != cont.end();) {
     KeyType dimension_size     = it->first;
     current_tile[current_rank] = dimension_size;
     if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
       it = cont.erase(it);
     } else {
-      Kokkos::Array<int, 6> next_tile = current_tile;
+      std::array<int, 6> next_tile = current_tile;
       apply_tiles_constraints(it->second, hw_tile_limits, next_tile,
                               current_rank + 1, policy_rank);
       ++it;
@@ -707,9 +703,9 @@ void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
 // exceed hardware limits based on the policy rank.
 template <typename KeyType, typename Mapped>
 void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
-                             const Kokkos::Array<int, 3>& hw_tile_limits,
+                             const std::array<int, 3>& hw_tile_limits,
                              int policy_rank) {
-  Kokkos::Array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
+  std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
   apply_tiles_constraints(cont, hw_tile_limits, current_tile, 0, policy_rank);
 }
 
