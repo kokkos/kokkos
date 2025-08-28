@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 
 # scan source files for importing C++20 modules
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
