@@ -36,8 +36,8 @@ struct reduction_identity<Integral> {
  public:
   KOKKOS_FUNCTION constexpr static Integral sum() noexcept { return 0; }
   KOKKOS_FUNCTION constexpr static Integral prod() noexcept { return 1; }
-  KOKKOS_FUNCTION constexpr static Integral max() noexcept { return max; }
-  KOKKOS_FUNCTION constexpr static Integral min() noexcept { return min; }
+  KOKKOS_FUNCTION constexpr static Integral max() noexcept { return min; }
+  KOKKOS_FUNCTION constexpr static Integral min() noexcept { return max; }
   KOKKOS_FUNCTION constexpr static Integral bor() noexcept { return 0x0; }
   KOKKOS_FUNCTION constexpr static Integral band() noexcept { return 0x0; }
   KOKKOS_FUNCTION constexpr static Integral lor() noexcept { return 0; }
