@@ -101,11 +101,12 @@ class EnvVarsHelper {
   }
 };
 std::mutex EnvVarsHelper::mutex_;
-#define SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev)       \
-  if (ev.skip()) {                                         \
-    GTEST_SKIP() << "environment variable '" << *ev.skip() \
-                 << "' is already set";                    \
-  }                                                        \
+#define SKIP_IF_ENVIRONMENT_VARIABLE_ALREADY_SET(ev)         \
+  if (ev.skip()) {                                           \
+    /* NOLINTNEXTLINE(bugprone-unchecked-optional-access) */ \
+    GTEST_SKIP() << "environment variable '" << *ev.skip()   \
+                 << "' is already set";                      \
+  }                                                          \
   static_assert(true, "no-op to require trailing semicolon")
 
 class CmdLineArgsHelper {
