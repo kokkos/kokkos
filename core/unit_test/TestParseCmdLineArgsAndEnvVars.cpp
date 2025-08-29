@@ -22,8 +22,8 @@
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
 
 #include <cstdlib>
-#include <memory>
 #include <mutex>
+#include <optional>
 #include <regex>
 #include <string>
 #include <unordered_map>
@@ -34,10 +34,7 @@ class EnvVarsHelper {
   // do not let GTest run unit tests that set the environment concurrently
   static std::mutex mutex_;
   std::vector<std::string> vars_;
-  // FIXME_CXX17 prefer optional
-  // store name of env var that was already set (if any)
-  // in which case unit test is skipped
-  std::unique_ptr<std::string> skip_;
+  std::optional<std::string> skip_;
 
   void setup(std::unordered_map<std::string, std::string> const& vars) {
     for (auto const& x : vars) {
@@ -45,7 +42,7 @@ class EnvVarsHelper {
       auto const& value = x.second;
       // skip unit test if env var is already set
       if (getenv(name.c_str())) {
-        skip_ = std::make_unique<std::string>(name);
+        skip_ = std::make_optional<std::string>(name);
         break;
       }
 #ifdef _WIN32
@@ -77,7 +74,7 @@ class EnvVarsHelper {
   }
 
  public:
-  auto& skip() { return skip_; }
+  auto const& skip() const { return skip_; }
   EnvVarsHelper(std::unordered_map<std::string, std::string> const& vars) {
     mutex_.lock();
     setup(vars);
