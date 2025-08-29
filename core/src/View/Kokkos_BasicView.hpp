@@ -276,40 +276,26 @@ class BasicView {
 
   KOKKOS_FUNCTION constexpr BasicView(data_handle_type p,
                                       const extents_type &exts)
-// Compilation will simply fail in C++17 and overload set should not be an issue
-#ifndef KOKKOS_ENABLE_CXX17
     requires(std::is_default_constructible_v<accessor_type> &&
              std::is_constructible_v<mapping_type, const extents_type &>)
-#endif
-      : m_ptr(std::move(p)), m_map(exts), m_acc{} {
-  }
+      : m_ptr(std::move(p)), m_map(exts), m_acc{} {}
 
   KOKKOS_FUNCTION constexpr BasicView(data_handle_type p, const mapping_type &m)
-// Compilation will simply fail in C++17 and overload set should not be an issue
-#ifndef KOKKOS_ENABLE_CXX17
     requires(std::is_default_constructible_v<accessor_type>)
-#endif
-      : m_ptr(std::move(p)), m_map(m), m_acc{} {
-  }
+      : m_ptr(std::move(p)), m_map(m), m_acc{} {}
 
   KOKKOS_FUNCTION constexpr BasicView(data_handle_type p, const mapping_type &m,
                                       const accessor_type &a)
       : m_ptr(std::move(p)), m_map(m), m_acc(a) {}
 
-  template <class OtherT, class OtherE, class OtherL, class OtherA,
-            typename = std::enable_if_t<std::is_constructible_v<
-                mdspan_type, typename BasicView<OtherT, OtherE, OtherL,
-                                                OtherA>::mdspan_type>>>
-//    requires(std::is_constructible_v<mdspan_type,
-//                                     typename BasicView<OtherT, OtherE,
-//                                     OtherL,
-//                                                        OtherA>::mdspan_type>)
-#ifndef KOKKOS_ENABLE_CXX17
+  template <class OtherT, class OtherE, class OtherL, class OtherA>
+    requires(std::is_constructible_v<mdspan_type,
+                                     typename BasicView<OtherT, OtherE, OtherL,
+                                                        OtherA>::mdspan_type>)
   explicit(
       !std::is_convertible_v<const typename OtherL::template mapping<OtherE> &,
                              mapping_type> ||
       !std::is_convertible_v<const OtherA &, accessor_type>)
-#endif
       KOKKOS_INLINE_FUNCTION
       BasicView(const BasicView<OtherT, OtherE, OtherL, OtherA> &other)
       : m_ptr(other.m_ptr), m_map(other.m_map), m_acc(other.m_acc) {
@@ -325,14 +311,12 @@ class BasicView {
   }
 
   template <class OtherT, class OtherE, class OtherL, class OtherA>
-//    requires(std::is_constructible_v<mdspan_type,
-//                                     mdspan<OtherT, OtherE, OtherL, OtherA>>)
-#ifndef KOKKOS_ENABLE_CXX17
+    requires(std::is_constructible_v<mdspan_type,
+                                     mdspan<OtherT, OtherE, OtherL, OtherA>>)
   explicit(
       !std::is_convertible_v<const typename OtherL::template mapping<OtherE> &,
                              mapping_type> ||
       !std::is_convertible_v<const OtherA &, accessor_type>)
-#endif
       KOKKOS_INLINE_FUNCTION
       BasicView(const mdspan<OtherT, OtherE, OtherL, OtherA> &other,
                 std::enable_if_t<
@@ -666,7 +650,6 @@ class BasicView {
   // [mdspan.mdspan.members], members
 
 // Introducing the C++20 and C++23 variants of the operators already
-#ifndef KOKKOS_ENABLE_CXX17
 #ifndef KOKKOS_ENABLE_CXX20
   // C++23 only operator[]
   template <class... OtherIndexTypes>
@@ -693,38 +676,6 @@ class BasicView {
     return m_acc.access(m_ptr,
                         m_map(static_cast<index_type>(std::move(indices))...));
   }
-#else
-  // C++17 variant of operator()
-
-  // Some weird unexplained issue in compiling the SFINAE version with MSVC
-  // So we just use post factor check here with static_assert
-#if defined(_WIN32)
-  template <class... OtherIndexTypes>
-  KOKKOS_FUNCTION constexpr reference operator()(
-      OtherIndexTypes... indices) const {
-    static_assert((std::is_convertible_v<OtherIndexTypes, index_type> && ...));
-    static_assert(
-        (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...));
-    static_assert((sizeof...(OtherIndexTypes)) == rank());
-    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(indices...)
-    return m_acc.access(m_ptr,
-                        m_map(static_cast<index_type>(std::move(indices))...));
-  }
-#else
-  template <class... OtherIndexTypes>
-  KOKKOS_FUNCTION constexpr std::enable_if_t<
-      ((std::is_convertible_v<OtherIndexTypes, index_type> && ...)) &&
-          ((std::is_nothrow_constructible_v<index_type, OtherIndexTypes> &&
-            ...)) &&
-          ((sizeof...(OtherIndexTypes)) == rank()),
-      reference>
-  operator()(OtherIndexTypes... indices) const {
-    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(indices...)
-    return m_acc.access(m_ptr,
-                        m_map(static_cast<index_type>(std::move(indices))...));
-  }
-#endif
-#endif
 
 #undef KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY
 
