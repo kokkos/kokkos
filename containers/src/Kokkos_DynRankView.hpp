@@ -159,7 +159,7 @@ struct DynRankDimTraits {
   template <typename Layout>
   KOKKOS_INLINE_FUNCTION static std::enable_if_t<
       (std::is_same_v<Layout, Kokkos::LayoutStride>), Layout>
-  createLayout(const Layout& layout, [[maybe_unused]] size_t new_rank = -1) {
+  createLayout(const Layout& layout, [[maybe_unused]] size_t new_rank = unspecified) {
     return Layout(
         layout.dimension[0] != unspecified ? layout.dimension[0] : 1,
         layout.stride[0],
