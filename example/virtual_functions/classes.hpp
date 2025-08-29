@@ -24,7 +24,7 @@ class Foo {
   int val;
 
  public:
-  KOKKOS_FUNCTION Foo();
+  KOKKOS_FUNCTION Foo() { val = 0; }
 
   KOKKOS_FUNCTION virtual int value() { return 0; }
 
@@ -33,16 +33,16 @@ class Foo {
 
 class Foo_1 : public Foo {
  public:
-  KOKKOS_FUNCTION Foo_1();
+  KOKKOS_FUNCTION Foo_1() { val = 1; }
 
-  KOKKOS_FUNCTION int value() override;
+  KOKKOS_FUNCTION int value() override { return val; }
 };
 
 class Foo_2 : public Foo {
  public:
-  KOKKOS_FUNCTION Foo_2();
+  KOKKOS_FUNCTION Foo_2() { val = 2; }
 
-  KOKKOS_FUNCTION int value() override;
+  KOKKOS_FUNCTION int value() override { return val; }
 };
 
 #endif  // KOKKOS_EXAMPLE_VIRTUAL_FUNCTIONS_CLASSES_HPP
