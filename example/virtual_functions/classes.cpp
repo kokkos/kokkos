@@ -14,35 +14,19 @@
 //
 //@HEADER
 
-#ifndef KOKKOS_EXAMPLE_VIRTUAL_FUNCTIONS_CLASSES_HPP
-#define KOKKOS_EXAMPLE_VIRTUAL_FUNCTIONS_CLASSES_HPP
+#include <classes.hpp>
 
-#include <Kokkos_Core.hpp>
+KOKKOS_FUNCTION
+Foo::Foo() { val = 0; }
 
-class Foo {
- protected:
-  int val;
+KOKKOS_FUNCTION
+Foo_1::Foo_1() { val = 1; }
 
- public:
-  KOKKOS_FUNCTION Foo();
+KOKKOS_FUNCTION
+int Foo_1::value() { return val; }
 
-  KOKKOS_FUNCTION virtual int value() { return 0; }
+KOKKOS_FUNCTION
+Foo_2::Foo_2() { val = 2; }
 
-  KOKKOS_FUNCTION virtual ~Foo() {}
-};
-
-class Foo_1 : public Foo {
- public:
-  KOKKOS_FUNCTION Foo_1();
-
-  KOKKOS_FUNCTION int value() override;
-};
-
-class Foo_2 : public Foo {
- public:
-  KOKKOS_FUNCTION Foo_2();
-
-  KOKKOS_FUNCTION int value() override;
-};
-
-#endif  // KOKKOS_EXAMPLE_VIRTUAL_FUNCTIONS_CLASSES_HPP
+KOKKOS_FUNCTION
+int Foo_2::value() { return val; }
