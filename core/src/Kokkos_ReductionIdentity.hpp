@@ -33,14 +33,15 @@ struct reduction_identity;
 template <typename Integral>
   requires(std::integral<Integral>)
 struct reduction_identity<Integral> {
+ private:
+  static constexpr auto max = std::numeric_limits<Floating>::max();
+  static constexpr auto min = std::numeric_limits<Floating>::min();
+
+ public:
   KOKKOS_FUNCTION constexpr static Integral sum() noexcept { return 0; }
   KOKKOS_FUNCTION constexpr static Integral prod() noexcept { return 1; }
-  KOKKOS_FUNCTION constexpr static Integral max() noexcept {
-    return std::numeric_limits<Integral>::min();
-  }
-  KOKKOS_FUNCTION constexpr static Integral min() noexcept {
-    return std::numeric_limits<Integral>::max();
-  }
+  KOKKOS_FUNCTION constexpr static Integral max() noexcept { return max; }
+  KOKKOS_FUNCTION constexpr static Integral min() noexcept { return min; }
   KOKKOS_FUNCTION constexpr static Integral bor() noexcept { return 0x0; }
   KOKKOS_FUNCTION constexpr static Integral band() noexcept { return 0x0; }
   KOKKOS_FUNCTION constexpr static Integral lor() noexcept { return 0; }
@@ -50,22 +51,18 @@ struct reduction_identity<Integral> {
 template <typename Floating>
   requires(std::floating_point<Floating> && sizeof(Floating) <= sizeof(double))
 struct reduction_identity<Floating> {
+ private:
+  static constexpr auto inf =
+#if __FINITE_MATH_ONLY__
+      std::numeric_limits<Floating>::max();
+#else
+      std::numeric_limits<Floating>::infinity();
+#endif
+ public:
   KOKKOS_FUNCTION constexpr static Floating sum() noexcept { return 0; }
   KOKKOS_FUNCTION constexpr static Floating prod() noexcept { return 1; }
-  KOKKOS_FUNCTION constexpr static Floating max() noexcept {
-#if __FINITE_MATH_ONLY__
-    return -std::numeric_limits<Floating>::max();
-#else
-    return -std::numeric_limits<Floating>::infinity();
-#endif
-  }
-  KOKKOS_FUNCTION constexpr static Floating min() noexcept {
-#if __FINITE_MATH_ONLY__
-    return +std::numeric_limits<Floating>::max();
-#else
-    return +std::numeric_limits<Floating>::infinity();
-#endif
-  }
+  KOKKOS_FUNCTION constexpr static Floating max() noexcept { return -inf; }
+  KOKKOS_FUNCTION constexpr static Floating min() noexcept { return +inf; }
 };
 
 // No __host__ __device__ annotation because long double treated as double in
@@ -73,22 +70,19 @@ struct reduction_identity<Floating> {
 template <typename Floating>
   requires(std::floating_point<Floating> && sizeof(Floating) > sizeof(double))
 struct reduction_identity<Floating> {
+ private:
+  static constexpr auto inf =
+#if __FINITE_MATH_ONLY__
+      std::numeric_limits<Floating>::max();
+#else
+      std::numeric_limits<Floating>::infinity();
+#endif
+
+ public:
   constexpr static Floating sum() noexcept { return 0; }
   constexpr static Floating prod() noexcept { return 1; }
-  constexpr static Floating max() noexcept {
-#if __FINITE_MATH_ONLY__
-    return -std::numeric_limits<Floating>::max();
-#else
-    return -std::numeric_limits<Floating>::infinity();
-#endif
-  }
-  constexpr static Floating min() noexcept {
-#if __FINITE_MATH_ONLY__
-    return +std::numeric_limits<Floating>::max();
-#else
-    return +std::numeric_limits<Floating>::infinity();
-#endif
-  }
+  constexpr static Floating max() noexcept { return -inf; }
+  constexpr static Floating min() noexcept { return +inf; }
 };
 
 }  // namespace Kokkos
