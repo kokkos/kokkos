@@ -22,9 +22,8 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#include <cfloat>
-#include <climits>
-#include <cmath>
+#include <concepts>
+#include <limits>
 
 namespace Kokkos {
 
@@ -54,375 +53,63 @@ type { static_assert( false, "Missing specialization of
 Kokkos::reduction_identity for custom land reduction type"); return T(); }
 };*/
 
-template <>
-struct reduction_identity<char> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char sum() {
-    return static_cast<char>(0);
+template <typename Integral>
+  requires(std::integral<Integral>)
+struct reduction_identity<Integral> {
+  KOKKOS_FUNCTION constexpr static Integral sum() noexcept { return 0; }
+  KOKKOS_FUNCTION constexpr static Integral prod() noexcept { return 1; }
+  KOKKOS_FUNCTION constexpr static Integral max() noexcept {
+    return std::numeric_limits<Integral>::min();
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char prod() {
-    return static_cast<char>(1);
+  KOKKOS_FUNCTION constexpr static Integral min() noexcept {
+    return std::numeric_limits<Integral>::max();
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char max() { return CHAR_MIN; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char min() { return CHAR_MAX; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char bor() {
-    return static_cast<char>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char band() {
-    return ~static_cast<char>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char lor() {
-    return static_cast<char>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static char land() {
-    return static_cast<char>(1);
-  }
+  KOKKOS_FUNCTION constexpr static Integral bor() noexcept { return 0x0; }
+  KOKKOS_FUNCTION constexpr static Integral band() noexcept { return 0x0; }
+  KOKKOS_FUNCTION constexpr static Integral lor() noexcept { return 0; }
+  KOKKOS_FUNCTION constexpr static Integral land() noexcept { return 1; }
 };
 
-template <>
-struct reduction_identity<signed char> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char sum() {
-    return static_cast<signed char>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char prod() {
-    return static_cast<signed char>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char max() {
-    return SCHAR_MIN;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char min() {
-    return SCHAR_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char bor() {
-    return static_cast<signed char>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char band() {
-    return ~static_cast<signed char>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char lor() {
-    return static_cast<signed char>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static signed char land() {
-    return static_cast<signed char>(1);
-  }
-};
-
-template <>
-struct reduction_identity<bool> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool lor() {
-    return static_cast<bool>(false);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static bool land() {
-    return static_cast<bool>(true);
-  }
-};
-
-template <>
-struct reduction_identity<short> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short sum() {
-    return static_cast<short>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short prod() {
-    return static_cast<short>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short max() { return SHRT_MIN; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short min() { return SHRT_MAX; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short bor() {
-    return static_cast<short>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short band() {
-    return ~static_cast<short>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short lor() {
-    return static_cast<short>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static short land() {
-    return static_cast<short>(1);
-  }
-};
-
-template <>
-struct reduction_identity<int> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int sum() {
-    return static_cast<int>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int prod() {
-    return static_cast<int>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int max() { return INT_MIN; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int min() { return INT_MAX; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int bor() {
-    return static_cast<int>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int band() {
-    return ~static_cast<int>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int lor() {
-    return static_cast<int>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static int land() {
-    return static_cast<int>(1);
-  }
-};
-
-template <>
-struct reduction_identity<long> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long sum() {
-    return static_cast<long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long prod() {
-    return static_cast<long>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long max() { return LONG_MIN; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long min() { return LONG_MAX; }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long bor() {
-    return static_cast<long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long band() {
-    return ~static_cast<long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long lor() {
-    return static_cast<long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long land() {
-    return static_cast<long>(1);
-  }
-};
-
-template <>
-struct reduction_identity<long long> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long sum() {
-    return static_cast<long long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long prod() {
-    return static_cast<long long>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long max() {
-    return LLONG_MIN;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long min() {
-    return LLONG_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long bor() {
-    return static_cast<long long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long band() {
-    return ~static_cast<long long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long lor() {
-    return static_cast<long long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static long long land() {
-    return static_cast<long long>(1);
-  }
-};
-
-template <>
-struct reduction_identity<unsigned char> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char sum() {
-    return static_cast<unsigned char>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char prod() {
-    return static_cast<unsigned char>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char max() {
-    return static_cast<unsigned char>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char min() {
-    return UCHAR_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char bor() {
-    return static_cast<unsigned char>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char band() {
-    return ~static_cast<unsigned char>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char lor() {
-    return static_cast<unsigned char>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned char land() {
-    return static_cast<unsigned char>(1);
-  }
-};
-
-template <>
-struct reduction_identity<unsigned short> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short sum() {
-    return static_cast<unsigned short>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short prod() {
-    return static_cast<unsigned short>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short max() {
-    return static_cast<unsigned short>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short min() {
-    return USHRT_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short bor() {
-    return static_cast<unsigned short>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short band() {
-    return ~static_cast<unsigned short>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short lor() {
-    return static_cast<unsigned short>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned short land() {
-    return static_cast<unsigned short>(1);
-  }
-};
-
-template <>
-struct reduction_identity<unsigned int> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int sum() {
-    return static_cast<unsigned int>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int prod() {
-    return static_cast<unsigned int>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int max() {
-    return static_cast<unsigned int>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int min() {
-    return UINT_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int bor() {
-    return static_cast<unsigned int>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int band() {
-    return ~static_cast<unsigned int>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int lor() {
-    return static_cast<unsigned int>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned int land() {
-    return static_cast<unsigned int>(1);
-  }
-};
-
-template <>
-struct reduction_identity<unsigned long> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long sum() {
-    return static_cast<unsigned long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long prod() {
-    return static_cast<unsigned long>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long max() {
-    return static_cast<unsigned long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long min() {
-    return ULONG_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long bor() {
-    return static_cast<unsigned long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long band() {
-    return ~static_cast<unsigned long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long lor() {
-    return static_cast<unsigned long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long land() {
-    return static_cast<unsigned long>(1);
-  }
-};
-
-template <>
-struct reduction_identity<unsigned long long> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long sum() {
-    return static_cast<unsigned long long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long prod() {
-    return static_cast<unsigned long long>(1);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long max() {
-    return static_cast<unsigned long long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long min() {
-    return ULLONG_MAX;
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long bor() {
-    return static_cast<unsigned long long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long band() {
-    return ~static_cast<unsigned long long>(0x0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long lor() {
-    return static_cast<unsigned long long>(0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static unsigned long long land() {
-    return static_cast<unsigned long long>(1);
-  }
-};
-
-template <>
-struct reduction_identity<float> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float sum() {
-    return static_cast<float>(0.0f);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float prod() {
-    return static_cast<float>(1.0f);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float max() {
+template <typename Floating>
+  requires(std::floating_point<Floating> && sizeof(Floating) <= sizeof(double))
+struct reduction_identity<Floating> {
+  KOKKOS_FUNCTION constexpr static Floating sum() noexcept { return 0; }
+  KOKKOS_FUNCTION constexpr static Floating prod() noexcept { return 1; }
+  KOKKOS_FUNCTION constexpr static Floating max() noexcept {
 #if __FINITE_MATH_ONLY__
-    return -FLT_MAX;
+    return -std::numeric_limits<Floating>::max();
 #else
-    return -HUGE_VALF;
+    return -std::numeric_limits<Floating>::infinity();
 #endif
   }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static float min() {
+  KOKKOS_FUNCTION constexpr static Floating min() noexcept {
 #if __FINITE_MATH_ONLY__
-    return FLT_MAX;
+    return +std::numeric_limits<Floating>::max();
 #else
-    return HUGE_VALF;
-#endif
-  }
-};
-
-template <>
-struct reduction_identity<double> {
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static double sum() {
-    return static_cast<double>(0.0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static double prod() {
-    return static_cast<double>(1.0);
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static double max() {
-#if __FINITE_MATH_ONLY__
-    return -DBL_MAX;
-#else
-    return -HUGE_VAL;
-#endif
-  }
-  KOKKOS_FORCEINLINE_FUNCTION constexpr static double min() {
-#if __FINITE_MATH_ONLY__
-    return DBL_MAX;
-#else
-    return HUGE_VAL;
+    return +std::numeric_limits<Floating>::infinity();
 #endif
   }
 };
 
 // No __host__ __device__ annotation because long double treated as double in
 // device code.  May be revisited later if that is not true any more.
-template <>
-struct reduction_identity<long double> {
-  constexpr static long double sum() { return static_cast<long double>(0.0); }
-  constexpr static long double prod() { return static_cast<long double>(1.0); }
-
-  constexpr static long double max() {
+template <typename Floating>
+  requires(std::floating_point<Floating> && sizeof(Floating) > sizeof(double))
+struct reduction_identity<Floating> {
+  constexpr static Floating sum() noexcept { return 0; }
+  constexpr static Floating prod() noexcept { return 1; }
+  constexpr static Floating max() noexcept {
 #if __FINITE_MATH_ONLY__
-    return -LDBL_MAX;
+    return -std::numeric_limits<Floating>::max();
 #else
-    return -HUGE_VALL;
+    return -std::numeric_limits<Floating>::infinity();
 #endif
   }
-  constexpr static long double min() {
+  constexpr static Floating min() noexcept {
 #if __FINITE_MATH_ONLY__
-    return LDBL_MAX;
+    return +std::numeric_limits<Floating>::max();
 #else
-    return HUGE_VALL;
+    return +std::numeric_limits<Floating>::infinity();
 #endif
   }
 };
