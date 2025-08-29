@@ -30,14 +30,14 @@ template <typename Integral>
   requires(std::integral<Integral>)
 struct reduction_identity<Integral> {
  private:
-  static constexpr auto max = std::numeric_limits<Integral>::max();
-  static constexpr auto min = std::numeric_limits<Integral>::min();
+  static constexpr auto max_ = std::numeric_limits<Integral>::max();
+  static constexpr auto min_ = std::numeric_limits<Integral>::min();
 
  public:
   KOKKOS_FUNCTION constexpr static Integral sum() noexcept { return 0; }
   KOKKOS_FUNCTION constexpr static Integral prod() noexcept { return 1; }
-  KOKKOS_FUNCTION constexpr static Integral max() noexcept { return min; }
-  KOKKOS_FUNCTION constexpr static Integral min() noexcept { return max; }
+  KOKKOS_FUNCTION constexpr static Integral max() noexcept { return min_; }
+  KOKKOS_FUNCTION constexpr static Integral min() noexcept { return max_; }
   KOKKOS_FUNCTION constexpr static Integral bor() noexcept { return 0x0; }
   KOKKOS_FUNCTION constexpr static Integral band() noexcept { return 0x0; }
   KOKKOS_FUNCTION constexpr static Integral lor() noexcept { return 0; }
