@@ -30,8 +30,8 @@ template <typename Integral>
   requires(std::integral<Integral>)
 struct reduction_identity<Integral> {
  private:
-  static constexpr auto max = std::numeric_limits<Floating>::max();
-  static constexpr auto min = std::numeric_limits<Floating>::min();
+  static constexpr auto max = std::numeric_limits<Integral>::max();
+  static constexpr auto min = std::numeric_limits<Integral>::min();
 
  public:
   KOKKOS_FUNCTION constexpr static Integral sum() noexcept { return 0; }
