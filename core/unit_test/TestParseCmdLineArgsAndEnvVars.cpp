@@ -34,6 +34,8 @@ class EnvVarsHelper {
   // do not let GTest run unit tests that set the environment concurrently
   static std::mutex mutex_;
   std::vector<std::string> vars_;
+  // store name of env var that was already set (if any)
+  // in which case unit test is skipped
   std::optional<std::string> skip_;
 
   void setup(std::unordered_map<std::string, std::string> const& vars) {
