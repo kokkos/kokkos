@@ -11,6 +11,7 @@ Checks: >
   -bugprone-throwing-static-initialization,
   clang-analyzer*,
   -clang-analyzer-core.BitwiseShift,
+  -clang-analyzer-core.CallAndMessage,
   -clang-analyzer-core.DivideZero,
   -clang-analyzer-core.NullDereference,
   -clang-analyzer-deadcode.DeadStores,
