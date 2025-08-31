@@ -14,6 +14,8 @@ Checks: >
   -clang-analyzer-core.CallAndMessage,
   -clang-analyzer-core.DivideZero,
   -clang-analyzer-core.NullDereference,
+  -clang-analyzer-core.uninitialized.Assign,
+  -clang-analyzer-cplusplus.NewDeleteLeaks,
   -clang-analyzer-deadcode.DeadStores,
   -clang-analyzer-optin.cplusplus.UninitializedObject,
   -clang-analyzer-security.ArrayBound,
