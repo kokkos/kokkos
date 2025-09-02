@@ -174,7 +174,7 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
     global_set(KOKKOS_MDSPAN_VERSION "internal (${KOKKOS_INTERNAL_MDSPAN_VERSION})")
     message(
       STATUS
-        "Using internal mdspan directory ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include (${KOKKOS_INTERNAL_MDSPAN_VERSION})"
+        "Using internal mdspan copy (${KOKKOS_INTERNAL_MDSPAN_VERSION})"
     )
   endif()
 endif()
