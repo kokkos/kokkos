@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/mdspan-version-check.yml'
+      - 'scripts/mdspan-hash.txt'
       - 'tpls/mdspan/**'
 
 permissions: read-all

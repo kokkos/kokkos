@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/desul-version-check.yml'
+      - 'scripts/desul-hash.txt'
       - 'tpls/desul/**'
 
 permissions: read-all
