@@ -668,6 +668,10 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 // clang-format on
 
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
+#endif
+
 #if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||         \
      defined(KOKKOS_COMPILER_INTEL_LLVM) || defined(KOKKOS_COMPILER_NVHPC)) && \
     !defined(_WIN32) && !defined(__ANDROID__)
