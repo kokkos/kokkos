@@ -668,7 +668,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #endif
 // clang-format on
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #define KOKKOS_ATTRIBUTE_NODISCARD [[nodiscard]]
 #endif
 
