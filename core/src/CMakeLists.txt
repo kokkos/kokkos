@@ -172,10 +172,7 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
 
     set(KOKKOS_INTERNAL_MDSPAN_VERSION "kokkos/mdspan@0e4eba59ad53451784b3839bdf98b25fa2d64931")
     global_set(KOKKOS_MDSPAN_VERSION "internal (${KOKKOS_INTERNAL_MDSPAN_VERSION})")
-    message(
-      STATUS
-        "Using internal mdspan copy (${KOKKOS_INTERNAL_MDSPAN_VERSION})"
-    )
+    message(STATUS "Using internal mdspan copy (${KOKKOS_INTERNAL_MDSPAN_VERSION})")
   endif()
 endif()
 
