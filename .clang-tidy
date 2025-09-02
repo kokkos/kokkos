@@ -20,6 +20,7 @@ Checks: >
   -clang-analyzer-cplusplus.NewDeleteLeaks,
   -clang-analyzer-deadcode.DeadStores,
   -clang-analyzer-optin.cplusplus.UninitializedObject,
+  -clang-analyzer-optin.performance.Padding,
   -clang-analyzer-security.ArrayBound,
   -clang-analyzer-security.insecureAPI.rand,
   -clang-analyzer-security.insecureAPI.strcpy,
