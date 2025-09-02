@@ -127,8 +127,12 @@ if(NOT desul_FOUND)
     PATTERN "*.hpp"
   )
 
-  message(STATUS "Using internal desul_atomics copy")
+  set(KOKKOS_INTERNAL_DESUL_VERSION "desul/desul@fd8da8299519d7ecde91a1c11a3ac8469ce29cac")
+  global_set(KOKKOS_DESUL_VERSION "internal (${KOKKOS_INTERNAL_DESUL_VERSION})")
+
+  message(STATUS "Using internal desul_atomics copy (${KOKKOS_INTERNAL_DESUL_VERSION})")
 else()
+  global_set(KOKKOS_DESUL_VERSION "external")
   message(STATUS "Using external desul_atomics install found at:")
   message(STATUS "  " ${desul_DIR})
 endif()
@@ -149,6 +153,7 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
   message(STATUS "Experimental mdspan support is enabled")
 
   if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
+    global_set(KOKKOS_MDSPAN_VERSION "external")
     message(STATUS "Using external mdspan")
     target_link_libraries(kokkoscore PUBLIC std::mdspan)
   else()
@@ -164,7 +169,13 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
       PATTERN "mdspan"
       PATTERN "*.hpp"
     )
-    message(STATUS "Using internal mdspan directory ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include")
+
+    set(KOKKOS_INTERNAL_MDSPAN_VERSION "kokkos/mdspan@0e4eba59ad53451784b3839bdf98b25fa2d64931")
+    global_set(KOKKOS_MDSPAN_VERSION "internal (${KOKKOS_INTERNAL_MDSPAN_VERSION})")
+    message(
+      STATUS
+        "Using internal mdspan directory ${KOKKOS_SOURCE_DIR}/tpls/mdspan/include (${KOKKOS_INTERNAL_MDSPAN_VERSION})"
+    )
   endif()
 endif()
 
