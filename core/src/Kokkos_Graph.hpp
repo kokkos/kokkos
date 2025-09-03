@@ -171,9 +171,8 @@ Graph<ExecutionSpace> create_graph(ExecutionSpace ex, Closure&& arg_closure) {
 template <
     class ExecutionSpace = DefaultExecutionSpace,
     class Closure = Kokkos::Impl::DoNotExplicitlySpecifyThisTemplateParameter>
-std::enable_if_t<
-    !Kokkos::is_execution_space_v<Kokkos::Impl::remove_cvref_t<Closure>>,
-    Graph<ExecutionSpace>>
+std::enable_if_t<!Kokkos::is_execution_space_v<std::remove_cvref_t<Closure>>,
+                 Graph<ExecutionSpace>>
 create_graph(Closure&& arg_closure) {
   return create_graph(ExecutionSpace{}, (Closure&&)arg_closure);
 }

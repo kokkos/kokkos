@@ -33,6 +33,7 @@ static_assert(false,
 #include <typeinfo>
 #endif
 #include <limits>
+#include <type_traits>
 
 //----------------------------------------------------------------------------
 
@@ -1277,30 +1278,30 @@ struct PatternImplSpecializationFromTag;
 
 template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelForTag, Args...>
-    : type_identity<ParallelFor<Args...>> {};
+    : std::type_identity<ParallelFor<Args...>> {};
 
 template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelReduceTag, Args...>
-    : type_identity<ParallelReduce<Args...>> {};
+    : std::type_identity<ParallelReduce<Args...>> {};
 
 template <class... Args>
 struct PatternImplSpecializationFromTag<Kokkos::ParallelScanTag, Args...>
-    : type_identity<ParallelScan<Args...>> {};
+    : std::type_identity<ParallelScan<Args...>> {};
 
 template <class PatternImpl>
 struct PatternTagFromImplSpecialization;
 
 template <class... Args>
 struct PatternTagFromImplSpecialization<ParallelFor<Args...>>
-    : type_identity<ParallelForTag> {};
+    : std::type_identity<ParallelForTag> {};
 
 template <class... Args>
 struct PatternTagFromImplSpecialization<ParallelReduce<Args...>>
-    : type_identity<ParallelReduceTag> {};
+    : std::type_identity<ParallelReduceTag> {};
 
 template <class... Args>
 struct PatternTagFromImplSpecialization<ParallelScan<Args...>>
-    : type_identity<ParallelScanTag> {};
+    : std::type_identity<ParallelScanTag> {};
 
 }  // end namespace Impl
 

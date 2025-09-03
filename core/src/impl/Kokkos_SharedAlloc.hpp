@@ -532,7 +532,7 @@ union SharedAllocationTracker {
   // number of symbols and inline functions.
 
 #ifdef KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
-#define KOKKOS_IMPL_BRANCH_PROB KOKKOS_IMPL_ATTRIBUTE_UNLIKELY
+#define KOKKOS_IMPL_BRANCH_PROB [[unlikely]]
 #else
 #define KOKKOS_IMPL_BRANCH_PROB
 #endif

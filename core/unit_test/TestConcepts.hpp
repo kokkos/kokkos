@@ -53,12 +53,6 @@ static_assert(!Kokkos::is_space<DeviceType &>{});
 static_assert(Kokkos::is_execution_space_v<ExecutionSpace>);
 static_assert(!Kokkos::is_execution_space_v<ExecutionSpace &>);
 
-static_assert(
-    std::is_same<float, Kokkos::Impl::remove_cvref_t<float const &>>{});
-static_assert(std::is_same<int, Kokkos::Impl::remove_cvref_t<int &>>{});
-static_assert(std::is_same<int, Kokkos::Impl::remove_cvref_t<int const>>{});
-static_assert(std::is_same<float, Kokkos::Impl::remove_cvref_t<float>>{});
-
 /*-------------------------------------------------
   begin test for team_handle concept
 
