@@ -21,11 +21,11 @@ template <class T>
 struct host_atomic_exchange_available_gcc {
   constexpr static bool value =
 #ifndef DESUL_HAVE_LIBATOMIC
-      ((sizeof(T) == 4 && alignof(T) == 4) ||
+      ((sizeof(T) == 4 && alignof(T) == 4) ||  // NOLINT(bugprone-sizeof-expression)
 #ifdef DESUL_HAVE_16BYTE_COMPARE_AND_SWAP
-       (sizeof(T) == 16 && alignof(T) == 16) ||
+       (sizeof(T) == 16 && alignof(T) == 16) ||  // NOLINT(bugprone-sizeof-expression)
 #endif
-       (sizeof(T) == 8 && alignof(T) == 8)) &&
+       (sizeof(T) == 8 && alignof(T) == 8)) &&  // NOLINT(bugprone-sizeof-expression)
 #endif
       std::is_trivially_copyable<T>::value;
 };

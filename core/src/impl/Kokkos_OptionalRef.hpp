@@ -53,6 +53,7 @@ struct OptionalRef {
   KOKKOS_INLINE_FUNCTION
   // MSVC requires that this copy constructor is not defaulted
   // if there exists a (non-defaulted) volatile one.
+  // NOLINTNEXTLINE(modernize-use-equals-default)
   OptionalRef& operator=(OptionalRef const& other) noexcept {
     m_value = other.m_value;
     return *this;

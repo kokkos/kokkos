@@ -42,7 +42,7 @@ constexpr unsigned shfl_all_mask = 0xffffffffu;
 // Since the logic with respect to value sizes, etc., is the same everywhere,
 // put it all in one place.
 template <class Derived>
-struct in_place_shfl_op {
+struct in_place_shfl_op {  // NOLINT(bugprone-crtp-constructor-accessibility)
   // CRTP boilerplate
   __device__ KOKKOS_IMPL_FORCEINLINE const Derived& self() const noexcept {
     return *static_cast<Derived const*>(this);
