@@ -127,9 +127,9 @@ if(NOT desul_FOUND)
     PATTERN "*.hpp"
   )
 
-  set(KOKKOS_INTERNAL_DESUL_VERSION "desul/desul@fd8da8299519d7ecde91a1c11a3ac8469ce29cac")
+  file(STRINGS "${KOKKOS_SOURCE_DIR}/scripts/desul-hash.txt" KOKKOS_DESUL_HASH)
+  set(KOKKOS_INTERNAL_DESUL_VERSION "desul/desul@${KOKKOS_DESUL_HASH}")
   global_set(KOKKOS_DESUL_VERSION "internal (${KOKKOS_INTERNAL_DESUL_VERSION})")
-
   message(STATUS "Using internal desul_atomics copy (${KOKKOS_INTERNAL_DESUL_VERSION})")
 else()
   global_set(KOKKOS_DESUL_VERSION "external")
@@ -170,7 +170,8 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
       PATTERN "*.hpp"
     )
 
-    set(KOKKOS_INTERNAL_MDSPAN_VERSION "kokkos/mdspan@0e4eba59ad53451784b3839bdf98b25fa2d64931")
+    file(STRINGS "${KOKKOS_SOURCE_DIR}/scripts/mdspan-hash.txt" KOKKOS_MDSPAN_HASH)
+    set(KOKKOS_INTERNAL_MDSPAN_VERSION "kokkos/mdspan@${KOKKOS_MDSPAN_HASH}")
     global_set(KOKKOS_MDSPAN_VERSION "internal (${KOKKOS_INTERNAL_MDSPAN_VERSION})")
     message(STATUS "Using internal mdspan copy (${KOKKOS_INTERNAL_MDSPAN_VERSION})")
   endif()
