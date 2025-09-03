@@ -536,9 +536,9 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("atomics", "desul atomics version", KOKKOS_IMPL_DESUL_VERSION);
 
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  declare_configuration_metadata("view", "using mdspan-based view", "no");
+  declare_configuration_metadata("view", "mdspan", "disabled");
 #else
-  declare_configuration_metadata("view", "using mdspan-based view", "yes");
+  declare_configuration_metadata("view", "mdspan", "enabled");
   declare_configuration_metadata("view", "mdspan version", KOKKOS_IMPL_MDSPAN_VERSION);
 #endif
 
