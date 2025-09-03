@@ -254,36 +254,21 @@ class OffsetView : public View<DataType, Properties...> {
   }
 
   template <class OtherIndexType>
-#ifndef KOKKOS_ENABLE_CXX17
     requires(std::is_convertible_v<OtherIndexType, index_type> &&
              std::is_nothrow_constructible_v<index_type, OtherIndexType> &&
              (base_t::rank() == 1))
-#endif
   KOKKOS_FUNCTION constexpr typename base_t::reference_type operator[](
       const OtherIndexType& idx) const {
-#ifdef KOKKOS_ENABLE_CXX17
-    static_assert(std::is_convertible_v<OtherIndexType, index_type> &&
-                  std::is_nothrow_constructible_v<index_type, OtherIndexType> &&
-                  (base_t::rank() == 1));
-#endif
     return base_t::operator[](idx - m_begins[0]);
   }
 
   template <class... OtherIndexTypes>
-#ifndef KOKKOS_ENABLE_CXX17
     requires((std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
              (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> &&
               ...) &&
              (sizeof...(OtherIndexTypes) == base_t::rank()))
-#endif
   KOKKOS_FUNCTION constexpr typename base_t::reference_type operator()(
       OtherIndexTypes... indices) const {
-#ifdef KOKKOS_ENABLE_CXX17
-    static_assert(
-        (std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
-        (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) &&
-        (sizeof...(OtherIndexTypes) == base_t::rank()));
-#endif
     return offset_operator(std::make_index_sequence<base_t::rank()>(),
                            indices...);
   }

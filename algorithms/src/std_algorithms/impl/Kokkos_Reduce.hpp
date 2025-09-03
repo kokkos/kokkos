@@ -124,7 +124,7 @@ ValueType reduce_default_functors_exespace_impl(
   Impl::static_assert_is_not_openmptarget(ex);
   Impl::expect_valid_range(first, last);
 
-  using value_type = Kokkos::Impl::remove_cvref_t<ValueType>;
+  using value_type = std::remove_cvref_t<ValueType>;
 
   if (::Kokkos::is_detected<has_reduction_identity_sum_t, value_type>::value) {
     if (first == last) {
@@ -199,7 +199,7 @@ KOKKOS_FUNCTION ValueType reduce_default_functors_team_impl(
   Impl::static_assert_is_not_openmptarget(teamHandle);
   Impl::expect_valid_range(first, last);
 
-  using value_type = Kokkos::Impl::remove_cvref_t<ValueType>;
+  using value_type = std::remove_cvref_t<ValueType>;
 
   if (::Kokkos::is_detected<has_reduction_identity_sum_t, value_type>::value) {
     if (first == last) {

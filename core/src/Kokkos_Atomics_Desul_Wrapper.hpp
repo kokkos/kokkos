@@ -21,11 +21,13 @@ static_assert(false,
 #endif
 #ifndef KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
 #define KOKKOS_DESUL_ATOMICS_WRAPPER_HPP_
+
 #include <Kokkos_Macros.hpp>
 #include <desul/atomics.hpp>
 
-#include <impl/Kokkos_Utilities.hpp>  // identity_type
 #include <impl/Kokkos_Volatile_Load.hpp>
+
+#include <type_traits>
 
 namespace Kokkos {
 
@@ -60,7 +62,7 @@ KOKKOS_DEPRECATED inline const char* atomic_query_version() {
 namespace Impl {
 template <class T>
 using not_deduced_atomic_t =
-    std::add_const_t<std::remove_volatile_t<type_identity_t<T>>>;
+    std::add_const_t<std::remove_volatile_t<std::type_identity_t<T>>>;
 
 template <class T, class R>
 using enable_if_atomic_t =

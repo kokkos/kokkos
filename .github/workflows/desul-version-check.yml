@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/desul-version-check.yml'
+      - 'scripts/desul-hash.txt'
       - 'tpls/desul/**'
 
 permissions: read-all
@@ -13,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - run: echo "ref=$(cat scripts/desul-hash.txt)" >> $GITHUB_ENV
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         repository: desul/desul
-        ref: fd8da8299519d7ecde91a1c11a3ac8469ce29cac
+        ref: ${{ env.ref }}
         path: desul-atomics
     - run: |
         rm tpls/desul/include/desul/.clang-format

@@ -1302,34 +1302,25 @@ class View : public ViewTraits<DataType, Properties...> {
   // MDSpan converting constructors
 #ifdef KOKKOS_ENABLE_IMPL_MDSPAN
   template <typename U = typename Impl::MDSpanViewTraits<traits>::mdspan_type>
-  KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_ENABLE_CXX17
-      explicit(!traits::memory_traits::is_unmanaged)
-#endif
-          View(const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
-               std::enable_if_t<
-                   !std::is_same_v<Impl::UnsupportedKokkosArrayLayout, U>>* =
-                   nullptr)
+  KOKKOS_INLINE_FUNCTION explicit(!traits::memory_traits::is_unmanaged) View(
+      const typename Impl::MDSpanViewTraits<traits>::mdspan_type& mds,
+      std::enable_if_t<
+          !std::is_same_v<Impl::UnsupportedKokkosArrayLayout, U>>* = nullptr)
       : View(mds.data_handle(),
              Impl::array_layout_from_mapping<
                  typename traits::array_layout,
                  typename Impl::MDSpanViewTraits<traits>::mdspan_type>(
-                 mds.mapping())) {
-  }
+                 mds.mapping())) {}
 
   template <class ElementType, class ExtentsType, class LayoutType,
             class AccessorType>
-  KOKKOS_INLINE_FUNCTION
-#ifndef KOKKOS_ENABLE_CXX17
-      explicit(!std::is_convertible_v<
-               Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
-                              AccessorType>,
-               typename Impl::MDSpanViewTraits<traits>::mdspan_type>)
-#endif
-          View(const Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
-                                    AccessorType>& mds)
-      : View(typename Impl::MDSpanViewTraits<traits>::mdspan_type(mds)) {
-  }
+  KOKKOS_INLINE_FUNCTION explicit(
+      !std::is_convertible_v<
+          Kokkos::mdspan<ElementType, ExtentsType, LayoutType, AccessorType>,
+          typename Impl::MDSpanViewTraits<traits>::mdspan_type>)
+      View(const Kokkos::mdspan<ElementType, ExtentsType, LayoutType,
+                                AccessorType>& mds)
+      : View(typename Impl::MDSpanViewTraits<traits>::mdspan_type(mds)) {}
 
   //----------------------------------------
   // Conversion to MDSpan

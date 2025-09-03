@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - '.github/workflows/mdspan-version-check.yml'
+      - 'scripts/mdspan-hash.txt'
       - 'tpls/mdspan/**'
 
 permissions: read-all
@@ -13,10 +14,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - run: echo "ref=$(cat scripts/mdspan-hash.txt)" >> $GITHUB_ENV
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       with:
         repository: kokkos/mdspan
-        ref: 0e4eba59ad53451784b3839bdf98b25fa2d64931 
+        ref: ${{ env.ref }}
         path: kokkos-mdspan
     - run: |
         rm kokkos-mdspan/include/experimental/mdarray

@@ -38,7 +38,7 @@ void test_mdspan_minimal_functional() {
 #if !defined(KOKKOS_ENABLE_OPENACC)
         Kokkos::mdspan<int, Kokkos::dextents<int, 1>> b_mds(a.data(), N);
 #endif
-#if !defined(KOKKOS_ENABLE_CXX17) && !defined(KOKKOS_ENABLE_CXX20)
+#if !defined(KOKKOS_ENABLE_CXX20)
         if (a_mds[i] != i) err++;
 #if !defined(KOKKOS_ENABLE_OPENACC)
         if (b_mds[i] != i) err++;

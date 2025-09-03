@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <TestStdAlgorithmsCommon.hpp>
+#include <algorithm>
 
 namespace Test {
 namespace stdalgos {
@@ -71,27 +72,6 @@ struct TestFunctorA {
   }
 };
 
-// shift_left is only supported starting from C++20,
-// so put here a working version of the std algo copied from
-// https://github.com/llvm/llvm-project/blob/main/libcxx/include/__algorithm/shift_left.h
-template <class ForwardIterator>
-ForwardIterator my_std_shift_left(
-    ForwardIterator first, ForwardIterator last,
-    typename std::iterator_traits<ForwardIterator>::difference_type n) {
-  if (n == 0) {
-    return last;
-  }
-
-  ForwardIterator m = first;
-  for (; n > 0; --n) {
-    if (m == last) {
-      return first;
-    }
-    ++m;
-  }
-  return std::move(m, last, first);
-}
-
 template <class LayoutTag, class ValueType>
 void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
             int apiId) {
@@ -138,7 +118,7 @@ void test_A(std::size_t numTeams, std::size_t numCols, std::size_t shift,
   auto intraTeamSentinelView_h = create_host_space_copy(intraTeamSentinelView);
   for (std::size_t i = 0; i < cloneOfDataViewBeforeOp_h.extent(0); ++i) {
     auto myRow = Kokkos::subview(cloneOfDataViewBeforeOp_h, i, Kokkos::ALL());
-    auto it    = my_std_shift_left(KE::begin(myRow), KE::end(myRow), shift);
+    auto it    = std::shift_left(KE::begin(myRow), KE::end(myRow), shift);
     const std::size_t stdDistance = KE::distance(KE::begin(myRow), it);
     ASSERT_EQ(stdDistance, distancesView_h(i));
     ASSERT_TRUE(intraTeamSentinelView_h(i));

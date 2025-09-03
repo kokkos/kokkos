@@ -21,8 +21,6 @@
 
 #if defined(KOKKOS_ENABLE_LIBQUADMATH)
 
-#include <Kokkos_NumericTraits.hpp>
-#include <Kokkos_ReductionIdentity.hpp>
 #include <Kokkos_MathematicalConstants.hpp>
 #include <Kokkos_MathematicalFunctions.hpp>
 
@@ -31,30 +29,6 @@
 #if !(defined(__FLOAT128__) || defined(__SIZEOF_FLOAT128__))
 #error __float128 not supported on this host
 #endif
-
-namespace Kokkos {
-template <>
-struct reduction_identity<__float128> {
-  KOKKOS_FUNCTION constexpr static __float128 sum() noexcept { return 0; }
-  KOKKOS_FUNCTION constexpr static __float128 prod() noexcept { return 1; }
-  KOKKOS_FUNCTION constexpr static __float128 max() noexcept {
-    using namespace Kokkos::Experimental;
-#if __FINITE_MATH_ONLY__
-    return finite_min_v<__float128>;
-#else
-    return -infinity_v<__float128>;
-#endif
-  }
-  KOKKOS_FUNCTION constexpr static __float128 min() noexcept {
-    using namespace Kokkos::Experimental;
-#if __FINITE_MATH_ONLY__
-    return finite_max_v<__float128>;
-#else
-    return infinity_v<__float128>;
-#endif
-  }
-};
-}  // namespace Kokkos
 
 //<editor-fold desc="Common mathematical functions __float128 overloads">
 namespace Kokkos {

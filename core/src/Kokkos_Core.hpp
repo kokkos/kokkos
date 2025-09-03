@@ -254,12 +254,9 @@ inline std::string scopeguard_destruct_after_finalize_warning() {
 
 }  // namespace Impl
 
-class KOKKOS_ATTRIBUTE_NODISCARD ScopeGuard {
+class [[nodiscard]] ScopeGuard {
  public:
   template <class... Args>
-#if defined(__has_cpp_attribute) && __has_cpp_attribute(nodiscard) >= 201907
-  [[nodiscard]]
-#endif
   ScopeGuard(Args&&... args) {
     if (is_initialized()) {
       Kokkos::abort(
