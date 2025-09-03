@@ -971,7 +971,7 @@ class Random_XorShift64_Pool {
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  void init(uint64_t seed, uint64_t num_states) {
+  KOKKOS_DEPRECATED void init(uint64_t seed, uint64_t num_states) {
     init_impl(execution_space(), seed, num_states);
     execution_space().fence("Random_XorShift64_Pool::init");
   }
