@@ -260,6 +260,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         TeamScratch
         TeamTeamSize
         TeamVectorRange
+        Timer
         UniqueToken
         View_64bit
         ViewAPI_a
