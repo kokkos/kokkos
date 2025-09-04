@@ -438,13 +438,12 @@ struct SizedFunctor {
 TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
 #if defined(KOKKOS_ENABLE_CUDA)
   if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+#elif defined(KOKKOS_ENABLE_HIP)
   if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
 #endif
     GTEST_SKIP() << "This execution space does not support global launch.";
 
-#if defined(KOKKOS_ENABLE_CUDA) || \
-    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH))
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   }
 
   using value_t   = int;
@@ -852,7 +851,7 @@ struct GraphNodeTypes {
 #else
   static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::Cuda>;
 #endif
-#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+#elif defined(KOKKOS_ENABLE_HIP)
     static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::HIP>;
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)
   static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::SYCL>;
@@ -970,8 +969,7 @@ __global__ void set_to(DstType* const dst, const SrcTypes* const... srcs) {
 
 template <typename Exec>
 struct ExternalCapture {
-#if defined(KOKKOS_ENABLE_CUDA) ||                                           \
-    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)) || \
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
   // clang-format off
   template <typename Pred, typename DstType, typename... SrcTypes>
@@ -1000,7 +998,7 @@ struct ExternalCapture {
         <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.cuda_stream()>>>(dst, srcs...);
   }
 #endif
-#if defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+#if defined(KOKKOS_ENABLE_HIP)
   template <typename DstType, typename... SrcTypes>
   static void compute(const Kokkos::HIP& exec, DstType* const dst,
                       const SrcTypes* const... srcs) {
@@ -1178,8 +1176,7 @@ struct ThenIncrementAndCombineFunctor
 template <typename T>
 struct GraphIsDefaulted : std::true_type {};
 
-#if defined(KOKKOS_ENABLE_CUDA) ||                                           \
-    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)) || \
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
 template <>
 struct GraphIsDefaulted<

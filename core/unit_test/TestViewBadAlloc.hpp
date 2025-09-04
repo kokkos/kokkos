@@ -54,12 +54,6 @@ TEST(TEST_CATEGORY, view_bad_alloc) {
   }
 #endif
 #endif
-#if ((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR < 7))
-  if (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
-    GTEST_SKIP() << "ROCm 5.6 and earlier segfaults when trying to allocate "
-                    "too much memory";
-  }
-#endif
 #if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
   if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP() << "acc_malloc() not properly returning nullptr";

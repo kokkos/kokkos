@@ -319,8 +319,7 @@ class GraphNodeRef {
     return rv;
   }
 
-#if defined(KOKKOS_ENABLE_CUDA) ||                                           \
-    (defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)) || \
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
   template <
       class Functor,
@@ -329,7 +328,7 @@ class GraphNodeRef {
 #if defined(KOKKOS_ENABLE_CUDA)
   auto cuda_capture(const ExecutionSpace& exec, Functor&& functor) const {
     if constexpr (std::is_same_v<ExecutionSpace, Kokkos::Cuda>) {
-#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+#elif defined(KOKKOS_ENABLE_HIP)
   auto hip_capture(const ExecutionSpace& exec, Functor&& functor) const {
     if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)

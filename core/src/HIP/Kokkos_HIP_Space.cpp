@@ -96,9 +96,7 @@ void* HIPSpace::impl_allocate(const int device_id,
                               const size_t arg_logical_size,
                               [[maybe_unused]] bool stream_sync_only) const {
   void* ptr = nullptr;
-  // ROCm 5.5 and earlier throw an error when using hipMallocAsync and
-  // arg_alloc_size is zero. Instead of trying to allocate memory, just return
-  // early.
+  // Instead of trying to allocate zero memory, return early.
   if (arg_alloc_size == 0) return ptr;
 
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(device_id));

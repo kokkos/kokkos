@@ -37,9 +37,6 @@ struct Increment {
 // This test checks the promises of Kokkos::Graph against its
 // underlying HIP native objects.
 TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
-#if !defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
-  GTEST_SKIP() << "This test will not work without native graph support";
-#else
   Kokkos::Experimental::Graph<Kokkos::HIP> graph{};
   // Before instantiation, the HIP graph is valid, but the HIP executable
   // graph is still null.
@@ -61,14 +58,11 @@ TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
 
   ASSERT_EQ(graph.native_graph(), hip_graph);
   ASSERT_EQ(graph.native_graph_exec(), hip_graph_exec);
-#endif
 }
 
 // Use native HIP graph to generate a DOT representation.
 TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
-#if !defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
-  GTEST_SKIP() << "This test will not work without native graph support";
-#elif defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
   GTEST_SKIP()
       << "The GNU C++ Library (libstdc++) versions less than 9.1 "
          "require linking with `-lstdc++fs` when using std::filesystem";
@@ -96,9 +90,6 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
   ASSERT_EQ(num_nodes, 2u);
 
-  // hipGraphDebugDotPrint was introduced in ROCm 5.5
-#if (HIP_VERSION_MAJOR > 5) || \
-    ((HIP_VERSION_MAJOR > 5) && (HIP_VERSION_MINOR >= 5))
   const auto dot = std::filesystem::temp_directory_path() / "hip_graph.dot";
 
   KOKKOS_IMPL_HIP_SAFE_CALL(hipGraphDebugDotPrint(
@@ -120,14 +111,10 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
       << "Could not find expected signature regex " << std::quoted(expected)
       << " in " << dot;
 #endif
-#endif
 }
 
 // Build a Kokkos::Graph from an existing hipGraph_t.
 TEST(TEST_CATEGORY, graph_construct_from_native) {
-#if !defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
-  GTEST_SKIP() << "This test will not work without native graph support";
-#else
   using view_t = Kokkos::View<int, Kokkos::HIPManagedSpace>;
 
   hipGraph_t native_graph = nullptr;
@@ -148,7 +135,6 @@ TEST(TEST_CATEGORY, graph_construct_from_native) {
   exec.fence();
 
   ASSERT_EQ(data(), 1);
-#endif
 }
 
 }  // namespace
