@@ -87,7 +87,7 @@ jobs:
             -DKokkos_ARCH_AMD_GFX90A=ON \
             -DKokkos_ARCH_NATIVE=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
@@ -129,7 +129,7 @@ jobs:
             -DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=ON \
             -DKokkos_ARCH_NATIVE=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
-            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
