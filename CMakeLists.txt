@@ -8,7 +8,7 @@ endif()
 # Work around MSVC+CUDA issue
 cmake_policy(SET CMP0126 OLD)
 
-// Work around LANGUAGE setting on source files
+# Work around LANGUAGE setting on source files
 cmake_policy(SET CMP0119 OLD)
 
 # Disable in-source builds to prevent source tree corruption.
