@@ -97,9 +97,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), count_nodes) {
 
 // Use native Cuda graph to generate a DOT representation.
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
-#if CUDA_VERSION < 11600
-  GTEST_SKIP() << "Export a graph to DOT requires Cuda 11.6.";
-#elif defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
   GTEST_SKIP()
       << "The GNU C++ Library (libstdc++) versions less than 9.1 "
          "require linking with `-lstdc++fs` when using std::filesystem";
@@ -137,9 +135,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
 
 // Ensure that the graph has been instantiated with the default flag.
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
-#if CUDA_VERSION < 12000
-  GTEST_SKIP() << "Graph instantiation flag inspection requires Cuda 12.";
-#else
   graph->instantiate();
   unsigned long long flags =
       Kokkos::Experimental::finite_max_v<unsigned long long>;
@@ -147,7 +142,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
       cudaGraphExecGetFlags(graph->native_graph_exec(), &flags));
 
   ASSERT_EQ(flags, 0u);
-#endif
 }
 
 // Build a Kokkos::Graph from an existing cudaGraph_t.

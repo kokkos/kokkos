@@ -38,8 +38,6 @@ namespace Impl {
     return CUDA_NAME(HALF_TYPE::impl_type(x));                     \
   }
 
-#ifdef KOKKOS_IMPL_CUDA_HALF_TYPE_DEFINED
-
 #define KOKKOS_CUDA_HALF_UNARY_FUNCTION_IMPL(OP, CUDA_NAME) \
   KOKKOS_CUDA_HALF_UNARY_FUNCTION(OP, CUDA_NAME, Kokkos::Experimental::half_t)
 #define KOKKOS_CUDA_HALF_BINARY_FUNCTION_IMPL(OP, CUDA_NAME) \
@@ -51,12 +49,6 @@ KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
     Kokkos::Experimental::half_t) {
   return Kokkos::Experimental::half_t(0.f);
 }
-
-#else
-#define KOKKOS_CUDA_HALF_UNARY_FUNCTION_IMPL(OP, CUDA_NAME)
-#define KOKKOS_CUDA_HALF_BINARY_FUNCTION_IMPL(OP, CUDA_NAME)
-#define KOKKOS_CUDA_HALF_UNARY_PREDICATE_IMPL(OP, CUDA_NAME)
-#endif
 
 // Function for bhalf are not available prior to Ampere
 #if defined(KOKKOS_IMPL_BHALF_TYPE_DEFINED) && \
@@ -147,7 +139,7 @@ KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(nearbyint, hrint)
 // nextafter
 // copysign
 // isfinite
-#if (KOKKOS_COMPILER_NVCC <= 1210 || KOKKOS_COMPILER_NVCC >= 1230)
+#if KOKKOS_COMPILER_NVCC >= 1230
 // __hisinf always returns false with nvcc 12.2 when compiling with cxx20
 // https://docs.nvidia.com/cuda/archive/12.3.2/cuda-toolkit-release-notes/index.html#cuda-math-release-12-3
 KOKKOS_CUDA_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isinf, __hisinf)
