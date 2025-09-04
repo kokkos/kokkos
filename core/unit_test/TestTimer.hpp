@@ -18,7 +18,6 @@
 
 #include <Kokkos_Timer.hpp>
 
-#include <chrono>
 #include <thread>
 #include <type_traits>
 
