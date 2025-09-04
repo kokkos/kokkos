@@ -399,13 +399,6 @@ KOKKOS_FUNCTION const auto &get_property(
     return view_ctor_prop;
   }
 }
-#if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1150)
-// pragma pop is getting a warning from the underlying GCC
-// for unknown pragma if -pedantic is used
-#ifdef __CUDA_ARCH__
-#pragma pop
-#endif
-#endif
 #ifdef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION
 #pragma warning(pop)
 #undef KOKKOS_IMPL_INTEL_BOGUS_MISSING_RETURN_STATEMENT_AT_END_OF_NON_VOID_FUNCTION

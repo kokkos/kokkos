@@ -844,14 +844,7 @@ struct GraphNodeTypes {
                                          Kokkos::Experimental::TypeErasedTag>;
 
 #if defined(KOKKOS_ENABLE_CUDA)
-// TODO check range of problematic nvcc/11.4 and gcc/10.x combos
-#if (defined(KOKKOS_COMPILER_GNU) &&                                 \
-     (KOKKOS_COMPILER_GNU >= 1000 && KOKKOS_COMPILER_GNU < 1100)) && \
-    (defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC == 1140))
-  static constexpr bool support_capture = false;
-#else
   static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::Cuda>;
-#endif
 #elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
     static constexpr bool support_capture = std::is_same_v<Exec, Kokkos::HIP>;
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)

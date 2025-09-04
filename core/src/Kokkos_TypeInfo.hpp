@@ -23,10 +23,8 @@
 
 #include <Kokkos_Macros.hpp>
 
-// NVCC versions less than 11.3.0 segfault when that header is included
 // NVCC+MSVC doesn't work at all - it simply reports "T" inside type_name
-#if (!defined(KOKKOS_COMPILER_NVCC) || (KOKKOS_COMPILER_NVCC >= 1130)) && \
-    (!(defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_COMPILER_MSVC)))
+#if !(defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_COMPILER_MSVC))
 
 #define KOKKOS_ENABLE_IMPL_TYPEINFO
 

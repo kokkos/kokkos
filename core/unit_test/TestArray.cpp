@@ -168,15 +168,9 @@ constexpr bool test_to_array() {
   static_assert(std::is_same_v<decltype(a2), Kokkos::Array<int, 4>>);
   maybe_unused(a2);
 
-// gcc8, icc, and nvcc 11.3 do not support the implicit conversion
-#if !(defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 910)) && \
-    !(defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC < 1140))
-  // deduces length with element type specified
-  // implicit conversion happens
   [[maybe_unused]] auto a3 = Kokkos::to_array<long>({0, 1, 3});
   static_assert(std::is_same_v<decltype(a3), Kokkos::Array<long, 3>>);
   maybe_unused(a3);
-#endif
 
   return true;
 }
