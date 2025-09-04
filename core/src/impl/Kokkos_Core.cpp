@@ -539,8 +539,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("view", "mdspan", "disabled");
 #else
   declare_configuration_metadata("view", "mdspan", "enabled");
-  declare_configuration_metadata("view", "mdspan version", KOKKOS_IMPL_MDSPAN_VERSION);
 #endif
+  declare_configuration_metadata("view", "mdspan version", KOKKOS_IMPL_MDSPAN_VERSION);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
   declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_IVDEP", "yes");
