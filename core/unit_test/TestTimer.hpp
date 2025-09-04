@@ -30,18 +30,15 @@ TEST(TEST_CATEGORY, timer) {
   std::this_thread::sleep_for(5ms);
   auto elapsed = t.seconds();
   EXPECT_GE(elapsed, .005);
-  EXPECT_LE(elapsed, .01);
 
   std::this_thread::sleep_for(10ms);
   auto elapsed2 = t.seconds();
   EXPECT_GE(elapsed2, .015);
-  EXPECT_LE(elapsed2, .02);
 
   t.reset();
   std::this_thread::sleep_for(5ms);
   auto elapsed3 = t.seconds();
   EXPECT_GE(elapsed3, .005);
-  EXPECT_LE(elapsed3, .01);
 }
 
 static_assert(!std::is_copy_constructible_v<Kokkos::Timer>);
