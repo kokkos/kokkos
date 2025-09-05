@@ -245,7 +245,6 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
     target_link_options(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_OPTIONS})
   endif()
 
-  #required for check_linker_flag
   #exclude case of compiler_launcher. The launcher forwards to nvcc_wrapper and shadow the CXX compiler that CMake sees (compiler_launcher changes the compiler).
   #The CXX compiler CMake will invoke for the check is not able to consume the cuda flags if it is not nvcc_wrapper or clang+cuda.
   #FIXME_NVHPC nvc++ is failing the check spuriously with various version numbers.
