@@ -354,11 +354,13 @@ RangePolicy(ES const&, int64_t, int64_t) -> RangePolicy<ES>;
 template <typename ES, typename = std::enable_if_t<is_execution_space_v<ES>>>
 RangePolicy(ES const&, int64_t, int64_t, ChunkSize const&) -> RangePolicy<ES>;
 
-/** \brief  Execution policy for work over a single thread
+/** \brief  Execution policy to execute work over a single thread
  */
 template <class... Properties>
 class SinglePolicy : public RangePolicy<Properties...> {
  public:
+  using base_class = RangePolicy<Properties...>;
+
   template <class... OtherProperties>
   SinglePolicy(const SinglePolicy<OtherProperties...>& p)
       : RangePolicy<Properties...>(p) {}

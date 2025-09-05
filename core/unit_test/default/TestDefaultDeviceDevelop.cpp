@@ -28,17 +28,38 @@ struct Functor {
   KOKKOS_FUNCTION void operator()(const TimeTwo) const { v(0) *= 2; }
 };
 
-struct PlusTen {};
+struct Ten {};
 
 struct FunctorRed {
-  Kokkos::View<double*> v;
-  KOKKOS_FUNCTION void operator()(int& res) const { res = v(0) - 5; }
-  KOKKOS_FUNCTION void operator()(const PlusTen, int& res) const {
-    res = v(0) + 10;
+  KOKKOS_FUNCTION void operator()(int& res) const { res = 5; }
+  KOKKOS_FUNCTION void operator()(const Ten, int& res) const { res = 10; }
+};
+
+struct CombinedFunctorRed {
+  KOKKOS_FUNCTION void operator()(int& res1, int& res2) const {
+    res1 = 5;
+    res2 = 5;
+  }
+  KOKKOS_FUNCTION void operator()(const Ten, int& res1, int& res2) const {
+    res1 = 10;
+    res2 = 10;
+  }
+
+  KOKKOS_FUNCTION void operator()(int& res1, int& res2, int& res3) const {
+    res1 = 5;
+    res2 = 5;
+    res3 = 5;
+  }
+  KOKKOS_FUNCTION void operator()(const Ten, int& res1, int& res2,
+                                  int& res3) const {
+    res1 = 10;
+    res2 = 10;
+    res3 = 10;
   }
 };
 
 void test_func() {
+  // ParallelFor based API
   {
     Kokkos::View<double*> v("v", 1);
     auto mirror = Kokkos::create_mirror_view(v);
@@ -109,45 +130,225 @@ void test_func() {
     EXPECT_EQ(res, mirror(0));
   }
 
-  // Reduce based API
+  // ParallelReduced based API
   {
-    Kokkos::View<double*> v("v", 1);
-    auto mirror = Kokkos::create_mirror_view(v);
-    mirror(0)   = 5;
-    Kokkos::deep_copy(v, mirror);
-
-    FunctorRed f;
-    f.v = v;
-
     int val;
+    FunctorRed f;
 
-    //// Full signature
-    //Kokkos::single(
-    //    "Single Reduce",
-    //    Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace, PlusTen>(), f, val);
-    //EXPECT_EQ(val, 15);
+    // Full signature
+    // Functor
+    Kokkos::single("Single Reduce",
+                   Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace, Ten>(),
+                   f, val);
+    EXPECT_EQ(val, 10);
 
-    //Kokkos::single(
-    //    "Single Reduce", Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(),
-    //    KOKKOS_LAMBDA(int& ret) { ret = 5; }, val);
-    //EXPECT_EQ(val, 5);
+    // Lambda
+    Kokkos::single(
+        "Single Reduce", Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(),
+        KOKKOS_LAMBDA(int& ret) { ret = 5; }, val);
+    EXPECT_EQ(val, 5);
 
     // Minimal
     Kokkos::single(f, val);
-    EXPECT_EQ(val, 0);
+    EXPECT_EQ(val, 5);
 
-    //// +kernel_name
-    //Kokkos::single("Single", f, val);
-    //EXPECT_EQ(val, 0);
+    // +kernel_name
+    Kokkos::single("Single", f, val);
+    EXPECT_EQ(val, 5);
 
-    //// +Policy
-    //Kokkos::single(Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(), f,
-    //               val);
-    //EXPECT_EQ(val, 0);
+    // +Policy
+    Kokkos::single(Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(), f,
+                   val);
+    EXPECT_EQ(val, 5);
 
-    //// +Worktag
-    //Kokkos::single(Kokkos::SinglePolicy<PlusTen>(), f, val);
-    //EXPECT_EQ(val, 15);
+    // +kernel_name +Policy
+    Kokkos::single("Single",
+                   Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(), f,
+                   val);
+    EXPECT_EQ(val, 5);
+
+    // +Worktag
+    Kokkos::single(Kokkos::SinglePolicy<Ten>(), f, val);
+    EXPECT_EQ(val, 10);
+
+    // +Worktag +Policy
+    Kokkos::single(Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace, Ten>(),
+                   f, val);
+    EXPECT_EQ(val, 10);
+
+    // +kernel_name +Worktag
+    Kokkos::single("Single", Kokkos::SinglePolicy<Ten>(), f, val);
+    EXPECT_EQ(val, 10);
+  }
+
+  // Combined Reducer
+  {
+    int sum1, sum2;
+
+    auto l = KOKKOS_LAMBDA(int& sum1, int& sum2) {
+      sum1 = 1;
+      sum2 = 2;
+    };
+
+    // Lambda
+    // Minimal
+    Kokkos::single(l, sum1, sum2);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+
+    // +Label
+    Kokkos::single("Combined reducer", l, sum1, sum2);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+
+    // +Policy
+    Kokkos::single(Kokkos::SinglePolicy(), l, sum1, sum2);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+
+    // Full
+    Kokkos::single("Combined reducer", Kokkos::SinglePolicy(), l, sum1, sum2);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+
+    // Full with ExecSpace
+    Kokkos::single("Combined reducer",
+                   Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(), l,
+                   sum1, sum2);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+
+    // Functor
+    CombinedFunctorRed f{};
+    // Minimal
+    Kokkos::single(f, sum1, sum2);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+
+    // +Label
+    Kokkos::single("Combined reducer", f, sum1, sum2);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+
+    // +Policy
+    Kokkos::single(Kokkos::SinglePolicy(), f, sum1, sum2);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+
+    // +Policy with WorkTag
+    Kokkos::single(Kokkos::SinglePolicy<Ten>(), f, sum1, sum2);
+    EXPECT_EQ(sum1, 10);
+    EXPECT_EQ(sum2, 10);
+
+    // Full
+    Kokkos::single("Combined reducer", Kokkos::SinglePolicy(), f, sum1, sum2);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+
+    // Full with WorkTag
+    Kokkos::single("Combined reducer", Kokkos::SinglePolicy<Ten>(), f, sum1,
+                   sum2);
+    EXPECT_EQ(sum1, 10);
+    EXPECT_EQ(sum2, 10);
+
+    // Full with WorkTag and ExecSpace
+    Kokkos::single("Combined reducer",
+                   Kokkos::SinglePolicy<Ten, Kokkos::DefaultExecutionSpace>(),
+                   f, sum1, sum2);
+    EXPECT_EQ(sum1, 10);
+    EXPECT_EQ(sum2, 10);
+  }
+
+  {
+    int sum1, sum2, sum3;
+
+    auto l = KOKKOS_LAMBDA(int& sum1, int& sum2, int& sum3) {
+      sum1 = 1;
+      sum2 = 2;
+      sum3 = 3;
+    };
+
+    // Lambda
+    // Minimal
+    Kokkos::single(l, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+    EXPECT_EQ(sum3, 3);
+
+    // +Label
+    Kokkos::single("Combined reducer", l, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+    EXPECT_EQ(sum3, 3);
+
+    // +Policy
+    Kokkos::single(Kokkos::SinglePolicy(), l, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+    EXPECT_EQ(sum3, 3);
+
+    // Full
+    Kokkos::single("Combined reducer", Kokkos::SinglePolicy(), l, sum1, sum2,
+                   sum3);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+    EXPECT_EQ(sum3, 3);
+
+    // Full with ExecSpace
+    Kokkos::single("Combined reducer",
+                   Kokkos::SinglePolicy<Kokkos::DefaultExecutionSpace>(), l,
+                   sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 1);
+    EXPECT_EQ(sum2, 2);
+    EXPECT_EQ(sum3, 3);
+
+    //// Functor
+    CombinedFunctorRed f{};
+    // Minimal
+    Kokkos::single(f, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+    EXPECT_EQ(sum3, 5);
+
+    // +Label
+    Kokkos::single("Combined reducer", f, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+    EXPECT_EQ(sum3, 5);
+
+    // +Policy
+    Kokkos::single(Kokkos::SinglePolicy(), f, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+    EXPECT_EQ(sum3, 5);
+
+    // +Policy with WorkTag
+    Kokkos::single(Kokkos::SinglePolicy<Ten>(), f, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 10);
+    EXPECT_EQ(sum2, 10);
+    EXPECT_EQ(sum3, 10);
+
+    // Full
+    Kokkos::single("Combined reducer", Kokkos::SinglePolicy(), f, sum1, sum2,
+                   sum3);
+    EXPECT_EQ(sum1, 5);
+    EXPECT_EQ(sum2, 5);
+    EXPECT_EQ(sum3, 5);
+
+    // Full with WorkTag
+    Kokkos::single("Combined reducer", Kokkos::SinglePolicy<Ten>(), f, sum1,
+                   sum2, sum3);
+    EXPECT_EQ(sum1, 10);
+    EXPECT_EQ(sum2, 10);
+    EXPECT_EQ(sum3, 10);
+
+    // Full with WorkTag and ExecSpace
+    Kokkos::single("Combined reducer",
+                   Kokkos::SinglePolicy<Ten, Kokkos::DefaultExecutionSpace>(),
+                   f, sum1, sum2, sum3);
+    EXPECT_EQ(sum1, 10);
+    EXPECT_EQ(sum2, 10);
+    EXPECT_EQ(sum3, 10);
   }
 }
 

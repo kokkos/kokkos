@@ -258,14 +258,14 @@ struct Kokkos_Profiling_EventSet {
   Kokkos_Tools_provideToolProgrammingInterfaceFunction
       provide_tool_programming_interface;
   Kokkos_Tools_requestToolSettingsFunction request_tool_settings;
-  char profiling_padding[9 * sizeof(Kokkos_Tools_functionPointer)];
+  char profiling_padding[7 * sizeof(Kokkos_Tools_functionPointer)];
   Kokkos_Tools_outputTypeDeclarationFunction declare_output_type;
   Kokkos_Tools_inputTypeDeclarationFunction declare_input_type;
   Kokkos_Tools_requestValueFunction request_output_values;
   Kokkos_Tools_contextBeginFunction begin_tuning_context;
   Kokkos_Tools_contextEndFunction end_tuning_context;
   Kokkos_Tools_optimizationGoalDeclarationFunction declare_optimization_goal;
-  char padding[230 *
+  char padding[232 *
                sizeof(
                    Kokkos_Tools_functionPointer)];  // allows us to add another
                                                     // 256 events to the Tools
