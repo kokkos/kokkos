@@ -30,6 +30,13 @@
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif
 
+#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
+    !defined(KOKKOS_COMPILER_MSVC)
+#define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE __builtin_unreachable();
+#else
+#define MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE
+#endif
+
 namespace KE = Kokkos::Experimental;
 
 // clang-format off
@@ -335,6 +342,7 @@ struct math_function_name;
                                      math_unary_function_return_type_t<T>>); \
         return std::FUNC(x);                                                 \
       }                                                                      \
+      MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                                \
     }                                                                        \
     static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }           \
   };                                                                         \
@@ -460,6 +468,7 @@ DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
                            math_binary_function_return_type_t<T, U>>);         \
         return std::FUNC(x, y);                                                \
       }                                                                        \
+      MATHEMATICAL_FUNCTIONS_TEST_UNREACHABLE                                  \
     }                                                                          \
     static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }             \
   };                                                                           \
