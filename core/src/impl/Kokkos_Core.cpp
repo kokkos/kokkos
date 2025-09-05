@@ -533,6 +533,15 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("tools_only", "compiler_family", "msvc");
 #endif
 
+  declare_configuration_metadata("atomics", "desul atomics version", KOKKOS_IMPL_DESUL_VERSION);
+
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  declare_configuration_metadata("view", "mdspan", "disabled");
+#else
+  declare_configuration_metadata("view", "mdspan", "enabled");
+#endif
+  declare_configuration_metadata("view", "mdspan version", KOKKOS_IMPL_MDSPAN_VERSION);
+
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
   declare_configuration_metadata("vectorization", "KOKKOS_ENABLE_PRAGMA_IVDEP", "yes");
 #else
@@ -1099,6 +1108,9 @@ void Kokkos::print_configuration(std::ostream& os, bool verbose) {
 
   os << "Atomics:\n";
   print_helper(os, metadata_map["atomics"]);
+
+  os << "View:\n";
+  print_helper(os, metadata_map["view"]);
 
   os << "Vectorization:\n";
   print_helper(os, metadata_map["vectorization"]);

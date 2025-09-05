@@ -189,17 +189,7 @@ void HIPInternal::initialize(hipStream_t stream) {
   if (was_finalized)
     Kokkos::abort("Calling HIP::initialize after HIP::finalize is illegal\n");
 
-    // Get the device ID. If this is ROCm 5.6 or later, we can query this from
-    // the provided stream and potentially use multiple GPU devices. For
-    // ROCm 5.5 or earlier, we must use the singleton device id and there are no
-    // checks possible for the device id matching the device the stream was
-    // created on.
-#if (HIP_VERSION_MAJOR > 5 || \
-     (HIP_VERSION_MAJOR == 5 && HIP_VERSION_MINOR >= 6))
   KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamGetDevice(stream, &m_hipDev));
-#else
-  m_hipDev = singleton().m_hipDev;
-#endif
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_hipDev));
   hip_devices.insert(m_hipDev);
 

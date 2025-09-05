@@ -187,7 +187,7 @@ decltype(auto) Graph<ExecutionSpace>::native_graph() {
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::Cuda>) {
     return m_impl_ptr->cuda_graph();
   }
-#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+#elif defined(KOKKOS_ENABLE_HIP)
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
     return m_impl_ptr->hip_graph();
   }
@@ -205,7 +205,7 @@ decltype(auto) Graph<ExecutionSpace>::native_graph_exec() {
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::Cuda>) {
     return m_impl_ptr->cuda_graph_exec();
   }
-#elif defined(KOKKOS_ENABLE_HIP) && defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
+#elif defined(KOKKOS_ENABLE_HIP)
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::HIP>) {
     return m_impl_ptr->hip_graph_exec();
   }
@@ -228,10 +228,7 @@ decltype(auto) Graph<ExecutionSpace>::native_graph_exec() {
 #include <impl/Kokkos_Default_Graph_Impl.hpp>
 #include <Cuda/Kokkos_Cuda_Graph_Impl.hpp>
 #if defined(KOKKOS_ENABLE_HIP)
-// The implementation of hipGraph in ROCm 5.2 is bugged, so we cannot use it.
-#if defined(KOKKOS_IMPL_HIP_NATIVE_GRAPH)
 #include <HIP/Kokkos_HIP_Graph_Impl.hpp>
-#endif
 #endif
 #ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
 #include <SYCL/Kokkos_SYCL_Graph_Impl.hpp>

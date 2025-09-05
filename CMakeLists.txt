@@ -1,9 +1,15 @@
-cmake_minimum_required(VERSION 3.16 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.22 FATAL_ERROR)
 
 # scan source files for importing C++20 modules
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
   cmake_policy(SET CMP0155 NEW)
 endif()
+
+# Work around MSVC+CUDA issue
+cmake_policy(SET CMP0126 OLD)
+
+# Work around LANGUAGE setting on source files
+cmake_policy(SET CMP0119 OLD)
 
 # Disable in-source builds to prevent source tree corruption.
 if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")

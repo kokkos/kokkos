@@ -49,11 +49,6 @@ static_assert(false,
 #endif
 // clang-format on
 
-// The implementation of hipGraph in ROCm 5.2 is bugged, so we cannot use it.
-#if !((HIP_VERSION_MAJOR == 5) && (HIP_VERSION_MINOR == 2))
-#define KOKKOS_IMPL_HIP_NATIVE_GRAPH
-#endif
-
 #ifdef KOKKOS_ARCH_AMD_GFX942_APU
 #define KOKKOS_IMPL_HIP_UNIFIED_MEMORY
 #endif
