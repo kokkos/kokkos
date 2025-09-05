@@ -1129,14 +1129,11 @@ add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cp
 target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
-  if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.20)
-    set(USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED USE_SOURCE_PERMISSIONS)
-  endif()
   file(
     GENERATE
     OUTPUT $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py
     INPUT TestDeviceAndThreads.py
-    ${USE_SOURCE_PERMISSIONS_WHEN_SUPPORTED}
+    USE_SOURCE_PERMISSIONS
   )
   add_test(NAME Kokkos_CoreUnitTest_DeviceAndThreads
            COMMAND ${Python3_EXECUTABLE}
