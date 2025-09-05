@@ -452,6 +452,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
       case 1: return vgetq_lane_f64(m_value, 1);
       default: Kokkos::abort("Index out of bound"); break;
     }
+// missing return statement warning with cuda 13
 #if defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC >= 1300) && \
     defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
     return value_type{};
