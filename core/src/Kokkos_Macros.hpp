@@ -131,11 +131,11 @@
 
 #if defined(__INTEL_LLVM_COMPILER)
 #define KOKKOS_COMPILER_INTEL_LLVM __INTEL_LLVM_COMPILER
-  #if defined(_MSC_VER)
-  // Check this after Intel and Clang because those define _MSC_VER for
-  // compatibility
-  #define KOKKOS_COMPILER_MSVC _MSC_VER
-  #endif
+#if defined(_MSC_VER)
+// Check this after Intel and Clang because those define _MSC_VER for
+// compatibility
+#define KOKKOS_COMPILER_MSVC _MSC_VER
+#endif
 
 // Cray compiler for device offload code
 #elif defined(__cray__) && defined(__clang__)
