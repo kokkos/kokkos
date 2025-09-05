@@ -130,28 +130,7 @@ mark_as_advanced(Kokkos_ENABLE_IMPL_MDSPAN)
 mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
 
-if(Kokkos_ENABLE_IMPL_MDSPAN)
-  # Older CUDA versions work with mdspan but *not* our mdspan-based view implementation due
-  # to various compiler bugs. So we will disable it here
-  # Similarly GCC 8 and 9 have excessive memory usage so we default to legacy view, though the
-  # user can enable the new implementation if they wish
-  # CUDA 12.9 has a bug that causes it to segfault when mdspan-based view is used:
-  #   see https://github.com/kokkos/kokkos/issues/8126
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL GNU AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS_EQUAL 9)
-    set(VIEW_LEGACY_DEFAULT ON)
-  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
-    set(VIEW_LEGACY_DEFAULT ON)
-  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.9
-         AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 13
-  )
-    set(VIEW_LEGACY_DEFAULT ON)
-  else()
-    set(VIEW_LEGACY_DEFAULT OFF)
-  endif()
-else()
-  set(VIEW_LEGACY_DEFAULT ON)
-endif()
-kokkos_enable_option(IMPL_VIEW_LEGACY ${VIEW_LEGACY_DEFAULT} "Whether to use the legacy implementation of View")
+kokkos_enable_option(IMPL_VIEW_LEGACY ON "Whether to use the legacy implementation of View")
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
 if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
   message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set to use the new View implementation")
