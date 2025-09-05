@@ -153,21 +153,6 @@ struct make_all_extents_into_pointers<T*> {
   using type = typename make_all_extents_into_pointers<T>::type*;
 };
 
-//----------------------------------------------------------------------------
-// is_instance_of<A, B> returns true if type A is a templated instance of type B
-// For instance, `is_instance_of<std::vector<int>, std::vector>::value` is true
-// but, `is_instance_of<std::vector<int>, std::list>::value` is false
-
-template <class, template <class> class>
-struct is_instance_of {
-  enum : bool { value = false };
-};
-
-template <class... Args, template <class> class T>
-struct is_instance_of<T<Args...>, T> {
-  enum : bool { value = true };
-};
-
 }  // namespace Impl
 }  // namespace Kokkos
 
