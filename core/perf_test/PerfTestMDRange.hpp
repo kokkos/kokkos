@@ -35,31 +35,6 @@ struct MultiDimRangePerf3D {
                             B(i, j, k));
   }
 
-  struct InitZeroTag {};
-  //  struct InitViewTag {};
-
-  struct Init {
-    Init(const view_type &input_, const long &irange_, const long &jrange_,
-         const long &krange_)
-        : input(input_), irange(irange_), jrange(jrange_), krange(krange_) {}
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const long i, const long j, const long k) const {
-      input(i, j, k) = 1.0;
-    }
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const InitZeroTag &, const long i, const long j,
-                    const long k) const {
-      input(i, j, k) = 0;
-    }
-
-    view_type input;
-    const long irange;
-    const long jrange;
-    const long krange;
-  };
-
   static double test_multi_index(const unsigned int icount,
                                  const unsigned int jcount,
                                  const unsigned int kcount,
@@ -75,18 +50,13 @@ struct MultiDimRangePerf3D {
 
     double dt_min = 0;
 
+    Kokkos::deep_copy(Atest, 1.0);
+    execution_space().fence();
+    Kokkos::deep_copy(Btest, 1.0);
+    execution_space().fence();
+
     // LayoutRight
     if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      Kokkos::MDRangePolicy<
-          Kokkos::Rank<3, iterate_type::Right, iterate_type::Right>,
-          execution_space>
-          policy_initA({{0, 0, 0}}, {{icount, jcount, kcount}}, {{Ti, Tj, Tk}});
-      Kokkos::MDRangePolicy<
-          Kokkos::Rank<3, iterate_type::Right, iterate_type::Right>,
-          execution_space>
-          policy_initB({{0, 0, 0}}, {{icount + 2, jcount + 2, kcount + 2}},
-                       {{Ti, Tj, Tk}});
-
       using MDRangeType = typename Kokkos::MDRangePolicy<
           Kokkos::Rank<3, iterate_type::Right, iterate_type::Right>,
           execution_space>;
@@ -98,12 +68,6 @@ struct MultiDimRangePerf3D {
           execution_space>
           policy(point_type{{0, 0, 0}}, point_type{{icount, jcount, kcount}},
                  tile_type{{Ti, Tj, Tk}});
-
-      Kokkos::parallel_for(policy_initA, Init(Atest, icount, jcount, kcount));
-      execution_space().fence();
-      Kokkos::parallel_for(policy_initB,
-                           Init(Btest, icount + 2, jcount + 2, kcount + 2));
-      execution_space().fence();
 
       for (int i = 0; i < iter; ++i) {
         Kokkos::Timer timer;
@@ -170,32 +134,7 @@ struct MultiDimRangePerf3D {
       Kokkos::MDRangePolicy<
           Kokkos::Rank<3, iterate_type::Left, iterate_type::Left>,
           execution_space>
-          policy_initA({{0, 0, 0}}, {{icount, jcount, kcount}}, {{Ti, Tj, Tk}});
-      Kokkos::MDRangePolicy<
-          Kokkos::Rank<3, iterate_type::Left, iterate_type::Left>,
-          execution_space>
-          policy_initB({{0, 0, 0}}, {{icount + 2, jcount + 2, kcount + 2}},
-                       {{Ti, Tj, Tk}});
-
-      // using MDRangeType =
-      //     typename Kokkos::MDRangePolicy<
-      //         Kokkos::Rank<3, iterate_type::Left, iterate_type::Left>,
-      //         execution_space >;
-      // using tile_type = typename MDRangeType::tile_type;
-      // using point_type = typename MDRangeType::point_type;
-      // MDRangeType policy(point_type{{0,0,0}},
-      //                    point_type{{icount,jcount,kcount}},
-      //                    tile_type{{Ti,Tj,Tk}});
-      Kokkos::MDRangePolicy<
-          Kokkos::Rank<3, iterate_type::Left, iterate_type::Left>,
-          execution_space>
           policy({{0, 0, 0}}, {{icount, jcount, kcount}}, {{Ti, Tj, Tk}});
-
-      Kokkos::parallel_for(policy_initA, Init(Atest, icount, jcount, kcount));
-      execution_space().fence();
-      Kokkos::parallel_for(policy_initB,
-                           Init(Btest, icount + 2, jcount + 2, kcount + 2));
-      execution_space().fence();
 
       for (int i = 0; i < iter; ++i) {
         Kokkos::Timer timer;
@@ -315,34 +254,6 @@ struct RangePolicyCollapseTwo {
     }
   }
 
-  struct Init {
-    view_type input;
-    const long irange;
-    const long jrange;
-    const long krange;
-
-    Init(const view_type &input_, const long &irange_, const long &jrange_,
-         const long &krange_)
-        : input(input_), irange(irange_), jrange(jrange_), krange(krange_) {}
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const long r) const {
-      if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-        long i = int(r / jrange);
-        long j = int(r - i * jrange);
-        for (int k = 0; k < krange; ++k) {
-          input(i, j, k) = 1;
-        }
-      } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-        long k = int(r / jrange);
-        long j = int(r - k * jrange);
-        for (int i = 0; i < irange; ++i) {
-          input(i, j, k) = 1;
-        }
-      }
-    }
-  };
-
   static double test_index_collapse_two(const unsigned int icount,
                                         const unsigned int jcount,
                                         const unsigned int kcount,
@@ -371,15 +282,12 @@ struct RangePolicyCollapseTwo {
     }
 
     Kokkos::RangePolicy<execution_space> policy(0, (collapse_index_rangeA));
-    Kokkos::RangePolicy<execution_space> policy_initB(0,
-                                                      (collapse_index_rangeB));
 
     double dt_min = 0;
 
-    Kokkos::parallel_for(policy, Init(Atest, icount, jcount, kcount));
+    Kokkos::deep_copy(Atest, 1.0);
     execution_space().fence();
-    Kokkos::parallel_for(policy_initB,
-                         Init(Btest, icount + 2, jcount + 2, kcount + 2));
+    Kokkos::deep_copy(Btest, 1.0);
     execution_space().fence();
 
     for (int i = 0; i < iter; ++i) {
@@ -481,32 +389,6 @@ struct RangePolicyCollapseAll {
     }
   }
 
-  struct Init {
-    view_type input;
-    const long irange;
-    const long jrange;
-    const long krange;
-
-    Init(const view_type &input_, const long &irange_, const long &jrange_,
-         const long &krange_)
-        : input(input_), irange(irange_), jrange(jrange_), krange(krange_) {}
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const long r) const {
-      if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-        long i         = int(r / (jrange * krange));
-        long j         = int((r - i * jrange * krange) / krange);
-        long k         = int(r - i * jrange * krange - j * krange);
-        input(i, j, k) = 1;
-      } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-        long k         = int(r / (irange * jrange));
-        long j         = int((r - k * irange * jrange) / irange);
-        long i         = int(r - k * irange * jrange - j * irange);
-        input(i, j, k) = 1;
-      }
-    }
-  };
-
   static double test_collapse_all(const unsigned int icount,
                                   const unsigned int jcount,
                                   const unsigned int kcount,
@@ -519,15 +401,12 @@ struct RangePolicyCollapseAll {
 
     const long flat_index_range = icount * static_cast<long>(jcount) * kcount;
     Kokkos::RangePolicy<execution_space> policy(0, flat_index_range);
-    Kokkos::RangePolicy<execution_space> policy_initB(
-        0, (icount + 2) * (jcount + 2) * (kcount + 2));
 
     double dt_min = 0;
 
-    Kokkos::parallel_for(policy, Init(Atest, icount, jcount, kcount));
+    Kokkos::deep_copy(Atest, 1.0);
     execution_space().fence();
-    Kokkos::parallel_for(policy_initB,
-                         Init(Btest, icount + 2, jcount + 2, kcount + 2));
+    Kokkos::deep_copy(Btest, 1.0);
     execution_space().fence();
 
     for (int i = 0; i < iter; ++i) {
