@@ -97,9 +97,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), count_nodes) {
 
 // Use native Cuda graph to generate a DOT representation.
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
-#if CUDA_VERSION < 11060
-  GTEST_SKIP() << "Export a graph to DOT requires Cuda 11.6.";
-#elif defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
+#if defined(_GLIBCXX_RELEASE) && _GLIBCXX_RELEASE < 9
   GTEST_SKIP()
       << "The GNU C++ Library (libstdc++) versions less than 9.1 "
          "require linking with `-lstdc++fs` when using std::filesystem";
