@@ -5,16 +5,75 @@
 #include <iostream>
 
 namespace Test {
+
+template <typename Layout>
+struct LayoutToIterationPattern {};
+
+template <>
+struct LayoutToIterationPattern<Kokkos::LayoutRight> {
+  static constexpr Kokkos::Iterate pattern = Kokkos::Iterate::Right;
+};
+
+template <>
+struct LayoutToIterationPattern<Kokkos::LayoutLeft> {
+  static constexpr Kokkos::Iterate pattern = Kokkos::Iterate::Left;
+};
+
+template <typename ScalarType, typename ViewType>
+void check_computation(const ViewType &A, const ViewType &B) {
+  long numErrors = 0;
+  auto Ahost     = Kokkos::create_mirror_view_and_copy(A);
+  auto Bhost     = Kokkos::create_mirror_view_and_copy(B);
+
+  const long icount = Ahost.extent(0);
+  const long jcount = Ahost.extent(1);
+  const long kcount = Ahost.extent(2);
+  // On KNL, this may vectorize - add print statement to prevent
+  // Also, compare against epsilon, as vectorization can change bitwise
+  // answer
+  for (long i = 0; i < icount; ++i) {
+    for (long j = 0; j < jcount; ++j) {
+      for (long k = 0; k < kcount; ++k) {
+        ScalarType check =
+            0.25 * (ScalarType)(Bhost(i + 2, j, k) + Bhost(i + 1, j, k) +
+                                Bhost(i, j + 2, k) + Bhost(i, j + 1, k) +
+                                Bhost(i, j, k + 2) + Bhost(i, j, k + 1) +
+                                Bhost(i, j, k));
+        if (Ahost(i, j, k) - check != 0) {
+          ++numErrors;
+          std::cout << "  Correctness error at index: " << i << "," << j << ","
+                    << k << "\n"
+                    << "  multi Ahost = " << Ahost(i, j, k)
+                    << "  expected = " << check
+                    << "  multi Bhost(ijk) = " << Bhost(i, j, k)
+                    << "  multi Bhost(i+1jk) = " << Bhost(i + 1, j, k)
+                    << "  multi Bhost(i+2jk) = " << Bhost(i + 2, j, k)
+                    << "  multi Bhost(ij+1k) = " << Bhost(i, j + 1, k)
+                    << "  multi Bhost(ij+2k) = " << Bhost(i, j + 2, k)
+                    << "  multi Bhost(ijk+1) = " << Bhost(i, j, k + 1)
+                    << "  multi Bhost(ijk+2) = " << Bhost(i, j, k + 2)
+                    << std::endl;
+        }
+      }
+    }
+  }
+  if (numErrors != 0) {
+    std::cout << " LL multi run: errors " << numErrors << "  range product "
+              << icount * jcount * kcount << "  LL " << jcount * kcount
+              << "  LR " << icount * jcount << std::endl;
+  }
+}
+
 template <class DeviceType, typename ScalarType = double,
           typename TestLayout = Kokkos::LayoutRight>
 struct MultiDimRangePerf3D {
   using execution_space = DeviceType;
   using size_type       = typename execution_space::size_type;
 
-  using iterate_type = Kokkos::Iterate;
+  static constexpr Kokkos::Iterate iteration_pattern =
+      LayoutToIterationPattern<TestLayout>::pattern;
 
   using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
-  using host_view_type = typename view_type::host_mirror_type;
 
   view_type A;
   view_type B;
@@ -55,147 +114,26 @@ struct MultiDimRangePerf3D {
     Kokkos::deep_copy(Btest, 1.0);
     execution_space().fence();
 
-    // LayoutRight
-    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      using MDRangeType = typename Kokkos::MDRangePolicy<
-          Kokkos::Rank<3, iterate_type::Right, iterate_type::Right>,
-          execution_space>;
-      using tile_type  = typename MDRangeType::tile_type;
-      using point_type = typename MDRangeType::point_type;
+    Kokkos::MDRangePolicy<Kokkos::Rank<3, iteration_pattern, iteration_pattern>,
+                          execution_space>
+        policy({{0, 0, 0}}, {{icount, jcount, kcount}}, {{Ti, Tj, Tk}});
 
-      Kokkos::MDRangePolicy<
-          Kokkos::Rank<3, iterate_type::Right, iterate_type::Right>,
-          execution_space>
-          policy(point_type{{0, 0, 0}}, point_type{{icount, jcount, kcount}},
-                 tile_type{{Ti, Tj, Tk}});
+    for (int i = 0; i < iter; ++i) {
+      Kokkos::Timer timer;
+      Kokkos::parallel_for(policy,
+                           FunctorType(Atest, Btest, icount, jcount, kcount));
+      execution_space().fence();
+      const double dt = timer.seconds();
+      if (0 == i)
+        dt_min = dt;
+      else
+        dt_min = dt < dt_min ? dt : dt_min;
 
-      for (int i = 0; i < iter; ++i) {
-        Kokkos::Timer timer;
-        Kokkos::parallel_for(policy,
-                             FunctorType(Atest, Btest, icount, jcount, kcount));
-        execution_space().fence();
-        const double dt = timer.seconds();
-        if (0 == i)
-          dt_min = dt;
-        else
-          dt_min = dt < dt_min ? dt : dt_min;
-
-        // Correctness check - only the first run
-        if (0 == i) {
-          long numErrors = 0;
-          host_view_type Ahost("Ahost", icount, jcount, kcount);
-          Kokkos::deep_copy(Ahost, Atest);
-          host_view_type Bhost("Bhost", icount + 2, jcount + 2, kcount + 2);
-          Kokkos::deep_copy(Bhost, Btest);
-
-          // On KNL, this may vectorize - add print statement to prevent
-          // Also, compare against epsilon, as vectorization can change bitwise
-          // answer
-          for (long l = 0; l < static_cast<long>(icount); ++l) {
-            for (long j = 0; j < static_cast<long>(jcount); ++j) {
-              for (long k = 0; k < static_cast<long>(kcount); ++k) {
-                ScalarType check =
-                    0.25 *
-                    (ScalarType)(Bhost(l + 2, j, k) + Bhost(l + 1, j, k) +
-                                 Bhost(l, j + 2, k) + Bhost(l, j + 1, k) +
-                                 Bhost(l, j, k + 2) + Bhost(l, j, k + 1) +
-                                 Bhost(l, j, k));
-                if (Ahost(l, j, k) - check != 0) {
-                  ++numErrors;
-                  std::cout << "  Correctness error at index: " << l << "," << j
-                            << "," << k << "\n"
-                            << "  multi Ahost = " << Ahost(l, j, k)
-                            << "  expected = " << check
-                            << "  multi Bhost(ijk) = " << Bhost(l, j, k)
-                            << "  multi Bhost(l+1jk) = " << Bhost(l + 1, j, k)
-                            << "  multi Bhost(l+2jk) = " << Bhost(l + 2, j, k)
-                            << "  multi Bhost(ij+1k) = " << Bhost(l, j + 1, k)
-                            << "  multi Bhost(ij+2k) = " << Bhost(l, j + 2, k)
-                            << "  multi Bhost(ijk+1) = " << Bhost(l, j, k + 1)
-                            << "  multi Bhost(ijk+2) = " << Bhost(l, j, k + 2)
-                            << std::endl;
-                  // exit(-1);
-                }
-              }
-            }
-          }
-          if (numErrors != 0) {
-            std::cout << "LR multi: errors " << numErrors << "  range product "
-                      << icount * jcount * kcount << "  LL " << jcount * kcount
-                      << "  LR " << icount * jcount << std::endl;
-          }
-          // else { std::cout << " multi: No errors!" <<  std::endl; }
-        }
-      }  // end for
-
-    }
-    // LayoutLeft
-    else {
-      Kokkos::MDRangePolicy<
-          Kokkos::Rank<3, iterate_type::Left, iterate_type::Left>,
-          execution_space>
-          policy({{0, 0, 0}}, {{icount, jcount, kcount}}, {{Ti, Tj, Tk}});
-
-      for (int i = 0; i < iter; ++i) {
-        Kokkos::Timer timer;
-        Kokkos::parallel_for(policy,
-                             FunctorType(Atest, Btest, icount, jcount, kcount));
-        execution_space().fence();
-        const double dt = timer.seconds();
-        if (0 == i)
-          dt_min = dt;
-        else
-          dt_min = dt < dt_min ? dt : dt_min;
-
-        // Correctness check - only the first run
-        if (0 == i) {
-          long numErrors = 0;
-          host_view_type Ahost("Ahost", icount, jcount, kcount);
-          Kokkos::deep_copy(Ahost, Atest);
-          host_view_type Bhost("Bhost", icount + 2, jcount + 2, kcount + 2);
-          Kokkos::deep_copy(Bhost, Btest);
-
-          // On KNL, this may vectorize - add print statement to prevent
-          // Also, compare against epsilon, as vectorization can change bitwise
-          // answer
-          for (long l = 0; l < static_cast<long>(icount); ++l) {
-            for (long j = 0; j < static_cast<long>(jcount); ++j) {
-              for (long k = 0; k < static_cast<long>(kcount); ++k) {
-                ScalarType check =
-                    0.25 *
-                    (ScalarType)(Bhost(l + 2, j, k) + Bhost(l + 1, j, k) +
-                                 Bhost(l, j + 2, k) + Bhost(l, j + 1, k) +
-                                 Bhost(l, j, k + 2) + Bhost(l, j, k + 1) +
-                                 Bhost(l, j, k));
-                if (Ahost(l, j, k) - check != 0) {
-                  ++numErrors;
-                  std::cout << "  Correctness error at index: " << l << "," << j
-                            << "," << k << "\n"
-                            << "  multi Ahost = " << Ahost(l, j, k)
-                            << "  expected = " << check
-                            << "  multi Bhost(ijk) = " << Bhost(l, j, k)
-                            << "  multi Bhost(l+1jk) = " << Bhost(l + 1, j, k)
-                            << "  multi Bhost(l+2jk) = " << Bhost(l + 2, j, k)
-                            << "  multi Bhost(ij+1k) = " << Bhost(l, j + 1, k)
-                            << "  multi Bhost(ij+2k) = " << Bhost(l, j + 2, k)
-                            << "  multi Bhost(ijk+1) = " << Bhost(l, j, k + 1)
-                            << "  multi Bhost(ijk+2) = " << Bhost(l, j, k + 2)
-                            << std::endl;
-                  // exit(-1);
-                }
-              }
-            }
-          }
-          if (numErrors != 0) {
-            std::cout << " LL multi run: errors " << numErrors
-                      << "  range product " << icount * jcount * kcount
-                      << "  LL " << jcount * kcount << "  LR "
-                      << icount * jcount << std::endl;
-          }
-          // else { std::cout << " multi: No errors!" <<  std::endl; }
-        }
-      }  // end for
-    }
+      // Correctness check - only the first run
+      if (0 == i) {
+        check_computation<ScalarType>(Atest, Btest);
+      }
+    }  // end for
 
     return dt_min;
   }
@@ -209,12 +147,7 @@ struct RangePolicyCollapseTwo {
 
   using execution_space = DeviceType;
   using size_type       = typename execution_space::size_type;
-  using layout          = TestLayout;
-
-  using iterate_type = Kokkos::Iterate;
-
   using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
-  using host_view_type = typename view_type::host_mirror_type;
 
   view_type A;
   view_type B;
@@ -229,7 +162,7 @@ struct RangePolicyCollapseTwo {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const long r) const {
-    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       // id(i,j,k) = k + j*Nk + i*Nk*Nj = k + Nk*(j + i*Nj) = k + Nk*r
       // r = j + i*Nj
       long i = int(r / jrange);
@@ -240,7 +173,7 @@ struct RangePolicyCollapseTwo {
                                 B(i, j + 2, k) + B(i, j + 1, k) +
                                 B(i, j, k + 2) + B(i, j, k + 1) + B(i, j, k));
       }
-    } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
       // id(i,j,k) = i + j*Ni + k*Ni*Nj = i + Ni*(j + k*Nj) = i + Ni*r
       // r = j + k*Nj
       long k = int(r / jrange);
@@ -265,20 +198,12 @@ struct RangePolicyCollapseTwo {
         RangePolicyCollapseTwo<execution_space, ScalarType, TestLayout>;
 
     long collapse_index_rangeA = 0;
-    long collapse_index_rangeB = 0;
-    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       collapse_index_rangeA = static_cast<long>(icount) * jcount;
-      collapse_index_rangeB = static_cast<long>(icount + 2) * (jcount + 2);
-      //      std::cout << "   LayoutRight " << std::endl;
-    } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
       collapse_index_rangeA = static_cast<long>(kcount) * jcount;
-      collapse_index_rangeB = static_cast<long>(kcount + 2) * (jcount + 2);
-      //      std::cout << "   LayoutLeft " << std::endl;
     } else {
-      std::cout << "  LayoutRight or LayoutLeft required - will pass 0 as "
-                   "range instead "
-                << std::endl;
-      exit(-1);
+      static_assert(false, "LayoutRight or LayoutLeft required");
     }
 
     Kokkos::RangePolicy<execution_space> policy(0, (collapse_index_rangeA));
@@ -303,41 +228,7 @@ struct RangePolicyCollapseTwo {
 
       // Correctness check - first iteration only
       if (0 == i) {
-        long numErrors = 0;
-        host_view_type Ahost("Ahost", icount, jcount, kcount);
-        Kokkos::deep_copy(Ahost, Atest);
-        host_view_type Bhost("Bhost", icount + 2, jcount + 2, kcount + 2);
-        Kokkos::deep_copy(Bhost, Btest);
-
-        // On KNL, this may vectorize - add print statement to prevent
-        // Also, compare against epsilon, as vectorization can change bitwise
-        // answer
-        for (long l = 0; l < static_cast<long>(icount); ++l) {
-          for (long j = 0; j < static_cast<long>(jcount); ++j) {
-            for (long k = 0; k < static_cast<long>(kcount); ++k) {
-              ScalarType check =
-                  0.25 * (ScalarType)(Bhost(l + 2, j, k) + Bhost(l + 1, j, k) +
-                                      Bhost(l, j + 2, k) + Bhost(l, j + 1, k) +
-                                      Bhost(l, j, k + 2) + Bhost(l, j, k + 1) +
-                                      Bhost(l, j, k));
-              if (Ahost(l, j, k) - check != 0) {
-                ++numErrors;
-                std::cout << "  Correctness error at index: " << l << "," << j
-                          << "," << k << "\n"
-                          << "  flat Ahost = " << Ahost(l, j, k)
-                          << "  expected = " << check << std::endl;
-                // exit(-1);
-              }
-            }
-          }
-        }
-        if (numErrors != 0) {
-          std::cout << " RP collapse2: errors " << numErrors
-                    << "  range product " << icount * jcount * kcount << "  LL "
-                    << jcount * kcount << "  LR " << icount * jcount
-                    << std::endl;
-        }
-        // else { std::cout << " RP collapse2: Pass! " << std::endl; }
+        check_computation<ScalarType>(Atest, Btest);
       }
     }
 
@@ -352,7 +243,6 @@ struct RangePolicyCollapseAll {
 
   using execution_space = DeviceType;
   using size_type       = typename execution_space::size_type;
-  using layout          = TestLayout;
 
   using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
   using host_view_type = typename view_type::host_mirror_type;
@@ -370,7 +260,7 @@ struct RangePolicyCollapseAll {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const long r) const {
-    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       long i = int(r / (jrange * krange));
       long j = int((r - i * jrange * krange) / krange);
       long k = int(r - i * jrange * krange - j * krange);
@@ -378,7 +268,7 @@ struct RangePolicyCollapseAll {
           0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) + B(i, j + 2, k) +
                               B(i, j + 1, k) + B(i, j, k + 2) + B(i, j, k + 1) +
                               B(i, j, k));
-    } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
       long k = int(r / (irange * jrange));
       long j = int((r - k * irange * jrange) / irange);
       long i = int(r - k * irange * jrange - j * irange);
@@ -422,41 +312,7 @@ struct RangePolicyCollapseAll {
 
       // Correctness check - first iteration only
       if (0 == i) {
-        long numErrors = 0;
-        host_view_type Ahost("Ahost", icount, jcount, kcount);
-        Kokkos::deep_copy(Ahost, Atest);
-        host_view_type Bhost("Bhost", icount + 2, jcount + 2, kcount + 2);
-        Kokkos::deep_copy(Bhost, Btest);
-
-        // On KNL, this may vectorize - add print statement to prevent
-        // Also, compare against epsilon, as vectorization can change bitwise
-        // answer
-        for (long l = 0; l < static_cast<long>(icount); ++l) {
-          for (long j = 0; j < static_cast<long>(jcount); ++j) {
-            for (long k = 0; k < static_cast<long>(kcount); ++k) {
-              ScalarType check =
-                  0.25 * (ScalarType)(Bhost(l + 2, j, k) + Bhost(l + 1, j, k) +
-                                      Bhost(l, j + 2, k) + Bhost(l, j + 1, k) +
-                                      Bhost(l, j, k + 2) + Bhost(l, j, k + 1) +
-                                      Bhost(l, j, k));
-              if (Ahost(l, j, k) - check != 0) {
-                ++numErrors;
-                std::cout << "  Callapse ALL Correctness error at index: " << l
-                          << "," << j << "," << k << "\n"
-                          << "  flat Ahost = " << Ahost(l, j, k)
-                          << "  expected = " << check << std::endl;
-                // exit(-1);
-              }
-            }
-          }
-        }
-        if (numErrors != 0) {
-          std::cout << " RP collapse all: errors " << numErrors
-                    << "  range product " << icount * jcount * kcount << "  LL "
-                    << jcount * kcount << "  LR " << icount * jcount
-                    << std::endl;
-        }
-        // else { std::cout << " RP collapse all: Pass! " << std::endl; }
+        check_computation<ScalarType>(Atest, Btest);
       }
     }
 
