@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Core.hpp>
+#include <iostream>
+
 namespace Test {
 template <class DeviceType, typename ScalarType = double,
           typename TestLayout = Kokkos::LayoutRight>
@@ -73,7 +76,7 @@ struct MultiDimRangePerf3D {
     double dt_min = 0;
 
     // LayoutRight
-    if (std::is_same<TestLayout, Kokkos::LayoutRight>::value) {
+    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       Kokkos::MDRangePolicy<
           Kokkos::Rank<3, iterate_type::Right, iterate_type::Right>,
           execution_space>
@@ -287,7 +290,7 @@ struct RangePolicyCollapseTwo {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const long r) const {
-    if (std::is_same<TestLayout, Kokkos::LayoutRight>::value) {
+    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       // id(i,j,k) = k + j*Nk + i*Nk*Nj = k + Nk*(j + i*Nj) = k + Nk*r
       // r = j + i*Nj
       long i = int(r / jrange);
@@ -298,7 +301,7 @@ struct RangePolicyCollapseTwo {
                                 B(i, j + 2, k) + B(i, j + 1, k) +
                                 B(i, j, k + 2) + B(i, j, k + 1) + B(i, j, k));
       }
-    } else if (std::is_same<TestLayout, Kokkos::LayoutLeft>::value) {
+    } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
       // id(i,j,k) = i + j*Ni + k*Ni*Nj = i + Ni*(j + k*Nj) = i + Ni*r
       // r = j + k*Nj
       long k = int(r / jrange);
@@ -324,13 +327,13 @@ struct RangePolicyCollapseTwo {
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const long r) const {
-      if (std::is_same<TestLayout, Kokkos::LayoutRight>::value) {
+      if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
         long i = int(r / jrange);
         long j = int(r - i * jrange);
         for (int k = 0; k < krange; ++k) {
           input(i, j, k) = 1;
         }
-      } else if (std::is_same<TestLayout, Kokkos::LayoutLeft>::value) {
+      } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
         long k = int(r / jrange);
         long j = int(r - k * jrange);
         for (int i = 0; i < irange; ++i) {
@@ -352,13 +355,13 @@ struct RangePolicyCollapseTwo {
 
     long collapse_index_rangeA = 0;
     long collapse_index_rangeB = 0;
-    if (std::is_same<TestLayout, Kokkos::LayoutRight>::value) {
-      collapse_index_rangeA = icount * jcount;
-      collapse_index_rangeB = (icount + 2) * (jcount + 2);
+    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
+      collapse_index_rangeA = static_cast<long>(icount) * jcount;
+      collapse_index_rangeB = static_cast<long>(icount + 2) * (jcount + 2);
       //      std::cout << "   LayoutRight " << std::endl;
-    } else if (std::is_same<TestLayout, Kokkos::LayoutLeft>::value) {
-      collapse_index_rangeA = kcount * jcount;
-      collapse_index_rangeB = (kcount + 2) * (jcount + 2);
+    } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      collapse_index_rangeA = static_cast<long>(kcount) * jcount;
+      collapse_index_rangeB = static_cast<long>(kcount + 2) * (jcount + 2);
       //      std::cout << "   LayoutLeft " << std::endl;
     } else {
       std::cout << "  LayoutRight or LayoutLeft required - will pass 0 as "
@@ -459,7 +462,7 @@ struct RangePolicyCollapseAll {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const long r) const {
-    if (std::is_same<TestLayout, Kokkos::LayoutRight>::value) {
+    if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       long i = int(r / (jrange * krange));
       long j = int((r - i * jrange * krange) / krange);
       long k = int(r - i * jrange * krange - j * krange);
@@ -467,7 +470,7 @@ struct RangePolicyCollapseAll {
           0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) + B(i, j + 2, k) +
                               B(i, j + 1, k) + B(i, j, k + 2) + B(i, j, k + 1) +
                               B(i, j, k));
-    } else if (std::is_same<TestLayout, Kokkos::LayoutLeft>::value) {
+    } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
       long k = int(r / (irange * jrange));
       long j = int((r - k * irange * jrange) / irange);
       long i = int(r - k * irange * jrange - j * irange);
@@ -490,12 +493,12 @@ struct RangePolicyCollapseAll {
 
     KOKKOS_INLINE_FUNCTION
     void operator()(const long r) const {
-      if (std::is_same<TestLayout, Kokkos::LayoutRight>::value) {
+      if (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
         long i         = int(r / (jrange * krange));
         long j         = int((r - i * jrange * krange) / krange);
         long k         = int(r - i * jrange * krange - j * krange);
         input(i, j, k) = 1;
-      } else if (std::is_same<TestLayout, Kokkos::LayoutLeft>::value) {
+      } else if (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
         long k         = int(r / (irange * jrange));
         long j         = int((r - k * irange * jrange) / irange);
         long i         = int(r - k * irange * jrange - j * irange);
@@ -514,7 +517,7 @@ struct RangePolicyCollapseAll {
     using FunctorType =
         RangePolicyCollapseAll<execution_space, ScalarType, TestLayout>;
 
-    const long flat_index_range = icount * jcount * kcount;
+    const long flat_index_range = icount * static_cast<long>(jcount) * kcount;
     Kokkos::RangePolicy<execution_space> policy(0, flat_index_range);
     Kokkos::RangePolicy<execution_space> policy_initB(
         0, (icount + 2) * (jcount + 2) * (kcount + 2));
