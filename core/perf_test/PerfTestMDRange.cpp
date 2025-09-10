@@ -68,11 +68,6 @@ void check_computation(const ViewType &A, const ViewType &B) {
 }
 
 template <typename FunctorType>
-// void bench_mdrange(benchmark::State& state, const unsigned int icount, const
-// unsigned int jcount,
-//                            const unsigned int kcount, const unsigned int Ti =
-//                            1, const unsigned int Tj = 1, const unsigned int
-//                            Tk = 1) {
 void bench_mdrange(benchmark::State &state) {
   using execution_space = FunctorType::execution_space;
   using view_type       = FunctorType::view_type;
@@ -114,7 +109,7 @@ void bench_mdrange(benchmark::State &state) {
 
 template <class DeviceType, typename ScalarType = double,
           typename TestLayout = Kokkos::LayoutRight>
-struct MultiDimRangePerf3D {
+struct MDRange3D {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
@@ -126,9 +121,8 @@ struct MultiDimRangePerf3D {
   const long jrange;
   const long krange;
 
-  MultiDimRangePerf3D(const view_type &A_, const view_type &B_,
-                      const long &irange_, const long &jrange_,
-                      const long &krange_)
+  MDRange3D(const view_type &A_, const view_type &B_, const long &irange_,
+            const long &jrange_, const long &krange_)
       : A(A_), B(B_), irange(irange_), jrange(jrange_), krange(krange_) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -265,9 +259,20 @@ struct RangePolicyCollapseAll {
   }
 };
 
-BENCHMARK(bench_mdrange<MultiDimRangePerf3D<TEST_EXECSPACE>>)
-    ->ArgNames({"size", "tile_size" })
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 10, 2),
-                   benchmark::CreateDenseRange(1, 4, 1)});
+BENCHMARK(bench_mdrange<MDRange3D<TEST_EXECSPACE>>)
+    ->Iterations(10)
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2),
+                   benchmark::CreateDenseRange(1, 8, 1)});
+
+BENCHMARK(bench_mdrange<RangePolicyCollapseTwo<TEST_EXECSPACE>>)
+    ->Iterations(10)
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {1}});
+
+BENCHMARK(bench_mdrange<RangePolicyCollapseAll<TEST_EXECSPACE>>)
+    ->Iterations(10)
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {1}});
 
 }  // end namespace Test
