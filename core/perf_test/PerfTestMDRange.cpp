@@ -2,7 +2,10 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <Kokkos_Core.hpp>
+#include <benchmark/benchmark.h>
 #include <iostream>
+
+#include "PerfTest_Category.hpp"
 
 namespace Test {
 
@@ -22,8 +25,8 @@ struct LayoutToIterationPattern<Kokkos::LayoutLeft> {
 template <typename ScalarType, typename ViewType>
 void check_computation(const ViewType &A, const ViewType &B) {
   long numErrors = 0;
-  auto Ahost     = Kokkos::create_mirror_view_and_copy(A);
-  auto Bhost     = Kokkos::create_mirror_view_and_copy(B);
+  auto Ahost     = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), A);
+  auto Bhost     = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), B);
 
   const long icount = Ahost.extent(0);
   const long jcount = Ahost.extent(1);
@@ -64,16 +67,58 @@ void check_computation(const ViewType &A, const ViewType &B) {
   }
 }
 
+template <typename FunctorType>
+// void bench_mdrange(benchmark::State& state, const unsigned int icount, const
+// unsigned int jcount,
+//                            const unsigned int kcount, const unsigned int Ti =
+//                            1, const unsigned int Tj = 1, const unsigned int
+//                            Tk = 1) {
+void bench_mdrange(benchmark::State &state) {
+  using execution_space = FunctorType::execution_space;
+  using view_type       = FunctorType::view_type;
+
+  int icount = state.range(0);
+  int jcount = state.range(0);
+  int kcount = state.range(0);
+  int Ti     = state.range(1);
+  int Tj     = state.range(1);
+  int Tk     = state.range(1);
+
+  view_type Atest("Atest", icount, jcount, kcount);
+  view_type Btest("Btest", icount + 2, jcount + 2, kcount + 2);
+
+  Kokkos::deep_copy(Atest, 1.0);
+  execution_space().fence();
+  Kokkos::deep_copy(Btest, 1.0);
+  execution_space().fence();
+
+  const auto policy =
+      FunctorType::get_policy(icount, jcount, kcount, Ti, Tj, Tk);
+
+  int i = 0;
+
+  for (auto _ : state) {
+    Kokkos::Timer timer;
+    Kokkos::parallel_for(policy,
+                         FunctorType(Atest, Btest, icount, jcount, kcount));
+    execution_space().fence();
+    const double dt = timer.seconds();
+    state.SetIterationTime(dt);
+
+    // Correctness check - only the first run
+    if (0 == i++) {
+      check_computation<typename FunctorType::scalar_type>(Atest, Btest);
+    }
+  }  // end for
+}
+
 template <class DeviceType, typename ScalarType = double,
           typename TestLayout = Kokkos::LayoutRight>
 struct MultiDimRangePerf3D {
   using execution_space = DeviceType;
+  using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-
-  static constexpr Kokkos::Iterate iteration_pattern =
-      LayoutToIterationPattern<TestLayout>::pattern;
-
-  using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
+  using view_type       = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
 
   view_type A;
   view_type B;
@@ -94,48 +139,14 @@ struct MultiDimRangePerf3D {
                             B(i, j, k));
   }
 
-  static double test_multi_index(const unsigned int icount,
-                                 const unsigned int jcount,
-                                 const unsigned int kcount,
-                                 const unsigned int Ti = 1,
-                                 const unsigned int Tj = 1,
-                                 const unsigned int Tk = 1,
-                                 const long iter       = 1) {
-    // This test performs multidim range over all dims
-    view_type Atest("Atest", icount, jcount, kcount);
-    view_type Btest("Btest", icount + 2, jcount + 2, kcount + 2);
-    using FunctorType =
-        MultiDimRangePerf3D<execution_space, ScalarType, TestLayout>;
-
-    double dt_min = 0;
-
-    Kokkos::deep_copy(Atest, 1.0);
-    execution_space().fence();
-    Kokkos::deep_copy(Btest, 1.0);
-    execution_space().fence();
-
-    Kokkos::MDRangePolicy<Kokkos::Rank<3, iteration_pattern, iteration_pattern>,
-                          execution_space>
-        policy({{0, 0, 0}}, {{icount, jcount, kcount}}, {{Ti, Tj, Tk}});
-
-    for (int i = 0; i < iter; ++i) {
-      Kokkos::Timer timer;
-      Kokkos::parallel_for(policy,
-                           FunctorType(Atest, Btest, icount, jcount, kcount));
-      execution_space().fence();
-      const double dt = timer.seconds();
-      if (0 == i)
-        dt_min = dt;
-      else
-        dt_min = dt < dt_min ? dt : dt_min;
-
-      // Correctness check - only the first run
-      if (0 == i) {
-        check_computation<ScalarType>(Atest, Btest);
-      }
-    }  // end for
-
-    return dt_min;
+  static auto get_policy(const unsigned int icount, const unsigned int jcount,
+                         const unsigned int kcount, const unsigned int Ti = 1,
+                         const unsigned int Tj = 1, const unsigned int Tk = 1) {
+    constexpr Kokkos::Iterate iteration_pattern =
+        LayoutToIterationPattern<TestLayout>::pattern;
+    return Kokkos::MDRangePolicy<
+        Kokkos::Rank<3, iteration_pattern, iteration_pattern>, execution_space>(
+        {0, 0, 0}, {icount, jcount, kcount}, {Ti, Tj, Tk});
   }
 };
 
@@ -146,8 +157,9 @@ struct RangePolicyCollapseTwo {
   // multi-dim; unroll 2 dims in one-dim
 
   using execution_space = DeviceType;
+  using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-  using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
+  using view_type       = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
 
   view_type A;
   view_type B;
@@ -187,16 +199,9 @@ struct RangePolicyCollapseTwo {
     }
   }
 
-  static double test_index_collapse_two(const unsigned int icount,
-                                        const unsigned int jcount,
-                                        const unsigned int kcount,
-                                        const long iter = 1) {
-    // This test refers to collapsing two dims while using the RangePolicy
-    view_type Atest("Atest", icount, jcount, kcount);
-    view_type Btest("Btest", icount + 2, jcount + 2, kcount + 2);
-    using FunctorType =
-        RangePolicyCollapseTwo<execution_space, ScalarType, TestLayout>;
-
+  static auto get_policy(const unsigned int icount, const unsigned int jcount,
+                         const unsigned int kcount, const unsigned int,
+                         const unsigned int, const unsigned int) {
     long collapse_index_rangeA = 0;
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       collapse_index_rangeA = static_cast<long>(icount) * jcount;
@@ -206,33 +211,7 @@ struct RangePolicyCollapseTwo {
       static_assert(false, "LayoutRight or LayoutLeft required");
     }
 
-    Kokkos::RangePolicy<execution_space> policy(0, (collapse_index_rangeA));
-
-    double dt_min = 0;
-
-    Kokkos::deep_copy(Atest, 1.0);
-    execution_space().fence();
-    Kokkos::deep_copy(Btest, 1.0);
-    execution_space().fence();
-
-    for (int i = 0; i < iter; ++i) {
-      Kokkos::Timer timer;
-      Kokkos::parallel_for(policy,
-                           FunctorType(Atest, Btest, icount, jcount, kcount));
-      execution_space().fence();
-      const double dt = timer.seconds();
-      if (0 == i)
-        dt_min = dt;
-      else
-        dt_min = dt < dt_min ? dt : dt_min;
-
-      // Correctness check - first iteration only
-      if (0 == i) {
-        check_computation<ScalarType>(Atest, Btest);
-      }
-    }
-
-    return dt_min;
+    return Kokkos::RangePolicy<execution_space>(0, (collapse_index_rangeA));
   }
 };
 
@@ -242,10 +221,9 @@ struct RangePolicyCollapseAll {
   // RangePolicy for 3D range, but will collapse all dims
 
   using execution_space = DeviceType;
+  using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-
-  using view_type      = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
-  using host_view_type = typename view_type::host_mirror_type;
+  using view_type       = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
 
   view_type A;
   view_type B;
@@ -279,45 +257,17 @@ struct RangePolicyCollapseAll {
     }
   }
 
-  static double test_collapse_all(const unsigned int icount,
-                                  const unsigned int jcount,
-                                  const unsigned int kcount,
-                                  const long iter = 1) {
-    // This test refers to collapsing all dims using the RangePolicy
-    view_type Atest("Atest", icount, jcount, kcount);
-    view_type Btest("Btest", icount + 2, jcount + 2, kcount + 2);
-    using FunctorType =
-        RangePolicyCollapseAll<execution_space, ScalarType, TestLayout>;
-
+  static auto get_policy(const unsigned int icount, const unsigned int jcount,
+                         const unsigned int kcount, const unsigned int,
+                         const unsigned int, const unsigned int) {
     const long flat_index_range = icount * static_cast<long>(jcount) * kcount;
-    Kokkos::RangePolicy<execution_space> policy(0, flat_index_range);
-
-    double dt_min = 0;
-
-    Kokkos::deep_copy(Atest, 1.0);
-    execution_space().fence();
-    Kokkos::deep_copy(Btest, 1.0);
-    execution_space().fence();
-
-    for (int i = 0; i < iter; ++i) {
-      Kokkos::Timer timer;
-      Kokkos::parallel_for(policy,
-                           FunctorType(Atest, Btest, icount, jcount, kcount));
-      execution_space().fence();
-      const double dt = timer.seconds();
-      if (0 == i)
-        dt_min = dt;
-      else
-        dt_min = dt < dt_min ? dt : dt_min;
-
-      // Correctness check - first iteration only
-      if (0 == i) {
-        check_computation<ScalarType>(Atest, Btest);
-      }
-    }
-
-    return dt_min;
+    return Kokkos::RangePolicy<execution_space>(0, flat_index_range);
   }
 };
+
+BENCHMARK(bench_mdrange<MultiDimRangePerf3D<TEST_EXECSPACE>>)
+    ->ArgNames({"size", "tile_size" })
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 10, 2),
+                   benchmark::CreateDenseRange(1, 4, 1)});
 
 }  // end namespace Test
