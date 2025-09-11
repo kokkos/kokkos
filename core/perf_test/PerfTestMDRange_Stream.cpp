@@ -42,20 +42,16 @@ static void MDRangePolicy_Triad(benchmark::State& state) {
       ->UseManualTime()                                     \
       ->Unit(benchmark::kMillisecond);
 
-MDRangePolicy_MAKE_BENCHMARK(2, Kokkos::IndexType<int32_t>)
-    MDRangePolicy_MAKE_BENCHMARK(2, Kokkos::IndexType<int64_t>)
-        MDRangePolicy_MAKE_BENCHMARK(3, Kokkos::IndexType<int32_t>)
-            MDRangePolicy_MAKE_BENCHMARK(3, Kokkos::IndexType<int64_t>)
-                MDRangePolicy_MAKE_BENCHMARK(4, Kokkos::IndexType<int32_t>)
-                    MDRangePolicy_MAKE_BENCHMARK(4, Kokkos::IndexType<int64_t>)
-                        MDRangePolicy_MAKE_BENCHMARK(5,
-                                                     Kokkos::IndexType<int32_t>)
-                            MDRangePolicy_MAKE_BENCHMARK(
-                                5, Kokkos::IndexType<int64_t>)
-                                MDRangePolicy_MAKE_BENCHMARK(
-                                    6, Kokkos::IndexType<int32_t>)
-                                    MDRangePolicy_MAKE_BENCHMARK(
-                                        6, Kokkos::IndexType<int64_t>)
+MDRangePolicy_MAKE_BENCHMARK(2, Kokkos::IndexType<int32_t>);
+MDRangePolicy_MAKE_BENCHMARK(2, Kokkos::IndexType<int64_t>);
+MDRangePolicy_MAKE_BENCHMARK(3, Kokkos::IndexType<int32_t>);
+MDRangePolicy_MAKE_BENCHMARK(3, Kokkos::IndexType<int64_t>);
+MDRangePolicy_MAKE_BENCHMARK(4, Kokkos::IndexType<int32_t>);
+MDRangePolicy_MAKE_BENCHMARK(4, Kokkos::IndexType<int64_t>);
+MDRangePolicy_MAKE_BENCHMARK(5, Kokkos::IndexType<int32_t>);
+MDRangePolicy_MAKE_BENCHMARK(5, Kokkos::IndexType<int64_t>);
+MDRangePolicy_MAKE_BENCHMARK(6, Kokkos::IndexType<int32_t>);
+MDRangePolicy_MAKE_BENCHMARK(6, Kokkos::IndexType<int64_t>);
 
 #undef MDRangePolicy_MAKE_BENCHMARK
 
