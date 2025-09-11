@@ -14,179 +14,201 @@
 //
 //@HEADER
 
-#include <benchmark/benchmark.h>
-
 #include <Kokkos_Core.hpp>
-#include "Benchmark_Context.hpp"
+#include <benchmark/benchmark.h>
 #include "PerfTest_Category.hpp"
-
-template <int R, typename ScalarType, typename Layout, class ExecutionSpace>
-struct view_type_rank {};
-
-template <typename ExecutionSpace, typename ScalarType, typename Layout>
-struct view_type_rank<2, ScalarType, Layout, ExecutionSpace> {
-  using type = Kokkos::View<ScalarType **, Layout, ExecutionSpace>;
-};
-
-template <typename ExecutionSpace, typename ScalarType, typename Layout>
-struct view_type_rank<3, ScalarType, Layout, ExecutionSpace> {
-  using type = Kokkos::View<ScalarType ***, Layout, ExecutionSpace>;
-};
-
-template <typename ExecutionSpace, typename ScalarType, typename Layout>
-struct view_type_rank<4, ScalarType, Layout, ExecutionSpace> {
-  using type = Kokkos::View<ScalarType ****, Layout, ExecutionSpace>;
-};
-
-template <typename ExecutionSpace, typename ScalarType, typename Layout>
-struct view_type_rank<5, ScalarType, Layout, ExecutionSpace> {
-  using type = Kokkos::View<ScalarType *****, Layout, ExecutionSpace>;
-};
-
-template <typename ExecutionSpace, typename ScalarType, typename Layout>
-struct view_type_rank<6, ScalarType, Layout, ExecutionSpace> {
-  using type = Kokkos::View<ScalarType ******, Layout, ExecutionSpace>;
-};
 
 namespace Benchmark {
 
-// Not used
-template <typename ViewType>
-struct Functor_Set {
-  ViewType tensor;
-  static constexpr bool need_initialize = false;
+struct Tag_Set {};
+struct Tag_Copy {};
+struct Tag_Scale {};
+struct Tag_Add {};
+struct Tag_Triad {};
+
+template <int Rank, typename ScalarType, typename Layout, typename MemorySpace>
+struct ViewTypeRank {};
+
+template <typename ScalarType, typename Layout, typename MemorySpace>
+struct ViewTypeRank<2, ScalarType, Layout, MemorySpace> {
+  using type = Kokkos::View<ScalarType **, Layout, MemorySpace>;
 };
 
-template <typename ViewType>
-struct Functor_Copy {
-  ViewType tensor;
-  static constexpr bool need_initialize = true;
+template <typename ScalarType, typename Layout, typename MemorySpace>
+struct ViewTypeRank<3, ScalarType, Layout, MemorySpace> {
+  using type = Kokkos::View<ScalarType ***, Layout, MemorySpace>;
 };
 
-template <typename ViewType>
-struct Functor_Scale {
-  ViewType tensor;
-  static constexpr bool need_initialize = true;
+template <typename ScalarType, typename Layout, typename MemorySpace>
+struct ViewTypeRank<4, ScalarType, Layout, MemorySpace> {
+  using type = Kokkos::View<ScalarType ****, Layout, MemorySpace>;
 };
 
-template <typename ViewType>
-struct Functor_Add {
-  ViewType tensor;
-  static constexpr bool need_initialize = true;
+template <typename ScalarType, typename Layout, typename MemorySpace>
+struct ViewTypeRank<5, ScalarType, Layout, MemorySpace> {
+  using type = Kokkos::View<ScalarType *****, Layout, MemorySpace>;
 };
 
-template <typename ViewType>
-struct Functor_Triad {
-  ViewType tensor;
-  static constexpr bool need_initialize = true;
+template <typename ScalarType, typename Layout, typename MemorySpace>
+struct ViewTypeRank<6, ScalarType, Layout, MemorySpace> {
+  using type = Kokkos::View<ScalarType ******, Layout, MemorySpace>;
 };
 
+// Functor for stream test (copy, scale, add, triad).
+// The problem size is N^6, meaning that each view will have the size of N^6
+// whatever the rank is.
 template <class ExecutionSpace, int Rank, typename ScalarType = double,
-          typename IndexType = Kokkos::IndexType<int32_t>>
-struct MDRangePolicyTriad {
-  using execution_space = ExecutionSpace;
-  using prefered_layout = typename ExecutionSpace::array_layout;
-  using scalar_type     = ScalarType;
-  using view_type = typename view_type_rank<Rank, scalar_type, prefered_layout,
-                                            execution_space>::type;
+          typename IndexType = Kokkos::IndexType<uint32_t>>
+struct MDRangePolicy_StreamTest {
+  using execution_space  = ExecutionSpace;
+  using memory_space     = typename execution_space::memory_space;
+  using preferred_layout = typename ExecutionSpace::array_layout;
+  using scalar_type      = ScalarType;
+  using view_type = typename ViewTypeRank<Rank, scalar_type, preferred_layout,
+                                          memory_space>::type;
 
   static const Kokkos::Iterate outer_iter =
       Kokkos::Impl::layout_iterate_type_selector<
-          prefered_layout>::outer_iteration_pattern;
+          preferred_layout>::outer_iteration_pattern;
   static const Kokkos::Iterate inner_iter =
       Kokkos::Impl::layout_iterate_type_selector<
-          prefered_layout>::inner_iteration_pattern;
+          preferred_layout>::inner_iteration_pattern;
   using rank_type = Kokkos::Rank<Rank, outer_iter, inner_iter>;
   using policy_type =
       Kokkos::MDRangePolicy<ExecutionSpace, rank_type, IndexType>;
+  using FunctorType =
+      MDRangePolicy_StreamTest<ExecutionSpace, Rank, ScalarType, IndexType>;
 
-  view_type A;
-  view_type B;
-  view_type C;
+  view_type view_A;
+  view_type view_B;
+  view_type view_C;
   ScalarType scalar;
   int N;
 
-  template <typename... Args>
-  MDRangePolicyTriad(const view_type &A_, const view_type &B_,
-                     const view_type &C_, ScalarType scalar_, int N_)
-      : A(A_), B(B_), C(C_), scalar(scalar_), N(N_) {
+  MDRangePolicy_StreamTest(const view_type &A_, const view_type &B_,
+                           const view_type &C_, ScalarType scalar_, int N_)
+      : view_A(A_), view_B(B_), view_C(C_), scalar(scalar_), N(N_) {
     static_assert(Rank >= 2 && Rank <= 6,
-                  "MDRangePolicyTriad: Only ranks 2 to 6 are supported");
+                  "MDRangePolicy_StreamTest: Only ranks 2 to 6 supported");
+  }
+
+  // Tagged operator()
+  template <typename... Args>
+  KOKKOS_INLINE_FUNCTION void operator()(const Tag_Set &, Args... args) const {
+    view_A(args...) = static_cast<ScalarType>(scalar);
   }
 
   template <typename... Args>
-  KOKKOS_INLINE_FUNCTION void operator()(Args... args) const {
-    C(args...) = A(args...) + scalar * B(args...);
+  KOKKOS_INLINE_FUNCTION void operator()(const Tag_Copy &, Args... args) const {
+    view_B(args...) = view_A(args...);
+  }
+
+  template <typename... Args>
+  KOKKOS_INLINE_FUNCTION void operator()(const Tag_Scale &,
+                                         Args... args) const {
+    view_B(args...) = scalar * view_A(args...);
+  }
+
+  template <typename... Args>
+  KOKKOS_INLINE_FUNCTION void operator()(const Tag_Add &, Args... args) const {
+    view_C(args...) = view_A(args...) + view_B(args...);
+  }
+
+  template <typename... Args>
+  KOKKOS_INLINE_FUNCTION void operator()(const Tag_Triad &,
+                                         Args... args) const {
+    view_C(args...) = view_A(args...) + scalar * view_B(args...);
+  }
+
+  static view_type create_test_view(const char *name, int dim) {
+    long N1 = dim;
+    long N2 = N1 * N1;
+    long N3 = N2 * N1;
+    std::string view_name(name);
+    if constexpr (Rank == 2) {
+      return view_type(view_name, N3, N3);
+    } else if constexpr (Rank == 3) {
+      return view_type(view_name, N2, N2, N2);
+    } else if constexpr (Rank == 4) {
+      return view_type(view_name, N2, N2, N1, N1);
+    } else if constexpr (Rank == 5) {
+      return view_type(view_name, N2, N1, N1, N1, N1);
+    } else if constexpr (Rank == 6) {
+      return view_type(view_name, N1, N1, N1, N1, N1, N1);
+    }
   }
 
   struct Init {
-    view_type tensor;
-    scalar_type value;
+    view_type m_tensor;
+    scalar_type m_value;
 
-    template <typename... Args>
-    Init(const view_type &tensor_, const scalar_type &value_)
-        : tensor(tensor_), value(value_) {}
+    Init(const view_type &tensor, const scalar_type &value)
+        : m_tensor(tensor), m_value(value) {}
 
     template <typename... Indices>
     KOKKOS_INLINE_FUNCTION void operator()(Indices... indices) const {
-      tensor(indices...) = value;
+      m_tensor(indices...) = m_value;
     }
   };
 
-  static double test_triad(int N, const int iterations = 1) {
-    // Use constexpr to create views
-    auto create_view = [](const char *name, int dim) {
-      int N1 = dim;
-      int N2 = N1 * N1;
-      int N3 = N2 * N1;
-      if constexpr (Rank == 2) {
-        return view_type(name, N3, N3);
-      } else if constexpr (Rank == 3) {
-        return view_type(name, N2, N2, N2);
-      } else if constexpr (Rank == 4) {
-        return view_type(name, N2, N2, N1, N1);
-      } else if constexpr (Rank == 5) {
-        return view_type(name, N2, N1, N1, N1, N1);
-      } else if constexpr (Rank == 6) {
-        return view_type(name, N1, N1, N1, N1, N1, N1);
-      }
-    };
+  template <typename Tag>
+  static double run_test(const int N, const int iterations) {
+    view_type view_A_test =
+        create_test_view("MDRangePolicy_StreamTest::view_A", N);
+    view_type view_B_test =
+        create_test_view("MDRangePolicy_StreamTest::view_B", N);
+    view_type view_C_test =
+        create_test_view("MDRangePolicy_StreamTest::view_C", N);
+    scalar_type scalar = static_cast<scalar_type>(2.718281828);
 
-    view_type A_test = create_view("A_test", N);
-    view_type B_test = create_view("B_test", N);
-    view_type C_test = create_view("C_test", N);
-
-    scalar_type scalar = 1.0 / static_cast<scalar_type>(N);
-
-    using FunctorType =
-        MDRangePolicyTriad<ExecutionSpace, Rank, ScalarType, IndexType>;
-
-    typename policy_type::point_type lower_bounds, upper_bounds;
+    using policy_test_type =
+        Kokkos::MDRangePolicy<ExecutionSpace, rank_type, IndexType, Tag>;
+    typename policy_test_type::point_type lower_bounds, upper_bounds;
     for (int i = 0; i < Rank; ++i) {
       lower_bounds[i] = 0;
-      upper_bounds[i] = A_test.extent(i);
+      upper_bounds[i] = view_A_test.extent(i);
     }
 
     policy_type init_policy(lower_bounds, upper_bounds);
-    Kokkos::parallel_for("init_A", init_policy,
-                         Init(A_test, static_cast<ScalarType>(1.0)));
-    Kokkos::parallel_for("init_B", init_policy,
-                         Init(B_test, static_cast<ScalarType>(2.0)));
-    Kokkos::parallel_for("init_C", init_policy,
-                         Init(C_test, static_cast<ScalarType>(0.0)));
+    Kokkos::parallel_for(init_policy,
+                         Init(view_A_test, static_cast<ScalarType>(1.0)));
+    Kokkos::parallel_for(init_policy,
+                         Init(view_B_test, static_cast<ScalarType>(2.0)));
+    Kokkos::parallel_for(init_policy,
+                         Init(view_C_test, static_cast<ScalarType>(0.0)));
     execution_space().fence();
 
-    policy_type compute_policy(lower_bounds, upper_bounds);
-    double dt = 0;
+    policy_test_type compute_policy(lower_bounds, upper_bounds);
+    double total_time = 0.0;
     for (int i = 0; i < iterations; ++i) {
       Kokkos::Timer timer;
-      Kokkos::parallel_for(compute_policy,
-                           FunctorType(A_test, B_test, C_test, scalar, N));
+      Kokkos::parallel_for(compute_policy, FunctorType(view_A_test, view_B_test,
+                                                       view_C_test, scalar, N));
       execution_space().fence();
-      dt += timer.seconds();
+      total_time += timer.seconds();
     }
-    dt /= iterations;
-    return dt;
+    total_time /= iterations;
+    return total_time;
+  }
+
+  static double test_set(int N, int iterations = 1) {
+    return run_test<Tag_Set>(N, iterations);
+  }
+
+  static double test_copy(int N, int iterations = 1) {
+    return run_test<Tag_Copy>(N, iterations);
+  }
+
+  static double test_scale(int N, int iterations = 1) {
+    return run_test<Tag_Scale>(N, iterations);
+  }
+
+  static double test_add(int N, int iterations = 1) {
+    return run_test<Tag_Add>(N, iterations);
+  }
+
+  static double test_triad(int N, int iterations = 1) {
+    return run_test<Tag_Triad>(N, iterations);
   }
 };
 

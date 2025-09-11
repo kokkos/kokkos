@@ -14,45 +14,99 @@
 //
 //@HEADER
 
-#include "PerfTestMDRange.hpp"
-#include <cstdint>
-#include <limits>
+#include "PerfTestMDRange_Stream.hpp"
 
 namespace Benchmark {
 
-template <int Rank = 2, typename index_type = Kokkos::IndexType<int32_t>>
-static void MDRangePolicy_Triad(benchmark::State& state) {
-  double N                = static_cast<double>(state.range(0));
-  uint32_t total_elements = std::pow(N, 6.0);
+namespace {
+// Number of times the test kernel is run
+const int kKernelIterations = 32;
+
+void report_mdrange_result(benchmark::State& state, double N, int data_ratio) {
+  double num_elements            = std::pow(N, 6);
+  state.counters["Problem Size"] = benchmark::Counter(num_elements);
+  state.SetBytesProcessed(static_cast<long long>(
+      state.iterations() * num_elements * sizeof(double) * data_ratio));
+}
+}  // namespace
+
+template <int Rank>
+static void MDRangePolicy_Set(benchmark::State& state) {
+  double N = static_cast<double>(state.range(0));
+  using MDRangePolicy_StreamTest =
+      MDRangePolicy_StreamTest<TEST_EXECSPACE, Rank, double>;
 
   for (auto _ : state) {
-    double seconds = MDRangePolicyTriad<TEST_EXECSPACE, Rank, double,
-                                        index_type>::test_triad(N, 32);
+    double seconds = MDRangePolicy_StreamTest::test_set(N, kKernelIterations);
     state.SetIterationTime(seconds);
   }
-  state.counters["Problem Size"] = benchmark::Counter(total_elements);
-  state.SetItemsProcessed(state.iterations() * total_elements);
+  report_mdrange_result(state, N, 1);
 }
 
-#define MDRangePolicy_MAKE_BENCHMARK(RANK, INDEX_TYPE)      \
-  BENCHMARK_TEMPLATE(MDRangePolicy_Triad, RANK, INDEX_TYPE) \
-      ->RangeMultiplier(2)                                  \
-      ->Range(1 << 2, 1 << 4)                               \
-      ->Iterations(16)                                      \
-      ->UseManualTime()                                     \
+template <int Rank>
+static void MDRangePolicy_Scale(benchmark::State& state) {
+  double N = static_cast<double>(state.range(0));
+  using MDRangePolicy_StreamTest =
+      MDRangePolicy_StreamTest<TEST_EXECSPACE, Rank, double>;
+
+  for (auto _ : state) {
+    double seconds = MDRangePolicy_StreamTest::test_scale(N, kKernelIterations);
+    state.SetIterationTime(seconds);
+  }
+  report_mdrange_result(state, N, 2);
+}
+
+template <int Rank>
+static void MDRangePolicy_Add(benchmark::State& state) {
+  double N = static_cast<double>(state.range(0));
+  using MDRangePolicy_StreamTest =
+      MDRangePolicy_StreamTest<TEST_EXECSPACE, Rank, double>;
+
+  for (auto _ : state) {
+    double seconds = MDRangePolicy_StreamTest::test_add(N, kKernelIterations);
+    state.SetIterationTime(seconds);
+  }
+  report_mdrange_result(state, N, 3);
+}
+
+template <int Rank>
+static void MDRangePolicy_Triad(benchmark::State& state) {
+  double N = static_cast<double>(state.range(0));
+  using MDRangePolicy_StreamTest =
+      MDRangePolicy_StreamTest<TEST_EXECSPACE, Rank, double>;
+
+  for (auto _ : state) {
+    double seconds = MDRangePolicy_StreamTest::test_triad(N, kKernelIterations);
+    state.SetIterationTime(seconds);
+  }
+  report_mdrange_result(state, N, 3);
+}
+
+// Macros to generate benchmarks
+#define MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, RANKS) \
+  BENCHMARK_TEMPLATE(BENCH_FUNCTION, RANKS)           \
+      ->Arg(24)                                       \
+      ->Iterations(10)                                \
+      ->UseManualTime()                               \
       ->Unit(benchmark::kMillisecond);
 
-MDRangePolicy_MAKE_BENCHMARK(2, Kokkos::IndexType<int32_t>);
-MDRangePolicy_MAKE_BENCHMARK(2, Kokkos::IndexType<int64_t>);
-MDRangePolicy_MAKE_BENCHMARK(3, Kokkos::IndexType<int32_t>);
-MDRangePolicy_MAKE_BENCHMARK(3, Kokkos::IndexType<int64_t>);
-MDRangePolicy_MAKE_BENCHMARK(4, Kokkos::IndexType<int32_t>);
-MDRangePolicy_MAKE_BENCHMARK(4, Kokkos::IndexType<int64_t>);
-MDRangePolicy_MAKE_BENCHMARK(5, Kokkos::IndexType<int32_t>);
-MDRangePolicy_MAKE_BENCHMARK(5, Kokkos::IndexType<int64_t>);
-MDRangePolicy_MAKE_BENCHMARK(6, Kokkos::IndexType<int32_t>);
-MDRangePolicy_MAKE_BENCHMARK(6, Kokkos::IndexType<int64_t>);
+#define MDRANGE_MAKE_BENCHMARK(BENCH_FUNCTION) \
+  MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 2)    \
+  MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 3)    \
+  MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 4)    \
+  MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 5)    \
+  MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 6)
 
-#undef MDRangePolicy_MAKE_BENCHMARK
+// Only run the benchmarks if not running on the host
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Set)
+MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Add)
+MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Scale)
+MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Triad)
+#endif
+
+#undef MDRANGE_BENCHMARK_ARGS
+#undef MDRANGE_MAKE_BENCHMARK
 
 }  // namespace Benchmark
