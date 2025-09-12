@@ -675,7 +675,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   // FIXME: Constructor which allows always 8 sizes should be deprecated
   template <class... P>
-  KOKKOS_FUNCTION explicit View(
+  explicit View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer, const size_t>
           arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
