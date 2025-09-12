@@ -24,19 +24,19 @@ struct LayoutToIterationPattern<Kokkos::LayoutLeft> {
 
 template <typename ScalarType, typename ViewType>
 void check_computation(const ViewType &A, const ViewType &B) {
-  long numErrors = 0;
-  auto Ahost     = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), A);
-  auto Bhost     = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), B);
+  int numErrors = 0;
+  auto Ahost    = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), A);
+  auto Bhost    = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), B);
 
-  const long icount = Ahost.extent(0);
-  const long jcount = Ahost.extent(1);
-  const long kcount = Ahost.extent(2);
+  const int icount = Ahost.extent(0);
+  const int jcount = Ahost.extent(1);
+  const int kcount = Ahost.extent(2);
   // On KNL, this may vectorize - add print statement to prevent
   // Also, compare against epsilon, as vectorization can change bitwise
   // answer
-  for (long i = 0; i < icount; ++i) {
-    for (long j = 0; j < jcount; ++j) {
-      for (long k = 0; k < kcount; ++k) {
+  for (int i = 0; i < icount; ++i) {
+    for (int j = 0; j < jcount; ++j) {
+      for (int k = 0; k < kcount; ++k) {
         ScalarType check =
             0.25 * (ScalarType)(Bhost(i + 2, j, k) + Bhost(i + 1, j, k) +
                                 Bhost(i, j + 2, k) + Bhost(i, j + 1, k) +
@@ -79,6 +79,15 @@ void bench_mdrange(benchmark::State &state) {
   int Tj     = state.range(1);
   int Tk     = state.range(1);
 
+  const auto policy =
+      FunctorType::get_policy(icount, jcount, kcount, Ti, Tj, Tk);
+
+  state.counters["tile_i"] = Ti;
+  state.counters["tile_k"] = Ti;
+  state.counters["tile_j"] = Ti;
+  state.counters["default_tiling"] =
+      Ti != state.range(1) || Tj != state.range(1) || Tk != state.range(1);
+
   view_type Atest("Atest", icount, jcount, kcount);
   view_type Btest("Btest", icount + 2, jcount + 2, kcount + 2);
 
@@ -86,9 +95,6 @@ void bench_mdrange(benchmark::State &state) {
   execution_space().fence();
   Kokkos::deep_copy(Btest, 1.0);
   execution_space().fence();
-
-  const auto policy =
-      FunctorType::get_policy(icount, jcount, kcount, Ti, Tj, Tk);
 
   int i = 0;
 
@@ -107,8 +113,8 @@ void bench_mdrange(benchmark::State &state) {
   }  // end for
 }
 
-template <class DeviceType, typename ScalarType = double,
-          typename TestLayout = Kokkos::LayoutRight>
+template <class DeviceType, typename TestLayout = Kokkos::LayoutRight,
+          typename ScalarType = double>
 struct MDRange3D {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
@@ -117,35 +123,40 @@ struct MDRange3D {
 
   view_type A;
   view_type B;
-  const long irange;
-  const long jrange;
-  const long krange;
+  const int irange;
+  const int jrange;
+  const int krange;
 
-  MDRange3D(const view_type &A_, const view_type &B_, const long &irange_,
-            const long &jrange_, const long &krange_)
+  MDRange3D(const view_type &A_, const view_type &B_, const int &irange_,
+            const int &jrange_, const int &krange_)
       : A(A_), B(B_), irange(irange_), jrange(jrange_), krange(krange_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const long i, const long j, const long k) const {
+  void operator()(const int i, const int j, const int k) const {
     A(i, j, k) =
         0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) + B(i, j + 2, k) +
                             B(i, j + 1, k) + B(i, j, k + 2) + B(i, j, k + 1) +
                             B(i, j, k));
   }
 
-  static auto get_policy(const unsigned int icount, const unsigned int jcount,
-                         const unsigned int kcount, const unsigned int Ti = 1,
-                         const unsigned int Tj = 1, const unsigned int Tk = 1) {
+  static auto get_policy(const int icount, const int jcount, const int kcount,
+                         int &Ti, int &Tj, int &Tk) {
     constexpr Kokkos::Iterate iteration_pattern =
         LayoutToIterationPattern<TestLayout>::pattern;
-    return Kokkos::MDRangePolicy<
-        Kokkos::Rank<3, iteration_pattern, iteration_pattern>, execution_space>(
-        {0, 0, 0}, {icount, jcount, kcount}, {Ti, Tj, Tk});
+    const Kokkos::MDRangePolicy<
+        Kokkos::Rank<3, iteration_pattern, iteration_pattern>, execution_space>
+        policy({0, 0, 0}, {icount, jcount, kcount}, {Ti, Tj, Tk});
+
+    Ti = policy.m_tile[0];
+    Tj = policy.m_tile[1];
+    Tk = policy.m_tile[2];
+
+    return policy;
   }
 };
 
-template <class DeviceType, typename ScalarType = double,
-          typename TestLayout = Kokkos::LayoutRight>
+template <class DeviceType, typename TestLayout = Kokkos::LayoutRight,
+          typename ScalarType = double>
 struct RangePolicyCollapseTwo {
   // RangePolicy for 3D range, but will collapse only 2 dims => like Rank<2> for
   // multi-dim; unroll 2 dims in one-dim
@@ -157,22 +168,21 @@ struct RangePolicyCollapseTwo {
 
   view_type A;
   view_type B;
-  const long irange;
-  const long jrange;
-  const long krange;
+  const int irange;
+  const int jrange;
+  const int krange;
 
-  RangePolicyCollapseTwo(view_type &A_, const view_type &B_,
-                         const long &irange_, const long &jrange_,
-                         const long &krange_)
+  RangePolicyCollapseTwo(view_type &A_, const view_type &B_, const int &irange_,
+                         const int &jrange_, const int &krange_)
       : A(A_), B(B_), irange(irange_), jrange(jrange_), krange(krange_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const long r) const {
+  void operator()(const int r) const {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       // id(i,j,k) = k + j*Nk + i*Nk*Nj = k + Nk*(j + i*Nj) = k + Nk*r
       // r = j + i*Nj
-      long i = int(r / jrange);
-      long j = int(r - i * jrange);
+      int i = r / jrange;
+      int j = r - i * jrange;
       for (int k = 0; k < krange; ++k) {
         A(i, j, k) =
             0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) +
@@ -182,8 +192,8 @@ struct RangePolicyCollapseTwo {
     } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
       // id(i,j,k) = i + j*Ni + k*Ni*Nj = i + Ni*(j + k*Nj) = i + Ni*r
       // r = j + k*Nj
-      long k = int(r / jrange);
-      long j = int(r - k * jrange);
+      int k = r / jrange;
+      int j = r - k * jrange;
       for (int i = 0; i < irange; ++i) {
         A(i, j, k) =
             0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) +
@@ -193,24 +203,25 @@ struct RangePolicyCollapseTwo {
     }
   }
 
-  static auto get_policy(const unsigned int icount, const unsigned int jcount,
-                         const unsigned int kcount, const unsigned int,
-                         const unsigned int, const unsigned int) {
-    long collapse_index_rangeA = 0;
+  static auto get_policy(const int icount, const int jcount, const int kcount,
+                         const int, const int, const int) {
+    int collapse_index_rangeA = 0;
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      collapse_index_rangeA = static_cast<long>(icount) * jcount;
+      collapse_index_rangeA = icount * jcount;
     } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      collapse_index_rangeA = static_cast<long>(kcount) * jcount;
+      collapse_index_rangeA = kcount * jcount;
     } else {
-      static_assert(false, "LayoutRight or LayoutLeft required");
+      static_assert(!(std::is_same_v<TestLayout, Kokkos::LayoutRight> ||
+                      std::is_same_v<TestLayout, Kokkos::LayoutLeft>),
+                    "LayoutRight or LayoutLeft required");
     }
 
     return Kokkos::RangePolicy<execution_space>(0, (collapse_index_rangeA));
   }
 };
 
-template <class DeviceType, typename ScalarType = double,
-          typename TestLayout = Kokkos::LayoutRight>
+template <class DeviceType, typename TestLayout = Kokkos::LayoutRight,
+          typename ScalarType = double>
 struct RangePolicyCollapseAll {
   // RangePolicy for 3D range, but will collapse all dims
 
@@ -221,29 +232,28 @@ struct RangePolicyCollapseAll {
 
   view_type A;
   view_type B;
-  const long irange;
-  const long jrange;
-  const long krange;
+  const int irange;
+  const int jrange;
+  const int krange;
 
-  RangePolicyCollapseAll(view_type &A_, const view_type &B_,
-                         const long &irange_, const long &jrange_,
-                         const long &krange_)
+  RangePolicyCollapseAll(view_type &A_, const view_type &B_, const int &irange_,
+                         const int &jrange_, const int &krange_)
       : A(A_), B(B_), irange(irange_), jrange(jrange_), krange(krange_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const long r) const {
+  void operator()(const int r) const {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      long i = int(r / (jrange * krange));
-      long j = int((r - i * jrange * krange) / krange);
-      long k = int(r - i * jrange * krange - j * krange);
+      int i = r / (jrange * krange);
+      int j = (r - i * jrange * krange) / krange;
+      int k = r - i * jrange * krange - j * krange;
       A(i, j, k) =
           0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) + B(i, j + 2, k) +
                               B(i, j + 1, k) + B(i, j, k + 2) + B(i, j, k + 1) +
                               B(i, j, k));
     } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      long k = int(r / (irange * jrange));
-      long j = int((r - k * irange * jrange) / irange);
-      long i = int(r - k * irange * jrange - j * irange);
+      int k = r / (irange * jrange);
+      int j = (r - k * irange * jrange) / irange;
+      int i = r - k * irange * jrange - j * irange;
       A(i, j, k) =
           0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) + B(i, j + 2, k) +
                               B(i, j + 1, k) + B(i, j, k + 2) + B(i, j, k + 1) +
@@ -251,28 +261,57 @@ struct RangePolicyCollapseAll {
     }
   }
 
-  static auto get_policy(const unsigned int icount, const unsigned int jcount,
-                         const unsigned int kcount, const unsigned int,
-                         const unsigned int, const unsigned int) {
-    const long flat_index_range = icount * static_cast<long>(jcount) * kcount;
+  static auto get_policy(const int icount, const int jcount, const int kcount,
+                         const int, const int, const int) {
+    const int flat_index_range = icount * jcount * kcount;
     return Kokkos::RangePolicy<execution_space>(0, flat_index_range);
   }
 };
 
-BENCHMARK(bench_mdrange<MDRange3D<TEST_EXECSPACE>>)
+BENCHMARK(bench_mdrange<MDRange3D<TEST_EXECSPACE, Kokkos::LayoutRight>>)
+    ->UseManualTime()
     ->Iterations(10)
+    ->Name("mdrange_vs_manual_MDRange3D_right")
     ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2),
-                   benchmark::CreateDenseRange(1, 8, 1)});
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {0, 1}});
 
-BENCHMARK(bench_mdrange<RangePolicyCollapseTwo<TEST_EXECSPACE>>)
+BENCHMARK(
+    bench_mdrange<RangePolicyCollapseTwo<TEST_EXECSPACE, Kokkos::LayoutRight>>)
+    ->UseManualTime()
     ->Iterations(10)
+    ->Name("mdrange_vs_manual_Collapse2D_right")
     ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {1}});
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
 
-BENCHMARK(bench_mdrange<RangePolicyCollapseAll<TEST_EXECSPACE>>)
+BENCHMARK(
+    bench_mdrange<RangePolicyCollapseAll<TEST_EXECSPACE, Kokkos::LayoutRight>>)
+    ->UseManualTime()
     ->Iterations(10)
+    ->Name("mdrange_vs_manual_CollapseAll_right")
     ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {1}});
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
+
+BENCHMARK(bench_mdrange<MDRange3D<TEST_EXECSPACE, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange_vs_manual_MDRange3D_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {0, 1}});
+
+BENCHMARK(
+    bench_mdrange<RangePolicyCollapseTwo<TEST_EXECSPACE, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange_vs_manual_Collapse2D_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
+
+BENCHMARK(
+    bench_mdrange<RangePolicyCollapseAll<TEST_EXECSPACE, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange_vs_manual_CollapseAll_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
 
 }  // end namespace Test
