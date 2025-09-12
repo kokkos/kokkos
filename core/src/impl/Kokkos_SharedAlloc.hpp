@@ -335,9 +335,11 @@ class HostInaccessibleSharedAllocationRecordCommon
 
     fill_host_accessible_header_info(this, header, label);
 
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
     Kokkos::Impl::DeepCopy<MemorySpace, HostSpace>(
         exec, SharedAllocationRecord<void, void>::m_alloc_ptr, &header,
         sizeof(SharedAllocationHeader));
+#endif
   }
   HostInaccessibleSharedAllocationRecordCommon(
       MemorySpace const& space, std::string const& label, std::size_t size,
