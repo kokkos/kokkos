@@ -447,6 +447,27 @@ struct TestReducers {
     }
   }
 
+  // Test that reducers return correct results with LaunchBounds value smaller
+  // that 32.
+  static void test_launch_bounds() {
+    Kokkos::View<Scalar*> v("", 31);
+    Kokkos::deep_copy(v, Scalar(10));
+
+    // Functor
+    auto l = KOKKOS_LAMBDA(const int i, Scalar& ret) { ret += v(i); };
+
+    // This first reduction is necessary to ensure we trigger the bug #8443
+    Scalar ret;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy(0, 1), l,
+                            Kokkos::Sum<Scalar>(ret));
+    EXPECT_EQ(ret, 10);
+
+    // Test that LaunchBounds<1> works
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Kokkos::LaunchBounds<1>>(0, 1),
+                            l, Kokkos::Sum<Scalar>(ret));
+    EXPECT_EQ(ret, 10);
+  }
+
   static void test_sum(int N) {
     Kokkos::View<Scalar*, ExecSpace> values("Values", N);
     auto h_values        = Kokkos::create_mirror_view(values);
@@ -1560,6 +1581,7 @@ struct TestReducers {
   }
 
   static void execute_float() {
+    test_launch_bounds();
     test_sum(10001);
     test_prod(35);
     test_min(10003);
@@ -1610,6 +1632,7 @@ struct TestReducers {
   // Although unlikely, the test below could still in principle overflow.
   // For reference log(numeric_limits<int>)/log(4) is 15.5
   static void execute_integer() {
+    test_launch_bounds();
     test_sum(10001);
     test_prod(sizeof(Scalar) > 4 ? 35 : 19);  // avoid int overflow (see above)
     test_min(10003);
