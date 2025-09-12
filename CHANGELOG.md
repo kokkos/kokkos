@@ -15,6 +15,7 @@
 ### Bug Fixes
 * Add missing const qualifier to `View::to_mdspan` and `View` to `mdspan` conversion [\#8333](https://github.com/kokkos/kokkos/pull/8333)
 * Fix configure-time check of compilation and linker flags [\#8292](https://github.com/kokkos/kokkos/pull/8292)
+* Add missing `KOKKOS_FUNCTION` annotation on `View(std::nullptr_t, ...)` constructor [\#8436](https://github.com/kokkos/kokkos/pull/8436) 
 
 ## 4.7.00
 
