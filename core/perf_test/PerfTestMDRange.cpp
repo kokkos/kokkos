@@ -289,8 +289,8 @@ struct RangePolicyCollapseAll {
     requires(dimension == 2)
   {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      int i   = r / ranges[0];
-      int j   = r - i * ranges[0];
+      int i   = r / ranges[1];
+      int j   = r - i * ranges[1];
       A(i, j) = 0.25 * (ScalarType)(B(i + 2, j) + B(i + 1, j) + B(i, j + 2) +
                                     B(i, j + 1) + B(i, j));
     } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
