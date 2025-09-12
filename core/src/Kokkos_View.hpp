@@ -670,12 +670,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Special function to be preferred over the above for passing in 0, NULL or
   // nullptr when pointer type is char*
   template <class... Args>
-  explicit View(decltype(nullptr), Args... args)
+  KOKKOS_FUNCTION explicit View(decltype(nullptr), Args... args)
       : View(Kokkos::view_wrap(pointer_type(nullptr)), args...) {}
 
   // FIXME: Constructor which allows always 8 sizes should be deprecated
   template <class... P>
-  explicit View(
+  KOKKOS_FUNCTION explicit View(
       const Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer, const size_t>
           arg_N0          = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
