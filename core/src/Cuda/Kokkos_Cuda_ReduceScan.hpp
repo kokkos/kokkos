@@ -334,7 +334,7 @@ struct CudaReductionsFunctor<FunctorType, false, false> {
     *my_shared_team_buffer_element = value;
     // Warp Level Reduction, ignoring Kokkos vector entries
     scalar_intra_warp_reduction(functor, my_shared_team_buffer_element, skip,
-                                32);
+                                Kokkos::min(32u, blockDim.x * blockDim.y));
     // Wait for every warp to be done before using one warp to do final cross
     // warp reduction
     __syncthreads();
