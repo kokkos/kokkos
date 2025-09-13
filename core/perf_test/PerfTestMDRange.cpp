@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <functional>
 #include <iostream>
 #include <numeric>
 
@@ -33,17 +34,24 @@ void check_computation(const ViewType &A, const ViewType &B) {
   // On KNL, this may vectorize - add print statement to prevent
   // Also, compare against epsilon, as vectorization can change bitwise
   // answer
-  for (int i = 0; i < Ahost.extent_int(0); ++i) {
-    for (int j = 0; j < Ahost.extent_int(1); ++j) {
-      if constexpr (ViewType::rank == 2) {
+  if constexpr (ViewType::rank == 2) {
+    for (int i = 0; i < Ahost.extent_int(0); ++i) {
+      for (int j = 0; j < Ahost.extent_int(1); ++j) {
         ScalarType check =
             0.25 *
             (ScalarType)(Bhost(i + 2, j) + Bhost(i + 1, j) + Bhost(i, j + 2) +
                          Bhost(i, j + 1) + Bhost(i, j));
         if (Ahost(i, j) - check != 0) {
           ++numErrors;
+          std::cout << "Correctness error at index: " << i << "," << j
+                    << ", got " << Ahost(i, j) << ", expected " << check
+                    << "\n";
         }
-      } else {
+      }
+    }
+  } else if constexpr (ViewType::rank == 3) {
+    for (int i = 0; i < Ahost.extent_int(0); ++i) {
+      for (int j = 0; j < Ahost.extent_int(1); ++j) {
         for (int k = 0; k < Ahost.extent_int(2); ++k) {
           ScalarType check =
               0.25 * (ScalarType)(Bhost(i + 2, j, k) + Bhost(i + 1, j, k) +
@@ -52,33 +60,43 @@ void check_computation(const ViewType &A, const ViewType &B) {
                                   Bhost(i, j, k));
           if (Ahost(i, j, k) - check != 0) {
             ++numErrors;
-            // TODO: See if these print staements are needed
-
-            // std::cout << "  Correctness error at index: " << i << "," << j <<
-            // ","
-            //           << k << "\n"
-            //           << "  multi Ahost = " << Ahost(i, j, k)
-            //           << "  expected = " << check
-            //           << "  multi Bhost(ijk) = " << Bhost(i, j, k)
-            //           << "  multi Bhost(i+1jk) = " << Bhost(i + 1, j, k)
-            //           << "  multi Bhost(i+2jk) = " << Bhost(i + 2, j, k)
-            //           << "  multi Bhost(ij+1k) = " << Bhost(i, j + 1, k)
-            //           << "  multi Bhost(ij+2k) = " << Bhost(i, j + 2, k)
-            //           << "  multi Bhost(ijk+1) = " << Bhost(i, j, k + 1)
-            //           << "  multi Bhost(ijk+2) = " << Bhost(i, j, k + 2)
-            //           << std::endl;
+            std::cout << "Correctness error at index: " << i << "," << j << ","
+                      << k << ", got " << Ahost(i, j, k) << ", expected "
+                      << check << "\n";
           }
         }
       }
     }
-  }
-  if (numErrors != 0) {
-    std::cout << "Detected some errors for a run with dimensions "
-              << Ahost.extent(0);
-    for (std::size_t i = 1; i < Ahost.rank(); i++) {
-      std::cout << "x" << Ahost.extent(i);
+  } else if constexpr (ViewType::rank == 4) {
+    for (int i = 0; i < Ahost.extent_int(0); ++i) {
+      for (int j = 0; j < Ahost.extent_int(1); ++j) {
+        for (int k = 0; k < Ahost.extent_int(2); ++k) {
+          for (int u = 0; u < Ahost.extent_int(2); ++u) {
+            ScalarType check =
+                0.25 *
+                (ScalarType)(Bhost(i + 2, j, k, u) + Bhost(i + 1, j, k, u) +
+                             Bhost(i, j + 2, k, u) + Bhost(i, j + 1, k, u) +
+                             Bhost(i, j, k + 2, u) + Bhost(i, j, k + 1, u) +
+                             Bhost(i, j, k, u + 2) + Bhost(i, j, k, u + 1) +
+                             Bhost(i, j, k, u));
+            if (Ahost(i, j, k, u) - check != 0) {
+              ++numErrors;
+              std::cout << "Correctness error at index: " << i << "," << j
+                        << "," << k << "," << u << ", got " << Ahost(i, j, k, u)
+                        << ", expected " << check << "\n";
+            }
+          }
+        }
+      }
     }
-    std::cout << std::endl;
+    if (numErrors != 0) {
+      std::cout << "Detected some errors for a run with dimensions "
+                << Ahost.extent(0);
+      for (std::size_t i = 1; i < Ahost.rank(); i++) {
+        std::cout << "x" << Ahost.extent(i);
+      }
+      std::cout << std::endl;
+    }
   }
 }
 
@@ -133,10 +151,15 @@ void bench_mdrange(benchmark::State &state) {
 }
 
 template <typename T, int Dim>
-struct GetPointer {
-  using type = std::conditional_t<Dim == 2, T **,
-                                  std::conditional_t<Dim == 3, T ***, void>>;
+struct get_pointer {
+  using type = std::conditional_t<
+      Dim == 2, T **,
+      std::conditional_t<Dim == 3, T ***,
+                         std::conditional_t<Dim == 4, T ****, void>>>;
 };
+
+template <typename T, int Dim>
+using get_pointer_t = get_pointer<T, Dim>::type;
 
 template <class DeviceType, int Dimension,
           typename TestLayout = Kokkos::LayoutRight,
@@ -145,9 +168,8 @@ struct MDRange {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-  using view_type =
-      Kokkos::View<typename GetPointer<ScalarType, Dimension>::type, TestLayout,
-                   DeviceType>;
+  using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
+                                       TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
 
@@ -178,6 +200,17 @@ struct MDRange {
                             B(i, j, k));
   }
 
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i, const int j, const int k, const int u) const
+    requires(dimension == 4)
+  {
+    A(i, j, k, u) =
+        0.25 *
+        (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) + B(i, j + 2, k, u) +
+                     B(i, j + 1, k, u) + B(i, j, k + 2, u) + B(i, j, k + 1, u) +
+                     B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+  }
+
   static auto get_policy(const Kokkos::Array<int, dimension> &end,
                          Kokkos::Array<int, dimension> &tile) {
     constexpr Kokkos::Iterate iteration_pattern =
@@ -195,18 +228,20 @@ struct MDRange {
   }
 };
 
-template <class DeviceType, typename TestLayout = Kokkos::LayoutRight,
+template <class DeviceType, int Dimension,
+          typename TestLayout = Kokkos::LayoutRight,
           typename ScalarType = double>
 struct RangePolicyCollapseTwo {
-  // RangePolicy for 3D range, but will collapse only 2 dims => like Rank<2> for
-  // multi-dim; unroll 2 dims in one-dim
+  // RangePolicy for ND range, but will collapse only 2 dims; unroll 2 dims in
+  // one-dim
 
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-  using view_type       = Kokkos::View<ScalarType ***, TestLayout, DeviceType>;
+  using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
+                                       TestLayout, DeviceType>;
 
-  static constexpr int dimension = 3;
+  static constexpr int dimension = Dimension;
 
   view_type A;
   view_type B;
@@ -217,7 +252,9 @@ struct RangePolicyCollapseTwo {
       : A(A_), B(B_), ranges(dims) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int r) const {
+  void operator()(const int r) const
+    requires(dimension == 3)
+  {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       // id(i,j,k) = k + j*Nk + i*Nk*Nj = k + Nk*(j + i*Nj) = k + Nk*r
       // r = j + i*Nj
@@ -243,13 +280,48 @@ struct RangePolicyCollapseTwo {
     }
   }
 
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int r) const
+    requires(dimension == 4)
+  {
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
+      int i = r / (ranges[1] * ranges[2]);
+      int j = (r - i * ranges[1] * ranges[2]) / ranges[2];
+      int k = r - i * ranges[1] * ranges[2] - j * ranges[2];
+      for (int u = 0; u < ranges[3]; ++u) {
+        A(i, j, k, u) =
+            0.25 *
+            (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
+                         B(i, j + 2, k, u) + B(i, j + 1, k, u) +
+                         B(i, j, k + 2, u) + B(i, j, k + 1, u) +
+                         B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+      }
+    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      int u = r / (ranges[1] * ranges[2]);
+      int k = (r - u * ranges[1] * ranges[2]) / ranges[1];
+      int j = r - u * ranges[1] * ranges[2] - k * ranges[1];
+      for (int i = 0; i < ranges[0]; ++i) {
+        A(i, j, k, u) =
+            0.25 *
+            (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
+                         B(i, j + 2, k, u) + B(i, j + 1, k, u) +
+                         B(i, j, k + 2, u) + B(i, j, k + 1, u) +
+                         B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+      }
+    }
+  }
+
   static auto get_policy(const Kokkos::Array<int, dimension> &dims,
                          const Kokkos::Array<int, dimension> &) {
     int collapse_index_rangeA = 0;
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      collapse_index_rangeA = dims[0] * dims[1];
+      collapse_index_rangeA = std::reduce(Kokkos::begin(dims),
+                                          Kokkos::begin(dims) + (dimension - 1),
+                                          1, std::multiplies<int>{});
     } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      collapse_index_rangeA = dims[dimension - 1] * dims[dimension - 2];
+      collapse_index_rangeA =
+          std::reduce(Kokkos::begin(dims) + 1, Kokkos::end(dims), 1,
+                      std::multiplies<int>{});
     } else {
       static_assert(!(std::is_same_v<TestLayout, Kokkos::LayoutRight> ||
                       std::is_same_v<TestLayout, Kokkos::LayoutLeft>),
@@ -269,9 +341,8 @@ struct RangePolicyCollapseAll {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-  using view_type =
-      Kokkos::View<typename GetPointer<ScalarType, Dimension>::type, TestLayout,
-                   DeviceType>;
+  using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
+                                       TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
 
@@ -324,6 +395,44 @@ struct RangePolicyCollapseAll {
     }
   }
 
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int r) const
+    requires(dimension == 4)
+  {
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
+      // TODO: store the strides in variables
+      int i = r / (ranges[1] * ranges[2] * ranges[3]);
+      int j =
+          (r - i * ranges[1] * ranges[2] * ranges[3]) / (ranges[2] * ranges[3]);
+      int k = (r - i * ranges[1] * ranges[2] * ranges[3] -
+               j * ranges[2] * ranges[3]) /
+              ranges[3];
+      int u = r - i * ranges[1] * ranges[2] * ranges[3] -
+              j * ranges[2] * ranges[3] - k * ranges[3];
+      A(i, j, k, u) =
+          0.25 *
+          (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
+                       B(i, j + 2, k, u) + B(i, j + 1, k, u) +
+                       B(i, j, k + 2, u) + B(i, j, k + 1, u) +
+                       B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      int i = r / (ranges[0] * ranges[1] * ranges[2]);
+      int j =
+          (r - i * ranges[0] * ranges[1] * ranges[2]) / (ranges[1] * ranges[2]);
+      int k = (r - i * ranges[0] * ranges[1] * ranges[2] -
+               j * ranges[1] * ranges[2]) /
+              ranges[2];
+      int u = r - i * ranges[0] * ranges[1] * ranges[2] -
+              j * ranges[1] * ranges[2] - k * ranges[2];
+      A(i, j, k, u) =
+          0.25 *
+          (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
+                       B(i, j + 2, k, u) + B(i, j + 1, k, u) +
+                       B(i, j, k + 2, u) + B(i, j, k + 1, u) +
+                       B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+    }
+  }
+
   static auto get_policy(const Kokkos::Array<int, dimension> &dims,
                          const Kokkos::Array<int, dimension> &) {
     const int flat_index_range = std::reduce(
@@ -332,60 +441,17 @@ struct RangePolicyCollapseAll {
   }
 };
 
-// 3D benchmarks
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_MDRange3D_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {0, 1}});
-
-BENCHMARK(
-    bench_mdrange<RangePolicyCollapseTwo<TEST_EXECSPACE, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_Collapse2D_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_CollapseAll_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
-
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_MDRange3D_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {0, 1}});
-
-BENCHMARK(
-    bench_mdrange<RangePolicyCollapseTwo<TEST_EXECSPACE, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_Collapse2D_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_CollapseAll_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 7, 1 << 9, 2), {-1}});
-
 // 2D benchmarks
+constexpr int min_size_2D = 1 << 9;
+constexpr int max_size_2D = 1 << 13;
+
 BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 2, Kokkos::LayoutRight>>)
     ->UseManualTime()
     ->Iterations(10)
     ->Name("mdrange2d_vs_manual_MDRange2D_right")
     ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 9, 1 << 13, 2), {0, 1}});
+    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2),
+                   {0, 1}});
 
 BENCHMARK(bench_mdrange<
               RangePolicyCollapseAll<TEST_EXECSPACE, 2, Kokkos::LayoutRight>>)
@@ -393,14 +459,15 @@ BENCHMARK(bench_mdrange<
     ->Iterations(10)
     ->Name("mdrange2d_vs_manual_CollapseAll_right")
     ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 9, 1 << 13, 2), {-1}});
+    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2), {-1}});
 
 BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 2, Kokkos::LayoutLeft>>)
     ->UseManualTime()
     ->Iterations(10)
     ->Name("mdrange2d_vs_manual_MDRange2D_left")
     ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 9, 1 << 13, 2), {0, 1}});
+    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2),
+                   {0, 1}});
 
 BENCHMARK(bench_mdrange<
               RangePolicyCollapseAll<TEST_EXECSPACE, 2, Kokkos::LayoutLeft>>)
@@ -408,6 +475,110 @@ BENCHMARK(bench_mdrange<
     ->Iterations(10)
     ->Name("mdrange2d_vs_manual_CollapseAll_left")
     ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(1 << 9, 1 << 13, 2), {-1}});
+    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2), {-1}});
+
+// 3D benchmarks
+constexpr int min_size_3D = 1 << 7;
+constexpr int max_size_3D = 1 << 9;
+
+BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange3d_vs_manual_MDRange3D_right")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2),
+                   {0, 1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseTwo<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange3d_vs_manual_CollapseTwo_right")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseAll<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange3d_vs_manual_CollapseAll_right")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
+
+BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange3d_vs_manual_MDRange3D_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2),
+                   {0, 1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseTwo<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange3d_vs_manual_CollapseTwo_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseAll<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange3d_vs_manual_CollapseAll_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
+
+// 4D benchmarks
+constexpr int min_size_4D = 1 << 5;
+constexpr int max_size_4D = 96;
+
+BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 4, Kokkos::LayoutRight>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange4d_vs_manual_MDRange4D_right")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2),
+                   {0, 1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseTwo<TEST_EXECSPACE, 4, Kokkos::LayoutRight>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange4d_vs_manual_CollapseTwo_right")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseAll<TEST_EXECSPACE, 4, Kokkos::LayoutRight>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange4d_vs_manual_CollapseAll_right")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
+
+BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 4, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange4d_vs_manual_MDRange4D_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2),
+                   {0, 1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseTwo<TEST_EXECSPACE, 4, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange4d_vs_manual_CollapseTwo_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
+
+BENCHMARK(bench_mdrange<
+              RangePolicyCollapseAll<TEST_EXECSPACE, 4, Kokkos::LayoutLeft>>)
+    ->UseManualTime()
+    ->Iterations(10)
+    ->Name("mdrange4d_vs_manual_CollapseAll_left")
+    ->ArgNames({"size", "tile_size"})
+    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
 
 }  // end namespace Test
