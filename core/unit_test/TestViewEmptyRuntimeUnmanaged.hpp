@@ -24,7 +24,8 @@ template <class T>
 struct TestEmptyViewRuntimeUnmanaged {
   template <class ExecutionSpace>
   TestEmptyViewRuntimeUnmanaged(ExecutionSpace const& exec) {
-    Kokkos::parallel_for(Kokkos::RangePolicy(exec, 0, 1), *this);
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(exec, 0, 1),
+                         *this);
   }
 
   KOKKOS_FUNCTION void operator()(int) const {
