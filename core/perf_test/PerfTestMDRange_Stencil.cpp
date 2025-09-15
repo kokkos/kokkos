@@ -416,14 +416,14 @@ struct CollapseAll {
                        B(i, j, k + 2, u) + B(i, j, k + 1, u) +
                        B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
     } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int i = r / (ranges[0] * ranges[1] * ranges[2]);
-      int j =
-          (r - i * ranges[0] * ranges[1] * ranges[2]) / (ranges[1] * ranges[2]);
-      int k = (r - i * ranges[0] * ranges[1] * ranges[2] -
-               j * ranges[1] * ranges[2]) /
+      int u = r / (ranges[0] * ranges[1] * ranges[2]);
+      int k =
+          (r - u * ranges[0] * ranges[1] * ranges[2]) / (ranges[1] * ranges[2]);
+      int j = (r - u * ranges[0] * ranges[1] * ranges[2] -
+               k * ranges[1] * ranges[2]) /
               ranges[2];
-      int u = r - i * ranges[0] * ranges[1] * ranges[2] -
-              j * ranges[1] * ranges[2] - k * ranges[2];
+      int i = r - u * ranges[0] * ranges[1] * ranges[2] -
+              k * ranges[1] * ranges[2] - j * ranges[2];
       A(i, j, k, u) =
           0.25 *
           (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
