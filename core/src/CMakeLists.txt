@@ -170,7 +170,11 @@ endif()
 kokkos_link_tpl(kokkoscore PUBLIC HWLOC)
 kokkos_link_tpl(kokkoscore PUBLIC CUDA)
 kokkos_link_tpl(kokkoscore PUBLIC HPX)
-kokkos_link_tpl(kokkoscore PUBLIC LIBDL)
+# Finding dlfcn.h includes a problematic path on MacOS X using homebrew's clang
+# Mac OS X doesn't require extra libraries for using dlopen
+if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  kokkos_link_tpl(kokkoscore PUBLIC LIBDL)
+endif()
 # On *nix-like systems (Linux, macOS) we need pthread for C++ std::thread
 if(NOT WIN32)
   kokkos_link_tpl(kokkoscore PUBLIC THREADS)

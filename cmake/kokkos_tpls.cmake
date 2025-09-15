@@ -81,7 +81,11 @@ kokkos_tpl_option(LIBQUADMATH ${LIBQUADMATH_DEFAULT} TRIBITS quadmath)
 kokkos_import_tpl(HPX INTERFACE)
 kokkos_import_tpl(CUDA INTERFACE)
 kokkos_import_tpl(HWLOC)
-kokkos_import_tpl(LIBDL)
+# Finding dlfcn.h includes a problematic path on MacOS X using homebrew's clang
+# Mac OS X doesn't require extra libraries for using dlopen
+if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
+  kokkos_import_tpl(LIBDL)
+endif()
 if(NOT WIN32)
   kokkos_import_tpl(THREADS INTERFACE)
 endif()
