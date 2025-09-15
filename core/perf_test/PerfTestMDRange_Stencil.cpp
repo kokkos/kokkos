@@ -169,7 +169,7 @@ struct MDRange {
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
   using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
-                                       TestLayout, DeviceType>;
+                                 TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
 
@@ -231,7 +231,7 @@ struct MDRange {
 template <class DeviceType, int Dimension,
           typename TestLayout = Kokkos::LayoutRight,
           typename ScalarType = double>
-struct RangePolicyCollapseTwo {
+struct CollapseTwo {
   // RangePolicy for ND range, but will collapse only 2 dims; unroll 2 dims in
   // one-dim
 
@@ -239,7 +239,7 @@ struct RangePolicyCollapseTwo {
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
   using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
-                                       TestLayout, DeviceType>;
+                                 TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
 
@@ -247,8 +247,8 @@ struct RangePolicyCollapseTwo {
   view_type B;
   const Kokkos::Array<int, dimension> ranges;
 
-  RangePolicyCollapseTwo(view_type &A_, const view_type &B_,
-                         const Kokkos::Array<int, dimension> &dims)
+  CollapseTwo(view_type &A_, const view_type &B_,
+              const Kokkos::Array<int, dimension> &dims)
       : A(A_), B(B_), ranges(dims) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -335,14 +335,14 @@ struct RangePolicyCollapseTwo {
 template <class DeviceType, int Dimension,
           typename TestLayout = Kokkos::LayoutRight,
           typename ScalarType = double>
-struct RangePolicyCollapseAll {
-  // RangePolicy for 3D range, but will collapse all dims
+struct CollapseAll {
+  // RangePolicy for ND range, but will collapse all dims
 
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
   using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
-                                       TestLayout, DeviceType>;
+                                 TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
 
@@ -351,8 +351,8 @@ struct RangePolicyCollapseAll {
   const Kokkos::Array<int, dimension> ranges;
 
   template <typename... Dims>
-  RangePolicyCollapseAll(view_type &A_, const view_type &B_,
-                         const Kokkos::Array<int, dimension> &dims)
+  CollapseAll(view_type &A_, const view_type &B_,
+              const Kokkos::Array<int, dimension> &dims)
       : A(A_), B(B_), ranges(dims) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -441,144 +441,47 @@ struct RangePolicyCollapseAll {
   }
 };
 
+#define MDRANGE_STENCIL_BENCHMARK(functor, dim, layout, ...)                \
+  BENCHMARK(bench_mdrange<functor<TEST_EXECSPACE, dim, Kokkos::layout>>)    \
+      ->UseManualTime()                                                     \
+      ->Iterations(10)                                                      \
+      ->Name("mdrange" #dim "d_vs_manual_" #functor "_" #layout)            \
+      ->ArgNames({"size", "tile_size"})                                     \
+      ->ArgsProduct(                                                        \
+          {benchmark::CreateRange(min_size_##dim##D, max_size_##dim##D, 2), \
+           __VA_ARGS__});
+
 // 2D benchmarks
 constexpr int min_size_2D = 1 << 9;
 constexpr int max_size_2D = 1 << 13;
 
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 2, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange2d_vs_manual_MDRange2D_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2),
-                   {0, 1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 2, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange2d_vs_manual_CollapseAll_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2), {-1}});
-
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 2, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange2d_vs_manual_MDRange2D_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2),
-                   {0, 1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 2, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange2d_vs_manual_CollapseAll_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_2D, max_size_2D, 2), {-1}});
+MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutRight, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutRight, {-1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutLeft, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutLeft, {-1})
 
 // 3D benchmarks
 constexpr int min_size_3D = 1 << 7;
 constexpr int max_size_3D = 1 << 9;
 
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_MDRange3D_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2),
-                   {0, 1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseTwo<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_CollapseTwo_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 3, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_CollapseAll_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
-
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_MDRange3D_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2),
-                   {0, 1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseTwo<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_CollapseTwo_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 3, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange3d_vs_manual_CollapseAll_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_3D, max_size_3D, 2), {-1}});
+MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutRight, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutRight, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutRight, {-1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutLeft, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutLeft, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutLeft, {-1})
 
 // 4D benchmarks
 constexpr int min_size_4D = 1 << 5;
 constexpr int max_size_4D = 96;
 
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 4, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange4d_vs_manual_MDRange4D_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2),
-                   {0, 1}});
+MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutRight, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutRight, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutRight, {-1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutLeft, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutLeft, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutLeft, {-1})
 
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseTwo<TEST_EXECSPACE, 4, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange4d_vs_manual_CollapseTwo_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 4, Kokkos::LayoutRight>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange4d_vs_manual_CollapseAll_right")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
-
-BENCHMARK(bench_mdrange<MDRange<TEST_EXECSPACE, 4, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange4d_vs_manual_MDRange4D_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2),
-                   {0, 1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseTwo<TEST_EXECSPACE, 4, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange4d_vs_manual_CollapseTwo_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
-
-BENCHMARK(bench_mdrange<
-              RangePolicyCollapseAll<TEST_EXECSPACE, 4, Kokkos::LayoutLeft>>)
-    ->UseManualTime()
-    ->Iterations(10)
-    ->Name("mdrange4d_vs_manual_CollapseAll_left")
-    ->ArgNames({"size", "tile_size"})
-    ->ArgsProduct({benchmark::CreateRange(min_size_4D, max_size_4D, 2), {-1}});
+#undef MDRANGE_STENCIL_BENCHMARK
 
 }  // end namespace Test
