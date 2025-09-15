@@ -269,9 +269,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_league(arg_policy.league_size()),
-        m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
-                 FunctorTeamShmemSize<FunctorType>::value(arg_functor, 1)) {}
+        m_league(m_policy.league_size()),
+        m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
+                 FunctorTeamShmemSize<FunctorType>::value(m_functor, 1)) {}
 };
 
 /*--------------------------------------------------------------------------*/

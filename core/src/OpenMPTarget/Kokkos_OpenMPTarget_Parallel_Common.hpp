@@ -356,14 +356,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     ValueType result = ValueType();
 
     // Maximum active teams possible.
-    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
-    // omp_get_max_teams.
-#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
-#else
-    int max_active_teams =
-        std::min(p.space().concurrency() / team_size, league_size);
-#endif
 
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;
@@ -423,14 +416,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         p.space().impl_internal_space_instance()->get_scratch_ptr();
 
     // Maximum active teams possible.
-    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
-    // omp_get_max_teams.
-#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
-#else
-    int max_active_teams =
-        std::min(p.space().concurrency() / team_size, league_size);
-#endif
 
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;

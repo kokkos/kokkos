@@ -117,14 +117,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // mode but works in the Debug mode.
 
     // Maximum active teams possible.
-    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
-    // omp_get_max_teams.
-#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
-#else
-    int max_active_teams =
-        std::min(m_policy.space().concurrency() / team_size, league_size);
-#endif
 
     // FIXME_OPENMPTARGET: Although the maximum number of teams is set using the
     // omp_set_num_teams in the resize_scratch routine, the call is not
@@ -171,9 +164,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_shmem_size(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
+        m_shmem_size(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
                      FunctorTeamShmemSize<FunctorType>::value(
-                         arg_functor, arg_policy.team_size())) {}
+                         m_functor, m_policy.team_size())) {}
 };
 
 }  // namespace Impl

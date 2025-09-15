@@ -135,6 +135,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
 
 // Ensure that the graph has been instantiated with the default flag.
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
+#if CUDA_VERSION < 12000
+  GTEST_SKIP() << "Graph instantiation flag inspection requires Cuda 12.";
+#else
   graph->instantiate();
   unsigned long long flags =
       Kokkos::Experimental::finite_max_v<unsigned long long>;
@@ -142,6 +145,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
       cudaGraphExecGetFlags(graph->native_graph_exec(), &flags));
 
   ASSERT_EQ(flags, 0u);
+#endif
 }
 
 // Build a Kokkos::Graph from an existing cudaGraph_t.

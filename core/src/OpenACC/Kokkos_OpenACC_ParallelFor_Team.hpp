@@ -59,7 +59,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+      : m_functor(arg_functor), m_policy(std::move(arg_policy)) {}
 };
 
 namespace Kokkos {
@@ -162,7 +162,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   }
 
   inline ParallelFor(const FunctorType& arg_functor, Policy arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+      : m_functor(arg_functor), m_policy(std::move(arg_policy)) {}
 };
 
 namespace Kokkos {

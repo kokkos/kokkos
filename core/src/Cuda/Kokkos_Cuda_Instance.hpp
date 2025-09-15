@@ -349,7 +349,15 @@ class CudaInternal {
   cudaError_t cuda_graph_instantiate_wrapper(cudaGraphExec_t* pGraphExec,
                                              cudaGraph_t graph) const {
     set_cuda_device();
+#if CUDA_VERSION < 12000
+    constexpr size_t error_log_size = 256;
+    cudaGraphNode_t error_node      = nullptr;
+    char error_log[error_log_size];
+    return cudaGraphInstantiate(pGraphExec, graph, &error_node, error_log,
+                                error_log_size);
+#else
     return cudaGraphInstantiate(pGraphExec, graph);
+#endif
   }
 
   // Resizing of reduction related scratch spaces

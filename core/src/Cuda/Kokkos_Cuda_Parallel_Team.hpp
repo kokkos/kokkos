@@ -43,8 +43,6 @@
 
 namespace Kokkos {
 
-extern bool show_warnings() noexcept;
-
 namespace Impl {
 
 template <class... Properties>
@@ -524,14 +522,13 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_league_size(arg_policy.league_size()),
-        m_team_size(arg_policy.team_size()),
-        m_vector_size(arg_policy.impl_vector_length()) {
+        m_league_size(m_policy.league_size()),
+        m_team_size(m_policy.team_size()),
+        m_vector_size(m_policy.impl_vector_length()) {
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
     if (m_team_size < 0) {
-      m_team_size =
-          arg_policy.team_size_recommended(arg_functor, ParallelForTag());
+      m_team_size = m_policy.team_size_recommended(m_functor, ParallelForTag());
       if (m_team_size <= 0)
         Kokkos::Impl::throw_runtime_exception(
             "Kokkos::Impl::ParallelFor<Cuda, TeamPolicy> could not find a "

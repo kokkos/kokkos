@@ -40,14 +40,14 @@ template <class>
 struct IsLayoutRightPadded : std::false_type {};
 
 template <size_t Pad>
-struct IsLayoutRightPadded<Experimental::layout_right_padded<Pad>>
+struct IsLayoutRightPadded<::Kokkos::Experimental::layout_right_padded<Pad>>
     : std::true_type {};
 
 template <class>
 struct IsLayoutLeftPadded : std::false_type {};
 
 template <size_t Pad>
-struct IsLayoutLeftPadded<Experimental::layout_left_padded<Pad>>
+struct IsLayoutLeftPadded<::Kokkos::Experimental::layout_left_padded<Pad>>
     : std::true_type {};
 
 template <class ArrayLayout>
@@ -57,12 +57,12 @@ struct LayoutFromArrayLayout {
 
 template <>
 struct LayoutFromArrayLayout<LayoutLeft> {
-  using type = Experimental::layout_left_padded<dynamic_extent>;
+  using type = ::Kokkos::Experimental::layout_left_padded<dynamic_extent>;
 };
 
 template <>
 struct LayoutFromArrayLayout<LayoutRight> {
-  using type = Experimental::layout_right_padded<dynamic_extent>;
+  using type = ::Kokkos::Experimental::layout_right_padded<dynamic_extent>;
 };
 
 template <>

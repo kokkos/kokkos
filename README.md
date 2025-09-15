@@ -38,12 +38,14 @@ The current release is [4.7.00](https://github.com/kokkos/kokkos/releases/tag/4.
 curl -OJ -L https://github.com/kokkos/kokkos/releases/download/4.7.00/kokkos-4.7.00.tar.gz
 # Or with wget
 wget https://github.com/kokkos/kokkos/releases/download/4.7.00/kokkos-4.7.00.tar.gz
+# Or with git
+git clone --depth=2 --branch 4.7.00 https://github.com/kokkos/kokkos.git
 ```
 
 To clone the latest development version of Kokkos from GitHub:
 
 ```bash
-git clone -b develop  https://github.com/kokkos/kokkos.git
+git clone --branch develop  https://github.com/kokkos/kokkos.git
 ```
 
 ### Building Kokkos

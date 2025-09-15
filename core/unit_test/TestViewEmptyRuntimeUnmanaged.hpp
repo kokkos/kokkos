@@ -21,36 +21,44 @@
 namespace {
 
 template <class T>
-void test_empty_view_runtime_unmanaged() {
-  T d{};
+struct TestEmptyViewRuntimeUnmanaged {
+  template <class ExecutionSpace>
+  TestEmptyViewRuntimeUnmanaged(ExecutionSpace const& exec) {
+    Kokkos::parallel_for(Kokkos::RangePolicy(exec, 0, 1), *this);
+  }
+
+  KOKKOS_FUNCTION void operator()(int) const {
+    T d{};
 #if defined(_MSC_VER)
 #pragma warning(push)
 #pragma warning(disable : 4312)
 #endif
-  auto* p = reinterpret_cast<T*>(0xABADBABE);
+    auto* p = reinterpret_cast<T*>(0xABADBABE);
 #if defined(_MSC_VER)
 #pragma warning(push)
 #endif
 
-  (void)Kokkos::View<T*>(p, 0);
-  (void)Kokkos::View<T*>(&d, 0);
-  (void)Kokkos::View<T*>(nullptr, 0);
-  (void)Kokkos::View<T*>(NULL, 0);  // NOLINT(modernize-use-nullptr)
-  (void)Kokkos::View<T*>(0, 0);     // NOLINT(modernize-use-nullptr)
+    (void)Kokkos::View<T*>(p, 0);
+    (void)Kokkos::View<T*>(&d, 0);
+    (void)Kokkos::View<T*>(nullptr, 0);
+    (void)Kokkos::View<T*>(NULL, 0);  // NOLINT(modernize-use-nullptr)
+    (void)Kokkos::View<T*>(0, 0);     // NOLINT(modernize-use-nullptr)
 
-  (void)Kokkos::View<T**>(p, 0, 0);
-  (void)Kokkos::View<T**>(&d, 0, 0);
-  (void)Kokkos::View<T**>(nullptr, 0, 0);
-  (void)Kokkos::View<T**>(NULL, 0, 0);  // NOLINT(modernize-use-nullptr)
-  (void)Kokkos::View<T**>(0, 0, 0);     // NOLINT(modernize-use-nullptr)
-}
+    (void)Kokkos::View<T**>(p, 0, 0);
+    (void)Kokkos::View<T**>(&d, 0, 0);
+    (void)Kokkos::View<T**>(nullptr, 0, 0);
+    (void)Kokkos::View<T**>(NULL, 0, 0);  // NOLINT(modernize-use-nullptr)
+    (void)Kokkos::View<T**>(0, 0, 0);     // NOLINT(modernize-use-nullptr)
+  }
+};
 
 TEST(TEST_CATEGORY, view_empty_runtime_unmanaged) {
-  test_empty_view_runtime_unmanaged<float>();
-  test_empty_view_runtime_unmanaged<const double>();
-  test_empty_view_runtime_unmanaged<int>();
-  test_empty_view_runtime_unmanaged<char>();
-  test_empty_view_runtime_unmanaged<const char>();
+  TEST_EXECSPACE exec;
+  (void)TestEmptyViewRuntimeUnmanaged<float>(exec);
+  (void)TestEmptyViewRuntimeUnmanaged<const double>(exec);
+  (void)TestEmptyViewRuntimeUnmanaged<int>(exec);
+  (void)TestEmptyViewRuntimeUnmanaged<char>(exec);
+  (void)TestEmptyViewRuntimeUnmanaged<const char>(exec);
 }
 
 }  // namespace

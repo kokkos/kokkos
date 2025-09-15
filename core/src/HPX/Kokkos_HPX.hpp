@@ -1008,7 +1008,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   inline ParallelFor(const FunctorType &arg_functor, Policy arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
+      : m_functor(arg_functor), m_policy(std::move(arg_policy)) {}
 };
 
 template <class FunctorType, class... Traits>
@@ -1596,10 +1596,10 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   ParallelFor(const FunctorType &arg_functor, const Policy &arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_league(arg_policy.league_size()),
-        m_shared(arg_policy.scratch_size(0) + arg_policy.scratch_size(1) +
+        m_league(m_policy.league_size()),
+        m_shared(m_policy.scratch_size(0) + m_policy.scratch_size(1) +
                  FunctorTeamShmemSize<FunctorType>::value(
-                     arg_functor, arg_policy.team_size())) {}
+                     m_functor, m_policy.team_size())) {}
 };
 
 template <class CombinedFunctorReducerType, class... Properties>
