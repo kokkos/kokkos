@@ -44,6 +44,7 @@ namespace Impl {
 void hpx_thread_buffer::resize(const std::size_t num_threads,
                                const std::size_t size_per_thread,
                                const std::size_t extra_space) {
+  // dummy empty line for ci
   m_num_threads     = num_threads;
   m_size_per_thread = size_per_thread;
   m_extra_space     = extra_space;
