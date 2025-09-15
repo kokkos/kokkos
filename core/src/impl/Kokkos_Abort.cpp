@@ -18,6 +18,9 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+// include cstddef to deal with internal system header issue on some builds
+// where our CI complained about missing definition of std::size_t
+#include <cstddef>
 #include <cstdlib>
 #include <iostream>
 #include <Kokkos_Abort.hpp>
