@@ -624,8 +624,8 @@ class RangePolicyOccupancyTuner {
 namespace Impl {
 
 template <typename T>
-void fill_tile(std::vector<T>& cont, int max_value) {
-  for (int x = 1; x <= max_value; x *= 2) {
+void fill_tile(std::vector<T>& cont, int tile_size) {
+  for (int x = 1; x <= tile_size; x *= 2) {
     cont.push_back(x);
   }
 }
@@ -641,7 +641,7 @@ template <typename T, size_t N>
 constexpr std::array<T, 3> map_to_hw_tile(const std::array<T, N> tile,
                                           int policy_rank) {
   std::array<T, 3> hw_tile{1, 1, 1};
-  for (size_t i = 0; i < N; ++i) {
+  for (int i = 0; i < static_cast<int>(N) && i < policy_rank; ++i) {
     hw_tile[(i * 3) / policy_rank] *= tile[i];
   }
   return hw_tile;
@@ -663,7 +663,7 @@ constexpr bool valid_tile(const std::array<T, 3> hw_tile_limits,
 template <typename T>
 void apply_tiles_constraints(std::vector<T>& cont,
                              const std::array<int, 3>& hw_tile_limits,
-                             std::array<int, 6>& current_tile, int current_rank,
+                             std::array<int, 6> current_tile, int current_rank,
                              const int policy_rank) {
   auto it = cont.end();
   while (it != cont.begin()) {
@@ -683,7 +683,7 @@ void apply_tiles_constraints(std::vector<T>& cont,
 template <typename KeyType, typename Mapped>
 void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
                              const std::array<int, 3>& hw_tile_limits,
-                             std::array<int, 6>& current_tile, int current_rank,
+                             std::array<int, 6> current_tile, int current_rank,
                              const int policy_rank) {
   for (auto it = cont.begin(); it != cont.end();) {
     KeyType dimension_size     = it->first;
@@ -691,8 +691,7 @@ void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
     if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
       it = cont.erase(it);
     } else {
-      std::array<int, 6> next_tile = current_tile;
-      apply_tiles_constraints(it->second, hw_tile_limits, next_tile,
+      apply_tiles_constraints(it->second, hw_tile_limits, current_tile,
                               current_rank + 1, policy_rank);
       ++it;
     }
@@ -740,7 +739,6 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
     Impl::fill_tile(desc, max_tile_size);
     Impl::apply_tiles_constraints(desc, tile_properties.max_threads_dimensions,
                                   rank);
-
     std::vector<std::string> feature_names;
     for (int x = 0; x < rank; ++x) {
       feature_names.push_back(name + "_tile_size_" + std::to_string(x));

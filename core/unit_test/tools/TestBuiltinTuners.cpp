@@ -87,7 +87,7 @@ TEST(kokkosp, builtin_tuner) {
 
 template <typename T>
 void validate_tile_sizes(const std::vector<T>& cont,
-                         std::array<int, 6>& current_tile,
+                         std::array<int, 6> current_tile,
                          const std::array<int, 3>& hw_tile_limits,
                          int current_rank, const int policy_rank) {
   namespace Impl = Kokkos::Tools::Experimental::Impl;
@@ -99,15 +99,14 @@ void validate_tile_sizes(const std::vector<T>& cont,
 
 template <typename KeyType, typename Mapped>
 void validate_tile_sizes(std::map<KeyType, Mapped>& cont,
-                         std::array<int, 6>& current_tile,
+                         std::array<int, 6> current_tile,
                          const std::array<int, 3>& hw_tile_limits,
                          int current_rank, const int policy_rank) {
   for (auto it = cont.begin(); it != cont.end(); it++) {
-    KeyType key                  = it->first;
-    current_tile[current_rank]   = key;
-    std::array<int, 6> next_tile = current_tile;
-    validate_tile_sizes(it->second, next_tile, hw_tile_limits, current_rank + 1,
-                        policy_rank);
+    KeyType key                = it->first;
+    current_tile[current_rank] = key;
+    validate_tile_sizes(it->second, current_tile, hw_tile_limits,
+                        current_rank + 1, policy_rank);
   }
 }
 
@@ -127,29 +126,50 @@ void test_tile_constraints() {
   using SpaceDescription =
       typename n_dimensional_sparse_structure<int, test_policy_rank>::type;
 
-  std::array<int, 3> hw_const{128, 128, 128};
+  std::array<int, 3> hardware_limits{128, 128, 128};
   SpaceDescription tile_configuration_space;
   const int max_total_tile_size = 512;
 
   fill_tile(tile_configuration_space, max_total_tile_size);
-  apply_tiles_constraints(tile_configuration_space, hw_const, test_policy_rank);
-  validate_tile_sizes(tile_configuration_space, hw_const, test_policy_rank);
+  apply_tiles_constraints(tile_configuration_space, hardware_limits,
+                          test_policy_rank);
+  validate_tile_sizes(tile_configuration_space, hardware_limits,
+                      test_policy_rank);
+}
+
+template <typename T, int Rank>
+void test_valid_tile_by_type_and_rank() {
+  namespace Impl = Kokkos::Tools::Experimental::Impl;
+  std::array<T, 3> hardware_limits{128, 128, 128};
+  std::array<T, Rank> valid_tile;
+  std::array<T, Rank> invalid_tile;
+  std::array<T, Rank> tile_with_zero;
+
+  for (int i = 0; i < Rank; i++) {
+    valid_tile[i]     = 1;
+    invalid_tile[i]   = 1;
+    tile_with_zero[i] = 1;
+  }
+  valid_tile[0]     = hardware_limits[0];
+  invalid_tile[0]   = hardware_limits[0] + 1;
+  tile_with_zero[0] = 0;
+
+  EXPECT_TRUE(Impl::valid_tile(hardware_limits, valid_tile, Rank));
+  EXPECT_FALSE(Impl::valid_tile(hardware_limits, invalid_tile, Rank));
+  EXPECT_FALSE(Impl::valid_tile(hardware_limits, tile_with_zero, Rank));
 }
 
 TEST(kokkosp, constraint_tiles) {
-  namespace Impl = Kokkos::Tools::Experimental::Impl;
-
-  std::array<int, 3> hw_const{128, 128, 128};
-  std::array<int, 6> valid_tile{4, 2, 4, 4, 2, 4};
-  std::array<int, 3> valid_tile_max{128, 128, 128};
-  std::array<int, 3> tile_with_zero{128, 0, 1};
-  std::array<int, 3> invalid_tile{256, 1, 1};
-
-  // Impl::valid_tile checks each dimension but not the total product
-  EXPECT_TRUE(Impl::valid_tile(hw_const, valid_tile, 6));
-  EXPECT_TRUE(Impl::valid_tile(hw_const, valid_tile_max, 3));
-  EXPECT_FALSE(Impl::valid_tile(hw_const, tile_with_zero, 3));
-  EXPECT_FALSE(Impl::valid_tile(hw_const, invalid_tile, 3));
+  test_valid_tile_by_type_and_rank<int, 2>();
+  test_valid_tile_by_type_and_rank<long, 2>();
+  test_valid_tile_by_type_and_rank<int, 3>();
+  test_valid_tile_by_type_and_rank<long, 3>();
+  test_valid_tile_by_type_and_rank<int, 4>();
+  test_valid_tile_by_type_and_rank<long, 4>();
+  test_valid_tile_by_type_and_rank<int, 5>();
+  test_valid_tile_by_type_and_rank<long, 5>();
+  test_valid_tile_by_type_and_rank<int, 6>();
+  test_valid_tile_by_type_and_rank<long, 6>();
 
   test_tile_constraints<2>();
   test_tile_constraints<3>();
