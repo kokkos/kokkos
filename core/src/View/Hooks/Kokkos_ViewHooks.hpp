@@ -67,13 +67,13 @@ struct EmptyViewHooks {
   using hooks_policy = EmptyViewHooks;
 
   template <typename View>
-  static void copy_construct(View &, const View &) {}
+  static constexpr void copy_construct(View &, const View &) {}
   template <typename View>
-  static void copy_assign(View &, const View &) {}
+  static constexpr void copy_assign(View &, const View &) {}
   template <typename View>
-  static void move_construct(View &, const View &) {}
+  static constexpr void move_construct(View &, const View &) {}
   template <typename View>
-  static void move_assign(View &, const View &) {}
+  static constexpr void move_assign(View &, const View &) {}
 };
 
 template <class... Subscribers>

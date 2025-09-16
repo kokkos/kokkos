@@ -586,6 +586,21 @@ struct RemoveAlignedMemoryTrait {
  public:
   using type = typename TypeListToViewTraits<D, new_type_list>::type;
 };
+
+// Customization point for view hooks; default is to use the explicit template
+// parameter, but this can be customized to get the view hook from a special
+// memory space for example
+template< class DataType, class... Properties >
+constexpr auto customize_view_hooks() {
+  using traits_type = ViewTraits<DataType, Properties...>;
+  return typename traits_type::hooks_policy{};
+}
+
+template<class DataType, class... Properties>
+struct ViewHooksFromTraits
+{
+  using type = decltype(customize_view_hooks<DataType, Properties...>());
+};
 }  // namespace Impl
 
 } /* namespace Kokkos */
