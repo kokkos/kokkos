@@ -71,7 +71,7 @@ void check_computation(const ViewType &A, const ViewType &B) {
     for (int i = 0; i < Ahost.extent_int(0); ++i) {
       for (int j = 0; j < Ahost.extent_int(1); ++j) {
         for (int k = 0; k < Ahost.extent_int(2); ++k) {
-          for (int u = 0; u < Ahost.extent_int(2); ++u) {
+          for (int u = 0; u < Ahost.extent_int(3); ++u) {
             ScalarType check =
                 0.25 *
                 (ScalarType)(Bhost(i + 2, j, k, u) + Bhost(i + 1, j, k, u) +
@@ -128,20 +128,15 @@ void bench_mdrange(benchmark::State &state, std::index_sequence<Idx...>) {
   Kokkos::deep_copy(Btest, 1.0);
   execution_space().fence();
 
-  int i = 0;
-
   for (auto _ : state) {
     Kokkos::Timer timer;
     Kokkos::parallel_for(policy, FunctorType(Atest, Btest, dims));
     execution_space().fence();
     const double dt = timer.seconds();
     state.SetIterationTime(dt);
-
-    // Correctness check - only the first run
-    if (0 == i++) {
-      check_computation<typename FunctorType::scalar_type>(Atest, Btest);
-    }
-  }  // end for
+  }
+  // Correctness check
+  check_computation<typename FunctorType::scalar_type>(Atest, Btest);
 }
 
 template <typename FunctorType>
@@ -256,8 +251,6 @@ struct CollapseTwo {
     requires(dimension == 3)
   {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      // id(i,j,k) = k + j*Nk + i*Nk*Nj = k + Nk*(j + i*Nj) = k + Nk*r
-      // r = j + i*Nj
       int i = r / ranges[1];
       int j = r - i * ranges[1];
       for (int k = 0; k < ranges[2]; ++k) {
@@ -267,8 +260,6 @@ struct CollapseTwo {
                                 B(i, j, k + 2) + B(i, j, k + 1) + B(i, j, k));
       }
     } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      // id(i,j,k) = i + j*Ni + k*Ni*Nj = i + Ni*(j + k*Nj) = i + Ni*r
-      // r = j + k*Nj
       int k = r / ranges[1];
       int j = r - k * ranges[1];
       for (int i = 0; i < ranges[0]; ++i) {
@@ -444,8 +435,8 @@ struct CollapseAll {
 #define MDRANGE_STENCIL_BENCHMARK(functor, dim, layout, ...)                \
   BENCHMARK(bench_mdrange<functor<TEST_EXECSPACE, dim, Kokkos::layout>>)    \
       ->UseManualTime()                                                     \
-      ->Iterations(10)                                                      \
-      ->Name("mdrange" #dim "d_vs_manual_" #functor "_" #layout)            \
+      ->Unit(benchmark::kMillisecond)                                       \
+      ->Name("bench_mdrange_stencil_" #dim "d_" #functor "_" #layout)       \
       ->ArgNames({"size", "tile_size"})                                     \
       ->ArgsProduct(                                                        \
           {benchmark::CreateRange(min_size_##dim##D, max_size_##dim##D, 2), \
