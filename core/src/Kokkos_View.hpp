@@ -688,7 +688,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Special function to be preferred over the above for passing in 0, NULL or
   // nullptr when pointer type is char*
   template <class... Args>
-  explicit View(decltype(nullptr), Args... args)
+  KOKKOS_FUNCTION explicit View(std::nullptr_t, Args... args)
       : View(Kokkos::view_wrap(pointer_type(nullptr)), args...) {}
 #else
   // FIXME: The std::is_null_pointer_v<P> condition is to workaround a GCC8 bug
@@ -724,7 +724,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // Special function to be preferred over the above for passing in 0, NULL or
   // nullptr when pointer type is char*
   template <class... Args>
-  explicit View(decltype(nullptr), Args... args)
+  KOKKOS_FUNCTION explicit View(std::nullptr_t, Args... args)
       : View(Kokkos::view_wrap(pointer_type(nullptr)), args...) {}
 #endif
 

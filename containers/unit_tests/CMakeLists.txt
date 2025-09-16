@@ -20,6 +20,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       DynViewAPI_generic
       DynViewAPI_rank12345
       DynViewAPI_rank67
+      DynRankView_Ctors
       DynRankView_TeamScratch
       DynRankView_ViewCustomization
       ErrorReporter

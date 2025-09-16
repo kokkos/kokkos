@@ -571,13 +571,13 @@ pipeline {
                         }
                     }
                 }
-                stage('CUDA-11.6-NVCC-DEBUG') {
+                stage('CUDA-13.0-NVCC-DEBUG') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:11.6.2-devel-ubuntu20.04@sha256:d95d54bc231f8aea7fda79f60da620324584b20ed31a8ebdb0686cffd34dd405'
-                            label 'nvidia-docker && (volta || ampere)'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:13.0.0-devel-ubuntu24.04@sha256:435220c0fef35cbf712e11999f8670a83835ef3cdd18564e5e8122f83078c88c'
+                            label 'nvidia-docker && ampere && cuda-13-driver'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
                     }

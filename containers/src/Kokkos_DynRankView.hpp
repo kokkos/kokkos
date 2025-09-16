@@ -804,6 +804,23 @@ class DynRankView : private View<DataType*******, Properties...> {
   KOKKOS_FUNCTION DynRankView(const DynRankView<RT, RP...>& rhs)
       : view_type(rhs), m_rank(rhs.m_rank) {}
 
+  KOKKOS_INLINE_FUNCTION DynRankView(view_type rhs, size_t new_rank)
+      : view_type(rhs), m_rank(new_rank) {
+    if (new_rank > view_type::rank())
+      Kokkos::abort(
+          "Attempting to construct DynRankView from View and new rank, with "
+          "the new rank being too large.");
+
+    bool invalid_extent = false;
+    for (size_t r = new_rank; r < view_type::rank(); r++)
+      if (rhs.extent(r) != 1) invalid_extent = true;
+    if (invalid_extent)
+      Kokkos::abort(
+          "Attempting to construct DynRankView from View with incompatible "
+          "extents. (Extents for dimensions larger than the provided rank are "
+          "not equal to 1).");
+  }
+
   template <class RT, class... RP>
   KOKKOS_FUNCTION DynRankView& operator=(const DynRankView<RT, RP...>& rhs) {
     view_type::operator=(rhs);
