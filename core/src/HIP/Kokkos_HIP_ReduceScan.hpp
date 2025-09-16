@@ -182,7 +182,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
 
     if (warp_id == 0) {
       const unsigned int delta =
-	   (threadIdx.y * blockDim.x + threadIdx.x) * warp_size;
+          (threadIdx.y * blockDim.x + threadIdx.x) * warp_size;
       if (delta < num_threads)
         *my_shared_team_buffer_element = shared_team_buffer_element[delta];
       scalar_intra_warp_reduction(functor, my_shared_team_buffer_element, false,
