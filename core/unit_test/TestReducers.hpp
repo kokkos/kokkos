@@ -448,7 +448,7 @@ struct TestReducers {
   }
 
   // Test that reducers return correct results with LaunchBounds value smaller
-  // that 32.
+  // than 32.
   static void test_launch_bounds() {
     Kokkos::View<Scalar*> v("", 31);
     Kokkos::deep_copy(v, Scalar(10));
