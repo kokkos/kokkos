@@ -161,7 +161,6 @@ macro(KOKKOS_SETUP_BUILD_ENVIRONMENT)
     include(${KOKKOS_SRC_PATH}/cmake/kokkos_arch.cmake)
     set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${Kokkos_SOURCE_DIR}/cmake/Modules/")
     include(${KOKKOS_SRC_PATH}/cmake/kokkos_tpls.cmake)
-    include(${KOKKOS_SRC_PATH}/cmake/kokkos_corner_cases.cmake)
   endif()
 endmacro()
 
