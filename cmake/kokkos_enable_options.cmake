@@ -138,13 +138,8 @@ mark_as_advanced(Kokkos_ENABLE_MDSPAN_EXTERNAL)
 mark_as_advanced(IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS)
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
-  # Older CUDA versions work with mdspan but *not* our mdspan-based view implementation due
-  # to various compiler bugs. So we will disable it here
   # CUDA 12.9 has a bug that causes it to segfault when mdspan-based view is used:
   #   see https://github.com/kokkos/kokkos/issues/8126
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.4)
-    set(VIEW_LEGACY_DEFAULT ON)
-  elseif(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.9
   if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 12.9
          AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 13
   )
