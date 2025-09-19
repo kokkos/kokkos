@@ -855,7 +855,8 @@ if(KOKKOS_ENABLE_HIP)
 endif()
 
 if(KOKKOS_ENABLE_SYCL)
-  compiler_specific_flags(DEFAULT -fsycl -fno-sycl-id-queries-fit-in-int -fsycl-dead-args-optimization)
+  # extra flags needed for intel 2025, probably not the right place to put them but...
+  compiler_specific_flags(DEFAULT -fsycl -fno-sycl-id-queries-fit-in-int -fsycl-dead-args-optimization -fsycl-targets=spir64_gen -Xs "-device pvc")
   compiler_specific_options(DEFAULT -fsycl-unnamed-lambda)
   if(KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2024.1.0)
     # Before oneAPI 2024.1.0 passing -fno-sycl didn't work properly
@@ -865,7 +866,8 @@ if(KOKKOS_ENABLE_SYCL)
   elseif(KOKKOS_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
     compiler_specific_options(DEFAULT -fsycl-rdc)
   else()
-    compiler_specific_options(DEFAULT -fno-sycl-rdc)
+    # intel-oneapi 2025 compiler crashes with this flag defined, comment out
+    #compiler_specific_options(DEFAULT -fno-sycl-rdc)
   endif()
 endif()
 
