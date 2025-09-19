@@ -675,7 +675,8 @@ class BasicView {
                         m_map(static_cast<index_type>(std::move(indices))...));
   }
 
-#undef KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY
+  // We need this for the workaround with integer promotion in View
+  // #undef KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY
 
  private:
   // FIXME_CXX20: could use inline templated lambda in C++20 mode inside size()

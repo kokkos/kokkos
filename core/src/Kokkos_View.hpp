@@ -158,6 +158,10 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using base_t =
       typename Impl::BasicViewFromTraits<DataType, Properties...>::type;
 
+  using base_t::m_acc;
+  using base_t::m_map;
+  using base_t::m_ptr;
+
  public:
   using base_t::base_t;
 
@@ -201,6 +205,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // typedefs from BasicView
   using typename base_t::mdspan_type;
   using reference_type = typename base_t::reference;
+  using typename base_t::data_handle_type;
 
   //----------------------------------------
   // Compatible view of array of scalar types
@@ -394,6 +399,112 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     static_assert(static_cast<int>(sizeof...(Is)) <=
                   static_cast<int>(8 - rank));
     static_assert(Kokkos::Impl::are_integral<Is...>::value);
+  }
+#endif
+
+  // The following are shortcuts to allow implicit integer precision
+  // in offset calculations - meaning index calculation happens in the common
+  // type of the used indices. If and when these are not needed, the data access
+  // operator should come from BasicView only. BasicView will not support this
+  // directly, since BasicView anyway requires you to be explicit about the
+  // desired index_type
+
+  // ROCM: The below code segfaults the compiler with ROCM 6.3 and ROCM 6.2
+  // We will simply avoid the performance optimization code path for those.
+  // SYCL: The below code segfaults the compiler with Intel OneAPI 2024
+#if !(defined(HIP_VERSION) && HIP_VERSION_MAJOR == 6 &&                     \
+      HIP_VERSION_MINOR <= 3) &&                                            \
+    !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+      KOKKOS_COMPILER_INTEL_LLVM < 20250000)
+  // Rank 0
+  KOKKOS_FUNCTION constexpr auto compute_offset(std::index_sequence<>) const {
+    return 0;
+  }
+
+  // Rank 1
+  template <class IndexOffset>
+  KOKKOS_FUNCTION constexpr auto compute_offset(
+      std::index_sequence<0>, IndexOffset index_offset) const {
+    if constexpr (std::is_same_v<typename base_t::layout_type,
+                                 Kokkos::layout_stride>)
+      return index_offset * static_cast<IndexOffset>(m_map.stride(0));
+    else
+      return index_offset;
+  }
+
+  // Rank > 1
+  // CUDA: using requires clauses instead of if constexpr ran into issues
+  // with CUDA 12.2 + GCC 11.5, hence the if constexpr approach
+  template <size_t... I, class... IndexOffsets>
+  KOKKOS_FUNCTION constexpr auto compute_offset(
+      std::index_sequence<I...>, IndexOffsets... index_offsets) const {
+    using idx_type = std::common_type_t<IndexOffsets...>;
+
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<
+                      typename base_t::layout_type>::value) {
+      idx_type indices[] = {static_cast<idx_type>(index_offsets)...};
+      // self-recursive fold trick from
+      // https://github.com/llvm/llvm-project/blob/96e1914aa2e6d8966acbfbe2f4d184201f1aa318/libcxx/include/__mdspan/layout_left.h#L144
+      idx_type res = 0;
+      ((res = indices[rank() - 1 - I] +
+              static_cast<idx_type>((rank() - 1 - I) == 0u /* extent_to_pad */
+                                        ? m_map.stride(1)
+                                        : extent(rank() - 1 - I)) *
+                  res),
+       ...);
+      return res;
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<
+                             typename base_t::layout_type>::value) {
+      // self-recursive fold trick from
+      // https://github.com/llvm/llvm-project/blob/4d9771741d40cc9cfcccb6b033f43689d36b705a/libcxx/include/__mdspan/layout_right.h#L141
+      idx_type res = 0;
+      ((res = static_cast<idx_type>(index_offsets) +
+              static_cast<idx_type>(I == rank() - 1 ? m_map.stride(rank() - 2)
+                                                    : extent(I)) *
+                  res),
+       ...);
+      return res;
+    } else {
+      return ((static_cast<idx_type>(index_offsets) *
+               static_cast<idx_type>(m_map.stride(I))) +
+              ...);
+    }
+  }
+
+ public:
+  template <class... OtherIndexTypes>
+    requires(
+        (std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
+        (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) &&
+        (sizeof...(OtherIndexTypes) == rank()) &&
+        (Kokkos::Impl::IsLayoutLeftPadded<
+             typename base_t::layout_type>::value ||
+         Kokkos::Impl::IsLayoutRightPadded<
+             typename base_t::layout_type>::value ||
+         std::is_same_v<typename base_t::layout_type, Kokkos::layout_stride>))
+  KOKKOS_FUNCTION constexpr base_t::reference operator()(
+      OtherIndexTypes... idx) const {
+    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(idx...);
+    return m_acc.access(
+        m_ptr, static_cast<size_t>(compute_offset(
+                   std::index_sequence_for<OtherIndexTypes...>{}, idx...)));
+  }
+
+  template <class... OtherIndexTypes>
+    requires(
+        (std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
+        (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) &&
+        (sizeof...(OtherIndexTypes) == rank()) &&
+        !(Kokkos::Impl::IsLayoutLeftPadded<
+              typename base_t::layout_type>::value ||
+          Kokkos::Impl::IsLayoutRightPadded<
+              typename base_t::layout_type>::value ||
+          std::is_same_v<typename base_t::layout_type, Kokkos::layout_stride>))
+  KOKKOS_FUNCTION constexpr base_t::reference operator()(
+      OtherIndexTypes... indices) const {
+    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(indices...);
+    return m_acc.access(m_ptr,
+                        m_map(static_cast<index_type>(std::move(indices))...));
   }
 #endif
 
