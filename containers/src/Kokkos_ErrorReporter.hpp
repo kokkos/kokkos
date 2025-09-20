@@ -26,11 +26,13 @@
 #include <Kokkos_View.hpp>
 #include <Kokkos_DualView.hpp>
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+
 namespace Kokkos {
 namespace Experimental {
 
 template <typename ReportType, typename DeviceType>
-class ErrorReporter {
+class KOKKOS_DEPRECATED ErrorReporter {
  public:
   using report_type     = ReportType;
   using device_type     = DeviceType;
@@ -167,6 +169,8 @@ void ErrorReporter<ReportType, DeviceType>::resize(const size_t new_size) {
 
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_4
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ERRORREPORTER
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

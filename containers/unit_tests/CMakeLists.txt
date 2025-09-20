@@ -11,7 +11,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
     set(UnitTestSources UnitTestMain.cpp)
     set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
     file(MAKE_DIRECTORY ${dir})
-    set(DeprecatedTests Vector StaticCrsGraph)
+    set(DeprecatedTests ErrorReporter Vector StaticCrsGraph)
     foreach(
       Name
       Bitset

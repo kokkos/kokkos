@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include <Kokkos_Core.hpp>
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 #include <Kokkos_ErrorReporter.hpp>
 
 namespace Test {
