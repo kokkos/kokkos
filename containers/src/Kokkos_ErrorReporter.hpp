@@ -90,6 +90,12 @@ class KOKKOS_DEPRECATED ErrorReporter {
   Kokkos::DualView<int *, device_type> m_reporters;
 };
 
+#ifdef KOKKOS_COMPILER_GNU
+// g++ raises deprecated declaration warnings on the out-of-class
+// implementations of the various member functions below
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
+
 template <typename ReportType, typename DeviceType>
 inline int ErrorReporter<ReportType, DeviceType>::getNumReports() {
   int num_reports = 0;
@@ -166,6 +172,10 @@ void ErrorReporter<ReportType, DeviceType>::resize(const size_t new_size) {
   typename DeviceType::execution_space().fence(
       "Kokkos::Experimental::ErrorReporter::resize: fence after resizing");
 }
+
+#ifdef KOKKOS_COMPILER_GNU
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
 
 }  // namespace Experimental
 }  // namespace Kokkos
