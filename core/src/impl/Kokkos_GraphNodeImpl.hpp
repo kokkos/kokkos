@@ -134,7 +134,8 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
             typename = std::enable_if_t<
                 std::is_same_v<Tag, _graph_node_kernel_ctor_tag> ||
                 std::is_same_v<Tag, _graph_node_capture_ctor_tag> ||
-                std::is_same_v<Tag, _graph_node_host_ctor_tag>>>
+                std::same_as<Tag, _graph_node_host_ctor_tag> ||
+                std::same_as<Tag, _graph_node_native_ctor_tag>>>
   GraphNodeImpl(device_handle_t const& device_handle, Tag,
                 KernelDeduced&& arg_kernel)
       : base_t(device_handle), m_kernel{(KernelDeduced&&)arg_kernel} {}
@@ -179,6 +180,8 @@ struct GraphNodeImpl<ExecutionSpace, Kernel,
       return Experimental::GraphNodeKind::Capture;
     } else if constexpr (is_graph_then_host_v<kernel_type>) {
       return Experimental::GraphNodeKind::Host;
+    } else if constexpr (is_graph_then_native_v<kernel_type>) {
+      return Experimental::GraphNodeKind::Native;
     } else {
       return Experimental::GraphNodeKind::Aggregate;
     }
@@ -249,7 +252,8 @@ struct GraphNodeImpl
             typename = std::enable_if_t<
                 std::is_same_v<Tag, _graph_node_kernel_ctor_tag> ||
                 std::is_same_v<Tag, _graph_node_capture_ctor_tag> ||
-                std::is_same_v<Tag, _graph_node_host_ctor_tag>>>
+                std::same_as<Tag, _graph_node_host_ctor_tag> ||
+                std::same_as<Tag, _graph_node_native_ctor_tag>>>
   GraphNodeImpl(device_handle_t const& device_handle, Tag,
                 KernelDeduced&& arg_kernel, _graph_node_predecessor_ctor_tag,
                 PredecessorPtrDeduced&& arg_predecessor)

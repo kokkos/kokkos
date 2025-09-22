@@ -249,6 +249,16 @@ class HIPInternal {
                                  numDependencies, pNodeParams);
   }
 
+  hipError_t hip_graph_add_node_wrapper(hipGraphNode_t *pGraphNode,
+                                        hipGraph_t graph,
+                                        const hipGraphNode_t *pDependencies,
+                                        size_t numDependencies,
+                                        hipGraphNodeParams *pNodeParams) const {
+    set_hip_device();
+    return hipGraphAddNode(pGraphNode, graph, pDependencies, numDependencies,
+                           pNodeParams);
+  }
+
   hipError_t hip_graph_create_wrapper(hipGraph_t *pGraph,
                                       unsigned int flags) const {
     set_hip_device();

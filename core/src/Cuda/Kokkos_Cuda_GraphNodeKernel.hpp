@@ -10,12 +10,14 @@
 
 #include <Kokkos_Graph_fwd.hpp>
 
+#include <impl/Kokkos_DeviceHandle.hpp>
 #include <impl/Kokkos_GraphImpl.hpp>  // GraphAccess needs to be complete
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
 
 #include <Cuda/Kokkos_Cuda.hpp>
+#include <Cuda/Kokkos_Cuda_Instance.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -39,6 +41,24 @@ struct GraphNodeThenHostImpl<Kokkos::Cuda, Functor> {
 
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaGraphAddHostNode(&m_node, graph, nullptr, 0, &params));
+  }
+};
+
+template <typename Functor>
+struct GraphNodeThenNativeImpl<Kokkos::Cuda, Functor> {
+  Functor m_functor;
+  cudaGraphNode_t m_node = nullptr;
+
+  explicit GraphNodeThenNativeImpl(Functor functor)
+      : m_functor(std::move(functor)) {}
+
+  void add_to_graph(
+      const Kokkos::Impl::DeviceHandle<Kokkos::Cuda>& device_handle,
+      cudaGraph_t graph) {
+    cudaGraphNodeParams params = m_functor();
+    KOKKOS_IMPL_CUDA_SAFE_CALL(
+        device_handle.m_exec.impl_internal_space_instance()
+            ->cuda_graph_add_node_wrapper(&m_node, graph, nullptr, 0, &params));
   }
 };
 

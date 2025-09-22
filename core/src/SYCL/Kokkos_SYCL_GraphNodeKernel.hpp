@@ -6,6 +6,7 @@
 
 #include <Kokkos_Graph_fwd.hpp>
 
+#include <impl/Kokkos_DeviceHandle.hpp>
 #include <impl/Kokkos_GraphImpl.hpp>
 
 #include <Kokkos_Parallel.hpp>
@@ -32,14 +33,32 @@ struct GraphNodeThenHostImpl<Kokkos::SYCL, Functor> {
       : m_functor{std::move(functor)} {}
 
   void add_to_graph(sycl_graph_t& graph) {
-    KOKKOS_ENSURES(!m_node);
-    KOKKOS_ENSURES(m_functor.has_value());
+    KOKKOS_EXPECTS(!m_node.has_value());
+    KOKKOS_EXPECTS(m_functor.has_value());
     m_node = graph.add([&](sycl::handler& cgh) {
       // The functor is passed through as universal reference and can thus be
       // moved. See also
       // https://github.com/intel/llvm/blob/d33426f92e885dce30700b7327a44e039d656962/sycl/include/sycl/handler.hpp#L1942-L1949.
       cgh.host_task(*std::exchange(m_functor, std::nullopt));
     });
+  }
+};
+
+// Inspired by
+// https://github.com/intel/llvm/blob/1d5eac36b4b696aaf6d0842cc05ae36be09f99bc/sycl/include/sycl/ext/oneapi/experimental/graph/modifiable_graph.hpp#L90.
+template <typename Functor>
+struct GraphNodeThenNativeImpl<Kokkos::SYCL, Functor> {
+  using sycl_graph_t = sycl::ext::oneapi::experimental::command_graph<
+      sycl::ext::oneapi::experimental::graph_state::modifiable>;
+
+  Functor m_functor;
+  std::optional<sycl::ext::oneapi::experimental::node> m_node = std::nullopt;
+
+  // FIXME_SYCL Use the device handle for device selection.
+  void add_to_graph(const Kokkos::Impl::DeviceHandle<Kokkos::SYCL>&,
+                    sycl_graph_t& graph) {
+    KOKKOS_EXPECTS(!m_node.has_value());
+    m_node = graph.add(m_functor());
   }
 };
 
@@ -171,12 +190,11 @@ void sycl_attach_kernel_to_node(Kernel& kernel, const Lambda& lambda) {
       Impl::get_sycl_graph_from_kernel(kernel);
   std::optional<sycl::ext::oneapi::experimental::node>& graph_node =
       Impl::get_sycl_graph_node_from_kernel(kernel);
-  KOKKOS_ENSURES(!graph_node);
+  KOKKOS_EXPECTS(!graph_node);
   graph_node = graph.add(lambda);
   KOKKOS_ENSURES(graph_node);
-  // FIXME_SYCL_GRAPH not yet implemented in the compiler
-  //   KOKKOS_ENSURES(graph_node.get_type() ==
-  //   sycl::ext::oneapi::experimental::node_type::kernel)
+  KOKKOS_ENSURES(graph_node->get_type() ==
+                 sycl::ext::oneapi::experimental::node_type::kernel);
 }
 
 }  // namespace Impl

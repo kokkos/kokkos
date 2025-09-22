@@ -217,6 +217,20 @@ class CudaInternal {
                                   numDependencies, pNodeParams);
   }
 
+  cudaError_t cuda_graph_add_node_wrapper(
+      cudaGraphNode_t* pGraphNode, cudaGraph_t graph,
+      const cudaGraphNode_t* pDependencies, size_t numDependencies,
+      cudaGraphNodeParams* pNodeParams) const {
+    set_cuda_device();
+#if CUDART_VERSION >= 13000
+    return cudaGraphAddNode(pGraphNode, graph, pDependencies, nullptr,
+                            numDependencies, pNodeParams);
+#else
+    return cudaGraphAddNode(pGraphNode, graph, pDependencies, numDependencies,
+                            pNodeParams);
+#endif
+  }
+
   cudaError_t cuda_graph_create_wrapper(cudaGraph_t* pGraph,
                                         unsigned int flags) const {
     set_cuda_device();

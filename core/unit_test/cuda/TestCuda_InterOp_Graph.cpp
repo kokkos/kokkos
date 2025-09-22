@@ -213,6 +213,64 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), interact_with_cuda_node) {
   ASSERT_EQ(data(), 5);
 #endif
 }
+
+template <typename ViewType>
+struct CheckValue {
+  typename ViewType::const_type data;
+  typename ViewType::non_const_value_type value;
+
+  KOKKOS_FUNCTION
+  void operator()() const {
+    if (data() != value) Kokkos::abort("Wrong value.");
+  }
+};
+
+template <typename ViewType>
+struct CustomCudaNode {
+  typename ViewType::const_type data;
+
+  auto operator()() const noexcept {
+    cudaGraphNodeParams params = {};
+    params.type                = cudaGraphNodeTypeMemset;
+    params.memset.dst =
+        const_cast<void*>(static_cast<const void*>(this->data.data()));
+    params.memset.pitch       = 0;
+    params.memset.value       = 42;
+    params.memset.elementSize = 4;
+    params.memset.width       = 1;
+    params.memset.height      = 1;
+    return params;
+  }
+};
+
+// Add a CUDA memset node using the CUDA graph node interoperability
+// feature.
+TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), then_cuda_node) {
+  graph_t graph_with_cuda_node{
+      Kokkos::Experimental::get_device_handle(this->exec)};
+
+  const auto node_check_zero = graph_with_cuda_node.root_node().then(
+      Kokkos::Experimental::node_props("check it is zero"),
+      CheckValue<view_t>{.data = this->data, .value = 0});
+
+  ASSERT_EQ(this->data.use_count(), 2);
+  const auto node_memset = node_check_zero.then_cuda_node(
+      Kokkos::Experimental::node_props("nice interop"),
+      CustomCudaNode<view_t>{.data = data});
+  ASSERT_EQ(this->data.use_count(), 3);
+
+  ASSERT_EQ(node_memset.get_node_kind(),
+            Kokkos::Experimental::GraphNodeKind::Native);
+
+  const auto node_incr = node_memset.then_parallel_for(
+      Kokkos::RangePolicy(this->exec, 0, 1), Increment{.data = this->data});
+
+  graph_with_cuda_node.submit(exec);
+
+  exec.fence();
+
+  ASSERT_EQ(data(), 43);
+}
 // NOLINTEND(bugprone-unchecked-optional-access)
 
 }  // namespace
