@@ -681,7 +681,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   KOKKOS_FUNCTION
-  View(View&& other) : base_t{std::move(other)} {
+  View(View&& other) : base_t{std::move(static_cast<base_t &&>(other))} {
     KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
   }
 
@@ -696,7 +696,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   View& operator=(View&& other) {
-    base_t::operator=(other);
+    base_t::operator=(std::move(static_cast<base_t &&>(other)));
     KOKKOS_IF_ON_HOST(
         (if (&other != this) { hooks_policy::move_assign(*this, other); }))
 
