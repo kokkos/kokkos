@@ -2433,7 +2433,7 @@ struct ViewDataHandle<
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
   // NOLINTNEXTLINE(modernize-use-using)
-  typedef KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) value_type* handle_type;
+  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) handle_type;
   using return_type = typename Traits::value_type&;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
@@ -2470,7 +2470,7 @@ struct ViewDataHandle<
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
   // NOLINTNEXTLINE(modernize-use-using)
-  typedef KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) value_type* handle_type;
+  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) handle_type;
   using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 

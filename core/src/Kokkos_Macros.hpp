@@ -200,7 +200,7 @@
 
 #ifndef KOKKOS_IMPL_ALIGN_PTR
 #if defined(_WIN32)
-#define KOKKOS_IMPL_ALIGN_PTR(size) __declspec(align(size))
+#define KOKKOS_IMPL_ALIGN_PTR(size) __declspec(align_value(size))
 #else
 #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((align_value(size)))
 #endif
