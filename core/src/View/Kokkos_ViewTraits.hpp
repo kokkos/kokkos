@@ -479,10 +479,7 @@ struct ViewTraits {
                          typename prop::memory_traits,
                          typename Kokkos::MemoryTraits<>>;
 
-  using HooksPolicy =
-      std::conditional_t<!std::is_void_v<typename prop::hooks_policy>,
-                         typename prop::hooks_policy,
-                         Kokkos::Experimental::DefaultViewHooks>;
+  using HooksPolicy = typename prop::hooks_policy;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type

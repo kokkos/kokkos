@@ -197,7 +197,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using raw_allocation_value_type = std::remove_pointer_t<pointer_type>;
   using hooks_policy =
       typename Impl::ViewHooksFromTraits<DataType, Properties...>::type;
-  static constexpr bool has_empty_hooks_policy = std::same_as<hooks_policy, Experimental::EmptyViewHooks>;
+  static constexpr bool has_empty_hooks_policy = std::is_void_v<hooks_policy>;
 
  public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
