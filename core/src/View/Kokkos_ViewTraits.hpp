@@ -590,7 +590,7 @@ struct RemoveAlignedMemoryTrait {
 template <class DataType, class... Properties>
 constexpr auto customize_view_hooks() {
   using traits_type = ViewTraits<DataType, Properties...>;
-  if constexpr ( !std::is_void_v<typename traits_type::hooks_policy> ) {
+  if constexpr (!std::is_void_v<typename traits_type::hooks_policy>) {
     return typename traits_type::hooks_policy{};
   }
 }
