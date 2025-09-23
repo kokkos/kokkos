@@ -87,7 +87,7 @@ struct HIPReductionsFunctor<FunctorType, true> {
     if (warp_id == 0) {
       functor.init(&value);
       for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
-           i < num_warps; i += warp_size) {
+           i < num_threads / warp_size; i += warp_size) {
         functor.join(&value, &shared_team_buffer_element[i]);
       }
       scalar_intra_warp_reduction(functor, value, false, warp_size,
