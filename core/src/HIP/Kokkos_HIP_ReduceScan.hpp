@@ -87,7 +87,7 @@ struct HIPReductionsFunctor<FunctorType, true> {
     if (warp_id == 0) {
       functor.init(&value);
       for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
-           i < num_threads / warp_size; i += warp_size) {
+           i < num_warps; i += warp_size) {
         functor.join(&value, &shared_team_buffer_element[i]);
       }
       scalar_intra_warp_reduction(functor, value, false, warp_size,
@@ -156,8 +156,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
     int const lane_id =
         (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
-      if (lane_id + delta < HIPTraits::WarpSize &&
-          (lane_id % (delta * 2) == 0)) {
+      if (lane_id + delta < width && (lane_id % (delta * 2) == 0)) {
         functor.join(value, value + delta);
       }
     }
