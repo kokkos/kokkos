@@ -227,7 +227,8 @@ class View : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
-  using hooks_policy = typename traits::hooks_policy;
+  using hooks_policy                           = typename traits::hooks_policy;
+  static constexpr bool has_empty_hooks_policy = std::is_void_v<hooks_policy>;
 
   view_tracker_type m_track;
   map_type m_map;
@@ -880,19 +881,39 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View(const View&)
+    requires(has_empty_hooks_policy)
+  = default;
+
   KOKKOS_FUNCTION
-  View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
+  View(const View& other)
+    requires(!has_empty_hooks_policy)
+      : m_track(other.m_track), m_map(other.m_map) {
     KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View(View&&)
+    requires(has_empty_hooks_policy)
+  = default;
+
   KOKKOS_FUNCTION
   View(View&& other)
+    requires(!has_empty_hooks_policy)
       : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
     KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(const View&)
+    requires(has_empty_hooks_policy)
+  = default;
+
   KOKKOS_FUNCTION
-  View& operator=(const View& other) {
+  View& operator=(const View& other)
+    requires(!has_empty_hooks_policy)
+  {
     m_map   = other.m_map;
     m_track = other.m_track;
 
@@ -901,8 +922,15 @@ class View : public ViewTraits<DataType, Properties...> {
     return *this;
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(View&&)
+    requires(has_empty_hooks_policy)
+  = default;
+
   KOKKOS_FUNCTION
-  View& operator=(View&& other) {
+  View& operator=(View&& other)
+    requires(!has_empty_hooks_policy)
+  {
     m_map   = std::move(other.m_map);
     m_track = std::move(other.m_track);
 
