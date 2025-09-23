@@ -197,6 +197,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using raw_allocation_value_type = std::remove_pointer_t<pointer_type>;
   using hooks_policy =
       typename Impl::ViewHooksFromTraits<DataType, Properties...>::type;
+  static constexpr bool has_empty_hooks_policy = std::same_as<hooks_policy, Experimental::EmptyViewHooks>;
 
  public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
@@ -675,18 +676,27 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View(const View&) requires(has_empty_hooks_policy) = default;
+
   KOKKOS_FUNCTION
-  View(const View& other) : base_t{other} {
+  View(const View& other) requires(!has_empty_hooks_policy) : base_t{other} {
     KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View(View&&) requires(has_empty_hooks_policy) = default;
+
   KOKKOS_FUNCTION
-  View(View&& other) : base_t{std::move(static_cast<base_t &&>(other))} {
+  View(View&& other) requires(!has_empty_hooks_policy) : base_t{std::move(static_cast<base_t &&>(other))} {
     KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(const View&) requires(has_empty_hooks_policy) = default;
+
   KOKKOS_FUNCTION
-  View& operator=(const View& other) {
+  View& operator=(const View& other) requires(!has_empty_hooks_policy) {
     base_t::operator=(other);
     KOKKOS_IF_ON_HOST(
         (if (&other != this) { hooks_policy::copy_assign(*this, other); }))
@@ -694,8 +704,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return *this;
   }
 
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(View&&) requires(has_empty_hooks_policy) = default;
+
   KOKKOS_FUNCTION
-  View& operator=(View&& other) {
+  View& operator=(View&& other) requires(!has_empty_hooks_policy) {
     base_t::operator=(std::move(static_cast<base_t &&>(other)));
     KOKKOS_IF_ON_HOST(
         (if (&other != this) { hooks_policy::move_assign(*this, other); }))
