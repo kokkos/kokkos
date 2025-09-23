@@ -469,12 +469,17 @@ struct TestReducers {
                             suml, Kokkos::Sum<Scalar>(ret));
     EXPECT_EQ(ret, 2 * N) << "N=" << N;
 
-    // Test that LaunchBounds<N> works with Prod
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Kokkos::LaunchBounds<N>>(0, N),
-                            prodl, Kokkos::Prod<Scalar>(ret));
+    // This test can't be run on int32 with N>= 31 because of overflow
+    if constexpr (!(std::is_integral_v<Scalar> && sizeof(Scalar) <= 32) ||
+                  N < 31) {
+      // Test that LaunchBounds<N> works with Prod
+      Kokkos::parallel_reduce(
+          Kokkos::RangePolicy<Kokkos::LaunchBounds<N>>(0, N), prodl,
+          Kokkos::Prod<Scalar>(ret));
 
-    Scalar expected = Scalar(1ull << N);
-    EXPECT_EQ(ret, expected) << "N=" << N;
+      Scalar expected = Scalar(1ull << N);
+      EXPECT_EQ(ret, expected) << "N=" << N;
+    }
   }
 
   static void test_launch_bounds() {
