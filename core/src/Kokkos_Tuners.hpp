@@ -623,33 +623,30 @@ class RangePolicyOccupancyTuner {
 
 namespace Impl {
 
-template <typename T>
-void fill_tile(std::vector<T>& cont, int tile_size) {
+inline void fill_tile(std::vector<int>& cont, int tile_size) {
   for (int x = 1; x <= tile_size; x *= 2) {
     cont.push_back(x);
   }
 }
-template <typename T, typename Mapped>
-void fill_tile(std::map<T, Mapped>& cont, int tile_size) {
+template <typename Mapped>
+void fill_tile(std::map<int, Mapped>& cont, int tile_size) {
   for (int x = 1; x <= tile_size; x *= 2) {
     fill_tile(cont[x], tile_size / x);
   }
 }
 
 // Map MDRangePolicy tile dimensions to hardware tile dimensions
-template <typename T, size_t N>
-constexpr std::array<T, 3> map_to_hw_tile(const std::array<T, N> tile,
-                                          int policy_rank) {
-  std::array<T, 3> hw_tile{1, 1, 1};
-  for (int i = 0; i < static_cast<int>(N) && i < policy_rank; ++i) {
+constexpr std::array<int, 3> map_to_hw_tile(const std::array<int, 6> tile,
+                                            int policy_rank) {
+  std::array<int, 3> hw_tile{1, 1, 1};
+  for (int i = 0; i < 6 && i < policy_rank; ++i) {
     hw_tile[(i * 3) / policy_rank] *= tile[i];
   }
   return hw_tile;
 }
 
-template <typename T, size_t N>
-constexpr bool valid_tile(const std::array<T, 3> hw_tile_limits,
-                          const std::array<T, N> current_tile,
+constexpr bool valid_tile(const std::array<int, 3> hw_tile_limits,
+                          const std::array<int, 6> current_tile,
                           int policy_rank) {
   auto hw_tile = map_to_hw_tile(current_tile, policy_rank);
 
@@ -660,11 +657,10 @@ constexpr bool valid_tile(const std::array<T, 3> hw_tile_limits,
 
 // Prunes invalid tiles dimension from largest to smallest until a valid size is
 // found
-template <typename T>
-void apply_tiles_constraints(std::vector<T>& cont,
-                             const std::array<int, 3>& hw_tile_limits,
-                             std::array<int, 6> current_tile, int current_rank,
-                             const int policy_rank) {
+inline void apply_tiles_constraints(std::vector<int>& cont,
+                                    const std::array<int, 3>& hw_tile_limits,
+                                    std::array<int, 6> current_tile,
+                                    int current_rank, const int policy_rank) {
   auto it = cont.end();
   while (it != cont.begin()) {
     --it;
@@ -680,13 +676,13 @@ void apply_tiles_constraints(std::vector<T>& cont,
 // Validate the current tile size and recursively apply constraints to the
 // nested map structure. If a tile exceeds limits, remove the entire branch from
 // the research space.
-template <typename KeyType, typename Mapped>
-void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
+template <typename Mapped>
+void apply_tiles_constraints(std::map<int, Mapped>& cont,
                              const std::array<int, 3>& hw_tile_limits,
                              std::array<int, 6> current_tile, int current_rank,
                              const int policy_rank) {
   for (auto it = cont.begin(); it != cont.end();) {
-    KeyType dimension_size     = it->first;
+    int dimension_size         = it->first;
     current_tile[current_rank] = dimension_size;
     if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
       it = cont.erase(it);
@@ -700,8 +696,8 @@ void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
 
 // Entry point for applying tile constraints. Filters out invalid tiles that
 // exceed hardware limits based on the policy rank.
-template <typename KeyType, typename Mapped>
-void apply_tiles_constraints(std::map<KeyType, Mapped>& cont,
+template <typename Mapped>
+void apply_tiles_constraints(std::map<int, Mapped>& cont,
                              const std::array<int, 3>& hw_tile_limits,
                              int policy_rank) {
   std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
