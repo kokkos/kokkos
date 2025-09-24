@@ -88,7 +88,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
     // maximum number of threads in each dimension of the block as fetched by
     // the API
-    const auto max_threads_dim = m_rp.space().cuda_device_prop().maxThreadsDim;
+    [[maybe_unused]] const auto max_threads_dim =
+        m_rp.space().cuda_device_prop().maxThreadsDim;
 
     // maximum total number of threads per block as fetched by the API
     [[maybe_unused]] const auto max_threads_per_block =
