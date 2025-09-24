@@ -145,16 +145,18 @@ void bench_mdrange(benchmark::State &state) {
       state, std::make_index_sequence<FunctorType::dimension>());
 }
 
-template <typename T, int Dim>
-struct get_pointer {
-  using type = std::conditional_t<
-      Dim == 2, T **,
-      std::conditional_t<Dim == 3, T ***,
-                         std::conditional_t<Dim == 4, T ****, void>>>;
+template <typename T, std::size_t Rank>
+struct add_pointer_n {
+  using type = typename add_pointer_n<T *, Rank - 1>::type;
 };
 
-template <typename T, int Dim>
-using get_pointer_t = get_pointer<T, Dim>::type;
+template <typename T>
+struct add_pointer_n<T, 0> {
+  using type = T;
+};
+
+template <typename T, std::size_t Rank>
+using add_pointer_n_t = typename add_pointer_n<T, Rank>::type;
 
 template <class DeviceType, int Dimension,
           typename TestLayout = Kokkos::LayoutRight,
@@ -163,7 +165,7 @@ struct MDRange {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-  using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
+  using view_type       = Kokkos::View<add_pointer_n_t<ScalarType, Dimension>,
                                  TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
@@ -233,7 +235,7 @@ struct CollapseTwo {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-  using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
+  using view_type       = Kokkos::View<add_pointer_n_t<ScalarType, Dimension>,
                                  TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
@@ -332,7 +334,7 @@ struct CollapseAll {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using size_type       = typename execution_space::size_type;
-  using view_type       = Kokkos::View<get_pointer_t<ScalarType, Dimension>,
+  using view_type       = Kokkos::View<add_pointer_n_t<ScalarType, Dimension>,
                                  TestLayout, DeviceType>;
 
   static constexpr int dimension = Dimension;
