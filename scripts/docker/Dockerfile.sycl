@@ -47,17 +47,17 @@ RUN wget -O- https://apt.repos.intel.com/intel-gpg-keys/GPG-PUB-KEY-INTEL-SW-PRO
     | tee /etc/apt/sources.list.d/oneAPI.list
 
 RUN apt-get update && apt-get install -y \
-        intel-oneapi-compiler-dpcpp-cpp-2025.0 \
+        intel-oneapi-compiler-dpcpp-cpp-2025.1 \
         curl \
         && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -LOJ "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2025.0.0&filters[]=12.0&filters[]=linux" && \
-    chmod +x oneapi-for-nvidia-gpus-2025.0.0-cuda-12.0-linux.sh && \
-    ./oneapi-for-nvidia-gpus-2025.0.0-cuda-12.0-linux.sh
+RUN curl -LOJ "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2025.1.1&filters[]=linux" && \
+    chmod +x oneapi-for-nvidia-gpus-2025.1.1-rocm-all-linux.sh && \
+    ./oneapi-for-nvidia-gpus-2025.1.1-rocm-all-linux.sh
 
 # sycl-ls, icpx
-ENV PATH=/opt/intel/oneapi/compiler/2025.0/bin/:$PATH
+ENV PATH=/opt/intel/oneapi/compiler/2025.1/bin/:$PATH
 # libsycl, libsvml
-ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.0/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/2025.1/lib:$LD_LIBRARY_PATH
