@@ -81,7 +81,9 @@ template <bool constant_evaluated, bool device>
 struct ByteSwap {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-#ifdef KOKKOS_ENABLE_CXX20
+#if defined(__cpp_lib_byteswap)
+    return std::byteswap(x);  // since C++23
+#else
     if constexpr (sizeof(T) > 1) {
       using U = std::make_unsigned_t<T>;
 
@@ -108,8 +110,6 @@ struct ByteSwap {
     }
     // sizeof(T) == 1
     return x;
-#else  // since C++23
-    return std::byteswap(x);
 #endif
   }
 };
