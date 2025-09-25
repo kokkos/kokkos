@@ -102,8 +102,8 @@ void check_computation(const ViewType &A, const ViewType &B) {
 
 template <typename FunctorType, std::size_t... Idx>
 void bench_mdrange(benchmark::State &state, std::index_sequence<Idx...>) {
-  using execution_space = FunctorType::execution_space;
-  using view_type       = FunctorType::view_type;
+  using execution_space = typename FunctorType::execution_space;
+  using view_type       = typename FunctorType::view_type;
 
   Kokkos::Array<int, FunctorType::dimension> dims, tiles;
   for (std::size_t i = 0; i < dims.size(); i++) {
