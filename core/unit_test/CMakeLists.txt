@@ -860,7 +860,6 @@ set(DEFAULT_DEVICE_SOURCES
     TestSharedSpace.cpp
     TestSharedHostPinnedSpace.cpp
     TestCompilerMacros.cpp
-    TestTypeInfoRuntime.cpp
     default/TestDefaultDeviceType.cpp
     default/TestDefaultDeviceType_a1.cpp
     default/TestDefaultDeviceType_b1.cpp
