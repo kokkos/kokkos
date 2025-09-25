@@ -115,7 +115,7 @@ struct ByteSwap {
 template <bool constant_evaluated>
 struct ByteSwap<constant_evaluated, /*device=*/false> {
   template <class T>
-  static KOKKOS_IMPL_HOST_FUNCTION constexpr T do_compute(T x) noexcept {
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
     if constexpr (sizeof(T) == 1) {
       return x;
     } else if constexpr (sizeof(T) == 2) {
@@ -188,7 +188,7 @@ struct CountlZero</*constant_evaluated=*/false, /*device=*/true> {
 template <bool constant_evaluated>
 struct CountlZero<constant_evaluated, /*device=*/false> {
   template <class T>
-  static KOKKOS_IMPL_HOST_FUNCTION constexpr T do_compute(T x) noexcept {
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
     using ::Kokkos::Experimental::digits_v;
     if (x == 0) return digits_v<T>;
     if constexpr (std::is_same_v<T, unsigned long long>) {
@@ -243,7 +243,7 @@ struct CountrZero</*constant_evaluated=*/false, /*device=*/true> {
 template <bool constant_evaluated>
 struct CountrZero<constant_evaluated, /*device=*/false> {
   template <class T>
-  static KOKKOS_IMPL_HOST_FUNCTION constexpr T do_compute(T x) noexcept {
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
     using ::Kokkos::Experimental::digits_v;
     if (x == 0) return digits_v<T>;
     if constexpr (std::is_same_v<T, unsigned long long>) {
@@ -289,7 +289,7 @@ struct PopCount</*constant_evaluated=*/false, /*device=*/true> {
 template <bool constant_evaluated>
 struct PopCount<constant_evaluated, /*device=*/false> {
   template <class T>
-  static KOKKOS_IMPL_HOST_FUNCTION constexpr T do_compute(T x) noexcept {
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
     if constexpr (std::is_same_v<T, unsigned long long>) {
       return __builtin_popcountll(x);
     } else if constexpr (std::is_same_v<T, unsigned long>) {
