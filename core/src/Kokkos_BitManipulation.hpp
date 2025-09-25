@@ -28,11 +28,14 @@ namespace Kokkos::Impl {
 
 #ifndef KOKKOS_COMPILER_NVCC
 #if (defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU > 1200)) || \
-    defined(__clang__) && (__clang_major__ >= 17)
+    (!defined(KOKKOS_COMPILER_INTEL_LLVM) && defined(__clang__) &&    \
+     (__clang_major__ >= 17))
 #define KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wc++23-extensions"
-#elif defined(__clang__)
+#elif (defined(KOKKOS_COMPILER_INTEL_LLVM) &&       \
+       (KOKKOS_COMPILER_INTEL_LLVM >= 20240000)) || \
+    (!defined(KOKKOS_COMPILER_INTEL_LLVM) && defined(__clang__))
 #pragma GCC diagnostic push
 #define KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
 #pragma GCC diagnostic ignored "-Wc++2b-extensions"
