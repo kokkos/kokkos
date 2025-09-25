@@ -263,7 +263,11 @@ template <bool constant_evaluated, bool device>
 struct PopCount {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-    return std::popcount(x);
+    int c = 0;
+    for (; x != 0; x &= x - 1) {
+      ++c;
+    }
+    return c;
   }
 };
 
