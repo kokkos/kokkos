@@ -26,6 +26,7 @@
 
 namespace Kokkos::Impl {
 
+#ifndef KOKKOS_COMPILER_NVCC
 #if (defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU > 1200)) || \
     defined(__clang__) && (__clang_major__ >= 17)
 #define KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
@@ -36,10 +37,11 @@ namespace Kokkos::Impl {
 #define KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
 #pragma GCC diagnostic ignored "-Wc++2b-extensions"
 #endif
+#endif
 
 template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
           class T>
-constexpr auto dispatch_helper(T x) noexcept {
+KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
 #if defined(__cpp_if_consteval) || \
     defined(KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION)
   if consteval {
@@ -61,7 +63,7 @@ constexpr auto dispatch_helper(T x) noexcept {
 
 template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
           class T>
-constexpr auto dispatch_helper_builtin(T x) noexcept {
+KOKKOS_FUNCTION constexpr auto dispatch_helper_builtin(T x) noexcept {
   KOKKOS_IF_ON_HOST((return Op<false, false>::do_compute(x);))
   KOKKOS_IF_ON_DEVICE((return Op<false, true>::do_compute(x);))
 }
@@ -142,7 +144,20 @@ template <bool constant_evaluated, bool device>
 struct CountlZero {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-    return std::countl_zero(x);
+    // From Hacker's Delight (2nd edition) section 5-3
+    unsigned int y = 0;
+    using ::Kokkos::Experimental::digits_v;
+    int n = digits_v<T>;
+    int c = digits_v<T> / 2;
+    do {
+      y = x >> c;
+      if (y != 0) {
+        n -= c;
+        x = y;
+      }
+      c >>= 1;
+    } while (c != 0);
+    return n - static_cast<int>(x);
   }
 };
 
@@ -196,7 +211,10 @@ template <bool constant_evaluated, bool device>
 struct CountrZero {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-    return std::countr_zero(x);
+    using ::Kokkos::Experimental::digits_v;
+    return digits_v<T> -
+           CountlZero<constant_evaluated, device>::do_compute(
+               static_cast<T>(static_cast<T>(~x) & static_cast<T>(x - 1)));
   }
 };
 
