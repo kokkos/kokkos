@@ -4,5 +4,4 @@
 .jenkins* export-ignore
 .appveyor.yml export-ignore
 scripts/ export-ignore
-LICENSE_FILE_HEADER export-ignore
 CTestConfig.cmake export-ignore
