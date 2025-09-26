@@ -63,22 +63,22 @@ export {
   namespace Kokkos::Experimental {
   using ::Kokkos::Experimental::all_of;
   using ::Kokkos::Experimental::any_of;
-  using ::Kokkos::Experimental::basic_simd;
-  using ::Kokkos::Experimental::basic_simd_mask;
+  using ::Kokkos::Experimental::basic_mask;
+  using ::Kokkos::Experimental::basic_vec;
   using ::Kokkos::Experimental::condition;
+  using ::Kokkos::Experimental::mask;
   using ::Kokkos::Experimental::none_of;
   using ::Kokkos::Experimental::reduce;
   using ::Kokkos::Experimental::reduce_max;
   using ::Kokkos::Experimental::reduce_min;
   using ::Kokkos::Experimental::round_half_to_nearest_even;
-  using ::Kokkos::Experimental::simd;
   using ::Kokkos::Experimental::simd_flag_aligned;
   using ::Kokkos::Experimental::simd_flag_default;
-  using ::Kokkos::Experimental::simd_mask;
   using ::Kokkos::Experimental::simd_partial_load;
   using ::Kokkos::Experimental::simd_partial_store;
   using ::Kokkos::Experimental::simd_unchecked_load;
   using ::Kokkos::Experimental::simd_unchecked_store;
+  using ::Kokkos::Experimental::vec;
 
   using ::Kokkos::Experimental::operator+=;
   using ::Kokkos::Experimental::operator*=;

@@ -41,9 +41,8 @@ template <typename Abi, typename Loader, typename ReductionOp, typename T>
 inline void host_check_reduction_one_loader(ReductionOp reduce_op,
                                             std::size_t n, T const* args) {
   Loader loader;
-  using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
-  using mask_type =
-      typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
+  using simd_type = Kokkos::Experimental::basic_vec<T, Abi>;
+  using mask_type = typename Kokkos::Experimental::basic_vec<T, Abi>::mask_type;
   constexpr std::size_t width = simd_type::size();
 
   for (std::size_t i = 0; i < n; i += width) {
@@ -140,9 +139,8 @@ template <typename Abi, typename Loader, typename ReductionOp, typename T>
 KOKKOS_INLINE_FUNCTION void device_check_reduction_one_loader(
     ReductionOp reduce_op, std::size_t n, T const* args) {
   Loader loader;
-  using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
-  using mask_type =
-      typename Kokkos::Experimental::basic_simd<T, Abi>::mask_type;
+  using simd_type = Kokkos::Experimental::basic_vec<T, Abi>;
+  using mask_type = typename Kokkos::Experimental::basic_vec<T, Abi>::mask_type;
   constexpr std::size_t width = simd_type::size();
 
   T true_identity = get_identity<T, ReductionOp>{}();
@@ -195,7 +193,7 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_reductions() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
+  if constexpr (is_type_v<Kokkos::Experimental::basic_vec<DataType, Abi>>) {
     constexpr size_t n = 16;
 
     if constexpr (std::is_signed_v<DataType>) {
