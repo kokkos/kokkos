@@ -19,7 +19,6 @@
 
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_NumericTraits.hpp>
-#include <bit>
 #include <climits>  // CHAR_BIT
 #include <cstring>  //memcpy
 #include <type_traits>
@@ -91,9 +90,6 @@ template <bool constant_evaluated, bool device>
 struct ByteSwap {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-#if defined(__cpp_lib_byteswap)
-    return std::byteswap(x);  // since C++23
-#else
     if constexpr (sizeof(T) > 1) {
       using U = std::make_unsigned_t<T>;
 
@@ -120,7 +116,6 @@ struct ByteSwap {
     }
     // sizeof(T) == 1
     return x;
-#endif
   }
 };
 
