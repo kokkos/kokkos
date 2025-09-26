@@ -17,7 +17,7 @@ union Baz {
   float f;
 };
 
-[[maybe_unused]] auto func = [](int) {};  // < line 33
+[[maybe_unused]] auto func = [](int) {};  // < line 20
 //                           ^  column 30
 using Lambda = decltype(func);
 
@@ -36,7 +36,7 @@ static_assert(TypeInfo<Foo>::name()      == "(anonymous namespace)::Foo");
 static_assert(TypeInfo<FooAlias>::name() == "(anonymous namespace)::Foo");
 static_assert(TypeInfo<Bar>::name()      == "(anonymous namespace)::Bar");
 static_assert(TypeInfo<Baz>::name()      == "(anonymous namespace)::Baz");
-static_assert(TypeInfo<Lambda>::name()   == "(anonymous namespace)::(lambda at "  __FILE__  ":33:30)");
+static_assert(TypeInfo<Lambda>::name()   == "(anonymous namespace)::(lambda at "  __FILE__  ":20:30)");
 #elif defined(__GNUC__)
 static_assert(TypeInfo<Foo>::name()      == "{anonymous}::Foo");
 static_assert(TypeInfo<FooAlias>::name() == "{anonymous}::Foo");
