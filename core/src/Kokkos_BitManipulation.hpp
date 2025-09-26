@@ -44,6 +44,9 @@ namespace Kokkos::Impl {
 template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
           class T>
 KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  return Op<true, true>::do_compute(x);
+#else
 #if defined(__cpp_if_consteval) || \
     defined(KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION)
   if consteval {
@@ -56,10 +59,6 @@ KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
   KOKKOS_IF_ON_HOST((return Op<true, false>::do_compute(x);))
   KOKKOS_IF_ON_DEVICE((return Op<true, true>::do_compute(x);))
 #endif
-
-  // FIXME_NVHPC: erroneous warning about return from non-void function
-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-  return T();
 #endif
 }
 
