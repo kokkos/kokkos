@@ -45,6 +45,7 @@ template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
           class T>
 KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  // __builtin_is_device_code() is non-constexpr
   return Op<true, true>::do_compute(x);
 #else
 #if defined(__cpp_if_consteval) || \
