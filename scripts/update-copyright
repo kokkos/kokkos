@@ -1,4 +1,4 @@
-files=`git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/'`
+files=`git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\|cppm\)' | grep -v 'tpls/'`
 echo "" &> diff_files
 echo "" &> clean_files
 echo "" &> updated_files
