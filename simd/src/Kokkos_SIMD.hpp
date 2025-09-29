@@ -257,12 +257,8 @@ using simd = basic_simd<T, simd_abi::Impl::native_abi<T, N>>;
 template <class T, int N = 0>
 using simd_mask = basic_simd_mask<T, simd_abi::Impl::native_abi<T, N>>;
 
-template <
-    typename T, typename... Flags,
-    std::enable_if_t<
-        !std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
-                        basic_simd<T, simd_abi::scalar>>,
-        bool> = false>
+template <typename T, typename... Flags>
+  requires Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
     simd_unchecked_load(const T* ptr,
@@ -271,12 +267,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
       basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(ptr, flag);
 }
 
-template <
-    typename T, typename... Flags,
-    std::enable_if_t<
-        std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
-                       basic_simd<T, simd_abi::scalar>>,
-        bool> = false>
+template <typename T, typename... Flags>
+  requires Impl::ScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar>
 simd_unchecked_load(const T* ptr,
                     simd_flags<Flags...> flag = simd_flag_default) {

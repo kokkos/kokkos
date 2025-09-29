@@ -46,6 +46,110 @@ inline constexpr simd_flags<simd_alignment_vector_aligned> simd_flag_aligned{};
 using element_aligned_tag = simd_flags<>;
 using vector_aligned_tag  = simd_flags<simd_alignment_vector_aligned>;
 
+template <typename V>
+concept simd_vec_type =
+    std::same_as<V, basic_simd<typename V::value_type, typename V::abi_type>> &&
+    std::is_default_constructible_v<V>;
+
+template <typename V>
+concept simd_mask_type =
+    std::same_as<
+        V, basic_simd_mask<typename V::value_type, typename V::abi_type>> &&
+    std::is_default_constructible_v<V>;
+
+template <typename V>
+concept simd_floating_point =
+    simd_vec_type<V> && std::floating_point<typename V::value_type>;
+
+template <typename V>
+concept simd_integral =
+    simd_vec_type<V> && std::integral<typename V::value_type>;
+
+namespace Impl {
+
+template <class BinaryOperation>
+struct is_basic_reduction_op {
+  static constexpr bool value =
+      std::is_same_v<BinaryOperation, std::plus<>> ||
+      std::is_same_v<BinaryOperation, std::multiplies<>> ||
+      std::is_same_v<BinaryOperation, std::bit_and<>> ||
+      std::is_same_v<BinaryOperation, std::bit_or<>> ||
+      std::is_same_v<BinaryOperation, std::bit_xor<>>;
+};
+
+template <class BinaryOperation>
+constexpr bool is_basic_reduction_op_v =
+    is_basic_reduction_op<BinaryOperation>::value;
+
+template <class T, class BinaryOperation>
+struct Identity {
+  KOKKOS_FORCEINLINE_FUNCTION
+  constexpr operator T() {
+    // NOLINTNEXTLINE(bugprone-branch-clone)
+    if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
+      return T();
+    } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
+      return T(1);
+    } else if constexpr (std::is_same_v<BinaryOperation, std::bit_and<>>) {
+      return T(~T());
+    } else if constexpr (std::is_same_v<BinaryOperation, std::bit_or<>>) {
+      return T();
+    } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
+      return T();
+    } else {
+      return T();
+    }
+    // NOLINTNEXTLINE(bugprone-branch-clone)
+  }
+};
+
+template <typename From, typename To>
+struct is_value_preserving_conversion {
+  static constexpr bool value =
+      (std::is_integral_v<From> && std::is_integral_v<To>) ||
+      (std::is_floating_point_v<From> && std::is_floating_point_v<To>);
+};
+
+template <typename From, typename To>
+constexpr bool is_value_preserving_conversion_v =
+    is_value_preserving_conversion<From, To>::value;
+
+template <typename From, typename To>
+struct is_narrowing_conversion {
+  static constexpr bool value =
+      (is_value_preserving_conversion_v<From, To>)&&(sizeof(To) < sizeof(From));
+};
+
+template <typename From, typename To>
+constexpr bool is_narrowing_conversion_v =
+    is_narrowing_conversion<From, To>::value;
+
+template <typename From, typename To>
+struct needs_explicit_conversion
+    : std::integral_constant<bool,
+                             !is_value_preserving_conversion_v<From, To> ||
+                                 is_narrowing_conversion_v<From, To>> {};
+
+template <typename From, typename To>
+constexpr bool needs_explicit_conversion_v =
+    needs_explicit_conversion<From, To>::value;
+
+template <typename V>
+concept Arithmetic = std::is_arithmetic_v<V>;
+
+template <typename Abi>
+concept ScalarAbi = std::same_as<Abi, simd_abi::scalar>;
+
+template <typename Abi>
+concept NonScalarAbi = !std::same_as<Abi, simd_abi::scalar>;
+
+template <typename G, typename R, typename... Args>
+concept InvocableWithReturnType =
+    std::invocable<G, Args...> &&
+    std::is_convertible_v<std::invoke_result_t<G, Args...>, R>;
+
+}  // namespace Impl
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 // class template declarations for const_where_expression and where_expression
 
@@ -142,8 +246,7 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 // operator@(Arithmetic, basic_simd<T, Abi>)
 // operator@=(basic_simd<T, Abi>&, U&&)
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] + rhs);
@@ -151,8 +254,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs + rhs[0]);
@@ -160,9 +262,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <
-    class T, class U, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
+template <class T, class U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator+=(
     basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs + std::forward<U>(rhs);
@@ -180,8 +280,7 @@ operator+=(where_expression<M, T>& lhs, U&& rhs) {
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] - rhs);
@@ -189,8 +288,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs - rhs[0]);
@@ -198,9 +296,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <
-    class T, class U, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
+template <class T, class U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator-=(
     basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs - std::forward<U>(rhs);
@@ -218,8 +314,7 @@ operator-=(where_expression<M, T>& lhs, U&& rhs) {
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] * rhs);
@@ -227,8 +322,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs * rhs[0]);
@@ -236,9 +330,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <
-    class T, class U, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
+template <class T, class U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator*=(
     basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs * std::forward<U>(rhs);
@@ -256,8 +348,7 @@ operator*=(where_expression<M, T>& lhs, U&& rhs) {
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
-template <class T, class Abi,
-          std::enable_if_t<std::is_integral_v<T>, bool> = false>
+template <std::integral T, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
     Experimental::basic_simd<T, Abi> const& lhs,
     Experimental::basic_simd<T, Abi> const& rhs) {
@@ -265,8 +356,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
       [&](std::size_t i) { return lhs[i] / rhs[i]; });
 }
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] / rhs);
@@ -274,8 +364,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, class U, class Abi,
-          std::enable_if_t<std::is_arithmetic_v<U>, bool> = false>
+template <class T, Impl::Arithmetic U, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs / rhs[0]);
@@ -283,9 +372,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <
-    class T, class U, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
+template <class T, class U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator/=(
     basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs / std::forward<U>(rhs);
@@ -303,18 +390,14 @@ operator/=(where_expression<M, T>& lhs, U&& rhs) {
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
-template <
-    class T, class U, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
+template <class T, class U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator>>=(
     basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs >> std::forward<U>(rhs);
   return lhs;
 }
 
-template <
-    class T, class U, class Abi,
-    std::enable_if_t<!std::is_same_v<Abi, simd_abi::scalar>, bool> = false>
+template <class T, class U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator<<=(
     basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs << std::forward<U>(rhs);
@@ -368,77 +451,6 @@ KOKKOS_FORCEINLINE_FUNCTION auto round_half_to_nearest_even(T const& x) {
   }
   return Kokkos::round(x);
 }
-
-namespace Impl {
-
-template <class BinaryOperation>
-struct is_basic_reduction_op {
-  static constexpr bool value =
-      std::is_same_v<BinaryOperation, std::plus<>> ||
-      std::is_same_v<BinaryOperation, std::multiplies<>> ||
-      std::is_same_v<BinaryOperation, std::bit_and<>> ||
-      std::is_same_v<BinaryOperation, std::bit_or<>> ||
-      std::is_same_v<BinaryOperation, std::bit_xor<>>;
-};
-
-template <class BinaryOperation>
-constexpr bool is_basic_reduction_op_v =
-    is_basic_reduction_op<BinaryOperation>::value;
-
-template <class T, class BinaryOperation>
-struct Identity {
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr operator T() {
-    // NOLINTNEXTLINE(bugprone-branch-clone)
-    if constexpr (std::is_same_v<BinaryOperation, std::plus<>>) {
-      return T();
-    } else if constexpr (std::is_same_v<BinaryOperation, std::multiplies<>>) {
-      return T(1);
-    } else if constexpr (std::is_same_v<BinaryOperation, std::bit_and<>>) {
-      return T(~T());
-    } else if constexpr (std::is_same_v<BinaryOperation, std::bit_or<>>) {
-      return T();
-    } else if constexpr (std::is_same_v<BinaryOperation, std::bit_xor<>>) {
-      return T();
-    } else {
-      return T();
-    }
-    // NOLINTNEXTLINE(bugprone-branch-clone)
-  }
-};
-
-template <typename From, typename To>
-struct is_value_preserving_conversion {
-  static constexpr bool value =
-      (std::is_integral_v<From> && std::is_integral_v<To>) ||
-      (std::is_floating_point_v<From> && std::is_floating_point_v<To>);
-};
-
-template <typename From, typename To>
-constexpr bool is_value_preserving_conversion_v =
-    is_value_preserving_conversion<From, To>::value;
-
-template <typename From, typename To>
-struct is_narrowing_conversion {
-  static constexpr bool value =
-      (is_value_preserving_conversion_v<From, To>)&&(sizeof(To) < sizeof(From));
-};
-
-template <typename From, typename To>
-constexpr bool is_narrowing_conversion_v =
-    is_narrowing_conversion<From, To>::value;
-
-template <typename From, typename To>
-struct needs_explicit_conversion
-    : std::integral_constant<bool,
-                             !is_value_preserving_conversion_v<From, To> ||
-                                 is_narrowing_conversion_v<From, To>> {};
-
-template <typename From, typename To>
-constexpr bool needs_explicit_conversion_v =
-    needs_explicit_conversion<From, To>::value;
-
-}  // namespace Impl
 
 // common implementations of host only simd reductions:
 template <class T, class Abi, class BinaryOperation = std::plus<>>

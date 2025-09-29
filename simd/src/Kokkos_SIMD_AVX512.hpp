@@ -63,11 +63,9 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(
       basic_simd_mask<U, simd_abi::avx512_fixed_size<8>> const& other) noexcept
       : m_value(static_cast<__mmask8>(other)) {}
-  template <class G,
-            std::enable_if_t<
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(G&& gen) noexcept
       : m_value(false) {
     m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 0>())))
@@ -156,11 +154,9 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<16>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(
       basic_simd_mask<U, simd_abi::avx512_fixed_size<16>> const& other) noexcept
       : m_value(static_cast<__mmask16>(other)) {}
-  template <class G,
-            std::enable_if_t<
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(G&& gen) noexcept
       : m_value(false) {
     m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 0>())))
@@ -278,8 +274,8 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_pd(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -302,13 +298,9 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
       basic_simd<std::int32_t, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint32_t, abi_type> const& other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_pd(gen(std::integral_constant<std::size_t, 0>()),
@@ -589,10 +581,9 @@ min(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<double, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(const double* ptr,
@@ -610,10 +601,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<double, simd_abi::avx512_fixed_size<8>>(ptr, mask, flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<double, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(
@@ -633,10 +623,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<double, simd_abi::avx512_fixed_size<8>>(ptr, mask, flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<double, simd_abi::avx512_fixed_size<8>>
     simd_partial_load(
@@ -708,8 +697,8 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm256_set1_ps(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -732,11 +721,9 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
       basic_simd<std::int32_t, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint32_t, abi_type> const& other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(G&& gen) noexcept
       : m_value(_mm256_setr_ps(gen(std::integral_constant<std::size_t, 0>()),
                                gen(std::integral_constant<std::size_t, 1>()),
@@ -993,10 +980,9 @@ min(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<float, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(const float* ptr,
@@ -1014,10 +1000,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<float, simd_abi::avx512_fixed_size<8>>(ptr, mask, flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<float, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(
@@ -1037,10 +1022,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<float, simd_abi::avx512_fixed_size<8>>(ptr, mask, flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<float, simd_abi::avx512_fixed_size<8>>
     simd_partial_load(
@@ -1112,8 +1096,8 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_ps(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1130,11 +1114,9 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
       basic_simd<std::int32_t, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint32_t, abi_type> const& other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(G&& gen) noexcept
       : m_value(
             _mm512_setr_ps(gen(std::integral_constant<std::size_t, 0>()),
@@ -1398,10 +1380,9 @@ min(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<float, simd_abi::avx512_fixed_size<16>>
     simd_unchecked_load(const float* ptr,
@@ -1419,10 +1400,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<float, simd_abi::avx512_fixed_size<16>>(ptr, mask, flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<float, simd_abi::avx512_fixed_size<16>>
     simd_unchecked_load(
@@ -1442,10 +1422,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<float, simd_abi::avx512_fixed_size<16>>(ptr, mask, flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<float, simd_abi::avx512_fixed_size<16>>
     simd_partial_load(
@@ -1517,8 +1496,8 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm256_set1_epi32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1541,13 +1520,9 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd<std::int64_t, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const& other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(
@@ -1749,10 +1724,9 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(const std::int32_t* ptr,
@@ -1771,10 +1745,9 @@ simd_unchecked_load(
                                                                   flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::int32_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_unchecked_load(
@@ -1796,10 +1769,9 @@ simd_partial_load(
                                                                   flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::int32_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_partial_load(
@@ -1878,8 +1850,8 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1896,13 +1868,9 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
       basic_simd<float, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint32_t, abi_type> const& other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_epi32(
@@ -2111,10 +2079,9 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>
     simd_unchecked_load(const std::int32_t* ptr,
@@ -2133,10 +2100,9 @@ simd_unchecked_load(
                                                                    flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<
     std::int32_t, simd_abi::avx512_fixed_size<16>>
 simd_unchecked_load(
@@ -2158,10 +2124,9 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<
     std::int32_t, simd_abi::avx512_fixed_size<16>>
 simd_partial_load(
@@ -2246,8 +2211,8 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm256_set1_epi32(
             Kokkos::bit_cast<std::int32_t>(value_type(value)))) {}
@@ -2271,13 +2236,9 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd<std::int64_t, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const& other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(
@@ -2472,10 +2433,9 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(const std::uint32_t* ptr,
@@ -2494,10 +2454,9 @@ simd_unchecked_load(
                                                                    flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_unchecked_load(
@@ -2519,10 +2478,9 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_partial_load(
@@ -2601,8 +2559,8 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi32(
             Kokkos::bit_cast<std::int32_t>(value_type(value)))) {}
@@ -2620,13 +2578,9 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
       basic_simd<float, abi_type> const& other) noexcept;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::int32_t, abi_type> const& other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_epi32(
@@ -2828,10 +2782,9 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>>
     simd_unchecked_load(const std::uint32_t* ptr,
@@ -2850,10 +2803,9 @@ simd_unchecked_load(
                                                                     flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<
     std::uint32_t, simd_abi::avx512_fixed_size<16>>
 simd_unchecked_load(
@@ -2875,10 +2827,9 @@ simd_partial_load(
                                                                     flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<16>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<16>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<
     std::uint32_t, simd_abi::avx512_fixed_size<16>>
 simd_partial_load(
@@ -2970,8 +2921,8 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi64(value_type(value))) {}
   template <typename U>
@@ -2994,13 +2945,9 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(
       basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
           other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(
@@ -3191,10 +3138,9 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(const std::int64_t* ptr,
@@ -3213,10 +3159,9 @@ simd_unchecked_load(
                                                                   flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::int64_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_unchecked_load(
@@ -3238,10 +3183,9 @@ simd_partial_load(
                                                                   flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::int64_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_partial_load(
@@ -3320,8 +3264,8 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd const&) noexcept = default;
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd& operator=(
       basic_simd&&) noexcept = default;
-  template <class U, std::enable_if_t<std::is_convertible_v<U, value_type>,
-                                      bool> = false>
+  template <class U>
+    requires std::convertible_to<U, value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi64(
             Kokkos::bit_cast<std::int64_t>(value_type(value)))) {}
@@ -3348,13 +3292,9 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(
       basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
           other) noexcept;
-  template <class G,
-            std::enable_if_t<
-                // basically, can you do { value_type r =
-                // gen(std::integral_constant<std::size_t, i>()); }
-                std::is_invocable_r_v<value_type, G,
-                                      std::integral_constant<std::size_t, 0>>,
-                bool> = false>
+  template <class G>
+    requires Impl::InvocableWithReturnType<
+        G, value_type, std::integral_constant<std::size_t, 0>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(
@@ -3545,10 +3485,9 @@ trunc(Experimental::basic_simd<
 
 namespace Experimental {
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>
     simd_unchecked_load(const std::uint64_t* ptr,
@@ -3567,10 +3506,9 @@ simd_unchecked_load(
                                                                    flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint64_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_unchecked_load(
@@ -3592,10 +3530,9 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename SimdType, typename... Flags,
-          std::enable_if_t<std::is_same_v<typename SimdType::abi_type,
-                                          simd_abi::avx512_fixed_size<8>>,
-                           bool> = false>
+template <typename SimdType, typename... Flags>
+  requires std::same_as<typename SimdType::abi_type,
+                        simd_abi::avx512_fixed_size<8>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint64_t,
                                                  simd_abi::avx512_fixed_size<8>>
 simd_partial_load(
