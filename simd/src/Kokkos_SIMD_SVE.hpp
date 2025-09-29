@@ -2575,14 +2575,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_vec<std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
-    condition(
-        basic_mask<std::int64_t,
-                   simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
-        basic_vec<std::int64_t,
-                  simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
-        basic_vec<std::int64_t,
-                  simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& c) {
+basic_vec<std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+condition(basic_mask<std::int64_t,
+                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
+          basic_vec<std::int64_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
+          basic_vec<std::int64_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& c) {
   return basic_vec<std::int64_t,
                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       static_cast<vls_int64_t>(svsel(static_cast<vls_bool_t>(a),
@@ -3037,14 +3036,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_vec<std::uint64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
-    condition(
-        basic_mask<std::uint64_t,
-                   simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
-        basic_vec<std::uint64_t,
-                  simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
-        basic_vec<std::uint64_t,
-                  simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& c) {
+basic_vec<std::uint64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+condition(basic_mask<std::uint64_t,
+                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
+          basic_vec<std::uint64_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
+          basic_vec<std::uint64_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& c) {
   return basic_vec<std::uint64_t,
                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       static_cast<vls_uint64_t>(svsel(static_cast<vls_bool_t>(a),
@@ -3405,14 +3403,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
 
 // FIXME should be converted to use sve mask
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_vec<std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
-    condition(
-        basic_mask<std::int32_t,
-                   simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
-        basic_vec<std::int32_t,
-                  simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
-        basic_vec<std::int32_t,
-                  simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& c) {
+basic_vec<std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
+condition(basic_mask<std::int32_t,
+                     simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& a,
+          basic_vec<std::int32_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& b,
+          basic_vec<std::int32_t,
+                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& c) {
   return basic_vec<std::int32_t,
                    simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       [=](std::size_t i) { return a[i] ? b[i] : c[i]; });

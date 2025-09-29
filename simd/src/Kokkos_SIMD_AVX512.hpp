@@ -870,9 +870,9 @@ abs(Experimental::basic_vec<
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
-    floor(Experimental::basic_vec<
-          float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
+floor(Experimental::basic_vec<
+      float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m256 const val = static_cast<__m256>(a);
   return Experimental::basic_vec<float,
                                  Experimental::simd_abi::avx512_fixed_size<8>>(
@@ -880,9 +880,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
-    ceil(Experimental::basic_vec<
-         float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
+ceil(Experimental::basic_vec<
+     float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m256 const val = static_cast<__m256>(a);
   return Experimental::basic_vec<float,
                                  Experimental::simd_abi::avx512_fixed_size<8>>(
@@ -890,9 +890,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
-    round(Experimental::basic_vec<
-          float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
+round(Experimental::basic_vec<
+      float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m256 const val = static_cast<__m256>(a);
   return Experimental::basic_vec<float,
                                  Experimental::simd_abi::avx512_fixed_size<8>>(
@@ -900,9 +900,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 }
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
-    trunc(Experimental::basic_vec<
-          float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
+Experimental::basic_vec<float, Experimental::simd_abi::avx512_fixed_size<8>>
+trunc(Experimental::basic_vec<
+      float, Experimental::simd_abi::avx512_fixed_size<8>> const& a) {
   __m256 const val = static_cast<__m256>(a);
   return Experimental::basic_vec<float,
                                  Experimental::simd_abi::avx512_fixed_size<8>>(
