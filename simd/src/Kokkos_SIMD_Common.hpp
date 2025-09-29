@@ -46,25 +46,6 @@ inline constexpr simd_flags<simd_alignment_vector_aligned> simd_flag_aligned{};
 using element_aligned_tag = simd_flags<>;
 using vector_aligned_tag  = simd_flags<simd_alignment_vector_aligned>;
 
-template <typename V>
-concept simd_vec_type =
-    std::same_as<V, basic_simd<typename V::value_type, typename V::abi_type>> &&
-    std::is_default_constructible_v<V>;
-
-template <typename V>
-concept simd_mask_type =
-    std::same_as<
-        V, basic_simd_mask<typename V::value_type, typename V::abi_type>> &&
-    std::is_default_constructible_v<V>;
-
-template <typename V>
-concept simd_floating_point =
-    simd_vec_type<V> && std::floating_point<typename V::value_type>;
-
-template <typename V>
-concept simd_integral =
-    simd_vec_type<V> && std::integral<typename V::value_type>;
-
 namespace Impl {
 
 template <class BinaryOperation>
