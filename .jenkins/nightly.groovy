@@ -129,7 +129,7 @@ pipeline {
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=20" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS='-Werror -Wno-unused-command-line-argument'" && \
-                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_PREFIX_PATH='/opt/rocm/lib/cmake'" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_PREFIX_PATH='/opt/rocm'" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON" && \
@@ -166,7 +166,7 @@ pipeline {
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=23" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS='-Werror -Wno-unused-command-line-argument'" && \
-                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_PREFIX_PATH='/opt/rocm/lib/cmake'" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_PREFIX_PATH='/opt/rocm'" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_DEPRECATED_CODE_4=ON" && \
