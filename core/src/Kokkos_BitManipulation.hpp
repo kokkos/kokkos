@@ -51,7 +51,8 @@ KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
 #if defined(__cpp_if_consteval) || \
     defined(KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION)
   if consteval {
-    return Op<true, false>::do_compute(x);
+    KOKKOS_IF_ON_HOST((return Op<true, false>::do_compute(x);))
+    KOKKOS_IF_ON_DEVICE((return Op<true, true>::do_compute(x);))
   } else {
     KOKKOS_IF_ON_HOST((return Op<false, false>::do_compute(x);))
     KOKKOS_IF_ON_DEVICE((return Op<false, true>::do_compute(x);))
