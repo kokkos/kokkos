@@ -25,22 +25,6 @@
 
 namespace Kokkos::Impl {
 
-#ifndef KOKKOS_COMPILER_NVCC
-#if (defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU > 1200)) || \
-    (!defined(KOKKOS_COMPILER_INTEL_LLVM) && defined(__clang__) &&    \
-     (__clang_major__ >= 17))
-#define KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wc++23-extensions"
-#elif (defined(KOKKOS_COMPILER_INTEL_LLVM) &&       \
-       (KOKKOS_COMPILER_INTEL_LLVM >= 20240000)) || \
-    (!defined(KOKKOS_COMPILER_INTEL_LLVM) && defined(__clang__))
-#pragma GCC diagnostic push
-#define KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
-#pragma GCC diagnostic ignored "-Wc++2b-extensions"
-#endif
-#endif
-
 template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
           class T>
 KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
@@ -48,8 +32,7 @@ KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
   // __builtin_is_device_code() is non-constexpr
   return Op<true, true>::do_compute(x);
 #else
-#if defined(__cpp_if_consteval) || \
-    defined(KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION)
+#if defined(__cpp_if_consteval)  // since C++23
   if consteval {
     KOKKOS_IF_ON_HOST((return Op<true, false>::do_compute(x);))
     KOKKOS_IF_ON_DEVICE((return Op<true, true>::do_compute(x);))
@@ -63,11 +46,6 @@ KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
 #endif
 #endif
 }
-
-#ifdef KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
-#pragma GCC diagnostic pop
-#undef KOKKOS_IMPL_IF_CONSTEVAL_CXX23_EXTENSION
-#endif
 
 template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
           class T>
