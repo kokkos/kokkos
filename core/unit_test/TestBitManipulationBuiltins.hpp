@@ -754,15 +754,15 @@ TEST(TEST_CATEGORY, bit_manip_byeswap) {
     test_bit_manip_byteswap<unsigned char>();
     test_bit_manip_byteswap<short>();
     test_bit_manip_byteswap<unsigned short>();
+    test_bit_manip_byteswap<int>();
+    test_bit_manip_byteswap<unsigned int>();
+    test_bit_manip_byteswap<long>();
+    test_bit_manip_byteswap<unsigned long>();
+    test_bit_manip_byteswap<long long>();
+    test_bit_manip_byteswap<unsigned long long>();
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
   }
 #endif
-  test_bit_manip_byteswap<int>();
-  test_bit_manip_byteswap<unsigned int>();
-  test_bit_manip_byteswap<long>();
-  test_bit_manip_byteswap<unsigned long>();
-  test_bit_manip_byteswap<long long>();
-  test_bit_manip_byteswap<unsigned long long>();
 }
 
 // CUDA doesn't provide memcmp
