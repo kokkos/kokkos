@@ -8,14 +8,9 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
+import kokkos.unorderd_map;
 #else
 #include <Kokkos_Core.hpp>
-#endif
-
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-import kokkos.unordered_map;
-#else
 #include <Kokkos_UnorderedMap.hpp>
 #endif
 

@@ -8,15 +8,11 @@
 #include <iostream>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.bitset;
 import kokkos.core;
 #else
-#include <Kokkos_Core.hpp>
-#endif
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-import kokkos.bitset;
-#else
 #include <Kokkos_Bitset.hpp>
+#include <Kokkos_Core.hpp>
 #endif
 #include <array>
 

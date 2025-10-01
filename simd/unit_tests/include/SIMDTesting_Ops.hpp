@@ -6,15 +6,11 @@
 
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
 import kokkos.simd;
 #else
-#include <Kokkos_SIMD.hpp>
-#endif
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-import kokkos.core;
-#else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_SIMD.hpp>
 #endif
 
 #include <cmath>

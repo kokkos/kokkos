@@ -14,19 +14,12 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
-#else
-#include <Kokkos_Core.hpp>
-#endif
-#include <Kokkos_Timer.hpp>
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.offset_view;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_OffsetView.hpp>
 #endif
-
-using std::cout;
-using std::endl;
+#include <Kokkos_Timer.hpp>
 
 namespace Test {
 
