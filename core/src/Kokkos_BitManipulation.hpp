@@ -313,8 +313,7 @@ KOKKOS_FUNCTION To bit_cast(From const& from) noexcept {
 
 //<editor-fold desc="[bit.byteswap], byteswap">
 template <std::integral T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<T>, T> byteswap(
-    T value) noexcept {
+KOKKOS_FUNCTION constexpr T byteswap(T value) noexcept {
   return Impl::dispatch_helper<Impl::ByteSwap>(value);
 }
 //</editor-fold>
@@ -449,9 +448,7 @@ KOKKOS_FUNCTION int countr_one_builtin(T x) noexcept {
 }
 
 template <Kokkos::Impl::UnsignedInteger T>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
-popcount_builtin(T x) noexcept {
+KOKKOS_FUNCTION int popcount_builtin(T x) noexcept {
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::PopCount>(x);
 }
 
