@@ -392,7 +392,7 @@ constexpr auto test_bit_width(UInt x) -> decltype(Kokkos::bit_width(x)) {
   using Kokkos::bit_width;
 
   static_assert(noexcept(bit_width(x)));
-  static_assert(std::is_same_v<decltype(bit_width(x)), UInt>);
+  static_assert(std::is_same_v<decltype(bit_width(x)), int>);
 
   constexpr auto dig = Kokkos::Experimental::digits_v<UInt>;
   constexpr auto max = Kokkos::Experimental::finite_max_v<UInt>;
