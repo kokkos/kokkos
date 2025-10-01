@@ -85,9 +85,10 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 #if defined(KOKKOS_COMPILER_NVCC)
 #pragma unroll
 #endif
-      for (Member i = 0; ((i < static_cast<Member>(work_stride * batch_size)) &&
-                          (iwork + i < work_end));
-           i += work_stride) {
+      for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
+                         i < work_end - iwork;
+           i = (i < (work_end - work_stride - iwork)) ? i + work_stride
+                                                      : work_end - iwork) {
         this->template exec_range<WorkTag>(iwork + i);
       }
     }
