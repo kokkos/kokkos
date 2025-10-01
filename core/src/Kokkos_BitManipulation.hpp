@@ -7,6 +7,7 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_NumericTraits.hpp>
 #include <climits>  // CHAR_BIT
+#include <concepts>
 #include <cstring>  //memcpy
 #include <type_traits>
 
@@ -288,6 +289,9 @@ inline constexpr bool is_standard_unsigned_integer_type_v =
     std::is_same_v<T, unsigned int> || std::is_same_v<T, unsigned long> ||
     std::is_same_v<T, unsigned long long>;
 
+template <class T>
+concept UnsignedInteger = is_standard_unsigned_integer_type_v<T>;
+
 }  // namespace Kokkos::Impl
 
 namespace Kokkos {
@@ -310,7 +314,7 @@ bit_cast(From const& from) noexcept {
 //</editor-fold>
 
 //<editor-fold desc="[bit.byteswap], byteswap">
-template <class T>
+template <std::integral T>
 KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<T>, T> byteswap(
     T value) noexcept {
   return Impl::dispatch_helper<Impl::ByteSwap>(value);
@@ -318,83 +322,65 @@ KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<T>, T> byteswap(
 //</editor-fold>
 
 //<editor-fold desc="[bit.count], counting">
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, int>
-countl_zero(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr int countl_zero(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   if (x == 0) return digits_v<T>;
   return Impl::dispatch_helper<Impl::CountlZero>(x);
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, int>
-countl_one(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr int countl_one(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   using ::Kokkos::Experimental::finite_max_v;
   if (x == finite_max_v<T>) return digits_v<T>;
   return countl_zero(static_cast<T>(~x));
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, int>
-countr_zero(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr int countr_zero(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   if (x == 0) return digits_v<T>;
   return Impl::dispatch_helper<Impl::CountrZero>(x);
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, int>
-countr_one(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr int countr_one(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   using ::Kokkos::Experimental::finite_max_v;
   if (x == finite_max_v<T>) return digits_v<T>;
   return countr_zero(static_cast<T>(~x));
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, int>
-popcount(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr int popcount(T x) noexcept {
   if (x == 0) return 0;
   return Impl::dispatch_helper<Impl::PopCount>(x);
 }
 //</editor-fold>
 
 //<editor-fold desc="[bit.pow.two], integral powers of 2">
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, bool>
-has_single_bit(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr bool has_single_bit(T x) noexcept {
   return x != 0 && (((x & (x - 1)) == 0));
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, T>
-bit_ceil(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr T bit_ceil(T x) noexcept {
   if (x <= 1) return 1;
   using ::Kokkos::Experimental::digits_v;
   return T{1} << (digits_v<T> - countl_zero(static_cast<T>(x - 1)));
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, T>
-bit_floor(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr T bit_floor(T x) noexcept {
   if (x == 0) return 0;
   using ::Kokkos::Experimental::digits_v;
   return T{1} << (digits_v<T> - 1 - countl_zero(x));
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, T>
-bit_width(T x) noexcept {
+template <Impl::UnsignedInteger T>
+KOKKOS_FUNCTION constexpr int bit_width(T x) noexcept {
   if (x == 0) return 0;
   using ::Kokkos::Experimental::digits_v;
   return digits_v<T> - countl_zero(x);
@@ -402,10 +388,8 @@ bit_width(T x) noexcept {
 //</editor-fold>
 
 //<editor-fold desc="[bit.rotate], rotating">
-template <class T>
-[[nodiscard]] KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, T>
-rotl(T x, int s) noexcept {
+template <Impl::UnsignedInteger T>
+[[nodiscard]] KOKKOS_FUNCTION constexpr T rotl(T x, int s) noexcept {
   using Experimental::digits_v;
   constexpr auto dig = digits_v<T>;
   int const rem      = s % dig;
@@ -414,10 +398,8 @@ rotl(T x, int s) noexcept {
   return (x >> -rem) | (x << ((dig + rem) % dig));  // rotr(x, -rem)
 }
 
-template <class T>
-[[nodiscard]] KOKKOS_FUNCTION constexpr std::enable_if_t<
-    Impl::is_standard_unsigned_integer_type_v<T>, T>
-rotr(T x, int s) noexcept {
+template <Impl::UnsignedInteger T>
+[[nodiscard]] KOKKOS_FUNCTION constexpr T rotr(T x, int s) noexcept {
   using Experimental::digits_v;
   constexpr auto dig = digits_v<T>;
   int const rem      = s % dig;
@@ -441,93 +423,72 @@ bit_cast_builtin(From const& from) noexcept {
   return Kokkos::bit_cast<To>(from);  // no benefit to call the _builtin variant
 }
 
-template <class T>
-KOKKOS_FUNCTION std::enable_if_t<std::is_integral_v<T>, T> byteswap_builtin(
-    T x) noexcept {
+template <std::integral T>
+KOKKOS_FUNCTION T byteswap_builtin(T x) noexcept {
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::ByteSwap>(x);
 }
 
-template <class T>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
-countl_zero_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION int countl_zero_builtin(T x) noexcept {
   if (x == 0) return digits_v<T>;
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::CountlZero>(x);
 }
 
-template <class T>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
-countl_one_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION int countl_one_builtin(T x) noexcept {
   if (x == finite_max_v<T>) return digits_v<T>;
   return countl_zero_builtin(static_cast<T>(~x));
 }
 
-template <class T>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
-countr_zero_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION int countr_zero_builtin(T x) noexcept {
   if (x == 0) return digits_v<T>;
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::CountrZero>(x);
 }
 
-template <class T>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
-countr_one_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION int countr_one_builtin(T x) noexcept {
   if (x == finite_max_v<T>) return digits_v<T>;
   return countr_zero_builtin(static_cast<T>(~x));
 }
 
-template <class T>
+template <Kokkos::Impl::UnsignedInteger T>
 KOKKOS_FUNCTION std::enable_if_t<
     ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
 popcount_builtin(T x) noexcept {
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::PopCount>(x);
 }
 
-template <class T>
-KOKKOS_FUNCTION std::enable_if_t<
-    ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, bool>
-has_single_bit_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION bool has_single_bit_builtin(T x) noexcept {
   return has_single_bit(x);  // no benefit to call the _builtin variant
 }
 
-template <class T>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
-    bit_ceil_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION T bit_ceil_builtin(T x) noexcept {
   if (x <= 1) return 1;
   return T{1} << (digits_v<T> - countl_zero_builtin(static_cast<T>(x - 1)));
 }
 
-template <class T>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
-    bit_floor_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION T bit_floor_builtin(T x) noexcept {
   if (x == 0) return 0;
   return T{1} << (digits_v<T> - 1 - countl_zero_builtin(x));
 }
 
-template <class T>
-KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
-    bit_width_builtin(T x) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+KOKKOS_FUNCTION int bit_width_builtin(T x) noexcept {
   if (x == 0) return 0;
   return digits_v<T> - countl_zero_builtin(x);
 }
 
-template <class T>
-[[nodiscard]] KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
-    rotl_builtin(T x, int s) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+[[nodiscard]] KOKKOS_FUNCTION T rotl_builtin(T x, int s) noexcept {
   return rotl(x, s);  // no benefit to call the _builtin variant
 }
 
-template <class T>
-[[nodiscard]] KOKKOS_FUNCTION
-    std::enable_if_t<::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, T>
-    rotr_builtin(T x, int s) noexcept {
+template <Kokkos::Impl::UnsignedInteger T>
+[[nodiscard]] KOKKOS_FUNCTION T rotr_builtin(T x, int s) noexcept {
   return rotr(x, s);  // no benefit to call the _builtin variant
 }
 

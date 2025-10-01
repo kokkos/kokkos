@@ -457,7 +457,7 @@ template <class UInt>
 void test_bit_manip_bit_width() {
   using Kokkos::Experimental::bit_width_builtin;
   static_assert(noexcept(bit_width_builtin(UInt())));
-  static_assert(std::is_same_v<decltype(bit_width_builtin(UInt())), UInt>);
+  static_assert(std::is_same_v<decltype(bit_width_builtin(UInt())), int>);
   constexpr auto max = Kokkos::Experimental::finite_max_v<UInt>;
   TEST_BIT_MANIP_FUNCTION(bit_width)
   ({
