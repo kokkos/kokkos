@@ -284,13 +284,10 @@ struct PopCount<constant_evaluated, /*device=*/false> {
 #undef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
 
 template <class T>
-inline constexpr bool is_standard_unsigned_integer_type_v =
-    std::is_same_v<T, unsigned char> || std::is_same_v<T, unsigned short> ||
-    std::is_same_v<T, unsigned int> || std::is_same_v<T, unsigned long> ||
-    std::is_same_v<T, unsigned long long>;
-
-template <class T>
-concept UnsignedInteger = is_standard_unsigned_integer_type_v<T>;
+concept UnsignedInteger =
+    std::same_as<T, unsigned char> || std::same_as<T, unsigned short> ||
+    std::same_as<T, unsigned int> || std::same_as<T, unsigned long> ||
+    std::same_as<T, unsigned long long>;
 
 }  // namespace Kokkos::Impl
 
