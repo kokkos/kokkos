@@ -90,23 +90,6 @@ struct numeric_limits_max<uint64_t> {
   static constexpr auto value = static_cast<uint64_t>(-1);
 };
 
-constexpr bool atomic_always_lock_free(std::size_t size) {
-  return size == 4 || size == 8
-#if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
-         || size == 16
-#endif
-      ;
-}
-
-template <std::size_t Size, std::size_t Align>
-DESUL_INLINE_FUNCTION bool atomic_is_lock_free() noexcept {
-  return Size == 4 || Size == 8
-#if defined(DESUL_HAVE_16BYTE_COMPARE_AND_SWAP)
-         || Size == 16
-#endif
-      ;
-}
-
 //<editor-fold desc="Underlying type for atomic compare exchange">
 template <std::size_t Bytes>
 struct atomic_compare_exchange_helper;

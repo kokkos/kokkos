@@ -136,6 +136,19 @@ __device__ std::enable_if_t<sizeof(T) == 4 || sizeof(T) == 8, T> device_atomic_e
 
 #endif
 
+namespace desul {
+namespace Impl {
+template <class T>
+constexpr bool device_atomic_always_lock_free() {
+  return (sizeof(T) == 4) ||
+#ifdef DESUL_HAVE_CUDA_128BIT_CAS
+         (sizeof(T) == 16) ||
+#endif
+         (sizeof(T) == 8);
+}
+}  // namespace Impl
+}  // namespace desul
+
 // SeqCst is not directly supported by PTX, need the additional fences:
 
 namespace desul {
@@ -205,12 +218,7 @@ __device__ std::enable_if_t<sizeof(T) == 8, T> device_atomic_compare_exchange(
 }
 
 template <class T, class MemoryOrder, class MemoryScope>
-__device__ std::enable_if_t<(sizeof(T) != 8) && (sizeof(T) != 4)
-#ifdef DESUL_HAVE_CUDA_128BIT_CAS
-                                && (sizeof(T) != 16)
-#endif
-                                ,
-                            T>
+__device__ std::enable_if_t<!device_atomic_always_lock_free<T>(), T>
 device_atomic_compare_exchange(
     T* const dest, T compare, T value, MemoryOrder, MemoryScope scope) {
   // This is a way to avoid deadlock in a warp or wave front
@@ -240,12 +248,7 @@ device_atomic_compare_exchange(
 }
 
 template <class T, class MemoryOrder, class MemoryScope>
-__device__ std::enable_if_t<(sizeof(T) != 8) && (sizeof(T) != 4)
-#ifdef DESUL_HAVE_CUDA_128BIT_CAS
-                                && (sizeof(T) != 16)
-#endif
-                                ,
-                            T>
+__device__ std::enable_if_t<!device_atomic_always_lock_free<T>(), T>
 device_atomic_exchange(T* const dest, T value, MemoryOrder, MemoryScope scope) {
   // This is a way to avoid deadlock in a warp or wave front
   T return_val;

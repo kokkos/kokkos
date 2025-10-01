@@ -22,13 +22,25 @@ struct host_atomic_exchange_available_gcc {
   constexpr static bool value =
 #ifndef DESUL_HAVE_LIBATOMIC
       ((sizeof(T) == 4 && alignof(T) == 4) ||
-#ifdef DESUL_HAVE_16BYTE_COMPARE_AND_SWAP
+#ifdef __SIZEOF_INT128__
        (sizeof(T) == 16 && alignof(T) == 16) ||
 #endif
        (sizeof(T) == 8 && alignof(T) == 8)) &&
 #endif
       std::is_trivially_copyable<T>::value;
 };
+
+template <class T>
+constexpr bool host_atomic_always_lock_free() {
+  return (sizeof(T) == 4) ||
+#ifdef __SIZEOF_INT128__
+         (sizeof(T) == 16) ||
+#endif
+         (sizeof(T) == 8);
+#ifdef __SIZEOF_INT128__
+  static_assert(__SIZEOF_INT128__ == 16);
+#endif
+}
 
 // clang-format off
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)
@@ -48,7 +60,7 @@ std::enable_if_t<host_atomic_exchange_available_gcc<T>::value, T> host_atomic_ex
   return return_val;
 }
 
-// Failure mode for host_atomic_compare_exchange_n cannot be RELEASE nor ACQREL so
+// Failure mode for host_atomic_compare_exchange_n cannot be RELEASE nor ACQ_REL so
 // Those two get handled separately.
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_exchange_available_gcc<T>::value, T>

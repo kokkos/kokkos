@@ -10,6 +10,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_LOCK_BASED_FETCH_OP_HIP_HPP_
 
 #include <desul/atomics/Common.hpp>
+#include <desul/atomics/Compare_Exchange_HIP.hpp>
 #include <desul/atomics/Lock_Array_HIP.hpp>
 #include <desul/atomics/Thread_Fence_HIP.hpp>
 #include <type_traits>
@@ -17,13 +18,16 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
+template <class T>
+constexpr bool device_atomic_always_lock_free() {
+  return atomic_exchange_available_hip<T>::value;
+}
+
 template <class Oper,
           class T,
           class MemoryOrder,
           class MemoryScope,
-          // equivalent to:
-          //   requires !atomic_always_lock_free(sizeof(T))
-          std::enable_if_t<!atomic_always_lock_free(sizeof(T)), int> = 0>
+          std::enable_if_t<!device_atomic_always_lock_free(sizeof(T)), int> = 0>
 __device__ T device_atomic_fetch_oper(const Oper& op,
                                       T* const dest,
                                       dont_deduce_this_parameter_t<const T> val,
