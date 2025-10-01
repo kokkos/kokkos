@@ -676,6 +676,17 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && \
+    KOKKOS_COMPILER_NVCC >= 1220 && KOKKOS_COMPILER_NVCC < 1240
+  KOKKOS_FUNCTION
+  View(const View& other) : base_t{other} {
+    if constexpr (!has_empty_hooks_policy) {
+      KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
+    }
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View(const View&)
     requires(has_empty_hooks_policy)
@@ -687,7 +698,19 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       : base_t{other} {
     KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
+#endif
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && \
+    KOKKOS_COMPILER_NVCC >= 1220 && KOKKOS_COMPILER_NVCC < 1240
+  KOKKOS_FUNCTION
+  View(View&& other) : base_t{std::move(static_cast<base_t&&>(other))} {
+    if constexpr (!has_empty_hooks_policy) {
+      KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+    }
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View(View&&)
     requires(has_empty_hooks_policy)
@@ -699,7 +722,24 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       : base_t{std::move(static_cast<base_t&&>(other))} {
     KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
   }
+#endif
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && \
+    KOKKOS_COMPILER_NVCC >= 1220 && KOKKOS_COMPILER_NVCC < 1240
+  KOKKOS_FUNCTION
+  View& operator=(const View& other) {
+    base_t::operator=(other);
+
+    if constexpr (!has_empty_hooks_policy) {
+      KOKKOS_IF_ON_HOST(
+          (if (&other != this) { hooks_policy::copy_assign(*this, other); }))
+    }
+
+    return *this;
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(const View&)
     requires(has_empty_hooks_policy)
@@ -715,7 +755,24 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
     return *this;
   }
+#endif
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && \
+    KOKKOS_COMPILER_NVCC >= 1220 && KOKKOS_COMPILER_NVCC < 1240
+  KOKKOS_FUNCTION
+  View& operator=(View&& other) {
+    base_t::operator=(std::move(static_cast<base_t&&>(other)));
+
+    if constexpr (!has_empty_hooks_policy) {
+      KOKKOS_IF_ON_HOST(
+          (if (&other != this) { hooks_policy::move_assign(*this, other); }))
+    }
+
+    return *this;
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(View&&)
     requires(has_empty_hooks_policy)
@@ -731,6 +788,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
     return *this;
   }
+#endif
 
   KOKKOS_FUNCTION
   View(typename base_t::data_handle_type p,
