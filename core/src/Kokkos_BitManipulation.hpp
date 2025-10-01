@@ -298,11 +298,9 @@ namespace Kokkos {
 
 //<editor-fold desc="[bit.cast], bit_cast">
 template <class To, class From>
-KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&
-                                     std::is_trivially_copyable_v<To> &&
-                                     std::is_trivially_copyable_v<From>,
-                                 To>
-bit_cast(From const& from) noexcept {
+  requires(sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<To> &&
+           std::is_trivially_copyable_v<From>)
+KOKKOS_FUNCTION To bit_cast(From const& from) noexcept {
 #if defined(KOKKOS_ENABLE_SYCL)
   return sycl::bit_cast<To>(from);
 #else
@@ -414,11 +412,9 @@ template <Impl::UnsignedInteger T>
 namespace Kokkos::Experimental {
 
 template <class To, class From>
-KOKKOS_FUNCTION std::enable_if_t<sizeof(To) == sizeof(From) &&
-                                     std::is_trivially_copyable_v<To> &&
-                                     std::is_trivially_copyable_v<From>,
-                                 To>
-bit_cast_builtin(From const& from) noexcept {
+  requires(sizeof(To) == sizeof(From) && std::is_trivially_copyable_v<To> &&
+           std::is_trivially_copyable_v<From>)
+KOKKOS_FUNCTION To bit_cast_builtin(From const& from) noexcept {
   // qualify the call to avoid ADL
   return Kokkos::bit_cast<To>(from);  // no benefit to call the _builtin variant
 }
