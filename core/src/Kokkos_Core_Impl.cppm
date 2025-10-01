@@ -22,12 +22,12 @@ export {
   namespace BV {
   using ::Kokkos::Impl::BV::BasicView;
   }
+  using ::Kokkos::Impl::AccessorArg_t;
+  using ::Kokkos::Impl::AccessorTypeTag;
   using ::Kokkos::Impl::append_formatted_multidimensional_index;
   using ::Kokkos::Impl::ApplyToViewOfStaticRank;
   using ::Kokkos::Impl::are_integral;
   using ::Kokkos::Impl::as_view_of_rank_n;
-using ::Kokkos::Impl::AccessorTypeTag;
-  using ::Kokkos::Impl::AccessorArg_t;
   using ::Kokkos::Impl::AtomicAccessorRelaxed;
   using ::Kokkos::Impl::check_view_ctor_args_create_mirror;
   using ::Kokkos::Impl::check_view_ctor_args_create_mirror_view_and_copy;
@@ -60,10 +60,10 @@ using ::Kokkos::Impl::AccessorTypeTag;
   using ::Kokkos::Impl::SubviewExtents;
   using ::Kokkos::Impl::SubviewLegalArgsCompileTime;
   using ::Kokkos::Impl::ViewArguments;
-  using ::Kokkos::Impl::ViewCustomArguments;
   using ::Kokkos::Impl::ViewArrayAnalysis;
   using ::Kokkos::Impl::ViewCopy;
   using ::Kokkos::Impl::ViewCtorProp;
+  using ::Kokkos::Impl::ViewCustomArguments;
   using ::Kokkos::Impl::ViewDataAnalysis;
   using ::Kokkos::Impl::ViewDataHandle;
   using ::Kokkos::Impl::ViewDimension;
@@ -76,18 +76,18 @@ using ::Kokkos::Impl::AccessorTypeTag;
 
   // execution policies
   namespace Impl {
+  using ::Kokkos::Impl::get_tile_size_properties;
   using ::Kokkos::Impl::ParallelConstructName;
   using ::Kokkos::Impl::PolicyTraits;
   using ::Kokkos::Impl::WorkTagTrait;
-  using ::Kokkos::Impl::get_tile_size_properties;
   }  // namespace Impl
 
   // miscellaneous
   namespace Impl {
+  using ::Kokkos::Impl::FunctorAnalysis;
   using ::Kokkos::Impl::python_view_type_impl_t;
   using ::Kokkos::Impl::throw_runtime_exception;
   using ::Kokkos::Impl::TypeInfo;
-  using ::Kokkos::Impl::FunctorAnalysis;
   }  // namespace Impl
 
   // initialization/finalization

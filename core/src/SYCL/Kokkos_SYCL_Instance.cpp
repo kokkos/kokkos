@@ -10,7 +10,7 @@
 import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
-#endif  //kokkos_malloc
+#endif  // kokkos_malloc
 
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
 #include <impl/Kokkos_Error.hpp>

@@ -505,8 +505,7 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr void simd_partial_store(
 
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar> condition(
-    std::type_identity_t<
-        basic_simd_mask<T, simd_abi::scalar>> const& a,
+    std::type_identity_t<basic_simd_mask<T, simd_abi::scalar>> const& a,
     basic_simd<T, simd_abi::scalar> const& b,
     basic_simd<T, simd_abi::scalar> const& c) {
   return basic_simd<T, simd_abi::scalar>(
