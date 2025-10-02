@@ -22,9 +22,6 @@ struct host_atomic_exchange_available_gcc {
   constexpr static bool value =
 #ifndef DESUL_HAVE_LIBATOMIC
       ((sizeof(T) == 4 && alignof(T) == 4) ||
-#ifdef __SIZEOF_INT128__
-       (sizeof(T) == 16 && alignof(T) == 16) ||
-#endif
        (sizeof(T) == 8 && alignof(T) == 8)) &&
 #endif
       std::is_trivially_copyable<T>::value;
@@ -33,13 +30,7 @@ struct host_atomic_exchange_available_gcc {
 template <class T>
 constexpr bool host_atomic_always_lock_free() {
   return (sizeof(T) == 4) ||
-#ifdef __SIZEOF_INT128__
-         (sizeof(T) == 16) ||
-#endif
          (sizeof(T) == 8);
-#ifdef __SIZEOF_INT128__
-  static_assert(__SIZEOF_INT128__ == 16);
-#endif
 }
 
 // clang-format off
