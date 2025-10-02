@@ -118,10 +118,7 @@ static void StreamCopy(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
-                          N8);
-  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
-                          N8);
+  StreamView<MemTraits> a("a", N8), b("b", N8);
 
   perform_set(a, A_INIT);
 
@@ -141,10 +138,7 @@ static void StreamScale(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
-  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
-                          N8);
-  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
-                          N8);
+  StreamView<MemTraits> a("a", N8), b("b", N8);
 
   perform_set(b, B_INIT);
 
@@ -164,12 +158,7 @@ static void StreamAdd(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
-                          N8);
-  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
-                          N8);
-  StreamView<MemTraits> c(Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"),
-                          N8);
+  StreamView<MemTraits> a("a", N8), b("b", N8), c("c", N8);
 
   perform_set(a, A_INIT);
   perform_set(b, B_INIT);
@@ -191,12 +180,7 @@ static void StreamTriad(benchmark::State& state) {
   const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
-  StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
-                          N8);
-  StreamView<MemTraits> b(Kokkos::view_alloc(Kokkos::WithoutInitializing, "b"),
-                          N8);
-  StreamView<MemTraits> c(Kokkos::view_alloc(Kokkos::WithoutInitializing, "c"),
-                          N8);
+  StreamView<MemTraits> a("a", N8), b("b", N8), c("c", N8);
 
   perform_set(a, A_INIT);
   perform_set(b, B_INIT);
