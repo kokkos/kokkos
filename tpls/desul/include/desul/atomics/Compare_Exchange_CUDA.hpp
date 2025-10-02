@@ -141,7 +141,7 @@ namespace Impl {
 template <class T>
 constexpr bool device_atomic_always_lock_free() {
   return (sizeof(T) == 4) ||
-#ifdef DESUL_HAVE_CUDA_128BIT_CAS
+#ifdef DESUL_HAVE_16BYTE_LOCK_FREE_ATOMICS_DEVICE
          (sizeof(T) == 16) ||
 #endif
          (sizeof(T) == 8);
@@ -154,7 +154,7 @@ constexpr bool device_atomic_always_lock_free() {
 namespace desul {
 namespace Impl {
 
-#ifdef DESUL_HAVE_CUDA_128BIT_CAS
+#ifdef DESUL_HAVE_16BYTE_LOCK_FREE_ATOMICS_DEVICE
 template <class T, class MemoryScope>
 __device__ std::enable_if_t<sizeof(T) == 16, T> device_atomic_exchange(
     T* const dest, T value, MemoryOrderSeqCst, MemoryScope) {
