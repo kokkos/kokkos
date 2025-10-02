@@ -81,8 +81,8 @@ void perform_triad(const V& a, const V& b, const V& c,
 
 template <typename V>
 int validate_array(V& a_dev, typename V::const_value_type expected) {
-  const auto a = Kokkos::create_mirror_view(Kokkos::WithoutInitializing, a_dev);
-  Kokkos::deep_copy(a, a_dev);
+  const auto a =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, a_dev);
 
   double error = 0.0;
   for (size_t i = 0; i < a.size(); ++i) {
