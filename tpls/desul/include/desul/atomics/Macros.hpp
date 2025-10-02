@@ -61,6 +61,12 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_HAVE_OPENACC_ATOMICS
 #endif
 
+#if defined(DESUL_ATOMICS_ENABLE_CUDA) || defined(DESUL_ATOMICS_ENABLE_HIP) || \
+    defined(DESUL_ATOMICS_ENABLE_HIP) || defined(DESUL_ATOMICS_ENABLE_SYCL) || \
+    defined(DESUL_ATOMICS_ENABLE_OPENACC)
+#define DESUL_HAVE_DEVICE_ATOMICS
+#endif
+
 // ONLY use GNUC atomics if not explicitly say to use OpenMP atomics
 #if !defined(DESUL_HAVE_OPENMP_ATOMICS) && defined(__GNUC__)
 #define DESUL_HAVE_GCC_ATOMICS
