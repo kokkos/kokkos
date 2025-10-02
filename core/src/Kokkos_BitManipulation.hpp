@@ -284,7 +284,7 @@ struct PopCount<constant_evaluated, /*device=*/false> {
 #undef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
 
 template <class T>
-concept UnsignedInteger =
+concept StandardUnsignedInteger =
     std::same_as<T, unsigned char> || std::same_as<T, unsigned short> ||
     std::same_as<T, unsigned int> || std::same_as<T, unsigned long> ||
     std::same_as<T, unsigned long long>;
@@ -316,14 +316,14 @@ KOKKOS_FUNCTION constexpr T byteswap(T value) noexcept {
 //</editor-fold>
 
 //<editor-fold desc="[bit.count], counting">
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countl_zero(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   if (x == 0) return digits_v<T>;
   return Impl::dispatch_helper<Impl::CountlZero>(x);
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countl_one(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   using ::Kokkos::Experimental::finite_max_v;
@@ -331,14 +331,14 @@ KOKKOS_FUNCTION constexpr int countl_one(T x) noexcept {
   return countl_zero(static_cast<T>(~x));
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countr_zero(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   if (x == 0) return digits_v<T>;
   return Impl::dispatch_helper<Impl::CountrZero>(x);
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countr_one(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   using ::Kokkos::Experimental::finite_max_v;
@@ -346,7 +346,7 @@ KOKKOS_FUNCTION constexpr int countr_one(T x) noexcept {
   return countr_zero(static_cast<T>(~x));
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int popcount(T x) noexcept {
   if (x == 0) return 0;
   return Impl::dispatch_helper<Impl::PopCount>(x);
@@ -354,26 +354,26 @@ KOKKOS_FUNCTION constexpr int popcount(T x) noexcept {
 //</editor-fold>
 
 //<editor-fold desc="[bit.pow.two], integral powers of 2">
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr bool has_single_bit(T x) noexcept {
   return x != 0 && (((x & (x - 1)) == 0));
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr T bit_ceil(T x) noexcept {
   if (x <= 1) return 1;
   using ::Kokkos::Experimental::digits_v;
   return T{1} << (digits_v<T> - countl_zero(static_cast<T>(x - 1)));
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr T bit_floor(T x) noexcept {
   if (x == 0) return 0;
   using ::Kokkos::Experimental::digits_v;
   return T{1} << (digits_v<T> - 1 - countl_zero(x));
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int bit_width(T x) noexcept {
   if (x == 0) return 0;
   using ::Kokkos::Experimental::digits_v;
@@ -382,7 +382,7 @@ KOKKOS_FUNCTION constexpr int bit_width(T x) noexcept {
 //</editor-fold>
 
 //<editor-fold desc="[bit.rotate], rotating">
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 [[nodiscard]] KOKKOS_FUNCTION constexpr T rotl(T x, int s) noexcept {
   using Experimental::digits_v;
   constexpr auto dig = digits_v<T>;
@@ -392,7 +392,7 @@ template <Impl::UnsignedInteger T>
   return (x >> -rem) | (x << ((dig + rem) % dig));  // rotr(x, -rem)
 }
 
-template <Impl::UnsignedInteger T>
+template <Impl::StandardUnsignedInteger T>
 [[nodiscard]] KOKKOS_FUNCTION constexpr T rotr(T x, int s) noexcept {
   using Experimental::digits_v;
   constexpr auto dig = digits_v<T>;
@@ -420,64 +420,64 @@ KOKKOS_FUNCTION T byteswap_builtin(T x) noexcept {
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::ByteSwap>(x);
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION int countl_zero_builtin(T x) noexcept {
   if (x == 0) return digits_v<T>;
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::CountlZero>(x);
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION int countl_one_builtin(T x) noexcept {
   if (x == finite_max_v<T>) return digits_v<T>;
   return countl_zero_builtin(static_cast<T>(~x));
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION int countr_zero_builtin(T x) noexcept {
   if (x == 0) return digits_v<T>;
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::CountrZero>(x);
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION int countr_one_builtin(T x) noexcept {
   if (x == finite_max_v<T>) return digits_v<T>;
   return countr_zero_builtin(static_cast<T>(~x));
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION int popcount_builtin(T x) noexcept {
   return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::PopCount>(x);
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION bool has_single_bit_builtin(T x) noexcept {
   return has_single_bit(x);  // no benefit to call the _builtin variant
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION T bit_ceil_builtin(T x) noexcept {
   if (x <= 1) return 1;
   return T{1} << (digits_v<T> - countl_zero_builtin(static_cast<T>(x - 1)));
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION T bit_floor_builtin(T x) noexcept {
   if (x == 0) return 0;
   return T{1} << (digits_v<T> - 1 - countl_zero_builtin(x));
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION int bit_width_builtin(T x) noexcept {
   if (x == 0) return 0;
   return digits_v<T> - countl_zero_builtin(x);
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 [[nodiscard]] KOKKOS_FUNCTION T rotl_builtin(T x, int s) noexcept {
   return rotl(x, s);  // no benefit to call the _builtin variant
 }
 
-template <Kokkos::Impl::UnsignedInteger T>
+template <Kokkos::Impl::StandardUnsignedInteger T>
 [[nodiscard]] KOKKOS_FUNCTION T rotr_builtin(T x, int s) noexcept {
   return rotr(x, s);  // no benefit to call the _builtin variant
 }
