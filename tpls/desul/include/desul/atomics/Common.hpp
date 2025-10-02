@@ -17,10 +17,10 @@ namespace desul {
 struct alignas(16) Dummy16ByteValue {
   int64_t value1;
   int64_t value2;
-  bool operator!=(Dummy16ByteValue v) const {
+  DESUL_FUNCTION bool operator!=(Dummy16ByteValue v) const {
     return (value1 != v.value1) || (value2 != v.value2);
   }
-  bool operator==(Dummy16ByteValue v) const {
+  DESUL_FUNCTION bool operator==(Dummy16ByteValue v) const {
     return (value1 == v.value1) && (value2 == v.value2);
   }
 };
