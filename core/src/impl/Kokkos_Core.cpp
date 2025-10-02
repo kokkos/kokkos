@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
@@ -723,6 +710,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1100");
 #elif defined(KOKKOS_ARCH_AMD_GFX1103)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1103");
+#elif defined(KOKKOS_ARCH_AMD_GFX1201)
+  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1201");
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
 #endif

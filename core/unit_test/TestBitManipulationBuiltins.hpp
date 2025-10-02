@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <gtest/gtest.h>
 
@@ -754,15 +741,15 @@ TEST(TEST_CATEGORY, bit_manip_byeswap) {
     test_bit_manip_byteswap<unsigned char>();
     test_bit_manip_byteswap<short>();
     test_bit_manip_byteswap<unsigned short>();
+    test_bit_manip_byteswap<int>();
+    test_bit_manip_byteswap<unsigned int>();
+    test_bit_manip_byteswap<long>();
+    test_bit_manip_byteswap<unsigned long>();
+    test_bit_manip_byteswap<long long>();
+    test_bit_manip_byteswap<unsigned long long>();
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
   }
 #endif
-  test_bit_manip_byteswap<int>();
-  test_bit_manip_byteswap<unsigned int>();
-  test_bit_manip_byteswap<long>();
-  test_bit_manip_byteswap<unsigned long>();
-  test_bit_manip_byteswap<long long>();
-  test_bit_manip_byteswap<unsigned long long>();
 }
 
 // CUDA doesn't provide memcmp

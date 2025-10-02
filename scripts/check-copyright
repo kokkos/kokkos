@@ -1,10 +1,10 @@
-files=$(git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\)' | grep -v 'tpls/')
+files=$(git ls-files | grep -e '.*\.\(cc\|cpp\|hpp\|cppm\)' | grep -v 'tpls/')
 echo "" &> scripts/diff_files
-tmp=$(wc -l < LICENSE_FILE_HEADER)
+tmp=$(wc -l < scripts/LICENSE_FILE_HEADER)
 NNEW=$(($tmp))
 for file in $files
 do
-  head -n +$NNEW "${file}" | diff -q - LICENSE_FILE_HEADER > /dev/null
+  head -n +$NNEW "${file}" | diff -q - scripts/LICENSE_FILE_HEADER > /dev/null
   if [[ "${?}" == 1 ]]
   then
     echo "${file}" >> scripts/diff_files

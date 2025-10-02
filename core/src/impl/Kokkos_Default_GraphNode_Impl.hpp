@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_KOKKOS_HOST_GRAPHNODE_IMPL_HPP
 #define KOKKOS_KOKKOS_HOST_GRAPHNODE_IMPL_HPP
@@ -91,10 +78,9 @@ struct GraphNodeBackendSpecificDetails {
     m_is_aggregate = true;
   }
 
-  // A node is awaitable if it can execute a kernel.
-  // A root node or an aggregate node cannot be waited for, because it does
-  // not launch anything.
-  bool awaitable() const { return (!m_is_root) && (!m_is_aggregate); }
+  // A node is awaitable if it is not a root node.
+  // Note that an aggregate node is a when_all event that may be waited for.
+  bool awaitable() const { return !m_is_root; }
 
   // Retrieve the execution space instance that has been passed to
   // the kernel at construction phase.

@@ -111,19 +111,15 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCM-6.4-MI100-RDC-CXX20') {
+                stage('HIP-ROCM-7.0-MI100-RDC-CXX20') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.4.1-complete'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:7.0-complete'
                             label 'rocm-docker && AMD_Radeon_Instinct_MI100'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
-                    }
-                    environment {
-                        // FIXME Test returns a wrong value
-                        GTEST_FILTER = '-hip_hostpinned.view_allocation_large_rank'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -133,6 +129,7 @@ pipeline {
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=20" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS='-Werror -Wno-unused-command-line-argument'" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_PREFIX_PATH='/opt/rocm'" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP_RELOCATABLE_DEVICE_CODE=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON" && \
@@ -141,7 +138,7 @@ pipeline {
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_BENCHMARKS=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_EXAMPLES=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON" && \
-                              ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="HIP-ROCM-6.4-MI100-RDC-CXX20"
+                              ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="HIP-ROCM-7.0-MI100-RDC-CXX20"
                               '''
                     }
                     post {
@@ -151,30 +148,25 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCM-6.4-MI210-CXX23') {
+                stage('HIP-ROCM-7.0-MI210-CXX23') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:6.4.1-complete --build-arg CMAKE_VERSION=3.31.3'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:7.0-complete --build-arg CMAKE_VERSION=3.31.3'
                             label 'rocm-docker && AMD_Radeon_Instinct_MI210'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
                     }
-                    environment {
-                        // FIXME Test returns a wrong value
-                        GTEST_FILTER = '-hip_hostpinned.view_allocation_large_rank'
-                    }
                     steps {
-                        // FIXME Disable warnings from the Hankel functions ch_10 and ch_20 when using complex numbers and from lgamma_op in SIMD.
                         sh 'ccache --zero-stats'
                         sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=23" && \
-                              export
-                              ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS='-Werror -Wno-unused-command-line-argument -Wno-pass-failed'" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_FLAGS='-Werror -Wno-unused-command-line-argument'" && \
+                              export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_PREFIX_PATH='/opt/rocm'" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_NATIVE=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_DEPRECATED_CODE_4=ON" && \
@@ -182,7 +174,7 @@ pipeline {
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_BENCHMARKS=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_EXAMPLES=ON" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON" && \
-                              ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="HIP-ROCM-6.4-MI210-CXX23"
+                              ctest -VV -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="ornl-jenkins" -D CTEST_BUILD_NAME="HIP-ROCM-7.0-MI210-CXX23"
                               '''
                     }
                     post {

@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Graph.hpp>
@@ -1167,7 +1154,10 @@ struct ThenIncrementAndCombineFunctor
 };
 
 template <typename T>
-struct GraphIsDefaulted : std::true_type {};
+struct GraphIsDefaulted : std::false_type {};
+
+template <typename Exec>
+struct GraphIsDefaulted<Kokkos::Experimental::Graph<Exec>> : std::true_type {};
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
@@ -1178,7 +1168,8 @@ struct GraphIsDefaulted<
 #endif
 
 template <typename T>
-constexpr bool is_graph_defaulted = GraphIsDefaulted<T>::value;
+constexpr bool is_graph_defaulted =
+    GraphIsDefaulted<std::remove_cv_t<T>>::value;
 
 // A graph with only one node that is a then_host node.
 TEST(TEST_CATEGORY, then_host) {
@@ -1279,6 +1270,82 @@ TEST(TEST_CATEGORY, mixed_then_host_device_nodes) {
   } else {
     GTEST_SKIP() << "This test requires a shared space.";
   }
+}
+
+// Ensure that in the default implementation, fencing occurs as needed
+// to ensure that dependencies are met when using an aggregate node.
+//
+// The graph is:
+//
+//              root
+//          (exec_default)
+//               *
+//            *      *
+//    node left      node right
+// (exec_default)  (exec_default)
+//            *      *
+//               *
+//            when_all
+//         (exec_default)
+//               *
+//               *
+//           node final
+//          (exec_other)
+//
+// The default implementation need not fence in the upper part of the graph
+// (diamond) because all nodes are on the same execution space instance.
+// However, before executing 'node final', we must ensure that 'node left' and
+// 'node right' have executed, and so the when_all must be waited for and a
+// fence is needed.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), aggregate_is_awaitable) {
+  const TEST_EXECSPACE exec_default{};
+  const auto exec_instances =
+      Kokkos::Experimental::partition_space(exec_default, std::vector<int>{1});
+  const auto& exec_other = exec_instances.at(0);
+
+  using witness_t =
+      Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>;
+  const witness_t witness(Kokkos::view_alloc("witness", exec_default));
+
+  const Kokkos::Experimental::Graph graph{exec_default};
+  const auto root = graph.root_node();
+  auto node_left =
+      root.then("node left", exec_default, ThenFunctor<witness_t>{witness, 1});
+  auto node_right =
+      root.then("node right", exec_default, ThenFunctor<witness_t>{witness, 1});
+  Kokkos::Experimental::when_all(std::move(node_left), std::move(node_right))
+      .then("node final", exec_other, ThenFunctor<witness_t>{witness, 1});
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+
+  if constexpr (is_graph_defaulted<decltype(graph)>) {
+    const auto matcher = [&](BeginFenceEvent fence) {
+      if (fence.name ==
+          "Kokkos::DefaultGraphNode::execute_node: sync "
+          "with predecessors")
+        return MatchDiagnostic{true};
+      else
+        return MatchDiagnostic{false};
+    };
+    if (exec_default != exec_other) {
+      ASSERT_TRUE(
+          validate_existence([&] { graph.submit(exec_other); }, matcher));
+    } else {
+      ASSERT_TRUE(validate_absence([&] { graph.submit(exec_other); }, matcher));
+    }
+  } else {
+    ASSERT_TRUE(validate_absence(
+        [&] { graph.submit(exec_other); },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; }));
+  }
+
+  listen_tool_events(Config::DisableAll());
+
+  exec_other.fence("wait for the graph to complete");
+  const auto witness_h =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, witness);
+  ASSERT_EQ(witness_h(), 3);
 }
 
 // Ensure that a then can be given a work tag.

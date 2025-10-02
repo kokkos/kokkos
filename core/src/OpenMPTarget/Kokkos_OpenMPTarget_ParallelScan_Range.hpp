@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_OPENMPTARGET_PARALLELSCAN_RANGE_HPP
 #define KOKKOS_OPENMPTARGET_PARALLELSCAN_RANGE_HPP
@@ -134,8 +121,9 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           if (i > 0) {
             local_offset_value = element_values(team_id, i - 1);
             // FIXME_OPENMPTARGET We seem to access memory illegaly on AMD GPUs
-#if defined(KOKKOS_ARCH_AMD_GPU) && !defined(KOKKOS_ARCH_AMD_GFX1030) && \
-    !defined(KOKKOS_ARCH_AMD_GFX1100) && !defined(KOKKOS_ARCH_AMD_GFX1103)
+#if defined(KOKKOS_ARCH_AMD_GPU) && !defined(KOKKOS_ARCH_AMD_GFX1030) &&      \
+    !defined(KOKKOS_ARCH_AMD_GFX1100) && !defined(KOKKOS_ARCH_AMD_GFX1103) && \
+    !defined(KOKKOS_ARCH_AMD_GFX1201)
             if constexpr (Analysis::Reducer::has_join_member_function()) {
               a_functor.get_functor().join(local_offset_value, offset_value);
             } else

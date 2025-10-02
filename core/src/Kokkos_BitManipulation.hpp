@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_BIT_MANIPULATION_HPP
 #define KOKKOS_BIT_MANIPULATION_HPP
@@ -25,69 +12,275 @@
 
 namespace Kokkos::Impl {
 
-template <class T>
-KOKKOS_FUNCTION constexpr T byteswap_fallback(T x) {
-  if constexpr (sizeof(T) > 1) {
-    using U = std::make_unsigned_t<T>;
-
-    size_t shift = CHAR_BIT * (sizeof(T) - 1);
-
-    U lo_mask = static_cast<unsigned char>(~0);
-    U hi_mask = lo_mask << shift;
-
-    U val = x;
-
-    for (size_t i = 0; i < sizeof(T) / 2; ++i) {
-      U lo_val = val & lo_mask;
-      U hi_val = val & hi_mask;
-
-      val = (val & ~lo_mask) | (hi_val >> shift);
-      val = (val & ~hi_mask) | (lo_val << shift);
-
-      lo_mask <<= CHAR_BIT;
-      hi_mask >>= CHAR_BIT;
-
-      shift -= static_cast<size_t>(2) * CHAR_BIT;
-    }
-    return val;
+template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
+          class T>
+KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  // __builtin_is_device_code() is non-constexpr
+  return Op<true, true>::do_compute(x);
+#else
+#if defined(__cpp_if_consteval)  // since C++23
+  if consteval {
+    KOKKOS_IF_ON_HOST((return Op<true, false>::do_compute(x);))
+    KOKKOS_IF_ON_DEVICE((return Op<true, true>::do_compute(x);))
+  } else {
+    KOKKOS_IF_ON_HOST((return Op<false, false>::do_compute(x);))
+    KOKKOS_IF_ON_DEVICE((return Op<false, true>::do_compute(x);))
   }
-  // sizeof(T) == 1
-  return x;
+#else
+  KOKKOS_IF_ON_HOST((return Op<true, false>::do_compute(x);))
+  KOKKOS_IF_ON_DEVICE((return Op<true, true>::do_compute(x);))
+#endif
+#endif
 }
 
-template <class T>
-KOKKOS_FUNCTION constexpr int countl_zero_fallback(T x) {
-  // From Hacker's Delight (2nd edition) section 5-3
-  unsigned int y = 0;
-  using ::Kokkos::Experimental::digits_v;
-  int n = digits_v<T>;
-  int c = digits_v<T> / 2;
-  do {
-    y = x >> c;
-    if (y != 0) {
-      n -= c;
-      x = y;
+template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
+          class T>
+KOKKOS_FUNCTION constexpr auto dispatch_helper_builtin(T x) noexcept {
+  KOKKOS_IF_ON_HOST((return Op<false, false>::do_compute(x);))
+  KOKKOS_IF_ON_DEVICE((return Op<false, true>::do_compute(x);))
+
+  // FIXME_NVHPC: erroneous warning about return from non-void function
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
+  return T();
+#endif
+}
+
+#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
+    defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_APPLECC
+#define KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+#endif
+
+//<editor-fold desc="byteswap implementation details">
+template <bool constant_evaluated, bool device>
+struct ByteSwap {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    if constexpr (sizeof(T) > 1) {
+      using U = std::make_unsigned_t<T>;
+
+      size_t shift = CHAR_BIT * (sizeof(T) - 1);
+
+      U lo_mask = static_cast<unsigned char>(~0);
+      U hi_mask = lo_mask << shift;
+
+      U val = x;
+
+      for (size_t i = 0; i < sizeof(T) / 2; ++i) {
+        U lo_val = val & lo_mask;
+        U hi_val = val & hi_mask;
+
+        val = (val & ~lo_mask) | (hi_val >> shift);
+        val = (val & ~hi_mask) | (lo_val << shift);
+
+        lo_mask <<= CHAR_BIT;
+        hi_mask >>= CHAR_BIT;
+
+        shift -= static_cast<size_t>(2) * CHAR_BIT;
+      }
+      return val;
     }
-    c >>= 1;
-  } while (c != 0);
-  return n - static_cast<int>(x);
-}
-
-template <class T>
-KOKKOS_FUNCTION constexpr int countr_zero_fallback(T x) {
-  using ::Kokkos::Experimental::digits_v;
-  return digits_v<T> - countl_zero_fallback(static_cast<T>(
-                           static_cast<T>(~x) & static_cast<T>(x - 1)));
-}
-
-template <class T>
-KOKKOS_FUNCTION constexpr int popcount_fallback(T x) {
-  int c = 0;
-  for (; x != 0; x &= x - 1) {
-    ++c;
+    // sizeof(T) == 1
+    return x;
   }
-  return c;
-}
+};
+
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+template <bool constant_evaluated>
+struct ByteSwap<constant_evaluated, /*device=*/false> {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    if constexpr (sizeof(T) == 1) {
+      return x;
+    } else if constexpr (sizeof(T) == 2) {
+      return __builtin_bswap16(x);
+    } else if constexpr (sizeof(T) == 4) {
+      return __builtin_bswap32(x);
+    } else if constexpr (sizeof(T) == 8) {
+      return __builtin_bswap64(x);
+    } else if constexpr (sizeof(T) == 16) {
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_bswap128)
+      return __builtin_bswap128(x);
+#endif
+#endif
+      return (__builtin_bswap64(x >> 64) |
+              (static_cast<T>(__builtin_bswap64(x)) << 64));
+    }
+    return ByteSwap<true, false>::do_compute(x);
+  }
+};
+#endif
+//</editor-fold>
+
+//<editor-fold desc="countl_zero implementation details">
+template <bool constant_evaluated, bool device>
+struct CountlZero {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    // From Hacker's Delight (2nd edition) section 5-3
+    unsigned int y = 0;
+    using ::Kokkos::Experimental::digits_v;
+    int n = digits_v<T>;
+    int c = digits_v<T> / 2;
+    do {
+      y = x >> c;
+      if (y != 0) {
+        n -= c;
+        x = y;
+      }
+      c >>= 1;
+    } while (c != 0);
+    return n - static_cast<int>(x);
+  }
+};
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+template <>
+struct CountlZero</*constant_evaluated=*/false, /*device=*/true> {
+  template <class T>
+  static KOKKOS_IMPL_DEVICE_FUNCTION T do_compute(T x) noexcept {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+    if constexpr (sizeof(T) == sizeof(long long int))
+      return __clzll(reinterpret_cast<long long int&>(x));
+    if constexpr (sizeof(T) == sizeof(int))
+      return __clz(reinterpret_cast<int&>(x));
+    using ::Kokkos::Experimental::digits_v;
+    constexpr int shift = digits_v<unsigned int> - digits_v<T>;
+    return __clz(x) - shift;
+#elif defined(KOKKOS_ENABLE_SYCL)
+    return sycl::clz(x);
+#else
+    static_assert(false, "implementation bug");
+#endif
+  }
+};
+#endif
+
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+template <bool constant_evaluated>
+struct CountlZero<constant_evaluated, /*device=*/false> {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    using ::Kokkos::Experimental::digits_v;
+    if (x == 0) return digits_v<T>;
+    if constexpr (std::is_same_v<T, unsigned long long>) {
+      return __builtin_clzll(x);
+    } else if constexpr (std::is_same_v<T, unsigned long>) {
+      return __builtin_clzl(x);
+    } else if constexpr (std::is_same_v<T, unsigned int>) {
+      return __builtin_clz(x);
+    } else {
+      constexpr int shift = digits_v<unsigned int> - digits_v<T>;
+      return __builtin_clz(x) - shift;
+    }
+  }
+};
+#endif
+//</editor-fold>
+
+//<editor-fold desc="countr_zero implementation details">
+template <bool constant_evaluated, bool device>
+struct CountrZero {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    using ::Kokkos::Experimental::digits_v;
+    return digits_v<T> -
+           CountlZero<constant_evaluated, device>::do_compute(
+               static_cast<T>(static_cast<T>(~x) & static_cast<T>(x - 1)));
+  }
+};
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+template <>
+struct CountrZero</*constant_evaluated=*/false, /*device=*/true> {
+  template <class T>
+  static KOKKOS_IMPL_DEVICE_FUNCTION T do_compute(T x) noexcept {
+    using ::Kokkos::Experimental::digits_v;
+    if (x == 0) return digits_v<T>;
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+    if constexpr (sizeof(T) == sizeof(long long int))
+      return __ffsll(reinterpret_cast<long long int&>(x)) - 1;
+    return __ffs(reinterpret_cast<int&>(x)) - 1;
+#elif defined(KOKKOS_ENABLE_SYCL)
+    return sycl::ctz(x);
+#else
+    static_assert(false, "implementation bug");
+#endif
+  }
+};
+#endif
+
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+template <bool constant_evaluated>
+struct CountrZero<constant_evaluated, /*device=*/false> {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    using ::Kokkos::Experimental::digits_v;
+    if (x == 0) return digits_v<T>;
+    if constexpr (std::is_same_v<T, unsigned long long>) {
+      return __builtin_ctzll(x);
+    } else if constexpr (std::is_same_v<T, unsigned long>) {
+      return __builtin_ctzl(x);
+    } else {
+      return __builtin_ctz(x);
+    }
+  }
+};
+#endif
+//</editor-fold>
+
+//<editor-fold desc="popcount implementation details">
+template <bool constant_evaluated, bool device>
+struct PopCount {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    int c = 0;
+    for (; x != 0; x &= x - 1) {
+      ++c;
+    }
+    return c;
+  }
+};
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL)
+template <>
+struct PopCount</*constant_evaluated=*/false, /*device=*/true> {
+  template <class T>
+  static KOKKOS_IMPL_DEVICE_FUNCTION T do_compute(T x) noexcept {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+    if constexpr (sizeof(T) == sizeof(long long int)) return __popcll(x);
+    return __popc(x);
+#elif defined(KOKKOS_ENABLE_SYCL)
+    return sycl::popcount(x);
+#else
+    static_assert(false, "implementation bug");
+#endif
+  }
+};
+#endif
+
+#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
+template <bool constant_evaluated>
+struct PopCount<constant_evaluated, /*device=*/false> {
+  template <class T>
+  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+    if constexpr (std::is_same_v<T, unsigned long long>) {
+      return __builtin_popcountll(x);
+    } else if constexpr (std::is_same_v<T, unsigned long>) {
+      return __builtin_popcountl(x);
+    } else {
+      return __builtin_popcount(x);
+    }
+  }
+};
+#endif
+//</editor-fold>
+
+#undef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
 
 template <class T>
 inline constexpr bool is_standard_unsigned_integer_type_v =
@@ -120,7 +313,7 @@ bit_cast(From const& from) noexcept {
 template <class T>
 KOKKOS_FUNCTION constexpr std::enable_if_t<std::is_integral_v<T>, T> byteswap(
     T value) noexcept {
-  return Impl::byteswap_fallback(value);
+  return Impl::dispatch_helper<Impl::ByteSwap>(value);
 }
 //</editor-fold>
 
@@ -131,8 +324,7 @@ KOKKOS_FUNCTION constexpr std::enable_if_t<
 countl_zero(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   if (x == 0) return digits_v<T>;
-  // TODO use compiler intrinsics when available
-  return Impl::countl_zero_fallback(x);
+  return Impl::dispatch_helper<Impl::CountlZero>(x);
 }
 
 template <class T>
@@ -151,8 +343,7 @@ KOKKOS_FUNCTION constexpr std::enable_if_t<
 countr_zero(T x) noexcept {
   using ::Kokkos::Experimental::digits_v;
   if (x == 0) return digits_v<T>;
-  // TODO use compiler intrinsics when available
-  return Impl::countr_zero_fallback(x);
+  return Impl::dispatch_helper<Impl::CountrZero>(x);
 }
 
 template <class T>
@@ -170,8 +361,7 @@ KOKKOS_FUNCTION constexpr std::enable_if_t<
     Impl::is_standard_unsigned_integer_type_v<T>, int>
 popcount(T x) noexcept {
   if (x == 0) return 0;
-  // TODO use compiler intrinsics when available
-  return Impl::popcount_fallback(x);
+  return Impl::dispatch_helper<Impl::PopCount>(x);
 }
 //</editor-fold>
 
@@ -239,155 +429,6 @@ rotr(T x, int s) noexcept {
 
 }  // namespace Kokkos
 
-namespace Kokkos::Impl {
-
-#if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \
-    defined(KOKKOS_COMPILER_GNU)
-#define KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
-#endif
-
-template <class T>
-KOKKOS_IMPL_DEVICE_FUNCTION T byteswap_builtin_device(T x) noexcept {
-  return byteswap_fallback(x);
-}
-
-template <class T>
-KOKKOS_IMPL_HOST_FUNCTION T byteswap_builtin_host(T x) noexcept {
-#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
-  if constexpr (sizeof(T) == 1) {
-    return x;
-  } else if constexpr (sizeof(T) == 2) {
-    return __builtin_bswap16(x);
-  } else if constexpr (sizeof(T) == 4) {
-    return __builtin_bswap32(x);
-  } else if constexpr (sizeof(T) == 8) {
-    return __builtin_bswap64(x);
-  } else if constexpr (sizeof(T) == 16) {
-#if defined(__has_builtin)
-#if __has_builtin(__builtin_bswap128)
-    return __builtin_bswap128(x);
-#endif
-#endif
-    return (__builtin_bswap64(x >> 64) |
-            (static_cast<T>(__builtin_bswap64(x)) << 64));
-  }
-#endif
-
-  return byteswap_fallback(x);
-}
-
-template <class T>
-KOKKOS_IMPL_DEVICE_FUNCTION
-    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
-    countl_zero_builtin_device(T x) noexcept {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  if constexpr (sizeof(T) == sizeof(long long int))
-    return __clzll(reinterpret_cast<long long int&>(x));
-  if constexpr (sizeof(T) == sizeof(int))
-    return __clz(reinterpret_cast<int&>(x));
-  using ::Kokkos::Experimental::digits_v;
-  constexpr int shift = digits_v<unsigned int> - digits_v<T>;
-  return __clz(x) - shift;
-#elif defined(KOKKOS_ENABLE_SYCL)
-  return sycl::clz(x);
-#else
-  return countl_zero_fallback(x);
-#endif
-}
-
-template <class T>
-KOKKOS_IMPL_HOST_FUNCTION
-    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
-    countl_zero_builtin_host(T x) noexcept {
-  using ::Kokkos::Experimental::digits_v;
-  if (x == 0) return digits_v<T>;
-#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
-  if constexpr (std::is_same_v<T, unsigned long long>) {
-    return __builtin_clzll(x);
-  } else if constexpr (std::is_same_v<T, unsigned long>) {
-    return __builtin_clzl(x);
-  } else if constexpr (std::is_same_v<T, unsigned int>) {
-    return __builtin_clz(x);
-  } else {
-    constexpr int shift = digits_v<unsigned int> - digits_v<T>;
-    return __builtin_clz(x) - shift;
-  }
-#else
-  return countl_zero_fallback(x);
-#endif
-}
-
-template <class T>
-KOKKOS_IMPL_DEVICE_FUNCTION
-    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
-    countr_zero_builtin_device(T x) noexcept {
-  using ::Kokkos::Experimental::digits_v;
-  if (x == 0) return digits_v<T>;
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  if constexpr (sizeof(T) == sizeof(long long int))
-    return __ffsll(reinterpret_cast<long long int&>(x)) - 1;
-  return __ffs(reinterpret_cast<int&>(x)) - 1;
-#elif defined(KOKKOS_ENABLE_SYCL)
-  return sycl::ctz(x);
-#else
-  return countr_zero_fallback(x);
-#endif
-}
-
-template <class T>
-KOKKOS_IMPL_HOST_FUNCTION
-    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
-    countr_zero_builtin_host(T x) noexcept {
-  using ::Kokkos::Experimental::digits_v;
-  if (x == 0) return digits_v<T>;
-#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
-  if constexpr (std::is_same_v<T, unsigned long long>) {
-    return __builtin_ctzll(x);
-  } else if constexpr (std::is_same_v<T, unsigned long>) {
-    return __builtin_ctzl(x);
-  } else {
-    return __builtin_ctz(x);
-  }
-#else
-  return countr_zero_fallback(x);
-#endif
-}
-
-template <class T>
-KOKKOS_IMPL_DEVICE_FUNCTION
-    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
-    popcount_builtin_device(T x) noexcept {
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-  if constexpr (sizeof(T) == sizeof(long long int)) return __popcll(x);
-  return __popc(x);
-#elif defined(KOKKOS_ENABLE_SYCL)
-  return sycl::popcount(x);
-#else
-  return popcount_fallback(x);
-#endif
-}
-
-template <class T>
-KOKKOS_IMPL_HOST_FUNCTION
-    std::enable_if_t<is_standard_unsigned_integer_type_v<T>, int>
-    popcount_builtin_host(T x) noexcept {
-#ifdef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
-  if constexpr (std::is_same_v<T, unsigned long long>) {
-    return __builtin_popcountll(x);
-  } else if constexpr (std::is_same_v<T, unsigned long>) {
-    return __builtin_popcountl(x);
-  } else {
-    return __builtin_popcount(x);
-  }
-#else
-  return popcount_fallback(x);
-#endif
-}
-
-#undef KOKKOS_IMPL_USE_GCC_BUILT_IN_FUNCTIONS
-
-}  // namespace Kokkos::Impl
-
 namespace Kokkos::Experimental {
 
 template <class To, class From>
@@ -403,24 +444,15 @@ bit_cast_builtin(From const& from) noexcept {
 template <class T>
 KOKKOS_FUNCTION std::enable_if_t<std::is_integral_v<T>, T> byteswap_builtin(
     T x) noexcept {
-  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::byteswap_builtin_device(x);))
-  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::byteswap_builtin_host(x);))
-// FIXME-NVHPC: erroneous warning about return from non-void function
-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-  return T();
-#endif
+  return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::ByteSwap>(x);
 }
 
 template <class T>
 KOKKOS_FUNCTION std::enable_if_t<
     ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
 countl_zero_builtin(T x) noexcept {
-  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::countl_zero_builtin_device(x);))
-  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::countl_zero_builtin_host(x);))
-// FIXME-NVHPC: erroneous warning about return from non-void function
-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-  return 0;
-#endif
+  if (x == 0) return digits_v<T>;
+  return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::CountlZero>(x);
 }
 
 template <class T>
@@ -435,12 +467,8 @@ template <class T>
 KOKKOS_FUNCTION std::enable_if_t<
     ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
 countr_zero_builtin(T x) noexcept {
-  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::countr_zero_builtin_device(x);))
-  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::countr_zero_builtin_host(x);))
-// FIXME-NVHPC: erroneous warning about return from non-void function
-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-  return 0;
-#endif
+  if (x == 0) return digits_v<T>;
+  return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::CountrZero>(x);
 }
 
 template <class T>
@@ -455,12 +483,7 @@ template <class T>
 KOKKOS_FUNCTION std::enable_if_t<
     ::Kokkos::Impl::is_standard_unsigned_integer_type_v<T>, int>
 popcount_builtin(T x) noexcept {
-  KOKKOS_IF_ON_DEVICE((return ::Kokkos::Impl::popcount_builtin_device(x);))
-  KOKKOS_IF_ON_HOST((return ::Kokkos::Impl::popcount_builtin_host(x);))
-// FIXME-NVHPC: erroneous warning about return from non-void function
-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-  return 0;
-#endif
+  return Kokkos::Impl::dispatch_helper_builtin<Kokkos::Impl::PopCount>(x);
 }
 
 template <class T>
