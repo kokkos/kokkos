@@ -7,12 +7,11 @@
 
 namespace {
 
-// Check that moving a View outside a parallel region does not increase the
-// number of views managing the allocation.
 template <class ViewType>
-void test_moving_view_does_not_change_use_count(ViewType v) {
-  auto* const ptr = v.data();
-  auto const cnt  = v.use_count();
+void test_moving_view_use_count_and_label(ViewType v) {
+  auto const ptr = v.data();
+  auto const cnt = v.use_count();
+  auto const lbl = v.label();
 
   // NOLINTBEGIN(bugprone-use-after-move)
 
@@ -26,14 +25,14 @@ void test_moving_view_does_not_change_use_count(ViewType v) {
   EXPECT_EQ(w.use_count(), cnt);
 #endif
   EXPECT_EQ(w.data(), ptr);
+  EXPECT_EQ(w.label(), lbl);
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   EXPECT_EQ(v.use_count(), w.use_count());
-  EXPECT_EQ(v.data(), w.data());
 #else
   EXPECT_EQ(v.use_count(), 0);
-  // FIXME should be nullptr
-  EXPECT_EQ(v.data(), ptr);
 #endif
+  EXPECT_EQ(v.data(), ptr);
+  EXPECT_EQ(v.label(), lbl);
 
   v = std::move(w);  // move assignment
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
@@ -45,58 +44,86 @@ void test_moving_view_does_not_change_use_count(ViewType v) {
   EXPECT_EQ(v.use_count(), cnt);
 #endif
   EXPECT_EQ(v.data(), ptr);
+  EXPECT_EQ(v.label(), lbl);
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   EXPECT_EQ(w.use_count(), v.use_count());
-  EXPECT_EQ(w.data(), v.data());
 #else
   EXPECT_EQ(w.use_count(), 0);
-  // FIXME should be nullptr
-  EXPECT_EQ(w.data(), ptr);
 #endif
+  EXPECT_EQ(w.data(), v.data());
+  EXPECT_EQ(v.label(), lbl);
 
   // NOLINTEND(bugprone-use-after-move)
 }
 
-TEST(TEST_CATEGORY, view_move_and_use_count) {
+TEST(TEST_CATEGORY, view_move_use_count_and_label) {
   using ExecutionSpace = TEST_EXECSPACE;
 
-  test_moving_view_does_not_change_use_count(
-      Kokkos::View<int, ExecutionSpace>("v0"));
+  test_moving_view_use_count_and_label(Kokkos::View<int, ExecutionSpace>("v0"));
 
-  test_moving_view_does_not_change_use_count(
+  test_moving_view_use_count_and_label(
       Kokkos::View<float*, ExecutionSpace>("v1", 1));
 
   Kokkos::View<double**, ExecutionSpace> v2("v2", 1, 2);
-  test_moving_view_does_not_change_use_count(
-      Kokkos::View<double**, ExecutionSpace>(v2.data(), v2.extent(0),
-                                             v2.extent(1)));
-  test_moving_view_does_not_change_use_count(
+  test_moving_view_use_count_and_label(Kokkos::View<double**, ExecutionSpace>(
+      v2.data(), v2.extent(0), v2.extent(1)));
+  test_moving_view_use_count_and_label(
       Kokkos::View<double**, ExecutionSpace,
                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
           v2.data(), v2.extent(0), v2.extent(1)));
 }
 
-// Check that moving a View leaves the moved-from object in a state equivalent
-// to being default constructed
-// returns the number of errors encountered
 template <class ViewType>
 KOKKOS_FUNCTION int check_moved_from_view_state(ViewType v) {
   int err = 0;
 
+  constexpr int rank = ViewType::rank();
+  std::size_t
+      exts[rank + 1];  // add a dummy trailing element to accomodate rank zero
+  for (int i = 0; i < rank; ++i) {
+    exts[i] = v.extent(i);
+  }
+  auto* const ptr = v.data();
+  auto const span = v.span();
+
+#define CHECK(CONTEXT, VIEW, PTR, SPAN, EXTS)                              \
+  for (int i = 0; i < rank; ++i) {                                         \
+    if (VIEW.extent(i) != EXTS[i]) {                                       \
+      Kokkos::printf(CONTEXT "expected equality of " #VIEW                 \
+                             ".extent(%d) which is %d and " #EXTS          \
+                             "[%d] which is %d\n",                         \
+                     i, VIEW.extent(i), i, EXTS[i]);                       \
+      ++err;                                                               \
+    }                                                                      \
+  }                                                                        \
+  if (VIEW.span() != SPAN) {                                               \
+    Kokkos::printf(CONTEXT "expected equality of " #VIEW                   \
+                           ".span() which is %d and " #SPAN "which is %d", \
+                   VIEW.span(), span);                                     \
+    ++err;                                                                 \
+  }                                                                        \
+  if (VIEW.data() != PTR) {                                                \
+    Kokkos::printf(CONTEXT "expected equality of " #VIEW                   \
+                           ".data() which is %p and " #PTR "which is %p",  \
+                   VIEW.data(), ptr);                                      \
+    ++err;                                                                 \
+  }
+
   // NOLINTBEGIN(bugprone-use-after-move)
 
   ViewType w(std::move(v));  // move construction
-  if (v != ViewType()) {
-    Kokkos::printf("failed moved-from view after calling move constructor\n");
-    ++err;
-  }
+
+  CHECK("failed moved-from view after calling move constructor\n", v, ptr, span,
+        exts)
+  CHECK("failed moved-from view after calling move constructor\n", w, ptr, span,
+        exts)
 
   v = std::move(w);  // move assignment
-  if (w != ViewType()) {
-    Kokkos::printf(
-        "failed moved-from view after calling move assignment operator\n");
-    ++err;
-  }
+
+  CHECK("failed moved-from view after calling move assignment operator\n", v,
+        ptr, span, exts)
+  CHECK("failed moved-from view after calling move assignment operator\n", w,
+        ptr, span, exts)
 
   // NOLINTEND(bugprone-use-after-move)
 
@@ -105,18 +132,13 @@ KOKKOS_FUNCTION int check_moved_from_view_state(ViewType v) {
 
 template <class ViewType>
 void test_moved_from_view(ViewType v) {
-  // The comparison fails because we don't reset extents or span in either
-  // implementation EXPECT_EQ(check_moved_from_view_state(v), 0) << "outside
-  // parallel region";
-
-  using ExexutionSpace = typename ViewType::execution_space;
+  using ExecutionSpace = typename ViewType::execution_space;
   int errors;
   Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExexutionSpace>(0, 1),
+      Kokkos::RangePolicy<ExecutionSpace>(0, 1),
       KOKKOS_LAMBDA(int, int& err) { err += check_moved_from_view_state(v); },
       errors);
-  // The comparison fails because we don't reset extents or span in either
-  // implementation EXPECT_EQ(errors, 0) << "within parallel region";
+  EXPECT_EQ(errors, 0) << "within parallel region";
 }
 
 TEST(TEST_CATEGORY, view_moved_from) {
