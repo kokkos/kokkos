@@ -28,11 +28,12 @@ void test_moving_view_use_count_and_label(ViewType v) {
   EXPECT_EQ(w.label(), lbl);
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   EXPECT_EQ(v.use_count(), w.use_count());
+  EXPECT_EQ(v.label(), lbl);
 #else
   EXPECT_EQ(v.use_count(), 0);
+  EXPECT_EQ(v.label(), std::string(""));
 #endif
   EXPECT_EQ(v.data(), ptr);
-  EXPECT_EQ(v.label(), lbl);
 
   v = std::move(w);  // move assignment
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
