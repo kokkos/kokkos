@@ -205,7 +205,7 @@ static void or_skip(benchmark::State& state) {
   } catch (const std::runtime_error& e) {
     state.SkipWithError(e.what());
   }
-};
+}
 
 namespace Test {
 
@@ -217,7 +217,7 @@ namespace Test {
       ->Arg(10)                       \
       ->Arg(11)                       \
       ->Unit(benchmark::kMillisecond) \
-      ->UseManualTime();
+      ->UseManualTime()
 
 // clang-format off
 // clang-format formatted these lines inconsistently, making it hard to
