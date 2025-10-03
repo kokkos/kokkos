@@ -95,6 +95,16 @@ template <std::size_t Bytes>
 struct atomic_compare_exchange_helper;
 
 template <>
+struct atomic_compare_exchange_helper<1> {
+  using type = char;
+};
+
+template <>
+struct atomic_compare_exchange_helper<2> {
+  using type = short;
+};
+
+template <>
 struct atomic_compare_exchange_helper<4> {
   using type = int32_t;
 };
