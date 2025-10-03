@@ -67,8 +67,7 @@ class UniqueToken<Cuda, UniqueTokenScope::Global> {
     int idx = blockIdx.x * (blockDim.x * blockDim.y) +
               threadIdx.y * blockDim.x + threadIdx.x;
     idx = idx % size();
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_PASCAL) || \
-    defined(KOKKOS_ARCH_MAXWELL)
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
     unsigned int mask        = __activemask();
     unsigned int active      = __ballot_sync(mask, 1);
     unsigned int done_active = 0;

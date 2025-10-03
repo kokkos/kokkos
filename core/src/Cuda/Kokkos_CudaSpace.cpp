@@ -187,7 +187,6 @@ void *impl_allocate_common(const int device_id,
     }
   }
 #elif (defined(KOKKOS_ENABLE_IMPL_CUDA_MALLOC_ASYNC) && CUDART_VERSION >= 11020)
-  // FIXME_KEPLER Everything after Kepler should support cudaMallocAsync
   int device_supports_cuda_malloc_async;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaDeviceGetAttribute(&device_supports_cuda_malloc_async,

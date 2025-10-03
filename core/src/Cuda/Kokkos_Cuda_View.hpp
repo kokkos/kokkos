@@ -19,14 +19,10 @@ struct CudaLDGFetch {
 
   template <typename iType>
   KOKKOS_FUNCTION ValueType operator[](const iType& i) const {
-#if defined(KOKKOS_ARCH_KEPLER30) || defined(KOKKOS_ARCH_KEPLER32)
-    return m_ptr[i];
-#else
     KOKKOS_IF_ON_DEVICE(
         (AliasType v = __ldg(reinterpret_cast<const AliasType*>(&m_ptr[i]));
          return *(reinterpret_cast<ValueType*>(&v));))
     KOKKOS_IF_ON_HOST((return m_ptr[i];))
-#endif
   }
 
   KOKKOS_FUNCTION

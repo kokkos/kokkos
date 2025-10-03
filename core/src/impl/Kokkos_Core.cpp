@@ -660,14 +660,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_INTEL_PVC)
   declare_configuration_metadata("architecture", "GPU architecture", "INTEL_PVC");
 
-#elif defined(KOKKOS_ARCH_KEPLER30)
-  declare_configuration_metadata("architecture", "GPU architecture", "KEPLER30");
-#elif defined(KOKKOS_ARCH_KEPLER32)
-  declare_configuration_metadata("architecture", "GPU architecture", "KEPLER32");
-#elif defined(KOKKOS_ARCH_KEPLER35)
-  declare_configuration_metadata("architecture", "GPU architecture", "KEPLER35");
-#elif defined(KOKKOS_ARCH_KEPLER37)
-  declare_configuration_metadata("architecture", "GPU architecture", "KELPER37");
 #elif defined(KOKKOS_ARCH_MAXWELL50)
   declare_configuration_metadata("architecture", "GPU architecture", "MAXWELL50");
 #elif defined(KOKKOS_ARCH_MAXWELL52)

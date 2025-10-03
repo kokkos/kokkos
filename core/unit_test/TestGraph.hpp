@@ -379,7 +379,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+    defined(KOKKOS_ARCH_MAXWELL)
   Kokkos::fence();
 #endif
   graph.submit(ex);
@@ -387,7 +387,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+    defined(KOKKOS_ARCH_MAXWELL)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
   graph.submit(ex);

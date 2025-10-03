@@ -54,8 +54,7 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
         }
 // On pre-volta architectures we need a __syncwarp here to prevent
 // infinite loops depending on the scheduling order above
-#if defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL) || \
-    defined(KOKKOS_ARCH_PASCAL)
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
         __syncwarp(__activemask());
 #endif
       }
