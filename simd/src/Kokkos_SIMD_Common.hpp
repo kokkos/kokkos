@@ -125,9 +125,7 @@ template <typename Abi>
 concept NonScalarAbi = !std::same_as<Abi, simd_abi::scalar>;
 
 template <typename G, typename R, typename... Args>
-concept InvocableWithReturnType =
-    std::invocable<G, Args...> &&
-    std::is_convertible_v<std::invoke_result_t<G, Args...>, R>;
+concept InvocableWithReturnType = std::is_invocable_r_v<R, G, Args...>;
 
 }  // namespace Impl
 

@@ -249,8 +249,7 @@ class basic_simd<T, simd_abi::scalar> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value + rhs.m_value);
   }
-  template <typename U>
-    requires Impl::Arithmetic<U>
+  template <Impl::Arithmetic U>
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator+(
       basic_simd const& lhs, U rhs) {
     return lhs.m_value + basic_simd(rhs);
@@ -259,8 +258,7 @@ class basic_simd<T, simd_abi::scalar> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value - rhs.m_value);
   }
-  template <typename U>
-    requires Impl::Arithmetic<U>
+  template <Impl::Arithmetic U>
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator-(
       basic_simd const& lhs, U rhs) {
     return lhs.m_value - basic_simd(rhs);
@@ -269,8 +267,7 @@ class basic_simd<T, simd_abi::scalar> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value * rhs.m_value);
   }
-  template <typename U>
-    requires Impl::Arithmetic<U>
+  template <Impl::Arithmetic U>
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator*(
       basic_simd const& lhs, U rhs) {
     return lhs.m_value * basic_simd(rhs);
@@ -279,8 +276,7 @@ class basic_simd<T, simd_abi::scalar> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value / rhs.m_value);
   }
-  template <typename U>
-    requires Impl::Arithmetic<U>
+  template <Impl::Arithmetic U>
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator/(
       basic_simd const& lhs, U rhs) {
     return lhs.m_value / basic_simd(rhs);
