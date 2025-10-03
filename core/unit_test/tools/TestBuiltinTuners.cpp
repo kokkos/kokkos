@@ -85,72 +85,75 @@ TEST(kokkosp, builtin_tuner) {
   end_context(kernel_context);
 }
 
+// Last level of recursion, validates all possible sizes for the last dimension
 void validate_tile_sizes(const std::vector<int>& cont,
                          std::array<int, 6> current_tile,
                          const std::array<int, 3>& hw_tile_limits,
-                         int current_rank, const int policy_rank) {
-  namespace Impl = Kokkos::Tools::Experimental::Impl;
+                         const int current_rank, const int policy_rank) {
+  namespace KTE = Kokkos::Tools::Experimental;
   for (const auto& size : cont) {
     current_tile[current_rank] = size;
-    EXPECT_TRUE(Impl::valid_tile(hw_tile_limits, current_tile, policy_rank));
+    EXPECT_TRUE(
+        KTE::Impl::valid_tile(hw_tile_limits, current_tile, policy_rank));
   }
 }
 
+// Builds candidate tiles by traversing the nested map structure. Each recursive
+// level sets one dimension.
 template <typename Mapped>
-void validate_tile_sizes(std::map<int, Mapped>& cont,
+void validate_tile_sizes(const std::map<int, Mapped>& cont,
                          std::array<int, 6> current_tile,
                          const std::array<int, 3>& hw_tile_limits,
-                         int current_rank, const int policy_rank) {
-  for (auto it = cont.begin(); it != cont.end(); it++) {
-    int key                    = it->first;
-    current_tile[current_rank] = key;
-    validate_tile_sizes(it->second, current_tile, hw_tile_limits,
+                         const int current_rank, const int policy_rank) {
+  for (const auto& [dimension_size, sub_cont] : cont) {
+    current_tile[current_rank] = dimension_size;
+    validate_tile_sizes(sub_cont, current_tile, hw_tile_limits,
                         current_rank + 1, policy_rank);
   }
 }
 
-// Test helper function that verifies all tiles in the configuration space
-// satisfy hardware constraints.
+// Verifies that all tiles in the configuration space satisfy hardware
+// constraints.
 template <typename Mapped>
-void validate_tile_sizes(std::map<int, Mapped>& cont,
-                         const std::array<int, 3>& hw_tile_limits,
-                         int policy_rank) {
+void validate_tile_configurations(std::map<int, Mapped>& cont,
+                                  const std::array<int, 3>& hw_tile_limits,
+                                  const int policy_rank) {
   std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
   validate_tile_sizes(cont, current_tile, hw_tile_limits, 0, policy_rank);
 }
 
+// Test for a given rank that the tile constraints are correctly applied
 template <int test_policy_rank>
 void test_tile_constraints() {
-  using namespace Kokkos::Tools::Experimental::Impl;
-  using SpaceDescription =
-      typename n_dimensional_sparse_structure<int, test_policy_rank>::type;
+  namespace KTE          = Kokkos::Tools::Experimental;
+  using SpaceDescription = typename KTE::Impl::n_dimensional_sparse_structure<
+      int, test_policy_rank>::type;
 
   std::array<int, 3> hardware_limits{128, 128, 128};
   SpaceDescription tile_configuration_space;
   const int max_total_tile_size = 512;
 
-  fill_tile(tile_configuration_space, max_total_tile_size);
-  apply_tiles_constraints(tile_configuration_space, hardware_limits,
-                          test_policy_rank);
-  validate_tile_sizes(tile_configuration_space, hardware_limits,
-                      test_policy_rank);
+  KTE::Impl::fill_tile(tile_configuration_space, max_total_tile_size);
+  KTE::Impl::apply_tiles_constraints(tile_configuration_space, hardware_limits,
+                                     test_policy_rank);
+  validate_tile_configurations(tile_configuration_space, hardware_limits,
+                               test_policy_rank);
 }
 
 TEST(kokkosp, constraint_tiles) {
-  namespace Impl = Kokkos::Tools::Experimental::Impl;
+  namespace KTE = Kokkos::Tools::Experimental;
 
   std::array<int, 3> hardware_limits{128, 128, 128};
   std::array<int, 6> valid_tile{4, 2, 4, 4, 2, 4};
-  std::array<int, 6> valid_tile_max{128, 128, 128, 1, 1};
+  std::array<int, 6> valid_tile_max{128, 128, 128, 1, 1, 1};
   std::array<int, 6> tile_with_zero{128, 0, 1, 1, 1, 1};
   std::array<int, 6> invalid_tile{256, 1, 1, 1, 1, 1};
 
-  // Impl::valid_tile checks each dimension but not the total product
-  EXPECT_TRUE(Impl::valid_tile(hardware_limits, valid_tile, 6));
-  EXPECT_TRUE(Impl::valid_tile(hardware_limits, valid_tile_max, 3));
-  EXPECT_FALSE(Impl::valid_tile(hardware_limits, valid_tile_max, 4));
-  EXPECT_FALSE(Impl::valid_tile(hardware_limits, tile_with_zero, 3));
-  EXPECT_FALSE(Impl::valid_tile(hardware_limits, invalid_tile, 3));
+  // KTE::Impl::valid_tile checks each dimension but not the total product
+  EXPECT_TRUE(KTE::Impl::valid_tile(hardware_limits, valid_tile, 6));
+  EXPECT_TRUE(KTE::Impl::valid_tile(hardware_limits, valid_tile_max, 3));
+  EXPECT_FALSE(KTE::Impl::valid_tile(hardware_limits, tile_with_zero, 3));
+  EXPECT_FALSE(KTE::Impl::valid_tile(hardware_limits, invalid_tile, 3));
 
   test_tile_constraints<2>();
   test_tile_constraints<3>();

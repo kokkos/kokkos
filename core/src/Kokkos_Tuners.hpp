@@ -655,12 +655,12 @@ constexpr bool valid_tile(const std::array<int, 3> hw_tile_limits,
           hw_tile[2] <= hw_tile_limits[2]);
 }
 
-// Prunes invalid tiles dimension from largest to smallest until a valid size is
-// found
-inline void apply_tiles_constraints(std::vector<int>& cont,
-                                    const std::array<int, 3>& hw_tile_limits,
-                                    std::array<int, 6> current_tile,
-                                    int current_rank, const int policy_rank) {
+// Filter the last dimension of the research space (vector) to remove invalid
+// tiles that exceed hardware limits
+inline void constrain_tile_sizes(std::vector<int>& cont,
+                                 const std::array<int, 3>& hw_tile_limits,
+                                 std::array<int, 6> current_tile,
+                                 int current_rank, const int policy_rank) {
   auto it = cont.end();
   while (it != cont.begin()) {
     --it;
@@ -673,35 +673,34 @@ inline void apply_tiles_constraints(std::vector<int>& cont,
   }
 }
 
-// Validate the current tile size and recursively apply constraints to the
-// nested map structure. If a tile exceeds limits, remove the entire branch from
-// the research space.
+// Validate the current tile size, then recursively apply constraints to the
+// nested map structure.
 template <typename Mapped>
-void apply_tiles_constraints(std::map<int, Mapped>& cont,
-                             const std::array<int, 3>& hw_tile_limits,
-                             std::array<int, 6> current_tile, int current_rank,
-                             const int policy_rank) {
+void constrain_tile_sizes(std::map<int, Mapped>& cont,
+                          const std::array<int, 3>& hw_tile_limits,
+                          std::array<int, 6> current_tile, int current_rank,
+                          const int policy_rank) {
   for (auto it = cont.begin(); it != cont.end();) {
     int dimension_size         = it->first;
     current_tile[current_rank] = dimension_size;
     if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
       it = cont.erase(it);
     } else {
-      apply_tiles_constraints(it->second, hw_tile_limits, current_tile,
-                              current_rank + 1, policy_rank);
+      constrain_tile_sizes(it->second, hw_tile_limits, current_tile,
+                           current_rank + 1, policy_rank);
       ++it;
     }
   }
 }
 
 // Entry point for applying tile constraints. Filters out invalid tiles that
-// exceed hardware limits based on the policy rank.
+// exceed hardware limits based on the rank of the policy.
 template <typename Mapped>
 void apply_tiles_constraints(std::map<int, Mapped>& cont,
                              const std::array<int, 3>& hw_tile_limits,
                              int policy_rank) {
   std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
-  apply_tiles_constraints(cont, hw_tile_limits, current_tile, 0, policy_rank);
+  constrain_tile_sizes(cont, hw_tile_limits, current_tile, 0, policy_rank);
 }
 
 }  // namespace Impl
