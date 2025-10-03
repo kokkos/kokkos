@@ -5,7 +5,6 @@
 #define KOKKOS_DESUL_ATOMICS_CONFIG_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
 #include <cuda.h>
