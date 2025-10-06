@@ -26,6 +26,11 @@ struct atomic_exchange_available_hip {
       std::is_trivially_copyable<T>::value;
 };
 
+template <class T>
+constexpr bool device_atomic_always_lock_free() {
+  return atomic_exchange_available_hip<T>::value;
+}
+
 template <class T, class MemoryOrder, class MemoryScope>
 __device__ std::enable_if_t<atomic_exchange_available_hip<T>::value, T>
 device_atomic_compare_exchange(

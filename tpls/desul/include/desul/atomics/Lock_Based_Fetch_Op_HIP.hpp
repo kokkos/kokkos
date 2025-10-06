@@ -18,11 +18,6 @@ SPDX-License-Identifier: (BSD-3-Clause)
 namespace desul {
 namespace Impl {
 
-template <class T>
-constexpr bool device_atomic_always_lock_free() {
-  return atomic_exchange_available_hip<T>::value;
-}
-
 template <class Oper,
           class T,
           class MemoryOrder,
