@@ -643,7 +643,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     requires(!std::is_null_pointer_v<P> &&
              std::is_constructible_v<typename base_t::data_handle_type, P> &&
              sizeof...(Args) != rank() + 1)
-  KOKKOS_FUNCTION View(P ptr_, Args... args)
+  KOKKOS_FUNCTION explicit View(P ptr_, Args... args)
       : View(Kokkos::view_wrap(static_cast<pointer_type>(ptr_)), args...) {}
 
   // Special function to be preferred over the above for string literals
