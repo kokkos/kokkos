@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <Kokkos_Core.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
@@ -94,7 +93,7 @@ void validate_tile_sizes(const std::vector<int>& cont,
   for (const auto& size : cont) {
     current_tile[current_rank] = size;
     EXPECT_TRUE(
-        KTE::Impl::valid_tile(hw_tile_limits, current_tile, policy_rank));
+        KTE::Impl::is_valid_tile(hw_tile_limits, current_tile, policy_rank));
   }
 }
 
@@ -129,31 +128,40 @@ void test_tile_constraints() {
   using SpaceDescription = typename KTE::Impl::n_dimensional_sparse_structure<
       int, test_policy_rank>::type;
 
-  std::array<int, 3> hardware_limits{128, 128, 128};
+  std::array<int, 3> hw_thread_limits{128, 128, 128};
   SpaceDescription tile_configuration_space;
-  const int max_total_tile_size = 512;
+  const int max_tile_product = 512;
 
-  KTE::Impl::fill_tile(tile_configuration_space, max_total_tile_size);
-  KTE::Impl::apply_tiles_constraints(tile_configuration_space, hardware_limits,
+  KTE::Impl::fill_tile(tile_configuration_space, max_tile_product);
+  KTE::Impl::apply_tiles_constraints(tile_configuration_space, hw_thread_limits,
                                      test_policy_rank);
-  validate_tile_configurations(tile_configuration_space, hardware_limits,
+  validate_tile_configurations(tile_configuration_space, hw_thread_limits,
                                test_policy_rank);
 }
 
 TEST(kokkosp, constraint_tiles) {
   namespace KTE = Kokkos::Tools::Experimental;
 
-  std::array<int, 3> hardware_limits{128, 128, 128};
-  std::array<int, 6> valid_tile{4, 2, 4, 4, 2, 4};
-  std::array<int, 6> valid_tile_max{128, 128, 128, 1, 1, 1};
-  std::array<int, 6> tile_with_zero{128, 0, 1, 1, 1, 1};
-  std::array<int, 6> invalid_tile{256, 1, 1, 1, 1, 1};
+  std::array<int, 3> hw_thread_limits{128, 128, 128};
 
-  // KTE::Impl::valid_tile checks each dimension but not the total product
-  EXPECT_TRUE(KTE::Impl::valid_tile(hardware_limits, valid_tile, 6));
-  EXPECT_TRUE(KTE::Impl::valid_tile(hardware_limits, valid_tile_max, 3));
-  EXPECT_FALSE(KTE::Impl::valid_tile(hardware_limits, tile_with_zero, 3));
-  EXPECT_FALSE(KTE::Impl::valid_tile(hardware_limits, invalid_tile, 3));
+  std::array<int, 6> tile_6d_within_limits{4, 2, 4, 4, 2, 4};
+  std::array<int, 6> tile_6d_large_product{1, 1, 1, 1, 32, 32};
+  std::array<int, 6> tile_3d_hw_max{128, 128, 128, 1, 1, 1};
+  std::array<int, 6> tile_3d_with_zero{128, 0, 1, 1, 1, 1};
+  std::array<int, 6> tile_3d_exceeds_limit{1, 129, 1, 1, 1, 1};
+
+  // KTE::Impl::is_valid_tile checks each hardware dimension but not the total
+  // product
+  EXPECT_TRUE(
+      KTE::Impl::is_valid_tile(hw_thread_limits, tile_6d_within_limits, 6));
+  EXPECT_FALSE(
+      KTE::Impl::is_valid_tile(hw_thread_limits, tile_6d_large_product, 6));
+
+  EXPECT_TRUE(KTE::Impl::is_valid_tile(hw_thread_limits, tile_3d_hw_max, 3));
+  EXPECT_FALSE(
+      KTE::Impl::is_valid_tile(hw_thread_limits, tile_3d_with_zero, 3));
+  EXPECT_FALSE(
+      KTE::Impl::is_valid_tile(hw_thread_limits, tile_3d_exceeds_limit, 3));
 
   test_tile_constraints<2>();
   test_tile_constraints<3>();

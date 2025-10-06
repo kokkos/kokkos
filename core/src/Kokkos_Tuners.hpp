@@ -645,9 +645,9 @@ constexpr std::array<int, 3> map_to_hw_tile(const std::array<int, 6> tile,
   return hw_tile;
 }
 
-constexpr bool valid_tile(const std::array<int, 3> hw_tile_limits,
-                          const std::array<int, 6> current_tile,
-                          int policy_rank) {
+constexpr bool is_valid_tile(const std::array<int, 3> hw_tile_limits,
+                             const std::array<int, 6> current_tile,
+                             int policy_rank) {
   auto hw_tile = map_to_hw_tile(current_tile, policy_rank);
 
   return (0 < hw_tile[0] && hw_tile[0] <= hw_tile_limits[0] && 0 < hw_tile[1] &&
@@ -665,7 +665,7 @@ inline void constrain_tile_sizes(std::vector<int>& cont,
   while (it != cont.begin()) {
     --it;
     current_tile[current_rank] = *it;
-    if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
+    if (!is_valid_tile(hw_tile_limits, current_tile, policy_rank)) {
       it = cont.erase(it);
     } else {
       break;
@@ -683,7 +683,7 @@ void constrain_tile_sizes(std::map<int, Mapped>& cont,
   for (auto it = cont.begin(); it != cont.end();) {
     int dimension_size         = it->first;
     current_tile[current_rank] = dimension_size;
-    if (!valid_tile(hw_tile_limits, current_tile, policy_rank)) {
+    if (!is_valid_tile(hw_tile_limits, current_tile, policy_rank)) {
       it = cont.erase(it);
     } else {
       constrain_tile_sizes(it->second, hw_tile_limits, current_tile,
