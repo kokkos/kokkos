@@ -660,6 +660,12 @@ struct CudaParallelLaunchImpl<
 
       // check any launch error (synchronous check)
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetLastError());
+
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+      // check any execution error (asynchronous check)
+      cuda_instance->fence(
+          "Kokkos::Impl::launch_kernel: Debug Only Check for Execution Error");
+#endif
     }
   }
 

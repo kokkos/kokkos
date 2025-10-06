@@ -573,6 +573,13 @@ struct HIPParallelLaunch<
 
       // check any launch error (synchronous check)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());
+
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+      // check any execution error (asynchronous check)
+      hip_instance->fence(
+          "Kokkos::Impl::HIParallelLaunch: Debug Only Check for "
+          "Execution Error");
+#endif
     }
   }
 };
