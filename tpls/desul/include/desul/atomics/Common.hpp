@@ -96,12 +96,12 @@ struct atomic_compare_exchange_helper;
 
 template <>
 struct atomic_compare_exchange_helper<1> {
-  using type = char;
+  using type = int8_t;
 };
 
 template <>
 struct atomic_compare_exchange_helper<2> {
-  using type = short;
+  using type = int16_t;
 };
 
 template <>
