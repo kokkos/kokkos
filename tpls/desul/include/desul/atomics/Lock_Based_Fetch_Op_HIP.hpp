@@ -27,7 +27,7 @@ template <class Oper,
           class T,
           class MemoryOrder,
           class MemoryScope,
-          std::enable_if_t<!device_atomic_always_lock_free(sizeof(T)), int> = 0>
+          std::enable_if_t<!device_atomic_always_lock_free<T>(), int> = 0>
 __device__ T device_atomic_fetch_oper(const Oper& op,
                                       T* const dest,
                                       dont_deduce_this_parameter_t<const T> val,
