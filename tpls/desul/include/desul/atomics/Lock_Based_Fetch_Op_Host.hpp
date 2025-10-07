@@ -21,7 +21,7 @@ template <class Oper,
           class T,
           class MemoryOrder,
           class MemoryScope,
-          std::enable_if_t<!host_atomic_always_lock_free<T>(), int> = 0>
+          std::enable_if_t<!host_atomic_always_lock_free<T>, int> = 0>
 inline T host_atomic_fetch_oper(const Oper& op,
                                 T* const dest,
                                 dont_deduce_this_parameter_t<const T> val,

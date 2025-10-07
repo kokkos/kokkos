@@ -1,11 +1,10 @@
 /*
-Copyright (c) 2019, Lawrence Livermore National Security, LLC
-and DESUL project contributors. See the COPYRIGHT file for details.
-Source: https://github.com/desul/desul
+ Copyright (c) 2019, Lawrence Livermore National Security, LLC
+ and DESUL project contributors. See the COPYRIGHT file for details.
+ Source: https://github.com/desul/desul
 
-SPDX-License-Identifier: (BSD-3-Clause)
-*/
-
+ SPDX-License-Identifier: (BSD-3-Clause)
+ */
 #ifndef DESUL_ATOMICS_COMMON_HPP_
 #define DESUL_ATOMICS_COMMON_HPP_
 
@@ -123,6 +122,13 @@ template <class T>
 using atomic_compare_exchange_t =
     typename atomic_compare_exchange_helper<sizeof(T)>::type;
 //</editor-fold>
+
+// adding a Dummy to allow a way of specializing independent of T
+template <typename T, typename Dummy = void>
+inline constexpr bool host_atomic_always_lock_free = false;
+
+template <typename T, typename Dummy = void>
+inline constexpr bool device_atomic_always_lock_free = false;
 
 template <class T>
 struct dont_deduce_this_parameter {

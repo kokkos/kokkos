@@ -27,9 +27,8 @@ struct atomic_exchange_available_hip {
 };
 
 template <class T>
-constexpr bool device_atomic_always_lock_free() {
-  return atomic_exchange_available_hip<T>::value;
-}
+inline constexpr bool device_atomic_always_lock_free<T, void> =
+    atomic_exchange_available_hip<T>::value;
 
 template <class T, class MemoryOrder, class MemoryScope>
 __device__ std::enable_if_t<atomic_exchange_available_hip<T>::value, T>

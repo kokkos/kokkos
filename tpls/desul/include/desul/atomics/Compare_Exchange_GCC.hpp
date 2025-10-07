@@ -27,9 +27,8 @@ struct host_atomic_exchange_available_gcc {
 };
 
 template <class T>
-constexpr bool host_atomic_always_lock_free() {
-  return (sizeof(T) == 4) || (sizeof(T) == 8);
-}
+inline constexpr bool host_atomic_always_lock_free<T, void> = (sizeof(T) == 4) ||
+                                                              (sizeof(T) == 8);
 
 // clang-format off
 // Disable warning for large atomics on clang 7 and up (checked with godbolt)

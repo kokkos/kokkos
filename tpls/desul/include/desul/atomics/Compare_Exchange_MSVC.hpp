@@ -127,13 +127,14 @@ std::enable_if_t<sizeof(T) == 16, T> host_atomic_compare_exchange(
 }
 
 template <class T>
-constexpr bool host_atomic_always_lock_free() {
-  return (sizeof(T) == 1) || (sizeof(T) == 2) || (sizeof(T) == 4) || (sizeof(T) == 8) ||
-         (sizeof(T) == 16);
-}
+inline constexpr bool host_atomic_always_lock_free<T, void> = (sizeof(T) == 1) ||
+                                                              (sizeof(T) == 2) ||
+                                                              (sizeof(T) == 4) ||
+                                                              (sizeof(T) == 8) ||
+                                                              (sizeof(T) == 16);
 
 template <class T, class MemoryOrder, class MemoryScope>
-std::enable_if_t<!host_atomic_always_lock_free<T>(), T> host_atomic_compare_exchange(
+std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* const dest, T compare, T val, MemoryOrder, MemoryScope scope) {
   while (!lock_address((void*)dest, scope)) {
   }
