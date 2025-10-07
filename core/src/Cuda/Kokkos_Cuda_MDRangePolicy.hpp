@@ -28,7 +28,7 @@ inline TileSizeProperties get_tile_size_properties<Kokkos::Cuda>(
     const Kokkos::Cuda& space) {
   TileSizeProperties properties;
   const auto& device_prop = space.cuda_device_prop();
-  properties.max_threads  = device_prop.maxThreadsPerMultiProcessor;
+  properties.max_threads  = device_prop.maxThreadsPerBlock;
   properties.default_largest_tile_size = 16;
   properties.default_tile_size         = 2;
   properties.max_total_tile_size       = 512;
