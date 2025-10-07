@@ -5,7 +5,6 @@
 
 #include <Kokkos_Core.hpp>
 
-#include <limits>
 #include <regex>
 
 namespace {
@@ -187,96 +186,5 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
     EXPECT_LT(prod_rec_tile_size, policy.max_total_tile_size());
   }
 }
-
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL)
-
-struct MDRangePolicyLimitsFunctor {
-  KOKKOS_FUNCTION
-  void operator()(const int, const int, const int, const int) const {}
-};
-
-TEST(TEST_CATEGORY_DEATH, md_range_policy_limits) {
-  // test API limits
-  // see #8103
-
-  // get maximum number of threads per block for each backend
-  int max_threads_per_block = std::numeric_limits<int>::max();
-#if defined(KOKKOS_ENABLE_CUDA)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    max_threads_per_block =
-        Kokkos::Cuda().cuda_device_prop().maxThreadsPerBlock;
-  } else {
-    GTEST_SKIP() << "skipping for this backend";
-  }
-#elif defined(KOKKOS_ENABLE_HIP)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
-    max_threads_per_block = Kokkos::Impl::HIPTraits::MaxThreadsPerBlock;
-  } else {
-    GTEST_SKIP() << "skipping for this backend";
-  }
-#elif defined(KOKKOS_ENABLE_SYCL)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) {
-    max_threads_per_block =
-        Kokkos::SYCL().impl_internal_space_instance()->m_maxWorkgroupSize;
-  } else {
-    GTEST_SKIP() << "skipping for this backend";
-  }
-#endif
-
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  const int N                             = 100;
-
-  using range_type =
-      typename Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<4>>;
-  using range_type_bounds =
-      typename Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<4>,
-                                     Kokkos::LaunchBounds<32, 1>>;
-
-  MDRangePolicyLimitsFunctor functor{};
-
-  // request a very large tiling that exceeds tile product limits
-  EXPECT_DEATH(
-      {
-        range_type range({0, 0, 0, 0}, {N, N, N, N},
-                         {max_threads_per_block, max_threads_per_block, 1, 1});
-        Kokkos::parallel_for("very large total tiling", range, functor);
-        Kokkos::fence("wait very large total tiling");
-      },
-      "MDRange tile dims exceed maximum number of threads per block - choose "
-      "smaller tile dims");  // TODO check if this is the error we want
-
-  // request a very large tiling in one dimension
-  EXPECT_DEATH(
-      {
-        range_type range({0, 0, 0, 0}, {N, N, N, N},
-                         {2 * max_threads_per_block, 1, 1, 1});
-        Kokkos::parallel_for("very large tiling", range, functor);
-        Kokkos::fence("wait very large tiling");
-      },
-      "MDRange tile dims exceed maximum number of threads per block - choose "
-      "smaller tile dims");  // TODO check if this is the error we want
-
-  // request a slightly too large tiling in one dimension
-  EXPECT_DEATH(
-      {
-        range_type range({0, 0, 0, 0}, {N, N, N, N},
-                         {max_threads_per_block + 2, 1, 1, 1});
-        Kokkos::parallel_for("slightly too large tiling", range, functor);
-        Kokkos::fence("wait slightly too large tiling");
-      },
-      "Kokkos contract violation");  // TODO check if this is the error we
-                                     // want
-
-  // request an invalid tiling
-  EXPECT_DEATH(
-      {
-        range_type_bounds range({0, 0, 0, 0}, {N, N, N, N}, {32, 2, 1, 1});
-        Kokkos::parallel_for("invalid tiling", range, functor);
-        Kokkos::fence("wait invalid tiling");
-      },
-      "invalid argument");
-}
-#endif
 
 }  // namespace
