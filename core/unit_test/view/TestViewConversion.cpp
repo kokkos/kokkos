@@ -9,14 +9,8 @@
 namespace {
 
 using T     = int;
-using ptr_t = T*;
-
-using view0_t = Kokkos::View<T>;
-using view1_t = Kokkos::View<T*>;
-using view2_t = Kokkos::View<T[4]>;
-
-static_assert(!std::is_convertible_v<ptr_t, view0_t>);
-static_assert(!std::is_convertible_v<ptr_t, view1_t>);
-static_assert(!std::is_convertible_v<ptr_t, view2_t>);
+static_assert(!std::is_convertible_v<T*, Kokkos::View<T>>);
+static_assert(!std::is_convertible_v<T*, Kokkos::View<T*>>);
+static_assert(!std::is_convertible_v<T*, Kokkos::View<T[4]>>);
 
 }  // namespace
