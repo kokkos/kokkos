@@ -56,7 +56,8 @@ DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_or, std::is_integral)
 DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_nand, std::is_integral)
 
 #if defined(__clang__)
-#if (__clang_major__ >= 17)
+#if (__clang_major__ >= 17) && \
+    (!defined(__INTEL_LLVM_COMPILER) || __INTEL_LLVM_COMPILER >= 20240000)
 // the suppression is not necessary from Clang 19 onwards
 #pragma GCC diagnostic ignored "-Watomic-alignment"
 DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_min, arithmetic_not_long_double)
