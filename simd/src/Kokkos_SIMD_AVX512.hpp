@@ -66,6 +66,7 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<8>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(G&& gen) noexcept
       : m_value(false) {
     m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 0>())))
@@ -157,6 +158,7 @@ class basic_simd_mask<T, simd_abi::avx512_fixed_size<16>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask(G&& gen) noexcept
       : m_value(false) {
     m_value = (static_cast<bool>(gen(std::integral_constant<std::size_t, 0>())))
@@ -276,6 +278,7 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_pd(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -301,6 +304,7 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_pd(gen(std::integral_constant<std::size_t, 0>()),
@@ -699,6 +703,7 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm256_set1_ps(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -724,6 +729,7 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(G&& gen) noexcept
       : m_value(_mm256_setr_ps(gen(std::integral_constant<std::size_t, 0>()),
                                gen(std::integral_constant<std::size_t, 1>()),
@@ -1098,6 +1104,7 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_ps(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1117,6 +1124,7 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(G&& gen) noexcept
       : m_value(
             _mm512_setr_ps(gen(std::integral_constant<std::size_t, 0>()),
@@ -1498,6 +1506,7 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm256_set1_epi32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1523,6 +1532,7 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(
@@ -1852,6 +1862,7 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1871,6 +1882,7 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_epi32(
@@ -2213,6 +2225,7 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm256_set1_epi32(
             Kokkos::bit_cast<std::int32_t>(value_type(value)))) {}
@@ -2239,6 +2252,7 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(
@@ -2561,6 +2575,7 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi32(
             Kokkos::bit_cast<std::int32_t>(value_type(value)))) {}
@@ -2581,6 +2596,7 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(_mm512_setr_epi32(
@@ -2923,6 +2939,7 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi64(value_type(value))) {}
   template <typename U>
@@ -2948,6 +2965,7 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(
@@ -3266,6 +3284,7 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(_mm512_set1_epi64(
             Kokkos::bit_cast<std::int64_t>(value_type(value)))) {}
@@ -3295,6 +3314,7 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(

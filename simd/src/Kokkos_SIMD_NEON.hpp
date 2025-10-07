@@ -82,6 +82,7 @@ class neon_mask<Derived, 64, 2> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       G&& gen) noexcept {
     m_value = vsetq_lane_u64((gen(std::integral_constant<std::size_t, 0>())
@@ -171,6 +172,7 @@ class neon_mask<Derived, 32, 2> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       G&& gen) noexcept {
     m_value = vset_lane_u32(
@@ -253,6 +255,7 @@ class neon_mask<Derived, 32, 4> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit neon_mask(
       G&& gen) noexcept {
     m_value = vsetq_lane_u32(
@@ -316,37 +319,40 @@ class neon_mask<Derived, 32, 4> {
 
 }  // namespace Impl
 
-#define INSTANTIATE_SIMD_MASK_NEON(T, LANES_IN_VECTOR)                        \
-  template <>                                                                 \
-  class basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>        \
-      : public Impl::neon_mask<                                               \
-            basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>,   \
-            sizeof(T) * 8, LANES_IN_VECTOR> {                                 \
-    using base_type = Impl::neon_mask<                                        \
-        basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>,       \
-        sizeof(T) * 8, LANES_IN_VECTOR>;                                      \
-    using implementation_type = typename base_type::implementation_type;      \
-                                                                              \
-   public:                                                                    \
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() noexcept =        \
-        default;                                                              \
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(           \
-        bool value) noexcept                                                  \
-        : base_type(value) {}                                                 \
-    template <class U>                                                        \
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(           \
-        basic_simd_mask<U, simd_abi::neon_fixed_size<LANES_IN_VECTOR>> const& \
-            other) noexcept                                                   \
-        : base_type(other) {}                                                 \
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask( \
-        implementation_type const& value) noexcept                            \
-        : base_type(value) {}                                                 \
-    template <class G>                                                        \
-      requires Impl::InvocableWithReturnType<                                 \
-          G, base_type::value_type, std::integral_constant<std::size_t, 0>>   \
-    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask( \
-        G&& gen) noexcept                                                     \
-        : base_type(gen) {}                                                   \
+#define INSTANTIATE_SIMD_MASK_NEON(T, LANES_IN_VECTOR)                         \
+  template <>                                                                  \
+  class basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>         \
+      : public Impl::neon_mask<                                                \
+            basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>,    \
+            sizeof(T) * 8, LANES_IN_VECTOR> {                                  \
+    using base_type = Impl::neon_mask<                                         \
+        basic_simd_mask<T, simd_abi::neon_fixed_size<LANES_IN_VECTOR>>,        \
+        sizeof(T) * 8, LANES_IN_VECTOR>;                                       \
+    using implementation_type = typename base_type::implementation_type;       \
+                                                                               \
+   public:                                                                     \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask() noexcept =         \
+        default;                                                               \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(            \
+        bool value) noexcept                                                   \
+        : base_type(value) {}                                                  \
+    template <class U>                                                         \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd_mask(            \
+        basic_simd_mask<U, simd_abi::neon_fixed_size<LANES_IN_VECTOR>> const&  \
+            other) noexcept                                                    \
+        : base_type(other) {}                                                  \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(  \
+        implementation_type const& value) noexcept                             \
+        : base_type(value) {}                                                  \
+    template <class G>                                                         \
+      requires Impl::InvocableWithReturnType<                                  \
+          G, base_type::value_type,                                            \
+          std::integral_constant<                                              \
+              std::size_t,                                                     \
+              0>> /* NOLINTNEXTLINE(bugprone-forwarding-reference-overload) */ \
+    KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(  \
+        G&& gen) noexcept                                                      \
+        : base_type(gen) {}                                                    \
   }
 
 INSTANTIATE_SIMD_MASK_NEON(std::int32_t, 2);
@@ -385,6 +391,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(vmovq_n_f64(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -402,6 +409,7 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept {
     m_value = vsetq_lane_f64(gen(std::integral_constant<std::size_t, 0>()),
@@ -742,6 +750,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value)
       : m_value(vmov_n_f32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -759,6 +768,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(G&& gen) noexcept {
     m_value = vset_lane_f32(gen(std::integral_constant<std::size_t, 0>()),
                             m_value, 0);
@@ -1087,6 +1097,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(vmovq_n_f32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1102,6 +1113,7 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(G&& gen) noexcept {
     m_value = vsetq_lane_f32(gen(std::integral_constant<std::size_t, 0>()),
                              m_value, 0);
@@ -1440,6 +1452,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(vmov_n_s32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1459,6 +1472,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept {
     m_value = vset_lane_s32(gen(std::integral_constant<std::size_t, 0>()),
@@ -1750,6 +1764,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(vmovq_n_s32(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -1765,6 +1780,7 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept {
     m_value = vsetq_lane_s32(gen(std::integral_constant<std::size_t, 0>()),
@@ -2066,6 +2082,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(vmovq_n_s64(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -2085,6 +2102,7 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept {
     m_value = vsetq_lane_s64(gen(std::integral_constant<std::size_t, 0>()),
@@ -2375,6 +2393,7 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
       basic_simd&&) noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
       : m_value(vmovq_n_u64(value_type(value))) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
@@ -2394,6 +2413,7 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept {
     m_value = vsetq_lane_u64(gen(std::integral_constant<std::size_t, 0>()),

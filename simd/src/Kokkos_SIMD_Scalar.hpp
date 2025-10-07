@@ -60,6 +60,7 @@ class basic_simd_mask<T, simd_abi::scalar> {
   template <class G>
     requires Impl::InvocableWithReturnType<G, value_type,
                                            std::integral_constant<bool, false>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
       G&& gen) noexcept
       : m_value(gen(0)) {}
@@ -186,6 +187,7 @@ class basic_simd<T, simd_abi::scalar> {
       default;
   template <class U>
     requires std::convertible_to<U, value_type>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd(U&& value) noexcept
       : m_value(value) {}
   template <class U>
@@ -197,6 +199,7 @@ class basic_simd<T, simd_abi::scalar> {
   template <class G>
     requires Impl::InvocableWithReturnType<
         G, value_type, std::integral_constant<std::size_t, 0>>
+  // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
       : m_value(gen(0)) {}
   template <typename FlagType>
