@@ -117,6 +117,8 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits_slightly_large_tiling) {
       "smaller tile dims");  // TODO check if this is the error we want
 }
 
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+
 TEST(TEST_CATEGORY_DEATH, md_range_policy_limits_invalid_tiling) {
   int max_threads_per_block = get_max_threads_per_block();
   if (!max_threads_per_block) {
@@ -127,6 +129,13 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits_invalid_tiling) {
   const int N                             = 100;
   MDRangePolicyLimitsFunctor functor{};
 
+  // the message depends on the backend
+#if defined(KOKKOS_ENABLE_CUDA)
+  const char* message = "invalid argument";
+#elif defined(KOKKOS_ENABLE_HIP)
+  const char* message = "unspecified launch failure";
+#endif
+
   // request an invalid tiling
   EXPECT_DEATH(
       {
@@ -134,8 +143,10 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_limits_invalid_tiling) {
         Kokkos::parallel_for("invalid tiling", range, functor);
         Kokkos::fence("wait invalid tiling");
       },
-      "invalid argument");
+      message);
 }
+
+#endif  // if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
 
 #endif  // if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||
         // defined(KOKKOS_ENABLE_SYCL)
