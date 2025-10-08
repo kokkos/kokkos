@@ -1121,7 +1121,7 @@ struct TestViewMapOperator {
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_t i, int64_t& error_count) const {
-    // DEBUG_OPENACC: add explicit constexpr keywords to avoid NVHPC compiler
+    // FIXME_OPENACC: add explicit constexpr keywords to avoid NVHPC compiler
     // bug.
     if constexpr (std::is_same_v<typename ViewType::array_layout,
                                  Kokkos::LayoutLeft>) {

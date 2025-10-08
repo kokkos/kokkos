@@ -1572,7 +1572,6 @@ struct TestReducers {
     test_maxloc_loc_init(3);
 // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
 #if !defined(KOKKOS_ENABLE_OPENACC)
-    // FIXME_OPENACC - OpenACC (V3.3) does not support custom reductions.
 // FIXME_OPENMPTARGET requires custom reductions.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
     test_maxloc_2d(100);
@@ -1603,11 +1602,12 @@ struct TestReducers {
     test_min(10003);
     test_minloc(10003);
     test_minloc_loc_init(3);
-// FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
-#if !defined(KOKKOS_ENABLE_OPENACC)
 #if defined(KOKKOS_ENABLE_CUDA)
     if (!std::is_same_v<ExecSpace, Kokkos::Cuda>)
 #endif
+    // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet
+    // implemented.
+#if !defined(KOKKOS_ENABLE_OPENACC)
     // FIXME_OPENMPTARGET requires custom reductions.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
       test_minloc_2d(100);
@@ -1616,11 +1616,11 @@ struct TestReducers {
     test_max(10007);
     test_maxloc(10007);
     test_maxloc_loc_init(3);
-// FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
-#if !defined(KOKKOS_ENABLE_OPENACC)
 #if defined(KOKKOS_ENABLE_CUDA)
     if (!std::is_same_v<ExecSpace, Kokkos::Cuda>)
 #endif
+// FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
+#if !defined(KOKKOS_ENABLE_OPENACC)
 // FIXME_OPENMPTARGET requires custom reductions.
 #if !defined(KOKKOS_ENABLE_OPENMPTARGET)
       test_maxloc_2d(100);

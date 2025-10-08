@@ -29,20 +29,25 @@
 // gang-private variables, and the alternative implementation allocates
 // the gang-private arrays on GPU global memory using array expansion,
 // instead of using the private clause.
-/* clang-format off */
 #ifdef KOKKOS_COMPILER_CLANG
 #define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS1(THREADID) \
   vector_red_temp[team_id * chunk_size + THREADID]
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS2(THREADID) vector_red_temp[THREADID]
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE1 create(vector_red_temp [0:n_chunks*chunk_size])
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 create(vector_red_temp[0:chunk_size])
+#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS2(THREADID) \
+  vector_red_temp[THREADID]
+#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE1 \
+  create(vector_red_temp [0:n_chunks * chunk_size])
+#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 \
+  create(vector_red_temp [0:chunk_size])
 #else
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS1(THREADID) vector_red_temp[THREADID]
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS2(THREADID) vector_red_temp[THREADID]
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE1 private(vector_red_temp[0:chunk_size])
-#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 private(vector_red_temp[0:chunk_size])
+#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS1(THREADID) \
+  vector_red_temp[THREADID]
+#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS2(THREADID) \
+  vector_red_temp[THREADID]
+#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE1 \
+  private(vector_red_temp [0:chunk_size])
+#define KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 \
+  private(vector_red_temp [0:chunk_size])
 #endif
-/* clang-format on */
 
 #define KOKKOS_IMPL_OPENACC_CHUNK_SIZE 64
 
