@@ -55,7 +55,7 @@ namespace Kokkos::Experimental::Impl {
 
 // primary template: catch-all non-implemented custom reducers
 template <
-    class Functor, class Reducer, class Policy, class Pointer,
+    class Functor, class Reducer, class Policy,
     bool = Kokkos::Impl::FunctorAnalysis<
                Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
                typename Functor::functor_type, typename Reducer::value_type>::
@@ -63,7 +63,11 @@ template <
            !std::is_arithmetic_v<typename Reducer::value_type>>
 struct OpenACCParallelReduceHelper {
   OpenACCParallelReduceHelper(Functor const&, Reducer const&, Policy const&,
-                              Pointer, bool) {
+                              Kokkos::Impl::FunctorAnalysis<
+                                  Kokkos::Impl::FunctorPatternInterface::REDUCE,
+                                  Policy, typename Functor::functor_type,
+                                  typename Reducer::value_type>::pointer_type,
+                              bool) {
     static_assert(Kokkos::Impl::always_false<Functor>::value,
                   "not implemented");
   }
@@ -275,11 +279,15 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(n_chunks) num_workers(1) vec
 }
 }  // namespace Kokkos::Experimental::Impl
 
-template <class Functor, class Reducer, class Pointer, class... Traits>
+template <class Functor, class Reducer, class... Traits>
 struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
-    Functor, Reducer, Kokkos::RangePolicy<Traits...>, Pointer, true> {
+    Functor, Reducer, Kokkos::RangePolicy<Traits...>, true> {
   using Policy       = RangePolicy<Traits...>;
   using ScheduleType = Kokkos::Experimental::Impl::OpenACCScheduleType<Policy>;
+  using Pointer      = Kokkos::Impl::FunctorAnalysis<
+      Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,
+      typename Functor::functor_type,
+      typename Reducer::value_type>::pointer_type;
 
   OpenACCParallelReduceHelper(Functor const& functor, Reducer const& reducer,
                               Policy const& policy, Pointer m_result_ptr,
@@ -388,15 +396,18 @@ struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<
 
 #define KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_HELPER(REDUCER, OPERATOR)          \
   KOKKOS_IMPL_OPENACC_PARALLEL_REDUCE_DISPATCH_SCHEDULE(REDUCER, OPERATOR)     \
-  template <class Functor, class Scalar, class Space, class Pointer,           \
-            class... Traits>                                                   \
+  template <class Functor, class Scalar, class Space, class... Traits>         \
   struct Kokkos::Experimental::Impl::OpenACCParallelReduceHelper<              \
       Functor, Kokkos::REDUCER<Scalar, Space>, Kokkos::RangePolicy<Traits...>, \
-      Pointer, false> {                                                        \
+      false> {                                                                 \
     using Policy = RangePolicy<Traits...>;                                     \
     using ScheduleType =                                                       \
         Kokkos::Experimental::Impl::OpenACCScheduleType<Policy>;               \
     using Reducer = REDUCER<Scalar, Space>;                                    \
+    using Pointer = Kokkos::Impl::FunctorAnalysis<                             \
+        Kokkos::Impl::FunctorPatternInterface::REDUCE, Policy,                 \
+        typename Functor::functor_type,                                        \
+        typename Reducer::value_type>::pointer_type;                           \
                                                                                \
     OpenACCParallelReduceHelper(Functor const& functor,                        \
                                 Reducer const& reducer, Policy const& policy,  \
