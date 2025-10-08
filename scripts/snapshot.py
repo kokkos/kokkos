@@ -14,12 +14,10 @@ in the source repository.
 
 import sys
 
-#check the version number so that there is a good error message when argparse is not available.
-#This checks for exactly 2.7 which is bad, but it is a python 2 script and argparse was introduced
-#in 2.7 which is also the last version of python 2. If this script is updated for python 3 this
-#will need to change, but for now it is not safe to allow 3.x to run this.
-if sys.version_info[:2] != (2, 7):
-  print "Error snapshot requires python 2.7 detected version is %d.%d." % (sys.version_info[0], sys.version_info[1])
+#This checks for python version >= 3.2 (which is when argparse was added to python3)
+#See https://docs.python.org/3/library/argparse.html for reference
+if sys.version_info[:2] < (3, 2):
+  print "Error snapshot requires python 3.2 or newer, detected version is %d.%d." % (sys.version_info[0], sys.version_info[1])
   sys.exit(1)
 
 import subprocess, argparse, re, doctest, os, datetime, traceback
