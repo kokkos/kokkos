@@ -394,5 +394,5 @@ BENCHMARK(Test_Atomic<unsigned long long int>)->Arg(LOOP)->Iterations(10);
 BENCHMARK(Test_Atomic<float>)->Arg(LOOP)->Iterations(10);
 BENCHMARK(Test_Atomic<double>)->Arg(LOOP)->Iterations(10);
 #ifdef __SIZEOF_INT128__
-BENCHMARK(Test_Atomic<__int128>)->Arg(LOOP)->Iterations(10);
+BENCHMARK(Test_Atomic<__int128>)->Arg(30'000)->Iterations(10);
 #endif
