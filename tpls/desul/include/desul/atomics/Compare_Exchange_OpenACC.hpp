@@ -19,8 +19,8 @@ namespace desul {
 namespace Impl {
 
 template <class T>
-inline constexpr bool device_atomic_is_always_lock_free<T, void> = (sizeof(T) == 4) ||
-                                                                   (sizeof(T) == 8);
+inline constexpr bool device_atomic_always_lock_free<T, void> = (sizeof(T) == 4) ||
+                                                                (sizeof(T) == 8);
 
 #ifdef __NVCOMPILER
 
