@@ -393,3 +393,4 @@ BENCHMARK(Test_Atomic<unsigned long int>)->Arg(LOOP)->Iterations(10);
 BENCHMARK(Test_Atomic<unsigned long long int>)->Arg(LOOP)->Iterations(10);
 BENCHMARK(Test_Atomic<float>)->Arg(LOOP)->Iterations(10);
 BENCHMARK(Test_Atomic<double>)->Arg(LOOP)->Iterations(10);
+BENCHMARK(Test_Atomic<Kokkos::complex<double>>)->Arg(LOOP)->Iterations(10);
