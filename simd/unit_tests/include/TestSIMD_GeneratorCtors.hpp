@@ -15,7 +15,7 @@ import kokkos.simd;
 template <typename Abi, typename DataType>
 inline void host_check_gen_ctor() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
-    using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+    using simd_type = Kokkos::Experimental::basic_vec<DataType, Abi>;
     using mask_type = typename simd_type::mask_type;
     constexpr std::size_t lanes = simd_type::size();
 
@@ -74,8 +74,8 @@ inline void host_check_gen_ctors_all_abis(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_gen_ctor() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
-    using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  if constexpr (is_type_v<Kokkos::Experimental::basic_vec<DataType, Abi>>) {
+    using simd_type = Kokkos::Experimental::basic_vec<DataType, Abi>;
     using mask_type = typename simd_type::mask_type;
     constexpr std::size_t lanes = simd_type::size();
 

@@ -229,45 +229,52 @@ using native = ForSpace<T, Kokkos::DefaultExecutionSpace>;
 
 }  // namespace simd_abi
 
+template <class T, int N = 0>
+using vec = basic_vec<T, simd_abi::Impl::native_abi<T, N>>;
+
+template <class T, int N = 0>
+using mask = basic_mask<T, simd_abi::Impl::native_abi<T, N>>;
+
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 template <class T>
 using native_simd KOKKOS_DEPRECATED_WITH_COMMENT("Use simd<T> instead") =
-    basic_simd<T, simd_abi::native<T>>;
+    basic_vec<T, simd_abi::native<T>>;
 template <class T>
 using native_simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
-    "Use simd_mask<T> instead") = basic_simd_mask<T, simd_abi::native<T>>;
+    "Use simd_mask<T> instead") = basic_mask<T, simd_abi::native<T>>;
+
+template <class T, int N = 0>
+using simd KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::Experimental::vec instead") = vec<T, N>;
+
+template <class T, int N = 0>
+using simd_mask KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::Experimental::mask instead") = mask<T, N>;
 #endif
-
-template <class T, int N = 0>
-using simd = basic_simd<T, simd_abi::Impl::native_abi<T, N>>;
-
-template <class T, int N = 0>
-using simd_mask = basic_simd_mask<T, simd_abi::Impl::native_abi<T, N>>;
 
 template <
     typename T, typename... Flags,
     std::enable_if_t<
-        !std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
-                        basic_simd<T, simd_abi::scalar>>,
+        !std::is_same_v<basic_vec<T, simd_abi::Impl::host_fixed_native<T>>,
+                        basic_vec<T, simd_abi::scalar>>,
         bool> = false>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
+    basic_vec<T, simd_abi::Impl::host_fixed_native<T>>
     simd_unchecked_load(const T* ptr,
                         simd_flags<Flags...> flag = simd_flag_default) {
   return simd_unchecked_load<
-      basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(ptr, flag);
+      basic_vec<T, simd_abi::Impl::host_fixed_native<T>>>(ptr, flag);
 }
 
-template <
-    typename T, typename... Flags,
-    std::enable_if_t<
-        std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
-                       basic_simd<T, simd_abi::scalar>>,
-        bool> = false>
-KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar>
+template <typename T, typename... Flags,
+          std::enable_if_t<
+              std::is_same_v<basic_vec<T, simd_abi::Impl::host_fixed_native<T>>,
+                             basic_vec<T, simd_abi::scalar>>,
+              bool> = false>
+KOKKOS_FORCEINLINE_FUNCTION constexpr basic_vec<T, simd_abi::scalar>
 simd_unchecked_load(const T* ptr,
                     simd_flags<Flags...> flag = simd_flag_default) {
-  return simd_unchecked_load<basic_simd<T, simd_abi::scalar>>(ptr, flag);
+  return simd_unchecked_load<basic_vec<T, simd_abi::scalar>>(ptr, flag);
 }
 
 namespace Impl {

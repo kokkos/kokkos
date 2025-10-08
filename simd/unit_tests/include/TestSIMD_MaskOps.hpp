@@ -15,7 +15,7 @@ import kokkos.simd;
 template <typename Abi, typename DataType>
 inline void host_check_mask_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
-    using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
+    using mask_type = Kokkos::Experimental::basic_mask<DataType, Abi>;
 
     EXPECT_FALSE(none_of(mask_type(true)));
     EXPECT_TRUE(none_of(mask_type(false)));
@@ -54,8 +54,8 @@ inline void host_check_mask_ops_all_abis(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_mask_ops() {
-  if constexpr (is_type_v<Kokkos::Experimental::basic_simd<DataType, Abi>>) {
-    using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
+  if constexpr (is_type_v<Kokkos::Experimental::basic_vec<DataType, Abi>>) {
+    using mask_type = Kokkos::Experimental::basic_mask<DataType, Abi>;
     kokkos_checker checker;
     checker.truth(!none_of(mask_type(true)));
     checker.truth(none_of(mask_type(false)));

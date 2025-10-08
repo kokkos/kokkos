@@ -61,7 +61,7 @@ inline void host_test_simd_store(SimdType const& init, SimdType const& expected,
 
 template <typename Abi, typename DataType>
 inline void host_test_simd_loadstore() {
-  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using simd_type = Kokkos::Experimental::basic_vec<DataType, Abi>;
   using mask_type = typename simd_type::mask_type;
 
   mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i % 2 == 0; });
@@ -163,7 +163,7 @@ KOKKOS_INLINE_FUNCTION void device_test_simd_store(SimdType const& init,
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_test_simd_loadstore() {
-  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  using simd_type = Kokkos::Experimental::basic_vec<DataType, Abi>;
   using mask_type = typename simd_type::mask_type;
 
   mask_type mask([=](std::size_t i) { return i % 2 == 0; });

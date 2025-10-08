@@ -23,20 +23,19 @@ inline void host_check_conversions() {
                                                                      : 213;
     bool test_mask_val = true;
     {
-      auto from = Kokkos::Experimental::basic_simd<DataTypeA, Abi>(test_val);
-      auto to   = Kokkos::Experimental::basic_simd<DataTypeB, Abi>(from);
-      auto expected =
-          Kokkos::Experimental::basic_simd<DataTypeB, Abi>(test_val);
+      auto from     = Kokkos::Experimental::basic_vec<DataTypeA, Abi>(test_val);
+      auto to       = Kokkos::Experimental::basic_vec<DataTypeB, Abi>(from);
+      auto expected = Kokkos::Experimental::basic_vec<DataTypeB, Abi>(test_val);
       EXPECT_EQ(from.size(), to.size());
       host_check_equality(to, decltype(to)(test_val), to.size());
       host_check_equality(to, expected, to.size());
     }
     {
       auto from =
-          Kokkos::Experimental::basic_simd_mask<DataTypeA, Abi>(test_mask_val);
-      auto to = Kokkos::Experimental::basic_simd_mask<DataTypeB, Abi>(from);
+          Kokkos::Experimental::basic_mask<DataTypeA, Abi>(test_mask_val);
+      auto to = Kokkos::Experimental::basic_mask<DataTypeB, Abi>(from);
       auto expected =
-          Kokkos::Experimental::basic_simd_mask<DataTypeB, Abi>(test_mask_val);
+          Kokkos::Experimental::basic_mask<DataTypeB, Abi>(test_mask_val);
       EXPECT_EQ(from.size(), to.size());
       EXPECT_TRUE(all_of(to == decltype(to)(test_mask_val)));
       EXPECT_TRUE(all_of(to == expected));
@@ -74,20 +73,19 @@ KOKKOS_INLINE_FUNCTION void device_check_conversions() {
     bool test_mask_val = true;
     kokkos_checker checker;
     {
-      auto from = Kokkos::Experimental::basic_simd<DataTypeA, Abi>(test_val);
-      auto to   = Kokkos::Experimental::basic_simd<DataTypeB, Abi>(from);
-      auto expected =
-          Kokkos::Experimental::basic_simd<DataTypeB, Abi>(test_val);
+      auto from     = Kokkos::Experimental::basic_vec<DataTypeA, Abi>(test_val);
+      auto to       = Kokkos::Experimental::basic_vec<DataTypeB, Abi>(from);
+      auto expected = Kokkos::Experimental::basic_vec<DataTypeB, Abi>(test_val);
       checker.truth(from.size() == to.size());
       device_check_equality(to, decltype(to)(test_val), to.size());
       device_check_equality(to, expected, to.size());
     }
     {
       auto from =
-          Kokkos::Experimental::basic_simd_mask<DataTypeA, Abi>(test_mask_val);
-      auto to = Kokkos::Experimental::basic_simd_mask<DataTypeB, Abi>(from);
+          Kokkos::Experimental::basic_mask<DataTypeA, Abi>(test_mask_val);
+      auto to = Kokkos::Experimental::basic_mask<DataTypeB, Abi>(from);
       auto expected =
-          Kokkos::Experimental::basic_simd_mask<DataTypeB, Abi>(test_mask_val);
+          Kokkos::Experimental::basic_mask<DataTypeB, Abi>(test_mask_val);
       checker.truth(from.size() == to.size());
       checker.truth(all_of(to == decltype(to)(test_mask_val)));
       checker.truth(all_of(to == expected));
