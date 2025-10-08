@@ -197,7 +197,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using raw_allocation_value_type = std::remove_pointer_t<pointer_type>;
   using hooks_policy =
       typename Impl::ViewHooksFromTraits<DataType, Properties...>::type;
-  static constexpr bool has_empty_hooks_policy = std::is_void_v<hooks_policy>;
+  static constexpr bool has_hooks_policy = !std::is_void_v<hooks_policy>;
 
  public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
@@ -682,19 +682,19 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC)
   KOKKOS_FUNCTION
   View(const View& other) : base_t{other} {
-    if constexpr (!has_empty_hooks_policy) {
+    if constexpr (has_hooks_policy) {
       KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
     }
   }
 #else
   KOKKOS_DEFAULTED_FUNCTION
   View(const View&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View(const View& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
       : base_t{other} {
     KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
@@ -706,19 +706,19 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC)
   KOKKOS_FUNCTION
   View(View&& other) : base_t{std::move(static_cast<base_t&&>(other))} {
-    if constexpr (!has_empty_hooks_policy) {
+    if constexpr (has_hooks_policy) {
       KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
     }
   }
 #else
   KOKKOS_DEFAULTED_FUNCTION
   View(View&&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View(View&& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
       : base_t{std::move(static_cast<base_t&&>(other))} {
     KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
   }
@@ -732,7 +732,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   View& operator=(const View& other) {
     base_t::operator=(other);
 
-    if constexpr (!has_empty_hooks_policy) {
+    if constexpr (has_hooks_policy) {
       KOKKOS_IF_ON_HOST(
           (if (&other != this) { hooks_policy::copy_assign(*this, other); }))
     }
@@ -742,12 +742,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 #else
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(const View&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View& operator=(const View& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
   {
     base_t::operator=(other);
     KOKKOS_IF_ON_HOST(
@@ -765,7 +765,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   View& operator=(View&& other) {
     base_t::operator=(std::move(static_cast<base_t&&>(other)));
 
-    if constexpr (!has_empty_hooks_policy) {
+    if constexpr (has_hooks_policy) {
       KOKKOS_IF_ON_HOST(
           (if (&other != this) { hooks_policy::move_assign(*this, other); }))
     }
@@ -775,12 +775,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 #else
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(View&&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View& operator=(View&& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
   {
     base_t::operator=(std::move(static_cast<base_t&&>(other)));
     KOKKOS_IF_ON_HOST(
