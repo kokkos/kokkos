@@ -20,15 +20,17 @@ struct TestSubscriber {
                    Kokkos::Experimental::SubscribableViewHooks<TestSubscriber>,
                    DeviceType>,
       Kokkos::View<double **, DeviceType>>;
-  inline static test_view_type *self_ptr = nullptr;
+  inline static test_view_type *self_ptr        = nullptr;
   inline static const test_view_type *other_ptr = nullptr;
 
-  static void copy_constructed(test_view_type &self, const test_view_type &other) {
+  static void copy_constructed(test_view_type &self,
+                               const test_view_type &other) {
     self_ptr  = &self;
     other_ptr = &other;
   }
 
-  static void move_constructed(test_view_type &self, const test_view_type &other) {
+  static void move_constructed(test_view_type &self,
+                               const test_view_type &other) {
     self_ptr  = &self;
     other_ptr = &other;
   }
@@ -48,36 +50,37 @@ struct TestSubscriber {
     other_ptr = nullptr;
   }
 };
+}  // namespace Test
+
+namespace TestADLViewHookCustomization {
+template <typename DeviceType>
+class TestMemSpace : public DeviceType::memory_space {};
+
+template <typename DeviceType>
+using TestDevice = Kokkos::Device<typename DeviceType::execution_space,
+                                  TestMemSpace<DeviceType>>;
+
+template <class DataType, class... Properties>
+constexpr auto customize_view_hooks() {
+  using traits_type = Kokkos::ViewTraits<DataType, Properties...>;
+  return Test::TestSubscriber<typename traits_type::device_type, false>{};
 }
-
-namespace TestADLViewHookCustomization
-{
-  template< typename DeviceType >
-  class TestMemSpace : public DeviceType::memory_space
-  {};
-
-  template< typename DeviceType >
-  using TestDevice = Kokkos::Device<typename DeviceType::execution_space, TestMemSpace<DeviceType>>;
-
-  template <class DataType, class... Properties>
-  constexpr auto customize_view_hooks() {
-    using traits_type = Kokkos::ViewTraits<DataType, Properties...>;
-    return Test::TestSubscriber<typename traits_type::device_type, false>{};
-  }
-}
+}  // namespace TestADLViewHookCustomization
 
 namespace Test {
 template <class DeviceType>
 struct TestViewHooks {
   using subscriber_type = TestSubscriber<DeviceType, true>;
-  using test_view_type = typename subscriber_type::test_view_type;
+  using test_view_type  = typename subscriber_type::test_view_type;
 
-  using adl_subscriber_type = TestSubscriber<TestADLViewHookCustomization::TestMemSpace<DeviceType>, false>;
+  using adl_subscriber_type =
+      TestSubscriber<TestADLViewHookCustomization::TestMemSpace<DeviceType>,
+                     false>;
   using adl_test_view_type = typename adl_subscriber_type::test_view_type;
 
   static_assert(
       Kokkos::Experimental::is_hooks_policy<
-          Kokkos::Experimental::SubscribableViewHooks<subscriber_type> >::value,
+          Kokkos::Experimental::SubscribableViewHooks<subscriber_type>>::value,
       "Must be a hooks policy");
 
   static void testViewHooksCopyConstruct() {
