@@ -224,7 +224,7 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(n_chunks) num_workers(1) vec
     gang_red_temp(team_id) = KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_ACCESS1(0);
   }
   /* clang-format off */
-	KOKKOS_IMPL_ACC_PRAGMA(parallel num_gangs(1) num_workers(1) vector_length(chunk_size) KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 present(reducer, gang_red_temp) copyin(m_result_view) async(async_arg))
+KOKKOS_IMPL_ACC_PRAGMA(parallel num_gangs(1) num_workers(1) vector_length(chunk_size) KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 present(reducer, gang_red_temp) copyin(m_result_view) async(async_arg))
   /* clang-format on */
   {
     IndexType tSize = chunk_size;
