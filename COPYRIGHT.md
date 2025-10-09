@@ -71,7 +71,7 @@ Carl Pearson; SNL; cwpears@sandia.gov
 Jan Ciesko; SNL; jan.ciesko@gmail.com
 Cezary Skrzyński; SNL; cezary.skrzynski@ng-analytics.com
 Arkadiusz Szczepkowicz; SNL; arek.szczepkowicz@ng-analytics.com
-Dan Ibanez; SNL; ibaned@users.noreply.github.com
+Dan Ibanez; SNL; daibane@sandia.gov
 Evan Harvey; SNL; 57234914+e10harvey@users.noreply.github.com
 
 ### Oak Ridge National Laboratories (ORNL)
