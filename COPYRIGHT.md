@@ -23,7 +23,7 @@ Christian Trott; SNL; crtrott@sandia.gov
 Nathan Ellingwood; SNL; ndellin@sandia.gov
 Dong Hun Lee; SNL; donlee@sandia.gov
 Nicolas Morales; SNL; nmmoral@sandia.gov
-Thomas Conrad; SNL; Clevenger tccleve@sandia.gov tccleve@kokkos-dev-2.sandia.gov
+Conrad Clevenger ; SNL; tccleve@sandia.gov
 Carl Pearson; SNL; cwpears@sandia.gov
 Jan Ciesko; SNL; jan.ciesko@gmail.com
 
@@ -66,7 +66,7 @@ Francesco Rizzi; SNL; fnrizzi@sandia.gov
 Nathan Ellingwood; SNL; ndellin@sandia.gov
 Dong Hun Lee; SNL; donlee@sandia.gov
 Nicolas Morales; SNL; nmmoral@sandia.gov
-Thomas Conrad; SNL; Clevenger tccleve@sandia.gov tccleve@kokkos-dev-2.sandia.gov
+Conrad Clevenger ; SNL; tccleve@sandia.gov
 Carl Pearson; SNL; cwpears@sandia.gov
 Jan Ciesko; SNL; jan.ciesko@gmail.com
 Cezary Skrzyński; SNL; cezary.skrzynski@ng-analytics.com
