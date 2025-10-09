@@ -32,7 +32,7 @@ Jan Ciesko; SNL; jan.ciesko@gmail.com
 Damien Lebrun-Grandie; ORNL; dalg24@gmail.com
 Daniel Arndt; ORNL; arndtd@ornl.gov
 Bruno Turcksin; ORNL; bruno.turcksin@gmail.com
-Jakob Bludau; ORNL; bludauj@ornl.gov 104908666+JBludau@users.noreply.github.com
+Jakob Bludau; ORNL; bludauj@ornl.gov
 Seyong Lee; ORNL; lees2@ornl.gov
 
 ### Commissariat à l’Energie Atomique et aux Energies Alternatives (CEA)
@@ -79,7 +79,7 @@ Evan Harvey; SNL; eharvey@sandia.gov
 Damien Lebrun-Grandie; ORNL; dalg24@gmail.com
 Daniel Arndt; ORNL; arndtd@ornl.gov
 Bruno Turcksin; ORNL; bruno.turcksin@gmail.com
-Jakob Bludau; ORNL; bludauj@ornl.gov 104908666+JBludau@users.noreply.github.com
+Jakob Bludau; ORNL; bludauj@ornl.gov
 Seyong Lee; ORNL; lees2@ornl.gov
 Andrey Prokopenko; ORNL; prokopenkoav@ornl.gov
 
