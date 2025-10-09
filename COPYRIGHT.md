@@ -148,7 +148,7 @@ Seyong Lee; ORNL; lees2@ornl.gov
 
 Rahul Gayatri; OTHER; rgayatri@lbl.gov rahulgayatri84@gmail.com
 Nick Curtis; OTHER; nicholas.curtis@amd.com nicurtis@amd.com
-Jonathan R. Madsen; OTHER; jonathanrmadsen@gmail.com jrmadsen@users.noreply.github.com
+Jonathan R. Madsen; OTHER; jonathanrmadsen@gmail.com
 Christoph Junghans; OTHER; junghans@lanl.gov
 Mikael Simberg; OTHER; simberg@cscs.ch mikael.simberg@iki.fi
 J Todd; OTHER; joeatodd@gmail.com
