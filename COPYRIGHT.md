@@ -123,7 +123,7 @@ Francesco Rizzi; SNL; fnrizzi@sandia.gov
 Dong Hun Lee; SNL; donlee@sandia.gov
 Evan Harvey; SNL; eharvey@sandia.gov
 Phil Miller; SNL; pbmille@sandia.gov
-Jeff Miles; SNL; jsmiles@sandia.gov jsmiles@kokkos-dev-2.sandia.gov jsmiles@apollo.sandia.gov
+Jeff Miles; SNL; jsmiles@sandia.gov
 Nicolas Morales; SNL; nmmoral@sandia.gov
 Jeremiah Wilke; SNL; jjwilke@sandia.gov
 Jan Ciesko; SNL; jan.ciesko@gmail.com
@@ -181,7 +181,7 @@ Si Hammond; SNL; sdhammo@sandia.gov
 James David Stevens; SNL; jdsteve@kokkos-dev.sandia.gov
 Mark Hoemmen; SNL; mhoemme@sandia.gov
 Jeremiah Wilke; SNL; jjwilke@sandia.gov
-Jeff Miles; SNL; jsmiles@sandia.gov jsmiles@kokkos-dev-2.sandia.gov jsmiles@apollo.sandia.gov
+Jeff Miles; SNL; jsmiles@sandia.gov
 Stan Moore; SNL; stamoor@sandia.gov
 James Elliott; SNL; jjellio@sandia.gov
 Eric Phipps; SNL; etphipp@sandia.gov
