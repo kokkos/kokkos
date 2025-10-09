@@ -98,7 +98,7 @@ Romin Tomasetti; OTHER; romin.tomasetti@gmail.com
 Mikael Simberg; OTHER; mikael.simberg@iki.fi
 Nevin ":-)" Liber; OTHER; nliber+github@gmail.com nliber@anl.gov
 Maarten Arnst; OTHER; maarten.arnst@uliege.be
-Christoph Junghans; OTHER; junghans@votca.org
+Christoph Junghans; OTHER; junghans@lanl.gov
 Timo Heister; OTHER; timo.heister@gmail.com
 
 ## Kokkos 3
@@ -149,7 +149,7 @@ Seyong Lee; ORNL; lees2@ornl.gov
 Rahul Gayatri; OTHER; rgayatri@lbl.gov rahulgayatri84@gmail.com
 Nick Curtis; OTHER; nicholas.curtis@amd.com nicurtis@amd.com
 Jonathan R. Madsen; OTHER; jonathanrmadsen@gmail.com jrmadsen@users.noreply.github.com
-Christoph Junghans; OTHER; junghans@votca.org junghans@lanl.gov
+Christoph Junghans; OTHER; junghans@lanl.gov
 Mikael Simberg; OTHER; simberg@cscs.ch mikael.simberg@iki.fi
 J Todd; OTHER; joeatodd@gmail.com
 Jakob Bludau; OTHER; jakob.bludau@tum.de
@@ -201,6 +201,6 @@ Pierre Kestener; CEA; pierre.kestener@cea.fr
 Mikael Simberg; OTHER; simberg@cscs.ch mikael.simberg@iki.fi
 Chip Freitag; OTHER; chip.freitag@amd.com
 Scott Kruger; OTHER; scott.e.kruger@gmail.com
-Christoph Junghans; OTHER; junghans@votca.org
+Christoph Junghans; OTHER; junghans@lanl.gov
 Daniel Holladay; OTHER; dholladay00@.lanl.gov
 
