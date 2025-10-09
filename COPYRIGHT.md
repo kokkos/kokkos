@@ -202,5 +202,5 @@ Mikael Simberg; OTHER; simberg@cscs.ch mikael.simberg@iki.fi
 Chip Freitag; OTHER; chip.freitag@amd.com
 Scott Kruger; OTHER; scott.e.kruger@gmail.com
 Christoph Junghans; OTHER; junghans@votca.org
-Daniel Holladay; OTHER; dholladay00@.lanl.gov
+Daniel Holladay; OTHER; dholladay00@lanl.gov
 
