@@ -29,7 +29,7 @@ Jan Ciesko; SNL; jan.ciesko@gmail.com
 
 ### Oak Ridge National Laboratories (ORNL)
 
-Damien Lebrun-Grandie; ORNL; dalg24@gmail.com dalg24+github@gmail.com
+Damien Lebrun-Grandie; ORNL; dalg24@gmail.com
 Daniel Arndt; ORNL; arndtd@ornl.gov
 Bruno Turcksin; ORNL; bruno.turcksin@gmail.com
 Jakob Bludau; ORNL; bludauj@ornl.gov 104908666+JBludau@users.noreply.github.com
@@ -76,7 +76,7 @@ Evan Harvey; SNL; 57234914+e10harvey@users.noreply.github.com
 
 ### Oak Ridge National Laboratories (ORNL)
 
-Damien Lebrun-Grandie; ORNL; dalg24@gmail.com dalg24+github@gmail.com
+Damien Lebrun-Grandie; ORNL; dalg24@gmail.com
 Daniel Arndt; ORNL; arndtd@ornl.gov
 Bruno Turcksin; ORNL; bruno.turcksin@gmail.com
 Jakob Bludau; ORNL; bludauj@ornl.gov 104908666+JBludau@users.noreply.github.com
@@ -139,7 +139,7 @@ Si Hammond; SNL; sdhammo@compton1.(none)
 
 ### Oak Ridge National Laboratories (ORNL)
 
-Damien Lebrun-Grandie; ORNL; dalg24@gmail.com dalg24+github@gmail.com
+Damien Lebrun-Grandie; ORNL; dalg24@gmail.com
 Daniel Arndt; ORNL; arndtd@ornl.gov
 Bruno Turcksin; ORNL; bruno.turcksin@gmail.com
 Seyong Lee; ORNL; lees2@ornl.gov
@@ -190,7 +190,7 @@ Steven W. Bova; SNL; swbova@kokkos-dev.sandia.gov
 
 ### Oak Ridge National Laboratories (ORNL)
 
-Damien Lebrun-Grandie; ORNL; qdi@ornl.gov
+Damien Lebrun-Grandie; ORNL; dalg24@gmail.com
 
 ### Commissariat à l’Energie Atomique et aux Energies Alternatives (CEA)
 
