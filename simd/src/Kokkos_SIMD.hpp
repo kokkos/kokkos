@@ -76,7 +76,7 @@ template <class T>
 using host_fixed_native = avx512_fixed_size<8>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, avx512_fixed_size<512 / sizeof(T)>,
+    std::conditional_t<N == 0, avx512_fixed_size<512 / (8 * sizeof(T))>,
                        avx512_fixed_size<N>>;
 
 #elif defined(KOKKOS_ARCH_AVX2)
@@ -84,7 +84,7 @@ template <class T>
 using host_fixed_native = avx2_fixed_size<4>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, avx2_fixed_size<256 / sizeof(T)>,
+    std::conditional_t<N == 0, avx2_fixed_size<256 / (8 * sizeof(T))>,
                        avx2_fixed_size<N>>;
 
 #elif defined(KOKKOS_ARCH_ARM_SVE)
@@ -100,7 +100,7 @@ template <class T>
 using host_fixed_native = neon_fixed_size<2>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, neon_fixed_size<128 / sizeof(T)>,
+    std::conditional_t<N == 0, neon_fixed_size<128 / (8 * sizeof(T))>,
                        neon_fixed_size<N>>;
 
 #else
@@ -295,8 +295,8 @@ using host_abi_set = abi_set<simd_abi::scalar, simd_abi::neon_fixed_size<2>,
 using data_type_set =
     data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;
 #else
-using host_abi_set    = abi_set<simd_abi::scalar>;
-using data_type_set   = data_types<std::int32_t, std::uint32_t, std::int64_t,
+using host_abi_set  = abi_set<simd_abi::scalar>;
+using data_type_set = data_types<std::int32_t, std::uint32_t, std::int64_t,
                                  std::uint64_t, double, float>;
 #endif
 
