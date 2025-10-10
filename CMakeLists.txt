@@ -189,6 +189,9 @@ include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/kokkos_configure_trilinos.cmake)
 
 if(Kokkos_ENABLE_TESTS)
   find_package(GTest QUIET)
+  # If the low-memory tests are enabled, then set the relevant variable
+  set(KOKKOS_ENABLE_LOW_MEM_TESTS ON "Switch on Low-memory tests")
+  endif()
 endif()
 
 # Include a set of Kokkos-specific wrapper functions that
