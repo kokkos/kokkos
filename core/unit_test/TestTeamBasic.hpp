@@ -182,6 +182,11 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   const size_t per_team_extent = 502795560;
 #endif
 
+#ifdef KOKKOS_ENABLE_LOW_MEM_TESTS
+  const size_t per_team_extent = 268435460; // 2 GiB allocation to prevent too much memory usage
+#endif
+
+
   const size_t per_team_bytes = per_team_extent * sizeof(double);
 
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
