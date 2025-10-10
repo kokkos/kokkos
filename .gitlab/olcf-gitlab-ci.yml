@@ -1,3 +1,6 @@
+variables:
+  FF_ENABLE_JOB_CLEANUP: 1
+
 stages:
   - test
   - clean_up

@@ -24,11 +24,11 @@ jobs:
     - name: configure
       shell: bash
       run: |
-        cmake -B build -DCMAKE_CXX_STANDARD=20 -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
+        cmake -B build -DCMAKE_CUDA_FLAGS="-Xcompiler=-bigobj" -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
     - name: build library
       shell: bash
       run: |
-        cmake --build build --parallel 4 --config Release
+        cmake --build build --parallel 4 --config Debug
   windows-serial:
     # Serial build on Windows
     name: Serial VS-2022
@@ -39,7 +39,7 @@ jobs:
     - name: configure
       shell: bash
       run: |
-        cmake -B build -DCMAKE_CXX_STANDARD=20 -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON
+        cmake -B build -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON
     - name: build library
       shell: bash
       run: |
@@ -47,6 +47,7 @@ jobs:
     - name: run tests
       shell: bash
       run: |
+        export PATH="$(pwd)/build/core/src/Release:$(pwd)/build/containers/src/Release:$PATH"
         ctest --test-dir build -C Release -j 4 --output-on-failure
 
   windows-clang:

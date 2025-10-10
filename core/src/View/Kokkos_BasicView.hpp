@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 static_assert(false,
@@ -508,14 +495,25 @@ class BasicView {
   template <class T>
   KOKKOS_INLINE_FUNCTION static bool is_in_bounds(size_t extent,
                                                   const std::pair<T, T> arg) {
-    return static_cast<std::size_t>(arg.second) <= extent && arg.first >= 0 &&
-           arg.first <= arg.second;
+    if constexpr (std::is_signed_v<T>) {
+      return static_cast<std::size_t>(arg.second) <= extent && arg.first >= 0 &&
+             arg.first <= arg.second;
+    } else {
+      return static_cast<std::size_t>(arg.second) <= extent &&
+             arg.first <= arg.second;
+    }
   }
 
   template <class T>
-  static bool is_in_bounds(size_t extent, const Kokkos::pair<T, T> arg) {
-    return static_cast<std::size_t>(arg.second) <= extent && arg.first >= 0 &&
-           arg.first <= arg.second;
+  KOKKOS_INLINE_FUNCTION static bool is_in_bounds(
+      size_t extent, const Kokkos::pair<T, T> arg) {
+    if constexpr (std::is_signed_v<T>) {
+      return static_cast<std::size_t>(arg.second) <= extent && arg.first >= 0 &&
+             arg.first <= arg.second;
+    } else {
+      return static_cast<std::size_t>(arg.second) <= extent &&
+             arg.first <= arg.second;
+    }
   }
 
   KOKKOS_INLINE_FUNCTION static bool is_in_bounds(size_t /*extent*/,

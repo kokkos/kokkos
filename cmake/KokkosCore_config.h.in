@@ -16,6 +16,8 @@
 #define KOKKOS_VERSION_MINOR @KOKKOS_VERSION_MINOR@
 #define KOKKOS_VERSION_PATCH @KOKKOS_VERSION_PATCH@
 
+#cmakedefine KOKKOS_IMPL_BUILD_SHARED_LIBS
+
 /* Execution Spaces */
 #cmakedefine KOKKOS_ENABLE_SERIAL
 #cmakedefine KOKKOS_ENABLE_OPENMP
@@ -146,6 +148,7 @@
 #cmakedefine KOKKOS_ARCH_AMD_GFX1030
 #cmakedefine KOKKOS_ARCH_AMD_GFX1100
 #cmakedefine KOKKOS_ARCH_AMD_GFX1103
+#cmakedefine KOKKOS_ARCH_AMD_GFX1201
 #cmakedefine KOKKOS_ARCH_AMD_GPU "@KOKKOS_ARCH_AMD_GPU@"
 #cmakedefine KOKKOS_ARCH_VEGA // deprecated
 #cmakedefine KOKKOS_ARCH_VEGA906 // deprecated

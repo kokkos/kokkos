@@ -76,6 +76,7 @@ set(BENCHMARK_SOURCES
     PerfTestGramSchmidt.cpp
     PerfTest_CustomReduction.cpp
     PerfTest_ExecSpacePartitioning.cpp
+    PerfTest_Gemv.cpp
     PerfTestHexGrad.cpp
     PerfTest_MallocFree.cpp
     PerfTest_ViewAllocate.cpp

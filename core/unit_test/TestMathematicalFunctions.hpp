@@ -1,23 +1,18 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
+
 #include <algorithm>
+#include <cmath>
 #include <initializer_list>
 #include <type_traits>
 #include <cstdint>
@@ -1593,10 +1588,10 @@ TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
 
 // Known to fail with
 // * CUDA 12.4 and GCC 13.2
-// * CUDA 12.8 and GCC 13.3
+// * CUDA 12.8 and GCC 13.3, 14.2
 #if defined(KOKKOS_COMPILER_NVCC) && \
     (defined(KOKKOS_COMPILER_GNU) && \
-     (KOKKOS_COMPILER_GNU >= 1300 && KOKKOS_COMPILER_GNU < 1400))
+     (KOKKOS_COMPILER_GNU >= 1300 && KOKKOS_COMPILER_GNU < 1500))
 #define KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_PUSH() \
   KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 

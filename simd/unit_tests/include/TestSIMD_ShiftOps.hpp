@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_TEST_SIMD_SHIFT_OPS_HPP
 #define KOKKOS_TEST_SIMD_SHIFT_OPS_HPP
@@ -46,10 +33,9 @@ inline void host_check_shift_on_one_loader(ShiftOp shift_op,
           shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[i]));
     }
 
-    simd_type expected_result;
-    expected_result.copy_from(expected_val,
-                              Kokkos::Experimental::simd_flag_default);
-
+    simd_type expected_result =
+        Kokkos::Experimental::simd_unchecked_load<simd_type>(
+            expected_val, Kokkos::Experimental::simd_flag_default);
     simd_type const computed_result =
         shift_op.on_host(simd_vals, static_cast<int>(shift_by[i]));
 
@@ -75,10 +61,9 @@ inline void host_check_shift_by_lanes_on_one_loader(
         shift_op.on_host(simd_vals[lane], static_cast<int>(shift_by[lane]));
   }
 
-  simd_type expected_result;
-  expected_result.copy_from(expected_val,
-                            Kokkos::Experimental::simd_flag_default);
-
+  simd_type expected_result =
+      Kokkos::Experimental::simd_unchecked_load<simd_type>(
+          expected_val, Kokkos::Experimental::simd_flag_default);
   simd_type const computed_result = shift_op.on_host(simd_vals, shift_by);
 
   host_check_equality(expected_result, computed_result, width);
@@ -98,8 +83,10 @@ inline void host_check_shift_op_all_loaders(ShiftOp shift_op,
   host_check_shift_on_one_loader<Abi, load_vector_aligned>(shift_op, test_vals,
                                                            shift_by, n);
 
-  Kokkos::Experimental::basic_simd<DataType, Abi> shift_by_lanes;
-  shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  simd_type shift_by_lanes =
+      Kokkos::Experimental::simd_unchecked_load<simd_type>(
+          shift_by, Kokkos::Experimental::simd_flag_default);
 
   host_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
       shift_op, test_vals, shift_by_lanes);
@@ -223,8 +210,10 @@ KOKKOS_INLINE_FUNCTION void device_check_shift_op_all_loaders(
   device_check_shift_on_one_loader<Abi, load_vector_aligned>(
       shift_op, test_vals, shift_by, n);
 
-  Kokkos::Experimental::basic_simd<DataType, Abi> shift_by_lanes;
-  shift_by_lanes.copy_from(shift_by, Kokkos::Experimental::simd_flag_default);
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+  simd_type shift_by_lanes =
+      Kokkos::Experimental::simd_unchecked_load<simd_type>(
+          shift_by, Kokkos::Experimental::simd_flag_default);
 
   device_check_shift_by_lanes_on_one_loader<Abi, load_element_aligned>(
       shift_op, test_vals, shift_by_lanes);

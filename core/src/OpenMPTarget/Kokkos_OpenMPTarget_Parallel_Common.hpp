@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
 #define KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
@@ -356,14 +343,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     ValueType result = ValueType();
 
     // Maximum active teams possible.
-    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
-    // omp_get_max_teams.
-#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
-#else
-    int max_active_teams =
-        std::min(p.space().concurrency() / team_size, league_size);
-#endif
 
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;
@@ -423,14 +403,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         p.space().impl_internal_space_instance()->get_scratch_ptr();
 
     // Maximum active teams possible.
-    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
-    // omp_get_max_teams.
-#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
-#else
-    int max_active_teams =
-        std::min(p.space().concurrency() / team_size, league_size);
-#endif
 
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;

@@ -6,7 +6,7 @@ if(NOT GTest_FOUND) # fallback to internal gtest
   set(GTEST_SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/gtest)
 
   kokkos_add_test_library(
-    kokkos_gtest HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
+    kokkos_gtest STATIC HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
   )
 
   target_include_directories(kokkos_gtest SYSTEM PUBLIC ${GTEST_SOURCE_DIR})
@@ -111,17 +111,11 @@ if(WIN32)
 endif()
 
 if(Kokkos_INSTALL_TESTING) # FIXME Kokkos_ and KOKKOS_ variables are out of sync
-  if((Kokkos_CXX_COMPILER_ID STREQUAL "Intel" AND Kokkos_CXX_COMPILER_VERSION VERSION_LESS 2021.2.0)
-     OR (Kokkos_CXX_COMPILER_ID STREQUAL "NVIDIA" AND Kokkos_CXX_COMPILER_VERSION VERSION_LESS 11.3.0)
-     OR (Kokkos_CXX_COMPILER_ID STREQUAL "NVIDIA" AND Kokkos_CXX_HOST_COMPILER_ID STREQUAL "MSVC")
-  )
+  if(Kokkos_CXX_COMPILER_ID STREQUAL "NVIDIA" AND Kokkos_CXX_HOST_COMPILER_ID STREQUAL "MSVC")
     list(REMOVE_ITEM COMPILE_ONLY_SOURCES TestTypeInfo.cpp)
   endif()
 else()
-  if((KOKKOS_CXX_COMPILER_ID STREQUAL "Intel" AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 2021.2.0)
-     OR (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA" AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 11.3.0)
-     OR (KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA" AND KOKKOS_CXX_HOST_COMPILER_ID STREQUAL "MSVC")
-  )
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL "NVIDIA" AND KOKKOS_CXX_HOST_COMPILER_ID STREQUAL "MSVC")
     list(REMOVE_ITEM COMPILE_ONLY_SOURCES TestTypeInfo.cpp)
   endif()
 endif()
@@ -281,6 +275,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         ViewMapping_b
         ViewMapping_subview
         ViewMemoryAccessViolation
+        ViewMove
         ViewOfClass
         ViewOfViews
         ViewOutOfBoundsAccess
@@ -650,7 +645,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Abort.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Complex.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ExecutionSpace.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ExecSpacePartitioning.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalConstants.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalSpecialFunctions.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MinMaxClamp.cpp
@@ -808,12 +802,9 @@ if(Kokkos_ENABLE_HIP)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpGraph SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_Graph.cpp
   )
-  if(KOKKOS_CXX_COMPILER_ID STREQUAL HIPCC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 5.6)
-    # MultiGPU only works for rocm 5.6+
-    kokkos_add_executable_and_test(
-      CoreUnitTest_HIPInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_StreamsMultiGPU.cpp
-    )
-  endif()
+  kokkos_add_executable_and_test(
+    CoreUnitTest_HIPInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_StreamsMultiGPU.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_SYCL)
@@ -942,7 +933,7 @@ kokkos_add_executable_and_test(
 kokkos_add_executable_and_test(CoreUnitTest_Develop SOURCES UnitTestMainInit.cpp default/TestDefaultDeviceDevelop.cpp)
 
 if(KOKKOS_ENABLE_TUNING)
-  kokkos_add_executable_and_test(CoreUnitTest_TuningBuiltins SOURCES tools/TestBuiltinTuners.cpp)
+  kokkos_add_executable_and_test(CoreUnitTest_TuningBuiltins SOURCES UnitTestMainInit.cpp tools/TestBuiltinTuners.cpp)
   kokkos_add_executable_and_test(CoreUnitTest_TuningBasics SOURCES tools/TestTuning.cpp)
   kokkos_add_executable_and_test(CoreUnitTest_CategoricalTuner SOURCES tools/TestCategoricalTuner.cpp)
 endif()

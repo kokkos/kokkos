@@ -9,8 +9,6 @@ enable_testing()
 list(LENGTH SRC_NAME_LIST LEN) 
 math(EXPR LEN "${LEN}-1")
 
-set(CMAKE_CXX_COMPILER ${Kokkos_CXX_COMPILER})
-
 foreach (it RANGE ${LEN}) 
   list(GET SRC_NAME_LIST ${it} src) 
   list(GET BIN_NAME_LIST ${it} bin)

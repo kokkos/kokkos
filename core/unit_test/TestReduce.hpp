@@ -1,24 +1,19 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <sstream>
 #include <iostream>
 #include <limits>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#include <Kokkos_TypeInfo.hpp>
+
+#include <cmath>
 
 namespace Test {
 
@@ -512,11 +507,7 @@ class TestReduceDynamicView {
 }  // namespace
 
 // FIXME_SYCL
-// FIXME_OPENMPTARGET : The feature works with LLVM/13 on NVIDIA
-// architectures. The jenkins currently tests with LLVM/12.
-#if !defined(KOKKOS_ENABLE_SYCL) &&          \
-    (!defined(KOKKOS_ENABLE_OPENMPTARGET) || \
-     defined(KOKKOS_COMPILER_CLANG) && (KOKKOS_COMPILER_CLANG >= 1300))
+#if !defined(KOKKOS_ENABLE_SYCL)
 TEST(TEST_CATEGORY, int64_t_reduce) {
   TestReduce<int64_t, TEST_EXECSPACE>(0);
   TestReduce<int64_t, TEST_EXECSPACE>(1000000);
@@ -654,10 +645,6 @@ struct FunctorReductionWithLargeIterationCount {
 };
 
 TEST(TEST_CATEGORY, reduction_with_large_iteration_count) {
-  // FIXME_OPENMPTARGET - causes runtime failure with CrayClang compiler
-#if defined(KOKKOS_COMPILER_CRAY_LLVM) && defined(KOKKOS_ENABLE_OPENMPTARGET)
-  GTEST_SKIP() << "known to fail with OpenMPTarget+Cray LLVM";
-#endif
   if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,
                                Kokkos::HostSpace>) {
     GTEST_SKIP() << "Disabling for host backends";

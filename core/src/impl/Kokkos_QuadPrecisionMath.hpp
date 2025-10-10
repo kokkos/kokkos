@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_QUAD_PRECISION_MATH_HPP
 #define KOKKOS_QUAD_PRECISION_MATH_HPP
@@ -49,9 +36,7 @@ inline __float128 fdim(__float128 x, __float128 y) { return ::fdimq(x, y); }
 inline __float128 nanq(char const* arg) { return ::nanq(arg); }
 // Exponential functions
 inline __float128 exp(__float128 x) { return ::expq(x); }
-#if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 910)
 inline __float128 exp2(__float128 x) { return ::exp2q(x); }
-#endif
 inline __float128 expm1(__float128 x) { return ::expm1q(x); }
 inline __float128 log(__float128 x) { return ::logq(x); }
 inline __float128 log10(__float128 x) { return ::log10q(x); }

@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_MACROS_HPP
 #define KOKKOS_MACROS_HPP
@@ -161,8 +148,8 @@
 #define KOKKOS_COMPILER_GNU \
   __GNUC__ * 100 + __GNUC_MINOR__ * 10 + __GNUC_PATCHLEVEL__
 
-#if (820 > KOKKOS_COMPILER_GNU)
-#error "Compiling with GCC version earlier than 8.2.0 is not supported."
+#if (1040 > KOKKOS_COMPILER_GNU)
+#error "Compiling with GCC version earlier than 10.4.0 is not supported."
 #endif
 
 #elif defined(_MSC_VER)
@@ -200,7 +187,7 @@
 
 #ifndef KOKKOS_IMPL_ALIGN_PTR
 #if defined(_WIN32)
-#define KOKKOS_IMPL_ALIGN_PTR(size) __declspec(align_value(size))
+#define KOKKOS_IMPL_ALIGN_PTR(size)
 #else
 #define KOKKOS_IMPL_ALIGN_PTR(size) __attribute__((align_value(size)))
 #endif
@@ -675,6 +662,16 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION __declspec(empty_bases)
 #else
 #define KOKKOS_IMPL_ENFORCE_EMPTY_BASE_OPTIMIZATION
+#endif
+
+#if defined(KOKKOS_IMPL_BUILD_SHARED_LIBS) && defined(_WIN32)
+#ifdef KOKKOS_IMPL_EXPORT_SYMBOLS
+#define KOKKOS_IMPL_EXPORT __declspec(dllexport)
+#else
+#define KOKKOS_IMPL_EXPORT __declspec(dllimport)
+#endif
+#else
+#define KOKKOS_IMPL_EXPORT
 #endif
 
 #endif  // #ifndef KOKKOS_MACROS_HPP

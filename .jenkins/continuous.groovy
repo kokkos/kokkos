@@ -5,6 +5,7 @@ pipeline {
         CCACHE_DIR = '/tmp/ccache'
         CCACHE_MAXSIZE = '5G'
         CCACHE_CPP2 = 'true'
+        GTEST_SHUFFLE = 1
     }
 
     options {
@@ -127,8 +128,20 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
+                                -DKokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES=ON \
+                                -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
-                              make -j16 && ctest --no-compress-output -T Test --verbose'''
+                              make -j16 install && ctest --no-compress-output -T Test --verbose && \
+                              cd .. && \
+                              export CMAKE_PREFIX_PATH=${PWD}/install && \
+                              cd example/build_cmake_installed_multilanguage && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_CXX_COMPILER=hipcc \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=20 \
+                              .. && \
+                              make -j8 && ctest --verbose'''
                     }
                     post {
                         always {
@@ -142,7 +155,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.nvcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:12.2.2-devel-ubuntu22.04@sha256:5f603101462baa721ff6ddc44af82f6e9ba7cbd92a424c9f9f348e6e9d6d64c3 --build-arg ADDITIONAL_PACKAGES="gfortran clang" --build-arg CMAKE_VERSION=3.22.1'
+                            additionalBuildArgs '--build-arg BASE=nvcr.io/nvidia/cuda:12.2.2-devel-ubuntu22.04@sha256:5f603101462baa721ff6ddc44af82f6e9ba7cbd92a424c9f9f348e6e9d6d64c3 --build-arg ADDITIONAL_PACKAGES="gfortran clang" --build-arg CMAKE_VERSION=3.25.3'
                             label 'nvidia-docker && (volta || ampere)'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES'
                         }
@@ -173,6 +186,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA_UVM=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
+                                -DKokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES=ON \
                                 \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
@@ -191,6 +205,14 @@ pipeline {
                               .. && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_cmake_installed && \
+                              rm -rf build && mkdir -p build && cd build && \
+                              cmake \
+                                -DCMAKE_CXX_COMPILER=g++-11 \
+                                -DCMAKE_CXX_FLAGS=-Werror \
+                                -DCMAKE_CXX_STANDARD=20 \
+                              .. && \
+                              make -j8 && ctest --verbose && \
+                              cd ../../build_cmake_installed_multilanguage && \
                               rm -rf build && mkdir -p build && cd build && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=g++-11 \

@@ -8,20 +8,17 @@ Polaris:
   stage: test
   extends: .polaris-shell-runner
   script:
-    - module use /opt/cray/pe/lmod/modulefiles/core
-    - module use /opt/cray/pe/lmod/modulefiles/craype-targets/default
-    - module load craype-x86-milan craype-accel-nvidia80
-    - module swap PrgEnv-nvhpc PrgEnv-gnu
     - module use /soft/modulefiles
-    - module load cuda-PrgEnv-nvidia/12.2.91
-    - module load spack-pe-base/0.8.1
-    - module load cmake/3.27.9 gcc/11.4.0
+    - module load PrgEnv-gnu
+    - module load spack-pe-base
+    - module load cmake
+    - module load cudatoolkit-standalone/12.8.1
     - module list
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror -Wno-attributes'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_AMPERE80=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"

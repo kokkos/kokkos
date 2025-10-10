@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <gtest/gtest.h>
 
@@ -42,7 +29,10 @@ TEST(TEST_CATEGORY, timer) {
   std::this_thread::sleep_for(5ms);
   auto elapsed3 = t.seconds();
   EXPECT_GE(elapsed3, .005);
-  EXPECT_LT(elapsed3, elapsed2);
+  // Using the line below turned out to be problematic since there is no
+  // guaranteed upper bound for the time std::this_thread::sleep_for is
+  // blocking for.
+  // EXPECT_LT(elapsed3, elapsed2);
 }
 
 static_assert(!std::is_copy_constructible_v<Kokkos::Timer>);

@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_CUDAEXEC_HPP
 #define KOKKOS_CUDAEXEC_HPP
@@ -149,8 +136,6 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
                                        const KernelFuncPtr& func,
                                        const size_t block_size, int& shmem,
                                        const size_t occupancy) {
-#ifndef KOKKOS_ARCH_KEPLER
-
   const auto& func_attr =
       get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_instance,
                                                                 func);
@@ -231,13 +216,6 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
   if (cache_config_preference_cached != carveout) {
     cache_config_preference_cached = set_cache_config();
   }
-#else
-  // Use the parameters so we don't get a warning
-  (void)func;
-  (void)device_props;
-  (void)block_size;
-  (void)occupancy;
-#endif
 }
 
 // </editor-fold> end Some helper functions for launch code readability }}}1

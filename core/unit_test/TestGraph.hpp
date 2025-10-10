@@ -1,20 +1,12 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Graph.hpp>
 
 #include <gtest/gtest.h>
@@ -203,11 +195,6 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
 // one passed to the Kokkos::Graph constructor.
 TEST_F(TEST_CATEGORY_FIXTURE(graph),
        submit_onto_another_execution_space_instance) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
-  if (ex.concurrency() < 2)
-    GTEST_SKIP() << "insufficient number of supported concurrent threads";
-#endif
-
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1);
 
@@ -392,7 +379,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+    defined(KOKKOS_ARCH_MAXWELL)
   Kokkos::fence();
 #endif
   graph.submit(ex);
@@ -400,7 +387,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+    defined(KOKKOS_ARCH_MAXWELL)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
   graph.submit(ex);
@@ -653,11 +640,6 @@ FetchValuesAndContribute(ViewType, const size_t (&)[NumIndices],
 //  \ /         fence(exec_1)               enforce dependencies.
 //   D          D(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
-  if (ex.concurrency() < 4)
-    GTEST_SKIP() << "test needs at least 4 OpenMP threads";
-#endif
-
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 
@@ -730,11 +712,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
 //                  fence(exec_1)
 //    F             F(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
-  if (ex.concurrency() < 4)
-    GTEST_SKIP() << "insufficient number of supported concurrent threads";
-#endif
-
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 
@@ -1167,7 +1144,10 @@ struct ThenIncrementAndCombineFunctor
 };
 
 template <typename T>
-struct GraphIsDefaulted : std::true_type {};
+struct GraphIsDefaulted : std::false_type {};
+
+template <typename Exec>
+struct GraphIsDefaulted<Kokkos::Experimental::Graph<Exec>> : std::true_type {};
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
@@ -1178,7 +1158,8 @@ struct GraphIsDefaulted<
 #endif
 
 template <typename T>
-constexpr bool is_graph_defaulted = GraphIsDefaulted<T>::value;
+constexpr bool is_graph_defaulted =
+    GraphIsDefaulted<std::remove_cv_t<T>>::value;
 
 // A graph with only one node that is a then_host node.
 TEST(TEST_CATEGORY, then_host) {
@@ -1279,6 +1260,82 @@ TEST(TEST_CATEGORY, mixed_then_host_device_nodes) {
   } else {
     GTEST_SKIP() << "This test requires a shared space.";
   }
+}
+
+// Ensure that in the default implementation, fencing occurs as needed
+// to ensure that dependencies are met when using an aggregate node.
+//
+// The graph is:
+//
+//              root
+//          (exec_default)
+//               *
+//            *      *
+//    node left      node right
+// (exec_default)  (exec_default)
+//            *      *
+//               *
+//            when_all
+//         (exec_default)
+//               *
+//               *
+//           node final
+//          (exec_other)
+//
+// The default implementation need not fence in the upper part of the graph
+// (diamond) because all nodes are on the same execution space instance.
+// However, before executing 'node final', we must ensure that 'node left' and
+// 'node right' have executed, and so the when_all must be waited for and a
+// fence is needed.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), aggregate_is_awaitable) {
+  const TEST_EXECSPACE exec_default{};
+  const auto exec_instances =
+      Kokkos::Experimental::partition_space(exec_default, std::vector<int>{1});
+  const auto& exec_other = exec_instances.at(0);
+
+  using witness_t =
+      Kokkos::View<int, TEST_EXECSPACE, Kokkos::MemoryTraits<Kokkos::Atomic>>;
+  const witness_t witness(Kokkos::view_alloc("witness", exec_default));
+
+  const Kokkos::Experimental::Graph graph{exec_default};
+  const auto root = graph.root_node();
+  auto node_left =
+      root.then("node left", exec_default, ThenFunctor<witness_t>{witness, 1});
+  auto node_right =
+      root.then("node right", exec_default, ThenFunctor<witness_t>{witness, 1});
+  Kokkos::Experimental::when_all(std::move(node_left), std::move(node_right))
+      .then("node final", exec_other, ThenFunctor<witness_t>{witness, 1});
+
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableFences());
+
+  if constexpr (is_graph_defaulted<decltype(graph)>) {
+    const auto matcher = [&](BeginFenceEvent fence) {
+      if (fence.name ==
+          "Kokkos::DefaultGraphNode::execute_node: sync "
+          "with predecessors")
+        return MatchDiagnostic{true};
+      else
+        return MatchDiagnostic{false};
+    };
+    if (exec_default != exec_other) {
+      ASSERT_TRUE(
+          validate_existence([&] { graph.submit(exec_other); }, matcher));
+    } else {
+      ASSERT_TRUE(validate_absence([&] { graph.submit(exec_other); }, matcher));
+    }
+  } else {
+    ASSERT_TRUE(validate_absence(
+        [&] { graph.submit(exec_other); },
+        [&](BeginFenceEvent) { return MatchDiagnostic{true}; }));
+  }
+
+  listen_tool_events(Config::DisableAll());
+
+  exec_other.fence("wait for the graph to complete");
+  const auto witness_h =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, witness);
+  ASSERT_EQ(witness_h(), 3);
 }
 
 // Ensure that a then can be given a work tag.
