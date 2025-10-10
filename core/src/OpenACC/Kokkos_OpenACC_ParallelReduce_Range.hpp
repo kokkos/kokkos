@@ -125,20 +125,16 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       return;
     }
 
+    Kokkos::Experimental::Impl::FunctorAdapter<
+        FunctorType, Policy, Kokkos::Experimental::Impl::RoutineClause::seq>
+        functor(m_functor_reducer.get_functor());
     if constexpr (FunctorHasJoin || !std::is_arithmetic_v<ValueType>) {
       Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
-          Kokkos::Experimental::Impl::FunctorAdapter<
-              FunctorType, Policy,
-              Kokkos::Experimental::Impl::RoutineClause::seq>(
-              m_functor_reducer.get_functor()),
-          m_functor_reducer.get_reducer(), m_policy, m_result_ptr,
+          functor, m_functor_reducer.get_reducer(), m_policy, m_result_ptr,
           m_result_ptr_on_device);
     } else {
       Kokkos::Experimental::Impl::OpenACCParallelReduceHelper(
-          Kokkos::Experimental::Impl::FunctorAdapter<
-              FunctorType, Policy,
-              Kokkos::Experimental::Impl::RoutineClause::seq>(
-              m_functor_reducer.get_functor()),
+          functor,
           std::conditional_t<UseReducer, typename ReducerType::functor_type,
                              Sum<ValueType>>(val),
           m_policy, m_result_ptr, m_result_ptr_on_device);
