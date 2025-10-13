@@ -82,7 +82,7 @@ inline void host_test_simd_alias() {
   }
 }
 
-template <typename Abi, typename DataType>
+template <typename /*Abi*/, typename DataType>
 inline void host_test_simd_default_abi() {
 #if defined(KOKKOS_ENABLE_HPX) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
     defined(KOKKOS_ENABLE_OPENACC) || defined(KOKKOS_ENABLE_CUDA) ||     \
