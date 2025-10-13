@@ -10,6 +10,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_ATOMICS_LOCK_BASED_FETCH_OP_SYCL_HPP_
 
 #include <desul/atomics/Common.hpp>
+#include <desul/atomics/Compare_Exchange_SYCL.hpp>
 #include <desul/atomics/Lock_Array_SYCL.hpp>
 #include <desul/atomics/Thread_Fence_SYCL.hpp>
 #include <type_traits>
