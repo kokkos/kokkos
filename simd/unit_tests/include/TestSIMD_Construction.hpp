@@ -12,6 +12,8 @@ import kokkos.simd;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+#include <climits>
+
 using Kokkos::Experimental::all_of;
 
 template <typename Abi, typename DataType>
@@ -89,13 +91,14 @@ inline void host_test_simd_default_abi() {
     defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
   constexpr int expected_size = 1;
 #elif defined(KOKKOS_ARCH_AVX512XEON)
-  constexpr int expected_size = 512 / (8 * sizeof(DataType));
+  constexpr int expected_size = 512 / (CHAR_BIT * sizeof(DataType));
 #elif defined(KOKKOS_ARCH_AVX2)
-  constexpr int expected_size = 256 / (8 * sizeof(DataType));
+  constexpr int expected_size = 256 / (CHAR_BIT * sizeof(DataType));
 #elif defined(KOKKOS_ARCH_ARM_SVE)
-  constexpr int expected_size = __ARM_FEATURE_SVE_BITS / (8 * sizeof(DataType));
+  constexpr int expected_size =
+      __ARM_FEATURE_SVE_BITS / (CHAR_BIT * sizeof(DataType));
 #elif defined(KOKKOS_ARCH_ARM_NEON)
-  constexpr int expected_size = 128 / (8 * sizeof(DataType));
+  constexpr int expected_size = 128 / (CHAR_BIT * sizeof(DataType));
 #else
   constexpr int expected_size = 1;
 #endif
