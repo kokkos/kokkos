@@ -178,13 +178,16 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   // problems allocating too much memory.
   const size_t per_team_extent = 268435460;
 #else
-  // Value originally chosen in the reproducer.
-  const size_t per_team_extent = 502795560;
-#endif
 
 #ifdef KOKKOS_ENABLE_LOW_MEM_TESTS
   const size_t per_team_extent = 268435460; // 2 GiB allocation to prevent too much memory usage
+#else
+  // Value originally chosen in the reproducer.
+  const size_t per_team_extent = 502795560;
 #endif
+#endif
+
+
 
 
   const size_t per_team_bytes = per_team_extent * sizeof(double);
