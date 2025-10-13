@@ -16,8 +16,8 @@ Date Range: present -- 2025-08-11
 
 ### Sandia National Laboratories (SNL)
 
-Under the terms of Contract DE-NA0003525 with NTESS,
-the U.S. Government retains certain rights in this software.
+    Under the terms of Contract DE-NA0003525 with NTESS,
+    the U.S. Government retains certain rights in this software.
 
 - Christian Trott; SNL; crtrott@sandia.gov
 - Nathan Ellingwood; SNL; ndellin@sandia.gov
