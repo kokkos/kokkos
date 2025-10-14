@@ -412,10 +412,193 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   // ROCM: The below code segfaults the compiler with ROCM 6.3 and ROCM 6.2
   // We will simply avoid the performance optimization code path for those.
   // SYCL: The below code segfaults the compiler with Intel OneAPI 2024
+
+#if defined(KOKKOS_ENABLE_SYCL)
+
+// clang-format off
+private:
+  size_t compute_offset() const { return 0lu; }
+
+  template<class T>
+  size_t compute_offset(const T& i0) const {
+    return static_cast<size_t>(i0);
+  }
+
+  template<class T>
+  size_t compute_offset(const T& i0, const T& i1) const {
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 + m_map.stride(1) * i1);
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 * m_map.stride(0) + i1);
+    } else { // layout_stride
+      return static_cast<size_t>(i0 * static_cast<T>(m_map.stride(0)) +
+                                 i1 * static_cast<T>(m_map.stride(1)));
+    }
+  }
+
+  template<class T>
+  size_t compute_offset(const T& i0, const T& i1, const T& i2) const {
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 + static_cast<T>(m_map.stride(1)) * (i1
+                                    + static_cast<T>(extent(1)) *  i2));
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i2 + static_cast<T>(m_map.stride(1)) * (i1
+                                    + static_cast<T>(extent(1)) *  i0));
+    } else { // layout_stride
+      return static_cast<size_t>(i0 * static_cast<T>(m_map.stride(0)) +
+                                 i1 * static_cast<T>(m_map.stride(1)) +
+                                 i2 * static_cast<T>(m_map.stride(2)));
+    }
+  }
+
+  template<class T>
+  size_t compute_offset(const T& i0, const T& i1, const T& i2, const T& i3) const {
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 + static_cast<T>(m_map.stride(1)) * (i1
+                                    + static_cast<T>(extent(1)) * (i2
+                                    + static_cast<T>(extent(2)) *  i3)));
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i3 + static_cast<T>(m_map.stride(2)) * (i2
+                                    + static_cast<T>(extent(2)) * (i1
+                                    + static_cast<T>(extent(1)) *  i0)));
+    } else { // layout_stride
+      return static_cast<size_t>(i0 * static_cast<T>(m_map.stride(0)) +
+                                 i1 * static_cast<T>(m_map.stride(1)) +
+                                 i2 * static_cast<T>(m_map.stride(2)) +
+                                 i3 * static_cast<T>(m_map.stride(3)));
+    }
+  }
+
+  template<class T>
+  size_t compute_offset(const T& i0, const T& i1, const T& i2, const T& i3, const T& i4) const {
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 + static_cast<T>(m_map.stride(1)) * (i1
+                                    + static_cast<T>(extent(1)) * (i2
+                                    + static_cast<T>(extent(2)) * (i3
+                                    + static_cast<T>(extent(3)) *  i4))));
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i4 + static_cast<T>(m_map.stride(3)) * (i3
+                                    + static_cast<T>(extent(3)) * (i2
+                                    + static_cast<T>(extent(2)) * (i1
+                                    + static_cast<T>(extent(1)) *  i0))));
+    } else { // layout_stride
+      return static_cast<size_t>(i0 * static_cast<T>(m_map.stride(0)) +
+                                 i1 * static_cast<T>(m_map.stride(1)) +
+                                 i2 * static_cast<T>(m_map.stride(2)) +
+                                 i3 * static_cast<T>(m_map.stride(3)) +
+                                 i4 * static_cast<T>(m_map.stride(4)));
+    }
+  }
+
+  template<class T>
+  size_t compute_offset(const T& i0, const T& i1, const T& i2, const T& i3, const T& i4,
+                        const T& i5) const {
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 + static_cast<T>(m_map.stride(1)) * (i1
+                                    + static_cast<T>(extent(1)) * (i2
+                                    + static_cast<T>(extent(2)) * (i3
+                                    + static_cast<T>(extent(3)) * (i4
+                                    + static_cast<T>(extent(4)) *  i5)))));
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i5 + static_cast<T>(m_map.stride(4)) * (i4
+                                    + static_cast<T>(extent(4)) * (i3
+                                    + static_cast<T>(extent(3)) * (i2
+                                    + static_cast<T>(extent(2)) * (i1
+                                    + static_cast<T>(extent(1)) *  i0)))));
+    } else { // layout_stride
+      return static_cast<size_t>(i0 * static_cast<T>(m_map.stride(0)) +
+                                 i1 * static_cast<T>(m_map.stride(1)) +
+                                 i2 * static_cast<T>(m_map.stride(2)) +
+                                 i3 * static_cast<T>(m_map.stride(3)) +
+                                 i4 * static_cast<T>(m_map.stride(4)) +
+                                 i5 * static_cast<T>(m_map.stride(5)));
+    }
+  }
+
+  template<class T>
+  size_t compute_offset(const T& i0, const T& i1, const T& i2, const T& i3, const T& i4,
+                        const T& i5, const T& i6) const {
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 + static_cast<T>(m_map.stride(1)) * (i1
+                                    + static_cast<T>(extent(1)) * (i2
+                                    + static_cast<T>(extent(2)) * (i3
+                                    + static_cast<T>(extent(3)) * (i4
+                                    + static_cast<T>(extent(4)) * (i5
+                                    + static_cast<T>(extent(5)) *  i6))))));
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i6 + static_cast<T>(m_map.stride(5)) * (i5
+                                    + static_cast<T>(extent(5)) * (i4
+                                    + static_cast<T>(extent(4)) * (i3
+                                    + static_cast<T>(extent(3)) * (i2
+                                    + static_cast<T>(extent(2)) * (i1
+                                    + static_cast<T>(extent(1)) *  i0))))));
+    } else { // layout_stride
+      return static_cast<size_t>(i0 * static_cast<T>(m_map.stride(0)) +
+                                 i1 * static_cast<T>(m_map.stride(1)) +
+                                 i2 * static_cast<T>(m_map.stride(2)) +
+                                 i3 * static_cast<T>(m_map.stride(3)) +
+                                 i4 * static_cast<T>(m_map.stride(4)) +
+                                 i5 * static_cast<T>(m_map.stride(5)) +
+                                 i6 * static_cast<T>(m_map.stride(6)));
+    }
+  }
+
+  template<class T>
+  size_t compute_offset(const T& i0, const T& i1, const T& i2, const T& i3, const T& i4,
+                        const T& i5, const T& i6, const T& i7) const {
+    if constexpr (Kokkos::Impl::IsLayoutLeftPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i0 + static_cast<T>(m_map.stride(1)) * (i1
+                                    + static_cast<T>(extent(1)) * (i2
+                                    + static_cast<T>(extent(2)) * (i3
+                                    + static_cast<T>(extent(3)) * (i4
+                                    + static_cast<T>(extent(4)) * (i5
+                                    + static_cast<T>(extent(5)) * (i6
+                                    + static_cast<T>(extent(6)) *  i7)))))));
+    } else if constexpr (Kokkos::Impl::IsLayoutRightPadded<typename base_t::layout_type>::value) {
+      return static_cast<size_t>(i7 + static_cast<T>(m_map.stride(6)) * (i6
+                                    + static_cast<T>(extent(6)) * (i5
+                                    + static_cast<T>(extent(5)) * (i4
+                                    + static_cast<T>(extent(4)) * (i3
+                                    + static_cast<T>(extent(3)) * (i2
+                                    + static_cast<T>(extent(2)) * (i1
+                                    + static_cast<T>(extent(1)) *  i0)))))));
+    } else { // layout_stride
+      return static_cast<size_t>(i0 * static_cast<T>(m_map.stride(0)) +
+                                 i1 * static_cast<T>(m_map.stride(1)) +
+                                 i2 * static_cast<T>(m_map.stride(2)) +
+                                 i3 * static_cast<T>(m_map.stride(3)) +
+                                 i4 * static_cast<T>(m_map.stride(4)) +
+                                 i5 * static_cast<T>(m_map.stride(5)) +
+                                 i6 * static_cast<T>(m_map.stride(6)) +
+                                 i7 * static_cast<T>(m_map.stride(7)));
+    }
+  }
+
+public:
+  template <class... OtherIndexTypes>
+    requires(
+        (std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
+        (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) &&
+        (sizeof...(OtherIndexTypes) == rank()))
+  KOKKOS_FUNCTION constexpr base_t::reference operator()(
+      OtherIndexTypes... idx) const {
+    KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(idx...);
+      if constexpr (Kokkos::Impl::IsLayoutLeftPadded<
+                      typename base_t::layout_type>::value ||
+                    Kokkos::Impl::IsLayoutRightPadded<
+                      typename base_t::layout_type>::value ||
+                    std::is_same_v<typename base_t::layout_type, Kokkos::layout_stride>) {
+        using idx_type = std::common_type_t<int, OtherIndexTypes...>;
+        return m_acc.access(m_ptr, compute_offset(static_cast<idx_type>(idx)...));
+      } else {
+        return m_acc.access(m_ptr, m_map(static_cast<index_type>(std::move(idx))...));
+      }
+  }
+// clang-format on
+#endif
+
 #if !(defined(HIP_VERSION) && HIP_VERSION_MAJOR == 6 &&                     \
-      HIP_VERSION_MINOR <= 3) &&                                            \
-    !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_COMPILER_INTEL_LLVM) && \
-      KOKKOS_COMPILER_INTEL_LLVM < 20250000)
+      HIP_VERSION_MINOR <= 3) && !defined(KOKKOS_ENABLE_SYCL)
   // Rank 0
   KOKKOS_FUNCTION constexpr auto compute_offset(std::index_sequence<>) const {
     return 0;
