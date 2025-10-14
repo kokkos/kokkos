@@ -265,8 +265,8 @@ namespace Kokkos::Experimental::Impl {
 template <std::ranges::input_range Weights,
           std::output_iterator<Serial> OutIter>
 void impl_partition_space(const Serial&, const Weights& weights, OutIter out) {
-  std::ranges::transform(out, std::ranges::size(weights),
-                         [] { return Serial(NewInstance{}); });
+  std::ranges::generate_n(out, std::ranges::size(weights),
+                          [] { return Serial(NewInstance{}); });
 }
 }  // namespace Kokkos::Experimental::Impl
 
