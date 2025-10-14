@@ -227,7 +227,7 @@ class View : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
-  using hooks_policy                           = typename traits::hooks_policy;
+  using hooks_policy                     = typename traits::hooks_policy;
   static constexpr bool has_hooks_policy = !std::is_void_v<hooks_policy>;
 
   view_tracker_type m_track;
@@ -886,8 +886,7 @@ class View : public ViewTraits<DataType, Properties...> {
 // differently
 #if defined(KOKKOS_ENABLE_CUDA)
   KOKKOS_FUNCTION
-  View(const View& other)
-      : m_track(other.m_track), m_map(other.m_map) {
+  View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
     if constexpr (has_hooks_policy) {
       KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
     }
@@ -905,7 +904,6 @@ class View : public ViewTraits<DataType, Properties...> {
     KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
 #endif
-
 
 // FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
