@@ -8,7 +8,7 @@
 
 #include <openacc.h>
 
-#include <algorithms>
+#include <algorithm>
 #include <cstdint>
 #include <iosfwd>
 #include <iterator>

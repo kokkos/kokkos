@@ -25,7 +25,7 @@ static_assert(false,
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
 
-#include <algorithms>
+#include <algorithm>
 #include <iterator>
 #include <ranges>
 

@@ -22,7 +22,7 @@
 
 #include <omp.h>
 
-#include <algorithms>
+#include <algorithm>
 #include <iterator>
 #include <mutex>
 #include <numeric>

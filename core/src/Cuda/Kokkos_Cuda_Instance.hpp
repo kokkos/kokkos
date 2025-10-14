@@ -10,7 +10,7 @@
 #include <cuda_runtime_api.h>
 #include "Kokkos_CudaSpace.hpp"
 
-#include <algorithms>
+#include <algorithm>
 #include <atomic>
 #include <iterator>
 #include <map>

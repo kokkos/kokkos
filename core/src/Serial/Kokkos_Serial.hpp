@@ -15,7 +15,7 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_SERIAL)
 
-#include <algorithms>
+#include <algorithm>
 #include <cstddef>
 #include <iosfwd>
 #include <iterator>
