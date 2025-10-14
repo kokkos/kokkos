@@ -679,7 +679,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 // FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
 // differently
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
   KOKKOS_FUNCTION
   View(const View& other) : base_t{other} {
     if constexpr (has_hooks_policy) {
@@ -703,7 +703,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 // FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
 // differently
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
   KOKKOS_FUNCTION
   View(View&& other) : base_t{std::move(static_cast<base_t&&>(other))} {
     if constexpr (has_hooks_policy) {
@@ -727,7 +727,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 // FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
 // differently
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
   KOKKOS_FUNCTION
   View& operator=(const View& other) {
     base_t::operator=(other);
@@ -760,7 +760,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 // FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
 // differently
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
   KOKKOS_FUNCTION
   View& operator=(View&& other) {
     base_t::operator=(std::move(static_cast<base_t&&>(other)));
