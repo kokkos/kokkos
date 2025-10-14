@@ -260,15 +260,11 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
 namespace Kokkos::Experimental::Impl {
 // Create new instance of Serial execution space for each partition, ignoring
 // weights
-template <class T>
-std::vector<Serial> impl_partition_space(const Serial&,
-                                         const std::vector<T>& weights) {
-  std::vector<Serial> instances;
-  instances.reserve(weights.size());
-  std::generate_n(std::back_inserter(instances), weights.size(),
-                  []() { return Serial(NewInstance{}); });
-
-  return instances;
+template <std::ranges::input_range Weights, class OutIter>
+void impl_partition_space(const Serial&, const Weights& weights,
+                          OutIter instances) {
+  std::ranges::transform(weights, instances,
+                         [](const auto) { return Serial(NewInstance{}); });
 }
 }  // namespace Kokkos::Experimental::Impl
 

@@ -176,7 +176,12 @@ TEST(TEST_CATEGORY, partitioning_by_args) {
   test_partitioning(instances[0], instances[1]);
 }
 
-TEST(TEST_CATEGORY, partitioning_by_args_with_structured_bindings) {
+TEST(TEST_CATEGORY, partitioning_by_args_with_structured_bindings_1) {
+  [[maybe_unused]] const auto [instance] =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1);
+}
+
+TEST(TEST_CATEGORY, partitioning_by_args_with_structured_bindings_1_1) {
   auto [instance0, instance1] =
       Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1, 1);
   test_partitioning(instance0, instance1);

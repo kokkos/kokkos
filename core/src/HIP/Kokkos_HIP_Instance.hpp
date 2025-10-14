@@ -343,20 +343,16 @@ class HIPInternal {
 namespace Experimental::Impl {
 // For each space in partition, create new hipStream_t on the same device as
 // base_instance, ignoring weights
-template <class T>
-std::vector<HIP> impl_partition_space(const HIP &base_instance,
-                                      const std::vector<T> &weights) {
-  std::vector<HIP> instances;
-  instances.reserve(weights.size());
-  std::generate_n(
-      std::back_inserter(instances), weights.size(), [&base_instance]() {
-        hipStream_t stream;
-        KOKKOS_IMPL_HIP_SAFE_CALL(base_instance.impl_internal_space_instance()
-                                      ->hip_stream_create_wrapper(&stream));
-        return HIP(stream, Kokkos::Impl::ManageStream::yes);
-      });
-
-  return instances;
+template <std::ranges::input_range Weights, class OutIer>
+void impl_partition_space(const HIP &base_instance, const Weights &weights,
+                          OutIter instances) {
+  std::ranges::transform(weights, instances, [&base_instance](const auto) {
+    hipStream_t stream;
+    KOKKOS_IMPL_HIP_SAFE_CALL(
+        base_instance.impl_internal_space_instance()->hip_stream_create_wrapper(
+            &stream));
+    return HIP(stream, Kokkos::Impl::ManageStream::yes);
+  });
 }
 }  // namespace Experimental::Impl
 }  // namespace Kokkos

@@ -133,25 +133,20 @@ struct DeviceTypeTraits<Kokkos::SYCL> {
 namespace Experimental::Impl {
 // For each space in partition, create new queue on the same device as
 // base_instance, ignoring weights
-template <class T>
-std::vector<SYCL> impl_partition_space(const SYCL& base_instance,
-                                       const std::vector<T>& weights) {
+template <std::ranges::input_range Weights, class OutIter>
+void impl_partition_space(const SYCL& base_instance, const Weights& weights,
+                          OutIter instances) {
   sycl::context context = base_instance.sycl_queue().get_context();
   sycl::device device   = base_instance.sycl_queue().get_device();
 
-  std::vector<SYCL> instances;
-  instances.reserve(weights.size());
-  std::generate_n(std::back_inserter(instances), weights.size(),
-                  [&context, &device]() {
-                    return SYCL(sycl::queue(context, device
+  std::ranges::transform(weights, instances, [&context, &device]() {
+    return SYCL(sycl::queue(context, device
 #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-                                            ,
-                                            sycl::property::queue::in_order()
+                            ,
+                            sycl::property::queue::in_order()
 #endif
-                                                ));
-                  });
-
-  return instances;
+                                ));
+  });
 }
 }  // namespace Experimental::Impl
 
