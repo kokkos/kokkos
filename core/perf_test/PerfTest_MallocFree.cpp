@@ -61,65 +61,40 @@ static void MallocTouchFree(benchmark::State& state) {
   Impl(state, true, When::after_free);
 }
 
+
+
 #ifdef KOKKOS_ENABLE_LOW_MEM_TESTS
+constexpr int test_range = 31;
+#else 
+constexpr int test_range = 32;
+#endif
 
 BENCHMARK(Malloc)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 31)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK(MallocFree)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 31)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK(MallocTouch)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 31)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK(MallocTouchFree)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 31)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
-
-#else
-BENCHMARK(Malloc)
-    ->ArgName("N")
-    ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
-    ->UseManualTime()
-    ->Unit(benchmark::kMicrosecond);
-
-BENCHMARK(MallocFree)
-    ->ArgName("N")
-    ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
-    ->UseManualTime()
-    ->Unit(benchmark::kMicrosecond);
-
-BENCHMARK(MallocTouch)
-    ->ArgName("N")
-    ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
-    ->UseManualTime()
-    ->Unit(benchmark::kMicrosecond);
-
-BENCHMARK(MallocTouchFree)
-    ->ArgName("N")
-    ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
-    ->UseManualTime()
-    ->Unit(benchmark::kMicrosecond);
-
-  #endif
 
 }  // namespace Benchmark
