@@ -22,8 +22,11 @@
 
 #include <omp.h>
 
+#include <algorithms>
+#include <iterator>
 #include <mutex>
 #include <numeric>
+#include <ranges>
 #include <type_traits>
 #include <vector>
 
@@ -161,9 +164,10 @@ inline std::vector<int> calculate_omp_pool_sizes(OpenMP const& main_instance,
 }
 
 // Create new OpenMP instances with pool sizes relative to input weights
-template <std::ranges::input_range Weights, class OutIter>
+template <std::ranges::input_range Weights,
+          std::output_iterator<OpenMP> OutIter>
 void impl_partition_space(const OpenMP& base_instance, const Weights& weights,
-                          OutIter instances) {
+                          OutIter out) {
 #if (!defined(KOKKOS_COMPILER_GNU) || KOKKOS_COMPILER_GNU >= 1110) && \
     _OPENMP >= 201511
   bool has_nested = omp_get_max_active_levels() > 1;
@@ -171,13 +175,13 @@ void impl_partition_space(const OpenMP& base_instance, const Weights& weights,
   bool has_nested = static_cast<bool>(omp_get_nested());
 #endif
   if (!has_nested || omp_get_level() != 0) {
-    std::ranges::generate_n(instances, std::ranges::size(weights),
+    std::ranges::generate_n(out, std::ranges::size(weights),
                             [] { return Kokkos::OpenMP{}; });
   } else {
     const auto pool_sizes =
         Impl::calculate_omp_pool_sizes(base_instance, weights);
 
-    std::ranges::transform(pool_sizes, instances,
+    std::ranges::transform(pool_sizes, out,
                            [](const auto size) { return OpenMP(size); });
   }
 }

@@ -15,10 +15,12 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_SERIAL)
 
+#include <algorithms>
 #include <cstddef>
 #include <iosfwd>
 #include <iterator>
 #include <mutex>
+#include <ranges>
 #include <thread>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Layout.hpp>
@@ -260,11 +262,11 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
 namespace Kokkos::Experimental::Impl {
 // Create new instance of Serial execution space for each partition, ignoring
 // weights
-template <std::ranges::input_range Weights, class OutIter>
-void impl_partition_space(const Serial&, const Weights& weights,
-                          OutIter instances) {
-  std::ranges::transform(weights, instances,
-                         [](const auto) { return Serial(NewInstance{}); });
+template <std::ranges::input_range Weights,
+          std::output_iterator<Serial> OutIter>
+void impl_partition_space(const Serial&, const Weights& weights, OutIter out) {
+  std::ranges::transform(out, std::ranges::size(weights),
+                         [] { return Serial(NewInstance{}); });
 }
 }  // namespace Kokkos::Experimental::Impl
 

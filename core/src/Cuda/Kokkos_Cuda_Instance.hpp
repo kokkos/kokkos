@@ -4,15 +4,18 @@
 #ifndef KOKKOS_CUDA_INSTANCE_HPP_
 #define KOKKOS_CUDA_INSTANCE_HPP_
 
-#include <vector>
+#include <algorithm>
 #include <impl/Kokkos_Tools.hpp>
-#include <atomic>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 #include <cuda_runtime_api.h>
 #include "Kokkos_CudaSpace.hpp"
 
-#include <set>
+#include <algorithms>
+#include <atomic>
+#include <iterator>
 #include <map>
+#include <set>
+#include <ranges>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -366,10 +369,10 @@ class CudaInternal {
 namespace Experimental::Impl {
 // For each space in partition, create new cudaStream_t on the same device as
 // base_instance, ignoring weights
-template <std::ranges::input_range Weights, class OutIter>
+template <std::ranges::input_range Weights, std::output_iterator<Cuda> OutIter>
 void impl_partition_space(const Cuda& base_instance, const Weights& weights,
-                          OutIter instances) {
-  std::ranges::transform(weights, instances, [&base_instance](const auto) {
+                          OutIter out) {
+  std::ranges::generate_n(out, std::ranges::size(weights), [&base_instance] {
     cudaStream_t stream;
     KOKKOS_IMPL_CUDA_SAFE_CALL(base_instance.impl_internal_space_instance()
                                    ->cuda_stream_create_wrapper(&stream));

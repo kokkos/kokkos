@@ -13,6 +13,8 @@
 
 #include <algorithm>
 #include <array>
+#include <iterator>
+#include <ranges>
 #include <type_traits>
 #include <vector>
 
@@ -20,12 +22,13 @@ namespace Kokkos::Experimental::Impl {
 
 // Customization point for backends. Default behavior is to return the passed
 // in instance, ignoring weights
-template <class ExecSpace, std::ranges::input_range Weights, class OutIter>
+template <class ExecSpace, std::ranges::input_range Weights,
+          std::output_iterator<ExecSpace> OutIter>
+  requires(is_execution_space_v<ExecSpace>)
 void impl_partition_space(const ExecSpace& base_instance,
-                          const Weights& weights, OutIter instances) {
-  std::ranges::transform(weights, instances, [&base_instance](const auto) {
-    return base_instance;
-  });
+                          const Weights& weights, OutIter out) {
+  std::ranges::generate_n(out, std::ranges::size(weights),
+                          [&base_instance] { return base_instance; });
 }
 
 }  // namespace Kokkos::Experimental::Impl

@@ -11,9 +11,12 @@
 
 #include <hip/hip_runtime_api.h>
 
+#include <algorithm>
 #include <atomic>
+#include <iterator>
 #include <map>
 #include <mutex>
+#include <ranges>
 #include <set>
 
 namespace Kokkos {
@@ -343,10 +346,10 @@ class HIPInternal {
 namespace Experimental::Impl {
 // For each space in partition, create new hipStream_t on the same device as
 // base_instance, ignoring weights
-template <std::ranges::input_range Weights, class OutIer>
+template <std::ranges::input_range Weights, std::output_iterator<HIP> OutIter>
 void impl_partition_space(const HIP &base_instance, const Weights &weights,
-                          OutIter instances) {
-  std::ranges::transform(weights, instances, [&base_instance](const auto) {
+                          OutIter out) {
+  std::ranges::generate_n(out, std::ranges::size(weights), [&base_instance] {
     hipStream_t stream;
     KOKKOS_IMPL_HIP_SAFE_CALL(
         base_instance.impl_internal_space_instance()->hip_stream_create_wrapper(

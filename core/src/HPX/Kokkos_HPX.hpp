@@ -37,12 +37,14 @@ static_assert(false,
 
 #include <Kokkos_UniqueToken.hpp>
 
+#include <algorithm>
 #include <cstddef>
 #include <iosfwd>
+#include <iterator>
 #include <functional>
 #include <memory>
+#include <ranges>
 #include <type_traits>
-#include <vector>
 
 namespace Kokkos {
 namespace Impl {
@@ -449,9 +451,8 @@ namespace Impl {
 template <std::ranges::input_range Weights, class OutIer>
 void impl_partition_space(const HPX &, const Weights &weights,
                           OutIer instances) {
-  std::ranges::transform(weights, instances, [](const auto) {
-    return HPX(HPX::instance_mode::independent);
-  });
+  std::ranges::generate_n(instances, std::ranges::size(weights),
+                          [] { return HPX(HPX::instance_mode::independent); });
 }
 }  // namespace Impl
 
