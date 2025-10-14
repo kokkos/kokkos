@@ -228,7 +228,7 @@ class View : public ViewTraits<DataType, Properties...> {
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
   using hooks_policy                           = typename traits::hooks_policy;
-  static constexpr bool has_empty_hooks_policy = std::is_void_v<hooks_policy>;
+  static constexpr bool has_hooks_policy = !std::is_void_v<hooks_policy>;
 
   view_tracker_type m_track;
   map_type m_map;
@@ -881,38 +881,82 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses. 12.6 Also has some issues though it manifests
+// differently
+#if defined(KOKKOS_ENABLE_CUDA)
+  KOKKOS_FUNCTION
+  View(const View& other)
+      : m_track(other.m_track), m_map(other.m_map) {
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
+    }
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View(const View&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View(const View& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
       : m_track(other.m_track), m_map(other.m_map) {
     KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
+#endif
 
+
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses. 12.6 Also has some issues though it manifests
+// differently
+#if defined(KOKKOS_ENABLE_CUDA)
+  KOKKOS_FUNCTION
+  View(View&& other)
+      : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+    }
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View(View&&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View(View&& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
       : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
     KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
   }
+#endif
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses. 12.6 Also has some issues though it manifests
+// differently
+#if defined(KOKKOS_ENABLE_CUDA)
+  KOKKOS_FUNCTION
+  View& operator=(const View& other) {
+    m_map   = other.m_map;
+    m_track = other.m_track;
+
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST(
+          (if (&other != this) { hooks_policy::copy_assign(*this, other); }))
+    }
+
+    return *this;
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(const View&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View& operator=(const View& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
   {
     m_map   = other.m_map;
     m_track = other.m_track;
@@ -921,15 +965,33 @@ class View : public ViewTraits<DataType, Properties...> {
 
     return *this;
   }
+#endif
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses. 12.6 Also has some issues though it manifests
+// differently
+#if defined(KOKKOS_ENABLE_CUDA)
+  KOKKOS_FUNCTION
+  View& operator=(View&& other) {
+    m_map   = std::move(other.m_map);
+    m_track = std::move(other.m_track);
+
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST(
+          (if (&other != this) { hooks_policy::move_assign(*this, other); }))
+    }
+
+    return *this;
+  }
+#else
   KOKKOS_DEFAULTED_FUNCTION
   View& operator=(View&&)
-    requires(has_empty_hooks_policy)
+    requires(!has_hooks_policy)
   = default;
 
   KOKKOS_FUNCTION
   View& operator=(View&& other)
-    requires(!has_empty_hooks_policy)
+    requires(has_hooks_policy)
   {
     m_map   = std::move(other.m_map);
     m_track = std::move(other.m_track);
@@ -938,6 +1000,7 @@ class View : public ViewTraits<DataType, Properties...> {
 
     return *this;
   }
+#endif
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
