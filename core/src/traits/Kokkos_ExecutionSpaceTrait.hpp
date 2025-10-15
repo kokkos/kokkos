@@ -14,7 +14,13 @@ namespace Impl {
 
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
-// Fixme CUDA: This struct was previously declared inside ExecutionSpaceTrait.
+template <class T>
+struct show_extra_execution_space_erroneously_given_to_execution_policy;
+template <>
+struct show_extra_execution_space_erroneously_given_to_execution_policy<void> {
+};
+
+// FIXME_CUDA: This struct was previously declared inside ExecutionSpaceTrait.
 // Cuda 12.8 choked on the visibility so it is externalized and put into an
 // anonymous namespace.
 namespace {
@@ -38,11 +44,6 @@ struct mixin_matching_trait_impl : AnalyzeNextTrait {
 };
 }  // namespace
 
-template <class T>
-struct show_extra_execution_space_erroneously_given_to_execution_policy;
-template <>
-struct show_extra_execution_space_erroneously_given_to_execution_policy<void> {
-};
 struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
   struct base_traits {
     static constexpr auto execution_space_is_defaulted = true;
