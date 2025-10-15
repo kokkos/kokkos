@@ -173,13 +173,18 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   const int level   = 1;
   const int n_teams = 1;
 
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_LOW_MEM_TESTS)
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
   // Allocate slightly more than (2^31-1) bytes. The other value resulted in
   // problems allocating too much memory.
   const size_t per_team_extent = 268435460;
 #else
   // Value originally chosen in the reproducer.
   const size_t per_team_extent = 502795560;
+#endif
+
+#ifdef KOKKOS_ENABLE_LOW_MEM_TESTS
+  // We are in low-memory mode, reduce memory usage
+  per_team_extent = 268435460;
 #endif
 
   const size_t per_team_bytes = per_team_extent * sizeof(double);
