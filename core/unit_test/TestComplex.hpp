@@ -732,6 +732,108 @@ constexpr bool comparison_in_constant_expression() {
 
 static_assert(comparison_in_constant_expression());
 
+struct TestStdComplexOperators {
+  static void testit() {
+    using kcomplex_t = Kokkos::complex<double>;
+    using scomplex_t = std::complex<kcomplex_t::value_type>;
+
+    const kcomplex_t k(.5, .25);
+    const scomplex_t s(.125, .0625);
+
+    // operator +=
+    kcomplex_t k0 = k;
+    k0 += s;
+    ASSERT_FLOAT_EQ(k0.real(), .625);
+    ASSERT_FLOAT_EQ(k0.imag(), .3125);
+
+    scomplex_t s1 = s;
+    s1 += k;
+    ASSERT_FLOAT_EQ(s1.real(), .625);
+    ASSERT_FLOAT_EQ(s1.imag(), .3125);
+
+    kcomplex_t k2 = k;
+    k2 -= s;
+    ASSERT_FLOAT_EQ(k2.real(), .375);
+    ASSERT_FLOAT_EQ(k2.imag(), .1875);
+
+    scomplex_t s3 = s;
+    s3 -= k;
+    ASSERT_FLOAT_EQ(s3.real(), -.375);
+    ASSERT_FLOAT_EQ(s3.imag(), -.1875);
+
+    kcomplex_t k4 = k;
+    k4 *= s;
+    ASSERT_FLOAT_EQ(k4.real(), .046875);
+    ASSERT_FLOAT_EQ(k4.imag(), .0625);
+
+    scomplex_t s5 = s;
+    s5 *= k;
+    ASSERT_FLOAT_EQ(s5.real(), .046875);
+    ASSERT_FLOAT_EQ(s5.imag(), .0625);
+
+// FIXME
+// Does not compile (old code)
+#if 0
+    kcomplex_t k6 = k;
+    k6 /= s;
+    ASSERT_FLOAT_EQ(k6.real(), 4.);
+    ASSERT_FLOAT_EQ(k6.imag(), 0.);
+#endif
+
+// FIXME
+#if 0
+    scomplex_t s7 = s;
+    s7 /= k;
+    ASSERT_FLOAT_EQ(s7.real(), .25);
+    ASSERT_FLOAT_EQ(s7.imag(), 0.); // assert fails; s7.imag() == 5.5511152e-18
+  }
+#endif
+
+    kcomplex_t k8 = k + s;
+    ASSERT_FLOAT_EQ(k8.real(), .625);
+    ASSERT_FLOAT_EQ(k8.imag(), .3125);
+
+    kcomplex_t s9 = s + k;
+    ASSERT_FLOAT_EQ(s9.real(), .625);
+    ASSERT_FLOAT_EQ(s9.imag(), .3125);
+
+    kcomplex_t k10 = k - s;
+    ASSERT_FLOAT_EQ(k10.real(), .375);
+    ASSERT_FLOAT_EQ(k10.imag(), .1875);
+
+    kcomplex_t k11 = s - k;
+    ASSERT_FLOAT_EQ(k11.real(), -.375);
+    ASSERT_FLOAT_EQ(k11.imag(), -.1875);
+
+    kcomplex_t k12 = k * s;
+    ASSERT_FLOAT_EQ(k12.real(), .046875);
+    ASSERT_FLOAT_EQ(k12.imag(), .0625);
+
+    kcomplex_t k13 = s * k;
+    ASSERT_FLOAT_EQ(k13.real(), .046875);
+    ASSERT_FLOAT_EQ(k13.imag(), .0625);
+
+// FIXME
+#if 0
+    kcomplex_t k14 = k / s;
+    ASSERT_FLOAT_EQ(k14.real(), 4.);
+    ASSERT_FLOAT_EQ(k14.imag(), 0.);  // assert fails; k14.imag() == 8.8817843e-17
+#endif
+
+// FIXME
+#if 0
+    kcomplex_t k15 = s / k;
+    ASSERT_FLOAT_EQ(k15.real(), .25);
+    ASSERT_FLOAT_EQ(k15.imag(), 0.); // assert fails; s7.imag() == 5.5511152e-18
+#endif
+
+  }
+};
+
+TEST(TEST_CATEGORY, std_complex_operators) {
+  TestStdComplexOperators test;
+  test.testit();
+}
 }  // namespace Test
 
 #ifdef KOKKOS_COMPILER_NVCC
