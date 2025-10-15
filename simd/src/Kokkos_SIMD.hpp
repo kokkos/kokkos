@@ -8,6 +8,7 @@
 #include <Kokkos_SIMD_Scalar.hpp>
 #include <Kokkos_Macros.hpp>
 
+#include <climits>
 #include <cstdint>
 
 // FIXME_OPENMPTARGET The device pass disables all compiler macros checked
@@ -76,7 +77,7 @@ template <class T>
 using host_fixed_native = avx512_fixed_size<8>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, avx512_fixed_size<512 / sizeof(T)>,
+    std::conditional_t<N == 0, avx512_fixed_size<512 / (CHAR_BIT * sizeof(T))>,
                        avx512_fixed_size<N>>;
 
 #elif defined(KOKKOS_ARCH_AVX2)
@@ -84,13 +85,13 @@ template <class T>
 using host_fixed_native = avx2_fixed_size<4>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, avx2_fixed_size<256 / sizeof(T)>,
+    std::conditional_t<N == 0, avx2_fixed_size<256 / (CHAR_BIT * sizeof(T))>,
                        avx2_fixed_size<N>>;
 
 #elif defined(KOKKOS_ARCH_ARM_SVE)
 template <class T>
 using host_fixed_native =
-    sve_fixed_size<(__ARM_FEATURE_SVE_BITS / (8 * sizeof(T)))>;
+    sve_fixed_size<(__ARM_FEATURE_SVE_BITS / (CHAR_BIT * sizeof(T)))>;
 template <typename T, int N>
 using host_native_abi =
     std::conditional_t<N == 0, host_fixed_native<T>, sve_fixed_size<N>>;
@@ -100,7 +101,7 @@ template <class T>
 using host_fixed_native = neon_fixed_size<2>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, neon_fixed_size<128 / sizeof(T)>,
+    std::conditional_t<N == 0, neon_fixed_size<128 / (CHAR_BIT * sizeof(T))>,
                        neon_fixed_size<N>>;
 
 #else

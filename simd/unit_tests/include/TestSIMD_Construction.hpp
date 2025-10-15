@@ -12,6 +12,8 @@ import kokkos.simd;
 #endif
 #include <SIMDTesting_Utilities.hpp>
 
+#include <climits>
+
 using Kokkos::Experimental::all_of;
 
 template <typename Abi, typename DataType>
@@ -82,12 +84,39 @@ inline void host_test_simd_alias() {
   }
 }
 
+template <typename /*Abi*/, typename DataType>
+inline void host_test_simd_default_abi() {
+#if defined(KOKKOS_ENABLE_HPX) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
+    defined(KOKKOS_ENABLE_OPENACC) || defined(KOKKOS_ENABLE_CUDA) ||     \
+    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  constexpr int expected_size = 1;
+#elif defined(KOKKOS_ARCH_AVX512XEON)
+  constexpr int expected_size = 512 / (CHAR_BIT * sizeof(DataType));
+#elif defined(KOKKOS_ARCH_AVX2)
+  constexpr int expected_size = 256 / (CHAR_BIT * sizeof(DataType));
+#elif defined(KOKKOS_ARCH_ARM_SVE)
+  constexpr int expected_size =
+      __ARM_FEATURE_SVE_BITS / (CHAR_BIT * sizeof(DataType));
+#elif defined(KOKKOS_ARCH_ARM_NEON)
+  constexpr int expected_size = 128 / (CHAR_BIT * sizeof(DataType));
+#else
+  constexpr int expected_size = 1;
+#endif
+
+  using simd_type      = Kokkos::Experimental::simd<DataType>;
+  using simd_mask_type = typename simd_type::mask_type;
+
+  static_assert(simd_type::size() == expected_size);
+  static_assert(simd_mask_type::size() == expected_size);
+}
+
 template <typename Abi, typename DataType>
 inline void host_check_construction() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     host_test_simd_traits<Abi, DataType>();
     host_test_mask_traits<Abi, DataType>();
     host_test_simd_alias<Abi, DataType>();
+    host_test_simd_default_abi<Abi, DataType>();
   }
 }
 

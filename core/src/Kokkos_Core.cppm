@@ -128,17 +128,17 @@ export {
   using ::Kokkos::ViewAllocateWithoutInitializing;
   using ::Kokkos::ViewTraits;
   using ::Kokkos::WithoutInitializing;
+  namespace Experimental {
   using ::Kokkos::Experimental::AppendExtent;
   using ::Kokkos::Experimental::DefaultViewHooks;
   using ::Kokkos::Experimental::EmptyViewHooks;
+  using ::Kokkos::Experimental::Extents;
   using ::Kokkos::Experimental::is_hooks_policy;
   using ::Kokkos::Experimental::is_hooks_policy_v;
-  using ::Kokkos::Experimental::PrependExtent;
-  using ::Kokkos::Experimental::SubscribableViewHooks;
-  namespace Experimental {
-  using ::Kokkos::Experimental::Extents;
   using ::Kokkos::Experimental::local_deep_copy;
   using ::Kokkos::Experimental::local_deep_copy_contiguous;
+  using ::Kokkos::Experimental::PrependExtent;
+  using ::Kokkos::Experimental::SubscribableViewHooks;
   }  // namespace Experimental
 
   // execution policies
@@ -814,8 +814,8 @@ export {
   using ::Kokkos::submdspan;
   using ::Kokkos::submdspan_extents;
   using ::Kokkos::submdspan_mapping_result;
-  using ::Kokkos::Experimental::dims;
   namespace Experimental {
+  using ::Kokkos::Experimental::dims;
   using ::Kokkos::Experimental::layout_left_padded;
   using ::Kokkos::Experimental::layout_right_padded;
   }  // namespace Experimental

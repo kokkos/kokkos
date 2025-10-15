@@ -73,14 +73,13 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
   // Perform the actual workgroup reduction in each subgroup
   // separately.
-  auto sg            = item.get_sub_group();
-  auto* result       = &local_mem[local_id * value_count];
-  const int id_in_sg = sg.get_local_id()[0];
-  const auto local_range =
-      std::min<unsigned int>(sg.get_local_range()[0], max_size);
+  auto sg                = item.get_sub_group();
+  auto* result           = &local_mem[local_id * value_count];
+  const int id_in_sg     = sg.get_local_id()[0];
+  const auto local_range = std::min<int>(sg.get_local_range()[0], max_size);
   const auto upper_stride_bound =
-      std::min<unsigned int>(local_range - id_in_sg, max_size - local_id);
-  for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
+      std::min<int>(local_range - id_in_sg, max_size - local_id);
+  for (int stride = 1; stride < local_range; stride <<= 1) {
     if (stride < upper_stride_bound)
       final_reducer.join(result, &local_mem[(local_id + stride) * value_count]);
     sycl::group_barrier(sg);
@@ -89,14 +88,14 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
 
   // Do the final reduction only using the first subgroup.
   if (sg.get_group_id()[0] == 0) {
-    const unsigned int n_subgroups = sg.get_group_range()[0];
-    const int max_subgroup_size    = sg.get_max_local_range()[0];
+    const int n_subgroups       = sg.get_group_range()[0];
+    const int max_subgroup_size = sg.get_max_local_range()[0];
     auto* result_ = &local_mem[id_in_sg * max_subgroup_size * value_count];
     // In case the number of subgroup results is larger than the range of
     // the first subgroup, we first combine the items with a higher
     // index.
-    for (unsigned int offset = local_range;
-         offset < std::min(n_subgroups, max_size); offset += local_range)
+    for (int offset = local_range;
+         offset < std::min<int>(n_subgroups, max_size); offset += local_range)
       if (id_in_sg + offset < n_subgroups)
         final_reducer.join(
             result_,
@@ -104,7 +103,7 @@ std::enable_if_t<!use_shuffle_based_algorithm<ReducerType>> workgroup_reduction(
     sycl::group_barrier(sg);
 
     // Then, we proceed as before.
-    for (unsigned int stride = 1; stride < local_range; stride <<= 1) {
+    for (int stride = 1; stride < local_range; stride <<= 1) {
       if (id_in_sg + stride < n_subgroups)
         final_reducer.join(
             result_,
