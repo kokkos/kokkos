@@ -132,7 +132,7 @@ if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
   endif()
 endif()
 
-kokkos_enable_option(IMPL_MDSPAN ON "Whether to enable experimental mdspan support")
+kokkos_enable_option(IMPL_MDSPAN ON "Whether to enable mdspan support (internal use only)")
 kokkos_enable_option(MDSPAN_EXTERNAL OFF "Whether to use an external version of mdspan")
 kokkos_enable_option(
   IMPL_CHECK_POSSIBLY_BREAKING_LAYOUTS

@@ -40,6 +40,14 @@ struct ChunkSize {
 #endif
 };
 
+namespace Impl {
+// Private tag that can be used to make a copy of another execution policy
+// and set the underlying execution space instance.
+// It does NOT perform any sanity check.
+// For now, it is used in Kokkos::Experimental::Graph.
+struct PolicyUpdate {};
+}  // namespace Impl
+
 /** \brief  Execution policy for work over a range of an integral type.
  *
  * Valid template argument options:
@@ -164,6 +172,12 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
               const ChunkSize chunk_size)
       : RangePolicy(typename traits::execution_space(), work_begin, work_end,
                     chunk_size) {}
+
+  RangePolicy(const Impl::PolicyUpdate, const RangePolicy& other,
+              typename traits::execution_space space)
+      : RangePolicy(other) {
+    this->m_space = std::move(space);
+  }
 
  public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
@@ -667,6 +681,10 @@ class TeamPolicy
     // it is not a direct base.
     internal_policy::traits::operator=(p);
   }
+
+  TeamPolicy(const Impl::PolicyUpdate tag, const TeamPolicy& other,
+             typename traits::execution_space space)
+      : internal_policy(tag, other, std::move(space)) {}
 
  private:
   TeamPolicy(const internal_policy& p) : internal_policy(p) {}

@@ -79,6 +79,7 @@ export {
   using ::Kokkos::Impl::get_tile_size_properties;
   using ::Kokkos::Impl::ParallelConstructName;
   using ::Kokkos::Impl::PolicyTraits;
+  using ::Kokkos::Impl::PolicyUpdate;
   using ::Kokkos::Impl::WorkTagTrait;
   }  // namespace Impl
 

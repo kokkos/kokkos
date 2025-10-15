@@ -346,6 +346,13 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
         m_chunk_size(0) {
     init(league_size_request, team_size_request, 1);
   }
+
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal& other,
+                     Kokkos::Experimental::OpenACC space)
+      : TeamPolicyInternal(other) {
+    this->m_space = std::move(space);
+  }
+
   static int vector_length_max() {
     return 32; /* TODO: this is bad. Need logic that is compiler and backend
                   aware */

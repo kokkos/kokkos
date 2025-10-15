@@ -193,4 +193,29 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
   }
 }
 
+// The execution space is defaulted if not given to the constructor.
+TEST(TEST_CATEGORY, md_range_policy_default_space) {
+  using policy_t = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
+
+  policy_t defaulted({42, 47}, {666, 999});
+
+  ASSERT_EQ(defaulted.space(), TEST_EXECSPACE{});
+}
+
+// The execution space instance can be updated.
+TEST(TEST_CATEGORY, md_range_policy_impl_set_space) {
+  using policy_t = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
+
+  const auto [exec_old, exec_new] =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE{}, 1, 1);
+
+  const policy_t policy_old(exec_old, {42, 47}, {666, 999});
+  ASSERT_EQ(policy_old.space(), exec_old);
+
+  const policy_t policy_new(Kokkos::Impl::PolicyUpdate{}, policy_old, exec_new);
+  ASSERT_EQ(policy_new.space(), exec_new);
+  ASSERT_EQ(policy_new.m_lower, (typename policy_t::point_type{42, 47}));
+  ASSERT_EQ(policy_new.m_upper, (typename policy_t::point_type{666, 999}));
+}
+
 }  // namespace

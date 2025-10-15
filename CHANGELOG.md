@@ -1,5 +1,22 @@
 # CHANGELOG
 
+## 4.7.01
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.7.00...4.7.01)
+
+### CUDA
+* Support CUDA 13 [\#8298](https://github.com/kokkos/kokkos/pull/8298)
+
+### Performance
+* Revert back to old `View` implementation by default to avoid performance regressions [\#8411](https://github.com/kokkos/kokkos/pull/8411)
+  * This was by default off in Trilinos and Spack builds already, as well as for older GCC versions
+* Improve performance of `DynRankView` construction from internal `View` type [\#8303](https://github.com/kokkos/kokkos/pull/8303)
+
+### Bug Fixes
+* Add missing const qualifier to `View::to_mdspan` and `View` to `mdspan` conversion [\#8333](https://github.com/kokkos/kokkos/pull/8333)
+* Fix configure-time check of compilation and linker flags [\#8292](https://github.com/kokkos/kokkos/pull/8292)
+* Add missing `KOKKOS_FUNCTION` annotation on `View(std::nullptr_t, ...)` constructor [\#8436](https://github.com/kokkos/kokkos/pull/8436)
+
 ## 4.7.00
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.6.02...4.7.00)

@@ -251,6 +251,12 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
     init(league_size_request, team_size_request);
   }
 
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal& other,
+                     typename traits::execution_space space)
+      : TeamPolicyInternal(other) {
+    this->m_space = std::move(space);
+  }
+
   inline int team_alloc() const { return m_team_alloc; }
   inline int team_iter() const { return m_team_iter; }
 

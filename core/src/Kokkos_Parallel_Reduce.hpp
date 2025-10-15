@@ -10,9 +10,12 @@ static_assert(false,
 #define KOKKOS_PARALLEL_REDUCE_HPP
 
 #include <impl/Kokkos_BuiltinReducers.hpp>
+#include <Kokkos_CheckUsage.hpp>
+#include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
+
 #include <type_traits>
 
 namespace Kokkos {
@@ -340,7 +343,6 @@ struct ParallelReduceFence {
  */
 
 // ReturnValue is scalar or array: take by reference
-
 template <class PolicyType, class FunctorType, class ReturnType>
 inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                         !(Kokkos::is_view<ReturnType>::value ||
@@ -348,6 +350,10 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      "parallel_reduce", policy, label.c_str());
+
   static_assert(
       !std::is_const_v<ReturnType>,
       "A const reduction result type is only allowed for a View, pointer or "
@@ -369,6 +375,10 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
+                                                              policy);
+
   parallel_reduce("", policy, functor, return_value);
 }
 
@@ -378,10 +388,13 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const std::string& label, const size_t& work_count,
                 const FunctorType& functor, ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      "parallel_reduce", work_count, label.c_str());
+
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
-
   parallel_reduce(label, policy_type(0, work_count), functor, return_value);
 }
 
@@ -391,11 +404,14 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
                           std::is_pointer_v<ReturnType>)>
 parallel_reduce(const size_t& work_count, const FunctorType& functor,
                 ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
+                                                              work_count);
+
   parallel_reduce("", work_count, functor, return_value);
 }
 
 // ReturnValue as View or Reducer: take by copy to allow for inline construction
-
 template <class PolicyType, class FunctorType, class ReturnType>
 inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                         (Kokkos::is_view<ReturnType>::value ||
@@ -403,14 +419,17 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                          std::is_pointer_v<ReturnType>)>
 parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      "parallel_reduce", policy, label.c_str());
+
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
       label, policy, functor, return_value_impl);
   Impl::ParallelReduceFence<typename PolicyType::execution_space, ReturnType>::
-      fence(
-          policy.space(),
-          "Kokkos::parallel_reduce: fence due to result being value, not view",
-          return_value);
+      fence(policy.space(),
+            "Kokkos::parallel_reduce: fence" /*FIXME: describe correct reason*/,
+            return_value);
 }
 
 template <class PolicyType, class FunctorType, class ReturnType>
@@ -420,6 +439,10 @@ inline std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value &&
                          std::is_pointer_v<ReturnType>)>
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
+                                                              policy);
+
   parallel_reduce("", policy, functor, return_value);
 }
 
@@ -429,10 +452,13 @@ inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
                         std::is_pointer_v<ReturnType>>
 parallel_reduce(const std::string& label, const size_t& work_count,
                 const FunctorType& functor, const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      "parallel_reduce", work_count, label.c_str());
+
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
-
   parallel_reduce(label, policy_type(0, work_count), functor, return_value);
 }
 
@@ -442,17 +468,24 @@ inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
                         std::is_pointer_v<ReturnType>>
 parallel_reduce(const size_t& work_count, const FunctorType& functor,
                 const ReturnType& return_value) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
+                                                              work_count);
+
   parallel_reduce("", work_count, functor, return_value);
 }
 
 // No Return Argument
-
 template <class PolicyType, class FunctorType>
 inline void parallel_reduce(
     const std::string& label, const PolicyType& policy,
     const FunctorType& functor,
     std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
         nullptr) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      "parallel_reduce", policy, label.c_str());
+
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                             FunctorType, void>;
@@ -478,12 +511,20 @@ inline void parallel_reduce(
     const PolicyType& policy, const FunctorType& functor,
     std::enable_if_t<Kokkos::is_execution_policy<PolicyType>::value>* =
         nullptr) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
+                                                              policy);
+
   parallel_reduce("", policy, functor);
 }
 
 template <class FunctorType>
 inline void parallel_reduce(const std::string& label, const size_t& work_count,
                             const FunctorType& functor) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      "parallel_reduce", work_count, label.c_str());
+
   using policy_type =
       typename Impl::ParallelReducePolicyType<void, size_t,
                                               FunctorType>::policy_type;
@@ -494,6 +535,10 @@ inline void parallel_reduce(const std::string& label, const size_t& work_count,
 template <class FunctorType>
 inline void parallel_reduce(const size_t& work_count,
                             const FunctorType& functor) {
+  /** Enforce correct use **/
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
+                                                              work_count);
+
   parallel_reduce("", work_count, functor);
 }
 

@@ -153,8 +153,6 @@ if(NOT desul_FOUND)
 endif()
 
 if(Kokkos_ENABLE_IMPL_MDSPAN)
-  message(STATUS "Experimental mdspan support is enabled")
-
   if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
     global_set(KOKKOS_MDSPAN_VERSION "unknown")
     message(STATUS "Using external mdspan")

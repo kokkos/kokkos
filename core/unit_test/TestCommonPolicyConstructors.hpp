@@ -89,8 +89,8 @@ TEST(TEST_CATEGORY, execution_policy_occupancy_and_hint) {
 
 // Check that the policy size does not increase if the user does not specify the
 // occupancy (only pay for what you use).
-// Disabling since EBO was not working with VS 16.11.3 and CUDA 11.4.2
-#if !(defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA))
+// Disabling since EBO was not working on Windows with multiple configurations
+#if !defined(_WIN32)
 constexpr bool test_empty_base_optimization() {
   DummyPolicy<> policy;
   static_assert(sizeof(decltype(policy)) == 1);
