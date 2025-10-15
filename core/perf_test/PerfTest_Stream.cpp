@@ -81,17 +81,21 @@ void perform_triad(const V& a, const V& b, const V& c,
 
 template <typename V>
 int validate_array(V& a_dev, typename V::const_value_type expected) {
+  using scalar_type = typename V::non_const_value_type;
+
   const auto a =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, a_dev);
 
-  double error = 0.0;
+  scalar_type error = 0.0;
   for (size_t i = 0; i < a.size(); ++i) {
     error += std::abs(a[i] - expected);
   }
-  const double avgError = error / (double)a.size();
+  const scalar_type avgError = error / (scalar_type)a.size();
 
-  constexpr double epsilon = 1.0e-13;
-  return std::abs(avgError / expected) > epsilon;
+  // all values here are pretty easy for float types to represent
+  // so let's make the tolerances very tight.
+  return std::abs(avgError / expected) >
+         Kokkos::Experimental::epsilon_v<scalar_type>;
 }
 
 template <unsigned MemTraits>
