@@ -12,6 +12,7 @@
 #include <Kokkos_NumericTraits.hpp>
 #include <Kokkos_ReductionIdentity.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Utilities.hpp>
 #include <complex>
 #include <type_traits>
 #include <iosfwd>
