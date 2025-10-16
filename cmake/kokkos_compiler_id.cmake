@@ -149,7 +149,7 @@ endif()
 
 message(
   STATUS
-    "Kokkos compiles in ${Kokkos_LANGUAGES} with compiler ${KOKKOS_CXX_COMPILER_ID} version ${KOKKOS_CXX_COMPILER_VERSION}"
+    "Kokkos is configured for CMake languages ${Kokkos_LANGUAGES} compilation (using ${KOKKOS_CXX_COMPILER_ID} version ${KOKKOS_CXX_COMPILER_VERSION})"
 )
 unset(Kokkos_LANGUAGES)
 
