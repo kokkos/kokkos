@@ -23,7 +23,6 @@ struct show_extra_execution_space_erroneously_given_to_execution_policy<void> {
 // FIXME_CUDA: This struct was previously declared inside ExecutionSpaceTrait.
 // Cuda 12.8 choked on the visibility so it is externalized and put into an
 // anonymous namespace.
-namespace {
 template <class ExecSpace, class AnalyzeNextTrait>
 struct mixin_matching_trait_impl : AnalyzeNextTrait {
   using base_t = AnalyzeNextTrait;
@@ -42,7 +41,6 @@ struct mixin_matching_trait_impl : AnalyzeNextTrait {
 
   using execution_space = ExecSpace;
 };
-}  // namespace
 
 struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
   struct base_traits {
