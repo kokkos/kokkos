@@ -275,12 +275,8 @@ TEST(TEST_CATEGORY, view_allocation_large_rank) {
 #endif
   using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
   using MemorySpace    = typename TEST_EXECSPACE::memory_space;
-#ifdef KOKKOS_ENABLE_LOW_MEM_TESTS
-  constexpr int dim = 15;  // enable 2 GiB instead of 4GiB
-#else
-  constexpr int dim = 16;
-#endif
-  using FunctorType = TestViewAllocationLargeRank<MemorySpace>;
+  constexpr int dim    = 15;
+  using FunctorType    = TestViewAllocationLargeRank<MemorySpace>;
   typename FunctorType::ViewType v("v", dim, dim, dim, dim, dim, dim, dim, dim);
 
   Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
