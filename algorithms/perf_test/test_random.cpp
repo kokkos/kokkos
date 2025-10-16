@@ -33,7 +33,7 @@ static void Random(benchmark::State &state) {
           random_pool.free_state(generator);
           out(i) = acc;
         });
-    Kokkos::fence("");
+    Kokkos::fence();
   }
 
   state.counters[KokkosBenchmark::benchmark_fom("rate")] = benchmark::Counter(
