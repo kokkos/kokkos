@@ -4,7 +4,8 @@
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
 #include <benchmark/benchmark.h>
-#include "Benchmark_Context.hpp"
+// FIXME: Benchmark_Context.hpp should be moved to a common location
+#include "../../core/perf_test/Benchmark_Context.hpp"
 
 namespace Benchmark {
 

@@ -79,7 +79,6 @@ set(BENCHMARK_SOURCES
     PerfTest_Gemv.cpp
     PerfTestHexGrad.cpp
     PerfTest_MallocFree.cpp
-    PerfTest_Random.cpp
     PerfTest_Stream.cpp
     PerfTest_ViewAllocate.cpp
     PerfTest_ViewCopy_a123.cpp
