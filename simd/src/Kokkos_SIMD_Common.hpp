@@ -395,7 +395,7 @@ KOKKOS_FORCEINLINE_FUNCTION bool none_of(bool a) { return !a; }
 template <class T, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
     basic_simd_mask<T, Abi> const& a) {
-  for (size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
+  for (Impl::simd_size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
     if (!a[i]) return false;
   }
   return true;
@@ -404,7 +404,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
 template <class T, class Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
     basic_simd_mask<T, Abi> const& a) {
-  for (size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
+  for (Impl::simd_size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
     if (a[i]) return true;
   }
   return false;
