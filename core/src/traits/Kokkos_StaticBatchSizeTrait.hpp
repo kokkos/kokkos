@@ -28,6 +28,20 @@ namespace Kokkos::Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class StaticBatchSizeParam, class AnalyzeNextTrait>
+struct StaticBatchSizeMixin : AnalyzeNextTrait {
+  using base_t = AnalyzeNextTrait;
+  using base_t::base_t;
+
+  static constexpr bool batch_size_is_defaulted = false;
+
+  static_assert(
+      base_t::batch_size_is_defaulted,
+      "Kokkos Error: More than one StaticBatchSizeTrait specified is given.");
+
+  using static_batch_size = StaticBatchSizeParam;
+};
+
 struct StaticBatchSizeTrait : TraitSpecificationBase<StaticBatchSizeTrait> {
   struct base_traits {
     static constexpr bool batch_size_is_defaulted = true;
@@ -36,18 +50,8 @@ struct StaticBatchSizeTrait : TraitSpecificationBase<StaticBatchSizeTrait> {
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
   template <class StaticBatchSizeParam, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-
-    static constexpr bool batch_size_is_defaulted = false;
-
-    static_assert(
-        base_t::batch_size_is_defaulted,
-        "Kokkos Error: More than one StaticBatchSizeTrait specified is given.");
-
-    using static_batch_size = StaticBatchSizeParam;
-  };
+  using mixin_matching_trait =
+      StaticBatchSizeMixin<StaticBatchSizeParam, AnalyzeNextTrait>;
 };
 }  // end namespace Kokkos::Impl
 

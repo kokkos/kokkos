@@ -20,11 +20,8 @@ template <>
 struct show_extra_execution_space_erroneously_given_to_execution_policy<void> {
 };
 
-// FIXME_CUDA: This struct was previously declared inside ExecutionSpaceTrait.
-// Cuda 12.8 choked on the visibility so it is externalized and put into an
-// anonymous namespace.
 template <class ExecSpace, class AnalyzeNextTrait>
-struct mixin_matching_trait_impl : AnalyzeNextTrait {
+struct ExecutionSpaceMixin : AnalyzeNextTrait {
   using base_t = AnalyzeNextTrait;
   using base_t::base_t;
 
@@ -52,8 +49,7 @@ struct ExecutionSpaceTrait : TraitSpecificationBase<ExecutionSpaceTrait> {
   template <class T>
   using trait_matches_specification = Kokkos::is_execution_space<T>;
   template <class ExecSpace, class AnalyzeNextTrait>
-  using mixin_matching_trait =
-      mixin_matching_trait_impl<ExecSpace, AnalyzeNextTrait>;
+  using mixin_matching_trait = ExecutionSpaceMixin<ExecSpace, AnalyzeNextTrait>;
 };
 
 // </editor-fold> end trait specification }}}1

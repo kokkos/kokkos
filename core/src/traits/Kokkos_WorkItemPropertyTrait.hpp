@@ -15,17 +15,21 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class WorkItemProp, class AnalyzeNextTrait>
+struct WorkItemPropMixin : AnalyzeNextTrait {
+  using base_t = AnalyzeNextTrait;
+  using base_t::base_t;
+  using work_item_property = WorkItemProp;
+};
+
 struct WorkItemPropertyTrait : TraitSpecificationBase<WorkItemPropertyTrait> {
   struct base_traits {
     using work_item_property = Kokkos::Experimental::WorkItemProperty::None_t;
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
   template <class WorkItemProp, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-    using work_item_property = WorkItemProp;
-  };
+  using mixin_matching_trait =
+      WorkItemPropMixin<WorkItemProp, AnalyzeNextTrait>;
   template <class T>
   using trait_matches_specification =
       Kokkos::Experimental::is_work_item_property<T>;

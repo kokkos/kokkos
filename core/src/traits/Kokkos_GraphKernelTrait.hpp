@@ -16,17 +16,20 @@ namespace Impl {
 //==============================================================================
 // <editor-fold desc="trait specification"> {{{1
 
+template <class, class AnalyzeNextTrait>
+struct GraphMixin : AnalyzeNextTrait {
+  using base_t = AnalyzeNextTrait;
+  using base_t::base_t;
+  using is_graph_kernel = std::true_type;
+};
+
 struct GraphKernelTrait : TraitSpecificationBase<GraphKernelTrait> {
   struct base_traits {
     using is_graph_kernel = std::false_type;
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
-  template <class, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-    using is_graph_kernel = std::true_type;
-  };
+  template <class NotUsed, class AnalyzeNextTrait>
+  using mixin_matching_trait = GraphMixin<NotUsed, AnalyzeNextTrait>;
   template <class T>
   using trait_matches_specification = std::is_same<T, IsGraphKernelTag>;
 };
