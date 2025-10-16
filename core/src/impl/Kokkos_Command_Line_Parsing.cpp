@@ -56,7 +56,8 @@ bool Kokkos::Impl::check_env_bool(char const* name, bool& val) {
   }
 
   // FIXME: temporary change, not intended to be merged
-  // this is needed to be able to call this function during static initialization
+  // this is needed to be able to call this function during static
+  // initialization
   static auto const regex_true =
       std::regex("(yes|true|1)",
                  std::regex_constants::icase | std::regex_constants::egrep);
