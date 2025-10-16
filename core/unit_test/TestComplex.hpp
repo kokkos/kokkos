@@ -734,11 +734,17 @@ static_assert(comparison_in_constant_expression());
 
 struct TestStdComplexOperators {
   static void testit() {
-    using kcomplex_t = Kokkos::complex<double>;
-    using scomplex_t = std::complex<kcomplex_t::value_type>;
+    using fp_t       = double;
+    using kcomplex_t = Kokkos::complex<fp_t>;
+    using scomplex_t = std::complex<fp_t>;
 
-    const kcomplex_t k(.5, .25);
-    const scomplex_t s(.125, .0625);
+    constexpr kcomplex_t k(.5, .25);
+    constexpr scomplex_t s(.125, .0625);
+
+    // Division involving Kokkos::complex numbers with exact
+    // floating point representations is inexact because of the way we perform
+    // it, so we need to check results against an epsilon.
+    constexpr fp_t epsilon = std::numeric_limits<fp_t>::epsilon();
 
     // operator +=
     kcomplex_t k0 = k;
@@ -771,23 +777,15 @@ struct TestStdComplexOperators {
     ASSERT_FLOAT_EQ(s5.real(), .046875);
     ASSERT_FLOAT_EQ(s5.imag(), .0625);
 
-// FIXME
-// Does not compile (old code)
-#if 0
     kcomplex_t k6 = k;
     k6 /= s;
     ASSERT_FLOAT_EQ(k6.real(), 4.);
-    ASSERT_FLOAT_EQ(k6.imag(), 0.);
-#endif
+    ASSERT_NEAR(k6.imag(), 0., epsilon);
 
-// FIXME
-#if 0
     scomplex_t s7 = s;
     s7 /= k;
     ASSERT_FLOAT_EQ(s7.real(), .25);
-    ASSERT_FLOAT_EQ(s7.imag(), 0.); // assert fails; s7.imag() == 5.5511152e-18
-  }
-#endif
+    ASSERT_NEAR(s7.imag(), 0., epsilon);
 
     kcomplex_t k8 = k + s;
     ASSERT_FLOAT_EQ(k8.real(), .625);
@@ -813,20 +811,13 @@ struct TestStdComplexOperators {
     ASSERT_FLOAT_EQ(k13.real(), .046875);
     ASSERT_FLOAT_EQ(k13.imag(), .0625);
 
-// FIXME
-#if 0
     kcomplex_t k14 = k / s;
     ASSERT_FLOAT_EQ(k14.real(), 4.);
-    ASSERT_FLOAT_EQ(k14.imag(), 0.);  // assert fails; k14.imag() == 8.8817843e-17
-#endif
+    ASSERT_NEAR(k14.imag(), 0., epsilon);
 
-// FIXME
-#if 0
     kcomplex_t k15 = s / k;
     ASSERT_FLOAT_EQ(k15.real(), .25);
-    ASSERT_FLOAT_EQ(k15.imag(), 0.); // assert fails; s7.imag() == 5.5511152e-18
-#endif
-
+    ASSERT_NEAR(k15.imag(), 0., epsilon);
   }
 };
 

@@ -258,7 +258,7 @@ class
       this->im_ /= s;
     } else {
       const complex x_scaled(this->re_ / s, this->im_ / s);
-      const complex y_conj_scaled(y.re_ / s, -(y.im_) / s);
+      const complex y_conj_scaled(y.real() / s, -(y.imag()) / s);
       const RealType y_scaled_abs =
           y_conj_scaled.re_ * y_conj_scaled.re_ +
           y_conj_scaled.im_ * y_conj_scaled.im_;  // abs(y) == abs(conj(y))
