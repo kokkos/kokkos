@@ -471,6 +471,34 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     }
   }
 
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+
+#define KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(...)                             \
+  if constexpr (Impl::IsReferenceCountedDataHandle<data_handle_type>::value) { \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        m_ptr.tracker());                                                      \
+    Kokkos::Impl::view_verify_operator_bounds(                                 \
+        m_ptr.tracker(), m_map.extents(), m_ptr.get(), __VA_ARGS__);           \
+  } else {                                                                     \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        Kokkos::Impl::SharedAllocationTracker());                              \
+    Kokkos::Impl::view_verify_operator_bounds(                                 \
+        Kokkos::Impl::SharedAllocationTracker(), m_map.extents(), m_ptr,       \
+        __VA_ARGS__);                                                          \
+  }
+
+#else
+
+#define KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(...)                             \
+  if constexpr (Impl::IsReferenceCountedDataHandle<data_handle_type>::value) { \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        m_ptr.tracker());                                                      \
+  } else {                                                                     \
+    Kokkos::Impl::runtime_check_memory_access_violation<memory_space>(         \
+        Kokkos::Impl::SharedAllocationTracker());                              \
+  }
+#endif
+
  public:
   template <class... OtherIndexTypes>
     requires(
@@ -506,6 +534,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     return m_acc.access(m_ptr,
                         m_map(static_cast<index_type>(std::move(indices))...));
   }
+#undef KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY
 #endif
 
  public:
