@@ -495,8 +495,8 @@ struct TestReducers {
 
 // FIXME_OPENACC - custom reduction with TeamPolicy is not yet implemented.
 #ifdef KOKKOS_ENABLE_OPENACC
-      if constexpr(!std::is_same_v<ExecSpace, Kokkos::Experimental::OpenACC>)
-    test_sum_team_policy(N, f, reference_sum);
+    if constexpr (!std::is_same_v<ExecSpace, Kokkos::Experimental::OpenACC>)
+      test_sum_team_policy(N, f, reference_sum);
 #endif
 
     {
