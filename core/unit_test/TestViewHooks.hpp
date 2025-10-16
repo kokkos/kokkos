@@ -54,7 +54,10 @@ struct TestSubscriber {
 
 namespace TestADLViewHookCustomization {
 template <typename DeviceType>
-class TestMemSpace : public DeviceType::memory_space {};
+class TestMemSpace : public DeviceType::memory_space {
+ public:
+  using memory_space = TestMemSpace;
+};
 
 template <typename DeviceType>
 using TestDevice = Kokkos::Device<typename DeviceType::execution_space,
@@ -63,13 +66,16 @@ using TestDevice = Kokkos::Device<typename DeviceType::execution_space,
 template <class DataType, class... Properties>
 constexpr auto customize_view_hooks() {
   using traits_type = Kokkos::ViewTraits<DataType, Properties...>;
-  return Test::TestSubscriber<typename traits_type::device_type, false>{};
+  return Kokkos::Experimental::SubscribableViewHooks<
+      Test::TestSubscriber<typename traits_type::device_type, false>>{};
 }
 }  // namespace TestADLViewHookCustomization
 
 namespace Test {
 template <class DeviceType>
 struct TestViewHooks {
+  static_assert(Kokkos::is_memory_space_v<
+                TestADLViewHookCustomization::TestMemSpace<DeviceType>>);
   using subscriber_type = TestSubscriber<DeviceType, true>;
   using test_view_type  = typename subscriber_type::test_view_type;
 
@@ -82,6 +88,14 @@ struct TestViewHooks {
       Kokkos::Experimental::is_hooks_policy<
           Kokkos::Experimental::SubscribableViewHooks<subscriber_type>>::value,
       "Must be a hooks policy");
+  static_assert(
+      std::same_as<typename test_view_type::array_type,
+                   Kokkos::View<typename test_view_type::scalar_array_type,
+                                typename test_view_type::array_layout,
+                                typename test_view_type::device_type,
+                                Kokkos::Experimental::SubscribableViewHooks<
+                                    subscriber_type>,
+                                typename test_view_type::memory_traits>>);
 
   static void testViewHooksCopyConstruct() {
     subscriber_type::reset();
