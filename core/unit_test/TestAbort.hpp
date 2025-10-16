@@ -4,7 +4,12 @@
 #include <gtest/gtest.h>
 
 #include <regex>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 TEST(TEST_CATEGORY_DEATH, abort_from_host) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";

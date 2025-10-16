@@ -4,7 +4,14 @@
 #ifndef KOKKOS_SORT_BY_KEY_FREE_FUNCS_IMPL_HPP_
 #define KOKKOS_SORT_BY_KEY_FREE_FUNCS_IMPL_HPP_
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+
+#include <tuple>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 

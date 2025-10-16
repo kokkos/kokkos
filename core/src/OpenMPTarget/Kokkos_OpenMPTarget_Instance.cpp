@@ -14,7 +14,12 @@
 // constructor. undef'ed at the end
 #define KOKKOS_IMPL_OPENMPTARGET_WORKAROUND
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <OpenMPTarget/Kokkos_OpenMPTarget.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_UniqueToken.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Instance.hpp>

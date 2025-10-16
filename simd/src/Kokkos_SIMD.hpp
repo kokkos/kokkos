@@ -8,6 +8,9 @@
 #include <Kokkos_SIMD_Scalar.hpp>
 #include <Kokkos_Macros.hpp>
 
+#include <climits>
+#include <cstdint>
+
 // FIXME_OPENMPTARGET The device pass disables all compiler macros checked
 #ifdef KOKKOS_ENABLE_OPENMPTARGET
 #if defined(KOKKOS_ARCH_AVX2)
@@ -74,7 +77,7 @@ template <class T>
 using host_fixed_native = avx512_fixed_size<8>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, avx512_fixed_size<512 / sizeof(T)>,
+    std::conditional_t<N == 0, avx512_fixed_size<512 / (CHAR_BIT * sizeof(T))>,
                        avx512_fixed_size<N>>;
 
 #elif defined(KOKKOS_ARCH_AVX2)
@@ -82,13 +85,13 @@ template <class T>
 using host_fixed_native = avx2_fixed_size<4>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, avx2_fixed_size<256 / sizeof(T)>,
+    std::conditional_t<N == 0, avx2_fixed_size<256 / (CHAR_BIT * sizeof(T))>,
                        avx2_fixed_size<N>>;
 
 #elif defined(KOKKOS_ARCH_ARM_SVE)
 template <class T>
 using host_fixed_native =
-    sve_fixed_size<(__ARM_FEATURE_SVE_BITS / (8 * sizeof(T)))>;
+    sve_fixed_size<(__ARM_FEATURE_SVE_BITS / (CHAR_BIT * sizeof(T)))>;
 template <typename T, int N>
 using host_native_abi =
     std::conditional_t<N == 0, host_fixed_native<T>, sve_fixed_size<N>>;
@@ -98,7 +101,7 @@ template <class T>
 using host_fixed_native = neon_fixed_size<2>;
 template <typename T, int N>
 using host_native_abi =
-    std::conditional_t<N == 0, neon_fixed_size<128 / sizeof(T)>,
+    std::conditional_t<N == 0, neon_fixed_size<128 / (CHAR_BIT * sizeof(T))>,
                        neon_fixed_size<N>>;
 
 #else
@@ -244,12 +247,8 @@ using simd = basic_simd<T, simd_abi::Impl::native_abi<T, N>>;
 template <class T, int N = 0>
 using simd_mask = basic_simd_mask<T, simd_abi::Impl::native_abi<T, N>>;
 
-template <
-    typename T, typename... Flags,
-    std::enable_if_t<
-        !std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
-                        basic_simd<T, simd_abi::scalar>>,
-        bool> = false>
+template <typename T, typename... Flags>
+  requires Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
     basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
     simd_unchecked_load(const T* ptr,
@@ -258,12 +257,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
       basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(ptr, flag);
 }
 
-template <
-    typename T, typename... Flags,
-    std::enable_if_t<
-        std::is_same_v<basic_simd<T, simd_abi::Impl::host_fixed_native<T>>,
-                       basic_simd<T, simd_abi::scalar>>,
-        bool> = false>
+template <typename T, typename... Flags>
+  requires Impl::ScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar>
 simd_unchecked_load(const T* ptr,
                     simd_flags<Flags...> flag = simd_flag_default) {

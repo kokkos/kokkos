@@ -3,7 +3,13 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.core_impl;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 namespace {
 

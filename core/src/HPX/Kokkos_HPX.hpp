@@ -928,6 +928,12 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     init(league_size_request, 1);
   }
 
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal &other,
+                     typename traits::execution_space space)
+      : TeamPolicyInternal(other) {
+    this->m_space = std::move(space);
+  }
+
   inline int chunk_size() const { return m_chunk_size; }
 
   inline TeamPolicyInternal &set_chunk_size(

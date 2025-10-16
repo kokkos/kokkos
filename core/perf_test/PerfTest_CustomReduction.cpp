@@ -1,16 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.random;
+#else
 #include <Kokkos_Core.hpp>
+#include <Kokkos_Random.hpp>
+#endif
 #include <benchmark/benchmark.h>
 #include "Benchmark_Context.hpp"
 #include "PerfTest_Category.hpp"
-#include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-import kokkos.random;
-#else
-#include <Kokkos_Random.hpp>
-#endif
 #include <utility>
 
 namespace Test {

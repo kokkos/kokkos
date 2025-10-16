@@ -4,7 +4,12 @@
 #ifndef KOKKOS_STD_ALGORITHMS_ITER_SWAP_HPP
 #define KOKKOS_STD_ALGORITHMS_ITER_SWAP_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include "impl/Kokkos_Constraints.hpp"
 
 namespace Kokkos {

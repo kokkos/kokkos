@@ -8,7 +8,12 @@
 #define KOKKOS_IMPL_DO_NOT_WARN_INCLUDE_STATIC_CRS_GRAPH
 #include <Kokkos_StaticCrsGraph.hpp>
 #undef KOKKOS_IMPL_DO_NOT_WARN_INCLUDE_STATIC_CRS_GRAPH
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 /*--------------------------------------------------------------------------*/
 namespace Test {

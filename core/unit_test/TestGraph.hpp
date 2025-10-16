@@ -1,7 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <Kokkos_Graph.hpp>
 
 #include <gtest/gtest.h>
@@ -190,11 +195,6 @@ TEST_F(TEST_CATEGORY_FIXTURE_DEATH(graph), can_instantiate_only_once) {
 // one passed to the Kokkos::Graph constructor.
 TEST_F(TEST_CATEGORY_FIXTURE(graph),
        submit_onto_another_execution_space_instance) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
-  if (ex.concurrency() < 2)
-    GTEST_SKIP() << "insufficient number of supported concurrent threads";
-#endif
-
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1);
 
@@ -379,7 +379,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+    defined(KOKKOS_ARCH_MAXWELL)
   Kokkos::fence();
 #endif
   graph.submit(ex);
@@ -387,7 +387,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
 // These fences are only necessary because of the weirdness of how CUDA
 // UVM works on pre pascal cards.
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    (defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL))
+    defined(KOKKOS_ARCH_MAXWELL)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
 #endif
   graph.submit(ex);
@@ -640,11 +640,6 @@ FetchValuesAndContribute(ViewType, const size_t (&)[NumIndices],
 //  \ /         fence(exec_1)               enforce dependencies.
 //   D          D(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
-  if (ex.concurrency() < 4)
-    GTEST_SKIP() << "test needs at least 4 OpenMP threads";
-#endif
-
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 
@@ -717,11 +712,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), diamond) {
 //                  fence(exec_1)
 //    F             F(exec_0)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), end_of_submit_control_flow) {
-#ifdef KOKKOS_ENABLE_OPENMP  // FIXME_OPENMP partition_space
-  if (ex.concurrency() < 4)
-    GTEST_SKIP() << "insufficient number of supported concurrent threads";
-#endif
-
   const auto execution_space_instances =
       Kokkos::Experimental::partition_space(ex, 1, 1, 1, 1);
 

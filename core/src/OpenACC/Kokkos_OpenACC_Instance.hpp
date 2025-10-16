@@ -23,6 +23,7 @@ class OpenACCInternal {
  public:
   static int m_acc_device_num;
   static int m_concurrency;
+  static int m_next_async;
   int m_async_arg = acc_async_noval;
 
   OpenACCInternal() = default;
@@ -41,6 +42,24 @@ class OpenACCInternal {
 
   uint32_t instance_id() const noexcept;
 };
+
+// For each space in partition, assign a new async ID, ignoring weights
+template <class T>
+std::vector<OpenACC> impl_partition_space(const OpenACC& base_instance,
+                                          const std::vector<T>& weights) {
+  constexpr int KOKKOS_IMPL_ACC_ASYNC_RANGE_BEGIN  = 64;
+  constexpr int KOKKOS_IMPL_ACC_ASYNC_RANGE_LENGTH = 128;
+  std::vector<OpenACC> instances;
+  auto const n = weights.size();
+  instances.reserve(n);
+  std::generate_n(std::back_inserter(instances), n, [] {
+    OpenACCInternal::m_next_async = (OpenACCInternal::m_next_async + 1) %
+                                    KOKKOS_IMPL_ACC_ASYNC_RANGE_LENGTH;
+    return OpenACC(OpenACCInternal::m_next_async +
+                   KOKKOS_IMPL_ACC_ASYNC_RANGE_BEGIN);
+  });
+  return instances;
+}
 
 }  // namespace Kokkos::Experimental::Impl
 

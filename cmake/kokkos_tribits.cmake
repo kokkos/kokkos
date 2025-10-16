@@ -235,10 +235,20 @@ endmacro()
 function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   cmake_parse_arguments(PARSE "PLAIN_STYLE" "" "" ${ARGN})
 
+  #allow multiple languages to be used downstream
+  set(Kokkos_LANGUAGES "${KOKKOS_COMPILE_LANGUAGE}")
+  if(Kokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES)
+    if(Kokkos_ENABLE_HIP)
+      set(Kokkos_LANGUAGES "HIP,CXX")
+    elseif(Kokkos_ENABLE_CUDA)
+      set(Kokkos_LANGUAGES "CUDA,CXX")
+    endif()
+  endif()
+
   if(NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
     #I can use link options
     #check for CXX linkage using the simple 3.18 way
-    target_link_options(${LIBRARY_NAME} PUBLIC $<$<LINK_LANGUAGE:CXX>:${KOKKOS_LINK_OPTIONS}>)
+    target_link_options(${LIBRARY_NAME} PUBLIC $<$<LINK_LANGUAGE:${Kokkos_LANGUAGES}>:${KOKKOS_LINK_OPTIONS}>)
   else()
     #I can use link options
     #just assume CXX linkage
@@ -256,20 +266,16 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   endif()
 
   list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_COMPILE_OPTIONS})
-  target_compile_options(
-    ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_COMPILE_OPTIONS}>
-  )
+  target_compile_options(${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${Kokkos_LANGUAGES}>:${KOKKOS_COMPILE_OPTIONS}>)
 
   target_compile_definitions(
-    ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_COMPILE_DEFINITIONS}>
+    ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${Kokkos_LANGUAGES}>:${KOKKOS_COMPILE_DEFINITIONS}>
   )
 
   target_link_libraries(${LIBRARY_NAME} PUBLIC ${KOKKOS_LINK_LIBRARIES})
 
   if(KOKKOS_ENABLE_CUDA)
-    target_compile_options(
-      ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_CUDA_OPTIONS}>
-    )
+    target_compile_options(${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${Kokkos_LANGUAGES}>:${KOKKOS_CUDA_OPTIONS}>)
     set(NODEDUP_CUDAFE_OPTIONS)
     foreach(OPT ${KOKKOS_CUDAFE_OPTIONS})
       list(APPEND NODEDUP_CUDAFE_OPTIONS -Xcudafe ${OPT})
@@ -283,9 +289,7 @@ function(KOKKOS_SET_LIBRARY_PROPERTIES LIBRARY_NAME)
   endif()
 
   if(KOKKOS_ENABLE_HIP)
-    target_compile_options(
-      ${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${KOKKOS_COMPILE_LANGUAGE}>:${KOKKOS_AMDGPU_OPTIONS}>
-    )
+    target_compile_options(${LIBRARY_NAME} PUBLIC $<$<COMPILE_LANGUAGE:${Kokkos_LANGUAGES}>:${KOKKOS_AMDGPU_OPTIONS}>)
     list(APPEND ALL_KOKKOS_COMPILER_FLAGS ${KOKKOS_AMDGPU_OPTIONS})
   endif()
 

@@ -4,12 +4,18 @@
 #ifndef KOKKOS_CORE_PERFTEST_BENCHMARK_VIEW_COPY_HPP
 #define KOKKOS_CORE_PERFTEST_BENCHMARK_VIEW_COPY_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <benchmark/benchmark.h>
 
 #include "Benchmark_Context.hpp"
 #include <cmath>
+#include <stdexcept>
 
 namespace Test {
 

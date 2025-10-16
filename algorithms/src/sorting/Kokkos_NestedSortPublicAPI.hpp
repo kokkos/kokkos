@@ -5,7 +5,12 @@
 #define KOKKOS_NESTED_SORT_PUBLIC_API_HPP_
 
 #include "impl/Kokkos_NestedSortImpl.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
 
 namespace Kokkos {

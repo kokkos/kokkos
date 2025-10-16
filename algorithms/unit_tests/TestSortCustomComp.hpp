@@ -5,12 +5,13 @@
 #define KOKKOS_ALGORITHMS_UNITTESTS_TEST_SORT_CUSTOM_COMP_HPP
 
 #include <gtest/gtest.h>
-#include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
 import kokkos.random;
 import kokkos.sort;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_Random.hpp>
 #include <Kokkos_Sort.hpp>
 #endif

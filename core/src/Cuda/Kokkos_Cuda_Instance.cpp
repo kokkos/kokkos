@@ -11,7 +11,12 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 // #include <Cuda/Kokkos_Cuda_Error.hpp>
 // #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>

@@ -4,6 +4,7 @@
 #include "Benchmark_Context.hpp"
 
 #include <cmath>
+#include <stdexcept>
 
 namespace Test {
 

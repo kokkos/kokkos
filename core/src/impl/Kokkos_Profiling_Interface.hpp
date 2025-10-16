@@ -17,7 +17,7 @@ namespace Kokkos {
 namespace Tools {
 namespace Experimental {
 
-constexpr const uint32_t NumReservedDeviceIDs = 1;
+inline constexpr const uint32_t NumReservedDeviceIDs = 1;
 
 enum SpecialSynchronizationCases : int {
   GlobalDeviceSynchronization     = 1,

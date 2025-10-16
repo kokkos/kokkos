@@ -266,6 +266,12 @@ class TeamPolicyInternal<HIP, Properties...>
       : TeamPolicyInternal(typename traits::execution_space(), league_size_, -1,
                            -1) {}
 
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal& other,
+                     typename traits::execution_space space)
+      : TeamPolicyInternal(other) {
+    this->m_space = std::move(space);
+  }
+
   int chunk_size() const { return m_chunk_size; }
 
   TeamPolicyInternal& set_chunk_size(typename traits::index_type chunk_size_) {

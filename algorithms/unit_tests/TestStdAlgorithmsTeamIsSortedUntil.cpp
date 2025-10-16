@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <TestStdAlgorithmsCommon.hpp>
+#include <Kokkos_Assert.hpp>
 
 namespace Test {
 namespace stdalgos {

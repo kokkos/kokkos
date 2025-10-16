@@ -5,7 +5,12 @@
 #define KOKKOS_SORT_BY_KEY_PUBLIC_API_HPP_
 
 #include "./impl/Kokkos_SortByKeyImpl.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <algorithm>
 
 namespace Kokkos::Experimental {

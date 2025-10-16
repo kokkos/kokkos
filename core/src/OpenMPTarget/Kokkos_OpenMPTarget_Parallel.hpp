@@ -493,6 +493,12 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenMPTarget, Properties...>
         m_chunk_size(0) {
     init(league_size_request, team_size_request, 1);
   }
+
+  // FIXME_OPENMPTARGET https://github.com/kokkos/kokkos/issues/8510
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal& other,
+                     typename traits::execution_space)
+      : TeamPolicyInternal(other) {}
+
   inline static size_t vector_length_max() {
     return 32; /* TODO: this is bad. Need logic that is compiler and backend
                   aware */

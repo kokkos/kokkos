@@ -4,7 +4,12 @@
 #ifndef KOKKOS_STD_ALGORITHMS_SHIFT_RIGHT_IMPL_HPP
 #define KOKKOS_STD_ALGORITHMS_SHIFT_RIGHT_IMPL_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_Move.hpp>

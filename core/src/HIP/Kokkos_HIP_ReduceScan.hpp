@@ -239,7 +239,6 @@ __device__ void hip_intra_block_reduce_scan(
     typename FunctorType::pointer_type const base_data) {
   using pointer_type = typename FunctorType::pointer_type;
 
-  const unsigned value_count = functor.length();
   const unsigned not_less_power_of_two =
       Kokkos::Experimental::bit_ceil_builtin<unsigned>(blockDim.y);
   const unsigned BlockSizeMask = not_less_power_of_two - 1;
@@ -250,15 +249,19 @@ __device__ void hip_intra_block_reduce_scan(
   const bool is_full_warp = (((threadIdx.y >> HIPTraits::WarpIndexShift) + 1)
                              << HIPTraits::WarpIndexShift) <= blockDim.y;
 
-  auto block_reduce_step = [&functor, value_count](
-                               int const R, pointer_type const TD, int const S,
-                               pointer_type memory_start, int index_shift) {
+  auto block_reduce_step = [&functor](int const R, pointer_type const TD,
+                                      int const S, pointer_type memory_start,
+                                      int index_shift) {
+    // FIXME_HIP define value_count inside the lambda instead of capturing it to
+    // avoid a warning when using ROCm 7.0 with C++ 23
+    const unsigned value_count = functor.length();
     const auto join_ptr = TD - (value_count << S) + value_count * index_shift;
     if (R > ((1 << S) - 1) && join_ptr >= memory_start) {
       functor.join(TD, join_ptr);
     }
   };
 
+  const unsigned value_count = functor.length();
   // Intra-warp reduction:
   int bit_shift = 0;
   {

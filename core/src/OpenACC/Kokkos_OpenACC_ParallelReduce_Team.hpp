@@ -324,7 +324,6 @@ parallel_reduce(const Impl::TeamThreadRangeBoundariesStruct<
   value_type tmp;
   wrapped_reducer.init(&tmp);
 
-  ValueType tmp = ValueType();
 #pragma acc loop worker reduction(+ : tmp)
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)
     lambda(i, tmp);

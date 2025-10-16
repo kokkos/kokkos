@@ -306,6 +306,12 @@ struct MDRangePolicy<P, Properties...>
             Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
                 tile)) {}
 
+  MDRangePolicy(const Impl::PolicyUpdate, const MDRangePolicy& other,
+                typename traits::execution_space space)
+      : MDRangePolicy(other) {
+    this->m_space = std::move(space);
+  }
+
   template <class... OtherProperties>
   MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
       : traits(p),  // base class may contain data such as desired occupancy

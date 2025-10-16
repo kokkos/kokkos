@@ -8,15 +8,17 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_ERRORREPORTER
 #endif
 
-#include <vector>
-#include <Kokkos_Core.hpp>
-#include <Kokkos_View.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
 import kokkos.dual_view;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
 #endif
+
+#include <cstddef>
+#include <vector>
 
 namespace Kokkos {
 namespace Experimental {

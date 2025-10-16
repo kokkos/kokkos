@@ -3,7 +3,12 @@
 
 #include <cstdio>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 // This file is largely duplicating TestRange.hpp but it applies
 // Kokkos::Experimental require at every place where a parallel

@@ -7,7 +7,12 @@
 // If the kokkos_free does not free the allocated memory,
 // we will exceed the available space.
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <gtest/gtest.h>
 
 namespace Test {

@@ -5,7 +5,14 @@
 // testing library this tests that our shared-library loading based profiling
 // mechanisms work
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+
+#include <cstdint>
 #include <iostream>
 #include <sstream>
 

@@ -4,7 +4,12 @@
 #ifndef TESTNONTRIVIALSCALARTYPES_HPP_
 #define TESTNONTRIVIALSCALARTYPES_HPP_
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <Kokkos_Timer.hpp>
 #include <iostream>

@@ -12,19 +12,17 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
-
-#include <TestDynRankView.hpp>
-
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-import kokkos.unordered_map;
+import kokkos.core;
+import kokkos.unordered_impl;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_UnorderedMap.hpp>
 #endif
 
+#include <TestDynRankView.hpp>
 #include <TestGlobal2LocalIds.hpp>
-
 #include <TestUnorderedMapPerformance.hpp>
 
 namespace Performance {

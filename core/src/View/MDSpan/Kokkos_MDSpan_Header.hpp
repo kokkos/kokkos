@@ -17,6 +17,11 @@ static_assert(false,
 
 #include <Kokkos_Pair.hpp>
 
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+#include <cassert>
+#include <iostream>
+#endif
+
 namespace Kokkos {
 namespace detail {
 template <class IdxT1, class IdxT2>
@@ -41,6 +46,22 @@ struct index_pair_like<Kokkos::pair<IdxT1, IdxT2>, IndexType> {
 };
 }  // namespace detail
 }  // namespace Kokkos
+
+// FIXME_OPENMPTARGET We need to inject our own error handler as the default
+// mdspan one cannot be called from device code
+#ifdef KOKKOS_ENABLE_OPENMPTARGET
+namespace Kokkos::detail {
+KOKKOS_INLINE_FUNCTION void openmptarget_precondition_handler(const char *cond,
+                                                              const char *file,
+                                                              unsigned line) {
+  ::printf("%s:%u: precondition failure: `%s`\n", file, line, cond);
+  assert(0);
+}
+}  // namespace Kokkos::detail
+#define MDSPAN_IMPL_PRECONDITION_VIOLATION_HANDLER(cond, file, line) \
+  Kokkos::detail::openmptarget_precondition_handler(cond, file, line)
+#endif
+
 #include <mdspan/mdspan.hpp>
 
 #endif  // KOKKOS_EXPERIMENTAL_MDSPAN_HPP

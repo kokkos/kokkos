@@ -8,12 +8,12 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
-#include <Kokkos_Core.hpp>
-
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
 import kokkos.dynamic_view;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_DynamicView.hpp>
 #endif
 #include <Kokkos_Timer.hpp>

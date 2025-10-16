@@ -6,7 +6,12 @@
 
 #include "Kokkos_BinOpsPublicAPI.hpp"
 #include "impl/Kokkos_CopyOpsForBinSortImpl.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <algorithm>
 
 namespace Kokkos {

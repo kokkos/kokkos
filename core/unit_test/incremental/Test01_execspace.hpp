@@ -3,7 +3,12 @@
 
 /// @Kokkos_Feature_Level_Required:1
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <cstdio>
 #include <sstream>
 #include <type_traits>

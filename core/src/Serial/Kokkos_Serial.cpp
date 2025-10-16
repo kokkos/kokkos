@@ -5,7 +5,12 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <Serial/Kokkos_Serial.hpp>
 #include <impl/Kokkos_Traits.hpp>

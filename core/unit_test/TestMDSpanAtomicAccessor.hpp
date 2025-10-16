@@ -1,11 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.core_impl;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <type_traits>
 
 #include <gtest/gtest.h>
 #include <concepts>
+
+#include <desul/atomics.hpp>
 
 template <class T, class ExecutionSpace>
 void test_atomic_accessor() {

@@ -7,7 +7,12 @@
 
 #include <Kokkos_Macros.hpp>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_IsXnack.hpp>
 

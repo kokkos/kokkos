@@ -6,6 +6,7 @@
 
 #if defined(KOKKOS_ENABLE_OPENACC)
 #include <OpenACC/Kokkos_OpenACC.hpp>
+#include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <OpenACC/Kokkos_OpenACCSpace.hpp>
 #include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
 #include <OpenACC/Kokkos_OpenACC_SharedAllocationRecord.hpp>

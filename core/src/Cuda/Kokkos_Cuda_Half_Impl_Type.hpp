@@ -6,8 +6,8 @@
 
 #include <Kokkos_Macros.hpp>
 
-#if !(defined(KOKKOS_ARCH_KEPLER) || defined(KOKKOS_ARCH_MAXWELL50) || \
-      defined(KOKKOS_ARCH_MAXWELL52))
+#if !(defined(KOKKOS_ARCH_MAXWELL50) || defined(KOKKOS_ARCH_MAXWELL52))
+
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
 
@@ -28,7 +28,6 @@ struct bhalf_impl_t {
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_IMPL_HALF_TYPE_DEFINED
-#endif  // Disables for half_t on cuda:
-        // KEPLER30||KEPLER32||KEPLER37||MAXWELL50||MAXWELL52
+#endif  // Disables for half_t on cuda: MAXWELL50||MAXWELL52
 
 #endif

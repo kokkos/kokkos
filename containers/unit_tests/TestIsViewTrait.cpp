@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
 import kokkos.dual_view;
 import kokkos.dyn_rank_view;
 import kokkos.dynamic_view;
 import kokkos.offset_view;
 import kokkos.scatter_view;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
 #include <Kokkos_DynRankView.hpp>
 #include <Kokkos_DynamicView.hpp>

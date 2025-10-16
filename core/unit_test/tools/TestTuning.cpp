@@ -4,7 +4,12 @@
 // This file tests the primitives of the Tuning system
 
 #include <iostream>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <stdexcept>
 #include <string>
 #include <unordered_map>

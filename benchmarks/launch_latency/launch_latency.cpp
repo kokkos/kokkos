@@ -20,7 +20,15 @@
     3. Avg functor completion latency: (M (launch + sync)) / M
 */
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+
+#include <iostream>
+#include <string>
 
 template <int V>
 struct TestFunctor {

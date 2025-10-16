@@ -6,6 +6,8 @@
 #include <std_algorithms/impl/Kokkos_IdentityReferenceUnaryFunctor.hpp>
 #include <std_algorithms/impl/Kokkos_FunctorsForExclusiveScan.hpp>
 #endif
+#include <Kokkos_Assert.hpp>
+
 #include <utility>
 #include <iomanip>
 

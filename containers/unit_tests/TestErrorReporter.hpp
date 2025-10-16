@@ -6,11 +6,12 @@
 
 #include <gtest/gtest.h>
 #include <iostream>
-#include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
 import kokkos.error_reporter;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_ErrorReporter.hpp>
 #endif
 

@@ -12,7 +12,12 @@
 
 #include "Benchmark_Context.hpp"
 #include "PerfTest_Category.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 using exec_space = Kokkos::DefaultExecutionSpace;
 

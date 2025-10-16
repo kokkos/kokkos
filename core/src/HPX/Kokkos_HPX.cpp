@@ -5,7 +5,12 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #ifdef KOKKOS_ENABLE_HPX
 #include <HPX/Kokkos_HPX.hpp>

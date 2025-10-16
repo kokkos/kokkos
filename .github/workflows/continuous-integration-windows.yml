@@ -49,3 +49,23 @@ jobs:
       run: |
         export PATH="$(pwd)/build/core/src/Release:$(pwd)/build/containers/src/Release:$PATH"
         ctest --test-dir build -C Release -j 4 --output-on-failure
+
+  windows-clang:
+   # Threads build on Windows using ClangCL
+    name: Threads Clang VS-2022
+    runs-on: windows-2025
+
+    steps:
+    - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+    - name: configure
+      shell: bash
+      run: |
+        cmake -B build -T ClangCL -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ENABLE_TESTS=ON
+    - name: build library
+      shell: bash
+      run: |
+        cmake --build build --parallel 4 --config Release
+    - name: run tests
+      shell: bash
+      run: |
+        ctest --test-dir build -C Release -j 4 --output-on-failure

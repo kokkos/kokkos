@@ -3,7 +3,12 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <sstream>
 #include <iostream>
 
@@ -264,6 +269,9 @@ struct TestViewAllocationLargeRank {
 TEST(TEST_CATEGORY, view_allocation_large_rank) {
 #ifdef KOKKOS_ARCH_AMPERE87
   GTEST_SKIP() << "skipping for Jetson devices that have only 8GB memory";
+#endif
+#ifdef KOKKOS_IMPL_32BIT
+  GTEST_SKIP() << "skipping for 32-bit builds";
 #endif
   using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
   using MemorySpace    = typename TEST_EXECSPACE::memory_space;

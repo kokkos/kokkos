@@ -83,10 +83,6 @@ if(Kokkos_ENABLE_CUDA
   set(KOKKOS_SHOW_CUDA_ARCHS ON)
 endif()
 
-kokkos_arch_option(KEPLER30 GPU "NVIDIA Kepler generation CC 3.0" "KOKKOS_SHOW_CUDA_ARCHS")
-kokkos_arch_option(KEPLER32 GPU "NVIDIA Kepler generation CC 3.2" "KOKKOS_SHOW_CUDA_ARCHS")
-kokkos_arch_option(KEPLER35 GPU "NVIDIA Kepler generation CC 3.5" "KOKKOS_SHOW_CUDA_ARCHS")
-kokkos_arch_option(KEPLER37 GPU "NVIDIA Kepler generation CC 3.7" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(MAXWELL50 GPU "NVIDIA Maxwell generation CC 5.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(MAXWELL52 GPU "NVIDIA Maxwell generation CC 5.2" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(MAXWELL53 GPU "NVIDIA Maxwell generation CC 5.3" "KOKKOS_SHOW_CUDA_ARCHS")
@@ -962,10 +958,6 @@ endfunction()
 
 #These will define KOKKOS_CUDA_ARCH_FLAG
 #to the corresponding flag name if ON
-check_cuda_arch(KEPLER30 sm_30)
-check_cuda_arch(KEPLER32 sm_32)
-check_cuda_arch(KEPLER35 sm_35)
-check_cuda_arch(KEPLER37 sm_37)
 check_cuda_arch(MAXWELL50 sm_50)
 check_cuda_arch(MAXWELL52 sm_52)
 check_cuda_arch(MAXWELL53 sm_53)
@@ -1260,15 +1252,6 @@ if(KOKKOS_ENABLE_CUDA AND NOT CUDA_ARCH_ALREADY_SPECIFIED)
         "If you are cross-compiling, you should try to do this on a compute node."
     )
   endif()
-endif()
-
-#Regardless of version, make sure we define the general architecture name
-if(KOKKOS_ARCH_KEPLER30
-   OR KOKKOS_ARCH_KEPLER32
-   OR KOKKOS_ARCH_KEPLER35
-   OR KOKKOS_ARCH_KEPLER37
-)
-  set(KOKKOS_ARCH_KEPLER ON)
 endif()
 
 #Regardless of version, make sure we define the general architecture name

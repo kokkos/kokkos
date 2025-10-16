@@ -14,7 +14,13 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_DYNRANKVIEW
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.core_impl;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <KokkosExp_InterOp.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <type_traits>

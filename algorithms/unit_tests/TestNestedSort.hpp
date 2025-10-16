@@ -5,6 +5,7 @@
 #define KOKKOS_ALGORITHMS_UNITTESTS_TEST_NESTED_SORT_HPP
 
 #include <gtest/gtest.h>
+#include <algorithm>
 #include <unordered_set>
 #include <random>
 #include <Kokkos_Macros.hpp>

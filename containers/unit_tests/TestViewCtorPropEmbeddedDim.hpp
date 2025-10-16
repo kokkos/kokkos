@@ -5,11 +5,12 @@
 
 #include <gtest/gtest.h>
 
-#include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
 import kokkos.dyn_rank_view;
 #else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_DynRankView.hpp>
 #endif
 

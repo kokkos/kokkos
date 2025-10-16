@@ -3,7 +3,13 @@
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#include <Kokkos_Assert.hpp>
 
 namespace {
 // Do not rely on deep_copy(0) as we want to test it!

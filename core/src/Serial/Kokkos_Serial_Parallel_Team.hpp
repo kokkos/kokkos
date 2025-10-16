@@ -157,6 +157,12 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
                            league_size_request, team_size_request,
                            vector_length_request) {}
 
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal& other,
+                     typename traits::execution_space space)
+      : TeamPolicyInternal(other) {
+    this->m_space = std::move(space);
+  }
+
   inline int chunk_size() const { return m_chunk_size; }
 
   /** \brief set chunk_size to a discrete value*/

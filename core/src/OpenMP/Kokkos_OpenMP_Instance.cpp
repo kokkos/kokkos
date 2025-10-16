@@ -5,8 +5,14 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
+#include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_CPUDiscovery.hpp>
 #include <impl/Kokkos_Tools.hpp>

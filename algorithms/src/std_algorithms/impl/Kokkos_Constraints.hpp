@@ -4,8 +4,17 @@
 #ifndef KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 #define KOKKOS_STD_ALGORITHMS_CONSTRAINTS_HPP_
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
+#include <Kokkos_Assert.hpp>
+
 #include <Kokkos_DetectionIdiom.hpp>
+
+#include <iterator>
 
 namespace Kokkos {
 namespace Experimental {
