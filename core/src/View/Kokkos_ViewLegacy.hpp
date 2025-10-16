@@ -236,9 +236,12 @@ class View : public ViewTraits<DataType, Properties...> {
  public:
   //----------------------------------------
   /** \brief  Compatible view of data type */
-  using type = View<typename traits::data_type, typename traits::array_layout,
+  using type = std::conditional_t<
+      has_hooks_policy, View<typename traits::data_type, typename traits::array_layout,
                     typename traits::device_type, typename traits::hooks_policy,
-                    typename traits::memory_traits>;
+                    typename traits::memory_traits>,
+      View<typename traits::data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   /** \brief  Compatible view of array of data types */
@@ -246,23 +249,33 @@ class View : public ViewTraits<DataType, Properties...> {
 #endif
 
   /** \brief  Compatible view of const data type */
-  using const_type =
+  using const_type = std::conditional_t<
+      has_hooks_policy,
       View<typename traits::const_data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
-           typename traits::memory_traits>;
+           typename traits::memory_traits>,
+      View<typename traits::const_data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>>;
 
   /** \brief  Compatible view of non-const data type */
-  using non_const_type =
+  using non_const_type = std::conditional_t<
+      has_hooks_policy,
       View<typename traits::non_const_data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
-           typename traits::memory_traits>;
+           typename traits::memory_traits>,
+      View<typename traits::non_const_data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>>;
 
   /** \brief  Compatible host mirror view */
-  using host_mirror_type =
+  using host_mirror_type = std::conditional_t<
+      has_hooks_policy,
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>,
-           typename traits::hooks_policy>;
+           typename traits::hooks_policy>,
+      View<typename traits::non_const_data_type, typename traits::array_layout,
+           Device<DefaultHostExecutionSpace,
+                  typename traits::host_mirror_space::memory_space>>>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible host mirror view */
