@@ -482,7 +482,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
          Kokkos::Impl::IsLayoutRightPadded<
              typename base_t::layout_type>::value ||
          std::is_same_v<typename base_t::layout_type, Kokkos::layout_stride>))
-  KOKKOS_FUNCTION constexpr base_t::reference operator()(
+  KOKKOS_FUNCTION constexpr reference_type operator()(
       OtherIndexTypes... idx) const {
     KOKKOS_IMPL_BASICVIEW_OPERATOR_VERIFY(idx...);
     return m_acc.access(
