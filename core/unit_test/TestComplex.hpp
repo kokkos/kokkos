@@ -818,6 +818,36 @@ struct TestStdComplexOperators {
     kcomplex_t k15 = s / k;
     ASSERT_FLOAT_EQ(k15.real(), .25);
     ASSERT_NEAR(k15.imag(), 0., epsilon);
+
+    bool b16 = (k == s);
+    ASSERT_FALSE(b16);
+
+    bool b17 = (s == k);
+    ASSERT_FALSE(b17);
+
+    bool b18 = (k != s);
+    ASSERT_TRUE(b18);
+
+    bool b19 = (s != k);
+    ASSERT_TRUE(b19);
+
+    bool b20 = (k == k);
+    ASSERT_TRUE(b20);
+
+    bool b21 = (k == epsilon);
+    ASSERT_FALSE(b21);
+
+    bool b22 = (epsilon == k);
+    ASSERT_FALSE(b22);
+
+    bool b23 = (k != k);
+    ASSERT_FALSE(b23);
+
+    bool b24 = (k != epsilon);
+    ASSERT_TRUE(b24);
+
+    bool b25 = (epsilon != k);
+    ASSERT_TRUE(b25);
   }
 };
 
