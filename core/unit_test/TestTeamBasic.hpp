@@ -478,9 +478,7 @@ TEST(TEST_CATEGORY, team_single_team_int_ptr) {
 }
 
 TEST(TEST_CATEGORY, team_handle_by_value) {
-  {
-    TestTeamPolicyHandleByValue<TEST_EXECSPACE>();
-  }
+  { TestTeamPolicyHandleByValue<TEST_EXECSPACE>(); }
 }
 
 }  // namespace Test
