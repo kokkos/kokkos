@@ -26,7 +26,7 @@ struct LayoutToIterationPattern<Kokkos::LayoutLeft> {
 };
 
 template <typename ScalarType, typename ViewType>
-void check_computation(const ViewType &A, const ViewType &B) {
+void check_computation(const ViewType& A, const ViewType& B) {
   int numErrors = 0;
   auto Ahost    = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), A);
   auto Bhost    = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), B);
@@ -101,7 +101,7 @@ void check_computation(const ViewType &A, const ViewType &B) {
 }
 
 template <typename FunctorType, std::size_t... Idx>
-void bench_mdrange(benchmark::State &state, std::index_sequence<Idx...>) {
+void bench_mdrange(benchmark::State& state, std::index_sequence<Idx...>) {
   using execution_space = typename FunctorType::execution_space;
   using view_type       = typename FunctorType::view_type;
 
@@ -140,14 +140,14 @@ void bench_mdrange(benchmark::State &state, std::index_sequence<Idx...>) {
 }
 
 template <typename FunctorType>
-void bench_mdrange(benchmark::State &state) {
+void bench_mdrange(benchmark::State& state) {
   bench_mdrange<FunctorType>(
       state, std::make_index_sequence<FunctorType::dimension>());
 }
 
 template <typename T, std::size_t Rank>
 struct add_pointer_n {
-  using type = typename add_pointer_n<T *, Rank - 1>::type;
+  using type = typename add_pointer_n<T*, Rank - 1>::type;
 };
 
 template <typename T>
@@ -175,8 +175,8 @@ struct MDRange {
   const Kokkos::Array<int, dimension> ranges;
 
   template <typename... Dims>
-  MDRange(const view_type &A_, const view_type &B_,
-          const Kokkos::Array<int, dimension> &dims)
+  MDRange(const view_type& A_, const view_type& B_,
+          const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -208,8 +208,8 @@ struct MDRange {
                      B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
   }
 
-  static auto get_policy(const Kokkos::Array<int, dimension> &end,
-                         Kokkos::Array<int, dimension> &tile) {
+  static auto get_policy(const Kokkos::Array<int, dimension>& end,
+                         Kokkos::Array<int, dimension>& tile) {
     constexpr Kokkos::Iterate iteration_pattern =
         LayoutToIterationPattern<TestLayout>::pattern;
     const Kokkos::MDRangePolicy<
@@ -244,8 +244,8 @@ struct CollapseTwo {
   view_type B;
   const Kokkos::Array<int, dimension> ranges;
 
-  CollapseTwo(view_type &A_, const view_type &B_,
-              const Kokkos::Array<int, dimension> &dims)
+  CollapseTwo(view_type& A_, const view_type& B_,
+              const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -304,8 +304,8 @@ struct CollapseTwo {
     }
   }
 
-  static auto get_policy(const Kokkos::Array<int, dimension> &dims,
-                         const Kokkos::Array<int, dimension> &) {
+  static auto get_policy(const Kokkos::Array<int, dimension>& dims,
+                         const Kokkos::Array<int, dimension>&) {
     int collapse_index_rangeA = 0;
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       collapse_index_rangeA = std::reduce(Kokkos::begin(dims),
@@ -344,8 +344,8 @@ struct CollapseAll {
   const Kokkos::Array<int, dimension> ranges;
 
   template <typename... Dims>
-  CollapseAll(view_type &A_, const view_type &B_,
-              const Kokkos::Array<int, dimension> &dims)
+  CollapseAll(view_type& A_, const view_type& B_,
+              const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
   KOKKOS_INLINE_FUNCTION
@@ -426,8 +426,8 @@ struct CollapseAll {
     }
   }
 
-  static auto get_policy(const Kokkos::Array<int, dimension> &dims,
-                         const Kokkos::Array<int, dimension> &) {
+  static auto get_policy(const Kokkos::Array<int, dimension>& dims,
+                         const Kokkos::Array<int, dimension>&) {
     const int flat_index_range = std::reduce(
         Kokkos::begin(dims), Kokkos::end(dims), 1, std::multiplies<int>{});
     return Kokkos::RangePolicy<execution_space>(0, flat_index_range);
