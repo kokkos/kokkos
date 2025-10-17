@@ -61,10 +61,14 @@ static void MallocTouchFree(benchmark::State& state) {
   Impl(state, true, When::after_free);
 }
 
+#ifdef KOKKOS_IMPL_32BIT
+constexpr int test_range = 30;
+#else
 #ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
 constexpr int test_range = 31;
 #else
 constexpr int test_range = 32;
+#endif
 #endif
 
 BENCHMARK(Malloc)
