@@ -59,7 +59,6 @@ void impl_partition_space(const OpenACC& base_instance, const Weights& weights,
     return OpenACC(OpenACCInternal::m_next_async +
                    KOKKOS_IMPL_ACC_ASYNC_RANGE_BEGIN);
   });
-  return instances;
 }
 
 }  // namespace Kokkos::Experimental::Impl
