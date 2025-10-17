@@ -177,6 +177,13 @@ TEST(TEST_CATEGORY, partitioning_by_args) {
 }
 
 TEST(TEST_CATEGORY, partitioning_by_args_with_structured_bindings_1) {
+  // FIXME_OPENMP
+  // https://github.com/kokkos/kokkos/pull/8556#issuecomment-3407533379
+#if defined(KOKKOS_ENABLE_OPENMP)
+  if constexpr (std::same_as<TEST_EXECSPACE, Kokkos::OpenMP>) {
+    GTEST_SKIP() << "OpenMP partitioning with one weight won't pass the tests.";
+  }
+#endif
   TEST_EXECSPACE exec{};
   auto [instance] = Kokkos::Experimental::partition_space(exec, 1);
   test_partitioning(exec, instance);
