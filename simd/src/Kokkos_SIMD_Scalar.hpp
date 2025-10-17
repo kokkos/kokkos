@@ -62,6 +62,11 @@ class basic_simd_mask<T, simd_abi::scalar> {
     return basic_simd_mask(!m_value);
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd_mask operator~()
+      const noexcept {
+    return basic_simd_mask(~m_value);
+  }
+
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator bool()
       const noexcept {
     return m_value;
@@ -235,6 +240,10 @@ class basic_simd<T, simd_abi::scalar> {
     return basic_simd(-m_value);
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd operator~() const noexcept {
+    return basic_simd(~m_value);
+  }
+
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator+(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value + rhs.m_value);
@@ -279,6 +288,10 @@ class basic_simd<T, simd_abi::scalar> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return lhs.m_value | rhs.m_value;
   }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator^(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return lhs.m_value ^ rhs.m_value;
+  }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator<<(
       basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(lhs.m_value << rhs);
@@ -314,6 +327,21 @@ class basic_simd<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator/=(
       basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs / rhs;
+    return lhs;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd& operator&=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs & rhs;
+    return lhs;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd& operator|=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs | rhs;
+    return lhs;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd& operator^=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs ^ rhs;
     return lhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator<<=(
@@ -587,8 +615,9 @@ max(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& a,
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class T>
-class KOKKOS_DEPRECATED const_where_expression<
-    basic_simd_mask<T, simd_abi::scalar>, basic_simd<T, simd_abi::scalar>> {
+class KOKKOS_DEPRECATED
+    const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
+                           basic_simd<T, simd_abi::scalar>> {
  public:
   using abi_type   = simd_abi::scalar;
   using value_type = basic_simd<T, abi_type>;

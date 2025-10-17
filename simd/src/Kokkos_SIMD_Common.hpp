@@ -363,6 +363,48 @@ operator/=(where_expression<M, T>& lhs, U&& rhs) {
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
+template <class T, Impl::NonScalarAbi Abi>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask<T, Abi>& operator&=(
+    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+  lhs = lhs & rhs;
+  return lhs;
+}
+
+template <class T, Impl::NonScalarAbi Abi>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask<T, Abi>& operator|=(
+    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+  lhs = lhs | rhs;
+  return lhs;
+}
+
+template <class T, Impl::NonScalarAbi Abi>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask<T, Abi>& operator^=(
+    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+  lhs = lhs ^ rhs;
+  return lhs;
+}
+
+template <class T, Impl::NonScalarAbi Abi>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator&=(
+    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+  lhs = lhs & rhs;
+  return lhs;
+}
+
+template <class T, Impl::NonScalarAbi Abi>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator|=(
+    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+  lhs = lhs | rhs;
+  return lhs;
+}
+
+template <class T, Impl::NonScalarAbi Abi>
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator^=(
+    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+  lhs = lhs ^ rhs;
+  return lhs;
+}
+
 template <class T, class U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator>>=(
     basic_simd<T, Abi>& lhs, U&& rhs) {
