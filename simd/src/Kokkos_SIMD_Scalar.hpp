@@ -64,7 +64,9 @@ class basic_simd_mask<T, simd_abi::scalar> {
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd_mask operator~()
       const noexcept {
-    return basic_simd_mask(~m_value);
+    // We don't use ~m_value here as it will give the wrong result when m_value
+    // is true (~1 == 0b111...1110 which still converts to true).
+    return basic_simd_mask(!m_value);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator bool()

@@ -138,10 +138,63 @@ inline void host_check_bitwise_ops() {
   }
 }
 
+template <typename Abi, typename DataType>
+KOKKOS_INLINE_FUNCTION void host_device_check_mask_bitwise_ops() {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
+    using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
+    constexpr size_t width = mask_type::size();
+
+    mask_type const all(true);
+    mask_type const none(false);
+    mask_type const hi(KOKKOS_LAMBDA(auto const i) { return i >= width / 2; });
+    mask_type const lo(KOKKOS_LAMBDA(auto const i) { return i < width / 2; });
+    mask_type const even(KOKKOS_LAMBDA(auto const i) { return i % 2 == 0; });
+    mask_type const odd(KOKKOS_LAMBDA(auto const i) { return i % 2 == 1; });
+
+    check_mask_equality(~all, none);
+    check_mask_equality(~none, all);
+    check_mask_equality(~hi, lo);
+    check_mask_equality(~lo, hi);
+    check_mask_equality(~even, odd);
+    check_mask_equality(~odd, even);
+
+    check_mask_equality(all & all, all);
+    check_mask_equality(all & none, none);
+    check_mask_equality(none & none, none);
+    check_mask_equality(all & hi, hi);
+    check_mask_equality(hi & hi, hi);
+    check_mask_equality(lo & lo, lo);
+    check_mask_equality(hi & lo, none);
+    check_mask_equality(even & even, even);
+    check_mask_equality(even & odd, none);
+
+    check_mask_equality(all | all, all);
+    check_mask_equality(all | none, all);
+    check_mask_equality(all | hi, all);
+    check_mask_equality(none | none, none);
+    check_mask_equality(none | hi, hi);
+    check_mask_equality(hi | hi, hi);
+    check_mask_equality(hi | lo, all);
+    check_mask_equality(even | even, even);
+    check_mask_equality(even | odd, all);
+
+    check_mask_equality(all ^ all, none);
+    check_mask_equality(all ^ none, all);
+    check_mask_equality(all ^ hi, lo);
+    check_mask_equality(none ^ none, none);
+    check_mask_equality(none ^ hi, hi);
+    check_mask_equality(hi ^ hi, none);
+    check_mask_equality(hi ^ lo, all);
+    check_mask_equality(even ^ even, none);
+    check_mask_equality(even ^ odd, all);
+  }
+}
+
 template <typename Abi, typename... DataTypes>
 inline void host_check_bitwise_ops_all_types(
     Kokkos::Experimental::Impl::data_types<DataTypes...>) {
   (host_check_bitwise_ops<Abi, DataTypes>(), ...);
+  (host_device_check_mask_bitwise_ops<Abi, DataTypes>(), ...);
 }
 
 template <typename... Abis>
@@ -152,9 +205,9 @@ inline void host_check_bitwise_ops_all_abis(
 }
 
 template <class Abi, class Loader, bool is_compound_op, class BinaryOp, class T>
-void device_check_bitwise_op_one_loader(BinaryOp binary_op, std::size_t n,
-                                        T const* first_args,
-                                        T const* second_args) {
+KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(
+    BinaryOp binary_op, std::size_t n, T const* first_args,
+    T const* second_args) {
   Loader loader;
   using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
   constexpr std::size_t width = simd_type::size();
@@ -192,8 +245,9 @@ void device_check_bitwise_op_one_loader(BinaryOp binary_op, std::size_t n,
 }
 
 template <class Abi, class Loader, bool, class UnaryOp, class T>
-void device_check_bitwise_op_one_loader(UnaryOp unary_op, std::size_t n,
-                                        T const* args) {
+KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(UnaryOp unary_op,
+                                                               std::size_t n,
+                                                               T const* args) {
   Loader loader;
   using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
 
@@ -222,8 +276,8 @@ void device_check_bitwise_op_one_loader(UnaryOp unary_op, std::size_t n,
 }
 
 template <class Abi, bool is_compound_op, class Op, class... T>
-inline void device_check_bitwise_op_all_loaders(Op op, std::size_t n,
-                                                T const*... args) {
+KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_all_loaders(
+    Op op, std::size_t n, T const*... args) {
   device_check_bitwise_op_one_loader<Abi, load_element_aligned, is_compound_op>(
       op, n, args...);
   device_check_bitwise_op_one_loader<Abi, load_masked, is_compound_op>(op, n,
@@ -235,8 +289,8 @@ inline void device_check_bitwise_op_all_loaders(Op op, std::size_t n,
 }
 
 template <typename Abi, typename DataType, size_t n>
-inline void device_check_all_bitwise_ops(const DataType (&first_args)[n],
-                                         const DataType (&second_args)[n]) {
+KOKKOS_INLINE_FUNCTION void device_check_all_bitwise_ops(
+    const DataType (&first_args)[n], const DataType (&second_args)[n]) {
   device_check_bitwise_op_all_loaders<Abi, false>(bitwise_not(), n, first_args);
   device_check_bitwise_op_all_loaders<Abi, false>(bitwise_and(), n, first_args,
                                                   second_args);
@@ -253,7 +307,7 @@ inline void device_check_all_bitwise_ops(const DataType (&first_args)[n],
 }
 
 template <typename Abi, typename DataType>
-inline void device_check_bitwise_ops() {
+KOKKOS_INLINE_FUNCTION void device_check_bitwise_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi> &&
                 std::is_integral_v<DataType>) {
     constexpr size_t alignment =
@@ -279,13 +333,14 @@ inline void device_check_bitwise_ops() {
 }
 
 template <typename Abi, typename... DataTypes>
-inline void device_check_bitwise_ops_all_types(
+KOKKOS_INLINE_FUNCTION void device_check_bitwise_ops_all_types(
     Kokkos::Experimental::Impl::data_types<DataTypes...>) {
   (device_check_bitwise_ops<Abi, DataTypes>(), ...);
+  (host_device_check_mask_bitwise_ops<Abi, DataTypes>(), ...);
 }
 
 template <typename... Abis>
-inline void device_check_bitwise_ops_all_abis(
+KOKKOS_INLINE_FUNCTION void device_check_bitwise_ops_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
   using DataTypes = Kokkos::Experimental::Impl::data_type_set;
   (device_check_bitwise_ops_all_types<Abis>(DataTypes()), ...);
