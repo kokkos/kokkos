@@ -97,17 +97,17 @@ class basic_simd_mask<T, simd_abi::scalar> {
 
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask& operator&=(
       basic_simd_mask& lhs, basic_simd_mask const& rhs) noexcept {
-    lhs &= rhs;
+    lhs = lhs & rhs;
     return lhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask& operator|=(
       basic_simd_mask& lhs, basic_simd_mask const& rhs) noexcept {
-    lhs |= rhs;
+    lhs = lhs | rhs;
     return lhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask& operator^=(
       basic_simd_mask& lhs, basic_simd_mask const& rhs) noexcept {
-    lhs ^= rhs;
+    lhs = lhs ^ rhs;
     return lhs;
   }
 
