@@ -617,9 +617,8 @@ max(Experimental::basic_simd<T, Experimental::simd_abi::scalar> const& a,
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <class T>
-class KOKKOS_DEPRECATED
-    const_where_expression<basic_simd_mask<T, simd_abi::scalar>,
-                           basic_simd<T, simd_abi::scalar>> {
+class KOKKOS_DEPRECATED const_where_expression<
+    basic_simd_mask<T, simd_abi::scalar>, basic_simd<T, simd_abi::scalar>> {
  public:
   using abi_type   = simd_abi::scalar;
   using value_type = basic_simd<T, abi_type>;
