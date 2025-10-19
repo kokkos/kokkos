@@ -75,13 +75,9 @@ export {
   using ::Kokkos::Experimental::operator*;
   using ::Kokkos::Experimental::operator-;
   using ::Kokkos::Experimental::operator/;
-  using ::Kokkos::Experimental::operator~;
   using ::Kokkos::Experimental::operator&=;
   using ::Kokkos::Experimental::operator|=;
   using ::Kokkos::Experimental::operator^=;
-  using ::Kokkos::Experimental::operator&;
-  using ::Kokkos::Experimental::operator|;
-  using ::Kokkos::Experimental::operator^;
   using ::Kokkos::Experimental::operator>>=;
   using ::Kokkos::Experimental::operator<<=;
 
