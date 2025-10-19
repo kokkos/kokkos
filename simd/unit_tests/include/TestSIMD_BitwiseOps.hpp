@@ -307,20 +307,20 @@ inline void host_check_mask_bitwise_ops() {
     mask_type const all(true);
     mask_type const none(false);
 
-    check_mask_equality(~all, none);
-    check_mask_equality(~none, all);
+    host_check_mask_equality(~all, none);
+    host_check_mask_equality(~none, all);
 
-    check_mask_equality(all & all, all);
-    check_mask_equality(all & none, none);
-    check_mask_equality(none & none, none);
+    host_check_mask_equality(all & all, all);
+    host_check_mask_equality(all & none, none);
+    host_check_mask_equality(none & none, none);
 
-    check_mask_equality(all | all, all);
-    check_mask_equality(all | none, all);
-    check_mask_equality(none | none, none);
+    host_check_mask_equality(all | all, all);
+    host_check_mask_equality(all | none, all);
+    host_check_mask_equality(none | none, none);
 
-    check_mask_equality(all ^ all, none);
-    check_mask_equality(all ^ none, all);
-    check_mask_equality(none ^ none, none);
+    host_check_mask_equality(all ^ all, none);
+    host_check_mask_equality(all ^ none, all);
+    host_check_mask_equality(none ^ none, none);
 
     if constexpr (!std::is_same_v<Abi,
                                   Kokkos::Experimental::simd_abi::scalar>) {
@@ -329,31 +329,31 @@ inline void host_check_mask_bitwise_ops() {
       mask_type const even([=](std::size_t const i) { return i % 2 == 0; });
       mask_type const odd([=](std::size_t const i) { return i % 2 == 1; });
 
-      check_mask_equality(~hi, lo);
-      check_mask_equality(~lo, hi);
-      check_mask_equality(~even, odd);
-      check_mask_equality(~odd, even);
+      host_check_mask_equality(~hi, lo);
+      host_check_mask_equality(~lo, hi);
+      host_check_mask_equality(~even, odd);
+      host_check_mask_equality(~odd, even);
 
-      check_mask_equality(all & hi, hi);
-      check_mask_equality(hi & hi, hi);
-      check_mask_equality(lo & lo, lo);
-      check_mask_equality(hi & lo, none);
-      check_mask_equality(even & even, even);
-      check_mask_equality(even & odd, none);
+      host_check_mask_equality(all & hi, hi);
+      host_check_mask_equality(hi & hi, hi);
+      host_check_mask_equality(lo & lo, lo);
+      host_check_mask_equality(hi & lo, none);
+      host_check_mask_equality(even & even, even);
+      host_check_mask_equality(even & odd, none);
 
-      check_mask_equality(all | hi, all);
-      check_mask_equality(none | hi, hi);
-      check_mask_equality(hi | hi, hi);
-      check_mask_equality(hi | lo, all);
-      check_mask_equality(even | even, even);
-      check_mask_equality(even | odd, all);
+      host_check_mask_equality(all | hi, all);
+      host_check_mask_equality(none | hi, hi);
+      host_check_mask_equality(hi | hi, hi);
+      host_check_mask_equality(hi | lo, all);
+      host_check_mask_equality(even | even, even);
+      host_check_mask_equality(even | odd, all);
 
-      check_mask_equality(all ^ hi, lo);
-      check_mask_equality(none ^ hi, hi);
-      check_mask_equality(hi ^ hi, none);
-      check_mask_equality(hi ^ lo, all);
-      check_mask_equality(even ^ even, none);
-      check_mask_equality(even ^ odd, all);
+      host_check_mask_equality(all ^ hi, lo);
+      host_check_mask_equality(none ^ hi, hi);
+      host_check_mask_equality(hi ^ hi, none);
+      host_check_mask_equality(hi ^ lo, all);
+      host_check_mask_equality(even ^ even, none);
+      host_check_mask_equality(even ^ odd, all);
     }
   }
 }
@@ -364,8 +364,8 @@ inline void host_check_mask_bitwise_assignment_op(
     Kokkos::Experimental::basic_simd_mask<Abi, DataType> const& rhs,
     Kokkos::Experimental::basic_simd_mask<Abi, DataType> const& expected) {
   auto const res = op.on_host(lhs, rhs);
-  check_mask_equality(res, expected);
-  check_mask_equality(lhs, expected);
+  host_check_mask_equality(res, expected);
+  host_check_mask_equality(lhs, expected);
 }
 
 template <typename Abi, typename DataType>
@@ -442,20 +442,20 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_bitwise_ops() {
     mask_type const all(true);
     mask_type const none(false);
 
-    check_mask_equality(~all, none);
-    check_mask_equality(~none, all);
+    device_check_mask_equality(~all, none);
+    device_check_mask_equality(~none, all);
 
-    check_mask_equality(all & all, all);
-    check_mask_equality(all & none, none);
-    check_mask_equality(none & none, none);
+    device_check_mask_equality(all & all, all);
+    device_check_mask_equality(all & none, none);
+    device_check_mask_equality(none & none, none);
 
-    check_mask_equality(all | all, all);
-    check_mask_equality(all | none, all);
-    check_mask_equality(none | none, none);
+    device_check_mask_equality(all | all, all);
+    device_check_mask_equality(all | none, all);
+    device_check_mask_equality(none | none, none);
 
-    check_mask_equality(all ^ all, none);
-    check_mask_equality(all ^ none, all);
-    check_mask_equality(none ^ none, none);
+    device_check_mask_equality(all ^ all, none);
+    device_check_mask_equality(all ^ none, all);
+    device_check_mask_equality(none ^ none, none);
   }
 }
 
@@ -465,8 +465,8 @@ KOKKOS_INLINE_FUNCTION void device_check_mask_bitwise_assignment_op(
     Kokkos::Experimental::basic_simd_mask<Abi, DataType> const& rhs,
     Kokkos::Experimental::basic_simd_mask<Abi, DataType> const& expected) {
   auto const res = op.on_device(lhs, rhs);
-  check_mask_equality(res, expected);
-  check_mask_equality(lhs, expected);
+  device_check_mask_equality(res, expected);
+  device_check_mask_equality(lhs, expected);
 }
 
 template <typename Abi, typename DataType>

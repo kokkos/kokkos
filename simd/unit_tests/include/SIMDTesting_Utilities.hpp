@@ -89,7 +89,8 @@ template <class T, class Abi>
 inline void host_check_mask_equality(
     Kokkos::Experimental::basic_simd_mask<T, Abi> const& expected_result,
     Kokkos::Experimental::basic_simd_mask<T, Abi> const& computed_result,
-    std::size_t nlanes) {
+    std::size_t nlanes =
+        Kokkos::Experimental::basic_simd_mask<T, Abi>::size()) {
   gtest_checker checker;
   for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
@@ -100,23 +101,12 @@ template <class T, class Abi>
 KOKKOS_INLINE_FUNCTION void device_check_mask_equality(
     Kokkos::Experimental::basic_simd_mask<T, Abi> const& expected_result,
     Kokkos::Experimental::basic_simd_mask<T, Abi> const& computed_result,
-    std::size_t nlanes) {
+    std::size_t nlanes =
+        Kokkos::Experimental::basic_simd_mask<T, Abi>::size()) {
   kokkos_checker checker;
   for (std::size_t i = 0; i < nlanes; ++i) {
     checker.equality(expected_result[i], computed_result[i]);
   }
-}
-
-template <typename T, typename Abi>
-KOKKOS_INLINE_FUNCTION void check_mask_equality(
-    Kokkos::Experimental::basic_simd_mask<T, Abi> const& expected_result,
-    Kokkos::Experimental::basic_simd_mask<T, Abi> const& computed_result,
-    std::size_t nlanes =
-        Kokkos::Experimental::basic_simd_mask<T, Abi>::size()) {
-  KOKKOS_IF_ON_HOST(
-      (host_check_mask_equality(expected_result, computed_result, nlanes);))
-  KOKKOS_IF_ON_DEVICE(
-      (device_check_mask_equality(expected_result, computed_result, nlanes);))
 }
 
 class load_element_aligned {
