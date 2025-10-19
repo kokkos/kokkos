@@ -99,28 +99,15 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
       "Kokkos allocation \"v\" is being deallocated after Kokkos::finalize was "
       "called");
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
-  std::string matcher = std::string("Kokkos::") +
-#ifdef KOKKOS_ENABLE_OPENACC
-                        "Experimental::" +
-#endif
-                        Kokkos::DefaultExecutionSpace::name() +
-                        "::" + Kokkos::DefaultExecutionSpace::name() +
-                        " instance constructor : ERROR device not initialized";
-#else
-  std::string matcher =
-      "Constructing View and initializing data with uninitialized execution "
-      "space";
-#endif
-  EXPECT_DEATH({ Kokkos::View<int*> v("v", 0); }, matcher);
+  EXPECT_DEATH({ Kokkos::View<int*> v("v", 0); },
+               "View is being constructed before initialize");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         Kokkos::finalize();
         Kokkos::View<int*> v("v", 0);
       },
-      matcher);
+      "View is being constructed after finalize");
 }
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,

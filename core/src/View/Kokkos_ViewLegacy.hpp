@@ -976,6 +976,16 @@ class View : public ViewTraits<DataType, Properties...> {
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout> const& arg_layout)
       : m_track(), m_map() {
+    if (is_finalized()) {
+      abort(
+          "Kokkos ERROR: View is being constructed after finalize() has been "
+          "called");
+    }
+    if (!is_initialized()) {
+      abort(
+          "Kokkos ERROR: View is being constructed before initialize() has "
+          "been called");
+    }
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =

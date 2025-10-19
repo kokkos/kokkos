@@ -345,6 +345,16 @@ class BasicView {
       const Impl::ViewCtorProp<P...> &arg_prop,
       const typename mdspan_type::mapping_type &arg_mapping,
       const typename mdspan_type::accessor_type &arg_accessor) {
+    if (is_finalized()) {
+      abort(
+          "Kokkos ERROR: View is being constructed after finalize() has been "
+          "called");
+    }
+    if (!is_initialized()) {
+      abort(
+          "Kokkos ERROR: View is being constructed before initialize() has "
+          "been called");
+    }
     using storage_value_type = typename data_handle_type::value_type;
     constexpr bool has_exec  = Impl::ViewCtorProp<P...>::has_execution_space;
     // Copy the input allocation properties with possibly defaulted properties
