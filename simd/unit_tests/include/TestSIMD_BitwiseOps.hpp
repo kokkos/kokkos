@@ -23,8 +23,7 @@ void host_check_bitwise_op_one_loader(BinaryOp binary_op, std::size_t n,
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
     if ((std::is_same_v<BinaryOp, divides> ||
-         std::is_same_v<BinaryOp, divides_eq>) &&
-        nremaining < width)
+         std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
       continue;
     simd_type first_arg;
     bool const loaded_first_arg =
@@ -162,8 +161,7 @@ KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(
     std::size_t const nremaining = n - i;
     std::size_t const nlanes     = Kokkos::min(nremaining, width);
     if ((std::is_same_v<BinaryOp, divides> ||
-         std::is_same_v<BinaryOp, divides_eq>) &&
-        nremaining < width)
+         std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
       continue;
     simd_type first_arg;
     bool const loaded_first_arg =
