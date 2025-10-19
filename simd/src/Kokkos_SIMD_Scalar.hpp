@@ -84,15 +84,15 @@ class basic_simd_mask<T, simd_abi::scalar> {
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask operator&(
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
-    return basic_simd_mask(static_cast<bool>(lhs) & static_cast<bool>(rhs));
+    return lhs && rhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask operator|(
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
-    return basic_simd_mask(static_cast<bool>(lhs) | static_cast<bool>(rhs));
+    return lhs || rhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask operator^(
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
-    return basic_simd_mask(static_cast<bool>(lhs) ^ static_cast<bool>(rhs));
+    return (lhs && !rhs) || (!lhs && rhs);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask& operator&=(

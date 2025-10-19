@@ -302,14 +302,18 @@ template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void check_mask_bitwise_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
-    constexpr size_t width = mask_type::size();
+    constexpr std::size_t width = mask_type::size();
 
     mask_type const all(true);
     mask_type const none(false);
-    mask_type const hi(KOKKOS_LAMBDA(auto const i) { return i >= width / 2; });
-    mask_type const lo(KOKKOS_LAMBDA(auto const i) { return i < width / 2; });
-    mask_type const even(KOKKOS_LAMBDA(auto const i) { return i % 2 == 0; });
-    mask_type const odd(KOKKOS_LAMBDA(auto const i) { return i % 2 == 1; });
+    mask_type const hi(
+        KOKKOS_LAMBDA(std::size_t const i) { return i >= width / 2; });
+    mask_type const lo(
+        KOKKOS_LAMBDA(std::size_t const i) { return i < width / 2; });
+    mask_type const even(
+        KOKKOS_LAMBDA(std::size_t const i) { return i % 2 == 0; });
+    mask_type const odd(
+        KOKKOS_LAMBDA(std::size_t const i) { return i % 2 == 1; });
 
     check_mask_equality(~all, none);
     check_mask_equality(~none, all);
@@ -364,14 +368,18 @@ template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void check_mask_bitwise_assignment_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
-    constexpr size_t width = mask_type::size();
+    constexpr std::size_t width = mask_type::size();
 
     mask_type const all(true);
     mask_type const none(false);
-    mask_type const hi(KOKKOS_LAMBDA(auto const i) { return i >= width / 2; });
-    mask_type const lo(KOKKOS_LAMBDA(auto const i) { return i < width / 2; });
-    mask_type const even(KOKKOS_LAMBDA(auto const i) { return i % 2 == 0; });
-    mask_type const odd(KOKKOS_LAMBDA(auto const i) { return i % 2 == 1; });
+    mask_type const hi(
+        KOKKOS_LAMBDA(std::size_t const i) { return i >= width / 2; });
+    mask_type const lo(
+        KOKKOS_LAMBDA(std::size_t const i) { return i < width / 2; });
+    mask_type const even(
+        KOKKOS_LAMBDA(std::size_t const i) { return i % 2 == 0; });
+    mask_type const odd(
+        KOKKOS_LAMBDA(std::size_t const i) { return i % 2 == 1; });
 
     check_mask_bitwise_assignment_op(bitwise_and_eq(), all, all, all);
     check_mask_bitwise_assignment_op(bitwise_and_eq(), all, none, none);
