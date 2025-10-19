@@ -993,7 +993,6 @@ class View : public ViewTraits<DataType, Properties...> {
     auto prop_copy = Impl::with_properties_if_unset(
         prop_copy_tmp, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{});
-    using alloc_prop = decltype(prop_copy);
 
     static_assert(!traits::memory_traits::is_unmanaged,
                   "View allocation constructor requires managed memory");
