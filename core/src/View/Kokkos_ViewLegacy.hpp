@@ -998,15 +998,6 @@ class View : public ViewTraits<DataType, Properties...> {
     static_assert(!traits::memory_traits::is_unmanaged,
                   "View allocation constructor requires managed memory");
 
-    if (alloc_prop::initialize &&
-        !alloc_prop::execution_space::impl_is_initialized()) {
-      // If initializing view data then
-      // the execution space must be initialized.
-      Kokkos::abort(
-          "Constructing View and initializing data with uninitialized "
-          "execution space");
-    }
-
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (std::is_same_v<typename traits::array_layout,
                                  Kokkos::LayoutLeft> ||

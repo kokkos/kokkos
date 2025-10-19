@@ -365,15 +365,6 @@ class BasicView {
         prop_copy_tmp, memory_space{}, execution_space{});
     using alloc_prop = decltype(prop_copy);
 
-    if (alloc_prop::initialize &&
-        !alloc_prop::execution_space::impl_is_initialized()) {
-      // If initializing view data then
-      // the execution space must be initialized.
-      Kokkos::abort(
-          "Constructing View and initializing data with uninitialized "
-          "execution space");
-    }
-
     // get allocation size: may be different from
     // arg_mapping.required_span_size()
     size_t allocation_size =
