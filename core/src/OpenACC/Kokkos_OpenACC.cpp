@@ -108,10 +108,6 @@ void Kokkos::Experimental::OpenACC::impl_finalize() {
   Impl::OpenACCInternal::singleton().finalize();
 }
 
-bool Kokkos::Experimental::OpenACC::impl_is_initialized() {
-  return Impl::OpenACCInternal::singleton().is_initialized();
-}
-
 void Kokkos::Experimental::OpenACC::print_configuration(std::ostream& os,
                                                         bool verbose) const {
   os << "Device Execution Space:\n";

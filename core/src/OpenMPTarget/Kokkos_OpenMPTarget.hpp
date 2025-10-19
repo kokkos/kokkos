@@ -77,9 +77,6 @@ class OpenMPTarget {
   //! Free any resources being consumed by the device.
   static void impl_finalize();
 
-  //! Has been initialized
-  static int impl_is_initialized();
-
   //! Initialize, telling the CUDA run-time library which device to use.
   static void impl_initialize(InitializationSettings const&);
 

@@ -83,10 +83,6 @@ void OpenMP::fence(const std::string &name) const {
       });
 }
 
-bool OpenMP::impl_is_initialized() noexcept {
-  return Impl::OpenMPInternal::singleton().is_initialized();
-}
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 KOKKOS_DEPRECATED bool OpenMP::in_parallel(OpenMP const &exec_space) noexcept {
   return exec_space.impl_internal_space_instance()->m_level < omp_get_level();

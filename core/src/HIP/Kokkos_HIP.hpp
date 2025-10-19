@@ -92,8 +92,6 @@ class HIP {
 
   static void impl_initialize(InitializationSettings const&);
 
-  static int impl_is_initialized();
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED static size_type detect_device_count() {
     int count;

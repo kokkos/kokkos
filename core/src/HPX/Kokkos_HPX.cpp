@@ -215,11 +215,6 @@ void HPX::impl_initialize(InitializationSettings const &settings) {
   }
 }
 
-bool HPX::impl_is_initialized() noexcept {
-  hpx::runtime *rt = hpx::get_runtime_ptr();
-  return rt != nullptr;
-}
-
 void HPX::impl_finalize() {
   if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();

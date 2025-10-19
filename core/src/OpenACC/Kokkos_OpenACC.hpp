@@ -68,7 +68,6 @@ class OpenACC {
 
   static void impl_initialize(InitializationSettings const& settings);
   static void impl_finalize();
-  static bool impl_is_initialized();
 
   void print_configuration(std::ostream& os, bool verbose = false) const;
 

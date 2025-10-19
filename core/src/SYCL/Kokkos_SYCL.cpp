@@ -69,10 +69,6 @@ int SYCL::concurrency() const { return m_space_instance->m_maxConcurrency; }
 
 const char* SYCL::name() { return "SYCL"; }
 
-bool SYCL::impl_is_initialized() {
-  return Impl::SYCLInternal::singleton().is_initialized();
-}
-
 void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
 void SYCL::print_configuration(std::ostream& os, bool verbose) const {

@@ -93,8 +93,6 @@ class SYCL {
 
   static void impl_initialize(InitializationSettings const&);
 
-  static bool impl_is_initialized();
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
 #else

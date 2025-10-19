@@ -32,10 +32,6 @@ int HIP::concurrency() const {
   return Impl::HIPInternal::concurrency();
 }
 
-int HIP::impl_is_initialized() {
-  return Impl::HIPInternal::singleton().is_initialized();
-}
-
 void HIP::impl_initialize(InitializationSettings const& settings) {
   const std::vector<int>& visible_devices = Impl::get_visible_devices();
   const int hip_device_id =

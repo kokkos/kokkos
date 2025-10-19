@@ -98,10 +98,6 @@ class OpenMP {
 
   static void impl_initialize(InitializationSettings const&);
 
-  /// \brief is the default execution space initialized for current 'master'
-  /// thread
-  static bool impl_is_initialized() noexcept;
-
   /// \brief Free any resources being consumed by the default execution space
   static void impl_finalize();
 

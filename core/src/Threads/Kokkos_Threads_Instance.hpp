@@ -539,10 +539,6 @@ KOKKOS_DEPRECATED inline int Threads::in_parallel() {
 }
 #endif
 
-inline int Threads::impl_is_initialized() {
-  return Impl::ThreadsInternal::is_initialized();
-}
-
 inline void Threads::impl_initialize(InitializationSettings const &settings) {
   Impl::ThreadsInternal::initialize(
       settings.has_num_threads() ? settings.get_num_threads() : -1);

@@ -192,8 +192,6 @@ class Serial {
 
   static void impl_initialize(InitializationSettings const&);
 
-  static bool impl_is_initialized();
-
   //! Free any resources being consumed by the device.
   static void impl_finalize();
 

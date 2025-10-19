@@ -530,10 +530,6 @@ int Cuda::concurrency() const {
   return Impl::CudaInternal::concurrency();
 }
 
-int Cuda::impl_is_initialized() {
-  return Impl::CudaInternal::singleton().is_initialized();
-}
-
 void Cuda::impl_initialize(InitializationSettings const &settings) {
   const std::vector<int> &visible_devices = Impl::get_visible_devices();
   const int cuda_device_id =

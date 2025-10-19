@@ -261,7 +261,6 @@ class HPX {
   int concurrency() const;
 #endif
   static void impl_initialize(InitializationSettings const &);
-  static bool impl_is_initialized() noexcept;
   static void impl_finalize();
   static int impl_thread_pool_size() noexcept;
   static int impl_thread_pool_rank() noexcept;

@@ -168,10 +168,6 @@ void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "\nSerial Runtime Configuration:\n";
 }
 
-bool Serial::impl_is_initialized() {
-  return Impl::SerialInternal::singleton().is_initialized();
-}
-
 void Serial::impl_initialize(InitializationSettings const&) {
   Impl::SerialInternal::singleton().initialize();
 }

@@ -227,9 +227,6 @@ void OpenMPTarget::impl_initialize(InitializationSettings const& settings) {
 void OpenMPTarget::impl_finalize() {
   Impl::OpenMPTargetInternal::impl_singleton()->impl_finalize();
 }
-int OpenMPTarget::impl_is_initialized() {
-  return Impl::OpenMPTargetInternal::impl_singleton()->impl_is_initialized();
-}
 }  // Namespace Experimental
 
 namespace Impl {
