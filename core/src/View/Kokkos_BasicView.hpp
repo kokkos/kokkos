@@ -654,9 +654,9 @@ class BasicView {
 
   KOKKOS_FUNCTION void assign_data(element_type *ptr) { m_ptr = ptr; }
 
-// ========================= mdspan =================================
+  // ========================= mdspan =================================
 
-// [mdspan.mdspan.members], members
+  // [mdspan.mdspan.members], members
 
 // Introducing the C++20 and C++23 variants of the operators already
 #ifndef KOKKOS_ENABLE_CXX20
