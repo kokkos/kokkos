@@ -317,19 +317,19 @@ static_assert(test_array_equality_comparable());
 constexpr bool test_array_traits() {
   using C0      = Kokkos::Array<char, 0>;
   using C2      = Kokkos::Array<char, 2>;
-  using constC3 = const Kokkos::Array<char, 2>;
+  using constC2 = const Kokkos::Array<char, 2>;
   using I0      = Kokkos::Array<int, 0>;
   using I2      = Kokkos::Array<int, 2>;
-  using constI3 = const Kokkos::Array<int, 2>;
+  using constI2 = const Kokkos::Array<int, 2>;
   using c0      = std::array<char, 0>;
   using i0      = std::array<int, 0>;
 
   static_assert(Kokkos::is_array_v<C0>);
   static_assert(Kokkos::is_array_v<C2>);
-  static_assert(Kokkos::is_array_v<constC3>);
+  static_assert(Kokkos::is_array_v<constC2>);
   static_assert(Kokkos::is_array_v<I0>);
   static_assert(Kokkos::is_array_v<I2>);
-  static_assert(Kokkos::is_array_v<constI3>);
+  static_assert(Kokkos::is_array_v<constI2>);
   static_assert(!Kokkos::is_array_v<c0>);
   static_assert(!Kokkos::is_array_v<i0>);
 
