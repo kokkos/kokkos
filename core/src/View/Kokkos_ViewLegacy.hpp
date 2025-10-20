@@ -976,15 +976,24 @@ class View : public ViewTraits<DataType, Properties...> {
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout> const& arg_layout)
       : m_track(), m_map() {
-    if (is_finalized()) {
-      abort(
-          "Kokkos ERROR: View is being constructed after finalize() has been "
-          "called");
-    }
-    if (!is_initialized()) {
-      abort(
-          "Kokkos ERROR: View is being constructed before initialize() has "
-          "been called");
+    if (bool was_finalized = is_finalized();
+        was_finalized || !is_initialized()) {
+      std::stringstream ss;
+      ss << "Kokkos ERROR: View ";
+      constexpr bool has_label = Impl::ViewCtorProp<P...>::has_label;
+      if (has_label) {
+        auto const& lbl = Impl::get_property<Impl::LabelTag>(arg_prop);
+        ss << "(label=\"" << lbl << "\") ";
+      }
+      ss << "is being constructed ";
+      if (was_finalized) {
+        ss << "after finalize() ";
+      } else {
+        ss << "before initialize() ";
+      }
+      ss << "has been called";
+      auto const err = ss.str();
+      abort(err.c_str());
     }
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors

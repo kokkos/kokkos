@@ -99,15 +99,16 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
       "Kokkos allocation \"v\" is being deallocated after Kokkos::finalize was "
       "called");
 
-  EXPECT_DEATH({ Kokkos::View<int*> v("v", 0); },
-               "View is being constructed before initialize");
+  EXPECT_DEATH(
+      { Kokkos::View<int*> v("v", 0); },
+      "View \\(label=\\\"v\\\"\\) is being constructed before initialize");
   EXPECT_DEATH(
       {
         Kokkos::initialize();
         Kokkos::finalize();
         Kokkos::View<int*> v("v", 0);
       },
-      "View is being constructed after finalize");
+      "View \\(label=\\\"v\\\"\\) is being constructed after finalize");
 }
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,

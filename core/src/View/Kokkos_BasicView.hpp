@@ -346,15 +346,24 @@ class BasicView {
       const Impl::ViewCtorProp<P...> &arg_prop,
       const typename mdspan_type::mapping_type &arg_mapping,
       const typename mdspan_type::accessor_type &arg_accessor) {
-    if (is_finalized()) {
-      abort(
-          "Kokkos ERROR: View is being constructed after finalize() has been "
-          "called");
-    }
-    if (!is_initialized()) {
-      abort(
-          "Kokkos ERROR: View is being constructed before initialize() has "
-          "been called");
+    if (bool was_finalized = is_finalized();
+        was_finalized || !is_initialized()) {
+      std::stringstream ss;
+      ss << "Kokkos ERROR: View ";
+      constexpr bool has_label = Impl::ViewCtorProp<P...>::has_label;
+      if (has_label) {
+        auto const &lbl = Impl::get_property<Impl::LabelTag>(arg_prop);
+        ss << "(label=\"" << lbl << "\") ";
+      }
+      ss << "is being constructed ";
+      if (was_finalized) {
+        ss << "after finalize() ";
+      } else {
+        ss << "before initialize() ";
+      }
+      ss << "has been called";
+      auto const err = ss.str();
+      abort(err.c_str());
     }
     using storage_value_type = typename data_handle_type::value_type;
     constexpr bool has_exec  = Impl::ViewCtorProp<P...>::has_execution_space;
@@ -394,8 +403,9 @@ class BasicView {
   // Ctors to pull out AccessorArg_t
   // Need also the other ones to keep the overload set consistent and all the
   // constraints mutually exclusive. Delegate to private ctors
-  // We need to explicitly distinguish between the has_pointer and !has_pointer
-  // versions since only the ones with a pointer can be marked host/device
+  // We need to explicitly distinguish between the has_pointer and
+  // !has_pointer versions since only the ones with a pointer can be marked
+  // host/device
   template <class... P>
   explicit BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
@@ -645,9 +655,9 @@ class BasicView {
 
   KOKKOS_FUNCTION void assign_data(element_type *ptr) { m_ptr = ptr; }
 
-  // ========================= mdspan =================================
+// ========================= mdspan =================================
 
-  // [mdspan.mdspan.members], members
+// [mdspan.mdspan.members], members
 
 // Introducing the C++20 and C++23 variants of the operators already
 #ifndef KOKKOS_ENABLE_CXX20
