@@ -89,7 +89,6 @@ class Threads {
 
   static void impl_initialize(InitializationSettings const&);
 
-  static Threads& impl_instance(int = 0);
 
   //----------------------------------------
 
