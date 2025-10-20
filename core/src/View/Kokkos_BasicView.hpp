@@ -403,9 +403,8 @@ class BasicView {
   // Ctors to pull out AccessorArg_t
   // Need also the other ones to keep the overload set consistent and all the
   // constraints mutually exclusive. Delegate to private ctors
-  // We need to explicitly distinguish between the has_pointer and
-  // !has_pointer versions since only the ones with a pointer can be marked
-  // host/device
+  // We need to explicitly distinguish between the has_pointer and !has_pointer
+  // versions since only the ones with a pointer can be marked host/device
   template <class... P>
   explicit BasicView(
       const Impl::ViewCtorProp<P...> &arg_prop,
