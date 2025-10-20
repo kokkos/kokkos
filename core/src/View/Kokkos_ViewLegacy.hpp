@@ -981,7 +981,7 @@ class View : public ViewTraits<DataType, Properties...> {
       std::stringstream ss;
       ss << "Kokkos ERROR: View ";
       constexpr bool has_label = Impl::ViewCtorProp<P...>::has_label;
-      if (has_label) {
+      if constexpr (has_label) {
         auto const& lbl = Impl::get_property<Impl::LabelTag>(arg_prop);
         ss << "(label=\"" << lbl << "\") ";
       }
