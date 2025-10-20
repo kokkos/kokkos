@@ -67,7 +67,7 @@ template <class>
 struct is_array : public std::false_type {};
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-template <class T = void, size_t N = KOKKOS_INVALID_INDEX, class Proxy = void>
+template <class T, size_t N, class Proxy>
 struct Array;
 
 template <class T, size_t N, class Proxy>
