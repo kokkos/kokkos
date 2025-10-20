@@ -89,7 +89,6 @@ class Threads {
 
   static void impl_initialize(InitializationSettings const&);
 
-
   //----------------------------------------
 
   static int impl_thread_pool_size(int depth = 0);
