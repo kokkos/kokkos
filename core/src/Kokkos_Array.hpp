@@ -63,6 +63,32 @@ struct ArrayBoundsCheck<Integral, false> {
 
 #endif  // !defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
+template <class>
+struct is_array : public std::false_type {};
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+template <class T = void, size_t N = KOKKOS_INVALID_INDEX, class Proxy = void>
+struct Array;
+
+template <class T, size_t N, class Proxy>
+struct is_array<Kokkos::Array<T, N, Proxy>> : public std::true_type {};
+
+template <class T, size_t N, class Proxy>
+struct is_array<const Kokkos::Array<T, N, Proxy>> : public std::true_type {};
+#else
+template <class T, size_t N>
+struct Array;
+
+template <class T, size_t N>
+struct is_array<Kokkos::Array<T, N>> : public std::true_type {};
+
+template <class T, size_t N>
+struct is_array<const Kokkos::Array<T, N>> : public std::true_type {};
+#endif
+
+template <class T>
+inline constexpr bool is_array_v = is_array<T>::value;
+
 /**\brief  Derived from the C++17 'std::array'.
  *         Dropping the iterator interface.
  */
