@@ -111,10 +111,10 @@ struct Array {
     return m_internal_implementation_private_member_data[i];
   }
 
-  KOKKOS_INLINE_FUNCTION constexpr pointer data() {
+  KOKKOS_INLINE_FUNCTION constexpr pointer data() noexcept {
     return &m_internal_implementation_private_member_data[0];
   }
-  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const noexcept {
     return &m_internal_implementation_private_member_data[0];
   }
 
