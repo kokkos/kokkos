@@ -1,7 +1,7 @@
 # FIXME: The following logic should be moved from here and also from `core/perf_test/CMakeLists.txt` to
 # the root `CMakeLists.txt` in the form of a macro
 # Find or download google/benchmark library
-find_package(benchmark QUIET 1.5.6)
+find_package(benchmark QUIET 1.8.3)
 if(benchmark_FOUND)
   message(STATUS "Using google benchmark found in ${benchmark_DIR}")
 else()
