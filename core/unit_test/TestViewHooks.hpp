@@ -89,8 +89,8 @@ struct TestViewHooks {
           Kokkos::Experimental::SubscribableViewHooks<subscriber_type>>::value,
       "Must be a hooks policy");
   static_assert(
-      std::same_as<typename test_view_type::array_type,
-                   Kokkos::View<typename test_view_type::scalar_array_type,
+      std::same_as<typename test_view_type::type,
+                   Kokkos::View<typename test_view_type::data_type,
                                 typename test_view_type::array_layout,
                                 typename test_view_type::device_type,
                                 Kokkos::Experimental::SubscribableViewHooks<
