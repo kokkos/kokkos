@@ -102,7 +102,7 @@ constexpr bool test_view_typedefs_impl() {
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   static_assert(std::is_same_v<typename ViewType::array_type,
                                Kokkos::View<typename ViewType::scalar_array_type, typename ViewType::array_layout,
-                                            typename ViewType::device_type, typename ViewTraitsType::hooks_policy,
+                                            typename ViewType::device_type,
                                             typename ViewType::memory_traits>>);
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif

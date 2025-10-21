@@ -217,9 +217,10 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   //----------------------------------------
   // Compatible view of a data type
   using type = std::conditional_t<
-      has_hooks_policy, View<typename traits::data_type, typename traits::array_layout,
-                    typename traits::device_type, typename traits::hooks_policy,
-                    typename traits::memory_traits>,
+      has_hooks_policy,
+      View<typename traits::data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>,
       View<typename traits::data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::memory_traits> >;
 
