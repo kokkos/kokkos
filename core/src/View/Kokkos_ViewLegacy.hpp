@@ -899,6 +899,9 @@ class View : public ViewTraits<DataType, Properties...> {
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
 // differently
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
+#define KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND 1
+#endif
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
   KOKKOS_FUNCTION
   View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
     if constexpr (has_hooks_policy) {
@@ -919,10 +922,7 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 #endif
 
-// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
-// exclusive requirements clauses. 12.6 Also has some issues though it manifests
-// differently
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
   KOKKOS_FUNCTION
   View(View&& other)
       : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
@@ -944,10 +944,7 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 #endif
 
-// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
-// exclusive requirements clauses. 12.6 Also has some issues though it manifests
-// differently
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
   KOKKOS_FUNCTION
   View& operator=(const View& other) {
     m_map   = other.m_map;
@@ -979,10 +976,7 @@ class View : public ViewTraits<DataType, Properties...> {
   }
 #endif
 
-// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
-// exclusive requirements clauses. 12.6 Also has some issues though it manifests
-// differently
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
   KOKKOS_FUNCTION
   View& operator=(View&& other) {
     m_map   = std::move(other.m_map);
@@ -1013,6 +1007,7 @@ class View : public ViewTraits<DataType, Properties...> {
     return *this;
   }
 #endif
+#undef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
