@@ -26,6 +26,8 @@ else()
   target_compile_options(benchmark_main PRIVATE -w)
 endif()
 
+# This being a macro allows it to be used in other perf test directories without having to
+# use absolute paths for the source files we pass as argument.
 macro(KOKKOS_ADD_BENCHMARK NAME)
   cmake_parse_arguments(BENCHMARK "" "MAIN_FILE" "SOURCES" ${ARGN})
   if(DEFINED BENCHMARK_UNPARSED_ARGUMENTS)
