@@ -41,10 +41,10 @@ void device_bench_unary_op(benchmark::State& state) {
         1, KOKKOS_LAMBDA(std::size_t) {
           simd_type a, x;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-            a.copy_from(args.arg1.data() + i,
+            a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
             x = op.on_device(a);
-            x.copy_to(res.data() + i, Kokkos::Experimental::simd_flag_aligned);
+            simd_unchecked_store(x, res.data() + i, Kokkos::Experimental::simd_flag_aligned);
           }
         });
     Kokkos::fence("After simd loop");
@@ -70,12 +70,12 @@ void device_bench_binary_op(benchmark::State& state) {
         1, KOKKOS_LAMBDA(std::size_t) {
           simd_type a, b, x;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-            a.copy_from(args.arg1.data() + i,
+            a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
-            b.copy_from(args.arg2.data() + i,
+            b = simd_unchecked_load<simd_type>(args.arg2.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
             x = op.on_device(a, b);
-            x.copy_to(res.data() + i, Kokkos::Experimental::simd_flag_aligned);
+            simd_unchecked_store(x, res.data() + i, Kokkos::Experimental::simd_flag_aligned);
           }
         });
     Kokkos::fence("After simd loop");
@@ -101,14 +101,14 @@ void device_bench_ternary_op(benchmark::State& state) {
         1, KOKKOS_LAMBDA(std::size_t) {
           simd_type a, b, c, x;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-            a.copy_from(args.arg1.data() + i,
+            a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
-            b.copy_from(args.arg2.data() + i,
+            b = simd_unchecked_load<simd_type>(args.arg2.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
-            c.copy_from(args.arg3.data() + i,
+            c = simd_unchecked_load<simd_type>(args.arg3.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
             x = op.on_device(a, b, c);
-            x.copy_to(res.data() + i, Kokkos::Experimental::simd_flag_aligned);
+            simd_unchecked_store(x, res.data() + i, Kokkos::Experimental::simd_flag_aligned);
           }
         });
     Kokkos::fence("After simd loop");
@@ -149,7 +149,7 @@ void device_bench_reduction_op(benchmark::State& state) {
         1, KOKKOS_LAMBDA(std::size_t) {
           simd_type a;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-            a.copy_from(args.arg1.data() + i,
+            a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
                         Kokkos::Experimental::simd_flag_aligned);
             res(i / width) = op.on_device(a, masks(i / width));
           }
