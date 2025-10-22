@@ -191,6 +191,10 @@ if(Kokkos_ENABLE_TESTS)
   find_package(GTest QUIET)
 endif()
 
+if(Kokkos_ENABLE_BENCHMARKS)
+  find_package(benchmark QUIET 1.8.3)
+endif()
+
 # Include a set of Kokkos-specific wrapper functions that
 # will either call raw CMake or TriBITS
 # These are functions like KOKKOS_INCLUDE_DIRECTORIES
