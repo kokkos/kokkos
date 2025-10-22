@@ -43,6 +43,7 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
 
   add_executable(${BENCHMARK_NAME} ${BENCHMARK_SOURCES})
   target_link_libraries(${BENCHMARK_NAME} PRIVATE benchmark::benchmark Kokkos::kokkos impl_git_version)
+  target_include_directories(${BENCHMARK_NAME} PRIVATE ${CORE_PERFTEST_DIR})
   target_include_directories(${BENCHMARK_NAME} SYSTEM PRIVATE ${benchmark_SOURCE_DIR}/include)
 
   foreach(SOURCE_FILE ${BENCHMARK_SOURCES})
