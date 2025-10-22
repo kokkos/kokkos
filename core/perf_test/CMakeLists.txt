@@ -1,5 +1,5 @@
 # Find or download google/benchmark library
-find_package(benchmark QUIET 1.8.3)
+find_package(benchmark GLOBAL QUIET 1.8.3)
 if(benchmark_FOUND)
   message(STATUS "Using google benchmark found in ${benchmark_DIR}")
 else()
