@@ -8,6 +8,7 @@
 
 #include <HIP/Kokkos_HIP_Space.hpp>
 #include <HIP/Kokkos_HIP_Error.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
 
 #include <hip/hip_runtime_api.h>
 
@@ -141,15 +142,13 @@ struct SharedResourceLock {
 };
 
 class HIPInternal {
- private:
-  HIPInternal(const HIPInternal &);
-  HIPInternal &operator=(const HIPInternal &);
-
  public:
   using size_type = ::Kokkos::HIP::size_type;
 
   int m_hipDev = -1;
   static int m_maxThreadsPerSM;
+
+  static HostSharedPtr<HIPInternal> default_instance;
 
   static hipDeviceProp_t m_deviceProp;
 
@@ -179,31 +178,21 @@ class HIPInternal {
   int32_t *m_scratch_locks                        = nullptr;
   size_t m_num_scratch_locks                      = 0;
 
-  bool was_finalized = false;
-
   static std::set<int> hip_devices;
   static std::map<int, unsigned long *> constantMemHostStaging;
   static std::map<int, SharedResourceLock> constantMemReusable;
 
-  static HIPInternal &singleton();
-
   int verify_is_initialized(const char *const label) const;
 
-  int is_initialized() const {
-    return nullptr != m_scratchSpace && nullptr != m_scratchFlags;
-  }
-
-  void initialize(hipStream_t stream);
-  void finalize();
+  HIPInternal(hipStream_t stream);
+  ~HIPInternal();
+  HIPInternal(const HIPInternal &)            = delete;
+  HIPInternal &operator=(const HIPInternal &) = delete;
 
   void print_configuration(std::ostream &) const;
 
   void fence() const;
   void fence(const std::string &) const;
-
-  ~HIPInternal();
-
-  HIPInternal() = default;
 
   // Using HIP API function/objects will be w.r.t. device 0 unless
   // hipSetDevice(device_id) is called with the correct device_id.
