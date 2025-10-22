@@ -25,22 +25,14 @@
 #include <sstream>
 
 Kokkos::Experimental::OpenACC::OpenACC()
-    : m_space_instance(
-          &Kokkos::Experimental::Impl::OpenACCInternal::singleton(),
-          [](Impl::OpenACCInternal*) {}) {
-  Impl::OpenACCInternal::singleton().verify_is_initialized(
-      "OpenACC instance constructor");
+    : m_space_instance(Impl::OpenACCInternal::default_instance) {
+  KOKKOS_ASSERT(Impl::OpenACCInternal::default_instance);
 }
 
 Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
-    : m_space_instance(new Kokkos::Experimental::Impl::OpenACCInternal,
-                       [](Impl::OpenACCInternal* ptr) {
-                         ptr->finalize();
-                         delete ptr;
-                       }) {
-  Impl::OpenACCInternal::singleton().verify_is_initialized(
-      "OpenACC instance constructor");
-  m_space_instance->initialize(async_arg);
+    : m_space_instance(
+          new Kokkos::Experimental::Impl::OpenACCInternal(async_arg)) {
+  KOKKOS_ASSERT(Impl::OpenACCInternal::default_instance);
 }
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
@@ -101,11 +93,12 @@ void Kokkos::Experimental::OpenACC::impl_initialize(
     // FIXME_OPENACC: Compute Impl::OpenACCInternal::m_concurrency correctly.
 #endif
   }
-  Impl::OpenACCInternal::singleton().initialize();
+  Impl::OpenACCInternal::default_instance =
+      Kokkos::Impl::HostSharedPtr(new Impl::OpenACCInternal);
 }
 
 void Kokkos::Experimental::OpenACC::impl_finalize() {
-  Impl::OpenACCInternal::singleton().finalize();
+  Impl::OpenACCInternal::default_instance = nullptr;
 }
 
 void Kokkos::Experimental::OpenACC::print_configuration(std::ostream& os,
