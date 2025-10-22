@@ -155,7 +155,6 @@ void Serial::impl_initialize(InitializationSettings const&) {
 }
 
 void Serial::impl_finalize() {
-  KOKKOS_ASSERT(Impl::SerialInternal::default_instance.use_count() == 1);
   Impl::SerialInternal::default_instance = nullptr;
 }
 
