@@ -36,18 +36,15 @@ namespace Kokkos {
 namespace Impl {
 class SerialInternal {
  public:
-  SerialInternal() = default;
+  SerialInternal();
+  ~SerialInternal();
 
-  bool is_initialized();
-
-  void initialize();
-
-  void finalize();
-
-  static SerialInternal& singleton();
+  SerialInternal(SerialInternal const&)            = delete;
+  SerialInternal& operator=(SerialInternal const&) = delete;
 
   std::mutex m_instance_mutex;
 
+  static HostSharedPtr<SerialInternal> default_instance;
   static std::vector<SerialInternal*> all_instances;
   static std::mutex all_instances_mutex;
 
@@ -58,7 +55,6 @@ class SerialInternal {
                                size_t thread_local_bytes);
 
   HostThreadTeamData m_thread_team_data;
-  bool m_is_initialized = false;
 };
 }  // namespace Impl
 
