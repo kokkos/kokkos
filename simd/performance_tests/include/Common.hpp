@@ -28,9 +28,10 @@ using View =
     Kokkos::View<T, ExecSpace,
                  Kokkos::MemoryTraits<Kokkos::Aligned | Kokkos::Restrict>>;
 
+// Class wrapping the Arguments we use in the benchmarks.
+// This avoids recreating the Views between each benches.
 template <class T, class ExecSpace>
-class Args {
- public:
+struct Args {
   using view_type = View<T*, ExecSpace>;
 
   view_type arg1;
@@ -44,6 +45,34 @@ class Args {
     Kokkos::fill_random(arg1, random_pool, 1, 100);
     Kokkos::fill_random(arg2, random_pool, 1, 15);
     Kokkos::fill_random(arg3, random_pool, 1, 100);
+  }
+};
+
+// Google Benchmark keeps a pointer to the data passed as argument when
+// registering a benchmark.
+// If we don't manually destroy the Views, they will get deleted after
+// Kokkos::finalize() is called, causing a Kokkos::abort.
+
+// Hook that will be called right before Kokkos::finalize(), ensuring that the
+// Views are deleted in time.
+template <class T, class ExecSpace>
+struct FinalizeHook {
+  Args<T, ExecSpace>* args;
+
+  void operator()() { delete args; }
+};
+
+// Class wrapping the arguments, Google Benchmark will have an handle on this
+// class and not on the underlying Args class.
+template <class T, class ExecSpace>
+struct ArgsWrapper {
+  Args<T, ExecSpace>* args;
+
+  explicit ArgsWrapper(std::size_t size) {
+    args = new Args<T, ExecSpace>(size);
+
+    FinalizeHook hook(args);
+    Kokkos::push_finalize_hook(hook);
   }
 };
 

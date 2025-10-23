@@ -24,29 +24,29 @@
 #include "Common.hpp"
 #include "PerfTest_Operators.hpp"
 
-template <class Abi, class UnaryOp, class T>
-void host_bench_unary_op(benchmark::State& state) {
+template <class Abi, class UnaryOp, class T, class ExecSpace>
+void host_bench_unary_op(benchmark::State& state,
+                         const ArgsWrapper<T, ExecSpace>& wrapper) {
   constexpr bool force_serial = std::is_same_v<Abi, simd_abi_force_serial>;
   using RealAbi =
       std::conditional_t<force_serial, Kokkos::Experimental::simd_abi::scalar,
                          Abi>;
-  using ExecSpace             = Kokkos::DefaultHostExecutionSpace;
   using simd_type             = Kokkos::Experimental::basic_simd<T, RealAbi>;
   constexpr std::size_t width = simd_type::size();
 
   UnaryOp op;
-
-  Args<T, ExecSpace> args(BENCH_SIZE);
 
   View<T*, ExecSpace> res("res", BENCH_SIZE);
 
   for (auto _ : state) {
     simd_type a, x;
     for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-      a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
-                  Kokkos::Experimental::simd_flag_aligned);
+      a = simd_unchecked_load<simd_type>(
+          wrapper.args->arg1.data() + i,
+          Kokkos::Experimental::simd_flag_aligned);
       x = op.on_host(a);
-      simd_unchecked_store(x, res.data() + i, Kokkos::Experimental::simd_flag_aligned);
+      simd_unchecked_store(x, res.data() + i,
+                           Kokkos::Experimental::simd_flag_aligned);
       if constexpr (force_serial) {
         benchmark::DoNotOptimize(x);
       }
@@ -54,17 +54,16 @@ void host_bench_unary_op(benchmark::State& state) {
   }
 }
 
-template <class Abi, class BinaryOp, class T>
-void host_bench_binary_op(benchmark::State& state) {
+template <class Abi, class BinaryOp, class T, class ExecSpace>
+void host_bench_binary_op(benchmark::State& state,
+                          const ArgsWrapper<T, ExecSpace>& wrapper) {
   constexpr bool force_serial = std::is_same_v<Abi, simd_abi_force_serial>;
   using RealAbi =
       std::conditional_t<force_serial, Kokkos::Experimental::simd_abi::scalar,
                          Abi>;
-  using ExecSpace             = Kokkos::DefaultHostExecutionSpace;
   using simd_type             = Kokkos::Experimental::basic_simd<T, RealAbi>;
   constexpr std::size_t width = simd_type::size();
 
-  Args<T, ExecSpace> args(BENCH_SIZE);
   BinaryOp op;
 
   View<T*, ExecSpace> res("res", BENCH_SIZE);
@@ -72,12 +71,15 @@ void host_bench_binary_op(benchmark::State& state) {
   for (auto _ : state) {
     simd_type a, b, x;
     for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-      a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
-                  Kokkos::Experimental::simd_flag_aligned);
-      b = simd_unchecked_load<simd_type>(args.arg2.data() + i,
-                  Kokkos::Experimental::simd_flag_aligned);
+      a = simd_unchecked_load<simd_type>(
+          wrapper.args->arg1.data() + i,
+          Kokkos::Experimental::simd_flag_aligned);
+      b = simd_unchecked_load<simd_type>(
+          wrapper.args->arg2.data() + i,
+          Kokkos::Experimental::simd_flag_aligned);
       x = op.on_host(a, b);
-      simd_unchecked_store(x, res.data() + i, Kokkos::Experimental::simd_flag_aligned);
+      simd_unchecked_store(x, res.data() + i,
+                           Kokkos::Experimental::simd_flag_aligned);
       if constexpr (force_serial) {
         benchmark::DoNotOptimize(x);
       }
@@ -85,17 +87,16 @@ void host_bench_binary_op(benchmark::State& state) {
   }
 }
 
-template <class Abi, class TernaryOp, class T>
-void host_bench_ternary_op(benchmark::State& state) {
+template <class Abi, class TernaryOp, class T, class ExecSpace>
+void host_bench_ternary_op(benchmark::State& state,
+                           const ArgsWrapper<T, ExecSpace>& wrapper) {
   constexpr bool force_serial = std::is_same_v<Abi, simd_abi_force_serial>;
   using RealAbi =
       std::conditional_t<force_serial, Kokkos::Experimental::simd_abi::scalar,
                          Abi>;
-  using ExecSpace             = Kokkos::DefaultHostExecutionSpace;
   using simd_type             = Kokkos::Experimental::basic_simd<T, RealAbi>;
   constexpr std::size_t width = simd_type::size();
 
-  Args<T, ExecSpace> args(BENCH_SIZE);
   TernaryOp op;
 
   View<T*, ExecSpace> res("res", BENCH_SIZE);
@@ -103,14 +104,18 @@ void host_bench_ternary_op(benchmark::State& state) {
   for (auto _ : state) {
     simd_type a, b, c, x;
     for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-      a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
-                  Kokkos::Experimental::simd_flag_aligned);
-      b = simd_unchecked_load<simd_type>(args.arg2.data() + i,
-                  Kokkos::Experimental::simd_flag_aligned);
-      c = simd_unchecked_load<simd_type>(args.arg3.data() + i,
-                  Kokkos::Experimental::simd_flag_aligned);
+      a = simd_unchecked_load<simd_type>(
+          wrapper.args->arg1.data() + i,
+          Kokkos::Experimental::simd_flag_aligned);
+      b = simd_unchecked_load<simd_type>(
+          wrapper.args->arg2.data() + i,
+          Kokkos::Experimental::simd_flag_aligned);
+      c = simd_unchecked_load<simd_type>(
+          wrapper.args->arg3.data() + i,
+          Kokkos::Experimental::simd_flag_aligned);
       x = op.on_host(a, b, c);
-      simd_unchecked_store(x, res.data() + i, Kokkos::Experimental::simd_flag_aligned);
+      simd_unchecked_store(x, res.data() + i,
+                           Kokkos::Experimental::simd_flag_aligned);
       if constexpr (force_serial) {
         benchmark::DoNotOptimize(x);
       }
@@ -118,20 +123,18 @@ void host_bench_ternary_op(benchmark::State& state) {
   }
 }
 
-template <class Abi, class ReductionOp, class T>
-void host_bench_reduction_op(benchmark::State& state) {
+template <class Abi, class ReductionOp, class T, class ExecSpace>
+void host_bench_reduction_op(benchmark::State& state,
+                             const ArgsWrapper<T, ExecSpace>& wrapper) {
   constexpr bool force_serial = std::is_same_v<Abi, simd_abi_force_serial>;
   using RealAbi =
       std::conditional_t<force_serial, Kokkos::Experimental::simd_abi::scalar,
                          Abi>;
-  using ExecSpace             = Kokkos::DefaultHostExecutionSpace;
   using simd_type             = Kokkos::Experimental::basic_simd<T, RealAbi>;
   using mask_type             = typename simd_type::mask_type;
   constexpr std::size_t width = simd_type::size();
 
   ReductionOp op;
-
-  Args<T, ExecSpace> args(BENCH_SIZE);
 
   View<mask_type*, ExecSpace> masks("masks", BENCH_SIZE / width);
   std::srand(58051);
@@ -151,8 +154,9 @@ void host_bench_reduction_op(benchmark::State& state) {
   for (auto _ : state) {
     simd_type a;
     for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
-      a = simd_unchecked_load<simd_type>(args.arg1.data() + i,
-                  Kokkos::Experimental::simd_flag_aligned);
+      a = simd_unchecked_load<simd_type>(
+          wrapper.args->arg1.data() + i,
+          Kokkos::Experimental::simd_flag_aligned);
       res(i / width) = op.on_host(a, masks(i / width));
       if constexpr (force_serial) {
         benchmark::DoNotOptimize(res(i / width));
@@ -164,22 +168,31 @@ void host_bench_reduction_op(benchmark::State& state) {
 #define KOKKOS_IMPL_SIMD_PERFTEST_HOST_UNARY_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                      \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),  \
-      host_bench_unary_op<Abi, op, DataType>)
+      host_bench_unary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
+      ->Iterations(num_ite)
 #define KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                       \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),   \
-      host_bench_binary_op<Abi, op, DataType>)
+      host_bench_binary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
+      ->Iterations(num_ite)
 #define KOKKOS_IMPL_SIMD_PERFTEST_HOST_TERNARY_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                        \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),    \
-      host_bench_ternary_op<Abi, op, DataType>)
+      host_bench_ternary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
+      ->Iterations(num_ite)
 #define KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                          \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),      \
-      host_bench_reduction_op<Abi, op, DataType>)
+      host_bench_reduction_op<Abi, op, DataType, ExecSpace>, wrapper)    \
+      ->Iterations(num_ite)
 
 template <typename Abi, typename DataType>
 inline void host_register_common_benchmarks() {
+  using ExecSpace = Kokkos::DefaultHostExecutionSpace;
+
+  const int num_ite = 5;
+  const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
+
   if constexpr (is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, add, plus);
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(common, sub, minus);
@@ -221,6 +234,11 @@ inline void host_register_common_benchmarks() {
 
 template <typename Abi, typename DataType>
 inline void host_register_math_benchmarks() {
+  using ExecSpace = Kokkos::DefaultHostExecutionSpace;
+
+  const int num_ite = 5;
+  const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
+
   if constexpr (std::is_floating_point_v<DataType> &&
                 is_simd_type_v<DataType, Abi>) {
     KOKKOS_IMPL_SIMD_PERFTEST_HOST_UNARY_BENCH(math, exp, exp_op);
