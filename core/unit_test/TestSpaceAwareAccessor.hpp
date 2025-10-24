@@ -87,9 +87,10 @@ void test_space_aware_accessor() {
             std::is_same_v<typename acc_t::nested_accessor_type, FunkyAcc<T>>);
         static_assert(std::copyable<acc_t>);
 // Windows and nvcc >= 13 (separately) )don't treat no-unique-address correctly
-#if !defined(_WIN32) &&                                               \
-    !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && \
-      (KOKKOS_COMPILER_NVCC >= 1300))
+#if !defined(_WIN32) &&                                                     \
+    !(defined(KOKKOS_ENABLE_CUDA) &&                                        \
+      ((defined(KOKKOS_COMPILER_NVCC) && (KOKKOS_COMPILER_NVCC >= 1300)) || \
+       (defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU < 1100)))
         static_assert(std::is_empty_v<acc_t>);
 #endif
       },

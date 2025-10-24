@@ -164,6 +164,13 @@ if(Kokkos_ENABLE_CUDA)
   # -std then the underlying host compiler by itself). Setting this variable
   # forces CMake to always add the -std flag even if it thinks it doesn't need it
   global_set(CMAKE_CXX_STANDARD_DEFAULT 98)
+
+
+  if(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+    if(CMAKE_CXX_COMPILER_VERSION VERSION_LESS 11)
+      set(CMAKE_CXX20_STANDARD_COMPILE_OPTION -std=c++20)
+    endif()
+  endif()
 endif()
 
 # These are the variables we will append to as we go
