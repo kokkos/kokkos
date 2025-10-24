@@ -957,7 +957,7 @@ struct TestComplexOperators {
   }
 
   void testit() {
-    d_results = device_view_type("TestComplexOperators", 99);
+    d_results = device_view_type("TestComplexOperators", 24);
     h_results = Kokkos::create_mirror_view(d_results);
 
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
