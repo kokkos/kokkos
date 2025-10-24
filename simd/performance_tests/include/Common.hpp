@@ -46,6 +46,8 @@ template <class T, class ExecSpace>
 struct FinalizeHook {
   Args<T, ExecSpace>* args;
 
+  FinalizeHook(Args<T, ExecSpace>* args_) : args(args_) {}
+
   void operator()() { delete args; }
 };
 
