@@ -67,7 +67,7 @@
 * Remove task DAG capabilities [\#8390](https://github.com/kokkos/kokkos/pull/8390)
 * Deprecate `{Owning,Observing}RawPtr` aliases [\#8397](https://github.com/kokkos/kokkos/pull/8397)
 * Deprecate support for using nested OpenMP parallel regions without nested OpenMP enabled [\#7417](https://github.com/kokkos/kokkos/pull/7417)
-* Deprecate creating Kokkos::OpenMP instances inside OpenMP parallel regions [\8488](https://github.com/kokkos/kokkos/pull/8488) 
+* Deprecate creating Kokkos::OpenMP instances inside OpenMP parallel regions [\#8488](https://github.com/kokkos/kokkos/pull/8488)
 * Deprecate `Random_XorShift{64,1024}_Pool::init` [\#8082](https://github.com/kokkos/kokkos/pull/8082)
 * Deprecate simd::\[const_\]where_expression [\#7960](https://github.com/kokkos/kokkos/pull/7960)
 * Remove support for Nvidia Kepler architecture [\#8518](https://github.com/kokkos/kokkos/pull/8518)
@@ -81,7 +81,7 @@
  * Properly delete `Timer` copy constructor and copy assignment operators [\#8399](https://github.com/kokkos/kokkos/pull/8399)
  * Fix RISC-V support (compiler check at configuration time and missing semicolons at compile time) [\#8439](https://github.com/kokkos/kokkos/pull/8439)
  * Corrected `bit_width` return type to be `int` instead of `T` to align with the standard library [\#8509](https://github.com/kokkos/kokkos/pull/8509)
- * Ensure `OpenMP::partition_space` doesn't error for small concurrency [\#8488](https://github.com/kokkos/kokkos/pull/8488) 
+ * Ensure `OpenMP::partition_space` doesn't error for small concurrency [\#8488](https://github.com/kokkos/kokkos/pull/8488)
  * Fix `parallel_reduce` on Hip and Cuda with `LaunchBounds` values smaller than 32 [\#8452](https://github.com/kokkos/kokkos/pull/8452)
  * Cuda,HIP: Launch work graph on the specified instance [\#8576](https://github.com/kokkos/kokkos/pull/8576)
 
