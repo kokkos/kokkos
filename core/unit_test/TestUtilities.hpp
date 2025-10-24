@@ -121,4 +121,53 @@ void test_is_scoped_enum() {
                                       is_scoped_enum<ScopedEnumShort>>);
 }
 
+void test_is_non_cv_floating_point() {
+  using Kokkos::Impl::is_noncv_floating_point;
+  using Kokkos::Impl::is_noncv_floating_point_v;
+
+  static_assert(!is_noncv_floating_point<int>::value);                 // NOLINT
+  static_assert(!is_noncv_floating_point<const int>::value);           // NOLINT
+  static_assert(!is_noncv_floating_point<volatile int>::value);        // NOLINT
+  static_assert(!is_noncv_floating_point<const volatile int>::value);  // NOLINT
+
+  static_assert(!is_noncv_floating_point_v<int>);
+  static_assert(!is_noncv_floating_point_v<const int>);
+  static_assert(!is_noncv_floating_point_v<volatile int>);
+  static_assert(!is_noncv_floating_point_v<const volatile int>);
+
+  static_assert(is_noncv_floating_point<float>::value);            // NOLINT
+  static_assert(!is_noncv_floating_point<const float>::value);     // NOLINT
+  static_assert(!is_noncv_floating_point<volatile float>::value);  // NOLINT
+  static_assert(
+      !is_noncv_floating_point<const volatile float>::value);  // NOLINT
+
+  static_assert(is_noncv_floating_point_v<float>);
+  static_assert(!is_noncv_floating_point_v<const float>);
+  static_assert(!is_noncv_floating_point_v<volatile float>);
+  static_assert(!is_noncv_floating_point_v<const volatile float>);
+
+  static_assert(is_noncv_floating_point<double>::value);            // NOLINT
+  static_assert(!is_noncv_floating_point<const double>::value);     // NOLINT
+  static_assert(!is_noncv_floating_point<volatile double>::value);  // NOLINT
+  static_assert(
+      !is_noncv_floating_point<const volatile double>::value);  // NOLINT
+
+  static_assert(is_noncv_floating_point_v<double>);
+  static_assert(!is_noncv_floating_point_v<const double>);
+  static_assert(!is_noncv_floating_point_v<volatile double>);
+  static_assert(!is_noncv_floating_point_v<const volatile double>);
+
+  static_assert(is_noncv_floating_point<long double>::value);         // NOLINT
+  static_assert(!is_noncv_floating_point<const long double>::value);  // NOLINT
+  static_assert(
+      !is_noncv_floating_point<volatile long double>::value);  // NOLINT
+  static_assert(
+      !is_noncv_floating_point<const volatile long double>::value);  // NOLINT
+
+  static_assert(is_noncv_floating_point_v<long double>);
+  static_assert(!is_noncv_floating_point_v<const long double>);
+  static_assert(!is_noncv_floating_point_v<volatile long double>);
+  static_assert(!is_noncv_floating_point_v<const volatile long double>);
+}
+
 }  // namespace Test
