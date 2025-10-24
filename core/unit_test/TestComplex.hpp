@@ -738,6 +738,9 @@ struct TestStdComplexOperators {
     using kcomplex_t = Kokkos::complex<fp_t>;
     using scomplex_t = std::complex<fp_t>;
 
+    // These values have exact floating point representations
+    // For addition, subtraction and multiplication, the result
+    // also has an exact floating point representation.
     constexpr kcomplex_t k(.5, .25);
     constexpr scomplex_t s(.125, .0625);
 
@@ -855,6 +858,221 @@ TEST(TEST_CATEGORY, std_complex_operators) {
   TestStdComplexOperators test;
   test.testit();
 }
+
+template <class ExecSpace>
+struct TestComplexOperators {
+  using exec_space          = ExecSpace;
+  using floating_point_type = double;
+  using complex_type        = Kokkos::complex<double>;
+  using device_view_type    = Kokkos::View<complex_type *, exec_space>;
+  using host_view_type      = typename device_view_type::host_mirror_type;
+
+  device_view_type d_results;
+  host_view_type h_results;
+
+  KOKKOS_FUNCTION
+  void operator()(int) const {
+    {
+      // These values have exact floating point representations.
+      // For addition, subtraction and multiplication, the result
+      // also has an exact floating point representation.
+      constexpr complex_type zl{.5, .25};
+      constexpr complex_type zr{.125, .0625};
+
+      constexpr floating_point_type f{.03125};
+      constexpr complex_type zf{f};
+
+      bool b0      = (zl == zl);
+      d_results[0] = complex_type(b0);
+
+      bool b1      = (zl == zr);
+      d_results[1] = complex_type(b1);
+
+      bool b2      = (zf == f);
+      d_results[2] = complex_type(b2);
+
+      bool b3      = (zl == f);
+      d_results[3] = complex_type(b3);
+
+      bool b4      = (f == zf);
+      d_results[4] = complex_type(b4);
+
+      bool b5      = (f == zr);
+      d_results[5] = complex_type(b5);
+
+      bool b6      = (zl != zl);
+      d_results[6] = complex_type(b6);
+
+      bool b7      = (zl != zr);
+      d_results[7] = complex_type(b7);
+
+      bool b8      = (zf != f);
+      d_results[8] = complex_type(b8);
+
+      bool b9      = (zl != f);
+      d_results[9] = complex_type(b9);
+
+      bool b10      = (f != zf);
+      d_results[10] = complex_type(b10);
+
+      bool b11      = (f != zr);
+      d_results[11] = complex_type(b11);
+
+      complex_type z12 = zl + zr;
+      d_results[12]    = z12;
+
+      complex_type z13 = zl + f;
+      d_results[13]    = z13;
+
+      complex_type z14 = f + zr;
+      d_results[14]    = z14;
+
+      complex_type z15 = zl - zr;
+      d_results[15]    = z15;
+
+      complex_type z16 = zl - f;
+      d_results[16]    = z16;
+
+      complex_type z17 = f - zr;
+      d_results[17]    = z17;
+
+      complex_type z18 = zl * zr;
+      d_results[18]    = z18;
+
+      complex_type z19 = zl * f;
+      d_results[19]    = z19;
+
+      complex_type z20 = f * zr;
+      d_results[20]    = z20;
+
+      complex_type z21 = zl / zr;
+      d_results[21]    = z21;
+
+      complex_type z22 = zl / f;
+      d_results[22]    = z22;
+
+      complex_type z23 = f / zr;
+      d_results[23]    = z23;
+    }
+  }
+
+  void testit() {
+    d_results = device_view_type("TestComplexOperators", 99);
+    h_results = Kokkos::create_mirror_view(d_results);
+
+    Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace>(0, 1), *this);
+    Kokkos::fence();
+    Kokkos::deep_copy(h_results, d_results);
+
+    // l == l
+    ASSERT_FLOAT_EQ(h_results[0].real(), 1.);
+    ASSERT_FLOAT_EQ(h_results[0].imag(), 0.);
+
+    // l == r
+    ASSERT_FLOAT_EQ(h_results[1].real(), 0.);
+    ASSERT_FLOAT_EQ(h_results[1].imag(), 0.);
+
+    // zf == f
+    ASSERT_FLOAT_EQ(h_results[2].real(), 1.);
+    ASSERT_FLOAT_EQ(h_results[2].imag(), 0.);
+
+    // zl == f
+    ASSERT_FLOAT_EQ(h_results[3].real(), 0.);
+    ASSERT_FLOAT_EQ(h_results[3].imag(), 0.);
+
+    // f == zf
+    ASSERT_FLOAT_EQ(h_results[4].real(), 1.);
+    ASSERT_FLOAT_EQ(h_results[4].imag(), 0.);
+
+    // f == zr
+    ASSERT_FLOAT_EQ(h_results[5].real(), 0.);
+    ASSERT_FLOAT_EQ(h_results[5].imag(), 0.);
+
+    // l != l
+    ASSERT_FLOAT_EQ(h_results[6].real(), 0.);
+    ASSERT_FLOAT_EQ(h_results[6].imag(), 0.);
+
+    // l != r
+    ASSERT_FLOAT_EQ(h_results[7].real(), 1.);
+    ASSERT_FLOAT_EQ(h_results[7].imag(), 0.);
+
+    // zf != f
+    ASSERT_FLOAT_EQ(h_results[8].real(), 0.);
+    ASSERT_FLOAT_EQ(h_results[8].imag(), 0.);
+
+    // zl != f
+    ASSERT_FLOAT_EQ(h_results[9].real(), 1.);
+    ASSERT_FLOAT_EQ(h_results[9].imag(), 0.);
+
+    // f != zf
+    ASSERT_FLOAT_EQ(h_results[10].real(), 0.);
+    ASSERT_FLOAT_EQ(h_results[10].imag(), 0.);
+
+    // f != zr
+    ASSERT_FLOAT_EQ(h_results[11].real(), 1.);
+    ASSERT_FLOAT_EQ(h_results[11].imag(), 0.);
+
+    // zl + zr
+    ASSERT_FLOAT_EQ(h_results[12].real(), .625);
+    ASSERT_FLOAT_EQ(h_results[12].imag(), .3125);
+
+    // zl + f
+    ASSERT_FLOAT_EQ(h_results[13].real(), .53125);
+    ASSERT_FLOAT_EQ(h_results[13].imag(), .25);
+
+    // f + zr
+    ASSERT_FLOAT_EQ(h_results[14].real(), .15625);
+    ASSERT_FLOAT_EQ(h_results[14].imag(), .0625);
+
+    // zl - zr
+    ASSERT_FLOAT_EQ(h_results[15].real(), .375);
+    ASSERT_FLOAT_EQ(h_results[15].imag(), .1875);
+
+    // zl - f
+    ASSERT_FLOAT_EQ(h_results[16].real(), .46875);
+    ASSERT_FLOAT_EQ(h_results[16].imag(), .25);
+
+    // f - zr
+    ASSERT_FLOAT_EQ(h_results[17].real(), -.09375);
+    ASSERT_FLOAT_EQ(h_results[17].imag(), -.0625);
+
+    // zl * zr
+    ASSERT_FLOAT_EQ(h_results[18].real(), .046875);
+    ASSERT_FLOAT_EQ(h_results[18].imag(), .0625);
+
+    // zl * f
+    ASSERT_FLOAT_EQ(h_results[19].real(), .015625);
+    ASSERT_FLOAT_EQ(h_results[19].imag(), .0078125);
+
+    // f * zr
+    ASSERT_FLOAT_EQ(h_results[20].real(), .00390625);
+    ASSERT_FLOAT_EQ(h_results[20].imag(), .001953125);
+
+    // Division involving Kokkos::complex numbers with exact
+    // floating point representations is inexact because of the way we perform
+    // it, so we need to check results against an epsilon.
+    constexpr floating_point_type epsilon{
+        std::numeric_limits<floating_point_type>::epsilon()};
+
+    // z1 / zr
+    ASSERT_FLOAT_EQ(h_results[21].real(), 4.);
+    ASSERT_NEAR(h_results[21].imag(), 0., epsilon);
+
+    // zl / f
+    ASSERT_FLOAT_EQ(h_results[22].real(), 16.);
+    ASSERT_FLOAT_EQ(h_results[22].imag(), 8.);
+
+    // f / zr
+    ASSERT_FLOAT_EQ(h_results[23].real(), .2);
+    ASSERT_FLOAT_EQ(h_results[23].imag(), -.1);
+  }
+};
+
+TEST(TEST_CATEGORY, complex_operators) {
+  TestComplexOperators<TEST_EXECSPACE> test;
+  test.testit();
+}
+
 }  // namespace Test
 
 #ifdef KOKKOS_COMPILER_NVCC
