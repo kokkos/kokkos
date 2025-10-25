@@ -16,13 +16,13 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-* Add 128bit CompareAndSwap [\#8025](https://github.com/kokkos/kokkos/pull/8025)
+* Leverage hardware atomics for 128-bit compare-and-swap on Hopper+ [\#8025](https://github.com/kokkos/kokkos/pull/8025)
 * Enable lock-free atomic_fetch_op for 128-bit types on Hopper+ [\#8511](https://github.com/kokkos/kokkos/pull/8511)
 * Use `__grid_constant__` based launch mechanism: this can lead to subtle synchronization behavior change for mid-size functors [\#8529](https://github.com/kokkos/kokkos/pull/8529)
 
 #### HIP:
 * Fix a performance regression introduced in 4.6 when using lightweight kernel in parallel reduce [\#8268](https://github.com/kokkos/kokkos/pull/8268)
-* Add support for the NAVI4 architecture [\#8501](https://github.com/kokkos/kokkos/pull/8501)
+* Add support for the Navi 4 architecture [\#8501](https://github.com/kokkos/kokkos/pull/8501)
 * Leverage HIP atomic builtins for `atomic_fetch_{min,max}` with floating point types [\#8554](https://github.com/kokkos/kokkos/pull/8554)
 * Prefer smaller block sizes for `parallel_for` with small iteration space. [\#8512](https://github.com/kokkos/kokkos/pull/8512)
 
@@ -81,8 +81,8 @@
  * Properly delete `Timer` copy constructor and copy assignment operators [\#8399](https://github.com/kokkos/kokkos/pull/8399)
  * Fix RISC-V support (compiler check at configuration time and missing semicolons at compile time) [\#8439](https://github.com/kokkos/kokkos/pull/8439)
  * Corrected `bit_width` return type to be `int` instead of `T` to align with the standard library [\#8509](https://github.com/kokkos/kokkos/pull/8509)
- * Ensure `OpenMP::partition_space` doesn't error for small concurrency [\#8488](https://github.com/kokkos/kokkos/pull/8488)
- * Fix `parallel_reduce` on Hip and Cuda with `LaunchBounds` values smaller than 32 [\#8452](https://github.com/kokkos/kokkos/pull/8452)
+ * `OpenMP: fix `partition_space` with low thread counts [\#8488](https://github.com/kokkos/kokkos/pull/8488)
+ * Fix `parallel_reduce` on HIP and Cuda with `LaunchBounds` values smaller than 32 [\#8452](https://github.com/kokkos/kokkos/pull/8452)
  * Cuda,HIP: Launch work graph on the specified instance [\#8576](https://github.com/kokkos/kokkos/pull/8576)
 
 ## 4.7.01
