@@ -925,6 +925,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   template <class P, class... Args>
     requires(!std::is_null_pointer_v<P> &&
+             std::is_convertible_v<P, pointer_type> &&
              std::is_constructible_v<typename base_t::data_handle_type, P> &&
              sizeof...(Args) != rank() + 1)
   KOKKOS_FUNCTION explicit View(P ptr_, Args... args)
