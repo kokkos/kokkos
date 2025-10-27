@@ -1591,11 +1591,12 @@ class TestViewAPI {
 
     // This is not currently supported but may be added in the future
     //{
-      //Kokkos::View<int *> b(a.data_handle(), 5);  // does not increase ref count
-      //ASSERT_EQ(a.use_count(), 2);
-      //ASSERT_EQ(b.use_count(), 2);
+    // Kokkos::View<int *> b(a.data_handle(), 5);
+    // ASSERT_EQ(a.use_count(), 2);
+    // ASSERT_EQ(b.use_count(), 2);
     //}
-    static_assert(!std::constructible_from<Kokkos::View<int *>, decltype(a.data_handle()), int>);
+    static_assert(!std::constructible_from<Kokkos::View<int *>,
+                                           decltype(a.data_handle()), int>);
 #endif
   }
 };
