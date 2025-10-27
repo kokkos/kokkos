@@ -8,8 +8,6 @@
 * Require C++20 [\#8372](https://github.com/kokkos/kokkos/pull/8372)
 * Reenabled new `mdspan` based `View` implementation (disabled in 4.7.1)
 * Complete C++20 module support [\#8222](https://github.com/kokkos/kokkos/pull/8222), [\#8263](https://github.com/kokkos/kokkos/pull/8263), [\#8218](https://github.com/kokkos/kokkos/pull/8218)
-* Drop makefile support [\#8374](https://github.com/kokkos/kokkos/pull/8374)
-* Change `Kokkos_ENABLE_DEPRECATE_CODE_4` default `ON -> OFF` [\#8378](https://github.com/kokkos/kokkos/pull/8378)
 * Bump CMake minimum required version to 3.22 [\#8377](https://github.com/kokkos/kokkos/pull/8377)
 * Added explicit loop unrolling execution policy trait [\#8164](https://github.com/kokkos/kokkos/pull/8164)
 
@@ -50,6 +48,7 @@
 * Updated `ErrorReporter`: adhere to Kokkos naming conventions and change `get_reports` to return values [\#8486](https://github.com/kokkos/kokkos/pull/8486)
 
 ### Build System Changes
+* Change `Kokkos_ENABLE_DEPRECATE_CODE_4` default `ON -> OFF` [\#8378](https://github.com/kokkos/kokkos/pull/8378)
 * Require CMake 3.25.2 for c++20 support in the CUDA language [\#8402](https://github.com/kokkos/kokkos/pull/8402)
 * Make Kokkos support multiple languages [\#8167](https://github.com/kokkos/kokkos/pull/8167)
 * Allow compiling with shared libraries on Windows [\#8324](https://github.com/kokkos/kokkos/pull/8324)
@@ -76,7 +75,7 @@
 * Deprecated old member function names in (experimental) `ErrorReporter` [\#8486](https://github.com/kokkos/kokkos/pull/8486)
 
 ### Bug Fixes
- * Track modification only if `DualView` is not using a single device [\#8273](https://github.com/kokkos/kokkos/pull/8273)
+ * Track modification for `resize` only if `DualView` is not using a single device [\#8273](https://github.com/kokkos/kokkos/pull/8273)
  * Fix MSVC `floating-point value does not fit in required floating-point type` warning from `reduction_identity` [\#8376](https://github.com/kokkos/kokkos/pull/8376)
  * Properly delete `Timer` copy constructor and copy assignment operators [\#8399](https://github.com/kokkos/kokkos/pull/8399)
  * Fix RISC-V support (compiler check at configuration time and missing semicolons at compile time) [\#8439](https://github.com/kokkos/kokkos/pull/8439)
