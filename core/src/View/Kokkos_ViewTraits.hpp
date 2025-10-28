@@ -505,9 +505,11 @@ struct ViewTraits {
   using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use data_type instead.") = typename data_analysis::scalar_array_type;
   using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use const_data_type instead.") = typename data_analysis::const_scalar_array_type;
+      "Use const_data_type instead.") =
+      typename data_analysis::const_scalar_array_type;
   using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use non_const_data_type instead.") = typename data_analysis::non_const_scalar_array_type;
+      "Use non_const_data_type instead.") =
+      typename data_analysis::non_const_scalar_array_type;
 #else
   using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use data_type instead.") = data_type;
