@@ -706,7 +706,6 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     }
   }
 #else
-#error "bad"
   KOKKOS_DEFAULTED_FUNCTION
   View(const View&)
     requires(!has_hooks_policy)
