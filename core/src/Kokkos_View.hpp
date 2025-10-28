@@ -199,12 +199,21 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
  public:
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use data_type instead.") = typename traits::scalar_array_type;
+  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use const_data_type instead.") = typename traits::const_scalar_array_type;
+  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use non_const_data_type instead.") = typename traits::non_const_scalar_array_type;
+#else
   using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use data_type instead.") = data_type;
   using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use const_data_type instead.") = const_data_type;
   using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use non_const_data_type instead.") = non_const_data_type;
+#endif
 #endif
 
   // typedefs from BasicView
@@ -214,6 +223,15 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   //----------------------------------------
   // Compatible view of a data type
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using type = std::conditional_t<
+      has_hooks_policy,
+      View<typename traits::scalar_array_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::hooks_policy,
+           typename traits::memory_traits>,
+      View<typename traits::scalar_array_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits> >;
+#else
   using type = std::conditional_t<
       has_hooks_policy,
       View<typename traits::data_type, typename traits::array_layout,
@@ -221,6 +239,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
            typename traits::memory_traits>,
       View<typename traits::data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::memory_traits> >;
+#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   //----------------------------------------
