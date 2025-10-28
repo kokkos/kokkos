@@ -18,6 +18,7 @@ void device_bench_unary_op(benchmark::State& state,
 
   UnaryOp op;
 
+  const Args<T, ExecSpace> args = *wrapper.args;
   View<T*, ExecSpace> res("res", BENCH_SIZE);
 
   for (auto _ : state) {
@@ -27,8 +28,7 @@ void device_bench_unary_op(benchmark::State& state,
           simd_type a, x;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
             a = simd_unchecked_load<simd_type>(
-                wrapper.args->arg1.data() + i,
-                Kokkos::Experimental::simd_flag_aligned);
+                args.arg1.data() + i, Kokkos::Experimental::simd_flag_aligned);
             x = op.on_device(a);
             simd_unchecked_store(x, res.data() + i,
                                  Kokkos::Experimental::simd_flag_aligned);
@@ -47,6 +47,7 @@ void device_bench_binary_op(benchmark::State& state,
 
   BinaryOp op;
 
+  const Args<T, ExecSpace> args = *wrapper.args;
   View<T*, ExecSpace> res("res", BENCH_SIZE);
 
   for (auto _ : state) {
@@ -56,11 +57,9 @@ void device_bench_binary_op(benchmark::State& state,
           simd_type a, b, x;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
             a = simd_unchecked_load<simd_type>(
-                wrapper.args->arg1.data() + i,
-                Kokkos::Experimental::simd_flag_aligned);
+                args.arg1.data() + i, Kokkos::Experimental::simd_flag_aligned);
             b = simd_unchecked_load<simd_type>(
-                wrapper.args->arg2.data() + i,
-                Kokkos::Experimental::simd_flag_aligned);
+                args.arg2.data() + i, Kokkos::Experimental::simd_flag_aligned);
             x = op.on_device(a, b);
             simd_unchecked_store(x, res.data() + i,
                                  Kokkos::Experimental::simd_flag_aligned);
@@ -79,6 +78,7 @@ void device_bench_ternary_op(benchmark::State& state,
 
   TernaryOp op;
 
+  const Args<T, ExecSpace> args = *wrapper.args;
   View<T*, ExecSpace> res("res", BENCH_SIZE);
 
   for (auto _ : state) {
@@ -88,14 +88,11 @@ void device_bench_ternary_op(benchmark::State& state,
           simd_type a, b, c, x;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
             a = simd_unchecked_load<simd_type>(
-                wrapper.args->arg1.data() + i,
-                Kokkos::Experimental::simd_flag_aligned);
+                args.arg1.data() + i, Kokkos::Experimental::simd_flag_aligned);
             b = simd_unchecked_load<simd_type>(
-                wrapper.args->arg2.data() + i,
-                Kokkos::Experimental::simd_flag_aligned);
+                args.arg2.data() + i, Kokkos::Experimental::simd_flag_aligned);
             c = simd_unchecked_load<simd_type>(
-                wrapper.args->arg3.data() + i,
-                Kokkos::Experimental::simd_flag_aligned);
+                args.arg3.data() + i, Kokkos::Experimental::simd_flag_aligned);
             x = op.on_device(a, b, c);
             simd_unchecked_store(x, res.data() + i,
                                  Kokkos::Experimental::simd_flag_aligned);
@@ -120,7 +117,7 @@ void device_bench_reduction_op(benchmark::State& state,
   Kokkos::Random_XorShift64_Pool<ExecSpace> random_pool(58051);
 
   Kokkos::parallel_for(
-      Kokkos::RangePolicy<>(ExecSpace(), 0, BENCH_SIZE / width),
+      Kokkos::RangePolicy(ExecSpace(), 0, BENCH_SIZE / width),
       KOKKOS_LAMBDA(std::size_t i) {
         auto generator = random_pool.get_state();
         masks(i)       = mask_type(generator.rand() % 2 == 0);
@@ -128,6 +125,7 @@ void device_bench_reduction_op(benchmark::State& state,
       });
   Kokkos::fence("After filling the masks");
 
+  const Args<T, ExecSpace> args = *wrapper.args;
   View<typename simd_type::value_type*, ExecSpace> res("res",
                                                        BENCH_SIZE / width);
 
@@ -138,8 +136,7 @@ void device_bench_reduction_op(benchmark::State& state,
           simd_type a;
           for (std::size_t i = 0; i < BENCH_SIZE; i += width) {
             a = simd_unchecked_load<simd_type>(
-                wrapper.args->arg1.data() + i,
-                Kokkos::Experimental::simd_flag_aligned);
+                args.arg1.data() + i, Kokkos::Experimental::simd_flag_aligned);
             res(i / width) = op.on_device(a, masks(i / width));
           }
         });
@@ -175,7 +172,7 @@ void device_bench_reduction_op(benchmark::State& state,
 
 template <typename Abi, typename DataType>
 inline void device_register_common_benchmarks() {
-  using ExecSpace = Kokkos::DefaultHostExecutionSpace;
+  using ExecSpace = Kokkos::DefaultExecutionSpace;
 
   const int num_ite = 5;
   const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
@@ -221,7 +218,7 @@ inline void device_register_common_benchmarks() {
 
 template <typename Abi, typename DataType>
 inline void device_register_math_benchmarks() {
-  using ExecSpace = Kokkos::DefaultHostExecutionSpace;
+  using ExecSpace = Kokkos::DefaultExecutionSpace;
 
   const int num_ite = 5;
   const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
