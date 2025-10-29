@@ -523,10 +523,12 @@ TEST(simd, host_mask_bitwise_ops) {
 
 TEST(simd, device_bitwise_ops) {
   Kokkos::parallel_for(1, simd_device_bitwise_ops_functor());
+  Kokkos::fence();
 }
 
 TEST(simd, device_mask_bitwise_ops) {
   Kokkos::parallel_for(1, simd_device_mask_bitwise_ops_functor());
+  Kokkos::fence();
 }
 
 #endif
