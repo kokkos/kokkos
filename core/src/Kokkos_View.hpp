@@ -693,7 +693,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
 // FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
-// differently
+// differently. Clang with CUDA also had segfaults in CI
+// Define the workaround here since this condition will be re-used.
+// We undef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND later.
 #if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \
     (defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA))
 #define KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND 1
