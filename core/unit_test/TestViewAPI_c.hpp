@@ -9,7 +9,7 @@ TEST(TEST_CATEGORY, view_api_c) {
   TestViewAPI<double, TEST_EXECSPACE>::run_test_refcount_exception();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_deep_copy_empty();
   TestViewAPI<double, TEST_EXECSPACE>::run_test_view_operator_b();
-  TestViewAPI<double, TEST_EXECSPACE>::test_view_data_handle_ctor();
+  TestViewAPI<double, TEST_EXECSPACE>::test_view_data_handle_ctor_ref_counts();
 }
 
 }  // namespace Test

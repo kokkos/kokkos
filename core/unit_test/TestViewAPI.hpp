@@ -1572,7 +1572,7 @@ class TestViewAPI {
     typename const_multivector_type::const_type ccmvX(cmv);
   }
 
-  static void test_view_data_handle_ctor() {
+  static void test_view_data_handle_ctor_ref_counts() {
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     Kokkos::View<int *> a("A", 5);
     ASSERT_EQ(a.use_count(), 1);
@@ -1584,6 +1584,12 @@ class TestViewAPI {
     ASSERT_EQ(a.use_count(), 1);
     {
       Kokkos::View<int *> b(a.data_handle(), a.mapping());
+      ASSERT_EQ(a.use_count(), 2);
+      ASSERT_EQ(b.use_count(), 2);
+    }
+    ASSERT_EQ(a.use_count(), 1);
+    {
+      Kokkos::View<int *> b(a.data_handle(), a.mapping(), a.accessor());
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
     }
