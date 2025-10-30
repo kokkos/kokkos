@@ -46,7 +46,7 @@
 * Enable running tests on systems with only 2GB of device memory [\#8552](https://github.com/kokkos/kokkos/pull/8552)
 * Added `begin()`/`end()` methods to `Kokkos::Array` [\#8577](https://github.com/kokkos/kokkos/pull/8577)
 * Updated `ErrorReporter`: adhere to Kokkos naming conventions and change `get_reports` to return values [\#8486](https://github.com/kokkos/kokkos/pull/8486)
-* Added explicit loop unrolling execution policy trait (for now ignored for backends other than CUDA)[\#8164](https://github.com/kokkos/kokkos/pull/8164)
+* Added explicit loop unrolling execution policy trait (for now ignored for backends other than CUDA) [\#8164](https://github.com/kokkos/kokkos/pull/8164)
 
 ### Build System Changes
 * Change `Kokkos_ENABLE_DEPRECATED_CODE_4` default `ON -> OFF` [\#8378](https://github.com/kokkos/kokkos/pull/8378)
@@ -83,7 +83,7 @@
  * Properly delete `Timer` copy constructor and copy assignment operators [\#8399](https://github.com/kokkos/kokkos/pull/8399)
  * Fix RISC-V support (compiler check at configuration time and missing semicolons at compile time) [\#8439](https://github.com/kokkos/kokkos/pull/8439)
  * Corrected `bit_width` return type to be `int` instead of `T` to align with the standard library [\#8509](https://github.com/kokkos/kokkos/pull/8509)
- * `OpenMP: fix `partition_space` with low thread counts [\#8488](https://github.com/kokkos/kokkos/pull/8488)
+ * OpenMP: fix `partition_space` with low thread counts [\#8488](https://github.com/kokkos/kokkos/pull/8488)
  * Fix `parallel_reduce` on HIP and Cuda with `LaunchBounds` values smaller than 32 [\#8452](https://github.com/kokkos/kokkos/pull/8452)
  * Cuda,HIP: Launch work graph on the specified instance [\#8576](https://github.com/kokkos/kokkos/pull/8576)
 
