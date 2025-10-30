@@ -51,7 +51,8 @@ struct TestViewCtorDataHandle {
 };
 
 TEST(TEST_CATEGORY, view_ctor_data_handle) {
-  TestViewCtorDataHandle<TEST_EXECSPACE>::test_view_data_handle_ctor_ref_counts();
+  TestViewCtorDataHandle<
+      TEST_EXECSPACE>::test_view_data_handle_ctor_ref_counts();
 }
 
 }  // namespace
