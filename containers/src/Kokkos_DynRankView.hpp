@@ -671,9 +671,6 @@ class DynRankView : private View<DataType*******, Properties...> {
     {
       return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
     }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0,
@@ -701,9 +698,6 @@ class DynRankView : private View<DataType*******, Properties...> {
     {
       return view_type::operator()(i0, i1, 0, 0, 0, 0, 0);
     }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
@@ -735,9 +729,6 @@ class DynRankView : private View<DataType*******, Properties...> {
     {
       return view_type::operator()(i0, i1, i2, 0, 0, 0, 0);
     }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
@@ -1606,9 +1597,6 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
 
     return dst_type(create_mirror(arg_prop, src.DownCast()), src.rank());
   }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 }  // namespace Impl
@@ -1694,9 +1682,6 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 }  // namespace Impl
@@ -1783,9 +1768,6 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 template <class Space, class T, class... P>

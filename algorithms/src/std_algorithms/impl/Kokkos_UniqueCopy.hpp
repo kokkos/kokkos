@@ -166,10 +166,6 @@ KOKKOS_FUNCTION OutputIterator unique_copy_team_impl(
       return Impl::copy_team_impl(teamHandle, first + scan_size, last,
                                   d_first + count);
     }
-
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-    __builtin_unreachable();
-#endif
   }
 }
 

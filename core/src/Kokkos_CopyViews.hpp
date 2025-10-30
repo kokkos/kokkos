@@ -3118,9 +3118,6 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     return dst_type(prop_copy, src.layout());
 #endif
   }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 }  // namespace Impl
 
@@ -3227,10 +3224,6 @@ inline auto choose_create_mirror(
       return create_mirror(arg_prop, src);
     }
   }
-
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 // create a mirror view
@@ -3264,9 +3257,6 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 }  // namespace Impl
 
@@ -3372,9 +3362,6 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
-#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 // Previously when using auto here, the intel compiler 19.3 would
