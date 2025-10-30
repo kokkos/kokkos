@@ -6,10 +6,10 @@
 
 ### Features:
 * Require C++20 [\#8372](https://github.com/kokkos/kokkos/pull/8372)
+  * Implies a new set of minimum compiler versions
 * Reenabled new `mdspan` based `View` implementation (disabled in 4.7.1)
 * Complete C++20 module support [\#8222](https://github.com/kokkos/kokkos/pull/8222), [\#8263](https://github.com/kokkos/kokkos/pull/8263), [\#8218](https://github.com/kokkos/kokkos/pull/8218)
-* Bump CMake minimum required version to 3.22 [\#8377](https://github.com/kokkos/kokkos/pull/8377)
-* Added explicit loop unrolling execution policy trait [\#8164](https://github.com/kokkos/kokkos/pull/8164)
+* Begin removal of deprecated code 4
 
 ### Backend and Architecture Enhancements:
 
@@ -46,9 +46,12 @@
 * Enable running tests on systems with only 2GB of device memory [\#8552](https://github.com/kokkos/kokkos/pull/8552)
 * Added `begin()`/`end()` methods to `Kokkos::Array` [\#8577](https://github.com/kokkos/kokkos/pull/8577)
 * Updated `ErrorReporter`: adhere to Kokkos naming conventions and change `get_reports` to return values [\#8486](https://github.com/kokkos/kokkos/pull/8486)
+* Added explicit loop unrolling execution policy trait (for now ignored for backends other than CUDA)[\#8164](https://github.com/kokkos/kokkos/pull/8164)
 
 ### Build System Changes
-* Change `Kokkos_ENABLE_DEPRECATE_CODE_4` default `ON -> OFF` [\#8378](https://github.com/kokkos/kokkos/pull/8378)
+* Change `Kokkos_ENABLE_DEPRECATED_CODE_4` default `ON -> OFF` [\#8378](https://github.com/kokkos/kokkos/pull/8378)
+* Added `Kokkos_ENABLE_DEPRECATED_CODE_5` option. Default is `ON`. [\#8340](https://github.com/kokkos/kokkos/pull/8340)
+* Bump CMake minimum required version to 3.22 [\#8377](https://github.com/kokkos/kokkos/pull/8377)
 * Require CMake 3.25.2 for c++20 support in the CUDA language [\#8402](https://github.com/kokkos/kokkos/pull/8402)
 * Make Kokkos support multiple languages [\#8167](https://github.com/kokkos/kokkos/pull/8167)
 * Allow compiling with shared libraries on Windows [\#8324](https://github.com/kokkos/kokkos/pull/8324)
