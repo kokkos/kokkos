@@ -170,6 +170,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         const index_type local_x    = item.get_local_id(2);
         const index_type local_y    = item.get_local_id(1);
         const index_type local_z    = item.get_local_id(0);
+        const index_type n_local_x  = item.get_local_range(2);
+        const index_type n_local_y  = item.get_local_range(1);
+        const index_type n_local_z  = item.get_local_range(0);
         const index_type global_x   = item.get_group(2);
         const index_type global_y   = item.get_group(1);
         const index_type global_z   = item.get_group(0);
@@ -181,7 +184,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
                                         MaxGridSize, typename Policy::work_tag>(
             bare_policy, functor_wrapper.get_functor(), max_grid_size,
             {n_global_x, n_global_y, n_global_z},
-            {global_x, global_y, global_z}, {local_x, local_y, local_z})
+            {n_local_x, n_local_y, n_local_z}, {global_x, global_y, global_z},
+            {local_x, local_y, local_z})
             .exec_range();
       });
     };
