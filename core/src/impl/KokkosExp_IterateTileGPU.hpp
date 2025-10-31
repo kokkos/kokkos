@@ -28,13 +28,13 @@ struct EmulateCUDADim3 {
 template <class Tag, class Functor, class... Args>
 KOKKOS_IMPL_FORCEINLINE_FUNCTION std::enable_if_t<std::is_void_v<Tag>>
 _tag_invoke(Functor const& f, Args&&... args) {
-  f((Args&&)args...);
+  f(std::forward<Args>(args)...);
 }
 
 template <class Tag, class Functor, class... Args>
 KOKKOS_IMPL_FORCEINLINE_FUNCTION std::enable_if_t<!std::is_void_v<Tag>>
 _tag_invoke(Functor const& f, Args&&... args) {
-  f(Tag{}, (Args&&)args...);
+  f(Tag{}, std::forward<Args>(args)...);
 }
 
 template <class Tag, class Functor, class T, size_t N, size_t... Idxs,
@@ -42,7 +42,7 @@ template <class Tag, class Functor, class T, size_t N, size_t... Idxs,
 KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array_helper(
     Functor const& f, T (&vals)[N], std::integer_sequence<size_t, Idxs...>,
     Args&&... args) {
-  _tag_invoke<Tag>(f, vals[Idxs]..., (Args&&)args...);
+  _tag_invoke<Tag>(f, vals[Idxs]..., std::forward<Args>(args)...);
 }
 
 template <class Tag, class Functor, class T, size_t N, class... Args>
@@ -50,7 +50,7 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
                                                         T (&vals)[N],
                                                         Args&&... args) {
   _tag_invoke_array_helper<Tag>(f, vals, std::make_index_sequence<N>{},
-                                (Args&&)args...);
+                                std::forward<Args>(args)...);
 }
 
 // ------------------------------------------------------------------------- //
@@ -457,12 +457,14 @@ struct DeviceIterateTile {
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateTile(
       const PolicyType& policy_, const Functor& f_, value_type_storage v_,
       const EmulateCUDADim3<index_type> gridDim_,
+      [[maybe_unused]] const EmulateCUDADim3<index_type> blockDim_,
       const EmulateCUDADim3<index_type> blockIdx_,
       const EmulateCUDADim3<index_type> threadIdx_)
       : m_policy(policy_),
         m_func(f_),
         m_v(v_),
         gridDim(gridDim_),
+        blockDim(blockDim_),
         blockIdx(blockIdx_),
         threadIdx(threadIdx_) {}
 #else
@@ -545,6 +547,7 @@ struct DeviceIterateTile {
   value_type_storage m_v;
 #ifdef KOKKOS_ENABLE_SYCL
   const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockDim;
   const EmulateCUDADim3<index_type> blockIdx;
   const EmulateCUDADim3<index_type> threadIdx;
 #endif

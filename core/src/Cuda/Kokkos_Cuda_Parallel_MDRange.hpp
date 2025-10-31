@@ -53,6 +53,71 @@ int max_tile_size_product_helper(const Policy& pol, const LaunchBounds&) {
       static_cast<int>(Kokkos::Impl::CudaTraits::MaxHierarchicalParallelism));
 }
 
+// Template structure for Stride optimization
+template <typename FunctorType, typename Policy, bool UseStride>
+class ParallelForMDRange;
+
+// Template specialization for Stride
+template <typename FunctorType, typename... Traits>
+class ParallelForMDRange<FunctorType, Kokkos::MDRangePolicy<Traits...>, true> {
+ public:
+  using Policy       = Kokkos::MDRangePolicy<Traits...>;
+  using functor_type = FunctorType;
+
+ private:
+  using index_type  = typename Policy::index_type;
+  using MaxGridSize = Kokkos::Array<index_type, 3>;
+
+  const FunctorType m_functor;
+  const Policy m_policy;
+  const MaxGridSize m_max_grid_size;
+
+ public:
+  ParallelForMDRange()                                     = delete;
+  ParallelForMDRange(ParallelForMDRange const&)            = default;
+  ParallelForMDRange& operator=(ParallelForMDRange const&) = delete;
+
+  inline __device__ void operator()() const {
+    Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
+                                    MaxGridSize, typename Policy::work_tag>(
+        m_policy, m_functor, m_max_grid_size)
+        .exec_range();
+  }
+
+  ParallelForMDRange(FunctorType const& arg_functor, Policy const& arg_policy,
+                     MaxGridSize const& max_grid_size)
+      : m_functor(arg_functor),
+        m_policy(arg_policy),
+        m_max_grid_size(max_grid_size) {}
+};
+
+// Template specialization for No Stride
+template <class FunctorType, class... Traits>
+class ParallelForMDRange<FunctorType, Kokkos::MDRangePolicy<Traits...>, false> {
+ public:
+  using Policy       = Kokkos::MDRangePolicy<Traits...>;
+  using functor_type = FunctorType;
+
+ private:
+  const FunctorType m_functor;
+  const Policy m_policy;
+
+ public:
+  ParallelForMDRange()                                     = delete;
+  ParallelForMDRange(ParallelForMDRange const&)            = default;
+  ParallelForMDRange& operator=(ParallelForMDRange const&) = delete;
+
+  inline __device__ void operator()() const {
+    Kokkos::Impl::DeviceIterateTileNoStride<Policy::rank, Policy, FunctorType,
+                                            typename Policy::work_tag>(
+        m_policy, m_functor)
+        .exec_range();
+  }
+
+  ParallelForMDRange(FunctorType const& arg_functor, Policy const& arg_policy)
+      : m_functor(arg_functor), m_policy(arg_policy) {}
+};
+
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
  public:
@@ -132,6 +197,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     // ensure we don't exceed the capability of the device
     check_grid_sizes(grid);
     check_block_sizes(block);
+
     // launch the kernel
     CudaParallelLaunch<ParallelFor, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance());
