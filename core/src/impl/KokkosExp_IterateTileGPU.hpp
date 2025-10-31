@@ -7,11 +7,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <algorithm>
-
 #include <utility>
-
-#include <impl/Kokkos_Profiling_Interface.hpp>
-#include <typeinfo>
 
 namespace Kokkos {
 namespace Impl {
@@ -52,6 +48,151 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
   _tag_invoke_array_helper<Tag>(f, vals, std::make_index_sequence<N>{},
                                 (Args&&)args...);
 }
+
+// ------------------------------------------------------------------------- //
+// ParallelFor iteration pattern without stride
+// When the backend API is sufficient for iterating over the ND-range
+//
+template <int Rank, typename array_index_type, typename index_type,
+          typename Functor, Kokkos::Iterate Layout, typename Tag>
+struct DeviceIterateNoStride {
+  using array_type = Kokkos::Array<array_index_type, Rank>;
+
+ private:
+  const array_type m_lower;
+  const array_type m_upper;
+  const array_type m_extent;  // tile_size * num_tiles
+  const Functor& m_functor;
+
+#ifdef KOKKOS_ENABLE_SYCL
+  const EmulateCUDADim3<index_type> gridDim;
+  const EmulateCUDADim3<index_type> blockDim;
+  const EmulateCUDADim3<index_type> blockIdx;
+  const EmulateCUDADim3<index_type> threadIdx;
+#endif
+
+ public:
+#ifdef KOKKOS_ENABLE_SYCL
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateNoStride(
+      const array_type& lower, const array_type& upper,
+      const array_type& extent, const Functor& functor,
+      const EmulateCUDADim3<index_type> gridDim_,
+      const EmulateCUDADim3<index_type> blockDim_,
+      const EmulateCUDADim3<index_type> blockIdx_,
+      const EmulateCUDADim3<index_type> threadIdx_)
+      : m_lower(lower),
+        m_upper(upper),
+        m_extent(extent),
+        m_functor(functor),
+        gridDim(gridDim_),
+        blockDim(blockDim_),
+        blockIdx(blockIdx_),
+        threadIdx(threadIdx_) {}
+#else
+  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateNoStride(const array_type& lower,
+                                                    const array_type& upper,
+                                                    const array_type& extent,
+                                                    const Functor& functor)
+      : m_lower(lower), m_upper(upper), m_extent(extent), m_functor(functor) {}
+#endif
+
+  KOKKOS_IMPL_DEVICE_FUNCTION
+  void exec_range() const { iterate(std::integral_constant<unsigned, Rank>()); }
+
+ private:
+  // Runtime expression to determine if Dim is part of a packed pair
+  // Packing occurs on consecutive dimension pairs for rank > 3
+  template <unsigned Dim>
+  KOKKOS_IMPL_DEVICE_FUNCTION static consteval bool is_packed_index() {
+    return ((Dim == 0 || Dim == 1) && Rank > 3) ||
+           ((Dim == 2 || Dim == 3) && Rank > 4) ||
+           ((Dim == 4 || Dim == 5) && Rank > 5);
+  }
+
+  // Packed: returns flat hardware thread index (unpacking happens in iterate())
+  // Unpacked: hardware thread index (blockIdx * blockDim + threadIdx)
+  template <unsigned R>
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
+  my_thIdx() const noexcept {
+    static_assert(R < 6);
+    if constexpr (is_packed_index<R>()) {
+      if constexpr (R == 0 || R == 1) {
+        return blockIdx.x * blockDim.x + threadIdx.x;
+      } else if constexpr (R == 2 || R == 3) {
+        return blockIdx.y * blockDim.y + threadIdx.y;
+      } else if constexpr (R == 4 || R == 5) {
+        return blockIdx.z * blockDim.z + threadIdx.z;
+      }
+    } else {
+      // No packed index
+      if constexpr (Rank < 4) {
+        if constexpr (R == 0) {
+          return blockIdx.x * blockDim.x + threadIdx.x;
+        } else if constexpr (R == 1) {
+          return blockIdx.y * blockDim.y + threadIdx.y;
+        } else if constexpr (R == 2) {
+          return blockIdx.z * blockDim.z + threadIdx.z;
+        }
+      } else {
+        // Mix of packed and unpacked for Rank 4 and 5
+        if constexpr (R == 2) {
+          return blockIdx.y * blockDim.y + threadIdx.y;
+        } else if constexpr (R == 3 || R == 4) {
+          return blockIdx.z * blockDim.z + threadIdx.z;
+        }
+      }
+    }
+    return index_type{0};
+  }
+
+  template <unsigned R, typename... Idxs>
+  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
+      std::integral_constant<unsigned, R>, Idxs... idxs) const {
+    constexpr unsigned rankIdx = R - 1;
+    const index_type thIdx     = my_thIdx<rankIdx>();
+
+    if constexpr (is_packed_index<rankIdx>()) {
+      static_assert(R >= 2);
+      // Unpack two consecutive indices
+      constexpr unsigned rankId1 = (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
+      constexpr unsigned rankId2 = (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
+
+      const index_type id_1 = thIdx % m_extent[rankId1] + m_lower[rankId1];
+      const index_type id_2 = thIdx / m_extent[rankId1] + m_lower[rankId2];
+
+      if constexpr (Layout == Iterate::Left) {
+        iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2, idxs...);
+      } else {
+        iterate(std::integral_constant<unsigned, R - 2>(), idxs..., id_2, id_1);
+      }
+    } else {
+      const index_type idx = thIdx + m_lower[rankIdx];
+      if constexpr (Layout == Iterate::Left) {
+        iterate(std::integral_constant<unsigned, R - 1>(), idx, idxs...);
+      } else {
+        iterate(std::integral_constant<unsigned, R - 1>(), idxs..., idx);
+      }
+    }
+  }
+
+  template <size_t... R, typename... Idxs>
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE bool check_bounds(
+      std::index_sequence<R...>, Idxs... idxs) const {
+    if constexpr (Layout == Iterate::Left) {
+      return ((idxs < m_upper[R]) && ...);
+    } else {
+      return ((idxs < m_upper[Rank - 1 - R]) && ...);
+    }
+  }
+
+  template <typename... Idxs>
+  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
+      std::integral_constant<unsigned, 0u>, Idxs... idxs) const {
+    if (check_bounds(std::make_index_sequence<Rank>{}, idxs...)) {
+      Impl::_tag_invoke<Tag>(m_functor, idxs...);
+    }
+  }
+};
 
 // ------------------------------------------------------------------------- //
 // Compute GPU launch parameters (grid/block dimensions) for MDRangePolicy
