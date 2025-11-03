@@ -5,6 +5,7 @@
 #define KOKKOS_SIMD_HPP
 
 #include <Kokkos_SIMD_Common.hpp>
+#include <Kokkos_SIMD_Base.hpp>
 #include <Kokkos_SIMD_Scalar.hpp>
 #include <Kokkos_Macros.hpp>
 
@@ -202,10 +203,9 @@ using simd_mask = basic_simd_mask<T, simd_abi::Impl::native_abi<T, N>>;
 
 template <typename T, typename... Flags>
   requires Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
-    simd_unchecked_load(const T* ptr,
-                        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_FORCEINLINE_FUNCTION basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
+simd_unchecked_load(const T* ptr,
+                    simd_flags<Flags...> flag = simd_flag_default) {
   return simd_unchecked_load<
       basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(ptr, flag);
 }
@@ -346,5 +346,9 @@ using device_abi_set = abi_set<simd_abi::scalar>;
 
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#ifdef KOKKOS_SIMD_IMPL_DEVICE_SIMD
+#undef KOKKOS_SIMD_IMPL_DEVICE_SIMD
+#endif
 
 #endif
