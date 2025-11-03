@@ -96,6 +96,7 @@ auto adjacent_difference(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   using view_type1  = ::Kokkos::View<DataType1, Properties1...>;
   using view_type2  = ::Kokkos::View<DataType2, Properties2...>;
@@ -121,6 +122,8 @@ auto adjacent_difference(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
+
   return Impl::adjacent_difference_exespace_impl(
       "Kokkos::adjacent_difference_view_api", ex, KE::cbegin(view_from),
       KE::cend(view_from), KE::begin(view_dest), bin_op);
@@ -137,6 +140,7 @@ auto adjacent_difference(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   using view_type1  = ::Kokkos::View<DataType1, Properties1...>;
   using view_type2  = ::Kokkos::View<DataType2, Properties2...>;
@@ -163,6 +167,8 @@ auto adjacent_difference(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
+
   return Impl::adjacent_difference_exespace_impl(
       label, ex, KE::cbegin(view_from), KE::cend(view_from),
       KE::begin(view_dest), bin_op);
@@ -214,6 +220,7 @@ KOKKOS_FUNCTION auto adjacent_difference(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   using view_type1  = ::Kokkos::View<DataType1, Properties1...>;
   using view_type2  = ::Kokkos::View<DataType2, Properties2...>;
@@ -239,6 +246,8 @@ KOKKOS_FUNCTION auto adjacent_difference(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
+
   return Impl::adjacent_difference_team_impl(teamHandle, KE::cbegin(view_from),
                                              KE::cend(view_from),
                                              KE::begin(view_dest), bin_op);

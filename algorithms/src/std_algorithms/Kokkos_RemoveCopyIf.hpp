@@ -49,6 +49,7 @@ auto remove_copy_if(const ExecutionSpace& ex,
                     const UnaryPredicate& pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   return Impl::remove_copy_if_exespace_impl(
       "Kokkos::remove_copy_if_iterator_api_default", ex,
@@ -67,6 +68,7 @@ auto remove_copy_if(const std::string& label, const ExecutionSpace& ex,
                     const UnaryPredicate& pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   return Impl::remove_copy_if_exespace_impl(
       label, ex, ::Kokkos::Experimental::cbegin(view_from),
@@ -101,6 +103,7 @@ KOKKOS_FUNCTION auto remove_copy_if(
     const UnaryPredicate& pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
+  Impl::expect_less_than_extents(view_from, view_dest);
 
   return Impl::remove_copy_if_team_impl(
       teamHandle, ::Kokkos::Experimental::cbegin(view_from),

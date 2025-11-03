@@ -56,6 +56,7 @@ ValueType transform_reduce(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::expect_less_than_extents(first_view, second_view);
 
   return Impl::transform_reduce_default_functors_exespace_impl(
       "Kokkos::transform_reduce_default_functors_iterator_api", ex,
@@ -75,6 +76,7 @@ ValueType transform_reduce(
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::expect_less_than_extents(first_view, second_view);
 
   return Impl::transform_reduce_default_functors_exespace_impl(
       label, ex, KE::cbegin(first_view), KE::cend(first_view),
@@ -149,6 +151,7 @@ ValueType transform_reduce(
 
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::expect_less_than_extents(first_view, second_view);
 
   return Impl::transform_reduce_custom_functors_exespace_impl(
       "Kokkos::transform_reduce_custom_functors_view_api", ex,
@@ -174,6 +177,7 @@ ValueType transform_reduce(
 
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::expect_less_than_extents(first_view, second_view);
 
   return Impl::transform_reduce_custom_functors_exespace_impl(
       label, ex, KE::cbegin(first_view), KE::cend(first_view),
@@ -305,6 +309,7 @@ transform_reduce(const TeamHandleType& teamHandle,
   namespace KE = ::Kokkos::Experimental;
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::expect_less_than_extents(first_view, second_view);
 
   return Impl::transform_reduce_default_functors_team_impl(
       teamHandle, KE::cbegin(first_view), KE::cend(first_view),
@@ -358,6 +363,7 @@ transform_reduce(const TeamHandleType& teamHandle,
 
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(first_view);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(second_view);
+  Impl::expect_less_than_extents(first_view, second_view);
 
   return Impl::transform_reduce_custom_functors_team_impl(
       teamHandle, KE::cbegin(first_view), KE::cend(first_view),
