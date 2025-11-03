@@ -529,7 +529,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_memcpy_async_wrapper(
           driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault)));
 
-      void const* args[] = {&driver_ptr};
+      void const* args[] = {static_cast<void const*>(driver_ptr)};
 
       cudaKernelNodeParams params = {};
 
