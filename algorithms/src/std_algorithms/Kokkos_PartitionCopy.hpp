@@ -5,8 +5,8 @@
 #define KOKKOS_STD_ALGORITHMS_PARTITION_COPY_HPP
 
 #include "impl/Kokkos_PartitionCopy.hpp"
-#include "Kokkos_BeginEnd.hpp"
 #include "impl/Kokkos_Constraints.hpp"
+#include <Kokkos_Iterator.hpp>
 
 namespace Kokkos {
 namespace Experimental {

@@ -14,7 +14,6 @@ import kokkos.core;
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_TransformInclusiveScan.hpp>
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 #if defined(KOKKOS_ENABLE_CUDA)

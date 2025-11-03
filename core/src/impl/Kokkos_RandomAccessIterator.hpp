@@ -7,7 +7,6 @@
 #include <iterator>
 #include <utility>  // declval
 #include <Kokkos_Macros.hpp>
-#include "Kokkos_Constraints.hpp"
 
 namespace Kokkos {
 namespace Experimental {

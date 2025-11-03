@@ -46,74 +46,6 @@ static_assert_is_admissible_to_kokkos_std_algorithms(
 }
 
 //
-// is_iterator
-//
-template <class T>
-using iterator_category_t = typename T::iterator_category;
-
-template <class T>
-using is_iterator = Kokkos::is_detected<iterator_category_t, T>;
-
-template <class T>
-inline constexpr bool is_iterator_v = is_iterator<T>::value;
-
-template <typename ViewType>
-struct is_kokkos_iterator : std::false_type {};
-
-template <typename ViewType>
-struct is_kokkos_iterator<RandomAccessIterator<ViewType>> {
-  static constexpr bool value =
-      is_admissible_to_kokkos_std_algorithms<ViewType>::value;
-};
-
-template <class T>
-inline constexpr bool is_kokkos_iterator_v = is_kokkos_iterator<T>::value;
-
-//
-// are_iterators
-//
-template <class... Args>
-struct are_iterators;
-
-template <class T>
-struct are_iterators<T> {
-  static constexpr bool value = is_iterator_v<T>;
-};
-
-template <class Head, class... Tail>
-struct are_iterators<Head, Tail...> {
-  static constexpr bool value =
-      are_iterators<Head>::value && (are_iterators<Tail>::value && ... && true);
-};
-
-template <class... Ts>
-inline constexpr bool are_iterators_v = are_iterators<Ts...>::value;
-
-//
-// are_random_access_iterators
-//
-template <class... Args>
-struct are_random_access_iterators;
-
-template <class T>
-struct are_random_access_iterators<T> {
-  static constexpr bool value =
-      is_iterator_v<T> && std::is_base_of_v<std::random_access_iterator_tag,
-                                            typename T::iterator_category>;
-};
-
-template <class Head, class... Tail>
-struct are_random_access_iterators<Head, Tail...> {
-  static constexpr bool value =
-      are_random_access_iterators<Head>::value &&
-      (are_random_access_iterators<Tail>::value && ... && true);
-};
-
-template <class... Ts>
-inline constexpr bool are_random_access_iterators_v =
-    are_random_access_iterators<Ts...>::value;
-
-//
 // iterators_are_accessible_from
 //
 template <class... Args>
@@ -210,8 +142,7 @@ template <typename IteratorType1, typename IteratorType2>
 KOKKOS_INLINE_FUNCTION void expect_no_overlap(
     [[maybe_unused]] IteratorType1 first, [[maybe_unused]] IteratorType1 last,
     [[maybe_unused]] IteratorType2 s_first) {
-  if constexpr (is_kokkos_iterator_v<IteratorType1> &&
-                is_kokkos_iterator_v<IteratorType2>) {
+  if constexpr (is_iterator_v<IteratorType1> && is_iterator_v<IteratorType2>) {
     std::size_t stride1  = first.stride();
     std::size_t stride2  = s_first.stride();
     ptrdiff_t first_diff = first.data() - s_first.data();
