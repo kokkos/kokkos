@@ -45,6 +45,7 @@
 * Desul atomics: Use Clang atomic min/max GCC-style builtins [\#8507](https://github.com/kokkos/kokkos/pull/8507)
 * Enable running tests on systems with only 2GB of device memory [\#8552](https://github.com/kokkos/kokkos/pull/8552)
 * Added `begin()`/`end()` methods to `Kokkos::Array` [\#8577](https://github.com/kokkos/kokkos/pull/8577)
+* Added missing `noexcept` specifier to some methods of `Kokkos::Array` [\#8582](https://github.com/kokkos/kokkos/pull/8582)
 * Updated `ErrorReporter`: adhere to Kokkos naming conventions and change `get_reports` to return values [\#8486](https://github.com/kokkos/kokkos/pull/8486)
 * Added explicit loop unrolling execution policy trait (for now ignored for backends other than CUDA) [\#8164](https://github.com/kokkos/kokkos/pull/8164)
 
