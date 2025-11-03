@@ -9,6 +9,7 @@
 #include <cfloat>
 
 #include <Kokkos_SIMD_Common.hpp>
+#include <Kokkos_SIMD_Base.hpp>
 
 #ifdef KOKKOS_SIMD_COMMON_MATH_HPP
 #error \
@@ -25,8 +26,10 @@ class scalar {};
 }  // namespace simd_abi
 
 template <class T>
-class basic_simd_mask<T, simd_abi::scalar> {
-  bool m_value;
+class basic_simd_mask<T, simd_abi::scalar>
+    : public Impl::basic_simd_mask_base<basic_simd_mask<T, simd_abi::scalar>> {
+  using implementation_type = bool;
+  implementation_type m_value;
 
  public:
   using value_type = bool;
@@ -162,8 +165,10 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr bool none_of(
 }
 
 template <class T>
-class basic_simd<T, simd_abi::scalar> {
-  T m_value;
+class basic_simd<T, simd_abi::scalar>
+    : public Impl::basic_simd_base<basic_simd<T, simd_abi::scalar>> {
+  using implementation_type = T;
+  implementation_type m_value;
 
  public:
   using value_type = T;

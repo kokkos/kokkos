@@ -15,6 +15,12 @@ import kokkos.core;
 #include <utility>
 #include <type_traits>
 
+#if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+    (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
+    (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__))
+#define KOKKOS_DEVICE_SIMD 
+#endif
+
 namespace Kokkos {
 
 namespace Experimental {

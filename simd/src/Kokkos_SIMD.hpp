@@ -5,6 +5,7 @@
 #define KOKKOS_SIMD_HPP
 
 #include <Kokkos_SIMD_Common.hpp>
+#include <Kokkos_SIMD_Base.hpp>
 #include <Kokkos_SIMD_Scalar.hpp>
 #include <Kokkos_Macros.hpp>
 
@@ -307,5 +308,9 @@ using device_abi_set = abi_set<simd_abi::scalar>;
 
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#ifdef KOKKOS_DEVICE_SIMD
+#undef KOKKOS_DEVICE_SIMD
+#endif
 
 #endif
