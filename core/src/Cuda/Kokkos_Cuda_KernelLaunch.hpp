@@ -530,7 +530,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
           driver_ptr, &driver, sizeof(DriverType), cudaMemcpyDefault)));
 
       // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-      void* args[] = {static_cast<void*>(&driver_ptr)};
+      void* args[] = {&driver_ptr};
 
       cudaKernelNodeParams params = {};
 

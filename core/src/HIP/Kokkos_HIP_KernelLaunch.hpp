@@ -451,7 +451,7 @@ struct HIPParallelLaunchKernelInvoker<DriverType, LaunchBounds,
       // FIXME_HIP Modifying the assignment to args causes a segfault in
       // hip_graph.force_global_launch
       // NOLINTNEXTLINE(bugprone-multi-level-implicit-pointer-conversion)
-      void *args[] = {static_cast<void *>(&driver_ptr)};
+      void *args[] = {&driver_ptr};
 
       hipKernelNodeParams params = {};
 
