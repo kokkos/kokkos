@@ -95,7 +95,8 @@ void MDRangeReduceViewTester(const int reduce_view_size) {
   auto host_data_1D =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, data_1D);
   for (int i = 0; i < reduce_view_size; i++) {
-    ASSERT_EQ(host_data_1D(i), T(N * N));
+    ASSERT_EQ(host_data_1D(i), T(N * N))
+        << " at index " << i << " for reduce_view_size " << reduce_view_size;
   }
 }
 

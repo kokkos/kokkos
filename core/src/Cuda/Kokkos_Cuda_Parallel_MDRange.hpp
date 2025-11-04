@@ -294,7 +294,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncwarp(0xffffffff);
       }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+      for (word_size_type i = threadIdx.y; i < word_count.value;
+           i += blockDim.y) {
         global[i] = shared[i];
       }
     }

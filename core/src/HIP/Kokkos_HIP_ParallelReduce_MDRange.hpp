@@ -122,7 +122,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncthreads();
       }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+      for (word_size_type i = threadIdx.y; i < word_count.value;
+           i += blockDim.y) {
         global[i] = shared[i];
       }
     }
@@ -131,8 +132,18 @@ class ParallelReduce<CombinedFunctorReducerType,
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
     unsigned n = HIPTraits::WarpSize * 8;
+    using closure_type =
+        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                             Policy, Kokkos::HIP>;
+    hipFuncAttributes attr =
+        HIPParallelLaunch<closure_type, LaunchBounds>::get_hip_func_attributes(
+            m_policy.space().hip_device());
+
+    // Compute the maximum dynamic shared memory per block allowed
+    // by subtracting the static shared memory used by the kernel
     int const maxShmemPerBlock =
-        m_policy.space().hip_device_prop().sharedMemPerBlock * 0.95;
+        m_policy.space().hip_device_prop().sharedMemPerBlock -
+        attr.sharedSizeBytes;
 
     int shmem_size =
         hip_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(f,
