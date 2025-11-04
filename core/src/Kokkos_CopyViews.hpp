@@ -3037,7 +3037,7 @@ struct MirrorViewType {
   static constexpr bool is_same_memspace =
       std::is_same_v<memory_space, typename src_view_type::memory_space>;
   using layout_type = typename src_view_type::layout_type;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   // The array_layout
   using array_layout KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use layout_type instead.") = layout_type;

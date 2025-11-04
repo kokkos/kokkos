@@ -116,6 +116,7 @@ export {
   using ::Kokkos::LayoutLeft;
   using ::Kokkos::LayoutRight;
   using ::Kokkos::LayoutStride;
+  using ::Kokkos::LayoutType;
   using ::Kokkos::MemoryRandomAccess;
   using ::Kokkos::MemoryTraits;
   using ::Kokkos::MemoryTraitsFlags;

@@ -91,7 +91,7 @@ struct TestViewHooks {
   static_assert(
       std::same_as<typename test_view_type::type,
                    Kokkos::View<typename test_view_type::data_type,
-                                typename test_view_type::array_layout,
+                                typename test_view_type::layout_type,
                                 typename test_view_type::device_type,
                                 Kokkos::Experimental::SubscribableViewHooks<
                                     subscriber_type>,

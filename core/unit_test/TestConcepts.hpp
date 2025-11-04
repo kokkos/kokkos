@@ -67,6 +67,10 @@ static_assert(Kokkos::is_layout_type_v<Kokkos::LayoutLeft>);
 static_assert(Kokkos::is_layout_type_v<Kokkos::LayoutRight>);
 static_assert(Kokkos::is_layout_type_v<Kokkos::LayoutStride>);
 
+static_assert(Kokkos::LayoutType<Kokkos::LayoutLeft>);
+static_assert(Kokkos::LayoutType<Kokkos::LayoutRight>);
+static_assert(Kokkos::LayoutType<Kokkos::LayoutStride>);
+
 static_assert(
     Kokkos::is_execution_policy_v<Kokkos::RangePolicy<ExecutionSpace>>);
 static_assert(Kokkos::is_execution_policy_v<

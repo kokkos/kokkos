@@ -76,7 +76,9 @@ constexpr bool test_view_typedefs_impl() {
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   // FIXME: should maybe be deprecated
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   static_assert(std::is_same_v<typename ViewType::array_layout, Layout>);
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
   static_assert(std::is_same_v<typename ViewType::layout_type, Layout>);
 
@@ -225,14 +227,10 @@ namespace TestInt {
                                Kokkos::Device<Kokkos::DefaultHostExecutionSpace, typename Kokkos::DefaultExecutionSpace::memory_space>>>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   static_assert(test_view_typedefs<Kokkos::DefaultExecutionSpace::array_layout, space, memory_traits, host_mirror_space, int, int&>(
                      ViewParams<int>{}));
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
   static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int, int&>(
                      ViewParams<int>{}));
@@ -251,14 +249,10 @@ namespace TestIntDefaultExecutionSpace {
                                Kokkos::DefaultExecutionSpace::memory_space>>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
   static_assert(test_view_typedefs<Kokkos::DefaultExecutionSpace::array_layout, space, memory_traits, host_mirror_space, int, int&>(
                      ViewParams<int, Kokkos::DefaultExecutionSpace>{}));
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
 static_assert(test_view_typedefs<layout_type, space, memory_traits, host_mirror_space, int, int&>(
