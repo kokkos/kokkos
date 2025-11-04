@@ -345,6 +345,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       int suggested_blocksize =
           local_block_size(m_functor_reducer.get_functor());
 
+      // Note: block_size must be less than or equal to 512
       block_size = std::max(block_size, static_cast<int>(CudaTraits::WarpSize));
       block_size = std::min(block_size, static_cast<int>(suggested_blocksize));
 
