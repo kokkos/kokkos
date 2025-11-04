@@ -129,23 +129,28 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   // Determine block size constrained by shared memory:
-  // This is copy/paste from Kokkos_HIP_Parallel_Range
   inline unsigned local_block_size(const FunctorType& f) {
-    const auto& instance = m_policy.space().impl_internal_space_instance();
-    auto shmem_functor   = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
-                                                      value_type>(f, n);
-    };
+    unsigned n = HIPTraits::WarpSize * 8;
+    int const maxShmemPerBlock =
+        m_policy.space().hip_device_prop().sharedMemPerBlock * 0.95;
 
-    unsigned block_size =
-        Kokkos::Impl::hip_get_preferred_blocksize<ParallelReduce, LaunchBounds>(
-            instance, shmem_functor);
-    if (block_size == 0) {
+    int shmem_size =
+        hip_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(f,
+                                                                             n);
+
+    while (n > 1 && shmem_size > maxShmemPerBlock) {
+      n >>= 1;
+      shmem_size =
+          hip_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
+              f, n);
+    }
+
+    if (n < HIPTraits::WarpSize) {
       Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
+          std::string("Kokkos::Impl::ParallelReduce<HIP> could not find a "
                       "valid tile size."));
     }
-    return block_size;
+    return n;
   }
 
   inline void execute() {
@@ -161,10 +166,8 @@ class ParallelReduce<CombinedFunctorReducerType,
       int suggested_blocksize =
           local_block_size(m_functor_reducer.get_functor());
 
-      block_size = (block_size > suggested_blocksize)
-                       ? block_size
-                       : suggested_blocksize;  // Note: block_size must be less
-                                               // than or equal to 512
+      block_size = std::max(block_size, static_cast<int>(HIPTraits::WarpSize));
+      block_size = std::min(block_size, static_cast<int>(suggested_blocksize));
 
       m_scratch_space =
           reinterpret_cast<word_size_type*>(hip_internal_scratch_space(

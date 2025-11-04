@@ -326,6 +326,11 @@ class ParallelReduce<CombinedFunctorReducerType,
           cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
               f, n);
     }
+    if (n < CudaTraits::WarpSize) {
+      Kokkos::Impl::throw_runtime_exception(
+          std::string("Kokkos::Impl::ParallelReduce<Cuda> could not find a "
+                      "valid tile size."));
+    }
     return n;
   }
 
@@ -340,10 +345,8 @@ class ParallelReduce<CombinedFunctorReducerType,
       int suggested_blocksize =
           local_block_size(m_functor_reducer.get_functor());
 
-      block_size = (block_size > suggested_blocksize)
-                       ? block_size
-                       : suggested_blocksize;  // Note: block_size must be less
-                                               // than or equal to 512
+      block_size = std::max(block_size, static_cast<int>(CudaTraits::WarpSize));
+      block_size = std::min(block_size, static_cast<int>(suggested_blocksize));
 
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
