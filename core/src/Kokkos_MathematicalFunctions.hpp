@@ -107,6 +107,28 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     return FUNC(static_cast<double>(x));                                       \
   }
 
+#define KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(FUNC)     \
+  KOKKOS_INLINE_FUNCTION int FUNC(float x) {          \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC; \
+    return FUNC(x);                                   \
+  }                                                   \
+  KOKKOS_INLINE_FUNCTION int FUNC(double x) {         \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC; \
+    return FUNC(x);                                   \
+  }                                                   \
+  inline int FUNC(long double x) {                    \
+    using std::FUNC;                                  \
+    return FUNC(x);                                   \
+  }                                                   \
+  KOKKOS_INLINE_FUNCTION int FUNC##f(float x) {       \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC; \
+    return FUNC(x);                                   \
+  }                                                   \
+  inline int FUNC##l(long double x) {                 \
+    using std::FUNC;                                  \
+    return FUNC(x);                                   \
+  }
+
 // isinf, isnan, and isinfinite do not work on Windows with CUDA with std::
 // getting warnings about calling host function in device function then
 // runtime test fails
@@ -420,7 +442,7 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
 // modf
 // scalbn
 // scalbln
-// ilog
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(ilogb)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(logb)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(nextafter)
 // nexttoward

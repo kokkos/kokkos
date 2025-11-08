@@ -309,6 +309,15 @@ struct FloatingPointComparison {
   }
 };
 
+struct IntegerComparison {
+  template <class Lhs, class Rhs>
+  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs) const {
+    static_assert(std::is_integral_v<Lhs>);
+    static_assert(std::is_integral_v<Rhs>);
+    return lhs == rhs;
+  }
+};
+
 template <class>
 struct math_function_name;
 
@@ -361,6 +370,31 @@ struct math_function_name;
   struct math_function_name<MathUnaryFunction_##FUNC> {                    \
     static constexpr char name[] = #FUNC;                                  \
   };                                                                       \
+  constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
+
+#define DEFINE_UNARY_FUNCTION_EVAL_INT(FUNC)                           \
+  struct MathUnaryFunction_##FUNC {                                    \
+    template <typename T>                                              \
+    static KOKKOS_FUNCTION auto eval(T x) {                            \
+      static_assert(std::is_integral_v<decltype(Kokkos::FUNC((T)0))>); \
+      return Kokkos::FUNC(x);                                          \
+    }                                                                  \
+    template <typename T>                                              \
+    static auto eval_std(T x) {                                        \
+      if constexpr (std::is_same_v<T, KE::half_t> ||                   \
+                    std::is_same_v<T, KE::bhalf_t>) {                  \
+        return std::FUNC(static_cast<float>(x));                       \
+      } else {                                                         \
+        static_assert(std::is_integral_v<decltype(std::FUNC((T)0))>);  \
+        return std::FUNC(x);                                           \
+      }                                                                \
+    }                                                                  \
+  };                                                                   \
+  using kk_##FUNC = MathUnaryFunction_##FUNC;                          \
+  template <>                                                          \
+  struct math_function_name<MathUnaryFunction_##FUNC> {                \
+    static constexpr char name[] = #FUNC;                              \
+  };                                                                   \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
@@ -424,6 +458,7 @@ DEFINE_UNARY_FUNCTION_EVAL(round, 1);
 DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 2);
 #endif
 
+DEFINE_UNARY_FUNCTION_EVAL_INT(ilogb);
 DEFINE_UNARY_FUNCTION_EVAL(logb, 2);
 #endif
 
@@ -594,6 +629,50 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
 
 #define TEST_HALF_MATH_FUNCTION(FUNC, T) \
   do_test_half_math_unary_function<T, TEST_EXECSPACE, MathUnaryFunction_##FUNC>
+
+template <class Space, class Func, class Arg, std::size_t N>
+struct TestIntMathUnaryFunction : IntegerComparison {
+  Arg val_[N];
+  int res_[N];
+  TestIntMathUnaryFunction(const Arg (&val)[N]) {
+    std::copy(val, val + N, val_);
+    std::transform(val, val + N, res_,
+                   [](auto x) { return Func::eval_std(x); });
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int i, int& e) const {
+    bool ar = compare(Func::eval(val_[i]), res_[i]);
+    if (!ar) {
+      ++e;
+      Kokkos::printf("value at %f which is %f was expected to be %f\n",
+                     (double)val_[i], (double)Func::eval(val_[i]),
+                     (double)res_[i]);
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg, std::size_t N>
+void do_test_int_math_unary_function(const Arg (&x)[N]) {
+  (void)std::initializer_list<int>{
+      (TestIntMathUnaryFunction<Space, Func, Arg, N>(x), 0)...};
+
+  // test if potentially device specific math functions also work on host
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
+    (void)std::initializer_list<int>{
+        (TestIntMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg,
+                                  N>(x),
+         0)...};
+}
+
+#define TEST_INT_MATH_FUNCTION(FUNC) \
+  do_test_int_math_unary_function<TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
@@ -1227,6 +1306,10 @@ TEST(TEST_CATEGORY,
 
 TEST(TEST_CATEGORY,
      mathematical_functions_floating_point_manipulation_functions) {
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3, 13.7, 132.7, 1282.4, 7839.9});
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
+  // Do not check for half precision since std::ilogb does not implement it
+
   TEST_MATH_FUNCTION(logb)({2, 3, 4, 56, 789});
   TEST_MATH_FUNCTION(logb)({2l, 3l, 4l, 56l, 789l});
   TEST_MATH_FUNCTION(logb)({2ll, 3ll, 4ll, 56ll, 789ll});
@@ -1238,6 +1321,7 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(logb)({123.45f, 6789.0f});
   TEST_MATH_FUNCTION(logb)({123.45, 6789.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3l, 13.7l, 132.7l, 1282.4l, 7839.9l});
   TEST_MATH_FUNCTION(logb)({123.45l, 6789.0l});
 #endif
 
