@@ -491,6 +491,9 @@ export {
   using ::Kokkos::hypot;
   using ::Kokkos::hypotf;
   using ::Kokkos::hypotl;
+  using ::Kokkos::ilogb;
+  using ::Kokkos::ilogbf;
+  using ::Kokkos::ilogbl;
   using ::Kokkos::isfinite;
   using ::Kokkos::isinf;
   using ::Kokkos::isnan;
