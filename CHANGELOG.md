@@ -47,7 +47,7 @@
 * Added `begin()`/`end()` methods to `Kokkos::Array` [\#8577](https://github.com/kokkos/kokkos/pull/8577)
 * Added missing `noexcept` specifier to some methods of `Kokkos::Array` [\#8582](https://github.com/kokkos/kokkos/pull/8582)
 * Updated `ErrorReporter`: adhere to Kokkos naming conventions and change `get_reports` to return values [\#8486](https://github.com/kokkos/kokkos/pull/8486)
-* Added explicit loop unrolling execution policy trait (for now ignored for backends other than CUDA) [\#8164](https://github.com/kokkos/kokkos/pull/8164)
+* Added explicit loop unrolling execution policy trait (currently only effective in CUDA) [\#8164](https://github.com/kokkos/kokkos/pull/8164)
 
 ### Build System Changes
 * Change `Kokkos_ENABLE_DEPRECATED_CODE_4` default `ON -> OFF` [\#8378](https://github.com/kokkos/kokkos/pull/8378)
@@ -55,7 +55,7 @@
 * Bump CMake minimum required version to 3.22 [\#8377](https://github.com/kokkos/kokkos/pull/8377)
 * Require CMake 3.25.2 for c++20 support in the CUDA language [\#8402](https://github.com/kokkos/kokkos/pull/8402)
 * Make Kokkos support multiple languages [\#8167](https://github.com/kokkos/kokkos/pull/8167)
-* Allow compiling with shared libraries on Windows [\#8324](https://github.com/kokkos/kokkos/pull/8324)
+* Allow compiling to shared libraries on Windows [\#8324](https://github.com/kokkos/kokkos/pull/8324)
 
 ### Incompatibilities (i.e. breaking changes)
 * Change `simd<T>` to use the largest available simd size by default [\#8250](https://github.com/kokkos/kokkos/pull/8250)
@@ -79,7 +79,7 @@
 * Deprecated old member function names in (experimental) `ErrorReporter` [\#8486](https://github.com/kokkos/kokkos/pull/8486)
 
 ### Bug Fixes
- * Track modification for `resize` only if `DualView` is not using a single device [\#8273](https://github.com/kokkos/kokkos/pull/8273)
+ * Track modification only if `DualView` is not using a single device [\#8273](https://github.com/kokkos/kokkos/pull/8273)
  * Fix MSVC `floating-point value does not fit in required floating-point type` warning from `reduction_identity` [\#8376](https://github.com/kokkos/kokkos/pull/8376)
  * Properly delete `Timer` copy constructor and copy assignment operators [\#8399](https://github.com/kokkos/kokkos/pull/8399)
  * Fix RISC-V support (compiler check at configuration time and missing semicolons at compile time) [\#8439](https://github.com/kokkos/kokkos/pull/8439)
