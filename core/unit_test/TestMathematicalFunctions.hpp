@@ -1306,9 +1306,15 @@ TEST(TEST_CATEGORY,
 
 TEST(TEST_CATEGORY,
      mathematical_functions_floating_point_manipulation_functions) {
-  TEST_INT_MATH_FUNCTION(ilogb)({0.3, 13.7, 132.7, 1282.4, 7839.9});
+  TEST_HALF_MATH_FUNCTION(ilogb, KE::half_t)
+  ({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
+  TEST_HALF_MATH_FUNCTION(ilogb, KE::bhalf_t)
+  ({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
   TEST_INT_MATH_FUNCTION(ilogb)({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
-  // Do not check for half precision since std::ilogb does not implement it
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3, 13.7, 132.7, 1282.4, 7839.9});
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  TEST_INT_MATH_FUNCTION(ilogb)({0.3l, 13.7l, 132.7l, 1282.4l, 7839.9l});
+#endif
 
   TEST_MATH_FUNCTION(logb)({2, 3, 4, 56, 789});
   TEST_MATH_FUNCTION(logb)({2l, 3l, 4l, 56l, 789l});
@@ -1321,7 +1327,6 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(logb)({123.45f, 6789.0f});
   TEST_MATH_FUNCTION(logb)({123.45, 6789.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_INT_MATH_FUNCTION(ilogb)({0.3l, 13.7l, 132.7l, 1282.4l, 7839.9l});
   TEST_MATH_FUNCTION(logb)({123.45l, 6789.0l});
 #endif
 
