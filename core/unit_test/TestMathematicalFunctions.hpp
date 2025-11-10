@@ -674,6 +674,25 @@ void do_test_int_math_unary_function(const Arg (&x)[N]) {
 #define TEST_INT_MATH_FUNCTION(FUNC) \
   do_test_int_math_unary_function<TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
+template <class Half, class Space, class... Func, class Arg, std::size_t N>
+void do_test_int_half_math_unary_function(const Arg (&x)[N]) {
+  Half y[N];
+  std::copy(x, x + N, y);  // cast to array of half type
+  (void)std::initializer_list<int>{
+      (TestIntMathUnaryFunction<Space, Func, Half, N>(y), 0)...};
+
+  // test if potentially device specific math functions also work on host
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>)
+    (void)std::initializer_list<int>{
+        (TestIntMathUnaryFunction<Kokkos::DefaultHostExecutionSpace, Func, Half,
+                                  N>(y),
+         0)...};
+}
+
+#define TEST_INT_HALF_MATH_FUNCTION(FUNC, T)              \
+  do_test_int_half_math_unary_function<T, TEST_EXECSPACE, \
+                                       MathUnaryFunction_##FUNC>
+
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathBinaryFunction : FloatingPointComparison {
@@ -1306,9 +1325,15 @@ TEST(TEST_CATEGORY,
 
 TEST(TEST_CATEGORY,
      mathematical_functions_floating_point_manipulation_functions) {
-  TEST_HALF_MATH_FUNCTION(ilogb, KE::half_t)
+  TEST_INT_MATH_FUNCTION(ilogb)({1, 13, 132, 1282, 7839});
+  TEST_INT_MATH_FUNCTION(ilogb)({1l, 13l, 132l, 1282l, 7839l});
+  TEST_INT_MATH_FUNCTION(ilogb)({1ll, 13ll, 132ll, 1282ll, 7839ll});
+  TEST_INT_MATH_FUNCTION(ilogb)({1u, 13u, 132u, 1282u, 7839u});
+  TEST_INT_MATH_FUNCTION(ilogb)({1ul, 13ul, 132ul, 1282ul, 7839ul});
+  TEST_INT_MATH_FUNCTION(ilogb)({1ull, 13ull, 132ull, 1282ull, 7839ull});
+  TEST_INT_HALF_MATH_FUNCTION(ilogb, KE::half_t)
   ({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
-  TEST_HALF_MATH_FUNCTION(ilogb, KE::bhalf_t)
+  TEST_INT_HALF_MATH_FUNCTION(ilogb, KE::bhalf_t)
   ({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
   TEST_INT_MATH_FUNCTION(ilogb)({0.3f, 13.7f, 132.7f, 1282.4f, 7839.9f});
   TEST_INT_MATH_FUNCTION(ilogb)({0.3, 13.7, 132.7, 1282.4, 7839.9});
