@@ -38,7 +38,7 @@
 
 ### General Enhancements
 * Optimize View initialization with adaptive `memset`/`parallel_for` selection in parallel Host backends [\#8178](https://github.com/kokkos/kokkos/pull/8178)
-* `UnorderedMap` allow using `SequentialHostInit` [\#8178](https://github.com/kokkos/kokkos/pull/8182)
+* `UnorderedMap` allow using `SequentialHostInit` [\#8182](https://github.com/kokkos/kokkos/pull/8182)
 * Add simd type conversions [\#8085](https://github.com/kokkos/kokkos/pull/8085)
 * Make `reduction_identity<[b]half_t>` member functions return `[b]half_t` instead of `float` [\#8329](https://github.com/kokkos/kokkos/pull/8329)
 * Print the commit hash of the embedded dependencies at configure time and when calling `print_configuration` [\#8385](https://github.com/kokkos/kokkos/pull/8385)
