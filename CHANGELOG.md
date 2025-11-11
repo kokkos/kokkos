@@ -9,7 +9,7 @@
   * Implies a new set of minimum compiler versions
 * Reenabled new `mdspan` based `View` implementation (disabled in 4.7.1)
 * Complete C++20 module support [\#8222](https://github.com/kokkos/kokkos/pull/8222), [\#8263](https://github.com/kokkos/kokkos/pull/8263), [\#8218](https://github.com/kokkos/kokkos/pull/8218)
-* Begin removal of deprecated code 4
+* Begin removal of features deprecated in the Kokkos 4 release cycle [\#8374](https://github.com/kokkos/kokkos/pull/8374), [\#8390](https://github.com/kokkos/kokkos/pull/8390)
 
 ### Backend and Architecture Enhancements:
 
@@ -61,19 +61,19 @@
 * Change `simd<T>` to use the largest available simd size by default [\#8250](https://github.com/kokkos/kokkos/pull/8250)
 * `MemoryRandomAccess` does not imply `Unmanaged` [\#8368](https://github.com/kokkos/kokkos/pull/8368)
 * Drop makefile support [\#8374](https://github.com/kokkos/kokkos/pull/8374)
+* Remove task DAG capabilities [\#8390](https://github.com/kokkos/kokkos/pull/8390)
+* Remove support for Nvidia Kepler architecture [\#8518](https://github.com/kokkos/kokkos/pull/8518)
 * Bump google benchmark minimum requirement to v1.8.3 [\#8579](https://github.com/kokkos/kokkos/pull/8579)
 * Check that parallel constructs invoked before initialize or after finalize will error out [\#7675](https://github.com/kokkos/kokkos/pull/7675)
 * Submit graphs on the default execution space when no execution space is specified [\#8365](https://github.com/kokkos/kokkos/pull/8365)
 
 ### Deprecations
 * Deprecate `KOKKOS_ATTRIBUTE_NODISCARD` macro [\#8388](https://github.com/kokkos/kokkos/pull/8388)
-* Remove task DAG capabilities [\#8390](https://github.com/kokkos/kokkos/pull/8390)
 * Deprecate `{Owning,Observing}RawPtr` aliases [\#8397](https://github.com/kokkos/kokkos/pull/8397)
 * Deprecate support for using nested OpenMP parallel regions without nested OpenMP enabled [\#7417](https://github.com/kokkos/kokkos/pull/7417)
 * Deprecate creating Kokkos::OpenMP instances inside OpenMP parallel regions [\#8488](https://github.com/kokkos/kokkos/pull/8488)
 * Deprecate `Random_XorShift{64,1024}_Pool::init` [\#8082](https://github.com/kokkos/kokkos/pull/8082)
 * Deprecate simd::\[const_\]where_expression [\#7960](https://github.com/kokkos/kokkos/pull/7960)
-* Remove support for Nvidia Kepler architecture [\#8518](https://github.com/kokkos/kokkos/pull/8518)
 * Deprecate View::HostMirror in favor of View::host_mirror_type [\#8232](https://github.com/kokkos/kokkos/pull/8232)
 * Deprecate array_type and scalar_array_type and more enums in ViewTraits [\#7360](https://github.com/kokkos/kokkos/pull/7360)
 * Deprecated old member function names in (experimental) `ErrorReporter` [\#8486](https://github.com/kokkos/kokkos/pull/8486)
