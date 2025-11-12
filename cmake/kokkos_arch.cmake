@@ -835,7 +835,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC" OR "x${CMAKE_CXX_SIMULATE_ID}" STREQUAL
 endif()
 
 # MSVC only supports __VA_OPT__ after adding another compiler flag
-compiler_specific_flags(MSVC /Zc:preprocessor)
+if(Kokkos_ENABLE_CUDA)
+  compiler_specific_options(MSVC "-Xcompiler /Zc:preprocessor")
+else()
+  compiler_specific_options(MSVC "/Zc:preprocessor")
+endif()
 
 #Right now we cannot get the compiler ID when cross-compiling, so just check
 #that HIP is enabled
