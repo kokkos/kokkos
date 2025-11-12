@@ -96,6 +96,7 @@ class Serial {
 
   //@}
 
+  ~Serial();
   Serial();
 
   explicit Serial(NewInstance);

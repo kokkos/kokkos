@@ -213,7 +213,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=icpx \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -fsycl-device-code-split=per_kernel -Wno-zero-length-array' \
+            -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -fsycl-device-code-split=per_kernel -Wno-zero-length-array -Wno-pass-failed' \
             -DKokkos_ENABLE_SYCL=ON \
             -DKokkos_ARCH_INTEL_PVC=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \

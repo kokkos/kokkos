@@ -50,7 +50,7 @@ git clone --branch develop  https://github.com/kokkos/kokkos.git
 
 ### Building Kokkos
 
-To build Kokkos, you will need to have a C++ compiler that supports C++17 or later.
+To build Kokkos, you will need to have a C++ compiler that supports C++20 or later.
 All requirements including minimum and primary tested compiler versions can be found [here](https://kokkos.org/kokkos-core-wiki/get-started/requirements.html).
 
 Building and installation instructions are described [here](https://kokkos.org/kokkos-core-wiki/get-started/building-from-source.html#configuring-and-building-kokkos).
@@ -76,9 +76,6 @@ Please see the [following page](https://kokkos.org/kokkos-core-wiki/citation.htm
 ## License
 
 [![License](https://img.shields.io/badge/License-Apache--2.0_WITH_LLVM--exception-blue)](https://spdx.org/licenses/LLVM-exception.html)
-
-Under the terms of Contract DE-NA0003525 with NTESS,
-the U.S. Government retains certain rights in this software.
 
 The full license statement used in all headers is available [here](https://kokkos.org/kokkos-core-wiki/license.html) or
 [here](https://github.com/kokkos/kokkos/blob/develop/LICENSE).

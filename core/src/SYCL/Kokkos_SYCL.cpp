@@ -15,8 +15,10 @@ import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#include <impl/Kokkos_Error.hpp>
+
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
 namespace {
@@ -38,24 +40,27 @@ struct Container {
 }  // namespace
 
 namespace Kokkos {
+
+SYCL::~SYCL() { Impl::check_execution_space_destructor_precondition(name()); }
+
 SYCL::SYCL()
-    : m_space_instance(&Impl::SYCLInternal::singleton(),
-                       [](Impl::SYCLInternal*) {}) {
-  Impl::SYCLInternal::singleton().verify_is_initialized(
-      "SYCL instance constructor");
-}
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(&Impl::SYCLInternal::singleton(),
+                               [](Impl::SYCLInternal*) {}))) {}
 
 SYCL::SYCL(const sycl::queue& stream)
-    : m_space_instance(new Impl::SYCLInternal, [](Impl::SYCLInternal* ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(new Impl::SYCLInternal,
+                               [](Impl::SYCLInternal* ptr) {
+                                 ptr->finalize();
+                                 delete ptr;
+                               }))) {
 #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
   if (!stream.is_in_order())
     Kokkos::abort("User provided sycl::queues must be in-order!");
 #endif
-  Impl::SYCLInternal::singleton().verify_is_initialized(
-      "SYCL instance constructor");
   m_space_instance->initialize(stream);
 }
 

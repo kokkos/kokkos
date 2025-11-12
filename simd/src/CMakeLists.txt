@@ -38,6 +38,7 @@ kokkos_link_internal_library(kokkossimd kokkoscore)
 
 # If ARM-SVE, check and warn for available arm_neon_sve_bridge.h
 if(KOKKOS_ARCH_ARM_SVE)
+  include(CheckIncludeFileCXX)
   check_include_file_cxx(arm_neon_sve_bridge.h KOKKOS_COMPILER_SUPPORTS_ARM_NEON_SVE_BRIDGE)
   if(NOT KOKKOS_COMPILER_SUPPORTS_ARM_NEON_SVE_BRIDGE)
     message(

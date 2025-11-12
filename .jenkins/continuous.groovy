@@ -50,6 +50,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && \
+                              set -x && \
                               cmake \
                                 -B build \
                                 -GNinja \
@@ -63,15 +64,18 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_SERIAL=ON && \
+                              set +x && \
                               cmake --build build --target install -j 8 && \
                               ctest --test-dir build --no-compress-output -T Test --verbose && \
                               cd example/build_cmake_installed_modules && \
                               rm -rf build && \
+                              set -x && \
                               cmake \
                                 -B build \
                                 -GNinja \
                                 -DCMAKE_CXX_COMPILER=clang++-19 \
                                 -DCMAKE_CXX_FLAGS="-Werror" && \
+                              set +x && \
                               cmake --build build -j 8 && \
                               ctest --test-dir build --verbose'''
                     }
@@ -101,6 +105,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_STANDARD=20 \
@@ -115,6 +120,7 @@ pipeline {
                                 -DKokkos_ENABLE_LIBQUADMATH=ON \
                                 -DKokkos_ENABLE_SERIAL=ON \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                     post {
@@ -139,6 +145,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -154,16 +161,19 @@ pipeline {
                                 -DKokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES=ON \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
+                              set +x && \
                               make -j16 install && ctest --no-compress-output -T Test --verbose && \
                               cd .. && \
                               export CMAKE_PREFIX_PATH=${PWD}/install && \
                               cd example/build_cmake_installed_multilanguage && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=hipcc \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=20 \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --verbose'''
                     }
                     post {
@@ -173,6 +183,7 @@ pipeline {
                         }
                     }
                 }
+/*
                 stage('CUDA-12.2-NVCC-RDC') {
                     agent {
                         dockerfile {
@@ -184,6 +195,7 @@ pipeline {
                         }
                     }
                     environment {
+                        CTEST_OUTPUT_ON_FAILURE = 1
                         OMP_NUM_THREADS = 8
                         // Nested OpenMP does not work for this configuration,
                         // so disabling it
@@ -199,6 +211,7 @@ pipeline {
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf install && mkdir -p install && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER=g++-11 \
@@ -216,10 +229,12 @@ pipeline {
                                 \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
+                              set +x && \
                               make -j8 install && \
                               cd .. && \
                               rm -rf build-tests && mkdir -p build-tests && cd build-tests && \
                               export CMAKE_PREFIX_PATH=${PWD}/../install && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -229,22 +244,27 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_INSTALL_TESTING=ON \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_cmake_installed && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=g++-11 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=20 \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --verbose && \
                               cd ../../build_cmake_installed_multilanguage && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_CXX_COMPILER=g++-11 \
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DCMAKE_CXX_STANDARD=20 \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --verbose && \
                               cd ../.. && \
                               cmake -B build_cmake_installed_different_compiler/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=20 build_cmake_installed_different_compiler && \
@@ -254,10 +274,10 @@ pipeline {
                     post {
                         always {
                             sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build-tests/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
                         }
                     }
                 }
+*/
             }
         }
         stage('Build-2') {
@@ -279,6 +299,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               /opt/cmake/bin/cmake \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
                                 -DCMAKE_CXX_STANDARD=20 \
@@ -289,6 +310,7 @@ pipeline {
                                 -DKokkos_ENABLE_OPENACC=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -321,6 +343,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               /opt/cmake/bin/cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER=nvc++ \
@@ -333,6 +356,7 @@ pipeline {
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -357,6 +381,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -375,6 +400,7 @@ pipeline {
                                 -DKokkos_ENABLE_UNSUPPORTED_ARCHS=ON \
                                 -DCMAKE_CXX_STANDARD=20 \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -407,6 +433,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=Debug \
                                 -DCMAKE_CXX_COMPILER=hipcc \
@@ -422,6 +449,7 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_MDSPAN=OFF \
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
+                              set +x && \
                               make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -451,6 +479,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
@@ -466,45 +495,8 @@ pipeline {
                                 -DKokkos_ENABLE_BENCHMARKS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
+                              set +x && \
                               make -j16 && ctest --no-compress-output -T Test --verbose'''
-                    }
-                    post {
-                        always {
-                            sh 'ccache --show-stats'
-                            xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
-                        }
-                    }
-                }
-                stage('OPENMPTARGET-Clang') {
-                    agent {
-                        dockerfile {
-                            filename 'Dockerfile.openmptarget'
-                            dir 'scripts/docker'
-                            label 'nvidia-docker && volta'
-                            args '-v /tmp/ccache.kokkos:/tmp/ccache --env NVIDIA_VISIBLE_DEVICES=$NVIDIA_VISIBLE_DEVICES --env NODE_NAME=${env.NODE_NAME} --env STAGE_NAME=${env.STAGE_NAME}'
-                        }
-                    }
-                    steps {
-                        sh 'ccache --zero-stats'
-                        sh '''#!/bin/bash
-                              exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
-                              echo "Hostname: ${NODE_NAME}" && \
-                              rm -rf build && mkdir -p build && cd build && \
-                              cmake \
-                                -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-                                -DCMAKE_CXX_COMPILER=clang++ \
-                                -DCMAKE_CXX_FLAGS="-Wno-unknown-cuda-version -Werror -Wno-undefined-internal -Wno-pass-failed" \
-                                -DKokkos_ARCH_NATIVE=ON \
-                                -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
-                                -DKokkos_ENABLE_TESTS=ON \
-                                -DKokkos_ENABLE_BENCHMARKS=ON \
-                                -DKokkos_ENABLE_TUNING=ON \
-                                -DKokkos_ENABLE_OPENMPTARGET=ON \
-                                -DKokkos_ARCH_VOLTA70=ON \
-                                -DCMAKE_CXX_STANDARD=20 \
-                              .. && \
-                              make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
                         always {
@@ -529,6 +521,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -545,6 +538,7 @@ pipeline {
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -570,6 +564,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DCMAKE_BUILD_TYPE=RelWithDebInfo \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
@@ -587,6 +582,7 @@ pipeline {
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -612,6 +608,7 @@ pipeline {
                               exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                               echo "Hostname: ${NODE_NAME}" && \
                               rm -rf build && mkdir -p build && cd build && \
+                              set -x && \
                               cmake \
                                 -DBUILD_SHARED_LIBS=ON \
                                 -DCMAKE_BUILD_TYPE=Debug \
@@ -631,10 +628,11 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                               .. && \
+                              set +x && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
-                              cmake -DCMAKE_CXX_STANDARD=20 .. && make -j8 && ctest --verbose'''
+                              set -x && cmake -DCMAKE_CXX_STANDARD=20 .. && set +x && make -j8 && ctest --verbose'''
                     }
                     post {
                         always {

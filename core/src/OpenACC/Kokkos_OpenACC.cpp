@@ -6,9 +6,10 @@
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_Instance.hpp>
 #include <OpenACC/Kokkos_OpenACC_Traits.hpp>
-#include <impl/Kokkos_Profiling.hpp>
-#include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_Profiling.hpp>
 
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
 #include <cuda_runtime.h>
@@ -24,16 +25,20 @@
 #include <iostream>
 #include <sstream>
 
-Kokkos::Experimental::OpenACC::OpenACC()
-    : m_space_instance(Impl::OpenACCInternal::default_instance) {
-  KOKKOS_ASSERT(Impl::OpenACCInternal::default_instance);
+Kokkos::Experimental::OpenACC::~OpenACC() {
+  Kokkos::Impl::check_execution_space_destructor_precondition(name());
 }
+
+Kokkos::Experimental::OpenACC::OpenACC()
+    : m_space_instance(
+          (Kokkos::Impl::check_execution_space_constructor_precondition(name()),
+           Impl::OpenACCInternal::default_instance)) {}
 
 Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
     : m_space_instance(
-          new Kokkos::Experimental::Impl::OpenACCInternal(async_arg)) {
-  KOKKOS_ASSERT(Impl::OpenACCInternal::default_instance);
-}
+          (Kokkos::Impl::check_execution_space_constructor_precondition(name()),
+           Kokkos::Impl::HostSharedPtr(
+               new Kokkos::Experimental::Impl::OpenACCInternal(async_arg)))) {}
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
     InitializationSettings const& settings) {

@@ -143,6 +143,7 @@ class Cuda {
   //--------------------------------------------------
   //! \name  Cuda space instances
 
+  ~Cuda();
   Cuda();
 
   explicit Cuda(cudaStream_t stream) : Cuda(stream, Impl::ManageStream::no) {}

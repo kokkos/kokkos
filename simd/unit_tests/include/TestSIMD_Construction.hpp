@@ -199,8 +199,8 @@ TEST(simd, host_construction) {
 }
 
 TEST(simd, device_construction) {
-  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::IndexType<int>>(0, 1),
-                       simd_device_construction_functor());
+  Kokkos::parallel_for(1, simd_device_construction_functor());
+  Kokkos::fence();
 }
 
 #endif

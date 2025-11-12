@@ -469,7 +469,12 @@ struct test_default_scatter_sub_view {
 
       scatter_view_test_impl.run_parallel(original_sub_view.extent(0));
 
-      Kokkos::Experimental::contribute(original_sub_view, scatter_view);
+      // purposefully using a rvalue below
+      // see https://github.com/kokkos/kokkos/issues/8588
+      Kokkos::Experimental::contribute(/*original_sub_view=*/
+                                       Kokkos::subview(original_view, rangeDim0,
+                                                       rangeDim1),
+                                       scatter_view);
       Kokkos::fence();
 
       scatter_view_test_impl.validateResultsForSubview(original_view, rangeDim0,

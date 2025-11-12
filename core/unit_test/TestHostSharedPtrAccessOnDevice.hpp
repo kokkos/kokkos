@@ -10,6 +10,7 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <new>
 #include <gtest/gtest.h>
 
 using Kokkos::Impl::HostSharedPtr;

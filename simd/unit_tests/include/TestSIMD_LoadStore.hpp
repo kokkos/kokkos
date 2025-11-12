@@ -229,8 +229,8 @@ TEST(simd, host_loadstore) {
 }
 
 TEST(simd, device_loadstore) {
-  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::IndexType<int>>(0, 1),
-                       simd_device_loadstore_functor());
+  Kokkos::parallel_for(1, simd_device_loadstore_functor());
+  Kokkos::fence();
 }
 
 #endif

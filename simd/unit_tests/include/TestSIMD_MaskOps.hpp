@@ -106,8 +106,8 @@ TEST(simd, host_mask_ops) {
 }
 
 TEST(simd, device_mask_ops) {
-  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::IndexType<int>>(0, 1),
-                       simd_device_mask_ops_functor());
+  Kokkos::parallel_for(1, simd_device_mask_ops_functor());
+  Kokkos::fence();
 }
 
 #endif

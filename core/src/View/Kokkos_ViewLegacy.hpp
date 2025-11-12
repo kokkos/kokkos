@@ -13,6 +13,7 @@ static_assert(false,
 #include <string>
 #include <algorithm>
 #include <initializer_list>
+#include <sstream>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -238,10 +239,10 @@ class View : public ViewTraits<DataType, Properties...> {
   /** \brief  Compatible view of data type */
   using type = std::conditional_t<
       has_hooks_policy,
-      View<typename traits::data_type, typename traits::array_layout,
+      View<typename traits::scalar_array_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>,
-      View<typename traits::data_type, typename traits::array_layout,
+      View<typename traits::scalar_array_type, typename traits::array_layout,
            typename traits::device_type, typename traits::memory_traits>>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
@@ -897,8 +898,11 @@ class View : public ViewTraits<DataType, Properties...> {
 
 // FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
 // exclusive requirements clauses. 12.6 Also has some issues though it manifests
-// differently
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_COMPILER_NVHPC)
+// differently. Clang with CUDA also had segfaults in CI
+// Define the workaround here since this condition will be re-used.
+// We undef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND later.
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \
+    (defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA))
 #define KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND 1
 #endif
 #ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND

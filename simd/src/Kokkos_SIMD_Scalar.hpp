@@ -62,6 +62,13 @@ class basic_simd_mask<T, simd_abi::scalar> {
     return basic_simd_mask(!m_value);
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd_mask operator~()
+      const noexcept {
+    // We don't use ~m_value here as it will give the wrong result when m_value
+    // is true (~1 == 0b111...1110 which still converts to true).
+    return basic_simd_mask(!m_value);
+  }
+
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator bool()
       const noexcept {
     return m_value;
@@ -77,30 +84,30 @@ class basic_simd_mask<T, simd_abi::scalar> {
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask operator&(
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
-    return basic_simd_mask(static_cast<bool>(lhs) & static_cast<bool>(rhs));
+    return lhs && rhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask operator|(
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
-    return basic_simd_mask(static_cast<bool>(lhs) | static_cast<bool>(rhs));
+    return lhs || rhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask operator^(
       basic_simd_mask const& lhs, basic_simd_mask const& rhs) noexcept {
-    return basic_simd_mask(static_cast<bool>(lhs) ^ static_cast<bool>(rhs));
+    return (lhs && !rhs) || (!lhs && rhs);
   }
 
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask& operator&=(
       basic_simd_mask& lhs, basic_simd_mask const& rhs) noexcept {
-    lhs &= rhs;
+    lhs = lhs & rhs;
     return lhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask& operator|=(
       basic_simd_mask& lhs, basic_simd_mask const& rhs) noexcept {
-    lhs |= rhs;
+    lhs = lhs | rhs;
     return lhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd_mask& operator^=(
       basic_simd_mask& lhs, basic_simd_mask const& rhs) noexcept {
-    lhs ^= rhs;
+    lhs = lhs ^ rhs;
     return lhs;
   }
 
@@ -235,6 +242,10 @@ class basic_simd<T, simd_abi::scalar> {
     return basic_simd(-m_value);
   }
 
+  KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd operator~() const noexcept {
+    return basic_simd(~m_value);
+  }
+
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator+(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(lhs.m_value + rhs.m_value);
@@ -279,6 +290,10 @@ class basic_simd<T, simd_abi::scalar> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return lhs.m_value | rhs.m_value;
   }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator^(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return lhs.m_value ^ rhs.m_value;
+  }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator<<(
       basic_simd const& lhs, int rhs) noexcept {
     return basic_simd(lhs.m_value << rhs);
@@ -314,6 +329,21 @@ class basic_simd<T, simd_abi::scalar> {
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator/=(
       basic_simd& lhs, basic_simd const& rhs) noexcept {
     lhs = lhs / rhs;
+    return lhs;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd& operator&=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs & rhs;
+    return lhs;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd& operator|=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs | rhs;
+    return lhs;
+  }
+  KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd& operator^=(
+      basic_simd& lhs, basic_simd const& rhs) noexcept {
+    lhs = lhs ^ rhs;
     return lhs;
   }
   KOKKOS_FORCEINLINE_FUNCTION friend constexpr basic_simd operator<<=(

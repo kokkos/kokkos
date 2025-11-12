@@ -10,6 +10,8 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <new>
+
 namespace {
 
 // User-defined types with a View data member

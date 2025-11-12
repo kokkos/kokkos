@@ -353,8 +353,8 @@ TEST(TEST_CATEGORY, range_policy_impl_set_space) {
 
   const policy_t policy_new(Kokkos::Impl::PolicyUpdate{}, policy_old, exec_new);
   ASSERT_EQ(policy_new.space(), exec_new);
-  ASSERT_EQ(policy_new.begin(), 42);
-  ASSERT_EQ(policy_new.end(), 666);
+  ASSERT_EQ(policy_new.begin(), 42u);
+  ASSERT_EQ(policy_new.end(), 666u);
 }
 
 }  // namespace

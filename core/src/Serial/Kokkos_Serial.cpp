@@ -13,10 +13,11 @@ import kokkos.core;
 #endif
 
 #include <Serial/Kokkos_Serial.hpp>
-#include <impl/Kokkos_Traits.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
+#include <impl/Kokkos_Traits.hpp>
 
 #include <cstdlib>
 #include <iostream>
@@ -134,9 +135,19 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
 }
 }  // namespace Impl
 
-Serial::Serial() : m_space_instance(Impl::SerialInternal::default_instance) {}
+Serial::~Serial() {
+  Impl::check_execution_space_destructor_precondition(name());
+}
 
-Serial::Serial(NewInstance) : m_space_instance(new Impl::SerialInternal) {}
+Serial::Serial()
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::SerialInternal::default_instance)) {}
+
+Serial::Serial(NewInstance)
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(new Impl::SerialInternal))) {}
 
 void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Host Serial Execution Space:\n";

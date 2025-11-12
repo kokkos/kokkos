@@ -1,31 +1,4 @@
 #
-# Add test-only library for gtest to be reused by all the subpackages
-#
-
-if(NOT GTest_FOUND) # fallback to internal gtest
-  set(GTEST_SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/gtest)
-
-  kokkos_add_test_library(
-    kokkos_gtest STATIC HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
-  )
-
-  target_include_directories(kokkos_gtest SYSTEM PUBLIC ${GTEST_SOURCE_DIR})
-  if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
-    target_compile_features(kokkos_gtest PUBLIC cxx_std_14)
-  endif()
-
-  # Suppress clang-tidy diagnostics on code that we do not have control over
-  if(CMAKE_CXX_CLANG_TIDY)
-    set_target_properties(kokkos_gtest PROPERTIES CXX_CLANG_TIDY "")
-  endif()
-
-  find_package(Threads QUIET)
-  if(TARGET Threads::Threads)
-    set_target_properties(kokkos_gtest PROPERTIES INTERFACE_LINK_LIBRARIES Threads::Threads)
-  endif()
-endif()
-
-#
 # Define Incremental Testing Feature Levels
 # Define Device name mappings (i.e. what comes after Kokkos:: for the ExecSpace)
 #

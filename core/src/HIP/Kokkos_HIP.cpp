@@ -15,6 +15,7 @@ import kokkos.core;
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_IsXnack.hpp>
 
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
@@ -132,20 +133,20 @@ void HIP::impl_finalize() {
   Impl::HIPInternal::default_instance = nullptr;
 }
 
-HIP::HIP() : m_space_instance(Impl::HIPInternal::default_instance) {
-  Impl::HIPInternal::default_instance->verify_is_initialized(
-      "HIP instance constructor");
-}
+HIP::~HIP() { Impl::check_execution_space_destructor_precondition(name()); }
+
+HIP::HIP()
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(Impl::HIPInternal::default_instance))) {}
 
 HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
     : m_space_instance(
-          static_cast<bool>(manage_stream)
-              ? Impl::HostSharedPtr(new Impl::HIPInternal(stream),
-                                    customDeleterManagesStream)
-              : Impl::HostSharedPtr(new Impl::HIPInternal(stream))) {
-  Impl::HIPInternal::default_instance->verify_is_initialized(
-      "HIP instance constructor");
-}
+          (Impl::check_execution_space_constructor_precondition(name()),
+           static_cast<bool>(manage_stream)
+               ? Impl::HostSharedPtr(new Impl::HIPInternal(stream),
+                                     customDeleterManagesStream)
+               : Impl::HostSharedPtr(new Impl::HIPInternal(stream)))) {}
 
 KOKKOS_DEPRECATED HIP::HIP(hipStream_t const stream, bool manage_stream)
     : HIP(stream,

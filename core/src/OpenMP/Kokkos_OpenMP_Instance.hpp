@@ -98,8 +98,6 @@ class OpenMPInternal {
 
   bool is_initialized() const { return m_initialized; }
 
-  bool verify_is_initialized(const char* const label) const;
-
   void print_configuration(std::ostream& s) const;
 
   std::mutex m_instance_mutex;
