@@ -18,3 +18,25 @@ repos:
     rev: e2c2116d86a80e72e7146a06e68b7c228afc6319 # v0.6.13
     hooks:
     - id: cmake-format
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: a30f0d816e5062a67d87c8de753cfe499672b959 # v1.5.5
+    hooks:
+    - id: insert-license
+      name: License and copyright headers in C++ files
+      args:
+      - --license-filepath
+      - scripts/license_header.txt
+      - --comment-style
+      - '//'
+      files: '\.(hpp|cpp|cppm)$'
+      exclude: '^tpls/'
+    - id: insert-license
+      name: License and copyright headers in C files
+      args:
+      - --license-filepath
+      - scripts/license_header.txt
+      - --comment-style
+      - '/*| *| */'
+      files: '\.h$'
+      exclude: '^tpls/'
