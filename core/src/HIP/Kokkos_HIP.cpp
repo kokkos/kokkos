@@ -25,7 +25,7 @@ import kokkos.core;
 
 namespace {
 
-struct CustomDeleterManagesStream {
+struct {
   void operator()(Kokkos::Impl::HIPInternal* ptr) const {
     hipStream_t stream = ptr->m_stream;
     delete ptr;
@@ -138,7 +138,7 @@ HIP::~HIP() { Impl::check_execution_space_destructor_precondition(name()); }
 HIP::HIP()
     : m_space_instance(
           (Impl::check_execution_space_constructor_precondition(name()),
-           Impl::HostSharedPtr(Impl::HIPInternal::default_instance))) {}
+           Impl::HIPInternal::default_instance)) {}
 
 HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
     : m_space_instance(

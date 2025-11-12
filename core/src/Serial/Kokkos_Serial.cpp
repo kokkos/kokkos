@@ -147,7 +147,7 @@ Serial::Serial()
 Serial::Serial(NewInstance)
     : m_space_instance(
           (Impl::check_execution_space_constructor_precondition(name()),
-           Impl::HostSharedPtr(new Impl::SerialInternal))) {}
+           new Impl::SerialInternal)) {}
 
 void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Host Serial Execution Space:\n";

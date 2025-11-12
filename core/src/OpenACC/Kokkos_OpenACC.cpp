@@ -37,8 +37,7 @@ Kokkos::Experimental::OpenACC::OpenACC()
 Kokkos::Experimental::OpenACC::OpenACC(int async_arg)
     : m_space_instance(
           (Kokkos::Impl::check_execution_space_constructor_precondition(name()),
-           Kokkos::Impl::HostSharedPtr(
-               new Kokkos::Experimental::Impl::OpenACCInternal(async_arg)))) {}
+           new Kokkos::Experimental::Impl::OpenACCInternal(async_arg))) {}
 
 void Kokkos::Experimental::OpenACC::impl_initialize(
     InitializationSettings const& settings) {
