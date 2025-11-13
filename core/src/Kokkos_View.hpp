@@ -1221,8 +1221,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
-    static_assert(sizeof...(Args) >= rank(),
-                  "Number of extents is insufficient");
+    static_assert(sizeof...(Args) == rank_dynamic || sizeof...(Args) >= rank(),
+                  "Number of extents is invalid");
     return impl_required_allocation_size(std::make_index_sequence<rank()>(),
                                          args...);
   }

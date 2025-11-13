@@ -26,9 +26,11 @@ void test_required_span_size_single_rank(size_t expected_size,
   size_t req_allocation_size = ViewT::required_allocation_size(sizes...);
   ASSERT_EQ(req_allocation_size, expected_size);
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-  size_t req_allocation_size_extra =
-      ViewT::required_allocation_size(sizes..., 3);
-  ASSERT_EQ(req_allocation_size_extra, expected_size);
+  if constexpr (sizeof...(Sizes) == ViewT::rank()) {
+    size_t req_allocation_size_extra =
+        ViewT::required_allocation_size(sizes..., 3);
+    ASSERT_EQ(req_allocation_size_extra, expected_size);
+  }
 #endif
 }
 
@@ -44,16 +46,23 @@ void test_required_span_size_layout() {
   test_required_span_size_single_rank<
       Kokkos::View<double[7], Layout, TEST_EXECSPACE>>(7 * 8, "A", 7);
   test_required_span_size_single_rank<
+      Kokkos::View<double[7], Layout, TEST_EXECSPACE>>(7 * 8, "A");
+  test_required_span_size_single_rank<
       Kokkos::View<double**, Layout, TEST_EXECSPACE>>(7 * 11 * 8, "A", 7, 11);
   test_required_span_size_single_rank<
       Kokkos::View<double* [11], Layout, TEST_EXECSPACE>>(7 * 11 * 8, "A", 7,
                                                           11);
+  test_required_span_size_single_rank<
+      Kokkos::View<double* [11], Layout, TEST_EXECSPACE>>(7 * 11 * 8, "A", 7);
   test_required_span_size_single_rank<
       Kokkos::View<double*******, Layout, TEST_EXECSPACE>>(
       7 * 11 * 13 * 17 * 19 * 2 * 3 * 8, "A", 7, 11, 13, 17, 19, 2, 3);
   test_required_span_size_single_rank<
       Kokkos::View<double***** [2][3], Layout, TEST_EXECSPACE>>(
       7 * 11 * 13 * 17 * 19 * 2 * 3 * 8, "A", 7, 11, 13, 17, 19, 2, 3);
+  test_required_span_size_single_rank<
+      Kokkos::View<double***** [2][3], Layout, TEST_EXECSPACE>>(
+      7 * 11 * 13 * 17 * 19 * 2 * 3 * 8, "A", 7, 11, 13, 17, 19);
 }
 
 TEST(TEST_CATEGORY, view_required_span_size) {
