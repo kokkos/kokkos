@@ -37,6 +37,13 @@ bool checkMemoryCoarseGrainedness(HIPMemoryContainer const& container) {
   }
 
 TEST(hip, memory_requirements) {
+  // FIXME_HIP hipMemRangeGetAttribute fails with the error code
+  // hipErrorInvalidValue
+#if defined(KOKKOS_ENABLE_HIP) && \
+    ((HIP_VERSION_MAJOR == 7 && HIP_VERSION_MINOR == 1)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>)
+    GTEST_SKIP() << "skipping when using ROCm 7.1";
+#endif
   // we want all user-facing memory in hip to be coarse grained. As of
   // today(07.01.22) the documentation is not reliable/correct, we test the
   // memory on the device and host
