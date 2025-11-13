@@ -12,14 +12,13 @@ import kokkos.core_impl;
 #include <type_traits>
 
 using Kokkos::Impl::BV::BasicView;
-#if 0  // TODO: after View is using BasicView this should be true
-static_assert(
-    std::is_convertible_v<
-        Kokkos::View<long long ****, Kokkos::LayoutRight, Kokkos::Serial>,
-        BasicView<long long, Kokkos::dextents<size_t, 4>,
-                  Kokkos::Experimental::layout_right_padded<>,
-                  Kokkos::Impl::CheckedReferenceCountedAccessor<
-                    long long, Kokkos::HostSpace>>>);
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+static_assert(std::is_convertible_v<
+              Kokkos::View<long long ****, Kokkos::LayoutRight, Kokkos::Serial>,
+              BasicView<long long, Kokkos::dextents<size_t, 4>,
+                        Kokkos::Experimental::layout_right_padded<>,
+                        Kokkos::Impl::CheckedReferenceCountedAccessor<
+                            long long, Kokkos::HostSpace>>>);
 #endif
 
 static_assert(std::is_convertible_v<
@@ -31,21 +30,13 @@ static_assert(std::is_convertible_v<
                         Kokkos::Experimental::layout_right_padded<>,
                         Kokkos::Impl::CheckedReferenceCountedAccessor<
                             const long long, Kokkos::HostSpace>>>);
-#if 0  // TODO: after View is using BasicView this should be true
-static_assert(
-    std::is_convertible_v<
-        Kokkos::View<long long ****, Kokkos::LayoutRight, Kokkos::Serial>,
-        BasicView<const long long, Kokkos::dextents<size_t, 4>,
-                  Kokkos::Experimental::layout_right_padded<>,
-                  Kokkos::Impl::CheckedReferenceCountedAccessor<
-                    const long long, Kokkos::HostSpace>>>);
-
-using test_atomic_view = Kokkos::View<double *, Kokkos::Serial,
-                                      Kokkos::MemoryTraits<Kokkos::Atomic>>;
-static_assert(std::is_same_v<
-              decltype(std::declval<test_atomic_view>()(std::declval<int>())),
-              desul::AtomicRef<double, desul::MemoryOrderRelaxed,
-                               desul::MemoryScopeDevice>>);
+#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+static_assert(std::is_convertible_v<
+              Kokkos::View<long long ****, Kokkos::LayoutRight, Kokkos::Serial>,
+              BasicView<const long long, Kokkos::dextents<size_t, 4>,
+                        Kokkos::Experimental::layout_right_padded<>,
+                        Kokkos::Impl::CheckedReferenceCountedAccessor<
+                            const long long, Kokkos::HostSpace>>>);
 #endif
 
 static_assert(std::is_convertible_v<Kokkos::default_accessor<double>,

@@ -69,6 +69,7 @@ set(COMPILE_ONLY_SOURCES
     view/TestViewCustomization.cpp
     view/TestExtentsDatatypeConversion.cpp
     view/TestConversionFromPointer.cpp
+    view/TestAtomicRef.cpp
 )
 
 if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
@@ -254,6 +255,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
         ViewOfViews
         ViewOutOfBoundsAccess
         ViewResize
+        ViewEqualityOperator
         WorkGraph
         WithoutInitializing
     )
