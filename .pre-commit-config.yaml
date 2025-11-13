@@ -29,7 +29,7 @@ repos:
       - scripts/license_header.txt
       - --comment-style
       - '//'
-      files: '\.(hh|hpp|cc|cpp|cppm)$'
+      files: '\.(hh|hpp|cc|cpp|cppm|hip|cuh|cu)$'
       exclude: '^tpls/'
     - id: insert-license
       name: License and copyright headers in C files
