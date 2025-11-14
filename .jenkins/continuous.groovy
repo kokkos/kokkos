@@ -18,20 +18,19 @@ pipeline {
     }
 
     stages {
-        stage('Clang-Format') {
+        stage('Pre-Commit') {
             agent {
-                dockerfile {
-                    filename 'Dockerfile.clang'
-                    dir 'scripts/docker'
+                docker {
+                    image 'jfxs/pre-commit'
                     label 'nvidia-docker || docker'
-                    args '-v /tmp/ccache.kokkos:/tmp/ccache --env NODE_NAME=${env.NODE_NAME} --env STAGE_NAME=${env.STAGE_NAME}'
+                    args '--env NODE_NAME=${env.NODE_NAME} --env STAGE_NAME=${env.STAGE_NAME}'
                 }
             }
             steps {
                 sh '''#!/bin/bash
                       exec > >(awk '{ print "[" ENVIRON["STAGE_NAME"] "]", $0 }') 2>&1 && \
                       echo "Hostname: ${NODE_NAME}" && \
-                      ./scripts/docker/check_format_cpp.sh'''
+                      pre-commit run --all-files'''
             }
         }
         stage('Build-1') {
