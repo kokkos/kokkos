@@ -21,7 +21,7 @@ pipeline {
         stage('Pre-Commit') {
             agent {
                 docker {
-                    image 'jfxs/pre-commit'
+                    image 'jfxs/pre-commit:4.4.0-002@sha256:40078d585cc17c502d8c2390b8d57e7ecb028d75dcc821f2f75ac8e9c485bf84'
                     label 'nvidia-docker || docker'
                     args '--env NODE_NAME=${env.NODE_NAME} --env STAGE_NAME=${env.STAGE_NAME}'
                 }
