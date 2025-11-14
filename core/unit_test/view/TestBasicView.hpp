@@ -203,11 +203,13 @@ void test_construct_from_view() {
 TEST(TEST_CATEGORY, basic_view_view_ctor) {
   test_construct_from_view<
       double, Kokkos::Experimental::layout_left_padded,
-      Kokkos::View<double[3], Kokkos::LayoutLeft, ExecutionSpace>>();
+      Kokkos::View<double[3], Kokkos::LayoutLeft, ExecutionSpace>,
+      Kokkos::extents<std::size_t, 3>>();
 
   test_construct_from_view<
       int, Kokkos::Experimental::layout_left_padded,
-      Kokkos::View<int *, Kokkos::LayoutLeft, ExecutionSpace>>();
+      Kokkos::View<int *, Kokkos::LayoutLeft, ExecutionSpace>,
+      Kokkos::extents<std::size_t, Kokkos::dynamic_extent>>();
 }
 #endif
 
