@@ -243,9 +243,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline __device__ void operator()() const {
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
                    sizeof(word_size_type));
 
@@ -294,8 +293,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncwarp(0xffffffff);
       }
 
-      for (word_size_type i = threadIdx.y; i < word_count.value;
-           i += blockDim.y) {
+      for (size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
     }
@@ -303,7 +301,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned n = CudaTraits::WarpSize * 8;
+    unsigned n = 512;  // Algorithm constraint
     int const maxShmemPerBlock =
         m_policy.space().cuda_device_prop().sharedMemPerBlock;
     int shmem_size =

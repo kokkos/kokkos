@@ -436,8 +436,9 @@ using value_type_storage_t =
 // 1. create offset arrays
 // 2. loop over number of tiles, striding by griddim (equal to num tiles, or max
 // num blocks)
-// 3. temps set for tile_idx and thrd_idx, which will be modified
-// 4. if LL vs LR:
+// 3. loop over threads within block, striding by blockdim ()
+// 4. temps set for tile_idx and thrd_idx, which will be modified
+// 5. if LL vs LR:
 //      determine tile starting point offsets (multidim)
 //      determine local index offsets (multidim)
 //      concatentate tile offset + local offset for global multi-dim index
@@ -471,22 +472,21 @@ struct DeviceIterateTile {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    if (static_cast<index_type>(blockIdx.x) < m_policy.m_num_tiles &&
-        static_cast<index_type>(threadIdx.y) < m_policy.m_prod_tile_dims) {
-      index_type m_offset[PolicyType::rank];  // tile starting global id offset
-      index_type
-          m_local_offset[PolicyType::rank];  // tile starting global id offset
+    index_type m_offset[PolicyType::rank];  // tile starting global Id offset
+    index_type
+        m_local_offset[PolicyType::rank];  // tile starting local Id offset
 
-      for (index_type tileidx = static_cast<index_type>(blockIdx.x);
-           tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+    for (index_type tileidx = static_cast<index_type>(blockIdx.x);
+         tileidx < m_policy.m_num_tiles; tileidx += gridDim.x) {
+      for (index_type thrd_idx = static_cast<index_type>(threadIdx.y);
+           thrd_idx < m_policy.m_prod_tile_dims; thrd_idx += blockDim.y) {
         index_type tile_idx =
             tileidx;  // temp because tile_idx will be modified while
                       // determining tile starting point offsets
-        index_type thrd_idx = static_cast<index_type>(threadIdx.y);
-        bool in_bounds      = true;
+        index_type local_thrd_idx = thrd_idx;
+        bool in_bounds            = true;
 
-        // LL
-        if (PolicyType::inner_direction == Iterate::Left) {
+        if constexpr (PolicyType::inner_direction == Iterate::Left) {
           for (int i = 0; i < PolicyType::rank; ++i) {
             m_offset[i] =
                 (tile_idx % m_policy.m_tile_end[i]) * m_policy.m_tile[i] +
@@ -494,21 +494,16 @@ struct DeviceIterateTile {
             tile_idx /= m_policy.m_tile_end[i];
 
             // tile-local indices identified with (index_type)threadIdx_y
-            m_local_offset[i] = (thrd_idx % m_policy.m_tile[i]);
-            thrd_idx /= m_policy.m_tile[i];
+            m_local_offset[i] = local_thrd_idx % m_policy.m_tile[i];
+            local_thrd_idx /= m_policy.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
-            if (!(m_offset[i] < m_policy.m_upper[i] &&
-                  m_local_offset[i] < m_policy.m_tile[i])) {
+
+            if (!(m_offset[i] < m_policy.m_upper[i])) {
               in_bounds = false;
             }
           }
-          if (in_bounds) {
-            Impl::_tag_invoke_array<Tag>(m_func, m_offset, m_v);
-          }
-        }
-        // LR
-        else {
+        } else {
           for (int i = PolicyType::rank - 1; i >= 0; --i) {
             m_offset[i] =
                 (tile_idx % m_policy.m_tile_end[i]) * m_policy.m_tile[i] +
@@ -516,21 +511,19 @@ struct DeviceIterateTile {
             tile_idx /= m_policy.m_tile_end[i];
 
             // tile-local indices identified with (index_type)threadIdx_y
-            m_local_offset[i] =
-                (thrd_idx %
-                 m_policy.m_tile[i]);  // Move this to first computation,
-                                       // add to m_offset right away
-            thrd_idx /= m_policy.m_tile[i];
+            m_local_offset[i] = local_thrd_idx % m_policy.m_tile[i];
+            local_thrd_idx /= m_policy.m_tile[i];
 
             m_offset[i] += m_local_offset[i];
-            if (!(m_offset[i] < m_policy.m_upper[i] &&
-                  m_local_offset[i] < m_policy.m_tile[i])) {
+
+            if (!(m_offset[i] < m_policy.m_upper[i])) {
               in_bounds = false;
             }
           }
-          if (in_bounds) {
-            Impl::_tag_invoke_array<Tag>(m_func, m_offset, m_v);
-          }
+        }
+
+        if (in_bounds) {
+          Impl::_tag_invoke_array<Tag>(m_func, m_offset, m_v);
         }
       }
     }

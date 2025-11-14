@@ -364,9 +364,9 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
 
   // NOLINTBEGIN(bugprone-sizeof-expression)
   const integral_nonzero_constant<
-      size_type, std::is_pointer_v<typename FunctorType::reference_type>
-                     ? 0
-                     : sizeof(value_type) / sizeof(size_type)>
+      HIP::size_type, std::is_pointer_v<typename FunctorType::reference_type>
+                          ? 0
+                          : sizeof(value_type) / sizeof(size_type)>
       word_count((sizeof(value_type) * functor.length()) / sizeof(size_type));
   // NOLINTEND(bugprone-sizeof-expression)
 
@@ -379,7 +379,8 @@ __device__ bool hip_single_inter_block_reduce_scan_impl(
     size_type* const shared = shared_data + word_count.value * BlockSizeMask;
     size_type* const global = global_data + word_count.value * block_id;
 
-    for (size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+    for (HIP::size_type i = threadIdx.y; i < word_count.value;
+         i += blockDim.y) {
       global[i] = shared[i];
     }
     __threadfence();

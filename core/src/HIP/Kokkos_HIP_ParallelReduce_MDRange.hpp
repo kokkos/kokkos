@@ -79,9 +79,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline __device__ void operator()() const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(word_size_type));
 
     {
@@ -122,8 +121,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncthreads();
       }
 
-      for (word_size_type i = threadIdx.y; i < word_count.value;
-           i += blockDim.y) {
+      for (size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
     }
@@ -131,7 +129,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned n = HIPTraits::WarpSize * 8;
+    unsigned n = 512;  // Algorithm constraint
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::HIP>;
