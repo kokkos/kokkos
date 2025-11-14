@@ -57,7 +57,7 @@ namespace Kokkos {
   namespace Impl {                                                                      \
   template <bool fallback = true>                                                       \
   KOKKOS_INLINE_FUNCTION INT_TYPE impl_##FUNC(HALF_TYPE x) {                            \
-    return static_cast<HALF_TYPE>(Kokkos::FUNC(static_cast<float>(x)));                 \
+    return Kokkos::FUNC(static_cast<float>(x));                                         \
   }                                                                                     \
   }  /* namespace Impl */                                                               \
   KOKKOS_INLINE_FUNCTION INT_TYPE FUNC(HALF_TYPE x) {                                   \
