@@ -129,7 +129,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned n = 512;  // Algorithm constraint
+    unsigned n = 512;  // block size must less than or equal to 512
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::HIP>;
@@ -175,9 +175,9 @@ class ParallelReduce<CombinedFunctorReducerType,
       int suggested_blocksize =
           local_block_size(m_functor_reducer.get_functor());
 
-      // Note: block_size must be less than or equal to 512
-      block_size = std::max(block_size, static_cast<int>(HIPTraits::WarpSize));
-      block_size = std::min(block_size, static_cast<int>(suggested_blocksize));
+      // Note: block_size must be between WarpSize and suggested_blocksize
+      block_size =
+          std::clamp<int>(block_size, HIPTraits::WarpSize, suggested_blocksize);
 
       m_scratch_space =
           reinterpret_cast<word_size_type*>(hip_internal_scratch_space(
