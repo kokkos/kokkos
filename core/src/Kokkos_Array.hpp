@@ -22,25 +22,9 @@ namespace Kokkos {
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
 namespace Impl {
-template <typename Integral, bool Signed = std::is_signed_v<Integral>>
-struct ArrayBoundsCheck;
 
 template <typename Integral>
-struct ArrayBoundsCheck<Integral, true> {
-  KOKKOS_INLINE_FUNCTION
-  constexpr ArrayBoundsCheck(Integral i, size_t N) {
-    if (i < 0) {
-      char err[128] = "Kokkos::Array: index ";
-      to_chars_i(err + strlen(err), err + 128, i);
-      strcat(err, " < 0");
-      Kokkos::abort(err);
-    }
-    ArrayBoundsCheck<Integral, false>(i, N);
-  }
-};
-
-template <typename Integral>
-struct ArrayBoundsCheck<Integral, false> {
+struct ArrayBoundsCheck {
   KOKKOS_INLINE_FUNCTION
   constexpr ArrayBoundsCheck(Integral i, size_t N) {
     if (size_t(i) >= N) {
@@ -101,18 +85,18 @@ struct Array {
   }
 
   template <typename iType>
+    requires((std::is_convertible_v<iType, size_type>) &&
+             (std::is_nothrow_constructible_v<size_type, iType>))
   KOKKOS_INLINE_FUNCTION constexpr reference operator[](const iType& i) {
-    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
-                  "Must be integral argument");
     KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
     return m_internal_implementation_private_member_data[i];
   }
 
   template <typename iType>
+    requires((std::is_convertible_v<iType, size_type>) &&
+             (std::is_nothrow_constructible_v<size_type, iType>))
   KOKKOS_INLINE_FUNCTION constexpr const_reference operator[](
       const iType& i) const {
-    static_assert((std::is_integral_v<iType> || std::is_enum_v<iType>),
-                  "Must be integral argument");
     KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
     return m_internal_implementation_private_member_data[i];
   }
