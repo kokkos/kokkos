@@ -84,19 +84,13 @@ struct Array {
     return N;
   }
 
-  template <typename iType>
-    requires((std::is_convertible_v<iType, size_type>) &&
-             (std::is_nothrow_constructible_v<size_type, iType>))
-  KOKKOS_INLINE_FUNCTION constexpr reference operator[](const iType& i) {
+  KOKKOS_INLINE_FUNCTION constexpr reference operator[](size_type i) {
     KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
     return m_internal_implementation_private_member_data[i];
   }
 
-  template <typename iType>
-    requires((std::is_convertible_v<iType, size_type>) &&
-             (std::is_nothrow_constructible_v<size_type, iType>))
   KOKKOS_INLINE_FUNCTION constexpr const_reference operator[](
-      const iType& i) const {
+      size_type i) const {
     KOKKOS_ARRAY_BOUNDS_CHECK(i, N);
     return m_internal_implementation_private_member_data[i];
   }
