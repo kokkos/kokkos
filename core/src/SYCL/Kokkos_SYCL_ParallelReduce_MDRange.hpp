@@ -192,6 +192,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               const index_type local_x    = 0;
               const index_type local_y    = item.get_local_id(0);
               const index_type local_z    = 0;
+              const index_type n_local_x  = 1;
+              const index_type n_local_y  = item.get_local_range(0);
+              const index_type n_local_z  = 1;
               const index_type global_y   = 0;
               const index_type global_z   = 0;
               const index_type n_global_x = n_tiles;
@@ -210,6 +213,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                       typename Policy::work_tag, reference_type>(
                       bare_policy, functor, update,
                       {n_global_x, n_global_y, n_global_z},
+                      {n_local_x, n_local_y, n_local_z},
                       {global_x, global_y, global_z},
                       {local_x, local_y, local_z})
                       .exec_range();
@@ -257,6 +261,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                       typename Policy::work_tag, reference_type>(
                       bare_policy, functor, update,
                       {n_global_x, n_global_y, n_global_z},
+                      {n_local_x, n_local_y, n_local_z},
                       {global_x, global_y, global_z},
                       {local_x, local_y, local_z})
                       .exec_range();

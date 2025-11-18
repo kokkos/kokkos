@@ -84,8 +84,8 @@ struct MDReduceFunctor {
 };
 
 template <typename T>
-void MDRangeReduceViewTester(const int reduce_view_size, int view_size,
-                             int tile_x, int tile_y) {
+void MDRangeReduceViewTester(int view_size, int reduce_view_size, int tile_x,
+                             int tile_y) {
   using PolicyType =
       Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<2>>;
   using point_t = typename PolicyType::point_type;
