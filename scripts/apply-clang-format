@@ -40,8 +40,3 @@ else
   git ls-files | grep "\.\(md\)$" | xargs sed -i '' -r 's/[[:blank:]]+$//g'
 fi
 echo "***   Running trailing whitespaces check - done"
-
-# Check that we do not introduce any file with the old copyright
-echo "***   Running copyright"
-./scripts/check-copyright
-echo "***   Running copyright - done"

@@ -13,6 +13,7 @@ static_assert(false,
 #include <string>
 #include <algorithm>
 #include <initializer_list>
+#include <sstream>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -238,10 +239,10 @@ class View : public ViewTraits<DataType, Properties...> {
   /** \brief  Compatible view of data type */
   using type = std::conditional_t<
       has_hooks_policy,
-      View<typename traits::data_type, typename traits::array_layout,
+      View<typename traits::scalar_array_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
            typename traits::memory_traits>,
-      View<typename traits::data_type, typename traits::array_layout,
+      View<typename traits::scalar_array_type, typename traits::array_layout,
            typename traits::device_type, typename traits::memory_traits>>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5

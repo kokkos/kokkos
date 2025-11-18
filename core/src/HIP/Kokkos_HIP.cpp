@@ -15,12 +15,25 @@ import kokkos.core;
 #include <HIP/Kokkos_HIP_Instance.hpp>
 #include <HIP/Kokkos_HIP_IsXnack.hpp>
 
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
 #include <hip/hip_runtime_api.h>
 
 #include <iostream>
+
+namespace {
+
+struct {
+  void operator()(Kokkos::Impl::HIPInternal* ptr) const {
+    hipStream_t stream = ptr->m_stream;
+    delete ptr;
+    KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(stream));
+  }
+} customDeleterManagesStream;
+
+}  // namespace
 
 namespace Kokkos {
 
@@ -94,13 +107,11 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
   // Init the array for used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME
 
-  // Set singleton device id
-  Impl::HIPInternal::singleton().m_hipDev = hip_device_id;
-
-  // Create the singleton stream and initialize singleton instance.
-  hipStream_t singleton_stream;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&singleton_stream));
-  Impl::HIPInternal::singleton().initialize(singleton_stream);
+  // Create the default instance.
+  hipStream_t stream;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamCreate(&stream));
+  Impl::HIPInternal::default_instance = Impl::HostSharedPtr(
+      new Impl::HIPInternal(stream), customDeleterManagesStream);
 }
 
 void HIP::impl_finalize() {
@@ -118,32 +129,24 @@ void HIP::impl_finalize() {
     lock.finalize();
   }
 
-  Impl::HIPInternal::singleton().finalize();
-
-  KOKKOS_IMPL_HIP_SAFE_CALL(
-      hipStreamDestroy(Impl::HIPInternal::singleton().m_stream));
+  // Destroy the default instance.
+  Impl::HIPInternal::default_instance = nullptr;
 }
+
+HIP::~HIP() { Impl::check_execution_space_destructor_precondition(name()); }
 
 HIP::HIP()
-    : m_space_instance(&Impl::HIPInternal::singleton(),
-                       [](Impl::HIPInternal*) {}) {
-  Impl::HIPInternal::singleton().verify_is_initialized(
-      "HIP instance constructor");
-}
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HIPInternal::default_instance)) {}
 
 HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
     : m_space_instance(
-          new Impl::HIPInternal, [manage_stream](Impl::HIPInternal* ptr) {
-            ptr->finalize();
-            if (static_cast<bool>(manage_stream)) {
-              KOKKOS_IMPL_HIP_SAFE_CALL(hipStreamDestroy(ptr->m_stream));
-            }
-            delete ptr;
-          }) {
-  Impl::HIPInternal::singleton().verify_is_initialized(
-      "HIP instance constructor");
-  m_space_instance->initialize(stream);
-}
+          (Impl::check_execution_space_constructor_precondition(name()),
+           static_cast<bool>(manage_stream)
+               ? Impl::HostSharedPtr(new Impl::HIPInternal(stream),
+                                     customDeleterManagesStream)
+               : Impl::HostSharedPtr(new Impl::HIPInternal(stream)))) {}
 
 KOKKOS_DEPRECATED HIP::HIP(hipStream_t const stream, bool manage_stream)
     : HIP(stream,
@@ -196,7 +199,7 @@ hipStream_t HIP::hip_stream() const { return m_space_instance->m_stream; }
 int HIP::hip_device() const { return impl_internal_space_instance()->m_hipDev; }
 
 hipDeviceProp_t const& HIP::hip_device_prop() {
-  return Impl::HIPInternal::singleton().m_deviceProp;
+  return Impl::HIPInternal::default_instance->m_deviceProp;
 }
 
 const char* HIP::name() { return "HIP"; }

@@ -17,6 +17,9 @@ permissions: read-all
 
 jobs:
   # pre-stage
+  pre-commit-check:
+    uses: ./.github/workflows/pre-commit.yml
+
   clang-format-check:
     uses: ./.github/workflows/clang-format-check.yml
 

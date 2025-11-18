@@ -62,6 +62,7 @@ class OpenACC {
 
   using scratch_memory_space = ScratchMemorySpace<OpenACC>;
 
+  ~OpenACC();
   OpenACC();
 
   explicit OpenACC(int async_arg);

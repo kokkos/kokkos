@@ -108,9 +108,19 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     return internal_team_size_max<closure_type>(f);
   }
 
-  template <class FunctorType, class ReducerType>
-  inline int team_size_max(const FunctorType& f, const ReducerType& /*r*/,
-                           const ParallelReduceTag&) const {
+  template <typename FunctorType, typename ReducerType>
+  inline int team_size_max(const FunctorType& f, const ReducerType& reducer,
+                           const ParallelReduceTag& tag) const {
+    using functor_analysis_type =
+        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                              TeamPolicyInternal, ReducerType, void>;
+    return team_size_max_internal(
+        f, typename functor_analysis_type::Reducer{reducer}, tag);
+  }
+
+  template <typename FunctorType, typename ReducerType>
+  inline int team_size_max_internal(const FunctorType& f, const ReducerType&,
+                                    const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::Cuda>;
@@ -147,9 +157,19 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     return internal_team_size_recommended<closure_type>(f);
   }
 
-  template <class FunctorType, class ReducerType>
-  int team_size_recommended(const FunctorType& f, const ReducerType&,
-                            const ParallelReduceTag&) const {
+  template <typename FunctorType, typename ReducerType>
+  int team_size_recommended(const FunctorType& f, const ReducerType& reducer,
+                            const ParallelReduceTag& tag) const {
+    using functor_analysis_type =
+        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                              TeamPolicyInternal, ReducerType, void>;
+    return team_size_recommended_internal(
+        f, typename functor_analysis_type::Reducer{reducer}, tag);
+  }
+
+  template <typename FunctorType, typename ReducerType>
+  int team_size_recommended_internal(const FunctorType& f, const ReducerType&,
+                                     const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::Cuda>;
@@ -883,7 +903,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_policy.space().impl_internal_space_instance();
 
     if (m_team_size < 0) {
-      m_team_size = arg_policy.team_size_recommended(
+      m_team_size = arg_policy.team_size_recommended_internal(
           arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
           ParallelReduceTag());
       if (m_team_size <= 0)
@@ -952,9 +972,9 @@ class ParallelReduce<CombinedFunctorReducerType,
     }
 
     if (int(m_team_size) >
-        arg_policy.team_size_max(m_functor_reducer.get_functor(),
-                                 m_functor_reducer.get_reducer(),
-                                 ParallelReduceTag())) {
+        arg_policy.team_size_max_internal(m_functor_reducer.get_functor(),
+                                          m_functor_reducer.get_reducer(),
+                                          ParallelReduceTag())) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< Cuda > requested too "
                       "large team size."));

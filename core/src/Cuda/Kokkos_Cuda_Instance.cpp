@@ -25,6 +25,7 @@ import kokkos.core;
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
@@ -652,28 +653,29 @@ void Cuda::impl_finalize() {
       cudaStreamDestroy(Impl::CudaInternal::singleton().m_stream));
 }
 
+Cuda::~Cuda() { Impl::check_execution_space_destructor_precondition(name()); }
+
 Cuda::Cuda()
-    : m_space_instance(&Impl::CudaInternal::singleton(),
-                       [](Impl::CudaInternal *) {}) {
-  Impl::CudaInternal::singleton().verify_is_initialized(
-      "Cuda instance constructor");
-}
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(&Impl::CudaInternal::singleton(),
+                               [](Impl::CudaInternal *) {}))) {}
 
 KOKKOS_DEPRECATED Cuda::Cuda(cudaStream_t stream, bool manage_stream)
     : Cuda(stream,
            manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
 
 Cuda::Cuda(cudaStream_t stream, Impl::ManageStream manage_stream)
-    : m_space_instance(
-          new Impl::CudaInternal, [manage_stream](Impl::CudaInternal *ptr) {
-            ptr->finalize();
-            if (static_cast<bool>(manage_stream)) {
-              KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(ptr->m_stream));
-            }
-            delete ptr;
-          }) {
-  Impl::CudaInternal::singleton().verify_is_initialized(
-      "Cuda instance constructor");
+    : m_space_instance((
+          Impl::check_execution_space_constructor_precondition(name()),
+          Impl::HostSharedPtr(
+              new Impl::CudaInternal, [manage_stream](Impl::CudaInternal *ptr) {
+                ptr->finalize();
+                if (static_cast<bool>(manage_stream)) {
+                  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(ptr->m_stream));
+                }
+                delete ptr;
+              }))) {
   m_space_instance->initialize(stream);
 }
 

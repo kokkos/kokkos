@@ -260,4 +260,3 @@ NVIDIA-GRACE-GRACE:
       - build/result_grace_grace.xml
     reports:
       junit: build/result_grace_grace.xml
-

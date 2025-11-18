@@ -925,6 +925,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   template <class P, class... Args>
     requires(!std::is_null_pointer_v<P> &&
+             std::is_convertible_v<P, pointer_type> &&
              std::is_constructible_v<typename base_t::data_handle_type, P> &&
              sizeof...(Args) != rank() + 1)
   KOKKOS_FUNCTION explicit View(P ptr_, Args... args)
@@ -1172,16 +1173,58 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
            sizeof(raw_allocation_value_type);
   }
 
-  KOKKOS_FUNCTION
-  static constexpr size_t required_allocation_size(
-      const size_t arg_N0 = 0, const size_t arg_N1 = 0, const size_t arg_N2 = 0,
-      const size_t arg_N3 = 0, const size_t arg_N4 = 0, const size_t arg_N5 = 0,
-      const size_t arg_N6 = 0, const size_t arg_N7 = 0) {
+ private:
+  template <size_t... RankIdx, std::integral... Args>
+  KOKKOS_FUNCTION static constexpr size_t impl_required_allocation_size(
+      std::index_sequence<RankIdx...>, Args... args) {
+    constexpr size_t num_passed_args = sizeof...(Args);
+    // Deal with customized view with extra args first.
+    // Secondly, handle case where the number of arguments is valid.
+    // Thirdly, deal with the case where the number of arguments is
+    // invalid, which the old impl allowed.
+    if constexpr (traits::impl_is_customized && num_passed_args == rank() + 1) {
+      size_t args_array[num_passed_args] = {static_cast<size_t>(args)...};
+      size_t req_span_size =
+          typename base_t::mapping_type(
+              typename base_t::extents_type{args_array[RankIdx]...})
+              .required_span_size();
+      return req_span_size * args_array[rank()] *
+             sizeof(raw_allocation_value_type);
+    } else if constexpr (num_passed_args == rank_dynamic ||
+                         num_passed_args == rank()) {
+      size_t req_span_size =
+          typename base_t::mapping_type(typename base_t::extents_type{args...})
+              .required_span_size();
+      return req_span_size * sizeof(typename base_t::element_type);
+    }
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    static_assert(
+        (traits::impl_is_customized && num_passed_args == rank() + 1) ||
+            num_passed_args == rank_dynamic || num_passed_args == rank(),
+        "Kokkos::View::required_span_size(...) - invalid number of arguments");
+#else
+    else {
+      size_t args_array[num_passed_args] = {static_cast<size_t>(args)...};
+      size_t req_span_size =
+          typename base_t::mapping_type(
+              typename base_t::extents_type{args_array[RankIdx]...})
+              .required_span_size();
+      return req_span_size * sizeof(typename base_t::element_type);
+    }
+#endif
+  }
+
+ public:
+  template <std::integral... Args>
+  KOKKOS_FUNCTION static constexpr size_t required_allocation_size(
+      Args... args) {
     static_assert(traits::array_layout::is_extent_constructible,
                   "Layout is not constructible from extent arguments. Use "
                   "overload taking a layout object instead.");
-    return required_allocation_size(typename traits::array_layout(
-        arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7));
+    static_assert(sizeof...(Args) == rank_dynamic || sizeof...(Args) >= rank(),
+                  "Number of extents is invalid");
+    return impl_required_allocation_size(std::make_index_sequence<rank()>(),
+                                         args...);
   }
 
   //----------------------------------------

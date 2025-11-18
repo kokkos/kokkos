@@ -687,7 +687,7 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 #elif defined(KOKKOS_ARCH_AMPERE86)
   declare_configuration_metadata("architecture", "GPU architecture", "AMPERE86");
 #elif defined(KOKKOS_ARCH_AMPERE87)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMPERE87");  
+  declare_configuration_metadata("architecture", "GPU architecture", "AMPERE87");
 #elif defined(KOKKOS_ARCH_ADA89)
   declare_configuration_metadata("architecture", "GPU architecture", "ADA89");
 #elif defined(KOKKOS_ARCH_HOPPER90)

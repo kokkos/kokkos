@@ -1,7 +1,7 @@
 include(FindPackageHandleStandardArgs)
 
-find_library(AMD_HIP_LIBRARY amdhip64 PATHS ENV ROCM_PATH PATH_SUFFIXES lib)
-find_library(HSA_RUNTIME_LIBRARY hsa-runtime64 PATHS ENV ROCM_PATH PATH_SUFFIXES lib)
+find_library(AMD_HIP_LIBRARY amdhip64 PATHS ${ROCM_PATH} ENV ROCM_PATH PATH_SUFFIXES lib)
+find_library(HSA_RUNTIME_LIBRARY hsa-runtime64 PATHS ${ROCM_PATH} ENV ROCM_PATH PATH_SUFFIXES lib)
 
 find_package_handle_standard_args(TPLROCM DEFAULT_MSG AMD_HIP_LIBRARY HSA_RUNTIME_LIBRARY)
 

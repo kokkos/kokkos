@@ -51,6 +51,7 @@ class OpenMP {
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<OpenMP>;
 
+  ~OpenMP();
   OpenMP();
 
   explicit OpenMP(int pool_size);

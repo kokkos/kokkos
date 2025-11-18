@@ -19,9 +19,9 @@ for file in $files; do
     cp tmp $file
   else
     head -n +$NNEW $file &> header
-    diff header scripts/new_header &> new_header_diff  
+    diff header scripts/new_header &> new_header_diff
     count=`cat new_header_diff | wc -l`
-    if [ "$count" -eq "0" ]; then  
+    if [ "$count" -eq "0" ]; then
       echo $file >> updated_files
     else
       echo $file >> diff_files

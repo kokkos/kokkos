@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
         lsb-release \
         wget \
         software-properties-common \
-        gnupg \ 
+        gnupg \
         bc \
         ninja-build \
         git \

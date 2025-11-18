@@ -6,6 +6,7 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
+#include <Kokkos_Assert.hpp>
 #else
 #include <Kokkos_Core.hpp>
 #endif
@@ -380,4 +381,81 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, parallel_scan) {
       "parallel_scan\\(\\) \\*\\*after\\*\\* Kokkos::finalize\\(\\) was "
       "called. Concerns scan_workcnt_ret_float with exec policy RangePolicy.");
 }
+
+template <class ExecutionSpace>
+void test_execution_space() {
+  EXPECT_DEATH({ ExecutionSpace exec; },
+               "execution space is being constructed before initialize")
+      << ExecutionSpace::name();
+
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        Kokkos::finalize();
+        ExecutionSpace exec;
+      },
+      "execution space is being constructed after finalize")
+      << ExecutionSpace::name();
+
+  EXPECT_DEATH(
+      {
+        Kokkos::initialize();
+        ExecutionSpace exec;
+        Kokkos::finalize();
+      },
+      "execution space is being destructed after finalize")
+      << ExecutionSpace::name();
+}
+
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
+       execution_space) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  test_execution_space<Kokkos::DefaultExecutionSpace>();
+  if (!std::is_same_v<Kokkos::DefaultExecutionSpace,
+                      Kokkos::DefaultHostExecutionSpace>) {
+    test_execution_space<Kokkos::DefaultHostExecutionSpace>();
+  }
+}
+
+Kokkos::DefaultExecutionSpace replace_static_execution_space() {
+  static std::optional<Kokkos::DefaultExecutionSpace> exec;
+  [[maybe_unused]] static bool once = [] {
+    exec = Kokkos::DefaultExecutionSpace();
+    Kokkos::push_finalize_hook([] { exec.reset(); });
+    return true;
+  }();
+  KOKKOS_ASSERT(exec.has_value());
+  return *exec;  // NOLINT(bugprone-unchecked-optional-access)
+}
+
+void compute_stuff(Kokkos::DefaultExecutionSpace exec) {
+  int const N = 10;
+  Kokkos::View<int*> v("v", N);
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy(exec, 0, N), KOKKOS_LAMBDA(int i) { v(i) = i + 1; });
+  int sum;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy(exec, 0, N),
+      KOKKOS_LAMBDA(int i, int& partial_sum) { partial_sum += v(i); }, sum);
+  KOKKOS_ASSERT(sum == (N + 1) * N / 2);
+}
+
+TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
+       static_execution_space) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  EXPECT_EXIT(
+      {
+        Kokkos::initialize();
+        {
+          auto exec = replace_static_execution_space();
+          compute_stuff(exec);
+        }
+        Kokkos::finalize();
+        std::exit(EXIT_SUCCESS);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
 }  // namespace

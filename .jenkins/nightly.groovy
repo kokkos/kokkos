@@ -41,8 +41,8 @@ pipeline {
                           spack test run ${CDASH_ARGS} kokkos && \
                           spack test results -l
                           '''
-                    }      
-                }   
+                    }
+                }
                 stage('spack-cuda') {
                     agent {
                         docker {
@@ -76,8 +76,8 @@ pipeline {
                           spack test run ${CDASH_ARGS} kokkos && \
                           spack test results -l
                           '''
-                    }      
-                }   
+                    }
+                }
                 stage('GCC-15-CXX26') {
                     agent {
                         docker {
