@@ -95,7 +95,7 @@ if(Kokkos_ENABLE_HIP)
   string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" TEMP_CXX_COMPILER_VERSION ${INTERNAL_COMPILER_VERSION_ONE_LINE})
   set(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION})
 
-  #FIXME HIP
+  #FIXME_HIP
   if(KOKKOS_CXX_COMPILER_VERSION VERSION_EQUAL 7.1)
     message(FATAL_ERROR "Found ROCm 7.1 which leads to wrong code when used with Kokkos. Please use an older version")
   endif()
