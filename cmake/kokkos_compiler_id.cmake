@@ -97,7 +97,7 @@ if(Kokkos_ENABLE_HIP)
 
   #FIXME_HIP
   if(KOKKOS_CXX_COMPILER_VERSION VERSION_EQUAL 7.1)
-    message(FATAL_ERROR "Found ROCm 7.1 which leads to wrong code when used with Kokkos. Please use an older version")
+    message(FATAL_ERROR "Found ROCm 7.1 which leads to wrong code when used with Kokkos. Please use an older version of ROCm.")
   endif()
 endif()
 
