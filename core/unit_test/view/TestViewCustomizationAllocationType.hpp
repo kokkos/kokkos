@@ -374,3 +374,51 @@ void test_deep_copy_single_element_view() {
 TEST(TEST_CATEGORY, view_customization_deep_copy_single_element_view) {
   test_deep_copy_single_element_view();
 }
+
+template <class ViewT, std::integral... Sizes>
+void test_required_span_size_single_rank(size_t expected_size,
+                                         std::string label, Sizes... sizes) {
+  ViewT view(label, sizes...);
+  // Lets get the required size two ways: based on mapping + accessor and using
+  // the required_allocation_size
+  size_t extra_dim = view.accessor().size;
+  size_t span_size = view.mapping().required_span_size();
+  size_t span_size_based_bytes =
+      span_size * sizeof(std::remove_pointer_t<decltype(view.data())>) *
+      extra_dim;
+  size_t req_allocation_size = ViewT::required_allocation_size(sizes...);
+  ASSERT_EQ(span_size_based_bytes, expected_size);
+  ASSERT_EQ(req_allocation_size, expected_size);
+}
+
+template <class Layout>
+void test_required_span_size_layout() {
+  // 5 is the number of underlying elements per Foo::Bar
+  static_assert(std::extent_v<decltype(Foo::Bar::vals)> == 5);
+  // 8 is the size of the raw value types we store.
+  // While Foo::Bar uses float, the accessor and reference type associated
+  // with Foo::Bar actually make the allocation store double!
+  test_required_span_size_single_rank<
+      Kokkos::View<Foo::Bar, Layout, TEST_EXECSPACE>>(5 * 8, "A", 5);
+  test_required_span_size_single_rank<
+      Kokkos::View<Foo::Bar*, Layout, TEST_EXECSPACE>>(5 * 7 * 8, "A", 7, 5);
+  test_required_span_size_single_rank<
+      Kokkos::View<Foo::Bar[7], Layout, TEST_EXECSPACE>>(5 * 7 * 8, "A", 7, 5);
+  test_required_span_size_single_rank<
+      Kokkos::View<Foo::Bar**, Layout, TEST_EXECSPACE>>(5 * 7 * 11 * 8, "A", 7,
+                                                        11, 5);
+  test_required_span_size_single_rank<
+      Kokkos::View<Foo::Bar* [11], Layout, TEST_EXECSPACE>>(5 * 7 * 11 * 8, "A",
+                                                            7, 11, 5);
+  test_required_span_size_single_rank<
+      Kokkos::View<Foo::Bar*******, Layout, TEST_EXECSPACE>>(
+      5 * 7 * 11 * 13 * 17 * 19 * 2 * 3 * 8, "A", 7, 11, 13, 17, 19, 2, 3, 5);
+  test_required_span_size_single_rank<
+      Kokkos::View<Foo::Bar***** [2][3], Layout, TEST_EXECSPACE>>(
+      5 * 7 * 11 * 13 * 17 * 19 * 2 * 3 * 8, "A", 7, 11, 13, 17, 19, 2, 3, 5);
+}
+
+TEST(TEST_CATEGORY, view_customization_required_span_size) {
+  test_required_span_size_layout<Kokkos::LayoutLeft>();
+  test_required_span_size_layout<Kokkos::LayoutRight>();
+}

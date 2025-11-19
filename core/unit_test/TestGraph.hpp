@@ -1179,7 +1179,7 @@ TEST(TEST_CATEGORY, then_host) {
     });
     // clang-format on
 
-    constexpr size_t expt_use_count = 1 + 1;
+    constexpr int expt_use_count = 1 + 1;
     ASSERT_EQ(counter.use_count(), expt_use_count);
 
     using namespace Kokkos::Test::Tools;
@@ -1208,7 +1208,7 @@ TEST(TEST_CATEGORY, then_host) {
   }
 
   ASSERT_EQ(counter.use_count(), 1);
-  ASSERT_EQ(counter(0), 2);
+  ASSERT_EQ(counter(0), 2u);
 }
 
 #if !defined(KOKKOS_HAS_SHARED_SPACE)
@@ -1241,7 +1241,7 @@ void test_mixed_host_device_nodes();
       });
       // clang-format on
 
-      constexpr size_t expt_use_count = 1 + 3;
+      constexpr int expt_use_count = 1 + 3;
       ASSERT_EQ(counter.use_count(), expt_use_count);
 
       graph.submit(exec);
@@ -1249,7 +1249,7 @@ void test_mixed_host_device_nodes();
     }
 
     ASSERT_EQ(counter.use_count(), 1);
-    ASSERT_EQ(counter(0), 6);
+    ASSERT_EQ(counter(0), 6u);
   }
 #endif
 

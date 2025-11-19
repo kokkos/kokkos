@@ -71,8 +71,7 @@ template <typename ViewT>
 struct python_view_type {
   static_assert(Kokkos::is_view<std::decay_t<ViewT>>::value);
 
-  using type =
-      Kokkos::Impl::python_view_type_impl_t<typename ViewT::array_type>;
+  using type = Kokkos::Impl::python_view_type_impl_t<typename ViewT::type>;
 };
 
 template <typename ViewT>

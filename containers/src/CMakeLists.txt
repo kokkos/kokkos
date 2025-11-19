@@ -15,11 +15,14 @@ set(KOKKOS_CONTAINERS_MODULES
     Kokkos_DualView.cppm
     Kokkos_DynamicView.cppm
     Kokkos_DynRankView.cppm
+    Kokkos_DynRankView_Impl.cppm
     Kokkos_ErrorReporter.cppm
     Kokkos_Functional.cppm
     Kokkos_OffsetView.cppm
     Kokkos_ScatterView.cppm
+    Kokkos_ScatterView_Impl.cppm
     Kokkos_UnorderedMap.cppm
+    Kokkos_UnorderedMap_Impl.cppm
 )
 
 install(

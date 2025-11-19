@@ -16,8 +16,13 @@ TEST(TEST_CATEGORY, array_capacity) {
   using A = Kokkos::Array<int, 2>;
   A a{{3, 5}};
 
+  static_assert(noexcept(a.empty()));
   ASSERT_FALSE(a.empty());
+
+  static_assert(noexcept(a.size()));
   ASSERT_EQ(a.size(), 2u);
+
+  static_assert(noexcept(a.max_size()));
   ASSERT_EQ(a.max_size(), 2u);
 }
 
@@ -80,7 +85,10 @@ TEST(TEST_CATEGORY, array_element_access) {
   ASSERT_EQ(a[es], a[index]);
   ASSERT_EQ(ca[es], a[index]);
 
+  static_assert(noexcept(a.data()));
   ASSERT_EQ(a.data()[index], a[index]);
+
+  static_assert(noexcept(ca.data()));
   ASSERT_EQ(ca.data()[index], a[index]);
 }
 
@@ -113,8 +121,13 @@ TEST(TEST_CATEGORY, array_zero_capacity) {
   using A = Kokkos::Array<int, 0>;
   A e;
 
+  static_assert(noexcept(e.empty()));
   ASSERT_TRUE(e.empty());
+
+  static_assert(noexcept(e.size()));
   ASSERT_EQ(e.size(), 0u);
+
+  static_assert(noexcept(e.max_size()));
   ASSERT_EQ(e.max_size(), 0u);
 }
 
@@ -122,10 +135,23 @@ TEST(TEST_CATEGORY, array_zero_data_nullptr) {
   using A = Kokkos::Array<int, 0>;
 
   A e;
+  static_assert(noexcept(e.data()));
   ASSERT_EQ(e.data(), nullptr);
 
   const A& ce = e;
+  static_assert(noexcept(ce.data()));
   ASSERT_EQ(ce.data(), nullptr);
+}
+
+TEST(TEST_CATEGORY, array_stl_compatibility) {
+  using A = Kokkos::Array<int, 3>;
+  A a{1, 2, 3};
+
+  int sum  = std::reduce(a.begin(), a.end(), int{0}, std::plus<int>{});
+  int csum = std::reduce(a.cbegin(), a.cend(), int{0}, std::plus<int>{});
+  int expected_sum = 1 + 2 + 3;
+  EXPECT_EQ(sum, expected_sum);
+  EXPECT_EQ(csum, expected_sum);
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4

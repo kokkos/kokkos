@@ -120,7 +120,7 @@ void test_view_out_of_bounds_access() {
   TestViewOutOfBoundAccess(make_view<V7>(lbl), exec_space, prefix + ".*" + lbl);
   TestViewOutOfBoundAccess(make_view<V8>(lbl), exec_space, prefix + ".*" + lbl);
   V0 v0("v0");  // obtain a valid pointer for an allocation in the right space
-  int* const ptr = v0.data();  
+  int* const ptr = v0.data();
   TestViewOutOfBoundAccess(make_view<V1>(ptr), exec_space, prefix + ".*UNMANAGED");
   TestViewOutOfBoundAccess(make_view<V2>(ptr), exec_space, prefix + ".*UNMANAGED");
   TestViewOutOfBoundAccess(make_view<V3>(ptr), exec_space, prefix + ".*UNMANAGED");

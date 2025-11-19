@@ -63,19 +63,6 @@ struct move_assignment_operator_invoker {
 };
 }  // namespace Impl
 
-struct EmptyViewHooks {
-  using hooks_policy = EmptyViewHooks;
-
-  template <typename View>
-  static void copy_construct(View &, const View &) {}
-  template <typename View>
-  static void copy_assign(View &, const View &) {}
-  template <typename View>
-  static void move_construct(View &, const View &) {}
-  template <typename View>
-  static void move_assign(View &, const View &) {}
-};
-
 template <class... Subscribers>
 struct SubscribableViewHooks {
   using hooks_policy = SubscribableViewHooks<Subscribers...>;
@@ -101,8 +88,6 @@ struct SubscribableViewHooks {
                                  Subscribers...>::invoke(self, other);
   }
 };
-
-using DefaultViewHooks = EmptyViewHooks;
 
 }  // namespace Experimental
 }  // namespace Kokkos

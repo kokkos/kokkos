@@ -23,4 +23,4 @@ jobs:
     - run: |
         rm kokkos-mdspan/include/experimental/mdarray
         rm kokkos-mdspan/include/experimental/mdspan
-        diff --brief --recursive tpls/mdspan/include kokkos-mdspan/include
+        diff --unified=3 --recursive tpls/mdspan/include kokkos-mdspan/include

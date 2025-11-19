@@ -33,24 +33,27 @@ struct _trait_matches_spec_predicate {
   };
 };
 
+template <class WorkTag, class AnalyzeNextTrait>
+struct WorkTagMixin : AnalyzeNextTrait {
+  using base_t = AnalyzeNextTrait;
+  using base_t::base_t;
+  using work_tag = WorkTag;
+  static constexpr auto show_work_tag_error_in_compilation_message =
+      show_extra_work_tag_erroneously_given_to_execution_policy<
+          typename base_t::work_tag>{};
+  static_assert(
+      std::is_void_v<typename base_t::work_tag>,
+      "Kokkos Error: More than one work tag given. Search compiler output "
+      "for 'show_extra_work_tag' to see the type of the errant tag.");
+};
+
 struct WorkTagTrait : TraitSpecificationBase<WorkTagTrait> {
   struct base_traits {
     using work_tag = void;
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND
   };
   template <class WorkTag, class AnalyzeNextTrait>
-  struct mixin_matching_trait : AnalyzeNextTrait {
-    using base_t = AnalyzeNextTrait;
-    using base_t::base_t;
-    using work_tag = WorkTag;
-    static constexpr auto show_work_tag_error_in_compilation_message =
-        show_extra_work_tag_erroneously_given_to_execution_policy<
-            typename base_t::work_tag>{};
-    static_assert(
-        std::is_void_v<typename base_t::work_tag>,
-        "Kokkos Error: More than one work tag given. Search compiler output "
-        "for 'show_extra_work_tag' to see the type of the errant tag.");
-  };
+  using mixin_matching_trait = WorkTagMixin<WorkTag, AnalyzeNextTrait>;
   // Since we don't have subsumption in pre-C++20, we need to have the work tag
   // "trait" handling code ensure that none of the other conditions are met.
   // * Compile time cost complexity note: at first glance it looks like this

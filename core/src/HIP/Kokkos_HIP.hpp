@@ -34,6 +34,7 @@ class HIP {
 
   using scratch_memory_space = ScratchMemorySpace<HIP>;
 
+  ~HIP();
   HIP();
 
   explicit HIP(hipStream_t stream) : HIP(stream, Impl::ManageStream::no) {}
@@ -91,8 +92,6 @@ class HIP {
   static hipDeviceProp_t const& hip_device_prop();
 
   static void impl_initialize(InitializationSettings const&);
-
-  static int impl_is_initialized();
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED static size_type detect_device_count() {

@@ -321,9 +321,6 @@ namespace Impl {
 
 cudaStream_t cuda_get_deep_copy_stream();
 
-const std::unique_ptr<Kokkos::Cuda>& cuda_get_deep_copy_space(
-    bool initialize = true);
-
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
                                               Kokkos::CudaSpace>::assignable);
 static_assert(Kokkos::Impl::MemorySpaceAccess<

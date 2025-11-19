@@ -90,9 +90,15 @@ struct Array {
   using pointer         = T*;
   using const_pointer   = std::add_const_t<T>*;
 
-  KOKKOS_INLINE_FUNCTION static constexpr size_type size() { return N; }
-  KOKKOS_INLINE_FUNCTION static constexpr bool empty() { return false; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return N; }
+  KOKKOS_INLINE_FUNCTION static constexpr size_type size() noexcept {
+    return N;
+  }
+  KOKKOS_INLINE_FUNCTION static constexpr bool empty() noexcept {
+    return false;
+  }
+  KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const noexcept {
+    return N;
+  }
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION constexpr reference operator[](const iType& i) {
@@ -111,11 +117,31 @@ struct Array {
     return m_internal_implementation_private_member_data[i];
   }
 
-  KOKKOS_INLINE_FUNCTION constexpr pointer data() {
+  KOKKOS_INLINE_FUNCTION constexpr pointer data() noexcept {
     return &m_internal_implementation_private_member_data[0];
   }
-  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const noexcept {
     return &m_internal_implementation_private_member_data[0];
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr pointer begin() noexcept { return data(); }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer begin() const noexcept {
+    return data();
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr pointer end() noexcept { return data() + N; }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer end() const noexcept {
+    return data() + N;
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer cbegin() const noexcept {
+    return data();
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer cend() const noexcept {
+    return data() + N;
   }
 
   friend KOKKOS_FUNCTION constexpr bool operator==(Array const& lhs,
@@ -158,9 +184,13 @@ struct Array<T, 0> {
   using pointer         = T*;
   using const_pointer   = std::add_const_t<T>*;
 
-  KOKKOS_INLINE_FUNCTION static constexpr size_type size() { return 0; }
-  KOKKOS_INLINE_FUNCTION static constexpr bool empty() { return true; }
-  KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const { return 0; }
+  KOKKOS_INLINE_FUNCTION static constexpr size_type size() noexcept {
+    return 0;
+  }
+  KOKKOS_INLINE_FUNCTION static constexpr bool empty() noexcept { return true; }
+  KOKKOS_INLINE_FUNCTION constexpr size_type max_size() const noexcept {
+    return 0;
+  }
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION reference operator[](const iType&) {
@@ -178,9 +208,29 @@ struct Array<T, 0> {
     return *reinterpret_cast<const_pointer>(-1);
   }
 
-  KOKKOS_INLINE_FUNCTION constexpr pointer data() { return nullptr; }
-  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const {
+  KOKKOS_INLINE_FUNCTION constexpr pointer data() noexcept { return nullptr; }
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer data() const noexcept {
     return nullptr;
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr pointer begin() noexcept { return data(); }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer begin() const noexcept {
+    return data();
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr pointer end() noexcept { return data(); }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer end() const noexcept {
+    return data();
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer cbegin() const noexcept {
+    return data();
+  }
+
+  KOKKOS_INLINE_FUNCTION constexpr const_pointer cend() const noexcept {
+    return data();
   }
 
   friend KOKKOS_FUNCTION constexpr bool operator==(Array const&,

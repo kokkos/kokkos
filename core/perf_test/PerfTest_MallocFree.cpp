@@ -61,31 +61,41 @@ static void MallocTouchFree(benchmark::State& state) {
   Impl(state, true, When::after_free);
 }
 
+#ifdef KOKKOS_IMPL_32BIT
+constexpr int test_range = 30;
+#else
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+constexpr int test_range = 31;
+#else
+constexpr int test_range = 32;
+#endif
+#endif
+
 BENCHMARK(Malloc)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK(MallocFree)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK(MallocTouch)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
 
 BENCHMARK(MallocTouchFree)
     ->ArgName("N")
     ->RangeMultiplier(16)
-    ->Range(1, int64_t(1) << 32)
+    ->Range(1, int64_t(1) << test_range)
     ->UseManualTime()
     ->Unit(benchmark::kMicrosecond);
 

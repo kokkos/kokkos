@@ -479,10 +479,7 @@ struct ViewTraits {
                          typename prop::memory_traits,
                          typename Kokkos::MemoryTraits<>>;
 
-  using HooksPolicy =
-      std::conditional_t<!std::is_void_v<typename prop::hooks_policy>,
-                         typename prop::hooks_policy,
-                         Kokkos::Experimental::DefaultViewHooks>;
+  using HooksPolicy = typename prop::hooks_policy;
 
   // Analyze data type's properties,
   // May be specialized based upon the layout and value type
@@ -491,20 +488,38 @@ struct ViewTraits {
  public:
   //------------------------------------
   // Data type traits:
-
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using data_type           = typename data_analysis::type;
   using const_data_type     = typename data_analysis::const_type;
   using non_const_data_type = typename data_analysis::non_const_type;
+#else
+  using data_type           = typename data_analysis::data_type;
+  using const_data_type     = typename data_analysis::const_data_type;
+  using non_const_data_type = typename data_analysis::non_const_data_type;
+#endif
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   //------------------------------------
   // Compatible array of trivial type traits:
-
-  using scalar_array_type = typename data_analysis::scalar_array_type;
-  using const_scalar_array_type =
-      typename data_analysis::const_scalar_array_type;
-  using non_const_scalar_array_type =
-      typename data_analysis::non_const_scalar_array_type;
-
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Only supported with KOKKOS_ENABLE_IMPL_VIEW_LEGACY, to be removed after "
+      "5.0 release") = typename data_analysis::scalar_array_type;
+  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Only supported with KOKKOS_ENABLE_IMPL_VIEW_LEGACY, to be removed after "
+      "5.0 release.") = typename data_analysis::const_scalar_array_type;
+  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Only supported with KOKKOS_ENABLE_IMPL_VIEW_LEGACY, to be removed after "
+      "5.0 release.") = typename data_analysis::non_const_scalar_array_type;
+#else
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use data_type instead.") = data_type;
+  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use const_data_type instead.") = const_data_type;
+  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use non_const_data_type instead.") = non_const_data_type;
+#endif
+#endif
   //------------------------------------
   // Value type traits:
 
@@ -584,6 +599,22 @@ struct RemoveAlignedMemoryTrait {
 
  public:
   using type = typename TypeListToViewTraits<D, new_type_list>::type;
+};
+
+// Customization point for view hooks; default is to use the explicit template
+// parameter, but this can be customized to get the view hook from a special
+// memory space for example
+template <class DataType, class... Properties>
+constexpr auto customize_view_hooks() {
+  using traits_type = ViewTraits<DataType, Properties...>;
+  if constexpr (!std::is_void_v<typename traits_type::hooks_policy>) {
+    return typename traits_type::hooks_policy{};
+  }
+}
+
+template <class DataType, class... Properties>
+struct ViewHooksFromTraits {
+  using type = decltype(customize_view_hooks<DataType, Properties...>());
 };
 }  // namespace Impl
 

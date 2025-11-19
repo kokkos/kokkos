@@ -86,23 +86,16 @@ void OpenMPTargetInternal::print_configuration(std::ostream& os,
 }
 
 void OpenMPTargetInternal::impl_finalize() {
-  m_is_initialized = false;
-
   if (m_uniquetoken_ptr != nullptr)
     Kokkos::kokkos_free<Kokkos::Experimental::OpenMPTargetSpace>(
         m_uniquetoken_ptr);
 }
 
 void OpenMPTargetInternal::impl_initialize() {
-  m_is_initialized = true;
-
   // FIXME_OPENMPTARGET:  Only fix the number of teams for NVIDIA architectures
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   omp_set_num_teams(512);
 #endif
-}
-int OpenMPTargetInternal::impl_is_initialized() {
-  return m_is_initialized ? 1 : 0;
 }
 
 OpenMPTargetInternal* OpenMPTargetInternal::impl_singleton() {
@@ -115,14 +108,6 @@ void OpenMPTargetInternal::verify_is_process(const char* const label) {
   if (omp_in_parallel() && (!omp_is_initial_device())) {
     std::string msg(label);
     msg.append(" ERROR: in parallel or on device");
-    Kokkos::Impl::throw_runtime_exception(msg);
-  }
-}
-
-void OpenMPTargetInternal::verify_initialized(const char* const label) {
-  if (0 == Kokkos::Experimental::OpenMPTarget().impl_is_initialized()) {
-    std::string msg(label);
-    msg.append(" ERROR: not initialized");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 }
@@ -226,9 +211,6 @@ void OpenMPTarget::impl_initialize(InitializationSettings const& settings) {
 }
 void OpenMPTarget::impl_finalize() {
   Impl::OpenMPTargetInternal::impl_singleton()->impl_finalize();
-}
-int OpenMPTarget::impl_is_initialized() {
-  return Impl::OpenMPTargetInternal::impl_singleton()->impl_is_initialized();
 }
 }  // Namespace Experimental
 

@@ -85,7 +85,7 @@ namespace Kokkos {
       Pool(const execution_space& exec, uint64_t seed);
 
       //Initializing constructor
-      //Initialize Pool with seed as a starting seed with a pool_size of num_states using the 
+      //Initialize Pool with seed as a starting seed with a pool_size of num_states using the
       //specified execution space instance
       Pool(const execution_space& exec, uint64_t seed, uint64_t num_states);
 

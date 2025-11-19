@@ -30,10 +30,5 @@ export {
 
   using ::Kokkos::operator!=;
   using ::Kokkos::operator==;
-
-  namespace Impl {  // FIXME
-  using ::Kokkos::Impl::ApplyToViewOfStaticRank;
-  using ::Kokkos::Impl::as_view_of_rank_n;
-  }  // namespace Impl
   }  // namespace Kokkos
 }

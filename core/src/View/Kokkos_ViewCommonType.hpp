@@ -23,8 +23,13 @@ struct CommonViewAllocProp;
 
 template <class ValueType>
 struct CommonViewAllocProp<void, ValueType> {
-  using value_type        = ValueType;
-  using scalar_array_type = ValueType;
+  using value_type = ValueType;
+  using data_type  = ValueType;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use data_type instead.") = data_type;
+#endif
 
   template <class... Views>
   KOKKOS_INLINE_FUNCTION CommonViewAllocProp(const Views&...) {}

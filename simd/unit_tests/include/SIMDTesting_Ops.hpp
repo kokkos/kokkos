@@ -283,6 +283,90 @@ class shift_left_eq {
   }
 };
 
+class bitwise_not {
+ public:
+  template <typename T>
+  auto on_host(T const& a) const {
+    return ~a;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a) const {
+    return ~a;
+  }
+};
+
+class bitwise_and {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a & b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a & b;
+  }
+};
+
+class bitwise_and_eq {
+ public:
+  template <typename T>
+  auto on_host(T& a, T const& b) const {
+    return a &= b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T& a, T const& b) const {
+    return a &= b;
+  }
+};
+
+class bitwise_or {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a | b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a | b;
+  }
+};
+
+class bitwise_or_eq {
+ public:
+  template <typename T>
+  auto on_host(T& a, T const& b) const {
+    return a |= b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T& a, T const& b) const {
+    return a |= b;
+  }
+};
+
+class bitwise_xor {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a ^ b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a ^ b;
+  }
+};
+
+class bitwise_xor_eq {
+ public:
+  template <typename T>
+  auto on_host(T& a, T const& b) const {
+    return a ^= b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T& a, T const& b) const {
+    return a ^= b;
+  }
+};
+
 class minimum {
  public:
   template <typename T>

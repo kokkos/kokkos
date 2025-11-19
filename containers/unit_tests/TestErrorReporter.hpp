@@ -48,6 +48,7 @@ struct ErrorReporterDriverBase {
   using report_type = ThreeValReport<int, int, double>;
   using error_reporter_type =
       Kokkos::Experimental::ErrorReporter<report_type, DeviceType>;
+
   error_reporter_type m_errorReporter;
 
   ErrorReporterDriverBase(int reporter_capacity, int /*test_size*/)
@@ -59,8 +60,18 @@ struct ErrorReporterDriverBase {
 
   void check_expectations(int reporter_capacity, int test_size) {
     using namespace std;
-    int num_reported = m_errorReporter.getNumReports();
-    int num_attempts = m_errorReporter.getNumReportAttempts();
+    int num_reported = m_errorReporter.num_reports();
+    int num_attempts = m_errorReporter.num_report_attempts();
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
+    EXPECT_EQ(num_reported, m_errorReporter.getNumReports());
+    EXPECT_EQ(num_attempts, m_errorReporter.getNumReportAttempts());
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+#endif
 
     int expected_num_reports = min(reporter_capacity, test_size / 2);
     EXPECT_EQ(expected_num_reports, num_reported);
@@ -75,14 +86,23 @@ struct ErrorReporterDriverBase {
 template <typename ErrorReporterDriverType>
 void TestErrorReporter() {
   using tester_type = ErrorReporterDriverType;
+
   std::vector<int> reporters;
   std::vector<typename tester_type::report_type> reports;
 
   tester_type test1(100, 10);
-  test1.m_errorReporter.getReports(reporters, reports);
+
+  std::tie(reporters, reports) = test1.m_errorReporter.get_reports();
   checkReportersAndReportsAgree(reporters, reports);
 
   tester_type test2(10, 100);
+  auto [reporters2, reports2] = test2.m_errorReporter.get_reports();
+  checkReportersAndReportsAgree(reporters2, reports2);
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+#endif
   test2.m_errorReporter.getReports(reporters, reports);
   checkReportersAndReportsAgree(reporters, reports);
 
@@ -105,6 +125,10 @@ void TestErrorReporter() {
     reports.push_back(view_reports(i));
   }
   checkReportersAndReportsAgree(reporters, reports);
+#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
+  KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif
+#endif
 }
 
 template <typename DeviceType>
@@ -115,12 +139,23 @@ struct ErrorReporterDriver : public ErrorReporterDriverBase<DeviceType> {
 
   ErrorReporterDriver(int reporter_capacity, int test_size)
       : driver_base(reporter_capacity, test_size) {
+    EXPECT_EQ(driver_base::m_errorReporter.capacity(), reporter_capacity);
+    EXPECT_EQ(driver_base::m_errorReporter.num_reports(), 0);
+    EXPECT_EQ(driver_base::m_errorReporter.num_report_attempts(), 0);
+
     execute(reporter_capacity, test_size);
 
     // Test that clear() and resize() work across memory spaces.
     if (reporter_capacity < test_size) {
       driver_base::m_errorReporter.clear();
+      EXPECT_EQ(driver_base::m_errorReporter.capacity(), reporter_capacity);
+      EXPECT_EQ(driver_base::m_errorReporter.num_reports(), 0);
+      EXPECT_EQ(driver_base::m_errorReporter.num_report_attempts(), 0);
+
       driver_base::m_errorReporter.resize(test_size);
+      EXPECT_EQ(driver_base::m_errorReporter.capacity(), test_size);
+      EXPECT_EQ(driver_base::m_errorReporter.num_reports(), 0);
+      EXPECT_EQ(driver_base::m_errorReporter.num_report_attempts(), 0);
       execute(test_size, test_size);
     }
   }
@@ -205,6 +240,34 @@ TEST(TEST_CATEGORY, ErrorReporterViaLambda) {
 TEST(TEST_CATEGORY, ErrorReporter) {
   TestErrorReporter<ErrorReporterDriver<TEST_EXECSPACE>>();
 }
+
+TEST(TEST_CATEGORY, ErrorReporter_label_ctor) {
+  Kokkos::Experimental::ErrorReporter<int, TEST_EXECSPACE> logger("Reporter",
+                                                                  10);
+}
+
+void ErrorReporter_test_resize() {
+  Kokkos::Experimental::ErrorReporter<int, TEST_EXECSPACE> logger("Reporter",
+                                                                  10);
+
+  // produce more errors when we can store
+  Kokkos::parallel_for(
+      "TestErrorReporter_resize", Kokkos::RangePolicy<TEST_EXECSPACE>(0, 20),
+      KOKKOS_LAMBDA(int i) { logger.add_report(i, 0); });
+
+  ASSERT_EQ(logger.num_reports(), 10);
+  ASSERT_EQ(logger.num_report_attempts(), 20);
+
+  logger.resize(15);
+  ASSERT_EQ(logger.num_reports(), 10);
+  ASSERT_EQ(logger.num_report_attempts(), 10);
+
+  logger.resize(5);
+  ASSERT_EQ(logger.num_reports(), 5);
+  ASSERT_EQ(logger.num_report_attempts(), 10);
+}
+
+TEST(TEST_CATEGORY, ErrorReporter_resize) { ErrorReporter_test_resize(); }
 
 }  // namespace Test
 #endif  // #ifndef KOKKOS_TEST_ERROR_REPORTING_HPP

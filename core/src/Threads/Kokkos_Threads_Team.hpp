@@ -7,6 +7,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <cstdio>
+#include <new>
 
 #include <utility>
 #include <impl/Kokkos_HostThreadTeam.hpp>
@@ -527,6 +528,8 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
   bool m_tune_team_size;
   bool m_tune_vector_length;
 
+  Threads m_space;
+
   inline void init(const int league_size_request, const int team_size_request) {
     const int pool_size = traits::execution_space::impl_thread_pool_size(0);
     const int max_host_team_size = Impl::HostThreadTeamData::max_team_members;
@@ -563,10 +566,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
   using traits = PolicyTraits<Properties...>;
 
-  const typename traits::execution_space& space() const {
-    static typename traits::execution_space m_space;
-    return m_space;
-  }
+  const typename traits::execution_space& space() const { return m_space; }
 
   template <class ExecSpace, class... OtherProperties>
   friend class TeamPolicyInternal;
@@ -585,6 +585,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     m_chunk_size             = p.m_chunk_size;
     m_tune_team_size         = p.m_tune_team_size;
     m_tune_vector_length     = p.m_tune_vector_length;
+    m_space                  = p.m_space;
   }
 
   //----------------------------------------

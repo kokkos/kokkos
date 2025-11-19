@@ -145,8 +145,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute() const {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
     const idx_type N          = m_policy.end() - m_policy.begin();
     const idx_type chunk_size = 128;
     const idx_type n_chunks   = (N + chunk_size - 1) / chunk_size;
@@ -195,8 +193,6 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
  public:
   void execute() const {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const int64_t N        = base_t::m_policy.end() - base_t::m_policy.begin();
     const int chunk_size   = 128;

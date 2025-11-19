@@ -48,6 +48,7 @@ class SYCL {
 
   using scratch_memory_space = ScratchMemorySpace<SYCL>;
 
+  ~SYCL();
   SYCL();
   explicit SYCL(const sycl::queue&);
 
@@ -88,8 +89,6 @@ class SYCL {
   static void impl_finalize();
 
   static void impl_initialize(InitializationSettings const&);
-
-  static bool impl_is_initialized();
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();

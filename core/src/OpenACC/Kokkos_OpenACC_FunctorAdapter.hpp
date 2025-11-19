@@ -21,6 +21,7 @@ class FunctorAdapter;
     using WorkTag = typename Policy::work_tag;                     \
                                                                    \
    public:                                                         \
+    using functor_type = Functor;                                  \
     FunctorAdapter(Functor const &functor) : m_functor(functor) {} \
                                                                    \
     KOKKOS_IMPL_ACC_PRAGMA(routine CLAUSE)                         \

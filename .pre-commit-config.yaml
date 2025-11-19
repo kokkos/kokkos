@@ -1,0 +1,44 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 3e8a8703264a2f4a69428a0aa4dcb512790b2c8c # v6.0.0
+    hooks:
+    - id: check-case-conflict
+    - id: check-merge-conflict
+    - id: check-yaml
+    - id: end-of-file-fixer
+      exclude: '^tpls/'
+    - id: forbid-submodules
+    - id: trailing-whitespace
+      exclude: '^tpls/'
+
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: 579d9fe3b1ee34ddd6ebc5def531f2f1acce622e # v16.0.0
+    hooks:
+    - id: clang-format
+
+  - repo: https://github.com/cheshirekow/cmake-format-precommit
+    rev: e2c2116d86a80e72e7146a06e68b7c228afc6319 # v0.6.13
+    hooks:
+    - id: cmake-format
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: a30f0d816e5062a67d87c8de753cfe499672b959 # v1.5.5
+    hooks:
+    - id: insert-license
+      name: License and copyright headers in C++ files
+      args:
+      - --license-filepath
+      - scripts/license_header.txt
+      - --comment-style
+      - '//'
+      files: '\.(hh|hpp|cc|cpp|cppm|hip|cuh|cu)$'
+      exclude: '^tpls/'
+    - id: insert-license
+      name: License and copyright headers in C files
+      args:
+      - --license-filepath
+      - scripts/license_header.txt
+      - --comment-style
+      - '/*| *| */'
+      files: '\.[hc]$'
+      exclude: '^tpls/'

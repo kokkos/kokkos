@@ -165,7 +165,7 @@ unsigned get_preferred_blocksize_for_range(HIPInternal const *hip_instance,
                                   LaunchMechanism>::default_launchbounds()) {
     if (requested_parallelism &&
         requested_parallelism < size_t(hip_instance->concurrency())) {
-      const unsigned eus            = hip_internal_multiprocessor_count();
+      const unsigned eus = hip_instance->m_deviceProp.multiProcessorCount;
       const unsigned requestedPerEU = (requested_parallelism + eus - 1) / eus;
       // round up to power of 2
       unsigned threadsPerEU = Kokkos::bit_ceil(requestedPerEU);

@@ -13,6 +13,7 @@ static_assert(false,
 #include <string>
 #include <algorithm>
 #include <initializer_list>
+#include <sstream>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_HostSpace.hpp>
@@ -20,6 +21,7 @@ static_assert(false,
 #include <Kokkos_ExecPolicy.hpp>
 #include <View/Hooks/Kokkos_ViewHooks.hpp>
 
+#include <impl/Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
@@ -226,37 +228,56 @@ class View : public ViewTraits<DataType, Properties...> {
       Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
-  using hooks_policy = typename traits::hooks_policy;
+  using hooks_policy                     = typename traits::hooks_policy;
+  static constexpr bool has_hooks_policy = !std::is_void_v<hooks_policy>;
 
   view_tracker_type m_track;
   map_type m_map;
 
  public:
   //----------------------------------------
-  /** \brief  Compatible view of array of scalar types */
-  using array_type =
+  /** \brief  Compatible view of data type */
+  using type = std::conditional_t<
+      has_hooks_policy,
       View<typename traits::scalar_array_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
-           typename traits::memory_traits>;
+           typename traits::memory_traits>,
+      View<typename traits::scalar_array_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  /** \brief  Compatible view of array of data types */
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") = type;
+#endif
 
   /** \brief  Compatible view of const data type */
-  using const_type =
+  using const_type = std::conditional_t<
+      has_hooks_policy,
       View<typename traits::const_data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
-           typename traits::memory_traits>;
+           typename traits::memory_traits>,
+      View<typename traits::const_data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>>;
 
   /** \brief  Compatible view of non-const data type */
-  using non_const_type =
+  using non_const_type = std::conditional_t<
+      has_hooks_policy,
       View<typename traits::non_const_data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::hooks_policy,
-           typename traits::memory_traits>;
+           typename traits::memory_traits>,
+      View<typename traits::non_const_data_type, typename traits::array_layout,
+           typename traits::device_type, typename traits::memory_traits>>;
 
   /** \brief  Compatible host mirror view */
-  using host_mirror_type =
+  using host_mirror_type = std::conditional_t<
+      has_hooks_policy,
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>,
-           typename traits::hooks_policy>;
+           typename traits::hooks_policy>,
+      View<typename traits::non_const_data_type, typename traits::array_layout,
+           Device<DefaultHostExecutionSpace,
+                  typename traits::host_mirror_space::memory_space>>>;
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   /** \brief  Compatible host mirror view */
@@ -875,19 +896,81 @@ class View : public ViewTraits<DataType, Properties...> {
   KOKKOS_DEFAULTED_FUNCTION
   View() = default;
 
+// FIXME_NVCC: nvcc 12.2 and 12.3 view these as ambiguous even though they have
+// exclusive requirements clauses. 12.6 Also has some issues though it manifests
+// differently. Clang with CUDA also had segfaults in CI
+// Define the workaround here since this condition will be re-used.
+// We undef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND later.
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \
+    (defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA))
+#define KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND 1
+#endif
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
   KOKKOS_FUNCTION
   View(const View& other) : m_track(other.m_track), m_map(other.m_map) {
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
+    }
+  }
+#else
+  KOKKOS_DEFAULTED_FUNCTION
+  View(const View&)
+    requires(!has_hooks_policy)
+  = default;
+
+  KOKKOS_FUNCTION
+  View(const View& other)
+    requires(has_hooks_policy)
+      : m_track(other.m_track), m_map(other.m_map) {
     KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
   }
+#endif
 
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
   KOKKOS_FUNCTION
   View(View&& other)
       : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
-    KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+    }
   }
+#else
+  KOKKOS_DEFAULTED_FUNCTION
+  View(View&&)
+    requires(!has_hooks_policy)
+  = default;
 
   KOKKOS_FUNCTION
+  View(View&& other)
+    requires(has_hooks_policy)
+      : m_track{std::move(other.m_track)}, m_map{std::move(other.m_map)} {
+    KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+  }
+#endif
+
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
+  KOKKOS_FUNCTION
   View& operator=(const View& other) {
+    m_map   = other.m_map;
+    m_track = other.m_track;
+
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST(
+          (if (&other != this) { hooks_policy::copy_assign(*this, other); }))
+    }
+
+    return *this;
+  }
+#else
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(const View&)
+    requires(!has_hooks_policy)
+  = default;
+
+  KOKKOS_FUNCTION
+  View& operator=(const View& other)
+    requires(has_hooks_policy)
+  {
     m_map   = other.m_map;
     m_track = other.m_track;
 
@@ -895,9 +978,31 @@ class View : public ViewTraits<DataType, Properties...> {
 
     return *this;
   }
+#endif
 
+#ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
   KOKKOS_FUNCTION
   View& operator=(View&& other) {
+    m_map   = std::move(other.m_map);
+    m_track = std::move(other.m_track);
+
+    if constexpr (has_hooks_policy) {
+      KOKKOS_IF_ON_HOST(
+          (if (&other != this) { hooks_policy::move_assign(*this, other); }))
+    }
+
+    return *this;
+  }
+#else
+  KOKKOS_DEFAULTED_FUNCTION
+  View& operator=(View&&)
+    requires(!has_hooks_policy)
+  = default;
+
+  KOKKOS_FUNCTION
+  View& operator=(View&& other)
+    requires(has_hooks_policy)
+  {
     m_map   = std::move(other.m_map);
     m_track = std::move(other.m_track);
 
@@ -905,6 +1010,8 @@ class View : public ViewTraits<DataType, Properties...> {
 
     return *this;
   }
+#endif
+#undef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND
 
   //----------------------------------------
   // Compatible view copy constructor and assignment
@@ -976,6 +1083,25 @@ class View : public ViewTraits<DataType, Properties...> {
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout> const& arg_layout)
       : m_track(), m_map() {
+    if (bool was_finalized = is_finalized();
+        was_finalized || !is_initialized()) {
+      std::stringstream ss;
+      ss << "Kokkos ERROR: View ";
+      constexpr bool has_label = Impl::ViewCtorProp<P...>::has_label;
+      if constexpr (has_label) {
+        auto const& lbl = Impl::get_property<Impl::LabelTag>(arg_prop);
+        ss << "(label=\"" << lbl << "\") ";
+      }
+      ss << "is being constructed ";
+      if (was_finalized) {
+        ss << "after finalize() ";
+      } else {
+        ss << "before initialize() ";
+      }
+      ss << "has been called";
+      auto const err = ss.str();
+      abort(err.c_str());
+    }
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =
@@ -983,19 +1109,9 @@ class View : public ViewTraits<DataType, Properties...> {
     auto prop_copy = Impl::with_properties_if_unset(
         prop_copy_tmp, typename traits::device_type::memory_space{},
         typename traits::device_type::execution_space{});
-    using alloc_prop = decltype(prop_copy);
 
     static_assert(!traits::memory_traits::is_unmanaged,
                   "View allocation constructor requires managed memory");
-
-    if (alloc_prop::initialize &&
-        !alloc_prop::execution_space::impl_is_initialized()) {
-      // If initializing view data then
-      // the execution space must be initialized.
-      Kokkos::abort(
-          "Constructing View and initializing data with uninitialized "
-          "execution space");
-    }
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (std::is_same_v<typename traits::array_layout,

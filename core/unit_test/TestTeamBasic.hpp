@@ -173,13 +173,14 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
   const int level   = 1;
   const int n_teams = 1;
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  // Allocate slightly more than (2^31-1) bytes. The other value resulted in
-  // problems allocating too much memory.
-  const size_t per_team_extent = 268435460;
-#else
-  // Value originally chosen in the reproducer.
+#if defined(KOKKOS_ENABLE_LARGE_MEM_TESTS) || defined(KOKKOS_ENABLE_CUDA) || \
+    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+  //  The GPU backends use unsigned as size_type and we need to check that we
+  //  didn't screw the scratch space calculation up, CPU backends anyway use
+  //  size_t so less likely to screw up
   const size_t per_team_extent = 502795560;
+#else
+  const size_t per_team_extent = 268435460;
 #endif
 
   const size_t per_team_bytes = per_team_extent * sizeof(double);

@@ -29,8 +29,6 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
   void execute_impl() const {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto begin = m_policy.begin();
     const auto end   = m_policy.end();
 

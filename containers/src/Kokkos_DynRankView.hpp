@@ -459,9 +459,14 @@ class DynRankView : private View<DataType*******, Properties...> {
   using reference_type = typename view_type::reference_type;
   using pointer_type   = typename view_type::pointer_type;
 
-  using scalar_array_type           = value_type;
-  using const_scalar_array_type     = const_value_type;
-  using non_const_scalar_array_type = non_const_value_type;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use data_type instead.") = data_type;
+  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use const_data_type instead.") = const_data_type;
+  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use non_const_data_type instead.") = non_const_data_type;
+#endif
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   using specialize KOKKOS_DEPRECATED = void;
@@ -500,9 +505,14 @@ class DynRankView : private View<DataType*******, Properties...> {
   // rank 7 data_type of the traits
 
   /** \brief  Compatible view of array of scalar types */
-  using array_type = DynRankView<
-      typename drvtraits::scalar_array_type, typename drvtraits::array_layout,
+  using type = DynRankView<
+      typename drvtraits::data_type, typename drvtraits::array_layout,
       typename drvtraits::device_type, typename drvtraits::memory_traits>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  /** \brief  Compatible view of array of scalar types */
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") = type;
+#endif
 
   /** \brief  Compatible view of const data type */
   using const_type = DynRankView<
@@ -661,10 +671,6 @@ class DynRankView : private View<DataType*******, Properties...> {
     {
       return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
     }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0,
@@ -692,10 +698,6 @@ class DynRankView : private View<DataType*******, Properties...> {
     {
       return view_type::operator()(i0, i1, 0, 0, 0, 0, 0);
     }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
@@ -727,10 +729,6 @@ class DynRankView : private View<DataType*******, Properties...> {
     {
       return view_type::operator()(i0, i1, i2, 0, 0, 0, 0);
     }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-    __builtin_unreachable();
-#endif
   }
 
   KOKKOS_FUNCTION reference_type operator()(index_type i0, index_type i1,
@@ -747,7 +745,7 @@ class DynRankView : private View<DataType*******, Properties...> {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_FUNCTION reference_type operator[](index_type i0) const {
     if constexpr (std::is_same_v<typename drvtraits::value_type,
-                                 typename drvtraits::scalar_array_type>) {
+                                 typename drvtraits::data_type>) {
       return view_type::data()[i0];
     } else {
       const size_t dim_scalar = view_type::impl_map().dimension_scalar();
@@ -1599,10 +1597,6 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
 
     return dst_type(create_mirror(arg_prop, src.DownCast()), src.rank());
   }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 }  // namespace Impl
@@ -1688,10 +1682,6 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 }  // namespace Impl
@@ -1778,10 +1768,6 @@ auto create_mirror_view_and_copy(
       deep_copy(mirror, src);
     return mirror;
   }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 template <class Space, class T, class... P>
@@ -1952,7 +1938,7 @@ namespace Experimental {
 template <class T, class... P>
 struct python_view_type<DynRankView<T, P...>> {
   using type = Kokkos::Impl::python_view_type_impl_t<
-      typename DynRankView<T, P...>::array_type>;
+      typename DynRankView<T, P...>::type>;
 };
 }  // namespace Experimental
 

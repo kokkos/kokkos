@@ -33,11 +33,6 @@ export {
   using ::Kokkos::Experimental::ScatterSum;
   }  // namespace Experimental
 
-  namespace Impl::Experimental {  // FIXME
-  using ::Kokkos::Impl::Experimental::DefaultContribution;
-  using ::Kokkos::Impl::Experimental::DefaultDuplication;
-  }  // namespace Impl::Experimental
-
   using ::Kokkos::realloc;
   using ::Kokkos::resize;
   }  // namespace Kokkos

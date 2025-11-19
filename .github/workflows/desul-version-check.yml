@@ -27,4 +27,4 @@ jobs:
         rm desul-atomics/atomics/CMakeLists.txt
         rm desul-atomics/atomics/desul_atomicsConfig.cmake.in
         rm desul-atomics/atomics/src/common.cpp
-        diff --brief --recursive tpls/desul desul-atomics/atomics
+        diff --unified=3 --recursive tpls/desul desul-atomics/atomics

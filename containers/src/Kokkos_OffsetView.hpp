@@ -211,11 +211,15 @@ class OffsetView : public View<DataType, Properties...> {
 
  public:
   //----------------------------------------
+  /** \brief  Compatible view of data type */
+  using type =
+      OffsetView<typename traits::data_type, typename traits::array_layout,
+                 typename traits::device_type, typename traits::memory_traits>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   /** \brief  Compatible view of array of scalar types */
-  using array_type =
-      OffsetView<typename traits::scalar_array_type,
-                 typename traits::array_layout, typename traits::device_type,
-                 typename traits::memory_traits>;
+  using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") = type;
+#endif
 
   /** \brief  Compatible view of const data type */
   using const_type =
@@ -284,7 +288,7 @@ class OffsetView : public View<DataType, Properties...> {
   // interoperability with View
  private:
   using view_type =
-      View<typename traits::scalar_array_type, typename traits::array_layout,
+      View<typename traits::data_type, typename traits::array_layout,
            typename traits::device_type, typename traits::memory_traits>;
 
  public:
@@ -1314,10 +1318,6 @@ inline auto create_mirror(const Kokkos::Experimental::OffsetView<T, P...>& src,
     return typename Kokkos::Experimental::OffsetView<T, P...>::host_mirror_type(
         Kokkos::create_mirror(arg_prop, src.view()), src.begins());
   }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 }  // namespace Impl
@@ -1411,10 +1411,6 @@ inline auto create_mirror_view(
       return Kokkos::Impl::choose_create_mirror(src, arg_prop);
     }
   }
-#if defined(KOKKOS_COMPILER_NVCC) && KOKKOS_COMPILER_NVCC >= 1130 && \
-    !defined(KOKKOS_COMPILER_MSVC)
-  __builtin_unreachable();
-#endif
 }
 
 }  // namespace Impl

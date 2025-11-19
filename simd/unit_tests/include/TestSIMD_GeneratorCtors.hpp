@@ -7,6 +7,7 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.simd;
+import kokkos.simd_impl;
 #else
 #include <Kokkos_SIMD.hpp>
 #endif
@@ -138,6 +139,7 @@ TEST(simd, host_gen_ctors) {
 
 TEST(simd, device_gen_ctors) {
   Kokkos::parallel_for(1, simd_device_gen_ctor_functor());
+  Kokkos::fence();
 }
 
 #endif

@@ -1,31 +1,4 @@
 #
-# Add test-only library for gtest to be reused by all the subpackages
-#
-
-if(NOT GTest_FOUND) # fallback to internal gtest
-  set(GTEST_SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/gtest)
-
-  kokkos_add_test_library(
-    kokkos_gtest STATIC HEADERS ${GTEST_SOURCE_DIR}/gtest/gtest.h SOURCES ${GTEST_SOURCE_DIR}/gtest/gtest-all.cc
-  )
-
-  target_include_directories(kokkos_gtest SYSTEM PUBLIC ${GTEST_SOURCE_DIR})
-  if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
-    target_compile_features(kokkos_gtest PUBLIC cxx_std_14)
-  endif()
-
-  # Suppress clang-tidy diagnostics on code that we do not have control over
-  if(CMAKE_CXX_CLANG_TIDY)
-    set_target_properties(kokkos_gtest PROPERTIES CXX_CLANG_TIDY "")
-  endif()
-
-  find_package(Threads QUIET)
-  if(TARGET Threads::Threads)
-    set_target_properties(kokkos_gtest PROPERTIES INTERFACE_LINK_LIBRARIES Threads::Threads)
-  endif()
-endif()
-
-#
 # Define Incremental Testing Feature Levels
 # Define Device name mappings (i.e. what comes after Kokkos:: for the ExecSpace)
 #
@@ -290,11 +263,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
       list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewCopy_c)
     endif()
-    # FIXME: we will eventually likely remove ViewHooks entirely, but for now
-    # ViewHooks are not compatible
-    if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-      list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewHooks)
-    endif()
     foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid
@@ -359,11 +327,14 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenMPTarget;OpenACC;HIP;SYCL)
     # ViewSupport should eventually contain the new implementation
     # detail tests for the mdspan based View
     if(Kokkos_ENABLE_IMPL_MDSPAN)
-      set(BV_TestNames BasicView ReferenceCountedAccessor ReferenceCountedDataHandle)
+      set(BV_TestNames BasicView ReferenceCountedAccessor ReferenceCountedDataHandle AllocationAndSpanSize)
       if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
         list(APPEND BV_TestNames ViewCustomizationAccessorArg ViewCustomizationAllocationType
              ViewCustomizationAccessorFromMapping
         )
+      endif()
+      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
+        list(APPEND BV_TestNames ViewCtorDataHandle)
       endif()
       set(${Tag}_VIEWSUPPORT)
       foreach(Name IN LISTS BV_TestNames)
@@ -587,9 +558,7 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_NumericTraits.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_RangePolicy.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_RangePolicyRequire.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_a.cpp #fails if NVHPC V22.5 or lower.
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reducers_d.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reductions.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_Reductions_DeviceView.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamBasic.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamScratch.cpp

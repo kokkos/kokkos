@@ -211,6 +211,16 @@ class RangePolicy : public Impl::PolicyTraits<Properties...> {
       return;
     }
 #endif
+#ifdef KOKKOS_ENABLE_OPENACC
+    if (std::is_same_v<typename traits::execution_space,
+                       Kokkos::Experimental::OpenACC>) {
+      // chunk_size <=1 lets the compiler choose the chunk size when
+      // launching kernels
+      m_granularity      = 1;
+      m_granularity_mask = 0;
+      return;
+    }
+#endif
     auto concurrency = static_cast<int64_t>(m_space.concurrency());
     if (concurrency == 0) concurrency = 1;
 

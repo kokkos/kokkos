@@ -7,6 +7,7 @@
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 import kokkos.dyn_rank_view;
+import kokkos.dyn_rank_view_impl;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_DynRankView.hpp>

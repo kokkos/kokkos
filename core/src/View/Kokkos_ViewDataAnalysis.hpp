@@ -368,15 +368,28 @@ struct ViewDataAnalysis {
   using non_const_value_type = typename array_analysis::non_const_value_type;
 
   // Generate analogous multidimensional array specification type.
-  using type       = typename ViewDataType<value_type, dimension>::type;
-  using const_type = typename ViewDataType<const_value_type, dimension>::type;
-  using non_const_type =
+  using data_type = typename ViewDataType<value_type, dimension>::type;
+  using const_data_type =
+      typename ViewDataType<const_value_type, dimension>::type;
+  using non_const_data_type =
       typename ViewDataType<non_const_value_type, dimension>::type;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  using type KOKKOS_DEPRECATED_WITH_COMMENT("Use data_type instead.") =
+      data_type;
+  using const_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use const_data_type instead.") = const_data_type;
+  using non_const_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use non_const_data_type instead.") = non_const_data_type;
+
   // Generate "flattened" multidimensional array specification type.
-  using scalar_array_type           = type;
-  using const_scalar_array_type     = const_type;
-  using non_const_scalar_array_type = non_const_type;
+  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use data_type instead.") = data_type;
+  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use const_data_type instead.") = const_data_type;
+  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use non_const_data_type instead.") = non_const_data_type;
+#endif
 };
 
 template <class Dimension, class Layout, class Enable = void>

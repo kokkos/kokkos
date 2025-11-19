@@ -53,7 +53,7 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -LOJ "https://developer.codeplay.com/api/v1/products/download?product=oneapi&variant=nvidia&version=2025.0.0&filters[]=12.0&filters[]=linux" && \
+RUN curl -LOJ "https://cloud1.cees.ornl.gov/download/oneapi-for-nvidia-gpus-2025.0.0-cuda-12.0-linux.sh" && \
     chmod +x oneapi-for-nvidia-gpus-2025.0.0-cuda-12.0-linux.sh && \
     ./oneapi-for-nvidia-gpus-2025.0.0-cuda-12.0-linux.sh
 

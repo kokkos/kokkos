@@ -75,16 +75,12 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   void execute() const {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
     execute_impl();
   }
 
  private:
   void execute_impl() const {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget parallel_for");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget parallel_for");
     const auto league_size   = m_policy.league_size();
     const auto team_size     = m_policy.team_size();

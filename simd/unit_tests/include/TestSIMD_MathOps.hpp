@@ -7,6 +7,7 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.simd;
+import kokkos.simd_impl;
 #else
 #include <Kokkos_SIMD.hpp>
 #endif
@@ -566,6 +567,7 @@ TEST(simd, device_math_ops) {
          "cuStreamSynchronize: an illegal memory access was encountered";
 #endif
   Kokkos::parallel_for(1, simd_device_math_ops_functor());
+  Kokkos::fence();
 }
 
 #endif

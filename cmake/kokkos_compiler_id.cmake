@@ -73,7 +73,6 @@ if(INTERNAL_HAVE_COMPILER_NVCC)
   string(REGEX MATCH "V[0-9]+\\.[0-9]+\\.[0-9]+" TEMP_CXX_COMPILER_VERSION ${INTERNAL_COMPILER_VERSION_ONE_LINE})
   string(SUBSTRING ${TEMP_CXX_COMPILER_VERSION} 1 -1 TEMP_CXX_COMPILER_VERSION)
   set(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION})
-  message(STATUS "Compiler Version: ${KOKKOS_CXX_COMPILER_VERSION}")
   if(INTERNAL_USE_COMPILER_LAUNCHER)
     message(STATUS "kokkos_launch_compiler (${Kokkos_COMPILE_LAUNCHER}) is enabled...")
     kokkos_compilation(GLOBAL)
@@ -95,7 +94,6 @@ if(Kokkos_ENABLE_HIP)
 
   string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" TEMP_CXX_COMPILER_VERSION ${INTERNAL_COMPILER_VERSION_ONE_LINE})
   set(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION})
-  message(STATUS "Compiler Version: ${KOKKOS_CXX_COMPILER_VERSION}")
 endif()
 
 if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
@@ -139,6 +137,21 @@ if(KOKKOS_CXX_COMPILER_ID STREQUAL Fujitsu)
   string(REGEX MATCH "[0-9]+\\.[0-9]+\\.[0-9]+" TEMP_CXX_COMPILER_VERSION ${INTERNAL_CXX_COMPILER_VERSION})
   set(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION})
 endif()
+
+set(Kokkos_LANGUAGES "${KOKKOS_COMPILE_LANGUAGE}")
+if(Kokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES)
+  if(Kokkos_ENABLE_HIP)
+    set(Kokkos_LANGUAGES "HIP,CXX")
+  elseif(Kokkos_ENABLE_CUDA)
+    set(Kokkos_LANGUAGES "CUDA,CXX")
+  endif()
+endif()
+
+message(
+  STATUS
+    "Kokkos is configured for CMake languages ${Kokkos_LANGUAGES} compilation (using ${KOKKOS_CXX_COMPILER_ID} version ${KOKKOS_CXX_COMPILER_VERSION})"
+)
+unset(Kokkos_LANGUAGES)
 
 # Enforce the minimum compilers supported by Kokkos.
 set(KOKKOS_CLANG_CPU_MINIMUM 14.0.0)

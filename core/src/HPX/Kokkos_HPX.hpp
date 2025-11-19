@@ -20,11 +20,12 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_ScratchSpace.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_ConcurrentBitset.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
-#include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
+#include <impl/Kokkos_Tools.hpp>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 
@@ -41,6 +42,7 @@ static_assert(false,
 #include <iosfwd>
 #include <functional>
 #include <memory>
+#include <new>
 #include <type_traits>
 #include <vector>
 
@@ -156,22 +158,32 @@ class HPX {
 #pragma GCC diagnostic ignored "-Wuninitialized"
 
   HPX()
-      : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
-            &m_default_instance_data, &default_instance_deleter)) {}
+      : m_instance_data(
+            (Kokkos::Impl::check_execution_space_constructor_precondition(
+                 name()),
+             Kokkos::Impl::HostSharedPtr<instance_data>(
+                 &m_default_instance_data, &default_instance_deleter))) {}
 
 #pragma GCC diagnostic pop
 
-  ~HPX() = default;
+  ~HPX() {
+    Kokkos::Impl::check_execution_space_destructor_precondition(name());
+  }
   explicit HPX(instance_mode mode)
       : m_instance_data(
-            mode == instance_mode::independent
-                ? (Kokkos::Impl::HostSharedPtr<instance_data>(
-                      new instance_data(m_next_instance_id++)))
-                : Kokkos::Impl::HostSharedPtr<instance_data>(
-                      &m_default_instance_data, &default_instance_deleter)) {}
+            (Kokkos::Impl::check_execution_space_constructor_precondition(
+                 name()),
+             mode == instance_mode::independent
+                 ? (Kokkos::Impl::HostSharedPtr<instance_data>(
+                       new instance_data(m_next_instance_id++)))
+                 : Kokkos::Impl::HostSharedPtr<instance_data>(
+                       &m_default_instance_data, &default_instance_deleter))) {}
   explicit HPX(hpx::execution::experimental::unique_any_sender<> &&sender)
-      : m_instance_data(Kokkos::Impl::HostSharedPtr<instance_data>(
-            new instance_data(m_next_instance_id++, std::move(sender)))) {}
+      : m_instance_data(
+            (Kokkos::Impl::check_execution_space_constructor_precondition(
+                 name()),
+             Kokkos::Impl::HostSharedPtr<instance_data>(new instance_data(
+                 m_next_instance_id++, std::move(sender))))) {}
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   template <typename T = void>
@@ -259,7 +271,6 @@ class HPX {
   int concurrency() const;
 #endif
   static void impl_initialize(InitializationSettings const &);
-  static bool impl_is_initialized() noexcept;
   static void impl_finalize();
   static int impl_thread_pool_size() noexcept;
   static int impl_thread_pool_rank() noexcept;

@@ -1561,7 +1561,8 @@ namespace Experimental {
 template <typename DT1, typename DT2, typename LY, typename ES, typename OP,
           typename CT, typename DP, typename... VP>
 void contribute(
-    typename ES::execution_space const& exec_space, View<DT1, VP...>& dest,
+    typename ES::execution_space const& exec_space,
+    View<DT1, VP...> const& dest,
     Kokkos::Experimental::ScatterView<DT2, LY, ES, OP, CT, DP> const& src) {
   src.contribute_into(exec_space, dest);
 }
@@ -1569,7 +1570,7 @@ void contribute(
 template <typename DT1, typename DT2, typename LY, typename ES, typename OP,
           typename CT, typename DP, typename... VP>
 void contribute(
-    View<DT1, VP...>& dest,
+    View<DT1, VP...> const& dest,
     Kokkos::Experimental::ScatterView<DT2, LY, ES, OP, CT, DP> const& src) {
   using execution_space = typename ES::execution_space;
   contribute(execution_space{}, dest, src);

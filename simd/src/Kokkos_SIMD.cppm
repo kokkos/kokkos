@@ -75,6 +75,9 @@ export {
   using ::Kokkos::Experimental::operator*;
   using ::Kokkos::Experimental::operator-;
   using ::Kokkos::Experimental::operator/;
+  using ::Kokkos::Experimental::operator&=;
+  using ::Kokkos::Experimental::operator|=;
+  using ::Kokkos::Experimental::operator^=;
   using ::Kokkos::Experimental::operator>>=;
   using ::Kokkos::Experimental::operator<<=;
 
@@ -93,20 +96,5 @@ export {
   using ::Kokkos::Experimental::simd_abi::sve_fixed_size;
 #endif
   }  // namespace simd_abi
-
-  namespace simd_abi::Impl {  // FIXME
-  using ::Kokkos::Experimental::simd_abi::Impl::native_abi;
-  using ::Kokkos::Experimental::simd_abi::Impl::native_fixed_abi;
-  }  // namespace simd_abi::Impl
-
-  namespace Impl {  // FIXME
-  using ::Kokkos::Experimental::Impl::abi_set;
-  using ::Kokkos::Experimental::Impl::data_type_set;
-  using ::Kokkos::Experimental::Impl::data_types;
-  using ::Kokkos::Experimental::Impl::device_abi_set;
-  using ::Kokkos::Experimental::Impl::host_abi_set;
-  using ::Kokkos::Experimental::Impl::Identity;
-  using ::Kokkos::Experimental::Impl::simd_size_t;
-  }  // namespace Impl
   }  // namespace Kokkos::Experimental
 }

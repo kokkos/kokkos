@@ -88,8 +88,8 @@ public:
   using data_handle_type = typename accessor_type::data_handle_type;
   using reference = typename accessor_type::reference;
 
-  MDSPAN_INLINE_FUNCTION static constexpr size_t rank() noexcept { return extents_type::rank(); }
-  MDSPAN_INLINE_FUNCTION static constexpr size_t rank_dynamic() noexcept { return extents_type::rank_dynamic(); }
+  MDSPAN_INLINE_FUNCTION static constexpr rank_type rank() noexcept { return extents_type::rank(); }
+  MDSPAN_INLINE_FUNCTION static constexpr rank_type rank_dynamic() noexcept { return extents_type::rank_dynamic(); }
   MDSPAN_INLINE_FUNCTION static constexpr size_t static_extent(size_t r) noexcept { return extents_type::static_extent(r); }
   MDSPAN_INLINE_FUNCTION constexpr index_type extent(size_t r) const noexcept { return mapping_ref().extents().extent(r); }
 

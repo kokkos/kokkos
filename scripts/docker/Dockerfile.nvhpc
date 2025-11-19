@@ -31,3 +31,6 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
     sh ${CMAKE_SCRIPT} --skip-license --prefix=${CMAKE_DIR} && \
     rm cmake*
 ENV PATH=${CMAKE_DIR}/bin:$PATH
+
+# /usr/lib/x86_64-linux-gnu/libcuda.so being empty caused problems
+RUN rm -f /usr/lib/x86_64-linux-gnu/libcuda.so

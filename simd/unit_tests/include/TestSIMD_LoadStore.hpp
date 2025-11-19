@@ -4,7 +4,13 @@
 #ifndef KOKKOS_TEST_SIMD_LOADSTORE_HPP
 #define KOKKOS_TEST_SIMD_LOADSTORE_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.simd;
+import kokkos.simd_impl;
+#else
 #include <Kokkos_SIMD.hpp>
+#endif
 #include <SIMDTesting_Utilities.hpp>
 
 template <typename SimdType, typename... Args>
@@ -223,8 +229,8 @@ TEST(simd, host_loadstore) {
 }
 
 TEST(simd, device_loadstore) {
-  Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::IndexType<int>>(0, 1),
-                       simd_device_loadstore_functor());
+  Kokkos::parallel_for(1, simd_device_loadstore_functor());
+  Kokkos::fence();
 }
 
 #endif

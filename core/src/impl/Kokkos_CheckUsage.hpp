@@ -4,20 +4,18 @@
 #ifndef KOKKOS_CHECK_USAGE_HPP
 #define KOKKOS_CHECK_USAGE_HPP
 
-#include <sstream>
-#include <type_traits>
-
 #include <Kokkos_Abort.hpp>
 #include <Kokkos_Macros.hpp>
+#include <impl/Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Utilities.hpp>
+
+#include <sstream>
+#include <type_traits>
 
 // FIXME: Obtain file and line number information via std::source_location
 // (since C++20) which requires GCC 11 etc.
 
 namespace Kokkos {
-
-[[nodiscard]] bool is_initialized() noexcept;
-[[nodiscard]] bool is_finalized() noexcept;
 
 template <typename... Args>
 class RangePolicy;
@@ -99,6 +97,37 @@ struct CheckUsage<UsageRequires::insideExecEnv> {
         func_name, exec_policy, meta_data);
   }
 };
+
+// NOLINTBEGIN(bugprone-exception-escape)
+inline void check_execution_space_constructor_precondition(
+    char const* name) noexcept {
+  if (Kokkos::is_finalized()) {
+    std::stringstream err;
+    err << "Kokkos ERROR: " << name
+        << " execution space is being constructed"
+           " after finalize() has been called";
+    Kokkos::abort(err.str().c_str());
+  }
+  if (!Kokkos::is_initialized()) {
+    std::stringstream err;
+    err << "Kokkos ERROR: " << name
+        << " execution space is being constructed"
+           " before initialize() has been called";
+    Kokkos::abort(err.str().c_str());
+  }
+}
+
+inline void check_execution_space_destructor_precondition(
+    char const* name) noexcept {
+  if (Kokkos::is_finalized()) {
+    std::stringstream err;
+    err << "Kokkos ERROR: " << name
+        << " execution space is being destructed"
+           " after finalize() has been called";
+    Kokkos::abort(err.str().c_str());
+  }
+}
+// NOLINTEND(bugprone-exception-escape)
 
 }  // namespace Impl
 }  // namespace Kokkos

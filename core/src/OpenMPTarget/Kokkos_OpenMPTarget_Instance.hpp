@@ -32,8 +32,6 @@ class OpenMPTargetInternal {
   //! Free any resources being consumed by the device.
   void impl_finalize();
 
-  //! Has been initialized
-  int impl_is_initialized();
   uint32_t impl_get_instance_id() const noexcept;
   //! Initialize, telling the CUDA run-time library which device to use.
   void impl_initialize();
@@ -41,7 +39,6 @@ class OpenMPTargetInternal {
   static OpenMPTargetInternal* impl_singleton();
 
   static void verify_is_process(const char* const);
-  static void verify_initialized(const char* const);
 
   void* get_scratch_ptr();
   void clear_scratch();
@@ -54,7 +51,6 @@ class OpenMPTargetInternal {
   uint32_t* m_uniquetoken_ptr = nullptr;
 
  private:
-  bool m_is_initialized  = false;
   uint32_t m_instance_id = Kokkos::Tools::Experimental::Impl::idForInstance<
       Kokkos::Experimental::OpenMPTarget>(reinterpret_cast<uintptr_t>(this));
 };

@@ -11,6 +11,7 @@
 import kokkos.core;
 import kokkos.functional;
 import kokkos.unordered_map;
+import kokkos.unordered_map_impl;
 #else
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Functional.hpp>

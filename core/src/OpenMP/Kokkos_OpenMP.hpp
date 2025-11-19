@@ -51,6 +51,7 @@ class OpenMP {
   using size_type            = memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace<OpenMP>;
 
+  ~OpenMP();
   OpenMP();
 
   explicit OpenMP(int pool_size);
@@ -97,10 +98,6 @@ class OpenMP {
 #endif
 
   static void impl_initialize(InitializationSettings const&);
-
-  /// \brief is the default execution space initialized for current 'master'
-  /// thread
-  static bool impl_is_initialized() noexcept;
 
   /// \brief Free any resources being consumed by the default execution space
   static void impl_finalize();

@@ -676,11 +676,6 @@ void Threads::fence(const std::string &name) const {
   Impl::ThreadsInternal::fence(name);
 }
 
-Threads &Threads::impl_instance(int) {
-  static Threads t;
-  return t;
-}
-
 int Threads::impl_thread_pool_rank_host() {
   const std::thread::id pid = std::this_thread::get_id();
   int i                     = 0;

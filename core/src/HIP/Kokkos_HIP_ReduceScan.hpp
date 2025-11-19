@@ -43,15 +43,17 @@ struct HIPReductionsFunctor<FunctorType, true> {
 
   __device__ static inline void scalar_intra_block_reduction(
       FunctorType const& functor, Scalar value, bool const skip,
-      Scalar* my_global_team_buffer_element, int const shared_elements,
+      Scalar* my_global_team_buffer_element, unsigned int const shared_elements,
       Scalar* shared_team_buffer_element) {
     constexpr unsigned int warp_size = HIPTraits::WarpSize;
-    int const warp_id                = (threadIdx.y * blockDim.x) / warp_size;
+    unsigned int const warp_id       = (threadIdx.y * blockDim.x) / warp_size;
+    unsigned int const num_threads   = blockDim.x * blockDim.y;
     Scalar* const my_shared_team_buffer_element =
         shared_team_buffer_element + warp_id % shared_elements;
 
     // Warp Level Reduction, ignoring Kokkos vector entries
-    scalar_intra_warp_reduction(functor, value, skip, warp_size, value);
+    scalar_intra_warp_reduction(functor, value, skip,
+                                Kokkos::min(warp_size, num_threads), value);
 
     if (warp_id < shared_elements) {
       *my_shared_team_buffer_element = value;
@@ -60,8 +62,9 @@ struct HIPReductionsFunctor<FunctorType, true> {
     // cross warp reduction
     __syncthreads();
 
-    int const num_warps = blockDim.x * blockDim.y / warp_size;
-    for (int w = shared_elements; w < num_warps; w += shared_elements) {
+    unsigned int const num_warps = num_threads / warp_size;
+    for (unsigned int w = shared_elements; w < num_warps;
+         w += shared_elements) {
       if (warp_id >= w && warp_id < w + shared_elements) {
         if ((threadIdx.y * blockDim.x + threadIdx.x) % warp_size == 0)
           functor.join(my_shared_team_buffer_element, &value);
@@ -72,7 +75,7 @@ struct HIPReductionsFunctor<FunctorType, true> {
     if (warp_id == 0) {
       functor.init(&value);
       for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
-           i < blockDim.y * blockDim.x / warp_size; i += warp_size) {
+           i < num_warps; i += warp_size) {
         functor.join(&value, &shared_team_buffer_element[i]);
       }
       scalar_intra_warp_reduction(functor, value, false, warp_size,
@@ -93,8 +96,8 @@ struct HIPReductionsFunctor<FunctorType, true> {
         reinterpret_cast<Scalar*>(shared_data);
     Scalar value                     = shared_team_buffer_elements[threadIdx.y];
     constexpr unsigned int warp_size = Impl::HIPTraits::WarpSize;
-    int shared_elements              = blockDim.x * blockDim.y / warp_size;
-    int global_elements              = block_count;
+    unsigned int shared_elements     = blockDim.x * blockDim.y / warp_size;
+    unsigned int global_elements     = block_count;
     __syncthreads();
 
     scalar_intra_block_reduction(functor, value, true,
@@ -113,8 +116,8 @@ struct HIPReductionsFunctor<FunctorType, true> {
       is_last_block = true;
       *global_flags = 0;
       functor.init(&value);
-      for (int i = threadIdx.y * blockDim.x + threadIdx.x; i < global_elements;
-           i += blockDim.x * blockDim.y) {
+      for (unsigned int i = threadIdx.y * blockDim.x + threadIdx.x;
+           i < global_elements; i += blockDim.x * blockDim.y) {
         functor.join(&value, &global_team_buffer_element[i]);
       }
       scalar_intra_block_reduction(
@@ -141,8 +144,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
     int const lane_id =
         (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize;
     for (int delta = skip_vector ? blockDim.x : 1; delta < width; delta *= 2) {
-      if (lane_id + delta < HIPTraits::WarpSize &&
-          (lane_id % (delta * 2) == 0)) {
+      if (lane_id + delta < width && (lane_id % (delta * 2) == 0)) {
         functor.join(value, value + delta);
       }
     }
@@ -152,26 +154,27 @@ struct HIPReductionsFunctor<FunctorType, false> {
   __device__ static inline void scalar_intra_block_reduction(
       FunctorType const& functor, Scalar value, bool const skip, Scalar* result,
       int const /*shared_elements*/, Scalar* shared_team_buffer_element) {
-    int const warp_id = (threadIdx.y * blockDim.x) / HIPTraits::WarpSize;
+    constexpr unsigned int warp_size = Impl::HIPTraits::WarpSize;
+    unsigned int const warp_id       = (threadIdx.y * blockDim.x) / warp_size;
+    const unsigned int num_threads   = blockDim.x * blockDim.y;
     Scalar* const my_shared_team_buffer_element =
         shared_team_buffer_element + threadIdx.y * blockDim.x + threadIdx.x;
     *my_shared_team_buffer_element = value;
     // Warp Level Reduction, ignoring Kokkos vector entries
     scalar_intra_warp_reduction(functor, my_shared_team_buffer_element, skip,
-                                HIPTraits::WarpSize);
+                                Kokkos::min(num_threads, warp_size));
     // Wait for every warp to be done before using one warp to do final cross
     // warp reduction
     __syncthreads();
 
-    if (warp_id == 0) {
+    if (warp_id == 0u) {
       const unsigned int delta =
-          (threadIdx.y * blockDim.x + threadIdx.x) * HIPTraits::WarpSize;
-      if (delta < blockDim.x * blockDim.y)
+          (threadIdx.y * blockDim.x + threadIdx.x) * warp_size;
+      if (delta < num_threads)
         *my_shared_team_buffer_element = shared_team_buffer_element[delta];
-      scalar_intra_warp_reduction(
-          functor, my_shared_team_buffer_element, false,
-          blockDim.x * blockDim.y / HIPTraits::WarpSize);
-      if (threadIdx.x + threadIdx.y == 0) {
+      scalar_intra_warp_reduction(functor, my_shared_team_buffer_element, false,
+                                  num_threads / warp_size);
+      if (threadIdx.x + threadIdx.y == 0u) {
         *result = *shared_team_buffer_element;
         if (skip) __threadfence();
       }

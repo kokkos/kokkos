@@ -24,6 +24,11 @@ extern "C" void kokkos_impl_cuda_set_serial_execution(bool);
 extern "C" bool kokkos_impl_cuda_use_serial_execution();
 #endif
 
+#if defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_ARCH_MAXWELL) && \
+    !defined(KOKKOS_ARCH_PASCAL)
+#define KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
+#endif
+
 namespace Kokkos {
 namespace Impl {
 
@@ -39,7 +44,11 @@ struct CudaTraits {
   static constexpr CudaSpace::size_type ConstantMemoryCache =
       0x002000; /*  8k bytes */
   static constexpr CudaSpace::size_type KernelArgumentLimit =
+#ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
+      0x008000; /* 32k bytes */
+#else
       0x001000; /*  4k bytes */
+#endif
   static constexpr CudaSpace::size_type MaxHierarchicalParallelism =
       1024; /* team_size * vector_length */
   using ConstantGlobalBufferType =
@@ -266,17 +275,6 @@ class CudaInternal {
     return cudaMallocHost(ptr, size);
   }
 
-  cudaError_t cuda_mem_prefetch_async_wrapper(const void* devPtr, size_t count,
-                                              int dstDevice) const {
-    set_cuda_device();
-#if CUDART_VERSION >= 13000
-    cudaMemLocation loc = {cudaMemLocationTypeDevice, dstDevice};
-    return cudaMemPrefetchAsync(devPtr, count, loc, 0, m_stream);
-#else
-    return cudaMemPrefetchAsync(devPtr, count, dstDevice, m_stream);
-#endif
-  }
-
   cudaError_t cuda_memcpy_wrapper(void* dst, const void* src, size_t count,
                                   cudaMemcpyKind kind) const {
     set_cuda_device();
@@ -307,12 +305,6 @@ class CudaInternal {
                                         size_t count) const {
     set_cuda_device();
     return cudaMemsetAsync(devPtr, value, count, m_stream);
-  }
-
-  cudaError_t cuda_pointer_get_attributes_wrapper(
-      cudaPointerAttributes* attributes, const void* ptr) const {
-    set_cuda_device();
-    return cudaPointerGetAttributes(attributes, ptr);
   }
 
   cudaError_t cuda_stream_create_wrapper(cudaStream_t* pStream) const {

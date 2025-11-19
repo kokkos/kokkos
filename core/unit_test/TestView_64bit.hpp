@@ -90,7 +90,15 @@ void test_64bit() {
 }
 
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS
-TEST(TEST_CATEGORY, view_64bit) { test_64bit<TEST_EXECSPACE>(); }
+TEST(TEST_CATEGORY, view_64bit) {
+#if defined(KOKKOS_ENABLE_DEBUG) && defined(KOKKOS_ENABLE_SERIAL)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Serial>)
+    GTEST_SKIP()
+        << "Test is too expensive to run with the Serial backend in Debug mode";
+#endif
+
+  test_64bit<TEST_EXECSPACE>();
+}
 #endif
 
 }  // namespace Test

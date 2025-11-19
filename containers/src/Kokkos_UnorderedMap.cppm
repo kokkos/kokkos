@@ -17,9 +17,5 @@ export {
   using ::Kokkos::create_mirror;
 
   using ::Kokkos::deep_copy;
-
-  namespace Impl {  // FIXME
-  using ::Kokkos::Impl::UnorderedMapPrint;
-  }
   }  // namespace Kokkos
 }
