@@ -26,7 +26,7 @@ namespace Impl {
 struct ArrayBoundsCheck {
   KOKKOS_INLINE_FUNCTION
   constexpr ArrayBoundsCheck(size_t i, size_t N) {
-    if (size_t(i) >= N) {
+    if (i >= N) {
       char err[128] = "Kokkos::Array: index ";
       to_chars_i(err + strlen(err), err + 128, i);
       strcat(err, " >= ");
