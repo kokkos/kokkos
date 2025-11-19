@@ -23,10 +23,9 @@ namespace Kokkos {
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
 namespace Impl {
 
-template <typename Integral>
 struct ArrayBoundsCheck {
   KOKKOS_INLINE_FUNCTION
-  constexpr ArrayBoundsCheck(Integral i, size_t N) {
+  constexpr ArrayBoundsCheck(size_t i, size_t N) {
     if (size_t(i) >= N) {
       char err[128] = "Kokkos::Array: index ";
       to_chars_i(err + strlen(err), err + 128, i);
@@ -38,8 +37,7 @@ struct ArrayBoundsCheck {
 };
 }  // end namespace Impl
 
-#define KOKKOS_ARRAY_BOUNDS_CHECK(i, N) \
-  Kokkos::Impl::ArrayBoundsCheck<decltype(i)>(i, N)
+#define KOKKOS_ARRAY_BOUNDS_CHECK(i, N) Kokkos::Impl::ArrayBoundsCheck(i, N)
 
 #else  // !defined( KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK )
 
