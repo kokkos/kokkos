@@ -330,7 +330,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
     Experimental::basic_simd<T, Abi> const& lhs,
     Experimental::basic_simd<T, Abi> const& rhs) {
   return Experimental::basic_simd<T, Abi>(
-      [&](std::size_t i) { return lhs[i] / rhs[i]; });
+      [&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
 }
 
 template <class T, Impl::Arithmetic U, class Abi>

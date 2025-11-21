@@ -192,7 +192,7 @@ class basic_simd<T, simd_abi::scalar> {
       : m_value(static_cast<U>(other)) {}
   template <class G>
     requires Impl::InvocableWithReturnType<
-        G, value_type, std::integral_constant<std::size_t, 0>>
+        G, value_type, std::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
       : m_value(gen(0)) {}

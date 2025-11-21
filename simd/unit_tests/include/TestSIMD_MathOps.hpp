@@ -553,6 +553,13 @@ TEST(simd, host_math_ops) {
 }
 
 TEST(simd, device_math_ops) {
+#if defined(KOKKOS_IMPL_32BIT)
+  // FIXME_GCC: Floating point comparisons fail in a 32-bit build
+  // See https://github.com/kokkos/kokkos/pull/7912#issuecomment-2747713935
+  GTEST_SKIP()
+      << "skipping due to a GCC bug associated with the computation of "
+         "floating-point values in a 32-bit build.";
+#endif
 #ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
   GTEST_SKIP()
       << "skipping because of a non-deterministic failure reporting: "
