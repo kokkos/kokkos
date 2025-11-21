@@ -25,7 +25,7 @@
 namespace Kokkos {
 // BEGIN macro definitions
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-// FIXME_NVCC Use /Zc:preprocessor
+// FIXME_MSVC Use /Zc:preprocessor
 #if defined(KOKKOS_COMPILER_MSVC)
   #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
     MACRO(FUNC, Kokkos::Experimental::half_t, ##__VA_ARGS__)
@@ -38,7 +38,7 @@ namespace Kokkos {
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-// FIXME_NVCC Use /Zc:preprocessor
+// FIXME_MSVC Use /Zc:preprocessor
 #if defined(KOKKOS_COMPILER_MSVC)
   #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
     MACRO(FUNC, Kokkos::Experimental::bhalf_t, ##__VA_ARGS__)
