@@ -361,7 +361,7 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
     const index_type start_4 =
-        blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[3];
+        blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[4];
     const index_type stride_4 = gridDim.z * blockDim.z;
 
     const index_type max_tiles_01 =
