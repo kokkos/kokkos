@@ -50,7 +50,7 @@ namespace Kokkos {
   #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, ...)
 #endif
 
-// FIXME_NVCC Use /Zc:preprocessor
+// FIXME_MSVC Use /Zc:preprocessor
 #if defined(KOKKOS_COMPILER_MSVC)
 #define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RETURN_TYPE*/...) \
   KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, ##__VA_ARGS__)          \
