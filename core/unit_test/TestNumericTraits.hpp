@@ -163,8 +163,7 @@ struct TestNumericTraits {
   }
 
   KOKKOS_FUNCTION void use_on_device() const {
-#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
-    defined(KOKKOS_ENABLE_OPENACC)
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENACC)
     take_by_value(trait<T>::value);
 #else
     (void)take_address_of(trait<T>::value);
@@ -173,15 +172,13 @@ struct TestNumericTraits {
 };
 
 #if (defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA)) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    defined(KOKKOS_ENABLE_SYCL)
 template <class Tag>
 struct TestNumericTraits<
 #if defined(KOKKOS_ENABLE_CUDA)
     Kokkos::Cuda,
-#elif defined(KOKKOS_ENABLE_SYCL)
+#else defined(KOKKOS_ENABLE_SYCL)
     Kokkos::SYCL,
-#else
-    Kokkos::Experimental::OpenMPTarget,
 #endif
     long double, Tag> {
   template <class T>

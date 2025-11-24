@@ -76,7 +76,6 @@ declare_and_check_host_arch(RISCV_RVA22V "RVA22V (RISC-V) CPUs")
 declare_and_check_host_arch(RISCV_U74MC "U74MC (RISC-V) CPUs")
 
 if(Kokkos_ENABLE_CUDA
-   OR Kokkos_ENABLE_OPENMPTARGET
    OR Kokkos_ENABLE_OPENACC
    OR Kokkos_ENABLE_SYCL
 )
@@ -100,7 +99,6 @@ kokkos_arch_option(BLACKWELL100 GPU "NVIDIA Blackwell generation CC 10.0" "KOKKO
 kokkos_arch_option(BLACKWELL120 GPU "NVIDIA Blackwell generation CC 12.0" "KOKKOS_SHOW_CUDA_ARCHS")
 
 if(Kokkos_ENABLE_HIP
-   OR Kokkos_ENABLE_OPENMPTARGET
    OR Kokkos_ENABLE_OPENACC
    OR Kokkos_ENABLE_SYCL
 )
@@ -924,13 +922,12 @@ function(CHECK_CUDA_ARCH ARCH FLAG)
     endif()
     set(CUDA_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
     if(NOT KOKKOS_ENABLE_CUDA
-       AND NOT KOKKOS_ENABLE_OPENMPTARGET
        AND NOT KOKKOS_ENABLE_SYCL
        AND NOT KOKKOS_ENABLE_OPENACC
     )
       message(
         WARNING
-          "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA, Kokkos_ENABLE_SYCL, Kokkos_ENABLE_OPENACC, and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored."
+          "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA, Kokkos_ENABLE_SYCL, and Kokkos_ENABLE_OPENACC are OFF. Option will be ignored."
       )
       unset(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
     else()
@@ -985,13 +982,12 @@ function(CHECK_AMDGPU_ARCH ARCH FLAG)
     endif()
     set(AMDGPU_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
     if(NOT KOKKOS_ENABLE_HIP
-       AND NOT KOKKOS_ENABLE_OPENMPTARGET
        AND NOT KOKKOS_ENABLE_OPENACC
        AND NOT KOKKOS_ENABLE_SYCL
     )
       message(
         WARNING
-          "Given AMD GPU architecture ${ARCH}, but Kokkos_ENABLE_HIP, Kokkos_ENABLE_SYCL, Kokkos_ENABLE_OPENACC, and Kokkos_ENABLE_OPENMPTARGET are OFF. Option will be ignored."
+          "Given AMD GPU architecture ${ARCH}, but Kokkos_ENABLE_HIP, Kokkos_ENABLE_SYCL, and Kokkos_ENABLE_OPENACC are OFF. Option will be ignored."
       )
       unset(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
     else()
@@ -1067,22 +1063,6 @@ endif()
 
 if(KOKKOS_ENABLE_OPENMP)
   compiler_specific_link_options(CrayClang -fopenmp)
-endif()
-
-if(KOKKOS_ENABLE_OPENMPTARGET)
-  set(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
-  if(CLANG_CUDA_ARCH)
-    string(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${CLANG_CUDA_ARCH})
-    compiler_specific_flags(
-      Clang -Xopenmp-target -march=${CLANG_CUDA_ARCH} -fopenmp-targets=nvptx64 NVHPC -gpu=${NVHPC_CUDA_ARCH}
-    )
-  endif()
-  set(CLANG_AMDGPU_ARCH ${KOKKOS_AMDGPU_ARCH_FLAG})
-  if(CLANG_AMDGPU_ARCH)
-    compiler_specific_flags(
-      Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${CLANG_AMDGPU_ARCH} -fopenmp-targets=amdgcn-amd-amdhsa
-    )
-  endif()
 endif()
 
 if(KOKKOS_ENABLE_OPENACC)
@@ -1400,7 +1380,7 @@ endforeach()
 #Let's just always print things
 message(STATUS "Built-in Execution Spaces:")
 
-foreach(_BACKEND Cuda OpenMPTarget HIP SYCL OpenACC)
+foreach(_BACKEND Cuda HIP SYCL OpenACC)
   string(TOUPPER ${_BACKEND} UC_BACKEND)
   if(KOKKOS_ENABLE_${UC_BACKEND})
     if(_DEVICE_PARALLEL)

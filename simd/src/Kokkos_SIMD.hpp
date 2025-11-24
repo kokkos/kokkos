@@ -11,28 +11,6 @@
 #include <climits>
 #include <cstdint>
 
-// FIXME_OPENMPTARGET The device pass disables all compiler macros checked
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-#if defined(KOKKOS_ARCH_AVX2)
-#include <Kokkos_SIMD_AVX2.hpp>
-#endif
-
-#if defined(KOKKOS_ARCH_AVX512XEON)
-#include <Kokkos_SIMD_AVX512.hpp>
-#endif
-
-#if defined(KOKKOS_ARCH_ARM_SVE)
-#include <Kokkos_SIMD_SVE.hpp>
-#endif
-
-#if defined(KOKKOS_ARCH_ARM_NEON)
-#include <Kokkos_SIMD_NEON.hpp>
-#endif
-#else  // KOKKOS_ENABLE_OPENMPTARGET
-#if defined(KOKKOS_ARCH_AVX) && !defined(__AVX__)
-#error "__AVX__ must be defined for KOKKOS_ARCH_AVX"
-#endif
-
 #if defined(KOKKOS_ARCH_AVX2)
 #if !defined(__AVX2__)
 #error "__AVX2__ must be defined for KOKKOS_ARCH_AVX2"
@@ -166,17 +144,6 @@ struct ForSpace<Kokkos::OpenMP> {
 
   template <typename T, int N>
   using simd_abi = host_native_abi<T, N>;
-};
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-template <>
-struct ForSpace<Kokkos::Experimental::OpenMPTarget> {
-  template <class T>
-  using type = scalar;
-
-  template <typename T, int N>
-  using simd_abi = scalar;
 };
 #endif
 

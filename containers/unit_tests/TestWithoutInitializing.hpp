@@ -629,8 +629,6 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_offsetview) {
   ASSERT_TRUE(success);
 }
 
-// FIXME OPENMPTARGET
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -707,10 +705,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_dynamicview) {
       });
   ASSERT_TRUE(success);
 }
-#endif
 
-// FIXME OPENMPTARGET
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview_view_ctor) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
@@ -756,4 +751,3 @@ TEST(TEST_CATEGORY, create_mirror_no_init_dynamicview_view_ctor) {
       });
   ASSERT_TRUE(success);
 }
-#endif

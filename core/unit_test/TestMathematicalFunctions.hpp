@@ -18,9 +18,8 @@ import kokkos.core;
 #include <cstdint>
 #include <cfloat>
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||          \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
-    defined(KOKKOS_ENABLE_OPENACC)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
 #else
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif
@@ -944,13 +943,6 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log10)({1234.l, 567.l, 89.l, .003l});
 #endif
 
-// FIXME_OPENMPTARGET FIXME_AMD
-#if defined(KOKKOS_ENABLE_OPENMPTARGET) &&                                 \
-    (defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) || \
-     defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX942))
-
-  TEST_MATH_FUNCTION(log2)({1, 23, 456, 7890});
-#endif
   TEST_MATH_FUNCTION(log2)({1l, 23l, 456l, 7890l});
   TEST_MATH_FUNCTION(log2)({1ll, 23ll, 456ll, 7890ll});
   TEST_MATH_FUNCTION(log2)({1u, 23u, 456u, 7890u});

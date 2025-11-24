@@ -92,23 +92,6 @@ struct DefaultContribution<Kokkos::OpenMP,
 };
 #endif
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-template <>
-struct DefaultDuplication<Kokkos::Experimental::OpenMPTarget> {
-  using type = Kokkos::Experimental::ScatterNonDuplicated;
-};
-template <>
-struct DefaultContribution<Kokkos::Experimental::OpenMPTarget,
-                           Kokkos::Experimental::ScatterNonDuplicated> {
-  using type = Kokkos::Experimental::ScatterAtomic;
-};
-template <>
-struct DefaultContribution<Kokkos::Experimental::OpenMPTarget,
-                           Kokkos::Experimental::ScatterDuplicated> {
-  using type = Kokkos::Experimental::ScatterNonAtomic;
-};
-#endif
-
 #ifdef KOKKOS_ENABLE_HPX
 template <>
 struct DefaultDuplication<Kokkos::Experimental::HPX> {

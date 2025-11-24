@@ -170,7 +170,7 @@ struct ViewValueFunctor {
   // when the function is queried with cudaFuncGetAttributes
   void functor_instantiate_workaround() {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    defined(KOKKOS_ENABLE_SYCL)
     if (false) {
       parallel_for_implementation<DestroyTag>();
     }
