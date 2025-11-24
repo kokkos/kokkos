@@ -143,8 +143,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
           static_cast<size_t>(2) *
           q.get_device().get_info<sycl::info::device::max_compute_units>();
 
+      // Shared memory needed per block for reduction, it depends on the
+      // workgroup size, put 256 bytes for safe-guard.
       const auto sycl_single_inter_block_reduce_shmem = [&](int wgroup_size) {
-        return static_cast<int>(wgroup_size * value_count *
+        return static_cast<int>(static_cast<size_t>(wgroup_size) * value_count *
                                 sizeof(value_type)) +
                256 * static_cast<int>(sizeof(unsigned int));
       };
