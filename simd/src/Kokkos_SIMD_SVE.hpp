@@ -382,7 +382,7 @@ class sve_mask<Derived, 32> {
       requires Impl::InvocableWithReturnType<                                  \
           G, value_type,                                                       \
           std::integral_constant<                                              \
-              simd_size_t,                                                     \
+              Impl::simd_size_t,                                               \
               0>> /* NOLINTNEXTLINE(bugprone-forwarding-reference-overload) */ \
     KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(  \
         G&& gen) noexcept                                                      \
@@ -410,7 +410,8 @@ class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
   using abi_type   = simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>;
   using mask_type  = basic_simd_mask<value_type, abi_type>;
 
-  static constexpr std::integral_constant<simd_size_t, SVE_DOUBLES_IN_VECTOR>
+  static constexpr std::integral_constant<Impl::simd_size_t,
+                                          SVE_DOUBLES_IN_VECTOR>
       size{};
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
