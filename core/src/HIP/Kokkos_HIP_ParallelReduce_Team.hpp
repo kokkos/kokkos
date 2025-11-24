@@ -168,8 +168,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   __device__ inline void run(SHMEMReductionTag, int const threadid) const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
 
-    integral_nonzero_constant<word_size_type, ReducerType::static_value_size() /
-                                                  sizeof(word_size_type)> const
+    integral_nonzero_constant<size_type, ReducerType::static_value_size() /
+                                             sizeof(word_size_type)> const
         word_count(reducer.value_size() / sizeof(word_size_type));
 
     reference_type value = reducer.init(reinterpret_cast<pointer_type>(
@@ -205,7 +205,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncthreads();
       }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+      for (size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
     }

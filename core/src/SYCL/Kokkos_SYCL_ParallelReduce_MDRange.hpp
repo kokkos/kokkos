@@ -133,7 +133,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // values in all workgroups separately, write the workgroup results back
       // to global memory and recurse until only one workgroup does the
       // reduction and thus gets the final value.
-      const int wgroup_size = Kokkos::bit_ceil(
+      int wgroup_size = Kokkos::bit_ceil(
           static_cast<unsigned int>(m_policy.m_prod_tile_dims));
 
       // FIXME_SYCL Find a better way to determine a good limit for the
@@ -142,6 +142,28 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       size_t max_work_groups =
           static_cast<size_t>(2) *
           q.get_device().get_info<sycl::info::device::max_compute_units>();
+
+      const auto sycl_single_inter_block_reduce_shmem = [&](int wgroup_size) {
+        return static_cast<int>(wgroup_size * value_count *
+                                sizeof(value_type)) +
+               256 * static_cast<int>(sizeof(unsigned int));
+      };
+
+      const int maxShmemPerBlock = instance.m_maxShmemPerBlock;
+      int shmem_size = sycl_single_inter_block_reduce_shmem(wgroup_size);
+
+      // FIXME_SYCL Find a better way to determine workgroup size with shared
+      // memory constraints.
+      while (shmem_size > maxShmemPerBlock) {
+        wgroup_size >>= 1;
+        shmem_size = sycl_single_inter_block_reduce_shmem(wgroup_size);
+        if (wgroup_size < 32) {
+          Kokkos::Impl::throw_runtime_exception(
+              std::string("Kokkos::Impl::ParallelReduce<SYCL> could not find "
+                          "a valid tile size."));
+        }
+      }
+
       int values_per_thread = 1;
       size_t n_wgroups      = n_tiles;
       while (n_wgroups > max_work_groups) {
