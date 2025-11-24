@@ -2859,13 +2859,13 @@ class KOKKOS_DEPRECATED
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(double const* mem, element_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(double const* mem, vector_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
@@ -2873,7 +2873,7 @@ class KOKKOS_DEPRECATED
   void gather_from(
       double const* mem,
       basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
-    m_value = value_type([index, mem, this](std::size_t i) {
+    m_value = value_type([index, mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[index[i]] : m_value[i];
     });
   }
@@ -2952,12 +2952,12 @@ class KOKKOS_DEPRECATED
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(float const* mem, element_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
   void copy_from(float const* mem, vector_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
@@ -2965,7 +2965,7 @@ class KOKKOS_DEPRECATED
   void gather_from(
       float const* mem,
       basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
-    m_value = value_type([index, mem, this](std::size_t i) {
+    m_value = value_type([index, mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[index[i]] : m_value[i];
     });
   }
@@ -3050,13 +3050,13 @@ class KOKKOS_DEPRECATED
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(float const* mem, element_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(float const* mem, vector_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
@@ -3064,7 +3064,7 @@ class KOKKOS_DEPRECATED
   void gather_from(
       float const* mem,
       basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& index) {
-    m_value = value_type([index, mem, this](std::size_t i) {
+    m_value = value_type([index, mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[index[i]] : m_value[i];
     });
   }
@@ -3145,13 +3145,13 @@ class KOKKOS_DEPRECATED where_expression<
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int32_t const* mem, vector_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
@@ -3160,7 +3160,7 @@ class KOKKOS_DEPRECATED where_expression<
   void gather_from(
       std::int32_t const* mem,
       basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
-    m_value = value_type([index, mem, this](std::size_t i) {
+    m_value = value_type([index, mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[index[i]] : m_value[i];
     });
   }
@@ -3247,13 +3247,13 @@ class KOKKOS_DEPRECATED where_expression<
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int32_t const* mem, element_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int32_t const* mem, vector_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
@@ -3261,7 +3261,7 @@ class KOKKOS_DEPRECATED where_expression<
   void gather_from(
       std::int32_t const* mem,
       basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> const& index) {
-    m_value = value_type([mem, index, this](std::size_t i) {
+    m_value = value_type([mem, index, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[index[i]] : m_value[i];
     });
   }
@@ -3342,13 +3342,13 @@ class KOKKOS_DEPRECATED where_expression<
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int64_t const* mem, element_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::int64_t const* mem, vector_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
@@ -3357,7 +3357,7 @@ class KOKKOS_DEPRECATED where_expression<
   void gather_from(
       std::int64_t const* mem,
       basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
-    m_value = value_type([index, mem, this](std::size_t i) {
+    m_value = value_type([index, mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[index[i]] : m_value[i];
     });
   }
@@ -3440,13 +3440,13 @@ class KOKKOS_DEPRECATED where_expression<
       : const_where_expression(mask_arg, value_arg) {}
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::uint64_t const* mem, element_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   void copy_from(std::uint64_t const* mem, vector_aligned_tag) {
-    m_value = value_type([mem, this](std::size_t i) {
+    m_value = value_type([mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[i] : m_value[i];
     });
   }
@@ -3455,7 +3455,7 @@ class KOKKOS_DEPRECATED where_expression<
   void gather_from(
       std::uint64_t const* mem,
       basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> const& index) {
-    m_value = value_type([index, mem, this](std::size_t i) {
+    m_value = value_type([index, mem, this](Impl::simd_size_t i) {
       return (m_mask[i]) ? mem[index[i]] : m_value[i];
     });
   }

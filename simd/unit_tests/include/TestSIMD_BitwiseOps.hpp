@@ -18,15 +18,18 @@ import kokkos.simd;
 #endif
 
 template <class Abi, class Loader, bool is_compound_op, class BinaryOp, class T>
-void host_check_bitwise_op_one_loader(BinaryOp binary_op, std::size_t n,
+void host_check_bitwise_op_one_loader(BinaryOp binary_op,
+                                      Kokkos::Experimental::Impl::simd_size_t n,
                                       T const* first_args,
                                       T const* second_args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
-  constexpr std::size_t width = simd_type::size();
-  for (std::size_t i = 0; i < n; i += width) {
-    std::size_t const nremaining = n - i;
-    std::size_t const nlanes     = Kokkos::min(nremaining, width);
+  using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+  using size_type = Kokkos::Experimental::Impl::simd_size_t;
+
+  constexpr size_type width = simd_type::size();
+  for (size_type i = 0; i < n; i += width) {
+    size_type const nremaining = n - i;
+    size_type const nlanes     = Kokkos::min(nremaining, width);
     if ((std::is_same_v<BinaryOp, divides> ||
          std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
       continue;
@@ -39,7 +42,7 @@ void host_check_bitwise_op_one_loader(BinaryOp binary_op, std::size_t n,
     if (!(loaded_first_arg && loaded_second_arg)) continue;
 
     T expected_val[width];
-    for (std::size_t lane = 0; lane < width; ++lane) {
+    for (size_type lane = 0; lane < width; ++lane) {
       T tmp              = first_arg[lane];
       expected_val[lane] = binary_op.on_host(tmp, T(second_arg[lane]));
     }
@@ -56,15 +59,17 @@ void host_check_bitwise_op_one_loader(BinaryOp binary_op, std::size_t n,
 }
 
 template <class Abi, class Loader, bool, class UnaryOp, class T>
-void host_check_bitwise_op_one_loader(UnaryOp unary_op, std::size_t n,
+void host_check_bitwise_op_one_loader(UnaryOp unary_op,
+                                      Kokkos::Experimental::Impl::simd_size_t n,
                                       T const* args) {
   Loader loader;
   using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+  using size_type = Kokkos::Experimental::Impl::simd_size_t;
 
-  constexpr std::size_t width = simd_type::size();
-  for (std::size_t i = 0; i < n; i += width) {
-    std::size_t const nremaining = n - i;
-    std::size_t const nlanes     = Kokkos::min(nremaining, width);
+  constexpr auto width = simd_type::size();
+  for (size_type i = 0; i < n; i += width) {
+    size_type const nremaining = n - i;
+    size_type const nlanes     = Kokkos::min(nremaining, width);
     simd_type arg;
     bool const loaded_arg = loader.host_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
@@ -73,7 +78,7 @@ void host_check_bitwise_op_one_loader(UnaryOp unary_op, std::size_t n,
     using result_simd_type = decltype(unary_op_result);
 
     typename result_simd_type::value_type expected_val[width];
-    for (std::size_t lane = 0; lane < width; ++lane) {
+    for (size_type lane = 0; lane < width; ++lane) {
       expected_val[lane] = unary_op.on_host(T(arg[lane]));
     }
 
@@ -86,8 +91,8 @@ void host_check_bitwise_op_one_loader(UnaryOp unary_op, std::size_t n,
 }
 
 template <class Abi, bool is_compound_op, class Op, class... T>
-inline void host_check_bitwise_op_all_loaders(Op op, std::size_t n,
-                                              T const*... args) {
+inline void host_check_bitwise_op_all_loaders(
+    Op op, Kokkos::Experimental::Impl::simd_size_t n, T const*... args) {
   host_check_bitwise_op_one_loader<Abi, load_element_aligned, is_compound_op>(
       op, n, args...);
   host_check_bitwise_op_one_loader<Abi, load_masked, is_compound_op>(op, n,
@@ -98,7 +103,8 @@ inline void host_check_bitwise_op_all_loaders(Op op, std::size_t n,
       op, n, args...);
 }
 
-template <typename Abi, typename DataType, size_t n>
+template <typename Abi, typename DataType,
+          Kokkos::Experimental::Impl::simd_size_t n>
 inline void host_check_all_bitwise_ops(const DataType (&first_args)[n],
                                        const DataType (&second_args)[n]) {
   host_check_bitwise_op_all_loaders<Abi, false>(bitwise_not(), n, first_args);
@@ -169,14 +175,16 @@ inline void host_check_bitwise_ops_all_abis(
 
 template <class Abi, class Loader, bool is_compound_op, class BinaryOp, class T>
 KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(
-    BinaryOp binary_op, std::size_t n, T const* first_args,
-    T const* second_args) {
+    BinaryOp binary_op, Kokkos::Experimental::Impl::simd_size_t n,
+    T const* first_args, T const* second_args) {
   Loader loader;
-  using simd_type             = Kokkos::Experimental::basic_simd<T, Abi>;
-  constexpr std::size_t width = simd_type::size();
-  for (std::size_t i = 0; i < n; i += width) {
-    std::size_t const nremaining = n - i;
-    std::size_t const nlanes     = Kokkos::min(nremaining, width);
+  using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+  using size_type = Kokkos::Experimental::Impl::simd_size_t;
+
+  constexpr size_type width = simd_type::size();
+  for (size_type i = 0; i < n; i += width) {
+    size_type const nremaining = n - i;
+    size_type const nlanes     = Kokkos::min(nremaining, width);
     if ((std::is_same_v<BinaryOp, divides> ||
          std::is_same_v<BinaryOp, divides_eq>)&&nremaining < width)
       continue;
@@ -189,7 +197,7 @@ KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(
     if (!(loaded_first_arg && loaded_second_arg)) continue;
 
     T expected_val[width];
-    for (std::size_t lane = 0; lane < width; ++lane) {
+    for (size_type lane = 0; lane < width; ++lane) {
       T tmp              = first_arg[lane];
       expected_val[lane] = binary_op.on_device(tmp, T(second_arg[lane]));
     }
@@ -207,16 +215,17 @@ KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(
 }
 
 template <class Abi, class Loader, bool, class UnaryOp, class T>
-KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(UnaryOp unary_op,
-                                                               std::size_t n,
-                                                               T const* args) {
+KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(
+    UnaryOp unary_op, Kokkos::Experimental::Impl::simd_size_t n,
+    T const* args) {
   Loader loader;
   using simd_type = Kokkos::Experimental::basic_simd<T, Abi>;
+  using size_type = Kokkos::Experimental::Impl::simd_size_t;
 
-  constexpr std::size_t width = simd_type::size();
-  for (std::size_t i = 0; i < n; i += width) {
-    std::size_t const nremaining = n - i;
-    std::size_t const nlanes     = Kokkos::min(nremaining, width);
+  constexpr size_type width = simd_type::size();
+  for (size_type i = 0; i < n; i += width) {
+    size_type const nremaining = n - i;
+    size_type const nlanes     = Kokkos::min(nremaining, width);
     simd_type arg;
     bool const loaded_arg = loader.device_load(args + i, nlanes, arg);
     if (!loaded_arg) continue;
@@ -225,7 +234,7 @@ KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(UnaryOp unary_op,
     using result_simd_type = decltype(unary_op_result);
 
     typename result_simd_type::value_type expected_val[width];
-    for (std::size_t lane = 0; lane < width; ++lane) {
+    for (size_type lane = 0; lane < width; ++lane) {
       expected_val[lane] = unary_op.on_device(T(arg[lane]));
     }
 
@@ -239,7 +248,7 @@ KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_one_loader(UnaryOp unary_op,
 
 template <class Abi, bool is_compound_op, class Op, class... T>
 KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_all_loaders(
-    Op op, std::size_t n, T const*... args) {
+    Op op, Kokkos::Experimental::Impl::simd_size_t n, T const*... args) {
   device_check_bitwise_op_one_loader<Abi, load_element_aligned, is_compound_op>(
       op, n, args...);
   device_check_bitwise_op_one_loader<Abi, load_masked, is_compound_op>(op, n,
@@ -250,7 +259,8 @@ KOKKOS_INLINE_FUNCTION void device_check_bitwise_op_all_loaders(
       op, n, args...);
 }
 
-template <typename Abi, typename DataType, size_t n>
+template <typename Abi, typename DataType,
+          Kokkos::Experimental::Impl::simd_size_t n>
 KOKKOS_INLINE_FUNCTION void device_check_all_bitwise_ops(
     const DataType (&first_args)[n], const DataType (&second_args)[n]) {
   device_check_bitwise_op_all_loaders<Abi, false>(bitwise_not(), n, first_args);
@@ -331,7 +341,9 @@ template <typename Abi, typename DataType>
 inline void host_check_mask_bitwise_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
-    constexpr std::size_t width = mask_type::size();
+    using size_type = Kokkos::Experimental::Impl::simd_size_t;
+
+    constexpr size_type width = mask_type::size();
 
     mask_type const all(true);
     mask_type const none(false);
@@ -401,7 +413,9 @@ template <typename Abi, typename DataType>
 inline void host_check_mask_bitwise_assignment_ops() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
     using mask_type = Kokkos::Experimental::basic_simd_mask<DataType, Abi>;
-    constexpr std::size_t width = mask_type::size();
+    using size_type = Kokkos::Experimental::Impl::simd_size_t;
+
+    constexpr size_type width = mask_type::size();
 
     mask_type const all(true);
     mask_type const none(false);

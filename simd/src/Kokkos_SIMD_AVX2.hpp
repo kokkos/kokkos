@@ -3422,7 +3422,7 @@ class KOKKOS_DEPRECATED const_where_expression<
   void scatter_to(double* mem,
                   basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const&
                       index) const {
-    for (std::size_t lane = 0; lane < 4; ++lane) {
+    for (Impl::simd_size_t lane = 0; lane < 4; ++lane) {
       if (m_mask[lane]) mem[index[lane]] = m_value[lane];
     }
   }
@@ -3513,7 +3513,7 @@ class KOKKOS_DEPRECATED
   void scatter_to(float* mem,
                   basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const&
                       index) const {
-    for (std::size_t lane = 0; lane < 4; ++lane) {
+    for (Impl::simd_size_t lane = 0; lane < 4; ++lane) {
       if (m_mask[lane]) mem[index[lane]] = m_value[lane];
     }
   }
@@ -3695,7 +3695,7 @@ class KOKKOS_DEPRECATED const_where_expression<
   void scatter_to(std::int32_t* mem,
                   basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const&
                       index) const {
-    for (std::size_t lane = 0; lane < 4; ++lane) {
+    for (Impl::simd_size_t lane = 0; lane < 4; ++lane) {
       if (m_mask[lane]) mem[index[lane]] = m_value[lane];
     }
   }
@@ -3788,7 +3788,7 @@ class KOKKOS_DEPRECATED const_where_expression<
   void scatter_to(std::int32_t* mem,
                   basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>> const&
                       index) const {
-    for (std::size_t lane = 0; lane < value_type::size(); ++lane) {
+    for (Impl::simd_size_t lane = 0; lane < value_type::size(); ++lane) {
       if (m_mask[lane]) mem[index[lane]] = m_value[lane];
     }
   }
@@ -3885,7 +3885,7 @@ class KOKKOS_DEPRECATED const_where_expression<
   void scatter_to(std::int64_t* mem,
                   basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const&
                       index) const {
-    for (std::size_t lane = 0; lane < 4; ++lane) {
+    for (Impl::simd_size_t lane = 0; lane < 4; ++lane) {
       if (m_mask[lane]) mem[index[lane]] = m_value[lane];
     }
   }
@@ -3983,7 +3983,7 @@ class KOKKOS_DEPRECATED const_where_expression<
   void scatter_to(std::uint64_t* mem,
                   basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> const&
                       index) const {
-    for (std::size_t lane = 0; lane < 4; ++lane) {
+    for (Impl::simd_size_t lane = 0; lane < 4; ++lane) {
       if (m_mask[lane]) mem[index[lane]] = m_value[lane];
     }
   }

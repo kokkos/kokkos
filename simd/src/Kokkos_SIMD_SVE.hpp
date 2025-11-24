@@ -1485,7 +1485,7 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svasr_m(svptrue_b32(), static_cast<implementation_type>(lhs),
                 std::uint32_t(rhs))));
@@ -1498,7 +1498,7 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svlsl_m(svptrue_b32(), static_cast<implementation_type>(lhs),
                 std::uint32_t(rhs))));
@@ -1982,7 +1982,7 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svlsr_m(svptrue_b32(), static_cast<implementation_type>(lhs),
                 std::uint32_t(rhs))));
@@ -1995,7 +1995,7 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svlsl_m(svptrue_b32(), static_cast<implementation_type>(lhs),
                 std::uint32_t(rhs))));
@@ -2455,7 +2455,7 @@ class basic_simd<std::int64_t,
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svasr_m(svptrue_b64(), static_cast<implementation_type>(lhs),
                 std::uint64_t(rhs))));
@@ -2468,7 +2468,7 @@ class basic_simd<std::int64_t,
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svlsl_m(svptrue_b64(), static_cast<implementation_type>(lhs),
                 std::uint64_t(rhs))));
@@ -2949,7 +2949,7 @@ class basic_simd<std::uint64_t,
   }
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator>>(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svlsr_m(svptrue_b64(), static_cast<implementation_type>(lhs),
                 std::uint64_t(rhs))));
@@ -2962,7 +2962,7 @@ class basic_simd<std::uint64_t,
             (to_sve_vla<value_type>)static_cast<implementation_type>(rhs)))));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator<<(
-      basic_simd const& lhs, int rhs) noexcept {
+      basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(static_cast<implementation_type>(
         svlsl_m(svptrue_b64(), static_cast<implementation_type>(lhs),
                 std::uint64_t(rhs))));
