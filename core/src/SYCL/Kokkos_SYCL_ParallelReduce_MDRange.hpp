@@ -143,12 +143,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
           static_cast<size_t>(2) *
           q.get_device().get_info<sycl::info::device::max_compute_units>();
 
-      // Shared memory needed per block for reduction, it depends on the
-      // workgroup size, put 256 bytes for safe-guard.
+      // Shared memory needed per block for reduction
       const auto sycl_single_inter_block_reduce_shmem = [&](int wgroup_size) {
         return static_cast<int>(static_cast<size_t>(wgroup_size) * value_count *
                                 sizeof(value_type)) +
-               256 * static_cast<int>(sizeof(unsigned int));
+               static_cast<int>(sizeof(unsigned int));
       };
 
       const int maxShmemPerBlock = instance.m_maxShmemPerBlock;
@@ -160,9 +159,14 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         wgroup_size >>= 1;
         shmem_size = sycl_single_inter_block_reduce_shmem(wgroup_size);
         if (wgroup_size < 32) {
-          Kokkos::Impl::throw_runtime_exception(
-              std::string("Kokkos::Impl::ParallelReduce<SYCL> could not find "
-                          "a valid tile size."));
+          std::string msg =
+              "Kokkos::parallel_reduce<SYCL, MDRangePolicy>: could not find a "
+              "valid tile size for inter block reduction. Shared memory per "
+              "block required (" +
+              std::to_string(sycl_single_inter_block_reduce_shmem(32)) +
+              ") exceeds device limit (" + std::to_string(maxShmemPerBlock) +
+              ").";
+          Kokkos::Impl::throw_runtime_exception(msg);
         }
       }
 

@@ -147,17 +147,24 @@ class ParallelReduce<CombinedFunctorReducerType,
         hip_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(f,
                                                                              n);
 
-    while (n > 1 && shmem_size > maxShmemPerBlock) {
+    while (shmem_size > maxShmemPerBlock) {
       n >>= 1;
       shmem_size =
           hip_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
               f, n);
-    }
-
-    if (n < HIPTraits::WarpSize) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce<HIP> could not find a "
-                      "valid tile size."));
+      if (n < HIPTraits::WarpSize) {
+        std::string msg =
+            "Kokkos::parallel_reduce<HIP, MDRangePolicy>: could not find a "
+            "valid tile size for inter block reduction. Shared memory per "
+            "block required (" +
+            std::to_string(
+                hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                         value_type>(
+                    f, HIPTraits::WarpSize)) +
+            ") exceeds device limit (" + std::to_string(maxShmemPerBlock) +
+            ").";
+        Kokkos::Impl::throw_runtime_exception(msg);
+      }
     }
     return n;
   }

@@ -324,11 +324,20 @@ class ParallelReduce<CombinedFunctorReducerType,
       shmem_size =
           cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
               f, n);
-    }
-    if (n < CudaTraits::WarpSize) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce<Cuda> could not find a "
-                      "valid tile size."));
+
+      if (n < CudaTraits::WarpSize) {
+        std::string msg =
+            "Kokkos::parallel_reduce<Cuda, MDRangePolicy>: could not find a "
+            "valid tile size for inter block reduction. Shared memory per "
+            "block required (" +
+            std::to_string(
+                cuda_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                          value_type>(
+                    f, CudaTraits::WarpSize)) +
+            ") exceeds device limit (" + std::to_string(maxShmemPerBlock) +
+            ").";
+        Kokkos::Impl::throw_runtime_exception(msg);
+      }
     }
     return n;
   }
@@ -414,10 +423,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                               typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<WorkTag, value_type>(
-        m_policy, m_functor_reducer.get_functor());
-  }
+        m_unified_space(nullptr) {}
 };
 }  // namespace Impl
 }  // namespace Kokkos
