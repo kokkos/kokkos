@@ -86,6 +86,7 @@ export {
   // miscellaneous
   namespace Impl {
   using ::Kokkos::Impl::FunctorAnalysis;
+  using ::Kokkos::Impl::integral_constant;
   using ::Kokkos::Impl::python_view_type_impl_t;
   using ::Kokkos::Impl::throw_runtime_exception;
   }  // namespace Impl
