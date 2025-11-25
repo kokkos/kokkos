@@ -10,6 +10,7 @@ import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <cstdint>
 #include <cstring>
 #include <functional>
 #include <utility>
