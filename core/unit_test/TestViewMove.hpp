@@ -148,8 +148,14 @@ TEST(TEST_CATEGORY, view_moved_from) {
   test_moved_from_view(Kokkos::View<int, ExecutionSpace>("v0"));
   test_moved_from_view(Kokkos::View<float*, ExecutionSpace>("v1", 1));
   Kokkos::View<double**, ExecutionSpace> v2("v2", 1, 2);
+  // FIXME_HIP On MI300 with ROCm 7.1, the compiler ICES in the check macro
+#if !(                                                    \
+    defined(KOKKOS_ENABLE_HIP) &&                         \
+    (HIP_VERSION_MAJOR == 7 && HIP_VERSION_MINOR == 1) && \
+    (defined(KOKKOS_ARCH_AMD_GFX942) || defined(KOKKOS_ARCH_AMD_GFX942_APU)))
   test_moved_from_view(Kokkos::View<double**, ExecutionSpace>(
       v2.data(), v2.extent(0), v2.extent(1)));
+#endif
   test_moved_from_view(Kokkos::View<double**, ExecutionSpace,
                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
       v2.data(), v2.extent(0), v2.extent(1)));
