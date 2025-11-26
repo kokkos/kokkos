@@ -141,12 +141,12 @@ namespace Kokkos {
 // Public concept:
 
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(memory_space, MemorySpace)
-KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(memory_traits)
+KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(memory_traits, MemoryTraitsConcept)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(execution_space,
                                                   ExecutionSpace)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(execution_policy,
                                                   ExecutionPolicy)
-KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(array_layout)
+KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(array_layout, ArrayLayoutConcept)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(reducer, Reducer)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(team_handle, TeamHandle)
 namespace Experimental {
