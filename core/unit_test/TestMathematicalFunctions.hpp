@@ -511,6 +511,37 @@ DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
 
+#define DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)              \
+  struct MathTernaryIntPtrFunction_##FUNC {                                 \
+    template <typename T, typename U>                                       \
+    static KOKKOS_FUNCTION auto eval(T x, U y, int* z) {                    \
+      static_assert(                                                        \
+          std::is_same_v<decltype(Kokkos::FUNC((T)0, (U)0, (int*)nullptr)), \
+                         math_binary_function_return_type_t<T, U>>);        \
+      return Kokkos::FUNC(x, y, z);                                         \
+    }                                                                       \
+    template <typename T, typename U>                                       \
+    static auto eval_std(T x, U y, int* z) {                                \
+      static_assert(                                                        \
+          std::is_same_v<decltype(std::FUNC((T)0, (U)0, (int*)nullptr)),    \
+                         math_binary_function_return_type_t<T, U>>);        \
+      return std::FUNC(x, y, z);                                            \
+    }                                                                       \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }          \
+  };                                                                        \
+  using kk3_##FUNC = MathTernaryIntPtrFunction_##FUNC;                      \
+  template <>                                                               \
+  struct math_function_name<MathTernaryIntPtrFunction_##FUNC> {             \
+    static constexpr char name[] = #FUNC;                                   \
+  };                                                                        \
+  constexpr char math_function_name<MathTernaryIntPtrFunction_##FUNC>::name[]
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(remquo, 0);
+#endif
+
+#undef DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL
+
 #define DEFINE_TERNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                   \
   struct MathTernaryFunction_##FUNC {                                    \
     template <typename T, typename U, typename V>                        \
@@ -728,6 +759,48 @@ void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
       (TestMathBinaryFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
 }
 
+template <class Space, class Func, class Arg1, class Arg2,
+          class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
+struct TestMathTernaryIntPtrFunction : FloatingPointComparison {
+  Arg1 val1_;
+  Arg2 val2_;
+  int valptr_;
+  Ret res_;
+  TestMathTernaryIntPtrFunction(Arg1 val1, Arg2 val2)
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2, &valptr_)) {
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    int valptr;
+    bool ar_1 =
+        compare(Func::eval(val1_, val2_, &valptr), res_, Func::ulp_factor());
+    bool ar_2 = compare(valptr_, valptr, Func::ulp_factor());
+    if (!(ar_1 && ar_2)) {
+      ++e;
+      Kokkos::printf(
+          "value at %f, %f which is %f and %i was expected to be %f and %i\n",
+          (double)val1_, (double)val2_,
+          (double)Func::eval(val1_, val2_, &valptr), (double)res_, valptr,
+          valptr_);
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg1, class Arg2>
+void do_test_math_ternary_int_ptr_function(Arg1 arg1, Arg2 arg2) {
+  (void)std::initializer_list<int>{
+      (TestMathTernaryIntPtrFunction<Space, Func, Arg1, Arg2>(arg1, arg2),
+       0)...};
+}
+
 template <class Space, class Func, class Arg1, class Arg2, class Arg3,
           class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
 struct TestMathTernaryFunction : FloatingPointComparison {
@@ -748,7 +821,7 @@ struct TestMathTernaryFunction : FloatingPointComparison {
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
-                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ", "
                          << type_helper<Arg3>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
@@ -939,6 +1012,15 @@ TEST(TEST_CATEGORY, mathematical_functions_fma) {
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2, 3.f, 4.);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_fma>(2.l, 3.l, 4.l);
+#endif
+}
+
+TEST(TEST_CATEGORY, mathematical_functions_remquo) {
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2.f, 3.f);
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2., 3.);
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2, 3);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2.l, 3.l);
 #endif
 }
 

@@ -218,6 +218,51 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
   }
 
+#define KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(FUNC)                        \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, float y, int* z) {                \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x, double y, int* z) {             \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  inline long double FUNC(long double x, long double y, int* z) {              \
+    using std::FUNC;                                                           \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x, float y, int* z) {             \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  inline long double FUNC##l(long double x, long double y, int* z) {           \
+    using std::FUNC;                                                           \
+    return FUNC(x, y, z);                                                      \
+  }                                                                            \
+  template <class T1, class T2>                                                \
+  KOKKOS_INLINE_FUNCTION                                                       \
+      std::enable_if_t<std::is_arithmetic_v<T1> && std::is_arithmetic_v<T2> && \
+                           !std::is_same_v<T1, long double> &&                 \
+                           !std::is_same_v<T2, long double>,                   \
+                       Kokkos::Impl::promote_2_t<T1, T2>>                      \
+      FUNC(T1 x, T2 y, int* z) {                                               \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y), z);        \
+  }                                                                            \
+  template <class T1, class T2>                                                \
+  inline std::enable_if_t<std::is_arithmetic_v<T1> &&                          \
+                              std::is_arithmetic_v<T2> &&                      \
+                              (std::is_same_v<T1, long double> ||              \
+                               std::is_same_v<T2, long double>),               \
+                          long double>                                         \
+  FUNC(T1 x, T2 y, int* z) {                                                   \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
+    static_assert(std::is_same_v<Promoted, long double>);                      \
+    using std::FUNC;                                                           \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y), z);        \
+  }
+
 #define KOKKOS_IMPL_MATH_TERNARY_FUNCTION(FUNC)                             \
   KOKKOS_INLINE_FUNCTION float FUNC(float x, float y, float z) {            \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                       \
@@ -314,7 +359,7 @@ inline long double abs(long double x) {
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(fabs)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmod)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(remainder)
-// remquo
+KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(remquo)
 KOKKOS_IMPL_MATH_TERNARY_FUNCTION(fma)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmax)
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(fmin)
