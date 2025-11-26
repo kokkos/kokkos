@@ -187,7 +187,7 @@ struct DeviceIterateTile<3, PolicyType, Functor, MaxGridSize, Tag> {
           }
         }
       }
-    } else {
+    } else {  // Iterate::Right
       for (index_type idx_0 = start_0;
            idx_0 < static_cast<index_type>(m_policy.m_upper[0]);
            idx_0 += stride_0) {
@@ -246,37 +246,37 @@ struct DeviceIterateTile<4, PolicyType, Functor, MaxGridSize, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    const index_type stride_2 = gridDim.y * blockDim.y;
-    const index_type stride_3 = gridDim.z * blockDim.z;
+    const index_type stride_01 = gridDim.x * blockDim.x;
+    const index_type stride_2  = gridDim.y * blockDim.y;
+    const index_type stride_3  = gridDim.z * blockDim.z;
 
+    const index_type start_01 = blockIdx.x * blockDim.x + threadIdx.x;
     const index_type start_2 =
         blockIdx.y * blockDim.y + threadIdx.y + m_policy.m_lower[2];
     const index_type start_3 =
         blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[3];
 
-    const index_type max_tiles_01 =
-        m_policy.m_tile_end[0] * m_policy.m_tile_end[1];
+    const index_type max_threads_0 =
+        (m_policy.m_tile[0] * m_policy.m_tile_end[0]);
+    const index_type max_threads_1 =
+        (m_policy.m_tile[1] * m_policy.m_tile_end[1]);
+    const index_type max_threads_01 = max_threads_0 * max_threads_1;
 
     if constexpr (PolicyType::inner_direction == Iterate::Left) {
-      const index_type thread_id_1 = threadIdx.x / m_policy.m_tile[0];
-      const index_type thread_id_0 = threadIdx.x % m_policy.m_tile[0];
-
       for (index_type idx_3 = start_3;
            idx_3 < static_cast<index_type>(m_policy.m_upper[3]);
            idx_3 += stride_3) {
         for (index_type idx_2 = start_2;
              idx_2 < static_cast<index_type>(m_policy.m_upper[2]);
              idx_2 += stride_2) {
-          // Reconstruct tile 0 and tile 1 from blockIdx.x and threadIdx.x
-          for (index_type tile_x = blockIdx.x; tile_x < max_tiles_01;
-               tile_x += gridDim.x) {
-            const index_type tile_1 = tile_x / m_policy.m_tile_end[0];
-            const index_type tile_0 = tile_x % m_policy.m_tile_end[0];
+          // Unpack thread_id_0 and thread_id_1 from dimension x
+          for (index_type thread_id_01 = start_01;
+               thread_id_01 < max_threads_01; thread_id_01 += stride_01) {
+            const index_type thread_id_1 = thread_id_01 / max_threads_0;
+            const index_type thread_id_0 = thread_id_01 % max_threads_0;
 
-            const index_type idx_1 =
-                tile_1 * m_policy.m_tile[1] + thread_id_1 + m_policy.m_lower[1];
-            const index_type idx_0 =
-                tile_0 * m_policy.m_tile[0] + thread_id_0 + m_policy.m_lower[0];
+            const index_type idx_1 = thread_id_1 + m_policy.m_lower[1];
+            const index_type idx_0 = thread_id_0 + m_policy.m_lower[0];
 
             if (idx_1 < static_cast<index_type>(m_policy.m_upper[1]) &&
                 idx_0 < static_cast<index_type>(m_policy.m_upper[0])) {
@@ -288,19 +288,14 @@ struct DeviceIterateTile<4, PolicyType, Functor, MaxGridSize, Tag> {
 
     } else {  // Iterate::Right
 
-      const index_type thread_id_0 = threadIdx.x / m_policy.m_tile[1];
-      const index_type thread_id_1 = threadIdx.x % m_policy.m_tile[1];
+      // Unpack thread_id_0 and thread_id_1 from dimension x
+      for (index_type thread_id_01 = start_01; thread_id_01 < max_threads_01;
+           thread_id_01 += stride_01) {
+        const index_type thread_id_0 = thread_id_01 / max_threads_1;
+        const index_type thread_id_1 = thread_id_01 % max_threads_1;
 
-      // Reconstruct tile 0 and tile 1 from blockIdx.x and threadIdx.x
-      for (index_type tile_x = blockIdx.x; tile_x < max_tiles_01;
-           tile_x += gridDim.x) {
-        const index_type tile_0 = tile_x / m_policy.m_tile_end[1];
-        const index_type tile_1 = tile_x % m_policy.m_tile_end[1];
-
-        const index_type idx_0 =
-            tile_0 * m_policy.m_tile[0] + thread_id_0 + m_policy.m_lower[0];
-        const index_type idx_1 =
-            tile_1 * m_policy.m_tile[1] + thread_id_1 + m_policy.m_lower[1];
+        const index_type idx_0 = thread_id_0 + m_policy.m_lower[0];
+        const index_type idx_1 = thread_id_1 + m_policy.m_lower[1];
 
         if (idx_0 < static_cast<index_type>(m_policy.m_upper[0]) &&
             idx_1 < static_cast<index_type>(m_policy.m_upper[1])) {
@@ -316,6 +311,7 @@ struct DeviceIterateTile<4, PolicyType, Functor, MaxGridSize, Tag> {
         }
       }
     }
+
   }  // end exec_range
 
  private:
@@ -360,48 +356,49 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
+    const index_type start_01 = blockIdx.x * blockDim.x + threadIdx.x;
+    const index_type start_23 = blockIdx.y * blockDim.y + threadIdx.y;
     const index_type start_4 =
         blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[4];
-    const index_type stride_4 = gridDim.z * blockDim.z;
 
-    const index_type max_tiles_01 =
-        m_policy.m_tile_end[0] * m_policy.m_tile_end[1];
-    const index_type max_tiles_23 =
-        m_policy.m_tile_end[2] * m_policy.m_tile_end[3];
+    const index_type stride_01 = gridDim.x * blockDim.x;
+    const index_type stride_23 = gridDim.y * blockDim.y;
+    const index_type stride_4  = gridDim.z * blockDim.z;
+
+    const index_type max_threads_0 =
+        (m_policy.m_tile[0] * m_policy.m_tile_end[0]);
+    const index_type max_threads_1 =
+        (m_policy.m_tile[1] * m_policy.m_tile_end[1]);
+    const index_type max_threads_2 =
+        (m_policy.m_tile[2] * m_policy.m_tile_end[2]);
+    const index_type max_threads_3 =
+        (m_policy.m_tile[3] * m_policy.m_tile_end[3]);
+    const index_type max_threads_01 = max_threads_0 * max_threads_1;
+    const index_type max_threads_23 = max_threads_2 * max_threads_3;
 
     if (PolicyType::inner_direction == Iterate::Left) {
-      const index_type thread_id_3 = threadIdx.y / m_policy.m_tile[2];
-      const index_type thread_id_2 = threadIdx.y % m_policy.m_tile[2];
-
-      const index_type thread_id_1 = threadIdx.x / m_policy.m_tile[0];
-      const index_type thread_id_0 = threadIdx.x % m_policy.m_tile[0];
-
       for (index_type idx_4 = start_4;
            idx_4 < static_cast<index_type>(m_policy.m_upper[4]);
            idx_4 += stride_4) {
-        // Reconstruct tile 2 and tile 3 from blockIdx.y and threadIdx.y
-        for (index_type tile_y = blockIdx.y; tile_y < max_tiles_23;
-             tile_y += gridDim.y) {
-          const index_type tile_3 = tile_y / m_policy.m_tile_end[2];
-          const index_type tile_2 = tile_y % m_policy.m_tile_end[2];
+        // Unpack thread_id_2 and thread_id_3 from dimension y
+        for (index_type thread_id_23 = start_23; thread_id_23 < max_threads_23;
+             thread_id_23 += stride_23) {
+          const index_type thread_id_3 = thread_id_23 / max_threads_2;
+          const index_type thread_id_2 = thread_id_23 % max_threads_2;
 
-          const index_type idx_3 =
-              tile_3 * m_policy.m_tile[3] + thread_id_3 + m_policy.m_lower[3];
-          const index_type idx_2 =
-              tile_2 * m_policy.m_tile[2] + thread_id_2 + m_policy.m_lower[2];
+          const index_type idx_3 = thread_id_3 + m_policy.m_lower[3];
+          const index_type idx_2 = thread_id_2 + m_policy.m_lower[2];
 
           if (idx_3 < static_cast<index_type>(m_policy.m_upper[3]) &&
               idx_2 < static_cast<index_type>(m_policy.m_upper[2])) {
-            // Reconstruct tile 0 and tile 1 from blockIdx.x and threadIdx.x
-            for (index_type tile_x = blockIdx.x; tile_x < max_tiles_01;
-                 tile_x += gridDim.x) {
-              const index_type tile_1 = tile_x / m_policy.m_tile_end[0];
-              const index_type tile_0 = tile_x % m_policy.m_tile_end[0];
+            // Unpack thread_id_0 and thread_id_1 from dimension x
+            for (index_type thread_id_01 = start_01;
+                 thread_id_01 < max_threads_01; thread_id_01 += stride_01) {
+              const index_type thread_id_1 = thread_id_01 / max_threads_0;
+              const index_type thread_id_0 = thread_id_01 % max_threads_0;
 
-              const index_type idx_1 = tile_1 * m_policy.m_tile[1] +
-                                       thread_id_1 + m_policy.m_lower[1];
-              const index_type idx_0 = tile_0 * m_policy.m_tile[0] +
-                                       thread_id_0 + m_policy.m_lower[0];
+              const index_type idx_1 = thread_id_1 + m_policy.m_lower[1];
+              const index_type idx_0 = thread_id_0 + m_policy.m_lower[0];
 
               if (idx_1 < static_cast<index_type>(m_policy.m_upper[1]) &&
                   idx_0 < static_cast<index_type>(m_policy.m_upper[0])) {
@@ -415,35 +412,25 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
 
     } else {  // Iterate::Right
 
-      const index_type thread_id_0 = threadIdx.x / m_policy.m_tile[1];
-      const index_type thread_id_1 = threadIdx.x % m_policy.m_tile[1];
+      // Unpack thread_id_0 and thread_id_1 from dimension x
+      for (index_type thread_id_01 = start_01; thread_id_01 < max_threads_01;
+           thread_id_01 += stride_01) {
+        const index_type thread_id_0 = thread_id_01 / max_threads_1;
+        const index_type thread_id_1 = thread_id_01 % max_threads_1;
 
-      const index_type thread_id_2 = threadIdx.y / m_policy.m_tile[3];
-      const index_type thread_id_3 = threadIdx.y % m_policy.m_tile[3];
-
-      // Reconstruct tile 0 and tile 1 from blockIdx.x and threadIdx.x
-      for (index_type tile_x = blockIdx.x; tile_x < max_tiles_01;
-           tile_x += gridDim.x) {
-        const index_type tile_0 = tile_x / m_policy.m_tile_end[1];
-        const index_type tile_1 = tile_x % m_policy.m_tile_end[1];
-
-        const index_type idx_1 =
-            tile_1 * m_policy.m_tile[1] + thread_id_1 + m_policy.m_lower[1];
-        const index_type idx_0 =
-            tile_0 * m_policy.m_tile[0] + thread_id_0 + m_policy.m_lower[0];
+        const index_type idx_0 = thread_id_0 + m_policy.m_lower[0];
+        const index_type idx_1 = thread_id_1 + m_policy.m_lower[1];
 
         if (idx_0 < static_cast<index_type>(m_policy.m_upper[0]) &&
             idx_1 < static_cast<index_type>(m_policy.m_upper[1])) {
-          // Reconstruct tile 2 and tile 3 from blockIdx.y and threadIdx.y
-          for (index_type tile_y = blockIdx.y; tile_y < max_tiles_23;
-               tile_y += gridDim.y) {
-            const index_type tile_2 = tile_y / m_policy.m_tile_end[3];
-            const index_type tile_3 = tile_y % m_policy.m_tile_end[3];
+          // Unpack thread_id_2 and thread_id_3 from dimension y
+          for (index_type thread_id_23 = start_23;
+               thread_id_23 < max_threads_23; thread_id_23 += stride_23) {
+            const index_type thread_id_2 = thread_id_23 / max_threads_3;
+            const index_type thread_id_3 = thread_id_23 % max_threads_3;
 
-            const index_type idx_2 =
-                tile_2 * m_policy.m_tile[2] + thread_id_2 + m_policy.m_lower[2];
-            const index_type idx_3 =
-                tile_3 * m_policy.m_tile[3] + thread_id_3 + m_policy.m_lower[3];
+            const index_type idx_2 = thread_id_2 + m_policy.m_lower[2];
+            const index_type idx_3 = thread_id_3 + m_policy.m_lower[3];
 
             if (idx_2 < static_cast<index_type>(m_policy.m_upper[2]) &&
                 idx_3 < static_cast<index_type>(m_policy.m_upper[3])) {
@@ -458,6 +445,7 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
         }
       }
     }
+
   }  // end exec_range
 
  private:
@@ -502,59 +490,62 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    const index_type max_tiles_01 =
-        m_policy.m_tile_end[0] * m_policy.m_tile_end[1];
-    const index_type max_tiles_23 =
-        m_policy.m_tile_end[2] * m_policy.m_tile_end[3];
-    const index_type max_tiles_45 =
-        m_policy.m_tile_end[4] * m_policy.m_tile_end[5];
+    const index_type start_01 = blockIdx.x * blockDim.x + threadIdx.x;
+    const index_type start_23 = blockIdx.y * blockDim.y + threadIdx.y;
+    const index_type start_45 = blockIdx.z * blockDim.z + threadIdx.z;
+
+    const index_type stride_01 = gridDim.x * blockDim.x;
+    const index_type stride_23 = gridDim.y * blockDim.y;
+    const index_type stride_45 = gridDim.z * blockDim.z;
+
+    const index_type max_threads_0 =
+        (m_policy.m_tile[0] * m_policy.m_tile_end[0]);
+    const index_type max_threads_1 =
+        (m_policy.m_tile[1] * m_policy.m_tile_end[1]);
+    const index_type max_threads_2 =
+        (m_policy.m_tile[2] * m_policy.m_tile_end[2]);
+    const index_type max_threads_3 =
+        (m_policy.m_tile[3] * m_policy.m_tile_end[3]);
+    const index_type max_threads_4 =
+        (m_policy.m_tile[4] * m_policy.m_tile_end[4]);
+    const index_type max_threads_5 =
+        (m_policy.m_tile[5] * m_policy.m_tile_end[5]);
+
+    const index_type max_threads_01 = max_threads_0 * max_threads_1;
+    const index_type max_threads_23 = max_threads_2 * max_threads_3;
+    const index_type max_threads_45 = max_threads_4 * max_threads_5;
 
     if (PolicyType::inner_direction == Iterate::Left) {
-      const index_type thread_id_5 = threadIdx.z / m_policy.m_tile[4];
-      const index_type thread_id_4 = threadIdx.z % m_policy.m_tile[4];
+      // Unpack thread_id_4 and thread_id_5 from dimension z
+      for (index_type thread_id_45 = start_45; thread_id_45 < max_threads_45;
+           thread_id_45 += stride_45) {
+        const index_type thread_id_5 = thread_id_45 / max_threads_4;
+        const index_type thread_id_4 = thread_id_45 % max_threads_4;
 
-      const index_type thread_id_3 = threadIdx.y / m_policy.m_tile[2];
-      const index_type thread_id_2 = threadIdx.y % m_policy.m_tile[2];
-
-      const index_type thread_id_1 = threadIdx.x / m_policy.m_tile[0];
-      const index_type thread_id_0 = threadIdx.x % m_policy.m_tile[0];
-
-      // Reconstruct tile 4 and tile 5 from blockIdx.z and threadIdx.z
-      for (index_type tile_z = blockIdx.z; tile_z < max_tiles_45;
-           tile_z += gridDim.z) {
-        const index_type tile_5 = tile_z / m_policy.m_tile_end[4];
-        const index_type tile_4 = tile_z % m_policy.m_tile_end[4];
-
-        const index_type idx_5 =
-            tile_5 * m_policy.m_tile[5] + thread_id_5 + m_policy.m_lower[5];
-        const index_type idx_4 =
-            tile_4 * m_policy.m_tile[4] + thread_id_4 + m_policy.m_lower[4];
+        const index_type idx_5 = thread_id_5 + m_policy.m_lower[5];
+        const index_type idx_4 = thread_id_4 + m_policy.m_lower[4];
 
         if (idx_5 < static_cast<index_type>(m_policy.m_upper[5]) &&
             idx_4 < static_cast<index_type>(m_policy.m_upper[4])) {
-          // Reconstruct tile 2 and tile 3 from blockIdx.y and threadIdx.y
-          for (index_type tile_y = blockIdx.y; tile_y < max_tiles_23;
-               tile_y += gridDim.y) {
-            const index_type tile_3 = tile_y / m_policy.m_tile_end[2];
-            const index_type tile_2 = tile_y % m_policy.m_tile_end[2];
+          // Unpack thread_id_2 and thread_id_3 from dimension y
+          for (index_type thread_id_23 = start_23;
+               thread_id_23 < max_threads_23; thread_id_23 += stride_23) {
+            const index_type thread_id_3 = thread_id_23 / max_threads_2;
+            const index_type thread_id_2 = thread_id_23 % max_threads_2;
 
-            const index_type idx_3 =
-                tile_3 * m_policy.m_tile[3] + thread_id_3 + m_policy.m_lower[3];
-            const index_type idx_2 =
-                tile_2 * m_policy.m_tile[2] + thread_id_2 + m_policy.m_lower[2];
+            const index_type idx_3 = thread_id_3 + m_policy.m_lower[3];
+            const index_type idx_2 = thread_id_2 + m_policy.m_lower[2];
 
             if (idx_3 < static_cast<index_type>(m_policy.m_upper[3]) &&
                 idx_2 < static_cast<index_type>(m_policy.m_upper[2])) {
-              // Reconstruct tile 0 and tile 1 from blockIdx.x and threadIdx.x
-              for (index_type tile_x = blockIdx.x; tile_x < max_tiles_01;
-                   tile_x += gridDim.x) {
-                const index_type tile_1 = tile_x / m_policy.m_tile_end[0];
-                const index_type tile_0 = tile_x % m_policy.m_tile_end[0];
+              // Unpack thread_id_0 and thread_id_1 from dimension x
+              for (index_type thread_id_01 = start_01;
+                   thread_id_01 < max_threads_01; thread_id_01 += stride_01) {
+                const index_type thread_id_1 = thread_id_01 / max_threads_0;
+                const index_type thread_id_0 = thread_id_01 % max_threads_0;
 
-                const index_type idx_1 = tile_1 * m_policy.m_tile[1] +
-                                         thread_id_1 + m_policy.m_lower[1];
-                const index_type idx_0 = tile_0 * m_policy.m_tile[0] +
-                                         thread_id_0 + m_policy.m_lower[0];
+                const index_type idx_1 = thread_id_1 + m_policy.m_lower[1];
+                const index_type idx_0 = thread_id_0 + m_policy.m_lower[0];
 
                 if (idx_1 < static_cast<index_type>(m_policy.m_upper[1]) &&
                     idx_0 < static_cast<index_type>(m_policy.m_upper[0])) {
@@ -569,51 +560,36 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
 
     } else {  // Iterate::Right
 
-      const index_type thread_id_0 = threadIdx.x / m_policy.m_tile[1];
-      const index_type thread_id_1 = threadIdx.x % m_policy.m_tile[1];
+      // Unpack thread_id_0 and thread_id_1 from dimension x
+      for (index_type thread_id_01 = start_01; thread_id_01 < max_threads_01;
+           thread_id_01 += stride_01) {
+        const index_type thread_id_0 = thread_id_01 / max_threads_1;
+        const index_type thread_id_1 = thread_id_01 % max_threads_1;
 
-      const index_type thread_id_2 = threadIdx.y / m_policy.m_tile[3];
-      const index_type thread_id_3 = threadIdx.y % m_policy.m_tile[3];
-
-      const index_type thread_id_4 = threadIdx.z / m_policy.m_tile[5];
-      const index_type thread_id_5 = threadIdx.z % m_policy.m_tile[5];
-
-      // Reconstruct tile 0 and tile 1 from blockIdx.x and threadIdx.x
-      for (index_type tile_x = blockIdx.x; tile_x < max_tiles_01;
-           tile_x += gridDim.x) {
-        const index_type tile_0 = tile_x / m_policy.m_tile_end[1];
-        const index_type tile_1 = tile_x % m_policy.m_tile_end[1];
-
-        const index_type idx_0 =
-            tile_0 * m_policy.m_tile[0] + thread_id_0 + m_policy.m_lower[0];
-        const index_type idx_1 =
-            tile_1 * m_policy.m_tile[1] + thread_id_1 + m_policy.m_lower[1];
+        const index_type idx_0 = thread_id_0 + m_policy.m_lower[0];
+        const index_type idx_1 = thread_id_1 + m_policy.m_lower[1];
 
         if (idx_0 < static_cast<index_type>(m_policy.m_upper[0]) &&
             idx_1 < static_cast<index_type>(m_policy.m_upper[1])) {
-          // Reconstruct tile 2 and tile 3 from blockIdx.y and threadIdx.y
-          for (index_type tile_y = blockIdx.y; tile_y < max_tiles_23;
-               tile_y += gridDim.y) {
-            const index_type tile_2 = tile_y / m_policy.m_tile_end[3];
-            const index_type tile_3 = tile_y % m_policy.m_tile_end[3];
+          // Unpack thread_id_2 and thread_id_3 from dimension y
+          for (index_type thread_id_23 = start_23;
+               thread_id_23 < max_threads_23; thread_id_23 += stride_23) {
+            const index_type thread_id_2 = thread_id_23 / max_threads_3;
+            const index_type thread_id_3 = thread_id_23 % max_threads_3;
 
-            const index_type idx_2 =
-                tile_2 * m_policy.m_tile[2] + thread_id_2 + m_policy.m_lower[2];
-            const index_type idx_3 =
-                tile_3 * m_policy.m_tile[3] + thread_id_3 + m_policy.m_lower[3];
+            const index_type idx_2 = thread_id_2 + m_policy.m_lower[2];
+            const index_type idx_3 = thread_id_3 + m_policy.m_lower[3];
 
             if (idx_2 < static_cast<index_type>(m_policy.m_upper[2]) &&
                 idx_3 < static_cast<index_type>(m_policy.m_upper[3])) {
-              // Reconstruct tile 4 and tile 5 from blockIdx.z and threadIdx.z
-              for (index_type tile_z = blockIdx.z; tile_z < max_tiles_45;
-                   tile_z += gridDim.z) {
-                const index_type tile_4 = tile_z / m_policy.m_tile_end[5];
-                const index_type tile_5 = tile_z % m_policy.m_tile_end[5];
+              // Unpack thread_id_4 and thread_id_5 from dimension z
+              for (index_type thread_id_45 = start_45;
+                   thread_id_45 < max_threads_45; thread_id_45 += stride_45) {
+                const index_type thread_id_4 = thread_id_45 / max_threads_5;
+                const index_type thread_id_5 = thread_id_45 % max_threads_5;
 
-                const index_type idx_4 = tile_4 * m_policy.m_tile[4] +
-                                         thread_id_4 + m_policy.m_lower[4];
-                const index_type idx_5 = tile_5 * m_policy.m_tile[5] +
-                                         thread_id_5 + m_policy.m_lower[5];
+                const index_type idx_4 = thread_id_4 + m_policy.m_lower[4];
+                const index_type idx_5 = thread_id_5 + m_policy.m_lower[5];
 
                 if (idx_4 < static_cast<index_type>(m_policy.m_upper[4]) &&
                     idx_5 < static_cast<index_type>(m_policy.m_upper[5])) {
@@ -626,6 +602,7 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
         }
       }
     }
+
   }  // end exec_range
 
  private:
