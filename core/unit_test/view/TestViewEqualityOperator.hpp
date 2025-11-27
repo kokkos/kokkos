@@ -15,25 +15,44 @@ import kokkos.core_impl;
 
 namespace {
 
+#if 0
 template <class T>
+#else
+template <class T, class Enable = void>
+#endif
 struct Another;
 
+#if 0  // TODO: Enable once we use concept below
 template <Kokkos::MemorySpace T>
 struct Another<T> {
+#else
+template <class T>
+struct Another<T, std::enable_if_t<Kokkos::is_memory_space_v<T>>> {
+#endif
   using type =
       std::conditional_t<std::is_same_v<T, Kokkos::DefaultExecutionSpace>,
                          Kokkos::DefaultHostExecutionSpace,
                          Kokkos::DefaultExecutionSpace>;
 };
 
-template <Kokkos::ArrayLayoutConcept T>
+#if 0  // TODO: Enable once we have an ArrayLayout concept
+template <Kokkos::ArrayLayout T>
 struct Another<T> {
+#else
+template <class T>
+struct Another<T, std::enable_if_t<Kokkos::is_array_layout_v<T>>> {
+#endif
   using type = std::conditional_t<std::is_same_v<T, Kokkos::LayoutLeft>,
                                   Kokkos::LayoutRight, Kokkos::LayoutLeft>;
 };
 
+#if 0  // TODO: Enable once we have an MemoryTraits concept
 template <Kokkos::MemoryTraitsConcept T>
 struct Another<T> {
+#else
+template <class T>
+struct Another<T, std::enable_if_t<Kokkos::is_memory_traits_v<T>>> {
+#endif
   using type = std::conditional_t<std::is_same_v<T, Kokkos::MemoryRandomAccess>,
                                   typename Kokkos::MemoryUnmanaged,
                                   Kokkos::MemoryRandomAccess>;
