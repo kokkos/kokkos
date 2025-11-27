@@ -52,32 +52,6 @@ struct ArrayReduceFunctor {
   KOKKOS_INLINE_FUNCTION void final(value_type) const {}
 };
 
-struct MDArrayReduceFunctor {
-  using value_type = ValueType[];
-
-  int value_count;
-  Matrix3D m;
-
-  MDArrayReduceFunctor(const Matrix3D& m_) : value_count(m_.extent(2)), m(m_) {}
-
-  KOKKOS_INLINE_FUNCTION void operator()(const int i, const int j,
-                                         value_type sum) const {
-    const int numVecs = value_count;
-    for (int k = 0; k < numVecs; ++k) {
-      sum[k] += m(i, j, k);
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION void init(value_type update) const {
-    const int numVecs = value_count;
-    for (int j = 0; j < numVecs; ++j) {
-      update[j] = 0.0;
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION void final(value_type) const {}
-};
-
 struct ReduceViewSizeLimitTester {
   const ValueType initValue           = 3;
   const size_t nGlobalEntries         = 100;
@@ -107,31 +81,6 @@ struct ReduceViewSizeLimitTester {
       }
     }
   }
-
-  void run_test_md_range_2D() {
-    Matrix3D matrix;
-    Vector sum;
-
-    for (int i = 0; i < testViewSize; ++i) {
-      size_t sumInitShmemSize = (initBlockSize + 2) * sizeof(ValueType) * i;
-
-      Kokkos::resize(Kokkos::WithoutInitializing, sum, i);
-      Kokkos::resize(Kokkos::WithoutInitializing, matrix, nGlobalEntries,
-                     nGlobalEntries, i);
-      Kokkos::deep_copy(matrix, initValue);
-
-      auto policy = Kokkos::MDRangePolicy<Kokkos::Rank<2>>(
-          {0, 0}, {nGlobalEntries, nGlobalEntries});
-      auto functor = MDArrayReduceFunctor(matrix);
-
-      if (sumInitShmemSize < expectedInitShmemLimit) {
-        EXPECT_NO_THROW(Kokkos::parallel_reduce(policy, functor, sum));
-      } else {
-        EXPECT_THROW(Kokkos::parallel_reduce(policy, functor, sum),
-                     std::runtime_error);
-      }
-    }
-  }
 };
 
 }  // namespace Impl
@@ -140,12 +89,6 @@ TEST(cuda, reduceRangePolicyViewSizeLimit) {
   Impl::ReduceViewSizeLimitTester reduceViewSizeLimitTester;
 
   reduceViewSizeLimitTester.run_test_range();
-}
-
-TEST(cuda, reduceMDRangePolicyViewSizeLimit) {
-  Impl::ReduceViewSizeLimitTester reduceViewSizeLimitTester;
-
-  reduceViewSizeLimitTester.run_test_md_range_2D();
 }
 
 }  // namespace Test

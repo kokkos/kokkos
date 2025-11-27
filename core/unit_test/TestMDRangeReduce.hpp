@@ -55,21 +55,22 @@ TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
 #endif
 }
 
+// Functor for reduction tests, reducing over a 3D View into a 1D View
 template <typename T>
-struct MDReduceFunctor {
+struct MDArrayReduceFunctor {
   using value_type = T[];
 
   const int value_count;
-  Kokkos::View<T***, Kokkos::DefaultExecutionSpace> m;
+  Kokkos::View<T***, TEST_EXECSPACE> m_input_view;
 
-  MDReduceFunctor(const Kokkos::View<T***, Kokkos::DefaultExecutionSpace>& m_,
-                  int reduce_view_size)
-      : value_count(reduce_view_size), m(m_) {}
+  MDArrayReduceFunctor(const Kokkos::View<T***, TEST_EXECSPACE>& input_view,
+                       int reduce_view_size)
+      : value_count(reduce_view_size), m_input_view(input_view) {}
 
   KOKKOS_INLINE_FUNCTION
   void operator()(const int i, const int j, value_type sum) const {
     for (int k = 0; k < value_count; ++k) {
-      sum[k] += m(i, j, k);
+      sum[k] += m_input_view(i, j, k);
     }
   }
 
@@ -86,30 +87,29 @@ struct MDReduceFunctor {
 template <typename T>
 void MDRangeReduceViewTester(int view_size, int reduce_view_size, int tile_x,
                              int tile_y) {
-  using PolicyType =
-      Kokkos::MDRangePolicy<Kokkos::DefaultExecutionSpace, Kokkos::Rank<2>>;
-  using point_t = typename PolicyType::point_type;
-  using tile_t  = typename PolicyType::tile_type;
+  using PolicyType = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
+  using point_t    = typename PolicyType::point_type;
+  using tile_t     = typename PolicyType::tile_type;
 
   point_t lower_bound{0, 0};
   point_t upper_bound{view_size, view_size};
   tile_t tile{tile_x, tile_y};
 
-  Kokkos::View<T***, Kokkos::DefaultExecutionSpace> data_3D(
-      "data_3D", view_size, view_size, reduce_view_size);
-  Kokkos::View<T*, Kokkos::DefaultExecutionSpace> data_1D("data_1D",
-                                                          reduce_view_size);
+  Kokkos::View<T***, TEST_EXECSPACE> data_3D("data_3D", view_size, view_size,
+                                             reduce_view_size);
+  Kokkos::View<T*, TEST_EXECSPACE> data_1D("data_1D", reduce_view_size);
 
   Kokkos::deep_copy(data_1D, static_cast<T>(0.0));
   Kokkos::deep_copy(data_3D, static_cast<T>(1.0));
 
-  // Perform MDRange parallel reduce
   PolicyType policy(lower_bound, upper_bound, tile);
-  MDReduceFunctor<T> functor(data_3D, reduce_view_size);
+  MDArrayReduceFunctor<T> functor(data_3D, reduce_view_size);
+
+  // Perform MDRange parallel reduce with 1D View as reduction result
   Kokkos::parallel_reduce(policy, functor, data_1D);
   Kokkos::fence();
 
-  // Verify results
+  // Verify results on host
   auto host_data_1D =
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, data_1D);
   for (int i = 0; i < reduce_view_size; i++) {
@@ -132,6 +132,31 @@ TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
       MDRangeReduceTester<int64_t>(bound, k);
     }
   }
+}
+
+TEST(TEST_CATEGORY, mdrange_parallel_reduce_view_size_limit) {
+#if defined(KOKKOS_ENABLE_OPENMPTARGET)
+  GTEST_SKIP()
+      << "FIXME_OPENMPTARGET custom reduction with MDRangePolicy is not "
+         "yet implemented";
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  GTEST_SKIP() << "FIXME_OPENACC custom reduction with MDRangePolicy is not "
+                  "yet implemented";
+#else
+  const int view_size        = 100;
+  const int reduce_view_size = 1000;
+  const int tile_x           = 32;
+  const int tile_y           = 4;
+  if constexpr (std::is_same_v<TEST_EXECSPACE,
+                               Kokkos::DefaultHostExecutionSpace>) {
+    EXPECT_NO_THROW(MDRangeReduceViewTester<double>(view_size, reduce_view_size,
+                                                    tile_x, tile_y));
+  } else {
+    EXPECT_THROW(MDRangeReduceViewTester<double>(view_size, reduce_view_size,
+                                                 tile_x, tile_y),
+                 std::runtime_error);
+  }
+#endif
 }
 
 }  // namespace
