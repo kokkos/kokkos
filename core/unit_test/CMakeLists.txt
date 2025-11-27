@@ -69,6 +69,7 @@ set(COMPILE_ONLY_SOURCES
     view/TestViewCustomization.cpp
     view/TestExtentsDatatypeConversion.cpp
     view/TestConversionFromPointer.cpp
+    view/TestMemoryTraitTypes.cpp
 )
 
 if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
