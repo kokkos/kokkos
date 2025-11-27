@@ -147,14 +147,23 @@ TEST(TEST_CATEGORY, mdrange_parallel_reduce_view_size_limit) {
   const int reduce_view_size = 1000;
   const int tile_x           = 32;
   const int tile_y           = 4;
-  if constexpr (std::is_same_v<TEST_EXECSPACE,
-                               Kokkos::DefaultHostExecutionSpace>) {
-    EXPECT_NO_THROW(MDRangeReduceViewTester<double>(view_size, reduce_view_size,
-                                                    tile_x, tile_y));
-  } else {
+  if constexpr (
+#if defined(KOKKOS_ENABLE_CUDA)
+      std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>
+#elif defined(KOKKOS_ENABLE_HIP)
+      std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>
+#elif defined(KOKKOS_ENABLE_SYCL)
+      std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>
+#else
+      false
+#endif
+  ) {
     EXPECT_THROW(MDRangeReduceViewTester<double>(view_size, reduce_view_size,
                                                  tile_x, tile_y),
                  std::runtime_error);
+  } else {
+    EXPECT_NO_THROW(MDRangeReduceViewTester<double>(view_size, reduce_view_size,
+                                                    tile_x, tile_y));
   }
 #endif
 }
