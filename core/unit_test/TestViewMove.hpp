@@ -148,7 +148,7 @@ TEST(TEST_CATEGORY, view_moved_from) {
   test_moved_from_view(Kokkos::View<int, ExecutionSpace>("v0"));
   test_moved_from_view(Kokkos::View<float*, ExecutionSpace>("v1", 1));
   Kokkos::View<double**, ExecutionSpace> v2("v2", 1, 2);
-  // FIXME_HIP OCm 7.1 on MI300 triggers an internal compiler error in the CHECK
+  // FIXME_HIP ROCm 7.1 on MI300 triggers an internal compiler error in the CHECK
   // macro
 #if !(                                                    \
     defined(KOKKOS_ENABLE_HIP) &&                         \
