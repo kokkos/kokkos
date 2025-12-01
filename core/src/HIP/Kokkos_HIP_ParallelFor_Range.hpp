@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_HIP_PARALLEL_FOR_RANGE_HPP
 #define KOKKOS_HIP_PARALLEL_FOR_RANGE_HPP
@@ -58,14 +45,15 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
   ParallelFor& operator=(ParallelFor const&) = delete;
 
   inline __device__ void operator()() const {
-    const Member work_stride = blockDim.y * gridDim.x;
-    const Member work_end    = m_policy.end();
+    const auto work_stride = Member(blockDim.y) * gridDim.x;
+    const Member work_end  = m_policy.end();
 
-    for (Member iwork =
-             m_policy.begin() + threadIdx.y + blockDim.y * blockIdx.x;
+    for (Member iwork = m_policy.begin() + threadIdx.y +
+                        static_cast<Member>(blockDim.y) * blockIdx.x;
          iwork < work_end;
-         iwork = iwork < work_end - work_stride ? iwork + work_stride
-                                                : work_end) {
+         iwork = iwork < static_cast<Member>(work_end - work_stride)
+                     ? iwork + work_stride
+                     : work_end) {
       this->template exec_range<WorkTag>(iwork);
     }
   }
@@ -75,17 +63,22 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
 
     using DriverType = ParallelFor<FunctorType, Policy, Kokkos::HIP>;
     const int block_size =
-        Kokkos::Impl::hip_get_preferred_blocksize<DriverType, LaunchBounds>(
-            m_policy.space().hip_device());
-    const dim3 block(1, block_size, 1);
-    const dim3 grid(
-        typename Policy::index_type((nwork + block.y - 1) / block.y), 1, 1);
+        Kokkos::Impl::get_preferred_blocksize_for_range<DriverType,
+                                                        LaunchBounds>(
+            m_policy.space().impl_internal_space_instance(), nwork);
 
     if (block_size == 0) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelFor< HIP > could not find a "
                       "valid execution configuration."));
     }
+    const dim3 block(1, block_size, 1);
+    const int maxGridSizeX = m_policy.space().hip_device_prop().maxGridSize[0];
+    const dim3 grid(
+        std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
+                 typename Policy::index_type(maxGridSizeX)),
+        1, 1);
+
     Kokkos::Impl::hip_parallel_launch<DriverType, LaunchBounds>(
         *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
         false);

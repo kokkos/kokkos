@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 /// \file Kokkos_Serial.hpp
 /// \brief Declaration and definition of Kokkos::Serial device.
@@ -49,18 +36,15 @@ namespace Kokkos {
 namespace Impl {
 class SerialInternal {
  public:
-  SerialInternal() = default;
+  SerialInternal();
+  ~SerialInternal();
 
-  bool is_initialized();
-
-  void initialize();
-
-  void finalize();
-
-  static SerialInternal& singleton();
+  SerialInternal(SerialInternal const&)            = delete;
+  SerialInternal& operator=(SerialInternal const&) = delete;
 
   std::mutex m_instance_mutex;
 
+  static HostSharedPtr<SerialInternal> default_instance;
   static std::vector<SerialInternal*> all_instances;
   static std::mutex all_instances_mutex;
 
@@ -71,7 +55,6 @@ class SerialInternal {
                                size_t thread_local_bytes);
 
   HostThreadTeamData m_thread_team_data;
-  bool m_is_initialized = false;
 };
 }  // namespace Impl
 
@@ -113,6 +96,9 @@ class Serial {
 
   //@}
 
+  Serial(const Serial&)            = default;
+  Serial& operator=(const Serial&) = default;
+  ~Serial();
   Serial();
 
   explicit Serial(NewInstance);
@@ -143,30 +129,52 @@ class Serial {
   /// method does not return until all dispatched functors on this
   /// device have completed.
   static void impl_static_fence(const std::string& name) {
-    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
-        name,
-        Kokkos::Tools::Experimental::SpecialSynchronizationCases::
-            GlobalDeviceSynchronization,
-        []() {
-          std::lock_guard<std::mutex> lock_all_instances(
-              Impl::SerialInternal::all_instances_mutex);
-          for (auto* instance_ptr : Impl::SerialInternal::all_instances) {
-            std::lock_guard<std::mutex> lock_instance(
-                instance_ptr->m_instance_mutex);
-          }
-        });  // TODO: correct device ID
+#ifdef KOKKOS_ENABLE_ATOMICS_BYPASS
+    auto fence = []() {};
+#else
+    auto fence = []() {
+      std::lock_guard<std::mutex> lock_all_instances(
+          Impl::SerialInternal::all_instances_mutex);
+      for (auto* instance_ptr : Impl::SerialInternal::all_instances) {
+        std::lock_guard<std::mutex> lock_instance(
+            instance_ptr->m_instance_mutex);
+      }
+    };
+#endif
+    if (Kokkos::Tools::profileLibraryLoaded()) {
+      Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
+          name,
+          Kokkos::Tools::Experimental::SpecialSynchronizationCases::
+              GlobalDeviceSynchronization,
+          fence);  // TODO: correct device ID
+    } else {
+      fence();
+    }
+#ifndef KOKKOS_ENABLE_ATOMICS_BYPASS
     Kokkos::memory_fence();
+#endif
   }
 
   void fence(const std::string& name =
                  "Kokkos::Serial::fence: Unnamed Instance Fence") const {
-    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
-        name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
-        [this]() {
-          auto* internal_instance = this->impl_internal_space_instance();
-          std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
-        });  // TODO: correct device ID
+#ifdef KOKKOS_ENABLE_ATOMICS_BYPASS
+    auto fence = []() {};
+#else
+    auto fence = [this]() {
+      auto* internal_instance = this->impl_internal_space_instance();
+      std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
+    };
+#endif
+    if (Kokkos::Tools::profileLibraryLoaded()) {
+      Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
+          name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
+          fence);  // TODO: correct device ID
+    } else {
+      fence();
+    }
+#ifndef KOKKOS_ENABLE_ATOMICS_BYPASS
     Kokkos::memory_fence();
+#endif
   }
 
   /** \brief  Return the maximum amount of concurrency.  */
@@ -180,8 +188,6 @@ class Serial {
   void print_configuration(std::ostream& os, bool verbose = false) const;
 
   static void impl_initialize(InitializationSettings const&);
-
-  static bool impl_is_initialized();
 
   //! Free any resources being consumed by the device.
   static void impl_finalize();
@@ -248,44 +254,24 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
 }  // namespace Impl
 }  // namespace Kokkos
 
-namespace Kokkos::Experimental {
-
-template <class... Args>
-std::vector<Serial> partition_space(const Serial&, Args...) {
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-  std::vector<Serial> instances;
-  instances.reserve(sizeof...(Args));
-  std::generate_n(std::back_inserter(instances), sizeof...(Args),
-                  []() { return Serial{NewInstance{}}; });
-  return instances;
-}
-
+namespace Kokkos::Experimental::Impl {
+// Create new instance of Serial execution space for each partition, ignoring
+// weights
 template <class T>
-std::vector<Serial> partition_space(const Serial&,
-                                    std::vector<T> const& weights) {
-  static_assert(
-      std::is_arithmetic_v<T>,
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  // We only care about the number of instances to create and ignore weights
-  // otherwise.
+std::vector<Serial> impl_partition_space(const Serial&,
+                                         const std::vector<T>& weights) {
   std::vector<Serial> instances;
   instances.reserve(weights.size());
   std::generate_n(std::back_inserter(instances), weights.size(),
-                  []() { return Serial{NewInstance{}}; });
+                  []() { return Serial(NewInstance{}); });
+
   return instances;
 }
-
-}  // namespace Kokkos::Experimental
+}  // namespace Kokkos::Experimental::Impl
 
 #include <Serial/Kokkos_Serial_Parallel_Range.hpp>
 #include <Serial/Kokkos_Serial_Parallel_MDRange.hpp>
 #include <Serial/Kokkos_Serial_Parallel_Team.hpp>
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#include <Serial/Kokkos_Serial_Task.hpp>
-#endif
 #include <Serial/Kokkos_Serial_UniqueToken.hpp>
 
 #endif  // defined( KOKKOS_ENABLE_SERIAL )

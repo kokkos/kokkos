@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
@@ -61,6 +48,9 @@ class SYCL {
 
   using scratch_memory_space = ScratchMemorySpace<SYCL>;
 
+  SYCL(const SYCL&)            = default;
+  SYCL& operator=(const SYCL&) = default;
+  ~SYCL();
   SYCL();
   explicit SYCL(const sycl::queue&);
 
@@ -102,8 +92,6 @@ class SYCL {
 
   static void impl_initialize(InitializationSettings const&);
 
-  static bool impl_is_initialized();
-
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   static int concurrency();
 #else
@@ -143,44 +131,30 @@ struct DeviceTypeTraits<Kokkos::SYCL> {
 }  // namespace Experimental
 }  // namespace Tools
 
-namespace Experimental {
-template <class... Args>
-std::vector<SYCL> partition_space(const SYCL& sycl_space, Args...) {
-  static_assert(
-      (... && std::is_arithmetic_v<Args>),
-      "Kokkos Error: partitioning arguments must be integers or floats");
-
-  sycl::context context = sycl_space.sycl_queue().get_context();
-  sycl::device device   = sycl_space.sycl_queue().get_device();
-  std::vector<SYCL> instances;
-  instances.reserve(sizeof...(Args));
-  for (unsigned int i = 0; i < sizeof...(Args); ++i)
-    instances.emplace_back(
-        sycl::queue(context, device, sycl::property::queue::in_order()));
-  return instances;
-}
-
+namespace Experimental::Impl {
+// For each space in partition, create new queue on the same device as
+// base_instance, ignoring weights
 template <class T>
-std::vector<SYCL> partition_space(const SYCL& sycl_space,
-                                  std::vector<T> const& weights) {
-  static_assert(
-      std::is_arithmetic_v<T>,
-      "Kokkos Error: partitioning arguments must be integers or floats");
+std::vector<SYCL> impl_partition_space(const SYCL& base_instance,
+                                       const std::vector<T>& weights) {
+  sycl::context context = base_instance.sycl_queue().get_context();
+  sycl::device device   = base_instance.sycl_queue().get_device();
 
-  sycl::context context = sycl_space.sycl_queue().get_context();
-  sycl::device device   = sycl_space.sycl_queue().get_device();
   std::vector<SYCL> instances;
-
-  // We only care about the number of instances to create and ignore weights
-  // otherwise.
   instances.reserve(weights.size());
-  for (unsigned int i = 0; i < weights.size(); ++i)
-    instances.emplace_back(
-        sycl::queue(context, device, sycl::property::queue::in_order()));
+  std::generate_n(std::back_inserter(instances), weights.size(),
+                  [&context, &device]() {
+                    return SYCL(sycl::queue(context, device
+#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
+                                            ,
+                                            sycl::property::queue::in_order()
+#endif
+                                                ));
+                  });
+
   return instances;
 }
-
-}  // namespace Experimental
+}  // namespace Experimental::Impl
 
 namespace Impl {
 std::vector<sycl::device> get_sycl_devices();

@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_HALF_NUMERIC_TRAITS_HPP_
 #define KOKKOS_HALF_NUMERIC_TRAITS_HPP_
@@ -217,7 +204,7 @@ struct Kokkos::Experimental::Impl::radix_helper<Kokkos::Experimental::half_t> {
 
 /// \brief: This is the smallest possible exponent value
 ///
-/// Stdc defines this as the smallest possible exponent value for type binary16. 
+/// Stdc defines this as the smallest possible exponent value for type binary16.
 /// More precisely, it is the minimum negative integer such that the value min_exponent_helper
 /// raised to this power minus 1 can be represented as a normalized floating point number of type float.
 ///
@@ -225,10 +212,10 @@ struct Kokkos::Experimental::Impl::radix_helper<Kokkos::Experimental::half_t> {
 ///             [s  e  e  e  e  e  f f f f f f f f f f]
 ///             [0  0  0  0  0  1  0 0 0 0 0 0 0 0 0 0]
 /// bit index:   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-/// 
+///
 /// and in base10: 1 * 2**(2**0 - 15) * (1 + 0)
 ///                = 2**-14
-/// 
+///
 /// with a bias of one from (C11 5.2.4.2.2), gives -13;
 template <>
 struct Kokkos::Experimental::Impl::min_exponent_helper<
@@ -242,11 +229,11 @@ struct Kokkos::Experimental::Impl::min_exponent_helper<
 ///             [s  e  e  e  e  e  f f f f f f f f f f]
 ///             [0  1  1  1  1  0  0 0 0 0 0 0 0 0 0 0]
 /// bit index:   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
-/// 
+///
 /// and in base10: 1 * 2**(2**4 + 2**3 + 2**2 + 2**1 - 15) * (1 + 0)
 ///                = 2**(30 - 15)
 ///                = 2**15
-/// 
+///
 /// with a bias of one from (C11 5.2.4.2.2), gives 16;
 template <>
 struct Kokkos::Experimental::Impl::max_exponent_helper<

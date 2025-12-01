@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_CUDA_PARALLEL_RANGE_HPP
 #define KOKKOS_CUDA_PARALLEL_RANGE_HPP
@@ -41,24 +28,22 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   using Policy = Kokkos::RangePolicy<Traits...>;
 
  private:
-  using Member       = typename Policy::member_type;
-  using WorkTag      = typename Policy::work_tag;
-  using LaunchBounds = typename Policy::launch_bounds;
+  using Member          = typename Policy::member_type;
+  using WorkTag         = typename Policy::work_tag;
+  using LaunchBounds    = typename Policy::launch_bounds;
+  using StaticBatchSize = typename Policy::static_batch_size;
 
   const FunctorType m_functor;
   const Policy m_policy;
 
-  ParallelFor()                              = delete;
-  ParallelFor& operator=(const ParallelFor&) = delete;
-
   template <class TagType>
-  inline __device__ std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  inline __device__ std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member i) const {
     m_functor(i);
   }
 
   template <class TagType>
-  inline __device__ std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  inline __device__ std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member i) const {
     m_functor(TagType(), i);
   }
@@ -66,27 +51,46 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
  public:
   using functor_type = FunctorType;
 
+  ParallelFor()                              = delete;
+  ParallelFor(const ParallelFor&)            = default;
+  ParallelFor& operator=(const ParallelFor&) = delete;
+
   Policy const& get_policy() const { return m_policy; }
 
   inline __device__ void operator()() const {
-    const Member work_stride = blockDim.y * gridDim.x;
-    const Member work_end    = m_policy.end();
+    constexpr auto batch_size = Member(StaticBatchSize::batch_size);
+    const auto work_stride    = Member(blockDim.y) * gridDim.x;
+    const Member work_end     = m_policy.end();
 
-    for (Member iwork =
-             m_policy.begin() + threadIdx.y + blockDim.y * blockIdx.x;
+    for (Member iwork = m_policy.begin() + threadIdx.y +
+                        static_cast<Member>(blockDim.y) * blockIdx.x;
          iwork < work_end;
-         iwork = iwork < work_end - work_stride ? iwork + work_stride
-                                                : work_end) {
-      this->template exec_range<WorkTag>(iwork);
+         iwork =
+             iwork < static_cast<Member>(work_end - work_stride * batch_size)
+                 ? iwork + work_stride * batch_size
+                 : work_end) {
+#if defined(KOKKOS_COMPILER_NVCC)
+#pragma unroll
+#endif
+      for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
+                         i < work_end - iwork;
+           i = (i < static_cast<Member>(work_end - work_stride - iwork))
+                   ? i + work_stride
+                   : work_end - iwork) {
+        this->template exec_range<WorkTag>(iwork + i);
+      }
     }
   }
 
   inline void execute() const {
-    const typename Policy::index_type nwork = m_policy.end() - m_policy.begin();
-
+    constexpr typename Policy::index_type batch_size =
+        StaticBatchSize::batch_size;
+    const typename Policy::index_type nwork =
+        (m_policy.end() - m_policy.begin()) / batch_size +
+        ((m_policy.end() - m_policy.begin()) % batch_size == 0 ? 0 : 1);
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
-            m_policy.space().cuda_device());
+            m_policy.space().impl_internal_space_instance());
     const int block_size =
         Kokkos::Impl::cuda_get_opt_block_size<FunctorType, LaunchBounds>(
             m_policy.space().impl_internal_space_instance(), attr, m_functor, 1,
@@ -175,13 +179,13 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
   // Make the exec_range calls call to Reduce::DeviceIterateTile
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update) const {
     m_functor_reducer.get_functor()(i, update);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update) const {
     m_functor_reducer.get_functor()(TagType(), i, update);
   }
@@ -268,7 +272,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::Cuda>;
     cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
-        get_cuda_func_attributes(m_policy.space().cuda_device());
+        get_cuda_func_attributes(
+            m_policy.space().impl_internal_space_instance());
     while (
         (n && (maxShmemPerBlock < shmem_size)) ||
         (n >
@@ -296,11 +301,6 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       KOKKOS_ASSERT(block_size > 0);
 
-      // TODO: down casting these uses more space than required?
-      m_scratch_space = (word_size_type*)cuda_internal_scratch_space(
-          m_policy.space(), m_functor_reducer.get_reducer().value_size() *
-                                block_size /* block_size == max block_count */);
-
       // Intentionally do not downcast to word_size_type since we use Cuda
       // atomics in Kokkos_Cuda_ReduceScan.hpp
       m_scratch_flags = cuda_internal_scratch_flags(m_policy.space(),
@@ -311,10 +311,15 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 
       // REQUIRED ( 1 , N , 1 )
       dim3 block(1, block_size, 1);
-      // Required grid.x <= block.y
-      dim3 grid(std::min(index_type(block.y),
-                         index_type((nwork + block.y - 1) / block.y)),
-                1, 1);
+      auto cc = m_policy.space().concurrency() / block_size;
+      dim3 grid(
+          std::min(index_type(cc), index_type((nwork + block.y - 1) / block.y)),
+          1, 1);
+
+      // TODO: down casting these uses more space than required?
+      m_scratch_space = (word_size_type*)cuda_internal_scratch_space(
+          m_policy.space(),
+          m_functor_reducer.get_reducer().value_size() * grid.x);
 
       // TODO @graph We need to effectively insert this in to the graph
       const int shmem =
@@ -438,13 +443,13 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 #endif
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(i, update, final_result);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(TagType(), i, update, final_result);
   }
@@ -757,13 +762,13 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 #endif
 
   template <class TagType>
-  __device__ inline std::enable_if_t<std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(i, update, final_result);
   }
 
   template <class TagType>
-  __device__ inline std::enable_if_t<!std::is_void<TagType>::value> exec_range(
+  __device__ inline std::enable_if_t<!std::is_void_v<TagType>> exec_range(
       const Member& i, reference_type update, const bool final_result) const {
     m_functor_reducer.get_functor()(TagType(), i, update, final_result);
   }
@@ -1015,7 +1020,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         if (!m_result_ptr_device_accessible)
           DeepCopy<HostSpace, CudaSpace, Cuda>(
               m_policy.space(), m_result_ptr,
-              m_scratch_space + (grid_x - 1) * size / sizeof(word_size_type),
+              m_scratch_space + (static_cast<ptrdiff_t>(grid_x) - 1) * size /
+                                    sizeof(word_size_type),
               size);
       }
     }

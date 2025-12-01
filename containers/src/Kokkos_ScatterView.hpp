@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 /// \file Kokkos_ScatterView.hpp
 /// \brief Declaration and definition of Kokkos::ScatterView.
@@ -27,8 +14,16 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_SCATTERVIEW
 #endif
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.core_impl;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <utility>
+#include <cstddef>
+#include <string>
 
 namespace Kokkos {
 namespace Experimental {
@@ -1566,7 +1561,8 @@ namespace Experimental {
 template <typename DT1, typename DT2, typename LY, typename ES, typename OP,
           typename CT, typename DP, typename... VP>
 void contribute(
-    typename ES::execution_space const& exec_space, View<DT1, VP...>& dest,
+    typename ES::execution_space const& exec_space,
+    View<DT1, VP...> const& dest,
     Kokkos::Experimental::ScatterView<DT2, LY, ES, OP, CT, DP> const& src) {
   src.contribute_into(exec_space, dest);
 }
@@ -1574,7 +1570,7 @@ void contribute(
 template <typename DT1, typename DT2, typename LY, typename ES, typename OP,
           typename CT, typename DP, typename... VP>
 void contribute(
-    View<DT1, VP...>& dest,
+    View<DT1, VP...> const& dest,
     Kokkos::Experimental::ScatterView<DT2, LY, ES, OP, CT, DP> const& src) {
   using execution_space = typename ES::execution_space;
   contribute(execution_space{}, dest, src);

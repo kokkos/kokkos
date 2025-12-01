@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
 #define KOKKOS_EXPERIMENTAL_VIEW_MAPPING_HPP
@@ -44,6 +31,7 @@
 namespace Kokkos {
 namespace Impl {
 
+// NOLINTBEGIN(bugprone-non-zero-enum-to-bool-conversion)
 template <class T>
 struct is_integral_extent_type {
   enum : bool { value = std::is_same_v<T, Kokkos::ALL_t> ? 1 : 0 };
@@ -163,6 +151,7 @@ struct SubviewLegalArgsCompileTime<Kokkos::LayoutStride, Kokkos::LayoutStride,
                                    SubViewArgs...> {
   enum : bool { value = true };
 };
+// NOLINTEND(bugprone-non-zero-enum-to-bool-conversion)
 
 template <unsigned DomainRank, unsigned RangeRank>
 struct SubviewExtents {
@@ -2431,8 +2420,7 @@ struct ViewDataHandle<
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
   // NOLINTNEXTLINE(modernize-use-using)
-  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(KOKKOS_MEMORY_ALIGNMENT)
-      handle_type;
+  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) handle_type;
   using return_type = typename Traits::value_type&;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
@@ -2469,8 +2457,7 @@ struct ViewDataHandle<
   // typedef work-around for intel compilers error #3186: expected typedef
   // declaration
   // NOLINTNEXTLINE(modernize-use-using)
-  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(KOKKOS_MEMORY_ALIGNMENT)
-      handle_type;
+  typedef value_type* KOKKOS_IMPL_ALIGN_PTR(Impl::MEMORY_ALIGNMENT) handle_type;
   using return_type = typename Traits::value_type& KOKKOS_RESTRICT;
   using track_type  = Kokkos::Impl::SharedAllocationTracker;
 
@@ -2531,7 +2518,7 @@ class ViewMapping<
 
  public:
   using printable_label_typedef = void;
-  enum { is_managed = Traits::is_managed };
+  enum { is_managed = !Traits::memory_traits::is_unmanaged };
 
   //----------------------------------------
   // Domain dimensions
@@ -3313,25 +3300,32 @@ class ViewMapping<
   KOKKOS_INLINE_FUNCTION static void assign(
       ViewMapping<DstTraits, void>& dst,
       ViewMapping<SrcTraits, void> const& src, Args... args) {
-    static_assert(ViewMapping<DstTraits, traits_type, void>::is_assignable,
-                  "Subview destination type must be compatible with subview "
-                  "derived type");
+    // Create ViewMapping based on traits_type, which was determined by this
+    // class. We cannot assume that aligned src memory implies the subview will
+    // be aligned, so remove aligned memory trait before mapping.
+    using traits_type_wo_align =
+        typename apply<typename Impl::RemoveAlignedMemoryTrait<
+            typename traits_type::memory_traits>::type::memory_traits>::
+            traits_type;
+    using base_dst_type        = ViewMapping<traits_type_wo_align, void>;
+    using base_dst_offset_type = typename base_dst_type::offset_type;
 
-    using DstType = ViewMapping<DstTraits, void>;
-
-    using dst_offset_type = typename DstType::offset_type;
-
+    base_dst_type base_dst;
     const SubviewExtents<SrcTraits::rank, rank> extents(src.m_impl_offset.m_dim,
                                                         args...);
-
-    dst.m_impl_offset = dst_offset_type(src.m_impl_offset, extents);
-
-    dst.m_impl_handle = ViewDataHandle<DstTraits>::assign(
+    base_dst.m_impl_offset = base_dst_offset_type(src.m_impl_offset, extents);
+    base_dst.m_impl_handle = ViewDataHandle<traits_type_wo_align>::assign(
         src.m_impl_handle,
         src.m_impl_offset(extents.domain_offset(0), extents.domain_offset(1),
                           extents.domain_offset(2), extents.domain_offset(3),
                           extents.domain_offset(4), extents.domain_offset(5),
                           extents.domain_offset(6), extents.domain_offset(7)));
+
+    // Map from base dst to dst requested.
+    Kokkos::Impl::SharedAllocationTracker dummy_track;
+    ViewMapping<DstTraits, traits_type_wo_align,
+                typename DstTraits::specialize>::assign(dst, base_dst,
+                                                        dummy_track);
   }
 };
 
@@ -3353,6 +3347,9 @@ KOKKOS_FUNCTION bool within_range(Map const& map,
   return (((std::size_t)indices < map.extent(Enumerate)) && ...);
 }
 
+// Disabled when using MDSpan because the MDSpan implementation has its own
+// version
+#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
 template <class... Indices>
 KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
     char* dest, Indices... indices) {
@@ -3370,6 +3367,7 @@ KOKKOS_FUNCTION constexpr char* append_formatted_multidimensional_index(
   d[strlen(d) - 1] = ']';  // overwrite trailing comma
   return dest;
 }
+#endif
 
 template <class Map, class... Indices, std::size_t... Enumerate>
 KOKKOS_FUNCTION void print_extents(char* dest, Map const& map,

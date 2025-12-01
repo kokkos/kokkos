@@ -2,7 +2,7 @@ name: Nightly CEA builds
 
 on:
   schedule:
-    - cron: "0 2 * * 1-5" # every weekday at 2am UTC
+    - cron: "0 0 * * 1-5" # every weekday at midnight UTC
 
 permissions: read-all
 
@@ -17,19 +17,16 @@ jobs:
       matrix:
         build_type:
           - Release
+        cxx_standard:
+          - 20
         backend:
-          - name: OpenMP-x86_64-GCC/10.3-Shared
+          - name: OpenMP-x86_64-GCC/11.2-Shared
             configure: -DKokkos_ENABLE_OPENMP=ON -DBUILD_SHARED_LIBS=ON
             test: -e cpu OMP_PROC_BIND=spread OMP_PLACES=threads
-            modules: gcc/10.3.0/gcc-4.8.5 cmake/3.28.3/gcc-11.2.0
+            modules: gcc/11.2.0/gcc-4.8.5 cmake/3.28.3/gcc-11.2.0
 
           - name: Cuda-A100-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
             configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
-            test: -e gpu -g a100
-            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
-
-          - name: Cuda-A100-UVM-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
-            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_UVM=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
             test: -e gpu -g a100
             modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
 
@@ -38,15 +35,10 @@ jobs:
             test: -e gpu -g v100
             modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
 
-          - name: Cuda-V100-UVM-GCC/11.2.0-Cuda/12.2.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
-            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_UVM=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
-            test: -e gpu -g v100
-            modules: gcc/11.2.0/gcc-4.8.5 cuda/12.2.1/gcc-11.2.0 cmake/3.28.3/gcc-11.2.0
-
     runs-on: [self-hosted, cuda]
 
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Initialize the build tree
         # note: BUILDNAME sets the name of the build on the Dashboard
@@ -58,14 +50,15 @@ jobs:
             -e local \
             cmake \
               -B build \
-              -DBUILDNAME=${{ matrix.backend.name }}-${{ matrix.build_type }} \
+              -DBUILDNAME=${{ matrix.backend.name }}-C++${{ matrix.cxx_standard }}-${{ matrix.build_type }} \
               -DSITE=cea-ruche \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
-              -DCMAKE_CXX_STANDARD=17 \
+              -DCMAKE_CXX_STANDARD=${{ matrix.cxx_standard }} \
               -DCMAKE_COMPILE_WARNING_AS_ERROR=ON \
               -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
               -DKokkos_ENABLE_TESTS=ON \
               -DKokkos_ENABLE_EXAMPLES=ON \
+              -DKokkos_ENABLE_BENCHMARKS=ON \
               ${{ matrix.backend.configure }}
 
       - name: Start, update and configure

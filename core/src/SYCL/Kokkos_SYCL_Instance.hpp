@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_SYCL_INSTANCE_HPP_
 #define KOKKOS_SYCL_INSTANCE_HPP_
@@ -32,7 +19,7 @@ namespace Impl {
 
 class SYCLInternal {
  public:
-  using size_type = int;
+  using size_type = unsigned int;
 
   SYCLInternal() = default;
   ~SYCLInternal();
@@ -107,7 +94,7 @@ class SYCLInternal {
     USMObjectMem& operator=(USMObjectMem&&)      = delete;
     USMObjectMem& operator=(USMObjectMem const&) = delete;
 
-    ~USMObjectMem() { reset(); };
+    ~USMObjectMem() { reset(); }
 
     void* data() noexcept { return m_data; }
     const void* data() const noexcept { return m_data; }
@@ -135,11 +122,12 @@ class SYCLInternal {
       fence();
       reserve(sizeof(T));
       if constexpr (sycl::usm::alloc::device == Kind) {
-        std::memcpy(static_cast<void*>(m_staging.get()), std::addressof(t),
-                    sizeof(T));
+        std::memcpy(static_cast<void*>(m_staging.get()),
+                    static_cast<const void*>(std::addressof(t)), sizeof(T));
         m_copy_event = m_q->memcpy(m_data, m_staging.get(), sizeof(T));
       } else
-        std::memcpy(m_data, std::addressof(t), sizeof(T));
+        std::memcpy(static_cast<void*>(m_data),
+                    static_cast<const void*>(std::addressof(t)), sizeof(T));
       return *reinterpret_cast<T*>(m_data);
     }
 
@@ -151,9 +139,10 @@ class SYCLInternal {
     }
 
     void register_event(sycl::event event) {
-      assert(m_last_event
-                 .get_info<sycl::info::event::command_execution_status>() ==
-             sycl::info::event_command_status::complete);
+      KOKKOS_ASSERT(
+          m_last_event
+              .get_info<sycl::info::event::command_execution_status>() ==
+          sycl::info::event_command_status::complete);
       m_last_event = event;
       m_mutex.unlock();
     }
@@ -248,7 +237,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
   // We need a union here so that we can avoid calling a constructor for m_f
   // and can controll all the special member functions.
   union TrivialWrapper {
-    TrivialWrapper(){};
+    TrivialWrapper() {}
 
     TrivialWrapper(const Functor& f) {
       std::memcpy(static_cast<void*>(&m_f), static_cast<const void*>(&f),
@@ -264,7 +253,7 @@ class SYCLFunctionWrapper<Functor, Storage, false> {
                   static_cast<const void*>(&other.m_f), sizeof(m_f));
       return *this;
     }
-    ~TrivialWrapper(){};
+    ~TrivialWrapper() {}
 
     Functor m_f;
   } m_functor;
@@ -329,29 +318,5 @@ struct sycl::is_device_copyable<
     Kokkos::Impl::SYCLFunctionWrapper<Functor, Storage, false>>
     : std::true_type {};
 
-#if (defined(__INTEL_LLVM_COMPILER) && __INTEL_LLVM_COMPILER < 20240000) || \
-    (defined(__LIBSYCL_MAJOR_VERSION) && __LIBSYCL_MAJOR_VERSION < 7)
-template <typename>
-struct NonTriviallyCopyableAndDeviceCopyable {
-  NonTriviallyCopyableAndDeviceCopyable(
-      const NonTriviallyCopyableAndDeviceCopyable&) {}
-};
-
-template <typename T>
-struct sycl::is_device_copyable<NonTriviallyCopyableAndDeviceCopyable<T>>
-    : std::true_type {};
-
-static_assert(
-    !std::is_trivially_copyable_v<
-        NonTriviallyCopyableAndDeviceCopyable<void>> &&
-    sycl::is_device_copyable_v<NonTriviallyCopyableAndDeviceCopyable<void>>);
-
-template <typename Functor, typename Storage>
-struct sycl::is_device_copyable<
-    const Kokkos::Impl::SYCLFunctionWrapper<Functor, Storage, false>,
-    std::enable_if_t<!sycl::is_device_copyable_v<
-        const NonTriviallyCopyableAndDeviceCopyable<Functor>>>>
-    : std::true_type {};
-#endif
 #endif
 #endif

@@ -1,23 +1,11 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_FUNCTORANALYSIS_HPP
 #define KOKKOS_FUNCTORANALYSIS_HPP
 
 #include <cstddef>
+#include <new>
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Traits.hpp>
 
@@ -852,44 +840,7 @@ struct FunctorAnalysis {
     enum : bool { value = true };
   };
 
-  //----------------------------------------
-
-  template <class F = Functor, typename = void>
-  struct DeduceTeamShmem {
-    enum : bool { value = false };
-
-    static size_t team_shmem_size(F const&, int) { return 0; }
-  };
-
-  template <class F>
-  struct DeduceTeamShmem<F, std::enable_if_t<0 < sizeof(&F::team_shmem_size)>> {
-    enum : bool { value = true };
-
-    static size_t team_shmem_size(F const* const f, int team_size) {
-      return f->team_shmem_size(team_size);
-    }
-  };
-
-  template <class F>
-  struct DeduceTeamShmem<F,
-                         std::enable_if_t<(0 < sizeof(&F::shmem_size)) &&
-                                          !(0 < sizeof(&F::team_shmem_size))>> {
-    enum : bool { value = true };
-
-    static size_t team_shmem_size(F const* const f, int team_size) {
-      return f->shmem_size(team_size);
-    }
-  };
-
-  //----------------------------------------
-
  public:
-  inline static size_t team_shmem_size(Functor const& f) {
-    return DeduceTeamShmem<>::team_shmem_size(f);
-  }
-
-  //----------------------------------------
-
   enum { has_join_member_function = DeduceJoin<>::value };
   enum { has_init_member_function = DeduceInit<>::value };
   enum { has_final_member_function = DeduceFinal<>::value };

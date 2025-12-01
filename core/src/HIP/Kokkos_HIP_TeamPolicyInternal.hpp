@@ -1,22 +1,10 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_HIP_TEAM_POLICY_INTERNAL_HPP
 #define KOKKOS_HIP_TEAM_POLICY_INTERNAL_HPP
 
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_MinMax.hpp>
 
 namespace Kokkos {
@@ -86,8 +74,18 @@ class TeamPolicyInternal<HIP, Properties...>
   }
 
   template <typename FunctorType, typename ReducerType>
-  inline int team_size_max(const FunctorType& f, const ReducerType&,
-                           const ParallelReduceTag&) const {
+  inline int team_size_max(const FunctorType& f, const ReducerType& reducer,
+                           const ParallelReduceTag& tag) const {
+    using functor_analysis_type =
+        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                              TeamPolicyInternal, ReducerType, void>;
+    return team_size_max_internal(
+        f, typename functor_analysis_type::Reducer{reducer}, tag);
+  }
+
+  template <typename FunctorType, typename ReducerType>
+  inline int team_size_max_internal(const FunctorType& f, const ReducerType&,
+                                    const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::HIP>;
@@ -120,8 +118,18 @@ class TeamPolicyInternal<HIP, Properties...>
   }
 
   template <typename FunctorType, typename ReducerType>
-  int team_size_recommended(FunctorType const& f, ReducerType const&,
-                            ParallelReduceTag const&) const {
+  int team_size_recommended(const FunctorType& f, const ReducerType& reducer,
+                            const ParallelReduceTag& tag) const {
+    using functor_analysis_type =
+        Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE,
+                              TeamPolicyInternal, ReducerType, void>;
+    return team_size_recommended_internal(
+        f, typename functor_analysis_type::Reducer{reducer}, tag);
+  }
+
+  template <typename FunctorType, typename ReducerType>
+  int team_size_recommended_internal(const FunctorType& f, const ReducerType&,
+                                     const ParallelReduceTag&) const {
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              TeamPolicy<Properties...>, Kokkos::HIP>;
@@ -133,24 +141,11 @@ class TeamPolicyInternal<HIP, Properties...>
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
   static int vector_length_max() { return HIPTraits::WarpSize; }
 
-  static int verify_requested_vector_length(int requested_vector_length) {
-    int test_vector_length =
-        std::min(requested_vector_length, vector_length_max());
-
-    // Allow only power-of-two vector_length
-    if (!(is_integral_power_of_two(test_vector_length))) {
-      int test_pow2           = 1;
-      constexpr int warp_size = HIPTraits::WarpSize;
-      while (test_pow2 < warp_size) {
-        test_pow2 <<= 1;
-        if (test_pow2 > test_vector_length) {
-          break;
-        }
-      }
-      test_vector_length = test_pow2 >> 1;
-    }
-
-    return test_vector_length;
+  static int impl_determine_vector_length(int requested) {
+    // restrict requested between 1 and max
+    unsigned vector_length = std::clamp(requested, 1, vector_length_max());
+    // return the largest integral power of 2 not greater than requested
+    return Kokkos::bit_floor(vector_length);
   }
 
   inline static int scratch_size_max(int level) {
@@ -197,7 +192,7 @@ class TeamPolicyInternal<HIP, Properties...>
   typename traits::execution_space space() const { return m_space; }
 
   TeamPolicyInternal()
-      : m_space(typename traits::execution_space()),
+      : m_space(),
         m_league_size(0),
         m_team_size(-1),
         m_vector_length(0),
@@ -208,15 +203,12 @@ class TeamPolicyInternal<HIP, Properties...>
         m_tune_vector_length(false) {}
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal(const execution_space space_, int league_size_,
+  TeamPolicyInternal(execution_space space, int league_size_,
                      int team_size_request, int vector_length_request = 1)
-      : m_space(space_),
+      : m_space(std::move(space)),
         m_league_size(league_size_),
         m_team_size(team_size_request),
-        m_vector_length(
-            (vector_length_request > 0)
-                ? verify_requested_vector_length(vector_length_request)
-                : (verify_requested_vector_length(1))),
+        m_vector_length(impl_determine_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(HIPTraits::WarpSize),
@@ -238,27 +230,29 @@ class TeamPolicyInternal<HIP, Properties...>
   }
 
   /** \brief  Specify league size, request team size */
-  TeamPolicyInternal(const execution_space space_, int league_size_,
+  TeamPolicyInternal(execution_space space, int league_size_,
                      const Kokkos::AUTO_t& /* team_size_request */,
                      int vector_length_request = 1)
-      : TeamPolicyInternal(space_, league_size_, -1, vector_length_request) {}
+      : TeamPolicyInternal(std::move(space), league_size_, -1,
+                           vector_length_request) {}
   // FLAG
   /** \brief  Specify league size and team size, request vector length*/
-  TeamPolicyInternal(const execution_space space_, int league_size_,
+  TeamPolicyInternal(execution_space space, int league_size_,
                      int team_size_request,
                      const Kokkos::AUTO_t& /* vector_length_request */
                      )
-      : TeamPolicyInternal(space_, league_size_, team_size_request, -1)
+      : TeamPolicyInternal(std::move(space), league_size_, team_size_request,
+                           -1)
 
   {}
 
   /** \brief  Specify league size, request team size and vector length*/
-  TeamPolicyInternal(const execution_space space_, int league_size_,
+  TeamPolicyInternal(execution_space space, int league_size_,
                      const Kokkos::AUTO_t& /* team_size_request */,
                      const Kokkos::AUTO_t& /* vector_length_request */
 
                      )
-      : TeamPolicyInternal(space_, league_size_, -1, -1)
+      : TeamPolicyInternal(std::move(space), league_size_, -1, -1)
 
   {}
 
@@ -291,6 +285,12 @@ class TeamPolicyInternal<HIP, Properties...>
                      )
       : TeamPolicyInternal(typename traits::execution_space(), league_size_, -1,
                            -1) {}
+
+  TeamPolicyInternal(const PolicyUpdate, const TeamPolicyInternal& other,
+                     typename traits::execution_space space)
+      : TeamPolicyInternal(other) {
+    this->m_space = std::move(space);
+  }
 
   int chunk_size() const { return m_chunk_size; }
 

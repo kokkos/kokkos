@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "../mdspan"
+#include "../../mdspan/mdspan.hpp"
 #include <cassert>
 #include <vector>
 
@@ -59,7 +59,7 @@ template <
 >
 class mdarray {
 private:
-  static_assert(::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::__is_extents_v<Extents>,
+  static_assert(::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::impl_is_extents_v<Extents>,
                 MDSPAN_IMPL_PROPOSED_NAMESPACE_STRING "::mdspan's Extents template parameter must be a specialization of " MDSPAN_IMPL_STANDARD_NAMESPACE_STRING "::extents.");
 
 public:
@@ -104,9 +104,9 @@ public:
     class... SizeTypes,
     /* requires */ (
       (::MDSPAN_IMPL_STANDARD_NAMESPACE::detail::are_valid_indices<index_type, SizeTypes...>()) &&
-        _MDSPAN_TRAIT( std::is_constructible, extents_type, SizeTypes...) &&
-      _MDSPAN_TRAIT( std::is_constructible, mapping_type, extents_type) &&
-      (_MDSPAN_TRAIT( std::is_constructible, container_type, size_t) ||
+        MDSPAN_IMPL_TRAIT( std::is_constructible, extents_type, SizeTypes...) &&
+      MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, extents_type) &&
+      (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, size_t) ||
        container_is_array<container_type>::value) &&
       (extents_type::rank()>0 || extents_type::rank_dynamic()==0)
     )
@@ -119,16 +119,16 @@ public:
   MDSPAN_FUNCTION_REQUIRES(
     (MDSPAN_INLINE_FUNCTION constexpr),
     mdarray, (const extents_type& exts), ,
-    /* requires */ ((_MDSPAN_TRAIT( std::is_constructible, container_type, size_t) ||
+    /* requires */ ((MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, size_t) ||
                      container_is_array<container_type>::value) &&
-                    _MDSPAN_TRAIT( std::is_constructible, mapping_type, extents_type))
+                    MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, extents_type))
   ) : map_(exts), ctr_(container_is_array<container_type>::construct(map_))
   { }
 
   MDSPAN_FUNCTION_REQUIRES(
     (MDSPAN_INLINE_FUNCTION constexpr),
     mdarray, (const mapping_type& m), ,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, container_type, size_t) ||
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, size_t) ||
                     container_is_array<container_type>::value)
   ) : map_(m), ctr_(container_is_array<container_type>::construct(map_))
   { }
@@ -136,7 +136,7 @@ public:
   MDSPAN_FUNCTION_REQUIRES(
     (MDSPAN_INLINE_FUNCTION constexpr),
     mdarray, (const extents_type& exts, const container_type& ctr), ,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, mapping_type, extents_type))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, extents_type))
   ) : map_(exts), ctr_(ctr)
   { assert(ctr.size() >= static_cast<size_t>(map_.required_span_size())); }
 
@@ -147,7 +147,7 @@ public:
   MDSPAN_FUNCTION_REQUIRES(
     (MDSPAN_INLINE_FUNCTION constexpr),
     mdarray, (const extents_type& exts, container_type&& ctr), ,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, mapping_type, extents_type))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, extents_type))
   ) : map_(exts), ctr_(std::move(ctr))
   { assert(ctr_.size() >= static_cast<size_t>(map_.required_span_size())); }
 
@@ -159,8 +159,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class OtherElementType, class OtherExtents, class OtherLayoutPolicy, class OtherContainer,
     /* requires */ (
-      _MDSPAN_TRAIT( std::is_constructible, mapping_type, typename OtherLayoutPolicy::template mapping<OtherExtents>) &&
-      _MDSPAN_TRAIT( std::is_constructible, container_type, OtherContainer)
+      MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, typename OtherLayoutPolicy::template mapping<OtherExtents>) &&
+      MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, OtherContainer)
     )
   )
   MDSPAN_INLINE_FUNCTION
@@ -173,8 +173,8 @@ public:
   // Constructors for container types constructible from a size and allocator
   MDSPAN_TEMPLATE_REQUIRES(
     class Alloc,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, container_type, size_t, Alloc) &&
-                    _MDSPAN_TRAIT( std::is_constructible, mapping_type, extents_type))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, size_t, Alloc) &&
+                    MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, extents_type))
   )
   MDSPAN_INLINE_FUNCTION
   constexpr mdarray(const extents_type& exts, const Alloc& a)
@@ -183,7 +183,7 @@ public:
 
   MDSPAN_TEMPLATE_REQUIRES(
     class Alloc,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, container_type, size_t, Alloc))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, size_t, Alloc))
   )
   MDSPAN_INLINE_FUNCTION
   constexpr mdarray(const mapping_type& map, const Alloc& a)
@@ -193,8 +193,8 @@ public:
   // Constructors for container types constructible from a container and allocator
   MDSPAN_TEMPLATE_REQUIRES(
     class Alloc,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, container_type, container_type, Alloc) &&
-                    _MDSPAN_TRAIT( std::is_constructible, mapping_type, extents_type))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, container_type, Alloc) &&
+                    MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, extents_type))
   )
   MDSPAN_INLINE_FUNCTION
   constexpr mdarray(const extents_type& exts, const container_type& ctr, const Alloc& a)
@@ -203,7 +203,7 @@ public:
 
   MDSPAN_TEMPLATE_REQUIRES(
     class Alloc,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, container_type, size_t, Alloc))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, size_t, Alloc))
   )
   MDSPAN_INLINE_FUNCTION
   constexpr mdarray(const mapping_type& map, const container_type& ctr, const Alloc& a)
@@ -212,8 +212,8 @@ public:
 
   MDSPAN_TEMPLATE_REQUIRES(
     class Alloc,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, container_type, container_type, Alloc) &&
-                    _MDSPAN_TRAIT( std::is_constructible, mapping_type, extents_type))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, container_type, Alloc) &&
+                    MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, extents_type))
   )
   MDSPAN_INLINE_FUNCTION
   constexpr mdarray(const extents_type& exts, container_type&& ctr, const Alloc& a)
@@ -222,7 +222,7 @@ public:
 
   MDSPAN_TEMPLATE_REQUIRES(
     class Alloc,
-    /* requires */ (_MDSPAN_TRAIT( std::is_constructible, container_type, size_t, Alloc))
+    /* requires */ (MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, size_t, Alloc))
   )
   MDSPAN_INLINE_FUNCTION
   constexpr mdarray(const mapping_type& map, container_type&& ctr, const Alloc& a)
@@ -232,8 +232,8 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class OtherElementType, class OtherExtents, class OtherLayoutPolicy, class OtherContainer, class Alloc,
     /* requires */ (
-      _MDSPAN_TRAIT( std::is_constructible, mapping_type, typename OtherLayoutPolicy::template mapping<OtherExtents>) &&
-      _MDSPAN_TRAIT( std::is_constructible, container_type, OtherContainer, Alloc)
+      MDSPAN_IMPL_TRAIT( std::is_constructible, mapping_type, typename OtherLayoutPolicy::template mapping<OtherExtents>) &&
+      MDSPAN_IMPL_TRAIT( std::is_constructible, container_type, OtherContainer, Alloc)
     )
   )
   MDSPAN_INLINE_FUNCTION
@@ -255,7 +255,7 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class... SizeTypes,
     /* requires */ (
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT( std::is_convertible, SizeTypes, index_type) /* && ... */) &&
+      MDSPAN_IMPL_FOLD_AND(MDSPAN_IMPL_TRAIT( std::is_convertible, SizeTypes, index_type) /* && ... */) &&
       extents_type::rank() == sizeof...(SizeTypes)
     )
   )
@@ -268,7 +268,7 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class... SizeTypes,
     /* requires */ (
-      _MDSPAN_FOLD_AND(_MDSPAN_TRAIT( std::is_convertible, SizeTypes, index_type) /* && ... */) &&
+      MDSPAN_IMPL_FOLD_AND(MDSPAN_IMPL_TRAIT( std::is_convertible, SizeTypes, index_type) /* && ... */) &&
       extents_type::rank() == sizeof...(SizeTypes)
     )
   )
@@ -283,27 +283,27 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType, size_t N,
     /* requires */ (
-      _MDSPAN_TRAIT( std::is_convertible, SizeType, index_type) &&
+      MDSPAN_IMPL_TRAIT( std::is_convertible, SizeType, index_type) &&
       N == extents_type::rank()
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
   constexpr const_reference operator[](const std::array<SizeType, N>& indices) const noexcept
   {
-    return __impl::template __callop<reference>(*this, indices);
+    return impl::template callop<reference>(*this, indices);
   }
 
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType, size_t N,
     /* requires */ (
-      _MDSPAN_TRAIT( std::is_convertible, SizeType, index_type) &&
+      MDSPAN_IMPL_TRAIT( std::is_convertible, SizeType, index_type) &&
       N == extents_type::rank()
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
   constexpr reference operator[](const std::array<SizeType, N>& indices) noexcept
   {
-    return __impl::template __callop<reference>(*this, indices);
+    return impl::template callop<reference>(*this, indices);
   }
 #endif
 
@@ -338,35 +338,35 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType, size_t N,
     /* requires */ (
-      _MDSPAN_TRAIT( std::is_convertible, SizeType, index_type) &&
+      MDSPAN_IMPL_TRAIT( std::is_convertible, SizeType, index_type) &&
       N == extents_type::rank()
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
   constexpr const_reference operator()(const std::array<SizeType, N>& indices) const noexcept
   {
-    return __impl::template __callop<reference>(*this, indices);
+    return impl::template callop<reference>(*this, indices);
   }
 
   MDSPAN_TEMPLATE_REQUIRES(
     class SizeType, size_t N,
     /* requires */ (
-      _MDSPAN_TRAIT( std::is_convertible, SizeType, index_type) &&
+      MDSPAN_IMPL_TRAIT( std::is_convertible, SizeType, index_type) &&
       N == extents_type::rank()
     )
   )
   MDSPAN_FORCE_INLINE_FUNCTION
   constexpr reference operator()(const std::array<SizeType, N>& indices) noexcept
   {
-    return __impl::template __callop<reference>(*this, indices);
+    return impl::template callop<reference>(*this, indices);
   }
 #endif
   #endif
 
-  MDSPAN_INLINE_FUNCTION constexpr pointer data() noexcept { return ctr_.data(); };
-  MDSPAN_INLINE_FUNCTION constexpr const_pointer data() const noexcept { return ctr_.data(); };
-  MDSPAN_INLINE_FUNCTION constexpr container_type& container() noexcept { return ctr_; };
-  MDSPAN_INLINE_FUNCTION constexpr const container_type& container() const noexcept { return ctr_; };
+  MDSPAN_INLINE_FUNCTION constexpr pointer data() noexcept { return ctr_.data(); }
+  MDSPAN_INLINE_FUNCTION constexpr const_pointer data() const noexcept { return ctr_.data(); }
+  MDSPAN_INLINE_FUNCTION constexpr container_type& container() noexcept { return ctr_; }
+  MDSPAN_INLINE_FUNCTION constexpr const container_type& container() const noexcept { return ctr_; }
 
   //--------------------------------------------------------------------------------
   // [mdspan.basic.domobs], mdspan observers of the domain multidimensional index space
@@ -375,33 +375,33 @@ public:
   MDSPAN_INLINE_FUNCTION static constexpr rank_type rank_dynamic() noexcept { return extents_type::rank_dynamic(); }
   MDSPAN_INLINE_FUNCTION static constexpr size_t static_extent(size_t r) noexcept { return extents_type::static_extent(r); }
 
-  MDSPAN_INLINE_FUNCTION constexpr const extents_type& extents() const noexcept { return map_.extents(); };
-  MDSPAN_INLINE_FUNCTION constexpr index_type extent(size_t r) const noexcept { return map_.extents().extent(r); };
+  MDSPAN_INLINE_FUNCTION constexpr const extents_type& extents() const noexcept { return map_.extents(); }
+  MDSPAN_INLINE_FUNCTION constexpr index_type extent(size_t r) const noexcept { return map_.extents().extent(r); }
   MDSPAN_INLINE_FUNCTION constexpr index_type size() const noexcept {
-//    return __impl::__size(*this);
+//    return impl::size(*this);
     return ctr_.size();
-  };
+  }
 
 
   //--------------------------------------------------------------------------------
   // [mdspan.basic.obs], mdspan observers of the mapping
 
-  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_unique() noexcept { return mapping_type::is_always_unique(); };
-  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_exhaustive() noexcept { return mapping_type::is_always_exhaustive(); };
-  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_strided() noexcept { return mapping_type::is_always_strided(); };
+  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_unique() noexcept { return mapping_type::is_always_unique(); }
+  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_exhaustive() noexcept { return mapping_type::is_always_exhaustive(); }
+  MDSPAN_INLINE_FUNCTION static constexpr bool is_always_strided() noexcept { return mapping_type::is_always_strided(); }
 
-  MDSPAN_INLINE_FUNCTION constexpr const mapping_type& mapping() const noexcept { return map_; };
-  MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const noexcept { return map_.is_unique(); };
-  MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const noexcept { return map_.is_exhaustive(); };
-  MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const noexcept { return map_.is_strided(); };
-  MDSPAN_INLINE_FUNCTION constexpr index_type stride(size_t r) const { return map_.stride(r); };
+  MDSPAN_INLINE_FUNCTION constexpr const mapping_type& mapping() const noexcept { return map_; }
+  MDSPAN_INLINE_FUNCTION constexpr bool is_unique() const noexcept { return map_.is_unique(); }
+  MDSPAN_INLINE_FUNCTION constexpr bool is_exhaustive() const noexcept { return map_.is_exhaustive(); }
+  MDSPAN_INLINE_FUNCTION constexpr bool is_strided() const noexcept { return map_.is_strided(); }
+  MDSPAN_INLINE_FUNCTION constexpr index_type stride(size_t r) const { return map_.stride(r); }
 
   // Converstion to mdspan
   MDSPAN_TEMPLATE_REQUIRES(
     class OtherElementType, class OtherExtents,
     class OtherLayoutType, class OtherAccessorType,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_assignable,
+      MDSPAN_IMPL_TRAIT(std::is_assignable,
                       mdspan<OtherElementType, OtherExtents, OtherLayoutType, OtherAccessorType>,
                       mdspan_type)
     )
@@ -414,7 +414,7 @@ public:
     class OtherElementType, class OtherExtents,
     class OtherLayoutType, class OtherAccessorType,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_assignable,
+      MDSPAN_IMPL_TRAIT(std::is_assignable,
                       mdspan<OtherElementType, OtherExtents, OtherLayoutType, OtherAccessorType>,
                       const_mdspan_type)
     )
@@ -426,7 +426,7 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class OtherAccessorType = default_accessor<element_type>,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_assignable, mdspan_type,
+      MDSPAN_IMPL_TRAIT(std::is_assignable, mdspan_type,
                       mdspan<element_type, extents_type, layout_type, OtherAccessorType>)
     )
   )
@@ -438,7 +438,7 @@ public:
   MDSPAN_TEMPLATE_REQUIRES(
     class OtherAccessorType = default_accessor<const element_type>,
     /* requires */ (
-      _MDSPAN_TRAIT(std::is_assignable, const_mdspan_type,
+      MDSPAN_IMPL_TRAIT(std::is_assignable, const_mdspan_type,
                       mdspan<const element_type, extents_type, layout_type, OtherAccessorType>)
     )
   )

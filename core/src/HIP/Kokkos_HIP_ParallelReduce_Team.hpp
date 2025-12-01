@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_HIP_PARALLEL_REDUCE_TEAM_HPP
 #define KOKKOS_HIP_PARALLEL_REDUCE_TEAM_HPP
@@ -326,7 +313,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     auto internal_space_instance =
         m_policy.space().impl_internal_space_instance();
     if (m_team_size < 0) {
-      m_team_size = arg_policy.team_size_recommended(
+      m_team_size = arg_policy.team_size_recommended_internal(
           arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
           ParallelReduceTag());
       if (m_team_size <= 0)
@@ -357,7 +344,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           m_scratch_pool_id,
           static_cast<std::int64_t>(m_scratch_size[1]) *
               (std::min(
-                  static_cast<std::int64_t>(HIP().concurrency() /
+                  static_cast<std::int64_t>(m_policy.space().concurrency() /
                                             (m_team_size * m_vector_size)),
                   static_cast<std::int64_t>(m_league_size))));
     }
@@ -382,7 +369,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     const unsigned int shmem_size_total =
         m_team_begin + m_shmem_begin + m_shmem_size;
 
-    if (!Kokkos::Impl::is_integral_power_of_two(m_team_size) &&
+    if (!Kokkos::has_single_bit(static_cast<unsigned>(m_team_size)) &&
         !UseShflReduction) {
       Kokkos::Impl::throw_runtime_exception(
           std::string("Kokkos::Impl::ParallelReduce< HIP > bad team size"));
@@ -395,7 +382,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                       "L0 scratch memory"));
     }
 
-    size_t max_size = arg_policy.team_size_max(
+    size_t max_size = arg_policy.team_size_max_internal(
         arg_functor_reducer.get_functor(), arg_functor_reducer.get_reducer(),
         ParallelReduceTag());
     if (static_cast<int>(m_team_size) > static_cast<int>(max_size)) {

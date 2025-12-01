@@ -1,22 +1,14 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 namespace {
 
@@ -43,6 +35,16 @@ TEST(TEST_CATEGORY, execution_space_as_class_data_member) {
   CheckClassWithExecutionSpaceAsDataMemberIsCopyable<TEST_EXECSPACE>();
 }
 #endif
+
+TEST(TEST_CATEGORY, execution_space_moved_from) {
+  TEST_EXECSPACE exec;
+  TEST_EXECSPACE other = std::move(exec);
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  ASSERT_EQ(other, exec);
+  exec = std::move(other);
+  // NOLINTNEXTLINE(bugprone-use-after-move)
+  ASSERT_EQ(exec, other);
+}
 
 constexpr bool test_execspace_explicit_construction() {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4

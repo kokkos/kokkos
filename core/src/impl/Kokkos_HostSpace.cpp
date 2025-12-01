@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
@@ -21,6 +8,7 @@
 #include <Kokkos_Macros.hpp>
 
 #include <Kokkos_Atomic.hpp>
+#include <Kokkos_BitManipulation.hpp>
 #include <Kokkos_HostSpace.hpp>
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
@@ -29,6 +17,7 @@
 #include <cstdlib>
 #include <cstdint>
 #include <cstring>
+#include <new>
 
 #include <iostream>
 #include <sstream>
@@ -62,9 +51,8 @@ void *HostSpace::impl_allocate(
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
-  static_assert(
-      Kokkos::Impl::is_integral_power_of_two(Kokkos::Impl::MEMORY_ALIGNMENT),
-      "Memory alignment must be power of two");
+  static_assert(Kokkos::has_single_bit(Kokkos::Impl::MEMORY_ALIGNMENT),
+                "Memory alignment must be power of two");
 
   constexpr uintptr_t alignment      = Kokkos::Impl::MEMORY_ALIGNMENT;
   constexpr uintptr_t alignment_mask = alignment - 1;

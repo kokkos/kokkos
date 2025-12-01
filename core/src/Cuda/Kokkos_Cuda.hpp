@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
@@ -54,7 +41,6 @@ class CudaInternal;
 namespace Kokkos {
 
 namespace Impl {
-namespace Experimental {
 enum class CudaLaunchMechanism : unsigned {
   Default        = 0,
   ConstantMemory = 1,
@@ -72,12 +58,6 @@ constexpr inline CudaLaunchMechanism operator&(CudaLaunchMechanism p1,
   return static_cast<CudaLaunchMechanism>(static_cast<unsigned>(p1) &
                                           static_cast<unsigned>(p2));
 }
-
-template <CudaLaunchMechanism l>
-struct CudaDispatchProperties {
-  CudaLaunchMechanism launch_mechanism = l;
-};
-}  // namespace Experimental
 
 enum class ManageStream : bool { no, yes };
 
@@ -163,6 +143,9 @@ class Cuda {
   //--------------------------------------------------
   //! \name  Cuda space instances
 
+  Cuda(const Cuda&)            = default;
+  Cuda& operator=(const Cuda&) = default;
+  ~Cuda();
   Cuda();
 
   explicit Cuda(cudaStream_t stream) : Cuda(stream, Impl::ManageStream::no) {}
@@ -182,9 +165,6 @@ class Cuda {
   //--------------------------------------------------------------------------
   //! Free any resources being consumed by the device.
   static void impl_finalize();
-
-  //! Has been initialized
-  static int impl_is_initialized();
 
   //! Initialize, telling the CUDA run-time library which device to use.
   static void impl_initialize(InitializationSettings const&);

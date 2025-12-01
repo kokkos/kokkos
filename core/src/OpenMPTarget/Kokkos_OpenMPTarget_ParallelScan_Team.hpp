@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_OPENMPTARGET_PARALLELSCAN_TEAM_HPP
 #define KOKKOS_OPENMPTARGET_PARALLELSCAN_TEAM_HPP
@@ -21,13 +8,6 @@
 #include <sstream>
 #include <Kokkos_Parallel.hpp>
 #include <OpenMPTarget/Kokkos_OpenMPTarget_Parallel.hpp>
-
-// FIXME_OPENMPTARGET - Using this macro to implement a workaround for
-// hierarchical scan. It avoids hitting the code path which we wanted to
-// write but doesn't work. undef'ed at the end.
-#ifndef KOKKOS_ARCH_INTEL_GPU
-#define KOKKOS_IMPL_TEAM_SCAN_WORKAROUND
-#endif
 
 namespace Kokkos {
 
@@ -44,26 +24,11 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<analysis_value_type, ValueType>,
                 "Non-matching value types of functor and return type");
 
-  const auto start = loop_bounds.start;
-  const auto end   = loop_bounds.end;
-  //   Note this thing is called .member in the CUDA specialization of
-  //   TeamThreadRangeBoundariesStruct
-  auto& member         = loop_bounds.team;
+  const auto start     = loop_bounds.start;
+  const auto end       = loop_bounds.end;
+  auto& member         = loop_bounds.member;
   const auto team_rank = member.team_rank();
 
-#if defined(KOKKOS_IMPL_TEAM_SCAN_WORKAROUND)
-  ValueType scan_val = {};
-
-  if (team_rank == 0) {
-    for (iType i = start; i < end; ++i) {
-      lambda(i, scan_val, true);
-    }
-  }
-  member.team_broadcast(scan_val, 0);
-  return_val = scan_val;
-
-#pragma omp barrier
-#else
   const auto team_size = member.team_size();
   const auto nchunk    = (end - start + team_size - 1) / team_size;
   ValueType accum      = {};
@@ -87,8 +52,6 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
     member.team_broadcast(accum, team_size - 1);
   }
   return_val = accum;
-
-#endif
 }
 
 template <typename iType, class FunctorType>
@@ -158,9 +121,5 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
 }
 
 }  // namespace Kokkos
-
-#ifdef KOKKOS_IMPL_TEAM_SCAN_WORKAROUND
-#undef KOKKOS_IMPL_TEAM_SCAN_WORKAROUND
-#endif
 
 #endif

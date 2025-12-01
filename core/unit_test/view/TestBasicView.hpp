@@ -1,22 +1,15 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <gtest/gtest.h>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.core_impl;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 #include <type_traits>
 
 using ExecutionSpace = TEST_EXECSPACE;
@@ -51,7 +44,7 @@ void test_default_constructor() {
   using accessor_type = Kokkos::Impl::CheckedReferenceCountedAccessor<
       T, typename ExecutionSpace::memory_space>;
   using view_type =
-      Kokkos::Impl::BasicView<T, extents_type, layout_type, accessor_type>;
+      Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, accessor_type>;
   view_type view;
 
   EXPECT_FALSE(view.data_handle().has_record());
@@ -75,7 +68,7 @@ void test_extents_constructor(const ExtentsType &extents) {
   using accessor_type = Kokkos::Impl::CheckedReferenceCountedAccessor<
       T, typename ExecutionSpace::memory_space>;
   using view_type =
-      Kokkos::Impl::BasicView<T, extents_type, layout_type, accessor_type>;
+      Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, accessor_type>;
 
   view_type view("test_view", extents);
 
@@ -110,7 +103,7 @@ void test_mapping_constructor(const ExtentsType &extents, std::size_t padding) {
   using accessor_type = Kokkos::Impl::CheckedReferenceCountedAccessor<
       T, typename ExecutionSpace::memory_space>;
   using view_type =
-      Kokkos::Impl::BasicView<T, extents_type, layout_type, accessor_type>;
+      Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, accessor_type>;
   static_assert(std::is_same_v<typename view_type::mapping_type, mapping_type>);
 
   auto mapping = mapping_type(extents, padding);
@@ -163,7 +156,7 @@ void test_access_with_extents(const ExtentsType &extents) {
   using accessor_type = Kokkos::Impl::CheckedReferenceCountedAccessor<
       T, typename ExecutionSpace::memory_space>;
   using view_type =
-      Kokkos::Impl::BasicView<T, extents_type, layout_type, accessor_type>;
+      Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, accessor_type>;
 
   auto view = view_type("test_view", extents);
 
@@ -203,7 +196,7 @@ TEST(TEST_CATEGORY, basic_view_access) {
     using accessor_type = Kokkos::Impl::CheckedReferenceCountedAccessor<
         T, typename ExecutionSpace::memory_space>;
     using basic_view_type =
-        Kokkos::Impl::BasicView<T, extents_type, layout_type, accessor_type>;
+        Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, accessor_type>;
     using view_type = SrcViewType;
     static_assert(std::is_constructible_v<basic_view_type, SrcViewType>);
   }
@@ -231,11 +224,11 @@ void test_atomic_accessor() {
       Kokkos::Impl::CheckedReferenceCountedRelaxedAtomicAccessor<
           T, typename ExecutionSpace::memory_space>;
   using view_type =
-      Kokkos::Impl::BasicView<T, extents_type, layout_type, accessor_type>;
+      Kokkos::Impl::BV::BasicView<T, extents_type, layout_type, accessor_type>;
   using um_accessor_type = Kokkos::Impl::CheckedRelaxedAtomicAccessor<
       T, typename ExecutionSpace::memory_space>;
-  using um_view_type =
-      Kokkos::Impl::BasicView<T, extents_type, layout_type, um_accessor_type>;
+  using um_view_type = Kokkos::Impl::BV::BasicView<T, extents_type, layout_type,
+                                                   um_accessor_type>;
 
   extents_type extents{};
   auto view = view_type("test_view", extents);

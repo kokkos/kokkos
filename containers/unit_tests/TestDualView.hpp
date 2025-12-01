@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_TEST_DUALVIEW_HPP
 #define KOKKOS_TEST_DUALVIEW_HPP
@@ -21,8 +8,15 @@
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
-#include <Kokkos_Timer.hpp>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.dual_view;
+#else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
+#endif
+#include <Kokkos_Timer.hpp>
 
 namespace Test {
 
@@ -90,7 +84,7 @@ struct test_dualview_copy_construction_and_assignment {
 
     // We can't test shallow equality of modified_flags because it's protected.
     // So we test it indirectly through sync state behavior.
-    if (!std::decay_t<SrcViewType>::impl_dualview_stores_single_view) {
+    if (!SrcViewType::impl_dualview_is_single_device) {
       a.clear_sync_state();
       a.modify_host();
       ASSERT_TRUE(a.need_sync_device());
@@ -487,6 +481,64 @@ TEST(TEST_CATEGORY, dualview_deep_copy) {
   test_dualview_deep_copy<double, TEST_EXECSPACE>();
 }
 
+template <typename ExecutionSpace>
+void test_dualview_sync_should_fence() {
+  using DualViewType = Kokkos::DualView<int, ExecutionSpace>;
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_device();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_device().data(), 1); });
+    dv.sync_host();
+    ASSERT_EQ(dv.view_host()(), 10000);
+  }
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_device();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_device().data(), 1); });
+    dv.template sync<typename DualViewType::t_host::device_type>();
+    ASSERT_EQ(dv.view_host()(), 10000);
+  }
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_host();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_host().data(), 1); });
+    dv.sync_device();
+    int result;
+    auto device_exec =
+        Kokkos::Experimental::partition_space(ExecutionSpace{}, 1);
+    Kokkos::deep_copy(device_exec[0], result, dv.view_device());
+    device_exec[0].fence();
+    ASSERT_EQ(result, 10000);
+  }
+  {
+    DualViewType dv("test_dual_view");
+    dv.modify_host();
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<Kokkos::DefaultHostExecutionSpace>(0, 10000),
+        KOKKOS_LAMBDA(int) { Kokkos::atomic_add(dv.view_host().data(), 1); });
+    dv.template sync<typename DualViewType::t_dev::device_type>();
+    int result;
+    auto device_exec =
+        Kokkos::Experimental::partition_space(ExecutionSpace{}, 1);
+    Kokkos::deep_copy(device_exec[0], result, dv.view_device());
+    device_exec[0].fence();
+    ASSERT_EQ(result, 10000);
+  }
+}
+
+TEST(TEST_CATEGORY, dualview_sync_should_fence) {
+#ifdef KOKKOS_ENABLE_HPX  // FIXME_DUALVIEW_ASYNCHRONOUS_BACKENDS
+  GTEST_SKIP() << "Known to fail with HPX";
+#endif
+  test_dualview_sync_should_fence<TEST_EXECSPACE>();
+}
+
 struct NoDefaultConstructor {
   NoDefaultConstructor(int i_) : i(i_) {}
   KOKKOS_FUNCTION operator int() const { return i; }
@@ -522,8 +574,9 @@ void check_dualview_external_view_construction() {
 // FIXME_MSVC+CUDA error C2094: label 'gtest_label_520' was undefined
 #if !(defined(KOKKOS_COMPILER_MSVC) && defined(KOKKOS_ENABLE_CUDA))
 TEST(TEST_CATEGORY_DEATH, dualview_external_view_construction) {
-  if constexpr (!Kokkos::DualView<
-                    int*, TEST_EXECSPACE>::impl_dualview_stores_single_view) {
+  if constexpr (!Kokkos::SpaceAccessibility<
+                    Kokkos::HostSpace,
+                    TEST_EXECSPACE::memory_space>::accessible) {
     GTEST_SKIP() << "test only relevant if DualView uses one allocation";
   } else {
     // FIXME_CLANG We can't inline the function because recent clang versions
@@ -697,6 +750,43 @@ TEST(TEST_CATEGORY, dualview_sequential_host_init) {
   ASSERT_EQ(dv.view_device().size(), 3u);
   ASSERT_EQ(dv.view_host().size(), 3u);
 }
+
+TEST(TEST_CATEGORY, dualview_default_constructed) {
+  DualViewType dv;
+
+  dv.modify<DualViewType::t_dev>();
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+  dv.sync<DualViewType::t_dev>();
+
+  dv.modify_host();
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+  dv.sync_host();
+
+  dv.modify_device();
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+  dv.sync_device();
+}
+
+TEST(TEST_CATEGORY, dualview_resize_single_device) {
+  using dv_t = Kokkos::DualView<double*, TEST_EXECSPACE>;
+  dv_t dv("DV", 10);
+  bool is_same_device = std::is_same_v<typename dv_t::t_host::device_type,
+                                       typename dv_t::t_dev::device_type>;
+
+  dv.resize(20);
+  ASSERT_EQ(!is_same_device, dv.need_sync_host());
+  ASSERT_FALSE(dv.need_sync_device());
+
+  dv.sync_host();
+  dv.modify_host();
+  dv.resize(30);
+  ASSERT_FALSE(dv.need_sync_host());
+  ASSERT_EQ(!is_same_device, dv.need_sync_device());
+}
+
 }  // anonymous namespace
 }  // namespace Test
 

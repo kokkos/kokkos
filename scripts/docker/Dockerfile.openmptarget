@@ -41,7 +41,7 @@ RUN CMAKE_URL=https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSIO
     rm ${CMAKE_SCRIPT}
 ENV PATH=${CMAKE_DIR}/bin:$PATH
 
-ARG LLVM_VERSION=llvmorg-17.0.3
+ARG LLVM_VERSION=llvmorg-20.1.8
 ENV LLVM_DIR=/opt/llvm
 RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
     LLVM_ARCHIVE=${LLVM_VERSION}.tar.gz &&\
@@ -57,7 +57,7 @@ RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
       -DCMAKE_C_COMPILER=gcc \
       -DCMAKE_CXX_COMPILER=g++ \
       -DLLVM_ENABLE_PROJECTS="clang" \
-      -DLLVM_ENABLE_RUNTIMES="openmp" \
+      -DLLVM_ENABLE_RUNTIMES="openmp;offload" \
       -DLLVM_TARGETS_TO_BUILD="X86;NVPTX" \
       -DLIBOMPTARGET_DEVICE_ARCHITECTURES=sm_70 \
     ../llvm && \
@@ -65,4 +65,4 @@ RUN LLVM_URL=https://github.com/llvm/llvm-project/archive &&\
     make install && \
     rm -rf ${SCRATCH_DIR}
 ENV PATH=${LLVM_DIR}/bin:$PATH
-ENV LD_LIBRARY_PATH=${LLVM_DIR}/lib:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=${LLVM_DIR}/lib:${LLVM_DIR}/lib/x86_64-unknown-linux-gnu:$LD_LIBRARY_PATH

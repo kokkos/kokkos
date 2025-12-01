@@ -1,21 +1,13 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <gtest/gtest.h>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 namespace Test {
 
@@ -102,7 +94,7 @@ struct DynamicRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   VIEW_CTOR_TEST_UNREACHABLE();
 #endif
@@ -131,7 +123,7 @@ struct StaticRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   VIEW_CTOR_TEST_UNREACHABLE();
 #endif
@@ -160,7 +152,7 @@ struct MixedRank<0> {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   VIEW_CTOR_TEST_UNREACHABLE();
 #endif
@@ -192,7 +184,7 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECKS
+#ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   VIEW_CTOR_TEST_UNREACHABLE();
 #endif

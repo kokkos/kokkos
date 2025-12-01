@@ -5,3 +5,5 @@ endif()
 if(NOT ((KOKKOS_ENABLE_OPENMPTARGET AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC) OR KOKKOS_ENABLE_OPENACC))
   kokkos_add_test_directories(unit_tests)
 endif()
+
+kokkos_add_benchmark_directories(perf_test)

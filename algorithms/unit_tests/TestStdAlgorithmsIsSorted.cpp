@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <TestStdAlgorithmsCommon.hpp>
 #include <utility>
@@ -101,6 +88,7 @@ void fill_view(ViewType dest_view, const std::string& name) {
 }
 
 bool compute_gold(const std::string& name) {
+  // NOLINTBEGIN(bugprone-branch-clone)
   if (name == "empty") {
     return true;
   } else if (name == "one-element") {
@@ -121,6 +109,7 @@ bool compute_gold(const std::string& name) {
     return true;
   } else if (name == "large-b") {
     return false;
+    // NOLINTEND(bugprone-branch-clone)
   } else {
     Kokkos::abort("invalid choice");
     return false;  // unreachable

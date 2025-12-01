@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_INITIALIZATION_SETTINGS_HPP
 #define KOKKOS_INITIALIZATION_SETTINGS_HPP
@@ -25,19 +12,19 @@
 namespace Kokkos {
 
 class InitializationSettings {
-#define KOKKOS_IMPL_DECLARE(TYPE, NAME)                                    \
- private:                                                                  \
-  std::optional<TYPE> m_##NAME;                                            \
-                                                                           \
- public:                                                                   \
-  InitializationSettings& set_##NAME(TYPE NAME) {                          \
-    m_##NAME = NAME;                                                       \
-    return *this;                                                          \
-  }                                                                        \
-  bool has_##NAME() const noexcept { return static_cast<bool>(m_##NAME); } \
-  TYPE get_##NAME() const noexcept {                                       \
-    return *m_##NAME; /* NOLINT(bugprone-unchecked-optional-access) */     \
-  }                                                                        \
+#define KOKKOS_IMPL_DECLARE(TYPE, NAME)                                      \
+ private:                                                                    \
+  std::optional<TYPE> m_##NAME;                                              \
+                                                                             \
+ public:                                                                     \
+  InitializationSettings& set_##NAME(TYPE NAME) {                            \
+    m_##NAME = NAME;                                                         \
+    return *this;                                                            \
+  }                                                                          \
+  bool has_##NAME() const noexcept { return static_cast<bool>(m_##NAME); }   \
+  TYPE get_##NAME() const noexcept /* NOLINT(bugprone-exception-escape) */ { \
+    return *m_##NAME; /* NOLINT(bugprone-unchecked-optional-access) */       \
+  }                                                                          \
   static_assert(true, "no-op to require trailing semicolon")
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4

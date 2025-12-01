@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_STATICCRSGRAPH_HPP
 #define KOKKOS_STATICCRSGRAPH_HPP
@@ -288,9 +275,15 @@ class StaticCrsGraph {
 
   using staticcrsgraph_type =
       StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type, SizeType>;
-  using HostMirror = StaticCrsGraph<data_type, array_layout,
-                                    typename traits::host_mirror_space,
-                                    memory_traits, size_type>;
+
+  using host_mirror_type = StaticCrsGraph<data_type, array_layout,
+                                          typename traits::host_mirror_space,
+                                          memory_traits, size_type>;
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use host_mirror_type instead.") = host_mirror_type;
+#endif
 
   using row_map_type =
       View<const size_type*, array_layout, device_type, memory_traits>;
@@ -303,39 +296,19 @@ class StaticCrsGraph {
   row_map_type row_map;
   row_block_type row_block_offsets;
 
-  //! Construct an empty view.
-  KOKKOS_INLINE_FUNCTION
-  StaticCrsGraph() : entries(), row_map(), row_block_offsets() {}
-
-  //! Copy constructor (shallow copy).
-  KOKKOS_INLINE_FUNCTION
-  StaticCrsGraph(const StaticCrsGraph& rhs)
-      : entries(rhs.entries),
-        row_map(rhs.row_map),
-        row_block_offsets(rhs.row_block_offsets) {}
+  KOKKOS_DEFAULTED_FUNCTION
+  StaticCrsGraph() = default;
 
   template <class EntriesType, class RowMapType>
   KOKKOS_INLINE_FUNCTION StaticCrsGraph(const EntriesType& entries_,
                                         const RowMapType& row_map_)
-      : entries(entries_), row_map(row_map_), row_block_offsets() {}
+      : entries(entries_), row_map(row_map_) {}
 
-  /** \brief  Assign to a view of the rhs array.
-   *          If the old view is the last view
-   *          then allocated memory is deallocated.
-   */
-  KOKKOS_INLINE_FUNCTION
-  StaticCrsGraph& operator=(const StaticCrsGraph& rhs) {
-    entries           = rhs.entries;
-    row_map           = rhs.row_map;
-    row_block_offsets = rhs.row_block_offsets;
-    return *this;
-  }
-
-  /**  \brief  Destroy this view of the array.
-   *           If the last view then allocated memory is deallocated.
-   */
-  KOKKOS_DEFAULTED_FUNCTION
-  ~StaticCrsGraph() = default;
+  template <typename... Args>
+  KOKKOS_INLINE_FUNCTION StaticCrsGraph(const StaticCrsGraph<Args...>& other)
+      : entries(other.entries),
+        row_map(other.row_map),
+        row_block_offsets(other.row_block_offsets) {}
 
   /**  \brief  Return number of rows in the graph
    */
@@ -421,14 +394,14 @@ typename StaticCrsGraphType::staticcrsgraph_type create_staticcrsgraph(
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                        SizeType>::HostMirror
+                        SizeType>::host_mirror_type
 create_mirror_view(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                         SizeType>& input);
 
 template <class DataType, class Arg1Type, class Arg2Type, class Arg3Type,
           typename SizeType>
 typename StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
-                        SizeType>::HostMirror
+                        SizeType>::host_mirror_type
 create_mirror(const StaticCrsGraph<DataType, Arg1Type, Arg2Type, Arg3Type,
                                    SizeType>& input);
 

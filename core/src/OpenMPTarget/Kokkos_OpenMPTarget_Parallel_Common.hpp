@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
 #define KOKKOS_OPENMPTARGET_PARALLEL_COMMON_HPP
@@ -90,9 +77,6 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:reducer");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget RangePolicy "
-        "parallel_reduce:reducer");
     const auto begin = p.begin();
     const auto end   = p.end();
 
@@ -125,9 +109,6 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
   static void execute_array(const FunctorAdapter& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget RangePolicy "
-        "parallel_reduce:array_reduction");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:array_reduction");
     const auto begin = p.begin();
@@ -186,9 +167,6 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget RangePolicy "
         "parallel_reduce:init_join");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget RangePolicy "
-        "parallel_reduce:init_join");
     const auto begin = p.begin();
     const auto end   = p.end();
 
@@ -204,9 +182,7 @@ struct ParallelReduceSpecialize<FunctorType, Kokkos::RangePolicy<PolicyArgs...>,
     // based on NVIDIA-V100 and should be modifid to be based on the
     // architecture in the future.
     const int max_team_threads = 32;
-    const int max_teams =
-        p.space().impl_internal_space_instance()->concurrency() /
-        max_team_threads;
+    const int max_teams        = p.space().concurrency() / max_team_threads;
     // Number of elements in the reduction
     const auto value_count = FunctorAnalysis::value_count(f.get_functor());
 
@@ -339,9 +315,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:reducer");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
-        "parallel_reduce:reducer");
 
     const int league_size   = p.league_size();
     const int team_size     = p.team_size();
@@ -358,14 +331,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     ValueType result = ValueType();
 
     // Maximum active teams possible.
-    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
-    // omp_get_max_teams.
-#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
-#else
-    int max_active_teams =
-        std::min(p.space().concurrency() / team_size, league_size);
-#endif
 
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;
@@ -374,7 +340,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
 :ValueType : OpenMPTargetReducerWrapper<ReducerType>::join(omp_out, omp_in)) \
     initializer(OpenMPTargetReducerWrapper<ReducerType>::init(omp_priv))
 
-#if !defined(KOKKOS_IMPL_OPENMPTARGET_HIERARCHICAL_INTEL_GPU)
     KOKKOS_IMPL_OMPTARGET_PRAGMA(
         teams num_teams(max_active_teams) thread_limit(team_size)
             firstprivate(f) is_device_ptr(scratch_ptr) reduction(custom
@@ -397,23 +362,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         f(team, result);
       }
     }
-#else
-#pragma omp target teams distribute firstprivate(f) is_device_ptr(scratch_ptr) \
-    num_teams(max_active_teams) thread_limit(team_size)                        \
-    reduction(custom : result)
-    for (int i = 0; i < league_size; i++) {
-#pragma omp parallel reduction(custom : result)
-      {
-        if (omp_get_num_teams() > max_active_teams)
-          Kokkos::abort("`omp_set_num_teams` call was not respected.\n");
-
-        typename PolicyType::member_type team(i, league_size, team_size,
-                                              vector_length, scratch_ptr, i,
-                                              shmem_size_L0, shmem_size_L1);
-        f(team, result);
-      }
-    }
-#endif
 
     // Copy results back to device if `parallel_reduce` is on a device view.
     ParReduceCopy::memcpy_result(result_ptr, &result, sizeof(ValueType),
@@ -424,9 +372,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
   static void execute_array(const FunctorAdapter& f, const PolicyType& p,
                             PointerType result_ptr, bool ptr_on_device) {
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
-        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
-        "parallel_reduce:array_reduction");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:array_reduction");
 
@@ -443,14 +388,7 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
         p.space().impl_internal_space_instance()->get_scratch_ptr();
 
     // Maximum active teams possible.
-    // FIXME_OPENMPTARGET: Cray compiler did not yet implement
-    // omp_get_max_teams.
-#if !defined(KOKKOS_COMPILER_CRAY_LLVM)
     int max_active_teams = omp_get_max_teams();
-#else
-    int max_active_teams =
-        std::min(p.space().concurrency() / team_size, league_size);
-#endif
 
     // If the league size is <=0, do not launch the kernel.
     if (max_active_teams <= 0) return;
@@ -547,9 +485,6 @@ struct ParallelReduceSpecialize<FunctorType, TeamPolicyInternal<PolicyArgs...>,
     Experimental::Impl::OpenMPTargetInternal::verify_is_process(
         "Kokkos::Experimental::OpenMPTarget TeamPolicy "
         "parallel_reduce:init_join ");
-    Experimental::Impl::OpenMPTargetInternal::verify_initialized(
-        "Kokkos::Experimental::OpenMPTarget TeamPolicy "
-        "parallel_reduce:init_join");
     using FunctorAnalysis =
         Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
                               FunctorType, ValueType>;

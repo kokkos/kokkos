@@ -12,23 +12,60 @@ permissions: read-all
 jobs:
   windows-cuda:
     # Cuda build on Windows
-    name: Windows Cuda
+    name: Cuda VS-2022
     runs-on: windows-2022
 
     steps:
-    - uses: Jimver/cuda-toolkit@8022558310ea543e35132143092835585f60e628 # v0.2.21
+    - uses: Jimver/cuda-toolkit@6008063726ffe3309d1b22e413d9e88fed91a2f2 # v0.2.29
       id: cuda-toolkit
       with:
         cuda: '12.4.1'
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
     - name: configure
       shell: bash
       run: |
-        mkdir build
-        mkdir c:/project
-        cd build
-        cmake -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON ..
+        cmake -B build -DCMAKE_CUDA_FLAGS="-Xcompiler=-bigobj" -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
     - name: build library
       shell: bash
       run: |
-        cmake --build build --parallel 2 --config Release
+        cmake --build build --parallel 4 --config Debug
+  windows-serial:
+    # Serial build on Windows
+    name: Serial VS-2022
+    runs-on: windows-2025
+
+    steps:
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+    - name: configure
+      shell: bash
+      run: |
+        cmake -B build -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON
+    - name: build library
+      shell: bash
+      run: |
+        cmake --build build --parallel 4 --config Release
+    - name: run tests
+      shell: bash
+      run: |
+        export PATH="$(pwd)/build/core/src/Release:$(pwd)/build/containers/src/Release:$PATH"
+        ctest --test-dir build -C Release -j 4 --output-on-failure
+
+  windows-clang:
+   # Threads build on Windows using ClangCL
+    name: Threads Clang VS-2022
+    runs-on: windows-2025
+
+    steps:
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+    - name: configure
+      shell: bash
+      run: |
+        cmake -B build -T ClangCL -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_THREADS=ON -DKokkos_ENABLE_TESTS=ON
+    - name: build library
+      shell: bash
+      run: |
+        cmake --build build --parallel 4 --config Release
+    - name: run tests
+      shell: bash
+      run: |
+        ctest --test-dir build -C Release -j 4 --output-on-failure

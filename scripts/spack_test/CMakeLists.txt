@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.16)
-project(SpackTestGen)
+cmake_minimum_required(VERSION 3.22)
+project(SpackTestGen LANGUAGES NONE)
 set(TEST_LIST_DEF ${CMAKE_CURRENT_SOURCE_DIR}/test_list.def)
 file(STRINGS ${TEST_LIST_DEF} TEST_FILES)
 

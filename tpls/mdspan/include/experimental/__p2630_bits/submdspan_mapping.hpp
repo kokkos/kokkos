@@ -46,7 +46,7 @@ namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 // Return type of submdspan_mapping overloads
 //******************************************
 template <class LayoutMapping> struct submdspan_mapping_result {
-  _MDSPAN_NO_UNIQUE_ADDRESS LayoutMapping mapping{};
+  MDSPAN_IMPL_NO_UNIQUE_ADDRESS LayoutMapping mapping{};
   size_t offset;
 };
 
@@ -72,7 +72,7 @@ MDSPAN_INLINE_FUNCTION constexpr bool
 any_slice_out_of_bounds_helper(std::index_sequence<RankIndices...>,
                                const extents<IndexType, Exts...> &exts,
                                const Slices &... slices) {
-  return _MDSPAN_FOLD_OR(
+  return MDSPAN_IMPL_FOLD_OR(
       (one_slice_out_of_bounds(exts.extent(RankIndices), slices)));
 }
 
@@ -182,7 +182,7 @@ struct deduce_layout_left_submapping<
     // e.g. R I I I F F F R I I for obtaining a rank-5 from a rank-10
     return ((((Idx == 0)                                       && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx > 0 && Idx <= gap_len)                     && is_index_slice_v<SliceSpecifiers, IndexType>) ||
-             ((Idx > gap_len && Idx < gap_len + SubRank - 1) && std::is_same_v<SliceSpecifiers, full_extent_t>) || 
+             ((Idx > gap_len && Idx < gap_len + SubRank - 1) && std::is_same_v<SliceSpecifiers, full_extent_t>) ||
              ((Idx == gap_len + SubRank - 1)                  && is_range_slice_v<SliceSpecifiers, IndexType>) ||
              ((Idx >  gap_len + SubRank - 1)                  && is_index_slice_v<SliceSpecifiers, IndexType>)) && ... );
   }
@@ -190,18 +190,15 @@ struct deduce_layout_left_submapping<
 
 // We are reusing the same thing for layout_left and layout_left_padded
 // For layout_left as source StaticStride is static_extent(0)
-template<class Extents, size_t NumGaps, size_t StaticStride>
-struct compute_s_static_layout_left {
+template<class Extents, size_t NumGaps, size_t StaticStride, size_t... Idx>
+MDSPAN_INLINE_FUNCTION constexpr size_t
+compute_s_static_layout_left(std::index_sequence<Idx...>) {
   // Neither StaticStride nor any of the provided extents can be zero.
   // StaticStride can never be zero, the static_extents we are looking at are associated with
   // integral slice specifiers - which wouldn't be valid for zero extent
-  template<size_t ... Idx>
-  MDSPAN_INLINE_FUNCTION
-  static constexpr size_t value(std::index_sequence<Idx...>) {
     size_t val = ((Idx>0 && Idx<=NumGaps ? (Extents::static_extent(Idx) == dynamic_extent?0:Extents::static_extent(Idx)) : 1) * ... * (StaticStride == dynamic_extent?0:StaticStride));
     return val == 0?dynamic_extent:val;
   }
-};
 
 } // namespace detail
 
@@ -237,7 +234,7 @@ layout_left::mapping<Extents>::submdspan_mapping_impl(
     return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t(dst_ext),
                                                    offset};
   } else if constexpr (deduce_layout::layout_left_padded_value()) {
-    constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, Extents::static_extent(0)>::value(std::make_index_sequence<Extents::rank()>());
+    constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, Extents::static_extent(0)>(std::make_index_sequence<Extents::rank()>());
     using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<S_static>::template mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t>{
         dst_mapping_t(dst_ext, stride(1 + deduce_layout::gap_len)), offset};
@@ -254,7 +251,7 @@ layout_left::mapping<Extents>::submdspan_mapping_impl(
 // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have
 // the issue but Clang-CUDA also doesn't accept the use of deduction guide so
 // disable it for CUDA altogether
-#if defined(_MDSPAN_HAS_HIP) || defined(_MDSPAN_HAS_CUDA)
+#if defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_CUDA)
                         detail::tuple<decltype(detail::stride_of(slices))...>{
                             detail::stride_of(slices)...}).values),
 #else
@@ -316,7 +313,7 @@ MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<PaddingValue>::mapping<Extent
         using dst_mapping_t = typename layout_left::template mapping<dst_ext_t>;
         return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
       } else if constexpr (deduce_layout::layout_left_padded_value()) { // can keep layout_left_padded
-        constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, static_padding_stride>::value(std::make_index_sequence<Extents::rank()>());
+        constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, static_padding_stride>(std::make_index_sequence<Extents::rank()>());
         using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<S_static>::template mapping<dst_ext_t>;
         return submdspan_mapping_result<dst_mapping_t>{
         dst_mapping_t(dst_ext, stride(1 + deduce_layout::gap_len)), offset};
@@ -332,7 +329,7 @@ MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_left_padded<PaddingValue>::mapping<Extent
 // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have
 // the issue but Clang-CUDA also doesn't accept the use of deduction guide so
 // disable it for CUDA alltogether
-#if defined(_MDSPAN_HAS_HIP) || defined(_MDSPAN_HAS_CUDA)
+#if defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_CUDA)
                         MDSPAN_IMPL_STANDARD_NAMESPACE::detail::tuple<decltype(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices))...>{
                             MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices)...}).values),
 #else
@@ -421,18 +418,15 @@ struct deduce_layout_right_submapping<
 
 // We are reusing the same thing for layout_right and layout_right_padded
 // For layout_right as source StaticStride is static_extent(Rank-1)
-template<class Extents, size_t NumGaps, size_t StaticStride>
-struct compute_s_static_layout_right {
+template<class Extents, size_t NumGaps, size_t StaticStride, size_t... Idx>
+MDSPAN_INLINE_FUNCTION constexpr size_t
+compute_s_static_layout_right (std::index_sequence<Idx...>) {
   // Neither StaticStride nor any of the provided extents can be zero.
   // StaticStride can never be zero, the static_extents we are looking at are associated with
   // integral slice specifiers - which wouldn't be valid for zero extent
-  template<size_t ... Idx>
-  MDSPAN_INLINE_FUNCTION
-  static constexpr size_t value(std::index_sequence<Idx...>) {
     size_t val = ((Idx >= Extents::rank() - 1 - NumGaps && Idx < Extents::rank() - 1 ? (Extents::static_extent(Idx) == dynamic_extent?0:Extents::static_extent(Idx)) : 1) * ... * (StaticStride == dynamic_extent?0:StaticStride));
     return val == 0?dynamic_extent:val;
   }
-};
 
 } // namespace detail
 
@@ -468,7 +462,7 @@ layout_right::mapping<Extents>::submdspan_mapping_impl(
     return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t(dst_ext),
                                                    offset};
   } else if constexpr (deduce_layout::layout_right_padded_value()) {
-    constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, Extents::static_extent(Extents::rank() - 1)>::value(std::make_index_sequence<Extents::rank()>());
+    constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_left<Extents, deduce_layout::gap_len, Extents::static_extent(Extents::rank() - 1)>(std::make_index_sequence<Extents::rank()>());
     using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<S_static>::template mapping<dst_ext_t>;
     return submdspan_mapping_result<dst_mapping_t>{
         dst_mapping_t(dst_ext,
@@ -487,7 +481,7 @@ layout_right::mapping<Extents>::submdspan_mapping_impl(
 // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have
 // the issue but Clang-CUDA also doesn't accept the use of deduction guide so
 // disable it for CUDA altogether
-#if defined(_MDSPAN_HAS_HIP) || defined(_MDSPAN_HAS_CUDA)
+#if defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_CUDA)
                         MDSPAN_IMPL_STANDARD_NAMESPACE::detail::tuple<decltype(detail::stride_of(slices))...>{
                             detail::stride_of(slices)...}).values),
 #else
@@ -541,7 +535,7 @@ MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<PaddingValue>::mapping<Exten
         using dst_mapping_t = typename layout_right::template mapping<dst_ext_t>;
         return submdspan_mapping_result<dst_mapping_t>{dst_mapping_t{dst_ext}, offset};
       } else if constexpr (deduce_layout::layout_right_padded_value()) { // can keep layout_right_padded
-        constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_right<Extents, deduce_layout::gap_len, static_padding_stride>::value(std::make_index_sequence<Extents::rank()>());
+        constexpr size_t S_static = MDSPAN_IMPL_STANDARD_NAMESPACE::detail::compute_s_static_layout_right<Extents, deduce_layout::gap_len, static_padding_stride>(std::make_index_sequence<Extents::rank()>());
         using dst_mapping_t = typename MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<S_static>::template mapping<dst_ext_t>;
         return submdspan_mapping_result<dst_mapping_t>{
         dst_mapping_t(dst_ext, stride(Extents::rank() - 2 - deduce_layout::gap_len)), offset};
@@ -557,7 +551,7 @@ MDSPAN_IMPL_PROPOSED_NAMESPACE::layout_right_padded<PaddingValue>::mapping<Exten
 // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have
 // the issue but Clang-CUDA also doesn't accept the use of deduction guide so
 // disable it for CUDA alltogether
-#if defined(_MDSPAN_HAS_HIP) || defined(_MDSPAN_HAS_CUDA)
+#if defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_CUDA)
                         MDSPAN_IMPL_STANDARD_NAMESPACE::detail::tuple<decltype(MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices))...>{
                             MDSPAN_IMPL_STANDARD_NAMESPACE::detail::stride_of(slices)...}).values),
 #else
@@ -605,7 +599,7 @@ layout_stride::mapping<Extents>::submdspan_mapping_impl(
 // NVCC 11.0 has a bug with deduction guide here, tested that 11.2 does not have
 // the issue but Clang-CUDA also doesn't accept the use of deduction guide so
 // disable it for CUDA alltogether
-#if defined(_MDSPAN_HAS_HIP) || defined(_MDSPAN_HAS_CUDA)
+#if defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_CUDA)
                       MDSPAN_IMPL_STANDARD_NAMESPACE::detail::tuple<decltype(detail::stride_of(slices))...>(
                           detail::stride_of(slices)...)).values),
 #else

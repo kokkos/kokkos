@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 /*--------------------------------------------------------------------------*/
 /* Kokkos interfaces */
@@ -24,7 +11,12 @@
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_CUDA
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 // #include <Cuda/Kokkos_Cuda_Error.hpp>
 // #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
@@ -33,6 +25,7 @@
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
@@ -202,7 +195,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
   s << "macro  KOKKOS_ENABLE_CUDA      : defined\n";
 #endif
 #if defined(CUDA_VERSION)
-  s << "macro  CUDA_VERSION          = " << CUDA_VERSION << " = version "
+  s << "macro  CUDA_VERSION          : " << CUDA_VERSION << " = version "
     << CUDA_VERSION / 1000 << "." << (CUDA_VERSION % 1000) / 10 << '\n';
 #endif
 
@@ -210,7 +203,10 @@ void CudaInternal::print_configuration(std::ostream &s) const {
     cudaDeviceProp prop;
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGetDeviceProperties(&prop, i));
     s << "Kokkos::Cuda[ " << i << " ] " << prop.name;
-    if (m_cudaDev == i) s << " : Selected";
+    if (m_cudaDev == i)
+      s << " : Selected";
+    else
+      s << " : Not Selected";
     s << '\n'
       << "  Capability: " << prop.major << "." << prop.minor << '\n'
       << "  Total Global Memory: " << human_memory_size(prop.totalGlobalMem)
@@ -293,8 +289,8 @@ void CudaInternal::initialize(cudaStream_t stream) {
   }
 
   if (!constantMemReusablePerDevice[m_cudaDev])
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        (cuda_event_create_wrapper(&constantMemReusablePerDevice[m_cudaDev])));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cuda_event_create_with_flags_wrapper(
+        &constantMemReusablePerDevice[m_cudaDev], cudaEventDisableTiming));
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -304,11 +300,10 @@ void CudaInternal::initialize(cudaStream_t stream) {
   {
     // Maximum number of warps,
     // at most one warp per thread in a warp for reduction.
-    auto const maxWarpCount = std::min<unsigned>(
-        m_deviceProp.maxThreadsPerBlock / CudaTraits::WarpSize,
-        CudaTraits::WarpSize);
-    unsigned const reduce_block_count =
-        maxWarpCount * Impl::CudaTraits::WarpSize;
+    auto const maxWarpCount =
+        std::min<size_t>(m_deviceProp.maxThreadsPerBlock / CudaTraits::WarpSize,
+                         CudaTraits::WarpSize);
+    size_t const reduce_block_count = maxWarpCount * Impl::CudaTraits::WarpSize;
 
     (void)scratch_unified(16 * sizeof(size_type));
     (void)scratch_flags(reduce_block_count * 2 * sizeof(size_type));
@@ -501,6 +496,7 @@ void CudaInternal::finalize() {
   KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_free_wrapper(m_scratch_locks)));
   m_scratch_locks     = nullptr;
   m_num_scratch_locks = 0;
+  m_cudaDev           = -1;
 }
 
 //----------------------------------------------------------------------------
@@ -533,10 +529,6 @@ int Cuda::concurrency() {
 int Cuda::concurrency() const {
 #endif
   return Impl::CudaInternal::concurrency();
-}
-
-int Cuda::impl_is_initialized() {
-  return Impl::CudaInternal::singleton().is_initialized();
 }
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
@@ -653,9 +645,6 @@ void Cuda::impl_finalize() {
         Kokkos::Impl::CudaInternal::constantMemReusablePerDevice[cuda_device]));
   }
 
-  auto &deep_copy_space = Impl::cuda_get_deep_copy_space(/*initialize*/ false);
-  if (deep_copy_space)
-    deep_copy_space->impl_internal_space_instance()->finalize();
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaStreamDestroy(Impl::cuda_get_deep_copy_stream()));
 
@@ -664,28 +653,29 @@ void Cuda::impl_finalize() {
       cudaStreamDestroy(Impl::CudaInternal::singleton().m_stream));
 }
 
+Cuda::~Cuda() { Impl::check_execution_space_destructor_precondition(name()); }
+
 Cuda::Cuda()
-    : m_space_instance(&Impl::CudaInternal::singleton(),
-                       [](Impl::CudaInternal *) {}) {
-  Impl::CudaInternal::singleton().verify_is_initialized(
-      "Cuda instance constructor");
-}
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(&Impl::CudaInternal::singleton(),
+                               [](Impl::CudaInternal *) {}))) {}
 
 KOKKOS_DEPRECATED Cuda::Cuda(cudaStream_t stream, bool manage_stream)
     : Cuda(stream,
            manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
 
 Cuda::Cuda(cudaStream_t stream, Impl::ManageStream manage_stream)
-    : m_space_instance(
-          new Impl::CudaInternal, [manage_stream](Impl::CudaInternal *ptr) {
-            ptr->finalize();
-            if (static_cast<bool>(manage_stream)) {
-              KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(ptr->m_stream));
-            }
-            delete ptr;
-          }) {
-  Impl::CudaInternal::singleton().verify_is_initialized(
-      "Cuda instance constructor");
+    : m_space_instance((
+          Impl::check_execution_space_constructor_precondition(name()),
+          Impl::HostSharedPtr(
+              new Impl::CudaInternal, [manage_stream](Impl::CudaInternal *ptr) {
+                ptr->finalize();
+                if (static_cast<bool>(manage_stream)) {
+                  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaStreamDestroy(ptr->m_stream));
+                }
+                delete ptr;
+              }))) {
   m_space_instance->initialize(stream);
 }
 
@@ -735,9 +725,7 @@ uint32_t Cuda::impl_instance_id() const noexcept {
   return m_space_instance->impl_get_instance_id();
 }
 
-cudaStream_t Cuda::cuda_stream() const {
-  return m_space_instance->get_stream();
-}
+cudaStream_t Cuda::cuda_stream() const { return m_space_instance->m_stream; }
 int Cuda::cuda_device() const { return m_space_instance->m_cudaDev; }
 const cudaDeviceProp &Cuda::cuda_device_prop() const {
   return m_space_instance->m_deviceProp;
@@ -749,26 +737,18 @@ int g_cuda_space_factory_initialized =
     initialize_space_factory<Cuda>("150_Cuda");
 
 int CudaInternal::m_cudaArch = -1;
-cudaDeviceProp CudaInternal::m_deviceProp;
+KOKKOS_IMPL_EXPORT cudaDeviceProp CudaInternal::m_deviceProp;
 std::set<int> CudaInternal::cuda_devices = {};
-std::map<int, unsigned long *> CudaInternal::constantMemHostStagingPerDevice =
-    {};
-std::map<int, cudaEvent_t> CudaInternal::constantMemReusablePerDevice = {};
-std::map<int, std::mutex> CudaInternal::constantMemMutexPerDevice     = {};
+KOKKOS_IMPL_EXPORT std::map<int, unsigned long *>
+    CudaInternal::constantMemHostStagingPerDevice = {};
+KOKKOS_IMPL_EXPORT std::map<int, cudaEvent_t>
+    CudaInternal::constantMemReusablePerDevice = {};
+KOKKOS_IMPL_EXPORT std::map<int, std::mutex>
+    CudaInternal::constantMemMutexPerDevice = {};
 
 }  // namespace Impl
 
 }  // namespace Kokkos
-
-void Kokkos::Impl::create_Cuda_instances(std::vector<Cuda> &instances) {
-  for (int s = 0; s < int(instances.size()); s++) {
-    cudaStream_t stream;
-    KOKKOS_IMPL_CUDA_SAFE_CALL((
-        instances[s].impl_internal_space_instance()->cuda_stream_create_wrapper(
-            &stream)));
-    instances[s] = Cuda(stream, ManageStream::yes);
-  }
-}
 
 #else
 

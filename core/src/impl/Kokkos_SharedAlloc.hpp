@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_SHARED_ALLOC_HPP
 #define KOKKOS_SHARED_ALLOC_HPP
@@ -532,7 +519,7 @@ union SharedAllocationTracker {
   // number of symbols and inline functions.
 
 #ifdef KOKKOS_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY
-#define KOKKOS_IMPL_BRANCH_PROB KOKKOS_IMPL_ATTRIBUTE_UNLIKELY
+#define KOKKOS_IMPL_BRANCH_PROB [[unlikely]]
 #else
 #define KOKKOS_IMPL_BRANCH_PROB
 #endif
@@ -604,10 +591,22 @@ union SharedAllocationTracker {
 
   // Copy:
   KOKKOS_FORCEINLINE_FUNCTION
+  // NOLINTNEXTLINE(bugprone-exception-escape)
   ~SharedAllocationTracker(){KOKKOS_IMPL_SHARED_ALLOCATION_TRACKER_DECREMENT}
 
-  KOKKOS_FORCEINLINE_FUNCTION constexpr SharedAllocationTracker()
-      : m_record_bits(DO_NOT_DEREF_FLAG) {}
+  KOKKOS_FORCEINLINE_FUNCTION
+#if defined(KOKKOS_COMPILER_NVCC) || !defined(KOKKOS_COMPILER_GNU) || \
+    (KOKKOS_COMPILER_GNU < 1220) || (KOKKOS_COMPILER_GNU > 1240)
+      // FIXME_GCC: The ViewSupport test fails with gcc 12.2, 12.3 and 12.4
+      // because this constructor is optimized out, which leads to a nullptr
+      // dereference. Removing the constexpr fixes the issue but nvcc complains,
+      // so we keep the constexpr but only when using anything other than those
+      // three faulty gcc versions.
+      constexpr
+#endif
+      SharedAllocationTracker()
+      : m_record_bits(DO_NOT_DEREF_FLAG) {
+  }
 
   // Move:
 

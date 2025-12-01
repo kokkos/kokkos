@@ -1,0 +1,26 @@
+name: mdspan version check
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/mdspan-version-check.yml'
+      - 'tpls/mdspan-hash.txt'
+      - 'tpls/mdspan/**'
+
+permissions: read-all
+
+jobs:
+  mdspan-version-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+    - run: echo "ref=$(cat tpls/mdspan-hash.txt)" >> $GITHUB_ENV
+    - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      with:
+        repository: kokkos/mdspan
+        ref: ${{ env.ref }}
+        path: kokkos-mdspan
+    - run: |
+        rm kokkos-mdspan/include/experimental/mdarray
+        rm kokkos-mdspan/include/experimental/mdspan
+        diff --unified=3 --recursive tpls/mdspan/include kokkos-mdspan/include

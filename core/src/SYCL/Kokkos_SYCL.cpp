@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
@@ -22,9 +9,16 @@
 #include <SYCL/Kokkos_SYCL_Instance.hpp>
 #include <SYCL/Kokkos_SYCL.hpp>
 #include <Kokkos_HostSpace.hpp>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
-#include <impl/Kokkos_Error.hpp>
+#endif
+
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
+#include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
 namespace {
@@ -46,27 +40,27 @@ struct Container {
 }  // namespace
 
 namespace Kokkos {
+
+SYCL::~SYCL() { Impl::check_execution_space_destructor_precondition(name()); }
+
 SYCL::SYCL()
-    : m_space_instance(&Impl::SYCLInternal::singleton(),
-                       [](Impl::SYCLInternal*) {}) {
-  Impl::SYCLInternal::singleton().verify_is_initialized(
-      "SYCL instance constructor");
-}
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(&Impl::SYCLInternal::singleton(),
+                               [](Impl::SYCLInternal*) {}))) {}
 
 SYCL::SYCL(const sycl::queue& stream)
-    : m_space_instance(new Impl::SYCLInternal, [](Impl::SYCLInternal* ptr) {
-        ptr->finalize();
-        delete ptr;
-      }) {
-  // In principle could be guarded with
-  // #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-  // but we chose to require user-provided queues to be in-order
-  // unconditionally so that code downstream does not break
-  // when the backend setting changes.
+    : m_space_instance(
+          (Impl::check_execution_space_constructor_precondition(name()),
+           Impl::HostSharedPtr(new Impl::SYCLInternal,
+                               [](Impl::SYCLInternal* ptr) {
+                                 ptr->finalize();
+                                 delete ptr;
+                               }))) {
+#ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
   if (!stream.is_in_order())
     Kokkos::abort("User provided sycl::queues must be in-order!");
-  Impl::SYCLInternal::singleton().verify_is_initialized(
-      "SYCL instance constructor");
+#endif
   m_space_instance->initialize(stream);
 }
 
@@ -79,10 +73,6 @@ int SYCL::concurrency() const { return m_space_instance->m_maxConcurrency; }
 #endif
 
 const char* SYCL::name() { return "SYCL"; }
-
-bool SYCL::impl_is_initialized() {
-  return Impl::SYCLInternal::singleton().is_initialized();
-}
 
 void SYCL::impl_finalize() { Impl::SYCLInternal::singleton().finalize(); }
 
@@ -114,10 +104,10 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
 #else
   os << "macro  KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES : undefined\n";
 #endif
-#ifdef SYCL_EXT_ONEAPI_GRAPH
-  os << "macro  SYCL_EXT_ONEAPI_GRAPH : defined\n";
+#ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
+  os << "macro  KOKKOS_IMPL_SYCL_GRAPH_SUPPORT : defined\n";
 #else
-  os << "macro  SYCL_EXT_ONEAPI_GRAPH : undefined\n";
+  os << "macro  KOKKOS_IMPL_SYCL_GRAPH_SUPPORT : undefined\n";
 #endif
 #ifdef SYCL_EXT_ONEAPI_BFLOAT16
   os << "macro  SYCL_EXT_ONEAPI_BFLOAT16 : defined\n";
@@ -170,7 +160,10 @@ void SYCL::print_configuration(std::ostream& os, bool verbose) const {
     }
     os << "[" << device.get_backend() << "]:" << device_type << ':' << counter
        << "] " << device.get_info<sycl::info::device::name>();
-    if (counter == active_device) os << " : Selected";
+    if (counter == active_device)
+      os << " : Selected";
+    else
+      os << " : Not Selected";
     os << '\n';
     ++counter;
   }

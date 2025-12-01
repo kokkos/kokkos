@@ -1,18 +1,7 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 
 #ifndef TESTHALFOPERATOR_HPP_
 #define TESTHALFOPERATOR_HPP_
@@ -318,9 +307,22 @@ struct Functor_TestHalfOperators {
       Kokkos::parallel_for("Test::Functor_TestHalfOperators_4",
                            Kokkos::RangePolicy<Batch4, ExecutionSpace>(0, 1),
                            *this);
+
+      // error: total scratch space exceeds HW supported limit for kernel
+      //
+      // Kokkos::Impl::FunctorWrapperRangePolicyParallelForCustom<Kokkos::Impl::SYCLFunctionWrapper<Test::Functor_TestHalfOperators<Kokkos::View<double*,
+      // Kokkos::HostSpace>,
+      // Kokkos::Experimental::Impl::floating_point_wrapper<sycl::_V1::ext::oneapi::bfloat16>
+      // >, Kokkos::Impl::SYCLInternal::USMObjectMem<(sycl::_V1::usm::alloc)0>,
+      // false>, Kokkos::RangePolicy<Test::Batch5, Kokkos::SYCL> >
+      //
+      // error: backend compiler failed build.
+#if !(defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+      KOKKOS_COMPILER_INTEL_LLVM < 20250000)
       Kokkos::parallel_for("Test::Functor_TestHalfOperators_5",
                            Kokkos::RangePolicy<Batch5, ExecutionSpace>(0, 1),
                            *this);
+#endif
     }
   }
 
@@ -965,14 +967,14 @@ struct Functor_TestHalfOperators {
 };
 
 template <class half_type>
-void __test_half_operators(half_type h_lhs, half_type h_rhs) {
+void _test_half_operators(half_type h_lhs, half_type h_rhs) {
   half_type epsilon = Kokkos::Experimental::epsilon<half_type>::value;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);
-  typename ViewType::HostMirror f_device_actual_lhs =
+  typename ViewType::host_mirror_type f_device_actual_lhs =
       Kokkos::create_mirror_view(f_device.actual_lhs);
-  typename ViewType::HostMirror f_device_expected_lhs =
+  typename ViewType::host_mirror_type f_device_expected_lhs =
       Kokkos::create_mirror_view(f_device.expected_lhs);
 
   ExecutionSpace().fence();
@@ -1017,10 +1019,10 @@ void test_half_operators() {
   for (int i = -3; i < 2; i++) {
     // printf("%f OP %f\n", float(h_lhs + cast_to_half(i + 1)), float(h_rhs +
     // cast_to_half(i)));
-    __test_half_operators<half_t>(h_lhs + cast_to_half(i + 1),
-                                  h_rhs + cast_to_half(i));
-    // TODO: __test_half_operators(h_lhs + cast_to_half(i + 1), half_t(0));
-    // TODO: __test_half_operators(half_t(0), h_rhs + cast_to_half(i));
+    _test_half_operators<half_t>(h_lhs + cast_to_half(i + 1),
+                                 h_rhs + cast_to_half(i));
+    // TODO: _test_half_operators(h_lhs + cast_to_half(i + 1), half_t(0));
+    // TODO: _test_half_operators(half_t(0), h_rhs + cast_to_half(i));
   }
 }
 
@@ -1029,8 +1031,8 @@ void test_bhalf_operators() {
   for (int i = -2; i < 2; i++) {
     // printf("%f OP %f\n", float(h_lhs + cast_to_bhalf(i + 1)), float(h_rhs +
     // cast_to_bhalf(i)));
-    __test_half_operators<bhalf_t>(h_lhs + cast_to_bhalf(i + 1),
-                                   h_rhs + cast_to_bhalf(i));
+    _test_half_operators<bhalf_t>(h_lhs + cast_to_bhalf(i + 1),
+                                  h_rhs + cast_to_bhalf(i));
   }
 }
 

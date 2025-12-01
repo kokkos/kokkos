@@ -2,27 +2,20 @@ Checks: >
   -*,
   bugprone-*,
   -bugprone-argument-comment,
-  -bugprone-branch-clone,
   -bugprone-easily-swappable-parameters,
-  -bugprone-exception-escape,
-  -bugprone-forwarding-reference-overload,
-  -bugprone-integer-division,
   -bugprone-macro-parentheses,
-  -bugprone-misplaced-widening-cast,
-  -bugprone-multi-level-implicit-pointer-conversion,
   -bugprone-narrowing-conversions,
-  -bugprone-non-zero-enum-to-bool-conversion,
-  -bugprone-reserved-identifier,
-  -bugprone-signed-char-misuse,
-  -bugprone-sizeof-expression,
   -bugprone-suspicious-include,
-  -bugprone-suspicious-memory-comparison,
-  -bugprone-unhandled-exception-at-new,
   cppcoreguidelines-pro-type-cstyle-cast,
+  cppcoreguidelines-rvalue-reference-param-not-moved,
   modernize-type-traits,
   modernize-use-nullptr,
   modernize-use-using,
   kokkos-*
+
+CheckOptions:
+  - key: cppcoreguidelines-rvalue-reference-param-not-moved.AllowPartialMove
+    value: true
 
 FormatStyle: file
 HeaderFilterRegex: '(algorithms|benchmarks|containers|core|example|simd).*\.hpp'

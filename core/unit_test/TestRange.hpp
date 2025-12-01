@@ -1,22 +1,14 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <cstdio>
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 namespace Test {
 
@@ -54,7 +46,7 @@ struct TestRange {
   }
 
   void test_for() {
-    typename view_type::HostMirror host_flags =
+    typename view_type::host_mirror_type host_flags =
         Kokkos::create_mirror_view(m_flags);
 
     Kokkos::parallel_for(Kokkos::RangePolicy<ExecSpace, ScheduleType>(0, N),
@@ -181,11 +173,11 @@ struct TestRange {
   void test_dynamic_policy() {
     auto const N_no_implicit_capture = N;
     using policy_t =
-        Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic> >;
+        Kokkos::RangePolicy<ExecSpace, Kokkos::Schedule<Kokkos::Dynamic>>;
     int const concurrency = ExecSpace().concurrency();
 
     {
-      Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> >
+      Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
           count("Count", concurrency);
       Kokkos::View<int *, ExecSpace> a("A", N);
 
@@ -223,7 +215,7 @@ struct TestRange {
     }
 
     {
-      Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic> >
+      Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
           count("Count", concurrency);
       Kokkos::View<int *, ExecSpace> a("A", N);
 
@@ -271,80 +263,207 @@ struct TestRange {
 
 TEST(TEST_CATEGORY, range_for) {
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>> f(0);
     f.test_for();
   }
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(0);
-    f.test_for();
-  }
-
-  {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(2);
-    f.test_for();
-  }
-  {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(3);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(0);
     f.test_for();
   }
 
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(1000);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>> f(2);
     f.test_for();
   }
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(1001);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(3);
+    f.test_for();
+  }
+
+  {
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>> f(1000);
+    f.test_for();
+  }
+  {
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(1001);
     f.test_for();
   }
 }
 
 TEST(TEST_CATEGORY, range_reduce) {
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(0);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>> f(0);
     f.test_reduce();
   }
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(0);
-    f.test_reduce();
-  }
-
-  {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(2);
-    f.test_reduce();
-  }
-  {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(3);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(0);
     f.test_reduce();
   }
 
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static> > f(1000);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>> f(2);
     f.test_reduce();
   }
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(1001);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(3);
+    f.test_reduce();
+  }
+
+  {
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>> f(1000);
+    f.test_reduce();
+  }
+  {
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(1001);
     f.test_reduce();
   }
 }
+
+template <typename ExecSpace, typename StaticBatchSize>
+struct TestStaticBatchSize {
+  using view_type = Kokkos::View<int *, ExecSpace>;
+
+  view_type m_flags;
+  view_type result_view;
+
+  struct AtomicAddTag {};
+  struct VerifyAtomicAddTag {};
+
+  size_t N;
+
+  TestStaticBatchSize(const size_t N_)
+      : m_flags(Kokkos::view_alloc(Kokkos::WithoutInitializing, "flags"), N_),
+        result_view(Kokkos::view_alloc(Kokkos::WithoutInitializing, "results"),
+                    N_),
+        N(N_) {}
+
+  void test_batch_size() {
+    Kokkos::deep_copy(m_flags, 0);
+
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, AtomicAddTag, StaticBatchSize>(0, N),
+        *this);
+
+    bool success = true;
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecSpace, VerifyAtomicAddTag>(0, N), *this,
+        Kokkos::LAnd<bool>(success));
+
+    ASSERT_TRUE(success);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const AtomicAddTag, const int i) const {
+    Kokkos::atomic_add(&m_flags(i), 1);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const VerifyAtomicAddTag, const int i, bool &success) const {
+    if (m_flags(i) != 1) {
+      Kokkos::printf(
+          "TestStaticBatchSize {::test_batch_size_error at %d != %d\n", i,
+          m_flags(i));
+    }
+    success = success && (m_flags(i) == 1);
+  }
+};
 
 #ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, range_dynamic_policy) {
 #if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
     !defined(KOKKOS_ENABLE_SYCL)
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(0);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(0);
     f.test_dynamic_policy();
   }
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(3);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(3);
     f.test_dynamic_policy();
   }
   {
-    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic> > f(1001);
+    TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(1001);
     f.test_dynamic_policy();
   }
 #endif
 }
 #endif
+
+// For 32-bit builds a View can't store enough elements
+#ifndef KOKKOS_IMPL_32BIT
+void test_large_parallel_for_reduce() {
+  using ExecutionSpace              = typename TEST_EXECSPACE::execution_space;
+  constexpr long long unsigned size = 1llu << 32;
+  Kokkos::View<char *, TEST_EXECSPACE::memory_space> v(
+      Kokkos::view_alloc(Kokkos::WithoutInitializing, "v"), size);
+
+  // We want to explicitly test that using a parallel_for for filling the View
+  // works to test if our internal block size calculations do not overflow.
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace,
+                          Kokkos::IndexType<long long unsigned>>(0, size),
+      KOKKOS_LAMBDA(long long unsigned i) { v(i) = 1; });
+
+  long long unsigned sum;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace,
+                          Kokkos::IndexType<long long unsigned>>(0, size),
+      KOKKOS_LAMBDA(long long unsigned, long long unsigned &partial_sum) {
+        partial_sum += 1;
+      },
+      sum);
+  ASSERT_EQ(sum, size);
+}
+
+TEST(TEST_CATEGORY, large_parallel_for_reduce) {
+  if constexpr (std::is_same_v<typename TEST_EXECSPACE::memory_space,
+                               Kokkos::HostSpace>) {
+    GTEST_SKIP() << "Disabling for host backends";
+  }
+  test_large_parallel_for_reduce();
+}
+#endif
+
+TEST(TEST_CATEGORY, check_batch_size) {
+  ASSERT_TRUE(Kokkos::Experimental::StaticBatchSize<1>::batch_size == 1);
+  ASSERT_TRUE(Kokkos::Experimental::StaticBatchSize<4>::batch_size == 4);
+}
+
+TEST(TEST_CATEGORY, range_static_batch_size) {
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<1>>
+        f(1024);
+    f.test_batch_size();
+  }
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<2>>
+        f(1024);
+    f.test_batch_size();
+  }
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<4>>
+        f(1024);
+    f.test_batch_size();
+  }
+
+  // Check for loop ranges where the range is not exactly divisible by the
+  // static batch size.
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<4>>
+        f(1025);
+    f.test_batch_size();
+  }
+
+  // Check for loop ranges smaller than the static batch size.
+  {
+    TestStaticBatchSize<TEST_EXECSPACE,
+                        Kokkos::Experimental::StaticBatchSize<4>>
+        f(3);
+    f.test_batch_size();
+  }
+}
 
 }  // namespace Test
