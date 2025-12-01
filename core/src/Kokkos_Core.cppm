@@ -47,9 +47,6 @@ export {
 #ifdef KOKKOS_ENABLE_HPX
   using ::Kokkos::Experimental::HPX;
 #endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  using ::Kokkos::Experimental::OpenMPTarget;
-#endif
 #ifdef KOKKOS_ENABLE_OPENACC
   using ::Kokkos::Experimental::OpenACC;
 #endif
