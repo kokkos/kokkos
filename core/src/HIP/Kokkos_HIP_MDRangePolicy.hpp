@@ -22,26 +22,36 @@ struct default_inner_direction<HIP> {
 
 namespace Impl {
 
-// Specialization for HIP execution space
 template <typename... Properties>
-struct MDRangePolicyInternal<Kokkos::HIP, Properties...>
-    : public PolicyTraits<Properties...> {
+struct MDRangePolicyInternal;
+
+// Specialization for HIP execution space
+template <typename P, typename... Properties>
+struct MDRangePolicyInternal<Kokkos::HIP, P, Properties...>
+    : public PolicyTraits<P, Properties...> {
  public:
-  using traits          = Impl::PolicyTraits<Properties...>;
+  using traits          = Impl::PolicyTraits<P, Properties...>;
   using execution_space = Kokkos::HIP;
+  using range_policy    = RangePolicy<Properties...>;
 
-  using iteration_pattern   = typename traits::iteration_pattern;
+  using iteration_pattern = typename traits::iteration_pattern;
+  using work_tag          = typename traits::work_tag;
+  using launch_bounds     = typename traits::launch_bounds;
+  using member_type       = typename range_policy::member_type;
+
+  template <class... OtherProperties>
+  friend class MDRangePolicyInternal;
+
   static constexpr int rank = iteration_pattern::rank;
-
-  using index_type       = typename traits::index_type;
-  using array_index_type = std::make_signed_t<index_type>;
-  using point_type       = Kokkos::Array<array_index_type, rank>;
-  using tile_type        = Kokkos::Array<array_index_type, rank>;
+  using index_type          = typename traits::index_type;
+  using array_index_type    = std::make_signed_t<index_type>;
+  using point_type          = Kokkos::Array<array_index_type, rank>;
+  using tile_type           = Kokkos::Array<array_index_type, rank>;
 
   execution_space m_space;
 
  public:
-  int m_max_total_tile_size                      = 512;
+  int m_max_total_tile_size = HIPTraits::MaxThreadsPerBlock;
   Kokkos::Array<int, 3> m_max_threads_dimensions = {};
 
   point_type m_lower          = {};
@@ -94,18 +104,7 @@ struct MDRangePolicyInternal<Kokkos::HIP, Properties...>
   MDRangePolicyInternal& operator=(MDRangePolicyInternal&&)      = default;
   ~MDRangePolicyInternal()                                       = default;
 
- private:
  public:
-  int max_total_tile_size() const { return m_max_total_tile_size; }
-
-  tile_type max_tile_size() const {
-    tile_type result{};
-    for (std::size_t i = 0; i < rank && i < 3; ++i) {
-      result[i] = m_max_threads_dimensions[i];
-    }
-    return result;
-  }
-
   tile_type tile_size_recommended() const {
     tile_type tile_sizes = {};
     if (inner_direction == Iterate::Left) {

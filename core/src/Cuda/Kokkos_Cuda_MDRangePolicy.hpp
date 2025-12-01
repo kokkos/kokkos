@@ -22,15 +22,26 @@ struct default_inner_direction<Kokkos::Cuda> {
 
 namespace Impl {
 
-// Specialization for Cuda execution space
 template <typename... Properties>
-struct MDRangePolicyInternal<Kokkos::Cuda, Properties...>
-    : public PolicyTraits<Properties...> {
- public:
-  using traits          = Impl::PolicyTraits<Properties...>;
-  using execution_space = Kokkos::Cuda;
+struct MDRangePolicyInternal;
 
-  using iteration_pattern   = typename traits::iteration_pattern;
+// Specialization for Cuda execution space
+template <typename P, typename... Properties>
+struct MDRangePolicyInternal<Kokkos::Cuda, P, Properties...>
+    : public PolicyTraits<P, Properties...> {
+ public:
+  using traits          = Impl::PolicyTraits<P, Properties...>;
+  using execution_space = Kokkos::Cuda;
+  using range_policy    = RangePolicy<Properties...>;
+
+  using iteration_pattern = typename traits::iteration_pattern;
+  using work_tag          = typename traits::work_tag;
+  using launch_bounds     = typename traits::launch_bounds;
+  using member_type       = typename range_policy::member_type;
+
+  template <class... OtherProperties>
+  friend class MDRangePolicyInternal;
+
   static constexpr int rank = iteration_pattern::rank;
 
   using index_type       = typename traits::index_type;
@@ -87,24 +98,14 @@ struct MDRangePolicyInternal<Kokkos::Cuda, Properties...>
         m_prod_tile_dims(p.m_prod_tile_dims),
         m_tune_tile_size(p.m_tune_tile_size) {}
 
+  // Default constructor and assignment operators
   MDRangePolicyInternal(const MDRangePolicyInternal&)            = default;
   MDRangePolicyInternal(MDRangePolicyInternal&&)                 = default;
   MDRangePolicyInternal& operator=(const MDRangePolicyInternal&) = default;
   MDRangePolicyInternal& operator=(MDRangePolicyInternal&&)      = default;
   ~MDRangePolicyInternal()                                       = default;
 
- private:
  public:
-  int max_total_tile_size() const { return m_max_total_tile_size; }
-
-  tile_type max_tile_size() const {
-    tile_type result{};
-    for (std::size_t i = 0; i < rank && i < 3; ++i) {
-      result[i] = m_max_threads_dimensions[i];
-    }
-    return result;
-  }
-
   tile_type tile_size_recommended() const {
     tile_type tile_sizes = {};
     if (inner_direction == Iterate::Left) {

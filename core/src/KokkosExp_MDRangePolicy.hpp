@@ -22,17 +22,6 @@ static_assert(false,
 
 namespace Kokkos {
 
-// ------------------------------------------------------------------ //
-// Moved to Kokkos_Layout.hpp for more general accessibility
-/*
-enum class Iterate
-{
-  Default, // Default for the device
-  Left,    // Left indices stride fastest
-  Right,   // Right indices stride fastest
-};
-*/
-
 template <typename ExecSpace>
 struct default_outer_direction {
   using type                     = Iterate;
@@ -122,21 +111,41 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   return a;
 }
 
-template <typename ExecSpace, typename... Properties>
-struct MDRangePolicyInternal : public PolicyTraits<Properties...> {
+template <typename... Properties>
+struct MDRangePolicyInternal;
+
+template <typename ExecSpace, typename P, typename... Properties>
+struct MDRangePolicyInternal<ExecSpace, P, Properties...>
+    : public PolicyTraits<P, Properties...> {
  public:
-  using traits          = Impl::PolicyTraits<Properties...>;
+  using traits          = Impl::PolicyTraits<P, Properties...>;
   using execution_space = ExecSpace;
+  using range_policy    = RangePolicy<Properties...>;
 
   using iteration_pattern = typename traits::iteration_pattern;
+  using work_tag          = typename traits::work_tag;
   using launch_bounds     = typename traits::launch_bounds;
-  using index_type        = typename traits::index_type;
-  using array_index_type  = std::make_signed_t<index_type>;
+  using member_type       = typename range_policy::member_type;
+
+  template <class... OtherProperties>
+  friend class MDRangePolicyInternal;
 
   static constexpr int rank = iteration_pattern::rank;
 
-  using point_type = Kokkos::Array<array_index_type, rank>;
-  using tile_type  = Kokkos::Array<array_index_type, rank>;
+  // If point_type or tile_type is not templated on a signed integral type (if
+  // it is unsigned), then if user passes in intializer_list of
+  // runtime-determined values of signed integral type that are not const will
+  // receive a compiler error due to an invalid case for implicit conversion -
+  // "conversion from integer or unscoped enumeration type to integer type that
+  // cannot represent all values of the original, except where source is a
+  // constant expression whose value can be stored exactly in the target type"
+  // This would require the user to either pass a matching index_type parameter
+  // as template parameter to the MDRangePolicy or static_cast the individual
+  // values
+  using index_type       = typename traits::index_type;
+  using array_index_type = std::make_signed_t<index_type>;
+  using point_type       = Kokkos::Array<array_index_type, rank>;
+  using tile_type        = Kokkos::Array<array_index_type, rank>;
 
   execution_space m_space;
 
@@ -180,23 +189,13 @@ struct MDRangePolicyInternal : public PolicyTraits<Properties...> {
         m_prod_tile_dims(p.m_prod_tile_dims),
         m_tune_tile_size(p.m_tune_tile_size) {}
 
-  // Default constructor
+  // Default constructor and assignment operators
   MDRangePolicyInternal()                                        = default;
   MDRangePolicyInternal(const MDRangePolicyInternal&)            = default;
   MDRangePolicyInternal(MDRangePolicyInternal&&)                 = default;
   MDRangePolicyInternal& operator=(const MDRangePolicyInternal&) = default;
   MDRangePolicyInternal& operator=(MDRangePolicyInternal&&)      = default;
   ~MDRangePolicyInternal()                                       = default;
-
-  int max_total_tile_size() const { return m_max_total_tile_size; }
-
-  tile_type max_tile_size() const {
-    tile_type result{};
-    for (std::size_t i = 0; i < rank && i < 3; ++i) {
-      result[i] = m_max_threads_dimensions[i];
-    }
-    return result;
-  }
 
   tile_type tile_size_recommended() const {
     tile_type recommended_tile_sizes{};
@@ -238,14 +237,14 @@ struct MDRangePolicy;
 // specified (which is Rank<...>); otherwise, we'd get the static_assert
 // "Kokkos::Error: MD iteration pattern not defined".  This template
 // specialization uses <P, Properties...> in all places for correctness.
-template <typename... Properties>
-struct MDRangePolicy
+template <typename P, typename... Properties>
+struct MDRangePolicy<P, Properties...>
     : public Impl::MDRangePolicyInternal<
-          typename Impl::PolicyTraits<Properties...>::execution_space,
+          typename Impl::PolicyTraits<P, Properties...>::execution_space, P,
           Properties...> {
-  using traits          = Kokkos::Impl::PolicyTraits<Properties...>;
+  using traits          = Kokkos::Impl::PolicyTraits<P, Properties...>;
   using internal_policy = Impl::MDRangePolicyInternal<
-      typename Impl::PolicyTraits<Properties...>::execution_space,
+      typename Impl::PolicyTraits<P, Properties...>::execution_space, P,
       Properties...>;
 
   using range_policy = RangePolicy<Properties...>;
@@ -255,8 +254,8 @@ struct MDRangePolicy
                   typename traits::schedule_type, typename traits::index_type>;
 
   using execution_policy =
-      MDRangePolicy<Properties...>;  // needed for is_execution_policy
-                                     // interrogation
+      MDRangePolicy<P, Properties...>;  // needed for is_execution_policy
+                                        // interrogation
 
   template <class... OtherProperties>
   friend struct MDRangePolicy;
@@ -265,10 +264,10 @@ struct MDRangePolicy
                 "Kokkos Error: MD iteration pattern not defined");
 
  public:
-  using iteration_pattern = typename traits::iteration_pattern;
-  using work_tag          = typename traits::work_tag;
-  using launch_bounds     = typename traits::launch_bounds;
-  using member_type       = typename range_policy::member_type;
+  using typename internal_policy::iteration_pattern;
+  using typename internal_policy::launch_bounds;
+  using typename internal_policy::member_type;
+  using typename internal_policy::work_tag;
 
   static constexpr int rank = iteration_pattern::rank;
   static_assert(rank < 7, "Kokkos MDRangePolicy Error: Unsupported rank...");
@@ -284,6 +283,8 @@ struct MDRangePolicy
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return this->m_space;
   }
+
+  int max_total_tile_size() const { return this->m_max_total_tile_size; }
 
   void impl_change_tile_size(const point_type& tile) {
     this->m_tile = tile;
