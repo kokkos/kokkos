@@ -728,12 +728,9 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
     SpaceDescription desc;
     int max_tile_size =
         calc.get_mdrange_max_tile_size_product(policy, functor, tag);
-    Kokkos::Impl::TileSizeProperties tile_properties =
-        Kokkos::Impl::get_tile_size_properties(policy.space());
 
     Impl::fill_tile(desc, max_tile_size);
-    Impl::apply_tiles_constraints(desc, tile_properties.max_threads_dimensions,
-                                  rank);
+    Impl::apply_tiles_constraints(desc, policy.max_threads_dimensions, rank);
     std::vector<std::string> feature_names;
     for (int x = 0; x < rank; ++x) {
       feature_names.push_back(name + "_tile_size_" + std::to_string(x));

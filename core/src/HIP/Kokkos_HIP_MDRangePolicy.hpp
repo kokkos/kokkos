@@ -22,20 +22,130 @@ struct default_inner_direction<HIP> {
 
 namespace Impl {
 
-// Settings for MDRangePolicy
-template <>
-inline TileSizeProperties get_tile_size_properties<HIP>(const HIP& space) {
-  TileSizeProperties properties;
-  const auto& device_prop              = space.hip_device_prop();
-  properties.max_threads               = device_prop.maxThreadsPerBlock;
-  properties.default_largest_tile_size = 16;
-  properties.default_tile_size         = 4;
-  properties.max_total_tile_size       = HIPTraits::MaxThreadsPerBlock;
-  properties.max_threads_dimensions[0] = device_prop.maxThreadsDim[0];
-  properties.max_threads_dimensions[1] = device_prop.maxThreadsDim[1];
-  properties.max_threads_dimensions[2] = device_prop.maxThreadsDim[2];
-  return properties;
-}
+// Specialization for HIP execution space
+template <typename... Properties>
+struct MDRangePolicyInternal<Kokkos::HIP, Properties...>
+    : public PolicyTraits<Properties...> {
+ public:
+  using traits          = Impl::PolicyTraits<Properties...>;
+  using execution_space = Kokkos::HIP;
+
+  using iteration_pattern   = typename traits::iteration_pattern;
+  static constexpr int rank = iteration_pattern::rank;
+
+  using index_type       = typename traits::index_type;
+  using array_index_type = std::make_signed_t<index_type>;
+  using point_type       = Kokkos::Array<array_index_type, rank>;
+  using tile_type        = Kokkos::Array<array_index_type, rank>;
+
+  execution_space m_space;
+
+ public:
+  int m_max_total_tile_size                      = 512;
+  Kokkos::Array<int, 3> m_max_threads_dimensions = {};
+
+  point_type m_lower          = {};
+  point_type m_upper          = {};
+  tile_type m_tile            = {};
+  point_type m_tile_end       = {};
+  index_type m_num_tiles      = 1;
+  index_type m_prod_tile_dims = 1;
+  bool m_tune_tile_size       = false;
+
+  static constexpr auto outer_direction =
+      (iteration_pattern::outer_direction != Iterate::Default)
+          ? iteration_pattern::outer_direction
+          : default_outer_direction<typename traits::execution_space>::value;
+
+  static constexpr auto inner_direction =
+      iteration_pattern::inner_direction != Iterate::Default
+          ? iteration_pattern::inner_direction
+          : default_inner_direction<typename traits::execution_space>::value;
+
+  static constexpr auto Right = Iterate::Right;
+  static constexpr auto Left  = Iterate::Left;
+
+ public:
+  MDRangePolicyInternal() {
+    const auto& device_prop     = m_space.hip_device_prop();
+    m_max_total_tile_size       = HIPTraits::MaxThreadsPerBlock;
+    m_max_threads_dimensions[0] = device_prop.maxThreadsDim[0];
+    m_max_threads_dimensions[1] = device_prop.maxThreadsDim[1];
+    m_max_threads_dimensions[2] = device_prop.maxThreadsDim[2];
+  }
+
+  template <typename... OtherProperties>
+  MDRangePolicyInternal(
+      const MDRangePolicyInternal<Kokkos::Cuda, OtherProperties...>& p)
+      : m_space(p.m_space),
+        m_max_total_tile_size(p.m_max_total_tile_size),
+        m_max_threads_dimensions(p.m_max_threads_dimensions),
+        m_lower(p.m_lower),
+        m_upper(p.m_upper),
+        m_tile(p.m_tile),
+        m_tile_end(p.m_tile_end),
+        m_num_tiles(p.m_num_tiles),
+        m_prod_tile_dims(p.m_prod_tile_dims),
+        m_tune_tile_size(p.m_tune_tile_size) {}
+
+  MDRangePolicyInternal(const MDRangePolicyInternal&)            = default;
+  MDRangePolicyInternal(MDRangePolicyInternal&&)                 = default;
+  MDRangePolicyInternal& operator=(const MDRangePolicyInternal&) = default;
+  MDRangePolicyInternal& operator=(MDRangePolicyInternal&&)      = default;
+  ~MDRangePolicyInternal()                                       = default;
+
+ private:
+ public:
+  int max_total_tile_size() const { return m_max_total_tile_size; }
+
+  tile_type max_tile_size() const {
+    tile_type result{};
+    for (std::size_t i = 0; i < rank && i < 3; ++i) {
+      result[i] = m_max_threads_dimensions[i];
+    }
+    return result;
+  }
+
+  tile_type tile_size_recommended() const {
+    tile_type tile_sizes = {};
+    if (inner_direction == Iterate::Left) {
+      if constexpr (rank == 2) {
+        tile_sizes = {64, 4};
+      } else if constexpr (rank == 3) {
+        tile_sizes = {32, 2, 4};
+      } else if constexpr (rank == 4) {
+        tile_sizes = {32, 2, 2, 2};
+      } else if constexpr (rank == 5) {
+        tile_sizes = {32, 2, 2, 1, 2};
+      } else if constexpr (rank == 6) {
+        tile_sizes = {32, 2, 2, 1, 2, 1};
+      } else {
+        for (int i = 0; i < rank; ++i) {
+          tile_sizes[i] = 2;
+        }
+        tile_sizes[0] = 16;
+      }
+    } else {
+      if constexpr (rank == 2) {
+        tile_sizes = {4, 64};
+      } else if constexpr (rank == 3) {
+        tile_sizes = {4, 2, 32};
+      } else if constexpr (rank == 4) {
+        tile_sizes = {2, 2, 2, 32};
+      } else if constexpr (rank == 5) {
+        tile_sizes = {2, 1, 2, 2, 32};
+      } else if constexpr (rank == 6) {
+        tile_sizes = {2, 1, 2, 1, 2, 32};
+      } else {
+        for (int i = 0; i < rank; ++i) {
+          tile_sizes[i] = 2;
+        }
+        tile_sizes[rank - 1] = 16;
+      }
+    }
+    return tile_sizes;
+  }
+};
 
 // Settings for TeamMDRangePolicy
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>

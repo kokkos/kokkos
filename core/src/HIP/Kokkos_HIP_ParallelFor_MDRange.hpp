@@ -14,71 +14,7 @@
 namespace Kokkos {
 namespace Impl {
 
-// Template structure for Stride optimization
-template <typename FunctorType, typename Policy, bool UseStride>
-class ParallelForMDRange;
-
-// Template specialization for Stride
-template <typename FunctorType, typename... Traits>
-class ParallelForMDRange<FunctorType, Kokkos::MDRangePolicy<Traits...>, true> {
- public:
-  using Policy       = Kokkos::MDRangePolicy<Traits...>;
-  using functor_type = FunctorType;
-
- private:
-  using index_type  = typename Policy::index_type;
-  using MaxGridSize = Kokkos::Array<index_type, 3>;
-
-  const FunctorType m_functor;
-  const Policy m_policy;
-  const MaxGridSize m_max_grid_size;
-
- public:
-  ParallelForMDRange()                                     = delete;
-  ParallelForMDRange(ParallelForMDRange const&)            = default;
-  ParallelForMDRange& operator=(ParallelForMDRange const&) = delete;
-
-  inline __device__ void operator()() const {
-    Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
-                                    MaxGridSize, typename Policy::work_tag>(
-        m_policy, m_functor, m_max_grid_size)
-        .exec_range();
-  }
-
-  ParallelForMDRange(FunctorType const& arg_functor, Policy const& arg_policy,
-                     MaxGridSize const& max_grid_size)
-      : m_functor(arg_functor),
-        m_policy(arg_policy),
-        m_max_grid_size(max_grid_size) {}
-};
-
-// Template specialization for No Stride
-template <typename FunctorType, typename... Traits>
-class ParallelForMDRange<FunctorType, Kokkos::MDRangePolicy<Traits...>, false> {
- public:
-  using Policy       = Kokkos::MDRangePolicy<Traits...>;
-  using functor_type = FunctorType;
-
- private:
-  const FunctorType m_functor;
-  const Policy m_policy;
-
- public:
-  ParallelForMDRange()                                     = delete;
-  ParallelForMDRange(ParallelForMDRange const&)            = default;
-  ParallelForMDRange& operator=(ParallelForMDRange const&) = delete;
-
-  inline __device__ void operator()() const {
-    Kokkos::Impl::DeviceIterateTileNoStride<Policy::rank, Policy, FunctorType,
-                                            typename Policy::work_tag>(
-        m_policy, m_functor)
-        .exec_range();
-  }
-
-  ParallelForMDRange(FunctorType const& arg_functor, Policy const& arg_policy)
-      : m_functor(arg_functor), m_policy(arg_policy) {}
-};
-
+// ParallelFor
 template <class FunctorType, class... Traits>
 class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
  public:
@@ -114,6 +50,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   }
 
   inline void execute() const {
+    using ClosureType = ParallelFor<FunctorType, Policy, HIP>;
     if (m_policy.m_num_tiles == 0) return;
 
     const auto [grid, block] =

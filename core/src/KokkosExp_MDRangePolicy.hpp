@@ -122,86 +122,30 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   return a;
 }
 
-struct TileSizeProperties {
-  int max_threads;  // (per SM, CU)
-  int default_largest_tile_size;
-  int default_tile_size;
-  int max_total_tile_size;
-  // For GPU backends: hardware limits for block dimensions
-  std::array<int, 3> max_threads_dimensions;
-};
-
-template <typename ExecutionSpace>
-TileSizeProperties get_tile_size_properties(const ExecutionSpace&) {
-  // Host settings
-  TileSizeProperties properties;
-  properties.max_threads               = std::numeric_limits<int>::max();
-  properties.default_largest_tile_size = 0;
-  properties.default_tile_size         = 2;
-  properties.max_total_tile_size       = std::numeric_limits<int>::max();
-  for (int i = 0; i < 3; ++i) {
-    properties.max_threads_dimensions[i] = std::numeric_limits<int>::max();
-  }
-  return properties;
-}
-
-}  // namespace Impl
-
-// multi-dimensional iteration pattern
-template <typename... Properties>
-struct MDRangePolicy;
-
-// Note: If MDRangePolicy has a primary template, implicit CTAD (deduction
-// guides) are generated -> MDRangePolicy<> by some compilers, which is
-// incorrect.  By making it a template specialization instead, no implicit CTAD
-// is generated.  This works because there has to be at least one property
-// specified (which is Rank<...>); otherwise, we'd get the static_assert
-// "Kokkos::Error: MD iteration pattern not defined".  This template
-// specialization uses <P, Properties...> in all places for correctness.
-template <typename P, typename... Properties>
-struct MDRangePolicy<P, Properties...>
-    : public Kokkos::Impl::PolicyTraits<P, Properties...> {
-  using traits       = Kokkos::Impl::PolicyTraits<P, Properties...>;
-  using range_policy = RangePolicy<P, Properties...>;
-
-  typename traits::execution_space m_space;
-
-  using impl_range_policy =
-      RangePolicy<typename traits::execution_space,
-                  typename traits::schedule_type, typename traits::index_type>;
-
-  using execution_policy =
-      MDRangePolicy<P, Properties...>;  // needed for is_execution_policy
-                                        // interrogation
-
-  template <class... OtherProperties>
-  friend struct MDRangePolicy;
-
-  static_assert(!std::is_void_v<typename traits::iteration_pattern>,
-                "Kokkos Error: MD iteration pattern not defined");
+template <typename ExecSpace, typename... Properties>
+struct MDRangePolicyInternal : public PolicyTraits<Properties...> {
+ public:
+  using traits          = Impl::PolicyTraits<Properties...>;
+  using execution_space = ExecSpace;
 
   using iteration_pattern = typename traits::iteration_pattern;
-  using work_tag          = typename traits::work_tag;
   using launch_bounds     = typename traits::launch_bounds;
-  using member_type       = typename range_policy::member_type;
+  using index_type        = typename traits::index_type;
+  using array_index_type  = std::make_signed_t<index_type>;
 
   static constexpr int rank = iteration_pattern::rank;
-  static_assert(rank < 7, "Kokkos MDRangePolicy Error: Unsupported rank...");
 
-  using index_type       = typename traits::index_type;
-  using array_index_type = std::int64_t;
-  using point_type = Kokkos::Array<array_index_type, rank>;  // was index_type
+  using point_type = Kokkos::Array<array_index_type, rank>;
   using tile_type  = Kokkos::Array<array_index_type, rank>;
-  // If point_type or tile_type is not templated on a signed integral type (if
-  // it is unsigned), then if user passes in intializer_list of
-  // runtime-determined values of signed integral type that are not const will
-  // receive a compiler error due to an invalid case for implicit conversion -
-  // "conversion from integer or unscoped enumeration type to integer type that
-  // cannot represent all values of the original, except where source is a
-  // constant expression whose value can be stored exactly in the target type"
-  // This would require the user to either pass a matching index_type parameter
-  // as template parameter to the MDRangePolicy or static_cast the individual
-  // values
+
+  execution_space m_space;
+
+ public:
+  int m_default_tile_size   = 2;
+  int m_max_total_tile_size = std::numeric_limits<int>::max();
+  Kokkos::Array<int, 3> m_max_threads_dimensions = {
+      std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
+      std::numeric_limits<int>::max()};
 
   point_type m_lower          = {};
   point_type m_upper          = {};
@@ -221,15 +165,205 @@ struct MDRangePolicy<P, Properties...>
           ? iteration_pattern::inner_direction
           : default_inner_direction<typename traits::execution_space>::value;
 
-  static constexpr auto Right = Iterate::Right;
-  static constexpr auto Left  = Iterate::Left;
+ public:
+  template <typename... OtherProperties>
+  MDRangePolicyInternal(const MDRangePolicyInternal<OtherProperties...>& p)
+      : m_space(p.m_space),
+        m_default_tile_size(p.m_default_tile_size),
+        m_max_total_tile_size(p.m_max_total_tile_size),
+        m_max_threads_dimensions(p.m_max_threads_dimensions),
+        m_lower(p.m_lower),
+        m_upper(p.m_upper),
+        m_tile(p.m_tile),
+        m_tile_end(p.m_tile_end),
+        m_num_tiles(p.m_num_tiles),
+        m_prod_tile_dims(p.m_prod_tile_dims),
+        m_tune_tile_size(p.m_tune_tile_size) {}
 
-  KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
-    return m_space;
+  // Default constructor
+  MDRangePolicyInternal()                                        = default;
+  MDRangePolicyInternal(const MDRangePolicyInternal&)            = default;
+  MDRangePolicyInternal(MDRangePolicyInternal&&)                 = default;
+  MDRangePolicyInternal& operator=(const MDRangePolicyInternal&) = default;
+  MDRangePolicyInternal& operator=(MDRangePolicyInternal&&)      = default;
+  ~MDRangePolicyInternal()                                       = default;
+
+  int max_total_tile_size() const { return m_max_total_tile_size; }
+
+  tile_type max_tile_size() const {
+    tile_type result{};
+    for (std::size_t i = 0; i < rank && i < 3; ++i) {
+      result[i] = m_max_threads_dimensions[i];
+    }
+    return result;
   }
 
-  MDRangePolicy() = default;
+  tile_type tile_size_recommended() const {
+    tile_type recommended_tile_sizes{};
 
+    int rank_start = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int rank_end   = (inner_direction == Iterate::Right) ? -1 : rank;
+    int iter_step  = (inner_direction == Iterate::Right) ? -1 : 1;
+    array_index_type last_rank_length =
+        m_upper[rank_start] - m_lower[rank_start];
+
+    int prod_tile_size = 1;
+    for (int i = rank_start; i != rank_end; i += iter_step) {
+      int rank_tile_size = 1;
+      if (prod_tile_size * m_default_tile_size <= m_max_total_tile_size) {
+        rank_tile_size = m_default_tile_size;
+      } else {
+        rank_tile_size = 1;
+      }
+      if (i == rank_start) {
+        rank_tile_size = std::max<int>(last_rank_length, 1);
+      }
+      prod_tile_size *= rank_tile_size;
+      recommended_tile_sizes[i] = rank_tile_size;
+    }
+    return recommended_tile_sizes;
+  }
+};
+
+}  // namespace Impl
+
+// multi-dimensional iteration pattern
+template <typename... Properties>
+struct MDRangePolicy;
+
+// Note: If MDRangePolicy has a primary template, implicit CTAD (deduction
+// guides) are generated -> MDRangePolicy<> by some compilers, which is
+// incorrect.  By making it a template specialization instead, no implicit CTAD
+// is generated.  This works because there has to be at least one property
+// specified (which is Rank<...>); otherwise, we'd get the static_assert
+// "Kokkos::Error: MD iteration pattern not defined".  This template
+// specialization uses <P, Properties...> in all places for correctness.
+template <typename... Properties>
+struct MDRangePolicy
+    : public Impl::MDRangePolicyInternal<
+          typename Impl::PolicyTraits<Properties...>::execution_space,
+          Properties...> {
+  using traits          = Kokkos::Impl::PolicyTraits<Properties...>;
+  using internal_policy = Impl::MDRangePolicyInternal<
+      typename Impl::PolicyTraits<Properties...>::execution_space,
+      Properties...>;
+
+  using range_policy = RangePolicy<Properties...>;
+
+  using impl_range_policy =
+      RangePolicy<typename traits::execution_space,
+                  typename traits::schedule_type, typename traits::index_type>;
+
+  using execution_policy =
+      MDRangePolicy<Properties...>;  // needed for is_execution_policy
+                                     // interrogation
+
+  template <class... OtherProperties>
+  friend struct MDRangePolicy;
+
+  static_assert(!std::is_void_v<typename traits::iteration_pattern>,
+                "Kokkos Error: MD iteration pattern not defined");
+
+ public:
+  using iteration_pattern = typename traits::iteration_pattern;
+  using work_tag          = typename traits::work_tag;
+  using launch_bounds     = typename traits::launch_bounds;
+  using member_type       = typename range_policy::member_type;
+
+  static constexpr int rank = iteration_pattern::rank;
+  static_assert(rank < 7, "Kokkos MDRangePolicy Error: Unsupported rank...");
+
+  static constexpr auto outer_direction = internal_policy::outer_direction;
+  static constexpr auto inner_direction = internal_policy::inner_direction;
+
+  using typename internal_policy::array_index_type;
+  using typename internal_policy::index_type;
+  using typename internal_policy::point_type;
+  using typename internal_policy::tile_type;
+
+  KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
+    return this->m_space;
+  }
+
+  void impl_change_tile_size(const point_type& tile) {
+    this->m_tile = tile;
+    init_helper();
+  }
+
+  bool impl_tune_tile_size() const { return this->m_tune_tile_size; }
+
+ private:
+  void init_helper() {
+    tile_type default_tile = this->tile_size_recommended();
+    this->m_num_tiles      = 1;
+    this->m_prod_tile_dims = 1;
+
+    int increment  = 1;
+    int rank_start = 0;
+    int rank_end   = rank;
+
+    if constexpr (inner_direction == Iterate::Right) {
+      increment  = -1;
+      rank_start = rank - 1;
+      rank_end   = -1;
+    }
+
+    for (int i = rank_start; i != rank_end; i += increment) {
+      const index_type length = this->m_upper[i] - this->m_lower[i];
+
+      if (this->m_upper[i] < this->m_lower[i]) {
+        std::string msg =
+            "Kokkos::MDRangePolicy bounds error: The lower bound (" +
+            std::to_string(this->m_lower[i]) +
+            ") is greater than its upper bound (" +
+            std::to_string(this->m_upper[i]) + ") in dimension " +
+            std::to_string(i) + ".\n";
+        Kokkos::abort(msg.c_str());
+      }
+
+      if (this->m_tile[i] <= 0) {
+        this->m_tune_tile_size = true;
+        if (this->m_prod_tile_dims * default_tile[i] <=
+            static_cast<index_type>(this->m_max_total_tile_size)) {
+          this->m_tile[i] = default_tile[i];
+        } else {
+          this->m_tile[i] = 1;
+        }
+      }
+
+      this->m_tile_end[i] = static_cast<index_type>(
+          (length + this->m_tile[i] - 1) / this->m_tile[i]);
+      this->m_num_tiles *= this->m_tile_end[i];
+      this->m_prod_tile_dims *= this->m_tile[i];
+    }
+
+    if (this->m_prod_tile_dims >
+        static_cast<index_type>(this->m_max_total_tile_size)) {
+      std::string msg =
+          "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
+          "dimensions (" +
+          std::to_string(static_cast<int>(this->m_prod_tile_dims)) +
+          ") is greater than the maximum total tile size (" +
+          std::to_string(static_cast<int>(this->m_max_total_tile_size)) +
+          ") - choose smaller tile dims\n";
+      Kokkos::abort(msg.c_str());
+    }
+
+    if (launch_bounds::maxTperB != 0 &&
+        static_cast<index_type>(launch_bounds::maxTperB) <=
+            this->m_prod_tile_dims) {
+      std::string msg =
+          "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
+          "dimensions (" +
+          std::to_string(static_cast<int>(this->m_prod_tile_dims)) +
+          ") is greater than the maximum specified via LaunchBounds (" +
+          std::to_string(launch_bounds::maxTperB) +
+          ") - choose smaller tile dims\n";
+      Kokkos::abort(msg.c_str());
+    }
+  }
+
+ public:
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
             typename TT = array_index_type, std::size_t TN = rank,
             typename = std::enable_if_t<std::is_integral_v<LT> &&
@@ -238,12 +372,12 @@ struct MDRangePolicy<P, Properties...>
   MDRangePolicy(const LT (&lower)[LN], const UT (&upper)[UN],
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
-                lower),
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
-                upper),
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
-                tile)) {
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_lower)>(lower),
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_upper)>(upper),
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_tile)>(tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
@@ -259,12 +393,12 @@ struct MDRangePolicy<P, Properties...>
                 const TT (&tile)[TN] = {})
       : MDRangePolicy(
             work_space,
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
-                lower),
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
-                upper),
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
-                tile)) {
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_lower)>(lower),
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_upper)>(upper),
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_tile)>(tile)) {
     static_assert(
         LN == rank && UN == rank && TN <= rank,
         "MDRangePolicy: Constructor initializer lists have wrong size");
@@ -280,8 +414,12 @@ struct MDRangePolicy<P, Properties...>
   MDRangePolicy(const typename traits::execution_space& work_space,
                 point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
-      : m_space(work_space), m_lower(lower), m_upper(upper), m_tile(tile) {
-    init_helper(Impl::get_tile_size_properties(work_space));
+      : internal_policy() {
+    this->m_space = work_space;
+    this->m_lower = lower;
+    this->m_upper = upper;
+    this->m_tile  = tile;
+    init_helper();
   }
 
   template <typename T, std::size_t NT = rank,
@@ -299,129 +437,15 @@ struct MDRangePolicy<P, Properties...>
                 Kokkos::Array<T, NT> const& tile = Kokkos::Array<T, NT>{})
       : MDRangePolicy(
             work_space,
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
-                lower),
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
-                upper),
-            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
-                tile)) {}
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_lower)>(lower),
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_upper)>(upper),
+            Impl::to_array_potentially_narrowing<
+                index_type, decltype(internal_policy::m_tile)>(tile)) {}
 
-  MDRangePolicy(const Impl::PolicyUpdate, const MDRangePolicy& other,
-                typename traits::execution_space space)
-      : MDRangePolicy(other) {
-    this->m_space = std::move(space);
-  }
-
-  template <class... OtherProperties>
-  MDRangePolicy(const MDRangePolicy<OtherProperties...> p)
-      : traits(p),  // base class may contain data such as desired occupancy
-        m_space(p.m_space),
-        m_lower(p.m_lower),
-        m_upper(p.m_upper),
-        m_tile(p.m_tile),
-        m_tile_end(p.m_tile_end),
-        m_num_tiles(p.m_num_tiles),
-        m_prod_tile_dims(p.m_prod_tile_dims),
-        m_tune_tile_size(p.m_tune_tile_size) {}
-
-  void impl_change_tile_size(const point_type& tile) {
-    m_tile = tile;
-    init_helper(Impl::get_tile_size_properties(m_space));
-  }
-  bool impl_tune_tile_size() const { return m_tune_tile_size; }
-
-  tile_type tile_size_recommended() const {
-    tile_type rec_tile_sizes = {};
-
-    for (std::size_t i = 0; i < rec_tile_sizes.size(); ++i) {
-      rec_tile_sizes[i] = tile_size_recommended(i);
-    }
-    return rec_tile_sizes;
-  }
-
-  int max_total_tile_size() const {
-    return Impl::get_tile_size_properties(m_space).max_total_tile_size;
-  }
-
- private:
-  int tile_size_recommended(const int tile_rank) const {
-    auto properties = Impl::get_tile_size_properties(m_space);
-    int last_rank   = (inner_direction == Iterate::Right) ? rank - 1 : 0;
-    int rank_acc =
-        (inner_direction == Iterate::Right) ? tile_rank + 1 : tile_rank - 1;
-    int rec_tile_size = (std::pow(properties.default_tile_size, rank_acc) <
-                         properties.max_total_tile_size)
-                            ? properties.default_tile_size
-                            : 1;
-
-    if (tile_rank == last_rank) {
-      rec_tile_size = tile_size_last_rank(
-          properties, m_upper[last_rank] - m_lower[last_rank]);
-    }
-    return rec_tile_size;
-  }
-
-  int tile_size_last_rank(const Impl::TileSizeProperties properties,
-                          const index_type length) const {
-    return properties.default_largest_tile_size == 0
-               ? std::max<int>(length, 1)
-               : properties.default_largest_tile_size;
-  }
-
-  void init_helper(Impl::TileSizeProperties properties) {
-    m_prod_tile_dims = 1;
-    int increment    = 1;
-    int rank_start   = 0;
-    int rank_end     = rank;
-    if (inner_direction == Iterate::Right) {
-      increment  = -1;
-      rank_start = rank - 1;
-      rank_end   = -1;
-    }
-
-    for (int i = rank_start; i != rank_end; i += increment) {
-      const index_type length = m_upper[i] - m_lower[i];
-
-      if (m_upper[i] < m_lower[i]) {
-        std::string msg =
-            "Kokkos::MDRangePolicy bounds error: The lower bound (" +
-            std::to_string(m_lower[i]) + ") is greater than its upper bound (" +
-            std::to_string(m_upper[i]) + ") in dimension " + std::to_string(i) +
-            ".\n";
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-        Kokkos::abort(msg.c_str());
-#elif defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
-        Kokkos::Impl::log_warning(msg);
-#endif
-      }
-
-      if (m_tile[i] <= 0) {
-        m_tune_tile_size = true;
-        if ((inner_direction == Iterate::Right && (i < rank - 1)) ||
-            (inner_direction == Iterate::Left && (i > 0))) {
-          if (m_prod_tile_dims * properties.default_tile_size <
-              static_cast<index_type>(properties.max_total_tile_size)) {
-            m_tile[i] = properties.default_tile_size;
-          } else {
-            m_tile[i] = 1;
-          }
-        } else {
-          m_tile[i] = tile_size_last_rank(properties, length);
-        }
-      }
-      m_tile_end[i] =
-          static_cast<index_type>((length + m_tile[i] - 1) / m_tile[i]);
-      m_num_tiles *= m_tile_end[i];
-      m_prod_tile_dims *= m_tile[i];
-    }
-    if (m_prod_tile_dims > static_cast<index_type>(properties.max_threads)) {
-      printf(" Product of tile dimensions exceed maximum limit: %d\n",
-             static_cast<int>(properties.max_threads));
-      Kokkos::abort(
-          "ExecSpace Error: MDRange tile dims exceed maximum number "
-          "of threads per block - choose smaller tile dims");
-    }
-  }
+  MDRangePolicy() = default;
+  MDRangePolicy(const internal_policy& p) : internal_policy(p) {}
 };
 
 template <typename LT, size_t N, typename UT>
