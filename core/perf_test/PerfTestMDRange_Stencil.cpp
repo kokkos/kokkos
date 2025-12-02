@@ -4,6 +4,7 @@
 #include <functional>
 #include <iostream>
 #include <numeric>
+#include <limits>
 
 #include <benchmark/benchmark.h>
 
@@ -35,6 +36,7 @@ void check_computation(const ViewType& A, const ViewType& B) {
   // On KNL, this may vectorize - add print statement to prevent
   // Also, compare against epsilon, as vectorization can change bitwise
   // answer
+  ScalarType epsilon = std::numeric_limits<ScalarType>::epsilon() * 100;
   if constexpr (ViewType::rank == 2) {
     for (int i = 0; i < Ahost.extent_int(0); ++i) {
       for (int j = 0; j < Ahost.extent_int(1); ++j) {
@@ -42,7 +44,7 @@ void check_computation(const ViewType& A, const ViewType& B) {
             0.25 *
             (ScalarType)(Bhost(i + 2, j) + Bhost(i + 1, j) + Bhost(i, j + 2) +
                          Bhost(i, j + 1) + Bhost(i, j));
-        if (Ahost(i, j) - check != 0) {
+        if (Kokkos::abs(Ahost(i, j) - check) > epsilon) {
           ++numErrors;
           std::cerr << "Correctness error at index: " << i << "," << j
                     << ", got " << Ahost(i, j) << ", expected " << check
@@ -59,7 +61,7 @@ void check_computation(const ViewType& A, const ViewType& B) {
                                   Bhost(i, j + 2, k) + Bhost(i, j + 1, k) +
                                   Bhost(i, j, k + 2) + Bhost(i, j, k + 1) +
                                   Bhost(i, j, k));
-          if (Ahost(i, j, k) - check != 0) {
+          if (Kokkos::abs(Ahost(i, j, k) - check) > epsilon) {
             ++numErrors;
             std::cerr << "Correctness error at index: " << i << "," << j << ","
                       << k << ", got " << Ahost(i, j, k) << ", expected "
@@ -72,18 +74,18 @@ void check_computation(const ViewType& A, const ViewType& B) {
     for (int i = 0; i < Ahost.extent_int(0); ++i) {
       for (int j = 0; j < Ahost.extent_int(1); ++j) {
         for (int k = 0; k < Ahost.extent_int(2); ++k) {
-          for (int u = 0; u < Ahost.extent_int(3); ++u) {
+          for (int l = 0; l < Ahost.extent_int(3); ++l) {
             ScalarType check =
                 0.25 *
-                (ScalarType)(Bhost(i + 2, j, k, u) + Bhost(i + 1, j, k, u) +
-                             Bhost(i, j + 2, k, u) + Bhost(i, j + 1, k, u) +
-                             Bhost(i, j, k + 2, u) + Bhost(i, j, k + 1, u) +
-                             Bhost(i, j, k, u + 2) + Bhost(i, j, k, u + 1) +
-                             Bhost(i, j, k, u));
-            if (Ahost(i, j, k, u) - check != 0) {
+                (ScalarType)(Bhost(i + 2, j, k, l) + Bhost(i + 1, j, k, l) +
+                             Bhost(i, j + 2, k, l) + Bhost(i, j + 1, k, l) +
+                             Bhost(i, j, k + 2, l) + Bhost(i, j, k + 1, l) +
+                             Bhost(i, j, k, l + 2) + Bhost(i, j, k, l + 1) +
+                             Bhost(i, j, k, l));
+            if (Kokkos::abs(Ahost(i, j, k, l) - check) > epsilon) {
               ++numErrors;
               std::cerr << "Correctness error at index: " << i << "," << j
-                        << "," << k << "," << u << ", got " << Ahost(i, j, k, u)
+                        << "," << k << "," << l << ", got " << Ahost(i, j, k, l)
                         << ", expected " << check << "\n";
             }
           }
