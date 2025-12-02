@@ -185,10 +185,6 @@ if(NOT KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
 endif()
 kokkos_link_tpl(kokkoscore PUBLIC LIBQUADMATH)
 
-# FIXME: We need a proper solution to figure out whether to enable
-#        libatomic
-# Most compilers only require libatomic for 128-bit CAS
-# I (CT) had removed 128bit CAS from desul to not need libatomic.
 if(desul_FOUND)
   target_link_libraries(kokkoscore PUBLIC desul_atomics)
 endif()
