@@ -175,8 +175,10 @@ struct MDRangePolicyInternal<ExecSpace, P, Properties...>
           : default_inner_direction<typename traits::execution_space>::value;
 
  public:
-  template <typename... OtherProperties>
-  MDRangePolicyInternal(const MDRangePolicyInternal<OtherProperties...>& p)
+  template <typename OtherExecSpace, typename OtherP,
+            typename... OtherProperties>
+  MDRangePolicyInternal(const MDRangePolicyInternal<OtherExecSpace, OtherP,
+                                                    OtherProperties...>& p)
       : m_space(p.m_space),
         m_default_tile_size(p.m_default_tile_size),
         m_max_total_tile_size(p.m_max_total_tile_size),
@@ -445,7 +447,10 @@ struct MDRangePolicy<P, Properties...>
             Impl::to_array_potentially_narrowing<
                 index_type, decltype(internal_policy::m_tile)>(tile)) {}
 
-  MDRangePolicy() = default;
+  template <typename OtherP, typename... OtherProperties>
+  MDRangePolicy(const MDRangePolicy<OtherP, OtherProperties...>& other)
+      : internal_policy(other) {}
+
   MDRangePolicy(const internal_policy& p) : internal_policy(p) {}
 };
 

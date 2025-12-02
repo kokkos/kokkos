@@ -84,9 +84,10 @@ struct MDRangePolicyInternal<Kokkos::Cuda, P, Properties...>
     m_max_threads_dimensions[2] = device_prop.maxThreadsDim[2];
   }
 
-  template <typename... OtherProperties>
-  MDRangePolicyInternal(
-      const MDRangePolicyInternal<Kokkos::Cuda, OtherProperties...>& p)
+  template <typename OtherExecSpace, typename OtherP,
+            typename... OtherProperties>
+  MDRangePolicyInternal(const MDRangePolicyInternal<OtherExecSpace, OtherP,
+                                                    OtherProperties...>& p)
       : m_space(p.m_space),
         m_max_total_tile_size(p.m_max_total_tile_size),
         m_max_threads_dimensions(p.m_max_threads_dimensions),
