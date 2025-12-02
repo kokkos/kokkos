@@ -70,8 +70,8 @@ device_abort(const char *const msg) {
   ::Kokkos::Impl::hip_abort(msg);
 #elif defined(KOKKOS_ENABLE_SYCL)
   ::Kokkos::Impl::sycl_abort(msg);
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_OPENACC)
-  printf("%s", msg);  // FIXME_OPENMPTARGET FIXME_OPENACC
+#elif defined(KOKKOS_ENABLE_OPENACC)
+  printf("%s", msg);  // FIXME_OPENACC
 #else
 #error faulty logic
 #endif
