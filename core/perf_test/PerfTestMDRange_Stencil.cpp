@@ -44,7 +44,7 @@ void check_computation(const ViewType& A, const ViewType& B) {
                          Bhost(i, j + 1) + Bhost(i, j));
         if (Ahost(i, j) - check != 0) {
           ++numErrors;
-          std::cout << "Correctness error at index: " << i << "," << j
+          std::cerr << "Correctness error at index: " << i << "," << j
                     << ", got " << Ahost(i, j) << ", expected " << check
                     << "\n";
         }
@@ -61,7 +61,7 @@ void check_computation(const ViewType& A, const ViewType& B) {
                                   Bhost(i, j, k));
           if (Ahost(i, j, k) - check != 0) {
             ++numErrors;
-            std::cout << "Correctness error at index: " << i << "," << j << ","
+            std::cerr << "Correctness error at index: " << i << "," << j << ","
                       << k << ", got " << Ahost(i, j, k) << ", expected "
                       << check << "\n";
           }
@@ -82,7 +82,7 @@ void check_computation(const ViewType& A, const ViewType& B) {
                              Bhost(i, j, k, u));
             if (Ahost(i, j, k, u) - check != 0) {
               ++numErrors;
-              std::cout << "Correctness error at index: " << i << "," << j
+              std::cerr << "Correctness error at index: " << i << "," << j
                         << "," << k << "," << u << ", got " << Ahost(i, j, k, u)
                         << ", expected " << check << "\n";
             }
@@ -91,12 +91,12 @@ void check_computation(const ViewType& A, const ViewType& B) {
       }
     }
     if (numErrors != 0) {
-      std::cout << "Detected some errors for a run with dimensions "
+      std::cerr << "Detected some errors for a run with dimensions "
                 << Ahost.extent(0);
       for (std::size_t i = 1; i < Ahost.rank(); i++) {
-        std::cout << "x" << Ahost.extent(i);
+        std::cerr << "x" << Ahost.extent(i);
       }
-      std::cout << std::endl;
+      std::cerr << std::endl;
     }
   }
 }
@@ -199,14 +199,14 @@ struct MDRange {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, const int j, const int k, const int u) const
+  void operator()(const int i, const int j, const int k, const int l) const
     requires(dimension == 4)
   {
-    A(i, j, k, u) =
+    A(i, j, k, l) =
         0.25 *
-        (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) + B(i, j + 2, k, u) +
-                     B(i, j + 1, k, u) + B(i, j, k + 2, u) + B(i, j, k + 1, u) +
-                     B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+        (ScalarType)(B(i + 2, j, k, l) + B(i + 1, j, k, l) + B(i, j + 2, k, l) +
+                     B(i, j + 1, k, l) + B(i, j, k + 2, l) + B(i, j, k + 1, l) +
+                     B(i, j, k, l + 2) + B(i, j, k, l + 1) + B(i, j, k, l));
   }
 
   static auto get_policy(const Kokkos::Array<int, dimension>& end,
@@ -253,18 +253,16 @@ struct CollapseTwo {
   void operator()(const int r) const
     requires(dimension == 3)
   {
-    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      int i = r / ranges[1];
-      int j = r - i * ranges[1];
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      int i = r % ranges[0], j = r / ranges[0];
       for (int k = 0; k < ranges[2]; ++k) {
         A(i, j, k) =
             0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) +
                                 B(i, j + 2, k) + B(i, j + 1, k) +
                                 B(i, j, k + 2) + B(i, j, k + 1) + B(i, j, k));
       }
-    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int k = r / ranges[1];
-      int j = r - k * ranges[1];
+    } else {
+      int k = r % ranges[2], j = r / ranges[2];
       for (int i = 0; i < ranges[0]; ++i) {
         A(i, j, k) =
             0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) +
@@ -278,29 +276,27 @@ struct CollapseTwo {
   void operator()(const int r) const
     requires(dimension == 4)
   {
-    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      int i = r / (ranges[1] * ranges[2]);
-      int j = (r - i * ranges[1] * ranges[2]) / ranges[2];
-      int k = r - i * ranges[1] * ranges[2] - j * ranges[2];
-      for (int u = 0; u < ranges[3]; ++u) {
-        A(i, j, k, u) =
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      int i = r % ranges[0], jk = r / ranges[0];
+      int j = jk % ranges[1], k = jk / ranges[1];
+      for (int l = 0; l < ranges[3]; ++l) {
+        A(i, j, k, l) =
             0.25 *
-            (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
-                         B(i, j + 2, k, u) + B(i, j + 1, k, u) +
-                         B(i, j, k + 2, u) + B(i, j, k + 1, u) +
-                         B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+            (ScalarType)(B(i + 2, j, k, l) + B(i + 1, j, k, l) +
+                         B(i, j + 2, k, l) + B(i, j + 1, k, l) +
+                         B(i, j, k + 2, l) + B(i, j, k + 1, l) +
+                         B(i, j, k, l + 2) + B(i, j, k, l + 1) + B(i, j, k, l));
       }
-    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int u = r / (ranges[1] * ranges[2]);
-      int k = (r - u * ranges[1] * ranges[2]) / ranges[1];
-      int j = r - u * ranges[1] * ranges[2] - k * ranges[1];
+    } else {
+      int l = r % ranges[3], jk = r / ranges[3];
+      int k = jk % ranges[2], j = jk / ranges[2];
       for (int i = 0; i < ranges[0]; ++i) {
-        A(i, j, k, u) =
+        A(i, j, k, l) =
             0.25 *
-            (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
-                         B(i, j + 2, k, u) + B(i, j + 1, k, u) +
-                         B(i, j, k + 2, u) + B(i, j, k + 1, u) +
-                         B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+            (ScalarType)(B(i + 2, j, k, l) + B(i + 1, j, k, l) +
+                         B(i, j + 2, k, l) + B(i, j + 1, k, l) +
+                         B(i, j, k + 2, l) + B(i, j, k + 1, l) +
+                         B(i, j, k, l + 2) + B(i, j, k, l + 1) + B(i, j, k, l));
       }
     }
   }
@@ -308,11 +304,11 @@ struct CollapseTwo {
   static auto get_policy(const Kokkos::Array<int, dimension>& dims,
                          const Kokkos::Array<int, dimension>&) {
     int collapse_index_rangeA = 0;
-    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
       collapse_index_rangeA = std::reduce(Kokkos::begin(dims),
                                           Kokkos::begin(dims) + (dimension - 1),
                                           1, std::multiplies<int>{});
-    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
       collapse_index_rangeA =
           std::reduce(Kokkos::begin(dims) + 1, Kokkos::end(dims), 1,
                       std::multiplies<int>{});
@@ -353,14 +349,12 @@ struct CollapseAll {
   void operator()(const int r) const
     requires(dimension == 2)
   {
-    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      int i   = r / ranges[1];
-      int j   = r - i * ranges[1];
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      int i = r % ranges[0], j = r / ranges[0];
       A(i, j) = 0.25 * (ScalarType)(B(i + 2, j) + B(i + 1, j) + B(i, j + 2) +
                                     B(i, j + 1) + B(i, j));
-    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int j   = r / ranges[0];
-      int i   = r - j * ranges[0];
+    } else {
+      int j = r % ranges[1], i = r / ranges[1];
       A(i, j) = 0.25 * (ScalarType)(B(i + 2, j) + B(i + 1, j) + B(i, j + 2) +
                                     B(i, j + 1) + B(i, j));
     }
@@ -370,18 +364,16 @@ struct CollapseAll {
   void operator()(const int r) const
     requires(dimension == 3)
   {
-    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      int i = r / (ranges[1] * ranges[2]);
-      int j = (r - i * ranges[1] * ranges[2]) / ranges[2];
-      int k = r - i * ranges[1] * ranges[2] - j * ranges[2];
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      int i = r % ranges[0], jk = r / ranges[0];
+      int j = jk % ranges[1], k = jk / ranges[1];
       A(i, j, k) =
           0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) + B(i, j + 2, k) +
                               B(i, j + 1, k) + B(i, j, k + 2) + B(i, j, k + 1) +
                               B(i, j, k));
-    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int k = r / (ranges[0] * ranges[1]);
-      int j = (r - k * ranges[0] * ranges[1]) / ranges[0];
-      int i = r - k * ranges[0] * ranges[1] - j * ranges[0];
+    } else {
+      int k = r % ranges[2], ji = r / ranges[2];
+      int j = ji % ranges[1], i = ji / ranges[1];
       A(i, j, k) =
           0.25 * (ScalarType)(B(i + 2, j, k) + B(i + 1, j, k) + B(i, j + 2, k) +
                               B(i, j + 1, k) + B(i, j, k + 2) + B(i, j, k + 1) +
@@ -393,37 +385,27 @@ struct CollapseAll {
   void operator()(const int r) const
     requires(dimension == 4)
   {
-    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutRight>) {
-      // TODO: store the strides in variables
-      int i = r / (ranges[1] * ranges[2] * ranges[3]);
-      int j =
-          (r - i * ranges[1] * ranges[2] * ranges[3]) / (ranges[2] * ranges[3]);
-      int k = (r - i * ranges[1] * ranges[2] * ranges[3] -
-               j * ranges[2] * ranges[3]) /
-              ranges[3];
-      int u = r - i * ranges[1] * ranges[2] * ranges[3] -
-              j * ranges[2] * ranges[3] - k * ranges[3];
-      A(i, j, k, u) =
+    if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
+      int i = r % ranges[0], jkl = r / ranges[0];
+      int j = jkl % ranges[1], kl = jkl / ranges[1];
+      int k = kl % ranges[2], l = kl / ranges[2];
+
+      A(i, j, k, l) =
           0.25 *
-          (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
-                       B(i, j + 2, k, u) + B(i, j + 1, k, u) +
-                       B(i, j, k + 2, u) + B(i, j, k + 1, u) +
-                       B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
-    } else if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int u = r / (ranges[0] * ranges[1] * ranges[2]);
-      int k =
-          (r - u * ranges[0] * ranges[1] * ranges[2]) / (ranges[1] * ranges[2]);
-      int j = (r - u * ranges[0] * ranges[1] * ranges[2] -
-               k * ranges[1] * ranges[2]) /
-              ranges[2];
-      int i = r - u * ranges[0] * ranges[1] * ranges[2] -
-              k * ranges[1] * ranges[2] - j * ranges[2];
-      A(i, j, k, u) =
+          (ScalarType)(B(i + 2, j, k, l) + B(i + 1, j, k, l) +
+                       B(i, j + 2, k, l) + B(i, j + 1, k, l) +
+                       B(i, j, k + 2, l) + B(i, j, k + 1, l) +
+                       B(i, j, k, l + 2) + B(i, j, k, l + 1) + B(i, j, k, l));
+    } else {
+      int l = r % ranges[3], ijk = r / ranges[3];
+      int k = ijk % ranges[2], ij = ijk / ranges[2];
+      int j = ij % ranges[1], i = ij / ranges[1];
+      A(i, j, k, l) =
           0.25 *
-          (ScalarType)(B(i + 2, j, k, u) + B(i + 1, j, k, u) +
-                       B(i, j + 2, k, u) + B(i, j + 1, k, u) +
-                       B(i, j, k + 2, u) + B(i, j, k + 1, u) +
-                       B(i, j, k, u + 2) + B(i, j, k, u + 1) + B(i, j, k, u));
+          (ScalarType)(B(i + 2, j, k, l) + B(i + 1, j, k, l) +
+                       B(i, j + 2, k, l) + B(i, j + 1, k, l) +
+                       B(i, j, k + 2, l) + B(i, j, k + 1, l) +
+                       B(i, j, k, l + 2) + B(i, j, k, l + 1) + B(i, j, k, l));
     }
   }
 
@@ -444,42 +426,45 @@ struct CollapseAll {
       ->ArgsProduct({sizes, __VA_ARGS__});
 
 int declare_benchmarks() {
-  bool run_large_benchmarks = false;
-  Kokkos::Impl::check_env_bool("KOKKOS_MDRANGE_STENCIL_BENCHMARK_LONG",
-                               run_large_benchmarks);
+  std::vector<int64_t> size_2d{512};
+  std::vector<int64_t> size_3d{128};
+  std::vector<int64_t> size_4d{32};
+  std::vector<int64_t> tile_sizes{0};
 
-  std::vector<int64_t> size_2d    = {512, 1024, 2048, 4096};
-  std::vector<int64_t> size_3d    = {128, 192, 256};
-  std::vector<int64_t> size_4d    = {32, 64};
-  std::vector<int64_t> tile_sizes = {0};
-
-  if (run_large_benchmarks) {
-    size_2d.push_back(8192);
-    size_3d.push_back(512);
-    size_4d.push_back(96);
-    tile_sizes.push_back(1);
-  }
+#if defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
+  size_2d.push_back(1024);
+  size_2d.push_back(2048);
+  size_2d.push_back(4096);
+  size_2d.push_back(8192);
+  size_3d.push_back(192);
+  size_3d.push_back(256);
+  size_3d.push_back(512);
+  size_4d.push_back(64);
+  size_4d.push_back(96);
+  tile_sizes.push_back(1);
+#endif
 
   MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutRight, size_2d, tile_sizes)
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutLeft, size_2d, tile_sizes)
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutRight, size_3d, tile_sizes)
   MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutLeft, size_3d, tile_sizes)
   MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutRight, size_4d, tile_sizes)
+
+#if defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
+  MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutLeft, size_2d, tile_sizes)
+  MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutRight, size_3d, tile_sizes)
   MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutLeft, size_4d, tile_sizes)
 
-  if (run_large_benchmarks) {
-    MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutRight, size_3d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutLeft, size_3d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutRight, size_4d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutLeft, size_4d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutRight, size_3d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutLeft, size_3d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutRight, size_4d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutLeft, size_4d, {-1})
 
-    MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutRight, size_2d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutLeft, size_2d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutRight, size_3d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutLeft, size_3d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutRight, size_4d, {-1})
-    MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutLeft, size_4d, {-1})
-  }
+  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutRight, size_2d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutLeft, size_2d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutRight, size_3d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutLeft, size_3d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutRight, size_4d, {-1})
+  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutLeft, size_4d, {-1})
+#endif
 
   return 0;
 }
