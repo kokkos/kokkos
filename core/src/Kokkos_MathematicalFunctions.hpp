@@ -435,7 +435,7 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(trunc)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(round)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(rint)
 #ifndef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
-// FIXME_SYCL not available as of current SYCL 2020 specification (revision 4)
+// FIXME_SYCL not available as of current SYCL 2020 specification (revision 11)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(lround)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(llround)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
