@@ -96,7 +96,7 @@ def validate_options(options):
 def run_cmd(cmd, options, working_dir="."):
   cmd_str = " ".join(cmd)
   if options.verbose_mode:
-    print (f"Running command '{cmd_str}' in dir {working_dir}.")
+    print (f"Running command '{cmd_str}' in dir {working_dir}")
 
   proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=working_dir)
   proc_stdout, proc_stderr = proc.communicate()
@@ -108,9 +108,9 @@ def run_cmd(cmd, options, working_dir="."):
     print (f"==== {cmd_str} stdout start ====")
     print (f"{proc_stdout_text}")
     print (f"==== {cmd_str} stdout end ====")
-    print (f"==== {cmd_str} stderr ====")
+    print (f"==== {cmd_str} stderr start ====")
     print (f"{proc_stderr_text}")
-    print (f"==== {cmd_str} stderr ====")
+    print (f"==== {cmd_str} stderr end ====")
 
   if ret_val != 0:
     raise RuntimeError(f"Command '{cmd_str}' failed with error code {ret_val}. Error message:{os.linesep}{proc_stderr_text}{os.linesep}stdout:{proc_stdout_text}")
@@ -166,9 +166,9 @@ def rsync(source, dest, options):
 
 def create_commit_message(commit_id, commit_log, project_name, project_location):
   eol = os.linesep
-  message = "Snapshot of %s from commit %s" % (project_name, commit_id)
+  message = f"Snapshot of {project_name} from commit {commit_id}"
   message += eol * 2
-  message += "From repository at %s" % project_location
+  message += f"From repository at {project_location}"
   message += eol * 2
   message += "At commit:" + eol
   message += commit_log
@@ -216,7 +216,7 @@ def do_git_commit(message, options):
   git_add_cmd = ["git", "add", "-A"]
   run_cmd(git_add_cmd, options, options.destination)
 
-  git_commit_cmd = ["git", "commit", "-m%s" % message]
+  git_commit_cmd = ["git", "commit", f"-m{message}", "--signoff"]
   run_cmd(git_commit_cmd, options, options.destination)
 
   git_log_cmd = ["git", "log", "--format=%h", "-1"]
@@ -247,7 +247,7 @@ def main(options):
     commit_id, commit_log, repo_name, repo_location = find_git_commit_information(options)
   elif options.source_repo == "none":
     commit_id     = "N/A"
-    commit_log    = "Unknown commit from %s snapshotted at: %s" % (options.source, datetime.datetime.now())
+    commit_log    = f"Unknown commit from {options.source} snapshotted at: {datetime.datetime.now()}"
     repo_name     = options.source
     repo_location = options.source
 
