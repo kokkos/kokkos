@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 """
 Snapshot a project into another project and perform the necessary repo actions
@@ -17,7 +17,7 @@ import sys
 #This checks for python version >= 3.2 (which is when argparse was added to python3)
 #See https://docs.python.org/3/library/argparse.html for reference
 if sys.version_info[:2] < (3, 2):
-  print "Error snapshot requires python 3.2 or newer, detected version is %d.%d." % (sys.version_info[0], sys.version_info[1])
+  print (f"Error snapshot requires python 3.2 or newer, detected version is {sys.version_info[0]}.{sys.version_info[1]}.")
   sys.exit(1)
 
 import subprocess, argparse, re, doctest, os, datetime, traceback
@@ -62,11 +62,11 @@ def validate_options(options):
   if os.path.exists(options.source):
     apparent_source_repo_type, source_root = determine_repo_type(options.source)
   else:
-    raise RuntimeError("Could not find source directory of %s." % options.source)
+    raise RuntimeError(f"Could not find source directory of {options.source}.")
   options.source_root = source_root
 
   if not os.path.exists(options.destination):
-    print "Could not find destination directory of %s so it will be created." % options.destination
+    print (f"Could not find destination directory of {options.destination} so it will be created.")
     os.makedirs(options.destination)
 
   apparent_dest_repo_type, dest_root = determine_repo_type(options.destination)
@@ -81,16 +81,14 @@ def validate_options(options):
     options.source_repo = apparent_source_repo_type
   else:
     if options.source_repo != "none" and options.source_repo != apparent_source_repo_type:
-      raise RuntimeError("Specified source repository type of %s conflicts with determined type of %s" % \
-        (options.source_repo, apparent_source_repo_type))
+      raise RuntimeError(f"Specified source repository type of {options.source_repo} conflicts with determined type of {apparent_source_repo_type}")
 
   if options.dest_repo == "":
     #destination repo type is not specified to just using the apparent type.
     options.dest_repo = apparent_dest_repo_type
   else:
     if options.dest_repo != "none" and options.dest_repo != apparent_dest_repo_type:
-      raise RuntimeError("Specified destination repository type of %s conflicts with determined type of %s" % \
-        (options.dest_repo, apparent_dest_repo_type))
+      raise RuntimeError(f"Specified destination repository type of {options.dest_repo} conflicts with determined type of {apparent_dest_repo_type}")
 
   return options
 #end validate_options
@@ -98,25 +96,26 @@ def validate_options(options):
 def run_cmd(cmd, options, working_dir="."):
   cmd_str = " ".join(cmd)
   if options.verbose_mode:
-    print "Running command '%s' in dir %s." % (cmd_str, working_dir)
+    print (f"Running command '{cmd_str}' in dir {working_dir}.")
 
   proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=working_dir)
   proc_stdout, proc_stderr = proc.communicate()
   ret_val = proc.wait()
+  proc_stdout_text = proc_stdout.decode('utf-8')
+  proc_stderr_text = proc_stderr.decode('utf-8')
 
   if options.debug_mode:
-    print "==== %s stdout start ====" % cmd_str
-    print proc_stdout
-    print "==== %s stdout end ====" % cmd_str
-    print "==== %s stderr ====" % cmd_str
-    print proc_stderr
-    print "==== %s stderr ====" % cmd_str
+    print (f"==== {cmd_str} stdout start ====")
+    print (f"{proc_stdout_text}")
+    print (f"==== {cmd_str} stdout end ====")
+    print (f"==== {cmd_str} stderr ====")
+    print (f"{proc_stderr_text}")
+    print (f"==== {cmd_str} stderr ====")
 
   if ret_val != 0:
-    raise RuntimeError("Command '%s' failed with error code %d. Error message:%s%s%sstdout:%s" % \
-      (cmd_str, ret_val, os.linesep, proc_stderr, os.linesep, proc_stdout))
+    raise RuntimeError(f"Command '{cmd_str}' failed with error code {ret_val}. Error message:{os.linesep}{proc_stderr_text}{os.linesep}stdout:{proc_stdout_text}")
 
-  return proc_stdout, proc_stderr
+  return proc_stdout_text, proc_stderr_text
 #end run_cmd
 
 def determine_repo_type(location):
@@ -197,9 +196,9 @@ def find_git_commit_information(options):
   git_remote_cmd = ["git", "remote", "-v"]
   output, error = run_cmd(git_remote_cmd, options, options.source)
 
-  remote_match = re.search("origin\s([^ ]*/([^ ]+))", output, re.MULTILINE)
+  remote_match = re.search(r"origin\s([^ ]*/([^ ]+))", output, re.MULTILINE)
   if not remote_match:
-    raise RuntimeError("Could not find origin of repo at %s. Consider using none for source repo type." % (options.source))
+    raise RuntimeError(f"Could not find origin of repo at {options.source}. Consider using none for source repo type.")
 
   source_location = remote_match.group(1)
   source_name     = remote_match.group(2).strip()
@@ -212,7 +211,7 @@ def find_git_commit_information(options):
 
 def do_git_commit(message, options):
   if options.verbose_mode:
-    print "Committing to destination repository."
+    print ("Committing to destination repository.")
 
   git_add_cmd = ["git", "add", "-A"]
   run_cmd(git_add_cmd, options, options.destination)
@@ -223,7 +222,7 @@ def do_git_commit(message, options):
   git_log_cmd = ["git", "log", "--format=%h", "-1"]
   commit_sha1, error = run_cmd(git_log_cmd, options, options.destination)
 
-  print "Commit %s was made to %s." % (commit_sha1.strip(), options.dest_root)
+  print (f"Commit {commit_sha1.strip()} was made to {options.dest_root}.")
 #end do_git_commit
 
 def verify_git_repo_clean(location, options):
@@ -232,17 +231,16 @@ def verify_git_repo_clean(location, options):
 
   if output != "":
     if options.no_validate_repo == False:
-      raise RuntimeError("%s is not clean.%sPlease commit or stash all changes before running snapshot."
-        % (location, os.linesep))
+      raise RuntimeError(f"{location} is not clean.{os.linesep}Please commit or stash all changes before running snapshot.")
     else:
-      print "WARNING: %s is not clean. Proceeding anyway." % location
-      print "WARNING:   This could lead to differences in the source and destination."
-      print "WARNING:   It could also lead to extra files being included in the snapshot commit."
+      print (f"WARNING: {location} is not clean. Proceeding anyway.")
+      print ("WARNING:   This could lead to differences in the source and destination.")
+      print ("WARNING:   It could also lead to extra files being included in the snapshot commit.")
 #end verify_git_repo_clean
 
 def main(options):
   if options.verbose_mode:
-    print "Snapshotting %s to %s." % (options.source, options.destination)
+    print (f"Snapshotting {options.source} to {options.destination}.")
 
   if options.source_repo == "git":
     verify_git_repo_clean(options.source, options)
@@ -268,8 +266,8 @@ def main(options):
     message_file.write(commit_message)
     message_file.close()
     cwd = os.getcwd()
-    print "No commit done by request. Please use file at:"
-    print "%s%sif you wish to commit this to a repo later." % (cwd+"/"+file_name, os.linesep)
+    print ("No commit done by request. Please use file at:")
+    print (f"{cwd+"/"+file_name}{os.linesep}if you wish to commit this to a repo later.")
 #end main
 
 if (__name__ == "__main__"):
@@ -280,8 +278,8 @@ if (__name__ == "__main__"):
   try:
     options = parse_cmdline(__doc__)
     main(options)
-  except RuntimeError, e:
-    print "Error occurred:", e
+  except RuntimeError as e:
+    print (f"Error occurred: {e}")
     if "--debug" in sys.argv:
       traceback.print_exc()
     sys.exit(1)
