@@ -556,6 +556,9 @@ MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutRight, SIZES_3D, {-1})
 MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutLeft, SIZES_3D, {-1})
 MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutRight, SIZES_4D, {-1})
 MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutLeft, SIZES_4D, {-1})
+#undef SIZES_2D
+#undef SIZES_3D
+#undef SIZES_4D
 #endif
 
 #undef MDRANGE_STENCIL_BENCHMARK
