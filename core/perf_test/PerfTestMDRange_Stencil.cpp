@@ -527,51 +527,36 @@ struct CollapseAll {
       ->ArgNames({"size", "tile_size"})                                  \
       ->ArgsProduct({sizes, __VA_ARGS__});
 
-int declare_benchmarks() {
-  std::vector<int64_t> size_2d{512};
-  std::vector<int64_t> size_3d{128};
-  std::vector<int64_t> size_4d{32};
-  std::vector<int64_t> tile_sizes{0};
+#if !defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
+MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutRight, {512}, {0})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutLeft, {128}, {0})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutRight, {32}, {0})
+#else
+#define SIZES_2D \
+  { 512, 1024, 2048, 4096, 8192 }
+#define SIZES_3D \
+  { 128, 192, 256, 512 }
+#define SIZES_4D \
+  { 32, 64, 96 }
+MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutRight, SIZES_2D, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutRight, SIZES_3D, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutRight, SIZES_4D, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutLeft, SIZES_2D, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutLeft, SIZES_3D, {0, 1})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutLeft, SIZES_4D, {0, 1})
 
-#if defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
-  size_2d.push_back(1024);
-  size_2d.push_back(2048);
-  size_2d.push_back(4096);
-  size_2d.push_back(8192);
-  size_3d.push_back(192);
-  size_3d.push_back(256);
-  size_3d.push_back(512);
-  size_4d.push_back(64);
-  size_4d.push_back(96);
-  tile_sizes.push_back(1);
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutRight, SIZES_3D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutLeft, SIZES_3D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutRight, SIZES_4D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutLeft, SIZES_4D, {-1})
+
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutRight, SIZES_2D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutLeft, SIZES_2D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutRight, SIZES_3D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutLeft, SIZES_3D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutRight, SIZES_4D, {-1})
+MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutLeft, SIZES_4D, {-1})
 #endif
-
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutRight, size_2d, tile_sizes)
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutLeft, size_3d, tile_sizes)
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutRight, size_4d, tile_sizes)
-
-#if defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutLeft, size_2d, tile_sizes)
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutRight, size_3d, tile_sizes)
-  MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutLeft, size_4d, tile_sizes)
-
-  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutRight, size_3d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 3, LayoutLeft, size_3d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutRight, size_4d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseTwo, 4, LayoutLeft, size_4d, {-1})
-
-  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutRight, size_2d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 2, LayoutLeft, size_2d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutRight, size_3d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 3, LayoutLeft, size_3d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutRight, size_4d, {-1})
-  MDRANGE_STENCIL_BENCHMARK(CollapseAll, 4, LayoutLeft, size_4d, {-1})
-#endif
-
-  return 0;
-}
-
-static int unused [[maybe_unused]] = declare_benchmarks();
 
 #undef MDRANGE_STENCIL_BENCHMARK
 
