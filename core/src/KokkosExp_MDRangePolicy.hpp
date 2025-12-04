@@ -150,7 +150,6 @@ struct MDRangePolicyInternal<ExecSpace, P, Properties...>
   execution_space m_space;
 
  public:
-  int m_default_tile_size   = 2;
   int m_max_total_tile_size = std::numeric_limits<int>::max();
   Kokkos::Array<int, 3> m_max_threads_dimensions = {
       std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
@@ -180,7 +179,6 @@ struct MDRangePolicyInternal<ExecSpace, P, Properties...>
   MDRangePolicyInternal(const MDRangePolicyInternal<OtherExecSpace, OtherP,
                                                     OtherProperties...>& p)
       : m_space(p.m_space),
-        m_default_tile_size(p.m_default_tile_size),
         m_max_total_tile_size(p.m_max_total_tile_size),
         m_max_threads_dimensions(p.m_max_threads_dimensions),
         m_lower(p.m_lower),
@@ -201,6 +199,7 @@ struct MDRangePolicyInternal<ExecSpace, P, Properties...>
 
   tile_type tile_size_recommended() const {
     tile_type recommended_tile_sizes{};
+    int m_default_tile_size = 2;
 
     int rank_start = (inner_direction == Iterate::Right) ? rank - 1 : 0;
     int rank_end   = (inner_direction == Iterate::Right) ? -1 : rank;
@@ -353,7 +352,7 @@ struct MDRangePolicy<P, Properties...>
     }
 
     if (launch_bounds::maxTperB != 0 &&
-        static_cast<index_type>(launch_bounds::maxTperB) <=
+        static_cast<index_type>(launch_bounds::maxTperB) <
             this->m_prod_tile_dims) {
       std::string msg =
           "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
@@ -452,6 +451,15 @@ struct MDRangePolicy<P, Properties...>
       : internal_policy(other) {}
 
   MDRangePolicy(const internal_policy& p) : internal_policy(p) {}
+
+  // for is_default_constructible == true
+  MDRangePolicy() = default;
+
+  MDRangePolicy(const Impl::PolicyUpdate, const MDRangePolicy& other,
+                typename traits::execution_space space)
+      : MDRangePolicy(other) {
+    this->m_space = std::move(space);
+  }
 };
 
 template <typename LT, size_t N, typename UT>

@@ -76,7 +76,6 @@ export {
 
   // execution policies
   namespace Impl {
-  using ::Kokkos::Impl::get_tile_size_properties;
   using ::Kokkos::Impl::ParallelConstructName;
   using ::Kokkos::Impl::PolicyTraits;
   using ::Kokkos::Impl::PolicyUpdate;

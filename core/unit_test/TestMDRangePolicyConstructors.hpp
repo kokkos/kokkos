@@ -138,9 +138,6 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
   using Policy    = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<rank>>;
   using tile_type = typename Policy::tile_type;
 
-  std::size_t last_rank =
-      (Policy::inner_direction == Kokkos::Iterate::Right) ? rank - 1 : 0;
-
   {
     int dim_length = 100;
     Policy policy_default({0, 0, 0}, {dim_length, dim_length, dim_length});
