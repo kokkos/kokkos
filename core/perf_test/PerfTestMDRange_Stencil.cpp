@@ -26,9 +26,6 @@ struct LayoutToIterationPattern<Kokkos::LayoutLeft> {
   static constexpr Kokkos::Iterate pattern = Kokkos::Iterate::Left;
 };
 
-KOKKOS_INLINE_FUNCTION
-auto periodic(const int i, const int n) { return (i + n) % n; }
-
 template <typename ScalarType, typename ViewType>
 void check_computation(const ViewType& A, const ViewType& B) {
   int numErrors = 0;
@@ -40,14 +37,13 @@ void check_computation(const ViewType& A, const ViewType& B) {
   // answer
   ScalarType epsilon = std::numeric_limits<ScalarType>::epsilon() * 100;
   if constexpr (ViewType::rank == 2) {
-    const int n0 = Ahost.extent_int(0), n1 = Ahost.extent_int(1);
-    for (int i0 = 0; i0 < n0; ++i0) {
-      for (int i1 = 0; i1 < n1; ++i1) {
-        const int i0p = periodic(i0 + 1, n0), i0m = periodic(i0 - 1, n0);
-        const int i1p = periodic(i1 + 1, n1), i1m = periodic(i1 - 1, n1);
-        ScalarType check = 0.25 * (ScalarType)(Bhost(i0p, i1) + Bhost(i0m, i1) +
-                                               Bhost(i0, i1p) + Bhost(i0, i1m) +
-                                               Bhost(i0, i1));
+    const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2;
+    for (int i0 = 1; i0 < n0 + 1; ++i0) {
+      for (int i1 = 1; i1 < n1 + 1; ++i1) {
+        ScalarType check =
+            0.25 *
+            (ScalarType)(Bhost(i0 + 1, i1) + Bhost(i0 - 1, i1) +
+                         Bhost(i0, i1 + 1) + Bhost(i0, i1 - 1) + Bhost(i0, i1));
         if (Kokkos::abs(Ahost(i0, i1) - check) > epsilon) {
           ++numErrors;
           std::cerr << "Correctness error at index: " << i0 << "," << i1
@@ -57,19 +53,17 @@ void check_computation(const ViewType& A, const ViewType& B) {
       }
     }
   } else if constexpr (ViewType::rank == 3) {
-    const int n0 = Ahost.extent_int(0), n1 = Ahost.extent_int(1),
-              n2 = Ahost.extent_int(2);
-    for (int i0 = 0; i0 < n0; ++i0) {
-      for (int i1 = 0; i1 < n1; ++i1) {
-        for (int i2 = 0; i2 < n2; ++i2) {
-          const int i0p = periodic(i0 + 1, n0), i0m = periodic(i0 - 1, n0);
-          const int i1p = periodic(i1 + 1, n1), i1m = periodic(i1 - 1, n1);
-          const int i2p = periodic(i2 + 1, n2), i2m = periodic(i2 - 1, n2);
+    const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
+              n2 = Ahost.extent_int(2) - 2;
+    for (int i0 = 1; i0 < n0 + 1; ++i0) {
+      for (int i1 = 1; i1 < n1 + 1; ++i1) {
+        for (int i2 = 1; i2 < n2 + 1; ++i2) {
           ScalarType check =
-              0.25 * (ScalarType)(Bhost(i0p, i1, i2) + Bhost(i0m, i1, i2) +
-                                  Bhost(i0, i1p, i2) + Bhost(i0, i1m, i2) +
-                                  Bhost(i0, i1, i2p) + Bhost(i0, i1, i2m) +
-                                  Bhost(i0, i1, i2));
+              0.25 *
+              (ScalarType)(Bhost(i0 + 1, i1, i2) + Bhost(i0 - 1, i1, i2) +
+                           Bhost(i0, i1 + 1, i2) + Bhost(i0, i1 - 1, i2) +
+                           Bhost(i0, i1, i2 + 1) + Bhost(i0, i1, i2 - 1) +
+                           Bhost(i0, i1, i2));
           if (Kokkos::abs(Ahost(i0, i1, i2) - check) > epsilon) {
             ++numErrors;
             std::cerr << "Correctness error at index: " << i0 << "," << i1
@@ -80,24 +74,21 @@ void check_computation(const ViewType& A, const ViewType& B) {
       }
     }
   } else if constexpr (ViewType::rank == 4) {
-    const int n0 = Ahost.extent_int(0), n1 = Ahost.extent_int(1),
-              n2 = Ahost.extent_int(2), n3 = Ahost.extent_int(3);
-    for (int i0 = 0; i0 < n0; ++i0) {
-      for (int i1 = 0; i1 < n1; ++i1) {
-        for (int i2 = 0; i2 < n2; ++i2) {
-          for (int i3 = 0; i3 < n3; ++i3) {
-            const int i0p = periodic(i0 + 1, n0), i0m = periodic(i0 - 1, n0);
-            const int i1p = periodic(i1 + 1, n1), i1m = periodic(i1 - 1, n1);
-            const int i2p = periodic(i2 + 1, n2), i2m = periodic(i2 - 1, n2);
-            const int i3p = periodic(i3 + 1, n3), i3m = periodic(i3 - 1, n3);
-
-            ScalarType check =
-                0.25 *
-                (ScalarType)(Bhost(i0p, i1, i2, i3) + Bhost(i0m, i1, i2, i3) +
-                             Bhost(i0, i1p, i2, i3) + Bhost(i0, i1m, i2, i3) +
-                             Bhost(i0, i1, i2p, i3) + Bhost(i0, i1, i2m, i3) +
-                             Bhost(i0, i1, i2, i3p) + Bhost(i0, i1, i2, i3m) +
-                             Bhost(i0, i1, i2, i3));
+    const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
+              n2 = Ahost.extent_int(2) - 2, n3 = Ahost.extent_int(3) - 2;
+    for (int i0 = 1; i0 < n0 + 1; ++i0) {
+      for (int i1 = 1; i1 < n1 + 1; ++i1) {
+        for (int i2 = 1; i2 < n2 + 1; ++i2) {
+          for (int i3 = 1; i3 < n3 + 1; ++i3) {
+            ScalarType check = 0.25 * (ScalarType)(Bhost(i0 + 1, i1, i2, i3) +
+                                                   Bhost(i0 - 1, i1, i2, i3) +
+                                                   Bhost(i0, i1 + 1, i2, i3) +
+                                                   Bhost(i0, i1 - 1, i2, i3) +
+                                                   Bhost(i0, i1, i2 + 1, i3) +
+                                                   Bhost(i0, i1, i2 - 1, i3) +
+                                                   Bhost(i0, i1, i2, i3 + 1) +
+                                                   Bhost(i0, i1, i2, i3 - 1) +
+                                                   Bhost(i0, i1, i2, i3));
             if (Kokkos::abs(Ahost(i0, i1, i2, i3) - check) > epsilon) {
               ++numErrors;
               std::cerr << "Correctness error at index: " << i0 << "," << i1
@@ -140,8 +131,8 @@ void bench_mdrange(benchmark::State& state, std::index_sequence<Idx...>) {
   }
   state.counters["default_tiling"] = using_default_tiling;
 
-  view_type Atest("Atest", dims[Idx]...);
-  view_type Btest("Btest", dims[Idx]...);
+  view_type Atest("Atest", (dims[Idx] + 2)...);
+  view_type Btest("Btest", (dims[Idx] + 2)...);
 
   Kokkos::deep_copy(Atest, 1.0);
   execution_space().fence();
@@ -200,50 +191,41 @@ struct MDRange {
       : A(A_), B(B_), ranges(dims) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i0, const int i1) const
+  void operator()(int i0, int i1) const
     requires(dimension == 2)
   {
-    const int i0p = periodic(i0 + 1, ranges[0]),
-              i0m = periodic(i0 - 1, ranges[0]);
-    const int i1p = periodic(i1 + 1, ranges[1]),
-              i1m = periodic(i1 - 1, ranges[1]);
-    A(i0, i1)     = 0.25 * (ScalarType)(B(i0p, i1) + B(i0m, i1) + B(i0, i1p) +
-                                    B(i0, i1m) + B(i0, i1));
+    i0++;
+    i1++;
+    A(i0, i1) = 0.25 * (ScalarType)(B(i0 + 1, i1) + B(i0 - 1, i1) +
+                                    B(i0, i1 + 1) + B(i0, i1 - 1) + B(i0, i1));
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i0, const int i1, const int i2) const
+  void operator()(int i0, int i1, int i2) const
     requires(dimension == 3)
   {
-    const int i0p = periodic(i0 + 1, ranges[0]),
-              i0m = periodic(i0 - 1, ranges[0]);
-    const int i1p = periodic(i1 + 1, ranges[1]),
-              i1m = periodic(i1 - 1, ranges[1]);
-    const int i2p = periodic(i2 + 1, ranges[2]),
-              i2m = periodic(i2 - 1, ranges[2]);
-    A(i0, i1, i2) =
-        0.25 * (ScalarType)(B(i0p, i1, i2) + B(i0m, i1, i2) + B(i0, i1p, i2) +
-                            B(i0, i1m, i2) + B(i0, i1, i2p) + B(i0, i1, i2m) +
-                            B(i0, i1, i2));
+    i0++;
+    i1++;
+    i2++;
+    A(i0, i1, i2) = 0.25 * (ScalarType)(B(i0 + 1, i1, i2) + B(i0 - 1, i1, i2) +
+                                        B(i0, i1 + 1, i2) + B(i0, i1 - 1, i2) +
+                                        B(i0, i1, i2 + 1) + B(i0, i1, i2 - 1) +
+                                        B(i0, i1, i2));
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i0, const int i1, const int i2, const int i3) const
+  void operator()(int i0, int i1, int i2, int i3) const
     requires(dimension == 4)
   {
-    const int i0p = periodic(i0 + 1, ranges[0]),
-              i0m = periodic(i0 - 1, ranges[0]);
-    const int i1p = periodic(i1 + 1, ranges[1]),
-              i1m = periodic(i1 - 1, ranges[1]);
-    const int i2p = periodic(i2 + 1, ranges[2]),
-              i2m = periodic(i2 - 1, ranges[2]);
-    const int i3p = periodic(i3 + 1, ranges[3]),
-              i3m = periodic(i3 - 1, ranges[3]);
+    i0++;
+    i1++;
+    i2++;
+    i3++;
     A(i0, i1, i2, i3) =
-        0.25 * (ScalarType)(B(i0p, i1, i2, i3) + B(i0m, i1, i2, i3) +
-                            B(i0, i1p, i2, i3) + B(i0, i1m, i2, i3) +
-                            B(i0, i1, i2p, i3) + B(i0, i1, i2m, i3) +
-                            B(i0, i1, i2, i3p) + B(i0, i1, i2, i3m) +
+        0.25 * (ScalarType)(B(i0 + 1, i1, i2, i3) + B(i0 - 1, i1, i2, i3) +
+                            B(i0, i1 + 1, i2, i3) + B(i0, i1 - 1, i2, i3) +
+                            B(i0, i1, i2 + 1, i3) + B(i0, i1, i2 - 1, i3) +
+                            B(i0, i1, i2, i3 + 1) + B(i0, i1, i2, i3 - 1) +
                             B(i0, i1, i2, i3));
   }
 
@@ -292,32 +274,22 @@ struct CollapseTwo {
     requires(dimension == 3)
   {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int i0 = r % ranges[0], i1 = r / ranges[0];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      for (int i2 = 0; i2 < ranges[2]; ++i2) {
-        const int i2p = periodic(i2 + 1, ranges[2]),
-                  i2m = periodic(i2 - 1, ranges[2]);
-        A(i0, i1, i2) = 0.25 * (ScalarType)(B(i0p, i1, i2) + B(i0m, i1, i2) +
-                                            B(i0, i1p, i2) + B(i0, i1m, i2) +
-                                            B(i0, i1, i2p) + B(i0, i1, i2m) +
-                                            B(i0, i1, i2));
+      const int i0 = r % ranges[0] + 1, i1 = r / ranges[0] + 1;
+      for (int i2 = 1; i2 < ranges[2] + 1; ++i2) {
+        A(i0, i1, i2) =
+            0.25 *
+            (ScalarType)(B(i0 + 1, i1, i2) + B(i0 - 1, i1, i2) +
+                         B(i0, i1 + 1, i2) + B(i0, i1 - 1, i2) +
+                         B(i0, i1, i2 + 1) + B(i0, i1, i2 - 1) + B(i0, i1, i2));
       }
     } else {
-      int i2 = r % ranges[2], i1 = r / ranges[2];
-      const int i2p = periodic(i2 + 1, ranges[2]),
-                i2m = periodic(i2 - 1, ranges[2]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      for (int i0 = 0; i0 < ranges[0]; ++i0) {
-        const int i0p = periodic(i0 + 1, ranges[0]),
-                  i0m = periodic(i0 - 1, ranges[0]);
-        A(i0, i1, i2) = 0.25 * (ScalarType)(B(i0p, i1, i2) + B(i0m, i1, i2) +
-                                            B(i0, i1p, i2) + B(i0, i1m, i2) +
-                                            B(i0, i1, i2p) + B(i0, i1, i2m) +
-                                            B(i0, i1, i2));
+      const int i2 = r % ranges[2] + 1, i1 = r / ranges[2] + 1;
+      for (int i0 = 1; i0 < ranges[0] + 1; ++i0) {
+        A(i0, i1, i2) =
+            0.25 *
+            (ScalarType)(B(i0 + 1, i1, i2) + B(i0 - 1, i1, i2) +
+                         B(i0, i1 + 1, i2) + B(i0, i1 - 1, i2) +
+                         B(i0, i1, i2 + 1) + B(i0, i1, i2 - 1) + B(i0, i1, i2));
       }
     }
   }
@@ -327,41 +299,25 @@ struct CollapseTwo {
     requires(dimension == 4)
   {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int i0 = r % ranges[0], i12 = r / ranges[0];
-      int i1 = i12 % ranges[1], i2 = i12 / ranges[1];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      const int i2p = periodic(i2 + 1, ranges[2]),
-                i2m = periodic(i2 - 1, ranges[2]);
-      for (int i3 = 0; i3 < ranges[3]; ++i3) {
-        const int i3p = periodic(i3 + 1, ranges[3]),
-                  i3m = periodic(i3 - 1, ranges[3]);
+      const int i0 = r % ranges[0] + 1, i12 = r / ranges[0];
+      const int i1 = i12 % ranges[1] + 1, i2 = i12 / ranges[1] + 1;
+      for (int i3 = 1; i3 < ranges[3] + 1; ++i3) {
         A(i0, i1, i2, i3) =
-            0.25 * (ScalarType)(B(i0p, i1, i2, i3) + B(i0m, i1, i2, i3) +
-                                B(i0, i1p, i2, i3) + B(i0, i1m, i2, i3) +
-                                B(i0, i1, i2p, i3) + B(i0, i1, i2m, i3) +
-                                B(i0, i1, i2, i3p) + B(i0, i1, i2, i3m) +
+            0.25 * (ScalarType)(B(i0 + 1, i1, i2, i3) + B(i0 - 1, i1, i2, i3) +
+                                B(i0, i1 + 1, i2, i3) + B(i0, i1 - 1, i2, i3) +
+                                B(i0, i1, i2 + 1, i3) + B(i0, i1, i2 - 1, i3) +
+                                B(i0, i1, i2, i3 + 1) + B(i0, i1, i2, i3 - 1) +
                                 B(i0, i1, i2, i3));
       }
     } else {
-      int i3 = r % ranges[3], i21 = r / ranges[3];
-      int i2 = i21 % ranges[2], i1 = i21 / ranges[2];
-      const int i3p = periodic(i3 + 1, ranges[3]),
-                i3m = periodic(i3 - 1, ranges[3]);
-      const int i2p = periodic(i2 + 1, ranges[2]),
-                i2m = periodic(i2 - 1, ranges[2]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      for (int i0 = 0; i0 < ranges[0]; ++i0) {
-        const int i0p = periodic(i0 + 1, ranges[0]),
-                  i0m = periodic(i0 - 1, ranges[0]);
+      const int i3 = r % ranges[3] + 1, i21 = r / ranges[3];
+      const int i2 = i21 % ranges[2] + 1, i1 = i21 / ranges[2] + 1;
+      for (int i0 = 1; i0 < ranges[0] + 1; ++i0) {
         A(i0, i1, i2, i3) =
-            0.25 * (ScalarType)(B(i0p, i1, i2, i3) + B(i0m, i1, i2, i3) +
-                                B(i0, i1p, i2, i3) + B(i0, i1m, i2, i3) +
-                                B(i0, i1, i2p, i3) + B(i0, i1, i2m, i3) +
-                                B(i0, i1, i2, i3p) + B(i0, i1, i2, i3m) +
+            0.25 * (ScalarType)(B(i0 + 1, i1, i2, i3) + B(i0 - 1, i1, i2, i3) +
+                                B(i0, i1 + 1, i2, i3) + B(i0, i1 - 1, i2, i3) +
+                                B(i0, i1, i2 + 1, i3) + B(i0, i1, i2 - 1, i3) +
+                                B(i0, i1, i2, i3 + 1) + B(i0, i1, i2, i3 - 1) +
                                 B(i0, i1, i2, i3));
       }
     }
@@ -416,21 +372,15 @@ struct CollapseAll {
     requires(dimension == 2)
   {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int i0 = r % ranges[0], i1 = r / ranges[0];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      A(i0, i1)     = 0.25 * (ScalarType)(B(i0p, i1) + B(i0m, i1) + B(i0, i1p) +
-                                      B(i0, i1m) + B(i0, i1));
+      const int i0 = r % ranges[0] + 1, i1 = r / ranges[0] + 1;
+      A(i0, i1) =
+          0.25 * (ScalarType)(B(i0 + 1, i1) + B(i0 - 1, i1) + B(i0, i1 + 1) +
+                              B(i0, i1 - 1) + B(i0, i1));
     } else {
-      int i1 = r % ranges[1], i0 = r / ranges[1];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      A(i0, i1)     = 0.25 * (ScalarType)(B(i0p, i1) + B(i0m, i1) + B(i0, i1p) +
-                                      B(i0, i1m) + B(i0, i1));
+      const int i1 = r % ranges[1] + 1, i0 = r / ranges[1] + 1;
+      A(i0, i1) =
+          0.25 * (ScalarType)(B(i0 + 1, i1) + B(i0 - 1, i1) + B(i0, i1 + 1) +
+                              B(i0, i1 - 1) + B(i0, i1));
     }
   }
 
@@ -439,31 +389,21 @@ struct CollapseAll {
     requires(dimension == 3)
   {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int i0 = r % ranges[0], i12 = r / ranges[0];
-      int i1 = i12 % ranges[1], i2 = i12 / ranges[1];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      const int i2p = periodic(i2 + 1, ranges[2]),
-                i2m = periodic(i2 - 1, ranges[2]);
+      const int i0 = r % ranges[0] + 1, i12 = r / ranges[0];
+      const int i1 = i12 % ranges[1] + 1, i2 = i12 / ranges[1] + 1;
       A(i0, i1, i2) =
-          0.25 * (ScalarType)(B(i0p, i1, i2) + B(i0m, i1, i2) + B(i0, i1p, i2) +
-                              B(i0, i1m, i2) + B(i0, i1, i2p) + B(i0, i1, i2m) +
-                              B(i0, i1, i2));
+          0.25 *
+          (ScalarType)(B(i0 + 1, i1, i2) + B(i0 - 1, i1, i2) +
+                       B(i0, i1 + 1, i2) + B(i0, i1 - 1, i2) +
+                       B(i0, i1, i2 + 1) + B(i0, i1, i2 - 1) + B(i0, i1, i2));
     } else {
-      int i2 = r % ranges[2], i10 = r / ranges[2];
-      int i1 = i10 % ranges[1], i0 = i10 / ranges[1];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      const int i2p = periodic(i2 + 1, ranges[2]),
-                i2m = periodic(i2 - 1, ranges[2]);
+      const int i2 = r % ranges[2] + 1, i10 = r / ranges[2];
+      const int i1 = i10 % ranges[1] + 1, i0 = i10 / ranges[1] + 1;
       A(i0, i1, i2) =
-          0.25 * (ScalarType)(B(i0p, i1, i2) + B(i0m, i1, i2) + B(i0, i1p, i2) +
-                              B(i0, i1m, i2) + B(i0, i1, i2p) + B(i0, i1, i2m) +
-                              B(i0, i1, i2));
+          0.25 *
+          (ScalarType)(B(i0 + 1, i1, i2) + B(i0 - 1, i1, i2) +
+                       B(i0, i1 + 1, i2) + B(i0, i1 - 1, i2) +
+                       B(i0, i1, i2 + 1) + B(i0, i1, i2 - 1) + B(i0, i1, i2));
     }
   }
 
@@ -472,41 +412,24 @@ struct CollapseAll {
     requires(dimension == 4)
   {
     if constexpr (std::is_same_v<TestLayout, Kokkos::LayoutLeft>) {
-      int i0 = r % ranges[0], i123 = r / ranges[0];
-      int i1 = i123 % ranges[1], i23 = i123 / ranges[1];
-      int i2 = i23 % ranges[2], i3 = i23 / ranges[2];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      const int i2p = periodic(i2 + 1, ranges[2]),
-                i2m = periodic(i2 - 1, ranges[2]);
-      const int i3p = periodic(i3 + 1, ranges[3]),
-                i3m = periodic(i3 - 1, ranges[3]);
-
+      const int i0 = r % ranges[0] + 1, i123 = r / ranges[0];
+      const int i1 = i123 % ranges[1] + 1, i23 = i123 / ranges[1];
+      const int i2 = i23 % ranges[2] + 1, i3 = i23 / ranges[2] + 1;
       A(i0, i1, i2, i3) =
-          0.25 * (ScalarType)(B(i0p, i1, i2, i3) + B(i0m, i1, i2, i3) +
-                              B(i0, i1p, i2, i3) + B(i0, i1m, i2, i3) +
-                              B(i0, i1, i2p, i3) + B(i0, i1, i2m, i3) +
-                              B(i0, i1, i2, i3p) + B(i0, i1, i2, i3m) +
+          0.25 * (ScalarType)(B(i0 + 1, i1, i2, i3) + B(i0 - 1, i1, i2, i3) +
+                              B(i0, i1 + 1, i2, i3) + B(i0, i1 - 1, i2, i3) +
+                              B(i0, i1, i2 + 1, i3) + B(i0, i1, i2 - 1, i3) +
+                              B(i0, i1, i2, i3 + 1) + B(i0, i1, i2, i3 - 1) +
                               B(i0, i1, i2, i3));
     } else {
-      int i3 = r % ranges[3], i210 = r / ranges[3];
-      int i2 = i210 % ranges[2], i10 = i210 / ranges[2];
-      int i1 = i10 % ranges[1], i0 = i10 / ranges[1];
-      const int i0p = periodic(i0 + 1, ranges[0]),
-                i0m = periodic(i0 - 1, ranges[0]);
-      const int i1p = periodic(i1 + 1, ranges[1]),
-                i1m = periodic(i1 - 1, ranges[1]);
-      const int i2p = periodic(i2 + 1, ranges[2]),
-                i2m = periodic(i2 - 1, ranges[2]);
-      const int i3p = periodic(i3 + 1, ranges[3]),
-                i3m = periodic(i3 - 1, ranges[3]);
+      const int i3 = r % ranges[3] + 1, i210 = r / ranges[3];
+      const int i2 = i210 % ranges[2] + 1, i10 = i210 / ranges[2];
+      const int i1 = i10 % ranges[1] + 1, i0 = i10 / ranges[1] + 1;
       A(i0, i1, i2, i3) =
-          0.25 * (ScalarType)(B(i0p, i1, i2, i3) + B(i0m, i1, i2, i3) +
-                              B(i0, i1p, i2, i3) + B(i0, i1m, i2, i3) +
-                              B(i0, i1, i2p, i3) + B(i0, i1, i2m, i3) +
-                              B(i0, i1, i2, i3p) + B(i0, i1, i2, i3m) +
+          0.25 * (ScalarType)(B(i0 + 1, i1, i2, i3) + B(i0 - 1, i1, i2, i3) +
+                              B(i0, i1 + 1, i2, i3) + B(i0, i1 - 1, i2, i3) +
+                              B(i0, i1, i2 + 1, i3) + B(i0, i1, i2 - 1, i3) +
+                              B(i0, i1, i2, i3 + 1) + B(i0, i1, i2, i3 - 1) +
                               B(i0, i1, i2, i3));
     }
   }
@@ -519,6 +442,20 @@ struct CollapseAll {
   }
 };
 
+#if !defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
+#define MDRANGE_STENCIL_BENCHMARK(functor, dim, layout, sizes, ...)      \
+  BENCHMARK(bench_mdrange<functor<TEST_EXECSPACE, dim, Kokkos::layout>>) \
+      ->UseManualTime()                                                  \
+      ->Unit(benchmark::kMillisecond)                                    \
+      ->Name("MDRangeStencil_" #dim "D_" #functor "_" #layout)           \
+      ->ArgNames({"size", "tile_size"})                                  \
+      ->ArgsProduct({sizes, __VA_ARGS__})                                \
+      ->Iterations(1);
+
+MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutRight, {512}, {0})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutLeft, {128}, {0})
+MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutRight, {32}, {0})
+#else
 #define MDRANGE_STENCIL_BENCHMARK(functor, dim, layout, sizes, ...)      \
   BENCHMARK(bench_mdrange<functor<TEST_EXECSPACE, dim, Kokkos::layout>>) \
       ->UseManualTime()                                                  \
@@ -527,11 +464,6 @@ struct CollapseAll {
       ->ArgNames({"size", "tile_size"})                                  \
       ->ArgsProduct({sizes, __VA_ARGS__});
 
-#if !defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
-MDRANGE_STENCIL_BENCHMARK(MDRange, 2, LayoutRight, {512}, {0})
-MDRANGE_STENCIL_BENCHMARK(MDRange, 3, LayoutLeft, {128}, {0})
-MDRANGE_STENCIL_BENCHMARK(MDRange, 4, LayoutRight, {32}, {0})
-#else
 #define SIZES_2D \
   { 512, 1024, 2048, 4096, 8192 }
 #define SIZES_3D \
