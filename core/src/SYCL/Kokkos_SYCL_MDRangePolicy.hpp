@@ -39,8 +39,8 @@ struct MDRangePolicyInternal<Kokkos::SYCL, P, Properties...>
   using launch_bounds     = typename traits::launch_bounds;
   using member_type       = typename range_policy::member_type;
 
-  template <class... OtherProperties>
-  friend class MDRangePolicyInternal;
+  template <typename... OtherProperties>
+  friend struct MDRangePolicyInternal;
 
   static constexpr int rank = iteration_pattern::rank;
 
@@ -86,6 +86,10 @@ struct MDRangePolicyInternal<Kokkos::SYCL, P, Properties...>
     m_max_threads_dimensions[0] = max_work_item_sizes[0];
     m_max_threads_dimensions[1] = max_work_item_sizes[1];
     m_max_threads_dimensions[2] = max_work_item_sizes[2];
+    if constexpr (launch_bounds::maxTperB != 0) {
+      m_max_total_tile_size =
+          std::min<index_type>(launch_bounds::maxTperB, m_max_total_tile_size);
+    }
   }
 
   template <typename OtherExecSpace, typename OtherP,

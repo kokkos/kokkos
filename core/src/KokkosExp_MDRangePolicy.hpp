@@ -127,8 +127,8 @@ struct MDRangePolicyInternal<ExecSpace, P, Properties...>
   using launch_bounds     = typename traits::launch_bounds;
   using member_type       = typename range_policy::member_type;
 
-  template <class... OtherProperties>
-  friend class MDRangePolicyInternal;
+  template <typename... OtherProperties>
+  friend struct MDRangePolicyInternal;
 
   static constexpr int rank = iteration_pattern::rank;
 
@@ -323,13 +323,25 @@ struct MDRangePolicy<P, Properties...>
         Kokkos::abort(msg.c_str());
       }
 
+      // If tile size is not specified (default tile)
       if (this->m_tile[i] <= 0) {
         this->m_tune_tile_size = true;
+        // Check if it fits within the limitation
         if (this->m_prod_tile_dims * default_tile[i] <=
             static_cast<index_type>(this->m_max_total_tile_size)) {
           this->m_tile[i] = default_tile[i];
         } else {
-          this->m_tile[i] = 1;
+          // Try to fit within limitation by reducing tile size
+          while (default_tile[i] > 1 &&
+                 this->m_prod_tile_dims * default_tile[i] >
+                     static_cast<index_type>(this->m_max_total_tile_size)) {
+            default_tile[i] >>= 1;
+          }
+          if (default_tile[i] > 1) {
+            this->m_tile[i] = default_tile[i];
+          } else {
+            this->m_tile[i] = 1;
+          }
         }
       }
 
