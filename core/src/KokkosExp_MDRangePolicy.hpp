@@ -178,7 +178,8 @@ struct MDRangePolicyInternal<ExecSpace, P, Properties...>
             typename... OtherProperties>
   MDRangePolicyInternal(const MDRangePolicyInternal<OtherExecSpace, OtherP,
                                                     OtherProperties...>& p)
-      : m_space(p.m_space),
+      : traits(p),  // base class may contain data such as desired occupancy
+        m_space(p.m_space),
         m_max_total_tile_size(p.m_max_total_tile_size),
         m_max_threads_dimensions(p.m_max_threads_dimensions),
         m_lower(p.m_lower),
@@ -464,7 +465,6 @@ struct MDRangePolicy<P, Properties...>
 
   MDRangePolicy(const internal_policy& p) : internal_policy(p) {}
 
-  // for is_default_constructible == true
   MDRangePolicy() = default;
 
   MDRangePolicy(const Impl::PolicyUpdate, const MDRangePolicy& other,

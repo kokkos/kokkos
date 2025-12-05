@@ -88,10 +88,12 @@ struct MDRangePolicyInternal<Kokkos::HIP, P, Properties...>
     }
   }
 
-  template <typename... OtherProperties>
-  MDRangePolicyInternal(
-      const MDRangePolicyInternal<Kokkos::Cuda, OtherProperties...>& p)
-      : m_space(p.m_space),
+  template <typename OtherExecSpace, typename OtherP,
+            typename... OtherProperties>
+  MDRangePolicyInternal(const MDRangePolicyInternal<OtherExecSpace, OtherP,
+                                                    OtherProperties...>& p)
+      : traits(p),  // base class may contain data such as desired occupancy
+        m_space(p.m_space),
         m_max_total_tile_size(p.m_max_total_tile_size),
         m_max_threads_dimensions(p.m_max_threads_dimensions),
         m_lower(p.m_lower),
