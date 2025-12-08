@@ -96,7 +96,13 @@ if(Kokkos_ENABLE_HIP)
   set(KOKKOS_CXX_COMPILER_VERSION ${TEMP_CXX_COMPILER_VERSION})
   # get ROCm version
   string(REGEX MATCH "roc-[0-9]+\\.[0-9]+\\.[0-9]+" INTERNAL_ROCM_VERSION_TMP ${INTERNAL_COMPILER_VERSION_ONE_LINE})
-  string(SUBSTRING ${INTERNAL_ROCM_VERSION_TMP} 4 -1 INTERNAL_ROCM_VERSION)
+  if(INTERNAL_ROCM_VERSION_TMP)
+    string(SUBSTRING ${INTERNAL_ROCM_VERSION_TMP} 4 -1 INTERNAL_ROCM_VERSION)
+  else()
+    # When ROCm is installed through SPACK, we cannot get the ROCm version using
+    # `hipcc --version` or `amdclang++ --version`.
+    set(INTERNAL_ROCM_VERSION "0.0.0")
+  endif()
 endif()
 
 if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
