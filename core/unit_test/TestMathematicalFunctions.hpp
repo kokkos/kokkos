@@ -456,11 +456,11 @@ DEFINE_UNARY_FUNCTION_EVAL(trunc, 2);
 DEFINE_UNARY_FUNCTION_EVAL(round, 1);
 DEFINE_UNARY_FUNCTION_EVAL(rint, 0);
 #ifndef KOKKOS_ENABLE_SYCL
+DEFINE_UNARY_FUNCTION_EVAL(nearbyint, 2);
 DEFINE_UNARY_FUNCTION_EVAL_INT(lround);
 DEFINE_UNARY_FUNCTION_EVAL_INT(llround);
 DEFINE_UNARY_FUNCTION_EVAL_INT(lrint);
 DEFINE_UNARY_FUNCTION_EVAL_INT(llrint);
-DEFINE_UNARY_FUNCTION_EVAL_INT(nearbyint);
 #endif
 
 DEFINE_UNARY_FUNCTION_EVAL_INT(ilogb);
@@ -1328,66 +1328,72 @@ TEST(TEST_CATEGORY,
   // since int has enough range to represent any possible rounded half_t,
   // lrint, llrint can be implemented by just upcasting from rint.
   // Thus they are implemented and tested
-  TEST_HALF_MATH_FUNCTION(lrint, KE::half_t)
+  TEST_INT_HALF_MATH_FUNCTION(lrint, KE::half_t)
   ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
-  TEST_HALF_MATH_FUNCTION(llrint, KE::half_t)
+  TEST_INT_HALF_MATH_FUNCTION(llrint, KE::half_t)
   ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
 
   // since int has enough range to represent any possible rounded half_t,
   // lround, llround can be implemented by just upcasting from rint.
   // Thus they are implemented and tested
-  TEST_HALF_MATH_FUNCTION(lround, KE::half_t)
+  TEST_INT_HALF_MATH_FUNCTION(lround, KE::half_t)
   ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
-  TEST_HALF_MATH_FUNCTION(llround, KE::half_t)
+  TEST_INT_HALF_MATH_FUNCTION(llround, KE::half_t)
   ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
 
 #ifndef KOKKOS_ENABLE_SYCL
-  TEST_MATH_FUNCTION(lround)({-3, -2, -1, 0, 1});
-  TEST_MATH_FUNCTION(lround)({-3l, -2l, -1l, 0l, 1l});
-  TEST_MATH_FUNCTION(lround)({-3ll, -2ll, -1ll, 0ll, 1ll});
-  TEST_MATH_FUNCTION(lround)({2u, 3u, 4u, 5u, 6u});
-  TEST_MATH_FUNCTION(lround)({2ul, 3ul, 4ul, 5ul, 6ul});
-  TEST_MATH_FUNCTION(lround)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_MATH_FUNCTION(lround)({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
-  TEST_MATH_FUNCTION(lround)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
+  TEST_INT_MATH_FUNCTION(lround)({-3, -2, -1, 0, 1});
+  TEST_INT_MATH_FUNCTION(lround)({-3l, -2l, -1l, 0l, 1l});
+  TEST_INT_MATH_FUNCTION(lround)({-3ll, -2ll, -1ll, 0ll, 1ll});
+  TEST_INT_MATH_FUNCTION(lround)({2u, 3u, 4u, 5u, 6u});
+  TEST_INT_MATH_FUNCTION(lround)({2ul, 3ul, 4ul, 5ul, 6ul});
+  TEST_INT_MATH_FUNCTION(lround)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_INT_MATH_FUNCTION(lround)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+  TEST_INT_MATH_FUNCTION(lround)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(lround)({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
+  TEST_INT_MATH_FUNCTION(lround)
+  ({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
 #endif
 
-  TEST_MATH_FUNCTION(llround)({-3, -2, -1, 0, 1});
-  TEST_MATH_FUNCTION(llround)({-3l, -2l, -1l, 0l, 1l});
-  TEST_MATH_FUNCTION(llround)({-3ll, -2ll, -1ll, 0ll, 1ll});
-  TEST_MATH_FUNCTION(llround)({2u, 3u, 4u, 5u, 6u});
-  TEST_MATH_FUNCTION(llround)({2ul, 3ul, 4ul, 5ul, 6ul});
-  TEST_MATH_FUNCTION(llround)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_MATH_FUNCTION(llround)({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
-  TEST_MATH_FUNCTION(llround)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
+  TEST_INT_MATH_FUNCTION(llround)({-3, -2, -1, 0, 1});
+  TEST_INT_MATH_FUNCTION(llround)({-3l, -2l, -1l, 0l, 1l});
+  TEST_INT_MATH_FUNCTION(llround)({-3ll, -2ll, -1ll, 0ll, 1ll});
+  TEST_INT_MATH_FUNCTION(llround)({2u, 3u, 4u, 5u, 6u});
+  TEST_INT_MATH_FUNCTION(llround)({2ul, 3ul, 4ul, 5ul, 6ul});
+  TEST_INT_MATH_FUNCTION(llround)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_INT_MATH_FUNCTION(llround)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+  TEST_INT_MATH_FUNCTION(llround)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(llround)({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
+  TEST_INT_MATH_FUNCTION(llround)
+  ({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
 #endif
 
-  TEST_MATH_FUNCTION(lrint)({-3, -2, -1, 0, 1});
-  TEST_MATH_FUNCTION(lrint)({-3l, -2l, -1l, 0l, 1l});
-  TEST_MATH_FUNCTION(lrint)({-3ll, -2ll, -1ll, 0ll, 1ll});
-  TEST_MATH_FUNCTION(lrint)({2u, 3u, 4u, 5u, 6u});
-  TEST_MATH_FUNCTION(lrint)({2ul, 3ul, 4ul, 5ul, 6ul});
-  TEST_MATH_FUNCTION(lrint)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_MATH_FUNCTION(lrint)({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
-  TEST_MATH_FUNCTION(lrint)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
+  TEST_INT_MATH_FUNCTION(lrint)({-3, -2, -1, 0, 1});
+  TEST_INT_MATH_FUNCTION(lrint)({-3l, -2l, -1l, 0l, 1l});
+  TEST_INT_MATH_FUNCTION(lrint)({-3ll, -2ll, -1ll, 0ll, 1ll});
+  TEST_INT_MATH_FUNCTION(lrint)({2u, 3u, 4u, 5u, 6u});
+  TEST_INT_MATH_FUNCTION(lrint)({2ul, 3ul, 4ul, 5ul, 6ul});
+  TEST_INT_MATH_FUNCTION(lrint)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_INT_MATH_FUNCTION(lrint)({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+  TEST_INT_MATH_FUNCTION(lrint)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(lrint)({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
+  TEST_INT_MATH_FUNCTION(lrint)({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
 #endif
 
-  TEST_MATH_FUNCTION(llrint)({-3, -2, -1, 0, 1});
-  TEST_MATH_FUNCTION(llrint)({-3l, -2l, -1l, 0l, 1l});
-  TEST_MATH_FUNCTION(llrint)({-3ll, -2ll, -1ll, 0ll, 1ll});
-  TEST_MATH_FUNCTION(llrint)({2u, 3u, 4u, 5u, 6u});
-  TEST_MATH_FUNCTION(llrint)({2ul, 3ul, 4ul, 5ul, 6ul});
-  TEST_MATH_FUNCTION(llrint)({2ull, 3ull, 4ull, 5ull, 6ull});
-  TEST_MATH_FUNCTION(llrint)({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
-  TEST_MATH_FUNCTION(llrint)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
+  TEST_INT_MATH_FUNCTION(llrint)({-3, -2, -1, 0, 1});
+  TEST_INT_MATH_FUNCTION(llrint)({-3l, -2l, -1l, 0l, 1l});
+  TEST_INT_MATH_FUNCTION(llrint)({-3ll, -2ll, -1ll, 0ll, 1ll});
+  TEST_INT_MATH_FUNCTION(llrint)({2u, 3u, 4u, 5u, 6u});
+  TEST_INT_MATH_FUNCTION(llrint)({2ul, 3ul, 4ul, 5ul, 6ul});
+  TEST_INT_MATH_FUNCTION(llrint)({2ull, 3ull, 4ull, 5ull, 6ull});
+  TEST_INT_MATH_FUNCTION(llrint)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+  TEST_INT_MATH_FUNCTION(llrint)({2.3, 2.5, 2.7, -2.3, -2.5, -2.7, -0.0});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(llrint)({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
+  TEST_INT_MATH_FUNCTION(llrint)
+  ({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
 #endif
 
   TEST_MATH_FUNCTION(nearbyint)({-3, -2, -1, 0, 1});
