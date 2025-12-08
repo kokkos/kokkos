@@ -1325,6 +1325,22 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(rint)({2.3l, 2.5l, 2.7l, -2.3l, -2.5l, -2.7l, -0.0l});
 #endif
 
+  // since int has enough range to represent any possible rounded half_t,
+  // lrint, llrint can be implemented by just upcasting from rint.
+  // Thus they are implemented and tested
+  TEST_HALF_MATH_FUNCTION(lrint, KE::half_t)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+  TEST_HALF_MATH_FUNCTION(llrint, KE::half_t)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+
+  // since int has enough range to represent any possible rounded half_t,
+  // lround, llround can be implemented by just upcasting from rint.
+  // Thus they are implemented and tested
+  TEST_HALF_MATH_FUNCTION(lround, KE::half_t)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+  TEST_HALF_MATH_FUNCTION(llround, KE::half_t)
+  ({2.3f, 2.5f, 2.7f, -2.3f, -2.5f, -2.7f, -0.0f});
+
 #ifndef KOKKOS_ENABLE_SYCL
   TEST_MATH_FUNCTION(lround)({-3, -2, -1, 0, 1});
   TEST_MATH_FUNCTION(lround)({-3l, -2l, -1l, 0l, 1l});
