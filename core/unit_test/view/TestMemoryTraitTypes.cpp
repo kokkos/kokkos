@@ -11,6 +11,8 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <type_traits.hpp>
+
 namespace {
 
 using test_atomic_view =
