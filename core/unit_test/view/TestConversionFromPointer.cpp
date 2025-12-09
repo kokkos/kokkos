@@ -8,7 +8,7 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 
-#include<type_traits>
+#include <type_traits>
 
 // Checking requirement of explict type conversion to View
 
