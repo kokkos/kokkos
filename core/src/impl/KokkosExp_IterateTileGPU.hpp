@@ -55,6 +55,16 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
 
 // ------------------------------------------------------------------ //
 // ParallelFor iteration pattern
+// map 2D/3D hardware threads to N-D iteration space
+//
+// For ranks 2-3: Direct mapping of hardware threads to iteration space
+// dimensions For ranks 4-6: Multiple logical indices are packed into single
+// hardware dimensions
+//
+// 1. Start iterating at hardware thread identifier
+// 2. Extend iteration space range with stride loops using grid dimensions
+// 3. Bound checking to ensure we do not exceed upper bounds
+//
 template <int N, typename PolicyType, typename Functor, typename MaxGridSize,
           typename Tag>
 struct DeviceIterateTile;
@@ -97,7 +107,9 @@ struct DeviceIterateTile<2, PolicyType, Functor, MaxGridSize, Tag> {
     const index_type start_1 =
         blockIdx.y * blockDim.y + threadIdx.y + m_policy.m_lower[1];
 
+    // Iterate::Left, fastest index 0
     if constexpr (PolicyType::inner_direction == Iterate::Left) {
+      // Iterate over dimension 1 and 0 with grid strides
       for (index_type idx_1 = start_1;
            idx_1 < static_cast<index_type>(m_policy.m_upper[1]);
            idx_1 += stride_1) {
@@ -107,7 +119,9 @@ struct DeviceIterateTile<2, PolicyType, Functor, MaxGridSize, Tag> {
           Impl::_tag_invoke<Tag>(m_func, idx_0, idx_1);
         }
       }
-    } else {
+
+    } else {  // Iterate::Right, fastest index 1
+      // Iterate over dimension 0 and 1 with grid strides
       for (index_type idx_0 = start_0;
            idx_0 < static_cast<index_type>(m_policy.m_upper[0]);
            idx_0 += stride_0) {
@@ -173,7 +187,9 @@ struct DeviceIterateTile<3, PolicyType, Functor, MaxGridSize, Tag> {
     const index_type start_2 =
         blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[2];
 
+    // Iterate::Left, fastest index 0
     if constexpr (PolicyType::inner_direction == Iterate::Left) {
+      // Iterate over dimension 2, 1 and 0 with grid strides
       for (index_type idx_2 = start_2;
            idx_2 < static_cast<index_type>(m_policy.m_upper[2]);
            idx_2 += stride_2) {
@@ -187,7 +203,9 @@ struct DeviceIterateTile<3, PolicyType, Functor, MaxGridSize, Tag> {
           }
         }
       }
-    } else {  // Iterate::Right
+
+    } else {  // Iterate::Right, fastest index 2
+      // Iterate over dimension 0, 1 and 2 with grid strides
       for (index_type idx_0 = start_0;
            idx_0 < static_cast<index_type>(m_policy.m_upper[0]);
            idx_0 += stride_0) {
@@ -256,22 +274,27 @@ struct DeviceIterateTile<4, PolicyType, Functor, MaxGridSize, Tag> {
     const index_type start_3 =
         blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[3];
 
+    // Maximum number of "virtual" threads needed to cover dimensions 0 and 1
     const index_type max_threads_0 =
         (m_policy.m_tile[0] * m_policy.m_tile_end[0]);
     const index_type max_threads_1 =
         (m_policy.m_tile[1] * m_policy.m_tile_end[1]);
     const index_type max_threads_01 = max_threads_0 * max_threads_1;
 
+    // Iterate::Left, fastest index 0
     if constexpr (PolicyType::inner_direction == Iterate::Left) {
+      // Iterate over dimension 3, 2 and packed 0 and 1 with grid strides
+
       for (index_type idx_3 = start_3;
            idx_3 < static_cast<index_type>(m_policy.m_upper[3]);
            idx_3 += stride_3) {
         for (index_type idx_2 = start_2;
              idx_2 < static_cast<index_type>(m_policy.m_upper[2]);
              idx_2 += stride_2) {
-          // Unpack thread_id_0 and thread_id_1 from dimension x
+          // Unpack from dimension x into thread_id_0 (fastest) and thread_id_1
           for (index_type thread_id_01 = start_01;
                thread_id_01 < max_threads_01; thread_id_01 += stride_01) {
+            // Unpack flat thread_id_01 into 2D indices
             const index_type thread_id_1 = thread_id_01 / max_threads_0;
             const index_type thread_id_0 = thread_id_01 % max_threads_0;
 
@@ -286,11 +309,13 @@ struct DeviceIterateTile<4, PolicyType, Functor, MaxGridSize, Tag> {
         }
       }
 
-    } else {  // Iterate::Right
+    } else {  // Iterate::Right, fastest index 3
+      // Iterate over packed dimension 0 and 1 and over 2, 3 with grid strides
 
-      // Unpack thread_id_0 and thread_id_1 from dimension x
+      // Unpack from dimension x into thread_id_0 and thread_id_1 (fastest)
       for (index_type thread_id_01 = start_01; thread_id_01 < max_threads_01;
            thread_id_01 += stride_01) {
+        // Unpack flat thread_id_01 into 2D indices
         const index_type thread_id_0 = thread_id_01 / max_threads_1;
         const index_type thread_id_1 = thread_id_01 % max_threads_1;
 
@@ -365,6 +390,7 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
     const index_type stride_23 = gridDim.y * blockDim.y;
     const index_type stride_4  = gridDim.z * blockDim.z;
 
+    // Maximum number of "virtual" threads needed to cover dimensions 0-3
     const index_type max_threads_0 =
         (m_policy.m_tile[0] * m_policy.m_tile_end[0]);
     const index_type max_threads_1 =
@@ -376,13 +402,18 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
     const index_type max_threads_01 = max_threads_0 * max_threads_1;
     const index_type max_threads_23 = max_threads_2 * max_threads_3;
 
+    // Iterate::Left, fastest index 0
     if (PolicyType::inner_direction == Iterate::Left) {
+      // Iterate over dimension 4, packed 3 and 2, packed 1 and 0 with grid
+      // strides
+
       for (index_type idx_4 = start_4;
            idx_4 < static_cast<index_type>(m_policy.m_upper[4]);
            idx_4 += stride_4) {
-        // Unpack thread_id_2 and thread_id_3 from dimension y
+        // Unpack from dimension y into thread_id_2 (fastest) and thread_id_3
         for (index_type thread_id_23 = start_23; thread_id_23 < max_threads_23;
              thread_id_23 += stride_23) {
+          // Unpack flat thread_id_23 into 2D indices
           const index_type thread_id_3 = thread_id_23 / max_threads_2;
           const index_type thread_id_2 = thread_id_23 % max_threads_2;
 
@@ -391,9 +422,11 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
 
           if (idx_3 < static_cast<index_type>(m_policy.m_upper[3]) &&
               idx_2 < static_cast<index_type>(m_policy.m_upper[2])) {
-            // Unpack thread_id_0 and thread_id_1 from dimension x
+            // Unpack from dimension x into thread_id_0 (fastest) and
+            // thread_id_1
             for (index_type thread_id_01 = start_01;
                  thread_id_01 < max_threads_01; thread_id_01 += stride_01) {
+              // Unpack flat thread_id_01 into 2D indices
               const index_type thread_id_1 = thread_id_01 / max_threads_0;
               const index_type thread_id_0 = thread_id_01 % max_threads_0;
 
@@ -410,11 +443,14 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
         }
       }
 
-    } else {  // Iterate::Right
+    } else {  // Iterate::Right, fastest index 4
+      // Iterate over packed dimension 0 and 1, packed 2 and 3, and over 4 with
+      // grid strides
 
-      // Unpack thread_id_0 and thread_id_1 from dimension x
+      // Unpack from dimension x into thread_id_0 and thread_id_1 (fastest)
       for (index_type thread_id_01 = start_01; thread_id_01 < max_threads_01;
            thread_id_01 += stride_01) {
+        // Unpack flat thread_id_01 into 2D indices
         const index_type thread_id_0 = thread_id_01 / max_threads_1;
         const index_type thread_id_1 = thread_id_01 % max_threads_1;
 
@@ -423,9 +459,10 @@ struct DeviceIterateTile<5, PolicyType, Functor, MaxGridSize, Tag> {
 
         if (idx_0 < static_cast<index_type>(m_policy.m_upper[0]) &&
             idx_1 < static_cast<index_type>(m_policy.m_upper[1])) {
-          // Unpack thread_id_2 and thread_id_3 from dimension y
+          // Unpack from dimension y into thread_id_2 and thread_id_3 (fastest)
           for (index_type thread_id_23 = start_23;
                thread_id_23 < max_threads_23; thread_id_23 += stride_23) {
+            // Unpack flat thread_id_23 into 2D indices
             const index_type thread_id_2 = thread_id_23 / max_threads_3;
             const index_type thread_id_3 = thread_id_23 % max_threads_3;
 
@@ -498,6 +535,7 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
     const index_type stride_23 = gridDim.y * blockDim.y;
     const index_type stride_45 = gridDim.z * blockDim.z;
 
+    // Maximum number of "virtual" threads needed to cover dimensions 0-5
     const index_type max_threads_0 =
         (m_policy.m_tile[0] * m_policy.m_tile_end[0]);
     const index_type max_threads_1 =
@@ -516,9 +554,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
     const index_type max_threads_45 = max_threads_4 * max_threads_5;
 
     if (PolicyType::inner_direction == Iterate::Left) {
-      // Unpack thread_id_4 and thread_id_5 from dimension z
+      // Iterate over packed 5 and 4, packed 3 and 2, packed 1 and 0 with grid
+      // strides
+
+      // Unpack from dimension z into thread_id_4 (fastest) and thread_id_5
       for (index_type thread_id_45 = start_45; thread_id_45 < max_threads_45;
            thread_id_45 += stride_45) {
+        // Unpack flat thread_id_45 into 2D indices
         const index_type thread_id_5 = thread_id_45 / max_threads_4;
         const index_type thread_id_4 = thread_id_45 % max_threads_4;
 
@@ -527,9 +569,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
 
         if (idx_5 < static_cast<index_type>(m_policy.m_upper[5]) &&
             idx_4 < static_cast<index_type>(m_policy.m_upper[4])) {
-          // Unpack thread_id_2 and thread_id_3 from dimension y
+          // Unpack from dimension y into thread_id_2 (fastest) and thread_id_3
           for (index_type thread_id_23 = start_23;
                thread_id_23 < max_threads_23; thread_id_23 += stride_23) {
+            // Unpack flat thread_id_23 into 2D indices
             const index_type thread_id_3 = thread_id_23 / max_threads_2;
             const index_type thread_id_2 = thread_id_23 % max_threads_2;
 
@@ -538,9 +581,11 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
 
             if (idx_3 < static_cast<index_type>(m_policy.m_upper[3]) &&
                 idx_2 < static_cast<index_type>(m_policy.m_upper[2])) {
-              // Unpack thread_id_0 and thread_id_1 from dimension x
+              // Unpack from dimension x into thread_id_0 (fastest) and
+              // thread_id_1
               for (index_type thread_id_01 = start_01;
                    thread_id_01 < max_threads_01; thread_id_01 += stride_01) {
+                // Unpack flat thread_id_01 into 2D indices
                 const index_type thread_id_1 = thread_id_01 / max_threads_0;
                 const index_type thread_id_0 = thread_id_01 % max_threads_0;
 
@@ -559,10 +604,13 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
       }
 
     } else {  // Iterate::Right
+      // Iterate over packed dimension 0 and 1, packed 2 and 3, packed 4 and 5
+      // with grid strides
 
-      // Unpack thread_id_0 and thread_id_1 from dimension x
+      // Unpack from dimension x into thread_id_0 and thread_id_1 (fastest)
       for (index_type thread_id_01 = start_01; thread_id_01 < max_threads_01;
            thread_id_01 += stride_01) {
+        // Unpack flat thread_id_01 into 2D indices
         const index_type thread_id_0 = thread_id_01 / max_threads_1;
         const index_type thread_id_1 = thread_id_01 % max_threads_1;
 
@@ -571,9 +619,10 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
 
         if (idx_0 < static_cast<index_type>(m_policy.m_upper[0]) &&
             idx_1 < static_cast<index_type>(m_policy.m_upper[1])) {
-          // Unpack thread_id_2 and thread_id_3 from dimension y
+          // Unpack from dimension y into thread_id_2 and thread_id_3 (fastest)
           for (index_type thread_id_23 = start_23;
                thread_id_23 < max_threads_23; thread_id_23 += stride_23) {
+            // Unpack flat thread_id_23 into 2D indices
             const index_type thread_id_2 = thread_id_23 / max_threads_3;
             const index_type thread_id_3 = thread_id_23 % max_threads_3;
 
@@ -582,9 +631,11 @@ struct DeviceIterateTile<6, PolicyType, Functor, MaxGridSize, Tag> {
 
             if (idx_2 < static_cast<index_type>(m_policy.m_upper[2]) &&
                 idx_3 < static_cast<index_type>(m_policy.m_upper[3])) {
-              // Unpack thread_id_4 and thread_id_5 from dimension z
+              // Unpack from dimension z into thread_id_4 and thread_id_5
+              // (fastest)
               for (index_type thread_id_45 = start_45;
                    thread_id_45 < max_threads_45; thread_id_45 += stride_45) {
+                // Unpack flat thread_id_45 into 2D indices
                 const index_type thread_id_4 = thread_id_45 / max_threads_5;
                 const index_type thread_id_5 = thread_id_45 % max_threads_5;
 
