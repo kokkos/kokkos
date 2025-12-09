@@ -49,7 +49,7 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ !matrix.view_legacy }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
             ./
 
       - name: build_and_install_kokkos
@@ -180,7 +180,7 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ !matrix.view_legacy }}
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }}
 
       - name: build_and_install_kokkos
         working-directory: kokkos
@@ -260,7 +260,7 @@ jobs:
             -DKokkos_ENABLE_HPX=ON \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ !matrix.view_legacy }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
