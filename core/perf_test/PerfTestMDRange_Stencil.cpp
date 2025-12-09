@@ -442,7 +442,7 @@ struct CollapseAll {
   }
 };
 
-#if !defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
+#if !defined(KOKKOS_ENABLE_BENCHMARKS_HEAVY)
 #define MDRANGE_STENCIL_BENCHMARK(functor, dim, layout, sizes, ...)      \
   BENCHMARK(bench_mdrange<functor<TEST_EXECSPACE, dim, Kokkos::layout>>) \
       ->UseManualTime()                                                  \
