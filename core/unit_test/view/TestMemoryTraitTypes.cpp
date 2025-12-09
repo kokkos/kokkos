@@ -11,7 +11,7 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
-#include <type_traits.hpp>
+#include <type_traits>
 
 namespace {
 
