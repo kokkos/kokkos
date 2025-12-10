@@ -76,8 +76,8 @@ struct MDRangePolicyInternal<Kokkos::SYCL, P, Properties...>
  public:
   MDRangePolicyInternal() {
     m_max_total_tile_size =
-        space.impl_internal_space_instance()->m_maxWorkgroupSize;
-    auto device = space.sycl_queue().get_device();
+        m_space.impl_internal_space_instance()->m_maxWorkgroupSize;
+    auto device = m_space.sycl_queue().get_device();
     auto max_work_item_sizes =
         device.get_info<sycl::info::device::max_work_item_sizes<3>>();
     m_max_threads_dimensions[0] = max_work_item_sizes[0];
