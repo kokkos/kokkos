@@ -77,8 +77,8 @@ declare_and_check_host_arch(RISCV_RVA22V "RVA22V (RISC-V) CPUs")
 declare_and_check_host_arch(RISCV_U74MC "U74MC (RISC-V) CPUs")
 
 if(Kokkos_ENABLE_CUDA
-  OR Kokkos_ENABLE_OPENACC
-  OR Kokkos_ENABLE_SYCL
+   OR Kokkos_ENABLE_OPENACC
+   OR Kokkos_ENABLE_SYCL
 )
   set(KOKKOS_SHOW_CUDA_ARCHS ON)
 endif()
@@ -100,8 +100,8 @@ kokkos_arch_option(BLACKWELL100 GPU "NVIDIA Blackwell generation CC 10.0" "KOKKO
 kokkos_arch_option(BLACKWELL120 GPU "NVIDIA Blackwell generation CC 12.0" "KOKKOS_SHOW_CUDA_ARCHS")
 
 if(Kokkos_ENABLE_HIP
-  OR Kokkos_ENABLE_OPENACC
-  OR Kokkos_ENABLE_SYCL
+   OR Kokkos_ENABLE_OPENACC
+   OR Kokkos_ENABLE_SYCL
 )
   set(KOKKOS_SHOW_HIP_ARCHS ON)
 endif()
