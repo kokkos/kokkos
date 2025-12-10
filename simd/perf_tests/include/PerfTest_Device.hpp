@@ -150,31 +150,30 @@ void device_bench_reduction_op(benchmark::State& state,
       benchmark_name<Abi, DataType>("device " #prefix, #name).data(),  \
       device_bench_unary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
       ->UseManualTime()                                                \
-      ->Iterations(num_ite)
+      ->Iterations(1)
 #define KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_BINARY_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                         \
       benchmark_name<Abi, DataType>("device " #prefix, #name).data(),   \
       device_bench_binary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
       ->UseManualTime()                                                 \
-      ->Iterations(num_ite)
+      ->Iterations(1)
 #define KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_TERNARY_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                          \
       benchmark_name<Abi, DataType>("device " #prefix, #name).data(),    \
       device_bench_ternary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
       ->UseManualTime()                                                  \
-      ->Iterations(num_ite)
+      ->Iterations(1)
 #define KOKKOS_IMPL_SIMD_PERFTEST_DEVICE_REDUCTION_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                            \
       benchmark_name<Abi, DataType>("device " #prefix, #name).data(),      \
       device_bench_reduction_op<Abi, op, DataType, ExecSpace>, wrapper)    \
       ->UseManualTime()                                                    \
-      ->Iterations(num_ite)
+      ->Iterations(1)
 
 template <typename Abi, typename DataType>
 inline void device_register_common_benchmarks() {
   using ExecSpace = Kokkos::DefaultExecutionSpace;
 
-  const int num_ite = 5;
   const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
 
   if constexpr (is_simd_type_v<DataType, Abi>) {
@@ -220,7 +219,6 @@ template <typename Abi, typename DataType>
 inline void device_register_math_benchmarks() {
   using ExecSpace = Kokkos::DefaultExecutionSpace;
 
-  const int num_ite = 5;
   const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
 
   if constexpr (std::is_floating_point_v<DataType> &&

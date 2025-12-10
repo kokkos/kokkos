@@ -156,28 +156,27 @@ void host_bench_reduction_op(benchmark::State& state,
   benchmark::RegisterBenchmark(                                      \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),  \
       host_bench_unary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
-      ->Iterations(num_ite)
+      ->Iterations(3)
 #define KOKKOS_IMPL_SIMD_PERFTEST_HOST_BINARY_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                       \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),   \
       host_bench_binary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
-      ->Iterations(num_ite)
+      ->Iterations(3)
 #define KOKKOS_IMPL_SIMD_PERFTEST_HOST_TERNARY_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                        \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),    \
       host_bench_ternary_op<Abi, op, DataType, ExecSpace>, wrapper)    \
-      ->Iterations(num_ite)
+      ->Iterations(3)
 #define KOKKOS_IMPL_SIMD_PERFTEST_HOST_REDUCTION_BENCH(prefix, name, op) \
   benchmark::RegisterBenchmark(                                          \
       benchmark_name<Abi, DataType>("host " #prefix, #name).data(),      \
       host_bench_reduction_op<Abi, op, DataType, ExecSpace>, wrapper)    \
-      ->Iterations(num_ite)
+      ->Iterations(3)
 
 template <typename Abi, typename DataType>
 inline void host_register_common_benchmarks() {
   using ExecSpace = Kokkos::DefaultHostExecutionSpace;
 
-  const int num_ite = 5;
   const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
 
   if constexpr (is_simd_type_v<DataType, Abi>) {
@@ -223,7 +222,6 @@ template <typename Abi, typename DataType>
 inline void host_register_math_benchmarks() {
   using ExecSpace = Kokkos::DefaultHostExecutionSpace;
 
-  const int num_ite = 5;
   const ArgsWrapper<DataType, ExecSpace> wrapper(BENCH_SIZE);
 
   if constexpr (std::is_floating_point_v<DataType> &&

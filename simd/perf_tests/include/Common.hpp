@@ -109,7 +109,9 @@ std::string benchmark_name(const char* prefix, const char* name) {
          name;
 }
 
-constexpr std::size_t BENCH_SIZE = 1'600'000;
+// This should be a multiple of the max vector size we can encounter, which is
+// currently 16 (avx512 + 32bit datatype)
+constexpr std::size_t BENCH_SIZE = 50'000;
 
 // TODO: is_type_v and is_simd_avail_v are duplicated from
 // SIMDTesting_Utilities.hpp, we should probably find a cleaner solution in the
