@@ -76,10 +76,7 @@ declare_and_check_host_arch(RISCV_SG2042 "SG2042 (RISC-V) CPUs")
 declare_and_check_host_arch(RISCV_RVA22V "RVA22V (RISC-V) CPUs")
 declare_and_check_host_arch(RISCV_U74MC "U74MC (RISC-V) CPUs")
 
-if(Kokkos_ENABLE_CUDA
-   OR Kokkos_ENABLE_OPENACC
-   OR Kokkos_ENABLE_SYCL
-)
+if(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_OPENACC OR Kokkos_ENABLE_SYCL)
   set(KOKKOS_SHOW_CUDA_ARCHS ON)
 endif()
 
@@ -99,10 +96,7 @@ kokkos_arch_option(HOPPER90 GPU "NVIDIA Hopper generation CC 9.0" "KOKKOS_SHOW_C
 kokkos_arch_option(BLACKWELL100 GPU "NVIDIA Blackwell generation CC 10.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL120 GPU "NVIDIA Blackwell generation CC 12.0" "KOKKOS_SHOW_CUDA_ARCHS")
 
-if(Kokkos_ENABLE_HIP
-   OR Kokkos_ENABLE_OPENACC
-   OR Kokkos_ENABLE_SYCL
-)
+if(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_OPENACC OR Kokkos_ENABLE_SYCL)
   set(KOKKOS_SHOW_HIP_ARCHS ON)
 endif()
 
@@ -993,10 +987,7 @@ function(CHECK_CUDA_ARCH ARCH FLAG)
       )
     endif()
     set(CUDA_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-    if(NOT KOKKOS_ENABLE_CUDA
-       AND NOT KOKKOS_ENABLE_SYCL
-       AND NOT KOKKOS_ENABLE_OPENACC
-    )
+    if(NOT KOKKOS_ENABLE_CUDA AND NOT KOKKOS_ENABLE_SYCL AND NOT KOKKOS_ENABLE_OPENACC)
       message(
         WARNING
           "Given CUDA arch ${ARCH}, but Kokkos_ENABLE_CUDA, Kokkos_ENABLE_SYCL and Kokkos_ENABLE_OPENACC are OFF. Option will be ignored."
@@ -1053,10 +1044,7 @@ function(CHECK_AMDGPU_ARCH ARCH FLAG)
       )
     endif()
     set(AMDGPU_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-    if(NOT KOKKOS_ENABLE_HIP
-       AND NOT KOKKOS_ENABLE_OPENACC
-       AND NOT KOKKOS_ENABLE_SYCL
-    )
+    if(NOT KOKKOS_ENABLE_HIP AND NOT KOKKOS_ENABLE_OPENACC AND NOT KOKKOS_ENABLE_SYCL)
       message(
         WARNING
           "Given AMD GPU architecture ${ARCH}, but Kokkos_ENABLE_HIP, Kokkos_ENABLE_SYCL and Kokkos_ENABLE_OPENACC are OFF. Option will be ignored."
