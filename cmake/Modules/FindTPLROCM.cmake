@@ -1,16 +1,10 @@
-include(FindPackageHandleStandardArgs)
+find_package(hip 6.2 REQUIRED)
 
-find_library(AMD_HIP_LIBRARY amdhip64 PATHS ${ROCM_PATH} ENV ROCM_PATH PATH_SUFFIXES lib)
-find_library(HSA_RUNTIME_LIBRARY hsa-runtime64 PATHS ${ROCM_PATH} ENV ROCM_PATH PATH_SUFFIXES lib)
+set(TPL_ROCM_LIBRARIES "")
+if(KOKKOS_ENABLE_COMPILE_AS_CMAKE_LANGUAGE)
+  set(TPL_ROCM_LIBRARIES hip::device)
+else()
+  set(TPL_ROCM_LIBRARIES hip::device)
+endif()
 
-find_package_handle_standard_args(TPLROCM DEFAULT_MSG AMD_HIP_LIBRARY HSA_RUNTIME_LIBRARY)
-
-kokkos_create_imported_tpl(
-  ROCM
-  INTERFACE
-  LINK_LIBRARIES
-  ${HSA_RUNTIME_LIBRARY}
-  ${AMD_HIP_LIBRARY}
-  COMPILE_DEFINITIONS
-  __HIP_ROCclr__
-)
+kokkos_create_imported_tpl(ROCM INTERFACE LINK_LIBRARIES ${TPL_ROCM_LIBRARIES})
