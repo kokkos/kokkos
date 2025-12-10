@@ -105,8 +105,10 @@ kokkos_enable_option(
   "Whether multiple kernels are instantiated at compile time - improve performance but increase compile time"
 )
 # FIXME_HIP
-find_package(hip 6.2 REQUIRED
-)#here just for the version, can be removed with the fixme as it will be found by our TPL processing
+if(KOKKOS_ENABLE_HIP)
+  find_package(hip 6.2 REQUIRED
+  )#here just for the version, can be removed with the fixme as it will be found by our TPL processing
+endif()
 if((hip_VERSION VERSION_EQUAL 7.1.0) OR (hip_version VERSION_EQUAL 7.1.1))
   set(HIP_MALLOC_ASYNC_DEFAULT OFF)
 else()
