@@ -45,7 +45,7 @@ struct MDRangePolicyInternal<Kokkos::Cuda, P, Properties...>
   static constexpr int rank = iteration_pattern::rank;
 
   using index_type       = typename traits::index_type;
-  using array_index_type = std::make_signed_t<index_type>;
+  using array_index_type = std::int64_t;
   using point_type       = Kokkos::Array<array_index_type, rank>;
   using tile_type        = Kokkos::Array<array_index_type, rank>;
 
@@ -72,9 +72,6 @@ struct MDRangePolicyInternal<Kokkos::Cuda, P, Properties...>
       iteration_pattern::inner_direction != Iterate::Default
           ? iteration_pattern::inner_direction
           : default_inner_direction<typename traits::execution_space>::value;
-
-  static constexpr auto Right = Iterate::Right;
-  static constexpr auto Left  = Iterate::Left;
 
  public:
   MDRangePolicyInternal() {

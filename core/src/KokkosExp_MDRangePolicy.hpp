@@ -266,6 +266,8 @@ struct MDRangePolicy<P, Properties...>
                 "Kokkos Error: MD iteration pattern not defined");
 
  public:
+  // Import types from MDRangePolicyInternal
+  using typename internal_policy::execution_space;
   using typename internal_policy::iteration_pattern;
   using typename internal_policy::launch_bounds;
   using typename internal_policy::member_type;
@@ -277,12 +279,16 @@ struct MDRangePolicy<P, Properties...>
   static constexpr auto outer_direction = internal_policy::outer_direction;
   static constexpr auto inner_direction = internal_policy::inner_direction;
 
+  static constexpr auto Right = Iterate::Right;
+  static constexpr auto Left  = Iterate::Left;
+
+  // Import types from MDRangePolicyInternal
   using typename internal_policy::array_index_type;
   using typename internal_policy::index_type;
   using typename internal_policy::point_type;
   using typename internal_policy::tile_type;
 
-  KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
+  KOKKOS_INLINE_FUNCTION const execution_space& space() const {
     return this->m_space;
   }
 
@@ -324,15 +330,15 @@ struct MDRangePolicy<P, Properties...>
         Kokkos::abort(msg.c_str());
       }
 
-      // If tile size is not specified (default tile)
+      // If tile size is not specified or <= 0 set to recommended tile size
       if (this->m_tile[i] <= 0) {
         this->m_tune_tile_size = true;
-        // Check if it fits within the limitation
+        // Set to recommended tile size if it fits within max total tile size
         if (this->m_prod_tile_dims * default_tile[i] <=
             static_cast<index_type>(this->m_max_total_tile_size)) {
           this->m_tile[i] = default_tile[i];
         } else {
-          // Try to fit within limitation by reducing tile size
+          // Try to fit within max total tile size by reducing tile size
           while (default_tile[i] > 1 &&
                  this->m_prod_tile_dims * default_tile[i] >
                      static_cast<index_type>(this->m_max_total_tile_size)) {
