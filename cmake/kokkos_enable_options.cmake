@@ -106,8 +106,8 @@ kokkos_enable_option(
 )
 # FIXME_HIP
 if(KOKKOS_ENABLE_HIP)
-  find_package(hip 6.2 REQUIRED
-  )#here just for the version, can be removed with the fixme as it will be found by our TPL processing
+  #here just for the version, can be removed with the fixme as it will be found by our TPL processing
+  find_package(hip 6.2 REQUIRED)
 endif()
 if((hip_VERSION VERSION_EQUAL 7.1.0) OR (hip_version VERSION_EQUAL 7.1.1))
   set(HIP_MALLOC_ASYNC_DEFAULT OFF)
