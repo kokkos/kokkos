@@ -77,6 +77,7 @@ struct policy_selector {
                                      IndexType, Tag>;
 };
 
+// Specialization for 1D RangePolicy
 template <typename ExecutionSpace, typename IndexType, typename Tag>
 struct policy_selector<1, ExecutionSpace, IndexType, Tag> {
   using type = Kokkos::RangePolicy<ExecutionSpace, IndexType, Tag>;
@@ -88,6 +89,7 @@ struct bound_type_selector {
   using type = typename PolicyType::index_type;
 };
 
+// Specialization for MDRangePolicy
 template <typename... Args>
 struct bound_type_selector<Kokkos::MDRangePolicy<Args...>> {
   using type = typename Kokkos::MDRangePolicy<Args...>::point_type;
@@ -114,9 +116,22 @@ struct MDStreamTest {
   view_type m_view_C;
   ScalarType m_scalar;
 
-  int m_N;
   bound_type m_lower_bounds;
   bound_type m_upper_bounds;
+
+  // Functor for initialization
+  struct Init {
+    view_type m_tensor;
+    scalar_type m_value;
+
+    Init(const view_type &tensor, const scalar_type &value)
+        : m_tensor(tensor), m_value(value) {}
+
+    template <typename... Indices>
+    KOKKOS_INLINE_FUNCTION void operator()(Indices... indices) const {
+      m_tensor(indices...) = m_value;
+    }
+  };
 
   MDStreamTest(const int N) {
     static_assert(Rank >= 1 && Rank <= 6,
@@ -187,27 +202,13 @@ struct MDStreamTest {
     } else if constexpr (Rank == 3) {
       return view_type(view_name, N2, N2, N2);
     } else if constexpr (Rank == 4) {
-      return view_type(view_name, N2, N2, N1, N1);
+      return view_type(view_name, N2, N1, N1, N2);
     } else if constexpr (Rank == 5) {
-      return view_type(view_name, N2, N1, N1, N1, N1);
+      return view_type(view_name, N1, N1, N2, N1, N1);
     } else if constexpr (Rank == 6) {
       return view_type(view_name, N1, N1, N1, N1, N1, N1);
     }
   }
-
-  // Functor for initialization
-  struct Init {
-    view_type m_tensor;
-    scalar_type m_value;
-
-    Init(const view_type &tensor, const scalar_type &value)
-        : m_tensor(tensor), m_value(value) {}
-
-    template <typename... Indices>
-    KOKKOS_INLINE_FUNCTION void operator()(Indices... indices) const {
-      m_tensor(indices...) = m_value;
-    }
-  };
 
   template <typename Tag>
   void run_test(benchmark::State &state) {
