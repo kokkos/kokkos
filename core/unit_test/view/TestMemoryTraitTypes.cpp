@@ -11,6 +11,8 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <desul/atomics.hpp>
+
 #include <type_traits>
 
 namespace {
