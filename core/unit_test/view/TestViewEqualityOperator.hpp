@@ -95,7 +95,7 @@ void test_view_equality_operator() {
     using V_memory_traits =
         Kokkos::View<T, V::memory_space, Another<V::memory_traits>::type>;
     using V_layout_type =
-        Kokkos::View<T*, Another<V::array_layout>::type, TEST_EXECSPACE>;
+        Kokkos::View<T, Another<V::array_layout>::type, TEST_EXECSPACE>;
     using V_memory_space_type = Kokkos::View<T, Another<V::memory_space>::type>;
 
     // Note: We do not enforce Traits::memory_traits equality
