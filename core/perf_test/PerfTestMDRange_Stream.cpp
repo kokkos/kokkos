@@ -48,7 +48,7 @@ void MDRangePolicy_Triad(benchmark::State& state) {
 // Small size for CPU backends, the problem size is computed as N^6
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
-#define MDRANGE_BENCHMARK_ARG_SIZE 24
+#define MDRANGE_BENCHMARK_ARG_SIZE 22
 #else
 #define MDRANGE_BENCHMARK_ARG_SIZE 16
 #endif
@@ -79,13 +79,13 @@ MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Triad)
 
 #else
 
-// Generate benchmarks for ranks 3 and 6 only
+// Generate benchmarks for ranks 1, 3 and 6
 #define MDRANGE_MAKE_BENCHMARK(BENCH_FUNCTION) \
+  MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 1)    \
   MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 3)    \
   MDRANGE_BENCHMARK_ARGS(BENCH_FUNCTION, 6)
 
 MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Set)
-MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Scale)
 MDRANGE_MAKE_BENCHMARK(MDRangePolicy_Triad)
 
 #endif  // defined(KOKKOS_ENABLE_BENCHMARKS_HEAVY)
