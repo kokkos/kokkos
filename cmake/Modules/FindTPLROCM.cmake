@@ -1,4 +1,4 @@
-find_package(hip 6.2 REQUIRED)
+find_package(hip REQUIRED)
 
 set(TPL_ROCM_LIBRARIES hip::device)
 
