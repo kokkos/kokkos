@@ -602,6 +602,7 @@ KOKKOS_FUNCTION constexpr bool operator==(const T& lhs, const complex<T>& rhs) {
   return lhs == rhs.real() && T() == rhs.imag();
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 //! Binary == operator for complex complex.
 template <class RealType1, class RealType2>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator==(
@@ -654,6 +655,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator==(
   return common_type(x) == common_type(y.real()) &&
          common_type(0) == common_type(y.imag());
 }
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_5
 
 //! Binary != operator for complex complex.
 //      Returns: !(lhs == rhs)
@@ -673,6 +675,7 @@ KOKKOS_FUNCTION constexpr bool operator!=(const T& lhs, const complex<T>& rhs) {
   return !(lhs == rhs);
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 //! Binary != operator for complex complex.
 template <class RealType1, class RealType2>
 KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator!=(
@@ -723,6 +726,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION bool operator!=(
   return common_type(x) != common_type(y.real()) ||
          common_type(0) != common_type(y.imag());
 }
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_5
 
 // </editor-fold> end Equality and inequality }}}1
 //==============================================================================
@@ -748,6 +752,7 @@ KOKKOS_FUNCTION constexpr complex<T> operator+(const T& lhs,
   return complex<T>(lhs + rhs.real(), rhs.imag());
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 //! Binary + operator for complex complex.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
@@ -781,6 +786,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
   return complex<std::common_type_t<RealType1, RealType2>>(x + y.real(),
                                                            y.imag());
 }
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_5
 
 //! Unary + operator for complex.
 template <class RealType>
@@ -809,6 +815,7 @@ KOKKOS_FUNCTION constexpr complex<T> operator-(const T& lhs,
   return complex<T>(lhs - rhs.real(), -rhs.imag());
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 //! Binary - operator for complex.
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
@@ -842,6 +849,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
   return complex<std::common_type_t<RealType1, RealType2>>(x - y.real(),
                                                            -y.imag());
 }
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_5
 
 //! Unary - operator for complex.
 template <class RealType>
@@ -871,6 +879,7 @@ KOKKOS_FUNCTION constexpr complex<T> operator*(const T& lhs,
   return complex<T>(lhs * rhs.real(), lhs * rhs.imag());
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
               std::common_type_t<RealType1, RealType2>>>>
@@ -928,6 +937,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
   return complex<std::common_type_t<RealType1, RealType2>>(x * y.real(),
                                                            x * y.imag());
 }
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_5
 
 //! Imaginary part of a complex number.
 template <class RealType>
@@ -1227,6 +1237,7 @@ KOKKOS_FUNCTION constexpr complex<T> operator/(const T& lhs,
   return complex<T>(lhs) / rhs;
 }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
 //! Binary operator / for complex and real numbers
 template <class RealType1, class RealType2,
           class = std::enable_if_t<Impl::is_noncv_floating_point_v<
@@ -1283,6 +1294,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
                                                              RealType2{})) {
   return complex<std::common_type_t<RealType1, RealType2>>(x) / y;
 }
+#endif  // KOKKOS_ENABLE_DEPRECATED_CODE_5
 
 template <class RealType>
 std::ostream& operator<<(std::ostream& os, const complex<RealType>& x) {
