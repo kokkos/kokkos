@@ -54,31 +54,61 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const auto& m_tile_end = m_policy.m_tile_end;
 
     if constexpr (Policy::rank == 2) {
-      // id0 to threadIdx.x; id1 to threadIdx.y
-      sycl::range<3> local_sizes(m_tile[0], m_tile[1], 1);
+      const array_index_type local_0 = m_tile[0];
+      const array_index_type local_1 = m_tile[1];
 
-      sycl::range<3> global_sizes(
-          std::min<array_index_type>(m_tile_end[0], m_max_grid_size[0]) *
-              m_tile[0],
-          std::min<array_index_type>(m_tile_end[1], m_max_grid_size[1]) *
-              m_tile[1],
-          1);
+      const array_index_type global_0 =
+          (m_policy.m_upper[0] - m_policy.m_lower[0] + local_0 - 1) / local_0;
+      const array_index_type global_1 =
+          (m_policy.m_upper[1] - m_policy.m_lower[1] + local_1 - 1) / local_1;
 
-      return {global_sizes, local_sizes};
+      if constexpr (Policy::inner_direction == Iterate::Left) {
+        // Iterate::Left, map id0->x, id1->y
+        sycl::range<3> local_sizes(local_0, local_1, 1);
+        sycl::range<3> global_sizes(
+            std::min<array_index_type>(global_0, m_max_grid_size[0]) * local_0,
+            std::min<array_index_type>(global_1, m_max_grid_size[1]) * local_1,
+            1);
+        return {global_sizes, local_sizes};
+      } else {
+        // Iterate::Right, map id1->x, id0->y
+        sycl::range<3> local_sizes(local_1, local_0, 1);
+        sycl::range<3> global_sizes(
+            std::min<array_index_type>(global_1, m_max_grid_size[0]) * local_1,
+            std::min<array_index_type>(global_0, m_max_grid_size[1]) * local_0,
+            1);
+        return {global_sizes, local_sizes};
+      }
     }
     if constexpr (Policy::rank == 3) {
-      // id0 to threadIdx.x; id1 to threadIdx.y; id2 to threadIdx.z
-      sycl::range<3> local_sizes(m_tile[0], m_tile[1], m_tile[2]);
+      const array_index_type local_0 = m_tile[0];
+      const array_index_type local_1 = m_tile[1];
+      const array_index_type local_2 = m_tile[2];
 
-      sycl::range<3> global_sizes(
-          std::min<array_index_type>(m_tile_end[0], m_max_grid_size[0]) *
-              m_tile[0],
-          std::min<array_index_type>(m_tile_end[1], m_max_grid_size[1]) *
-              m_tile[1],
-          std::min<array_index_type>(m_tile_end[2], m_max_grid_size[2]) *
-              m_tile[2]);
+      const array_index_type global_0 =
+          (m_policy.m_upper[0] - m_policy.m_lower[0] + local_0 - 1) / local_0;
+      const array_index_type global_1 =
+          (m_policy.m_upper[1] - m_policy.m_lower[1] + local_1 - 1) / local_1;
+      const array_index_type global_2 =
+          (m_policy.m_upper[2] - m_policy.m_lower[2] + local_2 - 1) / local_2;
 
-      return {global_sizes, local_sizes};
+      if constexpr (Policy::inner_direction == Iterate::Left) {
+        // Iterate::Left, map id0->x, id1->y, id2->z
+        sycl::range<3> local_sizes(local_0, local_1, local_2);
+        sycl::range<3> global_sizes(
+            std::min<array_index_type>(global_0, m_max_grid_size[0]) * local_0,
+            std::min<array_index_type>(global_1, m_max_grid_size[1]) * local_1,
+            std::min<array_index_type>(global_2, m_max_grid_size[2]) * local_2);
+        return {global_sizes, local_sizes};
+      } else {
+        // Iterate::Right, map id2->z, id1->x, id0->y
+        sycl::range<3> local_sizes(local_2, local_1, local_0);
+        sycl::range<3> global_sizes(
+            std::min<array_index_type>(global_2, m_max_grid_size[0]) * local_2,
+            std::min<array_index_type>(global_1, m_max_grid_size[1]) * local_1,
+            std::min<array_index_type>(global_0, m_max_grid_size[2]) * local_0);
+        return {global_sizes, local_sizes};
+      }
     }
     if constexpr (Policy::rank == 4) {
       // id0,id1 encoded within first index; id2 to second index; id3 to third

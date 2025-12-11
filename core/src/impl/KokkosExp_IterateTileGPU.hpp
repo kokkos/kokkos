@@ -58,8 +58,9 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
 // map 2D/3D hardware threads to N-D iteration space
 //
 // For ranks 2-3: Direct mapping of hardware threads to iteration space
-// dimensions For ranks 4-6: Multiple logical indices are packed into single
-// hardware dimensions
+// dimensions.
+// For ranks 4-6: Multiple logical indices are packed into single
+// hardware dimensions.
 //
 // 1. Start iterating at hardware thread identifier
 // 2. Extend iteration space range with stride loops using grid dimensions
@@ -99,36 +100,31 @@ struct DeviceIterateTile<2, PolicyType, Functor, MaxGridSize, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    const index_type stride_0 = gridDim.x * blockDim.x;
-    const index_type stride_1 = gridDim.y * blockDim.y;
+    // Map policy dimensions to hardware threads
+    constexpr Kokkos::Array<int, 2> idx =
+        (PolicyType::inner_direction == Iterate::Left)
+            ? Kokkos::Array<int, 2>{0, 1}
+            : Kokkos::Array<int, 2>{1, 0};
+
+    const index_type stride_x = gridDim.x * blockDim.x;
+    const index_type stride_y = gridDim.y * blockDim.y;
 
     const index_type start_0 =
-        blockIdx.x * blockDim.x + threadIdx.x + m_policy.m_lower[0];
+        blockIdx.x * blockDim.x + threadIdx.x + m_policy.m_lower[idx[0]];
     const index_type start_1 =
-        blockIdx.y * blockDim.y + threadIdx.y + m_policy.m_lower[1];
+        blockIdx.y * blockDim.y + threadIdx.y + m_policy.m_lower[idx[1]];
 
-    // Iterate::Left, fastest index 0
-    if constexpr (PolicyType::inner_direction == Iterate::Left) {
-      // Iterate over dimension 1 and 0 with grid strides
-      for (index_type idx_1 = start_1;
-           idx_1 < static_cast<index_type>(m_policy.m_upper[1]);
-           idx_1 += stride_1) {
-        for (index_type idx_0 = start_0;
-             idx_0 < static_cast<index_type>(m_policy.m_upper[0]);
-             idx_0 += stride_0) {
-          Impl::_tag_invoke<Tag>(m_func, idx_0, idx_1);
-        }
-      }
-
-    } else {  // Iterate::Right, fastest index 1
-      // Iterate over dimension 0 and 1 with grid strides
+    // Iterate over dimension 0 and 1 with grid strides
+    for (index_type idx_1 = start_1;
+         idx_1 < static_cast<index_type>(m_policy.m_upper[idx[1]]);
+         idx_1 += stride_y) {
       for (index_type idx_0 = start_0;
-           idx_0 < static_cast<index_type>(m_policy.m_upper[0]);
-           idx_0 += stride_0) {
-        for (index_type idx_1 = start_1;
-             idx_1 < static_cast<index_type>(m_policy.m_upper[1]);
-             idx_1 += stride_1) {
+           idx_0 < static_cast<index_type>(m_policy.m_upper[idx[0]]);
+           idx_0 += stride_x) {
+        if constexpr (PolicyType::inner_direction == Iterate::Left) {
           Impl::_tag_invoke<Tag>(m_func, idx_0, idx_1);
+        } else {
+          Impl::_tag_invoke<Tag>(m_func, idx_1, idx_0);
         }
       }
     }
@@ -176,46 +172,37 @@ struct DeviceIterateTile<3, PolicyType, Functor, MaxGridSize, Tag> {
 
   KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const {
-    const index_type stride_0 = gridDim.x * blockDim.x;
-    const index_type stride_1 = gridDim.y * blockDim.y;
-    const index_type stride_2 = gridDim.z * blockDim.z;
+    // Map policy dimensions to hardware threads
+    constexpr Kokkos::Array<int, 3> idx =
+        (PolicyType::inner_direction == Iterate::Left)
+            ? Kokkos::Array<int, 3>{0, 1, 2}
+            : Kokkos::Array<int, 3>{2, 1, 0};
+
+    const index_type stride_x = gridDim.x * blockDim.x;
+    const index_type stride_y = gridDim.y * blockDim.y;
+    const index_type stride_z = gridDim.z * blockDim.z;
 
     const index_type start_0 =
-        blockIdx.x * blockDim.x + threadIdx.x + m_policy.m_lower[0];
+        blockIdx.x * blockDim.x + threadIdx.x + m_policy.m_lower[idx[0]];
     const index_type start_1 =
-        blockIdx.y * blockDim.y + threadIdx.y + m_policy.m_lower[1];
+        blockIdx.y * blockDim.y + threadIdx.y + m_policy.m_lower[idx[1]];
     const index_type start_2 =
-        blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[2];
+        blockIdx.z * blockDim.z + threadIdx.z + m_policy.m_lower[idx[2]];
 
-    // Iterate::Left, fastest index 0
-    if constexpr (PolicyType::inner_direction == Iterate::Left) {
-      // Iterate over dimension 2, 1 and 0 with grid strides
-      for (index_type idx_2 = start_2;
-           idx_2 < static_cast<index_type>(m_policy.m_upper[2]);
-           idx_2 += stride_2) {
-        for (index_type idx_1 = start_1;
-             idx_1 < static_cast<index_type>(m_policy.m_upper[1]);
-             idx_1 += stride_1) {
-          for (index_type idx_0 = start_0;
-               idx_0 < static_cast<index_type>(m_policy.m_upper[0]);
-               idx_0 += stride_0) {
+    // Iterate over dimension 2, 1 and 0 with grid strides
+    for (index_type idx_2 = start_2;
+         idx_2 < static_cast<index_type>(m_policy.m_upper[idx[2]]);
+         idx_2 += stride_z) {
+      for (index_type idx_1 = start_1;
+           idx_1 < static_cast<index_type>(m_policy.m_upper[idx[1]]);
+           idx_1 += stride_y) {
+        for (index_type idx_0 = start_0;
+             idx_0 < static_cast<index_type>(m_policy.m_upper[idx[0]]);
+             idx_0 += stride_x) {
+          if constexpr (PolicyType::inner_direction == Iterate::Left) {
             Impl::_tag_invoke<Tag>(m_func, idx_0, idx_1, idx_2);
-          }
-        }
-      }
-
-    } else {  // Iterate::Right, fastest index 2
-      // Iterate over dimension 0, 1 and 2 with grid strides
-      for (index_type idx_0 = start_0;
-           idx_0 < static_cast<index_type>(m_policy.m_upper[0]);
-           idx_0 += stride_0) {
-        for (index_type idx_1 = start_1;
-             idx_1 < static_cast<index_type>(m_policy.m_upper[1]);
-             idx_1 += stride_1) {
-          for (index_type idx_2 = start_2;
-               idx_2 < static_cast<index_type>(m_policy.m_upper[2]);
-               idx_2 += stride_2) {
-            Impl::_tag_invoke<Tag>(m_func, idx_0, idx_1, idx_2);
+          } else {
+            Impl::_tag_invoke<Tag>(m_func, idx_2, idx_1, idx_0);
           }
         }
       }
