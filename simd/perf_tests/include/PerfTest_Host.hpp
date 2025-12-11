@@ -272,7 +272,7 @@ template <typename... Abis>
 inline void host_register_benchmarks_all_abis(
     Kokkos::Experimental::Impl::abi_set<Abis...>) {
   using DataTypes = Kokkos::Experimental::Impl::data_type_set;
-#if defined(KOKKOS_ENABLE_COMPILE_AND_RUN_LONG_BENCHMARKS)
+#if defined(KOKKOS_ENABLE_BENCHMARKS_HEAVY)
   host_register_benchmarks_all_types<simd_abi_force_serial>(DataTypes());
 #endif
   (host_register_benchmarks_all_types<Abis>(DataTypes()), ...);
