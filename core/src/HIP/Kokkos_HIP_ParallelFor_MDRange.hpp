@@ -74,17 +74,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
           *this, grid, block, 0,
           m_policy.space().impl_internal_space_instance(), false);
     } else if (Policy::rank == 3) {
-      const array_index_type block_0 = m_rp.m_tile[0];
-      const array_index_type block_1 = m_rp.m_tile[1];
-      const array_index_type block_2 = m_rp.m_tile[2];
+      const array_index_type block_0 = m_policy.m_tile[0];
+      const array_index_type block_1 = m_policy.m_tile[1];
+      const array_index_type block_2 = m_policy.m_tile[2];
 
       const array_index_type grid_0 =
-          (m_rp.m_upper[0] - m_rp.m_lower[0] + block_0 - 1) / block_0;
+          (m_policy.m_upper[0] - m_policy.m_lower[0] + block_0 - 1) / block_0;
       const array_index_type grid_1 =
-          (m_rp.m_upper[1] - m_rp.m_lower[1] + block_1 - 1) / block_1;
+          (m_policy.m_upper[1] - m_policy.m_lower[1] + block_1 - 1) / block_1;
       const array_index_type grid_2 =
-          (m_rp.m_upper[2] - m_rp.m_lower[2] + block_2 - 1) / block_2;
-
+          (m_policy.m_upper[2] - m_policy.m_lower[2] + block_2 - 1) / block_2;
       dim3 grid(1, 1, 1);
       dim3 block(1, 1, 1);
       if constexpr (RP::inner_direction == Iterate::Left) {
