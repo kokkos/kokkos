@@ -12,3 +12,4 @@
 #include <TestSIMD_Reductions.hpp>
 #include <TestSIMD_Construction.hpp>
 #include <TestSIMD_LoadStore.hpp>
+#include <TestSIMD_MemoryPermute.hpp>

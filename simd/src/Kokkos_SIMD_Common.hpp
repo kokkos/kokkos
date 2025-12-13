@@ -127,6 +127,15 @@ concept NonScalarAbi = !std::same_as<Abi, simd_abi::scalar>;
 template <typename G, typename R, typename... Args>
 concept InvocableWithReturnType = std::is_invocable_r_v<R, G, Args...>;
 
+template <typename V>
+concept simd_vec_type =
+    std::same_as<V, basic_simd<typename V::value_type, typename V::abi_type>> &&
+    std::is_default_constructible_v<V>;
+
+template <typename V>
+concept simd_integral =
+    simd_vec_type<V> && std::integral<typename V::value_type>;
+
 }  // namespace Impl
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
