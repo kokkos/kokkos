@@ -730,7 +730,7 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
         calc.get_mdrange_max_tile_size_product(policy, functor, tag);
 
     Impl::fill_tile(desc, max_tile_size);
-    Impl::apply_tiles_constraints(desc, policy.max_threads_dimensions, rank);
+    Impl::apply_tiles_constraints(desc, policy.m_max_threads_dimensions, rank);
     std::vector<std::string> feature_names;
     for (int x = 0; x < rank; ++x) {
       feature_names.push_back(name + "_tile_size_" + std::to_string(x));

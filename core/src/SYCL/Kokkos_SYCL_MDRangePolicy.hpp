@@ -52,8 +52,8 @@ struct MDRangePolicyInternal<Kokkos::SYCL, P, Properties...>
   execution_space m_space;
 
  public:
-  int m_max_total_tile_size                      = 1;
-  Kokkos::Array<int, 3> m_max_threads_dimensions = {};
+  int m_max_total_tile_size                   = 512;
+  std::array<int, 3> m_max_threads_dimensions = {};
 
   point_type m_lower          = {};
   point_type m_upper          = {};

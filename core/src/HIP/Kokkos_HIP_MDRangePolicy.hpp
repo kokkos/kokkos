@@ -52,8 +52,8 @@ struct MDRangePolicyInternal<Kokkos::HIP, P, Properties...>
   execution_space m_space;
 
  public:
-  int m_max_total_tile_size = HIPTraits::MaxThreadsPerBlock;
-  Kokkos::Array<int, 3> m_max_threads_dimensions = {};
+  int m_max_total_tile_size                   = HIPTraits::MaxThreadsPerBlock;
+  std::array<int, 3> m_max_threads_dimensions = {};
 
   point_type m_lower          = {};
   point_type m_upper          = {};
@@ -76,7 +76,6 @@ struct MDRangePolicyInternal<Kokkos::HIP, P, Properties...>
  public:
   MDRangePolicyInternal() {
     const auto& device_prop     = m_space.hip_device_prop();
-    m_max_total_tile_size       = HIPTraits::MaxThreadsPerBlock;
     m_max_threads_dimensions[0] = device_prop.maxThreadsDim[0];
     m_max_threads_dimensions[1] = device_prop.maxThreadsDim[1];
     m_max_threads_dimensions[2] = device_prop.maxThreadsDim[2];

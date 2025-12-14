@@ -150,8 +150,8 @@ struct MDRangePolicyInternal<ExecSpace, P, Properties...>
   execution_space m_space;
 
  public:
-  int m_max_total_tile_size = std::numeric_limits<int>::max();
-  Kokkos::Array<int, 3> m_max_threads_dimensions = {
+  int m_max_total_tile_size                   = std::numeric_limits<int>::max();
+  std::array<int, 3> m_max_threads_dimensions = {
       std::numeric_limits<int>::max(), std::numeric_limits<int>::max(),
       std::numeric_limits<int>::max()};
 
