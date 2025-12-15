@@ -82,24 +82,20 @@ KOKKOS_SYCL_HALF_UNARY_FUNCTION(trunc)
 KOKKOS_SYCL_HALF_UNARY_FUNCTION(round)
 // FIXME_SYCL SYCL does not provide these functions, but as the range of int is
 // enough for any value half_t can take, we can just cast here
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t lround(
-    Kokkos::Experimental::half_t x) {
-  return static_cast<long>(round(x));
+KOKKOS_INLINE_FUNCTION long impl_lround(Kokkos::Experimental::half_t x) {
+  return static_cast<long>(impl_round(x));
 }
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t llround(
-    Kokkos::Experimental::half_t x) {
-  return static_cast<long long>(round(x));
+KOKKOS_INLINE_FUNCTION long long impl_llround(Kokkos::Experimental::half_t x) {
+  return static_cast<long long>(impl_round(x));
 }
 KOKKOS_SYCL_HALF_UNARY_FUNCTION(rint)
 // FIXME_SYCL SYCL does not provide these functions, but as the range of int is
 // enough for any value half_t can take, we can just cast here
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t lrint(
-    Kokkos::Experimental::half_t x) {
-  return static_cast<long>(rint(x));
+KOKKOS_INLINE_FUNCTION long impl_lrint(Kokkos::Experimental::half_t x) {
+  return static_cast<long>(impl_rint(x));
 }
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t llrint(
-    Kokkos::Experimental::half_t x) {
-  return static_cast<long long>(rint(x));
+KOKKOS_INLINE_FUNCTION long long impl_llrint(Kokkos::Experimental::half_t x) {
+  return static_cast<long long>(impl_rint(x));
 }
 // KOKKOS_SYCL_HALF_UNARY_FUNCTION(nearbyint)
 KOKKOS_SYCL_HALF_UNARY_FUNCTION(logb)
