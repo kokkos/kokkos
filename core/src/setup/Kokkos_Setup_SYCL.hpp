@@ -4,12 +4,7 @@
 #ifndef KOKKOS_SETUP_SYCL_HPP_
 #define KOKKOS_SETUP_SYCL_HPP_
 
-// FIXME_SYCL
-#if __has_include(<sycl/sycl.hpp>)
 #include <sycl/sycl.hpp>
-#else
-#include <CL/sycl.hpp>
-#endif
 
 #ifndef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES
 #define KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
