@@ -500,6 +500,12 @@ export {
   using ::Kokkos::lgamma;
   using ::Kokkos::lgammaf;
   using ::Kokkos::lgammal;
+  using ::Kokkos::llrint;
+  using ::Kokkos::llrintf;
+  using ::Kokkos::llrintl;
+  using ::Kokkos::llround;
+  using ::Kokkos::llroundf;
+  using ::Kokkos::llroundl;
   using ::Kokkos::log;
   using ::Kokkos::log10;
   using ::Kokkos::log10f;
@@ -515,6 +521,12 @@ export {
   using ::Kokkos::logbl;
   using ::Kokkos::logf;
   using ::Kokkos::logl;
+  using ::Kokkos::lrint;
+  using ::Kokkos::lrintf;
+  using ::Kokkos::lrintl;
+  using ::Kokkos::lround;
+  using ::Kokkos::lroundf;
+  using ::Kokkos::lroundl;
   using ::Kokkos::nan;
   using ::Kokkos::nanf;
   using ::Kokkos::nanl;
@@ -530,6 +542,9 @@ export {
   using ::Kokkos::remainder;
   using ::Kokkos::remainderf;
   using ::Kokkos::remainderl;
+  using ::Kokkos::rint;
+  using ::Kokkos::rintf;
+  using ::Kokkos::rintl;
   using ::Kokkos::round;
   using ::Kokkos::roundf;
   using ::Kokkos::roundl;
