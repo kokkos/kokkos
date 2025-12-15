@@ -764,10 +764,10 @@ template <class Space, class Func, class Arg1, class Arg2,
 struct TestMathTernaryIntPtrFunction : FloatingPointComparison {
   Arg1 val1_;
   Arg2 val2_;
-  int valptr_;
+  int val_;
   Ret res_;
   TestMathTernaryIntPtrFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2, &valptr_)) {
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2, &val_)) {
     run();
   }
   void run() {
@@ -779,17 +779,15 @@ struct TestMathTernaryIntPtrFunction : FloatingPointComparison {
                          << type_helper<Arg2>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
-    int valptr;
-    bool ar_1 =
-        compare(Func::eval(val1_, val2_, &valptr), res_, Func::ulp_factor());
-    bool ar_2 = compare(valptr_, valptr, Func::ulp_factor());
+    int val;
+    auto res  = Func::eval(val1_, val2_, &val);
+    bool ar_1 = compare(res, res_, Func::ulp_factor());
+    bool ar_2 = (val_ == val);
     if (!(ar_1 && ar_2)) {
       ++e;
       Kokkos::printf(
           "value at %f, %f which is %f and %i was expected to be %f and %i\n",
-          (double)val1_, (double)val2_,
-          (double)Func::eval(val1_, val2_, &valptr), (double)res_, valptr,
-          valptr_);
+          (double)val1_, (double)val2_, (double)res, val, (double)res_, val_);
     }
   }
 };

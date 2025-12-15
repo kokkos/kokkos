@@ -530,6 +530,7 @@ export {
   using ::Kokkos::remainder;
   using ::Kokkos::remainderf;
   using ::Kokkos::remainderl;
+  using ::Kokkos::remquo;
   using ::Kokkos::round;
   using ::Kokkos::roundf;
   using ::Kokkos::roundl;
