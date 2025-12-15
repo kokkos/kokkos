@@ -5,6 +5,7 @@
 #define KOKKOS_SYCL_ABORT_HPP
 
 #include <Kokkos_Printf.hpp>
+#if defined(KOKKOS_ENABLE_SYCL)
 #include <sycl/sycl.hpp>
 
 namespace Kokkos {
