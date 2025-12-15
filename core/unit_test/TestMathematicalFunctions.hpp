@@ -1936,6 +1936,123 @@ TEST(TEST_CATEGORY, mathematical_functions_isnan) {
   TestIsNaN<TEST_EXECSPACE>();
 }
 
+template <class Space>
+struct TestSignbit {
+  TestSignbit() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using KE::denorm_min;
+    using KE::finite_max;
+    using KE::finite_min;
+    using KE::infinity;
+    using KE::quiet_NaN;
+    using KE::signaling_NaN;
+    using Kokkos::signbit;
+    if (signbit(1) || signbit(INT_MAX) || !signbit(-2) || !signbit(INT_MIN) ||
+        signbit(0)) {
+      ++e;
+      Kokkos::printf("failed signbit(integral)\n");
+    }
+    if (signbit(3.f) || signbit(finite_max<float>::value) ||
+        signbit(infinity<float>::value) || signbit(denorm_min<float>::value) ||
+        signbit(quiet_NaN<float>::value) ||
+        signbit(signaling_NaN<float>::value) || signbit(0.f) ||
+        !signbit(-0.4f) || !signbit(finite_min<float>::value) ||
+        !signbit(-infinity<float>::value) ||
+        !signbit(-denorm_min<float>::value) ||
+        !signbit(-quiet_NaN<float>::value) ||
+        !signbit(-signaling_NaN<float>::value) || !signbit(-0.f)) {
+      ++e;
+      Kokkos::printf("failed signbit(float)\n");
+    }
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
+    if (signbit(static_cast<KE::half_t>(0.f)) ||
+        signbit(finite_max<KE::half_t>::value) ||
+        signbit(infinity<KE::half_t>::value) ||
+        signbit(denorm_min<KE::half_t>::value) ||
+        signbit(quiet_NaN<KE::half_t>::value) ||
+        signbit(signaling_NaN<KE::half_t>::value) ||
+        !signbit(static_cast<KE::half_t>(-0.f)) ||
+        !signbit(finite_min<KE::half_t>::value) ||
+        !signbit(-infinity<KE::half_t>::value) ||
+        !signbit(-denorm_min<KE::half_t>::value) ||
+        !signbit(-quiet_NaN<KE::half_t>::value) ||
+        !signbit(-signaling_NaN<KE::half_t>::value)) {
+      ++e;
+      Kokkos::printf("failed signbit(KE::half_t)\n");
+    }
+    if (signbit(static_cast<KE::bhalf_t>(0.f)) ||
+        signbit(finite_max<KE::bhalf_t>::value) ||
+        signbit(infinity<KE::bhalf_t>::value) ||
+        signbit(denorm_min<KE::bhalf_t>::value) ||
+        signbit(quiet_NaN<KE::bhalf_t>::value) ||
+        signbit(signaling_NaN<KE::bhalf_t>::value) ||
+        !signbit(static_cast<KE::bhalf_t>(-0.f)) ||
+        !signbit(finite_min<KE::bhalf_t>::value) ||
+        !signbit(-infinity<KE::bhalf_t>::value) ||
+        !signbit(-denorm_min<KE::bhalf_t>::value) ||
+        !signbit(-quiet_NaN<KE::bhalf_t>::value) ||
+        !signbit(-signaling_NaN<KE::bhalf_t>::value)) {
+      ++e;
+      Kokkos::printf("failed signbit(KE::bhalf_t)\n");
+    }
+#endif
+    if (signbit(.5) || signbit(finite_max<double>::value) ||
+        signbit(infinity<double>::value) ||
+        signbit(denorm_min<double>::value) ||
+        signbit(quiet_NaN<double>::value) ||
+        signbit(signaling_NaN<double>::value) || signbit(0.) || !signbit(-6.) ||
+        !signbit(finite_min<double>::value) ||
+        !signbit(-infinity<double>::value) ||
+        !signbit(-denorm_min<double>::value) ||
+        !signbit(-quiet_NaN<double>::value) ||
+        !signbit(-signaling_NaN<double>::value) || !signbit(-0.)) {
+      ++e;
+      Kokkos::printf("failed signbit(double)\n");
+    }
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (signbit(7.l) || signbit(finite_max<long double>::value) ||
+        signbit(infinity<long double>::value) ||
+        signbit(denorm_min<long double>::value) ||
+        signbit(quiet_NaN<long double>::value) ||
+        signbit(signaling_NaN<long double>::value) || signbit(0.l) ||
+        !signbit(-.8l) || !signbit(finite_min<long double>::value) ||
+        !signbit(-infinity<long double>::value) ||
+        !signbit(-denorm_min<long double>::value) ||
+        !signbit(-quiet_NaN<long double>::value) ||
+        !signbit(-signaling_NaN<long double>::value) || !signbit(-0.l)) {
+      ++e;
+      Kokkos::printf("failed signbit(long double)\n");
+    }
+#endif
+    // special values
+    if (signbit(INFINITY) || signbit(NAN)) {
+      ++e;
+      Kokkos::printf("failed signbit(floating_point) special values\n");
+    }
+
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_PUSH()
+    static_assert(std::is_same_v<decltype(signbit(1)), bool>);
+    static_assert(std::is_same_v<decltype(signbit(2.f)), bool>);
+    static_assert(std::is_same_v<decltype(signbit(3.)), bool>);
+    KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    static_assert(std::is_same_v<decltype(signbit(4.l)), bool>);
+#endif
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_signbit) {
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
+  TestSignbit<TEST_EXECSPACE>();
+}
+
 KE::half_t ref_test_fallback_half(KE::half_t) {
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED)
   // When SYCL is enabled, half_t is available on both the GPU and the CPU.
@@ -2130,5 +2247,4 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
 }
 #endif
 
-// TODO: TestSignBit, see https://github.com/kokkos/kokkos/issues/6279
 #endif
