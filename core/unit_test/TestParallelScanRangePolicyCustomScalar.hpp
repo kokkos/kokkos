@@ -19,18 +19,17 @@ namespace {
 template <typename T, int N>
 struct ArrayValueType {
   T v[N];
-  KOKKOS_INLINE_FUNCTION
-  ArrayValueType() {
-    for (int i = 0; i < N; ++i) this->v[i] = 0;
-  }
+
+  ArrayValueType()                        = default;
+  ArrayValueType(const ArrayValueType& b) = default;
+  ArrayValueType(ArrayValueType&& b)      = default;
   KOKKOS_INLINE_FUNCTION
   ArrayValueType(const T b) {
     for (int i = 0; i < N; ++i) this->v[i] = b;
   }
-  KOKKOS_INLINE_FUNCTION
-  ArrayValueType(const ArrayValueType& b) {
-    for (int i = 0; i < N; ++i) this->v[i] = b.v[i];
-  }
+
+  ArrayValueType& operator=(const ArrayValueType& b) = default;
+  ArrayValueType& operator=(ArrayValueType&& b)      = default;
   KOKKOS_INLINE_FUNCTION
   ArrayValueType& operator=(const T& b) {
     for (int i = 0; i < N; ++i) this->v[i] = b;
@@ -41,13 +40,8 @@ struct ArrayValueType {
     for (int i = 0; i < N; ++i) this->v[i] = b;
     return *this;
   }
-  KOKKOS_INLINE_FUNCTION
-  ArrayValueType& operator=(const ArrayValueType& b) {
-    if (this != &b) {
-      for (int i = 0; i < N; ++i) this->v[i] = b.v[i];
-    }
-    return *this;
-  }
+
+  ~ArrayValueType() = default;
 };
 
 template <typename T, int N>
