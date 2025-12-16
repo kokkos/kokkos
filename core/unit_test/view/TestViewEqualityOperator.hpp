@@ -18,33 +18,10 @@ import kokkos.core_impl;
 
 namespace {
 
-#if 0  // TODO: Enable once we have have ArrayLayout and MemoryTraits concepts
-template <class T>
-#else
+// TODO: Replace SFINAE with concepts when we have have ArrayLayout and
+// MemoryTraits
 template <class T, class Enable = void>
-#endif
 struct Another;
-
-#if 0  // TODO: Enable once we have have ArrayLayout and MemoryTraits concepts
-template <Kokkos::ArrayLayout T>
-struct Another<T> {
-  using type = std::conditional_t<std::is_same_v<T, Kokkos::LayoutLeft>,
-                                  Kokkos::LayoutRight, Kokkos::LayoutLeft>;
-};
-
-template <Kokkos::MemoryTraits T>
-struct Another<T> {
-  using type = std::conditional_t<std::is_same_v<T, Kokkos::MemoryRandomAccess>,
-                                  typename Kokkos::MemoryUnmanaged,
-                                  Kokkos::MemoryRandomAccess>;
-};
-
-template <Kokkos::MemorySpace T>
-struct Another<T> {
-  using type = Kokkos::DefaultHostExecutionSpace;
-};
-
-#else
 
 template <class T>
 struct Another<T, std::enable_if_t<Kokkos::is_array_layout_v<T>>> {
@@ -63,7 +40,6 @@ template <class T>
 struct Another<T, std::enable_if_t<Kokkos::is_memory_space_v<T>>> {
   using type = Kokkos::DefaultHostExecutionSpace;
 };
-#endif  // TODO: Enable once we have have ArrayLayout and MemoryTraits concepts
 
 template <class Left, class Right>
 bool check_equal(Left l, Right r) {
@@ -101,12 +77,16 @@ void test_view_equality_operator() {
     // Note: We do not enforce Traits::memory_traits equality
     ASSERT_EQ(check_equal(V(), V_memory_traits()), true);
     ASSERT_EQ(check_equal(V(), V_layout_type()), false);
+
+    // Creating this View outside of the if constexpr works around
+    // a CUDA link issue, where a defaulted ctor is not created properly
+    auto v_mem_space = V_memory_space_type();
     if constexpr (std::is_same_v<
                       TEST_EXECSPACE::memory_space,
                       Kokkos::DefaultHostExecutionSpace::memory_space>)
-      ASSERT_EQ(check_equal(V(), V_memory_space_type()), true);
+      ASSERT_EQ(check_equal(V(), v_mem_space), true);
     else
-      ASSERT_EQ(check_equal(V(), V_memory_space_type()), false);
+      ASSERT_EQ(check_equal(V(), v_mem_space), false);
   }
 
   {
