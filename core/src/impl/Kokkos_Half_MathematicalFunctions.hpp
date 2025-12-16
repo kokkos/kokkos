@@ -427,7 +427,18 @@ KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t nextafter(Kokkos::Experimen
 #endif  // !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
 
 // isnormal
-KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF, signbit)
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool signbit(Kokkos::Experimental::half_t x) {
+  constexpr std::uint16_t sign_mask = 0x8000;
+  return (Kokkos::bit_cast<std::uint16_t>(x) & sign_mask) != 0;
+}
+#endif
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+KOKKOS_INLINE_FUNCTION bool signbit(Kokkos::Experimental::bhalf_t x) {
+  constexpr std::uint16_t sign_mask = 0x8000;
+  return (Kokkos::bit_cast<std::uint16_t>(x) & sign_mask) != 0;
+}
+#endif
 // isgreater
 // isgreaterequal
 // isless
