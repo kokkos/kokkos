@@ -149,6 +149,9 @@ class ParallelScanHIPBase {
     } else if (0 == threadIdx.y) {
       final_reducer.init(reinterpret_cast<pointer_type>(shared_accum));
     }
+    // Flush and sync the writes to shared_accum so they are visible to all
+    // threads in the block.
+    __syncthreads();
 
     const WorkRange range(m_policy, blockIdx.x, gridDim.x);
 
