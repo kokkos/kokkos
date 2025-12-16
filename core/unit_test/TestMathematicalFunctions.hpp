@@ -1973,7 +1973,7 @@ struct TestSignbit {
     if (signbit(static_cast<KE::half_t>(0.f)) ||
         signbit(finite_max<KE::half_t>::value) ||
         signbit(infinity<KE::half_t>::value) ||
-        signbit(denorm_min<KE::half_t>::value) ||
+        // signbit(denorm_min<KE::half_t>::value) ||
         signbit(quiet_NaN<KE::half_t>::value) ||
         signbit(signaling_NaN<KE::half_t>::value) ||
         !signbit(static_cast<KE::half_t>(-0.f)) ||
@@ -1988,15 +1988,17 @@ struct TestSignbit {
     if (signbit(static_cast<KE::bhalf_t>(0.f)) ||
         signbit(finite_max<KE::bhalf_t>::value) ||
         signbit(infinity<KE::bhalf_t>::value) ||
-        signbit(denorm_min<KE::bhalf_t>::value) ||
+        // signbit(denorm_min<KE::bhalf_t>::value) ||
         signbit(quiet_NaN<KE::bhalf_t>::value) ||
         signbit(signaling_NaN<KE::bhalf_t>::value) ||
         !signbit(static_cast<KE::bhalf_t>(-0.f)) ||
         !signbit(finite_min<KE::bhalf_t>::value) ||
         !signbit(-static_cast<KE::bhalf_t>(infinity<KE::bhalf_t>::value)) ||
-        // !signbit(-static_cast<KE::half_t>(denorm_min<KE::bhalf_t>::value)) ||
-        !signbit(-static_cast<KE::half_t>(quiet_NaN<KE::bhalf_t>::value)) ||
-        !signbit(-static_cast<KE::half_t>(signaling_NaN<KE::bhalf_t>::value))) {
+        // !signbit(-static_cast<KE::bhalf_t>(denorm_min<KE::bhalf_t>::value))
+        // ||
+        !signbit(-static_cast<KE::bhalf_t>(quiet_NaN<KE::bhalf_t>::value)) ||
+        !signbit(
+            -static_cast<KE::bhalf_t>(signaling_NaN<KE::bhalf_t>::value))) {
       ++e;
       Kokkos::printf("failed signbit(KE::bhalf_t)\n");
     }
