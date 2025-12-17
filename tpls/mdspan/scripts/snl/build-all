@@ -1,0 +1,94 @@
+
+
+echo "======================"
+echo "======================"
+echo "=====GCC 11.1========="
+echo "======================"
+echo "======================"
+module swap gcc gcc/11.1
+cd gcc-11
+cd cpp14; make -j 48; make test; cd ..
+cd cpp17; make -j 48; make test; cd ..
+cd cpp20; make -j 48; make test; cd ..
+cd cpp23; make -j 48; make test; cd ..
+cd ..
+
+
+echo "======================"
+echo "======================"
+echo "=====GCC 9.1=========="
+echo "======================"
+echo "======================"
+module swap gcc gcc/9.1
+cd gcc-9
+cd cpp14; make -j 48; make test; cd ..
+cd cpp17; make -j 48; make test; cd ..
+cd cpp20; make -j 48; make test; cd ..
+cd ..
+
+echo "======================"
+echo "======================"
+echo "=====CLANG 15========="
+echo "======================"
+echo "======================"
+module swap clang clang/15-head
+module swap gcc gcc/11.1
+cd clang-15
+cd cpp14; make -j 48; make test; cd ..
+cd cpp17; make -j 48; make test; cd ..
+cd cpp20; make -j 48; make test; cd ..
+cd cpp23; make -j 48; make test; cd ..
+cd ..
+
+echo "======================"
+echo "======================"
+echo "=====CLANG 8.0========"
+echo "======================"
+echo "======================"
+module swap clang clang/8.0
+module swap gcc gcc/9.1
+cd clang-8
+cd cpp14; make -j 48; make test; cd ..
+cd cpp17; make -j 48; make test; cd ..
+cd cpp20; make -j 48; make test; cd ..
+cd ..
+
+echo "======================"
+echo "======================"
+echo "=====NVCC 11.2========"
+echo "======================"
+echo "======================"
+module swap cuda cuda/11.2
+module swap gcc gcc/9.1
+cd nvcc-112
+cd cpp14; make -j 48; make test; cd ..
+cd cpp17; make -j 48; make test; cd ..
+cd ..
+
+echo "======================"
+echo "======================"
+echo "=====NVHPC 22.3======="
+echo "======================"
+echo "======================"
+module unload cuda
+module unload nvhpc
+module load nvhpc/22.3
+cd nvhpc-223
+cd cpp14; make -j 48; make test; cd ..
+cd cpp17; make -j 48; make test; cd ..
+cd cpp20; make -j 48; make test; cd ..
+cd ..
+
+echo "======================"
+echo "======================"
+echo "=====NVHPC 22.3======="
+echo "======================"
+echo "======================"
+module unload nvhpc
+module load nvhpc/22.7
+cd nvhpc-227
+cd cpp14; make -j 48; make test; cd ..
+cd cpp17; make -j 48; make test; cd ..
+cd cpp20; make -j 48; make test; cd ..
+cd ..
+module load cuda/11.2

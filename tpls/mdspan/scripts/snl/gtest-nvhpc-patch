@@ -1,0 +1,14 @@
+diff --git a/googletest/include/gtest/internal/gtest-port.h b/googletest/include/gtest/internal/gtest-port.h
+index c9e1f324..4cce2ddc 100644
+--- a/googletest/include/gtest/internal/gtest-port.h
++++ b/googletest/include/gtest/internal/gtest-port.h
+@@ -783,7 +783,7 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
+ // the marked function.
+ #define GTEST_NO_TAIL_CALL_ __attribute__((disable_tail_calls))
+ #endif
+-#elif __GNUC__
++#elif __GNUC__ && !defined(__NVCOMPILER)
+ #define GTEST_NO_TAIL_CALL_ \
+   __attribute__((optimize("no-optimize-sibling-calls")))
+ #else
+

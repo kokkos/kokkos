@@ -1,0 +1,13 @@
+mdspan_add_test(layout_stride.comparison.pass)
+mdspan_add_test(layout_stride.ctor.default.pass)
+mdspan_add_test(layout_stride.ctor.extents_array.pass)
+mdspan_add_test(layout_stride.ctor.extents_span.pass)
+mdspan_add_test(layout_stride.ctor.strided_mapping.pass)
+mdspan_add_test(layout_stride.deduction.pass)
+#mdspan_add_test(layout_stride.extents.verify) //FIXME
+mdspan_add_test(layout_stride.index_operator.pass)
+mdspan_add_test(layout_stride.is_exhaustive_corner_case.pass)
+mdspan_add_test(layout_stride.properties.pass)
+mdspan_add_test(layout_stride.required_span_size.pass)
+mdspan_add_test(layout_stride.static_requirements.pass)
+mdspan_add_test(layout_stride.stride.pass)

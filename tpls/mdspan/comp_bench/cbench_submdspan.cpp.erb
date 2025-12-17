@@ -1,0 +1,31 @@
+
+#include <mdspan/mdspan.hpp>
+
+int test(int* data) {
+  #if defined(METABENCH)
+  <% (32/n).times do |k| %>
+  auto <%= "sub0_#{k}" %> = Kokkos::mdspan<int,
+    Kokkos::extents<size_t,
+      <%= (["#{k+2}"] * n).join(", ") %>
+    >
+  >(data);
+  <% n.times do |i| %>
+    auto <%= "sub#{i+1}_#{k}" %> = Kokkos::submdspan(
+       <%= "sub#{i}_#{k}" %>,
+       1
+       <%= ", Kokkos::full_extent" * (n - i - 1) %>
+    );
+  <% end %>
+  <% end %>
+  return 42
+  <% (32/n).times do |k| %>
+      <%= " + sub#{n}_#{k}" %>()
+  <% end %>
+  ;
+  #else
+  (void) data;
+  return 1;
+  #endif
+}
+
+int main() {}

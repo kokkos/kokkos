@@ -1,0 +1,1 @@
+mdspan_add_example(aligned_accessor)

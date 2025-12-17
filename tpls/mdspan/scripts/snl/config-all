@@ -1,0 +1,73 @@
+module swap gcc gcc/9.1
+./config-one gcc-9 g++ 20 "-Wall -Wextra -Werror -pedantic"
+./config-one gcc-9 g++ 17 "-Wall -Wextra -Werror"
+./config-one gcc-9 g++ 14 "-Wall -Wextra -Werror"
+
+module swap gcc gcc/11.1
+./config-one gcc-11 g++ 23 "-Wall -Wextra -Werror -pedantic"
+./config-one gcc-11 g++ 20 "-Wall -Wextra -Werror -pedantic"
+./config-one gcc-11 g++ 17 "-Wall -Wextra -Werror"
+./config-one gcc-11 g++ 14 "-Wall -Wextra -Werror"
+
+module swap clang clang/15-head
+module swap gcc gcc/11.1
+./config-one clang-15 clang++ 23 "-Wall -Wextra -Werror -pedantic"
+cd clang-15/cpp23/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-clang-patch
+cd ../../../../
+./config-one clang-15 clang++ 20 "-Wall -Wextra -Werror -pedantic"
+cd clang-15/cpp20/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-clang-patch
+cd ../../../../
+./config-one clang-15 clang++ 17 "-Wall -Wextra -Werror"
+cd clang-15/cpp17/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-clang-patch
+cd ../../../../
+./config-one clang-15 clang++ 14 "-Wall -Werror"
+cd clang-15/cpp14/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-clang-patch
+cd ../../../../
+
+module swap clang clang/8.0
+module swap gcc gcc/9.1
+./config-one clang-8 clang++ 20 "-Wall -Wextra -Werror --gcc-toolchain=/home/projects/x86-64/gcc/9.1"
+./config-one clang-8 clang++ 17 "-Wall -Wextra -Werror --gcc-toolchain=/home/projects/x86-64/gcc/9.1"
+./config-one clang-8 clang++ 14 "-Wall -Werror --gcc-toolchain=/home/projects/x86-64/gcc/9.1"
+
+module swap cuda cuda/11.2
+module swap gcc gcc/9.1
+./config-one-cuda nvcc-112 g++ 17 "-Wall -Werror"
+./config-one-cuda nvcc-112 g++ 14 "-Wall -Werror"
+
+module unload cuda
+module load nvhpc/22.3
+./config-one nvhpc-223 nvc++ 20 "-Wall -Wextra"
+cd nvhpc-223/cpp20/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-nvhpc-patch
+cd ../../../../
+./config-one nvhpc-223 nvc++ 17 "-Wall -Wextra"
+cd nvhpc-223/cpp17/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-nvhpc-patch
+cd ../../../../
+./config-one nvhpc-223 nvc++ 14 "-Wall -Wextra"
+cd nvhpc-223/cpp14/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-nvhpc-patch
+cd ../../../../
+module load cuda/11.2
+
+
+module unload cuda
+module load nvhpc/22.7
+./config-one nvhpc-227 nvc++ 20 "-Wall -Wextra"
+cd nvhpc-227/cpp20/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-nvhpc-patch
+cd ../../../../
+./config-one nvhpc-227 nvc++ 17 "-Wall -Wextra"
+cd nvhpc-227/cpp17/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-nvhpc-patch
+cd ../../../../
+./config-one nvhpc-227 nvc++ 14 "-Wall -Wextra"
+cd nvhpc-227/cpp14/tests/googletest-src
+git apply ${MDSPAN_SOURCE}/scripts/snl/gtest-nvhpc-patch
+cd ../../../../
+module load cuda/11.2

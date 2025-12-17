@@ -1,0 +1,6 @@
+add_subdirectory(extents)
+add_subdirectory(default_accessor)
+add_subdirectory(layout_left)
+add_subdirectory(layout_right)
+add_subdirectory(layout_stride)
+add_subdirectory(mdspan)

@@ -1,0 +1,4 @@
+Checks: >
+  -*,
+  bugprone-reserved-identifier
+HeaderFilterRegex: 'include/*'
