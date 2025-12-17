@@ -86,7 +86,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
           (m_policy.m_upper[2] - m_policy.m_lower[2] + block_2 - 1) / block_2;
       dim3 grid(1, 1, 1);
       dim3 block(1, 1, 1);
-      if constexpr (RP::inner_direction == Iterate::Left) {
+      if constexpr (Policy::inner_direction == Iterate::Left) {
         // Iterate::Left, map id0->x, id1->y, id2->z
         block = dim3(block_0, block_1, block_2);
         grid  = dim3(std::min<array_index_type>(grid_0, m_max_grid_size[0]),

@@ -101,7 +101,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
             std::min<array_index_type>(global_2, m_max_grid_size[2]) * local_2);
         return {global_sizes, local_sizes};
       } else {
-        // Iterate::Right, map id2->z, id1->x, id0->y
+        // Iterate::Right, map id2->z, id1->y, id0->x
         sycl::range<3> local_sizes(local_2, local_1, local_0);
         sycl::range<3> global_sizes(
             std::min<array_index_type>(global_2, m_max_grid_size[0]) * local_2,
