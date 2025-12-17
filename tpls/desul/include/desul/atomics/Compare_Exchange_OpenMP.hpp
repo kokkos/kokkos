@@ -41,7 +41,7 @@ T host_atomic_exchange(T* dest, T value, MemoryOrder, MemoryScope) {
 }
 
 // OpenMP doesn't have compare exchange, so we use built-in functions and rely on
-// testing that this works Note that means we test this in OpenMPTarget offload regions!
+// testing that this works 
 template <class T, class MemoryOrder, class MemoryScope>
 std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchange(
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {

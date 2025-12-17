@@ -46,17 +46,6 @@ OutputIteratorType exclusive_scan_default_op_exespace_impl(
   //    "exclusive_scan: InputIteratorType::value_type not convertible to
   //    ValueType");
 
-  // we are unnecessarily duplicating code, but this is on purpose
-  // so that we can use the default_op for OpenMPTarget.
-  // Originally, I had this implemented as:
-  // '''
-  // using bop_type   = StdExclusiveScanDefaultJoinFunctor<ValueType>;
-  // call exclusive_scan_custom_op_impl(..., bop_type());
-  // '''
-  // which avoids duplicating the functors, but for OpenMPTarget
-  // I cannot use a custom binary op.
-  // This is the same problem that occurs for reductions.
-
   // aliases
   using index_type = typename InputIteratorType::difference_type;
   using func_type  = std::conditional_t<
