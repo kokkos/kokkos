@@ -1980,7 +1980,9 @@ struct TestSignbit {
         !signbit(finite_min<KE::half_t>::value) ||
         !signbit(-static_cast<KE::half_t>(infinity<KE::half_t>::value))
     // || !signbit(-static_cast<KE::half_t>(denorm_min<KE::half_t>::value))
-    // FIXME_CUDA sign bit not being set with NaNs
+    // https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/mathematical-functions.html#cuda-and-ieee-754-compliance:
+    // "[...] result in the sign of a NaN being updated in an
+    // implementation-defined manner."
 #ifndef KOKKOS_ENABLE_CUDA
         || !signbit(-static_cast<KE::half_t>(quiet_NaN<KE::half_t>::value)) ||
         !signbit(-static_cast<KE::half_t>(signaling_NaN<KE::half_t>::value))
@@ -1999,7 +2001,6 @@ struct TestSignbit {
         !signbit(finite_min<KE::bhalf_t>::value) ||
         !signbit(-static_cast<KE::bhalf_t>(infinity<KE::bhalf_t>::value))
     // || !signbit(-static_cast<KE::bhalf_t>(denorm_min<KE::bhalf_t>::value))
-    // FIXME_CUDA sign bit not being set with NaNs
 #ifndef KOKKOS_ENABLE_CUDA
         || !signbit(-static_cast<KE::bhalf_t>(quiet_NaN<KE::bhalf_t>::value)) ||
         !signbit(-static_cast<KE::bhalf_t>(signaling_NaN<KE::bhalf_t>::value))
