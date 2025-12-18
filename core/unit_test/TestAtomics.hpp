@@ -499,9 +499,8 @@ TEST(TEST_CATEGORY, atomics) {
   Loop<float, TEST_EXECSPACE>(100, 4);
 #endif
 
-  // FIXME_OPENMPTARGET
   // FIXME_OPENACC: atomic operations on composite types are not supported.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET) && !defined(KOKKOS_ENABLE_OPENACC)
+#if !defined(KOKKOS_ENABLE_OPENACC)
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 1);
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 2);
   Loop<Kokkos::complex<float>, TEST_EXECSPACE>(1, 3);

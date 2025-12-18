@@ -22,8 +22,6 @@ TEST(TEST_CATEGORY, team_for) {
       1000);
 }
 
-// FIXME_OPENMPTARGET wrong results
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Static>>::test_reduce(
       0);
@@ -38,7 +36,6 @@ TEST(TEST_CATEGORY, team_reduce) {
   TestTeamPolicy<TEST_EXECSPACE,
                  Kokkos::Schedule<Kokkos::Dynamic>>::test_reduce(1000);
 }
-#endif
 
 template <typename ExecutionSpace>
 struct TestTeamReduceLarge {
@@ -114,16 +111,6 @@ struct TestTeamForAggregate {
 
   static void run() {
     int minTeamSize = 1;
-    /* OpenMPTarget hard-codes 32 as the minimum size
-       FIXME OPENMPTARGET
-    */
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-    if constexpr (std::is_same<ExecutionSpace,
-                               Kokkos::Experimental::OpenMPTarget>::value) {
-      minTeamSize = 32;
-    }
-#endif
-
     int maxTeamSize;
     {
       TestTeamForAggregate test;
@@ -185,15 +172,7 @@ TEST(TEST_CATEGORY, large_team_scratch_size) {
 
   const size_t per_team_bytes = per_team_extent * sizeof(double);
 
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  Kokkos::TeamPolicy<TEST_EXECSPACE> policy(
-      n_teams,
-      std::is_same<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>::value
-          ? 32
-          : 1);
-#else
   Kokkos::TeamPolicy<TEST_EXECSPACE> policy(n_teams, 1);
-#endif
   policy.set_scratch_size(level, Kokkos::PerTeam(per_team_bytes));
 
   Kokkos::parallel_for(policy,
@@ -223,10 +202,6 @@ TEST(TEST_CATEGORY, team_broadcast_long) {
                     long>::test_teambroadcast(1000, 1);
 }
 
-// FIXME_OPENMPTARGET CI fails with
-// Libomptarget error: Copying data from device failed.
-// Possibly, because long_wrapper is not trivially-copyable.
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 struct long_wrapper {
   long value;
 
@@ -287,7 +262,6 @@ TEST(TEST_CATEGORY, team_broadcast_long_wrapper) {
   TestTeamBroadcast<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>,
                     long_wrapper>::test_teambroadcast(1000, 1);
 }
-#endif
 
 TEST(TEST_CATEGORY, team_broadcast_char) {
   {
@@ -479,7 +453,5 @@ TEST(TEST_CATEGORY, team_handle_by_value) {
 
 }  // namespace Test
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 #include <TestTeamVector.hpp>
-#endif
 #endif
