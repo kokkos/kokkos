@@ -35,11 +35,6 @@ struct ArrayValueType {
     for (int i = 0; i < N; ++i) this->v[i] = b;
     return *this;
   }
-  KOKKOS_INLINE_FUNCTION
-  ArrayValueType& operator=(const T&& b) {
-    for (int i = 0; i < N; ++i) this->v[i] = b;
-    return *this;
-  }
 
   ~ArrayValueType() = default;
 };
