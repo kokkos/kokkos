@@ -61,20 +61,20 @@ struct TestParallelScanRangePolicyCustomScalar {
   using ValueType = ArrayValueType<T, N>;
   using ViewType  = Kokkos::View<ValueType*, execution_space>;
 
-  ViewType prefix_results;
-  ViewType postfix_results;
+  ViewType ex_scan_results;
+  ViewType in_scan_results;
 
   // Operator defining work done in parallel_scan.
   // Simple scan over [0,1,...,N-1].
-  // Compute both prefix and postfix scans.
+  // Compute both exclusive and inclusive scans.
   KOKKOS_INLINE_FUNCTION
   void operator()(const size_t i, ValueType& update, bool final_pass) const {
     if (final_pass) {
-      prefix_results(i) = update;
+      ex_scan_results(i) = update;
     }
     update += i;
     if (final_pass) {
-      postfix_results(i) = update;
+      in_scan_results(i) = update;
     }
   }
 
@@ -89,56 +89,56 @@ struct TestParallelScanRangePolicyCustomScalar {
   template <typename... Args>
   void test_scan(const size_t work_size) {
     // Reset member data based on work_size
-    prefix_results  = ViewType("prefix_results", work_size);
-    postfix_results = ViewType("postfix_results", work_size);
+    ex_scan_results = ViewType("ex_scan_results", work_size);
+    in_scan_results = ViewType("in_scan_results", work_size);
 
     // Lambda for checking errors from stored value at each index.
     auto check_scan_results = [&]() {
-      auto const prefix_h = Kokkos::create_mirror_view_and_copy(
-          Kokkos::HostSpace(), prefix_results);
-      auto const postfix_h = Kokkos::create_mirror_view_and_copy(
-          Kokkos::HostSpace(), postfix_results);
+      auto const ex_scan_h = Kokkos::create_mirror_view_and_copy(
+          Kokkos::HostSpace(), ex_scan_results);
+      auto const in_scan_h = Kokkos::create_mirror_view_and_copy(
+          Kokkos::HostSpace(), in_scan_results);
 
       for (size_t i = 0; i < work_size; ++i) {
-        // Check prefix sum
+        // Check exclusive scan sum
         for (int j = 0; j < N; ++j) {
-          ASSERT_EQ(i * (i - 1) / 2, prefix_h(i).v[j]);
+          ASSERT_EQ(i * (i - 1) / 2, ex_scan_h(i).v[j]);
         }
 
-        // Check postfix sum
+        // Check inclusive scan sum
         for (int j = 0; j < N; ++j) {
-          ASSERT_EQ(i * (i + 1) / 2, postfix_h(i).v[j]);
+          ASSERT_EQ(i * (i + 1) / 2, in_scan_h(i).v[j]);
         }
       }
 
       // Reset results
-      Kokkos::deep_copy(prefix_results, ValueType());
-      Kokkos::deep_copy(postfix_results, ValueType());
+      Kokkos::deep_copy(ex_scan_results, ValueType());
+      Kokkos::deep_copy(in_scan_results, ValueType());
     };
 
     // Lambda for checking errors from stored value at each index
     // starting from 2.
     auto check_scan_results_start2 = [&]() {
-      auto const prefix_h = Kokkos::create_mirror_view_and_copy(
-          Kokkos::HostSpace(), prefix_results);
-      auto const postfix_h = Kokkos::create_mirror_view_and_copy(
-          Kokkos::HostSpace(), postfix_results);
+      auto const ex_scan_h = Kokkos::create_mirror_view_and_copy(
+          Kokkos::HostSpace(), ex_scan_results);
+      auto const in_scan_h = Kokkos::create_mirror_view_and_copy(
+          Kokkos::HostSpace(), in_scan_results);
 
       for (size_t i = 2; i < work_size; ++i) {
-        // Check prefix sum
+        // Check exclusive scan sum
         for (int j = 0; j < N; ++j) {
-          ASSERT_EQ((i + 1) * (i - 2) / 2, prefix_h(i).v[j]);
+          ASSERT_EQ((i + 1) * (i - 2) / 2, ex_scan_h(i).v[j]);
         }
 
-        // Check postfix sum
+        // Check inclusive scan sum
         for (int j = 0; j < N; ++j) {
-          ASSERT_EQ((i + 2) * (i - 1) / 2, postfix_h(i).v[j]);
+          ASSERT_EQ((i + 2) * (i - 1) / 2, in_scan_h(i).v[j]);
         }
       }
 
       // Reset results
-      Kokkos::deep_copy(prefix_results, ValueType());
-      Kokkos::deep_copy(postfix_results, ValueType());
+      Kokkos::deep_copy(ex_scan_results, ValueType());
+      Kokkos::deep_copy(in_scan_results, ValueType());
     };
 
     // If policy template args are not given, call parallel_scan()
