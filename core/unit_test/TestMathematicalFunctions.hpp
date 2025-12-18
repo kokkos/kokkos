@@ -2046,13 +2046,13 @@ struct TestSignbit {
     if (signbit(static_cast<KE::half_t>(0.f)) ||
         signbit(finite_max<KE::half_t>::value) ||
         signbit(infinity<KE::half_t>::value) ||
-        // signbit(denorm_min<KE::half_t>::value) ||
+        signbit(denorm_min<KE::half_t>::value) ||
         signbit(quiet_NaN<KE::half_t>::value) ||
         signbit(signaling_NaN<KE::half_t>::value) ||
         !signbit(static_cast<KE::half_t>(-0.f)) ||
         !signbit(finite_min<KE::half_t>::value) ||
-        !signbit(-static_cast<KE::half_t>(infinity<KE::half_t>::value))
-    // || !signbit(-static_cast<KE::half_t>(denorm_min<KE::half_t>::value))
+        !signbit(-static_cast<KE::half_t>(infinity<KE::half_t>::value)) ||
+        !signbit(-static_cast<KE::half_t>(denorm_min<KE::half_t>::value))
     // https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/mathematical-functions.html#cuda-and-ieee-754-compliance:
     // "[...] result in the sign of a NaN being updated in an
     // implementation-defined manner."
@@ -2067,13 +2067,13 @@ struct TestSignbit {
     if (signbit(static_cast<KE::bhalf_t>(0.f)) ||
         signbit(finite_max<KE::bhalf_t>::value) ||
         signbit(infinity<KE::bhalf_t>::value) ||
-        // signbit(denorm_min<KE::bhalf_t>::value) ||
+        signbit(denorm_min<KE::bhalf_t>::value) ||
         signbit(quiet_NaN<KE::bhalf_t>::value) ||
         signbit(signaling_NaN<KE::bhalf_t>::value) ||
         !signbit(static_cast<KE::bhalf_t>(-0.f)) ||
         !signbit(finite_min<KE::bhalf_t>::value) ||
-        !signbit(-static_cast<KE::bhalf_t>(infinity<KE::bhalf_t>::value))
-    // || !signbit(-static_cast<KE::bhalf_t>(denorm_min<KE::bhalf_t>::value))
+        !signbit(-static_cast<KE::bhalf_t>(infinity<KE::bhalf_t>::value)) ||
+        !signbit(-static_cast<KE::bhalf_t>(denorm_min<KE::bhalf_t>::value))
 #ifndef KOKKOS_ENABLE_CUDA
         || !signbit(-static_cast<KE::bhalf_t>(quiet_NaN<KE::bhalf_t>::value)) ||
         !signbit(-static_cast<KE::bhalf_t>(signaling_NaN<KE::bhalf_t>::value))
