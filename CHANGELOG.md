@@ -1,4 +1,13 @@
 # CHANGELOG
+## 5.0.1
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/5.0.0...5.0.1)
+
+### Bug Fixes
+* Fix nvcc warnings in mdspan [\#8750](https://github.com/kokkos/kokkos/pull/8750)
+* Disable MallocAsync for ROCm 7 [\#8746](https://github.com/kokkos/kokkos/pull/8746)
+* Add a missing deprecation for HostMirror in DyanamicView [\#8762](https://github.com/kokkos/kokkos/pull/8762)
+* Replace cudaMemAdvise_v2 with cudaMemAdvise when CUDART_VERSION >= 13000 [\#8707](https://github.com/kokkos/kokkos/pull/8707)
 
 ## 5.0.0
 
