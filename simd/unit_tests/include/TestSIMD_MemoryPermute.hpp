@@ -141,10 +141,10 @@ inline void host_check_gather_scatter() {
     host_test_scatter_to(init, mask, reverse,
                         Kokkos::Experimental::simd_flag_aligned);
 
-    // host_test_gather_from(init, mask, reverse,
-    //                       Kokkos::Experimental::simd_flag_default);
-    // host_test_gather_from(init, mask, reverse,
-    //                       Kokkos::Experimental::simd_flag_aligned);
+    host_test_gather_from(init, mask, reverse,
+                          Kokkos::Experimental::simd_flag_default);
+    host_test_gather_from(init, mask, reverse,
+                          Kokkos::Experimental::simd_flag_aligned);
     }
 }
 
