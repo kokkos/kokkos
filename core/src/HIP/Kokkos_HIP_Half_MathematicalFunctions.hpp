@@ -81,6 +81,8 @@ KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(log2, hlog2)
 // Power functions
 // pow
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(sqrt, hsqrt)
+KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(rsqrt, hrsqrt)
+KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(rcp, hrcp)
 // cbrt
 // hypot
 // Trigonometric functions

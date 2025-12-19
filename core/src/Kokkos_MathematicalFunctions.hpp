@@ -540,10 +540,37 @@ KOKKOS_INLINE_FUNCTION double rsqrt(double val) {
 inline long double rsqrt(long double val) { return 1.0l / Kokkos::sqrt(val); }
 KOKKOS_INLINE_FUNCTION float rsqrtf(float x) { return Kokkos::rsqrt(x); }
 inline long double rsqrtl(long double x) { return Kokkos::rsqrt(x); }
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> rsqrt(
-    T x) {
+
+template <typename T>
+  requires(std::is_integral_v<T>)
+KOKKOS_INLINE_FUNCTION double rsqrt(T x) {
   return Kokkos::rsqrt(static_cast<double>(x));
+}
+
+// reciprocal functions 1/x
+KOKKOS_INLINE_FUNCTION float rcp(float val) {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  KOKKOS_IF_ON_DEVICE(return __frcp_rn(val);)
+  KOKKOS_IF_ON_HOST(return 1.0f / val;)
+#elif defined(KOKKOS_ENABLE_SYCL)
+  return sycl::native::recip(val);
+#else
+  return 1.0f / val;
+#endif
+}
+KOKKOS_INLINE_FUNCTION double rcp(double val) {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+  KOKKOS_IF_ON_DEVICE(return __drcp_rn(val);)
+  KOKKOS_IF_ON_HOST(return 1.0 / val;)
+#else
+  return 1.0 / val;
+#endif
+}
+inline long double rcp(long double val) { return 1.0l / val; }
+template <typename T>
+  requires(std::is_integral_v<T>)
+KOKKOS_INLINE_FUNCTION double rcp(T x) {
+  return Kokkos::rcp(static_cast<double>(x));
 }
 
 }  // namespace Kokkos
