@@ -14,17 +14,20 @@ import kokkos.simd_impl;
 #include <SIMDTesting_Utilities.hpp>
 
 template <typename T>
-using simd_index_type = std::conditional_t<(sizeof(T) == 8), std::int64_t, std::int32_t>;
+using simd_index_type =
+    std::conditional_t<(sizeof(T) == 8), std::int64_t, std::int32_t>;
 
 template <typename Abi, typename DataType, typename Flag>
 inline void host_test_scatter_to(
     Kokkos::Experimental::basic_simd<DataType, Abi> init,
     Kokkos::Experimental::basic_simd_mask<simd_index_type<DataType>, Abi> mask,
-    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices, Flag flag) {
+    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices,
+    Flag flag) {
   using size_type = Kokkos::Experimental::Impl::simd_size_t;
   using mask_type = decltype(mask);
 
-  auto check_scattered = [&](DataType(&arr)[init.size()], mask_type m = mask_type{true}) {
+  auto check_scattered = [&](DataType(&arr)[init.size()],
+                             mask_type m = mask_type{true}) {
     gtest_checker checker;
     for (size_type i = 0; i < init.size(); ++i) {
       auto expected = (m[i]) ? init[i] : arr[indices[i]];
@@ -57,12 +60,14 @@ template <typename Abi, typename DataType, typename Flag>
 inline void host_test_gather_from(
     Kokkos::Experimental::basic_simd<DataType, Abi> init,
     Kokkos::Experimental::basic_simd_mask<simd_index_type<DataType>, Abi> mask,
-    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices, Flag flag) {
+    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices,
+    Flag flag) {
   using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
   using size_type = Kokkos::Experimental::Impl::simd_size_t;
   using mask_type = decltype(mask);
 
-  auto check_gathered = [&](DataType(&arr)[init.size()], simd_type& result, mask_type m = mask_type{true}) {
+  auto check_gathered = [&](DataType(&arr)[init.size()], simd_type& result,
+                            mask_type m = mask_type{true}) {
     gtest_checker checker;
     for (size_type i = 0; i < result.size(); ++i) {
       auto expected = (m[i]) ? arr[indices[i]] : DataType{};
@@ -78,11 +83,10 @@ inline void host_test_gather_from(
     if constexpr (std::is_same_v<Kokkos::Experimental::simd_abi::Impl::
                                      host_fixed_native<DataType>,
                                  Abi>) {
-      result =
-          Kokkos::Experimental::unchecked_gather_from(arr, indices, flag);
+      result = Kokkos::Experimental::unchecked_gather_from(arr, indices, flag);
     } else {
-      result =
-          Kokkos::Experimental::unchecked_gather_from<simd_type>(arr, indices, flag);
+      result = Kokkos::Experimental::unchecked_gather_from<simd_type>(
+          arr, indices, flag);
     }
     check_gathered(arr, result);
   }
@@ -93,8 +97,8 @@ inline void host_test_gather_from(
       result =
           Kokkos::Experimental::unchecked_gather_from(arr, mask, indices, flag);
     } else {
-      result =
-          Kokkos::Experimental::unchecked_gather_from<simd_type>(arr, mask, indices, flag);
+      result = Kokkos::Experimental::unchecked_gather_from<simd_type>(
+          arr, mask, indices, flag);
     }
     check_gathered(arr, result, mask);
   }
@@ -102,11 +106,10 @@ inline void host_test_gather_from(
     if constexpr (std::is_same_v<Kokkos::Experimental::simd_abi::Impl::
                                      host_fixed_native<DataType>,
                                  Abi>) {
-      result =
-          Kokkos::Experimental::partial_gather_from(arr, indices, flag);
+      result = Kokkos::Experimental::partial_gather_from(arr, indices, flag);
     } else {
-      result =
-          Kokkos::Experimental::partial_gather_from<simd_type>(arr, indices, flag);
+      result = Kokkos::Experimental::partial_gather_from<simd_type>(
+          arr, indices, flag);
     }
     check_gathered(arr, result);
   }
@@ -117,8 +120,8 @@ inline void host_test_gather_from(
       result =
           Kokkos::Experimental::partial_gather_from(arr, mask, indices, flag);
     } else {
-      result =
-          Kokkos::Experimental::partial_gather_from<simd_type>(arr, mask, indices, flag);
+      result = Kokkos::Experimental::partial_gather_from<simd_type>(
+          arr, mask, indices, flag);
     }
     check_gathered(arr, result, mask);
   }
@@ -127,9 +130,10 @@ inline void host_test_gather_from(
 template <class Abi, typename DataType>
 inline void host_check_gather_scatter() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
-    using simd_type  = Kokkos::Experimental::basic_simd<DataType, Abi>;
-    using index_type = Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi>;
-    using mask_type  = typename index_type::mask_type;
+    using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+    using index_type =
+        Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi>;
+    using mask_type = typename index_type::mask_type;
 
     simd_type init([=](std::size_t i) { return (i + 1) * 11; });
     mask_type mask([=](std::size_t i) { return i % 2 == 0; });
@@ -137,15 +141,15 @@ inline void host_check_gather_scatter() {
         [=](std::size_t i) { return (simd_type::size() - 1) - i; });
 
     host_test_scatter_to(init, mask, reverse,
-                        Kokkos::Experimental::simd_flag_default);
+                         Kokkos::Experimental::simd_flag_default);
     host_test_scatter_to(init, mask, reverse,
-                        Kokkos::Experimental::simd_flag_aligned);
+                         Kokkos::Experimental::simd_flag_aligned);
 
     host_test_gather_from(init, mask, reverse,
                           Kokkos::Experimental::simd_flag_default);
     host_test_gather_from(init, mask, reverse,
                           Kokkos::Experimental::simd_flag_aligned);
-    }
+  }
 }
 
 template <typename Abi, typename... DataTypes>
@@ -162,15 +166,16 @@ inline void host_check_memory_permute_all_abis(
 }
 
 template <typename Abi, typename DataType, typename Flag>
-KOKKOS_INLINE_FUNCTION
-void device_test_scatter_to(
+KOKKOS_INLINE_FUNCTION void device_test_scatter_to(
     Kokkos::Experimental::basic_simd<DataType, Abi> init,
     Kokkos::Experimental::basic_simd_mask<simd_index_type<DataType>, Abi> mask,
-    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices, Flag flag) {
+    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices,
+    Flag flag) {
   using size_type = Kokkos::Experimental::Impl::simd_size_t;
   using mask_type = decltype(mask);
 
-  auto check_scattered = KOKKOS_LAMBDA(DataType(&arr)[init.size()], mask_type m = mask_type{true}) {
+  auto check_scattered = KOKKOS_LAMBDA(DataType(&arr)[init.size()],
+                                       mask_type m = mask_type{true}) {
     kokkos_checker checker;
     for (size_type i = 0; i < init.size(); ++i) {
       auto expected = (m[i]) ? init[i] : arr[indices[i]];
@@ -200,16 +205,18 @@ void device_test_scatter_to(
 }
 
 template <typename Abi, typename DataType, typename Flag>
-KOKKOS_INLINE_FUNCTION
-void device_test_gather_from(
+KOKKOS_INLINE_FUNCTION void device_test_gather_from(
     Kokkos::Experimental::basic_simd<DataType, Abi> init,
     Kokkos::Experimental::basic_simd_mask<simd_index_type<DataType>, Abi> mask,
-    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices, Flag flag) {
+    Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices,
+    Flag flag) {
   using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
   using size_type = Kokkos::Experimental::Impl::simd_size_t;
   using mask_type = decltype(mask);
 
-  auto check_gathered = KOKKOS_LAMBDA(DataType(&arr)[init.size()], simd_type& result, mask_type m = mask_type{true}) {
+  auto check_gathered =
+      KOKKOS_LAMBDA(DataType(&arr)[init.size()], simd_type & result,
+                    mask_type m = mask_type{true}) {
     kokkos_checker checker;
     for (size_type i = 0; i < result.size(); ++i) {
       auto expected = (m[i]) ? arr[indices[i]] : DataType{};
@@ -225,11 +232,10 @@ void device_test_gather_from(
     if constexpr (std::is_same_v<Kokkos::Experimental::simd_abi::Impl::
                                      host_fixed_native<DataType>,
                                  Abi>) {
-    result =
-        Kokkos::Experimental::unchecked_gather_from(arr, indices, flag);
+      result = Kokkos::Experimental::unchecked_gather_from(arr, indices, flag);
     } else {
-    result =
-        Kokkos::Experimental::unchecked_gather_from<simd_type>(arr, indices, flag);
+      result = Kokkos::Experimental::unchecked_gather_from<simd_type>(
+          arr, indices, flag);
     }
     check_gathered(arr, result);
   }
@@ -238,10 +244,10 @@ void device_test_gather_from(
                                      host_fixed_native<DataType>,
                                  Abi>) {
       result =
-        Kokkos::Experimental::unchecked_gather_from(arr, mask, indices, flag);
+          Kokkos::Experimental::unchecked_gather_from(arr, mask, indices, flag);
     } else {
-      result =
-        Kokkos::Experimental::unchecked_gather_from<simd_type>(arr, mask, indices, flag);
+      result = Kokkos::Experimental::unchecked_gather_from<simd_type>(
+          arr, mask, indices, flag);
     }
     check_gathered(arr, result, mask);
   }
@@ -249,11 +255,10 @@ void device_test_gather_from(
     if constexpr (std::is_same_v<Kokkos::Experimental::simd_abi::Impl::
                                      host_fixed_native<DataType>,
                                  Abi>) {
-      result =
-        Kokkos::Experimental::partial_gather_from(arr, indices, flag);
+      result = Kokkos::Experimental::partial_gather_from(arr, indices, flag);
     } else {
-      result =
-        Kokkos::Experimental::partial_gather_from<simd_type>(arr, indices, flag);
+      result = Kokkos::Experimental::partial_gather_from<simd_type>(
+          arr, indices, flag);
     }
     check_gathered(arr, result);
   }
@@ -264,8 +269,8 @@ void device_test_gather_from(
       result =
           Kokkos::Experimental::partial_gather_from(arr, mask, indices, flag);
     } else {
-      result =
-          Kokkos::Experimental::partial_gather_from<simd_type>(arr, mask, indices, flag);
+      result = Kokkos::Experimental::partial_gather_from<simd_type>(
+          arr, mask, indices, flag);
     }
     check_gathered(arr, result, mask);
   }
@@ -274,9 +279,10 @@ void device_test_gather_from(
 template <class Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_memory_permute() {
   if constexpr (is_simd_avail_v<DataType, Abi>) {
-    using simd_type  = Kokkos::Experimental::basic_simd<DataType, Abi>;
-    using index_type = Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi>;
-    using mask_type  = typename index_type::mask_type;
+    using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
+    using index_type =
+        Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi>;
+    using mask_type = typename index_type::mask_type;
 
     simd_type init(KOKKOS_LAMBDA(std::size_t i) { return (i + 1) * 11; });
     mask_type mask(KOKKOS_LAMBDA(std::size_t i) { return i % 2 == 0; });
@@ -284,13 +290,13 @@ KOKKOS_INLINE_FUNCTION void device_check_memory_permute() {
         KOKKOS_LAMBDA(std::size_t i) { return (simd_type::size() - 1) - i; });
 
     device_test_scatter_to(init, mask, reverse,
-                          Kokkos::Experimental::simd_flag_default);
+                           Kokkos::Experimental::simd_flag_default);
     device_test_scatter_to(init, mask, reverse,
-                          Kokkos::Experimental::simd_flag_aligned);
+                           Kokkos::Experimental::simd_flag_aligned);
     device_test_gather_from(init, mask, reverse,
-                          Kokkos::Experimental::simd_flag_default);
+                            Kokkos::Experimental::simd_flag_default);
     device_test_gather_from(init, mask, reverse,
-                          Kokkos::Experimental::simd_flag_aligned);
+                            Kokkos::Experimental::simd_flag_aligned);
   }
 }
 
