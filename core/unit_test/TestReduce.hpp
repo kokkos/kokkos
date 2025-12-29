@@ -541,8 +541,6 @@ TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
 #endif
 #endif
 
-// FIXME_OPENMPTARGET: Not yet implemented.
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 // FIXME_OPENACC: Not yet implemented.
 #ifndef KOKKOS_ENABLE_OPENACC
 TEST(TEST_CATEGORY, int_combined_reduce) {
@@ -639,7 +637,6 @@ TEST(TEST_CATEGORY, int_combined_reduce_mixed) {
   }
 }
 #endif
-#endif
 
 #if defined(NDEBUG)
 // the following test was made for:
@@ -730,9 +727,8 @@ TEST(TEST_CATEGORY, reduction_identity_min_max_floating_point_types) {
   TestReductionOverInfiniteFloat<float>();
   TestReductionOverInfiniteFloat<double>();
 
-#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) &&          \
-    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENMPTARGET) && \
-    !defined(KOKKOS_ENABLE_OPENACC)
+#if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
   TestReductionOverInfiniteFloat<long double>();
 #endif
 }

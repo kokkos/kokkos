@@ -87,9 +87,9 @@ inline void host_test_simd_alias() {
 
 template <typename /*Abi*/, typename DataType>
 inline void host_test_simd_default_abi() {
-#if defined(KOKKOS_ENABLE_HPX) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
-    defined(KOKKOS_ENABLE_OPENACC) || defined(KOKKOS_ENABLE_CUDA) ||     \
-    defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL)
+#if defined(KOKKOS_ENABLE_HPX) || defined(KOKKOS_ENABLE_OPENACC) || \
+    defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||    \
+    defined(KOKKOS_ENABLE_SYCL)
   constexpr Kokkos::Experimental::Impl::simd_size_t expected_size = 1;
 #elif defined(KOKKOS_ARCH_AVX512XEON)
   constexpr Kokkos::Experimental::Impl::simd_size_t expected_size =

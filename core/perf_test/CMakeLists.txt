@@ -58,9 +58,8 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
   add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
 endmacro()
 
-# FIXME_OPENMPTARGET - the NVIDIA HPC compiler nvc++ in the OpenMPTarget backend does not pass the perf_tests.
 # FIXME_OPENACC - temporarily disabled due to unimplemented features
-if((KOKKOS_ENABLE_OPENMPTARGET OR KOKKOS_ENABLE_OPENACC) AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
+if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   return()
 endif()
 if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
@@ -121,13 +120,6 @@ set(BENCHMARK_SOURCES
     PerfTest_ViewResize_8.cpp
     PerfTest_ViewResize_Raw.cpp
 )
-
-if(Kokkos_ENABLE_OPENMPTARGET)
-  # FIXME OPENMPTARGET requires TeamPolicy Reductions and Custom Reduction
-  list(REMOVE_ITEM BENCHMARK_SOURCES PerfTestGramSchmidt.cpp PerfTest_CustomReduction.cpp
-       PerfTest_ExecSpacePartitioning.cpp
-  )
-endif()
 
 kokkos_add_benchmark(PerformanceTest_Benchmark SOURCES ${BENCHMARK_SOURCES})
 

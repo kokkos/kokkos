@@ -163,8 +163,7 @@ struct TestNumericTraits {
   }
 
   KOKKOS_FUNCTION void use_on_device() const {
-#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENMPTARGET) || \
-    defined(KOKKOS_ENABLE_OPENACC)
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_ENABLE_OPENACC)
     take_by_value(trait<T>::value);
 #else
     (void)take_address_of(trait<T>::value);
@@ -173,7 +172,7 @@ struct TestNumericTraits {
 };
 
 #if (defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA)) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENMPTARGET)
+    defined(KOKKOS_ENABLE_SYCL)
 template <class Tag>
 struct TestNumericTraits<
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -181,7 +180,7 @@ struct TestNumericTraits<
 #elif defined(KOKKOS_ENABLE_SYCL)
     Kokkos::SYCL,
 #else
-    Kokkos::Experimental::OpenMPTarget,
+#error "logic error"
 #endif
     long double, Tag> {
   template <class T>
@@ -234,6 +233,8 @@ TEST(TEST_CATEGORY, numeric_traits_norm_min) {
 }
 
 TEST(TEST_CATEGORY, numeric_traits_denorm_min) {
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, DenormMin>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, float, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, double, DenormMin>();
   TestNumericTraits<TEST_EXECSPACE, long double, DenormMin>();

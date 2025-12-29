@@ -252,10 +252,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), create_graph_no_arg) {
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
-#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET team_size incompatible
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "skipping since OpenMPTarget can't use team_size 1";
-#endif
 #if defined(KOKKOS_ENABLE_SYCL) &&               \
     (!defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT) || \
      !defined(KOKKOS_ARCH_INTEL_GPU))  // FIXME_SYCL

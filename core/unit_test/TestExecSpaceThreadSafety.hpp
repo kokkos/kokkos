@@ -100,10 +100,6 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range) {
          "race conditions during shared allocation reference counting";
   THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "skipping since test is known to fail for OpenMPTarget";
-#endif
 #ifdef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES  // FIXME_SYCL
   GTEST_SKIP()
       << "skipping since tests are known to fail with out-of-order queues";
@@ -146,10 +142,6 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_mdrange) {
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
   THREAD_SAFETY_TEST_UNREACHABLE();
-#endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "skipping since test is known to fail for OpenMPTarget";
 #endif
 #ifdef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES  // FIXME_SYCL
   GTEST_SKIP()
@@ -195,12 +187,6 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy) {
       << "skipping OpenACC test since unsupported host-side atomics cause "
          "race conditions during shared allocation reference counting";
   THREAD_SAFETY_TEST_UNREACHABLE();
-#endif
-// FIXME_OPENMPTARGET
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "skipping for OpenMPTarget since the test is designed to "
-                    "run with vector_length=1";
 #endif
 #ifdef KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES  // FIXME_SYCL
   GTEST_SKIP()
@@ -334,13 +320,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_team_policy_reduce) {
          "race conditions during shared allocation reference counting";
   THREAD_SAFETY_TEST_UNREACHABLE();
 #endif
-// FIXME_OPENMPTARGET
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenMPTarget>)
-    GTEST_SKIP() << "skipping for OpenMPTarget since the test is designed to "
-                    "run with vector_length=1";
-#endif
-    // FIXME_SYCL
+  // FIXME_SYCL
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
     GTEST_SKIP() << "skipping since test is know to fail with SYCL+Cuda";

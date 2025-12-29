@@ -167,7 +167,8 @@ ThreadsInternal::~ThreadsInternal() {
   const unsigned entry = m_pool_size - (m_pool_rank + 1);
 
   if (m_scratch) {
-    Kokkos::kokkos_free<Kokkos::HostSpace>(m_scratch);
+    Kokkos::HostSpace{}.deallocate("Kokkos::thread_scratch", m_scratch,
+                                   m_scratch_thread_end);
     m_scratch = nullptr;
   }
 
@@ -306,7 +307,8 @@ void ThreadsInternal::execute_resize_scratch_in_serial() {
 
   auto deallocate_scratch_memory = [](ThreadsInternal &exec) {
     if (exec.m_scratch) {
-      Kokkos::kokkos_free<Kokkos::HostSpace>(exec.m_scratch);
+      Kokkos::HostSpace{}.deallocate("Kokkos::thread_scratch", exec.m_scratch,
+                                     exec.m_scratch_thread_end);
       exec.m_scratch = nullptr;
     }
   };
@@ -358,8 +360,8 @@ void ThreadsInternal::first_touch_allocate_thread_private_scratch(
   if (s_threads_process.m_scratch_thread_end) {
     // Allocate tracked memory:
     {
-      exec.m_scratch = Kokkos::kokkos_malloc<Kokkos::HostSpace>(
-          "Kokkos::thread_scratch", s_threads_process.m_scratch_thread_end);
+      exec.m_scratch = Kokkos::HostSpace{}.allocate("Kokkos::thread_scratch",
+                                                    exec.m_scratch_thread_end);
     }
 
     unsigned *ptr = reinterpret_cast<unsigned *>(exec.m_scratch);

@@ -149,10 +149,8 @@ struct TestComplexBasicMath {
     ASSERT_FLOAT_EQ(h_results(2).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(2).imag(), r.imag());
     r = a / b;
-#ifndef KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
     ASSERT_FLOAT_EQ(h_results(3).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(3).imag(), r.imag());
-#endif
     r = d + a;
     ASSERT_FLOAT_EQ(h_results(4).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(4).imag(), r.imag());
@@ -199,11 +197,8 @@ struct TestComplexBasicMath {
     ASSERT_FLOAT_EQ(h_results(18).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(18).imag(), r.imag());
     r = c / a;
-#ifndef KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
     ASSERT_FLOAT_EQ(h_results(19).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(19).imag(), r.imag());
-#endif
-
     r = a;
     /* r = a+e; */ ASSERT_FLOAT_EQ(h_results(20).real(), r.real() + e);
     ASSERT_FLOAT_EQ(h_results(20).imag(), r.imag());
@@ -306,7 +301,6 @@ struct TestComplexSpecialFunctions {
     r = Kokkos::exp(a);
     ASSERT_FLOAT_EQ(h_results(4).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(4).imag(), r.imag());
-#ifndef KOKKOS_WORKAROUND_OPENMPTARGET_CLANG
     r = std::log(a);
     ASSERT_FLOAT_EQ(h_results(5).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(5).imag(), r.imag());
@@ -352,7 +346,6 @@ struct TestComplexSpecialFunctions {
     r = std::log10(a);
     ASSERT_FLOAT_EQ(h_results(18).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(18).imag(), r.imag());
-#endif
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -443,62 +436,6 @@ struct TestBugPowAndLogComplex {
 TEST(TEST_CATEGORY, complex_issue_3865) {
   TestBugPowAndLogComplex<TEST_EXECSPACE>();
 }
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
-TEST(TEST_CATEGORY, complex_issue_3867) {
-  ASSERT_EQ(Kokkos::pow(Kokkos::complex<double>(2., 1.), 3.),
-            Kokkos::pow(Kokkos::complex<double>(2., 1.), 3));
-  ASSERT_EQ(
-      Kokkos::pow(Kokkos::complex<double>(2., 1.), 3.),
-      Kokkos::pow(Kokkos::complex<double>(2., 1.), Kokkos::complex<double>(3)));
-
-  auto x = Kokkos::pow(Kokkos::complex<double>(2, 1),
-                       Kokkos::complex<double>(-3, 4));
-  auto y = Kokkos::complex<double>(
-      std::pow(std::complex<double>(2, 1), std::complex<double>(-3, 4)));
-  ASSERT_FLOAT_EQ(x.real(), y.real());
-  ASSERT_FLOAT_EQ(x.imag(), y.imag());
-
-#define CHECK_POW_COMPLEX_PROMOTION(ARGTYPE1, ARGTYPE2, RETURNTYPE)          \
-  static_assert(                                                             \
-      std::is_same<RETURNTYPE,                                               \
-                   decltype(Kokkos::pow(std::declval<ARGTYPE1>(),            \
-                                        std::declval<ARGTYPE2>()))>::value); \
-  static_assert(                                                             \
-      std::is_same<RETURNTYPE,                                               \
-                   decltype(Kokkos::pow(std::declval<ARGTYPE2>(),            \
-                                        std::declval<ARGTYPE1>()))>::value);
-
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<long double>, long double,
-                              Kokkos::complex<long double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<long double>, double,
-                              Kokkos::complex<long double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<long double>, float,
-                              Kokkos::complex<long double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<long double>, int,
-                              Kokkos::complex<long double>);
-
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<double>, long double,
-                              Kokkos::complex<long double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<double>, double,
-                              Kokkos::complex<double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<double>, float,
-                              Kokkos::complex<double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<double>, int,
-                              Kokkos::complex<double>);
-
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<float>, long double,
-                              Kokkos::complex<long double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<float>, double,
-                              Kokkos::complex<double>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<float>, float,
-                              Kokkos::complex<float>);
-  CHECK_POW_COMPLEX_PROMOTION(Kokkos::complex<float>, int,
-                              Kokkos::complex<double>);
-
-#undef CHECK_POW_COMPLEX_PROMOTION
-}
-#endif
 
 TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
   static_assert(Kokkos::real(1) == 1.);
