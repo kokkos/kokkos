@@ -237,6 +237,43 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     return FUNC(static_cast<double>(x), y);                                    \
   }
 
+#define KOKKOS_IMPL_MATH_BINARY_PREDICATE(FUNC)                                \
+  KOKKOS_INLINE_FUNCTION bool FUNC(float x, float y) {                         \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION bool FUNC(double x, double y) {                       \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  inline bool FUNC(long double x, long double y) {                             \
+    using std::FUNC;                                                           \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  template <class T1, class T2>                                                \
+  KOKKOS_INLINE_FUNCTION                                                       \
+      std::enable_if_t<std::is_arithmetic_v<T1> && std::is_arithmetic_v<T2> && \
+                           !std::is_same_v<T1, long double> &&                 \
+                           !std::is_same_v<T2, long double>,                   \
+                       bool>                                                   \
+      FUNC(T1 x, T2 y) {                                                       \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
+  }                                                                            \
+  template <class T1, class T2>                                                \
+  inline std::enable_if_t<std::is_arithmetic_v<T1> &&                          \
+                              std::is_arithmetic_v<T2> &&                      \
+                              (std::is_same_v<T1, long double> ||              \
+                               std::is_same_v<T2, long double>),               \
+                          bool>                                                \
+  FUNC(T1 x, T2 y) {                                                           \
+    using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
+    static_assert(std::is_same_v<Promoted, long double>);                      \
+    using std::FUNC;                                                           \
+    return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
+  }
+
 #define KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(FUNC)                        \
   KOKKOS_INLINE_FUNCTION float FUNC(float x, float y, int* z) {                \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
@@ -544,12 +581,12 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, bool> isnormal(
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnormal)
 #endif
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
-// isgreater
-// isgreaterequal
-// isless
-// islessequal
-// islessgreater
-// isunordered
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreater)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreaterequal)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isless)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessequal)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessgreater)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isunordered)
 
 #undef KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION
@@ -557,6 +594,7 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_BINARY_PTR_FUNCTION
+#undef KOKKOS_IMPL_MATH_BINARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_TERNARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION
 
