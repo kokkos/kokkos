@@ -209,20 +209,6 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RET
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RETURN_INT, llround, long long)
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RETURN_INT, lrint, long )
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RETURN_INT, llrint, long long)
-#else
-  // FIXME_SYCL: these have no upcasting fallback, thus we must expose them only for half_t
-  KOKKOS_INLINE_FUNCTION long lround(Kokkos::Experimental::half_t x) {
-    return Kokkos::Impl::impl_lround(x);
-  }
-  KOKKOS_INLINE_FUNCTION long long llround(Kokkos::Experimental::half_t x) {
-    return Kokkos::Impl::impl_llround(x);
-  }
-  KOKKOS_INLINE_FUNCTION long lrint(Kokkos::Experimental::half_t x) {
-    return Kokkos::Impl::impl_lrint(x);
-  }
-  KOKKOS_INLINE_FUNCTION long long llrint(Kokkos::Experimental::half_t x) {
-    return Kokkos::Impl::impl_llrint(x);
-  }
 #endif
 // Floating point manipulation functions
 // frexp
