@@ -109,13 +109,14 @@ KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(floor, hfloor)
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(trunc, htrunc)
 // round
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(rint, hrint)
-// FIXME_HIP HIP does not provide these functions, but as the range of int is
-// enough for any value half_t can take, we can just cast here
+// NOTE HIP does not provide these functions, but we can exclude domain errors,
+// as the range of int is enough for any value half_t can take.
+// Thus we just cast to the required return type
 KOKKOS_INLINE_FUNCTION long impl_lrint(Kokkos::Experimental::half_t x) {
-  return static_cast<long>(impl_rint(x));
+  return impl_rint(x);
 }
 KOKKOS_INLINE_FUNCTION long long impl_llrint(Kokkos::Experimental::half_t x) {
-  return static_cast<long long>(impl_rint(x));
+  return impl_rint(x);
 }
 // logb
 // nextafter
