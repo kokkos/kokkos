@@ -37,3 +37,6 @@ kokkos_create_imported_tpl(
   COMPILE_DEFINITIONS
   __HIP_ROCclr__
 )
+
+find_package(hip REQUIRED PATHS ${ROCM_PATH} $ENV{ROCM_PATH})
+kokkos_export_cmake_tpl(hip REQUIRED)
