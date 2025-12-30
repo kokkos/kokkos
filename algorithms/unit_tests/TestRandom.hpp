@@ -643,13 +643,6 @@ TEST(TEST_CATEGORY, Random_XorShift1024_0) {
 
 TEST(TEST_CATEGORY, Multi_streams) {
   using ExecutionSpace = TEST_EXECSPACE;
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-  if constexpr (std::is_same_v<ExecutionSpace,
-                               Kokkos::Experimental::OpenMPTarget>) {
-    GTEST_SKIP() << "Libomptarget error";  // FIXME_OPENMPTARGET
-  }
-#endif
-
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
   if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
     GTEST_SKIP() << "Failing on NVIDIA GPUs";  // FIXME_SYCL
