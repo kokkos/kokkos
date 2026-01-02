@@ -782,15 +782,17 @@ struct TestMathBinaryPtrFunction : FloatingPointComparison {
   Arg val_;
   Ret res_frac_;
   Ret res_int_;
-  TestMathBinaryPtrFunction(Arg val) : val_(val) {
+  const char* m_name;
+  TestMathBinaryPtrFunction(Arg val)
+      : val_(val), m_name(math_function_name<Func>::name) {
     res_frac_ = Func::eval_std(val_, &res_int_);
     run();
   }
   void run() {
     int errors = 0;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
-    ASSERT_EQ(errors, 0) << "Failed " << math_function_name<Func>::name
-                         << " check for " << type_helper<Arg>::name();
+    ASSERT_EQ(errors, 0) << "Failed " << m_name << " check for "
+                         << type_helper<Arg>::name();
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
     Arg iptr;
@@ -800,8 +802,8 @@ struct TestMathBinaryPtrFunction : FloatingPointComparison {
     if (!ar_frac || !ar_int) {
       ++e;
       Kokkos::printf("%s failed: Val %f -> Frac %f (exp %f), Int %f (exp %f)\n",
-                     math_function_name<Func>::name, (double)val_, (double)frac,
-                     (double)res_frac_, (double)iptr, (double)res_int_);
+                     m_name, (double)val_, (double)frac, (double)res_frac_,
+                     (double)iptr, (double)res_int_);
     }
   }
 };
