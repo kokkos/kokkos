@@ -512,6 +512,7 @@ export {
   using ::Kokkos::logbl;
   using ::Kokkos::logf;
   using ::Kokkos::logl;
+  using ::Kokkos::modf;
   using ::Kokkos::nan;
   using ::Kokkos::nanf;
   using ::Kokkos::nanl;
