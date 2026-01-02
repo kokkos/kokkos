@@ -510,6 +510,28 @@ DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
 
+#define DEFINE_BINARY_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)              \
+  struct MathBinaryPtrFunction_##FUNC {                                \
+    template <typename T>                                              \
+    static KOKKOS_FUNCTION auto eval(T x, T* y) {                      \
+      return Kokkos::FUNC(x, y);                                       \
+    }                                                                  \
+    template <typename T>                                              \
+    static auto eval_std(T x, T* y) {                                  \
+      return std::FUNC(x, y);                                          \
+    }                                                                  \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }     \
+  };                                                                   \
+  template <> struct math_function_name<MathBinaryPtrFunction_##FUNC> { \
+    static constexpr char name[] = #FUNC;                              \
+  };
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+DEFINE_BINARY_PTR_FUNCTION_EVAL(modf, 0)
+#endif
+
+#undef DEFINE_BINARY_PTR_FUNCTION_EVAL
+
 #define DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)              \
   struct MathTernaryIntPtrFunction_##FUNC {                                 \
     template <typename T, typename U>                                       \
@@ -751,6 +773,50 @@ struct TestMathBinaryFunction : FloatingPointComparison {
     }
   }
 };
+
+template <class Space, class Func, class Arg,
+          class Ret = math_unary_function_return_type_t<Arg>>
+struct TestMathBinaryPtrFunction : FloatingPointComparison {
+  Arg val_;
+  Ret res_frac_;
+  Ret res_int_;
+
+  TestMathBinaryPtrFunction(Arg val) : val_(val) {
+    res_frac_ = Func::eval_std(val_, &res_int_);
+    run();
+  }
+
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed modf check for " << type_helper<Arg>::name();
+  }
+
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    Arg iptr;
+    Ret frac = Func::eval(val_, &iptr);
+    
+    bool ar_frac = compare(frac, res_frac_, Func::ulp_factor());
+    bool ar_int  = compare(iptr, res_int_, Func::ulp_factor());
+
+    if (!ar_frac || !ar_int) {
+      ++e;
+      Kokkos::printf("modf failed: Val %f -> Frac %f (exp %f), Int %f (exp %f)\n",
+                     (double)val_, (double)frac, (double)res_frac_, 
+                     (double)iptr, (double)res_int_);
+    }
+  }
+};
+
+template <class Space, class... Func, class Arg>
+void do_test_math_binary_ptr_function(Arg x) {
+  (void)std::initializer_list<int>{
+      (TestMathBinaryPtrFunction<Space, Func, Arg>(x), 0)...};
+  if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>) {
+    (void)std::initializer_list<int>{
+        (TestMathBinaryPtrFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg>(x), 0)...};
+  }
+}
 
 template <class Space, class... Func, class Arg1, class Arg2>
 void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
@@ -1000,6 +1066,17 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
 #if !(defined(KOKKOS_ARCH_POWER8) || defined(KOKKOS_ARCH_POWER9))
   do_test_math_ternary_function<TEST_EXECSPACE, kk3_hypot>(2.l, 3.l, 4.l);
 #endif
+#endif
+}
+
+TEST(TEST_CATEGORY, mathematical_functions_modf) {
+  using Func = MathBinaryPtrFunction_modf;
+  
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(42.765f);
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(-15.123);
+  
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(1234.5678l);
 #endif
 }
 
