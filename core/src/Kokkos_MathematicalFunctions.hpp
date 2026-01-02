@@ -217,12 +217,12 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;         \
     return FUNC(x, y);                                        \
   }                                                           \
-  inline long double FUNC(long double x, long double* y) {    \
-    using std::FUNC;                                          \
-    return FUNC(x, y);                                        \
-  }                                                           \
   KOKKOS_INLINE_FUNCTION float FUNC##f(float x, float* y) {   \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;         \
+    return FUNC(x, y);                                        \
+  }                                                           \
+  inline long double FUNC(long double x, long double* y) {    \
+    using std::FUNC;                                          \
     return FUNC(x, y);                                        \
   }                                                           \
   inline long double FUNC##l(long double x, long double* y) { \
