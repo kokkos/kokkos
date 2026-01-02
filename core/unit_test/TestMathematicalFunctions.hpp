@@ -510,22 +510,22 @@ DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
 
-#define DEFINE_BINARY_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)                    \
-  struct MathBinaryPtrFunction_##FUNC {                                      \
-    template <typename T>                                                    \
-    static KOKKOS_FUNCTION auto eval(T x, T* y) {                            \
-      return Kokkos::FUNC(x, y);                                             \
-    }                                                                        \
-    template <typename T>                                                    \
-    static auto eval_std(T x, T* y) {                                        \
-      return std::FUNC(x, y);                                                \
-    }                                                                        \
-    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }           \
-  };                                                                         \
-  template <>                                                                \
-  struct math_function_name<MathBinaryPtrFunction_##FUNC> {                  \
-    static constexpr char name[] = #FUNC;                                    \
-  };                                                                         \
+#define DEFINE_BINARY_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)          \
+  struct MathBinaryPtrFunction_##FUNC {                            \
+    template <typename T>                                          \
+    static KOKKOS_FUNCTION auto eval(T x, T* y) {                  \
+      return Kokkos::FUNC(x, y);                                   \
+    }                                                              \
+    template <typename T>                                          \
+    static auto eval_std(T x, T* y) {                              \
+      return std::FUNC(x, y);                                      \
+    }                                                              \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; } \
+  };                                                               \
+  template <>                                                      \
+  struct math_function_name<MathBinaryPtrFunction_##FUNC> {        \
+    static constexpr char name[] = #FUNC;                          \
+  };                                                               \
   constexpr char math_function_name<MathBinaryPtrFunction_##FUNC>::name[];
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
@@ -794,7 +794,7 @@ struct TestMathBinaryPtrFunction : FloatingPointComparison {
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
     Arg iptr;
-    Ret frac = Func::eval(val_, &iptr);
+    Ret frac     = Func::eval(val_, &iptr);
     bool ar_frac = compare(frac, res_frac_, Func::ulp_factor());
     bool ar_int  = compare(iptr, res_int_, Func::ulp_factor());
     if (!ar_frac || !ar_int) {
@@ -811,8 +811,10 @@ void do_test_math_binary_ptr_function(Arg x) {
   (void)std::initializer_list<int>{
       (TestMathBinaryPtrFunction<Space, Func, Arg>(x), 0)...};
   if constexpr (!std::is_same_v<Space, Kokkos::DefaultHostExecutionSpace>) {
-    (void)std::initializer_list<int>{
-        (TestMathBinaryPtrFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg>(x), 0)...};
+    (void)std::initializer_list<int>{(
+        TestMathBinaryPtrFunction<Kokkos::DefaultHostExecutionSpace, Func, Arg>(
+            x),
+        0)...};
   }
 }
 
