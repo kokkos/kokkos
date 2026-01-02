@@ -526,7 +526,7 @@ DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
   struct math_function_name<MathBinaryPtrFunction_##FUNC> {                  \
     static constexpr char name[] = #FUNC;                                    \
   };                                                                         \
-  constexpr char math_function_name<MathBinaryPtrFunction_##FUNC>::name[]
+  constexpr char math_function_name<MathBinaryPtrFunction_##FUNC>::name[];
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_BINARY_PTR_FUNCTION_EVAL(modf, 0)
@@ -790,7 +790,7 @@ struct TestMathBinaryPtrFunction : FloatingPointComparison {
     int errors = 0;
     Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
     ASSERT_EQ(errors, 0) << "Failed " << math_function_name<Func>::name
-                       << " check for " << type_helper<Arg>::name();
+                         << " check for " << type_helper<Arg>::name();
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
     Arg iptr;
@@ -800,9 +800,8 @@ struct TestMathBinaryPtrFunction : FloatingPointComparison {
     if (!ar_frac || !ar_int) {
       ++e;
       Kokkos::printf("%s failed: Val %f -> Frac %f (exp %f), Int %f (exp %f)\n",
-                 math_function_name<Func>::name,
-                 (double)val_, (double)frac, (double)res_frac_,
-                 (double)iptr, (double)res_int_);
+                     math_function_name<Func>::name, (double)val_, (double)frac,
+                     (double)res_frac_, (double)iptr, (double)res_int_);
     }
   }
 };
@@ -1070,10 +1069,10 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
 
 TEST(TEST_CATEGORY, mathematical_functions_modf) {
   using Func = MathBinaryPtrFunction_modf;
-  
+
   do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(42.765f);
   do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(-15.123);
-  
+
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(1234.5678l);
 #endif
