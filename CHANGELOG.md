@@ -8,6 +8,7 @@
 * Disable MallocAsync for ROCm 7+ [\#8746](https://github.com/kokkos/kokkos/pull/8746)
 * Add a missing deprecation for HostMirror in DynamicView [\#8762](https://github.com/kokkos/kokkos/pull/8762)
 * Replace cudaMemAdvise_v2 with cudaMemAdvise when CUDART_VERSION >= 13000 [\#8707](https://github.com/kokkos/kokkos/pull/8707)
+* Use mdspan-based View in Cuda 12.9 [\#8779](https://github.com/kokkos/kokkos/pull/8779)
 
 ## 5.0.0
 
