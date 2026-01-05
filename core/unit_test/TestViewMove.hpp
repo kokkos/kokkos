@@ -162,4 +162,20 @@ TEST(TEST_CATEGORY, view_moved_from) {
       v2.data(), v2.extent(0), v2.extent(1)));
 }
 
+#if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \
+    (defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA))
+#define KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND 1
+#endif
+
+#if !defined(KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND)
+constexpr bool test_view_is_nothrow_move_constructible() {
+  using view_t = Kokkos::View<int*, TEST_EXECSPACE>;
+
+  static_assert(std::is_nothrow_move_constructible_v<view_t>);
+
+  return true;
+}
+static_assert(test_view_is_nothrow_move_constructible());
+#endif
+
 }  // namespace
