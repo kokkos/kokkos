@@ -66,12 +66,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
 #if defined(KOKKOS_ENABLE_SYCL)
 #define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE sycl
 #else
-#if (defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC)) && \
-    defined(__GNUC__) && (__GNUC__ < 6) && !defined(__clang__)
-#define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
-#else
 #define KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE std
-#endif
 #endif
 
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION(FUNC)                                  \
@@ -211,6 +206,34 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     static_assert(std::is_same_v<Promoted, long double>);                      \
     using std::FUNC;                                                           \
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
+  }
+
+#define KOKKOS_IMPL_MATH_BINARY_PTR_FUNCTION(FUNC)                             \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, float* y) {                       \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x, double* y) {                    \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x, float* y) {                    \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  inline long double FUNC(long double x, long double* y) {                     \
+    using std::FUNC;                                                           \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  inline long double FUNC##l(long double x, long double* y) {                  \
+    using std::FUNC;                                                           \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  template <class T>                                                           \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> FUNC( \
+      T x, double* y) {                                                        \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(static_cast<double>(x), y);                                    \
   }
 
 #define KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(FUNC)                        \
@@ -388,7 +411,8 @@ inline long double exp2(long double val) {
   return exp(ln2 * val);
 }
 template <class T>
-KOKKOS_INLINE_FUNCTION double exp2(T val) {
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> exp2(
+    T val) {
   constexpr double ln2 = 0.693147180559945309417232121458176568L;
   return exp(ln2 * static_cast<double>(val));
 }
@@ -473,19 +497,22 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(ceil)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(floor)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(trunc)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(round)
-// lround
-// llround
-// FIXME_SYCL not available as of current SYCL 2020 specification (revision 4)
-#ifndef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+// FIXME_SYCL not available as of current SYCL 2020 specification (revision 11)
+#ifndef KOKKOS_ENABLE_SYCL
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(lround)
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(llround)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
 #endif
-// rint
-// lrint
-// llrint
+KOKKOS_IMPL_MATH_UNARY_FUNCTION(rint)
+// FIXME_SYCL not available as of current SYCL 2020 specification (revision 11)
+#ifndef KOKKOS_ENABLE_SYCL
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(lrint)
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(llrint)
+#endif
 // Floating point manipulation functions
 // frexp
 // ldexp
-// modf
+KOKKOS_IMPL_MATH_BINARY_PTR_FUNCTION(modf)
 // scalbn
 // scalbln
 KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(ilogb)
@@ -512,7 +539,9 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
 #undef KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
+#undef KOKKOS_IMPL_MATH_BINARY_PTR_FUNCTION
 #undef KOKKOS_IMPL_MATH_TERNARY_FUNCTION
+#undef KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION
 
 // non-standard math functions provided by CUDA/HIP/SYCL
 KOKKOS_INLINE_FUNCTION float rsqrt(float val) {

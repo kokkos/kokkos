@@ -1,5 +1,8 @@
 .common-setup:
   stage: test
+  variables:
+    OMP_PLACES: "threads"
+    OMP_PROC_BIND: "spread"
   before_script:
     - if [ ${CI_PIPELINE_SOURCE} == "schedule" ]; then
         export CDASH_MODEL="Nightly";
@@ -68,7 +71,6 @@ NVIDIA-GH200:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_LARGE_MEM_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_LIBDL=OFF"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_BENCHMARKS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON"
     - export CTEST_BUILD_NAME="NVIDIA-GH200"
     - ctest -VV
