@@ -512,12 +512,12 @@ DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 
 #define DEFINE_BINARY_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)          \
   struct MathBinaryPtrFunction_##FUNC {                            \
-    template <typename T>                                          \
-    static KOKKOS_FUNCTION auto eval(T x, T* y) {                  \
+    template <typename T, typename U>                              \
+    static KOKKOS_FUNCTION auto eval(T x, U* y) {                  \
       return Kokkos::FUNC(x, y);                                   \
     }                                                              \
-    template <typename T>                                          \
-    static auto eval_std(T x, T* y) {                              \
+    template <typename T, typename U>                              \
+    static auto eval_std(T x, U* y) {                              \
       return std::FUNC(x, y);                                      \
     }                                                              \
     static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; } \
@@ -795,7 +795,7 @@ struct TestMathBinaryPtrFunction : FloatingPointComparison {
                          << type_helper<Arg>::name();
   }
   KOKKOS_FUNCTION void operator()(int, int& e) const {
-    Arg iptr;
+    Ret iptr;
     Ret frac     = Func::eval(val_, &iptr);
     bool ar_frac = compare(frac, res_frac_, Func::ulp_factor());
     bool ar_int  = compare(iptr, res_int_, Func::ulp_factor());
@@ -1076,6 +1076,7 @@ TEST(TEST_CATEGORY, mathematical_functions_modf) {
 
   do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(42.765f);
   do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(-15.123);
+  do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(15);
 
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_binary_ptr_function<TEST_EXECSPACE, Func>(1234.5678l);
