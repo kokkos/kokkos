@@ -38,9 +38,7 @@ struct TestFunctorA {
       result = KE::is_sorted(member, myRowView);
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
-    }
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
-    else if (m_apiPick == 2) {
+    } else if (m_apiPick == 2) {
       using value_type = typename ViewType::value_type;
       result = KE::is_sorted(member, KE::cbegin(myRowView), KE::cend(myRowView),
                              CustomLessThanComparator<value_type>{});
@@ -53,7 +51,6 @@ struct TestFunctorA {
       Kokkos::single(Kokkos::PerTeam(member),
                      [=, *this]() { m_returnsView(myRowIndex) = result; });
     }
-#endif
 
     // store result of checking if all members have their local
     // values matching the one stored in m_distancesView

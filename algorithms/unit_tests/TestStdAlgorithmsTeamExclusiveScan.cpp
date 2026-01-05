@@ -72,8 +72,6 @@ struct TestFunctorA {
         break;
       }
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
-
       case 2: {
         auto it = KE::exclusive_scan(
             member, KE::cbegin(rowViewSrc), KE::cend(rowViewSrc),
@@ -94,7 +92,6 @@ struct TestFunctorA {
 
         break;
       }
-#endif
     }
 
     // store result of checking if all members have their local
