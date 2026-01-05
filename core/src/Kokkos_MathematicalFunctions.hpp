@@ -497,15 +497,18 @@ KOKKOS_IMPL_MATH_UNARY_FUNCTION(ceil)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(floor)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(trunc)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(round)
-// lround
-// llround
-// FIXME_SYCL not available as of current SYCL 2020 specification (revision 4)
-#ifndef KOKKOS_ENABLE_SYCL  // FIXME_SYCL
+// FIXME_SYCL not available as of current SYCL 2020 specification (revision 11)
+#ifndef KOKKOS_ENABLE_SYCL
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(lround)
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(llround)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(nearbyint)
 #endif
-// rint
-// lrint
-// llrint
+KOKKOS_IMPL_MATH_UNARY_FUNCTION(rint)
+// FIXME_SYCL not available as of current SYCL 2020 specification (revision 11)
+#ifndef KOKKOS_ENABLE_SYCL
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(lrint)
+KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(llrint)
+#endif
 // Floating point manipulation functions
 // frexp
 // ldexp
