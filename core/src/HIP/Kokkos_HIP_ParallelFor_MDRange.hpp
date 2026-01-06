@@ -26,10 +26,15 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   using index_type       = typename Policy::index_type;
   using LaunchBounds     = typename Policy::launch_bounds;
   using MaxGridSize      = Kokkos::Array<index_type, 3>;
+  using array_type       = typename Policy::point_type;
 
   const FunctorType m_functor;
   const Policy m_policy;
   const MaxGridSize m_max_grid_size;
+
+  array_type m_lower;
+  array_type m_upper;
+  array_type m_max_threads;
 
  public:
   ParallelFor()                              = delete;
@@ -37,9 +42,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   ParallelFor& operator=(ParallelFor const&) = delete;
 
   inline __device__ void operator()() const {
-    Kokkos::Impl::DeviceIterateTile<Policy::rank, Policy, FunctorType,
-                                    MaxGridSize, typename Policy::work_tag>(
-        m_policy, m_functor, m_max_grid_size)
+    Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
+                                FunctorType, Policy::inner_direction,
+                                typename Policy::work_tag>(
+        m_lower, m_upper, m_max_threads, m_functor)
         .exec_range();
   }
 
@@ -47,129 +53,97 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
     using ClosureType = ParallelFor<FunctorType, Policy, HIP>;
     if (m_policy.m_num_tiles == 0) return;
 
-    if (Policy::rank == 2) {
-      const array_index_type block_0 = m_policy.m_tile[0];
-      const array_index_type block_1 = m_policy.m_tile[1];
+    dim3 grid(1, 1, 1);
+    dim3 block(1, 1, 1);
 
-      const array_index_type grid_0 =
-          (m_policy.m_upper[0] - m_policy.m_lower[0] + block_0 - 1) / block_0;
-      const array_index_type grid_1 =
-          (m_policy.m_upper[1] - m_policy.m_lower[1] + block_1 - 1) / block_1;
-
-      dim3 grid(1, 1, 1);
-      dim3 block(1, 1, 1);
+    if constexpr (Policy::rank == 2) {
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        // Iterate::Left, map id0->x, id1->y
-        block = dim3(block_0, block_1, 1);
-        grid  = dim3(std::min<array_index_type>(grid_0, m_max_grid_size[0]),
-                     std::min<array_index_type>(grid_1, m_max_grid_size[1]), 1);
+        block.x = m_policy.m_tile[0];
+        block.y = m_policy.m_tile[1];
+        grid.x  = std::min<array_index_type>(m_policy.m_tile_end[0],
+                                            m_max_grid_size[0]);
+        grid.y  = std::min<array_index_type>(m_policy.m_tile_end[1],
+                                            m_max_grid_size[1]);
       } else {
-        // Iterate::Right, map id1->x, id0->y
-        block = dim3(block_1, block_0, 1);
-        grid  = dim3(std::min<array_index_type>(grid_1, m_max_grid_size[0]),
-                     std::min<array_index_type>(grid_0, m_max_grid_size[1]), 1);
+        block.x = m_policy.m_tile[1];
+        block.y = m_policy.m_tile[0];
+        grid.x  = std::min<array_index_type>(m_policy.m_tile_end[1],
+                                            m_max_grid_size[0]);
+        grid.y  = std::min<array_index_type>(m_policy.m_tile_end[0],
+                                            m_max_grid_size[1]);
       }
+    } else if constexpr (Policy::rank >= 3) {
+      array_index_type grid_0 = 1;
+      array_index_type grid_1 = 1;
+      array_index_type grid_2 = 1;
 
-      hip_parallel_launch<ClosureType, LaunchBounds>(
-          *this, grid, block, 0,
-          m_policy.space().impl_internal_space_instance(), false);
-    } else if (Policy::rank == 3) {
-      const array_index_type block_0 = m_policy.m_tile[0];
-      const array_index_type block_1 = m_policy.m_tile[1];
-      const array_index_type block_2 = m_policy.m_tile[2];
-
-      const array_index_type grid_0 =
-          (m_policy.m_upper[0] - m_policy.m_lower[0] + block_0 - 1) / block_0;
-      const array_index_type grid_1 =
-          (m_policy.m_upper[1] - m_policy.m_lower[1] + block_1 - 1) / block_1;
-      const array_index_type grid_2 =
-          (m_policy.m_upper[2] - m_policy.m_lower[2] + block_2 - 1) / block_2;
-      dim3 grid(1, 1, 1);
-      dim3 block(1, 1, 1);
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        // Iterate::Left, map id0->x, id1->y, id2->z
-        block = dim3(block_0, block_1, block_2);
-        grid  = dim3(std::min<array_index_type>(grid_0, m_max_grid_size[0]),
-                     std::min<array_index_type>(grid_1, m_max_grid_size[1]),
-                     std::min<array_index_type>(grid_2, m_max_grid_size[2]));
+        if constexpr (Policy::rank == 3) {
+          block.x = m_policy.m_tile[0];
+          block.y = m_policy.m_tile[1];
+          block.z = m_policy.m_tile[2];
+          grid_0  = m_policy.m_tile_end[0];
+          grid_1  = m_policy.m_tile_end[1];
+          grid_2  = m_policy.m_tile_end[2];
+        } else if constexpr (Policy::rank >= 4) {
+          block.x = m_policy.m_tile[0] * m_policy.m_tile[1];
+          block.y = m_policy.m_tile[2];
+          block.z = m_policy.m_tile[3];
+          grid_0  = m_policy.m_tile_end[0] * m_policy.m_tile_end[1];
+          grid_1  = m_policy.m_tile_end[2];
+          grid_2  = m_policy.m_tile_end[3];
+        }
+        if constexpr (Policy::rank >= 5) {
+          block.y = m_policy.m_tile[2] * m_policy.m_tile[3];
+          block.z = m_policy.m_tile[4];
+          grid_1  = m_policy.m_tile_end[2] * m_policy.m_tile_end[3];
+          grid_2  = m_policy.m_tile_end[4];
+        }
+        if constexpr (Policy::rank >= 6) {
+          block.z = m_policy.m_tile[4] * m_policy.m_tile[5];
+          grid_2  = m_policy.m_tile_end[4] * m_policy.m_tile_end[5];
+        }
       } else {
-        // Iterate::Right, map id2->x, id1->y, id0->z
-        block = dim3(block_2, block_1, block_0);
-        grid  = dim3(std::min<array_index_type>(grid_2, m_max_grid_size[0]),
-                     std::min<array_index_type>(grid_1, m_max_grid_size[1]),
-                     std::min<array_index_type>(grid_0, m_max_grid_size[2]));
+        if constexpr (Policy::rank == 3) {
+          block.x = m_policy.m_tile[2];
+          block.y = m_policy.m_tile[1];
+          block.z = m_policy.m_tile[0];
+          grid_0  = m_policy.m_tile_end[2];
+          grid_1  = m_policy.m_tile_end[1];
+          grid_2  = m_policy.m_tile_end[0];
+        } else if constexpr (Policy::rank >= 4) {
+          block.x = m_policy.m_tile[Policy::rank - 1] *
+                    m_policy.m_tile[Policy::rank - 2];
+          block.y = m_policy.m_tile[Policy::rank - 3];
+          block.z = m_policy.m_tile[Policy::rank - 4];
+          grid_0  = m_policy.m_tile_end[Policy::rank - 1] *
+                   m_policy.m_tile_end[Policy::rank - 2];
+          grid_1 = m_policy.m_tile_end[Policy::rank - 3];
+          grid_2 = m_policy.m_tile_end[Policy::rank - 4];
+        }
+        if constexpr (Policy::rank >= 5) {
+          block.y = m_policy.m_tile[Policy::rank - 3] *
+                    m_policy.m_tile[Policy::rank - 4];
+          block.z = m_policy.m_tile[Policy::rank - 5];
+          grid_1  = m_policy.m_tile_end[Policy::rank - 3] *
+                   m_policy.m_tile_end[Policy::rank - 4];
+          grid_2 = m_policy.m_tile_end[Policy::rank - 5];
+        }
+        if constexpr (Policy::rank >= 6) {
+          block.z = m_policy.m_tile[Policy::rank - 5] *
+                    m_policy.m_tile[Policy::rank - 6];
+          grid_2 = m_policy.m_tile_end[Policy::rank - 5] *
+                   m_policy.m_tile_end[Policy::rank - 6];
+        }
       }
-
-      hip_parallel_launch<ClosureType, LaunchBounds>(
-          *this, grid, block, 0,
-          m_policy.space().impl_internal_space_instance(), false);
-    } else if (Policy::rank == 4) {
-      // id0,id1 encoded within threadIdx.x; id2 to threadIdx.y; id3 to
-      // threadIdx.z
-      dim3 const block(m_policy.m_tile[0] * m_policy.m_tile[1],
-                       m_policy.m_tile[2], m_policy.m_tile[3]);
-
-      dim3 const grid(
-          std::min<array_index_type>(
-              m_policy.m_tile_end[0] * m_policy.m_tile_end[1],
-              m_max_grid_size[0]),
-          std::min<array_index_type>(
-              (m_policy.m_upper[2] - m_policy.m_lower[2] + block.y - 1) /
-                  block.y,
-              m_max_grid_size[1]),
-          std::min<array_index_type>(
-              (m_policy.m_upper[3] - m_policy.m_lower[3] + block.z - 1) /
-                  block.z,
-              m_max_grid_size[2]));
-
-      hip_parallel_launch<ClosureType, LaunchBounds>(
-          *this, grid, block, 0,
-          m_policy.space().impl_internal_space_instance(), false);
-    } else if (Policy::rank == 5) {
-      // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y; id4
-      // to threadIdx.z
-      dim3 const block(m_policy.m_tile[0] * m_policy.m_tile[1],
-                       m_policy.m_tile[2] * m_policy.m_tile[3],
-                       m_policy.m_tile[4]);
-
-      dim3 const grid(
-          std::min<array_index_type>(
-              m_policy.m_tile_end[0] * m_policy.m_tile_end[1],
-              m_max_grid_size[0]),
-          std::min<array_index_type>(
-              m_policy.m_tile_end[2] * m_policy.m_tile_end[3],
-              m_max_grid_size[1]),
-          std::min<array_index_type>(
-              (m_policy.m_upper[4] - m_policy.m_lower[4] + block.z - 1) /
-                  block.z,
-              m_max_grid_size[2]));
-
-      hip_parallel_launch<ClosureType, LaunchBounds>(
-          *this, grid, block, 0,
-          m_policy.space().impl_internal_space_instance(), false);
-    } else if (Policy::rank == 6) {
-      // id0,id1 encoded within threadIdx.x; id2,id3 to threadIdx.y;
-      // id4,id5 to threadIdx.z
-      dim3 const block(m_policy.m_tile[0] * m_policy.m_tile[1],
-                       m_policy.m_tile[2] * m_policy.m_tile[3],
-                       m_policy.m_tile[4] * m_policy.m_tile[5]);
-
-      dim3 const grid(std::min<array_index_type>(
-                          m_policy.m_tile_end[0] * m_policy.m_tile_end[1],
-                          m_max_grid_size[0]),
-                      std::min<array_index_type>(
-                          m_policy.m_tile_end[2] * m_policy.m_tile_end[3],
-                          m_max_grid_size[1]),
-                      std::min<array_index_type>(
-                          m_policy.m_tile_end[4] * m_policy.m_tile_end[5],
-                          m_max_grid_size[2]));
-
-      hip_parallel_launch<ClosureType, LaunchBounds>(
-          *this, grid, block, 0,
-          m_policy.space().impl_internal_space_instance(), false);
-    } else {
-      Kokkos::abort("Kokkos::MDRange Error: Exceeded rank bounds with HIP\n");
+      grid = dim3(std::min<array_index_type>(grid_0, m_max_grid_size[0]),
+                  std::min<array_index_type>(grid_1, m_max_grid_size[1]),
+                  std::min<array_index_type>(grid_2, m_max_grid_size[2]));
     }
+
+    hip_parallel_launch<ClosureType, LaunchBounds>(
+        *this, grid, block, 0, m_policy.space().impl_internal_space_instance(),
+        false);
 
   }  // end execute
 
@@ -183,7 +157,22 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
                 m_policy.space().hip_device_prop().maxGridSize[1]),
             static_cast<index_type>(
                 m_policy.space().hip_device_prop().maxGridSize[2]),
-        }) {}
+        }) {
+    // Initialize begins and ends based on layout
+    // Swap the fastest indexes to x dimension
+    for (array_index_type i = 0; i < Policy::rank; ++i) {
+      if constexpr (Policy::inner_direction == Iterate::Left) {
+        m_lower[i]       = m_policy.m_lower[i];
+        m_upper[i]       = m_policy.m_upper[i];
+        m_max_threads[i] = m_policy.m_tile[i] * m_policy.m_tile_end[i];
+      } else {
+        m_lower[i]       = m_policy.m_lower[Policy::rank - 1 - i];
+        m_upper[i]       = m_policy.m_upper[Policy::rank - 1 - i];
+        m_max_threads[i] = m_policy.m_tile[Policy::rank - 1 - i] *
+                           m_policy.m_tile_end[Policy::rank - 1 - i];
+      }
+    }
+  }
 
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy&, const Functor&) {

@@ -25,146 +25,112 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using index_type       = typename Policy::index_type;
   using WorkTag          = typename Policy::work_tag;
   using MaxGridSize      = Kokkos::Array<index_type, 3>;
+  using array_type       = typename Policy::point_type;
 
   const FunctorType m_functor;
-  // MDRangePolicy is not trivially copyable. Hence, replicate the data we
-  // really need in DeviceIterateTile in a trivially copyable struct.
-  const struct BarePolicy {
-    using index_type = typename Policy::index_type;
-
-    BarePolicy(const Policy& policy)
-        : m_lower(policy.m_lower),
-          m_upper(policy.m_upper),
-          m_tile(policy.m_tile),
-          m_tile_end(policy.m_tile_end),
-          m_num_tiles(policy.m_num_tiles) {}
-
-    const typename Policy::point_type m_lower;
-    const typename Policy::point_type m_upper;
-    const typename Policy::tile_type m_tile;
-    const typename Policy::point_type m_tile_end;
-    const typename Policy::index_type m_num_tiles;
-    static constexpr Iterate inner_direction = Policy::inner_direction;
-  } m_policy;
+  const Policy m_policy;
   const MaxGridSize m_max_grid_size;
   const Kokkos::SYCL& m_space;
 
+  array_type m_lower;
+  array_type m_upper;
+  array_type m_max_threads;
+
   sycl::nd_range<3> compute_ranges() const {
+    static_assert(Policy::rank > 1 && Policy::rank < 7,
+                  "Kokkos::MDRange Error: Exceeded rank bounds with SYCL\n");
+
     const auto& m_tile     = m_policy.m_tile;
     const auto& m_tile_end = m_policy.m_tile_end;
 
+    sycl::range<3> local_sizes(1, 1, 1);
+    sycl::range<3> global_sizes(1, 1, 1);
+
     if constexpr (Policy::rank == 2) {
-      const array_index_type local_0 = m_tile[0];
-      const array_index_type local_1 = m_tile[1];
-
-      const array_index_type global_0 =
-          (m_policy.m_upper[0] - m_policy.m_lower[0] + local_0 - 1) / local_0;
-      const array_index_type global_1 =
-          (m_policy.m_upper[1] - m_policy.m_lower[1] + local_1 - 1) / local_1;
+      if constexpr (Policy::inner_direction == Iterate::Left) {
+        local_sizes[0] = m_tile[0];
+        local_sizes[1] = m_tile[1];
+        global_sizes[0] =
+            std::min<array_index_type>(m_tile_end[0], m_max_grid_size[0]);
+        global_sizes[1] =
+            std::min<array_index_type>(m_tile_end[1], m_max_grid_size[1]);
+      } else {
+        local_sizes[0] = m_tile[1];
+        local_sizes[1] = m_tile[0];
+        global_sizes[0] =
+            std::min<array_index_type>(m_tile_end[1], m_max_grid_size[0]);
+        global_sizes[1] =
+            std::min<array_index_type>(m_tile_end[0], m_max_grid_size[1]);
+      }
+    } else if constexpr (Policy::rank >= 3) {
+      array_index_type global_0 = 1;
+      array_index_type global_1 = 1;
+      array_index_type global_2 = 1;
 
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        // Iterate::Left, map id0->x, id1->y
-        sycl::range<3> local_sizes(local_0, local_1, 1);
-        sycl::range<3> global_sizes(
-            std::min<array_index_type>(global_0, m_max_grid_size[0]) * local_0,
-            std::min<array_index_type>(global_1, m_max_grid_size[1]) * local_1,
-            1);
-        return {global_sizes, local_sizes};
+        if constexpr (Policy::rank == 3) {
+          local_sizes[0] = m_tile[0];
+          local_sizes[1] = m_tile[1];
+          local_sizes[2] = m_tile[2];
+          global_0       = m_tile_end[0];
+          global_1       = m_tile_end[1];
+          global_2       = m_tile_end[2];
+        } else if constexpr (Policy::rank >= 4) {
+          local_sizes[0] = m_tile[0] * m_tile[1];
+          local_sizes[1] = m_tile[2];
+          local_sizes[2] = m_tile[3];
+          global_0       = m_tile_end[0] * m_tile_end[1];
+          global_1       = m_tile_end[2];
+          global_2       = m_tile_end[3];
+        }
+        if constexpr (Policy::rank >= 5) {
+          local_sizes[1] = m_tile[2] * m_tile[3];
+          local_sizes[2] = m_tile[4];
+          global_1       = m_tile_end[2] * m_tile_end[3];
+          global_2       = m_tile_end[4];
+        }
+        if constexpr (Policy::rank >= 6) {
+          local_sizes[2] = m_tile[4] * m_tile[5];
+          global_2       = m_tile_end[4] * m_tile_end[5];
+        }
       } else {
-        // Iterate::Right, map id1->x, id0->y
-        sycl::range<3> local_sizes(local_1, local_0, 1);
-        sycl::range<3> global_sizes(
-            std::min<array_index_type>(global_1, m_max_grid_size[0]) * local_1,
-            std::min<array_index_type>(global_0, m_max_grid_size[1]) * local_0,
-            1);
-        return {global_sizes, local_sizes};
+        if constexpr (Policy::rank == 3) {
+          local_sizes[0] = m_tile[2];
+          local_sizes[1] = m_tile[1];
+          local_sizes[2] = m_tile[0];
+          global_0       = m_tile_end[2];
+          global_1       = m_tile_end[1];
+          global_2       = m_tile_end[0];
+        } else if constexpr (Policy::rank >= 4) {
+          local_sizes[0] = m_tile[Policy::rank - 1] * m_tile[Policy::rank - 2];
+          local_sizes[1] = m_tile[Policy::rank - 3];
+          local_sizes[2] = m_tile[Policy::rank - 4];
+          global_0 =
+              m_tile_end[Policy::rank - 1] * m_tile_end[Policy::rank - 2];
+          global_1 = m_tile_end[Policy::rank - 3];
+          global_2 = m_tile_end[Policy::rank - 4];
+        }
+        if constexpr (Policy::rank >= 5) {
+          local_sizes[1] = m_tile[Policy::rank - 3] * m_tile[Policy::rank - 4];
+          local_sizes[2] = m_tile[Policy::rank - 5];
+          global_1 =
+              m_tile_end[Policy::rank - 3] * m_tile_end[Policy::rank - 4];
+          global_2 = m_tile_end[Policy::rank - 5];
+        }
+        if constexpr (Policy::rank >= 6) {
+          local_sizes[2] = m_tile[Policy::rank - 5] * m_tile[Policy::rank - 6];
+          global_2 =
+              m_tile_end[Policy::rank - 5] * m_tile_end[Policy::rank - 6];
+        }
       }
+      global_sizes[0] =
+          std::min<array_index_type>(global_0, m_max_grid_size[0]);
+      global_sizes[1] =
+          std::min<array_index_type>(global_1, m_max_grid_size[1]);
+      global_sizes[2] =
+          std::min<array_index_type>(global_2, m_max_grid_size[2]);
     }
-    if constexpr (Policy::rank == 3) {
-      const array_index_type local_0 = m_tile[0];
-      const array_index_type local_1 = m_tile[1];
-      const array_index_type local_2 = m_tile[2];
-
-      const array_index_type global_0 =
-          (m_policy.m_upper[0] - m_policy.m_lower[0] + local_0 - 1) / local_0;
-      const array_index_type global_1 =
-          (m_policy.m_upper[1] - m_policy.m_lower[1] + local_1 - 1) / local_1;
-      const array_index_type global_2 =
-          (m_policy.m_upper[2] - m_policy.m_lower[2] + local_2 - 1) / local_2;
-
-      if constexpr (Policy::inner_direction == Iterate::Left) {
-        // Iterate::Left, map id0->x, id1->y, id2->z
-        sycl::range<3> local_sizes(local_0, local_1, local_2);
-        sycl::range<3> global_sizes(
-            std::min<array_index_type>(global_0, m_max_grid_size[0]) * local_0,
-            std::min<array_index_type>(global_1, m_max_grid_size[1]) * local_1,
-            std::min<array_index_type>(global_2, m_max_grid_size[2]) * local_2);
-        return {global_sizes, local_sizes};
-      } else {
-        // Iterate::Right, map id2->z, id1->y, id0->x
-        sycl::range<3> local_sizes(local_2, local_1, local_0);
-        sycl::range<3> global_sizes(
-            std::min<array_index_type>(global_2, m_max_grid_size[0]) * local_2,
-            std::min<array_index_type>(global_1, m_max_grid_size[1]) * local_1,
-            std::min<array_index_type>(global_0, m_max_grid_size[2]) * local_0);
-        return {global_sizes, local_sizes};
-      }
-    }
-    if constexpr (Policy::rank == 4) {
-      // id0,id1 encoded within first index; id2 to second index; id3 to third
-      // index
-      sycl::range<3> local_sizes(m_tile[0] * m_tile[1], m_tile[2], m_tile[3]);
-
-      sycl::range<3> global_sizes(
-          std::min<array_index_type>(m_tile_end[0] * m_tile_end[1],
-                                     m_max_grid_size[0]) *
-              m_tile[0] * m_tile[1],
-          std::min<array_index_type>(m_tile_end[2], m_max_grid_size[1]) *
-              m_tile[2],
-          std::min<array_index_type>(m_tile_end[3], m_max_grid_size[2]) *
-              m_tile[3]);
-
-      return {global_sizes, local_sizes};
-    }
-    if constexpr (Policy::rank == 5) {
-      // id0,id1 encoded within first index; id2,id3 to second index; id4 to
-      // third index
-      sycl::range<3> local_sizes(m_tile[0] * m_tile[1], m_tile[2] * m_tile[3],
-                                 m_tile[4]);
-
-      sycl::range<3> global_sizes(
-          std::min<array_index_type>(m_tile_end[0] * m_tile_end[1],
-                                     m_max_grid_size[0]) *
-              m_tile[0] * m_tile[1],
-          std::min<array_index_type>(m_tile_end[2] * m_tile_end[3],
-                                     m_max_grid_size[1]) *
-              m_tile[2] * m_tile[3],
-          std::min<array_index_type>(m_tile_end[4], m_max_grid_size[2]) *
-              m_tile[4]);
-
-      return {global_sizes, local_sizes};
-    }
-    if constexpr (Policy::rank == 6) {
-      // id0,id1 encoded within first index; id2,id3 to second index; id4,id5 to
-      // third index
-      sycl::range<3> local_sizes(m_tile[0] * m_tile[1], m_tile[2] * m_tile[3],
-                                 m_tile[4] * m_tile[5]);
-
-      sycl::range<3> global_sizes(
-          std::min<array_index_type>(m_tile_end[0] * m_tile_end[1],
-                                     m_max_grid_size[0]) *
-              m_tile[0] * m_tile[1],
-          std::min<array_index_type>(m_tile_end[2] * m_tile_end[3],
-                                     m_max_grid_size[1]) *
-              m_tile[2] * m_tile[3],
-          std::min<array_index_type>(m_tile_end[4] * m_tile_end[5],
-                                     m_max_grid_size[2]) *
-              m_tile[4] * m_tile[5]);
-
-      return {global_sizes, local_sizes};
-    }
-    static_assert(Policy::rank > 1 && Policy::rank < 7,
-                  "Kokkos::MDRange Error: Exceeded rank bounds with SYCL\n");
+    return {global_sizes, local_sizes};
   }
 
   template <typename FunctorWrapper>
@@ -175,8 +141,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     if (m_policy.m_num_tiles == 0) return {};
 
-    const BarePolicy bare_policy(m_policy);
-    const auto& max_grid_size = m_max_grid_size;
+    const auto lower_bound   = m_lower;
+    const auto upper_bound   = m_upper;
+    const auto m_max_threads = m_max_threads;
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
@@ -193,8 +160,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      cgh.parallel_for(sycl_swapped_range, [functor_wrapper, bare_policy,
-                                            max_grid_size](
+      cgh.parallel_for(sycl_swapped_range, [lower_bound, upper_bound,
+                                            max_threads](
                                                sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
         const index_type local_x    = item.get_local_id(2);
@@ -210,9 +177,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         const index_type n_global_y = item.get_group_range(1);
         const index_type n_global_z = item.get_group_range(0);
 
-        Kokkos::Impl::DeviceIterateTile<Policy::rank, BarePolicy, FunctorType,
-                                        MaxGridSize, typename Policy::work_tag>(
-            bare_policy, functor_wrapper.get_functor(), max_grid_size,
+        Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
+                                    FunctorType, Policy::inner_direction,
+                                    typename Policy::work_tag>(
+            lower_bound, upper_bound, max_threads, m_functor,
             {n_global_x, n_global_y, n_global_z},
             {n_local_x, n_local_y, n_local_z}, {global_x, global_y, global_z},
             {local_x, local_y, local_z})
@@ -287,7 +255,22 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       : m_functor(arg_functor),
         m_policy(arg_policy),
         m_max_grid_size(get_max_grid_size(arg_policy)),
-        m_space(arg_policy.space()) {}
+        m_space(arg_policy.space()) {
+    // Initialize begins and ends based on layout
+    // Swap the fastest indexes to x dimension
+    for (array_index_type i = 0; i < Policy::rank; ++i) {
+      if constexpr (Policy::inner_direction == Iterate::Left) {
+        m_lower[i]       = m_policy.m_lower[i];
+        m_upper[i]       = m_policy.m_upper[i];
+        m_max_threads[i] = m_policy.m_tile[i] * m_policy.m_tile_end[i];
+      } else {
+        m_lower[i]       = m_policy.m_lower[Policy::rank - 1 - i];
+        m_upper[i]       = m_policy.m_upper[Policy::rank - 1 - i];
+        m_max_threads[i] = m_policy.m_tile[Policy::rank - 1 - i] *
+                           m_policy.m_tile_end[Policy::rank - 1 - i];
+      }
+    }
+  }
 };
 
 #endif  // KOKKOS_SYCL_PARALLEL_FOR_MDRANGE_HPP_
