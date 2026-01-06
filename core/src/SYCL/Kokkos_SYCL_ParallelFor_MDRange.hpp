@@ -141,9 +141,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     if (m_policy.m_num_tiles == 0) return {};
 
-    const auto lower_bound   = m_lower;
-    const auto upper_bound   = m_upper;
-    const auto m_max_threads = m_max_threads;
+    const auto lower_bound = m_lower;
+    const auto upper_bound = m_upper;
+    const auto max_threads = m_max_threads;
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
@@ -161,7 +161,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       (void)memcpy_event;
 #endif
       cgh.parallel_for(sycl_swapped_range, [lower_bound, upper_bound,
-                                            max_threads](
+                                            max_threads, functor_wrapper](
                                                sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
         const index_type local_x    = item.get_local_id(2);
@@ -180,8 +180,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
                                     FunctorType, Policy::inner_direction,
                                     typename Policy::work_tag>(
-            lower_bound, upper_bound, max_threads, m_functor,
-            {n_global_x, n_global_y, n_global_z},
+            lower_bound, upper_bound, max_threads,
+            functor_wrapper.get_functor(), {n_global_x, n_global_y, n_global_z},
             {n_local_x, n_local_y, n_local_z}, {global_x, global_y, global_z},
             {local_x, local_y, local_z})
             .exec_range();

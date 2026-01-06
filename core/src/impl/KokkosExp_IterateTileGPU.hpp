@@ -126,7 +126,7 @@ struct DeviceIterate {
  private:
   // Unpack happen on consecutive ranks
   template <unsigned R>
-  static consteval __device__ bool is_packed_index() {
+  KOKKOS_INLINE_FUNCTION static consteval bool is_packed_index() {
     return ((R == 0 || R == 1) && Rank > 3) ||
            ((R == 2 || R == 3) && Rank > 4) || ((R == 4 || R == 5) && Rank > 5);
   }
@@ -141,8 +141,6 @@ struct DeviceIterate {
         return blockIdx.y * blockDim.y + threadIdx.y;
       } else if constexpr (R == 4 || R == 5) {
         return blockIdx.z * blockDim.z + threadIdx.z;
-      } else {
-        return m_lower[R];
       }
     } else {
       // No packed index
@@ -158,15 +156,12 @@ struct DeviceIterate {
         // Mix of packed and unpacked for Rank 4 and 5
         if constexpr (R == 2) {
           return m_lower[R] + blockIdx.y * blockDim.y + threadIdx.y;
-        } else if constexpr (R == 3) {
+        } else if constexpr (R == 3 || R == 4) {
           return m_lower[R] + blockIdx.z * blockDim.z + threadIdx.z;
-        } else if constexpr (R == 4) {
-          return m_lower[R] + blockIdx.z * blockDim.z + threadIdx.z;
-        } else {
-          return m_lower[R];
         }
       }
     }
+    return m_lower[R];
   }
 
   template <unsigned R>
@@ -208,9 +203,7 @@ struct DeviceIterate {
         // Mix of packed and unpacked for Rank 4 and 5
         if constexpr (R == 2) {
           return static_cast<index_type>(blockDim.y * gridDim.y);
-        } else if constexpr (R == 3) {
-          return static_cast<index_type>(blockDim.z * gridDim.z);
-        } else if constexpr (R == 4) {
+        } else if constexpr (R == 3 || R == 4) {
           return static_cast<index_type>(blockDim.z * gridDim.z);
         }
       }
