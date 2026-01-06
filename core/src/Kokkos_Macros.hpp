@@ -531,10 +531,7 @@ static_assert(
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
-// Guard intel compiler version 19 and older
-// intel error #2651: attribute does not apply to any entity
-// using <deprecated_type> KOKKOS_DEPRECATED = ...
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__)
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
