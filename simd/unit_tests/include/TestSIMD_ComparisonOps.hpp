@@ -81,8 +81,7 @@ inline void host_check_all_comparison_ops(const DataType (&first_args)[n],
 
 template <typename Abi, typename DataType>
 inline void host_check_comparison_ops() {
-  if constexpr (is_simd_avail_v<DataType, Abi> &&
-                std::is_integral_v<DataType>) {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
     constexpr size_t alignment =
         Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
         sizeof(DataType);
@@ -196,8 +195,7 @@ KOKKOS_INLINE_FUNCTION void device_check_all_comparison_ops(
 
 template <typename Abi, typename DataType>
 KOKKOS_INLINE_FUNCTION void device_check_comparison_ops() {
-  if constexpr (is_simd_avail_v<DataType, Abi> &&
-                std::is_integral_v<DataType>) {
+  if constexpr (is_simd_avail_v<DataType, Abi>) {
     constexpr size_t alignment =
         Kokkos::Experimental::basic_simd<DataType, Abi>::size() *
         sizeof(DataType);
