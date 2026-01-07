@@ -51,16 +51,20 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         local_sizes[0] = m_tile[0];
         local_sizes[1] = m_tile[1];
         global_sizes[0] =
-            std::min<array_index_type>(m_tile_end[0], m_max_grid_size[0]);
+            std::min<array_index_type>(m_tile_end[0], m_max_grid_size[0]) *
+            m_tile[0];
         global_sizes[1] =
-            std::min<array_index_type>(m_tile_end[1], m_max_grid_size[1]);
+            std::min<array_index_type>(m_tile_end[1], m_max_grid_size[1]) *
+            m_tile[1];
       } else {
         local_sizes[0] = m_tile[1];
         local_sizes[1] = m_tile[0];
         global_sizes[0] =
-            std::min<array_index_type>(m_tile_end[1], m_max_grid_size[0]);
+            std::min<array_index_type>(m_tile_end[1], m_max_grid_size[0]) *
+            m_tile[1];
         global_sizes[1] =
-            std::min<array_index_type>(m_tile_end[0], m_max_grid_size[1]);
+            std::min<array_index_type>(m_tile_end[0], m_max_grid_size[1]) *
+            m_tile[0];
       }
     } else if constexpr (Policy::rank >= 3) {
       array_index_type global_0 = 1;
@@ -124,11 +128,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         }
       }
       global_sizes[0] =
-          std::min<array_index_type>(global_0, m_max_grid_size[0]);
+          std::min<array_index_type>(global_0, m_max_grid_size[0]) *
+          local_sizes[0];
       global_sizes[1] =
-          std::min<array_index_type>(global_1, m_max_grid_size[1]);
+          std::min<array_index_type>(global_1, m_max_grid_size[1]) *
+          local_sizes[1];
       global_sizes[2] =
-          std::min<array_index_type>(global_2, m_max_grid_size[2]);
+          std::min<array_index_type>(global_2, m_max_grid_size[2]) *
+          local_sizes[2];
     }
     return {global_sizes, local_sizes};
   }
