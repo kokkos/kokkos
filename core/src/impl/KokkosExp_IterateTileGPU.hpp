@@ -183,28 +183,36 @@ struct DeviceIterate {
     static_assert(R < 6, "R must be smaller than 6");
     if constexpr (is_packed_index<R>()) {
       if constexpr (R == 0 || R == 1) {
-        return static_cast<index_type>(blockDim.x * gridDim.x);
+        return static_cast<index_type>(blockDim.x) *
+               static_cast<index_type>(gridDim.x);
       } else if constexpr (R == 2 || R == 3) {
-        return static_cast<index_type>(blockDim.y * gridDim.y);
+        return static_cast<index_type>(blockDim.y) *
+               static_cast<index_type>(gridDim.y);
       } else if constexpr (R == 4 || R == 5) {
-        return static_cast<index_type>(blockDim.z * gridDim.z);
+        return static_cast<index_type>(blockDim.z) *
+               static_cast<index_type>(gridDim.z);
       }
     } else {
       // No packed index for all ranks
       if constexpr (Rank < 4) {
         if constexpr (R == 0) {
-          return static_cast<index_type>(blockDim.x * gridDim.x);
+          return static_cast<index_type>(blockDim.x) *
+                 static_cast<index_type>(gridDim.x);
         } else if constexpr (R == 1) {
-          return static_cast<index_type>(blockDim.y * gridDim.y);
+          return static_cast<index_type>(blockDim.y) *
+                 static_cast<index_type>(gridDim.y);
         } else if constexpr (R == 2) {
-          return static_cast<index_type>(blockDim.z * gridDim.z);
+          return static_cast<index_type>(blockDim.z) *
+                 static_cast<index_type>(gridDim.z);
         }
       } else {
         // Mix of packed and unpacked for Rank 4 and 5
         if constexpr (R == 2) {
-          return static_cast<index_type>(blockDim.y * gridDim.y);
+          return static_cast<index_type>(blockDim.y) *
+                 static_cast<index_type>(gridDim.y);
         } else if constexpr (R == 3 || R == 4) {
-          return static_cast<index_type>(blockDim.z * gridDim.z);
+          return static_cast<index_type>(blockDim.z) *
+                 static_cast<index_type>(gridDim.z);
         }
       }
     }
