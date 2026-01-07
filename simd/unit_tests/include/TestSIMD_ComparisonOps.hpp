@@ -40,7 +40,8 @@ void host_check_comparison_op_one_loader(
           binary_op.on_host(T(first_arg[lane]), T(second_arg[lane]));
     }
 
-    mask_type const expected_result([&](auto i) { return expected_val[i]; });
+    mask_type const expected_result(
+        [&](auto idx) { return expected_val[idx]; });
     mask_type const computed_result = binary_op.on_host(first_arg, second_arg);
     host_check_mask_equality(expected_result, computed_result, nlanes);
   }
@@ -153,7 +154,8 @@ KOKKOS_INLINE_FUNCTION void device_check_comparison_op_one_loader(
           binary_op.on_device(T(first_arg[lane]), T(second_arg[lane]));
     }
 
-    mask_type const expected_result([&](auto i) { return expected_val[i]; });
+    mask_type const expected_result(
+        [&](auto idx) { return expected_val[idx]; });
     mask_type const computed_result =
         binary_op.on_device(first_arg, second_arg);
     device_check_mask_equality(expected_result, computed_result, nlanes);
