@@ -71,18 +71,6 @@ EPYC-OMP-clang:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-unknown-cuda-version'"
     - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="AMD-EPYC-OpenMP-clang/20.1.3"
 
-A100-OpenMPTarget-clang:
-  stage: test
-  script:
-    - echo "Kokkos-OpenMPTarget tests by $GITLAB_USER_LOGIN using clang."
-    - module load llvm/20.1.3
-    - export BUILD_DIR=${SOURCE_DIR}/build_ompt_clang
-    - export ENV_CMAKE_OPTIONS="${ENV_KOKKOS_OPTIONS}"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=clang++"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ARCH_AMPERE80=ON"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMPTARGET=ON"
-    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="NVIDIA-A100-OpenMPTarget-clang/20.1.3"
-
 clear-ci-builds:
   stage: clean_up
   script:

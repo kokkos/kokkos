@@ -190,7 +190,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
         break;
       }
 
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
       case 2:
       case 3: {
         auto it = std::exclusive_scan(KE::cbegin(rowFrom), KE::cend(rowFrom),
@@ -200,7 +199,6 @@ void test_A(std::size_t numTeams, std::size_t numCols, int apiId) {
 
         break;
       }
-#endif
       default: Kokkos::abort("unreachable");
     }
   }
@@ -218,11 +216,7 @@ template <class LayoutTag, class ValueType, class InPlaceOrVoid = void>
 void run_all_scenarios() {
   for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 8153}) {
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
       for (int apiId : {0, 1, 2, 3}) {
-#else
-      for (int apiId : {0, 1}) {
-#endif
         test_A<LayoutTag, ValueType, InPlaceOrVoid>(numTeams, numCols, apiId);
       }
     }

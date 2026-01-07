@@ -163,11 +163,7 @@ template <class LayoutTag, class ValueType>
 void run_all_scenarios(bool makeDataSortedOnPurpose) {
   for (int numTeams : teamSizesToTest) {
     for (const auto& numCols : {0, 1, 2, 13, 101, 1444, 5153}) {
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
       for (int apiId : {0, 1, 2, 3}) {
-#else
-      for (int apiId : {0, 1}) {
-#endif
         test_A<LayoutTag, ValueType>(numTeams, numCols, apiId,
                                      makeDataSortedOnPurpose);
       }
