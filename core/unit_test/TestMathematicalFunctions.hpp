@@ -1267,15 +1267,15 @@ TEST(TEST_CATEGORY, mathematical_functions_non_standard) {
   TEST_MATH_FUNCTION(rcp)({-13, -9, 1, 7, 11});
   TEST_MATH_FUNCTION(rcp)({-13l, -9l, 1l, 7l, 11l});
   TEST_MATH_FUNCTION(rcp)({-13ll, -9ll, 1ll, 7ll, 11ll});
-  TEST_MATH_FUNCTION(rcp)({-13u, -9u, 1u, 7u, 11u});
-  TEST_MATH_FUNCTION(rcp)({-13ul, -9ul, 1ul, 7ul, 11ul});
-  TEST_MATH_FUNCTION(rcp)({-13ull, -9ull, 1ull, 7ull, 11ull});
+  TEST_MATH_FUNCTION(rcp)({2u, 3u, 9u, 13u, 17u});
+  TEST_MATH_FUNCTION(rcp)({2ul, 3ul, 9ul, 13ul, 17ul});
+  TEST_MATH_FUNCTION(rcp)({2ull, 3ull, 9ull, 13ull, 17ull});
   TEST_HALF_MATH_FUNCTION(rcp, KE::half_t)({-13.f, -9.f, 1.f, 7.f, 11.f});
   TEST_HALF_MATH_FUNCTION(rcp, KE::bhalf_t)({-13.f, -9.f, 1.f, 7.f, 11.f});
-  TEST_MATH_FUNCTION(rcp)({-13.f, -9.f, 1.f, 7.f, 11.f});
+  TEST_MATH_FUNCTION(rcp)({-13.1f, -9.2f, 1.3f, 7.4f, 11.5f});
   TEST_MATH_FUNCTION(rcp)({-13.1, -9.2, 1.3, 7.4, 11.5});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
-  TEST_MATH_FUNCTION(rcp)({-13.l, -9.l, 1.l, 7.l, 11.l});
+  TEST_MATH_FUNCTION(rcp)({-13.1l, -9.2l, 1.3l, 7.4l, 11.5l});
 #endif
 }
 #endif  // KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
