@@ -140,6 +140,59 @@ namespace Kokkos {
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long long)      \
   KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long long)
 
+#define KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, MIXED_TYPE) \
+  namespace Impl {                                                               \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION double impl_##FUNC(HALF_TYPE x, MIXED_TYPE y, int* z) { \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y), z);      \
+  }                                                                              \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION double impl_##FUNC(MIXED_TYPE x, HALF_TYPE y, int* z) { \
+    return Kokkos::FUNC(static_cast<double>(x), static_cast<double>(y), z);      \
+  }                                                                              \
+  }  /* namespace Impl */                                                        \
+  KOKKOS_INLINE_FUNCTION double FUNC(HALF_TYPE x, MIXED_TYPE y, int* z) {        \
+    return Kokkos::Impl::impl_##FUNC(x, y, z);                                   \
+  }                                                                              \
+  KOKKOS_INLINE_FUNCTION double FUNC(MIXED_TYPE x, HALF_TYPE y, int* z) {        \
+    return Kokkos::Impl::impl_##FUNC(x, y, z);                                   \
+  }
+
+#define KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF(FUNC, HALF_TYPE)          \
+  namespace Impl {                                                               \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION HALF_TYPE impl_##FUNC(HALF_TYPE x, HALF_TYPE y, int* z) { \
+    return static_cast<HALF_TYPE>(                                               \
+        Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y), z));          \
+  }                                                                              \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION float impl_##FUNC(float x, HALF_TYPE y, int* z) {       \
+    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y), z);        \
+  }                                                                              \
+  template <bool fallback = true>                                                \
+  KOKKOS_INLINE_FUNCTION float impl_##FUNC(HALF_TYPE x, float y, int* z) {       \
+    return Kokkos::FUNC(static_cast<float>(x), static_cast<float>(y), z);        \
+  }                                                                              \
+  }  /* namespace Impl */                                                        \
+  KOKKOS_INLINE_FUNCTION HALF_TYPE FUNC(HALF_TYPE x, HALF_TYPE y, int* z) {      \
+    return Kokkos::Impl::impl_##FUNC(x, y, z);                                   \
+  }                                                                              \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, HALF_TYPE y, int* z) {              \
+    return Kokkos::Impl::impl_##FUNC(x, y, z);                                   \
+  }                                                                              \
+  KOKKOS_INLINE_FUNCTION float FUNC(HALF_TYPE x, float y, int* z) {              \
+    return Kokkos::Impl::impl_##FUNC(x, y, z);                                   \
+  }                                                                              \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, double)         \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, short)          \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned short) \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, int)            \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned int)   \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long)           \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long)  \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, long long)      \
+  KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF_MIXED(FUNC, HALF_TYPE, unsigned long long)
+
 
 #define KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF(FUNC, HALF_TYPE) \
   namespace Impl {                                             \
@@ -157,7 +210,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, ab
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE, fabs)
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, fmod)
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, remainder)
-// remquo
+KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF, remquo)
 // fma
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, fmax)
 KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF, fmin)
@@ -471,6 +524,7 @@ KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(KOKKOS_IMPL_MATH_COMPLEX_IMAG_HALF, imag)
 #undef KOKKOS_IMPL_MATH_COMPLEX_IMAG_HALF
 #undef KOKKOS_IMPL_MATH_UNARY_PREDICATE_HALF
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION_HALF
+#undef KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION_HALF
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE
 #undef KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE_RETURN_INT
 #undef KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER
