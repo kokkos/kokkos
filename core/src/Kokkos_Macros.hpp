@@ -554,33 +554,48 @@ static_assert(
 
 // clang-format off
 #if defined(__NVCOMPILER)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("diag_suppress 1216") \
     _Pragma("diag_suppress deprecated_entity_with_custom_message")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("diag_default 1216") \
-    _Pragma("diag_suppress deprecated_entity_with_custom_message")
+    _Pragma("diag_default deprecated_entity_with_custom_message")
 #elif defined(__EDG__)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("warning push")                              \
     _Pragma("warning disable 1478")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("warning pop")
 #elif defined(__GNUC__) || defined(__clang__)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("GCC diagnostic push")                       \
     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("GCC diagnostic pop")
 #elif defined(_MSC_VER)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("warning(push)")                             \
     _Pragma("warning(disable: 4996)")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("warning(pop)")
 #else
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_()
+#endif
+
+#if defined(__NVCC__) && defined(__NVCC_DIAG_PRAGMA_SUPPORT__)
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
+    _Pragma("nv_diagnostic push") \
+    _Pragma("nv_diag_suppress 1215,1444")
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    _Pragma("nv_diagnostic pop") \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_()
+#else
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_()
 #endif
 
 #if defined(__NVCOMPILER)
