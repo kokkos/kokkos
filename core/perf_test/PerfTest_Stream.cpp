@@ -102,7 +102,7 @@ int validate_array(V& a_dev, typename V::const_value_type expected) {
 
 template <unsigned MemTraits>
 static void StreamSet(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 7);
+  const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 1;
 
   StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
@@ -121,7 +121,7 @@ static void StreamSet(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamCopy(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 7);
+  const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
   StreamView<MemTraits> a("a", N8), b("b", N8);
@@ -141,7 +141,7 @@ static void StreamCopy(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamScale(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 7);
+  const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 2;
 
   StreamView<MemTraits> a("a", N8), b("b", N8);
@@ -161,7 +161,7 @@ static void StreamScale(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamAdd(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 7);
+  const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
   StreamView<MemTraits> a("a", N8), b("b", N8), c("c", N8);
@@ -183,7 +183,7 @@ static void StreamAdd(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamTriad(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 7);
+  const size_t N8                 = std::pow(state.range(0), 8);
   static constexpr int DATA_RATIO = 3;
 
   StreamView<MemTraits> a("a", N8), b("b", N8), c("c", N8);
@@ -213,13 +213,13 @@ static void or_skip(benchmark::State& state) {
   }
 }
 
-// As of May 2025, 10^8 doubles is larger than caches, but not so large as
-// to be inconvenient. Also run 11^8 for a quick check of convergence.
+// As of Jan 2026, 9^8 doubles is larger than caches, but not so large as
+// to be inconvenient. Also run 10^8 for a quick check of convergence.
 #define STREAM_ARGS(label)            \
   Name(label)                         \
       ->ArgName("N")                  \
+      ->Arg(9)                        \
       ->Arg(10)                       \
-      ->Arg(11)                       \
       ->Unit(benchmark::kMillisecond) \
       ->UseManualTime()
 
