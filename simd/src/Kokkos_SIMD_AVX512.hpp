@@ -719,7 +719,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
   return V(_mm512_mask_i32gather_pd(
-      __m512d{value_type{}}, static_cast<__mmask8>(mask),
+      _mm512_set1_pd(value_type{}), static_cast<__mmask8>(mask),
       _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
 }
 
@@ -1204,7 +1204,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
   using value_type = typename V::value_type;
   __m256 on        = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
   __m256 m         = _mm256_maskz_mov_ps(static_cast<__mmask8>(mask), on);
-  return V(_mm256_mask_i32gather_ps(__m256{value_type{}}, in,
+  return V(_mm256_mask_i32gather_ps(_mm256_set1_ps(value_type{}), in,
                                     static_cast<__m256i>(indices), m, 4));
 }
 
@@ -1687,7 +1687,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
-  return V(_mm512_mask_i32gather_ps(__m512{value_type{}},
+  return V(_mm512_mask_i32gather_ps(_mm512_set1_ps(value_type{}),
                                     static_cast<__mmask16>(mask),
                                     static_cast<__m512i>(indices), in, 4));
 }
@@ -2147,7 +2147,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
-  return V(_mm256_mmask_i32gather_epi32(__m256i{value_type{}},
+  return V(_mm256_mmask_i32gather_epi32(_mm256_set1_epi32(value_type{}),
                                         static_cast<__mmask8>(mask),
                                         static_cast<__m256i>(indices), in, 4));
 }
@@ -2619,7 +2619,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
-  return V(_mm512_mask_i32gather_epi32(__m512i{value_type{}},
+  return V(_mm512_mask_i32gather_epi32(_mm512_set1_epi32(value_type{}),
                                        static_cast<__mmask16>(mask),
                                        static_cast<__m512i>(indices), in, 4));
 }
@@ -3081,7 +3081,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
-  return V(_mm256_mmask_i32gather_epi32(__m256i{value_type{}},
+  return V(_mm256_mmask_i32gather_epi32(_mm256_set1_epi32(value_type{}),
                                         static_cast<__mmask8>(mask),
                                         static_cast<__m256i>(indices), in, 4));
 }
@@ -3553,7 +3553,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
-  return V(_mm512_mask_i32gather_epi32(__m512i{value_type{}},
+  return V(_mm512_mask_i32gather_epi32(_mm512_set1_epi32(value_type{}),
                                        static_cast<__mmask16>(mask),
                                        static_cast<__m512i>(indices), in, 4));
 }
@@ -4012,7 +4012,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
   return V(_mm512_mask_i32gather_epi64(
-      __m512i{value_type{}}, static_cast<__mmask8>(mask),
+      _mm512_set1_epi64(value_type{}), static_cast<__mmask8>(mask),
       _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
 }
 
@@ -4464,7 +4464,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
   return V(_mm512_mask_i32gather_epi64(
-      __m512i{value_type{}}, static_cast<__mmask8>(mask),
+      _mm512_set1_epi64(value_type{}), static_cast<__mmask8>(mask),
       _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
 }
 

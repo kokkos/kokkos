@@ -1186,7 +1186,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
                     _mm_cvtsi128_si32(lower));
 
   return V(_mm256_mask_i32gather_pd(
-      __m256d{value_type{}}, in, rindices,
+      _mm256_set1_pd(value_type{}), in, rindices,
       _mm256_castsi256_pd(static_cast<__m256i>(mask)), 8));
 }
 
@@ -1655,7 +1655,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
   return V(_mm_mask_i32gather_ps(
-      __m128{value_type{}}, in, static_cast<__m128i>(indices),
+      _mm_set1_ps(value_type{}), in, static_cast<__m128i>(indices),
       _mm256_cvtpd_ps(_mm256_cvtepi32_pd(static_cast<__m128i>(mask))), 4));
 }
 
@@ -2132,7 +2132,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
   return V(_mm256_mask_i32gather_ps(
-      __m256{value_type{}}, in, static_cast<__m256i>(indices),
+      _mm256_set1_ps(value_type{}), in, static_cast<__m256i>(indices),
       _mm256_castsi256_ps(static_cast<__m256i>(mask)), 4));
 }
 
@@ -2562,7 +2562,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
-  return V(_mm_mask_i32gather_epi32(__m128i{value_type{}}, in,
+  return V(_mm_mask_i32gather_epi32(_mm_set1_epi32(value_type{}), in,
                                     static_cast<__m128i>(indices),
                                     static_cast<__m128i>(mask), 4));
 }
@@ -3001,7 +3001,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
   using value_type = typename V::value_type;
-  return V(_mm256_mask_i32gather_epi32(__m256i{value_type{}}, in,
+  return V(_mm256_mask_i32gather_epi32(_mm256_set1_epi32(value_type{}), in,
                                        static_cast<__m256i>(indices),
                                        static_cast<__m256i>(mask), 4));
 }
@@ -3480,8 +3480,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
                     _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
                     _mm_cvtsi128_si32(lower));
   return V(_mm256_mask_i32gather_epi64(
-      __m256i{value_type{}}, reinterpret_cast<long long const*>(in), rindices,
-      static_cast<__m256i>(mask), 8));
+      _mm256_set1_epi64x(value_type{}), reinterpret_cast<long long const*>(in),
+      rindices, static_cast<__m256i>(mask), 8));
 }
 
 template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
@@ -3953,8 +3953,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
                     _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
                     _mm_cvtsi128_si32(lower));
   return V(_mm256_mask_i32gather_epi64(
-      __m256i{value_type{}}, reinterpret_cast<long long const*>(in), rindices,
-      static_cast<__m256i>(mask), 8));
+      _mm256_set1_epi64x(value_type{}), reinterpret_cast<long long const*>(in),
+      rindices, static_cast<__m256i>(mask), 8));
 }
 
 template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
