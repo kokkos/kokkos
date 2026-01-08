@@ -102,7 +102,7 @@ int validate_array(V& a_dev, typename V::const_value_type expected) {
 
 template <unsigned MemTraits>
 static void StreamSet(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 8);
+  const size_t N8                 = std::pow(state.range(0), 7);
   static constexpr int DATA_RATIO = 1;
 
   StreamView<MemTraits> a(Kokkos::view_alloc(Kokkos::WithoutInitializing, "a"),
@@ -121,7 +121,7 @@ static void StreamSet(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamCopy(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 8);
+  const size_t N8                 = std::pow(state.range(0), 7);
   static constexpr int DATA_RATIO = 2;
 
   StreamView<MemTraits> a("a", N8), b("b", N8);
@@ -141,7 +141,7 @@ static void StreamCopy(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamScale(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 8);
+  const size_t N8                 = std::pow(state.range(0), 7);
   static constexpr int DATA_RATIO = 2;
 
   StreamView<MemTraits> a("a", N8), b("b", N8);
@@ -161,7 +161,7 @@ static void StreamScale(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamAdd(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 8);
+  const size_t N8                 = std::pow(state.range(0), 7);
   static constexpr int DATA_RATIO = 3;
 
   StreamView<MemTraits> a("a", N8), b("b", N8), c("c", N8);
@@ -183,7 +183,7 @@ static void StreamAdd(benchmark::State& state) {
 
 template <unsigned MemTraits>
 static void StreamTriad(benchmark::State& state) {
-  const size_t N8                 = std::pow(state.range(0), 8);
+  const size_t N8                 = std::pow(state.range(0), 7);
   static constexpr int DATA_RATIO = 3;
 
   StreamView<MemTraits> a("a", N8), b("b", N8), c("c", N8);
