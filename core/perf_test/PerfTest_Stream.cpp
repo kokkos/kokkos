@@ -213,13 +213,21 @@ static void or_skip(benchmark::State& state) {
   }
 }
 
-// As of Jan 2026, 9^8 doubles is larger than caches, but not so large as
-// to be inconvenient. Also run 10^8 for a quick check of convergence.
+// As of May 2025, 10^8 doubles is larger than caches, but not so large as
+// to be inconvenient. Also run 11^8 for a quick check of convergence.
+// This value is only used if the available memory is > 6G, so the test defaults
+// to a low-memory mode
+#ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS
+constexpr static int base_val = 10;
+#else
+constexpr static int base_val = 9;
+#endif
+
 #define STREAM_ARGS(label)            \
   Name(label)                         \
       ->ArgName("N")                  \
-      ->Arg(9)                        \
-      ->Arg(10)                       \
+      ->Arg(base_val)                 \
+      ->Arg(base_val + 1)             \
       ->Unit(benchmark::kMillisecond) \
       ->UseManualTime()
 
