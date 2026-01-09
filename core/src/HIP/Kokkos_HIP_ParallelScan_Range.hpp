@@ -149,8 +149,7 @@ class ParallelScanHIPBase {
     } else if (0 == threadIdx.y) {
       final_reducer.init(reinterpret_cast<pointer_type>(shared_accum));
     }
-    // Flush and sync the writes to shared_accum so they are visible to all
-    // threads in the block.
+    // FIXME_HIP below __syncthreads() is added to handle MI300A GPU errors.
     __syncthreads();
 
     const WorkRange range(m_policy, blockIdx.x, gridDim.x);
@@ -158,6 +157,13 @@ class ParallelScanHIPBase {
     for (typename Policy::member_type iwork_base = range.begin();
          iwork_base < range.end(); iwork_base += blockDim.y) {
       const typename Policy::member_type iwork = iwork_base + threadIdx.y;
+
+      // FIXME_HIP MI300A GPU requires extra synchronization at the end of this
+      // loop. Therefore, this __syncthreads() is moved to the end of this loop
+      // and  extra __syncthreads() is added before this loop to handle the
+      // first iteration of this loop.
+      //__syncthreads();
+      // Don't overwrite previous iteration values until they are used.
 
       final_reducer.init(
           reinterpret_cast<pointer_type>(shared_prefix + word_count.value));
@@ -205,7 +211,8 @@ class ParallelScanHIPBase {
       if (iwork + 1 == m_policy.end() && m_policy.end() == range.end() &&
           m_result_ptr_device_accessible)
         *m_result_ptr = *reinterpret_cast<pointer_type>(shared_prefix);
-      // Don't overwrite previous iteration values until they are used
+      // FIXME_HIP below __syncthreads() is moved from the beginning of this
+      // loop to here to handle MI300A GPU errors.
       __syncthreads();
     }
   }
