@@ -215,8 +215,8 @@ static void or_skip(benchmark::State& state) {
 
 // As of May 2025, 10^8 doubles is larger than caches, but not so large as
 // to be inconvenient. Also run 11^8 for a quick check of convergence.
-// This value is only used if the available memory is > 6G, so the test defaults
-// to a low-memory mode
+// This value is only used if the available memory is > 6GB, so the test defaults
+// to a low-memory mode using 9^8 and 10^8 elements.
 #ifdef KOKKOS_ENABLE_LARGE_MEM_TESTS
 constexpr static int base_val = 10;
 #else
