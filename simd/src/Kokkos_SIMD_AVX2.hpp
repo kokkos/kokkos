@@ -9,6 +9,7 @@
 
 #include <Kokkos_SIMD_Common.hpp>
 #include <Kokkos_BitManipulation.hpp>  // bit_cast
+#include "impl/Kokkos_SIMD_Impl_Macros.hpp"
 
 #include <immintrin.h>
 
@@ -1150,108 +1151,69 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                       static_cast<__m256d>(simd));
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(double, simd_abi::avx2_fixed_size<4>, {
   __m128i lower = _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
   __m128i upper = _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
-
   __m128i rindices =
       _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
                     _mm_cvtsi128_si32(upper),
                     _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
                     _mm_cvtsi128_si32(lower));
-
   return V(_mm256_i32gather_pd(in, rindices, 8));
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  using value_type = typename V::value_type;
-  __m128i lower    = _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
-  __m128i upper    = _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    double, simd_abi::avx2_fixed_size<4>, {
+      using value_type = typename V::value_type;
+      __m128i lower =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
+      __m128i upper =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+      __m128i rindices =
+          _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
+                        _mm_cvtsi128_si32(upper),
+                        _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
+                        _mm_cvtsi128_si32(lower));
+      return V(_mm256_mask_i32gather_pd(
+          _mm256_set1_pd(value_type{}), in, rindices,
+          _mm256_castsi256_pd(static_cast<__m256i>(mask)), 8));
+    })
 
-  __m128i rindices =
-      _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
-                    _mm_cvtsi128_si32(upper),
-                    _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
-                    _mm_cvtsi128_si32(lower));
-
-  return V(_mm256_mask_i32gather_pd(
-      _mm256_set1_pd(value_type{}), in, rindices,
-      _mm256_castsi256_pd(static_cast<__m256i>(mask)), 8));
-}
-
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM(double, simd_abi::avx2_fixed_size<4>, {
   return unchecked_gather_from<V>(in, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(double,
+                                             simd_abi::avx2_fixed_size<4>, {
+                                               return unchecked_gather_from<V>(
+                                                   in, mask, indices, flag);
+                                             })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(double, simd_abi::avx2_fixed_size<4>, {
   for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
     out[indices[lane]] = v[lane];
   }
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    if (mask[lane]) out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(double,
+                                              simd_abi::avx2_fixed_size<4>, {
+                                                for (Impl::simd_size_t lane = 0;
+                                                     lane < v.size(); ++lane) {
+                                                  if (mask[lane])
+                                                    out[indices[lane]] =
+                                                        v[lane];
+                                                }
+                                              })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO(double, simd_abi::avx2_fixed_size<4>, {
   unchecked_scatter_to<V>(v, out, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<double, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(double,
+                                            simd_abi::avx2_fixed_size<4>, {
+                                              unchecked_scatter_to<V>(
+                                                  v, out, mask, indices, flag);
+                                            })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<double, simd_abi::avx2_fixed_size<4>> condition(
@@ -1637,90 +1599,53 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                    static_cast<__m128>(simd));
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(float, simd_abi::avx2_fixed_size<4>, {
   return V(_mm_i32gather_ps(in, static_cast<__m128i>(indices), 4));
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  using value_type = typename V::value_type;
-  return V(_mm_mask_i32gather_ps(
-      _mm_set1_ps(value_type{}), in, static_cast<__m128i>(indices),
-      _mm256_cvtpd_ps(_mm256_cvtepi32_pd(static_cast<__m128i>(mask))), 4));
-}
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    float, simd_abi::avx2_fixed_size<4>, {
+      using value_type = typename V::value_type;
+      return V(_mm_mask_i32gather_ps(
+          _mm_set1_ps(value_type{}), in, static_cast<__m128i>(indices),
+          _mm256_cvtpd_ps(_mm256_cvtepi32_pd(static_cast<__m128i>(mask))), 4));
+    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM(float, simd_abi::avx2_fixed_size<4>, {
   return unchecked_gather_from<V>(in, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(float,
+                                             simd_abi::avx2_fixed_size<4>, {
+                                               return unchecked_gather_from<V>(
+                                                   in, mask, indices, flag);
+                                             })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(float, simd_abi::avx2_fixed_size<4>, {
   for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
     out[indices[lane]] = v[lane];
   }
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    if (mask[lane]) out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(float,
+                                              simd_abi::avx2_fixed_size<4>, {
+                                                for (Impl::simd_size_t lane = 0;
+                                                     lane < v.size(); ++lane) {
+                                                  if (mask[lane])
+                                                    out[indices[lane]] =
+                                                        v[lane];
+                                                }
+                                              })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO(float, simd_abi::avx2_fixed_size<4>, {
   unchecked_scatter_to<V>(v, out, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(float, simd_abi::avx2_fixed_size<4>,
+                                            {
+                                              unchecked_scatter_to<V>(
+                                                  v, out, mask, indices, flag);
+                                            })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<float, simd_abi::avx2_fixed_size<4>> condition(
@@ -2114,90 +2039,53 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                       static_cast<__m256>(simd));
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(float, simd_abi::avx2_fixed_size<8>, {
   return V(_mm256_i32gather_ps(in, static_cast<__m256i>(indices), 4));
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  using value_type = typename V::value_type;
-  return V(_mm256_mask_i32gather_ps(
-      _mm256_set1_ps(value_type{}), in, static_cast<__m256i>(indices),
-      _mm256_castsi256_ps(static_cast<__m256i>(mask)), 4));
-}
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    float, simd_abi::avx2_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      return V(_mm256_mask_i32gather_ps(
+          _mm256_set1_ps(value_type{}), in, static_cast<__m256i>(indices),
+          _mm256_castsi256_ps(static_cast<__m256i>(mask)), 4));
+    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM(float, simd_abi::avx2_fixed_size<8>, {
   return unchecked_gather_from<V>(in, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(float,
+                                             simd_abi::avx2_fixed_size<8>, {
+                                               return unchecked_gather_from<V>(
+                                                   in, mask, indices, flag);
+                                             })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(float, simd_abi::avx2_fixed_size<8>, {
   for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
     out[indices[lane]] = v[lane];
   }
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    if (mask[lane]) out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(float,
+                                              simd_abi::avx2_fixed_size<8>, {
+                                                for (Impl::simd_size_t lane = 0;
+                                                     lane < v.size(); ++lane) {
+                                                  if (mask[lane])
+                                                    out[indices[lane]] =
+                                                        v[lane];
+                                                }
+                                              })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO(float, simd_abi::avx2_fixed_size<8>, {
   unchecked_scatter_to<V>(v, out, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V, basic_simd<float, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(float, simd_abi::avx2_fixed_size<8>,
+                                            {
+                                              unchecked_scatter_to<V>(
+                                                  v, out, mask, indices, flag);
+                                            })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<float, simd_abi::avx2_fixed_size<8>> condition(
@@ -2543,98 +2431,55 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                       static_cast<__m128i>(simd));
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
-  return V(_mm_i32gather_epi32(in, static_cast<__m128i>(indices), 4));
-}
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::int32_t, simd_abi::avx2_fixed_size<4>,
+    { return V(_mm_i32gather_epi32(in, static_cast<__m128i>(indices), 4)); })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  using value_type = typename V::value_type;
-  return V(_mm_mask_i32gather_epi32(_mm_set1_epi32(value_type{}), in,
-                                    static_cast<__m128i>(indices),
-                                    static_cast<__m128i>(mask), 4));
-}
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::avx2_fixed_size<4>, {
+      using value_type = typename V::value_type;
+      return V(_mm_mask_i32gather_epi32(_mm_set1_epi32(value_type{}), in,
+                                        static_cast<__m128i>(indices),
+                                        static_cast<__m128i>(mask), 4));
+    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM(std::int32_t, simd_abi::avx2_fixed_size<4>, {
   return unchecked_gather_from<V>(in, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(std::int32_t,
+                                             simd_abi::avx2_fixed_size<4>, {
+                                               return unchecked_gather_from<V>(
+                                                   in, mask, indices, flag);
+                                             })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(std::int32_t, simd_abi::avx2_fixed_size<4>,
+                                    {
+                                      for (Impl::simd_size_t lane = 0;
+                                           lane < v.size(); ++lane) {
+                                        out[indices[lane]] = v[lane];
+                                      }
+                                    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    if (mask[lane]) out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(std::int32_t,
+                                              simd_abi::avx2_fixed_size<4>, {
+                                                for (Impl::simd_size_t lane = 0;
+                                                     lane < v.size(); ++lane) {
+                                                  if (mask[lane])
+                                                    out[indices[lane]] =
+                                                        v[lane];
+                                                }
+                                              })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO(std::int32_t, simd_abi::avx2_fixed_size<4>, {
   unchecked_scatter_to<V>(v, out, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(std::int32_t,
+                                            simd_abi::avx2_fixed_size<4>, {
+                                              unchecked_scatter_to<V>(
+                                                  v, out, mask, indices, flag);
+                                            })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> condition(
@@ -2982,98 +2827,55 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                          static_cast<__m256i>(simd));
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
-  return V(_mm256_i32gather_epi32(in, static_cast<__m256i>(indices), 4));
-}
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::int32_t, simd_abi::avx2_fixed_size<8>,
+    { return V(_mm256_i32gather_epi32(in, static_cast<__m256i>(indices), 4)); })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  using value_type = typename V::value_type;
-  return V(_mm256_mask_i32gather_epi32(_mm256_set1_epi32(value_type{}), in,
-                                       static_cast<__m256i>(indices),
-                                       static_cast<__m256i>(mask), 4));
-}
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::avx2_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      return V(_mm256_mask_i32gather_epi32(_mm256_set1_epi32(value_type{}), in,
+                                           static_cast<__m256i>(indices),
+                                           static_cast<__m256i>(mask), 4));
+    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM(std::int32_t, simd_abi::avx2_fixed_size<8>, {
   return unchecked_gather_from<V>(in, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(std::int32_t,
+                                             simd_abi::avx2_fixed_size<8>, {
+                                               return unchecked_gather_from<V>(
+                                                   in, mask, indices, flag);
+                                             })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(std::int32_t, simd_abi::avx2_fixed_size<8>,
+                                    {
+                                      for (Impl::simd_size_t lane = 0;
+                                           lane < v.size(); ++lane) {
+                                        out[indices[lane]] = v[lane];
+                                      }
+                                    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    if (mask[lane]) out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(std::int32_t,
+                                              simd_abi::avx2_fixed_size<8>, {
+                                                for (Impl::simd_size_t lane = 0;
+                                                     lane < v.size(); ++lane) {
+                                                  if (mask[lane])
+                                                    out[indices[lane]] =
+                                                        v[lane];
+                                                }
+                                              })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO(std::int32_t, simd_abi::avx2_fixed_size<8>, {
   unchecked_scatter_to<V>(v, out, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(std::int32_t,
+                                            simd_abi::avx2_fixed_size<8>, {
+                                              unchecked_scatter_to<V>(
+                                                  v, out, mask, indices, flag);
+                                            })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>> condition(
@@ -3442,116 +3244,76 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                          static_cast<__m256i>(simd));
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
-  __m128i lower = _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
-  __m128i upper = _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::int64_t, simd_abi::avx2_fixed_size<4>, {
+      __m128i lower =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
+      __m128i upper =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+      __m128i rindices =
+          _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
+                        _mm_cvtsi128_si32(upper),
+                        _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
+                        _mm_cvtsi128_si32(lower));
+      return V(_mm256_i32gather_epi64(reinterpret_cast<long long const*>(in),
+                                      rindices, 8));
+    })
 
-  __m128i rindices =
-      _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
-                    _mm_cvtsi128_si32(upper),
-                    _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
-                    _mm_cvtsi128_si32(lower));
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int64_t, simd_abi::avx2_fixed_size<4>, {
+      using value_type = typename V::value_type;
+      __m128i lower =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
+      __m128i upper =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+      __m128i rindices =
+          _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
+                        _mm_cvtsi128_si32(upper),
+                        _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
+                        _mm_cvtsi128_si32(lower));
+      return V(
+          _mm256_mask_i32gather_epi64(_mm256_set1_epi64x(value_type{}),
+                                      reinterpret_cast<long long const*>(in),
+                                      rindices, static_cast<__m256i>(mask), 8));
+    })
 
-  return V(_mm256_i32gather_epi64(reinterpret_cast<long long const*>(in),
-                                  rindices, 8));
-}
-
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  using value_type = typename V::value_type;
-  __m128i lower    = _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
-  __m128i upper    = _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
-
-  __m128i rindices =
-      _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
-                    _mm_cvtsi128_si32(upper),
-                    _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
-                    _mm_cvtsi128_si32(lower));
-  return V(_mm256_mask_i32gather_epi64(
-      _mm256_set1_epi64x(value_type{}), reinterpret_cast<long long const*>(in),
-      rindices, static_cast<__m256i>(mask), 8));
-}
-
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM(std::int64_t, simd_abi::avx2_fixed_size<4>, {
   return unchecked_gather_from<V>(in, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(std::int64_t,
+                                             simd_abi::avx2_fixed_size<4>, {
+                                               return unchecked_gather_from<V>(
+                                                   in, mask, indices, flag);
+                                             })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(std::int64_t, simd_abi::avx2_fixed_size<4>,
+                                    {
+                                      for (Impl::simd_size_t lane = 0;
+                                           lane < v.size(); ++lane) {
+                                        out[indices[lane]] = v[lane];
+                                      }
+                                    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    if (mask[lane]) out[indices[lane]] = v[lane];
-  }
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(std::int64_t,
+                                              simd_abi::avx2_fixed_size<4>, {
+                                                for (Impl::simd_size_t lane = 0;
+                                                     lane < v.size(); ++lane) {
+                                                  if (mask[lane])
+                                                    out[indices[lane]] =
+                                                        v[lane];
+                                                }
+                                              })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO(std::int64_t, simd_abi::avx2_fixed_size<4>, {
   unchecked_scatter_to<V>(v, out, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(std::int64_t,
+                                            simd_abi::avx2_fixed_size<4>, {
+                                              unchecked_scatter_to<V>(
+                                                  v, out, mask, indices, flag);
+                                            })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>> condition(
@@ -3916,115 +3678,78 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                          static_cast<__m256i>(simd));
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
-  __m128i lower = _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
-  __m128i upper = _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::uint64_t, simd_abi::avx2_fixed_size<4>, {
+      __m128i lower =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
+      __m128i upper =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+      __m128i rindices =
+          _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
+                        _mm_cvtsi128_si32(upper),
+                        _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
+                        _mm_cvtsi128_si32(lower));
+      return V(_mm256_i32gather_epi64(reinterpret_cast<long long const*>(in),
+                                      rindices, 8));
+    })
 
-  __m128i rindices =
-      _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
-                    _mm_cvtsi128_si32(upper),
-                    _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
-                    _mm_cvtsi128_si32(lower));
-  return V(_mm256_i32gather_epi64(reinterpret_cast<long long const*>(in),
-                                  rindices, 8));
-}
+MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::uint64_t, simd_abi::avx2_fixed_size<4>, {
+      using value_type = typename V::value_type;
+      __m128i lower =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
+      __m128i upper =
+          _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+      __m128i rindices =
+          _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
+                        _mm_cvtsi128_si32(upper),
+                        _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
+                        _mm_cvtsi128_si32(lower));
+      return V(
+          _mm256_mask_i32gather_epi64(_mm256_set1_epi64x(value_type{}),
+                                      reinterpret_cast<long long const*>(in),
+                                      rindices, static_cast<__m256i>(mask), 8));
+    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  using value_type = typename V::value_type;
-  __m128i lower    = _mm256_extracti128_si256(static_cast<__m256i>(indices), 0);
-  __m128i upper    = _mm256_extracti128_si256(static_cast<__m256i>(indices), 1);
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM(std::uint64_t, simd_abi::avx2_fixed_size<4>,
+                                   {
+                                     return unchecked_gather_from<V>(
+                                         in, indices, flag);
+                                   })
 
-  __m128i rindices =
-      _mm_set_epi32(_mm_cvtsi128_si32(_mm_unpackhi_epi64(upper, upper)),
-                    _mm_cvtsi128_si32(upper),
-                    _mm_cvtsi128_si32(_mm_unpackhi_epi64(lower, lower)),
-                    _mm_cvtsi128_si32(lower));
-  return V(_mm256_mask_i32gather_epi64(
-      _mm256_set1_epi64x(value_type{}), reinterpret_cast<long long const*>(in),
-      rindices, static_cast<__m256i>(mask), 8));
-}
+MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(std::uint64_t,
+                                             simd_abi::avx2_fixed_size<4>, {
+                                               return unchecked_gather_from<V>(
+                                                   in, mask, indices, flag);
+                                             })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, indices, flag);
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(std::uint64_t, simd_abi::avx2_fixed_size<4>,
+                                    {
+                                      for (Impl::simd_size_t lane = 0;
+                                           lane < v.size(); ++lane) {
+                                        out[indices[lane]] = v[lane];
+                                      }
+                                    })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
-    R&& in, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  return unchecked_gather_from<V>(in, mask, indices, flag);
-}
+MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(std::uint64_t,
+                                              simd_abi::avx2_fixed_size<4>, {
+                                                for (Impl::simd_size_t lane = 0;
+                                                     lane < v.size(); ++lane) {
+                                                  if (mask[lane])
+                                                    out[indices[lane]] =
+                                                        v[lane];
+                                                }
+                                              })
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    out[indices[lane]] = v[lane];
-  }
-}
-
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> = simd_flag_default) {
-  for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) {
-    if (mask[lane]) out[indices[lane]] = v[lane];
-  }
-}
-
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO(std::uint64_t, simd_abi::avx2_fixed_size<4>, {
   unchecked_scatter_to<V>(v, out, indices, flag);
-}
+})
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
-  requires std::ranges::sized_range<R> &&
-           std::same_as<V,
-                        basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
-    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
-    simd_flags<Flags...> flag = simd_flag_default) {
-  unchecked_scatter_to<V>(v, out, mask, indices, flag);
-}
+MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(std::uint64_t,
+                                            simd_abi::avx2_fixed_size<4>, {
+                                              unchecked_scatter_to<V>(
+                                                  v, out, mask, indices, flag);
+                                            })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> condition(

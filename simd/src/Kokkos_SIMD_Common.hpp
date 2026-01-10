@@ -11,6 +11,7 @@ import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <impl/Kokkos_SIMD_Impl_Macros.hpp>
 #include <cstdint>
 #include <cstring>
 #include <functional>
