@@ -16,6 +16,12 @@ namespace Impl {
     return sycl::OP(Experimental::half_t::impl_type(x)); \
   }
 
+#define KOKKOS_SYCL_HALF_UNARY_FUNCTION_SPECIAL_NAME(OP, SYCL_NAME) \
+  KOKKOS_INLINE_FUNCTION Experimental::half_t impl_##OP(            \
+      Experimental::half_t x) {                                     \
+    return sycl::SYCL_NAME(Experimental::half_t::impl_type(x));     \
+  }
+
 #define KOKKOS_SYCL_HALF_BINARY_FUNCTION(OP)             \
   KOKKOS_INLINE_FUNCTION Experimental::half_t impl_##OP( \
       Experimental::half_t x, Experimental::half_t y) {  \
@@ -54,6 +60,7 @@ KOKKOS_SYCL_HALF_UNARY_FUNCTION(log1p)
 KOKKOS_SYCL_HALF_BINARY_FUNCTION(pow)
 KOKKOS_SYCL_HALF_UNARY_FUNCTION(sqrt)
 KOKKOS_SYCL_HALF_UNARY_FUNCTION(rsqrt)
+KOKKOS_SYCL_HALF_UNARY_FUNCTION_SPECIAL_NAME(rcp, half_precision::recip)
 KOKKOS_SYCL_HALF_UNARY_FUNCTION(cbrt)
 KOKKOS_SYCL_HALF_BINARY_FUNCTION(hypot)
 // Trigonometric functions
@@ -105,6 +112,12 @@ KOKKOS_SYCL_HALF_UNARY_PREDICATE(signbit)
         Experimental::bhalf_t::impl_type(x));             \
   }
 
+#define KOKKOS_SYCL_BHALF_UNARY_FUNCTION_SPECIAL_NAME(OP, SYCL_NAME) \
+  KOKKOS_INLINE_FUNCTION Experimental::bhalf_t impl_##OP(            \
+      Experimental::bhalf_t x) {                                     \
+    return sycl::SYCL_NAME(Experimental::bhalf_t::impl_type(x));     \
+  }
+
 #define KOKKOS_SYCL_BHALF_BINARY_FUNCTION(OP)             \
   KOKKOS_INLINE_FUNCTION Experimental::bhalf_t impl_##OP( \
       Experimental::bhalf_t x, Experimental::bhalf_t y) { \
@@ -145,6 +158,7 @@ KOKKOS_SYCL_BHALF_UNARY_FUNCTION(log2)
 // pow
 KOKKOS_SYCL_BHALF_UNARY_FUNCTION(sqrt)
 KOKKOS_SYCL_BHALF_UNARY_FUNCTION(rsqrt)
+KOKKOS_SYCL_BHALF_UNARY_FUNCTION_SPECIAL_NAME(rcp, half_precision::recip)
 // cbrt
 // hypot
 // Trigonometric functions
