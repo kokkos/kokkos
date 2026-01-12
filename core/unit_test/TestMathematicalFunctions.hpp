@@ -2044,12 +2044,16 @@ struct TestSignbit {
     }
 #if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
     if (signbit(static_cast<KE::half_t>(0.f)) ||
-        signbit(finite_max<KE::half_t>::value) ||
+        !signbit(static_cast<KE::half_t>(-0.f))
+#if !(defined(KOKKOS_ENABLE_CUDA) &&                         \
+      defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE) && \
+      defined(KOKKOS_COMPILER_CLANG))
+        // FIXME internal compiler error for Clang+Cuda and RDC
+        || signbit(finite_max<KE::half_t>::value) ||
         signbit(infinity<KE::half_t>::value) ||
         signbit(denorm_min<KE::half_t>::value) ||
         signbit(quiet_NaN<KE::half_t>::value) ||
         signbit(signaling_NaN<KE::half_t>::value) ||
-        !signbit(static_cast<KE::half_t>(-0.f)) ||
         !signbit(finite_min<KE::half_t>::value) ||
         !signbit(-static_cast<KE::half_t>(infinity<KE::half_t>::value)) ||
         !signbit(-static_cast<KE::half_t>(denorm_min<KE::half_t>::value))
@@ -2059,6 +2063,7 @@ struct TestSignbit {
 #ifndef KOKKOS_ENABLE_CUDA
         || !signbit(-static_cast<KE::half_t>(quiet_NaN<KE::half_t>::value)) ||
         !signbit(-static_cast<KE::half_t>(signaling_NaN<KE::half_t>::value))
+#endif
 #endif
     ) {
       ++e;
