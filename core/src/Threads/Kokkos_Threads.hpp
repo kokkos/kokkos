@@ -113,6 +113,8 @@ class Threads {
 
   Threads(const Threads&)            = default;
   Threads& operator=(const Threads&) = default;
+  Threads(Threads&&)                 = default;
+  Threads& operator=(Threads&&)      = default;
 
   ~Threads() { Impl::check_execution_space_destructor_precondition(name()); }
 

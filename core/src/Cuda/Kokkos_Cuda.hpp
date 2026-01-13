@@ -145,6 +145,9 @@ class Cuda {
 
   Cuda(const Cuda&)            = default;
   Cuda& operator=(const Cuda&) = default;
+  Cuda(Cuda&&)                 = default;
+  Cuda& operator=(Cuda&&)      = default;
+
   ~Cuda();
   Cuda();
 

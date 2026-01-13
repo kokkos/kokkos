@@ -36,6 +36,9 @@ class HIP {
 
   HIP(const HIP&)            = default;
   HIP& operator=(const HIP&) = default;
+  HIP(HIP&&)                 = default;
+  HIP& operator=(HIP&&)      = default;
+
   ~HIP();
   HIP();
 

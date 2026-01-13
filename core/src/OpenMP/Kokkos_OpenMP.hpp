@@ -53,6 +53,9 @@ class OpenMP {
 
   OpenMP(const OpenMP&)            = default;
   OpenMP& operator=(const OpenMP&) = default;
+  OpenMP(OpenMP&&)                 = default;
+  OpenMP& operator=(OpenMP&&)      = default;
+
   ~OpenMP();
   OpenMP();
 

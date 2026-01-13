@@ -8,6 +8,7 @@ Checks: >
   -bugprone-suspicious-include,
   cppcoreguidelines-pro-type-cstyle-cast,
   cppcoreguidelines-rvalue-reference-param-not-moved,
+  cppcoreguidelines-special-member-functions,
   modernize-type-traits,
   modernize-use-nullptr,
   modernize-use-using,
