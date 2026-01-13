@@ -62,6 +62,20 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
+      - name: build_examples
+        working-directory: kokkos
+        run: |
+          cmake -S ${PWD}/examples/build_cmake_installed_multilanguage -B build_examples \
+            -DCMAKE_CXX_COMPILER=${PWD}/bin/nvcc_wrapper \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DKokkos_ROOT=${PWD}/install
+          cmake --build build_examples --parallel -j36
+
+      - name: test_examples
+        working-directory: kokkos/build_examples
+        run: ctest --output-on-failure
+
   HIP_6_2_1_CPP23:
     name: SNL_HIP_ROCM_6_2_1_CPP23
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
@@ -107,6 +121,20 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
+      - name: build_examples
+        working-directory: kokkos
+        run: |
+          cmake -S ${PWD}/examples/build_cmake_installed_multilanguage -B build_examples \
+            -DCMAKE_CXX_COMPILER=hipcc \
+            -DCMAKE_CXX_STANDARD=23 \
+            -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+            -DKokkos_ROOT=${PWD}/install
+          cmake --build build_examples --parallel $(nproc)
+
+      - name: test_examples
+        working-directory: kokkos/build_examples
+        run: ctest --output-on-failure
+
   HIP_6_2_1:
     name: SNL_HIP_ROCM_6_2_1
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
@@ -147,6 +175,20 @@ jobs:
       - name: test_kokkos
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
+
+      - name: build_examples
+        working-directory: kokkos
+        run: |
+          cmake -S ${PWD}/examples/build_cmake_installed_multilanguage -B build_examples \
+            -DCMAKE_CXX_COMPILER=hipcc \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
+            -DKokkos_ROOT=${PWD}/install
+          cmake --build build_examples --parallel $(nproc)
+
+      - name: test_examples
+        working-directory: kokkos/build_examples
+        run: ctest --output-on-failure
 
   INTEL_2024_2_1_SPR:
     name: SNL_OPENMP_SERIAL_INTEL_2024_2_1
@@ -192,6 +234,20 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
+      - name: build_examples
+        working-directory: kokkos
+        run: |
+          cmake -S ${PWD}/examples/build_cmake_installed_multilanguage -B build_examples \
+            -DCMAKE_CXX_COMPILER=icpx \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -Wno-pass-failed' \
+            -DKokkos_ROOT=${PWD}/install
+          cmake --build build_examples --parallel $(nproc)
+
+      - name: test_examples
+        working-directory: kokkos/build_examples
+        run: ctest --output-on-failure
+
   INTEL_2024_2_1_PVC:
     name: SNL_SYCL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
@@ -234,6 +290,20 @@ jobs:
       - name: test_kokkos
         working-directory: kokkos/build
         run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure --timeout 3600
+
+      - name: build_examples
+        working-directory: kokkos
+        run: |
+          cmake -S ${PWD}/examples/build_cmake_installed_multilanguage -B build_examples \
+            -DCMAKE_CXX_COMPILER=icpx \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -fsycl-device-code-split=per_kernel -Wno-zero-length-array -Wno-pass-failed' \
+            -DKokkos_ROOT=${PWD}/install
+          cmake --build build_examples --parallel $(nproc)
+
+      - name: test_examples
+        working-directory: kokkos/build_examples
+        run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure
 
 # FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
   HPX_GCC_15_1_1:
@@ -282,3 +352,17 @@ jobs:
       - name: test_kokkos
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
+
+      - name: build_examples
+        working-directory: kokkos
+        run: |
+          cmake -S ${PWD}/examples/build_cmake_installed_multilanguage -B build_examples \
+            -DCMAKE_CXX_COMPILER=g++ \
+            -DCMAKE_CXX_STANDARD=23 \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DKokkos_ROOT=${PWD}/install
+          cmake --build build_examples --parallel $(nproc)
+
+      - name: test_examples
+        working-directory: kokkos/build_examples
+        run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure
