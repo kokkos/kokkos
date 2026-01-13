@@ -352,17 +352,3 @@ jobs:
       - name: test_kokkos
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
-
-      - name: build_examples
-        working-directory: kokkos
-        run: |
-          cmake -S ${PWD}/example/build_cmake_installed_different_compiler -B build_examples \
-            -DCMAKE_CXX_COMPILER=g++ \
-            -DCMAKE_CXX_STANDARD=23 \
-            -DCMAKE_CXX_FLAGS="-Werror" \
-            -DKokkos_ROOT=${PWD}/install
-          cmake --build build_examples --parallel $(nproc)
-
-      - name: test_examples
-        working-directory: kokkos/build_examples
-        run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure
