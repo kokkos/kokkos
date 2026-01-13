@@ -67,7 +67,6 @@ TEST(TEST_CATEGORY, customscalar_parallel_scan) {
     accum += rowptr_h(i);
   }
 
-  //[FIXME] below causes a random test failure.
   Kokkos::RangePolicy<ExecSpace> policy(0, nrows + 1);
   Kokkos::parallel_scan(
       policy,
