@@ -43,8 +43,8 @@ static KOKKOS_INLINE_FUNCTION void operator+=(ArrayValueType<T, N>& a,
   for (int i = 0; i < N; ++i) a.v[i] += b.v[i];
 }
 
-TEST(TEST_CATEGORY, customscalar_parallel_scan) {
-  using ExecSpace   = TEST_EXECSPACE;
+template <class ExecSpace>
+void test_customscalar_parallel_scan() {
   using update_type = ArrayValueType<size_t, 2>;
 
   const int nrows = 4409601;
@@ -86,6 +86,10 @@ TEST(TEST_CATEGORY, customscalar_parallel_scan) {
   for (int i = 0; i < nrows + 1; i++) {
     ASSERT_EQ(rowptr_final(i), prefix_correct(i));
   }
+}
+
+TEST(TEST_CATEGORY, customscalar_parallel_scan) {
+  test_customscalar_parallel_scan<TEST_EXECSPACE>();
 }
 
 }  // namespace
