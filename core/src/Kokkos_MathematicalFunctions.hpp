@@ -540,10 +540,9 @@ KOKKOS_INLINE_FUNCTION double rsqrt(double val) {
 inline long double rsqrt(long double val) { return 1.0l / Kokkos::sqrt(val); }
 KOKKOS_INLINE_FUNCTION float rsqrtf(float x) { return Kokkos::rsqrt(x); }
 inline long double rsqrtl(long double x) { return Kokkos::rsqrt(x); }
-
-template <typename T>
-  requires(std::is_integral_v<T>)
-KOKKOS_INLINE_FUNCTION double rsqrt(T x) {
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> rsqrt(
+    T x) {
   return Kokkos::rsqrt(static_cast<double>(x));
 }
 
@@ -567,9 +566,9 @@ KOKKOS_INLINE_FUNCTION double rcp(double val) {
 #endif
 }
 inline long double rcp(long double val) { return 1.0l / val; }
-template <typename T>
-  requires(std::is_integral_v<T>)
-KOKKOS_INLINE_FUNCTION double rcp(T x) {
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> rcp(
+    T x) {
   return Kokkos::rcp(static_cast<double>(x));
 }
 

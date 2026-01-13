@@ -144,7 +144,6 @@ KOKKOS_SYCL_BHALF_UNARY_FUNCTION(log2)
 // Power functions
 // pow
 KOKKOS_SYCL_BHALF_UNARY_FUNCTION(sqrt)
-KOKKOS_SYCL_BHALF_UNARY_FUNCTION(rsqrt)
 // cbrt
 // hypot
 // Trigonometric functions
@@ -180,6 +179,9 @@ KOKKOS_SYCL_BHALF_UNARY_FUNCTION(trunc)
 // isinf
 KOKKOS_SYCL_BHALF_UNARY_PREDICATE(isnan)
 // signbit
+// Non-standard functions
+KOKKOS_SYCL_BHALF_UNARY_FUNCTION(rsqrt)
+// rcp
 
 #undef KOKKOS_SYCL_BHALF_UNARY_FUNCTION
 #undef KOKKOS_SYCL_BHALF_BINARY_FUNCTION
