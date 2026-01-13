@@ -65,7 +65,7 @@ jobs:
       - name: build_examples
         working-directory: kokkos
         run: |
-          cmake -S ${PWD}/example/build_cmake_installed -B build_examples \
+          cmake -S ${PWD}/example/build_cmake_installed_different_compiler -B build_examples \
             -DCMAKE_CXX_COMPILER=${PWD}/bin/nvcc_wrapper \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_FLAGS="-Werror" \
@@ -124,7 +124,7 @@ jobs:
       - name: build_examples
         working-directory: kokkos
         run: |
-          cmake -S ${PWD}/example/build_cmake_installed -B build_examples \
+          cmake -S ${PWD}/example/build_cmake_installed_different_compiler -B build_examples \
             -DCMAKE_CXX_COMPILER=hipcc \
             -DCMAKE_CXX_STANDARD=23 \
             -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
@@ -179,7 +179,7 @@ jobs:
       - name: build_examples
         working-directory: kokkos
         run: |
-          cmake -S ${PWD}/example/build_cmake_installed -B build_examples \
+          cmake -S ${PWD}/example/build_cmake_installed_different_compiler -B build_examples \
             -DCMAKE_CXX_COMPILER=hipcc \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
@@ -237,7 +237,7 @@ jobs:
       - name: build_examples
         working-directory: kokkos
         run: |
-          cmake -S ${PWD}/example/build_cmake_installed -B build_examples \
+          cmake -S ${PWD}/example/build_cmake_installed_different_compiler -B build_examples \
             -DCMAKE_CXX_COMPILER=icpx \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -Wno-pass-failed' \
@@ -294,7 +294,7 @@ jobs:
       - name: build_examples
         working-directory: kokkos
         run: |
-          cmake -S ${PWD}/example/build_cmake_installed -B build_examples \
+          cmake -S ${PWD}/example/build_cmake_installed_different_compiler -B build_examples \
             -DCMAKE_CXX_COMPILER=icpx \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -fsycl-device-code-split=per_kernel -Wno-zero-length-array -Wno-pass-failed' \
@@ -356,7 +356,7 @@ jobs:
       - name: build_examples
         working-directory: kokkos
         run: |
-          cmake -S ${PWD}/example/build_cmake_installed -B build_examples \
+          cmake -S ${PWD}/example/build_cmake_installed_different_compiler -B build_examples \
             -DCMAKE_CXX_COMPILER=g++ \
             -DCMAKE_CXX_STANDARD=23 \
             -DCMAKE_CXX_FLAGS="-Werror" \
