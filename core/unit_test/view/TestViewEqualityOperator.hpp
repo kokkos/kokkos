@@ -76,45 +76,40 @@ void test_view_equality_operator() {
     ASSERT_TRUE(check_equal(V(), V_memory_traits()));
     ASSERT_FALSE(check_equal(V(), V_layout_type()));
 
-    // Creating this View outside of the if constexpr works around
-    // a CUDA link issue, where a defaulted ctor is not created properly
     auto v_mem_space = V_memory_space_type();
-    if (std::is_same_v<TEST_EXECSPACE::memory_space,
-                       Kokkos::DefaultHostExecutionSpace::memory_space>)
-      ASSERT_TRUE(check_equal(V(), v_mem_space));
-    else
-      ASSERT_FALSE(check_equal(V(), v_mem_space));
+    constexpr bool is_default_host_space =
+        std::is_same_v<TEST_EXECSPACE::memory_space,
+                       Kokkos::DefaultHostExecutionSpace::memory_space>;
+    ASSERT_EQ(check_equal(V(), v_mem_space), is_default_host_space);
   }
 
   {
     // Check for pointer equality
     ASSERT_TRUE(check_equal(V(), V()));  // nullptr is equal
-    using V_1D = Kokkos::View<T*, TEST_EXECSPACE>;
-    using V_1D_unmanaged =
-        Kokkos::View<V_1D::data_type, TEST_EXECSPACE, Kokkos::MemoryUnmanaged>;
-    auto v_1D_0 = V_1D("v_1D_0", 3);
-    auto v_1D_1 = V_1D("v_1D_1", 3);
-    ASSERT_FALSE(check_equal(v_1D_0, v_1D_1));
-    ASSERT_TRUE(check_equal(v_1D_0, V_1D_unmanaged(v_1D_0.data(), 3)));
+    using V_t = Kokkos::View<T*, TEST_EXECSPACE>;
+    using V_unmanaged_t =
+        Kokkos::View<V_t::data_type, TEST_EXECSPACE, Kokkos::MemoryUnmanaged>;
+    auto v_0 = V_t("v_1D_0", 3);
+    auto v_1 = V_t("v_1D_1", 3);
+    ASSERT_FALSE(check_equal(v_0, v_1));
+    ASSERT_TRUE(check_equal(v_0, V_unmanaged_t(v_0.data(), 3)));
   }
 
   {
     // Check for matching static extents (same span, same ptr)
-    auto v_2D_0 = Kokkos::View<T[1][3], TEST_EXECSPACE>("v_2D_0");
-    auto v_2D_1 =
-        Kokkos::View<T[3][1], TEST_EXECSPACE, Kokkos::MemoryUnmanaged>(
-            v_2D_0.data());
-    ASSERT_FALSE(check_equal(v_2D_0, v_2D_1));
+    auto v_0 = Kokkos::View<T[1][3], TEST_EXECSPACE>("v_2D_0");
+    auto v_1 = Kokkos::View<T[3][1], TEST_EXECSPACE, Kokkos::MemoryUnmanaged>(
+        v_0.data());
+    ASSERT_FALSE(check_equal(v_0, v_1));
   }
 
   {
     // Check for matching dynamic extents (same span, same ptr)
-    using v_2D_t = Kokkos::View<T**, TEST_EXECSPACE>;
-    auto v_2D_2  = v_2D_t("v_2D_2", 3, 3);
-    auto v_2D_3 =
-        Kokkos::View<T[3][3], TEST_EXECSPACE, Kokkos::MemoryUnmanaged>(
-            v_2D_2.data());
-    ASSERT_TRUE(check_equal(v_2D_2, v_2D_3));
+    using v_t = Kokkos::View<T**, TEST_EXECSPACE>;
+    auto v_0  = v_t("v_2D_2", 3, 3);
+    auto v_1  = Kokkos::View<T[3][3], TEST_EXECSPACE, Kokkos::MemoryUnmanaged>(
+        v_0.data());
+    ASSERT_TRUE(check_equal(v_0, v_1));
   }
 }
 
