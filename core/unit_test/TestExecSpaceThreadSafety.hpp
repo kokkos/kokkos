@@ -39,9 +39,17 @@ namespace {
 #define KOKKOS_TEST_SKIP_IF_SYCL_OUT_OF_ORDER_QUEUES()
 #endif
 
+#ifdef KOKKOS_ENABLE_ATOMICS_BYPASS
+#define KOKKOS_TEST_SKIP_IF_ATOMICS_BYPASS() \
+  GTEST_SKIP() << "since bypassing atomics";
+#else
+#define KOKKOS_TEST_SKIP_IF_ATOMICS_BYPASS()
+#endif
+
 #define KOKKOS_TEST_SKIP_IF_NEEDED()             \
   KOKKOS_TEST_SKIP_IF_OPENACC()                  \
   KOKKOS_TEST_SKIP_IF_SYCL_OUT_OF_ORDER_QUEUES() \
+  KOKKOS_TEST_SKIP_IF_ATOMICS_BYPASS()           \
   static_assert(true, "no-op to require trailing semicolon")
 
 #ifdef KOKKOS_ENABLE_OPENMP
@@ -338,6 +346,7 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan) {
 }
 
 #undef KOKKOS_TEST_SKIP_IF_NEEDED
+#undef KOKKOS_TEST_SKIP_IF_ATOMICS_BYPASS
 #undef KOKKOS_TEST_SKIP_IF_SYCL_OUT_OF_ORDER_QUEUES
 #undef KOKKOS_TEST_SKIP_IF_OPENACC
 
