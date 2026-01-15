@@ -328,7 +328,7 @@ class simd_device_memory_permute_functor {
   }
 };
 
-TEST(simd, host_memory_permuete) {
+TEST(simd, host_memory_permute) {
   host_check_memory_permute_all_abis(
       Kokkos::Experimental::Impl::host_abi_set{});
 }
