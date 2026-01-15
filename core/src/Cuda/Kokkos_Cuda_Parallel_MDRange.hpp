@@ -129,36 +129,40 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     dim3 grid(1, 1, 1);
     dim3 block(1, 1, 1);
 
+    array_index_type grid_0 = 1;
+    array_index_type grid_1 = 1;
+    array_index_type grid_2 = 1;
     if constexpr (Policy::rank == 2) {
       if constexpr (Policy::inner_direction == Iterate::Left) {
         block.x = m_policy.m_tile[0];
         block.y = m_policy.m_tile[1];
-        grid.x  = std::min<array_index_type>(m_policy.m_tile_end[0],
-                                            m_max_grid_size[0]);
-        grid.y  = std::min<array_index_type>(m_policy.m_tile_end[1],
-                                            m_max_grid_size[1]);
+        grid_0  = m_policy.m_tile_end[0];
+        grid_1  = m_policy.m_tile_end[1];
       } else {
         block.x = m_policy.m_tile[1];
         block.y = m_policy.m_tile[0];
-        grid.x  = std::min<array_index_type>(m_policy.m_tile_end[1],
-                                            m_max_grid_size[0]);
-        grid.y  = std::min<array_index_type>(m_policy.m_tile_end[0],
-                                            m_max_grid_size[1]);
+        grid_0  = m_policy.m_tile_end[1];
+        grid_1  = m_policy.m_tile_end[0];
       }
-    } else if constexpr (Policy::rank >= 3) {
-      array_index_type grid_0 = 1;
-      array_index_type grid_1 = 1;
-      array_index_type grid_2 = 1;
-
+    } else if constexpr (Policy::rank == 3) {
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        if constexpr (Policy::rank == 3) {
-          block.x = m_policy.m_tile[0];
-          block.y = m_policy.m_tile[1];
-          block.z = m_policy.m_tile[2];
-          grid_0  = m_policy.m_tile_end[0];
-          grid_1  = m_policy.m_tile_end[1];
-          grid_2  = m_policy.m_tile_end[2];
-        } else if constexpr (Policy::rank >= 4) {
+        block.x = m_policy.m_tile[0];
+        block.y = m_policy.m_tile[1];
+        block.z = m_policy.m_tile[2];
+        grid_0  = m_policy.m_tile_end[0];
+        grid_1  = m_policy.m_tile_end[1];
+        grid_2  = m_policy.m_tile_end[2];
+      } else {
+        block.x = m_policy.m_tile[2];
+        block.y = m_policy.m_tile[1];
+        block.z = m_policy.m_tile[0];
+        grid_0  = m_policy.m_tile_end[2];
+        grid_1  = m_policy.m_tile_end[1];
+        grid_2  = m_policy.m_tile_end[0];
+      }
+    } else {  // rank > 3
+      if constexpr (Policy::inner_direction == Iterate::Left) {
+        if constexpr (Policy::rank >= 4) {
           block.x = m_policy.m_tile[0] * m_policy.m_tile[1];
           block.y = m_policy.m_tile[2];
           block.z = m_policy.m_tile[3];
@@ -176,15 +180,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
           block.z = m_policy.m_tile[4] * m_policy.m_tile[5];
           grid_2  = m_policy.m_tile_end[4] * m_policy.m_tile_end[5];
         }
-      } else {
-        if constexpr (Policy::rank == 3) {
-          block.x = m_policy.m_tile[2];
-          block.y = m_policy.m_tile[1];
-          block.z = m_policy.m_tile[0];
-          grid_0  = m_policy.m_tile_end[2];
-          grid_1  = m_policy.m_tile_end[1];
-          grid_2  = m_policy.m_tile_end[0];
-        } else if constexpr (Policy::rank >= 4) {
+      } else {  // InnerDirection == Right
+        if constexpr (Policy::rank >= 4) {
           block.x = m_policy.m_tile[Policy::rank - 1] *
                     m_policy.m_tile[Policy::rank - 2];
           block.y = m_policy.m_tile[Policy::rank - 3];
@@ -209,11 +206,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                    m_policy.m_tile_end[Policy::rank - 6];
         }
       }
-      grid = dim3(std::min<array_index_type>(grid_0, m_max_grid_size[0]),
-                  std::min<array_index_type>(grid_1, m_max_grid_size[1]),
-                  std::min<array_index_type>(grid_2, m_max_grid_size[2]));
     }
-
+    grid = dim3(std::min<array_index_type>(grid_0, m_max_grid_size[0]),
+                std::min<array_index_type>(grid_1, m_max_grid_size[1]),
+                std::min<array_index_type>(grid_2, m_max_grid_size[2]));
     // ensure we don't exceed the capability of the device
     check_grid_sizes(grid);
     check_block_sizes(block);
