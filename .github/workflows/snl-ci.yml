@@ -298,7 +298,7 @@ jobs:
       # Let nextsystemd try to initialize everything for 20s and see what happens
       - name: Initialize Hardware
         run: |
-          nextsystemd &
+          nextsystemd --ui-collector-address none &
           NEXTSYSTEMD_PID=$!
           sleep 20
           kill $NEXTSYSTEMD_PID
