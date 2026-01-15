@@ -286,7 +286,6 @@ jobs:
   NextSilicon_1_0_0:
     name: SNL_NextSilicon_1_0_0
     runs-on: [ns-1.0.0]
-    # no NextSilicon backend yet, so okay if this job fails
     continue-on-error: true
 
     steps:
