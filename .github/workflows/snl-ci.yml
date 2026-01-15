@@ -295,10 +295,13 @@ jobs:
           nextcli --version
           nextcxx --version
           cmake --version
-      # Let nextsystemd try to initialize everything for 20s and see what happens
+      # Give nextsystemd 20s to get going and check that everything is up
       - name: Initialize Hardware
         run: |
           nextsystemd --ui-collector-address none &
-          NEXTSYSTEMD_PID=$!
           sleep 20
-          kill $NEXTSYSTEMD_PID
+          nextcli system status
+          nextcli system status | grep "Service: UP"
+          nextcli system status | grep "Maverick 2"
+          nextcli system status | grep "Status: OK"
+          nextcli system terminate
