@@ -299,4 +299,6 @@ jobs:
       - name: Initialize Hardware
         run: |
           nextsystemd &
+          NEXTSYSTEMD_PID=$!
           sleep 20
+          kill $NEXTSYSTEMD_PID
