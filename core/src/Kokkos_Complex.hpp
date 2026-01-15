@@ -63,7 +63,6 @@ class
   /// This constructor cannot be called in a CUDA device function,
   /// because std::complex's methods and nonmember functions are not
   /// marked as CUDA device functions.
-  KOKKOS_INLINE_FUNCTION
   complex(const std::complex<RealType>& src) noexcept
       // We can use this aspect of the standard to avoid calling
       // non-device-marked functions `std::real` and `std::imag`: "For any
@@ -149,12 +148,12 @@ class
     return *this;
   }
 
-  KOKKOS_FUNCTION friend constexpr complex& operator+=(
-      complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr complex& operator+=(complex& lhs,
+                                       const std::complex<RealType>& rhs) {
     return lhs = lhs + rhs;
   }
 
-  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator+=(
+  friend constexpr std::complex<RealType>& operator+=(
       std::complex<RealType>& lhs, const complex& rhs) {
     return lhs = lhs + rhs;
   }
@@ -172,12 +171,12 @@ class
     return *this;
   }
 
-  KOKKOS_FUNCTION friend constexpr complex& operator-=(
-      complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr complex& operator-=(complex& lhs,
+                                       const std::complex<RealType>& rhs) {
     return lhs = lhs - rhs;
   }
 
-  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator-=(
+  friend constexpr std::complex<RealType>& operator-=(
       std::complex<RealType>& lhs, const complex& rhs) {
     return lhs = lhs - rhs;
   }
@@ -198,12 +197,12 @@ class
     return *this;
   }
 
-  KOKKOS_FUNCTION friend constexpr complex& operator*=(
-      complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr complex& operator*=(complex& lhs,
+                                       const std::complex<RealType>& rhs) {
     return lhs = lhs * rhs;
   }
 
-  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator*=(
+  friend constexpr std::complex<RealType>& operator*=(
       std::complex<RealType>& lhs, const complex& rhs) {
     return lhs = lhs * rhs;
   }
@@ -235,9 +234,8 @@ class
     return *this;
   }
 
-  constexpr KOKKOS_INLINE_FUNCTION complex& operator/=(
-      const std::complex<RealType>& y) noexcept(noexcept(RealType{} /
-                                                         RealType{})) {
+  constexpr complex& operator/=(const std::complex<RealType>& y) noexcept(
+      noexcept(RealType{} / RealType{})) {
     // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
     // If the real part is +/-Inf and the imaginary part is -/+Inf,
     // this won't change the result.
@@ -261,7 +259,7 @@ class
     return *this;
   }
 
-  KOKKOS_FUNCTION friend constexpr std::complex<RealType>& operator/=(
+  friend constexpr std::complex<RealType>& operator/=(
       std::complex<RealType>& lhs, const complex& rhs) {
     return lhs = lhs / rhs;
   }
@@ -284,65 +282,65 @@ class
   // These can be hidden friends because they are not specified by the C++
   // standard.
 
-  KOKKOS_FUNCTION friend constexpr complex operator+(
-      const complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr complex operator+(const complex& lhs,
+                                     const std::complex<RealType>& rhs) {
     return complex(lhs.real() + rhs.real(), lhs.imag() + rhs.imag());
   }
 
-  KOKKOS_FUNCTION friend constexpr complex operator+(
-      const std::complex<RealType>& lhs, const complex& rhs) {
+  friend constexpr complex operator+(const std::complex<RealType>& lhs,
+                                     const complex& rhs) {
     return complex(lhs.real() + rhs.real(), lhs.imag() + rhs.imag());
   }
 
-  KOKKOS_FUNCTION friend constexpr complex operator-(
-      const complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr complex operator-(const complex& lhs,
+                                     const std::complex<RealType>& rhs) {
     return complex(lhs.real() - rhs.real(), lhs.imag() - rhs.imag());
   }
 
-  KOKKOS_FUNCTION friend constexpr complex operator-(
-      const std::complex<RealType>& lhs, const complex& rhs) {
+  friend constexpr complex operator-(const std::complex<RealType>& lhs,
+                                     const complex& rhs) {
     return complex(lhs.real() - rhs.real(), lhs.imag() - rhs.imag());
   }
 
-  KOKKOS_FUNCTION friend constexpr complex operator*(
-      const complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr complex operator*(const complex& lhs,
+                                     const std::complex<RealType>& rhs) {
     return complex(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
                    lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
   }
 
-  KOKKOS_FUNCTION friend constexpr complex operator*(
-      const std::complex<RealType>& lhs, const complex& rhs) {
+  friend constexpr complex operator*(const std::complex<RealType>& lhs,
+                                     const complex& rhs) {
     return complex(lhs.real() * rhs.real() - lhs.imag() * rhs.imag(),
                    lhs.real() * rhs.imag() + lhs.imag() * rhs.real());
   }
 
-  KOKKOS_FUNCTION friend constexpr complex operator/(
-      const complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr complex operator/(const complex& lhs,
+                                     const std::complex<RealType>& rhs) {
     return lhs / complex(rhs);
   }
 
-  KOKKOS_FUNCTION friend constexpr complex operator/(
-      const std::complex<RealType>& lhs, const complex& rhs) {
+  friend constexpr complex operator/(const std::complex<RealType>& lhs,
+                                     const complex& rhs) {
     return complex(lhs) / rhs;
   }
 
-  KOKKOS_FUNCTION friend constexpr bool operator==(
-      const complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr bool operator==(const complex& lhs,
+                                   const std::complex<RealType>& rhs) {
     return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
   }
 
-  KOKKOS_FUNCTION friend constexpr bool operator==(
-      const std::complex<RealType>& lhs, const complex& rhs) {
+  friend constexpr bool operator==(const std::complex<RealType>& lhs,
+                                   const complex& rhs) {
     return lhs.real() == rhs.real() && lhs.imag() == rhs.imag();
   }
 
-  KOKKOS_FUNCTION friend constexpr bool operator!=(
-      const complex& lhs, const std::complex<RealType>& rhs) {
+  friend constexpr bool operator!=(const complex& lhs,
+                                   const std::complex<RealType>& rhs) {
     return !(lhs == rhs);
   }
 
-  KOKKOS_FUNCTION friend constexpr bool operator!=(
-      const std::complex<RealType>& lhs, const complex& rhs) {
+  friend constexpr bool operator!=(const std::complex<RealType>& lhs,
+                                   const complex& rhs) {
     return !(lhs == rhs);
   }
 
