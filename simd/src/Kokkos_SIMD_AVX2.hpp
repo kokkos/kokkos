@@ -3176,11 +3176,11 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
-    return (lhs > rhs) || (lhs == rhs);
+    return !(lhs < rhs);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
-    return (lhs < rhs) || (lhs == rhs);
+    return !(lhs > rhs);
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
