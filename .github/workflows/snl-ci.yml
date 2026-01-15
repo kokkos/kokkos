@@ -283,8 +283,8 @@ jobs:
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
 
-  NS_1_0_0:
-    name: SNL_NS_1_0_0
+  NextSilicon_1_0_0:
+    name: SNL_NextSilicon_1_0_0
     runs-on: [ns-1.0.0]
     # no NextSilicon backend yet, so okay if this job fails
     continue-on-error: true
