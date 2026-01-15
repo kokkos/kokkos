@@ -282,3 +282,21 @@ jobs:
       - name: test_kokkos
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
+
+  NS_1_0_0:
+    name: SNL_NS_1_0_0
+    runs-on: [ns-1.0.0]
+    # no NextSilicon backend yet, so okay if this job fails
+    continue-on-error: true
+
+    steps:
+      - name: Environment Information
+        run: |
+          nextcli --version
+          nextcxx --version
+          cmake --version
+      # Let nextsystemd try to initialize everything for 20s and see what happens
+      - name: Initialize Hardware
+        run: |
+          nextsystemd &
+          sleep 20
