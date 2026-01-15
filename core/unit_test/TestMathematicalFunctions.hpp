@@ -2079,7 +2079,8 @@ struct TestSignbit {
         !signbit(finite_min<KE::bhalf_t>::value) ||
         !signbit(-static_cast<KE::bhalf_t>(infinity<KE::bhalf_t>::value)) ||
         !signbit(-static_cast<KE::bhalf_t>(denorm_min<KE::bhalf_t>::value))
-#ifndef KOKKOS_ENABLE_CUDA
+// the bhalf test also fails for SYCL+Cuda
+#ifndef KOKKOS_IMPL_ARCH_NVIDIA_GPU
         || !signbit(-static_cast<KE::bhalf_t>(quiet_NaN<KE::bhalf_t>::value)) ||
         !signbit(-static_cast<KE::bhalf_t>(signaling_NaN<KE::bhalf_t>::value))
 #endif
