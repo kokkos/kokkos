@@ -458,16 +458,19 @@ jobs:
       - name: Training Run Kokkos_IncrementalTest_NEXTSILICON
         run: |
           export XDG_CACHE_HOME=$(mktemp -d)
-          nextsystemd --cfg-file kokkos_next_runtime.conf &
+          nextsystemd --cfg-file kokkos_next_runtime.conf > nextsystemd.log 2>&1 &
           sleep 20
+          cat nextsystemd.log
           nextcli system status
           nextcli system status | grep "Service: UP"
           nextcli system status | grep "Maverick 2"
           nextcli system status | grep "Status: OK"
           build/core/unit_test/Kokkos_IncrementalTest_NEXTSILICON
           sleep 20
+          cat nextsystemd.log
           build/core/unit_test/Kokkos_CoreUnitTest_NextSiliconNsapi
           sleep 20
+          cat nextsystemd.log
           nextcli system terminate
 
       # no offload run yet since no parallel regions to offload
