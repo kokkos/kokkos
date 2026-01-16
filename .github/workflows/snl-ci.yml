@@ -372,19 +372,20 @@ jobs:
 
       # FIXME_NEXTSILICON: -Wno-ns-unsupported-type: NS 1.0.0 doesn't support long double
       - name: Configure
-        run: cmake -S kokkos -B build \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
-          -DKokkos_ENABLE_BENCHMARKS=OFF \
-          -DKokkos_ENABLE_EXAMPLSE=OFF \
-          -DKokkos_ENABLE_SERIAL=ON \
-          -DKokkos_ENABLE_NEXTSILICON=ON \
-          -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
-          -DKokkos_ENABLE_IMPL_NEXTSILICON_UNIFIED_MEMORY=OFF \
-          -DKokkos_ENABLE_IMPL_NEXTSILICON_DISTRIBUTE_MEMORY=ON \
-          -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
-          -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
-          -DCMAKE_CXX_FLAGS="-Wno-ns-unsupported-type -Wno-return-type -Wno-invalid-noreturn"
+        run: |
+          cmake -S kokkos -B build \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
+            -DKokkos_ENABLE_BENCHMARKS=OFF \
+            -DKokkos_ENABLE_EXAMPLSE=OFF \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_NEXTSILICON=ON \
+            -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
+            -DKokkos_ENABLE_IMPL_NEXTSILICON_UNIFIED_MEMORY=OFF \
+            -DKokkos_ENABLE_IMPL_NEXTSILICON_DISTRIBUTE_MEMORY=ON \
+            -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
+            -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
+            -DCMAKE_CXX_FLAGS="-Wno-ns-unsupported-type -Wno-return-type -Wno-invalid-noreturn"
 
       # Build only specific tests. Most tests need ParallelFor and ParallelReduce.
       - name: Build
@@ -428,19 +429,20 @@ jobs:
 
       # FIXME_NEXTSILICON: -Wno-ns-unsupported-type: NS 1.0.0 doesn't support long double
       - name: Configure
-        run: cmake -S kokkos -B build \
-          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-          -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
-          -DKokkos_ENABLE_BENCHMARKS=OFF \
-          -DKokkos_ENABLE_EXAMPLSE=OFF \
-          -DKokkos_ENABLE_SERIAL=ON \
-          -DKokkos_ENABLE_NEXTSILICON=ON \
-          -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
-          -DKokkos_ENABLE_IMPL_NEXTSILICON_UNIFIED_MEMORY=OFF \
-          -DKokkos_ENABLE_IMPL_NEXTSILICON_DISTRIBUTE_MEMORY=ON \
-          -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
-          -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
-          -DCMAKE_CXX_FLAGS="-Wno-ns-unsupported-type -Wno-return-type -Wno-invalid-noreturn"
+        run: |
+          cmake -S kokkos -B build \
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+            -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
+            -DKokkos_ENABLE_BENCHMARKS=OFF \
+            -DKokkos_ENABLE_EXAMPLSE=OFF \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ENABLE_NEXTSILICON=ON \
+            -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
+            -DKokkos_ENABLE_IMPL_NEXTSILICON_UNIFIED_MEMORY=OFF \
+            -DKokkos_ENABLE_IMPL_NEXTSILICON_DISTRIBUTE_MEMORY=ON \
+            -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
+            -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
+            -DCMAKE_CXX_FLAGS="-Wno-ns-unsupported-type -Wno-return-type -Wno-invalid-noreturn"
 
       # Build only specific tests. Most tests need ParallelFor and ParallelReduce.
       - name: Build
