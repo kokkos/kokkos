@@ -20,7 +20,13 @@ namespace Test {
 using value_type = double;
 
 // Allocate M number of value_type elements N number of times.
+#if defined(KOKKOS_ENABLE_NEXTSILICON)
+// FIXME_NEXTSILICON: deallocation is slow in 1.0.0
+// This takes approximately 750ms
+const int N = 100;
+#else
 const int N = 100000;
+#endif
 const int M = 100000;
 
 template <class ExecSpace>
