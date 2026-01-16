@@ -372,8 +372,7 @@ jobs:
 
       # FIXME_NEXTSILICON: -Wno-ns-unsupported-type: NS 1.0.0 doesn't support long double
       - name: Configure
-        run: <
-          cmake -S kokkos -B build \
+        run: cmake -S kokkos -B build \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
           -DKokkos_ENABLE_BENCHMARKS=OFF \
@@ -429,8 +428,7 @@ jobs:
 
       # FIXME_NEXTSILICON: -Wno-ns-unsupported-type: NS 1.0.0 doesn't support long double
       - name: Configure
-        run: <
-          cmake -S kokkos -B build \
+        run: cmake -S kokkos -B build \
           -DCMAKE_BUILD_TYPE=RelWithDebInfo \
           -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
           -DKokkos_ENABLE_BENCHMARKS=OFF \
