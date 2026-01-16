@@ -466,7 +466,7 @@ jobs:
       # sleep after each separate binary to observe output of nextsilicon runtime components
       - name: Training Run Kokkos_IncrementalTest_NEXTSILICON
         run: |
-          XDG_CACHE_HOME=$(mktemp -d)
+          export XDG_CACHE_HOME=$(mktemp -d)
           nextsystemd --cfg-file kokkos_next_runtime.conf &
           sleep 20
           build/core/unit_test/Kokkos_IncrementalTest_NEXTSILICON
