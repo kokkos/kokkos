@@ -440,8 +440,8 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
-    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(rhs),
-                                        static_cast<__m512d>(lhs), _CMP_GE_OS));
+    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(lhs),
+                                        static_cast<__m512d>(rhs), _CMP_GE_OS));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -450,8 +450,8 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
-    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(rhs),
-                                        static_cast<__m512d>(lhs), _CMP_GT_OS));
+    return mask_type(_mm512_cmp_pd_mask(static_cast<__m512d>(lhs),
+                                        static_cast<__m512d>(rhs), _CMP_GT_OS));
   }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -547,7 +547,7 @@ sqrt(Experimental::basic_simd<
       _mm512_sqrt_pd(static_cast<__m512d>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#ifdef KOKKOS_HAVE_INTEL_SVML
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION Experimental::basic_simd<
     double, Experimental::simd_abi::avx512_fixed_size<8>>
@@ -946,8 +946,7 @@ sqrt(Experimental::basic_simd<
       _mm256_sqrt_ps(static_cast<__m256>(a)));
 }
 
-#ifdef __INTEL_COMPILER
-
+#ifdef KOKKOS_HAVE_INTEL_SVML
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 Experimental::basic_simd<float, Experimental::simd_abi::avx512_fixed_size<8>>
 cbrt(Experimental::basic_simd<

@@ -121,7 +121,17 @@ KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(ceil, hceil)
 KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(floor, hfloor)
 KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(trunc, htrunc)
 // round
-KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(nearbyint, hrint)
+KOKKOS_CUDA_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(rint, hrint)
+// NOTE Cuda does not provide these functions, but we can exclude domain errors,
+// as the range of int is enough for any value half_t can take.
+// Thus we just cast to the required return type here.
+// We are still missing the bhalf_t versions
+KOKKOS_INLINE_FUNCTION long impl_lrint(Kokkos::Experimental::half_t x) {
+  return static_cast<long>(impl_rint(x));
+}
+KOKKOS_INLINE_FUNCTION long long impl_llrint(Kokkos::Experimental::half_t x) {
+  return static_cast<long long>(impl_rint(x));
+}
 // logb
 // nextafter
 // copysign

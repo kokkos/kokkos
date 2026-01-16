@@ -70,7 +70,12 @@ template <class ViewType, class Layout, class ExecSpace, typename iType>
 struct ViewFill<ViewType, Layout, ExecSpace, 1, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
-  using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
+  // It was found empirically that increasing the number of elements per thread
+  // by a factor of 16 gives good results for configurations that support
+  // StaticBatchSize.
+  using policy_type =
+      Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>,
+                          Kokkos::Experimental::StaticBatchSize<16>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)

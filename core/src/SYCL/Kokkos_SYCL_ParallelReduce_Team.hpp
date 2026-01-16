@@ -49,7 +49,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
   template <typename CombinedFunctorReducerWrapper>
   sycl::event sycl_direct_launch(
-      const sycl_device_ptr<char> global_scratch_ptr,
+      const sycl::global_ptr<char> global_scratch_ptr,
       const CombinedFunctorReducerWrapper& functor_reducer_wrapper,
       const sycl::event& memcpy_event) const {
     // Convenience references
@@ -64,7 +64,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     value_type* results_ptr = nullptr;
     auto host_result_ptr =
         (m_result_ptr && !m_result_ptr_device_accessible)
-            ? static_cast<sycl_host_ptr<value_type>>(
+            ? static_cast<sycl::global_ptr<value_type>>(
                   instance.scratch_host(sizeof(value_type) * value_count))
             : nullptr;
 
@@ -77,7 +77,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // m_result_ptr yet.
     if (size <= 1) {
       results_ptr =
-          static_cast<sycl_device_ptr<value_type>>(instance.scratch_space(
+          static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
               sizeof(value_type) * std::max(value_count, 1u)));
       auto device_accessible_result_ptr =
           m_result_ptr_device_accessible
@@ -144,7 +144,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // reduction on the values in all workgroups separately, write the
       // workgroup results back to global memory and recurse until only one
       // workgroup does the reduction and thus gets the final value.
-      auto scratch_flags = static_cast<sycl_device_ptr<unsigned int>>(
+      auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
           instance.scratch_flags(sizeof(unsigned int)));
       auto cgh_lambda = [&](sycl::handler& cgh) {
         // FIXME_SYCL accessors seem to need a size greater than zero at least
@@ -162,7 +162,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
 
         auto team_reduction_factory =
             [&](sycl::local_accessor<value_type, 1> local_mem,
-                sycl_device_ptr<value_type> results_ptr) {
+                sycl::global_ptr<value_type> results_ptr) {
               auto device_accessible_result_ptr =
                   m_result_ptr_device_accessible
                       ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
@@ -320,7 +320,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         const auto init_size =
             std::max<std::size_t>((size + wgroup_size - 1) / wgroup_size, 1);
         results_ptr =
-            static_cast<sycl_device_ptr<value_type>>(instance.scratch_space(
+            static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
                 sizeof(value_type) * std::max(value_count, 1u) * init_size));
 
         size_t max_work_groups =
@@ -399,8 +399,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     int scratch_pool_id = instance.acquire_team_scratch_space();
-    const sycl_device_ptr<char> global_scratch_ptr =
-        static_cast<sycl_device_ptr<char>>(instance.resize_team_scratch_space(
+    const sycl::global_ptr<char> global_scratch_ptr =
+        static_cast<sycl::global_ptr<char>>(instance.resize_team_scratch_space(
             scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 

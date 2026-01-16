@@ -997,7 +997,7 @@ sqrt(Experimental::basic_simd<
       _mm256_sqrt_pd(static_cast<__m256d>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#ifdef KOKKOS_HAVE_INTEL_SVML
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 Experimental::basic_simd<double, Experimental::simd_abi::avx2_fixed_size<4>>
@@ -1381,7 +1381,7 @@ sqrt(Experimental::basic_simd<
       _mm_sqrt_ps(static_cast<__m128>(a)));
 }
 
-#ifdef __INTEL_COMPILER
+#ifdef KOKKOS_HAVE_INTEL_SVML
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 Experimental::basic_simd<float, Experimental::simd_abi::avx2_fixed_size<4>>
@@ -3173,6 +3173,35 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator!=(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return !(lhs == rhs);
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return !(lhs < rhs);
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<=(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return !(lhs > rhs);
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator>(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    // We use the following bit trick to compute the unsigned comparison from
+    // the signed values since there is no intrinsic for unsigned int comparison
+    // in AVX2: (a < 0) ^ (b < 0) ^ (a > b)
+    // If a and b have the same sign, the signed and unsigned comparison will
+    // give the same result. In this case:
+    //  (a < 0) == (b < 0) => (a < 0) ^ (b < 0) = 0, and 0 ^ (a > b) == (a > b)
+    // If they have different signs, the signed and unsigned comparisons will
+    // give opposite results (negative values are higher than positive values
+    // when interpreting them as unsigned). In that case:
+    //  (a < 0) != (b < 0) => (a < 0) ^ (b < 0) = 1, and 1 ^ (a > b) == !(a > b)
+    basic_simd<std::int64_t, abi_type> signed_lhs{static_cast<__m256i>(lhs)};
+    basic_simd<std::int64_t, abi_type> signed_rhs{static_cast<__m256i>(rhs)};
+    return static_cast<mask_type>((signed_lhs < 0) ^ (signed_rhs < 0) ^
+                                  (signed_lhs > signed_rhs));
+  }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return rhs > lhs;
   }
 };
 

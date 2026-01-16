@@ -45,7 +45,16 @@ struct extrema {
   DEFINE_EXTREMA(unsigned long, 0UL, ULONG_MAX)
   DEFINE_EXTREMA(long long, LLONG_MIN, LLONG_MAX)
   DEFINE_EXTREMA(unsigned long long, 0ULL, ULLONG_MAX)
-
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+  DEFINE_EXTREMA(Kokkos::Experimental::half_t,
+                 Kokkos::Experimental::half_t(-65504.0f),
+                 Kokkos::Experimental::half_t(65504.0f))
+#endif
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+  DEFINE_EXTREMA(Kokkos::Experimental::bhalf_t,
+                 Kokkos::Experimental::bhalf_t(-3.38953139e38f),
+                 Kokkos::Experimental::bhalf_t(3.38953139e38f))
+#endif
   DEFINE_EXTREMA(float, -FLT_MAX, FLT_MAX)
   DEFINE_EXTREMA(double, -DBL_MAX, DBL_MAX)
   DEFINE_EXTREMA(long double, -LDBL_MAX, LDBL_MAX)
@@ -268,6 +277,10 @@ TEST(TEST_CATEGORY, numeric_traits_finite_min_max) {
   TestNumericTraits<TEST_EXECSPACE, unsigned long long, FiniteMin>();
   TestNumericTraits<TEST_EXECSPACE, unsigned long long, FiniteMax>();
 
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t, FiniteMax>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, FiniteMin>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t, FiniteMax>();
   TestNumericTraits<TEST_EXECSPACE, float, FiniteMin>();
   TestNumericTraits<TEST_EXECSPACE, float, FiniteMax>();
   TestNumericTraits<TEST_EXECSPACE, double, FiniteMin>();
@@ -343,6 +356,10 @@ TEST(TEST_CATEGORY, numeric_traits_radix) {
 
 TEST(TEST_CATEGORY, numeric_traits_min_max_exponent) {
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
+                    MinExponent>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::half_t,
+                    MaxExponent>();
+  TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
                     MinExponent>();
   TestNumericTraits<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t,
                     MaxExponent>();

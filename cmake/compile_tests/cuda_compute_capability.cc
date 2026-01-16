@@ -33,6 +33,7 @@ int main() {
     case 89:  std::cout << "Set -DKokkos_ARCH_ADA89=ON ." << std::endl; break;
     case 90:  std::cout << "Set -DKokkos_ARCH_HOPPER90=ON ." << std::endl; break;
     case 100: std::cout << "Set -DKokkos_ARCH_BLACKWELL100=ON ." << std::endl; break;
+    case 103: std::cout << "Set -DKokkos_ARCH_BLACKWELL103=ON ." << std::endl; break;
     case 120: std::cout << "Set -DKokkos_ARCH_BLACKWELL120=ON ." << std::endl; break;
     default:
       std::cout << "Compute capability " << compute_capability
