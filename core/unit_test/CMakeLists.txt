@@ -23,8 +23,10 @@ if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 else()
   set(KOKKOS_OPENACC_FEATURE_LEVEL 17)
 endif()
-
 set(KOKKOS_OPENACC_NAME Experimental::OpenACC)
+
+set(KOKKOS_NEXTSILICON_FEATURE_LEVEL 3)
+set(KOKKOS_NEXTSILICON_NAME Experimental::NextSilicon)
 
 #
 # Define the tests
@@ -85,7 +87,7 @@ endif()
 
 kokkos_add_executable(CoreTestCompileOnly SOURCES TestCompileMain.cpp ${COMPILE_ONLY_SOURCES})
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;NextSilicon;HIP;SYCL)
   string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
 
@@ -666,6 +668,12 @@ if(Kokkos_ENABLE_SYCL)
     )
   endif()
 endif()
+
+if(KOKKOS_ENABLE_NEXTSILICON)
+  kokkos_add_executable_and_test(
+    CoreUnitTest_NextSiliconNsapi SOURCES UnitTestMainInit.cpp nextsilicon/TestNextSilicon_Nsapi_Link.cpp
+  )
+endif(KOKKOS_ENABLE_NEXTSILICON)
 
 set(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp

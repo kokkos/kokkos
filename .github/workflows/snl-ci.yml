@@ -352,8 +352,8 @@ jobs:
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
 
-  NextSilicon_1_0_0:
-    name: SNL_NextSilicon_1_0_0
+  NextSilicon_1_0_0_Host:
+    name: SNL_NextSilicon_1_0_0_Host
     runs-on: [ns-1.0.0]
     continue-on-error: true
 
@@ -363,6 +363,59 @@ jobs:
           nextcli --version
           nextcxx --version
           cmake --version
+
+      - name: checkout_kokkos
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      # FIXME_NEXTSILICON: -Wno-ns-unsupported-type: NS 1.0.0 doesn't support long double
+      - name: Configure
+        run: <
+          cmake -S kokkos -B build \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
+          -DKokkos_ENABLE_BENCHMARKS=OFF \
+          -DKokkos_ENABLE_EXAMPLSE=OFF \
+          -DKokkos_ENABLE_SERIAL=ON \
+          -DKokkos_ENABLE_NEXTSILICON=ON \
+          -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
+          -DKokkos_ENABLE_IMPL_NEXTSILICON_UNIFIED_MEMORY=OFF \
+          -DKokkos_ENABLE_IMPL_NEXTSILICON_DISTRIBUTE_MEMORY=ON \
+          -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
+          -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
+          -DCMAKE_CXX_FLAGS="-Wno-ns-unsupported-type -Wno-return-type -Wno-invalid-noreturn"
+
+      # Build only specific tests. Most tests need ParallelFor and ParallelReduce.
+      - name: Build
+        run: cmake --build build --target Kokkos_IncrementalTest_NEXTSILICON Kokkos_CoreUnitTest_NextSiliconNsapi --parallel $(nproc)
+
+      # Run without NextSilicon runtime enabled (pure host CPU execution)
+      - name: Host Tests
+        run: |
+          build/core/unit_test/Kokkos_IncrementalTest_NEXTSILICON
+          build/core/unit_test/Kokkos_CoreUnitTest_NextSiliconNsapi
+
+
+  NextSilicon_1_0_0_Telemetry:
+    name: SNL_NextSilicon_1_0_0_Telemetry
+    runs-on: [ns-1.0.0]
+    continue-on-error: true
+
+    steps:
+      - name: Environment Information
+        run: |
+          nextcli --version
+          nextcxx --version
+          cmake --version
+
+      - name: checkout_kokkos
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
       # Give nextsystemd 20s to get going and check that everything is up
       - name: Initialize Hardware
         run: |
@@ -373,3 +426,52 @@ jobs:
           nextcli system status | grep "Maverick 2"
           nextcli system status | grep "Status: OK"
           nextcli system terminate
+
+      # FIXME_NEXTSILICON: -Wno-ns-unsupported-type: NS 1.0.0 doesn't support long double
+      - name: Configure
+        run: <
+          cmake -S kokkos -B build \
+          -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+          -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
+          -DKokkos_ENABLE_BENCHMARKS=OFF \
+          -DKokkos_ENABLE_EXAMPLSE=OFF \
+          -DKokkos_ENABLE_SERIAL=ON \
+          -DKokkos_ENABLE_NEXTSILICON=ON \
+          -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
+          -DKokkos_ENABLE_IMPL_NEXTSILICON_UNIFIED_MEMORY=OFF \
+          -DKokkos_ENABLE_IMPL_NEXTSILICON_DISTRIBUTE_MEMORY=ON \
+          -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
+          -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
+          -DCMAKE_CXX_FLAGS="-Wno-ns-unsupported-type -Wno-return-type -Wno-invalid-noreturn"
+
+      # Build only specific tests. Most tests need ParallelFor and ParallelReduce.
+      - name: Build
+        run: cmake --build build --target Kokkos_IncrementalTest_NEXTSILICON Kokkos_CoreUnitTest_NextSiliconNsapi --parallel $(nproc)
+
+      # Enable "telemetry" mode where offload decisions are made via dynamic instrumentation
+      - name: Create Runtime Configuration Patch
+        run: |
+          echo "elrond:"                            > kokkos_runtime_patch.conf
+          echo "  enable-telemetry-less: false"     >> kokkos_runtime_patch.conf
+          echo "  max-migration-chunk: 4294967296" >> kokkos_runtime_patch.conf
+
+      - name: Print Runtime Configuration Patch
+        run: cat kokkos_runtime_patch.conf
+
+      - name: Generate Full Runtime Configuration
+        run: $NEXT_HOME/python/bin/python3 $NEXT_HOME/bin/merge_runtime_conf.py kokkos_runtime_patch.conf kokkos_next_runtime.conf
+
+      # NS runtime uses XDG_CACHE_HOME as a temporary file location. Making sure it's a local filesystem can really speed projection up
+      # sleep after nextsystemd to give it a chance to initialize (observed to take ~10s in 1.0.0)
+      # sleep after each separate binary to observe output of nextsilicon runtime components
+      - name: Training Run Kokkos_IncrementalTest_NEXTSILICON
+        run: |
+          XDG_CACHE_HOME=$(mktemp -d)
+          nextsystemd --cfg-file kokkos_next_runtime.conf &
+          sleep 20
+          build/core/unit_test/Kokkos_IncrementalTest_NEXTSILICON
+          sleep 10
+          build/core/unit_test/Kokkos_CoreUnitTest_NextSiliconNsapi
+          sleep 10
+
+      # no offload run yet since no parallel regions to offload
