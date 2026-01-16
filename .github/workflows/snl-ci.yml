@@ -377,7 +377,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
             -DKokkos_ENABLE_BENCHMARKS=OFF \
-            -DKokkos_ENABLE_EXAMPLSE=OFF \
+            -DKokkos_ENABLE_EXAMPLES=OFF \
+            -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_NEXTSILICON=ON \
             -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
@@ -423,7 +424,8 @@ jobs:
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
             -DCMAKE_CXX_COMPILER=$NEXT_HOME/bin/nextcxx \
             -DKokkos_ENABLE_BENCHMARKS=OFF \
-            -DKokkos_ENABLE_EXAMPLSE=OFF \
+            -DKokkos_ENABLE_EXAMPLES=OFF \
+            -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_NEXTSILICON=ON \
             -DKokkos_ENABLE_IMPL_NEXTSILICON_ADD_TELEM_REGIONS=ON \
