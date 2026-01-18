@@ -576,54 +576,29 @@ class BasicView {
 #endif
 
  protected:
-  // Optimized fast path for 1D contiguous subviews with a single range argument
-  // This avoids the overhead of calling submdspan for the common case
+  // Optimized subview constructor that directly constructs m_ptr, m_map, and m_acc
+  // without creating temporary mdspan objects. This avoids the overhead of
+  // submdspan() for all View ranks and layouts.
   template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
-            class OtherAccessorPolicy, class PairLike>
+            class OtherAccessorPolicy, class... SliceSpecifiers>
   KOKKOS_INLINE_FUNCTION BasicView(
       Impl::SubViewCtorTag,
       const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
                       OtherAccessorPolicy> &src_view,
-      const PairLike &range,
-      std::enable_if_t<
-          OtherExtents::rank() == 1 &&
-          Impl::is_pair_like<std::remove_cv_t<PairLike>>::value &&
-          (std::is_same_v<OtherLayoutPolicy, layout_left> ||
-           std::is_same_v<OtherLayoutPolicy, layout_right>),
-          int> = 0)
-      : m_ptr(src_view.m_ptr + static_cast<size_type>(range.first)),
-        m_map(extents_type(static_cast<size_type>(range.second - range.first))),
-        m_acc(src_view.m_acc) {
-#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
-    if (static_cast<size_type>(range.first) < 0 ||
-        static_cast<size_type>(range.second) > src_view.extent(0) ||
-        static_cast<size_type>(range.first) > static_cast<size_type>(range.second)) {
-      KOKKOS_IF_ON_HOST(
-          Kokkos::abort("Kokkos::subview bounds error: 1D range out of bounds");)
-      KOKKOS_IF_ON_DEVICE(Kokkos::abort("Kokkos::subview bounds error");)
-    }
-#endif
-  }
-
-  // General subview constructor that uses submdspan for all other cases
-  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
-            class OtherAccessorPolicy, class... SliceSpecifiers,
-            std::enable_if_t<
-                !(sizeof...(SliceSpecifiers) == 1 &&
-                  OtherExtents::rank() == 1 &&
-                  Impl::is_pair_like<std::remove_cv_t<
-                      std::tuple_element_t<0, std::tuple<SliceSpecifiers...>>>>::value &&
-                  (std::is_same_v<OtherLayoutPolicy, layout_left> ||
-                   std::is_same_v<OtherLayoutPolicy, layout_right>)),
-                int> = 0>
-  KOKKOS_INLINE_FUNCTION BasicView(
-      Impl::SubViewCtorTag,
-      const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
-                      OtherAccessorPolicy> &src_view,
-      SliceSpecifiers... slices)
-      : BasicView(submdspan(
-            src_view.to_mdspan(),
-            Impl::transform_kokkos_slice_to_mdspan_slice(slices)...)) {
+      SliceSpecifiers... slices) {
+    // Get the submdspan_mapping_result directly from the source mapping
+    using src_mdspan_type = 
+        mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessorPolicy>;
+    const auto sub_mapping_result = 
+        submdspan_mapping(src_view.m_map,
+                          Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
+    
+    // Construct members directly without creating temporary mdspan
+    using sub_accessor_t = typename OtherAccessorPolicy::offset_policy;
+    m_ptr = src_view.m_acc.offset(src_view.m_ptr, sub_mapping_result.offset);
+    m_map = sub_mapping_result.mapping;
+    m_acc = sub_accessor_t(src_view.m_acc);
+    
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     bool valid = subview_extents_valid(
         src_view, std::make_index_sequence<sizeof...(SliceSpecifiers)>{},
