@@ -9,6 +9,7 @@ static_assert(false,
 #ifndef KOKKOS_BASIC_VIEW_HPP
 #define KOKKOS_BASIC_VIEW_HPP
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Pair.hpp>
 #include <impl/Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
@@ -575,8 +576,46 @@ class BasicView {
 #endif
 
  protected:
+  // Optimized fast path for 1D contiguous subviews with a single range argument
+  // This avoids the overhead of calling submdspan for the common case
   template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
-            class OtherAccessorPolicy, class... SliceSpecifiers>
+            class OtherAccessorPolicy, class PairLike>
+  KOKKOS_INLINE_FUNCTION BasicView(
+      Impl::SubViewCtorTag,
+      const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
+                      OtherAccessorPolicy> &src_view,
+      const PairLike &range,
+      std::enable_if_t<
+          OtherExtents::rank() == 1 &&
+          Impl::is_pair_like<std::remove_cv_t<PairLike>>::value &&
+          (std::is_same_v<OtherLayoutPolicy, layout_left> ||
+           std::is_same_v<OtherLayoutPolicy, layout_right>),
+          int> = 0)
+      : m_ptr(src_view.m_ptr + static_cast<size_type>(range.first)),
+        m_map(extents_type(static_cast<size_type>(range.second - range.first))),
+        m_acc(src_view.m_acc) {
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+    if (static_cast<size_type>(range.first) < 0 ||
+        static_cast<size_type>(range.second) > src_view.extent(0) ||
+        static_cast<size_type>(range.first) > static_cast<size_type>(range.second)) {
+      KOKKOS_IF_ON_HOST(
+          Kokkos::abort("Kokkos::subview bounds error: 1D range out of bounds");)
+      KOKKOS_IF_ON_DEVICE(Kokkos::abort("Kokkos::subview bounds error");)
+    }
+#endif
+  }
+
+  // General subview constructor that uses submdspan for all other cases
+  template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
+            class OtherAccessorPolicy, class... SliceSpecifiers,
+            std::enable_if_t<
+                !(sizeof...(SliceSpecifiers) == 1 &&
+                  OtherExtents::rank() == 1 &&
+                  Impl::is_pair_like<std::remove_cv_t<
+                      std::tuple_element_t<0, std::tuple<SliceSpecifiers...>>>>::value &&
+                  (std::is_same_v<OtherLayoutPolicy, layout_left> ||
+                   std::is_same_v<OtherLayoutPolicy, layout_right>)),
+                int> = 0>
   KOKKOS_INLINE_FUNCTION BasicView(
       Impl::SubViewCtorTag,
       const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
