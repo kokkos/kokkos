@@ -587,8 +587,6 @@ class BasicView {
                       OtherAccessorPolicy> &src_view,
       SliceSpecifiers... slices) {
     // Get the submdspan_mapping_result directly from the source mapping
-    using src_mdspan_type = 
-        mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessorPolicy>;
     const auto sub_mapping_result = 
         submdspan_mapping(src_view.m_map,
                           Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
