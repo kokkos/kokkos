@@ -575,6 +575,8 @@ class BasicView {
 #endif
 
  protected:
+  // Optimized subview constructor that avoids creating src_view.to_mdspan()
+  // Instead, we call submdspan_mapping directly and construct the result mdspan
   template <class OtherElementType, class OtherExtents, class OtherLayoutPolicy,
             class OtherAccessorPolicy, class... SliceSpecifiers>
   KOKKOS_INLINE_FUNCTION BasicView(
@@ -582,9 +584,23 @@ class BasicView {
       const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
                       OtherAccessorPolicy> &src_view,
       SliceSpecifiers... slices)
-      : BasicView(submdspan(
-            src_view.to_mdspan(),
-            Impl::transform_kokkos_slice_to_mdspan_slice(slices)...)) {
+      : BasicView([&] {
+          // Get submdspan_mapping result directly from source mapping
+          const auto sub_mapping_result = 
+              submdspan_mapping(src_view.m_map,
+                                Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
+          
+          // Construct the result mdspan using the mapping and offset
+          using sub_accessor_t = typename OtherAccessorPolicy::offset_policy;
+          using result_mdspan_t = decltype(submdspan(
+              std::declval<mdspan<OtherElementType, OtherExtents, OtherLayoutPolicy, OtherAccessorPolicy>>(),
+              Impl::transform_kokkos_slice_to_mdspan_slice(slices)...));
+          
+          return result_mdspan_t(
+              src_view.m_acc.offset(src_view.m_ptr, sub_mapping_result.offset),
+              sub_mapping_result.mapping,
+              sub_accessor_t(src_view.m_acc));
+        }()) {
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     bool valid = subview_extents_valid(
         src_view, std::make_index_sequence<sizeof...(SliceSpecifiers)>{},
