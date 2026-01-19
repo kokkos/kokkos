@@ -585,18 +585,20 @@ class BasicView {
       Impl::SubViewCtorTag,
       const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
                       OtherAccessorPolicy> &src_view,
-      SliceSpecifiers... slices) {
-    // Get the submdspan_mapping_result directly from the source mapping
-    const auto sub_mapping_result = 
-        submdspan_mapping(src_view.m_map,
-                          Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
-    
-    // Construct members directly without creating temporary mdspan
-    using sub_accessor_t = typename OtherAccessorPolicy::offset_policy;
-    m_ptr = src_view.m_acc.offset(src_view.m_ptr, sub_mapping_result.offset);
-    m_map = sub_mapping_result.mapping;
-    m_acc = sub_accessor_t(src_view.m_acc);
-    
+      SliceSpecifiers... slices)
+      : BasicView([&] {
+          // Get the submdspan_mapping_result directly from the source mapping
+          const auto sub_mapping_result = 
+              submdspan_mapping(src_view.m_map,
+                                Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
+          
+          // Construct members directly without creating temporary mdspan
+          using sub_accessor_t = typename OtherAccessorPolicy::offset_policy;
+          return BasicView(
+              src_view.m_acc.offset(src_view.m_ptr, sub_mapping_result.offset),
+              sub_mapping_result.mapping,
+              sub_accessor_t(src_view.m_acc));
+        }()) {
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     bool valid = subview_extents_valid(
         src_view, std::make_index_sequence<sizeof...(SliceSpecifiers)>{},
