@@ -589,6 +589,9 @@ class BasicView {
         src_view.m_map,
         Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
 
+    // Kokkos View precondition should happen in release builds
+    check_basic_view_constructibility(sub_mapping_result.mapping);
+
     // Initialize members directly from the mapping result
     // Explicit cast is needed because submdspan_mapping may return a different
     // layout type
