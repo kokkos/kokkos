@@ -946,7 +946,7 @@ TEST(TEST_CATEGORY, mathematical_functions_trigonometric_functions) {
 
   // TODO atan2
 }
-#endif  // KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
+#endif
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
@@ -1050,7 +1050,7 @@ TEST(TEST_CATEGORY, mathematical_functions_fmax_fmin) {
   do_test_math_binary_function<TEST_EXECSPACE, kk_fmin>(2.l, 3.l);
 #endif
 }
-#endif  // KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+#endif
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
 TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
@@ -1158,7 +1158,7 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
   TEST_MATH_FUNCTION(log1p)({1234.l, 567.l, 89.l, -.007l});
 #endif
 }
-#endif  // KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_3
+#endif
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
@@ -1278,7 +1278,7 @@ TEST(TEST_CATEGORY, mathematical_functions_non_standard) {
   TEST_MATH_FUNCTION(rcp)({-13.1l, -9.2l, 1.3l, 7.4l, 11.5l});
 #endif
 }
-#endif  // KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
+#endif
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 
@@ -1783,7 +1783,7 @@ struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
 TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
   TestIEEEFloatingPointRemainderFunction<TEST_EXECSPACE>();
 }
-#endif  // end if 0
+#endif
 
 // TODO: TestFpClassify, see https://github.com/kokkos/kokkos/issues/6279
 
@@ -2226,7 +2226,7 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
 #endif
 #endif
 }
-#endif  // KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+#endif
 
 // TODO: TestSignBit, see https://github.com/kokkos/kokkos/issues/6279
 #endif
