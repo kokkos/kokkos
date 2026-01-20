@@ -517,6 +517,37 @@ DEFINE_BINARY_FUNCTION_EVAL(fmin, 0);
 
 #undef DEFINE_BINARY_FUNCTION_EVAL
 
+#define DEFINE_BINARY_PREDICATE_EVAL(FUNC)                                     \
+  struct MathBinaryPredicate_##FUNC {                                          \
+    template <typename T, typename U>                                          \
+    static KOKKOS_FUNCTION auto eval(T x, U y) {                               \
+      static_assert(std::is_same_v<decltype(Kokkos::FUNC((T)0, (U)0)), bool>); \
+      return Kokkos::FUNC(x, y);                                               \
+    }                                                                          \
+    template <typename T, typename U>                                          \
+    static auto eval_std(T x, U y) {                                           \
+      using std::FUNC;                                                         \
+      return FUNC(x, y);                                                       \
+    }                                                                          \
+  };                                                                           \
+  using kk_##FUNC = MathBinaryPredicate_##FUNC;                                \
+  template <>                                                                  \
+  struct math_function_name<MathBinaryPredicate_##FUNC> {                      \
+    static constexpr char name[] = #FUNC;                                      \
+  };                                                                           \
+  constexpr char math_function_name<MathBinaryPredicate_##FUNC>::name[]
+
+#ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
+DEFINE_BINARY_PREDICATE_EVAL(isgreater);
+DEFINE_BINARY_PREDICATE_EVAL(isgreaterequal);
+DEFINE_BINARY_PREDICATE_EVAL(isless);
+DEFINE_BINARY_PREDICATE_EVAL(islessequal);
+DEFINE_BINARY_PREDICATE_EVAL(islessgreater);
+DEFINE_BINARY_PREDICATE_EVAL(isunordered);
+#endif
+
+#undef DEFINE_BINARY_PREDICATE_EVAL
+
 #define DEFINE_BINARY_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)          \
   struct MathBinaryPtrFunction_##FUNC {                            \
     template <typename T, typename U>                              \
@@ -783,6 +814,12 @@ struct TestMathBinaryFunction : FloatingPointComparison {
   }
 };
 
+template <class Space, class... Func, class Arg1, class Arg2>
+void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
+  (void)std::initializer_list<int>{
+      (TestMathBinaryFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
+}
+
 template <class Space, class Func, class Arg,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathBinaryPtrFunction : FloatingPointComparison {
@@ -827,10 +864,39 @@ void do_test_math_binary_ptr_function(Arg x) {
   }
 }
 
+template <class Space, class Func, class Arg1, class Arg2>
+struct TestMathBinaryPredicate {
+  Arg1 val1_;
+  Arg2 val2_;
+  bool res_;
+  TestMathBinaryPredicate(Arg1 val1, Arg2 val2)
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
+    run();
+  }
+  void run() {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0) << "Failed check no error for "
+                         << math_function_name<Func>::name << "("
+                         << type_helper<Arg1>::name() << ", "
+                         << type_helper<Arg2>::name() << ")";
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    bool ar = Func::eval(val1_, val2_) == res_;
+    if (!ar) {
+      ++e;
+      Kokkos::printf("value at %f, %f which is %s was expected to be %s\n",
+                     (double)val1_, (double)val2_,
+                     Func::eval(val1_, val2_) ? "true" : "false",
+                     res_ ? "true" : "false");
+    }
+  }
+};
+
 template <class Space, class... Func, class Arg1, class Arg2>
-void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
+void do_test_math_binary_predicate(Arg1 arg1, Arg2 arg2) {
   (void)std::initializer_list<int>{
-      (TestMathBinaryFunction<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
+      (TestMathBinaryPredicate<Space, Func, Arg1, Arg2>(arg1, arg2), 0)...};
 }
 
 template <class Space, class Func, class Arg1, class Arg2,
@@ -2430,6 +2496,24 @@ TEST(TEST_CATEGORY, mathematical_functions_signbit) {
   GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
 #endif
   TestSignbit<TEST_EXECSPACE>();
+}
+
+TEST(TEST_CATEGORY, mathematical_functions_binary_predicates) {
+  auto test_all_predicates = [](auto x, auto y) {
+    do_test_math_binary_predicate<TEST_EXECSPACE, kk_isgreater>(x, y);
+    do_test_math_binary_predicate<TEST_EXECSPACE, kk_isgreaterequal>(x, y);
+    do_test_math_binary_predicate<TEST_EXECSPACE, kk_isless>(x, y);
+    do_test_math_binary_predicate<TEST_EXECSPACE, kk_islessequal>(x, y);
+    do_test_math_binary_predicate<TEST_EXECSPACE, kk_islessgreater>(x, y);
+    do_test_math_binary_predicate<TEST_EXECSPACE, kk_isunordered>(x, y);
+  };
+
+  test_all_predicates(2.f, 3.f);
+  test_all_predicates(2., 3.);
+  test_all_predicates(2, 3.f);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+  test_all_predicates(2.l, 3.l);
+#endif
 }
 
 KE::half_t ref_test_fallback_half(KE::half_t) {
