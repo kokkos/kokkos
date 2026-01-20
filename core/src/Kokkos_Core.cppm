@@ -491,7 +491,6 @@ export {
   using ::Kokkos::ilogb;
   using ::Kokkos::ilogbf;
   using ::Kokkos::ilogbl;
-  using ::Kokkos::isequal;
   using ::Kokkos::isfinite;
   using ::Kokkos::isgreater;
   using ::Kokkos::isgreaterequal;
