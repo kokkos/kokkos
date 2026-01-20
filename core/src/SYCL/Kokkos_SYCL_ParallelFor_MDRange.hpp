@@ -36,100 +36,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   array_type m_upper;
   array_type m_max_threads;
 
-  sycl::nd_range<3> compute_ranges() const {
-    static_assert(Policy::rank > 1 && Policy::rank < 7,
-                  "Kokkos::MDRange Error: Exceeded rank bounds with SYCL\n");
-
-    const auto& m_tile     = m_policy.m_tile;
-    const auto& m_tile_end = m_policy.m_tile_end;
-
-    sycl::range<3> local_sizes(1, 1, 1);
-    sycl::range<3> global_sizes(1, 1, 1);
-
-    array_index_type global_0 = 1;
-    array_index_type global_1 = 1;
-    array_index_type global_2 = 1;
-    if constexpr (Policy::rank == 2) {
-      if constexpr (Policy::inner_direction == Iterate::Left) {
-        local_sizes[0] = m_tile[0];
-        local_sizes[1] = m_tile[1];
-        global_0       = m_tile_end[0];
-        global_1       = m_tile_end[1];
-      } else {
-        local_sizes[0] = m_tile[1];
-        local_sizes[1] = m_tile[0];
-        global_0       = m_tile_end[1];
-        global_1       = m_tile_end[0];
-      }
-    } else if constexpr (Policy::rank == 3) {
-      if constexpr (Policy::inner_direction == Iterate::Left) {
-        local_sizes[0] = m_tile[0];
-        local_sizes[1] = m_tile[1];
-        local_sizes[2] = m_tile[2];
-        global_0       = m_tile_end[0];
-        global_1       = m_tile_end[1];
-        global_2       = m_tile_end[2];
-      } else {
-        local_sizes[0] = m_tile[2];
-        local_sizes[1] = m_tile[1];
-        local_sizes[2] = m_tile[0];
-        global_0       = m_tile_end[2];
-        global_1       = m_tile_end[1];
-        global_2       = m_tile_end[0];
-      }
-    } else {  // rank > 3
-      if constexpr (Policy::inner_direction == Iterate::Left) {
-        if constexpr (Policy::rank >= 4) {
-          local_sizes[0] = m_tile[0] * m_tile[1];
-          local_sizes[1] = m_tile[2];
-          local_sizes[2] = m_tile[3];
-          global_0       = m_tile_end[0] * m_tile_end[1];
-          global_1       = m_tile_end[2];
-          global_2       = m_tile_end[3];
-        }
-        if constexpr (Policy::rank >= 5) {
-          local_sizes[1] = m_tile[2] * m_tile[3];
-          local_sizes[2] = m_tile[4];
-          global_1       = m_tile_end[2] * m_tile_end[3];
-          global_2       = m_tile_end[4];
-        }
-        if constexpr (Policy::rank >= 6) {
-          local_sizes[2] = m_tile[4] * m_tile[5];
-          global_2       = m_tile_end[4] * m_tile_end[5];
-        }
-      } else {  // InnerDirection == Right
-        if constexpr (Policy::rank >= 4) {
-          local_sizes[0] = m_tile[Policy::rank - 1] * m_tile[Policy::rank - 2];
-          local_sizes[1] = m_tile[Policy::rank - 3];
-          local_sizes[2] = m_tile[Policy::rank - 4];
-          global_0 =
-              m_tile_end[Policy::rank - 1] * m_tile_end[Policy::rank - 2];
-          global_1 = m_tile_end[Policy::rank - 3];
-          global_2 = m_tile_end[Policy::rank - 4];
-        }
-        if constexpr (Policy::rank >= 5) {
-          local_sizes[1] = m_tile[Policy::rank - 3] * m_tile[Policy::rank - 4];
-          local_sizes[2] = m_tile[Policy::rank - 5];
-          global_1 =
-              m_tile_end[Policy::rank - 3] * m_tile_end[Policy::rank - 4];
-          global_2 = m_tile_end[Policy::rank - 5];
-        }
-        if constexpr (Policy::rank >= 6) {
-          local_sizes[2] = m_tile[Policy::rank - 5] * m_tile[Policy::rank - 6];
-          global_2 =
-              m_tile_end[Policy::rank - 5] * m_tile_end[Policy::rank - 6];
-        }
-      }
-    }
-    global_sizes[0] = std::min<array_index_type>(global_0, m_max_grid_size[0]) *
-                      local_sizes[0];
-    global_sizes[1] = std::min<array_index_type>(global_1, m_max_grid_size[1]) *
-                      local_sizes[1];
-    global_sizes[2] = std::min<array_index_type>(global_2, m_max_grid_size[2]) *
-                      local_sizes[2];
-    return {global_sizes, local_sizes};
-  }
-
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper,
                                  const sycl::event& memcpy_event) const {
@@ -145,7 +51,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     desul::ensure_sycl_lock_arrays_on_device(q);
 
     auto cgh_lambda = [&](sycl::handler& cgh) {
-      const auto range                  = compute_ranges();
+      const auto range =
+          Kokkos::Impl::compute_device_launch_params(m_policy, m_max_grid_size);
       const sycl::range<3> global_range = range.get_global_range();
       const sycl::range<3> local_range  = range.get_local_range();
       const sycl::nd_range sycl_swapped_range{

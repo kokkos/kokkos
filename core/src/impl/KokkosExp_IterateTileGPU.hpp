@@ -53,18 +53,132 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
                                 (Args&&)args...);
 }
 
-// ------------------------------------------------------------------ //
-// ParallelFor iteration pattern
-// map 2D/3D hardware threads to N-D iteration space
+// ------------------------------------------------------------------------- //
+// Compute GPU launch parameters (grid/block dimensions) for MDRangePolicy
+//
+// Ranks 2-3: Direct mapping - each policy dimension maps to one GPU dimension.
+// Ranks 4-6: Dimension packing - pairs of policy dimensions are packed
+//            into single GPU dimensions to fit the 3D hardware limit.
+//
+// Returns: CUDA/HIP: std::pair<dim3 grid, dim3 block>
+//          SYCL:     sycl::nd_range<3>{global, local}
+//
+template <typename... Traits, typename MaxGridSize>
+auto compute_device_launch_params(
+    const Kokkos::MDRangePolicy<Traits...>& policy,
+    const MaxGridSize& max_grid_size) {
+  using Policy           = Kokkos::MDRangePolicy<Traits...>;
+  using array_index_type = typename Policy::array_index_type;
+
+#ifdef KOKKOS_ENABLE_SYCL
+  EmulateCUDADim3 block{1, 1, 1};
+#else
+  dim3 block{1, 1, 1};
+#endif
+
+  array_index_type grid_0 = 1;
+  array_index_type grid_1 = 1;
+  array_index_type grid_2 = 1;
+
+  if constexpr (Policy::inner_direction == Iterate::Left) {
+    if constexpr (Policy::rank == 2) {
+      block.x = policy.m_tile[0];
+      block.y = policy.m_tile[1];
+      grid_0  = policy.m_tile_end[0];
+      grid_1  = policy.m_tile_end[1];
+    } else if constexpr (Policy::rank == 3) {
+      block.x = policy.m_tile[0];
+      block.y = policy.m_tile[1];
+      block.z = policy.m_tile[2];
+      grid_0  = policy.m_tile_end[0];
+      grid_1  = policy.m_tile_end[1];
+      grid_2  = policy.m_tile_end[2];
+    } else if constexpr (Policy::rank == 4) {
+      block.x = policy.m_tile[0] * policy.m_tile[1];
+      block.y = policy.m_tile[2];
+      block.z = policy.m_tile[3];
+      grid_0  = policy.m_tile_end[0] * policy.m_tile_end[1];
+      grid_1  = policy.m_tile_end[2];
+      grid_2  = policy.m_tile_end[3];
+    } else if constexpr (Policy::rank == 5) {
+      block.x = policy.m_tile[0] * policy.m_tile[1];
+      block.y = policy.m_tile[2] * policy.m_tile[3];
+      block.z = policy.m_tile[4];
+      grid_0  = policy.m_tile_end[0] * policy.m_tile_end[1];
+      grid_1  = policy.m_tile_end[2] * policy.m_tile_end[3];
+      grid_2  = policy.m_tile_end[4];
+    } else if constexpr (Policy::rank == 6) {
+      block.x = policy.m_tile[0] * policy.m_tile[1];
+      block.y = policy.m_tile[2] * policy.m_tile[3];
+      block.z = policy.m_tile[4] * policy.m_tile[5];
+      grid_0  = policy.m_tile_end[0] * policy.m_tile_end[1];
+      grid_1  = policy.m_tile_end[2] * policy.m_tile_end[3];
+      grid_2  = policy.m_tile_end[4] * policy.m_tile_end[5];
+    }
+  } else {  // InnerDirection == Right
+    if constexpr (Policy::rank == 2) {
+      block.x = policy.m_tile[1];
+      block.y = policy.m_tile[0];
+      grid_0  = policy.m_tile_end[1];
+      grid_1  = policy.m_tile_end[0];
+    } else if constexpr (Policy::rank == 3) {
+      block.x = policy.m_tile[2];
+      block.y = policy.m_tile[1];
+      block.z = policy.m_tile[0];
+      grid_0  = policy.m_tile_end[2];
+      grid_1  = policy.m_tile_end[1];
+      grid_2  = policy.m_tile_end[0];
+    } else if constexpr (Policy::rank == 4) {
+      block.x = policy.m_tile[3] * policy.m_tile[2];
+      block.y = policy.m_tile[1];
+      block.z = policy.m_tile[0];
+      grid_0  = policy.m_tile_end[3] * policy.m_tile_end[2];
+      grid_1  = policy.m_tile_end[1];
+      grid_2  = policy.m_tile_end[0];
+    } else if constexpr (Policy::rank == 5) {
+      block.x = policy.m_tile[4] * policy.m_tile[3];
+      block.y = policy.m_tile[2] * policy.m_tile[1];
+      block.z = policy.m_tile[0];
+      grid_0  = policy.m_tile_end[4] * policy.m_tile_end[3];
+      grid_1  = policy.m_tile_end[2] * policy.m_tile_end[1];
+      grid_2  = policy.m_tile_end[0];
+    } else if constexpr (Policy::rank == 6) {
+      block.x = policy.m_tile[5] * policy.m_tile[4];
+      block.y = policy.m_tile[3] * policy.m_tile[2];
+      block.z = policy.m_tile[1] * policy.m_tile[0];
+      grid_0  = policy.m_tile_end[5] * policy.m_tile_end[4];
+      grid_1  = policy.m_tile_end[3] * policy.m_tile_end[2];
+      grid_2  = policy.m_tile_end[1] * policy.m_tile_end[0];
+    }
+  }
+
+#ifdef KOKKOS_ENABLE_SYCL
+  // SYCL uses nd_range with global = grid * local sizes
+  sycl::range<3> local_sizes(block.x, block.y, block.z);
+  sycl::range<3> global_sizes(
+      std::min<array_index_type>(grid_0, max_grid_size[0]) * local_sizes[0],
+      std::min<array_index_type>(grid_1, max_grid_size[1]) * local_sizes[1],
+      std::min<array_index_type>(grid_2, max_grid_size[2]) * local_sizes[2]);
+  return sycl::nd_range<3>(global_sizes, local_sizes);
+#else
+  dim3 grid(std::min<array_index_type>(grid_0, max_grid_size[0]),
+            std::min<array_index_type>(grid_1, max_grid_size[1]),
+            std::min<array_index_type>(grid_2, max_grid_size[2]));
+  return std::pair(grid, block);
+#endif
+}
+
+// ------------------------------------------------------------------------- //
+// ParallelFor iteration pattern - maps GPU threads to N-D iteration space
 //
 // For ranks 2-3: Direct mapping of hardware threads to iteration space
 // dimensions.
 // For ranks 4-6: Multiple logical indices are packed into single
 // hardware dimensions.
 //
-// 1. Start iterating at hardware thread identifier
-// 2. Extend iteration space range with stride loops using grid dimensions
-// 3. Bound checking to ensure we do not exceed upper bounds
+// 1. Start iterating at the hardware thread identifier.
+// 2. Extend the iteration space range with stride loops using grid dimensions.
+// 3. Bounds check against m_upper to filter out-of-bounds iterations.
 //
 template <int Rank, typename array_index_type, typename index_type,
           typename Functor, Kokkos::Iterate Layout, typename Tag>
@@ -78,7 +192,7 @@ struct DeviceIterate {
  private:
   const array_type m_lower;
   const array_type m_upper;
-  const array_type m_max_threads;
+  const array_type m_extent;  // tile_size * num_tiles
   Functor m_functor;
 
 #ifdef KOKKOS_ENABLE_SYCL
@@ -92,14 +206,14 @@ struct DeviceIterate {
 #ifdef KOKKOS_ENABLE_SYCL
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterate(
       const array_type& lower, const array_type& upper,
-      const array_type& max_threads, const Functor& functor,
+      const array_type& extent, const Functor& functor,
       const EmulateCUDADim3<index_type> gridDim_,
       const EmulateCUDADim3<index_type> blockDim_,
       const EmulateCUDADim3<index_type> blockIdx_,
       const EmulateCUDADim3<index_type> threadIdx_)
       : m_lower(lower),
         m_upper(upper),
-        m_max_threads(max_threads),
+        m_extent(extent),
         m_functor(functor),
         gridDim(gridDim_),
         blockDim(blockDim_),
@@ -109,31 +223,29 @@ struct DeviceIterate {
 
   KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterate(const array_type& lower,
                                             const array_type& upper,
-                                            const array_type& max_threads,
+                                            const array_type& extent,
                                             const Functor& functor)
-      : m_lower(lower),
-        m_upper(upper),
-        m_max_threads(max_threads),
-        m_functor(functor) {}
+      : m_lower(lower), m_upper(upper), m_extent(extent), m_functor(functor) {}
 #endif
 
   KOKKOS_INLINE_FUNCTION
-  void exec_range() const {
-    // Execute nested loops directly without precomputing arrays
-    iterate(std::integral_constant<unsigned, Rank>());
-  }
+  void exec_range() const { iterate(std::integral_constant<unsigned, Rank>()); }
 
  private:
-  // Unpack happen on consecutive ranks
-  template <unsigned R>
+  // Runtime expression to determine if Dim is part of a packed pair
+  // Packing occurs on consecutive dimension pairs for rank > 3
+  template <unsigned Dim>
   KOKKOS_INLINE_FUNCTION static consteval bool is_packed_index() {
-    return ((R == 0 || R == 1) && Rank > 3) ||
-           ((R == 2 || R == 3) && Rank > 4) || ((R == 4 || R == 5) && Rank > 5);
+    return ((Dim == 0 || Dim == 1) && Rank > 3) ||
+           ((Dim == 2 || Dim == 3) && Rank > 4) ||
+           ((Dim == 4 || Dim == 5) && Rank > 5);
   }
 
+  // Packed: returns flat hardware thread ID (unpacking happens in iterate())
+  // Unpacked: returns global index (lower + blockIdx * blockDim + threadIdx)
   template <unsigned R>
   KOKKOS_INLINE_FUNCTION constexpr index_type my_begin() const noexcept {
-    static_assert(R < 6, "R must be smaller than 6");
+    static_assert(R < 6);
     if constexpr (is_packed_index<R>()) {
       if constexpr (R == 0 || R == 1) {
         return blockIdx.x * blockDim.x + threadIdx.x;
@@ -164,23 +276,26 @@ struct DeviceIterate {
     return m_lower[R];
   }
 
+  // Packed: end at the product of two consecutive extents
+  // Unpacked: directly use m_upper
   template <unsigned R>
   KOKKOS_INLINE_FUNCTION constexpr index_type my_end() const noexcept {
-    static_assert(R < 6, "R must be smaller than 6");
+    static_assert(R < 6);
     if constexpr (is_packed_index<R>()) {
       if constexpr (R % 2 == 0) {
-        return m_max_threads[R] * m_max_threads[R + 1];
+        return m_extent[R] * m_extent[R + 1];
       } else {
-        return m_max_threads[R] * m_max_threads[R - 1];
+        return m_extent[R] * m_extent[R - 1];
       }
     } else {
       return m_upper[R];
     }
   }
 
+  // Stride by the total number of threads in the GPU dimension
   template <unsigned R>
   KOKKOS_INLINE_FUNCTION constexpr index_type my_stride() const noexcept {
-    static_assert(R < 6, "R must be smaller than 6");
+    static_assert(R < 6);
     if constexpr (is_packed_index<R>()) {
       if constexpr (R == 0 || R == 1) {
         return static_cast<index_type>(blockDim.x) *
@@ -219,11 +334,25 @@ struct DeviceIterate {
     return index_type{1};
   }
 
-  // Generate nested loops
+  // ----------------------------------------------------------------------- //
+  // Nested loops with recursive template instantiation
+  //
+  // Accumulates indices in parameter pack Idxs...
+  // The fastest changing index is always i0 (innermost loop).
+  //
+  // Functor call order depends on the Layout:
+  //  Layout::Left:
+  //    functor(i0, i1, i2, ..., iR)
+  //  Layout::Right:
+  //    functor(iR, ..., i2, i1, i0)
+  //
+  // For Layout::Right, bounds were previously swapped during ParallelFor
+  // construction, so i0 correctly iterates over the range of iR while
+  // remaining the "fastest-changing" index.
+  //
   template <unsigned R, typename... Idxs>
   KOKKOS_INLINE_FUNCTION void iterate(std::integral_constant<unsigned, R>,
                                       Idxs... idxs) const {
-    static_assert(R > 0, "R must be greater than 0");
     constexpr unsigned rankIdx = R - 1;
     const index_type start     = my_begin<rankIdx>();
     const index_type end       = my_end<rankIdx>();
@@ -231,14 +360,13 @@ struct DeviceIterate {
 
     for (index_type idx = start; idx < end; idx += stride) {
       if constexpr (is_packed_index<rankIdx>()) {
+        static_assert(R >= 2);
         // Unpack two consecutive indices
-        constexpr index_type idx1 =
-            (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
-        constexpr index_type idx2 =
-            (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
+        constexpr unsigned idx1 = (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
+        constexpr unsigned idx2 = (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
 
-        const index_type id_1 = idx % m_max_threads[idx1] + m_lower[idx1];
-        const index_type id_2 = idx / m_max_threads[idx1] + m_lower[idx2];
+        const index_type id_1 = idx % m_extent[idx1] + m_lower[idx1];
+        const index_type id_2 = idx / m_extent[idx1] + m_lower[idx2];
 
         if (id_1 < m_upper[idx1] && id_2 < m_upper[idx2]) {
           if constexpr (Layout == Iterate::Left) {
