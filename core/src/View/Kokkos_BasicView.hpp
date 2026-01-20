@@ -584,17 +584,18 @@ class BasicView {
       const BasicView<OtherElementType, OtherExtents, OtherLayoutPolicy,
                       OtherAccessorPolicy> &src_view,
       SliceSpecifiers... slices) {
-    // Get submdspan_mapping result directly from source mapping
+    // Avoid calling submdspan to not create temporary mdspan objects.
+    // Instead do what submdspan does: calling submdspan_mapping.
     const auto sub_mapping_result = submdspan_mapping(
         src_view.m_map,
         Impl::transform_kokkos_slice_to_mdspan_slice(slices)...);
 
-    // Kokkos View precondition should happen in release builds
+    // Kokkos View precondition should happen in release build,
+    // and before any checks happen inside mdspan mapping ctor itself.
     check_basic_view_constructibility(sub_mapping_result.mapping);
 
-    // Initialize members directly from the mapping result
     // Explicit cast is needed because submdspan_mapping may return a different
-    // layout type
+    // layout type.
     using sub_accessor_t = typename OtherAccessorPolicy::offset_policy;
     m_ptr = src_view.m_acc.offset(src_view.m_ptr, sub_mapping_result.offset);
     m_map = mapping_type(sub_mapping_result.mapping);
