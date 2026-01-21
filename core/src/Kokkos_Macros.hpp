@@ -583,7 +583,11 @@ static_assert(
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_()
 #endif
 
-#if defined(__NVCC__) && defined(__NVCC_DIAG_PRAGMA_SUPPORT__)
+// FIXME NVCC <13: using the deprecation warnings push/pop mechanism with nvcc
+// and nvc++ as host compiler leads to bugs where some of the _Pragma are not
+// taken into account.
+#if defined(__NVCC__) && defined(__NVCC_DIAG_PRAGMA_SUPPORT__) && \
+    (!defined(__NVCOMPILER) || (KOKKOS_COMPILER_NVCC >= 1300))
   #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
     KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("nv_diagnostic push") \
