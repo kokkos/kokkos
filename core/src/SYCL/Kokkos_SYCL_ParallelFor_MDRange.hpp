@@ -34,7 +34,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   array_type m_lower;
   array_type m_upper;
-  array_type m_max_threads;
+  array_type m_extent;  // tile_size * num_tiles
 
   template <typename FunctorWrapper>
   sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper,
@@ -46,7 +46,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     const auto lower_bound = m_lower;
     const auto upper_bound = m_upper;
-    const auto max_threads = m_max_threads;
+    const auto extent      = m_extent;
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
@@ -64,8 +64,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #else
       (void)memcpy_event;
 #endif
-      cgh.parallel_for(sycl_swapped_range, [lower_bound, upper_bound,
-                                            max_threads, functor_wrapper](
+      cgh.parallel_for(sycl_swapped_range, [lower_bound, upper_bound, extent,
+                                            functor_wrapper](
                                                sycl::nd_item<3> item) {
         // swap back for correct index calculations in DeviceIterateTile
         const index_type local_x    = item.get_local_id(2);
@@ -84,8 +84,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
                                     FunctorType, Policy::inner_direction,
                                     typename Policy::work_tag>(
-            lower_bound, upper_bound, max_threads,
-            functor_wrapper.get_functor(), {n_global_x, n_global_y, n_global_z},
+            lower_bound, upper_bound, extent, functor_wrapper.get_functor(),
+            {n_global_x, n_global_y, n_global_z},
             {n_local_x, n_local_y, n_local_z}, {global_x, global_y, global_z},
             {local_x, local_y, local_z})
             .exec_range();
@@ -164,14 +164,14 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     // Swap the fastest indexes to x dimension
     for (array_index_type i = 0; i < Policy::rank; ++i) {
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        m_lower[i]       = m_policy.m_lower[i];
-        m_upper[i]       = m_policy.m_upper[i];
-        m_max_threads[i] = m_policy.m_tile[i] * m_policy.m_tile_end[i];
+        m_lower[i]  = m_policy.m_lower[i];
+        m_upper[i]  = m_policy.m_upper[i];
+        m_extent[i] = m_policy.m_tile[i] * m_policy.m_tile_end[i];
       } else {
-        m_lower[i]       = m_policy.m_lower[Policy::rank - 1 - i];
-        m_upper[i]       = m_policy.m_upper[Policy::rank - 1 - i];
-        m_max_threads[i] = m_policy.m_tile[Policy::rank - 1 - i] *
-                           m_policy.m_tile_end[Policy::rank - 1 - i];
+        m_lower[i]  = m_policy.m_lower[Policy::rank - 1 - i];
+        m_upper[i]  = m_policy.m_upper[Policy::rank - 1 - i];
+        m_extent[i] = m_policy.m_tile[Policy::rank - 1 - i] *
+                      m_policy.m_tile_end[Policy::rank - 1 - i];
       }
     }
   }

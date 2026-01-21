@@ -72,7 +72,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
   array_type m_lower;
   array_type m_upper;
-  array_type m_extent;
+  array_type m_extent;  // tile_size * num_tiles
 
  public:
   template <typename Policy, typename Functor>
