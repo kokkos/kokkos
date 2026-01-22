@@ -50,9 +50,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     desul::ensure_sycl_lock_arrays_on_device(q);
 
-    auto cgh_lambda = [&](sycl::handler& cgh) {
-      const auto range =
-          Kokkos::Impl::compute_device_launch_params(m_policy, m_max_grid_size);
+    const auto range =
+        Kokkos::Impl::compute_device_launch_params(m_policy, m_max_grid_size);
+
+    auto cgh_lambda = [&, range](sycl::handler& cgh) {
       const sycl::range<3> global_range = range.get_global_range();
       const sycl::range<3> local_range  = range.get_local_range();
       const sycl::nd_range sycl_swapped_range{
