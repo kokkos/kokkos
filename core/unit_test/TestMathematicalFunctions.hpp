@@ -541,29 +541,41 @@ DEFINE_BINARY_PTR_FUNCTION_EVAL(modf, 0)
 
 #undef DEFINE_BINARY_PTR_FUNCTION_EVAL
 
-#define DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)              \
-  struct MathTernaryIntPtrFunction_##FUNC {                                 \
-    template <typename T, typename U>                                       \
-    static KOKKOS_FUNCTION auto eval(T x, U y, int* z) {                    \
-      static_assert(                                                        \
-          std::is_same_v<decltype(Kokkos::FUNC((T)0, (U)0, (int*)nullptr)), \
-                         math_binary_function_return_type_t<T, U>>);        \
-      return Kokkos::FUNC(x, y, z);                                         \
-    }                                                                       \
-    template <typename T, typename U>                                       \
-    static auto eval_std(T x, U y, int* z) {                                \
-      static_assert(                                                        \
-          std::is_same_v<decltype(std::FUNC((T)0, (U)0, (int*)nullptr)),    \
-                         math_binary_function_return_type_t<T, U>>);        \
-      return std::FUNC(x, y, z);                                            \
-    }                                                                       \
-    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }          \
-  };                                                                        \
-  using kk3_##FUNC = MathTernaryIntPtrFunction_##FUNC;                      \
-  template <>                                                               \
-  struct math_function_name<MathTernaryIntPtrFunction_##FUNC> {             \
-    static constexpr char name[] = #FUNC;                                   \
-  };                                                                        \
+#define DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)                 \
+  struct MathTernaryIntPtrFunction_##FUNC {                                    \
+    template <typename T, typename U>                                          \
+    static KOKKOS_FUNCTION auto eval(T x, U y, int* z) {                       \
+      static_assert(                                                           \
+          std::is_same_v<decltype(Kokkos::FUNC((T)0, (U)0, (int*)nullptr)),    \
+                         math_binary_function_return_type_t<T, U>>);           \
+      return Kokkos::FUNC(x, y, z);                                            \
+    }                                                                          \
+    template <typename T, typename U>                                          \
+    static auto eval_std(T x, U y, int* z) {                                   \
+      constexpr bool const x_is_half =                                         \
+          (KE::Impl::is_float16<T>::value || KE::Impl::is_bfloat16<T>::value); \
+      constexpr bool const y_is_half =                                         \
+          (KE::Impl::is_float16<U>::value || KE::Impl::is_bfloat16<U>::value); \
+      if constexpr (x_is_half && y_is_half)                                    \
+        return std::FUNC(static_cast<float>(x), static_cast<float>(y), z);     \
+      else if constexpr (x_is_half)                                            \
+        return std::FUNC(static_cast<float>(x), y, z);                         \
+      else if constexpr (y_is_half)                                            \
+        return std::FUNC(x, static_cast<float>(y), z);                         \
+      else {                                                                   \
+        static_assert(                                                         \
+            std::is_same_v<decltype(std::FUNC((T)0, (U)0, (int*)nullptr)),     \
+                           math_binary_function_return_type_t<T, U>>);         \
+        return std::FUNC(x, y, z);                                             \
+      }                                                                        \
+    }                                                                          \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }             \
+  };                                                                           \
+  using kk3_##FUNC = MathTernaryIntPtrFunction_##FUNC;                         \
+  template <>                                                                  \
+  struct math_function_name<MathTernaryIntPtrFunction_##FUNC> {                \
+    static constexpr char name[] = #FUNC;                                      \
+  };                                                                           \
   constexpr char math_function_name<MathTernaryIntPtrFunction_##FUNC>::name[]
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
@@ -1100,6 +1112,10 @@ TEST(TEST_CATEGORY, mathematical_functions_fma) {
 }
 
 TEST(TEST_CATEGORY, mathematical_functions_remquo) {
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(
+      static_cast<KE::half_t>(2.f), static_cast<KE::half_t>(3.f));
+  do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(
+      static_cast<KE::bhalf_t>(2.f), static_cast<KE::bhalf_t>(3.f));
   do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2.f, 3.f);
   do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2., 3.);
   do_test_math_ternary_int_ptr_function<TEST_EXECSPACE, kk3_remquo>(2, 3);
