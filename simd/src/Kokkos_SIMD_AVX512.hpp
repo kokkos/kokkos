@@ -700,51 +700,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                        static_cast<__m512d>(simd));
 }
 
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    double, simd_abi::avx512_fixed_size<8>, {
-      return V(_mm512_i32gather_pd(
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    double, simd_abi::avx512_fixed_size<8>, {
-      using value_type = typename V::value_type;
-      return V(_mm512_mask_i32gather_pd(
-          _mm512_set1_pd(value_type{}), static_cast<__mmask8>(mask),
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    double, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    double, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    double, simd_abi::avx512_fixed_size<8>, {
-      _mm512_i32scatter_pd(out,
-                           _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)),
-                           static_cast<__m512d>(v), 8);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    double, simd_abi::avx512_fixed_size<8>, {
-      _mm512_mask_i32scatter_pd(
-          out, static_cast<__mmask8>(mask),
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)),
-          static_cast<__m512d>(v), 8);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    double, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    double, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
-
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<double, simd_abi::avx512_fixed_size<8>> condition(
     basic_simd_mask<double, simd_abi::avx512_fixed_size<8>> const& a,
@@ -1142,48 +1097,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
   _mm256_mask_store_ps(ptr, static_cast<__mmask8>(mask),
                        static_cast<__m256>(simd));
 }
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    float, simd_abi::avx512_fixed_size<8>,
-    { return V(_mm256_i32gather_ps(in, static_cast<__m256i>(indices), 4)); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<8>, {
-      using value_type = typename V::value_type;
-      __m256 on        = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
-      __m256 m         = _mm256_maskz_mov_ps(static_cast<__mmask8>(mask), on);
-      return V(_mm256_mask_i32gather_ps(_mm256_set1_ps(value_type{}), in,
-                                        static_cast<__m256i>(indices), m, 4));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    float, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    float, simd_abi::avx512_fixed_size<8>, {
-      _mm256_i32scatter_ps(out, static_cast<__m256i>(indices),
-                           static_cast<__m256>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<8>, {
-      _mm256_mask_i32scatter_ps(out, static_cast<__mmask8>(mask),
-                                static_cast<__m256i>(indices),
-                                static_cast<__m256>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    float, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<float, simd_abi::avx512_fixed_size<8>> condition(
@@ -1585,47 +1498,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                        static_cast<__m512>(simd));
 }
 
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    float, simd_abi::avx512_fixed_size<16>,
-    { return V(_mm512_i32gather_ps(static_cast<__m512i>(indices), in, 4)); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<16>, {
-      using value_type = typename V::value_type;
-      return V(_mm512_mask_i32gather_ps(_mm512_set1_ps(value_type{}),
-                                        static_cast<__mmask16>(mask),
-                                        static_cast<__m512i>(indices), in, 4));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    float, simd_abi::avx512_fixed_size<16>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<16>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    float, simd_abi::avx512_fixed_size<16>, {
-      _mm512_i32scatter_ps(out, static_cast<__m512i>(indices),
-                           static_cast<__m512>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<16>, {
-      _mm512_mask_i32scatter_ps(out, static_cast<__mmask16>(mask),
-                                static_cast<__m512i>(indices),
-                                static_cast<__m512>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    float, simd_abi::avx512_fixed_size<16>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    float, simd_abi::avx512_fixed_size<16>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
-
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<float, simd_abi::avx512_fixed_size<16>> condition(
     basic_simd_mask<float, simd_abi::avx512_fixed_size<16>> const& a,
@@ -1999,47 +1871,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
   _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask),
                           static_cast<__m256i>(simd));
 }
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::int32_t, simd_abi::avx512_fixed_size<8>,
-    { return V(_mm256_i32gather_epi32(in, static_cast<__m256i>(indices), 4)); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<8>, {
-      using value_type = typename V::value_type;
-      return V(_mm256_mmask_i32gather_epi32(
-          _mm256_set1_epi32(value_type{}), static_cast<__mmask8>(mask),
-          static_cast<__m256i>(indices), in, 4));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    std::int32_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    std::int32_t, simd_abi::avx512_fixed_size<8>, {
-      _mm256_i32scatter_epi32(out, static_cast<__m256i>(indices),
-                              static_cast<__m256i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<8>, {
-      _mm256_mask_i32scatter_epi32(out, static_cast<__mmask8>(mask),
-                                   static_cast<__m256i>(indices),
-                                   static_cast<__m256i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    std::int32_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> condition(
@@ -2421,47 +2252,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                           static_cast<__m512i>(simd));
 }
 
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::int32_t, simd_abi::avx512_fixed_size<16>,
-    { return V(_mm512_i32gather_epi32(static_cast<__m512i>(indices), in, 4)); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<16>, {
-      using value_type = typename V::value_type;
-      return V(_mm512_mask_i32gather_epi32(
-          _mm512_set1_epi32(value_type{}), static_cast<__mmask16>(mask),
-          static_cast<__m512i>(indices), in, 4));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    std::int32_t, simd_abi::avx512_fixed_size<16>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<16>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    std::int32_t, simd_abi::avx512_fixed_size<16>, {
-      _mm512_i32scatter_epi32(out, static_cast<__m512i>(indices),
-                              static_cast<__m512i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<16>, {
-      _mm512_mask_i32scatter_epi32(out, static_cast<__mmask16>(mask),
-                                   static_cast<__m512i>(indices),
-                                   static_cast<__m512i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    std::int32_t, simd_abi::avx512_fixed_size<16>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    std::int32_t, simd_abi::avx512_fixed_size<16>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
-
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> condition(
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const& a,
@@ -2830,49 +2620,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
   _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask),
                           static_cast<__m256i>(simd));
 }
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
-      return V(_mm256_i32gather_epi32(reinterpret_cast<const int*>(in),
-                                      static_cast<__m256i>(indices), 4));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
-      using value_type = typename V::value_type;
-      return V(_mm256_mmask_i32gather_epi32(
-          _mm256_set1_epi32(value_type{}), static_cast<__mmask8>(mask),
-          static_cast<__m256i>(indices), in, 4));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
-      _mm256_i32scatter_epi32(out, static_cast<__m256i>(indices),
-                              static_cast<__m256i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
-      _mm256_mask_i32scatter_epi32(out, static_cast<__mmask8>(mask),
-                                   static_cast<__m256i>(indices),
-                                   static_cast<__m256i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> condition(
@@ -3254,47 +3001,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
   }
 }
 
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>,
-    { return V(_mm512_i32gather_epi32(static_cast<__m512i>(indices), in, 4)); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>, {
-      using value_type = typename V::value_type;
-      return V(_mm512_mask_i32gather_epi32(
-          _mm512_set1_epi32(value_type{}), static_cast<__mmask16>(mask),
-          static_cast<__m512i>(indices), in, 4));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>, {
-      _mm512_i32scatter_epi32(out, static_cast<__m512i>(indices),
-                              static_cast<__m512i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>, {
-      _mm512_mask_i32scatter_epi32(out, static_cast<__mmask16>(mask),
-                                   static_cast<__m512i>(indices),
-                                   static_cast<__m512i>(v), 4);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    std::uint32_t, simd_abi::avx512_fixed_size<16>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
-
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<
     std::uint32_t, simd_abi::avx512_fixed_size<16>>
 condition(
@@ -3660,51 +3366,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                           static_cast<__m512i>(simd));
 }
 
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::int64_t, simd_abi::avx512_fixed_size<8>, {
-      return V(_mm512_i32gather_epi64(
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    std::int64_t, simd_abi::avx512_fixed_size<8>, {
-      using value_type = typename V::value_type;
-      return V(_mm512_mask_i32gather_epi64(
-          _mm512_set1_epi64(value_type{}), static_cast<__mmask8>(mask),
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    std::int64_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    std::int64_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    std::int64_t, simd_abi::avx512_fixed_size<8>, {
-      _mm512_i32scatter_epi64(
-          out, _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)),
-          static_cast<__m512i>(v), 8);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    std::int64_t, simd_abi::avx512_fixed_size<8>, {
-      _mm512_mask_i32scatter_epi64(
-          out, static_cast<__mmask8>(mask),
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)),
-          static_cast<__m512i>(v), 8);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    std::int64_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    std::int64_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
-
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> condition(
     basic_simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& a,
@@ -4062,51 +3723,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
                           static_cast<__m512i>(simd));
 }
 
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
-      return V(_mm512_i32gather_epi64(
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
-      using value_type = typename V::value_type;
-      return V(_mm512_mask_i32gather_epi64(
-          _mm512_set1_epi64(value_type{}), static_cast<__mmask8>(mask),
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)), in, 8));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>,
-    { return unchecked_gather_from<V>(in, mask, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
-      _mm512_i32scatter_epi64(
-          out, _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)),
-          static_cast<__m512i>(v), 8);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
-      _mm512_mask_i32scatter_epi64(
-          out, static_cast<__mmask8>(mask),
-          _mm512_cvtepi64_epi32(static_cast<__m512i>(indices)),
-          static_cast<__m512i>(v), 8);
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, indices, flag); })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
-    std::uint64_t, simd_abi::avx512_fixed_size<8>,
-    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
-
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> condition(
     basic_simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& a,
@@ -4320,6 +3936,440 @@ basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>>::basic_simd(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const&
         other) noexcept
     : m_value(_mm512_cvtepu32_epi64(static_cast<__m256i>(other))) {}
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm512_i32gather_epi64(idx, in, 8));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      __m256i idx      = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm512_mask_i32gather_epi64(_mm512_set1_epi64(value_type{}),
+                                           static_cast<__mmask8>(mask), idx, in,
+                                           8));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm512_i32scatter_epi64(out, idx, static_cast<__m512i>(v), 8);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm512_mask_i32scatter_epi64(out, static_cast<__mmask8>(mask), idx,
+                                   static_cast<__m512i>(v), 8);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    std::uint64_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    double, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm512_i32gather_pd(idx, in, 8));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    double, simd_abi::avx512_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      __m256i idx      = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm512_mask_i32gather_pd(_mm512_set1_pd(value_type{}),
+                                        static_cast<__mmask8>(mask), idx, in,
+                                        8));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    double, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    double, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    double, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm512_i32scatter_pd(out, idx, static_cast<__m512d>(v), 8);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    double, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm512_mask_i32scatter_pd(out, static_cast<__mmask8>(mask), idx,
+                                static_cast<__m512d>(v), 8);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    double, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    double, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    float, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm256_i32gather_ps(in, idx, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      __m256i idx      = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      __m256 on = _mm256_castsi256_ps(_mm256_set1_epi32(-1));
+      __m256 m  = _mm256_maskz_mov_ps(static_cast<__mmask8>(mask), on);
+      return V(_mm256_mask_i32gather_ps(_mm256_set1_ps(value_type{}), in, idx,
+                                        m, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    float, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    float, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm256_i32scatter_ps(out, idx, static_cast<__m256>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm256_mask_i32scatter_ps(out, static_cast<__mmask8>(mask), idx,
+                                static_cast<__m256>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    float, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    float, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      return V(_mm512_i32gather_ps(idx, in, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<16>, {
+      using value_type = typename V::value_type;
+      __m512i idx      = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      return V(_mm512_mask_i32gather_ps(_mm512_set1_ps(value_type{}),
+                                        static_cast<__mmask16>(mask), idx, in,
+                                        4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    float, simd_abi::avx512_fixed_size<16>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<16>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    float, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      _mm512_i32scatter_ps(out, idx, static_cast<__m512>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      _mm512_mask_i32scatter_ps(out, static_cast<__mmask16>(mask), idx,
+                                static_cast<__m512>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    float, simd_abi::avx512_fixed_size<16>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    float, simd_abi::avx512_fixed_size<16>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::int32_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm256_i32gather_epi32(in, idx, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      __m256i idx      = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm256_mmask_i32gather_epi32(_mm256_set1_epi32(value_type{}),
+                                            static_cast<__mmask8>(mask), idx,
+                                            in, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    std::int32_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    std::int32_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm256_i32scatter_epi32(out, idx, static_cast<__m256i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm256_mask_i32scatter_epi32(out, static_cast<__mmask8>(mask), idx,
+                                   static_cast<__m256i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    std::int32_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::int32_t, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      return V(_mm512_i32gather_epi32(idx, in, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<16>, {
+      using value_type = typename V::value_type;
+      __m512i idx      = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      return V(_mm512_mask_i32gather_epi32(_mm512_set1_epi32(value_type{}),
+                                           static_cast<__mmask16>(mask), idx,
+                                           in, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    std::int32_t, simd_abi::avx512_fixed_size<16>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<16>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    std::int32_t, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      _mm512_i32scatter_epi32(out, idx, static_cast<__m512i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      _mm512_mask_i32scatter_epi32(out, static_cast<__mmask16>(mask), idx,
+                                   static_cast<__m512i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    std::int32_t, simd_abi::avx512_fixed_size<16>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    std::int32_t, simd_abi::avx512_fixed_size<16>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(
+          _mm256_i32gather_epi32(reinterpret_cast<const int*>(in), idx, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      __m256i idx      = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm256_mmask_i32gather_epi32(_mm256_set1_epi32(value_type{}),
+                                            static_cast<__mmask8>(mask), idx,
+                                            in, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm256_i32scatter_epi32(out, idx, static_cast<__m256i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm256_mask_i32scatter_epi32(out, static_cast<__mmask8>(mask), idx,
+                                   static_cast<__m256i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      return V(_mm512_i32gather_epi32(idx, in, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>, {
+      using value_type = typename V::value_type;
+      __m512i idx      = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      return V(_mm512_mask_i32gather_epi32(_mm512_set1_epi32(value_type{}),
+                                           static_cast<__mmask16>(mask), idx,
+                                           in, 4));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      _mm512_i32scatter_epi32(out, idx, static_cast<__m512i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>, {
+      __m512i idx = static_cast<__m512i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>>{indices});
+      _mm512_mask_i32scatter_epi32(out, static_cast<__mmask16>(mask), idx,
+                                   static_cast<__m512i>(v), 4);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    std::uint32_t, simd_abi::avx512_fixed_size<16>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
+    std::int64_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm512_i32gather_epi64(idx, in, 8));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int64_t, simd_abi::avx512_fixed_size<8>, {
+      using value_type = typename V::value_type;
+      __m256i idx      = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      return V(_mm512_mask_i32gather_epi64(_mm512_set1_epi64(value_type{}),
+                                           static_cast<__mmask8>(mask), idx, in,
+                                           8));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
+    std::int64_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM_WITH_MASK(
+    std::int64_t, simd_abi::avx512_fixed_size<8>,
+    { return unchecked_gather_from<V>(in, mask, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
+    std::int64_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm512_i32scatter_epi64(out, idx, static_cast<__m512i>(v), 8);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::int64_t, simd_abi::avx512_fixed_size<8>, {
+      __m256i idx = static_cast<__m256i>(
+          basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>>{indices});
+      _mm512_mask_i32scatter_epi64(out, static_cast<__mmask8>(mask), idx,
+                                   static_cast<__m512i>(v), 8);
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
+    std::int64_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, indices, flag); })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
+    std::int64_t, simd_abi::avx512_fixed_size<8>,
+    { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
