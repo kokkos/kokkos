@@ -30,7 +30,6 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   const FunctorType m_functor;
   const Policy m_policy;
   const MaxGridSize m_max_grid_size;
-  const Kokkos::SYCL& m_space;
 
   array_type m_lower;
   array_type m_upper;
@@ -40,7 +39,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   sycl::event sycl_direct_launch(const FunctorWrapper& functor_wrapper,
                                  const sycl::event& memcpy_event) const {
     // Convenience references
-    sycl::queue& q = m_space.sycl_queue();
+    const Kokkos::SYCL& space = m_policy.space();
+    sycl::queue& q            = space.sycl_queue();
 
     if (m_policy.m_num_tiles == 0) return {};
 
@@ -146,8 +146,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
 
   void execute() const {
+    auto space_instance = m_policy.space().impl_internal_space_instance();
     Kokkos::Impl::SYCLInternal::IndirectKernelMem& indirectKernelMem =
-        m_space.impl_internal_space_instance()->get_indirect_kernel_mem();
+        space_instance->get_indirect_kernel_mem();
 
     auto functor_wrapper =
         Impl::make_sycl_function_wrapper(m_functor, indirectKernelMem);
@@ -159,8 +160,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   ParallelFor(const FunctorType& arg_functor, const Policy& arg_policy)
       : m_functor(arg_functor),
         m_policy(arg_policy),
-        m_max_grid_size(get_max_grid_size(arg_policy)),
-        m_space(arg_policy.space()) {
+        m_max_grid_size(get_max_grid_size(arg_policy)) {
     // Initialize begins and ends based on layout
     // Swap the fastest indexes to x dimension
     for (array_index_type i = 0; i < Policy::rank; ++i) {
