@@ -617,9 +617,9 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 
 //! Unary + operator for complex.
 template <class RealType>
-KOKKOS_INLINE_FUNCTION complex<RealType> operator+(
+KOKKOS_FUNCTION constexpr complex<RealType> operator+(
     const complex<RealType>& x) noexcept {
-  return complex<RealType>{+x.real(), +x.imag()};
+  return x;
 }
 
 //! Binary - operator for complex.
@@ -680,7 +680,7 @@ KOKKOS_DEPRECATED KOKKOS_FUNCTION
 
 //! Unary - operator for complex.
 template <class RealType>
-KOKKOS_INLINE_FUNCTION complex<RealType> operator-(
+KOKKOS_FUNCTION constexpr complex<RealType> operator-(
     const complex<RealType>& x) noexcept {
   return complex<RealType>(-x.real(), -x.imag());
 }
