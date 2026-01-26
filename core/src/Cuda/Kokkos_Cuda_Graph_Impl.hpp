@@ -87,17 +87,15 @@ struct GraphImpl<Kokkos::Cuda> {
     }
   }
 
-  explicit GraphImpl(device_handle_t device_handle)
-      : m_device_handle(std::move(device_handle)), m_graph_owning(true) {
+  explicit GraphImpl(const device_handle_t& device_handle)
+      : m_device_handle(device_handle), m_graph_owning(true) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         (m_device_handle.m_exec.impl_internal_space_instance()
              ->cuda_graph_create_wrapper(&m_graph, cuda_graph_flags_t{0})));
   }
 
-  explicit GraphImpl(device_handle_t device_handle, cudaGraph_t graph)
-      : m_device_handle(std::move(device_handle)),
-        m_graph(graph),
-        m_graph_owning(false) {
+  explicit GraphImpl(const device_handle_t& device_handle, cudaGraph_t graph)
+      : m_device_handle(device_handle), m_graph(graph), m_graph_owning(false) {
     KOKKOS_EXPECTS(graph != nullptr);
   }
 

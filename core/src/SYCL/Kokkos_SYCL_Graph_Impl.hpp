@@ -45,9 +45,9 @@ class GraphImpl<Kokkos::SYCL> {
 
   ~GraphImpl();
 
-  explicit GraphImpl(device_handle_t device_handle);
+  explicit GraphImpl(const device_handle_t& device_handle);
 
-  GraphImpl(device_handle_t device_handle, native_graph_t native_graph);
+  GraphImpl(const device_handle_t& device_handle, native_graph_t native_graph);
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr);
 
@@ -101,15 +101,14 @@ inline GraphImpl<Kokkos::SYCL>::~GraphImpl() {
       "Kokkos::GraphImpl::~GraphImpl: Graph Destruction");
 }
 
-inline GraphImpl<Kokkos::SYCL>::GraphImpl(device_handle_t device_handle)
-    : m_device_handle(std::move(device_handle)),
+inline GraphImpl<Kokkos::SYCL>::GraphImpl(const device_handle_t& device_handle)
+    : m_device_handle(device_handle),
       m_graph(m_device_handle.m_exec.sycl_queue().get_context(),
               m_device_handle.m_exec.sycl_queue().get_device()) {}
 
-inline GraphImpl<Kokkos::SYCL>::GraphImpl(device_handle_t device_handle,
+inline GraphImpl<Kokkos::SYCL>::GraphImpl(const device_handle_t& device_handle,
                                           native_graph_t native_graph)
-    : m_device_handle(std::move(device_handle)),
-      m_graph(std::move(native_graph)) {}
+    : m_device_handle(device_handle), m_graph(std::move(native_graph)) {}
 
 inline void GraphImpl<Kokkos::SYCL>::add_node(
     std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr) {

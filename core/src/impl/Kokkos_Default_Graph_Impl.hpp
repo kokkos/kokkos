@@ -56,8 +56,8 @@ struct GraphImpl
   GraphImpl& operator=(GraphImpl&&)      = delete;
   ~GraphImpl()                           = default;
 
-  explicit GraphImpl(device_handle_t device_handle)
-      : device_handle_storage_base_t(std::move(device_handle)) {}
+  explicit GraphImpl(const device_handle_t& device_handle)
+      : device_handle_storage_base_t(device_handle) {}
 
   // </editor-fold> end Constructors, destructor, and assignment }}}2
   //----------------------------------------------------------------------------

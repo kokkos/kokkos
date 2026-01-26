@@ -227,12 +227,10 @@ class GraphNodeRef {
 
   // TODO We should do better than a p-for (that uses registers, heavier).
   //      This should "just" launch the function on device with our driver.
-  template <
-      Kokkos::Impl::NodeProperties Props, typename Policy, typename Functor,
-      std::enable_if_t<
-          std::is_invocable_r_v<void, const std::remove_cvref_t<Functor>> &&
-              Kokkos::Impl::is_specialization_of_v<Policy, ThenPolicy>,
-          int> = 0>
+  template <typename Props, typename Policy, typename Functor>
+    requires(Kokkos::Impl::NodeProperties<std::remove_cvref_t<Props>> &&
+             std::is_invocable_r_v<void, const std::remove_cvref_t<Functor>> &&
+             Kokkos::Impl::is_specialization_of_v<Policy, ThenPolicy>)
   auto then(Props&& props, Policy&& policy, Functor&& functor) const {
     using next_kernel_t =
         Kokkos::Impl::GraphNodeThenImpl<ExecutionSpace,
@@ -249,7 +247,8 @@ class GraphNodeRef {
         std::forward<Policy>(policy), std::forward<Functor>(functor)});
   }
 
-  template <Kokkos::Impl::NodeProperties Props, typename Functor>
+  template <typename Props, typename Functor>
+    requires Kokkos::Impl::NodeProperties<std::remove_cvref_t<Props>>
   auto then(Props&& props, Functor&& functor) const {
     return this->then(std::forward<Props>(props), ThenPolicy{},
                       std::forward<Functor>(functor));
@@ -367,8 +366,9 @@ class GraphNodeRef {
   }
 #endif
 
-  template <Kokkos::Impl::NodeProperties Props, class Policy, class Functor>
-    requires ExecutionPolicyOn<std::remove_cvref_t<Policy>, ExecutionSpace>
+  template <typename Props, class Policy, class Functor>
+    requires(Kokkos::Impl::NodeProperties<std::remove_cvref_t<Props>> &&
+             ExecutionPolicyOn<std::remove_cvref_t<Policy>, ExecutionSpace>)
   auto then_parallel_for(Props&& props, Policy&& arg_policy,
                          Functor&& functor) const {
     //----------------------------------------
@@ -452,9 +452,9 @@ class GraphNodeRef {
       return static_cast<T2&&>(v2);
   }
 
-  template <Kokkos::Impl::NodeProperties Props, class Policy, class Functor,
-            class ReturnType>
-    requires ExecutionPolicyOn<std::remove_cvref_t<Policy>, ExecutionSpace>
+  template <typename Props, class Policy, class Functor, class ReturnType>
+    requires(Kokkos::Impl::NodeProperties<std::remove_cvref_t<Props>> &&
+             ExecutionPolicyOn<std::remove_cvref_t<Policy>, ExecutionSpace>)
   auto then_parallel_reduce(Props&& props, Policy&& arg_policy,
                             Functor&& functor,
                             ReturnType&& return_value) const {

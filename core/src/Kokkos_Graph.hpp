@@ -67,8 +67,8 @@ struct [[nodiscard]] Graph {
 
  public:
   // Construct an empty graph with a root node.
-  Graph(device_handle_t device_handle = device_handle_t{})
-      : m_impl_ptr{std::make_shared<impl_t>(std::move(device_handle))},
+  Graph(const device_handle_t& device_handle = device_handle_t{})
+      : m_impl_ptr{std::make_shared<impl_t>(device_handle)},
         m_root{m_impl_ptr->create_root_node_ptr()} {}
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
@@ -78,8 +78,8 @@ struct [[nodiscard]] Graph {
 #if defined(KOKKOS_ENABLE_CXX20)
     requires std::same_as<ExecutionSpace, Kokkos::DefaultExecutionSpace>
 #endif
-  Graph(device_handle_t device_handle, T&& native_graph)
-      : m_impl_ptr{std::make_shared<impl_t>(std::move(device_handle),
+  Graph(const device_handle_t& device_handle, T&& native_graph)
+      : m_impl_ptr{std::make_shared<impl_t>(device_handle,
                                             std::forward<T>(native_graph))},
         m_root{m_impl_ptr->create_root_node_ptr()} {
   }
@@ -153,14 +153,14 @@ auto when_all(PredecessorRefs&&... arg_pred_refs) {
 
 template <class ExecutionSpace, class Closure>
 Graph<ExecutionSpace> create_graph(
-    Kokkos::Impl::DeviceHandle<ExecutionSpace> device_handle,
+    const Kokkos::Impl::DeviceHandle<ExecutionSpace>& device_handle,
     Closure&& arg_closure) {
   // Create a shared pointer to the graph:
   // We need an attorney class here so we have an implementation friend to
   // create a Graph class without graph having public constructors. We can't
   // just make `create_graph` itself a friend because of the way that friend
   // function template injection works.
-  Graph<ExecutionSpace> rv{std::move(device_handle)};
+  Graph<ExecutionSpace> rv{device_handle};
   // Invoke the user's graph construction closure
   ((Closure&&)arg_closure)(rv.root_node());
   // and given them back the graph

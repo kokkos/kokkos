@@ -40,9 +40,9 @@ class GraphImpl<Kokkos::HIP> {
 
   ~GraphImpl();
 
-  explicit GraphImpl(device_handle_t device_handle);
+  explicit GraphImpl(const device_handle_t& device_handle);
 
-  GraphImpl(device_handle_t device_handle, hipGraph_t graph);
+  GraphImpl(const device_handle_t& device_handle, hipGraph_t graph);
 
   void add_node(std::shared_ptr<aggregate_node_impl_t> const& arg_node_ptr);
 
@@ -111,18 +111,16 @@ inline GraphImpl<Kokkos::HIP>::~GraphImpl() {
   }
 }
 
-inline GraphImpl<Kokkos::HIP>::GraphImpl(device_handle_t device_handle)
-    : m_device_handle(std::move(device_handle)), m_graph_owning(true) {
+inline GraphImpl<Kokkos::HIP>::GraphImpl(const device_handle_t& device_handle)
+    : m_device_handle(device_handle), m_graph_owning(true) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
       m_device_handle.m_exec.impl_internal_space_instance()
           ->hip_graph_create_wrapper(&m_graph, 0));
 }
 
-inline GraphImpl<Kokkos::HIP>::GraphImpl(device_handle_t device_handle,
+inline GraphImpl<Kokkos::HIP>::GraphImpl(const device_handle_t& device_handle,
                                          hipGraph_t graph)
-    : m_device_handle(std::move(device_handle)),
-      m_graph(graph),
-      m_graph_owning(false) {
+    : m_device_handle(device_handle), m_graph(graph), m_graph_owning(false) {
   KOKKOS_EXPECTS(graph != nullptr);
 }
 
