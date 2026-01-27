@@ -18,6 +18,12 @@
 #include <sycl/sycl.hpp>
 #endif
 
+#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(CUDA_VERSION) && CUDA_VERSION >= 12090
+#include <cuda/std/cmath>
+#endif
+#endif
+
 namespace Kokkos {
 
 namespace Impl {
@@ -237,13 +243,13 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     return FUNC(static_cast<double>(x), y);                                    \
   }
 
-#define KOKKOS_IMPL_MATH_BINARY_PREDICATE(FUNC)                                \
+#define KOKKOS_IMPL_MATH_BINARY_PREDICATE(FUNC, NAMESPACE)                     \
   KOKKOS_INLINE_FUNCTION bool FUNC(float x, float y) {                         \
-    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    using NAMESPACE::FUNC;                                                     \
     return FUNC(x, y);                                                         \
   }                                                                            \
   KOKKOS_INLINE_FUNCTION bool FUNC(double x, double y) {                       \
-    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    using NAMESPACE::FUNC;                                                     \
     return FUNC(x, y);                                                         \
   }                                                                            \
   inline bool FUNC(long double x, long double y) {                             \
@@ -258,7 +264,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
                        bool>                                                   \
       FUNC(T1 x, T2 y) {                                                       \
     using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
-    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    using NAMESPACE::FUNC;                                                     \
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
   }                                                                            \
   template <class T1, class T2>                                                \
@@ -613,20 +619,34 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, bool> isnormal(
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnormal)
 #endif
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(signbit)
-#if defined CUDA_VERSION && CUDA_VERSION < 12090
+#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(CUDA_VERSION) && CUDA_VERSION >= 12090
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreater, cuda::std)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreaterequal, cuda::std)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isless, cuda::std)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessequal, cuda::std)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessgreater, cuda::std)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isunordered, cuda::std)
+#else
 KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isgreater, x > y)
 KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isgreaterequal, x >= y)
 KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isless, x < y)
 KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(islessequal, x <= y)
 KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(islessgreater, x<y || x> y)
 KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isunordered, isnan(x) || isnan(y))
+#endif
 #else
-KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreater)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreaterequal)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE(isless)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessequal)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessgreater)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE(isunordered)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreater,
+                                  KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreaterequal,
+                                  KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isless, KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessequal,
+                                  KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessgreater,
+                                  KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE(isunordered,
+                                  KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE)
 #endif
 
 #undef KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE
