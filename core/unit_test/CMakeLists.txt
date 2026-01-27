@@ -374,6 +374,40 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
   endif()
 endforeach()
 
+# FIXME_CLANG - Avoid unit tests that raise ICE with clang compiler
+if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+  if(KOKKOS_ENABLE_OPENMP)
+    list(
+      REMOVE_ITEM
+      OpenMP_SOURCES
+      ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_AtomicOperations_double.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/openmp/TestOpenMP_AtomicOperations_float.cpp
+    )
+  endif()
+  if(KOKKOS_ENABLE_SERIAL)
+    list(
+      REMOVE_ITEM
+      Serial_SOURCES1
+      ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_AtomicOperations_double.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_AtomicOperations_float.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_HostSharedPtrAccessOnDevice.cpp
+    )
+  endif()
+  if(KOKKOS_ENABLE_CUDA)
+    list(
+      REMOVE_ITEM
+      Cuda_SOURCES1
+      ${CMAKE_CURRENT_BINARY_DIR}/cuda/TestCuda_HostSharedPtrAccessOnDevice.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/cuda/TestCuda_Reducers_d.cpp
+    )
+    list(
+      REMOVE_ITEM
+      Cuda_SOURCES2
+      ${CMAKE_CURRENT_BINARY_DIR}/cuda/TestCuda_ViewOfClass.cpp
+    )
+  endif()
+endif()
+
 if(Kokkos_ENABLE_OPENACC)
   list(
     REMOVE_ITEM
