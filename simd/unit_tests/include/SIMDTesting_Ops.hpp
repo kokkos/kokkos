@@ -816,4 +816,76 @@ class ternary_hypot_op {
 KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
 
+class equal {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a == b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a == b;
+  }
+};
+
+class not_equal {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a != b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a != b;
+  }
+};
+
+class less_than {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a < b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a < b;
+  }
+};
+
+class less_equal {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a <= b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a <= b;
+  }
+};
+
+class greater_than {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a > b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a > b;
+  }
+};
+
+class greater_equal {
+ public:
+  template <typename T>
+  auto on_host(T const& a, T const& b) const {
+    return a >= b;
+  }
+  template <typename T>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+    return a >= b;
+  }
+};
+
 #endif

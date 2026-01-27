@@ -67,6 +67,7 @@ KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(abs, __habs)
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(fabs, __habs)
 // fmod
 // remainder
+// remquo
 KOKKOS_HIP_HALF_AND_BHALF_BINARY_FUNCTION_IMPL(fmax, __hmax)
 KOKKOS_HIP_HALF_AND_BHALF_BINARY_FUNCTION_IMPL(fmin, __hmin)
 // fdim
@@ -108,15 +109,27 @@ KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(ceil, hceil)
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(floor, hfloor)
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(trunc, htrunc)
 // round
-KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(nearbyint, hrint)
+KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(rint, hrint)
+// NOTE HIP does not provide these functions, but we can exclude domain errors,
+// as the range of int is enough for any value half_t can take.
+// Thus we just cast to the required return type
+// We are still missing the bhalf_t versions
+KOKKOS_INLINE_FUNCTION long impl_lrint(Kokkos::Experimental::half_t x) {
+  return static_cast<long>(impl_rint(x));
+}
+KOKKOS_INLINE_FUNCTION long long impl_llrint(Kokkos::Experimental::half_t x) {
+  return static_cast<long long>(impl_rint(x));
+}
 // logb
 // nextafter
 // copysign
 // isfinite
-
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isinf, __hisinf)
 KOKKOS_HIP_HALF_AND_BHALF_UNARY_PREDICATE_IMPL(isnan, __hisnan)
 // signbit
+// Non-standard functions
+KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(rsqrt, hrsqrt)
+KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL(rcp, hrcp)
 
 #undef KOKKOS_HIP_HALF_AND_BHALF_UNARY_FUNCTION_IMPL
 #undef KOKKOS_HIP_HALF_AND_BHALF_BINARY_FUNCTION_IMPL

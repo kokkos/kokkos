@@ -284,26 +284,13 @@ class alignas(FloatType) floating_point_wrapper {
   KOKKOS_FUNCTION
   floating_point_wrapper() : val(0.0F) {}
 
-// Copy constructors
-// Getting "C2580: multiple versions of a defaulted special
-// member function are not allowed" with VS 16.11.3 and CUDA 11.4.2
-#if defined(_WIN32) && defined(KOKKOS_ENABLE_CUDA)
-  KOKKOS_FUNCTION
-  floating_point_wrapper(const floating_point_wrapper& rhs) : val(rhs.val) {}
-
-  KOKKOS_FUNCTION
-  floating_point_wrapper& operator=(const floating_point_wrapper& rhs) {
-    val = rhs.val;
-    return *this;
-  }
-#else
+  // Copy constructors
   KOKKOS_DEFAULTED_FUNCTION
   floating_point_wrapper(const floating_point_wrapper&) noexcept = default;
 
   KOKKOS_DEFAULTED_FUNCTION
   floating_point_wrapper& operator=(const floating_point_wrapper&) noexcept =
       default;
-#endif
 
   KOKKOS_FUNCTION
   floating_point_wrapper(bit_comparison_type rhs) {

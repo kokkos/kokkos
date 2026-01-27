@@ -27,14 +27,9 @@ struct CheckClassWithExecutionSpaceAsDataMemberIsCopyable {
   }
 };
 
-// FIXME_OPENMPTARGET nvlink error: Undefined reference to
-// '_ZSt25__throw_bad_function_callv' in
-// '/tmp/TestOpenMPTarget_ExecutionSpace-434d81.cubin'
-#ifndef KOKKOS_ENABLE_OPENMPTARGET
 TEST(TEST_CATEGORY, execution_space_as_class_data_member) {
   CheckClassWithExecutionSpaceAsDataMemberIsCopyable<TEST_EXECSPACE>();
 }
-#endif
 
 TEST(TEST_CATEGORY, execution_space_moved_from) {
   TEST_EXECSPACE exec;

@@ -66,11 +66,34 @@ struct ViewFill<ViewType, Layout, ExecSpace, 0, iType> {
   void operator()(const iType&) const { a() = val; }
 };
 
+// Increasing the number of elements per thread improves throughput for
+// configurations that support StaticBatchSize. The values were found
+// empirically.
+template <class ExecutionSpace, int size>
+struct ViewFillStaticBatchSize {
+  static constexpr int value = 1;
+};
+#ifdef KOKKOS_ENABLE_CUDA
+template <int size>
+struct ViewFillStaticBatchSize<Kokkos::Cuda, size> {
+  static constexpr int value = 16;
+};
+#endif
+#ifdef KOKKOS_ENABLE_HIP
+template <int size>
+struct ViewFillStaticBatchSize<Kokkos::HIP, size> {
+  static constexpr int value = size < 4 ? 8 : 4;
+};
+#endif
+
 template <class ViewType, class Layout, class ExecSpace, typename iType>
 struct ViewFill<ViewType, Layout, ExecSpace, 1, iType> {
   ViewType a;
   typename ViewType::const_value_type val;
-  using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
+  using policy_type = Kokkos::RangePolicy<
+      ExecSpace, Kokkos::IndexType<iType>,
+      Kokkos::Experimental::StaticBatchSize<ViewFillStaticBatchSize<
+          ExecSpace, sizeof(typename ViewType::value_type)>::value>>;
 
   ViewFill(const ViewType& a_, typename ViewType::const_value_type& val_,
            const ExecSpace& space)

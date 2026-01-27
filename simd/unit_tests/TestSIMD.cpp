@@ -6,6 +6,7 @@
 #include <TestSIMD_Conversions.hpp>
 #include <TestSIMD_ShiftOps.hpp>
 #include <TestSIMD_BitwiseOps.hpp>
+#include <TestSIMD_ComparisonOps.hpp>
 #include <TestSIMD_Condition.hpp>
 #include <TestSIMD_GeneratorCtors.hpp>
 #include <TestSIMD_Reductions.hpp>

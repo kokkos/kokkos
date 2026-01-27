@@ -114,13 +114,6 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
        c_style_memory_management) {
-// FIXME_THREADS: Checking for calls to kokkos_malloc, kokkos_realloc,
-// kokkos_free before initialize or after finalize is currently disabled
-// for the Threads backend. Refer issue #7944.
-#ifdef KOKKOS_ENABLE_THREADS
-  GTEST_SKIP()
-      << "skipping since initializing Threads backend calls kokkos_malloc";
-#endif
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   EXPECT_DEATH(

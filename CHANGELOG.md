@@ -1,4 +1,14 @@
 # CHANGELOG
+## 5.0.1
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/5.0.0...5.0.1)
+
+### Bug Fixes
+* Fix nvcc warnings in mdspan [\#8750](https://github.com/kokkos/kokkos/pull/8750)
+* Disable MallocAsync for ROCm 7+ [\#8746](https://github.com/kokkos/kokkos/pull/8746)
+* Add a missing deprecation for HostMirror in DynamicView [\#8762](https://github.com/kokkos/kokkos/pull/8762)
+* Replace cudaMemAdvise_v2 with cudaMemAdvise when CUDART_VERSION >= 13000 [\#8707](https://github.com/kokkos/kokkos/pull/8707)
+* Use mdspan-based View in Cuda 12.9 [\#8779](https://github.com/kokkos/kokkos/pull/8779)
 
 ## 5.0.0
 
@@ -89,6 +99,15 @@
 * Cuda,HIP: Launch work graph on the specified instance [\#8576](https://github.com/kokkos/kokkos/pull/8576)
 * Work around a performance regression related to index computation in the mdspan-based View [\#8476](https://github.com/kokkos/kokkos/pull/8476)
 * Fix a failure at configure time when SVE is enabled and the tests are disabled [\#8661](https://github.com/kokkos/kokkos/pull/8661)
+
+## 4.7.02
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/4.7.01...4.7.02)
+
+### Bug Fixes
+* Link kokkoscore directly with CMAKE_DL_LIBS [\#8456](https://github.com/kokkos/kokkos/pull/8456)
+* mdspan fixes for cuda >= 12.9 [\#8562](https://github.com/kokkos/kokkos/pull/8562), [\#8615](https://github.com/kokkos/kokkos/pull/8615)
+* Replace cudaMemAdvise_v2 with cudaMemAdvise when CUDART_VERSION >= 13000 [\#8726](https://github.com/kokkos/kokkos/pull/8726)
 
 ## 4.7.01
 

@@ -365,16 +365,7 @@ struct TestReducers {
     {
       constexpr int num_teams = get_num_teams();
       TeamSumFunctor tf;
-      // FIXME_OPENMPTARGET temporary restriction for team size to be at least
-      // 32
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-      int team_size =
-          std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value
-              ? 32
-              : 1;
-#else
-      int team_size         = 1;
-#endif
+      int team_size = 1;
       auto team_pol = Kokkos::TeamPolicy<ExecSpace>(num_teams, team_size);
       Kokkos::parallel_reduce(team_pol, tf, sum_view);
       Kokkos::deep_copy(sum_scalar, sum_view);
@@ -386,16 +377,7 @@ struct TestReducers {
       const int league_size = 1;
       Kokkos::View<Scalar*, ExecSpace> result("result", league_size);
       TeamSumNestedFunctor tnf(f, league_size, 0, result);
-      // FIXME_OPENMPTARGET temporary restriction for team size to be at least
-      // 32
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-      int team_size =
-          std::is_same<ExecSpace, Kokkos::Experimental::OpenMPTarget>::value
-              ? 32
-              : 1;
-#else
-      int team_size         = 1;
-#endif
+      int team_size = 1;
       auto team_pol = Kokkos::TeamPolicy<ExecSpace>(1, team_size);
       Kokkos::parallel_for(team_pol, tnf);
       auto result_h =
@@ -408,15 +390,7 @@ struct TestReducers {
       const int league_size = 10;
       Kokkos::View<Scalar*, ExecSpace> result("result", league_size);
       TeamSumNestedFunctor tnf(f, league_size, N, result);
-      // FIXME_OPENMPTARGET temporary restriction for team size to be at least
-      // 32
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-      int initial_team_size =
-          std::is_same_v<ExecSpace, Kokkos::Experimental::OpenMPTarget> ? 32
-                                                                        : 1;
-#else
       int initial_team_size = 1;
-#endif
       auto team_size_max =
           Kokkos::TeamPolicy<ExecSpace>(league_size, initial_team_size)
               .team_size_max(tnf, Kokkos::ParallelForTag());
@@ -1647,24 +1621,15 @@ struct TestReducers {
     test_minloc_loc_init(3);
 // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
 #if !defined(KOKKOS_ENABLE_OPENACC)
-// FIXME_OPENMPTARGET requires custom reductions.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
     test_minloc_2d(100);
-#endif
 #endif
     test_max(10007);
     test_maxloc(10007);
     test_maxloc_loc_init(3);
 // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
 #if !defined(KOKKOS_ENABLE_OPENACC)
-// FIXME_OPENMPTARGET requires custom reductions.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
     test_maxloc_2d(100);
 #endif
-#endif
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET custom reducers
-    test_minmaxloc(10007);
-#else
     test_minmaxloc(10007);
     test_minmaxloc_loc_init(3);
 // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
@@ -1675,7 +1640,6 @@ struct TestReducers {
     test_minmaxfirstlastloc_loc_init(3);
     test_minfirstloc_loc_init(3);
     test_maxfirstloc_loc_init(3);
-#endif
   }
 
   // NOTE test_prod generates N random numbers between 1 and 4.
@@ -1694,10 +1658,7 @@ struct TestReducers {
     // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet
     // implemented.
 #if !defined(KOKKOS_ENABLE_OPENACC)
-    // FIXME_OPENMPTARGET requires custom reductions.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
       test_minloc_2d(100);
-#endif
 #endif
     test_max(10007);
     test_maxloc(10007);
@@ -1707,14 +1668,8 @@ struct TestReducers {
 #endif
 // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
 #if !defined(KOKKOS_ENABLE_OPENACC)
-// FIXME_OPENMPTARGET requires custom reductions.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
       test_maxloc_2d(100);
 #endif
-#endif
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET custom reducers
-    test_minmaxloc(10007);
-#else
     test_minmaxloc(10007);
     test_minmaxloc_loc_init(3);
 // FIXME_OPENACC - custom reduction with MDRangePolicy is not yet implemented.
@@ -1725,7 +1680,6 @@ struct TestReducers {
     test_minmaxfirstlastloc_loc_init(3);
     test_minfirstloc_loc_init(3);
     test_maxfirstloc_loc_init(3);
-#endif
     test_BAnd(35);
     test_BOr(35);
     test_LAnd(35);

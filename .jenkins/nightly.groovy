@@ -35,8 +35,8 @@ pipeline {
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack install --only=dependencies kokkos@develop+tests && \
-                          spack install --only=package ${CDASH_ARGS} kokkos@develop+tests cxxstd=20 && \
+                          spack install -v --only=dependencies kokkos@develop+tests && \
+                          spack install -v --only=package ${CDASH_ARGS} kokkos@develop+tests cxxstd=20 && \
                           spack load cmake && \
                           spack test run ${CDASH_ARGS} kokkos && \
                           spack test results -l
@@ -67,8 +67,8 @@ pipeline {
                           rm -rf spack && \
                           git clone https://github.com/spack/spack.git && \
                           . ./spack/share/spack/setup-env.sh && \
-                          spack install --only=dependencies kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.9.0 && \
-                          spack install --only=package ${CDASH_ARGS} kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.9.0 && \
+                          spack install -v --only=dependencies kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.9.0 && \
+                          spack install -v --only=package ${CDASH_ARGS} kokkos@develop+cuda+wrapper+tests cuda_arch=80 ^cuda@12.9.0 && \
                           spack load cmake  && \
                           spack load kokkos-nvcc-wrapper && \
                           spack load cuda && \
@@ -153,7 +153,7 @@ pipeline {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:7.0-complete --build-arg CMAKE_VERSION=3.31.3'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:7.2-complete --build-arg CMAKE_VERSION=3.31.3'
                             label 'rocm-docker && AMD_Radeon_Instinct_MI210'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }

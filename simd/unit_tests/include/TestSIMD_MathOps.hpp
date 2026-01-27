@@ -560,12 +560,6 @@ TEST(simd, device_math_ops) {
       << "skipping due to a GCC bug associated with the computation of "
          "floating-point values in a 32-bit build.";
 #endif
-#ifdef KOKKOS_ENABLE_OPENMPTARGET  // FIXME_OPENMPTARGET
-  GTEST_SKIP()
-      << "skipping because of a non-deterministic failure reporting: "
-         "Failure to synchronize stream (nil): Error in "
-         "cuStreamSynchronize: an illegal memory access was encountered";
-#endif
 #if defined(KOKKOS_ENABLE_OPENACC) && \
     defined(KOKKOS_COMPILER_CLANG)  // FIXME_CLACC
   GTEST_SKIP()

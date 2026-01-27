@@ -20,18 +20,12 @@ jobs:
   pre-commit-check:
     uses: ./.github/workflows/pre-commit.yml
 
-  clang-format-check:
-    uses: ./.github/workflows/clang-format-check.yml
-
-  cmake-format-check:
-    uses: ./.github/workflows/cmake-format-check.yml
-
   initial-check:
     uses: ./.github/workflows/continuous-integration-smoketest.yml
 
   # primary testing
   codeql:
-    needs: [initial-check, clang-format-check, cmake-format-check]
+    needs: [initial-check, pre-commit-check]
     # need to set manual permissions since it requires security-events write
     # but then we have to set everything else manually to read since the
     # default is overwritten
@@ -42,17 +36,17 @@ jobs:
     uses: ./.github/workflows/codeql.yml
 
   windows:
-    needs: [initial-check, clang-format-check, cmake-format-check]
+    needs: [initial-check, pre-commit-check]
     uses: ./.github/workflows/continuous-integration-windows.yml
 
   linux:
-    needs: [initial-check, clang-format-check, cmake-format-check]
+    needs: [initial-check, pre-commit-check]
     uses: ./.github/workflows/continuous-integration-linux.yml
 
   osx-x64:
-    needs: [initial-check, clang-format-check, cmake-format-check]
+    needs: [initial-check, pre-commit-check]
     uses: ./.github/workflows/continuous-integration-osx.yml
 
   performance-test:
-    needs: [initial-check, clang-format-check, cmake-format-check]
+    needs: [initial-check, pre-commit-check]
     uses: ./.github/workflows/performance-benchmark.yml

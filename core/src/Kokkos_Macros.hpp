@@ -11,8 +11,6 @@
  *  KOKKOS_ENABLE_THREADS             Kokkos::Threads execution space
  *  KOKKOS_ENABLE_HPX                 Kokkos::Experimental::HPX execution space
  *  KOKKOS_ENABLE_OPENMP              Kokkos::OpenMP execution space
- *  KOKKOS_ENABLE_OPENMPTARGET        Kokkos::Experimental::OpenMPTarget
- *                                    execution space
  *  KOKKOS_ENABLE_HIP                 Kokkos::HIP execution space
  *  KOKKOS_ENABLE_SYCL                Kokkos::SYCL execution space
  *  KOKKOS_ENABLE_HWLOC               HWLOC library is available.
@@ -77,11 +75,11 @@
 
 //----------------------------------------------------------------------------
 
-#if defined(KOKKOS_ENABLE_ATOMICS_BYPASS) &&                              \
-    (defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_CUDA) ||     \
-     defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_HPX) ||       \
-     defined(KOKKOS_ENABLE_OPENMPTARGET) || defined(KOKKOS_ENABLE_HIP) || \
-     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC))
+#if defined(KOKKOS_ENABLE_ATOMICS_BYPASS) &&                          \
+    (defined(KOKKOS_ENABLE_THREADS) || defined(KOKKOS_ENABLE_CUDA) || \
+     defined(KOKKOS_ENABLE_OPENMP) || defined(KOKKOS_ENABLE_HPX) ||   \
+     defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_SYCL) ||     \
+     defined(KOKKOS_ENABLE_OPENACC))
 #error Atomics may only be disabled if neither a host parallel nor a device backend is enabled
 #endif
 
@@ -327,14 +325,11 @@
 #define KOKKOS_IMPL_DEVICE_FUNCTION
 #endif
 
-// FIXME_OPENACC FIXME_OPENMPTARGET
+// FIXME_OPENACC
 // Move to setup files once there is more content
 // clang-format off
 #if defined(KOKKOS_ENABLE_OPENACC)
 #define KOKKOS_IMPL_RELOCATABLE_FUNCTION @"KOKKOS_RELOCATABLE_FUNCTION is not supported for the OpenACC backend"
-#endif
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-#define KOKKOS_IMPL_RELOCATABLE_FUNCTION @"KOKKOS_RELOCATABLE_FUNCTION is not supported for the OpenMPTarget backend"
 #endif
 // clang-format on
 
@@ -431,26 +426,24 @@ static_assert(
 // Determine the default execution space for parallel dispatch.
 // There is zero or one default execution space specified.
 
-#if 1 < ((defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA) ? 1 : 0) +         \
-         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +          \
-         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL) ? 1 : 0) +         \
-         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC) ? 1 : 0) +      \
-         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET) ? 1 : 0) + \
-         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +       \
-         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS) ? 1 : 0) +      \
-         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX) ? 1 : 0) +          \
+#if 1 < ((defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA) ? 1 : 0) +    \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP) ? 1 : 0) +     \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL) ? 1 : 0) +    \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC) ? 1 : 0) + \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP) ? 1 : 0) +  \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS) ? 1 : 0) + \
+         (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX) ? 1 : 0) +     \
          (defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SERIAL) ? 1 : 0))
 #error "More than one KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_* specified."
 #endif
 
 // If default is not specified then chose from enabled execution spaces.
-// Priority: CUDA, HIP, SYCL, OPENACC, OPENMPTARGET, OPENMP, THREADS, HPX,
+// Priority: CUDA, HIP, SYCL, OPENACC, OPENMP, THREADS, HPX,
 // SERIAL
 #if defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_CUDA)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC)
-#elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS)
 #elif defined(KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HPX)
@@ -463,8 +456,6 @@ static_assert(
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_SYCL
 #elif defined(KOKKOS_ENABLE_OPENACC)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENACC
-#elif defined(KOKKOS_ENABLE_OPENMPTARGET)
-#define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET
 #elif defined(KOKKOS_ENABLE_OPENMP)
 #define KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP
 #elif defined(KOKKOS_ENABLE_THREADS)
@@ -488,39 +479,6 @@ static_assert(
 #include <nv/target>
 #define KOKKOS_IF_ON_DEVICE(CODE) NV_IF_TARGET(NV_IS_DEVICE, CODE)
 #define KOKKOS_IF_ON_HOST(CODE) NV_IF_TARGET(NV_IS_HOST, CODE)
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENMPTARGET
-#ifdef KOKKOS_COMPILER_NVHPC
-#define KOKKOS_IF_ON_DEVICE(CODE)   \
-  if (__builtin_is_device_code()) { \
-    KOKKOS_IMPL_STRIP_PARENS(CODE)  \
-  }
-#define KOKKOS_IF_ON_HOST(CODE)      \
-  if (!__builtin_is_device_code()) { \
-    KOKKOS_IMPL_STRIP_PARENS(CODE)   \
-  }
-#else
-// Base function.
-static constexpr bool kokkos_omp_on_host() { return true; }
-
-#pragma omp begin declare variant match(device = {kind(host)})
-static constexpr bool kokkos_omp_on_host() { return true; }
-#pragma omp end declare variant
-
-#pragma omp begin declare variant match(device = {kind(nohost)})
-static constexpr bool kokkos_omp_on_host() { return false; }
-#pragma omp end declare variant
-
-#define KOKKOS_IF_ON_DEVICE(CODE)        \
-  if constexpr (!kokkos_omp_on_host()) { \
-    KOKKOS_IMPL_STRIP_PARENS(CODE)       \
-  }
-#define KOKKOS_IF_ON_HOST(CODE)         \
-  if constexpr (kokkos_omp_on_host()) { \
-    KOKKOS_IMPL_STRIP_PARENS(CODE)      \
-  }
-#endif
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENACC
@@ -573,10 +531,7 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 #define KOKKOS_IMPL_CTOR_DEFAULT_ARG KOKKOS_INVALID_INDEX
 
-// Guard intel compiler version 19 and older
-// intel error #2651: attribute does not apply to any entity
-// using <deprecated_type> KOKKOS_DEPRECATED = ...
-#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS) && !defined(__NVCC__)
+#if defined(KOKKOS_ENABLE_DEPRECATION_WARNINGS)
 #define KOKKOS_DEPRECATED [[deprecated]]
 #define KOKKOS_DEPRECATED_WITH_COMMENT(comment) [[deprecated(comment)]]
 #else
@@ -599,33 +554,52 @@ static constexpr bool kokkos_omp_on_host() { return false; }
 
 // clang-format off
 #if defined(__NVCOMPILER)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("diag_suppress 1216") \
     _Pragma("diag_suppress deprecated_entity_with_custom_message")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("diag_default 1216") \
-    _Pragma("diag_suppress deprecated_entity_with_custom_message")
+    _Pragma("diag_default deprecated_entity_with_custom_message")
 #elif defined(__EDG__)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("warning push")                              \
     _Pragma("warning disable 1478")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("warning pop")
 #elif defined(__GNUC__) || defined(__clang__)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("GCC diagnostic push")                       \
     _Pragma("GCC diagnostic ignored \"-Wdeprecated-declarations\"")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("GCC diagnostic pop")
 #elif defined(_MSC_VER)
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
     _Pragma("warning(push)")                             \
     _Pragma("warning(disable: 4996)")
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_() \
     _Pragma("warning(pop)")
 #else
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_()
+#endif
+
+// FIXME NVCC <13: using the deprecation warnings push/pop mechanism with nvcc
+// and nvc++ as host compiler leads to bugs where some of the _Pragma are not
+// taken into account.
+#if defined(__NVCC__) && defined(__NVCC_DIAG_PRAGMA_SUPPORT__) && \
+    (!defined(__NVCOMPILER) || (KOKKOS_COMPILER_NVCC >= 1300))
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_() \
+    _Pragma("nv_diagnostic push") \
+    _Pragma("nv_diag_suppress 1215,1444")
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    _Pragma("nv_diagnostic pop") \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_()
+#else
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH() \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH_()
+  #define KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP() \
+    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP_()
 #endif
 
 #if defined(__NVCOMPILER)

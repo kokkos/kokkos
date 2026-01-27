@@ -151,14 +151,10 @@ struct TestMDRangeReduce {
 TEST(TEST_CATEGORY, incr_14_MDrangeReduce) {
   TestMDRangeReduce<TEST_EXECSPACE> test;
   test.reduce_MDRange();
-// FIXME_OPENMPTARGET: custom reductions are not yet supported in the
-// OpenMPTarget backend.
 // FIXME_OPENACC: custom reductions are not yet supported in the
 // OpenACC backend.
-#if !defined(KOKKOS_ENABLE_OPENMPTARGET)
 #if !defined(KOKKOS_ENABLE_OPENACC)
   test.reduce_custom();
-#endif
 #endif
 }
 

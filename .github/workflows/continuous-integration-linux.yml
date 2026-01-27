@@ -100,7 +100,7 @@ jobs:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
       - name: Checkout desul
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: desul/desul
           ref: 22931326247c9333cc909628004d75ee5de99fa2
@@ -115,8 +115,8 @@ jobs:
           cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
           sudo cmake --build . --target install --parallel 2
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.arch }}-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.stdcxx }}-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}

@@ -28,7 +28,7 @@ inline __float128 abs(__float128 x) { return ::fabsq(x); }
 inline __float128 fabs(__float128 x) { return ::fabsq(x); }
 inline __float128 fmod(__float128 x, __float128 y) { return ::fmodq(x, y); }
 inline __float128 remainder(__float128 x, __float128 y) { return ::remainderq(x, y); }
-// remquo
+inline __float128 remquo(__float128 x, __float128 y, int* quo) { return ::remquoq(x,y,quo); }
 inline __float128 fma(__float128 x, __float128 y, __float128 z) { return ::fmaq(x, y, z); }
 inline __float128 fmax(__float128 x, __float128 y) { return ::fmaxq(x, y); }
 inline __float128 fmin(__float128 x, __float128 y) { return ::fminq(x, y); }

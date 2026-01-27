@@ -35,9 +35,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   size_t m_scratch_size[2];
 
   template <typename FunctorWrapper>
-  sycl::event sycl_direct_launch(const sycl_device_ptr<char> global_scratch_ptr,
-                                 const FunctorWrapper& functor_wrapper,
-                                 const sycl::event& memcpy_event) const {
+  sycl::event sycl_direct_launch(
+      const sycl::global_ptr<char> global_scratch_ptr,
+      const FunctorWrapper& functor_wrapper,
+      const sycl::event& memcpy_event) const {
     // Convenience references
     const Kokkos::SYCL& space = m_policy.space();
     sycl::queue& q            = space.sycl_queue();
@@ -130,8 +131,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
     int scratch_pool_id = instance.acquire_team_scratch_space();
-    const sycl_device_ptr<char> global_scratch_ptr =
-        static_cast<sycl_device_ptr<char>>(instance.resize_team_scratch_space(
+    const sycl::global_ptr<char> global_scratch_ptr =
+        static_cast<sycl::global_ptr<char>>(instance.resize_team_scratch_space(
             scratch_pool_id,
             static_cast<ptrdiff_t>(m_scratch_size[1]) * m_league_size));
 

@@ -149,12 +149,6 @@ TEST(TEST_CATEGORY_DEATH, view_out_of_bounds_access) {
                     "is defined";
   }
 #endif
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)  // FIXME_OPENMPTARGET
-  if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::OpenMPTarget>) {
-    GTEST_SKIP() << "skipping because OpenMPTarget backend is currently not "
-                    "able to abort from the device";
-  }
-#endif
 #if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value) {
     GTEST_SKIP() << "skipping because OpenACC backend is currently not "

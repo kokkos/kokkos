@@ -142,6 +142,20 @@ struct Kokkos::Experimental::Impl::norm_min_helper<
   static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'00001'0000000000}; // 0.00006103515625
 };
 
+/// \brief: Smallest positive non-zero value
+///
+/// Smallest positive non-zero value
+///             [s  e  e  e  e  e  f f f f f f f f f f]
+///             [0  0  0  0  0  0  0 0 0 0 0 0 0 0 0 1]
+/// bit index:   15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0
+///
+/// and in base10: 2**-24 = 5.96046e-08
+template <>
+struct Kokkos::Experimental::Impl::denorm_min_helper<
+    Kokkos::Experimental::half_t> {
+  static constexpr Kokkos::Experimental::half_t::bit_comparison_type value{0b0'00000'0000000001};
+};
+
 /// \brief: Quiet not a half precision number
 ///
 /// IEEE 754 defines this as all exponent bits and the first fraction bit high.
@@ -285,6 +299,12 @@ template <>
 struct Kokkos::Experimental::Impl::norm_min_helper<
     Kokkos::Experimental::bhalf_t> {
   static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'00000001'0000000}; // 1.175494351e-38
+};
+/// Smallest positive non-zero bhalf
+template <>
+struct Kokkos::Experimental::Impl::denorm_min_helper<
+    Kokkos::Experimental::bhalf_t> {
+  static constexpr Kokkos::Experimental::bhalf_t::bit_comparison_type value{0b0'00000000'0000001}; // 2^(-133)=9.18355e-41
 };
 // Quiet not a bhalf number
 template <>
