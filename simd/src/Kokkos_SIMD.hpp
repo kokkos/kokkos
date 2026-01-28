@@ -10,7 +10,6 @@
 
 #include <climits>
 #include <cstdint>
-#include <ranges>
 
 #if defined(KOKKOS_ARCH_AVX) && !defined(__AVX__)
 #error "__AVX__ must be defined for KOKKOS_ARCH_AVX"

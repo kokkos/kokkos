@@ -17,6 +17,7 @@ import kokkos.core_impl;
 #include <functional>
 #include <utility>
 #include <type_traits>
+#include <ranges>
 
 namespace Kokkos {
 

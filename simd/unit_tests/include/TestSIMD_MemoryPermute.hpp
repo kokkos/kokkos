@@ -23,6 +23,7 @@ inline void host_test_scatter_to(
     Kokkos::Experimental::basic_simd_mask<simd_index_type<DataType>, Abi> mask,
     Kokkos::Experimental::basic_simd<simd_index_type<DataType>, Abi> indices,
     Flag flag) {
+  using simd_type = Kokkos::Experimental::basic_simd<DataType, Abi>;
   using size_type = Kokkos::Experimental::Impl::simd_size_t;
   using mask_type = decltype(mask);
 
@@ -35,7 +36,7 @@ inline void host_test_scatter_to(
     }
   };
 
-  DataType result[init.size()];
+  alignas(simd_type::size() * sizeof(DataType)) DataType result[init.size()];
   {
     Kokkos::Experimental::unchecked_scatter_to(init, result, indices, flag);
     check_scattered(result);
@@ -76,7 +77,7 @@ inline void host_test_gather_from(
   };
 
   simd_type result;
-  DataType arr[init.size()];
+  alignas(simd_type::size() * sizeof(DataType)) DataType arr[init.size()];
   Kokkos::Experimental::simd_unchecked_store(init, arr, flag);
   {
     if constexpr (std::is_same_v<Kokkos::Experimental::simd_abi::Impl::
@@ -188,7 +189,7 @@ KOKKOS_INLINE_FUNCTION void device_test_scatter_to(
     }
   };
 
-  DataType result[init.size()];
+  alignas(simd_type::size() * sizeof(DataType)) DataType result[init.size()];
   {
     Kokkos::Experimental::unchecked_scatter_to(init, result, indices, flag);
     check_scattered{}(init, indices, result);
@@ -233,7 +234,7 @@ KOKKOS_INLINE_FUNCTION void device_test_gather_from(
   };
 
   simd_type result;
-  DataType arr[init.size()];
+  alignas(simd_type::size() * sizeof(DataType)) DataType arr[init.size()];
   Kokkos::Experimental::simd_unchecked_store(init, arr, flag);
   {
     if constexpr (std::is_same_v<Kokkos::Experimental::simd_abi::Impl::

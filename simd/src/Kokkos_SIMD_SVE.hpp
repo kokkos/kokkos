@@ -3609,7 +3609,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
       return V(static_cast<vls_float64_t>(
-          svld1_gather_index(svptrue_b64(), in, idx)));
+          svld1_gather_index(svptrue_b64(), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3617,8 +3617,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      return V(static_cast<vls_float64_t>(
-          svld1_gather_index(static_cast<vls_bool_t>(mask), in, idx)));
+      return V(static_cast<vls_float64_t>(svld1_gather_index(
+          static_cast<vls_bool_t>(mask), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3634,7 +3634,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(svptrue_b64(), out, idx,
+      svst1_scatter_index(svptrue_b64(), std::ranges::data(out), idx,
                           static_cast<vls_float64_t>(v));
     })
 
@@ -3643,8 +3643,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask), out, idx,
-                          static_cast<vls_float64_t>(v));
+      svst1_scatter_index(static_cast<vls_bool_t>(mask), std::ranges::data(out),
+                          idx, static_cast<vls_float64_t>(v));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
@@ -3661,7 +3661,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
       return V(static_cast<vls_float32_t>(
-          svld1_gather_index(svptrue_b32(), in, idx)));
+          svld1_gather_index(svptrue_b32(), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3669,8 +3669,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      return V(static_cast<vls_float32_t>(
-          svld1_gather_index(static_cast<vls_bool_t>(mask), in, idx)));
+      return V(static_cast<vls_float32_t>(svld1_gather_index(
+          static_cast<vls_bool_t>(mask), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3686,7 +3686,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      svst1_scatter_index(svptrue_b32(), out, idx,
+      svst1_scatter_index(svptrue_b32(), std::ranges::data(out), idx,
                           static_cast<vls_float32_t>(v));
     })
 
@@ -3695,8 +3695,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask), out, idx,
-                          static_cast<vls_float32_t>(v));
+      svst1_scatter_index(static_cast<vls_bool_t>(mask), std::ranges::data(out),
+                          idx, static_cast<vls_float32_t>(v));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
@@ -3708,21 +3708,21 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
     { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>, {
-      vls_int32_t idx = static_cast<vls_int32_t>(
-          basic_simd<std::int32_t,
-                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      return V(
-          static_cast<vls_int32_t>(svld1_gather_index(svptrue_b32(), in, idx)));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>, {
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
       return V(static_cast<vls_int32_t>(
-          svld1_gather_index(static_cast<vls_bool_t>(mask), in, idx)));
+          svld1_gather_index(svptrue_b32(), std::ranges::data(in), idx)));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>, {
+      vls_int32_t idx = static_cast<vls_int32_t>(
+          basic_simd<std::int32_t,
+                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
+      return V(static_cast<vls_int32_t>(svld1_gather_index(
+          static_cast<vls_bool_t>(mask), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3738,18 +3738,19 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      svst1_scatter_index(svptrue_b32(), out, idx, static_cast<vls_int32_t>(v));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
-    std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>, {
-      vls_int32_t idx = static_cast<vls_int32_t>(
-          basic_simd<std::int32_t,
-                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask), out, idx,
+      svst1_scatter_index(svptrue_b32(), std::ranges::data(out), idx,
                           static_cast<vls_int32_t>(v));
     })
 
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
+    std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>, {
+      vls_int32_t idx = static_cast<vls_int32_t>(
+          basic_simd<std::int32_t,
+                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
+      svst1_scatter_index(static_cast<vls_bool_t>(mask), std::ranges::data(out),
+                          idx, static_cast<vls_int32_t>(v));
+    })
+
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
     std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>,
     { unchecked_scatter_to<V>(v, out, indices, flag); })
@@ -3764,7 +3765,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
       return V(static_cast<vls_uint32_t>(
-          svld1_gather_index(svptrue_b32(), in, idx)));
+          svld1_gather_index(svptrue_b32(), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3772,8 +3773,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      return V(static_cast<vls_uint32_t>(
-          svld1_gather_index(static_cast<vls_bool_t>(mask), in, idx)));
+      return V(static_cast<vls_uint32_t>(svld1_gather_index(
+          static_cast<vls_bool_t>(mask), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3789,7 +3790,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      svst1_scatter_index(svptrue_b32(), out, idx,
+      svst1_scatter_index(svptrue_b32(), std::ranges::data(out), idx,
                           static_cast<vls_uint32_t>(v));
     })
 
@@ -3798,8 +3799,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_int32_t idx = static_cast<vls_int32_t>(
           basic_simd<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask), out, idx,
-                          static_cast<vls_uint32_t>(v));
+      svst1_scatter_index(static_cast<vls_bool_t>(mask), std::ranges::data(out),
+                          idx, static_cast<vls_uint32_t>(v));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
@@ -3811,21 +3812,21 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO_WITH_MASK(
     { unchecked_scatter_to<V>(v, out, mask, indices, flag); })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
-    std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>, {
-      vls_int64_t idx = static_cast<vls_int64_t>(
-          basic_simd<std::int64_t,
-                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      return V(
-          static_cast<vls_int64_t>(svld1_gather_index(svptrue_b64(), in, idx)));
-    })
-
-KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>, {
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
       return V(static_cast<vls_int64_t>(
-          svld1_gather_index(static_cast<vls_bool_t>(mask), in, idx)));
+          svld1_gather_index(svptrue_b64(), std::ranges::data(in), idx)));
+    })
+
+KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
+    std::int64_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>, {
+      vls_int64_t idx = static_cast<vls_int64_t>(
+          basic_simd<std::int64_t,
+                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
+      return V(static_cast<vls_int64_t>(svld1_gather_index(
+          static_cast<vls_bool_t>(mask), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3841,7 +3842,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(svptrue_b64(), out, idx, static_cast<vls_int64_t>(v));
+      svst1_scatter_index(svptrue_b64(), std::ranges::data(out), idx,
+                          static_cast<vls_int64_t>(v));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
@@ -3849,8 +3851,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_int64_t idx = static_cast<vls_int64_t>(
           basic_simd<std::int64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask), out, idx,
-                          static_cast<vls_int64_t>(v));
+      svst1_scatter_index(static_cast<vls_bool_t>(mask), std::ranges::data(out),
+                          idx, static_cast<vls_int64_t>(v));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
@@ -3867,7 +3869,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
           basic_simd<std::uint64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
       return V(static_cast<vls_uint64_t>(
-          svld1_gather_index(svptrue_b64(), in, idx)));
+          svld1_gather_index(svptrue_b64(), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3875,8 +3877,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       vls_uint64_t idx = static_cast<vls_uint64_t>(
           basic_simd<std::uint64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      return V(static_cast<vls_uint64_t>(
-          svld1_gather_index(static_cast<vls_bool_t>(mask), in, idx)));
+      return V(static_cast<vls_uint64_t>(svld1_gather_index(
+          static_cast<vls_bool_t>(mask), std::ranges::data(in), idx)));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3892,7 +3894,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(
       vls_uint64_t idx = static_cast<vls_uint64_t>(
           basic_simd<std::uint64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(svptrue_b64(), out, idx,
+      svst1_scatter_index(svptrue_b64(), std::ranges::data(out), idx,
                           static_cast<vls_uint64_t>(v));
     })
 
@@ -3901,8 +3903,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(
       vls_uint64_t idx = static_cast<vls_uint64_t>(
           basic_simd<std::uint64_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>{indices});
-      svst1_scatter_index(static_cast<vls_bool_t>(mask), out, idx,
-                          static_cast<vls_uint64_t>(v));
+      svst1_scatter_index(static_cast<vls_bool_t>(mask), std::ranges::data(out),
+                          idx, static_cast<vls_uint64_t>(v));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_SCATTER_TO(
