@@ -530,7 +530,7 @@ template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
-  using T = V::value_type;
+  using T = typename V::value_type;
   return basic_simd<T, simd_abi::scalar>(in[indices[0]]);
 }
 
@@ -541,7 +541,7 @@ template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
 KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
     simd_flags<Flags...> = simd_flag_default) {
-  using T  = V::value_type;
+  using T  = typename V::value_type;
   auto val = (mask[0]) ? in[indices[0]] : T{};
   return basic_simd<T, simd_abi::scalar>(val);
 }
