@@ -280,9 +280,15 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
   }
 
-#define KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(FUNC, OP)                   \
-  KOKKOS_INLINE_FUNCTION bool FUNC(float x, float y) { return OP; }            \
-  KOKKOS_INLINE_FUNCTION bool FUNC(double x, double y) { return OP; }          \
+#define KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK(FUNC, OP)            \
+  KOKKOS_INLINE_FUNCTION bool FUNC(float x, float y) {                         \
+    KOKKOS_IF_ON_DEVICE(return OP;)                                            \
+    KOKKOS_IF_ON_HOST(using std::FUNC; return FUNC(x, y);)                     \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION bool FUNC(double x, double y) {                       \
+    KOKKOS_IF_ON_DEVICE(return OP;)                                            \
+    KOKKOS_IF_ON_HOST(using std::FUNC; return FUNC(x, y);)                     \
+  }                                                                            \
   inline bool FUNC(long double x, long double y) {                             \
     using std::FUNC;                                                           \
     return FUNC(x, y);                                                         \
@@ -297,7 +303,8 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     using Promoted = Kokkos::Impl::promote_2_t<T1, T2>;                        \
     auto x         = static_cast<Promoted>(a);                                 \
     auto y         = static_cast<Promoted>(b);                                 \
-    return OP;                                                                 \
+    KOKKOS_IF_ON_DEVICE(return OP;)                                            \
+    KOKKOS_IF_ON_HOST(using std::FUNC; return FUNC(x, y);)                     \
   }                                                                            \
   template <class T1, class T2>                                                \
   inline std::enable_if_t<std::is_arithmetic_v<T1> &&                          \
@@ -628,12 +635,13 @@ KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessequal, cuda::std)
 KOKKOS_IMPL_MATH_BINARY_PREDICATE(islessgreater, cuda::std)
 KOKKOS_IMPL_MATH_BINARY_PREDICATE(isunordered, cuda::std)
 #else
-KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isgreater, x > y)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isgreaterequal, x >= y)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isless, x < y)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(islessequal, x <= y)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(islessgreater, x<y || x> y)
-KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK(isunordered, isnan(x) || isnan(y))
+KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK(isgreater, x > y)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK(isgreaterequal, x >= y)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK(isless, x < y)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK(islessequal, x <= y)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK(islessgreater, x<y || x> y)
+KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK(isunordered,
+                                                  isnan(x) || isnan(y))
 #endif
 #else
 KOKKOS_IMPL_MATH_BINARY_PREDICATE(isgreater,
@@ -656,7 +664,7 @@ KOKKOS_IMPL_MATH_BINARY_PREDICATE(isunordered,
 #undef KOKKOS_IMPL_MATH_BINARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_BINARY_PTR_FUNCTION
 #undef KOKKOS_IMPL_MATH_BINARY_PREDICATE
-#undef KOKKOS_IMPL_MATH_BINARY_PREDICATE_FALLBACK
+#undef KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK
 #undef KOKKOS_IMPL_MATH_TERNARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION
 
