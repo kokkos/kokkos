@@ -18,7 +18,7 @@ ctest --output-on-failure
 ### Key Options
 **Backends** (≥1 required, SERIAL auto-enabled if none): `-DKokkos_ENABLE_<SERIAL|OPENMP|THREADS|CUDA|HIP|SYCL>=ON`  
 **Dev flags**: `-DKokkos_ENABLE_TESTS=ON`, `-DKokkos_ENABLE_COMPILER_WARNINGS=ON`, `-DCMAKE_CXX_FLAGS="-Werror"` (CI uses this)  
-**Standards**: `-DCMAKE_CXX_STANDARD=20` (or 23), `-DBUILD_SHARED_LIBS=ON` (CI default)
+**Standards**: `-DCMAKE_CXX_STANDARD=20` (or 23)
 
 ### CI-Compatible Build
 ```bash
