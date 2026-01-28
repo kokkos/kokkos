@@ -46,6 +46,28 @@ cmake -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" ..
 ```
 Checks: bugprone-*, modernize-use-nullptr/using, kokkos-* (config: `.clang-tidy`)
 
+### Naming Style Guidelines for Kokkos Development
+
+To maintain a consistent codebase, the following naming conventions should be followed:
+
+1. **Classes**:
+   - Use `CamelCase` style.
+   - Keep names descriptive but concise (e.g., `ExecutionSpace`, `MemoryManager`).
+
+2. **Class Members**:
+   - Use `snake_case` style.
+   - Prefix private data members with `m_` (e.g., `m_value` for internal data).
+
+3. **Functions**:
+   - Use `snake_case` style for both member and free functions.
+   - Names should clearly describe the function's purpose (e.g., `get_functor`, `register_event`).
+
+4. **Template Parameters**:
+   - Use descriptive names in `CamelCase` (e.g., `Data`, `Handler`).
+
+5. **Macros**:
+   - Use `ALL_UPPERCASE` with underscores (e.g., `KOKKOS_VERSION`, `KOKKOS_ENABLE_DEBUG`).
+
 ## Repository Structure
 
 ```
