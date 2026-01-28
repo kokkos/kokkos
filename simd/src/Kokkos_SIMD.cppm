@@ -62,9 +62,13 @@ export {
   using ::Kokkos::Experimental::simd_flag_aligned;
   using ::Kokkos::Experimental::simd_flag_default;
   using ::Kokkos::Experimental::simd_mask;
+  using ::Kokkos::Experimental::simd_partial_gather_from;
   using ::Kokkos::Experimental::simd_partial_load;
+  using ::Kokkos::Experimental::simd_partial_scatter_to;
   using ::Kokkos::Experimental::simd_partial_store;
+  using ::Kokkos::Experimental::simd_unchecked_gather_from;
   using ::Kokkos::Experimental::simd_unchecked_load;
+  using ::Kokkos::Experimental::simd_unchecked_scatter_to;
   using ::Kokkos::Experimental::simd_unchecked_store;
 
   using ::Kokkos::Experimental::operator+=;
