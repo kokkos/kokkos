@@ -16,8 +16,8 @@ ctest --output-on-failure
 **In-source builds FORBIDDEN** - CMake errors immediately.
 
 ### Key Options
-**Backends** (≥1 required, SERIAL auto-enabled if none): `-DKokkos_ENABLE_<SERIAL|OPENMP|THREADS|CUDA|HIP|SYCL>=ON`  
-**Dev flags**: `-DKokkos_ENABLE_TESTS=ON`, `-DKokkos_ENABLE_COMPILER_WARNINGS=ON`, `-DCMAKE_CXX_FLAGS="-Werror"` (CI uses this)  
+**Backends** (≥1 required, SERIAL auto-enabled if none): `-DKokkos_ENABLE_<SERIAL|OPENMP|THREADS|CUDA|HIP|SYCL>=ON`
+**Dev flags**: `-DKokkos_ENABLE_TESTS=ON`, `-DKokkos_ENABLE_COMPILER_WARNINGS=ON`, `-DCMAKE_CXX_FLAGS="-Werror"` (CI uses this)
 **Standards**: `-DCMAKE_CXX_STANDARD=20` (or 23)
 
 ### CI-Compatible Build
@@ -88,7 +88,8 @@ kokkos/
 └── .pre-commit-config.yaml
 ```
 
-**Key files:** `CMakeLists.txt`, `cmake/kokkos_enable_devices.cmake` (backends), `.clang-{format,tidy}`, `docs/CONTRIBUTING.md`, `bin/nvcc_wrapper`
+**Key files:** `CMakeLists.txt`, `cmake/kokkos_enable_devices.cmake` (backends), `.clang-{
+  format, tidy}`, `docs/CONTRIBUTING.md`, `bin/nvcc_wrapper`
 
 ## CI/CD Workflows
 
@@ -114,8 +115,8 @@ ctest -R CoreUnitTest --timeout 2000   # Pattern match with timeout (CI uses 200
 ctest -j$(nproc)                       # Parallel execution
 ```
 
-**Test structure:** `core/unit_test/` (main), `algorithms/unit_tests/`, `containers/unit_tests/`, `simd/unit_tests/`, `example/` (integration)  
-**Naming:** `Kokkos_<Component>UnitTest_<Backend>_<TestName>`  
+**Test structure:** `core/unit_test/` (main), `algorithms/unit_tests/`, `containers/unit_tests/`, `simd/unit_tests/`, `example/` (integration)
+**Naming:** `Kokkos_<Component>UnitTest_<Backend>_<TestName>`
 **Note:** Tests are backend-specific. Some disabled for certain backends (see `# FIXME_<BACKEND>` comments in CMakeLists.txt).
 
 ## Critical Rules
