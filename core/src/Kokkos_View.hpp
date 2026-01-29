@@ -189,7 +189,8 @@ struct BasicViewFromTraits<ElementType, extents<IndexType, Extents...>,
       typename DataTypeFromExtents<element_type, extents_type>::type;
   using view_traits =
       ViewTraits<data_type, typename ArrayLayoutFromLayout<layout_type>::type,
-                 typename accessor_type::memory_space>;
+                 typename accessor_type::memory_space,
+                 MemoryTraitsFromAccessor<accessor_type> >;
   using mdspan_view_traits = MDSpanViewTraits<view_traits>;
 };
 

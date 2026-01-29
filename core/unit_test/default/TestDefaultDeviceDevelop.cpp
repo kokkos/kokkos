@@ -29,6 +29,14 @@ struct Compare {
   }
 };
 
+template <class MemoryTraits>
+struct CheckAccessor {
+  using acc_t = typename Kokkos::Impl::ImplAccessor<int, Kokkos::HostSpace,
+                                                    MemoryTraits>::type;
+  static_assert(
+      std::is_same_v<MemoryTraits, decltype(acc_t::impl_memory_traits())>);
+};
+
 TEST(defaultdevicetype, development_test) {
   int* data = new int[12];
   {
@@ -40,6 +48,26 @@ TEST(defaultdevicetype, development_test) {
         c3(data, 1, 2, 3);
     Compare<const int******, Kokkos::MemoryTraits<Kokkos::Unmanaged>> c4(
         data, 1, 2, 2, 3, 1, 1);
+  }
+  {
+    CheckAccessor<Kokkos::MemoryTraits<>> a0;
+    (void)a0;
+    CheckAccessor<Kokkos::MemoryTraits<Kokkos::Unmanaged>> a1;
+    (void)a1;
+    CheckAccessor<Kokkos::MemoryTraits<Kokkos::Atomic>> a2;
+    (void)a2;
+    CheckAccessor<Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::Atomic>> a3;
+    (void)a3;
+  }
+  {
+    using new_view_t =
+        Kokkos::View<float, Kokkos::dextents<unsigned, 7>, Kokkos::layout_right,
+                     Kokkos::Experimental::Accessor<float>>;
+    using old_view_t = Kokkos::View<float*******, Kokkos::LayoutRight>;
+    static_assert(std::is_same_v<typename new_view_t::index_type, unsigned>);
+    static_assert(std::is_same_v<typename old_view_t::index_type, size_t>);
+    static_assert(sizeof(new_view_t) == 4 * 7 + 4 + 16);
+    static_assert(sizeof(old_view_t) == 8 * 7 + 8 + 16);
   }
   delete[] data;
 }
