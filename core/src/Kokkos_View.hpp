@@ -162,17 +162,35 @@ constexpr bool is_assignable(DstView&, const SrcView&) {
 }
 
 namespace Impl {
-template <class... Properties>
+template <class DataType, class... Properties>
 struct BasicViewFromTraits {
-  using view_traits        = ViewTraits<Properties...>;
+  using view_traits        = ViewTraits<DataType, Properties...>;
   using mdspan_view_traits = MDSpanViewTraits<view_traits>;
   using element_type       = typename view_traits::value_type;
   using extents_type       = typename mdspan_view_traits::extents_type;
   using layout_type        = typename mdspan_view_traits::mdspan_layout_type;
   using accessor_type      = typename mdspan_view_traits::accessor_type;
-
+  using data_type          = DataType;
   using type =
       BV::BasicView<element_type, extents_type, layout_type, accessor_type>;
+};
+
+template <class ElementType, class IndexType, size_t... Extents,
+          class... Properties>
+struct BasicViewFromTraits<ElementType, extents<IndexType, Extents...>,
+                           Properties...> {
+  using type =
+      BV::BasicView<ElementType, extents<IndexType, Extents...>, Properties...>;
+  using element_type  = typename type::element_type;
+  using extents_type  = typename type::extents_type;
+  using layout_type   = typename type::mdspan_type::layout_type;
+  using accessor_type = typename type::accessor_type;
+  using data_type =
+      typename DataTypeFromExtents<element_type, extents_type>::type;
+  using view_traits =
+      ViewTraits<data_type, typename ArrayLayoutFromLayout<layout_type>::type,
+                 typename accessor_type::memory_space>;
+  using mdspan_view_traits = MDSpanViewTraits<view_traits>;
 };
 
 // Helper function to deal with cases where the data handle is
@@ -202,8 +220,8 @@ KOKKOS_INLINE_FUNCTION constexpr bool view_equal_extents_impl(
 #pragma GCC diagnostic ignored "-Wuninitialized"
 #endif
 
-template <class DataType, class... Properties>
-class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
+template <class FirstArg, class... Properties>
+class View : public Impl::BasicViewFromTraits<FirstArg, Properties...>::type {
   // We are deriving from BasicView, but need a helper to translate
   // View template parameters to BasicView template parameters
  private:
@@ -212,8 +230,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   template <typename V>
   friend struct Kokkos::Impl::ViewTracker;
 
-  using base_t =
-      typename Impl::BasicViewFromTraits<DataType, Properties...>::type;
+  using basic_view_from_traits_t =
+      Impl::BasicViewFromTraits<FirstArg, Properties...>;
+  using base_t = typename basic_view_from_traits_t::type;
 
   using base_t::m_acc;
   using base_t::m_map;
@@ -223,19 +242,21 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   using base_t::base_t;
 
   // typedefs originally from ViewTraits
-  using traits               = ViewTraits<DataType, Properties...>;
+  using traits = typename basic_view_from_traits_t::view_traits;
+
   using const_value_type     = typename traits::const_value_type;
   using non_const_value_type = typename traits::non_const_value_type;
-  using data_type            = DataType;
-  using const_data_type      = typename traits::const_data_type;
-  using non_const_data_type  = typename traits::non_const_data_type;
-  using view_tracker_type    = Impl::ViewTracker<View>;
-  using array_layout         = typename traits::array_layout;
-  using device_type          = typename traits::device_type;
-  using execution_space      = typename traits::execution_space;
-  using memory_space         = typename traits::memory_space;
-  using memory_traits        = typename traits::memory_traits;
-  using host_mirror_space    = typename traits::host_mirror_space;
+  using data_type            = typename basic_view_from_traits_t::data_type;
+
+  using const_data_type     = typename traits::const_data_type;
+  using non_const_data_type = typename traits::non_const_data_type;
+  using view_tracker_type   = Impl::ViewTracker<View>;
+  using array_layout        = typename traits::array_layout;
+  using device_type         = typename traits::device_type;
+  using execution_space     = typename traits::execution_space;
+  using memory_space        = typename traits::memory_space;
+  using memory_traits       = typename traits::memory_traits;
+  using host_mirror_space   = typename traits::host_mirror_space;
   using typename base_t::index_type;
 
   // aliases from BasicView
@@ -251,9 +272,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
       std::declval<typename base_t::data_handle_type>()));
 
  private:
-  using raw_allocation_value_type = std::remove_pointer_t<pointer_type>;
-  using hooks_policy =
-      typename Impl::ViewHooksFromTraits<DataType, Properties...>::type;
+  using raw_allocation_value_type        = std::remove_pointer_t<pointer_type>;
+  using hooks_policy                     = typename traits::hooks_policy;
   static constexpr bool has_hooks_policy = !std::is_void_v<hooks_policy>;
 
  public:
