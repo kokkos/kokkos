@@ -110,7 +110,8 @@ struct HostMirror {
   // If input execution space can access HostSpace then keep it.
   // Example: Kokkos::OpenMP can access, Kokkos::Cuda cannot
   enum {
-    keep_exe = Kokkos::SpaceAccessibility<S, Kokkos::HostSpace>::accessible
+    keep_exe = Kokkos::SpaceAccessibility<typename S::execution_space,
+                                          Kokkos::HostSpace>::accessible
   };
   // If HostSpace can access memory space then keep it.
   // Example: Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
@@ -122,12 +123,23 @@ struct HostMirror {
 
  public:
   // Construct a device mirror type
+  // Decision logic: First check if HostSpace can access the memory space.
+  // If yes, keep it and check execution space compatibility.
+  // If no, fall back to HostSpace::device_type.
+
+  // keep_exe | keep_mem | Result
+  // ---------|----------|-------
+  //    T     |    T     | S::device_type
+  //    F     |    T     | Device<HostSpace::execution_space, S::memory_space>
+  //    T     |    F     | HostSpace::device_type
+  //    F     |    F     | HostSpace::device_type
+
   using Device = std::conditional_t<
-      keep_exe && keep_mem, typename S::device_type,
-      std::conditional_t<keep_mem,
+      keep_mem,
+      std::conditional_t<keep_exe, typename S::device_type,
                          Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                        typename S::memory_space>,
-                         Kokkos::HostSpace::device_type>>;
+                                        typename S::memory_space>>,
+      Kokkos::HostSpace::device_type>;
 
   using execution_space = typename Device::execution_space;
   using memory_space    = typename Device::memory_space;
