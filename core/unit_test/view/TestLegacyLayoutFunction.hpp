@@ -72,8 +72,6 @@ void test_layout_single_rank(Sizes... sizes) {
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using extents_type =
       typename decltype(std::declval<ViewT>().to_mdspan())::extents_type;
-  using mapping_type =
-      typename decltype(std::declval<ViewT>().to_mdspan())::mapping_type;
 #else
   using extents_type = typename ViewT::extents_type;
   using mapping_type = typename ViewT::mapping_type;
