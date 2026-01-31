@@ -609,13 +609,18 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(isfinite)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isinf)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
 #if defined(KOKKOS_ENABLE_CUDA)
-template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_floating_point_v<T>, bool>
-isnormal(T x) {
-  const T abs = Kokkos::abs(x);
-  return (abs >= Kokkos::Experimental::norm_min_v<T>)&&(
-      abs <= Kokkos::Experimental::finite_max_v<T>);
-}
+#define KOKKOS_IMPL_MATH_ISNORMAL(SPECIFIER, TYPE)            \
+  SPECIFIER bool isnormal(TYPE x) {                           \
+    auto const abs = Kokkos::abs(x);                          \
+    return (abs >= Kokkos::Experimental::norm_min_v<TYPE>)&&( \
+        abs <= Kokkos::Experimental::finite_max_v<TYPE>);     \
+  }
+
+KOKKOS_IMPL_MATH_ISNORMAL(KOKKOS_INLINE_FUNCTION, float)
+KOKKOS_IMPL_MATH_ISNORMAL(KOKKOS_INLINE_FUNCTION, double)
+KOKKOS_IMPL_MATH_ISNORMAL(inline, long double)
+
+#undef KOKKOS_IMPL_MATH_ISNORMAL
 
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, bool> isnormal(
