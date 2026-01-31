@@ -1585,6 +1585,17 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 
 } /* namespace Kokkos */
 
+// ViewTraits handling if the arguments are mdspan style args
+// This is not circular: View will translate mdspan style args to original style
+// before creating its internal ViewTraits typedef
+// The reason we need this is that in certain places we create ViewTraits from
+// the template arguments of passed in Views (like in deep_copy).
+namespace Kokkos {
+template <class T, class IndexType, size_t... Extents, class... Prop>
+struct ViewTraits<T, extents<IndexType, Extents...>, Prop...>
+    : public View<T, extents<IndexType, Extents...>, Prop...>::traits {};
+}  // namespace Kokkos
+
 // FIXME: https://github.com/kokkos/kokkos/issues/7736 We may want to move these
 // out
 #include <View/Kokkos_ViewCommonType.hpp>
@@ -1594,5 +1605,5 @@ KOKKOS_INLINE_FUNCTION bool operator!=(const View<LT, LP...>& lhs,
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-#endif /* KOKKOS_ENABLE_IMPL_VIEW_LEGACY */
+#endif /* !KOKKOS_ENABLE_IMPL_VIEW_LEGACY */
 #endif /* #ifndef KOKKOS_VIEW_HPP */
