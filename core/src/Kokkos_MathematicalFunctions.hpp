@@ -319,6 +319,62 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     return FUNC(static_cast<Promoted>(x), static_cast<Promoted>(y));           \
   }
 
+#define KOKKOS_IMPL_MATH_BINARY_INT_FUNCTION(FUNC, intT)                       \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, intT y) {                         \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x, intT y) {                       \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x, intT y) {                      \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  inline long double FUNC(long double x, intT y) {                             \
+    using std::FUNC;                                                           \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  inline long double FUNC##l(long double x, intT y) {                          \
+    using std::FUNC;                                                           \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  template <class T>                                                           \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> FUNC( \
+      T x, intT y) {                                                           \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(static_cast<double>(x), y);                                    \
+  }
+
+#define KOKKOS_IMPL_MATH_BINARY_INT_PTR_FUNCTION(FUNC)                         \
+  KOKKOS_INLINE_FUNCTION float FUNC(float x, int* y) {                         \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION double FUNC(double x, int* y) {                       \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  KOKKOS_INLINE_FUNCTION float FUNC##f(float x, int* y) {                      \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  inline long double FUNC(long double x, int* y) {                             \
+    using std::FUNC;                                                           \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  inline long double FUNC##l(long double x, int* y) {                          \
+    using std::FUNC;                                                           \
+    return FUNC(x, y);                                                         \
+  }                                                                            \
+  template <class T>                                                           \
+  KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> FUNC( \
+      T x, int* y) {                                                           \
+    using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
+    return FUNC(static_cast<double>(x), y);                                    \
+  }
+
 #define KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION(FUNC)                        \
   KOKKOS_INLINE_FUNCTION float FUNC(float x, float y, int* z) {                \
     using KOKKOS_IMPL_MATH_FUNCTIONS_NAMESPACE::FUNC;                          \
@@ -593,10 +649,11 @@ KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(lrint)
 KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(llrint)
 #endif
 // Floating point manipulation functions
-// frexp
-// ldexp
+KOKKOS_IMPL_MATH_BINARY_INT_PTR_FUNCTION(frexp)
+KOKKOS_IMPL_MATH_BINARY_INT_FUNCTION(ldexp, int)
 KOKKOS_IMPL_MATH_BINARY_PTR_FUNCTION(modf)
-// scalbn
+KOKKOS_IMPL_MATH_BINARY_INT_FUNCTION(scalbn, int)
+KOKKOS_IMPL_MATH_BINARY_INT_FUNCTION(scalbln, long)
 // scalbln
 KOKKOS_IMPL_MATH_UNARY_INT_FUNCTION(ilogb)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(logb)
@@ -665,6 +722,8 @@ KOKKOS_IMPL_MATH_BINARY_PREDICATE(isunordered,
 #undef KOKKOS_IMPL_MATH_BINARY_PTR_FUNCTION
 #undef KOKKOS_IMPL_MATH_BINARY_PREDICATE
 #undef KOKKOS_IMPL_MATH_BINARY_PREDICATE_DEVICE_FALLBACK
+#undef KOKKOS_IMPL_MATH_BINARY_INT_FUNCTION
+#undef KOKKOS_IMPL_MATH_BINARY_INT_PTR_FUNCTION
 #undef KOKKOS_IMPL_MATH_TERNARY_FUNCTION
 #undef KOKKOS_IMPL_MATH_TERNARY_INT_PTR_FUNCTION
 
