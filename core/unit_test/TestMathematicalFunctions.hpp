@@ -317,35 +317,50 @@ struct IntegerComparison {
   }
 };
 
+template <class Floating>
+struct ConvertibleTo {
+  operator Floating() const;
+};
+
 template <class>
 struct math_function_name;
 
-#define DEFINE_UNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                         \
-  struct MathUnaryFunction_##FUNC {                                          \
-    template <typename T>                                                    \
-    static KOKKOS_FUNCTION auto eval(T x) {                                  \
-      static_assert(std::is_same_v<decltype(Kokkos::FUNC((T)0)),             \
-                                   math_unary_function_return_type_t<T>>);   \
-      return Kokkos::FUNC(x);                                                \
-    }                                                                        \
-    template <typename T>                                                    \
-    static auto eval_std(T x) {                                              \
-      if constexpr (std::is_same_v<T, KE::half_t> ||                         \
-                    std::is_same_v<T, KE::bhalf_t>) {                        \
-        return std::FUNC(static_cast<float>(x));                             \
-      } else {                                                               \
-        static_assert(std::is_same_v<decltype(std::FUNC((T)0)),              \
-                                     math_unary_function_return_type_t<T>>); \
-        return std::FUNC(x);                                                 \
-      }                                                                      \
-    }                                                                        \
-    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }           \
-  };                                                                         \
-  using kk_##FUNC = MathUnaryFunction_##FUNC;                                \
-  template <>                                                                \
-  struct math_function_name<MathUnaryFunction_##FUNC> {                      \
-    static constexpr char name[] = #FUNC;                                    \
-  };                                                                         \
+#define DEFINE_UNARY_FUNCTION_EVAL(FUNC, ULP_FACTOR)                           \
+  struct MathUnaryFunction_##FUNC {                                            \
+    template <typename T>                                                      \
+    static KOKKOS_FUNCTION auto eval(T x) {                                    \
+      static_assert(std::is_same_v<decltype(Kokkos::FUNC((T)0)),               \
+                                   math_unary_function_return_type_t<T>>);     \
+      if constexpr (std::is_floating_point_v<T>) {                             \
+        static_assert(std::is_same_v<decltype(Kokkos::FUNC(                    \
+                                         std::declval<ConvertibleTo<T>>())),   \
+                                     math_unary_function_return_type_t<T>>);   \
+      }                                                                        \
+      return Kokkos::FUNC(x);                                                  \
+    }                                                                          \
+    template <typename T>                                                      \
+    static auto eval_std(T x) {                                                \
+      if constexpr (std::is_same_v<T, KE::half_t> ||                           \
+                    std::is_same_v<T, KE::bhalf_t>) {                          \
+        return std::FUNC(static_cast<float>(x));                               \
+      } else {                                                                 \
+        static_assert(std::is_same_v<decltype(std::FUNC((T)0)),                \
+                                     math_unary_function_return_type_t<T>>);   \
+        if constexpr (std::is_floating_point_v<T>) {                           \
+          static_assert(std::is_same_v<decltype(std::FUNC(                     \
+                                           std::declval<ConvertibleTo<T>>())), \
+                                       math_unary_function_return_type_t<T>>); \
+        }                                                                      \
+        return std::FUNC(x);                                                   \
+      }                                                                        \
+    }                                                                          \
+    static KOKKOS_FUNCTION int ulp_factor() { return ULP_FACTOR; }             \
+  };                                                                           \
+  using kk_##FUNC = MathUnaryFunction_##FUNC;                                  \
+  template <>                                                                  \
+  struct math_function_name<MathUnaryFunction_##FUNC> {                        \
+    static constexpr char name[] = #FUNC;                                      \
+  };                                                                           \
   constexpr char math_function_name<MathUnaryFunction_##FUNC>::name[]
 
 #define DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(FUNC, ULP_FACTOR, REF_FUNC)        \
@@ -354,6 +369,11 @@ struct math_function_name;
     static KOKKOS_FUNCTION auto eval(T x) {                                  \
       static_assert(std::is_same_v<decltype(Kokkos::FUNC((T)0)),             \
                                    math_unary_function_return_type_t<T>>);   \
+      if constexpr (std::is_floating_point_v<T>) {                           \
+        static_assert(std::is_same_v<decltype(Kokkos::FUNC(                  \
+                                         std::declval<ConvertibleTo<T>>())), \
+                                     math_unary_function_return_type_t<T>>); \
+      }                                                                      \
       return Kokkos::FUNC(x);                                                \
     }                                                                        \
     template <typename T>                                                    \
@@ -383,6 +403,10 @@ struct math_function_name;
     template <typename T>                                              \
     static KOKKOS_FUNCTION auto eval(T x) {                            \
       static_assert(std::is_integral_v<decltype(Kokkos::FUNC((T)0))>); \
+      if constexpr (std::is_floating_point_v<T>) {                     \
+        static_assert(std::is_integral_v<decltype(Kokkos::FUNC(        \
+                          std::declval<ConvertibleTo<T>>()))>);        \
+      }                                                                \
       return Kokkos::FUNC(x);                                          \
     }                                                                  \
     template <typename T>                                              \
@@ -392,6 +416,10 @@ struct math_function_name;
         return std::FUNC(static_cast<float>(x));                       \
       } else {                                                         \
         static_assert(std::is_integral_v<decltype(std::FUNC((T)0))>);  \
+        if constexpr (std::is_floating_point_v<T>) {                   \
+          static_assert(std::is_integral_v<decltype(std::FUNC(         \
+                            std::declval<ConvertibleTo<T>>()))>);      \
+        }                                                              \
         return std::FUNC(x);                                           \
       }                                                                \
     }                                                                  \
@@ -2065,6 +2093,11 @@ TEST(TEST_CATEGORY, mathematical_functions_ieee_remainder_function) {
 #define KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #endif
 
+#define KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(FUNC, FP_TYPE)             \
+  static_assert(std::is_same_v<decltype(Kokkos::FUNC(                        \
+                                   std::declval<ConvertibleTo<FP_TYPE>>())), \
+                               bool>)
+
 template <class Space>
 struct TestIsFinite {
   TestIsFinite() { run(); }
@@ -2131,6 +2164,12 @@ struct TestIsFinite {
     KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(isfinite(4.l)), bool>);
+#endif
+
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isfinite, float);
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isfinite, double);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isfinite, long double);
 #endif
   }
 };
@@ -2208,6 +2247,12 @@ struct TestIsInf {
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(isinf(4.l)), bool>);
 #endif
+
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isinf, float);
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isinf, double);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isinf, long double);
+#endif
   }
 };
 
@@ -2283,6 +2328,12 @@ struct TestIsNaN {
     KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(isnan(4.l)), bool>);
+#endif
+
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isnan, float);
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isnan, double);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isnan, long double);
 #endif
   }
 };
@@ -2396,6 +2447,12 @@ struct TestIsNormal {
     KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(isnormal(4.l)), bool>);
+#endif
+
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isnormal, float);
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isnormal, double);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(isnormal, long double);
 #endif
   }
 };
@@ -2528,6 +2585,12 @@ struct TestSignbit {
     KOKKOS_TEST_WORKAROUND_DEPRECATED_STD_ITERATOR_WARNINGS_POP()
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
     static_assert(std::is_same_v<decltype(signbit(4.l)), bool>);
+#endif
+
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(signbit, float);
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(signbit, double);
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(signbit, long double);
 #endif
   }
 };
