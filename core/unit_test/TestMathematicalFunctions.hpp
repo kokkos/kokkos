@@ -657,7 +657,6 @@ DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL(remquo, 0);
 
 #undef DEFINE_TERNARY_INT_PTR_FUNCTION_EVAL
 
-
 #define DEFINE_BINARY_INT_PTR_FUNCTION_EVAL(FUNC, ULP_FACTOR)              \
   struct MathBinaryIntPtrFunction_##FUNC {                                 \
     template <typename T, typename U>                                      \
