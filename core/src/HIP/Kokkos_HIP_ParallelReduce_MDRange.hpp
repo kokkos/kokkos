@@ -129,7 +129,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned n = 512;  // block size must less than or equal to 512
+    unsigned n = 512;  // block size must be less than or equal to 512
     using closure_type =
         Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
                              Policy, Kokkos::HIP>;

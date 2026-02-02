@@ -38,10 +38,6 @@ void MDRangeReduceTester([[maybe_unused]] int bound, int k) {
 }
 
 TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  GTEST_SKIP() << "FIXME OPENMPTARGET Tests of MDRange reduce over values "
-                  "smaller than int would fail";
-#else
   for (int bound : {0, 1, 7, 32, 65, 7000}) {
     for (int k = 0; k < bound; ++k) {
       MDRangeReduceTester<bool>(bound, k);
@@ -52,7 +48,6 @@ TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
       MDRangeReduceTester<int64_t>(bound, k);
     }
   }
-#endif
 }
 
 // Functor for reduction tests, reducing over a 3D View into a 1D View
@@ -121,25 +116,8 @@ void MDRangeReduceViewTester(int view_size, int reduce_view_size, int tile_x,
   }
 }
 
-TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
-  for (int bound : {0, 1, 7, 32, 65, 7000}) {
-    for (int k = 0; k < bound; ++k) {
-      MDRangeReduceTester<bool>(bound, k);
-      MDRangeReduceTester<signed char>(bound, k);
-      MDRangeReduceTester<int8_t>(bound, k);
-      MDRangeReduceTester<int16_t>(bound, k);
-      MDRangeReduceTester<int32_t>(bound, k);
-      MDRangeReduceTester<int64_t>(bound, k);
-    }
-  }
-}
-
 TEST(TEST_CATEGORY, mdrange_parallel_reduce_view_size_limit) {
-#if defined(KOKKOS_ENABLE_OPENMPTARGET)
-  GTEST_SKIP()
-      << "FIXME_OPENMPTARGET custom reduction with MDRangePolicy is not "
-         "yet implemented";
-#elif defined(KOKKOS_ENABLE_OPENACC)
+#if defined(KOKKOS_ENABLE_OPENACC)
   GTEST_SKIP() << "FIXME_OPENACC custom reduction with MDRangePolicy is not "
                   "yet implemented";
 #else
