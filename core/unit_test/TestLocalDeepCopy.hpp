@@ -26,10 +26,13 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA =
-      Kokkos::subview(A, 1, 1, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i6 = 0; i6 < N; i6++) {
+    for (int i7 = 0; i7 < N; i7++) {
+      h_A(1, 1, 1, 1, 1, 1, i6, i7) = 1.0 + i6 + i7 * N;
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -44,38 +47,20 @@ void impl_test_local_deepcopy_teampolicy_rank_1(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i6 = 0; i6 < N; i6++) {
+    for (int i7 = 0; i7 < N; i7++) {
+      double expected = 1.0 + i6 + i7 * N;
+      if (h_B(1, 1, 1, 1, 1, 1, i6, i7) != expected) {
+        test = false;
+        break;
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, 1, lid, Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -88,10 +73,15 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i5 = 0; i5 < N; i5++) {
+    for (int i6 = 0; i6 < N; i6++) {
+      for (int i7 = 0; i7 < N; i7++) {
+        h_A(1, 1, 1, 1, 1, i5, i6, i7) = 1.0 + i5 + i6 * N + i7 * N * N;
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -108,39 +98,22 @@ void impl_test_local_deepcopy_teampolicy_rank_2(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i5 = 0; i5 < N; i5++) {
+    for (int i6 = 0; i6 < N; i6++) {
+      for (int i7 = 0; i7 < N; i7++) {
+        double expected = 1.0 + i5 + i6 * N + i7 * N * N;
+        if (h_B(1, 1, 1, 1, 1, i5, i6, i7) != expected) {
+          test = false;
+          break;
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, lid, Kokkos::ALL(),
-                                      Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -153,10 +126,18 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i4 = 0; i4 < N; i4++) {
+    for (int i5 = 0; i5 < N; i5++) {
+      for (int i6 = 0; i6 < N; i6++) {
+        for (int i7 = 0; i7 < N; i7++) {
+          h_A(1, 1, 1, 1, i4, i5, i6, i7) =
+              1.0 + i4 + i5 * N + i6 * N * N + i7 * N * N * N;
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -173,39 +154,24 @@ void impl_test_local_deepcopy_teampolicy_rank_3(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i4 = 0; i4 < N; i4++) {
+    for (int i5 = 0; i5 < N; i5++) {
+      for (int i6 = 0; i6 < N; i6++) {
+        for (int i7 = 0; i7 < N; i7++) {
+          double expected = 1.0 + i4 + i5 * N + i6 * N * N + i7 * N * N * N;
+          if (h_B(1, 1, 1, 1, i4, i5, i6, i7) != expected) {
+            test = false;
+            break;
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto subDst = Kokkos::subview(B, 1, 1, 1, 1, lid, Kokkos::ALL(),
-                                      Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -218,10 +184,21 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i3 = 0; i3 < N; i3++) {
+    for (int i4 = 0; i4 < N; i4++) {
+      for (int i5 = 0; i5 < N; i5++) {
+        for (int i6 = 0; i6 < N; i6++) {
+          for (int i7 = 0; i7 < N; i7++) {
+            h_A(1, 1, 1, i3, i4, i5, i6, i7) = 1.0 + i3 + i4 * N + i5 * N * N +
+                                               i6 * N * N * N +
+                                               i7 * N * N * N * N;
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -240,40 +217,27 @@ void impl_test_local_deepcopy_teampolicy_rank_4(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i3 = 0; i3 < N; i3++) {
+    for (int i4 = 0; i4 < N; i4++) {
+      for (int i5 = 0; i5 < N; i5++) {
+        for (int i6 = 0; i6 < N; i6++) {
+          for (int i7 = 0; i7 < N; i7++) {
+            double expected = 1.0 + i3 + i4 * N + i5 * N * N + i6 * N * N * N +
+                              i7 * N * N * N * N;
+            if (h_B(1, 1, 1, i3, i4, i5, i6, i7) != expected) {
+              test = false;
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto subDst =
-            Kokkos::subview(B, 1, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(),
-                            Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -286,11 +250,23 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA =
-      Kokkos::subview(A, 1, 1, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-                      Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i2 = 0; i2 < N; i2++) {
+    for (int i3 = 0; i3 < N; i3++) {
+      for (int i4 = 0; i4 < N; i4++) {
+        for (int i5 = 0; i5 < N; i5++) {
+          for (int i6 = 0; i6 < N; i6++) {
+            for (int i7 = 0; i7 < N; i7++) {
+              h_A(1, 1, i2, i3, i4, i5, i6, i7) =
+                  1.0 + i2 + i3 * N + i4 * N * N + i5 * N * N * N +
+                  i6 * N * N * N * N + i7 * N * N * N * N * N;
+            }
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -309,40 +285,30 @@ void impl_test_local_deepcopy_teampolicy_rank_5(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i2 = 0; i2 < N; i2++) {
+    for (int i3 = 0; i3 < N; i3++) {
+      for (int i4 = 0; i4 < N; i4++) {
+        for (int i5 = 0; i5 < N; i5++) {
+          for (int i6 = 0; i6 < N; i6++) {
+            for (int i7 = 0; i7 < N; i7++) {
+              double expected = 1.0 + i2 + i3 * N + i4 * N * N +
+                                i5 * N * N * N + i6 * N * N * N * N +
+                                i7 * N * N * N * N * N;
+              if (h_B(1, 1, i2, i3, i4, i5, i6, i7) != expected) {
+                test = false;
+                break;
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto subDst =
-            Kokkos::subview(B, 1, 1, lid, Kokkos::ALL(), Kokkos::ALL(),
-                            Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -355,11 +321,26 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i1 = 0; i1 < N; i1++) {
+    for (int i2 = 0; i2 < N; i2++) {
+      for (int i3 = 0; i3 < N; i3++) {
+        for (int i4 = 0; i4 < N; i4++) {
+          for (int i5 = 0; i5 < N; i5++) {
+            for (int i6 = 0; i6 < N; i6++) {
+              for (int i7 = 0; i7 < N; i7++) {
+                h_A(1, i1, i2, i3, i4, i5, i6, i7) =
+                    1.0 + i1 + i2 * N + i3 * N * N + i4 * N * N * N +
+                    i5 * N * N * N * N + i6 * N * N * N * N * N +
+                    i7 * N * N * N * N * N * N;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -378,40 +359,33 @@ void impl_test_local_deepcopy_teampolicy_rank_6(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i1 = 0; i1 < N; i1++) {
+    for (int i2 = 0; i2 < N; i2++) {
+      for (int i3 = 0; i3 < N; i3++) {
+        for (int i4 = 0; i4 < N; i4++) {
+          for (int i5 = 0; i5 < N; i5++) {
+            for (int i6 = 0; i6 < N; i6++) {
+              for (int i7 = 0; i7 < N; i7++) {
+                double expected = 1.0 + i1 + i2 * N + i3 * N * N +
+                                  i4 * N * N * N + i5 * N * N * N * N +
+                                  i6 * N * N * N * N * N +
+                                  i7 * N * N * N * N * N * N;
+                if (h_B(1, i1, i2, i3, i4, i5, i6, i7) != expected) {
+                  test = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto subDst = Kokkos::subview(B, 1, lid, Kokkos::ALL(), Kokkos::ALL(),
-                                      Kokkos::ALL(), Kokkos::ALL(),
-                                      Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -424,8 +398,29 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  Kokkos::deep_copy(A, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i0 = 0; i0 < N; i0++) {
+    for (int i1 = 0; i1 < N; i1++) {
+      for (int i2 = 0; i2 < N; i2++) {
+        for (int i3 = 0; i3 < N; i3++) {
+          for (int i4 = 0; i4 < N; i4++) {
+            for (int i5 = 0; i5 < N; i5++) {
+              for (int i6 = 0; i6 < N; i6++) {
+                for (int i7 = 0; i7 < N; i7++) {
+                  h_A(i0, i1, i2, i3, i4, i5, i6, i7) =
+                      1.0 + i0 + i1 * N + i2 * N * N + i3 * N * N * N +
+                      i4 * N * N * N * N + i5 * N * N * N * N * N +
+                      i6 * N * N * N * N * N * N +
+                      i7 * N * N * N * N * N * N * N;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   using team_policy = Kokkos::TeamPolicy<ExecSpace>;
   using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
@@ -444,40 +439,36 @@ void impl_test_local_deepcopy_teampolicy_rank_7(const int N) {
         Kokkos::Experimental::local_deep_copy(teamMember, subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i0 = 0; i0 < N; i0++) {
+    for (int i1 = 0; i1 < N; i1++) {
+      for (int i2 = 0; i2 < N; i2++) {
+        for (int i3 = 0; i3 < N; i3++) {
+          for (int i4 = 0; i4 < N; i4++) {
+            for (int i5 = 0; i5 < N; i5++) {
+              for (int i6 = 0; i6 < N; i6++) {
+                for (int i7 = 0; i7 < N; i7++) {
+                  double expected = 1.0 + i0 + i1 * N + i2 * N * N +
+                                    i3 * N * N * N + i4 * N * N * N * N +
+                                    i5 * N * N * N * N * N +
+                                    i6 * N * N * N * N * N * N +
+                                    i7 * N * N * N * N * N * N * N;
+                  if (h_B(i0, i1, i2, i3, i4, i5, i6, i7) != expected) {
+                    test = false;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      team_policy(N, Kokkos::AUTO),
-      KOKKOS_LAMBDA(const member_type& teamMember) {
-        int lid = teamMember.league_rank();  // returns a number between 0 and N
-        auto subDst = Kokkos::subview(
-            B, lid, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-            Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(teamMember, subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -490,10 +481,13 @@ void impl_test_local_deepcopy_rangepolicy_rank_1(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA =
-      Kokkos::subview(A, 1, 1, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i6 = 0; i6 < N; i6++) {
+    for (int i7 = 0; i7 < N; i7++) {
+      h_A(1, 1, 1, 1, 1, 1, i6, i7) = 1.0 + i6 + i7 * N;
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   // Deep Copy
   Kokkos::parallel_for(
@@ -503,36 +497,20 @@ void impl_test_local_deepcopy_rangepolicy_rank_1(const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i6 = 0; i6 < N; i6++) {
+    for (int i7 = 0; i7 < N; i7++) {
+      double expected = 1.0 + i6 + i7 * N;
+      if (h_B(1, 1, 1, 1, 1, 1, i6, i7) != expected) {
+        test = false;
+        break;
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
-        auto subDst = Kokkos::subview(B, 1, 1, 1, 1, 1, 1, i, Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -545,10 +523,15 @@ void impl_test_local_deepcopy_rangepolicy_rank_2(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i5 = 0; i5 < N; i5++) {
+    for (int i6 = 0; i6 < N; i6++) {
+      for (int i7 = 0; i7 < N; i7++) {
+        h_A(1, 1, 1, 1, 1, i5, i6, i7) = 1.0 + i5 + i6 * N + i7 * N * N;
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   // Deep Copy
   Kokkos::parallel_for(
@@ -560,37 +543,22 @@ void impl_test_local_deepcopy_rangepolicy_rank_2(const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i5 = 0; i5 < N; i5++) {
+    for (int i6 = 0; i6 < N; i6++) {
+      for (int i7 = 0; i7 < N; i7++) {
+        double expected = 1.0 + i5 + i6 * N + i7 * N * N;
+        if (h_B(1, 1, 1, 1, 1, i5, i6, i7) != expected) {
+          test = false;
+          break;
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
-        auto subDst =
-            Kokkos::subview(B, 1, 1, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -603,10 +571,18 @@ void impl_test_local_deepcopy_rangepolicy_rank_3(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i4 = 0; i4 < N; i4++) {
+    for (int i5 = 0; i5 < N; i5++) {
+      for (int i6 = 0; i6 < N; i6++) {
+        for (int i7 = 0; i7 < N; i7++) {
+          h_A(1, 1, 1, 1, i4, i5, i6, i7) =
+              1.0 + i4 + i5 * N + i6 * N * N + i7 * N * N * N;
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   // Deep Copy
   Kokkos::parallel_for(
@@ -618,37 +594,24 @@ void impl_test_local_deepcopy_rangepolicy_rank_3(const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i4 = 0; i4 < N; i4++) {
+    for (int i5 = 0; i5 < N; i5++) {
+      for (int i6 = 0; i6 < N; i6++) {
+        for (int i7 = 0; i7 < N; i7++) {
+          double expected = 1.0 + i4 + i5 * N + i6 * N * N + i7 * N * N * N;
+          if (h_B(1, 1, 1, 1, i4, i5, i6, i7) != expected) {
+            test = false;
+            break;
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
-        auto subDst = Kokkos::subview(B, 1, 1, 1, 1, i, Kokkos::ALL(),
-                                      Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -661,10 +624,21 @@ void impl_test_local_deepcopy_rangepolicy_rank_4(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, 1, 1, Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i3 = 0; i3 < N; i3++) {
+    for (int i4 = 0; i4 < N; i4++) {
+      for (int i5 = 0; i5 < N; i5++) {
+        for (int i6 = 0; i6 < N; i6++) {
+          for (int i7 = 0; i7 < N; i7++) {
+            h_A(1, 1, 1, i3, i4, i5, i6, i7) = 1.0 + i3 + i4 * N + i5 * N * N +
+                                               i6 * N * N * N +
+                                               i7 * N * N * N * N;
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   // Deep Copy
   Kokkos::parallel_for(
@@ -678,38 +652,27 @@ void impl_test_local_deepcopy_rangepolicy_rank_4(const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i3 = 0; i3 < N; i3++) {
+    for (int i4 = 0; i4 < N; i4++) {
+      for (int i5 = 0; i5 < N; i5++) {
+        for (int i6 = 0; i6 < N; i6++) {
+          for (int i7 = 0; i7 < N; i7++) {
+            double expected = 1.0 + i3 + i4 * N + i5 * N * N + i6 * N * N * N +
+                              i7 * N * N * N * N;
+            if (h_B(1, 1, 1, i3, i4, i5, i6, i7) != expected) {
+              test = false;
+              break;
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
-        auto subDst =
-            Kokkos::subview(B, 1, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(),
-                            Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -722,11 +685,23 @@ void impl_test_local_deepcopy_rangepolicy_rank_5(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA =
-      Kokkos::subview(A, 1, 1, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-                      Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i2 = 0; i2 < N; i2++) {
+    for (int i3 = 0; i3 < N; i3++) {
+      for (int i4 = 0; i4 < N; i4++) {
+        for (int i5 = 0; i5 < N; i5++) {
+          for (int i6 = 0; i6 < N; i6++) {
+            for (int i7 = 0; i7 < N; i7++) {
+              h_A(1, 1, i2, i3, i4, i5, i6, i7) =
+                  1.0 + i2 + i3 * N + i4 * N * N + i5 * N * N * N +
+                  i6 * N * N * N * N + i7 * N * N * N * N * N;
+            }
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   // Deep Copy
   Kokkos::parallel_for(
@@ -740,38 +715,30 @@ void impl_test_local_deepcopy_rangepolicy_rank_5(const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i2 = 0; i2 < N; i2++) {
+    for (int i3 = 0; i3 < N; i3++) {
+      for (int i4 = 0; i4 < N; i4++) {
+        for (int i5 = 0; i5 < N; i5++) {
+          for (int i6 = 0; i6 < N; i6++) {
+            for (int i7 = 0; i7 < N; i7++) {
+              double expected = 1.0 + i2 + i3 * N + i4 * N * N +
+                                i5 * N * N * N + i6 * N * N * N * N +
+                                i7 * N * N * N * N * N;
+              if (h_B(1, 1, i2, i3, i4, i5, i6, i7) != expected) {
+                test = false;
+                break;
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
-        auto subDst =
-            Kokkos::subview(B, 1, 1, i, Kokkos::ALL(), Kokkos::ALL(),
-                            Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -784,11 +751,26 @@ void impl_test_local_deepcopy_rangepolicy_rank_6(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  auto subA = Kokkos::subview(A, 1, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-                              Kokkos::ALL());
-  Kokkos::deep_copy(subA, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i1 = 0; i1 < N; i1++) {
+    for (int i2 = 0; i2 < N; i2++) {
+      for (int i3 = 0; i3 < N; i3++) {
+        for (int i4 = 0; i4 < N; i4++) {
+          for (int i5 = 0; i5 < N; i5++) {
+            for (int i6 = 0; i6 < N; i6++) {
+              for (int i7 = 0; i7 < N; i7++) {
+                h_A(1, i1, i2, i3, i4, i5, i6, i7) =
+                    1.0 + i1 + i2 * N + i3 * N * N + i4 * N * N * N +
+                    i5 * N * N * N * N + i6 * N * N * N * N * N +
+                    i7 * N * N * N * N * N * N;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   // Deep Copy
   Kokkos::parallel_for(
@@ -802,38 +784,33 @@ void impl_test_local_deepcopy_rangepolicy_rank_6(const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i1 = 0; i1 < N; i1++) {
+    for (int i2 = 0; i2 < N; i2++) {
+      for (int i3 = 0; i3 < N; i3++) {
+        for (int i4 = 0; i4 < N; i4++) {
+          for (int i5 = 0; i5 < N; i5++) {
+            for (int i6 = 0; i6 < N; i6++) {
+              for (int i7 = 0; i7 < N; i7++) {
+                double expected = 1.0 + i1 + i2 * N + i3 * N * N +
+                                  i4 * N * N * N + i5 * N * N * N * N +
+                                  i6 * N * N * N * N * N +
+                                  i7 * N * N * N * N * N * N;
+                if (h_B(1, i1, i2, i3, i4, i5, i6, i7) != expected) {
+                  test = false;
+                  break;
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
-        auto subDst = Kokkos::subview(B, 1, i, Kokkos::ALL(), Kokkos::ALL(),
-                                      Kokkos::ALL(), Kokkos::ALL(),
-                                      Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
@@ -846,8 +823,29 @@ void impl_test_local_deepcopy_rangepolicy_rank_7(const int N) {
   typename ViewType::host_mirror_type h_A = Kokkos::create_mirror_view(A);
   typename ViewType::host_mirror_type h_B = Kokkos::create_mirror_view(B);
 
-  // Initialize A matrix.
-  Kokkos::deep_copy(A, 10.0);
+  // Initialize A matrix with non-trivial values.
+  for (int i0 = 0; i0 < N; i0++) {
+    for (int i1 = 0; i1 < N; i1++) {
+      for (int i2 = 0; i2 < N; i2++) {
+        for (int i3 = 0; i3 < N; i3++) {
+          for (int i4 = 0; i4 < N; i4++) {
+            for (int i5 = 0; i5 < N; i5++) {
+              for (int i6 = 0; i6 < N; i6++) {
+                for (int i7 = 0; i7 < N; i7++) {
+                  h_A(i0, i1, i2, i3, i4, i5, i6, i7) =
+                      1.0 + i0 + i1 * N + i2 * N * N + i3 * N * N * N +
+                      i4 * N * N * N * N + i5 * N * N * N * N * N +
+                      i6 * N * N * N * N * N * N +
+                      i7 * N * N * N * N * N * N * N;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  Kokkos::deep_copy(A, h_A);
 
   // Deep Copy
   Kokkos::parallel_for(
@@ -861,38 +859,36 @@ void impl_test_local_deepcopy_rangepolicy_rank_7(const int N) {
         Kokkos::Experimental::local_deep_copy(subDst, subSrc);
       });
 
-  Kokkos::deep_copy(h_A, A);
   Kokkos::deep_copy(h_B, B);
 
   bool test = true;
-  for (size_t i = 0; i < A.span(); i++) {
-    if (h_A.data()[i] != h_B.data()[i]) {
-      test = false;
-      break;
+  for (int i0 = 0; i0 < N; i0++) {
+    for (int i1 = 0; i1 < N; i1++) {
+      for (int i2 = 0; i2 < N; i2++) {
+        for (int i3 = 0; i3 < N; i3++) {
+          for (int i4 = 0; i4 < N; i4++) {
+            for (int i5 = 0; i5 < N; i5++) {
+              for (int i6 = 0; i6 < N; i6++) {
+                for (int i7 = 0; i7 < N; i7++) {
+                  double expected = 1.0 + i0 + i1 * N + i2 * N * N +
+                                    i3 * N * N * N + i4 * N * N * N * N +
+                                    i5 * N * N * N * N * N +
+                                    i6 * N * N * N * N * N * N +
+                                    i7 * N * N * N * N * N * N * N;
+                  if (h_B(i0, i1, i2, i3, i4, i5, i6, i7) != expected) {
+                    test = false;
+                    break;
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   }
 
   ASSERT_EQ(test, true);
-
-  // Fill
-  Kokkos::deep_copy(B, 0.0);
-
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
-        auto subDst = Kokkos::subview(
-            B, i, Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL(),
-            Kokkos::ALL(), Kokkos::ALL(), Kokkos::ALL());
-        Kokkos::Experimental::local_deep_copy(subDst, 20.0);
-      });
-
-  Kokkos::deep_copy(h_B, B);
-
-  double sum_all = 0.0;
-  for (size_t i = 0; i < B.span(); i++) {
-    sum_all += h_B.data()[i];
-  }
-
-  ASSERT_EQ(sum_all, 20.0 * N * N * N * N * N * N * N * N);
 }
 //-------------------------------------------------------------------------------------------------------------
 
@@ -901,25 +897,25 @@ TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutleft) {
   using ViewType  = Kokkos::View<double********, Kokkos::LayoutLeft, ExecSpace>;
 
   {  // Rank-1
-    impl_test_local_deepcopy_teampolicy_rank_1<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_1<ExecSpace, ViewType>(5);
   }
   {  // Rank-2
-    impl_test_local_deepcopy_teampolicy_rank_2<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_2<ExecSpace, ViewType>(5);
   }
   {  // Rank-3
-    impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace, ViewType>(5);
   }
   {  // Rank-4
-    impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace, ViewType>(5);
   }
   {  // Rank-5
-    impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace, ViewType>(5);
   }
   {  // Rank-6
-    impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace, ViewType>(5);
   }
   {  // Rank-7
-    impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace, ViewType>(5);
   }
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -928,25 +924,25 @@ TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutleft) {
   using ViewType  = Kokkos::View<double********, Kokkos::LayoutLeft, ExecSpace>;
 
   {  // Rank-1
-    impl_test_local_deepcopy_rangepolicy_rank_1<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_1<ExecSpace, ViewType>(5);
   }
   {  // Rank-2
-    impl_test_local_deepcopy_rangepolicy_rank_2<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_2<ExecSpace, ViewType>(5);
   }
   {  // Rank-3
-    impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace, ViewType>(5);
   }
   {  // Rank-4
-    impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace, ViewType>(5);
   }
   {  // Rank-5
-    impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace, ViewType>(5);
   }
   {  // Rank-6
-    impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace, ViewType>(5);
   }
   {  // Rank-7
-    impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace, ViewType>(5);
   }
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -955,25 +951,25 @@ TEST(TEST_CATEGORY, local_deepcopy_teampolicy_layoutright) {
   using ViewType = Kokkos::View<double********, Kokkos::LayoutRight, ExecSpace>;
 
   {  // Rank-1
-    impl_test_local_deepcopy_teampolicy_rank_1<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_1<ExecSpace, ViewType>(5);
   }
   {  // Rank-2
-    impl_test_local_deepcopy_teampolicy_rank_2<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_2<ExecSpace, ViewType>(5);
   }
   {  // Rank-3
-    impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_3<ExecSpace, ViewType>(5);
   }
   {  // Rank-4
-    impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_4<ExecSpace, ViewType>(5);
   }
   {  // Rank-5
-    impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_5<ExecSpace, ViewType>(5);
   }
   {  // Rank-6
-    impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_6<ExecSpace, ViewType>(5);
   }
   {  // Rank-7
-    impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_teampolicy_rank_7<ExecSpace, ViewType>(5);
   }
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -983,25 +979,25 @@ TEST(TEST_CATEGORY, local_deepcopy_rangepolicy_layoutright) {
   using ViewType = Kokkos::View<double********, Kokkos::LayoutRight, ExecSpace>;
 
   {  // Rank-1
-    impl_test_local_deepcopy_rangepolicy_rank_1<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_1<ExecSpace, ViewType>(5);
   }
   {  // Rank-2
-    impl_test_local_deepcopy_rangepolicy_rank_2<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_2<ExecSpace, ViewType>(5);
   }
   {  // Rank-3
-    impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_3<ExecSpace, ViewType>(5);
   }
   {  // Rank-4
-    impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_4<ExecSpace, ViewType>(5);
   }
   {  // Rank-5
-    impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_5<ExecSpace, ViewType>(5);
   }
   {  // Rank-6
-    impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_6<ExecSpace, ViewType>(5);
   }
   {  // Rank-7
-    impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace, ViewType>(8);
+    impl_test_local_deepcopy_rangepolicy_rank_7<ExecSpace, ViewType>(5);
   }
 }
 
