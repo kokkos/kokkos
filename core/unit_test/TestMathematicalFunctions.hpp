@@ -3215,10 +3215,8 @@ struct TestNextToward {
 
     // Since FP may be an integral type, we need to declare input constants in
     // FP type, but reference constants are in FromDataType
-    const FP pos_one{1}, pos_two{2};
-    const FP neg_one{-1}, neg_two{-2};
+    const FP pos_one{1}, neg_one{-1};
     const FP pos_zero{0}, neg_zero{-0};
-
     const FP pos_max{std::numeric_limits<FP>::max()};
     const FP neg_max{-std::numeric_limits<FP>::max()};
 
