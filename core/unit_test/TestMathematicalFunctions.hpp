@@ -584,8 +584,10 @@ DEFINE_BINARY_PREDICATE_EVAL(isunordered);
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
 DEFINE_BINARY_INT_FUNCTION_EVAL(ldexp, 0);
-#ifndef KOKKOS_ENABLE_SYCL
+#if !defined(KOKKOS_ENABLE_SYCL) || (defined(FLT_RADIX) && FLT_RADIX == 2)
 DEFINE_BINARY_INT_FUNCTION_EVAL(scalbn, 0);
+#endif
+#ifndef KOKKOS_ENABLE_SYCL
 DEFINE_BINARY_INT_FUNCTION_EVAL(scalbln, 0);
 #endif
 #endif
@@ -1294,14 +1296,16 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>(1234.5678l, 3);
 #endif
 
-#ifndef KOKKOS_ENABLE_SYCL
+#if !defined(KOKKOS_ENABLE_SYCL) || (defined(FLT_RADIX) && FLT_RADIX == 2)
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(42.765f, -4);
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(-15.123, -4);
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(15, -4);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(1234.5678l, -4);
 #endif
+#endif
 
+#ifndef KOKKOS_ENABLE_SYCL
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(42.765f, -4l);
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(-15.123, -4l);
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(15, -4l);
