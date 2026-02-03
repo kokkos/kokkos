@@ -3318,9 +3318,9 @@ struct TestNextToward {
     double pos_max_as_double = static_cast<double>(pos_max);
     double neg_max_as_double = static_cast<double>(neg_max);
     const double before_neg_max =
-        std::nextafter(neg_max_as_double, target_neg_inf);
+        std::nextafter(neg_max_as_double, static_cast<double>(target_neg_inf));
     const double after_pos_max =
-        std::nextafter(pos_max_as_double, target_pos_inf);
+        std::nextafter(pos_max_as_double, static_cast<double>(target_pos_inf));
     if (nexttoward(neg_max, target_neg_inf) != before_neg_max ||
         nexttoward(pos_max, target_pos_inf) != after_pos_max) {
       ++e;
