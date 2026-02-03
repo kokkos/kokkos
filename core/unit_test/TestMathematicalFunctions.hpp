@@ -3109,18 +3109,6 @@ struct TestNextToward {
     }
     ASSERT_EQ(errors, 0);
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    if constexpr ((std::is_same_v<FP, Kokkos::Experimental::half_t> ||
-                   std::is_same_v<FP,
-                                  Kokkos::Experimental::bhalf_t>)&&sizeof(FP) ==
-                  2) {
-      test_half(e);
-    } else if constexpr (std::is_integral_v<FP>) {
-      test_integral(e);
-    } else {
-      test_float(e);
-    }
-  }
 
   inline void test_half(int& e) const {
     using Kokkos::isnan;
