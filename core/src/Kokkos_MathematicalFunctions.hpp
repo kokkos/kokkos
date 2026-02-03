@@ -660,7 +660,43 @@ KOKKOS_IMPL_MATH_BINARY_FUNCTION(nextafter)
 // nexttoward
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(copysign)
 // Classification and comparison
-// fpclassify
+// fpclassify not available on Cuda and SYCL
+// FIXME_NVHPC nvhpc's fpclassify return FP_ZERO for subnormal values.
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_SYCL) || \
+    defined(KOKKOS_COMPILER_NVHPC)
+#define KOKKOS_IMPL_MATH_FPCLASSIFY(SPECIFIER, TYPE)                       \
+  SPECIFIER int fpclassify(TYPE x) {                                       \
+    if (x != x) {                                                          \
+      return FP_NAN;                                                       \
+    } else if (x == 0) {                                                   \
+      return FP_ZERO;                                                      \
+    } else if (Kokkos::abs(x) < Kokkos::Experimental::norm_min_v<TYPE>) {  \
+      return FP_SUBNORMAL;                                                 \
+    } else if (Kokkos::abs(x) == Kokkos::Experimental::infinity_v<TYPE>) { \
+      return FP_INFINITE;                                                  \
+    } else {                                                               \
+      return FP_NORMAL;                                                    \
+    }                                                                      \
+  }
+
+KOKKOS_IMPL_MATH_FPCLASSIFY(KOKKOS_INLINE_FUNCTION, float)
+KOKKOS_IMPL_MATH_FPCLASSIFY(KOKKOS_INLINE_FUNCTION, double)
+KOKKOS_IMPL_MATH_FPCLASSIFY(inline, long double)
+
+#undef KOKKOS_IMPL_MATH_FPCLASSIFY
+
+template <class T>
+KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<T>, int>
+fpclassify(T x) {
+  if (x == 0) {
+    return FP_ZERO;
+  } else {
+    return FP_NORMAL;
+  }
+}
+#else
+KOKKOS_IMPL_MATH_UNARY_FUNCTION(fpclassify)
+#endif
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isfinite)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isinf)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
