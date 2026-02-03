@@ -2395,6 +2395,106 @@ TEST(TEST_CATEGORY, mathematical_functions_isinf) {
 }
 
 template <class Space>
+struct TestFpClassify {
+  TestFpClassify() { run(); }
+  void run() const {
+    int errors = 0;
+    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    ASSERT_EQ(errors, 0);
+  }
+  KOKKOS_FUNCTION void operator()(int, int& e) const {
+    using KE::denorm_min;
+    using KE::infinity;
+    using KE::quiet_NaN;
+    using KE::signaling_NaN;
+    using Kokkos::fpclassify;
+
+    if (fpclassify(0) != FP_ZERO || fpclassify(1) != FP_NORMAL) {
+      ++e;
+      Kokkos::printf("failed fpclassify(integral)\n");
+    }
+
+    if (fpclassify(0.f) != FP_ZERO || fpclassify(-0.f) != FP_ZERO ||
+        fpclassify(1.f) != FP_NORMAL
+#if !__FINITE_MATH_ONLY__
+        || fpclassify(signaling_NaN<float>::value) != FP_NAN ||
+        fpclassify(quiet_NaN<float>::value) != FP_NAN ||
+        fpclassify(infinity<float>::value) != FP_INFINITE ||
+        fpclassify(denorm_min<float>::value) != FP_SUBNORMAL
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed fpclassify(float)\n");
+    }
+
+    if (fpclassify(0.) != FP_ZERO || fpclassify(-0.) != FP_ZERO ||
+        fpclassify(1.) != FP_NORMAL
+#if !__FINITE_MATH_ONLY__
+        || fpclassify(signaling_NaN<double>::value) != FP_NAN ||
+        fpclassify(quiet_NaN<double>::value) != FP_NAN ||
+        fpclassify(infinity<double>::value) != FP_INFINITE ||
+        fpclassify(denorm_min<double>::value) != FP_SUBNORMAL
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed fpclassify(double)\n");
+    }
+
+#ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
+    if (fpclassify(0.l) != FP_ZERO || fpclassify(-0.l) != FP_ZERO ||
+        fpclassify(1.l) != FP_NORMAL
+#if !__FINITE_MATH_ONLY__
+        || fpclassify(signaling_NaN<long double>::value) != FP_NAN ||
+        fpclassify(quiet_NaN<long double>::value) != FP_NAN ||
+        fpclassify(infinity<long double>::value) != FP_INFINITE ||
+        fpclassify(denorm_min<long double>::value) != FP_SUBNORMAL
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed fpclassify(long double)\n");
+    }
+#endif
+
+    if (fpclassify(static_cast<KE::half_t>(0.f)) != FP_ZERO ||
+        fpclassify(static_cast<KE::half_t>(-0.f)) != FP_ZERO ||
+        fpclassify(static_cast<KE::half_t>(1.f)) != FP_NORMAL
+#if !__FINITE_MATH_ONLY__
+#if !(defined(KOKKOS_ENABLE_CUDA) &&                         \
+      defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE) && \
+      defined(KOKKOS_COMPILER_CLANG))
+        // FIXME internal compiler error for Clang+Cuda and RDC
+        || fpclassify(signaling_NaN<KE::half_t>::value) != FP_NAN ||
+        fpclassify(quiet_NaN<KE::half_t>::value) != FP_NAN ||
+        fpclassify(infinity<KE::half_t>::value) != FP_INFINITE ||
+        fpclassify(denorm_min<KE::half_t>::value) != FP_SUBNORMAL
+#endif
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed fpclassify(Kokkos::Experimental::half_t)\n");
+    }
+
+    if (fpclassify(static_cast<KE::bhalf_t>(0.f)) != FP_ZERO ||
+        fpclassify(static_cast<KE::bhalf_t>(-0.f)) != FP_ZERO ||
+        fpclassify(static_cast<KE::bhalf_t>(1.f)) != FP_NORMAL
+#if !__FINITE_MATH_ONLY__
+        || fpclassify(signaling_NaN<KE::bhalf_t>::value) != FP_NAN ||
+        fpclassify(quiet_NaN<KE::bhalf_t>::value) != FP_NAN ||
+        fpclassify(infinity<KE::bhalf_t>::value) != FP_INFINITE ||
+        fpclassify(denorm_min<KE::bhalf_t>::value) != FP_SUBNORMAL
+#endif
+    ) {
+      ++e;
+      Kokkos::printf("failed fpclassify(Kokkos::Experimental::bhalf_t)\n");
+    }
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_fpclassify) {
+  TestFpClassify<TEST_EXECSPACE>();
+}
+
+template <class Space>
 struct TestIsNaN {
   TestIsNaN() { run(); }
   void run() const {
