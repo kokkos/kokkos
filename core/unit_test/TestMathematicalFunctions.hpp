@@ -3198,7 +3198,7 @@ struct TestNextToward {
     }
 
     // From Inf Handling
-    // Note: The behavior of nextafter with infinities is
+    // Note: The behavior of nexttoward with infinities is
     // implementation-defined, but in Kokkos it returns the maximum
     // finite value when moving towards a finite value.
     if (nexttoward(pos_inf, target_pos_one) != pos_max ||
@@ -3214,7 +3214,7 @@ struct TestNextToward {
     using Kokkos::nexttoward;
 
     // Since FP may be an integral type, we need to declare input constants in
-    // FP type, but reference constants are in FromDataType
+    // FP type, but reference constants are in double
     const FP pos_one{1}, neg_one{-1};
     const FP pos_zero{0}, neg_zero{-0};
     const FP pos_max{std::numeric_limits<FP>::max()};
@@ -3349,8 +3349,6 @@ struct TestNextToward {
   inline void test_float(int& e) const {
     using Kokkos::nexttoward;
 
-    // Since FP may be an integral type, we need to declare input constants in
-    // FP type, but reference constants are in FromDataType
     const FP pos_one{1.0}, pos_two{2.0};
     const FP neg_one{-1.0}, neg_two{-2.0};
     const FP pos_zero{0.0}, neg_zero{-0.0};
@@ -3446,7 +3444,10 @@ struct TestNextToward {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_nexttoward) {
-  bool skipped = true;
+#if __FINITE_MATH_ONLY__
+  GTEST_SKIP() << "skipping when compiling with -ffinite-math-only";
+#endif
+  [[maybe_unused]] bool skipped = true;
 #if defined(MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS)
   skipped = false;
   TestNextToward<TEST_EXECSPACE, int>();
@@ -3467,7 +3468,7 @@ TEST(TEST_CATEGORY, mathematical_functions_nexttoward) {
     GTEST_SKIP() << "FIXME internal compiler error for Clang+Cuda and RDC";
 #else
 #if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC)
-    GTEST_SKIP() << "FIXME MSVC nextafter for half precision "
+    GTEST_SKIP() << "FIXME MSVC nexttoward for half precision "
                     "not implemented yet";
 #else
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
