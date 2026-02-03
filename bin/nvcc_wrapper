@@ -150,7 +150,14 @@ do
   *.cpp|*.cxx|*.cc|*.C|*.c++|*.cu)
     cpp_files="$cpp_files $1"
     ;;
-   # Ensure we only have one optimization flag because NVCC doesn't allow multiple
+  #fast-compile level for device code, tradeoff between compilation speed and runtime performance
+  -Ofc|--Ofast-compile)
+    cuda_args="$cuda_args $1 $2"
+    shift
+    shift
+    continue
+    ;;
+  # Ensure we only have one optimization flag because NVCC doesn't allow multiple
   -O*)
     if [ -n "$optimization_flag" ]; then
         if [ "$1" = "$optimization_flag" ]; then
@@ -232,7 +239,7 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
-  --extended-lambda|--expt-extended-lambda|--expt-relaxed-constexpr|--Wno-deprecated-gpu-targets|-Wno-deprecated-gpu-targets|-allow-unsupported-compiler|--allow-unsupported-compiler|--disable-warnings)
+  --extended-lambda|--expt-extended-lambda|--expt-relaxed-constexpr|--Wno-deprecated-gpu-targets|-Wno-deprecated-gpu-targets|-allow-unsupported-compiler|--allow-unsupported-compiler|--disable-warnings|--fdevice-time-trace|-fdevice-time-trace)
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
