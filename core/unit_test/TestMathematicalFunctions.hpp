@@ -1294,6 +1294,7 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_ldexp>(1234.5678l, 3);
 #endif
 
+#ifndef KOKKOS_ENABLE_SYCL
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(42.765f, -4);
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(-15.123, -4);
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbn>(15, -4);
@@ -1306,6 +1307,7 @@ TEST(TEST_CATEGORY, mathematical_functions_power_functions) {
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(15, -4l);
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   do_test_math_binary_int_function<TEST_EXECSPACE, kk_scalbln>(1234.5678l, -4l);
+#endif
 #endif
 
   do_test_math_binary_function<TEST_EXECSPACE, kk_hypot>(
