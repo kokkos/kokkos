@@ -154,8 +154,9 @@ do
   -Ofc|--Ofast-compile)
     cuda_args="$cuda_args $1 $2"
     shift
-    shift
-    continue
+    ;;
+  -Ofc=*|--Ofast-compile=*)
+    cuda_args="$cuda_args $1"
     ;;
   # Ensure we only have one optimization flag because NVCC doesn't allow multiple
   -O*)
