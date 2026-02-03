@@ -610,10 +610,10 @@ DEFINE_BINARY_INT_FUNCTION_EVAL(scalbln, 0);
   struct math_function_name<MathBinaryPtrFunction_##FUNC> {        \
     static constexpr char name[] = #FUNC;                          \
   };                                                               \
-  constexpr char math_function_name<MathBinaryPtrFunction_##FUNC>::name[]
+  constexpr char math_function_name<MathBinaryPtrFunction_##FUNC>::name[];
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_2
-DEFINE_BINARY_PTR_FUNCTION_EVAL(modf, 0);
+DEFINE_BINARY_PTR_FUNCTION_EVAL(modf, 0)
 #endif
 
 #undef DEFINE_BINARY_PTR_FUNCTION_EVAL
