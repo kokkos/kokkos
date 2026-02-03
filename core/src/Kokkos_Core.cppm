@@ -550,6 +550,9 @@ export {
   using ::Kokkos::nextafter;
   using ::Kokkos::nextafterf;
   using ::Kokkos::nextafterl;
+  using ::Kokkos::nexttoward;
+  using ::Kokkos::nexttowardf;
+  using ::Kokkos::nexttowardl;
   using ::Kokkos::pow;
   using ::Kokkos::powf;
   using ::Kokkos::powl;

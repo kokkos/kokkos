@@ -833,6 +833,28 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> rcp(
   return Kokkos::rcp(static_cast<double>(x));
 }
 
+inline float nexttoward(float from, long double to) {
+  using std::nexttoward;
+  return nexttoward(from, to);
+}
+
+inline double nexttoward(double from, long double to) {
+  using std::nexttoward;
+  return nexttoward(from, to);
+}
+
+inline long double nexttoward(long double from, long double to) {
+  using std::nexttoward;
+  return nexttoward(from, to);
+}
+
+template <class Integer>
+inline std::enable_if_t<std::is_integral_v<Integer>, double> nexttoward(
+    Integer from, long double to) {
+  using std::nexttoward;
+  return nexttoward(from, to);
+}
+
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_MATHFUNCTIONS

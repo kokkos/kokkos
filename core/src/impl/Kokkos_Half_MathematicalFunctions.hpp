@@ -465,6 +465,36 @@ KOKKOS_INLINE_FUNCTION fp16_t nextafter_half_helper(fp16_t from, fp16_t to) {
    // }
    return bit_cast<fp16_t>(uint_result);
 }
+
+template <typename fp16_t>
+inline fp16_t nexttoward_half_helper(fp16_t from, long double to) {
+  static_assert((std::is_same_v<fp16_t, Kokkos::Experimental::half_t> ||
+                 std::is_same_v<fp16_t, Kokkos::Experimental::bhalf_t>)
+                 && sizeof(fp16_t) == 2, "nexttoward_half_impl only supports half_t and bhalf_t");
+  // Handle Nans
+  if (isnan(from) || std::isnan(to)) {
+    return Kokkos::Experimental::quiet_NaN<fp16_t>::value;
+  }
+
+  // Since we cannot cast half to long double directly,
+  // we cast from to float first.
+  float from_as_float = static_cast<float>(from);
+
+  // Handle equality
+  if (from_as_float == to) return static_cast<fp16_t>(static_cast<float>(to));
+
+  // Determine direction
+  if (from_as_float < to) {
+    // Moving toward positive infinity
+    const fp16_t pos_inf = Kokkos::Experimental::infinity<fp16_t>::value;
+    return nextafter_half_helper(from, pos_inf);
+  } else {
+    // Moving toward negative infinity
+    const fp16_t neg_inf =
+       -static_cast<fp16_t>(Kokkos::Experimental::infinity<fp16_t>::value);
+    return nextafter_half_helper(from, neg_inf);
+  }
+}
 } // namespace Impl
 
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
@@ -472,12 +502,20 @@ KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t nextafter(Kokkos::Experiment
                                                               Kokkos::Experimental::half_t to) {
   return Impl::nextafter_half_helper(from, to);
 }
+inline Kokkos::Experimental::half_t nexttoward(Kokkos::Experimental::half_t from,
+                                               long double to) {
+  return Impl::nexttoward_half_helper(from, to);
+}
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t nextafter(Kokkos::Experimental::bhalf_t from,
                                                                Kokkos::Experimental::bhalf_t to) {
   return Impl::nextafter_half_helper(from, to);
+}
+inline Kokkos::Experimental::bhalf_t nexttoward(Kokkos::Experimental::bhalf_t from,
+                                                long double to) {
+  return Impl::nexttoward_half_helper(from, to);
 }
 #endif
 #endif  // !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
