@@ -151,12 +151,12 @@ do
     cpp_files="$cpp_files $1"
     ;;
   #fast-compile level for device code, tradeoff between compilation speed and runtime performance
+  -Ofc=*|--Ofast-compile=*)
+    cuda_args="$cuda_args $1"
+    ;;
   -Ofc|--Ofast-compile)
     cuda_args="$cuda_args $1 $2"
     shift
-    ;;
-  -Ofc=*|--Ofast-compile=*)
-    cuda_args="$cuda_args $1"
     ;;
   # Ensure we only have one optimization flag because NVCC doesn't allow multiple
   -O*)
@@ -240,16 +240,26 @@ do
     cuda_args="$cuda_args $1"
     ;;
   #Handle more known nvcc args
-  --extended-lambda|--expt-extended-lambda|--expt-relaxed-constexpr|--Wno-deprecated-gpu-targets|-Wno-deprecated-gpu-targets|-allow-unsupported-compiler|--allow-unsupported-compiler|--disable-warnings|--fdevice-time-trace|-fdevice-time-trace)
+  --extended-lambda|--expt-extended-lambda|--expt-relaxed-constexpr|--Wno-deprecated-gpu-targets|-Wno-deprecated-gpu-targets|-allow-unsupported-compiler|--allow-unsupported-compiler|--disable-warnings)
     cuda_args="$cuda_args $1"
     ;;
   #Handle known nvcc args that have an argument
-  -maxrregcount=*|--maxrregcount=*|-time=*|-Xptxas=*)
+  -maxrregcount=*|--maxrregcount=*|-time=*|-Xptxas=*|--fdevice-time-trace=*|-fdevice-time-trace=*)
     cuda_args="$cuda_args $1"
     ;;
   -maxrregcount|--default-stream|-Xnvlink|--ftz|--prec-div|--prec-sqrt|--fmad|-cudart|--cudart|-include|-time|-Xptxas)
     cuda_args="$cuda_args $1 $2"
     shift
+    ;;
+  #Enables the time profiler trace generation
+  --fdevice-time-trace|-fdevice-time-trace)
+    # If file name is ‘-’, the JSON file will have the same name as the -o file
+    if [ $# -gt 1 ] && [[ $2 == "-" || $2 != -* ]]; then
+      cuda_args="$cuda_args $1 $2"
+      shift
+    else
+      cuda_args="$cuda_args $1"
+    fi
     ;;
   # Handle Werror. Note, we must differentiate between the ones going to nvcc and the host compiler
   # --Werror kind,... OR --Werror=kind,... <- always to nvcc
