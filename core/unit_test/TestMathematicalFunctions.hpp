@@ -3313,7 +3313,7 @@ struct TestNextToward {
       }
     }
 
-    // Special treatements for max, these should be numbers slightly bigger than
+    // Special treatments for max, these should be numbers slightly bigger than
     // max_val in double
     double pos_max_as_double = static_cast<double>(pos_max);
     double neg_max_as_double = static_cast<double>(neg_max);
