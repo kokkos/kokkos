@@ -128,6 +128,7 @@ export {
   using ::Kokkos::ViewTraits;
   using ::Kokkos::WithoutInitializing;
   namespace Experimental {
+  using ::Kokkos::Experimental::Accessor;
   using ::Kokkos::Experimental::AppendExtent;
   using ::Kokkos::Experimental::Extents;
   using ::Kokkos::Experimental::is_hooks_policy;
