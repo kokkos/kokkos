@@ -228,14 +228,14 @@ struct DeviceIterate {
       : m_lower(lower), m_upper(upper), m_extent(extent), m_functor(functor) {}
 #endif
 
-  KOKKOS_INLINE_FUNCTION
+  KOKKOS_IMPL_DEVICE_FUNCTION
   void exec_range() const { iterate(std::integral_constant<unsigned, Rank>()); }
 
  private:
   // Runtime expression to determine if Dim is part of a packed pair
   // Packing occurs on consecutive dimension pairs for rank > 3
   template <unsigned Dim>
-  KOKKOS_INLINE_FUNCTION static consteval bool is_packed_index() {
+  KOKKOS_IMPL_DEVICE_FUNCTION static consteval bool is_packed_index() {
     return ((Dim == 0 || Dim == 1) && Rank > 3) ||
            ((Dim == 2 || Dim == 3) && Rank > 4) ||
            ((Dim == 4 || Dim == 5) && Rank > 5);
@@ -244,7 +244,8 @@ struct DeviceIterate {
   // Packed: returns flat hardware thread ID (unpacking happens in iterate())
   // Unpacked: returns global index (lower + blockIdx * blockDim + threadIdx)
   template <unsigned R>
-  KOKKOS_INLINE_FUNCTION constexpr index_type my_begin() const noexcept {
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
+  my_begin() const noexcept {
     static_assert(R < 6);
     if constexpr (is_packed_index<R>()) {
       if constexpr (R == 0 || R == 1) {
@@ -279,7 +280,8 @@ struct DeviceIterate {
   // Packed: end at the product of two consecutive extents
   // Unpacked: directly use m_upper
   template <unsigned R>
-  KOKKOS_INLINE_FUNCTION constexpr index_type my_end() const noexcept {
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
+  my_end() const noexcept {
     static_assert(R < 6);
     if constexpr (is_packed_index<R>()) {
       if constexpr (R % 2 == 0) {
@@ -294,7 +296,8 @@ struct DeviceIterate {
 
   // Stride by the total number of threads in the GPU dimension
   template <unsigned R>
-  KOKKOS_INLINE_FUNCTION constexpr index_type my_stride() const noexcept {
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
+  my_stride() const noexcept {
     static_assert(R < 6);
     if constexpr (is_packed_index<R>()) {
       if constexpr (R == 0 || R == 1) {
@@ -351,8 +354,8 @@ struct DeviceIterate {
   // remaining the "fastest-changing" index.
   //
   template <unsigned R, typename... Idxs>
-  KOKKOS_INLINE_FUNCTION void iterate(std::integral_constant<unsigned, R>,
-                                      Idxs... idxs) const {
+  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
+      std::integral_constant<unsigned, R>, Idxs... idxs) const {
     constexpr unsigned rankIdx = R - 1;
     const index_type start     = my_begin<rankIdx>();
     const index_type end       = my_end<rankIdx>();
@@ -388,8 +391,8 @@ struct DeviceIterate {
   }
 
   template <typename... Idxs>
-  KOKKOS_INLINE_FUNCTION void iterate(std::integral_constant<unsigned, 0u>,
-                                      Idxs... idxs) const {
+  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
+      std::integral_constant<unsigned, 0u>, Idxs... idxs) const {
     Impl::_tag_invoke<Tag>(m_functor, idxs...);
   }
 };
