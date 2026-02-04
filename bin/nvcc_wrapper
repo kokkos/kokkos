@@ -247,19 +247,9 @@ do
   -maxrregcount=*|--maxrregcount=*|-time=*|-Xptxas=*|--fdevice-time-trace=*|-fdevice-time-trace=*)
     cuda_args="$cuda_args $1"
     ;;
-  -maxrregcount|--default-stream|-Xnvlink|--ftz|--prec-div|--prec-sqrt|--fmad|-cudart|--cudart|-include|-time|-Xptxas)
+  -maxrregcount|--default-stream|-Xnvlink|--ftz|--prec-div|--prec-sqrt|--fmad|-cudart|--cudart|-include|-time|-Xptxas|--fdevice-time-trace|-fdevice-time-trace)
     cuda_args="$cuda_args $1 $2"
     shift
-    ;;
-  #Enables the time profiler trace generation
-  --fdevice-time-trace|-fdevice-time-trace)
-    # If file name is ‘-’, the JSON file will have the same name as the -o file
-    if [ $# -gt 1 ] && [[ $2 == "-" || $2 != -* ]]; then
-      cuda_args="$cuda_args $1 $2"
-      shift
-    else
-      cuda_args="$cuda_args $1"
-    fi
     ;;
   # Handle Werror. Note, we must differentiate between the ones going to nvcc and the host compiler
   # --Werror kind,... OR --Werror=kind,... <- always to nvcc
