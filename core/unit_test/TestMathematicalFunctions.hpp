@@ -3096,21 +3096,27 @@ template <class FP>
 struct TestNextToward {
   TestNextToward() { run(); }
   void run() const {
-    int errors = 0;
     if constexpr ((std::is_same_v<FP, Kokkos::Experimental::half_t> ||
                    std::is_same_v<FP,
                                   Kokkos::Experimental::bhalf_t>)&&sizeof(FP) ==
                   2) {
-      test_half(errors);
+      test_half();
     } else if constexpr (std::is_integral_v<FP>) {
-      test_integral(errors);
+#if __FINITE_MATH_ONLY__
+      test_integral<true>();
+#else
+      test_integral<false>();
+#endif
     } else {
-      test_float(errors);
+#if __FINITE_MATH_ONLY__
+      test_float<true>();
+#else
+      test_float<false>();
+#endif
     }
-    ASSERT_EQ(errors, 0);
   }
 
-  void test_half(int& e) const {
+  void test_half() const {
     using Kokkos::isnan;
     using Kokkos::nexttoward;
 
@@ -3134,69 +3140,57 @@ struct TestNextToward {
                                 FP>();
 
     // NaN Handling
-    if (!isnan(nexttoward(KE::quiet_NaN<FP>::value, target_pos_one)) ||
-        !isnan(nexttoward(KE::signaling_NaN<FP>::value, target_pos_one)) ||
-        !isnan(nexttoward(pos_one, KE::quiet_NaN<long double>::value)) ||
-        !isnan(nexttoward(pos_one, KE::signaling_NaN<long double>::value)) ||
-        !isnan(nexttoward(KE::quiet_NaN<FP>::value,
-                          KE::quiet_NaN<long double>::value)) ||
-        !isnan(nexttoward(KE::quiet_NaN<FP>::value,
-                          KE::signaling_NaN<long double>::value)) ||
-        !isnan(nexttoward(KE::signaling_NaN<FP>::value,
-                          KE::quiet_NaN<long double>::value)) ||
-        !isnan(nexttoward(KE::signaling_NaN<FP>::value,
-                          KE::signaling_NaN<long double>::value))) {
-      ++e;
-      Kokkos::printf("failed half precision nexttoward(NaN)\n");
-    }
+    EXPECT_TRUE(isnan(nexttoward(KE::quiet_NaN<FP>::value, target_pos_one)));
+    EXPECT_TRUE(
+        isnan(nexttoward(KE::signaling_NaN<FP>::value, target_pos_one)));
+    EXPECT_TRUE(isnan(nexttoward(pos_one, KE::quiet_NaN<long double>::value)));
+    EXPECT_TRUE(
+        isnan(nexttoward(pos_one, KE::signaling_NaN<long double>::value)));
+    EXPECT_TRUE(isnan(nexttoward(KE::quiet_NaN<FP>::value,
+                                 KE::quiet_NaN<long double>::value)));
+    EXPECT_TRUE(isnan(nexttoward(KE::quiet_NaN<FP>::value,
+                                 KE::signaling_NaN<long double>::value)));
+    EXPECT_TRUE(isnan(nexttoward(KE::signaling_NaN<FP>::value,
+                                 KE::quiet_NaN<long double>::value)));
+    EXPECT_TRUE(isnan(nexttoward(KE::signaling_NaN<FP>::value,
+                                 KE::signaling_NaN<long double>::value)));
 
-    // Zero Handling ()
-    if (nexttoward(pos_zero, target_pos_one) != pos_smallest ||
-        nexttoward(pos_zero, target_neg_one) != neg_smallest ||
-        nexttoward(pos_zero, target_neg_zero) != neg_zero ||
-        nexttoward(neg_zero, target_pos_one) != pos_smallest ||
-        nexttoward(neg_zero, target_neg_one) != neg_smallest ||
-        nexttoward(neg_zero, target_pos_zero) != pos_zero) {
-      ++e;
-      Kokkos::printf("failed half precision nexttoward(zero)\n");
-    }
+    // Zero Handling
+    EXPECT_EQ(nexttoward(pos_zero, target_pos_one), pos_smallest);
+    EXPECT_EQ(nexttoward(pos_zero, target_neg_one), neg_smallest);
+    EXPECT_EQ(nexttoward(pos_zero, target_neg_zero), neg_zero);
+    EXPECT_EQ(nexttoward(neg_zero, target_pos_one), pos_smallest);
+    EXPECT_EQ(nexttoward(neg_zero, target_neg_one), neg_smallest);
+    EXPECT_EQ(nexttoward(neg_zero, target_pos_zero), pos_zero);
 
     // From Negative Non Zero Handling
     const FP after_neg_one  = Kokkos::nextafter(neg_one, pos_inf);
     const FP before_neg_one = Kokkos::nextafter(neg_one, neg_inf);
-    if (nexttoward(neg_smallest, target_pos_zero) != neg_zero ||
-        nexttoward(neg_one, target_pos_one) != after_neg_one ||
-        nexttoward(neg_one, target_neg_two) != before_neg_one ||
-        nexttoward(neg_max, target_neg_inf) != neg_inf) {
-      ++e;
-      Kokkos::printf("failed half precision nexttoward(negative)\n");
-    }
+    EXPECT_EQ(nexttoward(neg_smallest, target_pos_zero), neg_zero);
+    EXPECT_EQ(nexttoward(neg_one, target_pos_one), after_neg_one);
+    EXPECT_EQ(nexttoward(neg_one, target_neg_two), before_neg_one);
+    EXPECT_EQ(nexttoward(neg_max, target_neg_inf), neg_inf);
 
     // From Positive Non Zero Handling
     const FP after_pos_one  = Kokkos::nextafter(pos_one, pos_inf);
     const FP before_pos_one = Kokkos::nextafter(pos_one, neg_inf);
-    if (nexttoward(pos_smallest, target_neg_zero) != pos_zero ||
-        nexttoward(pos_one, target_neg_one) != before_pos_one ||
-        nexttoward(pos_one, target_pos_two) != after_pos_one ||
-        nexttoward(pos_max, target_pos_inf) != pos_inf) {
-      ++e;
-      Kokkos::printf("failed half precision nexttoward(positive)\n");
-    }
+    EXPECT_EQ(nexttoward(pos_smallest, target_neg_zero), pos_zero);
+    EXPECT_EQ(nexttoward(pos_one, target_neg_one), before_pos_one);
+    EXPECT_EQ(nexttoward(pos_one, target_pos_two), after_pos_one);
+    EXPECT_EQ(nexttoward(pos_max, target_pos_inf), pos_inf);
 
     // From Inf Handling
     // Note: The behavior of nexttoward with infinities is
     // implementation-defined, but in Kokkos it returns the maximum
     // finite value when moving towards a finite value.
-    if (nexttoward(pos_inf, target_pos_one) != pos_max ||
-        nexttoward(neg_inf, target_neg_one) != neg_max ||
-        nexttoward(pos_inf, target_pos_inf) != pos_inf ||
-        nexttoward(neg_inf, target_neg_inf) != neg_inf) {
-      ++e;
-      Kokkos::printf("failed half precision nexttoward(inf)\n");
-    }
+    EXPECT_EQ(nexttoward(pos_inf, target_pos_one), pos_max);
+    EXPECT_EQ(nexttoward(neg_inf, target_neg_one), neg_max);
+    EXPECT_EQ(nexttoward(pos_inf, target_pos_inf), pos_inf);
+    EXPECT_EQ(nexttoward(neg_inf, target_neg_inf), neg_inf);
   }
 
-  void test_integral(int& e) const {
+  template <bool finite_math_only>
+  void test_integral() const {
     using Kokkos::nexttoward;
 
     // Since FP may be an integral type, we need to declare input constants in
@@ -3224,42 +3218,43 @@ struct TestNextToward {
     testing::StaticAssertTypeEq<decltype(nexttoward(pos_one, target_pos_one)),
                                 double>();
 
-#if !defined(__FINITE_MATH_ONLY__)
+    int e = 0;
     // NaN Handling. Normally, integers do not support NaNs or Infinity
-    if constexpr (std::numeric_limits<FP>::has_quiet_NaN) {
-      if (!std::isnan(nexttoward(std::numeric_limits<FP>::quiet_NaN(),
-                                 target_pos_one)) ||
-          !std::isnan(
-              nexttoward(std::numeric_limits<FP>::quiet_NaN(),
-                         std::numeric_limits<long double>::quiet_NaN())) ||
-          !std::isnan(
-              nexttoward(std::numeric_limits<FP>::quiet_NaN(),
-                         std::numeric_limits<long double>::signaling_NaN()))) {
+    if constexpr (!finite_math_only) {
+      if constexpr (std::numeric_limits<FP>::has_quiet_NaN) {
+        if (!std::isnan(nexttoward(std::numeric_limits<FP>::quiet_NaN(),
+                                   target_pos_one)) ||
+            !std::isnan(
+                nexttoward(std::numeric_limits<FP>::quiet_NaN(),
+                           std::numeric_limits<long double>::quiet_NaN())) ||
+            !std::isnan(nexttoward(
+                std::numeric_limits<FP>::quiet_NaN(),
+                std::numeric_limits<long double>::signaling_NaN()))) {
+          ++e;
+          Kokkos::printf("failed int nexttoward(from quiet_NaN)\n");
+        }
+      }
+      if constexpr (std::numeric_limits<FP>::has_signaling_NaN) {
+        if (!std::isnan(nexttoward(std::numeric_limits<FP>::signaling_NaN(),
+                                   target_pos_one)) ||
+            !std::isnan(
+                nexttoward(std::numeric_limits<FP>::signaling_NaN(),
+                           std::numeric_limits<long double>::quiet_NaN())) ||
+            !std::isnan(nexttoward(
+                std::numeric_limits<FP>::signaling_NaN(),
+                std::numeric_limits<long double>::signaling_NaN()))) {
+          ++e;
+          Kokkos::printf("failed int nexttoward(from signaling_NaN)\n");
+        }
+      }
+      if (!std::isnan(nexttoward(
+              pos_one, std::numeric_limits<long double>::quiet_NaN())) ||
+          !std::isnan(nexttoward(
+              pos_one, std::numeric_limits<long double>::signaling_NaN()))) {
         ++e;
-        Kokkos::printf("failed int nexttoward(from quiet_NaN)\n");
+        Kokkos::printf("failed int nexttoward(to NaN)\n");
       }
     }
-    if constexpr (std::numeric_limits<FP>::has_signaling_NaN) {
-      if (!std::isnan(nexttoward(std::numeric_limits<FP>::signaling_NaN(),
-                                 target_pos_one)) ||
-          !std::isnan(
-              nexttoward(std::numeric_limits<FP>::signaling_NaN(),
-                         std::numeric_limits<long double>::quiet_NaN())) ||
-          !std::isnan(
-              nexttoward(std::numeric_limits<FP>::signaling_NaN(),
-                         std::numeric_limits<long double>::signaling_NaN()))) {
-        ++e;
-        Kokkos::printf("failed int nexttoward(from signaling_NaN)\n");
-      }
-    }
-    if (!std::isnan(nexttoward(
-            pos_one, std::numeric_limits<long double>::quiet_NaN())) ||
-        !std::isnan(nexttoward(
-            pos_one, std::numeric_limits<long double>::signaling_NaN()))) {
-      ++e;
-      Kokkos::printf("failed int nexttoward(to NaN)\n");
-    }
-#endif
 
     // Zero Handling
     if (nexttoward(pos_zero, target_pos_one) != ref_pos_smallest ||
@@ -3315,10 +3310,9 @@ struct TestNextToward {
       Kokkos::printf("failed int nexttoward(max)\n");
     }
 
-#if !defined(__FINITE_MATH_ONLY__)
     // From Inf Handling
     // Normally, integers do not support NaNs or Infinity
-    if constexpr (std::numeric_limits<FP>::has_infinity) {
+    if constexpr (std::numeric_limits<FP>::has_infinity && !finite_math_only) {
       const FP pos_inf{std::numeric_limits<FP>::infinity()};
       const FP neg_inf{-std::numeric_limits<FP>::infinity()};
       const double ref_pos_inf{std::numeric_limits<double>::infinity()};
@@ -3333,10 +3327,11 @@ struct TestNextToward {
         Kokkos::printf("failed int nexttoward(inf)\n");
       }
     }
-#endif
+    ASSERT_EQ(e, 0);
   }
 
-  void test_float(int& e) const {
+  template <bool finite_math_only>
+  void test_float() const {
     using Kokkos::nexttoward;
 
     const FP pos_one{1.0}, pos_two{2.0};
@@ -3344,49 +3339,42 @@ struct TestNextToward {
     const FP pos_zero{0.0}, neg_zero{-0.0};
     const FP pos_smallest{std::numeric_limits<FP>::denorm_min()};
     const FP neg_smallest{-std::numeric_limits<FP>::denorm_min()};
-    const FP pos_max{std::numeric_limits<FP>::max()};
-    const FP neg_max{-std::numeric_limits<FP>::max()};
-    const FP pos_inf{std::numeric_limits<FP>::infinity()};
-    const FP neg_inf{-std::numeric_limits<FP>::infinity()};
 
     const long double target_pos_one{1.0l}, target_pos_two{2.0l};
     const long double target_neg_one{-1.0l}, target_neg_two{-2.0l};
     const long double target_pos_zero{0.0l}, target_neg_zero{-0.0l};
-    const long double target_pos_inf{
-        std::numeric_limits<long double>::infinity()};
-    const long double target_neg_inf{
-        -std::numeric_limits<long double>::infinity()};
 
     // Check return type.
     testing::StaticAssertTypeEq<decltype(nexttoward(pos_one, target_pos_one)),
                                 FP>();
 
-#if !defined(__FINITE_MATH_ONLY__)
+    int e = 0;
     // NaN Handling. If finite-math is enabled, skip this
-    if (!std::isnan(
-            nexttoward(std::numeric_limits<FP>::quiet_NaN(), target_pos_one)) ||
-        !std::isnan(nexttoward(std::numeric_limits<FP>::signaling_NaN(),
-                               target_pos_one)) ||
-        !std::isnan(nexttoward(
-            pos_one, std::numeric_limits<long double>::quiet_NaN())) ||
-        !std::isnan(nexttoward(
-            pos_one, std::numeric_limits<long double>::signaling_NaN())) ||
-        !std::isnan(
-            nexttoward(std::numeric_limits<FP>::quiet_NaN(),
-                       std::numeric_limits<long double>::quiet_NaN())) ||
-        !std::isnan(
-            nexttoward(std::numeric_limits<FP>::quiet_NaN(),
-                       std::numeric_limits<long double>::signaling_NaN())) ||
-        !std::isnan(
-            nexttoward(std::numeric_limits<FP>::signaling_NaN(),
-                       std::numeric_limits<long double>::quiet_NaN())) ||
-        !std::isnan(
-            nexttoward(std::numeric_limits<FP>::signaling_NaN(),
-                       std::numeric_limits<long double>::signaling_NaN()))) {
-      ++e;
-      Kokkos::printf("failed float nexttoward(NaN)\n");
+    if constexpr (!finite_math_only) {
+      if (!std::isnan(nexttoward(std::numeric_limits<FP>::quiet_NaN(),
+                                 target_pos_one)) ||
+          !std::isnan(nexttoward(std::numeric_limits<FP>::signaling_NaN(),
+                                 target_pos_one)) ||
+          !std::isnan(nexttoward(
+              pos_one, std::numeric_limits<long double>::quiet_NaN())) ||
+          !std::isnan(nexttoward(
+              pos_one, std::numeric_limits<long double>::signaling_NaN())) ||
+          !std::isnan(
+              nexttoward(std::numeric_limits<FP>::quiet_NaN(),
+                         std::numeric_limits<long double>::quiet_NaN())) ||
+          !std::isnan(
+              nexttoward(std::numeric_limits<FP>::quiet_NaN(),
+                         std::numeric_limits<long double>::signaling_NaN())) ||
+          !std::isnan(
+              nexttoward(std::numeric_limits<FP>::signaling_NaN(),
+                         std::numeric_limits<long double>::quiet_NaN())) ||
+          !std::isnan(
+              nexttoward(std::numeric_limits<FP>::signaling_NaN(),
+                         std::numeric_limits<long double>::signaling_NaN()))) {
+        ++e;
+        Kokkos::printf("failed float nexttoward(NaN)\n");
+      }
     }
-#endif
 
     // Zero Handling
     if (nexttoward(pos_zero, target_pos_one) != pos_smallest ||
@@ -3419,21 +3407,31 @@ struct TestNextToward {
       Kokkos::printf("failed float nexttoward(positive)\n");
     }
 
-#if !defined(__FINITE_MATH_ONLY__)
     // From Inf Handling. If finite-math is enabled, skip this
     // Note: The behavior of nexttoward with infinities is
     // implementation-defined, but in Kokkos it returns the maximum
     // finite value when moving towards a finite value.
-    if (nexttoward(neg_max, target_neg_inf) != neg_inf ||
-        nexttoward(pos_max, target_pos_inf) != pos_inf ||
-        nexttoward(pos_inf, target_pos_one) != pos_max ||
-        nexttoward(neg_inf, target_neg_one) != neg_max ||
-        nexttoward(pos_inf, target_pos_inf) != pos_inf ||
-        nexttoward(neg_inf, target_neg_inf) != neg_inf) {
-      ++e;
-      Kokkos::printf("failed float nexttoward(inf)\n");
+    if constexpr (!finite_math_only) {
+      const FP pos_max{std::numeric_limits<FP>::max()};
+      const FP neg_max{-std::numeric_limits<FP>::max()};
+      const FP pos_inf{std::numeric_limits<FP>::infinity()};
+      const FP neg_inf{-std::numeric_limits<FP>::infinity()};
+      const long double target_pos_inf{
+          std::numeric_limits<long double>::infinity()};
+      const long double target_neg_inf{
+          -std::numeric_limits<long double>::infinity()};
+      if (nexttoward(neg_max, target_neg_inf) != neg_inf ||
+          nexttoward(pos_max, target_pos_inf) != pos_inf ||
+          nexttoward(pos_inf, target_pos_one) != pos_max ||
+          nexttoward(neg_inf, target_neg_one) != neg_max ||
+          nexttoward(pos_inf, target_pos_inf) != pos_inf ||
+          nexttoward(neg_inf, target_neg_inf) != neg_inf) {
+        ++e;
+        Kokkos::printf("failed float nexttoward(inf)\n");
+      }
     }
-#endif
+
+    ASSERT_EQ(e, 0);
   }
 };
 
