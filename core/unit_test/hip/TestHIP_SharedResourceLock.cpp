@@ -15,6 +15,7 @@
 //@HEADER
 
 #include <random>
+#include <thread>
 
 #include <Kokkos_Core.hpp>
 #include <TestHIP_Category.hpp>
