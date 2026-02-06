@@ -90,14 +90,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
         .exec_range();
   }
 
-  inline __device__ void operator()() const {
-    Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
-                                FunctorType, Policy::inner_direction,
-                                typename Policy::work_tag>(m_lower, m_upper,
-                                                           m_extent, m_functor)
-        .exec_range();
-  }
-
   inline void execute() const {
     if (m_policy.m_num_tiles == 0) return;
 
