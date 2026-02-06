@@ -34,15 +34,15 @@ struct TileSizeRecommended<Kokkos::Cuda> {
     using tile_type = Kokkos::Array<std::int64_t, Rank>;
     if (InnerDirection == Iterate::Left) {
       if constexpr (Rank == 2) {
-        return tile_type{32, 8};
+        return tile_type{64, 4};
       } else if constexpr (Rank == 3) {
         return tile_type{32, 2, 4};
       } else if constexpr (Rank == 4) {
-        return tile_type{32, 2, 2, 2};
+        return tile_type{16, 4, 1, 4};
       } else if constexpr (Rank == 5) {
-        return tile_type{32, 2, 2, 1, 2};
+        return tile_type{16, 2, 4, 2, 1};
       } else if constexpr (Rank == 6) {
-        return tile_type{32, 2, 2, 1, 2, 1};
+        return tile_type{8, 4, 2, 2, 2, 1};
       }
       tile_type tile_sizes{};
       for (int i = 0; i < Rank; ++i) {
@@ -52,15 +52,15 @@ struct TileSizeRecommended<Kokkos::Cuda> {
       return tile_sizes;
     } else {
       if constexpr (Rank == 2) {
-        return tile_type{8, 32};
+        return tile_type{4, 64};
       } else if constexpr (Rank == 3) {
         return tile_type{4, 2, 32};
       } else if constexpr (Rank == 4) {
-        return tile_type{2, 2, 2, 32};
+        return tile_type{4, 1, 4, 16};
       } else if constexpr (Rank == 5) {
-        return tile_type{2, 1, 2, 2, 32};
+        return tile_type{1, 2, 4, 2, 16};
       } else if constexpr (Rank == 6) {
-        return tile_type{1, 2, 1, 2, 2, 32};
+        return tile_type{1, 2, 2, 2, 4, 8};
       }
       tile_type tile_sizes{};
       for (int i = 0; i < Rank; ++i) {

@@ -55,11 +55,11 @@ struct TileSizeRecommended<Kokkos::SYCL> {
       } else if constexpr (Rank == 3) {
         return tile_type{32, 2, 4};
       } else if constexpr (Rank == 4) {
-        return tile_type{32, 2, 2, 2};
+        return tile_type{16, 4, 2, 2};
       } else if constexpr (Rank == 5) {
-        return tile_type{32, 2, 2, 1, 2};
+        return tile_type{16, 2, 2, 2, 2};
       } else if constexpr (Rank == 6) {
-        return tile_type{32, 2, 2, 1, 2, 1};
+        return tile_type{16, 2, 2, 2, 2, 1};
       }
       tile_type tile_sizes{};
       for (int i = 0; i < Rank; ++i) {
@@ -73,11 +73,11 @@ struct TileSizeRecommended<Kokkos::SYCL> {
       } else if constexpr (Rank == 3) {
         return tile_type{4, 2, 32};
       } else if constexpr (Rank == 4) {
-        return tile_type{2, 2, 2, 32};
+        return tile_type{2, 2, 4, 16};
       } else if constexpr (Rank == 5) {
-        return tile_type{2, 1, 2, 2, 32};
+        return tile_type{2, 2, 2, 2, 16};
       } else if constexpr (Rank == 6) {
-        return tile_type{1, 2, 1, 2, 2, 32};
+        return tile_type{1, 2, 2, 2, 2, 16};
       }
       tile_type tile_sizes{};
       for (int i = 0; i < Rank; ++i) {

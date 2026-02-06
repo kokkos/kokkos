@@ -138,6 +138,7 @@ struct TileSizeRecommended {
   static auto get(Policy const& policy);
 };
 
+// Host default recommended tile size
 template <typename ExecutionSpace>
 template <typename Policy>
 auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
