@@ -383,6 +383,14 @@ struct MDRangePolicy<P, Properties...>
         static_cast<index_type>(properties.max_total_tile_size);
     this->m_max_threads_dimensions = properties.max_threads_dimensions;
 
+    if constexpr (launch_bounds::maxTperB != 0) {
+      if (static_cast<index_type>(launch_bounds::maxTperB) <
+          this->m_max_total_tile_size) {
+        this->m_max_total_tile_size =
+            static_cast<index_type>(launch_bounds::maxTperB);
+      }
+    }
+
     tile_type default_tile = this->tile_size_recommended();
 
     int increment  = 1;
