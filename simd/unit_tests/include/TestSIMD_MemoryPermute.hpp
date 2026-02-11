@@ -36,21 +36,25 @@ inline void host_test_scatter_to(
     }
   };
 
-  alignas(simd_type::size() * sizeof(DataType)) DataType result[init.size()];
+  alignas(simd_type::size() * sizeof(DataType))
+      DataType result[init.size()] = {};
   {
     Kokkos::Experimental::unchecked_scatter_to(init, result, indices, flag);
     check_scattered(result);
   }
   {
+    std::fill(std::begin(result), std::end(result), 0);
     Kokkos::Experimental::unchecked_scatter_to(init, result, mask, indices,
                                                flag);
     check_scattered(result, mask);
   }
   {
+    std::fill(std::begin(result), std::end(result), 0);
     Kokkos::Experimental::partial_scatter_to(init, result, indices, flag);
     check_scattered(result);
   }
   {
+    std::fill(std::begin(result), std::end(result), 0);
     Kokkos::Experimental::partial_scatter_to(init, result, mask, indices, flag);
     check_scattered(result, mask);
   }
@@ -189,21 +193,26 @@ KOKKOS_INLINE_FUNCTION void device_test_scatter_to(
     }
   };
 
-  alignas(simd_type::size() * sizeof(DataType)) DataType result[init.size()];
+  alignas(simd_type::size() * sizeof(DataType))
+      DataType result[init.size()] = {};
   {
+    std::fill(std::begin(result), std::end(result), 0);
     Kokkos::Experimental::unchecked_scatter_to(init, result, indices, flag);
     check_scattered{}(init, indices, result);
   }
   {
+    std::fill(std::begin(result), std::end(result), 0);
     Kokkos::Experimental::unchecked_scatter_to(init, result, mask, indices,
                                                flag);
     check_scattered{}(init, indices, result, mask);
   }
   {
+    std::fill(std::begin(result), std::end(result), 0);
     Kokkos::Experimental::partial_scatter_to(init, result, indices, flag);
     check_scattered{}(init, indices, result);
   }
   {
+    std::fill(std::begin(result), std::end(result), 0);
     Kokkos::Experimental::partial_scatter_to(init, result, mask, indices, flag);
     check_scattered{}(init, indices, result, mask);
   }
