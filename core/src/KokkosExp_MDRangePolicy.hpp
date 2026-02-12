@@ -142,11 +142,8 @@ struct TileSizeRecommended {
 template <typename ExecutionSpace>
 template <typename Policy>
 auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
-  using traits            = typename Policy::traits;
-  using iteration_pattern = typename traits::iteration_pattern;
-
-  constexpr auto InnerDirection = iteration_pattern::inner_direction;
-  constexpr int Rank            = iteration_pattern::rank;
+  constexpr auto InnerDirection = Policy::inner_direction;
+  constexpr int Rank            = Policy::rank;
 
   using tile_type = Kokkos::Array<std::int64_t, Rank>;
 
@@ -345,6 +342,12 @@ struct MDRangePolicy<P, Properties...>
                 typename traits::execution_space space)
       : MDRangePolicy(other) {
     this->m_space = std::move(space);
+    // Reset auto-tuned tiles if the execution space changes since the computed
+    // tile size may be different
+    if (this->m_tune_tile_size) {
+      this->m_tile = {};
+    }
+    init_helper();
   }
 
   template <class... OtherProperties>
@@ -383,12 +386,11 @@ struct MDRangePolicy<P, Properties...>
         static_cast<index_type>(properties.max_total_tile_size);
     this->m_max_threads_dimensions = properties.max_threads_dimensions;
 
+    index_type effective_max_tile_size = this->m_max_total_tile_size;
     if constexpr (launch_bounds::maxTperB != 0) {
-      if (static_cast<index_type>(launch_bounds::maxTperB) <
-          this->m_max_total_tile_size) {
-        this->m_max_total_tile_size =
-            static_cast<index_type>(launch_bounds::maxTperB);
-      }
+      effective_max_tile_size =
+          std::min(effective_max_tile_size,
+                   static_cast<index_type>(launch_bounds::maxTperB));
     }
 
     tile_type default_tile = this->tile_size_recommended();
@@ -419,15 +421,15 @@ struct MDRangePolicy<P, Properties...>
       // If tile size is not specified or <= 0 set to recommended tile size
       if (this->m_tile[i] <= 0) {
         this->m_tune_tile_size = true;
-        // Set to recommended tile size if it fits within max total tile size
+        // Set to recommended tile size if it fits within effective limit
         if (this->m_prod_tile_dims * default_tile[i] <=
-            static_cast<index_type>(this->m_max_total_tile_size)) {
+            effective_max_tile_size) {
           this->m_tile[i] = default_tile[i];
         } else {
-          // Try to fit within max total tile size by reducing tile size
+          // Try to fit within effective limit by reducing tile size
           while (default_tile[i] > 1 &&
                  this->m_prod_tile_dims * default_tile[i] >
-                     static_cast<index_type>(this->m_max_total_tile_size)) {
+                     effective_max_tile_size) {
             default_tile[i] >>= 1;
           }
           this->m_tile[i] = (default_tile[i] > 1) ? default_tile[i] : 1;
@@ -440,6 +442,20 @@ struct MDRangePolicy<P, Properties...>
       this->m_prod_tile_dims *= this->m_tile[i];
     }
 
+    if constexpr (launch_bounds::maxTperB != 0) {
+      if (static_cast<index_type>(launch_bounds::maxTperB) <
+          this->m_prod_tile_dims) {
+        std::string msg =
+            "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
+            "dimensions (" +
+            std::to_string(static_cast<int>(this->m_prod_tile_dims)) +
+            ") is greater than the maximum specified via LaunchBounds (" +
+            std::to_string(launch_bounds::maxTperB) +
+            ") - choose smaller tile dims\n";
+        Kokkos::abort(msg.c_str());
+      }
+    }
+
     if (this->m_prod_tile_dims >
         static_cast<index_type>(this->m_max_total_tile_size)) {
       std::string msg =
@@ -448,19 +464,6 @@ struct MDRangePolicy<P, Properties...>
           std::to_string(static_cast<int>(this->m_prod_tile_dims)) +
           ") is greater than the maximum total tile size (" +
           std::to_string(static_cast<int>(this->m_max_total_tile_size)) +
-          ") - choose smaller tile dims\n";
-      Kokkos::abort(msg.c_str());
-    }
-
-    if (launch_bounds::maxTperB != 0 &&
-        static_cast<index_type>(launch_bounds::maxTperB) <
-            this->m_prod_tile_dims) {
-      std::string msg =
-          "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
-          "dimensions (" +
-          std::to_string(static_cast<int>(this->m_prod_tile_dims)) +
-          ") is greater than the maximum specified via LaunchBounds (" +
-          std::to_string(launch_bounds::maxTperB) +
           ") - choose smaller tile dims\n";
       Kokkos::abort(msg.c_str());
     }

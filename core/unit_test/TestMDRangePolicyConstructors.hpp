@@ -109,6 +109,22 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
   ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg1);
 }
 
+TEST(TEST_CATEGORY_DEATH, policy_tile_dims_exceed_launch_bounds) {
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                                       Kokkos::LaunchBounds<32>>;
+
+  // Check error message when user provided tile dims exceed user specified
+  // LaunchBounds.
+  std::string msg =
+      "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
+      "dimensions (256) is greater than the maximum specified via "
+      "LaunchBounds (32) - choose smaller tile dims\n";
+
+  std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  ASSERT_DEATH({ (void)Policy({0, 0}, {128, 128}, {64, 4}); }, expected);
+}
+
 TEST(TEST_CATEGORY, policy_get_tile_size) {
   constexpr int rank = 3;
   using Policy    = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<rank>>;
@@ -140,6 +156,46 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
       prod_rec_tile_size *= rec_tile_sizes[i];
     }
     EXPECT_LT(prod_rec_tile_size, policy.max_total_tile_size());
+  }
+}
+
+TEST(TEST_CATEGORY, policy_default_tiles_respect_launch_bounds) {
+  // Verify that auto-computed tiles never exceed LaunchBounds.
+  constexpr unsigned int max_threads = 32;
+  {
+    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                                         Kokkos::LaunchBounds<max_threads>>;
+    Policy policy({0, 0}, {1024, 1024});
+    EXPECT_LE(policy.m_prod_tile_dims,
+              static_cast<typename Policy::index_type>(max_threads));
+  }
+  {
+    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<3>,
+                                         Kokkos::LaunchBounds<max_threads>>;
+    Policy policy({0, 0, 0}, {256, 256, 256});
+    EXPECT_LE(policy.m_prod_tile_dims,
+              static_cast<typename Policy::index_type>(max_threads));
+  }
+  {
+    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<4>,
+                                         Kokkos::LaunchBounds<max_threads>>;
+    Policy policy({0, 0, 0, 0}, {64, 64, 64, 64});
+    EXPECT_LE(policy.m_prod_tile_dims,
+              static_cast<typename Policy::index_type>(max_threads));
+  }
+  {
+    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<5>,
+                                         Kokkos::LaunchBounds<max_threads>>;
+    Policy policy({0, 0, 0, 0, 0}, {32, 32, 32, 32, 32});
+    EXPECT_LE(policy.m_prod_tile_dims,
+              static_cast<typename Policy::index_type>(max_threads));
+  }
+  {
+    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<6>,
+                                         Kokkos::LaunchBounds<max_threads>>;
+    Policy policy({0, 0, 0, 0, 0, 0}, {16, 16, 16, 16, 16, 16});
+    EXPECT_LE(policy.m_prod_tile_dims,
+              static_cast<typename Policy::index_type>(max_threads));
   }
 }
 

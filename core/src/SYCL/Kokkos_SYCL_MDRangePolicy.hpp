@@ -43,10 +43,8 @@ template <>
 struct TileSizeRecommended<Kokkos::SYCL> {
   template <typename Policy>
   static auto get(Policy const&) {
-    using traits                  = typename Policy::traits;
-    using iteration_pattern       = typename traits::iteration_pattern;
-    constexpr auto InnerDirection = iteration_pattern::inner_direction;
-    constexpr int Rank            = iteration_pattern::rank;
+    constexpr auto InnerDirection = Policy::inner_direction;
+    constexpr int Rank            = Policy::rank;
 
     using tile_type = Kokkos::Array<std::int64_t, Rank>;
     if (InnerDirection == Iterate::Left) {
