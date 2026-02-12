@@ -130,13 +130,12 @@ template <typename G, typename R, typename... Args>
 concept InvocableWithReturnType = std::is_invocable_r_v<R, G, Args...>;
 
 template <typename V>
-concept simd_vec_type =
+concept SimdVecType =
     std::same_as<V, basic_simd<typename V::value_type, typename V::abi_type>> &&
     std::is_default_constructible_v<V>;
 
 template <typename V>
-concept simd_integral =
-    simd_vec_type<V> && std::integral<typename V::value_type>;
+concept SimdIntegral = SimdVecType<V> && std::integral<typename V::value_type>;
 
 }  // namespace Impl
 

@@ -6,8 +6,8 @@
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(PREFIX, DATA_TYPE,    \
                                                     ABI_TYPE, EXPR)       \
-  template <Impl::simd_vec_type V, std::ranges::contiguous_range R,       \
-            Impl::simd_integral I, typename... Flags>                     \
+  template <Impl::SimdVecType V, std::ranges::contiguous_range R,         \
+            Impl::SimdIntegral I, typename... Flags>                      \
     requires std::ranges::sized_range<R> &&                               \
              std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>             \
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from( \
@@ -28,8 +28,8 @@
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM_WITH_MASK(            \
     PREFIX, DATA_TYPE, ABI_TYPE, EXPR)                                    \
-  template <Impl::simd_vec_type V, std::ranges::contiguous_range R,       \
-            Impl::simd_integral I, typename... Flags>                     \
+  template <Impl::SimdVecType V, std::ranges::contiguous_range R,         \
+            Impl::SimdIntegral I, typename... Flags>                      \
     requires std::ranges::sized_range<R> &&                               \
              std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>             \
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from( \
@@ -50,8 +50,8 @@
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO(PREFIX, DATA_TYPE,       \
                                                    ABI_TYPE, EXPR)          \
-  template <Impl::simd_vec_type V, std::ranges::contiguous_range R,         \
-            Impl::simd_integral I, typename... Flags>                       \
+  template <Impl::SimdVecType V, std::ranges::contiguous_range R,           \
+            Impl::SimdIntegral I, typename... Flags>                        \
     requires std::ranges::sized_range<R> &&                                 \
              std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>               \
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void PREFIX##_scatter_to( \
@@ -71,8 +71,8 @@
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO_WITH_MASK(               \
     PREFIX, DATA_TYPE, ABI_TYPE, EXPR)                                      \
-  template <Impl::simd_vec_type V, std::ranges::contiguous_range R,         \
-            Impl::simd_integral I, typename... Flags>                       \
+  template <Impl::SimdVecType V, std::ranges::contiguous_range R,           \
+            Impl::SimdIntegral I, typename... Flags>                        \
     requires std::ranges::sized_range<R> &&                                 \
              std::same_as<V, basic_simd<DATA_TYPE, ABI_TYPE>>               \
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void PREFIX##_scatter_to( \

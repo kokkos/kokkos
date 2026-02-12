@@ -524,8 +524,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr void simd_partial_store(
   }
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
@@ -534,8 +534,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
   return basic_simd<T, simd_abi::scalar>(in[indices[0]]);
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
@@ -546,8 +546,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
   return basic_simd<T, simd_abi::scalar>(val);
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
@@ -555,8 +555,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
   return unchecked_gather_from<V>(in, indices);
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
@@ -565,8 +565,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
   return unchecked_gather_from<V>(in, mask, indices);
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
@@ -575,8 +575,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
   out[indices[0]] = v[0];
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
@@ -585,8 +585,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
   out[indices[0]] = (mask[0]) ? v[0] : typename V::value_type{};
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
@@ -595,8 +595,8 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
   unchecked_scatter_to<V>(v, out, indices);
 }
 
-template <Impl::simd_vec_type V, std::ranges::contiguous_range R,
-          Impl::simd_integral I, typename... Flags>
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
   requires std::ranges::sized_range<R> &&
            std::same_as<typename V::abi_type, simd_abi::scalar>
 KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(

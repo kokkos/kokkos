@@ -193,26 +193,30 @@ KOKKOS_INLINE_FUNCTION void device_test_scatter_to(
     }
   };
 
+  auto reset_array = KOKKOS_LAMBDA(DataType * arr, size_type len) {
+    for (size_type i = 0; i < len; ++i) arr[i] = 0;
+  };
+
   alignas(simd_type::size() * sizeof(DataType))
       DataType result[init.size()] = {};
   {
-    std::fill(std::begin(result), std::end(result), 0);
+    reset_array(result, init.size());
     Kokkos::Experimental::unchecked_scatter_to(init, result, indices, flag);
     check_scattered{}(init, indices, result);
   }
   {
-    std::fill(std::begin(result), std::end(result), 0);
+    reset_array(result, init.size());
     Kokkos::Experimental::unchecked_scatter_to(init, result, mask, indices,
                                                flag);
     check_scattered{}(init, indices, result, mask);
   }
   {
-    std::fill(std::begin(result), std::end(result), 0);
+    reset_array(result, init.size());
     Kokkos::Experimental::partial_scatter_to(init, result, indices, flag);
     check_scattered{}(init, indices, result);
   }
   {
-    std::fill(std::begin(result), std::end(result), 0);
+    reset_array(result, init.size());
     Kokkos::Experimental::partial_scatter_to(init, result, mask, indices, flag);
     check_scattered{}(init, indices, result, mask);
   }
