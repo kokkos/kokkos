@@ -167,7 +167,12 @@ inline static
 #else
     auto device_ptr = SYCL_SPACE_ATOMIC_LOCKS_DEVICE_h;
     auto node_ptr = SYCL_SPACE_ATOMIC_LOCKS_NODE_h;
-    q.single_task([=] {
+#ifdef SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS
+      sycl::ext::oneapi::experimental::single_task(q,
+#else
+    q.single_task(
+#endif
+	    [=] {
       SYCL_SPACE_ATOMIC_LOCKS_DEVICE.get() = device_ptr;
       SYCL_SPACE_ATOMIC_LOCKS_NODE.get() = node_ptr;
     });

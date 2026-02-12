@@ -20,22 +20,38 @@ namespace Kokkos {
 namespace Impl {
 
 void DeepCopySYCL(void* dst, const void* src, size_t n) {
+  SYCL exec;
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+  sycl::ext::oneapi::experimental::memcpy(exec.sycl_queue(), dst, src, n);
+#else
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  Impl::SYCLInternal::singleton().m_queue->memcpy(dst, src, n);
+  exec.sycl_queue().memcpy(dst, src, n);
+#endif
 }
 
 void DeepCopyAsyncSYCL(const Kokkos::SYCL& instance, void* dst, const void* src,
                        size_t n) {
   sycl::queue& q = instance.sycl_queue();
-  auto event     = q.memcpy(dst, src, n);
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+  sycl::ext::oneapi::experimental::memcpy(q, dst, src, n);
+#else
+  auto event = q.memcpy(dst, src, n);
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
   q.ext_oneapi_submit_barrier(std::vector<sycl::event>{event});
+#endif
 #endif
 }
 
 void DeepCopyAsyncSYCL(void* dst, const void* src, size_t n) {
   SYCL exec;
+#if defined(SYCL_EXT_ONEAPI_ENQUEUE_FUNCTIONS) && \
+    defined(KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES)
+  sycl::ext::oneapi::experimental::memcpy(exec.sycl_queue(), dst, src, n);
+#else
   exec.sycl_queue().memcpy(dst, src, n);
+#endif
   exec.fence("Kokkos::Impl::DeepCopyAsyncSYCL: fence after memcpy");
 }
 
