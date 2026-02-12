@@ -36,7 +36,7 @@ struct TileSizeRecommended<Kokkos::Cuda> {
       } else if constexpr (Rank == 3) {
         return tile_type{32, 2, 4};
       } else if constexpr (Rank == 4) {
-        return tile_type{16, 4, 1, 4};
+        return tile_type{16, 2, 2, 4};
       } else if constexpr (Rank == 5) {
         return tile_type{16, 2, 4, 2, 1};
       } else if constexpr (Rank == 6) {
@@ -54,7 +54,7 @@ struct TileSizeRecommended<Kokkos::Cuda> {
       } else if constexpr (Rank == 3) {
         return tile_type{4, 2, 32};
       } else if constexpr (Rank == 4) {
-        return tile_type{4, 1, 4, 16};
+        return tile_type{4, 2, 2, 16};
       } else if constexpr (Rank == 5) {
         return tile_type{1, 2, 4, 2, 16};
       } else if constexpr (Rank == 6) {
