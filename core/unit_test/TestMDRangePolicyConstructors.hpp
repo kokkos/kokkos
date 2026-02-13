@@ -76,7 +76,7 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   construct_mdrange_policy_variable_type<std::int64_t>();
 }
 
-TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
+TEST(TEST_CATEGORY_DEATH, md_range_policy_bounds_unsafe_narrowing_conversions) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::IndexType<unsigned>>;
 
@@ -91,7 +91,7 @@ TEST(TEST_CATEGORY_DEATH, policy_bounds_unsafe_narrowing_conversions) {
   ASSERT_DEATH({ (void)Policy({-1, 0}, {2, 3}); }, expected);
 }
 
-TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
+TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
@@ -109,7 +109,7 @@ TEST(TEST_CATEGORY_DEATH, policy_invalid_bounds) {
   ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg1);
 }
 
-TEST(TEST_CATEGORY_DEATH, policy_tile_dims_exceed_launch_bounds) {
+TEST(TEST_CATEGORY_DEATH, md_range_policy_tile_dims_exceed_launch_bounds) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::LaunchBounds<32>>;
 
@@ -125,32 +125,50 @@ TEST(TEST_CATEGORY_DEATH, policy_tile_dims_exceed_launch_bounds) {
   ASSERT_DEATH({ (void)Policy({0, 0}, {128, 128}, {64, 4}); }, expected);
 }
 
-TEST(TEST_CATEGORY, policy_get_tile_size) {
-  constexpr int rank = 3;
-  using Policy    = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<rank>>;
-  using tile_type = typename Policy::tile_type;
+// Test tile size recommendation
+template <int Rank, Kokkos::Iterate InnerDirection>
+void test_get_tile_size() {
+  using Policy =
+      Kokkos::MDRangePolicy<TEST_EXECSPACE,
+                            Kokkos::Rank<Rank, InnerDirection, InnerDirection>>;
+
+  using tile_type  = typename Policy::tile_type;
+  using point_t    = typename Policy::point_type;
+  using index_type = typename Policy::index_type;
+
+  auto lower = point_t{};
+  auto upper = point_t{};
+
+  const int dim_length = 32;
+
+  for (int i = 0; i < Rank; i++) {
+    lower[i] = 0;
+    upper[i] = dim_length;
+  }
 
   {
-    int dim_length = 100;
-    Policy policy_default({0, 0, 0}, {dim_length, dim_length, dim_length});
-
+    Policy policy_default(lower, upper);
     auto rec_tile_sizes      = policy_default.tile_size_recommended();
     auto internal_tile_sizes = policy_default.m_tile;
 
-    for (std::size_t i = 0; i < rank; ++i) {
+    for (std::size_t i = 0; i < Rank; ++i) {
       EXPECT_EQ(rec_tile_sizes[i], internal_tile_sizes[i])
           << " incorrect recommended tile size returned for rank " << i;
     }
   }
+
   {
-    int dim_length = 100;
-    Policy policy({0, 0, 0}, {dim_length, dim_length, dim_length},
-                  tile_type{{2, 4, 16}});
+    tile_type user_tile_sizes{};
+    for (int i = 0; i < Rank; i++) {
+      user_tile_sizes[i] = 2;
+    }
+
+    Policy policy(lower, upper, user_tile_sizes);
 
     auto rec_tile_sizes = policy.tile_size_recommended();
 
     int prod_rec_tile_size = 1;
-    for (std::size_t i = 0; i < rank; ++i) {
+    for (std::size_t i = 0; i < Rank; ++i) {
       EXPECT_GT(rec_tile_sizes[i], 0)
           << " invalid default tile size for rank " << i;
       prod_rec_tile_size *= rec_tile_sizes[i];
@@ -159,44 +177,62 @@ TEST(TEST_CATEGORY, policy_get_tile_size) {
   }
 }
 
-TEST(TEST_CATEGORY, policy_default_tiles_respect_launch_bounds) {
+template <int... Ranks>
+void test_get_tile_size_for_ranks(std::integer_sequence<int, Ranks...>) {
+  (test_get_tile_size<Ranks, Kokkos::Iterate::Left>(), ...);
+  (test_get_tile_size<Ranks, Kokkos::Iterate::Right>(), ...);
+}
+
+TEST(TEST_CATEGORY, md_range_policy_get_tile_size) {
+  constexpr auto ranks = std::integer_sequence<int, 2, 3, 4, 5, 6>{};
+  test_get_tile_size_for_ranks(ranks);
+}
+
+template <int Rank, int MaxTperB, Kokkos::Iterate InnerDirection>
+void test_default_tiles_respect_launch_bounds() {
+  using policy_t =
+      Kokkos::MDRangePolicy<TEST_EXECSPACE,
+                            Kokkos::Rank<Rank, InnerDirection, InnerDirection>,
+                            Kokkos::LaunchBounds<MaxTperB>>;
+  using point_t    = typename policy_t::point_type;
+  using index_type = typename policy_t::index_type;
+
+  auto lower = point_t{};
+  auto upper = point_t{};
+  for (int i = 0; i < Rank; i++) {
+    lower[i] = 0;
+    upper[i] = 32;
+  }
+
+  policy_t policy_with_default_tile(lower, upper);
+
+  EXPECT_LE(policy_with_default_tile.m_prod_tile_dims,
+            static_cast<index_type>(MaxTperB))
+      << " for Rank-" << Rank << " with LaunchBounds<" << MaxTperB << ">"
+      << " and InnerDirection "
+      << (InnerDirection == Kokkos::Iterate::Left ? "Left" : "Right");
+}
+
+// Expand ranks (2, 3, 4, 5, 6)
+template <int MaxTperB, Kokkos::Iterate InnerDirection, int... Ranks>
+void test_default_tiles_for_ranks(std::integer_sequence<int, Ranks...>) {
+  (test_default_tiles_respect_launch_bounds<Ranks, MaxTperB, InnerDirection>(),
+   ...);
+}
+
+// Expand launch bounds (256, 128, 64, 32, 16)
+template <int... MaxTperBs>
+void test_default_tiles_for_all_configs(
+    std::integer_sequence<int, MaxTperBs...>) {
+  constexpr auto ranks = std::integer_sequence<int, 2, 3, 4, 5, 6>{};
+  (test_default_tiles_for_ranks<MaxTperBs, Kokkos::Iterate::Left>(ranks), ...);
+  (test_default_tiles_for_ranks<MaxTperBs, Kokkos::Iterate::Right>(ranks), ...);
+}
+
+TEST(TEST_CATEGORY, md_range_policy_default_tiles_respect_launch_bounds) {
   // Verify that auto-computed tiles never exceed LaunchBounds.
-  constexpr unsigned int max_threads = 32;
-  {
-    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                                         Kokkos::LaunchBounds<max_threads>>;
-    Policy policy({0, 0}, {1024, 1024});
-    EXPECT_LE(policy.m_prod_tile_dims,
-              static_cast<typename Policy::index_type>(max_threads));
-  }
-  {
-    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<3>,
-                                         Kokkos::LaunchBounds<max_threads>>;
-    Policy policy({0, 0, 0}, {256, 256, 256});
-    EXPECT_LE(policy.m_prod_tile_dims,
-              static_cast<typename Policy::index_type>(max_threads));
-  }
-  {
-    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<4>,
-                                         Kokkos::LaunchBounds<max_threads>>;
-    Policy policy({0, 0, 0, 0}, {64, 64, 64, 64});
-    EXPECT_LE(policy.m_prod_tile_dims,
-              static_cast<typename Policy::index_type>(max_threads));
-  }
-  {
-    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<5>,
-                                         Kokkos::LaunchBounds<max_threads>>;
-    Policy policy({0, 0, 0, 0, 0}, {32, 32, 32, 32, 32});
-    EXPECT_LE(policy.m_prod_tile_dims,
-              static_cast<typename Policy::index_type>(max_threads));
-  }
-  {
-    using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<6>,
-                                         Kokkos::LaunchBounds<max_threads>>;
-    Policy policy({0, 0, 0, 0, 0, 0}, {16, 16, 16, 16, 16, 16});
-    EXPECT_LE(policy.m_prod_tile_dims,
-              static_cast<typename Policy::index_type>(max_threads));
-  }
+  test_default_tiles_for_all_configs(
+      std::integer_sequence<int, 256, 128, 64, 32, 16>{});
 }
 
 // The execution space is defaulted if not given to the constructor.
