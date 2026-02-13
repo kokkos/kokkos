@@ -515,7 +515,7 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         m_chunk_max((max_extent + m_chunk_mask) >>
                     m_chunk_shift)  // max num pointers-to-chunks in array
         ,
-        m_chunk_size(2 << (m_chunk_shift - 1)) {
+        m_chunk_size(1 << m_chunk_shift) {
     m_chunks = device_accessor(m_chunk_max, m_chunk_size);
 
     const std::string& label =

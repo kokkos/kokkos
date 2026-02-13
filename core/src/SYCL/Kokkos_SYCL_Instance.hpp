@@ -9,6 +9,8 @@
 
 #include <impl/Kokkos_Error.hpp>
 #include <impl/Kokkos_Profiling.hpp>
+#include <impl/Kokkos_HostSharedPtr.hpp>
+
 namespace Kokkos {
 namespace Impl {
 
@@ -16,7 +18,10 @@ class SYCLInternal {
  public:
   using size_type = unsigned int;
 
-  SYCLInternal() = default;
+  static HostSharedPtr<SYCLInternal> default_instance;
+
+  SYCLInternal(const sycl::device& d);
+  SYCLInternal(const sycl::queue& q);
   ~SYCLInternal();
 
   SYCLInternal(const SYCLInternal&)            = delete;
@@ -60,11 +65,9 @@ class SYCLInternal {
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::SYCL>(
           reinterpret_cast<uintptr_t>(this));
-  std::optional<sycl::queue> m_queue;
+  sycl::queue m_queue;
 
-  // Using std::vector<std::optional<sycl::queue>> reveals a compiler bug when
-  // compiling for the CUDA backend. Storing pointers instead works around this.
-  static std::vector<std::optional<sycl::queue>*> all_queues;
+  static std::vector<sycl::queue*> all_queues;
   // We need a mutex for thread safety when modifying all_queues.
   static std::mutex mutex;
 
@@ -176,19 +179,7 @@ class SYCLInternal {
   using IndirectKernelMem = USMObjectMem<sycl::usm::alloc::host>;
   IndirectKernelMem& get_indirect_kernel_mem();
 
-  bool was_finalized = false;
-
-  static SYCLInternal& singleton();
-
   int verify_is_initialized(const char* const label) const;
-
-  void initialize(const sycl::device& d);
-
-  void initialize(const sycl::queue& q);
-
-  int is_initialized() const { return m_queue.has_value(); }
-
-  void finalize();
 
  private:
   // fence(...) takes any type with a .wait_and_throw() method

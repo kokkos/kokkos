@@ -11,11 +11,13 @@ import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <impl/Kokkos_SIMD_Impl_Macros.hpp>
 #include <cstdint>
 #include <cstring>
 #include <functional>
 #include <utility>
 #include <type_traits>
+#include <ranges>
 
 namespace Kokkos {
 
@@ -126,6 +128,14 @@ concept NonScalarAbi = !std::same_as<Abi, simd_abi::scalar>;
 
 template <typename G, typename R, typename... Args>
 concept InvocableWithReturnType = std::is_invocable_r_v<R, G, Args...>;
+
+template <typename V>
+concept SimdVecType =
+    std::same_as<V, basic_simd<typename V::value_type, typename V::abi_type>> &&
+    std::is_default_constructible_v<V>;
+
+template <typename V>
+concept SimdIntegral = SimdVecType<V> && std::integral<typename V::value_type>;
 
 }  // namespace Impl
 

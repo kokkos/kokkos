@@ -1,8 +1,9 @@
 .common-setup:
   stage: test
   variables:
-    OMP_PLACES: "threads"
-    OMP_PROC_BIND: "spread"
+    OMP_NUM_THREADS: "8"
+    OMP_PLACES: "cores"
+    OMP_PROC_BIND: "close"
   before_script:
     - if [ ${CI_PIPELINE_SOURCE} == "schedule" ]; then
         export CDASH_MODEL="Nightly";
@@ -241,9 +242,6 @@ NVIDIA-GRACE-GRACE:
   image: ubuntu:latest
   script:
     - apt-get update && apt-get install -y cmake git g++
-    - export OMP_NUM_THREADS=8
-    - export OMP_PROC_BIND=close
-    - export OMP_PLACES=cores
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"

@@ -619,7 +619,7 @@ void ThreadsInternal::initialize(int thread_count_arg) {
 void ThreadsInternal::finalize() {
   verify_is_process("ThreadsInternal::finalize", false);
 
-  fence();
+  fence("Kokkos::ThreadsInternal::finalize: fence on destruction");
 
   resize_scratch(0, 0);
 

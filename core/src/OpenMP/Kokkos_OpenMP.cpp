@@ -78,12 +78,7 @@ void OpenMP::impl_static_fence(std::string const &name) {
 }
 
 void OpenMP::fence(const std::string &name) const {
-  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
-      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
-      [this]() {
-        auto *internal_instance = this->impl_internal_space_instance();
-        std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
-      });
+  impl_internal_space_instance()->fence(name);
 }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4

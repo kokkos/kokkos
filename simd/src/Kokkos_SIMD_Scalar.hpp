@@ -518,6 +518,87 @@ KOKKOS_FORCEINLINE_FUNCTION constexpr void simd_partial_store(
   }
 }
 
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
+    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
+  using T = typename V::value_type;
+  return basic_simd<T, simd_abi::scalar>(in[indices[0]]);
+}
+
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr V unchecked_gather_from(
+    R&& in, const typename I::mask_type& mask, const I& indices,
+    simd_flags<Flags...> = simd_flag_default) {
+  using T  = typename V::value_type;
+  auto val = (mask[0]) ? in[indices[0]] : T{};
+  return basic_simd<T, simd_abi::scalar>(val);
+}
+
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
+    R&& in, const I& indices, simd_flags<Flags...> = simd_flag_default) {
+  return unchecked_gather_from<V>(in, indices);
+}
+
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr V partial_gather_from(
+    R&& in, const typename I::mask_type& mask, const I& indices,
+    simd_flags<Flags...> = simd_flag_default) {
+  return unchecked_gather_from<V>(in, mask, indices);
+}
+
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
+    const V& v, R&& out, const I& indices,
+    simd_flags<Flags...> = simd_flag_default) {
+  out[indices[0]] = v[0];
+}
+
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr void unchecked_scatter_to(
+    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
+    simd_flags<Flags...> = simd_flag_default) {
+  out[indices[0]] = (mask[0]) ? v[0] : typename V::value_type{};
+}
+
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
+    const V& v, R&& out, const I& indices,
+    simd_flags<Flags...> = simd_flag_default) {
+  unchecked_scatter_to<V>(v, out, indices);
+}
+
+template <Impl::SimdVecType V, std::ranges::contiguous_range R,
+          Impl::SimdIntegral I, typename... Flags>
+  requires std::ranges::sized_range<R> &&
+           std::same_as<typename V::abi_type, simd_abi::scalar>
+KOKKOS_FORCEINLINE_FUNCTION constexpr void partial_scatter_to(
+    const V& v, R&& out, const typename I::mask_type& mask, const I& indices,
+    simd_flags<Flags...> = simd_flag_default) {
+  unchecked_scatter_to<V>(v, out, mask, indices);
+}
+
 template <class T>
 KOKKOS_FORCEINLINE_FUNCTION constexpr basic_simd<T, simd_abi::scalar> condition(
     std::type_identity_t<basic_simd_mask<T, simd_abi::scalar>> const& a,

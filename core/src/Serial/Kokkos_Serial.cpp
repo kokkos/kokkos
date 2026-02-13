@@ -43,7 +43,27 @@ SerialInternal::SerialInternal() {
   }
 }
 
+void SerialInternal::fence(const std::string& name) {
+#ifdef KOKKOS_ENABLE_ATOMICS_BYPASS
+  auto fence = []() {};
+#else
+  auto fence = [this]() { std::lock_guard<std::mutex> lock(m_instance_mutex); };
+#endif
+  if (Kokkos::Tools::profileLibraryLoaded()) {
+    Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
+        name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
+        fence);  // TODO: correct device ID
+  } else {
+    fence();
+  }
+#ifndef KOKKOS_ENABLE_ATOMICS_BYPASS
+  Kokkos::memory_fence();
+#endif
+}
+
 SerialInternal::~SerialInternal() {
+  fence("Kokkos::SerialInternal: fence on destruction");
+
   if (m_thread_team_data.scratch_buffer()) {
     m_thread_team_data.disband_team();
     m_thread_team_data.disband_pool();

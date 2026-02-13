@@ -258,6 +258,12 @@ void OpenMPInternal::initialize(int thread_count) {
   m_initialized = true;
 }
 
+void OpenMPInternal::fence(const std::string &name) {
+  Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(
+      name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
+      [this]() { std::lock_guard<std::mutex> lock(m_instance_mutex); });
+}
+
 void OpenMPInternal::finalize() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR ");
@@ -265,6 +271,8 @@ void OpenMPInternal::finalize() {
     if (omp_in_parallel()) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
+
+  fence("Kokkos::OpenMPInternal: fence on destruction");
 
   if (this == &singleton()) {
     auto const &instance = singleton();

@@ -48,6 +48,8 @@ class SerialInternal {
   static std::vector<SerialInternal*> all_instances;
   static std::mutex all_instances_mutex;
 
+  void fence(const std::string& name);
+
   // Resize thread team data scratch memory
   void resize_thread_team_data(size_t pool_reduce_bytes,
                                size_t team_reduce_bytes,
@@ -157,24 +159,7 @@ class Serial {
 
   void fence(const std::string& name =
                  "Kokkos::Serial::fence: Unnamed Instance Fence") const {
-#ifdef KOKKOS_ENABLE_ATOMICS_BYPASS
-    auto fence = []() {};
-#else
-    auto fence = [this]() {
-      auto* internal_instance = this->impl_internal_space_instance();
-      std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
-    };
-#endif
-    if (Kokkos::Tools::profileLibraryLoaded()) {
-      Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::Serial>(
-          name, Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{1},
-          fence);  // TODO: correct device ID
-    } else {
-      fence();
-    }
-#ifndef KOKKOS_ENABLE_ATOMICS_BYPASS
-    Kokkos::memory_fence();
-#endif
+    this->impl_internal_space_instance()->fence(name);
   }
 
   /** \brief  Return the maximum amount of concurrency.  */

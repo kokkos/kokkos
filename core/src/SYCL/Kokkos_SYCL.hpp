@@ -53,10 +53,7 @@ class SYCL {
     return m_space_instance->impl_get_instance_id();
   }
 
-  sycl::queue& sycl_queue() const noexcept {
-    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-    return *m_space_instance->m_queue;
-  }
+  sycl::queue& sycl_queue() const noexcept { return m_space_instance->m_queue; }
 
   //@}
   //------------------------------------

@@ -28,6 +28,12 @@ class OpenACCInternal {
 
   OpenACCInternal(int async_arg = acc_async_noval);
 
+  ~OpenACCInternal() {
+    fence(
+        "Kokkos::Experimental::Impl::OpenACCInternal::finalize: fence on "
+        "destruction");
+  }
+
   void print_configuration(std::ostream& os, bool verbose = false) const;
 
   void fence(std::string const& name) const;

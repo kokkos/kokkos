@@ -10,6 +10,8 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include "tools/include/ToolTestingUtilities.hpp"
+
 namespace {
 
 template <class ExecutionSpace>
@@ -95,5 +97,35 @@ constexpr bool test_execspace_explicit_construction() {
 }
 
 static_assert(test_execspace_explicit_construction());
+
+// We don't actually promise a tool-observable event and acknowledge that some
+// backend mights not need a fence to ensure that all enqueued work has finished
+// before an execution space instance is destroyed. Therefore we might want to
+// revisit this test.
+TEST(TEST_CATEGORY, execution_space_fence_on_destruction) {
+  auto [dummy_instance] =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1);
+  bool created_new_instance = TEST_EXECSPACE() != dummy_instance;
+  if (!created_new_instance)
+    GTEST_SKIP() << "partition_space doesn't create a new instance";
+
+  Kokkos::Test::Tools::listen_tool_events(
+      Kokkos::Test::Tools::Config::DisableAll(),
+      Kokkos::Test::Tools::Config::EnableFences());
+
+  auto success = Kokkos::Test::Tools::validate_existence(
+      [&]() {
+        [[maybe_unused]] auto [new_instance] =
+            Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1);
+      },
+      [&](Kokkos::Test::Tools::BeginFenceEvent event) {
+        return Kokkos::Test::Tools::MatchDiagnostic{
+            event.descriptor().find("fence on destruction") !=
+            std::string::npos};
+      });
+  ASSERT_TRUE(success);
+  Kokkos::Test::Tools::listen_tool_events(
+      Kokkos::Test::Tools::Config::DisableAll());
+}
 
 }  // namespace

@@ -75,6 +75,8 @@ class OpenMPInternal {
 
   void initialize(int thread_cound);
 
+  void fence(const std::string&);
+
   void finalize();
 
   void clear_thread_data();

@@ -332,7 +332,7 @@ HIPInternal::~HIPInternal() {
   // thread from launching another kernel in-between the fence
   // and the 'check_if_involved_and_unlock'.
   auto lock = HIPInternal::constantMemReusable[m_hipDev].lock();
-  this->fence("Kokkos::HIPInternal::finalize: fence on finalization");
+  this->fence("Kokkos::HIPInternal::finalize: fence on destruction");
   HIPInternal::constantMemReusable[m_hipDev].check_if_involved_and_unlock(
       std::move(lock), m_stream);
 

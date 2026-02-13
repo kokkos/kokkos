@@ -121,8 +121,11 @@ class HPX {
   static hpx::condition_variable_any m_active_parallel_region_count_cond;
 
   struct instance_data {
-    instance_data()  = default;
-    ~instance_data() = default;
+    instance_data() = default;
+    // NOLINTNEXTLINE(bugprone-exception-escape)
+    ~instance_data() {
+      fence("Kokkos::Experimental::HPX: fence on destruction");
+    }
     instance_data(uint32_t instance_id) : m_instance_id(instance_id) {}
     instance_data(uint32_t instance_id,
                   hpx::execution::experimental::unique_any_sender<> &&sender)
@@ -132,6 +135,25 @@ class HPX {
     instance_data(instance_data &&)                 = delete;
     instance_data &operator=(const instance_data &) = delete;
     instance_data &operator=(instance_data)         = delete;
+
+    void fence(const std::string &name) {
+      std::lock_guard<hpx::spinlock> l(m_sender_mutex);
+      fence_locked(name);
+    }
+
+    void fence_locked(const std::string &name) {
+      Kokkos::Tools::Experimental::Impl::profile_fence_event<
+          Kokkos::Experimental::HPX>(
+          name,
+          Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{m_instance_id},
+          [&]() {
+            auto &s = m_sender;
+
+            hpx::this_thread::experimental::sync_wait(std::move(s));
+            s = hpx::execution::experimental::unique_any_sender<>(
+                hpx::execution::experimental::just());
+          });
+    }
 
     uint32_t m_instance_id{HPX::impl_default_instance_id()};
     hpx::execution::experimental::unique_any_sender<> m_sender{
@@ -249,7 +271,7 @@ class HPX {
   void fence(
       const std::string &name =
           "Kokkos::Experimental::HPX::fence: Unnamed Instance Fence") const {
-    impl_instance_fence(name);
+    impl_get_instance_data().fence(name);
   }
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4

@@ -223,7 +223,7 @@ void CudaInternal::print_configuration(std::ostream &s) const {
 //----------------------------------------------------------------------------
 
 CudaInternal::~CudaInternal() {
-  this->fence("Kokkos::CudaInternal::~CudaInternal: fence on destruction");
+  fence("Kokkos::CudaInternal: fence on destruction");
 
   auto cuda_mem_space = Kokkos::CudaSpace::impl_create(m_cudaDev, m_stream);
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
