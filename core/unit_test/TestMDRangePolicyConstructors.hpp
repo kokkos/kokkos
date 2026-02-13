@@ -132,12 +132,11 @@ void test_get_tile_size() {
       Kokkos::MDRangePolicy<TEST_EXECSPACE,
                             Kokkos::Rank<Rank, InnerDirection, InnerDirection>>;
 
-  using tile_type  = typename Policy::tile_type;
-  using point_t    = typename Policy::point_type;
-  using index_type = typename Policy::index_type;
+  using tile_type = typename Policy::tile_type;
+  using point_t   = typename Policy::point_type;
 
-  auto lower = point_t{};
-  auto upper = point_t{};
+  point_t lower{};
+  point_t upper{};
 
   const int dim_length = 32;
 
@@ -197,8 +196,8 @@ void test_default_tiles_respect_launch_bounds() {
   using point_t    = typename policy_t::point_type;
   using index_type = typename policy_t::index_type;
 
-  auto lower = point_t{};
-  auto upper = point_t{};
+  point_t lower{};
+  point_t upper{};
   for (int i = 0; i < Rank; i++) {
     lower[i] = 0;
     upper[i] = 32;
