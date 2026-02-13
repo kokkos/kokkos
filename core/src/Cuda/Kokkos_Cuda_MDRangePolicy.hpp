@@ -29,8 +29,9 @@ struct TileSizeRecommended<Kokkos::Cuda> {
     constexpr auto InnerDirection = Policy::inner_direction;
     constexpr int Rank            = Policy::rank;
 
-    using tile_type = Kokkos::Array<std::int64_t, Rank>;
-    if (InnerDirection == Iterate::Left) {
+    using tile_type = typename Policy::tile_type;
+
+    if constexpr (InnerDirection == Iterate::Left) {
       if constexpr (Rank == 2) {
         return tile_type{64, 4};
       } else if constexpr (Rank == 3) {
