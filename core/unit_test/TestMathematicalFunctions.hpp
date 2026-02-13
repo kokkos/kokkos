@@ -10,6 +10,7 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 #include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
+#include <Kokkos_TypeInfo.hpp>
 
 #include <algorithm>
 #include <cmath>
@@ -3092,5 +3093,257 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
 #endif
 }
 #endif
+
+template <class T>
+struct TestNextToward {
+  TestNextToward() {
+#if __FINITE_MATH_ONLY__
+    constexpr bool finite_math_only = true;
+#else
+    constexpr bool finite_math_only = false;
+#endif
+    if constexpr (std::is_integral_v<T>) {
+      test_integral<finite_math_only>();
+    } else {
+      test_float<finite_math_only>();
+    }
+  }
+
+  template <bool finite_math_only>
+  void test_float() const {
+    using Kokkos::isnan;
+    using Kokkos::nexttoward;
+
+    const T pos_one{1.0f}, neg_one{-1.0f};
+    const T pos_zero{0.0f}, neg_zero{-0.0f};
+    const T pos_smallest = KE::denorm_min<T>::value;
+    const T neg_smallest = -static_cast<T>(KE::denorm_min<T>::value);
+    const T pos_max      = KE::finite_max<T>::value;
+    const T neg_max      = KE::finite_min<T>::value;
+    const T pos_inf      = KE::infinity<T>::value;
+    const T neg_inf      = -static_cast<T>(KE::infinity<T>::value);
+
+    long double target_pos_one{1.0l}, target_pos_two{2.0l};
+    long double target_neg_one{-1.0l}, target_neg_two{-2.0l};
+    long double target_pos_zero{0.0l}, target_neg_zero{-0.0l};
+    long double target_pos_inf{KE::infinity<long double>::value};
+    long double target_neg_inf{-KE::infinity<long double>::value};
+
+    // Check return type
+    testing::StaticAssertTypeEq<decltype(nexttoward(pos_one, target_pos_one)),
+                                T>();
+
+    // NaN Handling. If finite-math is enabled, skip this
+    if constexpr (!finite_math_only) {
+      std::string nan_err_msg =
+          "failed " +
+          static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+          " type nexttoward(NaN)";
+
+      EXPECT_TRUE(isnan(nexttoward(KE::quiet_NaN<T>::value, target_pos_one)))
+          << nan_err_msg;
+      EXPECT_TRUE(
+          isnan(nexttoward(KE::signaling_NaN<T>::value, target_pos_one)))
+          << nan_err_msg;
+      EXPECT_TRUE(isnan(nexttoward(pos_one, KE::quiet_NaN<long double>::value)))
+          << nan_err_msg;
+      EXPECT_TRUE(
+          isnan(nexttoward(pos_one, KE::signaling_NaN<long double>::value)))
+          << nan_err_msg;
+      EXPECT_TRUE(isnan(nexttoward(KE::quiet_NaN<T>::value,
+                                   KE::quiet_NaN<long double>::value)))
+          << nan_err_msg;
+      EXPECT_TRUE(isnan(nexttoward(KE::quiet_NaN<T>::value,
+                                   KE::signaling_NaN<long double>::value)))
+          << nan_err_msg;
+      EXPECT_TRUE(isnan(nexttoward(KE::signaling_NaN<T>::value,
+                                   KE::quiet_NaN<long double>::value)))
+          << nan_err_msg;
+      EXPECT_TRUE(isnan(nexttoward(KE::signaling_NaN<T>::value,
+                                   KE::signaling_NaN<long double>::value)))
+          << nan_err_msg;
+    }
+
+    // Zero Handling
+    std::string zero_err_msg =
+        "failed " +
+        static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+        " type nexttoward(zero)";
+    EXPECT_EQ(nexttoward(pos_zero, target_pos_one), pos_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(pos_zero, target_neg_one), neg_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(pos_zero, target_neg_zero), neg_zero) << zero_err_msg;
+    EXPECT_EQ(nexttoward(neg_zero, target_pos_one), pos_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(neg_zero, target_neg_one), neg_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(neg_zero, target_pos_zero), pos_zero) << zero_err_msg;
+
+    // From Negative Non Zero Handling
+    std::string negative_err_msg =
+        "failed " +
+        static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+        " type nexttoward(negative)";
+    const T after_neg_one  = Kokkos::nextafter(neg_one, pos_inf);
+    const T before_neg_one = Kokkos::nextafter(neg_one, neg_inf);
+    EXPECT_EQ(nexttoward(neg_smallest, target_pos_zero), neg_zero)
+        << negative_err_msg;
+    EXPECT_EQ(nexttoward(neg_one, target_pos_one), after_neg_one)
+        << negative_err_msg;
+    EXPECT_EQ(nexttoward(neg_one, target_neg_two), before_neg_one)
+        << negative_err_msg;
+
+    // From Positive Non Zero Handling
+    std::string positive_err_msg =
+        "failed " +
+        static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+        " type nexttoward(positive)";
+    const T after_pos_one  = Kokkos::nextafter(pos_one, pos_inf);
+    const T before_pos_one = Kokkos::nextafter(pos_one, neg_inf);
+    EXPECT_EQ(nexttoward(pos_smallest, target_neg_zero), pos_zero)
+        << positive_err_msg;
+    EXPECT_EQ(nexttoward(pos_one, target_neg_one), before_pos_one)
+        << positive_err_msg;
+    EXPECT_EQ(nexttoward(pos_one, target_pos_two), after_pos_one)
+        << positive_err_msg;
+
+    // From Inf Handling. If finite-math is enabled, skip this
+    if constexpr (!finite_math_only) {
+      std::string inf_err_msg =
+          "failed " +
+          static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+          " type nexttoward(inf)";
+      EXPECT_EQ(nexttoward(neg_max, target_neg_inf), neg_inf) << inf_err_msg;
+      EXPECT_EQ(nexttoward(pos_max, target_pos_inf), pos_inf) << inf_err_msg;
+      EXPECT_EQ(nexttoward(pos_inf, target_pos_one), pos_max) << inf_err_msg;
+      EXPECT_EQ(nexttoward(neg_inf, target_neg_one), neg_max) << inf_err_msg;
+      EXPECT_EQ(nexttoward(pos_inf, target_pos_inf), pos_inf) << inf_err_msg;
+      EXPECT_EQ(nexttoward(neg_inf, target_neg_inf), neg_inf) << inf_err_msg;
+    }
+  }
+
+  // As integral types do not support NaNs/Infinity/Denorms,
+  // we skip tests related to these values
+  template <bool finite_math_only>
+  void test_integral() const {
+    using Kokkos::nexttoward;
+
+    // Since T is an integral type, we need to declare input constants in
+    // integral type, but reference constants are in double
+    const T pos_one{1}, neg_one{-1};
+    const T pos_zero{0}, neg_zero{-0};
+
+    const double ref_pos_one{1.0}, ref_pos_two{2.0};
+    const double ref_neg_one{-1.0}, ref_neg_two{-2.0};
+    const double ref_pos_zero{0.0}, ref_neg_zero{-0.0};
+    const double ref_pos_smallest{std::numeric_limits<double>::denorm_min()};
+    const double ref_neg_smallest{-std::numeric_limits<double>::denorm_min()};
+
+    const long double target_pos_one{1.0l}, target_pos_two{2.0l};
+    const long double target_neg_one{-1.0l}, target_neg_two{-2.0l};
+    const long double target_pos_zero{0.0l}, target_neg_zero{-0.0l};
+
+    // Check return type. For integral types, the return type is double
+    testing::StaticAssertTypeEq<decltype(nexttoward(pos_one, target_pos_one)),
+                                double>();
+
+    // NaN Handling
+    if constexpr (!finite_math_only) {
+      std::string nan_err_msg =
+          "failed " +
+          static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+          " type nexttoward(NaN)";
+      EXPECT_TRUE(std::isnan(
+          nexttoward(pos_one, std::numeric_limits<long double>::quiet_NaN())))
+          << nan_err_msg;
+      EXPECT_TRUE(std::isnan(nexttoward(
+          pos_one, std::numeric_limits<long double>::signaling_NaN())))
+          << nan_err_msg;
+    }
+
+    // Zero Handling
+    std::string zero_err_msg =
+        "failed " +
+        static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+        " type nexttoward(zero)";
+    EXPECT_EQ(nexttoward(pos_zero, target_pos_one), ref_pos_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(pos_zero, target_neg_one), ref_neg_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(pos_zero, target_neg_zero), ref_neg_zero)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(neg_zero, target_pos_one), ref_pos_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(neg_zero, target_neg_one), ref_neg_smallest)
+        << zero_err_msg;
+    EXPECT_EQ(nexttoward(neg_zero, target_pos_zero), ref_pos_zero)
+        << zero_err_msg;
+
+    // From Negative Non Zero Handling
+    std::string negative_err_msg =
+        "failed " +
+        static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+        " type nexttoward(negative)";
+    const double after_neg_one  = std::nextafter(ref_neg_one, ref_pos_one);
+    const double before_neg_one = std::nextafter(ref_neg_one, ref_neg_two);
+    EXPECT_EQ(nexttoward(neg_one, target_pos_one), after_neg_one)
+        << negative_err_msg;
+    EXPECT_EQ(nexttoward(neg_one, target_neg_two), before_neg_one)
+        << negative_err_msg;
+
+    // From Positive Non Zero Handling
+    std::string positive_err_msg =
+        "failed " +
+        static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+        " type nexttoward(positive)";
+    const double after_pos_one  = std::nextafter(ref_pos_one, ref_pos_two);
+    const double before_pos_one = std::nextafter(ref_pos_one, ref_neg_one);
+    EXPECT_EQ(nexttoward(pos_one, target_neg_one), before_pos_one)
+        << positive_err_msg;
+    EXPECT_EQ(nexttoward(pos_one, target_pos_two), after_pos_one)
+        << positive_err_msg;
+
+    // If finite-math is enabled, skip this
+    // Special treatments for max (integer)
+    // Max (integer) corresponds to a big but finite number in double
+    // Thus, nexttoward from max (integer) to inf should return a slightly
+    // bigger number in double
+    if constexpr (!finite_math_only) {
+      const T pos_max{std::numeric_limits<T>::max()};
+      const T neg_max{-std::numeric_limits<T>::max()};
+      double pos_max_as_double = static_cast<double>(pos_max);
+      double neg_max_as_double = static_cast<double>(neg_max);
+      const long double target_pos_inf{
+          std::numeric_limits<long double>::infinity()};
+      const long double target_neg_inf{
+          -std::numeric_limits<long double>::infinity()};
+      const double before_neg_max = std::nextafter(
+          neg_max_as_double, static_cast<double>(target_neg_inf));
+      const double after_pos_max = std::nextafter(
+          pos_max_as_double, static_cast<double>(target_pos_inf));
+      std::string max_err_msg =
+          "failed " +
+          static_cast<std::string>(Kokkos::Impl::TypeInfo<T>::name()) +
+          " type nexttoward(max)";
+      EXPECT_EQ(nexttoward(neg_max, target_neg_inf), before_neg_max)
+          << max_err_msg;
+      EXPECT_EQ(nexttoward(pos_max, target_pos_inf), after_pos_max)
+          << max_err_msg;
+    }
+  }
+};
+
+TEST(TEST_CATEGORY, mathematical_functions_nexttoward) {
+  if constexpr (std::is_same_v<TEST_EXECSPACE,
+                               Kokkos::DefaultHostExecutionSpace>) {
+    TestNextToward<int>();
+    TestNextToward<float>();
+    TestNextToward<double>();
+    TestNextToward<long double>();
+  } else {
+    GTEST_SKIP() << "This function has already been tested at host";
+  }
+}
 
 #endif
