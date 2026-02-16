@@ -110,6 +110,21 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
 }
 
 TEST(TEST_CATEGORY_DEATH, md_range_policy_tile_dims_exceed_launch_bounds) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP()
+        << "LaunchBounds verification only applies to CUDA and HIP backends";
+  }
+#elif defined(KOKKOS_ENABLE_HIP)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+    GTEST_SKIP()
+        << "LaunchBounds verification only applies to CUDA and HIP backends";
+  }
+#else
+  GTEST_SKIP()
+      << "LaunchBounds verification only applies to CUDA and HIP backends";
+#endif
+
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::LaunchBounds<32>>;
 
@@ -229,6 +244,21 @@ void test_default_tiles_for_all_configs(
 }
 
 TEST(TEST_CATEGORY, md_range_policy_default_tiles_respect_launch_bounds) {
+#if defined(KOKKOS_ENABLE_CUDA)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
+    GTEST_SKIP()
+        << "LaunchBounds verification only applies to CUDA and HIP backends";
+  }
+#elif defined(KOKKOS_ENABLE_HIP)
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+    GTEST_SKIP()
+        << "LaunchBounds verification only applies to CUDA and HIP backends";
+  }
+#else
+  GTEST_SKIP()
+      << "LaunchBounds verification only applies to CUDA and HIP backends";
+#endif
+
   // Verify that auto-computed tiles never exceed LaunchBounds.
   test_default_tiles_for_all_configs(
       std::integer_sequence<int, 256, 128, 64, 32, 16>{});

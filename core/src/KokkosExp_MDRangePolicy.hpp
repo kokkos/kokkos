@@ -387,7 +387,17 @@ struct MDRangePolicy<P, Properties...>
     this->m_max_threads_dimensions = properties.max_threads_dimensions;
 
     index_type effective_max_tile_size = this->m_max_total_tile_size;
-    if constexpr (launch_bounds::maxTperB != 0) {
+
+    constexpr bool enforce_launch_bounds =
+#if defined(KOKKOS_ENABLE_CUDA)
+        std::is_same_v<execution_space, Kokkos::Cuda>;
+#elif defined(KOKKOS_ENABLE_HIP)
+        std::is_same_v<execution_space, Kokkos::HIP>;
+#else
+        false;
+#endif
+
+    if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
       effective_max_tile_size =
           std::min(effective_max_tile_size,
                    static_cast<index_type>(launch_bounds::maxTperB));
@@ -442,7 +452,7 @@ struct MDRangePolicy<P, Properties...>
       this->m_prod_tile_dims *= this->m_tile[i];
     }
 
-    if constexpr (launch_bounds::maxTperB != 0) {
+    if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
       if (static_cast<index_type>(launch_bounds::maxTperB) <
           this->m_prod_tile_dims) {
         std::string msg =
