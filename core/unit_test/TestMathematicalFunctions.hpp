@@ -3342,7 +3342,7 @@ TEST(TEST_CATEGORY, mathematical_functions_nexttoward) {
     TestNextToward<double>();
     TestNextToward<long double>();
   } else {
-    GTEST_SKIP() << "This function has already been tested at host";
+    GTEST_SKIP() << "nexttoward only defined for host";
   }
 }
 
