@@ -266,7 +266,11 @@ pipeline {
                               cd ../.. && \
                               cmake -B build_cmake_installed_different_compiler/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=20 build_cmake_installed_different_compiler && \
                               cmake --build build_cmake_installed_different_compiler/build --target all && \
-                              cmake --build build_cmake_installed_different_compiler/build --target test'''
+                              cmake --build build_cmake_installed_different_compiler/build --target test && \
+                              cd .. && \
+                              cmake -B build_cmake_installed_mark_kokkos_files/build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS=-Werror -DCMAKE_CXX_STANDARD=20 build_cmake_installed_mark_kokkos_files && \
+                              cmake --build build_cmake_installed_mark_kokkos_files/build --target all && \
+                              cmake --build build_cmake_installed_mark_kokkos_files/build --target test'''
                     }
                     post {
                         always {

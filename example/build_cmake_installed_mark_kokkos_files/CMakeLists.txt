@@ -2,14 +2,14 @@
 # but your project can set it higher
 cmake_minimum_required(VERSION 3.22)
 
-# Projects must have C++ support
+# Projects can safely mix languages - must have C++ support
 # Kokkos flags will only apply to C++ files
-project(Example CXX)
+project(Example CXX Fortran)
 
 find_package(Kokkos)
 
-# request launch compiler
-kokkos_set_launch_compiler(GLOBAL ON)
+# do not use the compiler launcher globally
+kokkos_set_launch_compiler(GLOBAL OFF)
 add_subdirectory(no_kokkos)
 add_subdirectory(with_kokkos)
 

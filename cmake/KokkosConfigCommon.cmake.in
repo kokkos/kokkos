@@ -214,7 +214,7 @@ endfunction()
 #
 function(kokkos_compilation)
   cmake_parse_arguments(
-    COMP "GLOBAL;PROJECT;CHECK_CUDA_COMPILES" "COMPILER" "DIRECTORY;TARGET;SOURCE;COMMAND_PREFIX" ${ARGN}
+    COMP "GLOBAL;PROJECT;CHECK_CUDA_COMPILES" "COMPILER;Kokkos_DIR" "DIRECTORY;TARGET;SOURCE;COMMAND_PREFIX" ${ARGN}
   )
 
   # if built w/o CUDA support, we want to basically make this a no-op
@@ -228,7 +228,7 @@ function(kokkos_compilation)
     Kokkos_COMPILE_LAUNCHER
     NAMES kokkos_launch_compiler
     HINTS ${_HINTS}
-    PATHS ${_HINTS}
+    PATHS ${COMP_Kokkos_DIR}
     PATH_SUFFIXES bin
   )
 
@@ -248,7 +248,7 @@ function(kokkos_compilation)
         Kokkos_NVCC_WRAPPER
         NAMES nvcc_wrapper
         HINTS ${_HINTS}
-        PATHS ${_HINTS}
+        PATHS ${COMP_Kokkos_DIR}
         PATH_SUFFIXES bin
       )
       # fatal if we can't nvcc_wrapper
@@ -299,16 +299,64 @@ function(kokkos_compilation)
       endif()
       # set the properties if defined
       if(COMP_${_TYPE})
-        # MESSAGE(STATUS "Using ${COMP_COMPILER} :: ${_TYPE} :: ${COMP_${_TYPE}}")
-        set_property(
-          ${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_COMPILE
-                                             "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}"
-        )
-        set_property(
-          ${_TYPE} ${COMP_${_TYPE}} PROPERTY RULE_LAUNCH_LINK
-                                             "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}"
-        )
+        foreach(ITEM IN LISTS COMP_${_TYPE})
+          # MESSAGE(STATUS "Using ${COMP_COMPILER} :: ${_TYPE} :: ${COMP_${_TYPE}}")
+          set_property(
+            ${_TYPE} ${ITEM} PROPERTY RULE_LAUNCH_COMPILE
+                                      "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}"
+          )
+          set_property(
+            ${_TYPE} ${ITEM} PROPERTY RULE_LAUNCH_LINK
+                                      "${Kokkos_COMPILE_LAUNCHER} ${COMP_COMPILER} ${CMAKE_CXX_COMPILER}"
+          )
+        endforeach()
       endif()
     endforeach()
+  endif()
+endfunction()
+
+function(kokkos_set_launch_compiler)
+  cmake_parse_arguments(INP "ON;OFF;GLOBAL" "" "DIRECTORY" ${ARGN})
+
+  if(NOT (INP_ON OR INP_OFF))
+    message(FATAL_ERROR "kokkos_set_launch_compiler needs 'ON' of 'OFF' as keyword.")
+  endif()
+  if(NOT (INP_GLOBAL OR INP_DIRECTORY))
+    message(FATAL_ERROR "kokkos_set_launch_compiler needs either 'GLOBAL' or 'DIRECTORY' as keyword.")
+  endif()
+
+  if(INP_GLOBAL)
+    if(INP_ON)
+      set(Kokkos_USE_LAUNCH_COMPILER ON CACHE BOOL "Wether or not kokkos_launch_compiler is enabled" FORCE)
+    else()
+      set(Kokkos_USE_LAUNCH_COMPILER OFF CACHE BOOL "Wether or not kokkos_launch_compiler is enabled" FORCE)
+    endif()
+  endif()
+
+  if(INP_DIRECTORY)
+    if(INP_ON)
+      kokkos_compilation(DIRECTORY ${INP_DIRECTORY})
+    else()
+      set(Kokkos_LAUNCH_COMPILER_EXCLUDE_PATHS "${Kokkos_LAUNCH_COMPILER_EXCLUDE_PATHS};${INP_DIRECTORY}"
+          CACHE PATH "Directories for which kokkos_launch_compiler is disabled" FORCE
+      )
+    endif()
+  endif()
+endfunction()
+
+function(kokkos_impl_set_launch_compiler)
+  cmake_parse_arguments(INP "" "Kokkos_DIR" "" ${ARGN})
+
+  if(DEFINED CACHE{Kokkos_USE_LAUNCH_COMPILER} AND Kokkos_USE_LAUNCH_COMPILER)
+    message(
+      STATUS
+        "kokkos_launch_compiler is enabled globally. C++ compiler commands with -DKOKKOS_DEPENDENCE will be redirected to the appropriate compiler for Kokkos unless they are listed in Kokkos_LAUNCH_COMPILER_EXCLUDE_PATHS CACHE variable."
+    )
+
+    get_property(ALL_SUBDIRECTORIES DIRECTORY ${CMAKE_SOURCE_DIR} PROPERTY SUBDIRECTORIES)
+    if(DEFINED CACHE{Kokkos_LAUNCH_COMPILER_EXCLUDE_PATHS})
+      list(REMOVE_ITEM ALL_SUBDIRECTORIES ${Kokkos_LAUNCH_COMPILER_EXCLUDE_PATHS})
+    endif()
+    kokkos_compilation(DIRECTORY "${CMAKE_SOURCE_DIR};${ALL_SUBDIRECTORIES}" Kokkos_DIR ${INP_Kokkos_DIR})
   endif()
 endfunction()
