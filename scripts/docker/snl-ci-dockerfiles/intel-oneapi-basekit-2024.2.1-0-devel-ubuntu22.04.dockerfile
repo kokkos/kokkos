@@ -1,5 +1,5 @@
 FROM intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
-  
+
 # certs may be needed for your system, e.g.
 #ADD <your>.crt /etc/pki/ca-trust/source/anchors/<your>.crt
 #RUN update-ca-trust
