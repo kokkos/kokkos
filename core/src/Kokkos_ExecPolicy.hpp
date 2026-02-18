@@ -553,6 +553,9 @@ inline std::enable_if_t<!std::is_integral_v<iType>, int> extract_vector_length(
   return 1;
 }
 
+// Causes abnormal program termination if level is not `0` or `1`
+void team_policy_check_valid_storage_level_argument(int level);
+
 }  // namespace Impl
 
 Impl::PerTeamValue PerTeam(const size_t& arg);
@@ -593,9 +596,6 @@ struct ScratchRequest {
     per_thread = thread_value.value;
   }
 };
-
-// Causes abnormal program termination if level is not `0` or `1`
-void team_policy_check_valid_storage_level_argument(int level);
 
 /** \brief  Execution policy for parallel work over a league of teams of
  * threads.
@@ -715,27 +715,27 @@ class TeamPolicy
                                  internal_policy&>,
                   "internal set_chunk_size should return a reference");
 
-    team_policy_check_valid_storage_level_argument(level);
+    Impl::team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_team));
   }
   inline TeamPolicy& set_scratch_size(const int& level,
                                       const Impl::PerThreadValue& per_thread) {
-    team_policy_check_valid_storage_level_argument(level);
+    Impl::team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_thread));
   }
   inline TeamPolicy& set_scratch_size(const int& level,
                                       const Impl::PerTeamValue& per_team,
                                       const Impl::PerThreadValue& per_thread) {
-    team_policy_check_valid_storage_level_argument(level);
+    Impl::team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
   inline TeamPolicy& set_scratch_size(const int& level,
                                       const Impl::PerThreadValue& per_thread,
                                       const Impl::PerTeamValue& per_team) {
-    team_policy_check_valid_storage_level_argument(level);
+    Impl::team_policy_check_valid_storage_level_argument(level);
     return static_cast<TeamPolicy&>(
         internal_policy::set_scratch_size(level, per_team, per_thread));
   }
