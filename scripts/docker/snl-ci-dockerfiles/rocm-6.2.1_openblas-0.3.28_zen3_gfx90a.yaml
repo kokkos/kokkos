@@ -1,0 +1,27 @@
+spack:
+  specs:
+    # Kokkos 5 requires CMake >= 3.22
+    - "cmake@3.22.6: arch=linux-rhel9-zen3"
+    - openblas@0.3.28 arch=linux-rhel9-zen3
+    - hip@6.2.1 arch=linux-rhel9-zen3
+    - rocm-smi-lib@6.2.1 arch=linux-rhel9-zen3 # rocm-smi
+    - rocblas@6.2.1 arch=linux-rhel9-zen3 amdgpu_target=gfx90a
+    - rocsolver@6.2.1 arch=linux-rhel9-zen3 amdgpu_target=gfx90a
+    - rocsparse@6.2.1 arch=linux-rhel9-zen3 amdgpu_target=gfx90a
+    - rocrand@6.2.1 arch=linux-rhel9-zen3 amdgpu_target=gfx90a
+    - rocthrust@6.2.1 arch=linux-rhel9-zen3 amdgpu_target=gfx90a
+
+  concretizer:
+    targets:
+      host_compatible: false
+    unify: true
+
+  # enabling a view is nice because it causes all of the includes
+  # to go into one place, which means hipcc can find rocm-core
+  # exlude certain things so their binaries, etc don't pollute the view
+  view:
+    default:
+      root: /rocm
+      exclude:
+        - 'llvm' # want llvm-amdgpu
+        - 'rocm-cmake' # want our cmake
