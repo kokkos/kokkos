@@ -166,7 +166,6 @@ export {
   using ::Kokkos::Schedule;
   using ::Kokkos::single;
   using ::Kokkos::Static;
-  using ::Kokkos::team_policy_check_valid_storage_level_argument;
   using ::Kokkos::TeamHandle;
   using ::Kokkos::TeamPolicy;
   using ::Kokkos::TeamThreadMDRange;
