@@ -1,7 +1,6 @@
 spack:
   specs:
     # Kokkos 5 requires CMake >= 3.22
-    # Somwhere between cmake 3.22 and 3.31, we start getting SSL errors
     - cmake@3.22 arch=linux-rhel9-x86_64
     - "openblas@0.3.29 arch=linux-rhel9-x86_64"
     - "cuda@12.2.2 arch=linux-rhel9-x86_64"
