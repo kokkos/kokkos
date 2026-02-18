@@ -22,28 +22,26 @@ OpenMP::~OpenMP() {
 OpenMP::OpenMP()
     : m_space_instance(
           (Impl::check_execution_space_constructor_precondition(name()),
-           Impl::HostSharedPtr(&Impl::OpenMPInternal::singleton(),
-                               [](Impl::OpenMPInternal *) {}))) {}
+           Impl::OpenMPInternal::default_instance)) {}
 
 OpenMP::OpenMP(int pool_size)
     : m_space_instance(
           (Impl::check_execution_space_constructor_precondition(name()),
-           Impl::HostSharedPtr(new Impl::OpenMPInternal(pool_size),
-                               [](Impl::OpenMPInternal *ptr) {
-                                 ptr->finalize();
-                                 delete ptr;
-                               }))) {}
+           Impl::HostSharedPtr(new Impl::OpenMPInternal(pool_size)))) {}
 
 int OpenMP::impl_get_current_max_threads() noexcept {
   return Impl::OpenMPInternal::get_current_max_threads();
 }
 
 void OpenMP::impl_initialize(InitializationSettings const &settings) {
-  Impl::OpenMPInternal::singleton().initialize(
-      settings.has_num_threads() ? settings.get_num_threads() : -1);
+  int thread_count =
+      settings.has_num_threads() ? settings.get_num_threads() : -1;
+  Impl::OpenMPInternal::init_default_instance(thread_count);
 }
 
-void OpenMP::impl_finalize() { Impl::OpenMPInternal::singleton().finalize(); }
+void OpenMP::impl_finalize() {
+  Impl::OpenMPInternal::finalize_default_instance();
+}
 
 void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
   os << "Host Parallel Execution Space:\n";
