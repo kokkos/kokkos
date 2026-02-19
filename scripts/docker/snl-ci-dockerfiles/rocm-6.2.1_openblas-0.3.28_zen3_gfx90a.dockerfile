@@ -1,4 +1,4 @@
-FROM registry.access.redhat.com/ubi9:latest
+FROM registry.access.redhat.com/ubi9:9.7@sha256:0d37bd2384f10881a2b0fdf695af99816fdf468a499fe3ace43da84c3cb566aa
 
 # certs may be needed for your system, e.g.
 #ADD <your>.crt /etc/pki/ca-trust/source/anchors/<your>.crt

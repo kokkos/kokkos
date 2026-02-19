@@ -1,4 +1,4 @@
-FROM intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
+FROM intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04@sha256:c148163a0476fad50ad46a473c03dc5ca9058fdf5cba69287a4836b3d9ae8bff
 
 # certs may be needed for your system, e.g.
 #ADD <your>.crt /etc/pki/ca-trust/source/anchors/<your>.crt
