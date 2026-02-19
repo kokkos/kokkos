@@ -243,10 +243,10 @@ TEST(TEST_CATEGORY_DEATH, team_policy_invalid_vector_length) {
       Kokkos::TeamPolicy<TEST_EXECSPACE>::vector_length_max() + 1;
   EXPECT_DEATH(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, 1, too_large),
                "Kokkos::TeamPolicy error: vector_length argument must be less "
-               "or equal to vector_length_max()");
+               "or equal to vector_length_max\\(\\)");
   EXPECT_DEATH(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, Kokkos::AUTO, too_large),
                "Kokkos::TeamPolicy error: vector_length argument must be less "
-               "or equal to vector_length_max()");
+               "or equal to vector_length_max\\(\\)");
 }
 
 }  // namespace
