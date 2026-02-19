@@ -20,6 +20,7 @@ static_assert(false,
 #include <typeinfo>
 #endif
 #include <limits>
+#include <sstream>
 #include <type_traits>
 
 //----------------------------------------------------------------------------
@@ -637,30 +638,35 @@ class TeamPolicy
 
   static int validate_league_size_argument(int league_size) {
     if (league_size < 0) {
-      Kokkos::abort(
-          "Kokkos::TeamPolicy error: league_size argument must be greater or "
-          "equal to 0");
+      std::stringstream err;
+      err << "Kokkos::TeamPolicy error: league_size (" << league_size
+          << ") must be greater than or equal to 0";
+      Kokkos::abort(err.str().c_str());
     }
     return league_size;
   }
   static int validate_team_size_argument(int team_size) {
     if (team_size < 1) {
-      Kokkos::abort(
-          "Kokkos::TeamPolicy error: team_size argument must be greater or "
-          "equal to 1");
+      std::stringstream err;
+      err << "Kokkos::TeamPolicy error: team_size (" << team_size
+          << ") must be greater than or equal to 1";
+      Kokkos::abort(err.str().c_str());
     }
     return team_size;
   }
   static int validate_vector_length_argument(int vector_length) {
     if (vector_length < 1) {
-      Kokkos::abort(
-          "Kokkos::TeamPolicy error: vector_length argument must be greater or "
-          "equal to 1");
+      std::stringstream err;
+      err << "Kokkos::TeamPolicy error: vector_length (" << vector_length
+          << ") must be greater than or equal to 1";
+      Kokkos::abort(err.str().c_str());
     }
-    if (vector_length > internal_policy::vector_length_max()) {
-      Kokkos::abort(
-          "Kokkos::TeamPolicy error: vector_length argument must be less or "
-          "equal to vector_length_max()");
+    int const vector_length_max = internal_policy::vector_length_max();
+    if (vector_length > vector_length_max) {
+      std::stringstream err;
+      err << "Kokkos::TeamPolicy error: vector_length (" << vector_length
+          << ") exceeds the maximum allowed (" << vector_length_max << ")";
+      Kokkos::abort(err.str().c_str());
     }
     return vector_length;
   }
