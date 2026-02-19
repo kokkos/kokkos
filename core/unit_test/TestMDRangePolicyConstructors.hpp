@@ -112,21 +112,13 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
 TEST(TEST_CATEGORY_DEATH, md_range_policy_tile_dims_exceed_launch_bounds) {
 #if defined(KOKKOS_ENABLE_CUDA)
   if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    GTEST_SKIP()
-        << "LaunchBounds verification only applies to CUDA and HIP backends";
-  }
 #elif defined(KOKKOS_ENABLE_HIP)
   if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+#endif
     GTEST_SKIP()
         << "LaunchBounds verification only applies to CUDA and HIP backends";
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   }
-#else
-  GTEST_SKIP()
-      << "LaunchBounds verification only applies to CUDA and HIP backends";
-#endif
-
-  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                                       Kokkos::LaunchBounds<32>>;
 
   // Check error message when user provided tile dims exceed user specified
   // LaunchBounds.
@@ -137,7 +129,11 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_tile_dims_exceed_launch_bounds) {
 
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                                       Kokkos::LaunchBounds<32>>;
   ASSERT_DEATH({ (void)Policy({0, 0}, {128, 128}, {64, 4}); }, expected);
+#endif
 }
 
 // Test tile size recommendation
@@ -246,22 +242,17 @@ void test_default_tiles_for_all_configs(
 TEST(TEST_CATEGORY, md_range_policy_default_tiles_respect_launch_bounds) {
 #if defined(KOKKOS_ENABLE_CUDA)
   if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
-    GTEST_SKIP()
-        << "LaunchBounds verification only applies to CUDA and HIP backends";
-  }
 #elif defined(KOKKOS_ENABLE_HIP)
-  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+    if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
+#endif
     GTEST_SKIP()
         << "LaunchBounds verification only applies to CUDA and HIP backends";
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   }
-#else
-  GTEST_SKIP()
-      << "LaunchBounds verification only applies to CUDA and HIP backends";
-#endif
-
   // Verify that auto-computed tiles never exceed LaunchBounds.
   test_default_tiles_for_all_configs(
       std::integer_sequence<int, 256, 128, 64, 32, 16>{});
+#endif
 }
 
 // The execution space is defaulted if not given to the constructor.
