@@ -661,6 +661,7 @@ class TeamPolicy
           << ") must be greater than or equal to 1";
       Kokkos::abort(err.str().c_str());
     }
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
     int const vector_length_max = internal_policy::vector_length_max();
     if (vector_length > vector_length_max) {
       std::stringstream err;
@@ -668,6 +669,7 @@ class TeamPolicy
           << ") exceeds the maximum allowed (" << vector_length_max << ")";
       Kokkos::abort(err.str().c_str());
     }
+#endif
     return vector_length;
   }
 

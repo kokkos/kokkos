@@ -239,6 +239,7 @@ TEST(TEST_CATEGORY_DEATH, team_policy_invalid_vector_length) {
                "Kokkos::TeamPolicy error: vector_length \\(-2\\) must be "
                "greater than or equal to 1");
 
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
   auto const max_allowed =
       Kokkos::TeamPolicy<TEST_EXECSPACE>::vector_length_max();
   EXPECT_DEATH(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, 1, max_allowed + 1),
@@ -252,6 +253,7 @@ TEST(TEST_CATEGORY_DEATH, team_policy_invalid_vector_length) {
           std::to_string(max_allowed + 2) +
           "\\) exceeds the maximum allowed \\(" + std::to_string(max_allowed) +
           "\\)");
+#endif
 }
 
 }  // namespace
