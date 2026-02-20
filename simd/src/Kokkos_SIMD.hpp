@@ -203,9 +203,14 @@ using simd_mask = basic_simd_mask<T, simd_abi::Impl::native_abi<T, N>>;
 
 template <typename T, typename... Flags>
   requires Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
-KOKKOS_FORCEINLINE_FUNCTION basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
-simd_unchecked_load(const T* ptr,
-                    simd_flags<Flags...> flag = simd_flag_default) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_FORCEINLINE_FUNCTION
+#endif
+    basic_simd<T, simd_abi::Impl::host_fixed_native<T>>
+    simd_unchecked_load(const T* ptr,
+                        simd_flags<Flags...> flag = simd_flag_default) {
   return simd_unchecked_load<
       basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(ptr, flag);
 }
