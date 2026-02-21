@@ -18,5 +18,5 @@ By contributing to Kokkos, you agree that your contributions will be licensed
 under the terms of the LICENSE file found in the root directory of the Kokkos
 repository.
 
-For your convenience, a copy of the license is also available on the [Kokkos
-Website](https://kokkos.org/LICENSE/).
+For your convenience, a copy of the license is also available at
+https://kokkos.org/LICENSE/.
