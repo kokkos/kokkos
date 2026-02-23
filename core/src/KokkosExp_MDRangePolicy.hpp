@@ -407,9 +407,9 @@ struct MDRangePolicy<P, Properties...>
 
     tile_type default_tile = this->tile_size_recommended();
 
-    int inner_rank  = (InnerDirection == Iterate::Right) ? Rank - 1 : 0;
-    int outer_bound = (InnerDirection == Iterate::Right) ? -1 : Rank;
-    int iter_step   = (InnerDirection == Iterate::Right) ? -1 : 1;
+    int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
+    int outer_bound = (inner_direction == Iterate::Right) ? -1 : rank;
+    int iter_step   = (inner_direction == Iterate::Right) ? -1 : 1;
 
     for (int i = inner_rank; i != outer_bound; i += iter_step) {
       const index_type length = this->m_upper[i] - this->m_lower[i];
