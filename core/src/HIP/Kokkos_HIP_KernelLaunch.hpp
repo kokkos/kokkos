@@ -571,8 +571,11 @@ struct HIPParallelLaunch<
       // Invoke the driver function on the device
       base_t::invoke_kernel(driver, grid, block, shmem, hip_instance);
 
-#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+      // check any launch error (synchronous check)
       KOKKOS_IMPL_HIP_SAFE_CALL(hipGetLastError());
+
+#if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
+      // check any execution error (asynchronous check)
       hip_instance->fence(
           "Kokkos::Impl::HIParallelLaunch: Debug Only Check for "
           "Execution Error");
