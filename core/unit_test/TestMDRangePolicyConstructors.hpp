@@ -109,6 +109,8 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
   ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg1);
 }
 
+// Verify that we get an error if the user requests tile dimensions too large
+// for the specified LaunchBounds.
 TEST(TEST_CATEGORY_DEATH, md_range_policy_tile_dims_exceed_launch_bounds) {
 #if defined(KOKKOS_ENABLE_CUDA)
   if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
@@ -193,6 +195,8 @@ void test_get_tile_size_for_ranks(std::integer_sequence<int, Ranks...>) {
   (test_get_tile_size<Ranks, Kokkos::Iterate::Right>(), ...);
 }
 
+// Check that tile_size_recommended() returns valid tile sizes consistent with
+// internal tile dimensions
 TEST(TEST_CATEGORY, md_range_policy_get_tile_size) {
   constexpr auto ranks = std::integer_sequence<int, 2, 3, 4, 5, 6>{};
   test_get_tile_size_for_ranks(ranks);
@@ -239,6 +243,8 @@ void test_default_tiles_for_all_configs(
   (test_default_tiles_for_ranks<MaxTperBs, Kokkos::Iterate::Right>(ranks), ...);
 }
 
+// Check that MDRangePolicy auto-computed tile sizes never exceed user-specified
+// LaunchBounds
 TEST(TEST_CATEGORY, md_range_policy_default_tiles_respect_launch_bounds) {
 #if defined(KOKKOS_ENABLE_CUDA)
   if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
