@@ -138,7 +138,9 @@ struct TileSizeRecommended {
   static auto get(Policy const& policy);
 };
 
-// Host default recommended tile size
+// Recommend tile sizes for each rank of MDRangePolicy.
+// Each rank is tiled with a default size of 2, except the innermost rank which
+// is set to its full work range length.
 template <typename ExecutionSpace>
 template <typename Policy>
 auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
@@ -151,22 +153,22 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
   int default_tile_size   = 2;
   int max_total_tile_size = policy.max_total_tile_size();
 
-  int rank_start = (InnerDirection == Iterate::Right) ? Rank - 1 : 0;
-  int rank_end   = (InnerDirection == Iterate::Right) ? -1 : Rank;
-  int iter_step  = (InnerDirection == Iterate::Right) ? -1 : 1;
-  auto last_rank_length =
-      policy.m_upper[rank_start] - policy.m_lower[rank_start];
+  int inner_rank  = (InnerDirection == Iterate::Right) ? Rank - 1 : 0;
+  int outer_bound = (InnerDirection == Iterate::Right) ? -1 : Rank;
+  int iter_step   = (InnerDirection == Iterate::Right) ? -1 : 1;
+  auto inner_work_range =
+      policy.m_upper[inner_rank] - policy.m_lower[inner_rank];
 
   int prod_tile_size = 1;
-  for (int i = rank_start; i != rank_end; i += iter_step) {
+  for (int i = inner_rank; i != outer_bound; i += iter_step) {
     int rank_tile_size = 1;
     if (prod_tile_size * default_tile_size <= max_total_tile_size) {
       rank_tile_size = default_tile_size;
     } else {
       rank_tile_size = 1;
     }
-    if (i == rank_start) {
-      rank_tile_size = std::max<int>(last_rank_length, 1);
+    if (i == inner_rank) {
+      rank_tile_size = std::max<int>(inner_work_range, 1);
     }
     prod_tile_size *= rank_tile_size;
     recommended_tile_sizes[i] = rank_tile_size;
@@ -313,7 +315,7 @@ struct MDRangePolicy<P, Properties...>
                 point_type const& lower, point_type const& upper,
                 tile_type const& tile = tile_type{})
       : m_space(work_space), m_lower(lower), m_upper(upper), m_tile(tile) {
-    init_helper();
+    update_tiling_properties();
   }
 
   template <typename T, std::size_t NT = rank,
@@ -347,7 +349,7 @@ struct MDRangePolicy<P, Properties...>
     if (this->m_tune_tile_size) {
       this->m_tile = {};
     }
-    init_helper();
+    update_tiling_properties();
   }
 
   template <class... OtherProperties>
@@ -366,7 +368,7 @@ struct MDRangePolicy<P, Properties...>
 
   void impl_change_tile_size(const point_type& tile) {
     this->m_tile = tile;
-    this->init_helper();
+    this->update_tiling_properties();
   }
 
   bool impl_tune_tile_size() const { return m_tune_tile_size; }
@@ -378,7 +380,7 @@ struct MDRangePolicy<P, Properties...>
   index_type max_total_tile_size() const { return m_max_total_tile_size; }
 
  private:
-  void init_helper() {
+  void update_tiling_properties() {
     auto properties        = Impl::get_tile_size_properties(m_space);
     this->m_num_tiles      = 1;
     this->m_prod_tile_dims = 1;
@@ -405,17 +407,11 @@ struct MDRangePolicy<P, Properties...>
 
     tile_type default_tile = this->tile_size_recommended();
 
-    int increment  = 1;
-    int rank_start = 0;
-    int rank_end   = rank;
+    int inner_rank  = (InnerDirection == Iterate::Right) ? Rank - 1 : 0;
+    int outer_bound = (InnerDirection == Iterate::Right) ? -1 : Rank;
+    int iter_step   = (InnerDirection == Iterate::Right) ? -1 : 1;
 
-    if constexpr (inner_direction == Iterate::Right) {
-      increment  = -1;
-      rank_start = rank - 1;
-      rank_end   = -1;
-    }
-
-    for (int i = rank_start; i != rank_end; i += increment) {
+    for (int i = inner_rank; i != outer_bound; i += iter_step) {
       const index_type length = this->m_upper[i] - this->m_lower[i];
 
       if (this->m_upper[i] < this->m_lower[i]) {

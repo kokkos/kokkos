@@ -8,16 +8,12 @@
 #if defined(KOKKOS_ENABLE_CUDA)
 
 #include <algorithm>
-#include <string>
 
 #include <Kokkos_Parallel.hpp>
 
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 #include <Cuda/Kokkos_Cuda_ReduceScan.hpp>
 #include <Cuda/Kokkos_Cuda_BlockSize_Deduction.hpp>
-
-#include <impl/Kokkos_Tools.hpp>
-#include <typeinfo>
 
 #include <KokkosExp_MDRangePolicy.hpp>
 #include <impl/KokkosExp_IterateTileGPU.hpp>
