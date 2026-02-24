@@ -696,7 +696,7 @@ class TestDynViewAPI {
 
   static void run_operator_test_rank67() {
     // FIXME_CLANG 22 The test triggers an internal compiler error in clang 22.
-#if !defined(KOKKOS_COMPILER_CLANG) || (KOKKOS_COMPILER_CLANG != 2200)
+#if !defined(KOKKOS_COMPILER_CLANG) || (KOKKOS_COMPILER_CLANG < 2200)
     TestViewOperator_LeftAndRight<int, device, 7>::testit(2, 3, 4, 2, 3, 4, 2);
 #endif
     TestViewOperator_LeftAndRight<int, device, 6>::testit(2, 3, 4, 2, 3, 4);
