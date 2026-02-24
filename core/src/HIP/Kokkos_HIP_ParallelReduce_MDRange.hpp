@@ -79,9 +79,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline __device__ void operator()() const {
     const ReducerType& reducer = m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(reducer.value_size() / sizeof(word_size_type));
 
     {
@@ -122,30 +121,52 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncthreads();
       }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+      for (size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
     }
   }
 
   // Determine block size constrained by shared memory:
-  // This is copy/paste from Kokkos_HIP_Parallel_Range
   inline unsigned local_block_size(const FunctorType& f) {
-    const auto& instance = m_policy.space().impl_internal_space_instance();
-    auto shmem_functor   = [&f](unsigned n) {
-      return hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
-                                                      value_type>(f, n);
-    };
+    unsigned n = 512;  // block size must be less than or equal to 512
+    using closure_type =
+        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
+                             Policy, Kokkos::HIP>;
+    hipFuncAttributes attr =
+        HIPParallelLaunch<closure_type, LaunchBounds>::get_hip_func_attributes(
+            m_policy.space().hip_device());
 
-    unsigned block_size =
-        Kokkos::Impl::hip_get_preferred_blocksize<ParallelReduce, LaunchBounds>(
-            instance, shmem_functor);
-    if (block_size == 0) {
-      Kokkos::Impl::throw_runtime_exception(
-          std::string("Kokkos::Impl::ParallelReduce< HIP > could not find a "
-                      "valid tile size."));
+    // Compute the maximum dynamic shared memory per block allowed
+    // by subtracting the static shared memory used by the kernel
+    int const maxShmemPerBlock =
+        m_policy.space().hip_device_prop().sharedMemPerBlock -
+        attr.sharedSizeBytes;
+
+    int shmem_size =
+        hip_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(f,
+                                                                             n);
+
+    while (shmem_size > maxShmemPerBlock) {
+      n >>= 1;
+      shmem_size =
+          hip_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
+              f, n);
+      if (n < HIPTraits::WarpSize) {
+        std::string msg =
+            "Kokkos::parallel_reduce<HIP, MDRangePolicy>: could not find a "
+            "valid tile size for inter block reduction. Shared memory per "
+            "block required (" +
+            std::to_string(
+                hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                         value_type>(
+                    f, HIPTraits::WarpSize)) +
+            ") exceeds device limit (" + std::to_string(maxShmemPerBlock) +
+            ").";
+        Kokkos::Impl::throw_runtime_exception(msg);
+      }
     }
-    return block_size;
+    return n;
   }
 
   inline void execute() {
@@ -161,10 +182,9 @@ class ParallelReduce<CombinedFunctorReducerType,
       int suggested_blocksize =
           local_block_size(m_functor_reducer.get_functor());
 
-      block_size = (block_size > suggested_blocksize)
-                       ? block_size
-                       : suggested_blocksize;  // Note: block_size must be less
-                                               // than or equal to 512
+      // Note: block_size must be between WarpSize and suggested_blocksize
+      block_size =
+          std::clamp<int>(block_size, HIPTraits::WarpSize, suggested_blocksize);
 
       m_scratch_space =
           reinterpret_cast<word_size_type*>(hip_internal_scratch_space(

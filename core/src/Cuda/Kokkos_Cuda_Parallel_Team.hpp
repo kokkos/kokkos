@@ -720,9 +720,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   __device__ inline void run(SHMEMReductionTag, const int& threadid) const {
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
                    sizeof(word_size_type));
 
@@ -780,7 +779,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncwarp(0xffffffff);
       }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+      for (size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
     }

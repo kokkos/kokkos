@@ -133,7 +133,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // values in all workgroups separately, write the workgroup results back
       // to global memory and recurse until only one workgroup does the
       // reduction and thus gets the final value.
-      const int wgroup_size = Kokkos::bit_ceil(
+      int wgroup_size = Kokkos::bit_ceil(
           static_cast<unsigned int>(m_policy.m_prod_tile_dims));
 
       // FIXME_SYCL Find a better way to determine a good limit for the
@@ -142,6 +142,34 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       size_t max_work_groups =
           static_cast<size_t>(2) *
           q.get_device().get_info<sycl::info::device::max_compute_units>();
+
+      // Shared memory needed per block for reduction
+      const auto sycl_single_inter_block_reduce_shmem = [&](int wgroup_size) {
+        return static_cast<int>(static_cast<size_t>(wgroup_size) * value_count *
+                                sizeof(value_type)) +
+               static_cast<int>(sizeof(unsigned int));
+      };
+
+      const int maxShmemPerBlock = instance.m_maxShmemPerBlock;
+      int shmem_size = sycl_single_inter_block_reduce_shmem(wgroup_size);
+
+      // FIXME_SYCL Find a better way to determine workgroup size with shared
+      // memory constraints.
+      while (shmem_size > maxShmemPerBlock) {
+        wgroup_size >>= 1;
+        shmem_size = sycl_single_inter_block_reduce_shmem(wgroup_size);
+        if (wgroup_size < 32) {
+          std::string msg =
+              "Kokkos::parallel_reduce<SYCL, MDRangePolicy>: could not find a "
+              "valid tile size for inter block reduction. Shared memory per "
+              "block required (" +
+              std::to_string(sycl_single_inter_block_reduce_shmem(32)) +
+              ") exceeds device limit (" + std::to_string(maxShmemPerBlock) +
+              ").";
+          Kokkos::Impl::throw_runtime_exception(msg);
+        }
+      }
+
       int values_per_thread = 1;
       size_t n_wgroups      = n_tiles;
       while (n_wgroups > max_work_groups) {
@@ -192,6 +220,9 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               const index_type local_x    = 0;
               const index_type local_y    = item.get_local_id(0);
               const index_type local_z    = 0;
+              const index_type n_local_x  = 1;
+              const index_type n_local_y  = item.get_local_range(0);
+              const index_type n_local_z  = 1;
               const index_type global_y   = 0;
               const index_type global_z   = 0;
               const index_type n_global_x = n_tiles;
@@ -210,6 +241,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                       typename Policy::work_tag, reference_type>(
                       bare_policy, functor, update,
                       {n_global_x, n_global_y, n_global_z},
+                      {n_local_x, n_local_y, n_local_z},
                       {global_x, global_y, global_z},
                       {local_x, local_y, local_z})
                       .exec_range();
@@ -257,6 +289,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                       typename Policy::work_tag, reference_type>(
                       bare_policy, functor, update,
                       {n_global_x, n_global_y, n_global_z},
+                      {n_local_x, n_local_y, n_local_z},
                       {global_x, global_y, global_z},
                       {local_x, local_y, local_z})
                       .exec_range();

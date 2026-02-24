@@ -243,9 +243,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline __device__ void operator()() const {
-    const integral_nonzero_constant<word_size_type,
-                                    ReducerType::static_value_size() /
-                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<
+        size_type, ReducerType::static_value_size() / sizeof(word_size_type)>
         word_count(m_functor_reducer.get_reducer().value_size() /
                    sizeof(word_size_type));
 
@@ -294,7 +293,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         __syncwarp(0xffffffff);
       }
 
-      for (unsigned i = threadIdx.y; i < word_count.value; i += blockDim.y) {
+      for (size_type i = threadIdx.y; i < word_count.value; i += blockDim.y) {
         global[i] = shared[i];
       }
     }
@@ -302,7 +301,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    unsigned n = CudaTraits::WarpSize * 8;
+    unsigned n = 512;  // block size must be less than or equal to 512
     int const maxShmemPerBlock =
         m_policy.space().cuda_device_prop().sharedMemPerBlock;
     int shmem_size =
@@ -325,6 +324,20 @@ class ParallelReduce<CombinedFunctorReducerType,
       shmem_size =
           cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
               f, n);
+
+      if (n < CudaTraits::WarpSize) {
+        std::string msg =
+            "Kokkos::parallel_reduce<Cuda, MDRangePolicy>: could not find a "
+            "valid tile size for inter block reduction. Shared memory per "
+            "block required (" +
+            std::to_string(
+                cuda_single_inter_block_reduce_scan_shmem<false, WorkTag,
+                                                          value_type>(
+                    f, CudaTraits::WarpSize)) +
+            ") exceeds device limit (" + std::to_string(maxShmemPerBlock) +
+            ").";
+        Kokkos::Impl::throw_runtime_exception(msg);
+      }
     }
     return n;
   }
@@ -340,10 +353,9 @@ class ParallelReduce<CombinedFunctorReducerType,
       int suggested_blocksize =
           local_block_size(m_functor_reducer.get_functor());
 
-      block_size = (block_size > suggested_blocksize)
-                       ? block_size
-                       : suggested_blocksize;  // Note: block_size must be less
-                                               // than or equal to 512
+      // Note: block_size must be between WarpSize and suggested_blocksize
+      block_size = std::clamp<int>(block_size, CudaTraits::WarpSize,
+                                   suggested_blocksize);
 
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
@@ -411,10 +423,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                               typename ViewType::memory_space>::accessible),
         m_scratch_space(nullptr),
         m_scratch_flags(nullptr),
-        m_unified_space(nullptr) {
-    check_reduced_view_shmem_size<WorkTag, value_type>(
-        m_policy, m_functor_reducer.get_functor());
-  }
+        m_unified_space(nullptr) {}
 };
 }  // namespace Impl
 }  // namespace Kokkos

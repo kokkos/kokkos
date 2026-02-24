@@ -87,8 +87,8 @@ class ParallelScanHIPBase {
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(final_reducer.value_size() / sizeof(word_size_type));
 
     pointer_type const shared_value = reinterpret_cast<pointer_type>(
@@ -126,8 +126,8 @@ class ParallelScanHIPBase {
     const typename Analysis::Reducer& final_reducer =
         m_functor_reducer.get_reducer();
 
-    const integral_nonzero_constant<word_size_type, Analysis::StaticValueSize /
-                                                        sizeof(word_size_type)>
+    const integral_nonzero_constant<size_type, Analysis::StaticValueSize /
+                                                   sizeof(word_size_type)>
         word_count(final_reducer.value_size() / sizeof(word_size_type));
 
     // Use shared memory as an exclusive scan: { 0 , value[0] , value[1] ,
@@ -164,7 +164,7 @@ class ParallelScanHIPBase {
 
       // Copy previous block's accumulation total into thread[0] prefix and
       // inclusive scan value of this block
-      for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
+      for (size_type i = threadIdx.y; i < word_count.value; ++i) {
         shared_data[i + word_count.value] = shared_data[i] = shared_accum[i];
       }
 
@@ -189,7 +189,7 @@ class ParallelScanHIPBase {
       {
         word_size_type* const block_total =
             shared_data + word_count.value * blockDim.y;
-        for (unsigned i = threadIdx.y; i < word_count.value; ++i) {
+        for (size_type i = threadIdx.y; i < word_count.value; ++i) {
           shared_accum[i] = block_total[i];
         }
       }
