@@ -57,10 +57,9 @@ class OpenMPInternal {
   OpenMPInternal(int arg_pool_size);
   ~OpenMPInternal();
 
-  static HostSharedPtr<OpenMPInternal> default_instance;
-
-  static void init_default_instance(int thread_count);
-  static void finalize_default_instance();
+  // Manage state shared by all instances
+  static void init_runtime(int thread_count);
+  static void finalize_runtime();
 
   void fence(const std::string&);
 
@@ -86,6 +85,8 @@ class OpenMPInternal {
   void print_configuration(std::ostream& s) const;
 
   std::mutex m_instance_mutex;
+
+  static HostSharedPtr<OpenMPInternal> default_instance;
 
   static std::vector<OpenMPInternal*> all_instances;
   static std::mutex all_instances_mutex;

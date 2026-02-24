@@ -36,11 +36,11 @@ int OpenMP::impl_get_current_max_threads() noexcept {
 void OpenMP::impl_initialize(InitializationSettings const &settings) {
   int thread_count =
       settings.has_num_threads() ? settings.get_num_threads() : -1;
-  Impl::OpenMPInternal::init_default_instance(thread_count);
+  Impl::OpenMPInternal::init_runtime(thread_count);
 }
 
 void OpenMP::impl_finalize() {
-  Impl::OpenMPInternal::finalize_default_instance();
+  Impl::OpenMPInternal::finalize_runtime();
 }
 
 void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {

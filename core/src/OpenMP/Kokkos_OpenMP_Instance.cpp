@@ -151,7 +151,7 @@ int OpenMPInternal::get_current_max_threads() noexcept {
   return count;
 }
 
-void OpenMPInternal::init_default_instance(int thread_count) {
+void OpenMPInternal::init_runtime(int thread_count) {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
@@ -237,7 +237,7 @@ void OpenMPInternal::init_default_instance(int thread_count) {
   }
 }
 
-void OpenMPInternal::finalize_default_instance() {
+void OpenMPInternal::finalize_runtime() {
   auto const &instance = *default_instance;
   // Silence Cuda Warning
   const int nthreads = instance.m_pool_size <= g_openmp_hardware_max_threads
