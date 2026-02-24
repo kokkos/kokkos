@@ -292,7 +292,6 @@ void OpenMPInternal::fence(const std::string &name) {
 OpenMPInternal::~OpenMPInternal() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR : in parallel");
-    if (omp_in_parallel()) msg.append(": in parallel");
     Kokkos::Impl::throw_runtime_exception(msg);
   }
 
