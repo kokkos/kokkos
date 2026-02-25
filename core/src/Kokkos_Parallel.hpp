@@ -36,6 +36,11 @@ namespace Impl {
 template <typename T>
 concept HasExecutionSpace = requires { typename T::execution_space; };
 
+template <typename T, typename U>
+concept HasMatchingExecutionSpace =
+    !HasExecutionSpace<T> || !HasExecutionSpace<U> ||
+    std::same_as<typename T::execution_space, typename U::execution_space>;
+
 template <typename T>
 concept HasDeviceType = requires { typename T::device_type; };
 
@@ -48,14 +53,8 @@ concept HasDeviceType = requires { typename T::device_type; };
  *  else     use the default
  */
 
-//TODO
+// TODO
 #if 0
-    static_assert(
-        !is_detected<execution_space_t, Policy>::value ||
-            !is_detected<execution_space_t, Functor>::value ||
-            std::is_same_v<policy_execution_space, functor_execution_space>,
-        "A policy with an execution space and a functor with an execution space "
-        "are given but the execution space types do not match!");
     static_assert(!is_detected<execution_space_t, Policy>::value ||
                       !is_detected<device_type_t, Functor>::value ||
                       std::is_same_v<policy_execution_space,
@@ -76,6 +75,11 @@ struct FunctorPolicyExecutionSpace;
 template <class Functor, class Policy>
   requires(HasExecutionSpace<Policy>)
 struct FunctorPolicyExecutionSpace<Functor, Policy> {
+  static_assert(
+      HasMatchingExecutionSpace<Policy, Functor>,
+      "A policy with an execution space and a functor with an execution space "
+      "are given but the execution space types do not match!");
+
   using execution_space = typename Policy::execution_space;
 };
 
