@@ -13,37 +13,28 @@ namespace Experimental {
 //
 // overload set1: default predicate, accepting execution space
 //
-template <typename ExecutionSpace, typename IteratorType,
-          std::enable_if_t<Impl::is_iterator_v<IteratorType> &&
-                               is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
-IteratorType unique(const ExecutionSpace& ex, IteratorType first,
-                    IteratorType last) {
+template <ExecutionSpace ExeSpace, std::forward_iterator IteratorType>
+IteratorType unique(const ExeSpace& ex, IteratorType first, IteratorType last) {
   return Impl::unique_exespace_impl("Kokkos::unique_iterator_api_default", ex,
                                     first, last);
 }
 
-template <typename ExecutionSpace, typename IteratorType,
-          std::enable_if_t<Impl::is_iterator_v<IteratorType> &&
-                               is_execution_space<ExecutionSpace>::value,
-                           int> = 0>
-IteratorType unique(const std::string& label, const ExecutionSpace& ex,
+template <ExecutionSpace ExeSpace, std::forward_iterator IteratorType>
+IteratorType unique(const std::string& label, const ExeSpace& ex,
                     IteratorType first, IteratorType last) {
   return Impl::unique_exespace_impl(label, ex, first, last);
 }
 
-template <typename ExecutionSpace, typename DataType, typename... Properties,
-          std::enable_if_t<is_execution_space<ExecutionSpace>::value, int> = 0>
-auto unique(const ExecutionSpace& ex,
+template <ExecutionSpace ExeSpace, typename DataType, typename... Properties>
+auto unique(const ExeSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::unique_exespace_impl("Kokkos::unique_view_api_default", ex,
                                     begin(view), end(view));
 }
 
-template <typename ExecutionSpace, typename DataType, typename... Properties,
-          std::enable_if_t<is_execution_space<ExecutionSpace>::value, int> = 0>
-auto unique(const std::string& label, const ExecutionSpace& ex,
+template <ExecutionSpace ExeSpace, typename DataType, typename... Properties>
+auto unique(const std::string& label, const ExeSpace& ex,
             const ::Kokkos::View<DataType, Properties...>& view) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view);
   return Impl::unique_exespace_impl(label, ex, begin(view), end(view));
@@ -52,19 +43,17 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
 //
 // overload set2: custom predicate, accepting execution space
 //
-template <typename ExecutionSpace, typename IteratorType,
-          typename BinaryPredicate,
-          std::enable_if_t<is_execution_space<ExecutionSpace>::value, int> = 0>
-IteratorType unique(const ExecutionSpace& ex, IteratorType first,
-                    IteratorType last, BinaryPredicate pred) {
+template <ExecutionSpace ExeSpace, std::forward_iterator IteratorType,
+          std::indirect_equivalence_relation<IteratorType> BinaryPredicate>
+IteratorType unique(const ExeSpace& ex, IteratorType first, IteratorType last,
+                    BinaryPredicate pred) {
   return Impl::unique_exespace_impl("Kokkos::unique_iterator_api_default", ex,
                                     first, last, pred);
 }
 
-template <typename ExecutionSpace, typename IteratorType,
-          typename BinaryPredicate,
-          std::enable_if_t<is_execution_space<ExecutionSpace>::value, int> = 0>
-IteratorType unique(const std::string& label, const ExecutionSpace& ex,
+template <ExecutionSpace ExeSpace, std::forward_iterator IteratorType,
+          std::indirect_equivalence_relation<IteratorType> BinaryPredicate>
+IteratorType unique(const std::string& label, const ExeSpace& ex,
                     IteratorType first, IteratorType last,
                     BinaryPredicate pred) {
   return Impl::unique_exespace_impl(label, ex, first, last, pred);
@@ -97,10 +86,7 @@ auto unique(const std::string& label, const ExecutionSpace& ex,
 // Note: for now omit the overloads accepting a label
 // since they cause issues on device because of the string allocation.
 //
-template <typename TeamHandleType, typename IteratorType,
-          std::enable_if_t<Impl::is_iterator_v<IteratorType> &&
-                               is_team_handle<TeamHandleType>::value,
-                           int> = 0>
+template <TeamHandle TeamHandleType, std::forward_iterator IteratorType>
 KOKKOS_FUNCTION IteratorType unique(const TeamHandleType& teamHandle,
                                     IteratorType first, IteratorType last) {
   return Impl::unique_team_impl(teamHandle, first, last);
