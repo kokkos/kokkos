@@ -133,23 +133,6 @@ void OpenMP::impl_initialize(InitializationSettings const &settings) {
 }
 
 void OpenMP::impl_finalize() {
-  auto const &instance = *Impl::OpenMPInternal::default_instance;
-  // Silence Cuda Warning
-  const int nthreads =
-      instance.m_pool_size <=
-              Impl::OpenMPInternal::g_openmp_hardware_max_threads
-          ? Impl::OpenMPInternal::g_openmp_hardware_max_threads
-          : instance.m_pool_size;
-  (void)nthreads;
-
-#pragma omp parallel num_threads(nthreads)
-  { Impl::SharedAllocationRecord<void, void>::tracking_disable(); }
-
-  // allow main thread to track
-  Impl::SharedAllocationRecord<void, void>::tracking_enable();
-
-  Impl::OpenMPInternal::g_openmp_hardware_max_threads = 1;
-
   // Destroy the default instance.
   Impl::OpenMPInternal::default_instance = nullptr;
 }

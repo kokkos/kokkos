@@ -24,8 +24,6 @@ import kokkos.core;
 #include <sstream>
 #include <thread>
 
-namespace {}
-
 namespace Kokkos {
 namespace Impl {
 
