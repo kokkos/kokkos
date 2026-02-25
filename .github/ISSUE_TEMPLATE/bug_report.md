@@ -6,6 +6,7 @@ labels: ''
 assignees: ''
 ---
 **Before you file**
+
 Please check already existing issues first. Filtering by our labels can help to e.g. find issues related to compiler bugs easily.
 
 **Describe the bug**
