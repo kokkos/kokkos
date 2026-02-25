@@ -701,9 +701,9 @@ class TestDynViewAPI {
   }
 
   static void run_operator_test_rank67() {
-    // FIXME_HIP The test triggers an internal compiler error in hipcc
-#if !(defined(KOKKOS_ENABLE_HIP) || \
-      (HIP_VERSION_MAJOR == 7 && HIP_VERSION_MINOR > 1))
+    // FIXME_CLANG 22 The test triggers an internal compiler error in clang 22.
+#if !defined(KOKKOS_COMPILER_CLANG) || (KOKKOS_COMPILER_CLANG < 2200) || \
+    (KOKKOS_COMPILER_CLANG > 2210)
     TestViewOperator_LeftAndRight<int, device, 7>::testit(2, 3, 4, 2, 3, 4, 2);
 #endif
     TestViewOperator_LeftAndRight<int, device, 6>::testit(2, 3, 4, 2, 3, 4);
