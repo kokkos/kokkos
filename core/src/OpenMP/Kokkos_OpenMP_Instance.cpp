@@ -19,15 +19,12 @@ import kokkos.core;
 #include <impl/Kokkos_ExecSpaceManager.hpp>
 
 #include <cstdlib>
-#include <iomanip>
 #include <iostream>
 #include <new>
 #include <sstream>
 #include <thread>
 
-namespace {
-int g_openmp_hardware_max_threads = 1;
-}
+namespace {}
 
 namespace Kokkos {
 namespace Impl {
@@ -35,6 +32,7 @@ namespace Impl {
 std::vector<OpenMPInternal *> OpenMPInternal::all_instances;
 std::mutex OpenMPInternal::all_instances_mutex;
 HostSharedPtr<OpenMPInternal> OpenMPInternal::default_instance;
+int OpenMPInternal::g_openmp_hardware_max_threads;
 
 int OpenMPInternal::max_hardware_threads() noexcept {
   return g_openmp_hardware_max_threads;
@@ -149,112 +147,6 @@ int OpenMPInternal::get_current_max_threads() noexcept {
     ++count;
   }
   return count;
-}
-
-void OpenMPInternal::init_runtime(int thread_count) {
-  if (omp_in_parallel()) {
-    std::string msg("Kokkos::OpenMP::initialize ERROR : in parallel");
-    Kokkos::Impl::throw_runtime_exception(msg);
-  }
-
-  {
-    if (Kokkos::show_warnings() && !std::getenv("OMP_PROC_BIND")) {
-      std::cerr
-          << R"WARNING(Kokkos::OpenMP::initialize WARNING: OMP_PROC_BIND environment variable not set
-  In general, for best performance with OpenMP 4.0 or better set OMP_PROC_BIND=spread and OMP_PLACES=threads
-  For best performance with OpenMP 3.1 set OMP_PROC_BIND=true
-  For unit testing set OMP_PROC_BIND=false
-)WARNING" << std::endl;
-
-      if (mpi_detected()) {
-        std::cerr
-            << R"WARNING(MPI detected: For OpenMP binding to work as intended, MPI ranks must be bound to exclusive CPU sets.
-)WARNING" << std::endl;
-      }
-    }
-
-    // Before any other call to OMP query the maximum number of threads
-    // and save the value for re-initialization unit testing.
-
-    g_openmp_hardware_max_threads = get_current_max_threads();
-
-    int process_num_threads = g_openmp_hardware_max_threads;
-
-    if (Kokkos::hwloc::available()) {
-      process_num_threads = Kokkos::hwloc::get_available_numa_count() *
-                            Kokkos::hwloc::get_available_cores_per_numa() *
-                            Kokkos::hwloc::get_available_threads_per_core();
-    }
-
-    // if thread_count  < 0, use g_openmp_hardware_max_threads;
-    // if thread_count == 0, set g_openmp_hardware_max_threads to
-    // process_num_threads if thread_count  > 0, set
-    // g_openmp_hardware_max_threads to thread_count
-    if (thread_count < 0) {
-      thread_count = g_openmp_hardware_max_threads;
-    } else if (thread_count == 0) {
-      if (g_openmp_hardware_max_threads != process_num_threads) {
-        g_openmp_hardware_max_threads = process_num_threads;
-        omp_set_num_threads(g_openmp_hardware_max_threads);
-      }
-    } else {
-      if (Kokkos::show_warnings() && thread_count > process_num_threads) {
-        std::cerr << "Kokkos::OpenMP::initialize WARNING: You are likely "
-                     "oversubscribing your CPU cores.\n"
-                  << "  process threads available : " << std::setw(3)
-                  << process_num_threads
-                  << ",  requested thread : " << std::setw(3) << thread_count
-                  << std::endl;
-      }
-      g_openmp_hardware_max_threads = thread_count;
-      omp_set_num_threads(g_openmp_hardware_max_threads);
-    }
-
-// setup thread local
-#pragma omp parallel num_threads(g_openmp_hardware_max_threads)
-    { Impl::SharedAllocationRecord<void, void>::tracking_enable(); }
-  }
-
-  // Create the default instance.
-  default_instance = HostSharedPtr<OpenMPInternal>(
-      new OpenMPInternal(g_openmp_hardware_max_threads));
-
-  // Check for over-subscription
-  auto const reported_ranks = mpi_ranks_per_node();
-  auto const mpi_local_size = reported_ranks < 0 ? 1 : reported_ranks;
-  int const procs_per_node  = std::thread::hardware_concurrency();
-  if (Kokkos::show_warnings() &&
-      (mpi_local_size * long(thread_count) > procs_per_node)) {
-    std::cerr << "Kokkos::OpenMP::initialize WARNING: You are likely "
-                 "oversubscribing your CPU cores."
-              << std::endl;
-    std::cerr << "                                    Detected: "
-              << procs_per_node << " cores per node." << std::endl;
-    std::cerr << "                                    Detected: "
-              << mpi_local_size << " MPI_ranks per node." << std::endl;
-    std::cerr << "                                    Requested: "
-              << thread_count << " threads per process." << std::endl;
-  }
-}
-
-void OpenMPInternal::finalize_runtime() {
-  auto const &instance = *default_instance;
-  // Silence Cuda Warning
-  const int nthreads = instance.m_pool_size <= g_openmp_hardware_max_threads
-                           ? g_openmp_hardware_max_threads
-                           : instance.m_pool_size;
-  (void)nthreads;
-
-#pragma omp parallel num_threads(nthreads)
-  { Impl::SharedAllocationRecord<void, void>::tracking_disable(); }
-
-  // allow main thread to track
-  Impl::SharedAllocationRecord<void, void>::tracking_enable();
-
-  g_openmp_hardware_max_threads = 1;
-
-  // Destroy the default instance.
-  default_instance = nullptr;
 }
 
 OpenMPInternal::OpenMPInternal(int arg_pool_size)
