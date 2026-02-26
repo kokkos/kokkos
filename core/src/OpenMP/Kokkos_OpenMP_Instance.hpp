@@ -85,7 +85,7 @@ class OpenMPInternal {
 
   static std::vector<OpenMPInternal*> all_instances;
   static std::mutex all_instances_mutex;
-  static int g_openmp_hardware_max_threads;
+  static int hardware_max_threads;
 };
 
 inline bool execute_in_serial(OpenMP const& space = OpenMP()) {

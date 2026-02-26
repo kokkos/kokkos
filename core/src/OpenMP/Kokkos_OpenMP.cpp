@@ -64,11 +64,11 @@ void OpenMP::impl_initialize(InitializationSettings const &settings) {
     // Before any other call to OMP query the maximum number of threads
     // and save the value for re-initialization unit testing.
 
-    Impl::OpenMPInternal::g_openmp_hardware_max_threads =
+    Impl::OpenMPInternal::hardware_max_threads =
         Impl::OpenMPInternal::get_current_max_threads();
 
     int process_num_threads =
-        Impl::OpenMPInternal::g_openmp_hardware_max_threads;
+        Impl::OpenMPInternal::hardware_max_threads;
 
     if (Kokkos::hwloc::available()) {
       process_num_threads = Kokkos::hwloc::get_available_numa_count() *
@@ -76,19 +76,19 @@ void OpenMP::impl_initialize(InitializationSettings const &settings) {
                             Kokkos::hwloc::get_available_threads_per_core();
     }
 
-    // if thread_count  < 0, use g_openmp_hardware_max_threads;
-    // if thread_count == 0, set g_openmp_hardware_max_threads to
+    // if thread_count  < 0, use hardware_max_threads;
+    // if thread_count == 0, set hardware_max_threads to
     // process_num_threads if thread_count  > 0, set
-    // g_openmp_hardware_max_threads to thread_count
+    // hardware_max_threads to thread_count
     if (thread_count < 0) {
-      thread_count = Impl::OpenMPInternal::g_openmp_hardware_max_threads;
+      thread_count = Impl::OpenMPInternal::hardware_max_threads;
     } else if (thread_count == 0) {
-      if (Impl::OpenMPInternal::g_openmp_hardware_max_threads !=
+      if (Impl::OpenMPInternal::hardware_max_threads !=
           process_num_threads) {
-        Impl::OpenMPInternal::g_openmp_hardware_max_threads =
+        Impl::OpenMPInternal::hardware_max_threads =
             process_num_threads;
         omp_set_num_threads(
-            Impl::OpenMPInternal::g_openmp_hardware_max_threads);
+            Impl::OpenMPInternal::hardware_max_threads);
       }
     } else {
       if (Kokkos::show_warnings() && thread_count > process_num_threads) {
@@ -99,20 +99,20 @@ void OpenMP::impl_initialize(InitializationSettings const &settings) {
                   << ",  requested thread : " << std::setw(3) << thread_count
                   << std::endl;
       }
-      Impl::OpenMPInternal::g_openmp_hardware_max_threads = thread_count;
-      omp_set_num_threads(Impl::OpenMPInternal::g_openmp_hardware_max_threads);
+      Impl::OpenMPInternal::hardware_max_threads = thread_count;
+      omp_set_num_threads(Impl::OpenMPInternal::hardware_max_threads);
     }
 
 // setup thread local
 #pragma omp parallel num_threads( \
-        Impl::OpenMPInternal::g_openmp_hardware_max_threads)
+        Impl::OpenMPInternal::hardware_max_threads)
     { Impl::SharedAllocationRecord<void, void>::tracking_enable(); }
   }
 
   // Create the default instance.
   Impl::OpenMPInternal::default_instance =
       Impl::HostSharedPtr<Impl::OpenMPInternal>(new Impl::OpenMPInternal(
-          Impl::OpenMPInternal::g_openmp_hardware_max_threads));
+          Impl::OpenMPInternal::hardware_max_threads));
 
   // Check for over-subscription
   auto const reported_ranks = Impl::mpi_ranks_per_node();

@@ -30,10 +30,10 @@ namespace Impl {
 std::vector<OpenMPInternal *> OpenMPInternal::all_instances;
 std::mutex OpenMPInternal::all_instances_mutex;
 HostSharedPtr<OpenMPInternal> OpenMPInternal::default_instance;
-int OpenMPInternal::g_openmp_hardware_max_threads;
+int OpenMPInternal::hardware_max_threads;
 
 int OpenMPInternal::max_hardware_threads() noexcept {
-  return g_openmp_hardware_max_threads;
+  return hardware_max_threads;
 }
 
 void OpenMPInternal::clear_thread_data() {
@@ -206,7 +206,7 @@ void OpenMPInternal::print_configuration(std::ostream &s) const {
   s << "Kokkos::OpenMP";
 
   const int numa_count      = 1;
-  const int core_per_numa   = g_openmp_hardware_max_threads;
+  const int core_per_numa   = hardware_max_threads;
   const int thread_per_core = 1;
 
   s << " thread_pool_topology[ " << numa_count << " x " << core_per_numa
