@@ -521,7 +521,7 @@ using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
 
 // Implements the deduction of accessors from ElementType, Space, and MemTraits
 template <class ElementType, class Space, class MemTraits>
-struct ImplAccessor {
+struct ViewArgsToAccessor {
  private:
   using memory_space = typename Space::memory_space;
 
@@ -567,8 +567,8 @@ struct ImplAccessor {
 namespace Experimental {
 template <class ElementType, class Space = DefaultExecutionSpace,
           class MemTraits = MemoryTraits<>>
-using Accessor =
-    typename Kokkos::Impl::ImplAccessor<ElementType, Space, MemTraits>::type;
+using Accessor = typename Kokkos::Impl::ViewArgsToAccessor<ElementType, Space,
+                                                           MemTraits>::type;
 }  // namespace Experimental
 
 namespace Impl {

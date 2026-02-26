@@ -173,14 +173,15 @@ struct BasicViewFromTraits {
   using data_type          = DataType;
   using type =
       BV::BasicView<element_type, extents_type, layout_type, accessor_type>;
+  static constexpr bool mdspan_style_args = false;
 };
 
 template <class ElementType, class IndexType, size_t... Extents,
-          class... Properties>
+          class LayoutType, class Accessor>
 struct BasicViewFromTraits<ElementType, extents<IndexType, Extents...>,
-                           Properties...> {
-  using type =
-      BV::BasicView<ElementType, extents<IndexType, Extents...>, Properties...>;
+                           LayoutType, Accessor> {
+  using type = BV::BasicView<ElementType, extents<IndexType, Extents...>,
+                             LayoutType, Accessor>;
   using element_type  = typename type::element_type;
   using extents_type  = typename type::extents_type;
   using layout_type   = typename type::mdspan_type::layout_type;
@@ -191,7 +192,8 @@ struct BasicViewFromTraits<ElementType, extents<IndexType, Extents...>,
       ViewTraits<data_type, typename ArrayLayoutFromLayout<layout_type>::type,
                  typename accessor_type::memory_space,
                  MemoryTraitsFromAccessor<accessor_type> >;
-  using mdspan_view_traits = MDSpanViewTraits<view_traits>;
+  using mdspan_view_traits                = MDSpanViewTraits<view_traits>;
+  static constexpr bool mdspan_style_args = true;
 };
 
 // Helper function to deal with cases where the data handle is
@@ -565,7 +567,15 @@ class View : public Impl::BasicViewFromTraits<FirstArg, Properties...>::type {
 
  public:
   template <class... OtherIndexTypes>
+    requires(basic_view_from_traits_t::mdspan_style_args)
+  KOKKOS_FUNCTION constexpr reference_type operator()(
+      OtherIndexTypes... idx) const {
+    return base_t::operator()(idx...);
+  }
+
+  template <class... OtherIndexTypes>
     requires(
+        !basic_view_from_traits_t::mdspan_style_args &&
         (std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
         (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) &&
         (sizeof...(OtherIndexTypes) == rank()) &&
@@ -584,6 +594,7 @@ class View : public Impl::BasicViewFromTraits<FirstArg, Properties...>::type {
 
   template <class... OtherIndexTypes>
     requires(
+        !basic_view_from_traits_t::mdspan_style_args &&
         (std::is_convertible_v<OtherIndexTypes, index_type> && ...) &&
         (std::is_nothrow_constructible_v<index_type, OtherIndexTypes> && ...) &&
         (sizeof...(OtherIndexTypes) == rank()) &&
