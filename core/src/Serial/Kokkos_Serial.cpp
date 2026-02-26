@@ -156,17 +156,31 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
 }  // namespace Impl
 
 Serial::~Serial() {
-  Impl::check_execution_space_destructor_precondition(name());
+  Impl::CheckUsage<Impl::UsageRequires::isNotFinalized>::check(
+      Impl::Message::Message<Impl::Message::Type::InstanceDestructionAfterFini>(
+          std::string(name())));
 }
 
 Serial::Serial()
     : m_space_instance(
-          (Impl::check_execution_space_constructor_precondition(name()),
+          (Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+               Impl::Message::Message<
+                   Impl::Message::Type::InstanceConstructionBeforeInit>(
+                   std::string(name())),
+               Impl::Message::Message<
+                   Impl::Message::Type::InstanceConstructionAfterFini>(
+                   std::string(name()))),
            Impl::SerialInternal::default_instance)) {}
 
 Serial::Serial(NewInstance)
     : m_space_instance(
-          (Impl::check_execution_space_constructor_precondition(name()),
+          (Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+               Impl::Message::Message<
+                   Impl::Message::Type::InstanceConstructionBeforeInit>(
+                   std::string(name())),
+               Impl::Message::Message<
+                   Impl::Message::Type::InstanceConstructionAfterFini>(
+                   std::string(name()))),
            new Impl::SerialInternal)) {}
 
 void Serial::print_configuration(std::ostream& os, bool /*verbose*/) const {

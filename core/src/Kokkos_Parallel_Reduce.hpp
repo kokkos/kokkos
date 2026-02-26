@@ -354,7 +354,10 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, ReturnType& return_value) {
   /** Enforce correct use **/
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_reduce", policy, label.c_str());
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(policy), label),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(policy), label));
 
   static_assert(
       !std::is_const_v<ReturnType>,
@@ -378,8 +381,11 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
-                                                              policy);
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(policy)),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(policy)));
 
   parallel_reduce("", policy, functor, return_value);
 }
@@ -392,7 +398,10 @@ parallel_reduce(const std::string& label, const size_t& work_count,
                 const FunctorType& functor, ReturnType& return_value) {
   /** Enforce correct use **/
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_reduce", work_count, label.c_str());
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(work_count), label),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(work_count), label));
 
   using policy_type =
       typename Impl::ParallelReducePolicyType<size_t, FunctorType>::policy_type;
@@ -406,8 +415,11 @@ inline std::enable_if_t<!(Kokkos::is_view<ReturnType>::value ||
 parallel_reduce(const size_t& work_count, const FunctorType& functor,
                 ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
-                                                              work_count);
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(work_count)),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(work_count)));
 
   parallel_reduce("", work_count, functor, return_value);
 }
@@ -422,7 +434,10 @@ parallel_reduce(const std::string& label, const PolicyType& policy,
                 const FunctorType& functor, const ReturnType& return_value) {
   /** Enforce correct use **/
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_reduce", policy, label.c_str());
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(policy), label),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(policy), label));
 
   ReturnType return_value_impl = return_value;
   Impl::ParallelReduceAdaptor<PolicyType, FunctorType, ReturnType>::execute(
@@ -441,8 +456,11 @@ inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
 parallel_reduce(const PolicyType& policy, const FunctorType& functor,
                 const ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
-                                                              policy);
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(policy)),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(policy)));
 
   parallel_reduce("", policy, functor, return_value);
 }
@@ -455,7 +473,10 @@ parallel_reduce(const std::string& label, const size_t& work_count,
                 const FunctorType& functor, const ReturnType& return_value) {
   /** Enforce correct use **/
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_reduce", work_count, label.c_str());
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(work_count), label),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(work_count), label));
 
   using policy_type =
       typename Impl::ParallelReducePolicyType<size_t, FunctorType>::policy_type;
@@ -469,8 +490,11 @@ inline std::enable_if_t<Kokkos::is_view<ReturnType>::value ||
 parallel_reduce(const size_t& work_count, const FunctorType& functor,
                 const ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
-                                                              work_count);
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(work_count)),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(work_count)));
 
   parallel_reduce("", work_count, functor, return_value);
 }
@@ -481,7 +505,10 @@ inline void parallel_reduce(const std::string& label, const PolicyType& policy,
                             const FunctorType& functor) {
   /** Enforce correct use **/
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_reduce", policy, label.c_str());
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(policy), label),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(policy), label));
 
   using FunctorAnalysis =
       Impl::FunctorAnalysis<Impl::FunctorPatternInterface::REDUCE, PolicyType,
@@ -507,8 +534,11 @@ template <Kokkos::ExecutionPolicy PolicyType, class FunctorType>
 inline void parallel_reduce(const PolicyType& policy,
                             const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
-                                                              policy);
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(policy)),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(policy)));
 
   parallel_reduce("", policy, functor);
 }
@@ -518,7 +548,10 @@ inline void parallel_reduce(const std::string& label, const size_t& work_count,
                             const FunctorType& functor) {
   /** Enforce correct use **/
   Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_reduce", work_count, label.c_str());
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(work_count), label),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(work_count), label));
 
   using policy_type =
       typename Impl::ParallelReducePolicyType<size_t, FunctorType>::policy_type;
@@ -530,8 +563,11 @@ template <class FunctorType>
 inline void parallel_reduce(const size_t& work_count,
                             const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_reduce",
-                                                              work_count);
+  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
+      Impl::Message::Message<Impl::Message::Type::CalledBeforeInit>(
+          "parallel_reduce", Impl::Message::toString(work_count)),
+      Impl::Message::Message<Impl::Message::Type::CalledAfterFini>(
+          "parallel_reduce", Impl::Message::toString(work_count)));
 
   parallel_reduce("", work_count, functor);
 }
