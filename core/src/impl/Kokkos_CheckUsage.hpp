@@ -61,15 +61,18 @@ struct CheckUsage<UsageRequires::isNotFinalized> {
 
 // NOLINTEND(bugprone-exception-escape)
 
-// Compound condition requires two messages for sub conditions
+// Compound condition requires two messages for sub conditions.
+// Check isNotFinalized before isInitialized so that after finalize() we report
+// "after finalize" (is_finalized() is true) rather than "before init"
+// (is_initialized() is false after finalize).
 template <>
 struct CheckUsage<UsageRequires::insideExecEnv> {
   template <typename T, typename U>
   static void check(T msg1, U msg2) noexcept {
-    Kokkos::Impl::CheckUsage<Kokkos::Impl::UsageRequires::isInitialized>::check(
-        msg1);
     Kokkos::Impl::CheckUsage<
         Kokkos::Impl::UsageRequires::isNotFinalized>::check(msg2);
+    Kokkos::Impl::CheckUsage<Kokkos::Impl::UsageRequires::isInitialized>::check(
+        msg1);
   }
 };
 
