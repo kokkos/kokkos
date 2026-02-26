@@ -151,12 +151,18 @@ OpenMPInternal::OpenMPInternal(int arg_pool_size)
     : m_pool_size{arg_pool_size}, m_level{omp_get_level()}, m_pool() {
   // guard pushing to all_instances
   {
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    if (omp_get_level() != 0)
-      Kokkos::abort(
+    if (omp_get_level() != 0) {
+      constexpr char msg[] =
           "Kokkos::OpenMP instances can only be created outside OpenMP "
-          "regions!");
+          "regions!";
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
+      if (Kokkos::show_warnings()) {
+        std::cerr << msg << '\n';
+      }
+#else
+      Kokkos::abort(msg);
 #endif
+    }
     std::scoped_lock lock(all_instances_mutex);
     all_instances.push_back(this);
   }
