@@ -261,6 +261,32 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.request_output_values == r.request_output_values &&
          l.declare_optimization_goal == r.declare_optimization_goal;
 }
+
+// true if any callback is set
+bool eventSetAny(const EventSet& e) {
+  return e.init != nullptr || e.finalize != nullptr ||
+         e.parse_args != nullptr || e.print_help != nullptr ||
+         e.begin_parallel_for != nullptr || e.end_parallel_for != nullptr ||
+         e.begin_parallel_reduce != nullptr ||
+         e.end_parallel_reduce != nullptr || e.begin_parallel_scan != nullptr ||
+         e.end_parallel_scan != nullptr || e.push_region != nullptr ||
+         e.pop_region != nullptr || e.allocate_data != nullptr ||
+         e.deallocate_data != nullptr || e.create_profile_section != nullptr ||
+         e.start_profile_section != nullptr ||
+         e.stop_profile_section != nullptr ||
+         e.destroy_profile_section != nullptr || e.profile_event != nullptr ||
+         e.begin_deep_copy != nullptr || e.end_deep_copy != nullptr ||
+         e.begin_fence != nullptr || e.end_fence != nullptr ||
+         e.sync_dual_view != nullptr || e.modify_dual_view != nullptr ||
+         e.declare_metadata != nullptr ||
+         e.provide_tool_programming_interface != nullptr ||
+         e.request_tool_settings != nullptr ||
+         e.declare_output_type != nullptr || e.declare_input_type != nullptr ||
+         e.request_output_values != nullptr ||
+         e.begin_tuning_context != nullptr || e.end_tuning_context != nullptr ||
+         e.declare_optimization_goal != nullptr;
+}
+
 enum class MayRequireGlobalFencing : bool { No, Yes };
 template <typename Callback, typename... Args>
 inline void invoke_kokkosp_callback(
@@ -709,6 +735,12 @@ void initialize(const std::string& profileLibrary) {
           Experimental::current_callbacks.provide_tool_programming_interface);
       lookup_function(firstProfileLibrary, "kokkosp_request_tool_settings",
                       Experimental::current_callbacks.request_tool_settings);
+
+      if (!Experimental::eventSetAny(Experimental::current_callbacks)) {
+        std::cerr << "Warning: Kokkos was configured to load a profiling "
+                     "library, but no profiling interface symbols were found "
+                     "in that library.\n";
+      }
     }
   }
 #else
