@@ -171,6 +171,9 @@ if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_IMPL_MDSPAN)
 endif()
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
+kokkos_enable_option(COMPLEX_OVERFLOW_GUARD ON "Use a scaling-based implementation for division")
+kokkos_enable_option(COMPLEX_ON_HOST_NATIVE OFF "Use std::complex::operator/ on host")
+kokkos_enable_option(IMPL_COMPLEX_OVERFLOW_GUARD_ZERO_BRANCH OFF "Handle a zero-valued denominator")
 
 if(KOKKOS_ENABLE_TESTS)
   set(HEADER_SELF_CONTAINMENT_TESTS_DEFAULT ON)

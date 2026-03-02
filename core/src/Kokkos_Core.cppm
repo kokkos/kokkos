@@ -552,6 +552,7 @@ export {
   using ::Kokkos::nexttoward;
   using ::Kokkos::nexttowardf;
   using ::Kokkos::nexttowardl;
+  using ::Kokkos::norm;
   using ::Kokkos::pow;
   using ::Kokkos::powf;
   using ::Kokkos::powl;

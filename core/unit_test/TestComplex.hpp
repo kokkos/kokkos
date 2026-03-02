@@ -457,9 +457,9 @@ TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
   static_assert((std::is_same_v<decltype(Kokkos::real(4.l)), long double>));
 
   // FIXME in principle could be checked at compile time too
-  ASSERT_EQ(Kokkos::conj(1), Kokkos::complex<double>(1));
-  ASSERT_EQ(Kokkos::conj(2.f), Kokkos::complex<float>(2.f));
-  ASSERT_EQ(Kokkos::conj(3.), Kokkos::complex<double>(3.));
+  static_assert(Kokkos::conj(1) == Kokkos::complex<double>(1));
+  static_assert(Kokkos::conj(2.f) == Kokkos::complex<float>(2.f));
+  static_assert(Kokkos::conj(3.) == Kokkos::complex<double>(3.));
 // long double has size 12 but Kokkos::complex requires 2*sizeof(T) to be a
 // power of two.
 #ifndef KOKKOS_IMPL_32BIT
@@ -473,6 +473,11 @@ TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
       (std::is_same_v<decltype(Kokkos::conj(3.)), Kokkos::complex<double>>));
   static_assert((std::is_same_v<decltype(Kokkos::conj(4.l)),
                                 Kokkos::complex<long double>>));
+
+  static_assert(Kokkos::norm(Kokkos::complex<float>{3., 4.}) ==
+                3. * 3. + 4. * 4.);
+  static_assert(Kokkos::norm(Kokkos::complex<double>{5., 6.}) ==
+                5. * 5. + 6. * 6.);
 }
 
 template <class ExecSpace>
@@ -668,6 +673,172 @@ constexpr bool comparison_in_constant_expression() {
 }
 
 static_assert(comparison_in_constant_expression());
+
+template <typename T>
+void expect_complex_eq(const T &actual, const T &expected,
+                       const char *statement_actual,
+                       const char *statement_expected, const char *file,
+                       int line) {
+  auto nan_aware_eq = [](const double a, const double b) {
+    return (std::isnan(a) && std::isnan(b)) || (a == b);
+  };
+  if (!nan_aware_eq(actual.real(), expected.real()) ||
+      !nan_aware_eq(actual.imag(), expected.imag())) {
+    ADD_FAILURE_AT(file, line)
+        << "\tExpecting " << expected << " from " << statement_expected << "\n"
+        << "\tbut got\n"
+        << actual << " from " << statement_actual;
+  }
+}
+
+TEST(TEST_CATEGORY, STDC_IEC_559_COMPLEX) {
+#if !defined(__STDC_IEC_559_COMPLEX__)
+  FAIL() << "__STDC_IEC_559_COMPLEX__ is not defined.";
+#endif
+}
+
+#define EXPECT_COMPLEX_EQ(actual, expected)                                 \
+  expect_complex_eq(KOKKOS_IMPL_STRIP_PARENS(actual),                       \
+                    KOKKOS_IMPL_STRIP_PARENS(expected), #actual, #expected, \
+                    __FILE__, __LINE__)
+
+TEST(TEST_CATEGORY, complex_operator_div) {
+  {
+    constexpr auto res =
+        Kokkos::complex<double>{4., 2.} / Kokkos::complex<double>{2., 1.};
+    static_assert(res.real() == 2. && res.imag() == 0.);
+  }
+  {
+    constexpr auto res =
+        Kokkos::complex<double>{1., 0.} / Kokkos::complex<double>{0., 1.};
+    static_assert(res.real() == 0. && res.imag() == -1.);
+  }
+
+#define CHECK_COMPLEX_DIV(x_r, x_i, y_r, y_i, naive, scale_br, scale, iec559, \
+                          std_complex)                                        \
+  EXPECT_COMPLEX_EQ(                                                          \
+      (Kokkos::Impl::complex_naive_div(Kokkos::complex<double>{x_r, x_i},     \
+                                       Kokkos::complex<double>{y_r, y_i})),   \
+      (Kokkos::complex<double> KOKKOS_IMPL_STRIP_PARENS(naive)));             \
+  EXPECT_COMPLEX_EQ(                                                          \
+      (Kokkos::Impl::complex_scaling_div<true>(                               \
+          Kokkos::complex<double>{x_r, x_i},                                  \
+          Kokkos::complex<double>{y_r, y_i})),                                \
+      (Kokkos::complex<double> KOKKOS_IMPL_STRIP_PARENS(scale_br)));          \
+  EXPECT_COMPLEX_EQ(                                                          \
+      (Kokkos::Impl::complex_scaling_div<false>(                              \
+          Kokkos::complex<double>{x_r, x_i},                                  \
+          Kokkos::complex<double>{y_r, y_i})),                                \
+      (Kokkos::complex<double> KOKKOS_IMPL_STRIP_PARENS(scale)));             \
+  EXPECT_COMPLEX_EQ(                                                          \
+      (Kokkos::Impl::complex_iec559_div(Kokkos::complex<double>{x_r, x_i},    \
+                                        Kokkos::complex<double>{y_r, y_i})),  \
+      (Kokkos::complex<double> KOKKOS_IMPL_STRIP_PARENS(iec559)));            \
+  EXPECT_COMPLEX_EQ(                                                          \
+      (std::complex<double>{x_r, x_i} / std::complex<double>{y_r, y_i}),      \
+      (std::complex<double> KOKKOS_IMPL_STRIP_PARENS(std_complex)));
+
+  // Check the behavior when dividing by 0. Branching is useful to return {inf, NaN}.
+  CHECK_COMPLEX_DIV(1., 0., 0., 0., ({std::nan(""), std::nan("")}),
+                    ({std::numeric_limits<double>::infinity(), std::nan("")}),
+                    ({std::nan(""), std::nan("")}),
+                    ({std::numeric_limits<double>::infinity(), std::nan("")}),
+                    ({std::numeric_limits<double>::infinity(), std::nan("")}))
+
+  // Ordinary integers - all methods agree.
+  CHECK_COMPLEX_DIV(1., 2., 3., 4., ({0.44, 0.08}), ({0.44, 0.08}),
+                    ({0.44, 0.08}), ({0.44, 0.08}), ({0.44, 0.08}))
+
+  // Pure real divided by pure real - all methods agree.
+  CHECK_COMPLEX_DIV(6., 0., 2., 0., ({3., 0.}), ({3., 0.}), ({3., 0.}),
+                    ({3., 0.}), ({3., 0.}))
+
+  // Pure real divided by pure imag.
+  CHECK_COMPLEX_DIV(1., 0., 0., 2., ({0., -0.5}), ({0., -0.5}), ({0., -0.5}),
+                    ({0., -0.5}), ({0., -0.5}))
+
+  // Pure-imag divided by pure-real.
+  CHECK_COMPLEX_DIV(0., 4., 3., 0., ({0., 4. / 3.}), ({0., 4. / 3.}),
+                    ({0., 4. / 3.}), ({0., 4. / 3.}), ({0., 4. / 3.}))
+
+  // All negative parts.
+  CHECK_COMPLEX_DIV(-3., -7., -1., -2., ({3.4, 0.2}), ({3.4, 0.2}),
+                    ({3.4, 0.2}), ({3.4, 0.2}), ({3.4, 0.2}))
+
+  // Denominator real part much larger than imaginary part.
+  CHECK_COMPLEX_DIV(1., 1., 1.e+200, 1.e-05, ({0., 0.}), ({1.e-200, 1.e-200}),
+                    ({1.e-200, 1.e-200}), ({1.e-200, 1.e-200}),
+                    ({1.e-200, 1.e-200}))
+
+  // Denominator real part much smaller than imaginary part.
+  CHECK_COMPLEX_DIV(1., 1., 1.e-05, 1.e+200, ({0., 0.}), ({1e-200, -1e-200}),
+                    ({1e-200, -1e-200}), ({1e-200, -1e-200}),
+                    ({1e-200, -1e-200}))
+
+  // Large denominator parts such that c^2 + d^2 overflows.
+  CHECK_COMPLEX_DIV(1., 0., 1.e+154, 1.e+154, ({0., 0.}), ({5.e-155, -5.e-155}),
+                    ({5.e-155, -5.e-155}), ({5.e-155, -5.e-155}),
+                    ({5.e-155, -5.e-155}))
+
+  // Large/tiny mixed denominator.
+  CHECK_COMPLEX_DIV(10., 1000., 1.e+150, -1.e-05,
+                    ({1.0000000000000002e-149, 1.0000000000000001e-147}),
+                    ({1.e-149, 1.e-147}), ({1.e-149, 1.e-147}),
+                    ({1.0000000000000002e-149, 1.0000000000000001e-147}),
+                    ({1.e-149, 1.e-147}))
+
+  // Numerator real part near DBL_MAX.
+  CHECK_COMPLEX_DIV(
+      1.7976931348623157e+308, 0., 2., 0.,
+      ({std::numeric_limits<double>::infinity(), 0.}),
+      ({8.988465674311579e+307, 0.}), ({8.988465674311579e+307, 0.}),
+      ({8.988465674311579e+307, 0.}), ({8.988465674311579e+307, 0.}))
+
+  // Tiny numerator real part.
+  CHECK_COMPLEX_DIV(1e-300, 0., 1., 1., ({5.e-301, -5.e-301}),
+                    ({5.e-301, -5.e-301}), ({5.e-301, -5.e-301}),
+                    ({5.e-301, -5.e-301}), ({5.e-301, -5.e-301}))
+
+  // Subnormal numerator real part.
+  CHECK_COMPLEX_DIV(5e-324, 5e-324, 1., 1., ({5e-324, 0.}), ({5e-324, 0.}),
+                    ({5e-324, 0.}), ({5e-324, 0.}), ({5e-324, 0.}))
+
+  // Both components large, same magnitude.
+  CHECK_COMPLEX_DIV(1.e+154, 1.e+154, 1.e+154, 1.e+154, ({std::nan(""), 0.}),
+                    ({1., 0.}), ({1., 0.}), ({1., 0.}), ({1., 0.}))
+
+  // Denominator imaginary part dominates.
+  CHECK_COMPLEX_DIV(1., 2., 0.5, 1.e+150,
+                    ({2.0000000000000003e-150, -1.0000000000000001e-150}),
+                    ({2.e-150, -1e-150}), ({2.e-150, -1.e-150}),
+                    ({2.0000000000000003e-150, -1.0000000000000001e-150}),
+                    ({2.e-150, -1.e-150}))
+
+  // From section 2.3 of "A Robust Complex Division in Scilab" (Baudin et al).
+  CHECK_COMPLEX_DIV(1., 1., 1., 0x1p1023, ({0., -0.}),
+                    ({0x1p-1023, -0x1p-1023}), ({0x1p-1023, -0x1p-1023}),
+                    ({0x1p-1023, -0x1p-1023}), ({0x1p-1023, -0x1p-1023}))
+
+  // From section 2.5 of "A Robust Complex Division in Scilab" (Baudin et al).
+  CHECK_COMPLEX_DIV(0x1p1023, 0x1p-1023, 0x1p677, 0x1p-677,
+                    ({std::nan(""), 0.}), ({0x1p346, 0.}), ({0x1p346, 0.}),
+                    ({0x1p346, 0.}), ({0x1p346, -0x1p-1008}))
+
+  // From figure 6 of "A Robust Complex Division in Scilab" (Baudin et al).
+  CHECK_COMPLEX_DIV(0x1p-1074, 0x1p-1074, 0x1p-1073, 0x1p-1074,
+                    ({std::nan(""), std::nan("")}), ({0.6, 0.2}), ({0.6, 0.2}),
+                    ({0.6, 0.2}), ({0.6, 0.2}))
+
+  // From figure 6 of "A Robust Complex Division in Scilab" (Baudin et al).
+  CHECK_COMPLEX_DIV(0x1p1023, 0x1p1023, 1., 1.,
+                    ({std::numeric_limits<double>::infinity(), 0.}),
+                    ({std::numeric_limits<double>::infinity(), 0.}),
+                    ({std::numeric_limits<double>::infinity(), 0.}),
+                    ({std::numeric_limits<double>::infinity(), 0.}),
+                    ({std::numeric_limits<double>::infinity(), 0.}))
+}
+
+#undef CHECK_COMPLEX_DIV
 
 }  // namespace Test
 
