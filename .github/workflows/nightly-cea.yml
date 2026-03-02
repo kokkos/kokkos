@@ -2,8 +2,8 @@ name: Nightly CEA builds
 
 on:
   schedule:
-    # FIXME revert this change, for testing only
-    # - cron: "0 0 * * 1-5" # every weekday at midnight UTC
+  # FIXME revert this change, for testing only
+  #   - cron: "0 0 * * 1-5" # every weekday at midnight UTC
   pull_request:
     branches:
       - develop
