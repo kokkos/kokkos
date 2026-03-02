@@ -30,6 +30,11 @@ jobs:
             test: -e gpu -g a100
             modules: gcc/15.1.0/gcc-15.1.0 cuda/12.8.1/none-none cmake/3.31.9/gcc-15.1.0
 
+          - name: Cuda-A100-GCC/15.1.0-Cuda/13.0.2-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
+            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
+            test: -e gpu -g a100
+            modules: gcc/15.1.0/gcc-15.1.0 cuda/13.0.2/none-none cmake/3.31.9/gcc-15.1.0
+
           - name: Cuda-V100-GCC/15.1.0-Cuda/12.8.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
             configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
             test: -e gpu -g v100
