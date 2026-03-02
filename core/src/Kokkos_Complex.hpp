@@ -19,6 +19,22 @@
 
 namespace Kokkos {
 
+template <class RealType>
+class
+#ifdef KOKKOS_ENABLE_COMPLEX_ALIGN
+    alignas(2 * sizeof(RealType))
+#endif
+        complex;
+
+namespace Impl {
+
+template <typename RealType>
+KOKKOS_INLINE_FUNCTION constexpr complex<RealType> complex_div(
+    const complex<RealType>&,
+    const complex<RealType>&) noexcept(noexcept(RealType{} / RealType{}));
+
+}  // namespace Impl
+
 /// \class complex
 /// \brief Partial reimplementation of std::complex that works as the
 ///   result of a Kokkos::parallel_reduce.
@@ -181,53 +197,14 @@ class
   // Conditional noexcept, just in case RType throws on divide-by-zero
   constexpr KOKKOS_INLINE_FUNCTION complex& operator/=(
       const complex<RealType>& y) noexcept(noexcept(RealType{} / RealType{})) {
-    // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
-    // If the real part is +/-Inf and the imaginary part is -/+Inf,
-    // this won't change the result.
-    const RealType s = fabs(y.real()) + fabs(y.imag());
-
-    // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
-    // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
-    // because y/s is NaN.
-    // TODO mark this branch unlikely
-    if (s == RealType(0)) {
-      this->re_ /= s;
-      this->im_ /= s;
-    } else {
-      const complex x_scaled(this->re_ / s, this->im_ / s);
-      const complex y_conj_scaled(y.re_ / s, -(y.im_) / s);
-      const RealType y_scaled_abs =
-          y_conj_scaled.re_ * y_conj_scaled.re_ +
-          y_conj_scaled.im_ * y_conj_scaled.im_;  // abs(y) == abs(conj(y))
-      *this = x_scaled * y_conj_scaled;
-      *this /= y_scaled_abs;
-    }
+    *this = Kokkos::Impl::complex_div(*this, y);
     return *this;
   }
 
   constexpr KOKKOS_INLINE_FUNCTION complex& operator/=(
       const std::complex<RealType>& y) noexcept(noexcept(RealType{} /
                                                          RealType{})) {
-    // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
-    // If the real part is +/-Inf and the imaginary part is -/+Inf,
-    // this won't change the result.
-    const RealType s = fabs(y.real()) + fabs(y.imag());
-
-    // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
-    // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
-    // because y/s is NaN.
-    if (s == RealType(0)) {
-      this->re_ /= s;
-      this->im_ /= s;
-    } else {
-      const complex x_scaled(this->re_ / s, this->im_ / s);
-      const complex y_conj_scaled(y.re_ / s, -(y.im_) / s);
-      const RealType y_scaled_abs =
-          y_conj_scaled.re_ * y_conj_scaled.re_ +
-          y_conj_scaled.im_ * y_conj_scaled.im_;  // abs(y) == abs(conj(y))
-      *this = x_scaled * y_conj_scaled;
-      *this /= y_scaled_abs;
-    }
+    *this = Kokkos::Impl::complex_div<RealType>(*this, y);
     return *this;
   }
 
@@ -807,30 +784,13 @@ operator/(const complex<RealType1>& x,
 //! Binary operator / for complex.
 template <class RealType1, class RealType2>
 KOKKOS_INLINE_FUNCTION complex<std::common_type_t<RealType1, RealType2>>
-operator/(const complex<RealType1>& x,
-          const complex<RealType2>& y) noexcept(noexcept(RealType1{} /
-                                                         RealType2{})) {
-  // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
-  // If the real part is +/-Inf and the imaginary part is -/+Inf,
-  // this won't change the result.
-  using common_real_type   = std::common_type_t<RealType1, RealType2>;
-  const common_real_type s = fabs(real(y)) + fabs(imag(y));
-
-  // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
-  // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
-  // because y/s is NaN.
-  if (s == 0.0) {
-    return complex<common_real_type>(real(x) / s, imag(x) / s);
-  } else {
-    const complex<common_real_type> x_scaled(real(x) / s, imag(x) / s);
-    const complex<common_real_type> y_conj_scaled(real(y) / s, -imag(y) / s);
-    const RealType1 y_scaled_abs =
-        real(y_conj_scaled) * real(y_conj_scaled) +
-        imag(y_conj_scaled) * imag(y_conj_scaled);  // abs(y) == abs(conj(y))
-    complex<common_real_type> result = x_scaled * y_conj_scaled;
-    result /= y_scaled_abs;
-    return result;
-  }
+operator/(const complex<RealType1>& x, const complex<RealType2>& y) noexcept(
+    noexcept(
+        Kokkos::Impl::complex_div<std::common_type_t<RealType1, RealType2>>(
+            std::declval<complex<RealType1>>(),
+            std::declval<complex<RealType2>>()))) {
+  return Kokkos::Impl::complex_div<std::common_type_t<RealType1, RealType2>>(x,
+                                                                             y);
 }
 
 //! Binary operator / for complex and real numbers
@@ -863,6 +823,31 @@ struct reduction_identity<Kokkos::complex<T>> {
   KOKKOS_FUNCTION static Kokkos::complex<T> prod() noexcept { return 1; }
 };
 
+namespace Impl {
+
+template <typename RealType>
+KOKKOS_INLINE_FUNCTION constexpr complex<RealType> complex_div(
+    const complex<RealType>& x,
+    const complex<RealType>& y) noexcept(noexcept(RealType{} / RealType{})) {
+  // Scale (by the "1-norm" of y) to avoid unwarranted overflow.
+  // If the real part is +/-Inf and the imaginary part is -/+Inf,
+  // this won't change the result.
+  const RealType s = Kokkos::fabs(y.real()) + Kokkos::fabs(y.imag());
+
+  // If s is 0, then y is zero, so x/y == real(x)/0 + i*imag(x)/0.
+  // In that case, the relation x/y == (x/s) / (y/s) doesn't hold,
+  // because y/s is NaN.
+  if (s == RealType(0)) [[unlikely]] {
+    return {x.real() / s, x.imag() / s};
+  } else {
+    const complex<RealType> x_scaled      = x / s;
+    const complex<RealType> y_conj_scaled = Kokkos::conj(y) / s;
+    const RealType y_conj_scaled_norm     = Kokkos::norm(y_conj_scaled);
+    return (x_scaled * y_conj_scaled) / y_conj_scaled_norm;
+  }
+}
+
+}  // namespace Impl
 }  // namespace Kokkos
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_COMPLEX
