@@ -1,13 +1,13 @@
 name: Nightly CEA builds
 
 on:
-  schedule:
   pull_request:
     branches:
       - develop
 
 # FIXME revert this change, for testing only
-#   - cron: "0 0 * * 1-5" # every weekday at midnight UTC
+#  schedule:
+#    - cron: "0 0 * * 1-5" # every weekday at midnight UTC
 
 permissions: read-all
 
