@@ -49,8 +49,8 @@ class CudaSpace {
   using memory_space    = CudaSpace;
   using execution_space = Kokkos::Cuda;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-
-  using size_type = unsigned int;
+  using size_type       = unsigned int;
+  using index_type      = std::make_signed_t<size_type>;
 
   /*--------------------------------*/
 
@@ -139,6 +139,7 @@ class CudaUVMSpace {
   using execution_space = Cuda;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = unsigned int;
+  using index_type      = std::make_signed_t<size_type>;
 
   /*--------------------------------*/
 
@@ -227,6 +228,7 @@ class CudaHostPinnedSpace {
   using memory_space    = CudaHostPinnedSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = unsigned int;
+  using index_type      = std::make_signed_t<size_type>;
 
   /*--------------------------------*/
 

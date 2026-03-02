@@ -26,8 +26,10 @@ struct TestRange {
   struct VerifyInitTag {};
   struct ResetTag {};
   struct VerifyResetTag {};
-  struct OffsetTag {};
-  struct VerifyOffsetTag {};
+  struct PosOffsetTag {};
+  struct NegOffsetTag {};
+  struct VerifyNegOffsetTag {};
+  struct VerifyPosOffsetTag {};
 
   int N;
   static const int offset = 13;
@@ -71,13 +73,14 @@ struct TestRange {
     }
     ASSERT_EQ(error_count, int(0));
 
+    // Test positive offset
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace, ScheduleType, OffsetTag>(offset,
-                                                                N + offset),
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, PosOffsetTag>(offset,
+                                                                   N + offset),
         *this);
     Kokkos::parallel_for(
         std::string("TestKernelFor"),
-        Kokkos::RangePolicy<ExecSpace, ScheduleType, VerifyOffsetTag>(0, N),
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, VerifyPosOffsetTag>(0, N),
         *this);
 
     Kokkos::deep_copy(host_flags, m_flags);
@@ -85,6 +88,25 @@ struct TestRange {
     error_count = 0;
     for (int i = 0; i < N; ++i) {
       if (i + offset != host_flags(i)) ++error_count;
+    }
+    ASSERT_EQ(error_count, int(0));
+
+    // Test negative offset
+    Kokkos::parallel_for(
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, NegOffsetTag>(
+            (-1) * offset, N - offset),
+        *this);
+    Kokkos::parallel_for(
+        std::string("TestKernelFor"),
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, VerifyNegOffsetTag>(0, N),
+        *this);
+
+    Kokkos::deep_copy(host_flags, m_flags);
+
+    // host_flag is at inital values again
+    error_count = 0;
+    for (int i = 0; i < N; ++i) {
+      if (i - offset != host_flags(i)) ++error_count;
     }
     ASSERT_EQ(error_count, int(0));
   }
@@ -112,14 +134,27 @@ struct TestRange {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const OffsetTag &, const int i) const {
+  void operator()(const PosOffsetTag &, const int i) const {
     m_flags(i - offset) = i;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const VerifyOffsetTag &, const int i) const {
+  void operator()(const NegOffsetTag &, const int i) const {
+    m_flags(i + offset) = i;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const VerifyPosOffsetTag &, const int i) const {
     if (i + offset != m_flags(i)) {
       Kokkos::printf("TestRange::test_for_error at %d != %d\n", i + offset,
+                     m_flags(i));
+    }
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const VerifyNegOffsetTag &, const int i) const {
+    if (i - offset != m_flags(i)) {
+      Kokkos::printf("TestRange::test_for_error at %d != %d\n", i - offset,
                      m_flags(i));
     }
   }
@@ -145,8 +180,15 @@ struct TestRange {
     ASSERT_EQ(size_t((N - 1) * (N) / 2), size_t(total));
 
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<ExecSpace, ScheduleType, OffsetTag>(offset,
-                                                                N + offset),
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, PosOffsetTag>(offset,
+                                                                   N + offset),
+        *this, total);
+    // sum( 1 .. N )
+    ASSERT_EQ(size_t((N) * (N + 1) / 2), size_t(total));
+
+    Kokkos::parallel_reduce(
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, NegOffsetTag>(
+            (-1) * offset, N - offset),
         *this, total);
     // sum( 1 .. N )
     ASSERT_EQ(size_t((N) * (N + 1) / 2), size_t(total));
@@ -158,8 +200,13 @@ struct TestRange {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const OffsetTag &, const int i, value_type &update) const {
+  void operator()(const PosOffsetTag &, const int i, value_type &update) const {
     update += 1 + m_flags(i - offset);
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const NegOffsetTag &, const int i, value_type &update) const {
+    update += 1 + m_flags(i + offset);
   }
 
   void test_dynamic_policy() {

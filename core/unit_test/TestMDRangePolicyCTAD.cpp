@@ -21,6 +21,7 @@ struct TestMDRangePolicyCTAD {
   struct SomeExecutionSpace {
     using execution_space = SomeExecutionSpace;
     using size_type       = size_t;
+    using index_type      = std::make_signed_t<size_type>;
   };
   static_assert(Kokkos::is_execution_space_v<SomeExecutionSpace>);
 

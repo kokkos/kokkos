@@ -40,11 +40,12 @@ struct ViewValueFunctor {
   template <class SameValueType = ValueType>
   KOKKOS_FUNCTION
       std::enable_if_t<std::is_default_constructible_v<SameValueType>>
-      operator()(ConstructTag, const size_t i) const {
+      operator()(ConstructTag, const ExecSpace::index_type i) const {
     new (ptr + i) ValueType();
   }
 
-  KOKKOS_FUNCTION void operator()(DestroyTag, const size_t i) const {
+  KOKKOS_FUNCTION void operator()(DestroyTag,
+                                  const ExecSpace::index_type i) const {
     // When instantiating a View on host execution space with a host only
     // destructor the workaround for CUDA device symbol instantiation tries to
     // still compile a destruction kernel for the device, and issues a warning
@@ -84,9 +85,9 @@ struct ViewValueFunctor {
 
   template <typename Tag>
   void parallel_for_implementation() {
-    using PolicyType =
-        Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<int64_t>, Tag>;
-    PolicyType policy(space, 0, n);
+    using index_type = typename ExecSpace::index_type;
+    using PolicyType = Kokkos::RangePolicy<ExecSpace, index_type, Tag>;
+    PolicyType policy(space, index_type(0), index_type(n));
     uint64_t kpID = 0;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       const std::string functor_name =

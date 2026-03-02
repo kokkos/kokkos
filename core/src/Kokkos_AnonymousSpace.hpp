@@ -23,6 +23,7 @@ class AnonymousSpace {
   using memory_space    = AnonymousSpace;
   using execution_space = Kokkos::DefaultExecutionSpace;
   using size_type       = size_t;
+  using index_type      = std::make_signed_t<size_type>;
 
   //! This memory space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;

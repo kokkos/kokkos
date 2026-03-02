@@ -147,9 +147,10 @@ void hostspace_parallel_zeromemset(const ExecutionSpace& exec, void* dst,
   // Zero-fill with 8-byte words in parallel
   uint64_t* dst_p  = reinterpret_cast<uint64_t*>(dst_c);
   const size_t cnt = (n - count) / 8;
+  using index_t    = typename ExecutionSpace::index_type;
   Kokkos::parallel_for("Kokkos::Impl::hostspace_parallel_zeromemset",
                        policy_t(exec, 0, cnt),
-                       [=](const size_t i) { dst_p[i] = z_u64; });
+                       [=](const index_t i) { dst_p[i] = z_u64; });
 
   // Handle any remaining bytes that don't fit in 8-byte words
   dst_c += cnt * 8;
@@ -160,9 +161,10 @@ void hostspace_parallel_zeromemset(const ExecutionSpace& exec, void* dst,
   }
 #else
   uint8_t* dst_p = reinterpret_cast<uint8_t*>(dst);
+  using index_t  = typename ExecutionSpace::index_type;
   Kokkos::parallel_for("Kokkos::Impl::hostspace_parallel_zeromemset",
                        policy_t(exec, 0, n),
-                       [=](const size_t i) { dst_p[i] = z_u8; });
+                       [=](const index_t i) { dst_p[i] = z_u8; });
 #endif
 }
 

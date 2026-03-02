@@ -15,6 +15,7 @@ struct TestRangePolicyCTAD {
   struct SomeExecutionSpace {
     using execution_space = SomeExecutionSpace;
     using size_type       = size_t;
+    using index_type      = std::make_signed_t<size_type>;
 
     [[maybe_unused]] static int concurrency() { return 0; }
   };

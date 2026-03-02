@@ -32,6 +32,7 @@ class SYCLDeviceUSMSpace {
   using memory_space    = SYCLDeviceUSMSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = Impl::SYCLInternal::size_type;
+  using index_type      = Impl::SYCLInternal::index_type;
 
   SYCLDeviceUSMSpace();
   explicit SYCLDeviceUSMSpace(sycl::queue queue);
@@ -63,6 +64,7 @@ class SYCLSharedUSMSpace {
   using memory_space    = SYCLSharedUSMSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = Impl::SYCLInternal::size_type;
+  using index_type      = Impl::SYCLInternal::index_type;
 
   SYCLSharedUSMSpace();
   explicit SYCLSharedUSMSpace(sycl::queue queue);
@@ -104,6 +106,7 @@ class SYCLHostUSMSpace {
   using memory_space    = SYCLHostUSMSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = Impl::SYCLInternal::size_type;
+  using index_type      = Impl::SYCLInternal::index_type;
 
   SYCLHostUSMSpace();
   explicit SYCLHostUSMSpace(sycl::queue queue);

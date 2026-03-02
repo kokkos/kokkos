@@ -256,9 +256,17 @@ class ImplRangePolicy<ExecSpace, Properties...>
                                 std::numeric_limits<member_type>::min()));
 
         // check unsigned to signed
-        if constexpr (std::is_signed_v<member_type>)
-          error |= (bound > static_cast<IndexType>(
-                                std::numeric_limits<member_type>::max()));
+        if constexpr (std::is_signed_v<member_type>) {
+          // avoid overflow warnings by checking the size of the types e.g.
+          // conversion ‘long int’ to ‘int’ changes value
+          // from ‘9223372036854775807’ to ‘-1’
+          if constexpr (sizeof(member_type) <= sizeof(IndexType))
+            warn |= (bound > static_cast<IndexType>(
+                                 std::numeric_limits<member_type>::max()));
+          else {
+            warn |= (bound > std::numeric_limits<IndexType>::max());
+          }
+        }
       }
 
       // check narrowing

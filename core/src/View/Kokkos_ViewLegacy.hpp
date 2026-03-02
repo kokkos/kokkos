@@ -323,7 +323,7 @@ class View : public ViewTraits<DataType, Properties...> {
   // using mapping_type -> not applicable
   using element_type = typename traits::value_type;
   // using value_type -> conflicts with traits::value_type
-  using index_type = typename traits::memory_space::size_type;
+  using index_type = typename traits::index_type;
   // using size_type -> already from traits::size_type; where it is
   // memory_space::size_type
   using rank_type        = size_t;

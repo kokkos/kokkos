@@ -18,7 +18,9 @@ namespace {
 template <class ExecutionSpace, class Extents>
 auto make_spanning_mdrange_policy_from_extents_impl(const Extents &extents,
                                                     std::index_sequence<0>) {
-  return Kokkos::RangePolicy<ExecutionSpace>{0, extents.extent(0)};
+  using index_type = typename Kokkos::RangePolicy<ExecutionSpace>::index_type;
+  return Kokkos::RangePolicy<ExecutionSpace>{
+      0, static_cast<index_type>(extents.extent(0))};
 }
 
 template <class ExecutionSpace, class Extents, std::size_t... Indices>

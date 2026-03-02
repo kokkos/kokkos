@@ -38,6 +38,7 @@ class HostSpace {
   //! Tag this class as a kokkos memory space
   using memory_space = HostSpace;
   using size_type    = size_t;
+  using index_type   = std::make_signed_t<size_type>;
 
   /// \typedef execution_space
   /// \brief Default execution space for this memory space.

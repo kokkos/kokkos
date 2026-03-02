@@ -197,7 +197,7 @@ struct ExecPolicyTraitsWithDefaults : AnalysisResults {
   //   instead of the wrapped IndexType<T> for backwards compatibility
   using index_type = typename std::conditional_t<
       base_t::index_type_is_defaulted,
-      Kokkos::IndexType<typename execution_space::size_type>,
+      Kokkos::IndexType<typename execution_space::index_type>,
       typename base_t::index_type>::type;
 };
 

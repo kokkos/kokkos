@@ -170,6 +170,7 @@ class HPX {
   using device_type          = Kokkos::Device<execution_space, memory_space>;
   using array_layout         = LayoutRight;
   using size_type            = memory_space::size_type;
+  using index_type           = memory_space::index_type;
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 
 // FIXME_HPX spurious warnings like
