@@ -163,7 +163,7 @@ TEST(TEST_CATEGORY, view_moved_from) {
 }
 
 #if !(defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \
-    (defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA)))
+      (defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA)))
 constexpr bool test_view_is_nothrow_move_constructible() {
   using view_t = Kokkos::View<int*, TEST_EXECSPACE>;
 
