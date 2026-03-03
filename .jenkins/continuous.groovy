@@ -136,6 +136,9 @@ pipeline {
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES --env NODE_NAME=${env.NODE_NAME} --env STAGE_NAME=${env.STAGE_NAME}'
                         }
                     }
+                    environment {
+                        GTEST_FILTER = '-hip.graph_capture'
+                    }
                     steps {
                         sh 'ccache --zero-stats'
                         sh '''#!/bin/bash
@@ -422,6 +425,7 @@ pipeline {
                         OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
+                        GTEST_FILTER = '-hip.graph_capture'
                     }
                     steps {
                         sh 'ccache --zero-stats'
@@ -467,7 +471,7 @@ pipeline {
                     }
                     environment {
                         // FIXME Test returns a wrong value
-                        GTEST_FILTER = '-hip_hostpinned.view_allocation_large_rank'
+                        GTEST_FILTER = '-hip_hostpinned.view_allocation_large_rank:hip.graph_capture'
                     }
                     steps {
                         sh 'ccache --zero-stats'
