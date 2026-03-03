@@ -190,7 +190,8 @@
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from( \
       R&& in, const I& indices,                                           \
       [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {   \
-    EXPR                                                                  \
+    KOKKOS_IF_ON_HOST((EXPR))                                             \
+    KOKKOS_IF_ON_DEVICE((return V{};))                                    \
   }
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(DATA_TYPE,      \
@@ -212,7 +213,8 @@
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from( \
       R&& in, const typename I::mask_type& mask, const I& indices,        \
       [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {   \
-    EXPR                                                                  \
+    KOKKOS_IF_ON_HOST((EXPR))                                             \
+    KOKKOS_IF_ON_DEVICE((return V{};))                                    \
   }
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(      \
@@ -234,7 +236,7 @@
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr void PREFIX##_scatter_to( \
       const V& v, R&& out, const I& indices,                                \
       [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {     \
-    EXPR                                                                    \
+    KOKKOS_IF_ON_HOST((EXPR))                                               \
   }
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO(DATA_TYPE,      \
@@ -256,7 +258,7 @@
       const V& v, R&& out, const typename I::mask_type& mask,               \
       const I& indices,                                                     \
       [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {     \
-    EXPR                                                                    \
+    KOKKOS_IF_ON_HOST((EXPR))                                               \
   }
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_SCATTER_TO_WITH_MASK(      \

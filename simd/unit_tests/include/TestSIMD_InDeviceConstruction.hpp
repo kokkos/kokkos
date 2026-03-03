@@ -36,15 +36,36 @@ KOKKOS_INLINE_FUNCTION void test_mask_constructions() {
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION void test_basic_simd_operators() {
-  T a{0}, b{0};
+  T a{0}, b{1};
   (void)(a[0]);
+  if constexpr (std::is_signed_v<typename T::value_type>) {
+    (void)(-a);
+  }
   (void)(a + b);
   (void)(a - b);
   (void)(a * b);
   (void)(a / b);
   (void)(a += b);
   (void)(a -= b);
+  (void)(a *= b);
   (void)(a /= b);
+  if constexpr (std::is_integral_v<typename T::value_type>) {
+    (void)(~a);
+    (void)(a & b);
+    (void)(a | b);
+    (void)(a ^ b);
+    (void)(a << b);
+    (void)(a >> b);
+    (void)(a << 0);
+    (void)(a >> 0);
+    (void)(a &= b);
+    (void)(a |= b);
+    (void)(a ^= b);
+    (void)(a <<= b);
+    (void)(a >>= b);
+    (void)(a <<= 0);
+    (void)(a >>= 0);
+  }
   (void)(a == b);
   (void)(a != b);
   (void)(a >= b);
@@ -57,6 +78,7 @@ template <typename T>
 KOKKOS_INLINE_FUNCTION void test_basic_mask_operators() {
   T a{false}, b{true};
   (void)!a;
+  (void)(~a);
   (void)(a && b);
   (void)(a || b);
   (void)(a & b);
@@ -68,7 +90,7 @@ KOKKOS_INLINE_FUNCTION void test_basic_mask_operators() {
   (void)(a == b);
   (void)(a != b);
 
-  // FIXME fallback impl needeed
+  // FIXME fallback impl needed
   // (void) (a>=b);
   // (void) (a<=b);
   // (void) (a>b);

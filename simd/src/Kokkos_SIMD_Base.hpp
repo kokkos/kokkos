@@ -12,9 +12,7 @@
     "Kokkos_SIMD_Base.hpp must be included before Kokkos_SIMD_Common_Math.hpp!"
 #endif
 
-namespace Kokkos {
-namespace Experimental {
-namespace Impl {
+namespace Kokkos::Experimental::Impl {
 
 template <typename Derived>
 class basic_simd_mask_base {
@@ -108,8 +106,6 @@ class basic_simd_base {
   KOKKOS_SIMD_IMPL_COMPARISON_OPERATOR(<, operator_lt, Derived const&)
 };
 
-}  // namespace Impl
-}  // namespace Experimental
-}  // namespace Kokkos
+}  // namespace Kokkos::Experimental::Impl
 
 #endif

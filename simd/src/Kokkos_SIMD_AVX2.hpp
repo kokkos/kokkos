@@ -1256,7 +1256,7 @@ KOKKOS_SIMD_IMPL_UNARY_MATH_FUNCTION(
       return (
           Experimental::basic_simd<double,
                                    Experimental::simd_abi::avx2_fixed_size<4>>(
-              _mm256_cbrt_pd(static_cast<__m256d>(a))));
+              _mm256_exp_pd(static_cast<__m256d>(a))));
     })
 
 KOKKOS_SIMD_IMPL_UNARY_MATH_FUNCTION(
@@ -2080,7 +2080,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      implementation const& value_in) noexcept
+      implementation_type const& value_in) noexcept
       : m_value(value_in) {}
   template <class U>
     requires std::convertible_to<U, value_type>
@@ -2187,6 +2187,10 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
 #endif
   }
 
+  template <typename T = basic_simd>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
+    return T(_mm_sub_epi32(_mm_set1_epi32(0), static_cast<__m128i>(m_value)));
+  }
   template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
     return T(_mm_andnot_si128(m_value, T(~value_type(0)).m_value));
@@ -2329,29 +2333,21 @@ KOKKOS_SIMD_IMPL_ROUNDING_FUNCTION(
               _mm256_cvtepi32_pd(static_cast<__m128i>(a))));
     })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::int32_t,
-                         Experimental::simd_abi::avx2_fixed_size<4>>
-max(Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<4>> const& a,
-    Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<4>> const& b) {
-  return Experimental::basic_simd<std::int32_t,
-                                  Experimental::simd_abi::avx2_fixed_size<4>>(
-      _mm_max_epi32(static_cast<__m128i>(a), static_cast<__m128i>(b)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    max, std::int32_t, Experimental::simd_abi::avx2_fixed_size<4>, {
+      return (
+          Experimental::basic_simd<std::int32_t,
+                                   Experimental::simd_abi::avx2_fixed_size<4>>(
+              _mm_max_epi32(static_cast<__m128i>(a), static_cast<__m128i>(b))));
+    })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::int32_t,
-                         Experimental::simd_abi::avx2_fixed_size<4>>
-min(Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<4>> const& a,
-    Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<4>> const& b) {
-  return Experimental::basic_simd<std::int32_t,
-                                  Experimental::simd_abi::avx2_fixed_size<4>>(
-      _mm_min_epi32(static_cast<__m128i>(a), static_cast<__m128i>(b)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    min, std::int32_t, Experimental::simd_abi::avx2_fixed_size<4>, {
+      return (
+          Experimental::basic_simd<std::int32_t,
+                                   Experimental::simd_abi::avx2_fixed_size<4>>(
+              _mm_min_epi32(static_cast<__m128i>(a), static_cast<__m128i>(b))));
+    })
 
 namespace Experimental {
 
@@ -2442,7 +2438,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      implementation const& value_in) noexcept
+      implementation_type const& value_in) noexcept
       : m_value(value_in) {}
   template <class U>
     requires std::convertible_to<U, value_type>
@@ -2549,6 +2545,11 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
 #endif
   }
 
+  template <typename T = basic_simd>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
+    return T(
+        _mm256_sub_epi32(_mm256_set1_epi32(0), static_cast<__m256i>(m_value)));
+  }
   template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
     return T(_mm256_andnot_si256(m_value, T(~value_type(0)).m_value));
@@ -2690,29 +2691,19 @@ KOKKOS_SIMD_IMPL_ROUNDING_FUNCTION(
               _mm256_cvtepi32_ps(static_cast<__m256i>(a))));
     })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::int32_t,
-                         Experimental::simd_abi::avx2_fixed_size<8>>
-max(Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>> const& a,
-    Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>> const& b) {
-  return Experimental::basic_simd<std::int32_t,
-                                  Experimental::simd_abi::avx2_fixed_size<8>>(
-      _mm256_max_epi32(static_cast<__m256i>(a), static_cast<__m256i>(b)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    max, std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>, {
+      return (Experimental::basic_simd<
+              std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>>(
+          _mm256_max_epi32(static_cast<__m256i>(a), static_cast<__m256i>(b))));
+    })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::int32_t,
-                         Experimental::simd_abi::avx2_fixed_size<8>>
-min(Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>> const& a,
-    Experimental::basic_simd<
-        std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>> const& b) {
-  return Experimental::basic_simd<std::int32_t,
-                                  Experimental::simd_abi::avx2_fixed_size<8>>(
-      _mm256_min_epi32(static_cast<__m256i>(a), static_cast<__m256i>(b)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    min, std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>, {
+      return (Experimental::basic_simd<
+              std::int32_t, Experimental::simd_abi::avx2_fixed_size<8>>(
+          _mm256_min_epi32(static_cast<__m256i>(a), static_cast<__m256i>(b))));
+    })
 
 namespace Experimental {
 
@@ -2805,7 +2796,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      implementation const& value_in) noexcept
+      implementation_type const& value_in) noexcept
       : m_value(value_in) {}
   template <class U>
     requires std::convertible_to<U, value_type>
@@ -2913,14 +2904,13 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
   }
 
   template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_si256(m_value, T(~value_type(0)).m_value));
-  }
-
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
     return T(
         _mm256_sub_epi64(_mm256_set1_epi64x(0), static_cast<__m256i>(m_value)));
+  }
+  template <typename T = basic_simd>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
+    return T(_mm256_andnot_si256(m_value, T(~value_type(0)).m_value));
   }
 
   template <typename T = basic_simd>
@@ -3067,31 +3057,21 @@ KOKKOS_SIMD_IMPL_ROUNDING_FUNCTION(
               _mm256_setr_pd(a[0], a[1], a[2], a[3])));
     })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::int64_t,
-                         Experimental::simd_abi::avx2_fixed_size<4>>
-max(Experimental::basic_simd<
-        std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& a,
-    Experimental::basic_simd<
-        std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& b) {
-  return Experimental::basic_simd<std::int64_t,
-                                  Experimental::simd_abi::avx2_fixed_size<4>>(
-      _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
-                         static_cast<__m256i>(b > a)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    max, std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>, {
+      return (Experimental::basic_simd<
+              std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>>(
+          _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
+                             static_cast<__m256i>(b > a))));
+    })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::int64_t,
-                         Experimental::simd_abi::avx2_fixed_size<4>>
-min(Experimental::basic_simd<
-        std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& a,
-    Experimental::basic_simd<
-        std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& b) {
-  return Experimental::basic_simd<std::int64_t,
-                                  Experimental::simd_abi::avx2_fixed_size<4>>(
-      _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
-                         static_cast<__m256i>(b < a)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    min, std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>, {
+      return (Experimental::basic_simd<
+              std::int64_t, Experimental::simd_abi::avx2_fixed_size<4>>(
+          _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
+                             static_cast<__m256i>(b < a))));
+    })
 
 namespace Experimental {
 
@@ -3299,6 +3279,10 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   }
 
   template <typename T = basic_simd>
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
+    return T(static_cast<__m256i>(m_value));
+  }
+  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
     return T(_mm256_andnot_si256(m_value, T(~value_type(0)).m_value));
   }
@@ -3348,9 +3332,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sra(T const& rhs) const noexcept
-    requires(!std::is_arithmetic_v<T>)
-  {
+  impl_operator_sra(T const& rhs) const noexcept {
     return _mm256_srlv_epi64(static_cast<__m256i>(m_value),
                              static_cast<__m256i>(rhs));
   }
@@ -3361,7 +3343,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  operator_sra(Impl::simd_size_t rhs) const noexcept {
+  impl_operator_sra(Impl::simd_size_t rhs) const noexcept {
     return _mm256_srli_epi64(static_cast<__m256i>(m_value), rhs);
   }
 
@@ -3450,31 +3432,21 @@ KOKKOS_SIMD_IMPL_ROUNDING_FUNCTION(
               _mm256_setr_pd(a[0], a[1], a[2], a[3])));
     })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::uint64_t,
-                         Experimental::simd_abi::avx2_fixed_size<4>>
-max(Experimental::basic_simd<
-        std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& a,
-    Experimental::basic_simd<
-        std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& b) {
-  return Experimental::basic_simd<std::uint64_t,
-                                  Experimental::simd_abi::avx2_fixed_size<4>>(
-      _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
-                         static_cast<__m256i>(b > a)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    max, std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>, {
+      return (Experimental::basic_simd<
+              std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>>(
+          _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
+                             static_cast<__m256i>(b > a))));
+    })
 
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-Experimental::basic_simd<std::uint64_t,
-                         Experimental::simd_abi::avx2_fixed_size<4>>
-min(Experimental::basic_simd<
-        std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& a,
-    Experimental::basic_simd<
-        std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>> const& b) {
-  return Experimental::basic_simd<std::uint64_t,
-                                  Experimental::simd_abi::avx2_fixed_size<4>>(
-      _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
-                         static_cast<__m256i>(b < a)));
-}
+KOKKOS_SIMD_IMPL_BINARY_MATH_FUNCTION(
+    min, std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>, {
+      return (Experimental::basic_simd<
+              std::uint64_t, Experimental::simd_abi::avx2_fixed_size<4>>(
+          _mm256_blendv_epi8(static_cast<__m256i>(a), static_cast<__m256i>(b),
+                             static_cast<__m256i>(b < a))));
+    })
 
 namespace Experimental {
 
