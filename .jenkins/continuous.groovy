@@ -137,6 +137,7 @@ pipeline {
                         }
                     }
                     environment {
+                        // FIXME Reenable hip.graph_capture for rocm 7 testing
                         GTEST_FILTER = '-hip.graph_capture'
                     }
                     steps {
@@ -425,6 +426,7 @@ pipeline {
                         OMP_MAX_ACTIVE_LEVELS = 3
                         OMP_PLACES = 'threads'
                         OMP_PROC_BIND = 'spread'
+                        // FIXME Reenable hip.graph_capture for rocm 7 testing
                         GTEST_FILTER = '-hip.graph_capture'
                     }
                     steps {
@@ -470,7 +472,8 @@ pipeline {
                         }
                     }
                     environment {
-                        // FIXME Test returns a wrong value
+                        // FIXME hip_hostpinned.view_allocation_large_rank test returns a wrong value
+                        // FIXME Reenable hip.graph_capture for rocm 7 testing
                         GTEST_FILTER = '-hip_hostpinned.view_allocation_large_rank:hip.graph_capture'
                     }
                     steps {
