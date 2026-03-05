@@ -48,6 +48,10 @@ kokkos_enable_option(
 )
 kokkos_enable_option(IMPL_SYCL_OUT_OF_ORDER_QUEUES OFF "Whether to make Kokkos use out-of-order queues internally")
 kokkos_enable_option(TESTS OFF "Whether to build the unit tests")
+kokkos_enable_option(
+  COVERAGE OFF
+  "Whether to enable code coverage (llvm-cov) for core/src using unit tests. Requires Clang and -DCMAKE_BUILD_TYPE=Debug."
+)
 kokkos_enable_option(BENCHMARKS OFF "Whether to build the benchmarks")
 kokkos_enable_option(EXAMPLES OFF "Whether to build the examples")
 if(Kokkos_ENABLE_BENCHMARKS)

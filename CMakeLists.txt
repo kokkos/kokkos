@@ -271,6 +271,89 @@ include(${KOKKOS_SRC_PATH}/cmake/kokkos_install.cmake)
 # files
 kokkos_install_additional_files()
 
+# Code coverage target - builds with coverage flags (when Kokkos_ENABLE_COVERAGE=ON)
+# Requires Clang, llvm-profdata, llvm-cov. Uses llvm-cov for reporting.
+if(KOKKOS_ENABLE_COVERAGE AND Kokkos_ENABLE_TESTS AND NOT Kokkos_INSTALL_TESTING)
+  add_custom_target(
+    kokkos_coverage
+    COMMAND ${CMAKE_COMMAND} -E echo "Cleaning previous coverage data..."
+    COMMAND
+      ${CMAKE_COMMAND} -DCMAKE_BINARY_DIR=${CMAKE_BINARY_DIR}
+      -P ${CMAKE_SOURCE_DIR}/cmake/coverage_clean.cmake
+  )
+  # Add dependency on kokkoscore and Kokkos_CoreUnitTest_Serial1 
+  # We can add more dependencies if we want to run more tests or benchmarks.
+  add_dependencies(kokkos_coverage kokkoscore)
+  if(TARGET Kokkos_CoreUnitTest_Serial1)
+    add_dependencies(kokkos_coverage Kokkos_CoreUnitTest_Serial1)
+  endif()
+  # Run test from build dir with LLVM_PROFILE_FILE so .profraw is written (must exit normally)
+  # I am ok if we drop this target and just run the test from the build dir.
+  add_custom_target(
+    kokkos_run_coverage_test
+    COMMAND
+      ${CMAKE_COMMAND} -E chdir ${CMAKE_BINARY_DIR}
+      ${CMAKE_COMMAND} -E env "LLVM_PROFILE_FILE=default.profraw"
+      $<TARGET_FILE:Kokkos_CoreUnitTest_Serial1>
+    COMMENT "Running all tests to generate .profraw"
+  )
+  add_dependencies(kokkos_run_coverage_test Kokkos_CoreUnitTest_Serial1)
+  find_program(LLVM_PROFDATA llvm-profdata)
+  find_program(LLVM_COV llvm-cov)
+  if(LLVM_PROFDATA AND LLVM_COV)
+    # For static libs, coverage is in the executable; for shared libs, pass --object
+    set(_LLVM_COV_OBJECT_ARGS)
+    if(BUILD_SHARED_LIBS)
+      set(_LLVM_COV_OBJECT_ARGS --object $<TARGET_FILE:kokkoscore>)
+    endif()
+    # Include only core/src, exclude all paths outside core/src
+    set(_LLVM_COV_IGNORE_ARGS
+      --ignore-filename-regex=".*/algorithms/.*"
+      --ignore-filename-regex=".*/containers/.*"
+      --ignore-filename-regex=".*/simd/.*"
+      --ignore-filename-regex=".*/unit_test/.*"
+      --ignore-filename-regex=".*/unit_tests/.*"
+      --ignore-filename-regex=".*/perf_test/.*"
+      --ignore-filename-regex=".*/tpls/.*"
+      --ignore-filename-regex=".*/gtest/.*"
+      --ignore-filename-regex=".*/desul/.*"
+      --ignore-filename-regex=".*/mdspan/.*"
+    )
+    list(JOIN _LLVM_COV_OBJECT_ARGS " " _LLVM_COV_OBJECT_STR)
+    list(JOIN _LLVM_COV_IGNORE_ARGS " " _LLVM_COV_IGNORE_STR)
+    set(_COVERAGE_REPORT_SH "${CMAKE_BINARY_DIR}/coverage_report.sh")
+    file(
+      GENERATE
+      OUTPUT ${_COVERAGE_REPORT_SH}
+      CONTENT
+        "#!/bin/sh
+        set -e
+        cd \"${CMAKE_BINARY_DIR}\"
+        \"${LLVM_COV}\" report -instr-profile=default.profdata 
+        \"$<TARGET_FILE:Kokkos_CoreUnitTest_Serial1>\" ${_LLVM_COV_OBJECT_STR} ${_LLVM_COV_IGNORE_STR} | tee coverage_report.txt
+        "
+    )
+    add_custom_target(
+      kokkos_coverage_report
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      COMMAND ${LLVM_PROFDATA} merge -sparse -o default.profdata default.profraw
+      COMMAND sh ${_COVERAGE_REPORT_SH}
+      COMMENT "Generating coverage report with llvm-cov (output in coverage_report.txt)"
+    )
+    message(
+      STATUS
+        "Coverage: kokkos_coverage (build), kokkos_run_coverage_test (run), "
+        "kokkos_coverage_report"
+    )
+  else()
+    message(
+      STATUS
+        "Coverage: kokkos_coverage (build), kokkos_run_coverage_test (run). "
+        "Install LLVM (llvm-profdata, llvm-cov) for kokkos_coverage_report"
+    )
+  endif()
+endif()
+
 #  Finally - if we are a subproject - make sure the enabled devices are visible
 if(HAS_PARENT)
   foreach(DEV Kokkos_ENABLED_DEVICES)

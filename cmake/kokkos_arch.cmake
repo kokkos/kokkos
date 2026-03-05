@@ -192,6 +192,28 @@ if(KOKKOS_ENABLE_COMPILER_WARNINGS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS}")
 endif()
 
+#------------------------------- KOKKOS_COVERAGE (llvm-cov) ---------------------------
+if(KOKKOS_ENABLE_COVERAGE)
+  string(TOUPPER "${CMAKE_BUILD_TYPE}" _COVERAGE_BUILD_TYPE)
+  if(NOT _COVERAGE_BUILD_TYPE STREQUAL "DEBUG")
+    message(
+      FATAL_ERROR
+        "Kokkos_ENABLE_COVERAGE requires CMAKE_BUILD_TYPE=Debug. Configure with -DCMAKE_BUILD_TYPE=Debug"
+    )
+  endif()
+  unset(_COVERAGE_BUILD_TYPE)
+  if(KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+    global_append(KOKKOS_COMPILE_OPTIONS -fprofile-instr-generate -fcoverage-mapping)
+    global_append(KOKKOS_LINK_OPTIONS -fprofile-instr-generate)
+    message(STATUS "Code coverage (llvm-cov) enabled for core/src - use unit tests in core/unit_test")
+  else()
+    message(
+      FATAL_ERROR
+        "Kokkos_ENABLE_COVERAGE requires Clang. Configure with -DCMAKE_CXX_COMPILER=clang++"
+    )
+  endif()
+endif()
+
 #------------------------------- KOKKOS_CUDA_OPTIONS ---------------------------
 #clear anything that might be in the cache
 global_set(KOKKOS_CUDA_OPTIONS)
