@@ -704,7 +704,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   KOKKOS_FUNCTION
   View(const View& other) : base_t{other} {
     if constexpr (has_hooks_policy) {
-      KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
+      // Has to be outside KOKKOS_IF_ON_HOST
+      // we need to make sure the template is actually instantiated or we may have a mismatch on
+      // code those host sees vs what the device sees
+      [[maybe_unused]] auto *copy_construct_ptr = &hooks_policy::template copy_construct<View>;
+      KOKKOS_IF_ON_HOST((copy_construct_ptr(*this, other);))
     }
   }
 #else
@@ -717,7 +721,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   View(const View& other)
     requires(has_hooks_policy)
       : base_t{other} {
-    KOKKOS_IF_ON_HOST((hooks_policy::copy_construct(*this, other);))
+    // Has to be outside KOKKOS_IF_ON_HOST
+    // we need to make sure the template is actually instantiated or we may have a mismatch on
+    // code those host sees vs what the device sees
+    [[maybe_unused]] auto *copy_construct_ptr = &hooks_policy::template copy_construct<View>;
+    KOKKOS_IF_ON_HOST((copy_construct_ptr(*this, other);))
   }
 #endif
 
@@ -725,7 +733,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   KOKKOS_FUNCTION
   View(View&& other) : base_t{std::move(static_cast<base_t&&>(other))} {
     if constexpr (has_hooks_policy) {
-      KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+      // Has to be outside KOKKOS_IF_ON_HOST
+      // we need to make sure the template is actually instantiated or we may have a mismatch on
+      // code those host sees vs what the device sees
+      [[maybe_unused]] auto *move_construct_ptr = &hooks_policy::template move_construct<View>;
+      KOKKOS_IF_ON_HOST((move_construct_ptr(*this, other);))
     }
   }
 #else
@@ -738,7 +750,11 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   View(View&& other)
     requires(has_hooks_policy)
       : base_t{std::move(static_cast<base_t&&>(other))} {
-    KOKKOS_IF_ON_HOST((hooks_policy::move_construct(*this, other);))
+    // Has to be outside KOKKOS_IF_ON_HOST
+    // we need to make sure the template is actually instantiated or we may have a mismatch on
+    // code those host sees vs what the device sees
+    [[maybe_unused]] auto *move_construct_ptr = &hooks_policy::template move_construct<View>;
+    KOKKOS_IF_ON_HOST((move_construct_ptr(*this, other);))
   }
 #endif
 
@@ -748,8 +764,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     base_t::operator=(other);
 
     if constexpr (has_hooks_policy) {
+      // Has to be outside KOKKOS_IF_ON_HOST
+      // we need to make sure the template is actually instantiated or we may have a mismatch on
+      // code those host sees vs what the device sees
+      [[maybe_unused]] auto *copy_assign_ptr = &hooks_policy::template copy_assign<View>;
       KOKKOS_IF_ON_HOST(
-          (if (&other != this) { hooks_policy::copy_assign(*this, other); }))
+          (if (&other != this) { copy_assign_ptr(*this, other); }))
     }
 
     return *this;
@@ -765,8 +785,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     requires(has_hooks_policy)
   {
     base_t::operator=(other);
+    // Has to be outside KOKKOS_IF_ON_HOST
+    // we need to make sure the template is actually instantiated or we may have a mismatch on
+    // code those host sees vs what the device sees
+    [[maybe_unused]] auto *copy_assign_ptr = &hooks_policy::template copy_assign<View>;
     KOKKOS_IF_ON_HOST(
-        (if (&other != this) { hooks_policy::copy_assign(*this, other); }))
+        (if (&other != this) { copy_assign_ptr(*this, other); }))
 
     return *this;
   }
@@ -781,8 +805,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     base_t::operator=(std::move(static_cast<base_t&&>(other)));
 
     if constexpr (has_hooks_policy) {
+      // Has to be outside KOKKOS_IF_ON_HOST
+      // we need to make sure the template is actually instantiated or we may have a mismatch on
+      // code those host sees vs what the device sees
+      [[maybe_unused]] auto *move_assign_ptr = &hooks_policy::template move_assign<View>;
       KOKKOS_IF_ON_HOST(
-          (if (&other != this) { hooks_policy::move_assign(*this, other); }))
+          (if (&other != this) { move_assign_ptr(*this, other); }))
     }
 
     return *this;
@@ -798,8 +826,12 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     requires(has_hooks_policy)
   {
     base_t::operator=(std::move(static_cast<base_t&&>(other)));
+    // Has to be outside KOKKOS_IF_ON_HOST
+    // we need to make sure the template is actually instantiated or we may have a mismatch on
+    // code those host sees vs what the device sees
+    [[maybe_unused]] auto *move_assign_ptr = &hooks_policy::template move_assign<View>;
     KOKKOS_IF_ON_HOST(
-        (if (&other != this) { hooks_policy::move_assign(*this, other); }))
+        (if (&other != this) { move_assign_ptr(*this, other); }))
 
     return *this;
   }
