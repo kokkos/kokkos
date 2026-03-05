@@ -30,20 +30,10 @@ jobs:
             test: -e cpu OMP_PROC_BIND=spread OMP_PLACES=threads
             modules: gcc/15.1.0/gcc-15.1.0 cmake/3.31.9/gcc-15.1.0
 
-          - name: CUDA-A100-GCC/15.1.0-CUDA/12.8.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
-            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
-            test: -e gpu -g a100
-            modules: gcc/15.1.0/gcc-15.1.0 cuda/12.8.1/none-none cmake/3.31.9/gcc-15.1.0
-
           - name: CUDA-A100-GCC/15.1.0-CUDA/13.0.2-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
             configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_AMPERE80=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
             test: -e gpu -g a100
             modules: gcc/15.1.0/gcc-15.1.0 cuda/13.0.2/none-none cmake/3.31.9/gcc-15.1.0
-
-          - name: CUDA-V100-GCC/15.1.0-CUDA/12.8.1-Static-CUDA_CONSTEXPR-CUDA_RELOCATABLE_DEVICE_CODE
-            configure: -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_CUDA_CONSTEXPR=ON -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON
-            test: -e gpu -g v100
-            modules: gcc/15.1.0/gcc-15.1.0 cuda/12.8.1/none-none cmake/3.31.9/gcc-15.1.0
 
     runs-on: [self-hosted, cuda]
 
