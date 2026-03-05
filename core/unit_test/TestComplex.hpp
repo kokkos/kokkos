@@ -346,6 +346,10 @@ struct TestComplexSpecialFunctions {
     r = std::log10(a);
     ASSERT_FLOAT_EQ(h_results(18).real(), r.real());
     ASSERT_FLOAT_EQ(h_results(18).imag(), r.imag());
+    // norm
+    r = std::norm(a);
+    ASSERT_FLOAT_EQ(h_results(19).real(), r.real());
+    ASSERT_FLOAT_EQ(h_results(19).imag(), r.imag());
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -372,6 +376,7 @@ struct TestComplexSpecialFunctions {
     d_results(16) = Kokkos::acos(a);
     d_results(17) = Kokkos::atan(a);
     d_results(18) = Kokkos::log10(a);
+    d_results(19) = Kokkos::norm(a);
   }
 };
 
@@ -456,14 +461,13 @@ TEST(TEST_CATEGORY, complex_operations_arithmetic_types_overloads) {
   static_assert((std::is_same_v<decltype(Kokkos::imag(3.)), double>));
   static_assert((std::is_same_v<decltype(Kokkos::real(4.l)), long double>));
 
-  // FIXME in principle could be checked at compile time too
-  ASSERT_EQ(Kokkos::conj(1), Kokkos::complex<double>(1));
-  ASSERT_EQ(Kokkos::conj(2.f), Kokkos::complex<float>(2.f));
-  ASSERT_EQ(Kokkos::conj(3.), Kokkos::complex<double>(3.));
+  static_assert(Kokkos::conj(1) == Kokkos::complex<double>(1));
+  static_assert(Kokkos::conj(2.f) == Kokkos::complex<float>(2.f));
+  static_assert(Kokkos::conj(3.) == Kokkos::complex<double>(3.));
 // long double has size 12 but Kokkos::complex requires 2*sizeof(T) to be a
 // power of two.
 #ifndef KOKKOS_IMPL_32BIT
-  ASSERT_EQ(Kokkos::conj(4.l), Kokkos::complex<long double>(4.l));
+  static_assert(Kokkos::conj(4.l) == Kokkos::complex<long double>(4.l));
   static_assert(
       (std::is_same_v<decltype(Kokkos::conj(1)), Kokkos::complex<double>>));
 #endif
@@ -668,6 +672,37 @@ constexpr bool comparison_in_constant_expression() {
 }
 
 static_assert(comparison_in_constant_expression());
+
+constexpr bool test_complex_norm() {
+  return Kokkos::norm(Kokkos::complex<double>{4., 2.}) == 20.;
+}
+static_assert(test_complex_norm());
+
+constexpr bool test_overload_norm() {
+  constexpr auto res_int = Kokkos::norm(int(100000));
+  static_assert(std::same_as<decltype(res_int), const double>);
+  static_assert(res_int == 1e10);
+
+  constexpr auto res_float = Kokkos::norm(float(666.));
+  static_assert(std::same_as<decltype(res_float), const float>);
+  static_assert(res_float == 666. * 666.);
+
+  return true;
+}
+static_assert(test_overload_norm());
+
+constexpr bool test_complex_conj() {
+  static_assert(Kokkos::conj(Kokkos::complex<double>{1., 1.}) ==
+                Kokkos::complex<double>{1., -1.});
+  static_assert(Kokkos::conj(Kokkos::complex<double>{1., -1.}) ==
+                Kokkos::complex<double>{1., 1.});
+  static_assert(Kokkos::conj(Kokkos::complex<double>{-1., 1.}) ==
+                Kokkos::complex<double>{-1., -1.});
+  static_assert(Kokkos::conj(Kokkos::complex<double>{-1., -1.}) ==
+                Kokkos::complex<double>{-1., 1.});
+  return true;
+}
+static_assert(test_complex_conj());
 
 }  // namespace Test
 

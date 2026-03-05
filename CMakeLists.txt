@@ -140,7 +140,7 @@ elseif(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 endif()
 
 set(Kokkos_VERSION_MAJOR 5)
-set(Kokkos_VERSION_MINOR 0)
+set(Kokkos_VERSION_MINOR 1)
 set(Kokkos_VERSION_PATCH 99)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 message(STATUS "Kokkos version: ${Kokkos_VERSION}")

@@ -29,41 +29,22 @@
 namespace Kokkos {
 // BEGIN macro definitions
 #if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-// FIXME_MSVC Use /Zc:preprocessor
-#if defined(KOKKOS_COMPILER_MSVC)
-  #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
-    MACRO(FUNC, Kokkos::Experimental::half_t, ##__VA_ARGS__)
-#else
   #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
     MACRO(FUNC, Kokkos::Experimental::half_t __VA_OPT__(,) __VA_ARGS__)
-#endif
 #else
   #define KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, ...)
 #endif
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-// FIXME_MSVC Use /Zc:preprocessor
-#if defined(KOKKOS_COMPILER_MSVC)
-  #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
-    MACRO(FUNC, Kokkos::Experimental::bhalf_t, ##__VA_ARGS__)
-#else
   #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RET*/...) \
     MACRO(FUNC, Kokkos::Experimental::bhalf_t __VA_OPT__(,) __VA_ARGS__)
-#endif
 #else
   #define KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, ...)
 #endif
 
-// FIXME_MSVC Use /Zc:preprocessor
-#if defined(KOKKOS_COMPILER_MSVC)
-#define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RETURN_TYPE*/...) \
-  KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC, ##__VA_ARGS__)          \
-  KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC, ##__VA_ARGS__)
-#else
 #define KOKKOS_IMPL_MATH_HALF_FUNC_WRAPPER(MACRO, FUNC, /*MAYBE_RETURN_TYPE*/...) \
   KOKKOS_IMPL_MATH_H_FUNC_WRAPPER(MACRO, FUNC __VA_OPT__(,) __VA_ARGS__)          \
   KOKKOS_IMPL_MATH_B_FUNC_WRAPPER(MACRO, FUNC __VA_OPT__(,) __VA_ARGS__)
-#endif
 
 #define KOKKOS_IMPL_MATH_UNARY_FUNCTION_HALF_TYPE(FUNC, HALF_TYPE)      \
   namespace Impl {                                                      \
