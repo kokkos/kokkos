@@ -81,7 +81,6 @@
 * Disable spurious failing CI tests [\#8939](https://github.com/kokkos/kokkos/pull/8939)
 * Disable deprecated `std::iterator` warning for GCC 15 [\#8934](https://github.com/kokkos/kokkos/pull/8934)
 * Adds a missing `constexpr` for `Kokkos::conj`, and for the `real` and `imag` free functions [\#8928](https://github.com/kokkos/kokkos/pull/8928)
-* Temporarily disable bugprone-* checks failing in OSX CI builds on GH actions [\#8930](https://github.com/kokkos/kokkos/pull/8930)
 * Use /Zc:preprocessor with MSVC to allow using __VA_OPT__ [\#8921](https://github.com/kokkos/kokkos/pull/8921)
 * Disable DynViewAPI testing for rank 7 with Clang22 due to ICE [\#8903](https://github.com/kokkos/kokkos/pull/8903)
 * Ensure that execution space instances fence on finalize [\#8626](https://github.com/kokkos/kokkos/pull/8626)
