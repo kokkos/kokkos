@@ -67,8 +67,6 @@
 * Do not export symbol for team policy helper (i.e., move `Kokkos::team_policy_check_valid_storage_level_argument()` to `Kokkos::Impl::`) [\#8902](https://github.com/kokkos/kokkos/pull/8902)
 * Enforce TeamPolicy constructor preconditions (includes vector length must be a power of two) [\#8904](https://github.com/kokkos/kokkos/pull/8904) [\#8907](https://github.com/kokkos/kokkos/pull/8907)
 * OpenMP: Warn on exec space instance created within omp region [\#8919](https://github.com/kokkos/kokkos/pull/8919)
-
-### Deprecations
 * Remove the deprecated OpenMPTarget backend [\#8701](https://github.com/kokkos/kokkos/pull/8701) [\#8717](https://github.com/kokkos/kokkos/pull/8717) [\#8749](https://github.com/kokkos/kokkos/pull/8749) [\#8767](https://github.com/kokkos/kokkos/pull/8767)
 
 ### Bug Fixes
