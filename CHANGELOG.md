@@ -83,7 +83,7 @@
 * Remove the deprecated OpenMPTarget backend [\#8701](https://github.com/kokkos/kokkos/pull/8701) [\#8717](https://github.com/kokkos/kokkos/pull/8717) [\#8749](https://github.com/kokkos/kokkos/pull/8749) [\#8767](https://github.com/kokkos/kokkos/pull/8767)
 
 ### Bug Fixes
-* Update use of deprecated Runtime API in CUDA 13 [\#8707](https://github.com/kokkos/kokkos/pull/8707)
+* Remove use of old Runtime API in CUDA 13 [\#8707](https://github.com/kokkos/kokkos/pull/8707)
 * Fix reduction_identity for BAnd [\#8715](https://github.com/kokkos/kokkos/pull/8715)
 * Make sure kokkosalgorithms and kokkossimd are built as position independent code [\#8815](https://github.com/kokkos/kokkos/pull/8815)
 * Restrict lock free host atomics to the actual sizes that are lock free [\#8809](https://github.com/kokkos/kokkos/pull/8809)
