@@ -34,7 +34,6 @@
 #### Threads:
 
 #### OpenMP:
-* Refactor OpenMP backend: replace singleton with static HostSharedPtr default_instance [\#8901](https://github.com/kokkos/kokkos/pull/8901)
 
 
 #### Serial:
