@@ -99,7 +99,7 @@
 * Fix a bunch of clang-analyzer-core complaints [\#8882](https://github.com/kokkos/kokkos/pull/8882)
 * Update `team_fan_in{in|out}` member functions of `ThreadsExecTeamMember` not to call host-only fuctions on the device [\#8730](https://github.com/kokkos/kokkos/pull/8730)
 * Remove `__host__` annotations from `DeviceIterate` function members prevent the compiler from calling a host function from a device-only function [\#8868](https://github.com/kokkos/kokkos/pull/8868)
-* Fix a use of vector inside device code in the simd perf tests [\#8861](https://github.com/kokkos/kokkos/pull/8861)
+* Remove std::vector inside device code in the simd perf tests [\#8861](https://github.com/kokkos/kokkos/pull/8861)
 * Fix `isnormal`  math function overload in the CUDA workaround [\#8857](https://github.com/kokkos/kokkos/pull/8857)
 
 ## 5.0.2
