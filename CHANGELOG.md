@@ -23,7 +23,6 @@
 * Add support for AMD MI355 and MI350 (`AMD_GFX950`) [\#8839](https://github.com/kokkos/kokkos/pull/8839)
 * Implement StaticBatchSize and it in deep_copy form scalar [\#8829](https://github.com/kokkos/kokkos/pull/8829)
 * Fix race conditions in HIP ParallelScan  [\#8648](https://github.com/kokkos/kokkos/pull/8648)
-* Move release of level-1 scratch pad and fix broken copy semantics [\#8881](https://github.com/kokkos/kokkos/pull/8881)
 
 #### SYCL:
 
