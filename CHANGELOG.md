@@ -15,7 +15,6 @@
 * Fix compiling with Clang+Cuda+OpenMP with KOKKOS_COMPILE_LANGUAGE=CUDA [\#8810](https://github.com/kokkos/kokkos/pull/8810)
 * Fix compilig with Cuda 13.1 [\#8801](https://github.com/kokkos/kokkos/pull/8801)
 * Add `-Ofc` and `--fdevice-time-trace` flags to nvcc_wrapper [\#8865](https://github.com/kokkos/kokkos/pull/8865)
-* Move release of level-1 scratch pad and fix broken copy semantics [\#8881](https://github.com/kokkos/kokkos/pull/8881)
 
 #### HIP: 
 * Search the CMake variable `ROCM_PATH` for dependencies [\#8669](https://github.com/kokkos/kokkos/pull/8669)
