@@ -24,14 +24,6 @@
 * Implement StaticBatchSize and it in deep_copy form scalar [\#8829](https://github.com/kokkos/kokkos/pull/8829)
 * Fix race conditions in HIP ParallelScan  [\#8648](https://github.com/kokkos/kokkos/pull/8648)
 
-#### SYCL:
-
-#### OpenACC:
-
-#### HPX:
-
-#### Threads:
-
 #### OpenMP:
 
 
