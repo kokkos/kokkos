@@ -94,7 +94,7 @@
 * Adds a missing `constexpr` for `Kokkos::conj`, and for the `real` and `imag` free functions [\#8928](https://github.com/kokkos/kokkos/pull/8928)
 * Temporarily disable bugprone-* checks failing in OSX CI builds on GH actions [\#8930](https://github.com/kokkos/kokkos/pull/8930)
 * Use /Zc:preprocessor with MSVC to allow using __VA_OPT__ [\#8921](https://github.com/kokkos/kokkos/pull/8921)
-* Add a more restrictive guard on DynViewAPI testing [\#8903](https://github.com/kokkos/kokkos/pull/8903)
+* Disable DynViewAPI testing for rank 7 with Clang22 due to ICE [\#8903](https://github.com/kokkos/kokkos/pull/8903)
 * Ensure that execution space instances fence on finalize [\#8626](https://github.com/kokkos/kokkos/pull/8626)
 * Fix a bunch of clang-analyzer-core complaints [\#8882](https://github.com/kokkos/kokkos/pull/8882)
 * Update `team_fan_in{in|out}` member functions of `ThreadsExecTeamMember` not to call host-only fuctions on the device [\#8730](https://github.com/kokkos/kokkos/pull/8730)
