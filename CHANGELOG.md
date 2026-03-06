@@ -50,8 +50,7 @@
 * Enable MPI detection with PALS [\#8895](https://github.com/kokkos/kokkos/pull/8895)
 * Added simd memory permute functions [\#8775](https://github.com/kokkos/kokkos/pull/8775)
 * Add an alias to std `nexttoward` math function [\#8891](https://github.com/kokkos/kokkos/pull/8891)
-* New default tile size for MDRangePolicy with CUDA, HIP and SYCL backend [\#8731](https://github.com/kokkos/kokkos/pull/8731)
-* Better performance with MDRangePolicy with CUDA, HIP and SYCL, plus no discrepancies between layoutLeft and LayoutRight. [\#8638](https://github.com/kokkos/kokkos/pull/8638)
+* Better performance with MDRangePolicy with CUDA, HIP and SYCL [\#8638](https://github.com/kokkos/kokkos/pull/8638),  [\#8731](https://github.com/kokkos/kokkos/pull/8731)
 * Support for `Kokkos::norm` - similar to `std::norm` [\#8638](https://github.com/kokkos/kokkos/pull/8927)
 
 ### Build System Changes
