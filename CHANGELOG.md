@@ -46,7 +46,6 @@
 * Use StaticBatchSize in ViewFill [\#8795](https://github.com/kokkos/kokkos/pull/8795)
 * Added half precision support for `rsqrt` [\#8778](https://github.com/kokkos/kokkos/pull/8778)
 * Added non-standard `rcp` (1/x) math function [\#8778](https://github.com/kokkos/kokkos/pull/8778)
-* Prefer atomic reduction over `fetch_op` and discard [\#8018](https://github.com/kokkos/kokkos/pull/8018)
 * Check that exceeding team_size_max and scratch_size_max fails [\#7445](https://github.com/kokkos/kokkos/pull/7445)
 * Enable MPI detection with PALS [\#8895](https://github.com/kokkos/kokkos/pull/8895)
 * Added simd memory permute functions [\#8775](https://github.com/kokkos/kokkos/pull/8775)
