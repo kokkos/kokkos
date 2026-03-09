@@ -71,17 +71,6 @@ struct pair {
       : first(p.first), second(p.second) {
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /// \brief Copy constructor.
-  ///
-  /// This calls the copy constructors of T1 and T2.  It won't compile
-  /// if those copy constructors are not defined and public.
-  template <class U, class V>
-  KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION constexpr pair(
-      const volatile pair<U, V>& p)
-      : first(p.first), second(p.second) {}
-#endif
-
   /// \brief Assignment operator.
   ///
   /// This calls the assignment operators of T1 and T2.  It won't
@@ -92,28 +81,6 @@ struct pair {
     second = p.second;
     return *this;
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /// \brief Assignment operator, for volatile <tt>*this</tt>.
-  ///
-  /// \param p [in] Input; right-hand side of the assignment.
-  ///
-  /// This calls the assignment operators of T1 and T2.  It will not
-  /// compile if the assignment operators are not defined and public.
-  ///
-  /// This operator returns \c void instead of <tt>volatile pair<T1,
-  /// T2>& </tt>.  See Kokkos Issue #177 for the explanation.  In
-  /// practice, this means that you should not chain assignments with
-  /// volatile lvalues.
-  template <class U, class V>
-  KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION void operator=(
-      const volatile pair<U, V>& p) volatile {
-    first  = p.first;
-    second = p.second;
-    // We deliberately do not return anything here.  See explanation
-    // in public documentation above.
-  }
-#endif
 
   // from std::pair<U,V>
   template <class U, class V>

@@ -140,11 +140,6 @@ class CudaUVMSpace {
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = unsigned int;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  If UVM capability is available */
-  KOKKOS_DEPRECATED static bool available();
-#endif
-
   /*--------------------------------*/
 
   /*--------------------------------*/

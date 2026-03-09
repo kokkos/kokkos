@@ -74,12 +74,6 @@ void DeepCopyAsyncCuda(void *dst, const void *src, size_t n) {
 
 namespace Kokkos {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-bool CudaUVMSpace::available() { return true; }
-#endif
-
-/*--------------------------------------------------------------------------*/
-
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_PIN_UVM_TO_HOST
 // The purpose of the following variable is to allow a state-based choice
 // for pinning UVM allocations to the CPU. For now this is considered
