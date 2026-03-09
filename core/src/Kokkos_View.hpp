@@ -286,9 +286,6 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   static constexpr Impl::integral_constant<size_t, base_t::rank()> rank = {};
   static constexpr Impl::integral_constant<size_t, base_t::rank_dynamic()>
       rank_dynamic = {};
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  enum {Rank KOKKOS_DEPRECATED_WITH_COMMENT("Use rank instead.") = rank()};
-#endif
 
   KOKKOS_INLINE_FUNCTION constexpr array_layout layout() const {
     return Impl::array_layout_from_mapping<array_layout, mdspan_type>(
@@ -1506,22 +1503,6 @@ KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
       typename Impl::RemoveAlignedMemoryTrait<D, P...>::type,
       Args...>::type(src, args...);
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-template <class MemoryTraits, class D, class... P, class... Args>
-KOKKOS_DEPRECATED KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src,
-                                                      Args... args) {
-  static_assert(View<D, P...>::rank == sizeof...(Args),
-                "subview requires one argument for each source View rank");
-  static_assert(Kokkos::is_memory_traits<MemoryTraits>::value);
-
-  return typename Kokkos::Impl::ViewMapping<
-      void /* deduce subview type from source view traits */
-      ,
-      typename Impl::RemoveAlignedMemoryTrait<D, P..., MemoryTraits>::type,
-      Args...>::type(src, args...);
-}
-#endif
 
 template <class V, class... Args>
 using Subview = decltype(subview(std::declval<V>(), std::declval<Args>()...));
