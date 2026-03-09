@@ -11,7 +11,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
     set(UnitTestSources UnitTestMain.cpp)
     set(dir ${CMAKE_CURRENT_BINARY_DIR}/${dir})
     file(MAKE_DIRECTORY ${dir})
-    set(DeprecatedTests Vector StaticCrsGraph)
+    set(DeprecatedTests StaticCrsGraph)
     foreach(
       Name
       Bitset
@@ -30,7 +30,6 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       StaticCrsGraph
       WithoutInitializing
       UnorderedMap
-      Vector
       ViewCtorPropEmbeddedDim
     )
       if(NOT Kokkos_ENABLE_DEPRECATED_CODE_4 AND Name IN_LIST DeprecatedTests)

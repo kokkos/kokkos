@@ -605,10 +605,6 @@ Cuda::Cuda()
           (Impl::check_execution_space_constructor_precondition(name()),
            Impl::CudaInternal::default_instance)) {}
 
-KOKKOS_DEPRECATED Cuda::Cuda(cudaStream_t stream, bool manage_stream)
-    : Cuda(stream,
-           manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
-
 Cuda::Cuda(cudaStream_t stream, Impl::ManageStream manage_stream)
     : m_space_instance(
           (Impl::check_execution_space_constructor_precondition(name()),

@@ -52,28 +52,6 @@ class HostSpace {
 
   HostSpace() = default;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /**\brief  Non-default memory space instance to choose allocation mechansim,
-   * if available */
-
-#if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU < 1100
-  // We see deprecation warnings even when not using the deprecated
-  // HostSpace constructor below when using gcc before release 11.
-  enum
-#else
-  enum KOKKOS_DEPRECATED
-#endif
-      AllocationMechanism {
-        STD_MALLOC,
-        POSIX_MEMALIGN,
-        POSIX_MMAP,
-        INTEL_MM_ALLOC
-      };
-
-  KOKKOS_DEPRECATED
-  explicit HostSpace(const AllocationMechanism&);
-#endif
-
   /**\brief  Allocate untracked memory in the space */
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {

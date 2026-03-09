@@ -142,10 +142,6 @@ HIP::HIP(hipStream_t const stream, Impl::ManageStream manage_stream)
                                      customDeleterManagesStream)
                : Impl::HostSharedPtr(new Impl::HIPInternal(stream)))) {}
 
-KOKKOS_DEPRECATED HIP::HIP(hipStream_t const stream, bool manage_stream)
-    : HIP(stream,
-          manage_stream ? Impl::ManageStream::yes : Impl::ManageStream::no) {}
-
 void HIP::print_configuration(std::ostream& os, bool /*verbose*/) const {
   os << "Device Execution Space:\n";
   os << "  KOKKOS_ENABLE_HIP: yes\n";
