@@ -98,11 +98,7 @@ class OpenMP {
   }
 #endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static int concurrency(OpenMP const& = OpenMP());
-#else
   int concurrency() const;
-#endif
 
   static void impl_initialize(InitializationSettings const&);
 

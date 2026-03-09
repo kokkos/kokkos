@@ -288,11 +288,7 @@ class HPX {
   }
 #endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static int concurrency();
-#else
   int concurrency() const;
-#endif
   static void impl_initialize(InitializationSettings const &);
   static void impl_finalize();
   static int impl_thread_pool_size() noexcept;

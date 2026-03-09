@@ -58,13 +58,7 @@ SYCL::SYCL(const sycl::queue& stream)
 #endif
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-int SYCL::concurrency() {
-  return Impl::SYCLInternal::default_instance->m_maxConcurrency;
-}
-#else
 int SYCL::concurrency() const { return m_space_instance->m_maxConcurrency; }
-#endif
 
 const char* SYCL::name() { return "SYCL"; }
 

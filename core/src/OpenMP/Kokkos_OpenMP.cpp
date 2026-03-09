@@ -141,13 +141,7 @@ void OpenMP::print_configuration(std::ostream &os, bool /*verbose*/) const {
   m_space_instance->print_configuration(os);
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-int OpenMP::concurrency(OpenMP const &instance) {
-  return instance.impl_thread_pool_size();
-}
-#else
 int OpenMP::concurrency() const { return impl_thread_pool_size(); }
-#endif
 
 void OpenMP::impl_static_fence(std::string const &name) {
   Kokkos::Tools::Experimental::Impl::profile_fence_event<Kokkos::OpenMP>(

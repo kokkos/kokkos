@@ -469,13 +469,7 @@ Cuda::size_type *cuda_internal_scratch_unified(const Cuda &instance,
 
 namespace Kokkos {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-int Cuda::concurrency() {
-#else
-int Cuda::concurrency() const {
-#endif
-  return Impl::CudaInternal::concurrency();
-}
+int Cuda::concurrency() const { return Impl::CudaInternal::concurrency(); }
 
 void Cuda::impl_initialize(InitializationSettings const &settings) {
   const std::vector<int> &visible_devices = Impl::get_visible_devices();

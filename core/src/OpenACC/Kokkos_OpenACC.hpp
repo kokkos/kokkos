@@ -83,11 +83,7 @@ class OpenACC {
   static void impl_static_fence(std::string const& name);
 
   static char const* name() { return "OpenACC"; }
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static int concurrency();
-#else
   int concurrency() const;
-#endif
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEPRECATED static bool in_parallel() {
     return acc_on_device(acc_device_not_host);

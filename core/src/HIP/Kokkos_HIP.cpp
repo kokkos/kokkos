@@ -37,13 +37,7 @@ struct {
 
 namespace Kokkos {
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-int HIP::concurrency() {
-#else
-int HIP::concurrency() const {
-#endif
-  return Impl::HIPInternal::concurrency();
-}
+int HIP::concurrency() const { return Impl::HIPInternal::concurrency(); }
 
 void HIP::impl_initialize(InitializationSettings const& settings) {
   const std::vector<int>& visible_devices = Impl::get_visible_devices();

@@ -107,11 +107,8 @@ class HIP {
   }
 #endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static int concurrency();
-#else
   int concurrency() const;
-#endif
+
   static const char* name();
 
   inline Impl::HIPInternal* impl_internal_space_instance() const {
