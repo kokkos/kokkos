@@ -388,20 +388,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
                 Kokkos::TeamPolicy<TEST_EXECSPACE>{0, Kokkos::AUTO},
                 no_op_functor, count);
       });
-// These fences are only necessary because of the weirdness of how CUDA
-// UVM works on pre pascal cards.
-#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    defined(KOKKOS_ARCH_MAXWELL)
-  Kokkos::fence();
-#endif
   graph.submit(ex);
   Kokkos::deep_copy(ex, count, 1);
-// These fences are only necessary because of the weirdness of how CUDA
-// UVM works on pre pascal cards.
-#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_ENABLE_CUDA_UVM) && \
-    defined(KOKKOS_ARCH_MAXWELL)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) Kokkos::fence();
-#endif
   graph.submit(ex);
 
   ASSERT_TRUE(contains(ex, count, 0));

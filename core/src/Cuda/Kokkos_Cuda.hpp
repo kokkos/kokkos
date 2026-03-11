@@ -80,13 +80,8 @@ class Cuda {
   //! Tag this class as a kokkos execution space
   using execution_space = Cuda;
 
-#if defined(KOKKOS_ENABLE_CUDA_UVM)
-  //! This execution space's preferred memory space.
-  using memory_space = CudaUVMSpace;
-#else
   //! This execution space's preferred memory space.
   using memory_space = CudaSpace;
-#endif
 
   //! This execution space preferred device_type
   using device_type = Kokkos::Device<execution_space, memory_space>;
@@ -249,24 +244,6 @@ struct MemorySpaceAccess<Kokkos::CudaSpace,
   enum : bool { accessible = true };
   enum : bool { deepcopy = false };
 };
-
-#if defined(KOKKOS_ENABLE_CUDA_UVM)
-
-// If forcing use of UVM everywhere
-// then must assume that CudaUVMSpace
-// can be a stand-in for CudaSpace.
-// This will fail when a strange host-side execution space
-// that defines CudaUVMSpace as its preferredmemory space.
-
-template <>
-struct MemorySpaceAccess<Kokkos::CudaUVMSpace,
-                         Kokkos::Cuda::scratch_memory_space> {
-  enum : bool { assignable = false };
-  enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
-};
-
-#endif
 
 }  // namespace Impl
 }  // namespace Kokkos
