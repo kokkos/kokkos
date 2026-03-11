@@ -36,17 +36,27 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   const FunctorType m_functor;
   const Policy m_policy;
 
+// Workaround for Clang CUDA ICE in MachineLICM pass: when the user functor is
+// fully inlined into cuda_parallel_launch_local_memory, MachineLICM crashes
+// with a null pointer dereference. noinline on exec_range keeps the loop body
+// in that kernel as a single call instruction, avoiding the crash.
+#if defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA)
+#define KOKKOS_IMPL_EXEC_RANGE_ATTRS __attribute__((noinline)) __device__
+#else
+#define KOKKOS_IMPL_EXEC_RANGE_ATTRS inline __device__
+#endif
   template <class TagType>
-  inline __device__ std::enable_if_t<std::is_void_v<TagType>> exec_range(
-      const Member i) const {
+  KOKKOS_IMPL_EXEC_RANGE_ATTRS std::enable_if_t<std::is_void_v<TagType>>
+  exec_range(const Member i) const {
     m_functor(i);
   }
 
   template <class TagType>
-  inline __device__ std::enable_if_t<!std::is_void_v<TagType>> exec_range(
-      const Member i) const {
+  KOKKOS_IMPL_EXEC_RANGE_ATTRS std::enable_if_t<!std::is_void_v<TagType>>
+  exec_range(const Member i) const {
     m_functor(TagType(), i);
   }
+#undef KOKKOS_IMPL_EXEC_RANGE_ATTRS
 
  public:
   using functor_type = FunctorType;
