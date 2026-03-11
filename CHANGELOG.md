@@ -9,7 +9,6 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-* Use neon and sve SIMD instructions if `nvcc` supports them [\#8667](https://github.com/kokkos/kokkos/pull/8667)
 * Add support for NVIDIA B300 architecture [\#8791](https://github.com/kokkos/kokkos/pull/8791)
 * Use StaticBatchSize in deep_copy from scalar [\#8795](https://github.com/kokkos/kokkos/pull/8795)
 * Fix compiling with Clang+Cuda+OpenMP with KOKKOS_COMPILE_LANGUAGE=CUDA [\#8810](https://github.com/kokkos/kokkos/pull/8810)
@@ -52,6 +51,7 @@
 * Add an alias to std `nexttoward` math function [\#8891](https://github.com/kokkos/kokkos/pull/8891)
 * Better performance with MDRangePolicy with CUDA, HIP and SYCL [\#8638](https://github.com/kokkos/kokkos/pull/8638),  [\#8731](https://github.com/kokkos/kokkos/pull/8731)
 * Support for `Kokkos::norm` - similar to `std::norm` [\#8638](https://github.com/kokkos/kokkos/pull/8927)
+* Use neon and sve SIMD instructions if `nvcc` supports them [\#8667](https://github.com/kokkos/kokkos/pull/8667)
 
 ### Build System Changes
 * use AMD recommended way to discover HIP in CMake [\#8787](https://github.com/kokkos/kokkos/pull/8787)
