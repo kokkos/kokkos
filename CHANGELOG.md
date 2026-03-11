@@ -9,24 +9,20 @@
 ### Backend and Architecture Enhancements:
 
 #### CUDA:
-* Add support for NVIDIA B300 architecture [\#8791](https://github.com/kokkos/kokkos/pull/8791)
-* Use StaticBatchSize in deep_copy from scalar [\#8795](https://github.com/kokkos/kokkos/pull/8795)
+* Added `Kokkos_ARCH_BLACKWELL103` configure option for NVIDIA B300 GPUs [\#8791](https://github.com/kokkos/kokkos/pull/8791)
+* Improve performance of `deep_copy` from scalar (view fill) [\#8795](https://github.com/kokkos/kokkos/pull/8795)
 * Fix compiling with Clang+Cuda+OpenMP with KOKKOS_COMPILE_LANGUAGE=CUDA [\#8810](https://github.com/kokkos/kokkos/pull/8810)
 * Fix compilig with Cuda 13.1 [\#8801](https://github.com/kokkos/kokkos/pull/8801)
-* Add `-Ofc` and `--fdevice-time-trace` flags to nvcc_wrapper [\#8865](https://github.com/kokkos/kokkos/pull/8865)
+* `nvcc_wrapper`: Add support for `-Ofc` and `--fdevice-time-trace` flags [\#8865](https://github.com/kokkos/kokkos/pull/8865)
 
 #### HIP: 
 * Search the CMake variable `ROCM_PATH` for dependencies [\#8669](https://github.com/kokkos/kokkos/pull/8669)
-* Implement bhalf_t and add mathematical functions [\#8705](https://github.com/kokkos/kokkos/pull/8705) 
+* Added support for brain floating-point (`bhalf_t`) [\#8705](https://github.com/kokkos/kokkos/pull/8705)
+* Implemented true reduced-precision mathematical functions (instead of falling back to `float`) [\#8705](https://github.com/kokkos/kokkos/pull/8705)
 * Disable `MALLOC_ASYNC` for ROCm >= 7.0 [\#8746](https://github.com/kokkos/kokkos/pull/8746)
 * Add support for AMD MI355 and MI350 (`AMD_GFX950`) [\#8839](https://github.com/kokkos/kokkos/pull/8839)
 * Implement StaticBatchSize and it in deep_copy form scalar [\#8829](https://github.com/kokkos/kokkos/pull/8829)
 * Fix race conditions in HIP ParallelScan  [\#8648](https://github.com/kokkos/kokkos/pull/8648)
-
-#### OpenMP:
-
-
-#### Serial:
 
 ### General Enhancements
 * Enable ScatterView contribute into a View that is a rvalue [\#8594](https://github.com/kokkos/kokkos/pull/8594)
@@ -49,7 +45,6 @@
 ### Incompatibilities (i.e. breaking changes)
 * Execution spaces can only be constructed after `Kokkos::initialize()` has been called and must be destructed before `Kokkos::finalize()` [\#8546](https://github.com/kokkos/kokkos/pull/8546) [\#8677](https://github.com/kokkos/kokkos/pull/8677)
 * ScatterValue isn't move constructible/assignable anymore [\#8761](https://github.com/kokkos/kokkos/pull/8761)
-* Do not export symbol for team policy helper (i.e., move `Kokkos::team_policy_check_valid_storage_level_argument()` to `Kokkos::Impl::`) [\#8902](https://github.com/kokkos/kokkos/pull/8902)
 * Enforce TeamPolicy constructor preconditions (includes vector length must be a power of two) [\#8904](https://github.com/kokkos/kokkos/pull/8904) [\#8907](https://github.com/kokkos/kokkos/pull/8907)
 * OpenMP: Warn on exec space instance created within omp region [\#8919](https://github.com/kokkos/kokkos/pull/8919)
 * Remove the deprecated OpenMPTarget backend [\#8701](https://github.com/kokkos/kokkos/pull/8701) [\#8717](https://github.com/kokkos/kokkos/pull/8717) [\#8749](https://github.com/kokkos/kokkos/pull/8749) [\#8767](https://github.com/kokkos/kokkos/pull/8767)
@@ -60,18 +55,14 @@
 * Make sure kokkosalgorithms and kokkossimd are built as position independent code [\#8815](https://github.com/kokkos/kokkos/pull/8815)
 * Restrict lock free host atomics to the actual sizes that are lock free [\#8809](https://github.com/kokkos/kokkos/pull/8809)
 * Use intrinsics when calling min and max on simd vectors of int types [\#8899](https://github.com/kokkos/kokkos/pull/8899)
-* Fix test names in containers/performance_tests [\#8940](https://github.com/kokkos/kokkos/pull/8940)
 * Disable deprecated `std::iterator` warning for GCC 15 [\#8934](https://github.com/kokkos/kokkos/pull/8934)
 * Adds a missing `constexpr` for `Kokkos::conj`, and for the `real` and `imag` free functions [\#8928](https://github.com/kokkos/kokkos/pull/8928)
 * Disable DynViewAPI testing for rank 7 with Clang22 due to ICE [\#8903](https://github.com/kokkos/kokkos/pull/8903)
 * Ensure that execution space instances fence on finalize [\#8626](https://github.com/kokkos/kokkos/pull/8626)
-* Fix a bunch of clang-analyzer-core complaints [\#8882](https://github.com/kokkos/kokkos/pull/8882)
 * Update `team_fan_in{in|out}` member functions of `ThreadsExecTeamMember` not to call host-only fuctions on the device [\#8730](https://github.com/kokkos/kokkos/pull/8730)
 * Remove std::vector inside device code in the simd perf tests [\#8861](https://github.com/kokkos/kokkos/pull/8861)
 * Make overloads of `isnormal` compliant with std [\#8857](https://github.com/kokkos/kokkos/pull/8857)
-* Identify GCC on MacOS X correctly as KOKKOS_COMPILER_GNU [\#8592](https://github.com/kokkos/kokkos/pull/8592)
-* Identify `homebrew llvm` correctly as KOKKOS_COMPILER_CLANG [\#8952](https://github.com/kokkos/kokkos/pull/8952)
-#8952
+* Fix compiler macros, properly identify GCC and LLVM Clang on OSX [\#8592](https://github.com/kokkos/kokkos/pull/8592) [\#8952](https://github.com/kokkos/kokkos/pull/8952)
 
 ## 5.0.2
 
