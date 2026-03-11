@@ -88,11 +88,7 @@ class SYCL {
 
   static void impl_initialize(InitializationSettings const&);
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static int concurrency();
-#else
   int concurrency() const;
-#endif
 
   static const char* name();
 
