@@ -33,7 +33,6 @@
 * Add bitwise operators to simd vectors and simd masks [\#8565](https://github.com/kokkos/kokkos/pull/8565) 
 * Allow user defined type indexers into Array subscript operators [\#8692](https://github.com/kokkos/kokkos/pull/8692) 
 * Add missing numeric trait `denorm_min` for `Kokkos::Experimental::half_t` and `Kokkos::Experimental::bhalf_t` [\#8769](https://github.com/kokkos/kokkos/pull/8769)
-* Expanded Math Support: Completed the implementation of all remaining math functions and increase half-type support [\#8595](https://github.com/kokkos/kokkos/pull/8789) [\#8858](https://github.com/kokkos/kokkos/pull/8858) [\#8873](https://github.com/kokkos/kokkos/pull/8873) [\#8712](https://github.com/kokkos/kokkos/pull/8712) [\#8827](https://github.com/kokkos/kokkos/pull/8827) [\#8819](https://github.com/kokkos/kokkos/pull/8819) [\#8719](https://github.com/kokkos/kokkos/pull/8719) [\#8863](https://github.com/kokkos/kokkos/pull/8863) [\#8862](https://github.com/kokkos/kokkos/pull/8862) [\#8778](https://github.com/kokkos/kokkos/pull/8778) [\#8778](https://github.com/kokkos/kokkos/pull/8778) [\#8891](https://github.com/kokkos/kokkos/pull/8891)
 * Use StaticBatchSize in ViewFill [\#8795](https://github.com/kokkos/kokkos/pull/8795)
 * Check that exceeding team_size_max and scratch_size_max fails [\#7445](https://github.com/kokkos/kokkos/pull/7445)
 * Enable MPI detection with PALS [\#8895](https://github.com/kokkos/kokkos/pull/8895)
@@ -41,6 +40,7 @@
 * Better performance with MDRangePolicy with CUDA, HIP and SYCL [\#8638](https://github.com/kokkos/kokkos/pull/8638),  [\#8731](https://github.com/kokkos/kokkos/pull/8731)
 * Support for `Kokkos::norm` - similar to `std::norm` [\#8638](https://github.com/kokkos/kokkos/pull/8927)
 * Use neon and sve SIMD instructions if `nvcc` supports them [\#8667](https://github.com/kokkos/kokkos/pull/8667)
+* Expanded Math Support: Completed the implementation of all remaining math functions and increase half-type support [\#8595](https://github.com/kokkos/kokkos/pull/8789) [\#8858](https://github.com/kokkos/kokkos/pull/8858) [\#8873](https://github.com/kokkos/kokkos/pull/8873) [\#8712](https://github.com/kokkos/kokkos/pull/8712) [\#8827](https://github.com/kokkos/kokkos/pull/8827) [\#8819](https://github.com/kokkos/kokkos/pull/8819) [\#8719](https://github.com/kokkos/kokkos/pull/8719) [\#8863](https://github.com/kokkos/kokkos/pull/8863) [\#8862](https://github.com/kokkos/kokkos/pull/8862) [\#8778](https://github.com/kokkos/kokkos/pull/8778) [\#8778](https://github.com/kokkos/kokkos/pull/8778) [\#8891](https://github.com/kokkos/kokkos/pull/8891)
 
 ### Build System Changes
 * use AMD recommended way to discover HIP in CMake [\#8787](https://github.com/kokkos/kokkos/pull/8787)
