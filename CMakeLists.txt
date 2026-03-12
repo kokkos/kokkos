@@ -318,6 +318,7 @@ if(KOKKOS_ENABLE_COVERAGE AND Kokkos_ENABLE_TESTS AND NOT Kokkos_INSTALL_TESTING
       --ignore-filename-regex=".*/gtest/.*"
       --ignore-filename-regex=".*/desul/.*"
       --ignore-filename-regex=".*/mdspan/.*"
+      --ignore-filename-regex=".*/core/src/impl/.*"
     )
     list(JOIN _LLVM_COV_OBJECT_ARGS " " _LLVM_COV_OBJECT_STR)
     list(JOIN _LLVM_COV_IGNORE_ARGS " " _LLVM_COV_IGNORE_STR)
@@ -329,8 +330,7 @@ if(KOKKOS_ENABLE_COVERAGE AND Kokkos_ENABLE_TESTS AND NOT Kokkos_INSTALL_TESTING
         "#!/bin/sh
         set -e
         cd \"${CMAKE_BINARY_DIR}\"
-        \"${LLVM_COV}\" report -instr-profile=default.profdata 
-        \"$<TARGET_FILE:Kokkos_CoreUnitTest_Serial1>\" ${_LLVM_COV_OBJECT_STR} ${_LLVM_COV_IGNORE_STR} | tee coverage_report.txt
+        \"${LLVM_COV}\" report -instr-profile=default.profdata \"$<TARGET_FILE:Kokkos_CoreUnitTest_Serial1>\" ${_LLVM_COV_OBJECT_STR} ${_LLVM_COV_IGNORE_STR} | tee coverage_report.txt
         "
     )
     add_custom_target(
