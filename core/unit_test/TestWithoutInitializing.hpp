@@ -64,11 +64,6 @@ TEST(TEST_CATEGORY, resize_realloc_no_alloc) {
 }
 
 TEST(TEST_CATEGORY, realloc_exec_space) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same_v<typename TEST_EXECSPACE::memory_space,
-                     Kokkos::CudaUVMSpace>)
-    GTEST_SKIP() << "skipping since CudaUVMSpace requires additional fences";
-#endif
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableFences());
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
@@ -300,12 +295,6 @@ TEST(TEST_CATEGORY, view_allocation_int) {
 }
 
 TEST(TEST_CATEGORY, view_allocation_exec_space_int) {
-#ifdef KOKKOS_ENABLE_CUDA
-  if (std::is_same_v<TEST_EXECSPACE::memory_space, Kokkos::CudaUVMSpace>)
-    GTEST_SKIP()
-        << "skipping since the CudaUVMSpace requires additiional fences";
-#endif
-
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::EnableAll());
   using view_type = Kokkos::View<int*, TEST_EXECSPACE>;
