@@ -31,7 +31,6 @@ import kokkos.functional;
 
 #include <cstdint>
 
-#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_4
 #if defined(KOKKOS_COMPILER_GNU) && !defined(__PGIC__) && \
     !defined(__CUDA_ARCH__)
 
@@ -45,12 +44,6 @@ import kokkos.functional;
 #define KOKKOS_IMPL_NONTEMPORAL_PREFETCH_LOAD(addr) ((void)0)
 #define KOKKOS_IMPL_NONTEMPORAL_PREFETCH_STORE(addr) ((void)0)
 
-#endif
-#else
-#define KOKKOS_IMPL_NONTEMPORAL_PREFETCH_LOAD(addr) \
-  KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr)
-#define KOKKOS_IMPL_NONTEMPORAL_PREFETCH_STORE(addr) \
-  KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr)
 #endif
 
 namespace Kokkos {
