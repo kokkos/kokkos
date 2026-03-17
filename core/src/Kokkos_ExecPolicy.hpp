@@ -247,28 +247,25 @@ class ImplRangePolicy<ExecSpace, Properties...>
     if constexpr (std::is_convertible_v<member_type, IndexType>) {
       bool error = false;
 
-      if constexpr (std::is_arithmetic_v<member_type> &&
-                    (std::is_signed_v<IndexType> !=
-                     std::is_signed_v<member_type>)) {
-        // check signed to unsigned
-        if constexpr (std::is_signed_v<IndexType>)
-          error |= (bound < static_cast<IndexType>(
-                                std::numeric_limits<member_type>::min()));
+      if constexpr (std::is_arithmetic_v<member_type>) {
+        if constexpr (std::is_signed_v<IndexType> !=
+                      std::is_signed_v<member_type>) {
+          // check signed to unsigned
+          if constexpr (std::is_signed_v<IndexType>) warn |= (bound < 0);
 
-        // check unsigned to signed
-        if constexpr (std::is_signed_v<member_type>) {
-          // avoid overflow warnings by checking the size of the types e.g.
-          // conversion ‘long int’ to ‘int’ changes value
-          // from ‘9223372036854775807’ to ‘-1’
-          if constexpr (sizeof(member_type) <= sizeof(IndexType))
-            warn |= (bound > static_cast<IndexType>(
-                                 std::numeric_limits<member_type>::max()));
-          else {
-            warn |= (bound > std::numeric_limits<IndexType>::max());
+          // check unsigned to signed
+          if constexpr (std::is_signed_v<member_type>) {
+            // avoid overflow warnings by checking the size of the types e.g.
+            // conversion ‘long int’ to ‘int’ changes value
+            // from ‘9223372036854775807’ to ‘-1’
+            if constexpr (sizeof(member_type) <= sizeof(IndexType))
+              // safely cast member_type max to IndexType because member_type is
+              // the same size or smaller.
+              warn |= (bound > static_cast<IndexType>(
+                                   std::numeric_limits<member_type>::max()));
           }
         }
       }
-
       // check narrowing
       error |=
           (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);

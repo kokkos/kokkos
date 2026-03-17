@@ -97,6 +97,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_check_exceeding_max) {
 }
 
 TEST(TEST_CATEGORY_DEATH, range_policy_check_exceeding_min) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   // Trigger due to exceeding a policy's range minimum
   using IntPolicy = Kokkos::RangePolicy<int>;
 
