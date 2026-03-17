@@ -11,7 +11,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <Kokkos_DualView.hpp>
-
+#include <Kokkos_Abort.hpp>
 #include <Kokkos_Timer.hpp>
 
 namespace Performance {
@@ -19,9 +19,9 @@ namespace Performance {
 namespace Impl {
 
 struct times_t {
-  double t1;
-  double t2;
-  double t3;
+  double t_sync_to_host;
+  double t_compute;
+  double t_sync_to_device;
 };
 
 template <typename Scalar, class ViewType>
@@ -68,54 +68,57 @@ struct test_dualview_with_datacheck {
 
     Kokkos::deep_copy(a.view_device(), 1);
 
-    Kokkos::Timer timer1, timer2, timer3;
+    Kokkos::Timer timer;
 
     using device_space = typename ViewType::t_dev::execution_space;
     using host_space   = typename ViewType::t_host::execution_space;
 
-    timer1.reset();
+    timer.reset();
     a.template modify<device_space>();
     a.template sync<host_space>();
-    times.t1 = timer1.seconds();
+    times.t_sync_to_host = timer.seconds();
 
     // Check device view is initialized as expected
     scalar_type a_d_sum = 0;
 
-    timer2.reset();
+    timer.reset();
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<device_space>(0, n),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
             a.view_device()),
         a_d_sum);
-    times.t2 = timer2.seconds();
-    ASSERT_EQ(a_d_sum, sum_total);
+    times.t_compute = timer.seconds();
+    if (a_d_sum != sum_total)
+      Kokkos::abort("test_dualview_with_datacheck: a_d_sum != sum_total");
 
     // Use deep_copy
     Kokkos::deep_copy(b, a);
-    timer3.reset();
+    timer.reset();
     b.template sync<host_space>();
-    times.t3 += timer3.seconds();
+    times.t_sync_to_device += timer.seconds();
 
     // Perform same checks on b as done on a
     // Check device view is initialized as expected
     scalar_type b_d_sum = 0;
-    timer2.reset();
+    timer.reset();
     Kokkos::parallel_reduce(
         Kokkos::RangePolicy<device_space>(0, n),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
             b.view_device()),
         b_d_sum);
-    times.t2 += timer2.seconds();
-    ASSERT_EQ(b_d_sum, sum_total);
+    times.t_compute += timer.seconds();
+    if (b_d_sum != sum_total)
+      Kokkos::abort("test_dualview_with_datacheck: b_d_sum != sum_total");
   }
   test_dualview_with_datacheck(const int n, const int m) {
     times_t elapsed_time = {0.0, 0.0, 0.0};
     run<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(n, m,
                                                                 elapsed_time);
-    std::cout << " DualView (test_dualview_with_datacheck) timing (sec):"
-              << elapsed_time.t1 << ", " << elapsed_time.t2 << ", "
-              << elapsed_time.t3 << ", dim0:" << n << ", dim1:" << m
-              << std::endl;
+    std::cout << " DualView (test_dualview_with_datacheck) timing (sec): "
+              << "t_sync_to_host: " << elapsed_time.t_sync_to_host
+              << ", t_compute: " << elapsed_time.t_compute
+              << ", t_sync_to_device: " << elapsed_time.t_sync_to_device
+              << ", dim0: " << n << ", dim1: " << m << std::endl;
   }
 };
 
@@ -135,37 +138,37 @@ struct test_dualview_sync {
 
     int i = iters;
 
-    Kokkos::Timer timer1, timer2, timer3;
+    Kokkos::Timer timer;
     while (i--) {
       // Sync to host
-      timer1.reset();
+      timer.reset();
       a.template modify<device_space>();
       a.template sync<host_space>();
-      elapsed_time.t1 += timer1.seconds();
+      elapsed_time.t_sync_to_host += timer.seconds();
 
       // Update on host
-      timer2.reset();
+      timer.reset();
       Kokkos::parallel_for(
           Kokkos::RangePolicy<host_space>(0, n),
           IncrViewEntriesFunctor<scalar_type, typename ViewType::t_host>(
               a.view_host()));
       Kokkos::fence();
-      elapsed_time.t2 += timer2.seconds();
+      elapsed_time.t_compute += timer.seconds();
 
       // Sync to device
-      timer3.reset();
+      timer.reset();
       a.template modify<host_space>();
       a.template sync<device_space>();
-      elapsed_time.t3 += timer3.seconds();
+      elapsed_time.t_sync_to_device += timer.seconds();
 
       // Update on device
-      timer2.reset();
+      timer.reset();
       Kokkos::parallel_for(
           Kokkos::RangePolicy<device_space>(0, n),
           IncrViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
               a.view_device()));
       Kokkos::fence();
-      elapsed_time.t2 += timer2.seconds();
+      elapsed_time.t_compute += timer.seconds();
     }
     Kokkos::fence();
 
@@ -177,18 +180,23 @@ struct test_dualview_sync {
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
             a.view_device()),
         a_d_sum);
-    ASSERT_EQ(a_d_sum, sum_total + iters * 2 * sum_total);
+    if (a_d_sum != sum_total + iters * 2 * sum_total)
+      Kokkos::abort(
+          "test_dualview_sync: a_d_sum != sum_total + iters * 2 * sum_total");
   }
   test_dualview_sync(const int n, const int m) {
     times_t elapsed_time = {0.0, 0.0, 0.0};
     const int iters      = 10;
     run<Kokkos::DualView<Scalar**, Kokkos::LayoutLeft, Device>>(n, m, iters,
                                                                 elapsed_time);
-    std::cout << " DualView (test_dualview_sync) timing (sec):"
-              << elapsed_time.t1 / static_cast<double>(iters) << ", "
-              << elapsed_time.t2 / static_cast<double>(iters) << ", "
-              << elapsed_time.t3 / static_cast<double>(iters) << ", dim0:" << n
-              << ", dim1:" << m << std::endl;
+    std::cout << " DualView (test_dualview_sync) timing (sec, avg per iter): "
+              << "t_sync_to_host: "
+              << elapsed_time.t_sync_to_host / static_cast<double>(iters)
+              << ", t_compute: "
+              << elapsed_time.t_compute / static_cast<double>(iters)
+              << ", t_sync_to_device: "
+              << elapsed_time.t_sync_to_device / static_cast<double>(iters)
+              << ", dim0: " << n << ", dim1: " << m << std::endl;
   }
 };
 }  // namespace Impl

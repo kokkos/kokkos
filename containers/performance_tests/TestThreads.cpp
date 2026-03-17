@@ -35,7 +35,7 @@ TEST(threads, dynrankview_perf) {
   test_dynrankview_op_perf<Kokkos::Threads>(8192);
 }
 
-TEST(TEST_CATEGORY, dualview_perf) {
+TEST(threads, dualview_perf) {
   std::cout << "Threads" << std::endl;
   std::cout << " DualView Access Performance " << std::endl;
   test_dualview<size_t, Kokkos::Threads>();
