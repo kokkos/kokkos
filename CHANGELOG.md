@@ -21,7 +21,7 @@
 * Implemented true reduced-precision mathematical functions (instead of falling back to `float`) [\#8705](https://github.com/kokkos/kokkos/pull/8705)
 * Disable `MALLOC_ASYNC` for ROCm >= 7.0 [\#8746](https://github.com/kokkos/kokkos/pull/8746)
 * Add support for AMD MI355 and MI350 (`AMD_GFX950`) [\#8839](https://github.com/kokkos/kokkos/pull/8839)
-* Implement StaticBatchSize and it in deep_copy form scalar [\#8829](https://github.com/kokkos/kokkos/pull/8829)
+* Implement StaticBatchSize in deep_copy form scalar [\#8829](https://github.com/kokkos/kokkos/pull/8829)
 * Fix race conditions in HIP ParallelScan  [\#8648](https://github.com/kokkos/kokkos/pull/8648)
 
 ### General Enhancements
