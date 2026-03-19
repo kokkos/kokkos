@@ -11,7 +11,7 @@
 #### CUDA:
 * Added `Kokkos_ARCH_BLACKWELL103` configure option for NVIDIA B300 GPUs [\#8791](https://github.com/kokkos/kokkos/pull/8791)
 * Improve performance of `deep_copy` from scalar (view fill) [\#8795](https://github.com/kokkos/kokkos/pull/8795)
-* Fix compiling with Clang+Cuda+OpenMP with KOKKOS_COMPILE_LANGUAGE=CUDA [\#8810](https://github.com/kokkos/kokkos/pull/8810)
+* Fix compiling with Clang+Cuda+OpenMP with Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON [\#8810](https://github.com/kokkos/kokkos/pull/8810)
 * Fix compilig with Cuda 13.1 [\#8801](https://github.com/kokkos/kokkos/pull/8801)
 * `nvcc_wrapper`: Add support for `-Ofc` and `--fdevice-time-trace` flags [\#8865](https://github.com/kokkos/kokkos/pull/8865)
 
