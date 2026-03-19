@@ -39,7 +39,6 @@
 * Expand math support: complete the implementation of all remaining math functions and increase half-type support [\#8595](https://github.com/kokkos/kokkos/pull/8789) [\#8858](https://github.com/kokkos/kokkos/pull/8858) [\#8873](https://github.com/kokkos/kokkos/pull/8873) [\#8712](https://github.com/kokkos/kokkos/pull/8712) [\#8827](https://github.com/kokkos/kokkos/pull/8827) [\#8819](https://github.com/kokkos/kokkos/pull/8819) [\#8719](https://github.com/kokkos/kokkos/pull/8719) [\#8863](https://github.com/kokkos/kokkos/pull/8863) [\#8862](https://github.com/kokkos/kokkos/pull/8862) [\#8778](https://github.com/kokkos/kokkos/pull/8778) [\#8891](https://github.com/kokkos/kokkos/pull/8891)
 
 ### Build System Changes
-* use AMD recommended way to discover HIP in CMake [\#8787](https://github.com/kokkos/kokkos/pull/8787)
 * Warn about multiple device architectures enabled by `find_package(HIP)` [\#8938](https://github.com/kokkos/kokkos/pull/8938)
 
 ### Incompatibilities (i.e. breaking changes)
