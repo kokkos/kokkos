@@ -27,7 +27,7 @@
 ### General Enhancements
 * Enable ScatterView to contribute into a View that is an rvalue [\#8594](https://github.com/kokkos/kokkos/pull/8594)
 * Add bitwise operators to simd vectors and simd masks [\#8565](https://github.com/kokkos/kokkos/pull/8565) 
-* Allow user defined type indexers into Array subscript operators [\#8692](https://github.com/kokkos/kokkos/pull/8692) 
+* Use Array::size_type for subscript operators [\#8692](https://github.com/kokkos/kokkos/pull/8692) 
 * Add missing numeric trait `denorm_min` for `Kokkos::Experimental::half_t` and `Kokkos::Experimental::bhalf_t` [\#8769](https://github.com/kokkos/kokkos/pull/8769)
 * Use StaticBatchSize in ViewFill [\#8795](https://github.com/kokkos/kokkos/pull/8795)
 * Check that exceeding team_size_max and scratch_size_max fails [\#7445](https://github.com/kokkos/kokkos/pull/7445)
