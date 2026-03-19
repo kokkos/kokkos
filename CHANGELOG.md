@@ -40,7 +40,7 @@
 
 ### Build System Changes
 * use AMD recommended way to discover HIP in CMake [\#8787](https://github.com/kokkos/kokkos/pull/8787)
-* Warn about multiple architectures enabled by HIP [\#8938](https://github.com/kokkos/kokkos/pull/8938)
+* Warn about multiple device architectures enabled by `find_package(HIP)` [\#8938](https://github.com/kokkos/kokkos/pull/8938)
 
 ### Incompatibilities (i.e. breaking changes)
 * Execution spaces can only be constructed after `Kokkos::initialize()` has been called and must be destructed before `Kokkos::finalize()` [\#8546](https://github.com/kokkos/kokkos/pull/8546) [\#8677](https://github.com/kokkos/kokkos/pull/8677)
