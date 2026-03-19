@@ -25,7 +25,7 @@
 * Fix race conditions in HIP ParallelScan  [\#8648](https://github.com/kokkos/kokkos/pull/8648)
 
 ### General Enhancements
-* Enable ScatterView contribute into a View that is a rvalue [\#8594](https://github.com/kokkos/kokkos/pull/8594)
+* Enable ScatterView to contribute into a View that is an rvalue [\#8594](https://github.com/kokkos/kokkos/pull/8594)
 * Add bitwise operators to simd vectors and simd masks [\#8565](https://github.com/kokkos/kokkos/pull/8565) 
 * Allow user defined type indexers into Array subscript operators [\#8692](https://github.com/kokkos/kokkos/pull/8692) 
 * Add missing numeric trait `denorm_min` for `Kokkos::Experimental::half_t` and `Kokkos::Experimental::bhalf_t` [\#8769](https://github.com/kokkos/kokkos/pull/8769)
