@@ -62,7 +62,7 @@
 * Update `team_fan_in{in|out}` member functions of `ThreadsExecTeamMember` not to call host-only fuctions on the device [\#8730](https://github.com/kokkos/kokkos/pull/8730)
 * Remove std::vector inside device code in the simd perf tests [\#8861](https://github.com/kokkos/kokkos/pull/8861)
 * Make overloads of `isnormal` compliant with std [\#8857](https://github.com/kokkos/kokkos/pull/8857)
-* Fix compiler macros, properly identify GCC and LLVM Clang on OSX [\#8592](https://github.com/kokkos/kokkos/pull/8592) [\#8952](https://github.com/kokkos/kokkos/pull/8952)
+* Fix compiler macros identify GCC and LLVM Clang on OSX [\#8592](https://github.com/kokkos/kokkos/pull/8592) [\#8952](https://github.com/kokkos/kokkos/pull/8952)
 
 ## 5.0.2
 
