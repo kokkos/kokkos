@@ -38,7 +38,6 @@
 * Improve performance of `deep_copy` from scalar in view fill using StaticBatchSize [\#8795](https://github.com/kokkos/kokkos/pull/8795) [\#8829](https://github.com/kokkos/kokkos/pull/8829)
 
 ### Build System Changes
-* use AMD recommended way to discover HIP in CMake [\#8787](https://github.com/kokkos/kokkos/pull/8787)
 * Warn about multiple device architectures enabled by `find_package(HIP)` [\#8938](https://github.com/kokkos/kokkos/pull/8938)
 
 ### Incompatibilities (i.e. breaking changes)
