@@ -30,7 +30,7 @@
 * Use Array::size_type for subscript operators [\#8692](https://github.com/kokkos/kokkos/pull/8692) 
 * Add missing numeric trait `denorm_min` for `Kokkos::Experimental::half_t` and `Kokkos::Experimental::bhalf_t` [\#8769](https://github.com/kokkos/kokkos/pull/8769)
 * Use StaticBatchSize in ViewFill [\#8795](https://github.com/kokkos/kokkos/pull/8795)
-* Check that exceeding team_size_max and scratch_size_max fails [\#7445](https://github.com/kokkos/kokkos/pull/7445)
+* Enforce failure when exceeding team_size_max and scratch_size_max checks [\#7445](https://github.com/kokkos/kokkos/pull/7445)
 * Enable MPI detection with PALS [\#8895](https://github.com/kokkos/kokkos/pull/8895)
 * Add simd memory permute functions [\#8775](https://github.com/kokkos/kokkos/pull/8775)
 * Performance improvements using `MDRangePolicy` with `CUDA`, `HIP` and `SYCL` [\#8638](https://github.com/kokkos/kokkos/pull/8638),  [\#8731](https://github.com/kokkos/kokkos/pull/8731)
