@@ -10,8 +10,8 @@
 #include <impl/Kokkos_Utilities.hpp>
 #include <impl/Kokkos_ErrorMessage.hpp>
 
-#include <sstream>
 #include <string>
+#include <string_view>
 #include <type_traits>
 
 // FIXME: Obtain file and line number information via std::source_location
@@ -93,6 +93,24 @@ inline void check_execution_space_destructor_precondition(T msg) noexcept {
   Impl::CheckUsage<Impl::UsageRequires::isNotFinalized>::check(
       Impl::Message::Message<Impl::Message::Type::InstanceDestructionAfterFini>(
           std::string(msg)));
+}
+
+template <Message::ExecutionPolicyOrInt T>
+void check_parallel_precondition(
+    const char* func_name, const T& policy,
+    const std::string& label = "no-label") noexcept {
+  CheckUsage<UsageRequires::insideExecEnv>::check(
+      Message::Message<Message::Type::CalledBeforeInit>(
+          func_name, Message::toString(policy), label),
+      Message::Message<Message::Type::CalledAfterFini>(
+          func_name, Message::toString(policy), label));
+}
+
+inline void check_view_allocation_precondition(
+    std::string_view label) noexcept {
+  CheckUsage<UsageRequires::insideExecEnv>::check(
+      Message::Message<Message::Type::ViewAllocationBeforeInit>(label),
+      Message::Message<Message::Type::ViewAllocationAfterFini>(label));
 }
 
 }  // namespace Impl
