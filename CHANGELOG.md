@@ -58,7 +58,6 @@
 * Disable DynViewAPI testing for rank 7 with Clang22 due to ICE [\#8903](https://github.com/kokkos/kokkos/pull/8903)
 * Ensure that execution space instances fence on finalize [\#8626](https://github.com/kokkos/kokkos/pull/8626)
 * Update `team_fan_{in|out}` member functions of `ThreadsExecTeamMember` not to call host-only fuctions on the device [\#8730](https://github.com/kokkos/kokkos/pull/8730)
-* Remove std::vector inside device code in the simd perf tests [\#8861](https://github.com/kokkos/kokkos/pull/8861)
 * Make overloads of `isnormal` compliant with std [\#8857](https://github.com/kokkos/kokkos/pull/8857)
 * Fix compiler macros identify GCC and LLVM Clang on OSX [\#8592](https://github.com/kokkos/kokkos/pull/8592) [\#8952](https://github.com/kokkos/kokkos/pull/8952)
 
