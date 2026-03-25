@@ -11,14 +11,12 @@
 #### CUDA:
 * Added `Kokkos_ARCH_BLACKWELL103` configure option for NVIDIA B300 GPUs [\#8791](https://github.com/kokkos/kokkos/pull/8791)
 * Fix compiling with Clang+Cuda+OpenMP with Kokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON [\#8810](https://github.com/kokkos/kokkos/pull/8810)
-* Fix compiling with Cuda 13.1 [\#8801](https://github.com/kokkos/kokkos/pull/8801)
 * `nvcc_wrapper`: Add support for `-Ofc` and `--fdevice-time-trace` flags [\#8865](https://github.com/kokkos/kokkos/pull/8865)
 
 #### HIP: 
 * Search the CMake variable `ROCM_PATH` for dependencies [\#8669](https://github.com/kokkos/kokkos/pull/8669)
 * Added support for brain floating-point (`bhalf_t`) [\#8705](https://github.com/kokkos/kokkos/pull/8705)
 * Implemented true reduced-precision mathematical functions (instead of falling back to `float`) [\#8705](https://github.com/kokkos/kokkos/pull/8705)
-* Disable `MALLOC_ASYNC` for ROCm >= 7.0 [\#8746](https://github.com/kokkos/kokkos/pull/8746)
 * Add support for AMD MI355 and MI350 (`AMD_GFX950`) [\#8839](https://github.com/kokkos/kokkos/pull/8839)
 * Fix race conditions in HIP `parallel_scan` when running on MI300A  [\#8648](https://github.com/kokkos/kokkos/pull/8648)
 
@@ -48,11 +46,9 @@
 * Remove the deprecated OpenMPTarget backend [\#8701](https://github.com/kokkos/kokkos/pull/8701) [\#8717](https://github.com/kokkos/kokkos/pull/8717) [\#8749](https://github.com/kokkos/kokkos/pull/8749) [\#8767](https://github.com/kokkos/kokkos/pull/8767)
 
 ### Bug Fixes
-* Remove use of old Runtime API in CUDA 13 [\#8707](https://github.com/kokkos/kokkos/pull/8707)
 * Fix reduction_identity for BAnd [\#8715](https://github.com/kokkos/kokkos/pull/8715)
-* Make sure kokkosalgorithms and kokkossimd are built as position independent code [\#8815](https://github.com/kokkos/kokkos/pull/8815)
 * Restrict lock free host atomics to the actual sizes that are lock free [\#8809](https://github.com/kokkos/kokkos/pull/8809)
-* Use intrinsics when calling min and max on simd vectors of int types [\#8899](https://github.com/kokkos/kokkos/pull/8899)
+* Use intrinsics when calling min and max on simd vectors of integral types [\#8899](https://github.com/kokkos/kokkos/pull/8899)
 * Adds missing `constexpr` specifiers on `conj()`, and for the `real()` and `imag()` non-member functions taking complex numbers [\#8928](https://github.com/kokkos/kokkos/pull/8928)
 * Ensure that execution space instances fence on finalize [\#8626](https://github.com/kokkos/kokkos/pull/8626)
 * Update `team_fan_{in|out}` member functions of `ThreadsExecTeamMember` not to call host-only fuctions on the device [\#8730](https://github.com/kokkos/kokkos/pull/8730)
