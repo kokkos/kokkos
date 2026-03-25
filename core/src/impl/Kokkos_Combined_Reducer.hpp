@@ -11,6 +11,7 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
 
+#include <algorithm>
 #include <utility>
 
 namespace Kokkos {
@@ -41,12 +42,28 @@ struct CombinedReducerValueItemImpl {
 
 //==============================================================================
 
+// Dummy struct used to get the alignment of CombinedReducerValueImpl.
+template <class IdxSeq, class... ValueTypes>
+struct DummyCombinedReducerValueImpl;
+
+template <size_t... Idxs, class... Types>
+struct DummyCombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
+                                     Types...>
+    : CombinedReducerValueItemImpl<Idxs, Types>... {};
+
 template <class IdxSeq, class... ValueTypes>
 struct CombinedReducerValueImpl;
 
+// CombinedReducerValueImpl has to be aligned to at least alignof(int) and its
+// sizeof must be a multiple of sizeof(int), as we might access it through an
+// int* in the CUDA and HIP reduction kernels.
 template <size_t... Idxs, class... ValueTypes>
-struct CombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
-                                ValueTypes...>
+struct alignas(
+    std::max(alignof(int),
+             alignof(DummyCombinedReducerValueImpl<
+                     std::integer_sequence<size_t, Idxs...>, ValueTypes...>)))
+    CombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
+                             ValueTypes...>
     : CombinedReducerValueItemImpl<Idxs, ValueTypes>... {
  public:
   KOKKOS_DEFAULTED_FUNCTION
