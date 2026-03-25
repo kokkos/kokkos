@@ -2563,51 +2563,51 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 }
 
 template <typename... Flags>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>
-    simd_unchecked_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<2>>
+simd_unchecked_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename SimdType, typename... Flags>
   requires std::same_as<typename SimdType::abi_type,
                         simd_abi::neon_fixed_size<2>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>
-    simd_unchecked_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<2>>
+simd_unchecked_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename... Flags>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>
-    simd_partial_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<2>>
+simd_partial_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename SimdType, typename... Flags>
   requires std::same_as<typename SimdType::abi_type,
                         simd_abi::neon_fixed_size<2>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>
-    simd_partial_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<2>>
+simd_partial_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<2>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename FlagType>
@@ -2923,51 +2923,51 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 }
 
 template <typename... Flags>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>
-    simd_unchecked_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<4>>
+simd_unchecked_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename SimdType, typename... Flags>
   requires std::same_as<typename SimdType::abi_type,
                         simd_abi::neon_fixed_size<4>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>
-    simd_unchecked_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<4>>
+simd_unchecked_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename... Flags>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>
-    simd_partial_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<4>>
+simd_partial_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename SimdType, typename... Flags>
   requires std::same_as<typename SimdType::abi_type,
                         simd_abi::neon_fixed_size<4>>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>
-    simd_partial_load(
-        const std::uint32_t* ptr,
-        basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
-        simd_flags<Flags...> flag = simd_flag_default) {
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<std::uint32_t,
+                                                 simd_abi::neon_fixed_size<4>>
+simd_partial_load(
+    const std::uint32_t* ptr,
+    basic_simd_mask<std::uint32_t, simd_abi::neon_fixed_size<4>> const& mask,
+    simd_flags<Flags...> flag = simd_flag_default) {
   return basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>>(ptr, mask,
-                                                                flag);
+                                                                 flag);
 }
 
 template <typename FlagType>
@@ -3854,8 +3854,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>>::basic_simd(
     basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> const&
         other) noexcept
-    : m_value(vmovn_u64(static_cast<uint64x2_t>(other))) {
-}
+    : m_value(vmovn_u64(static_cast<uint64x2_t>(other))) {}
 
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>>::basic_simd(
