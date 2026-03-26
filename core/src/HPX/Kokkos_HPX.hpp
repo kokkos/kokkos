@@ -162,8 +162,7 @@ class HPX {
     hpx::spinlock m_sender_mutex;
   };
 
-  static void default_instance_deleter(instance_data *) {}
-  static instance_data m_default_instance_data;
+  static Kokkos::Impl::HostSharedPtr<instance_data> m_default_instance_data;
   Kokkos::Impl::HostSharedPtr<instance_data> m_instance_data;
 
  public:
@@ -183,8 +182,7 @@ class HPX {
       : m_instance_data(
             (Kokkos::Impl::check_execution_space_constructor_precondition(
                  name()),
-             Kokkos::Impl::HostSharedPtr<instance_data>(
-                 &m_default_instance_data, &default_instance_deleter))) {}
+             m_default_instance_data)) {}
 
 #pragma GCC diagnostic pop
 
@@ -198,8 +196,7 @@ class HPX {
              mode == instance_mode::independent
                  ? (Kokkos::Impl::HostSharedPtr<instance_data>(
                        new instance_data(m_next_instance_id++)))
-                 : Kokkos::Impl::HostSharedPtr<instance_data>(
-                       &m_default_instance_data, &default_instance_deleter))) {}
+                 : m_default_instance_data)) {}
   explicit HPX(hpx::execution::experimental::unique_any_sender<> &&sender)
       : m_instance_data(
             (Kokkos::Impl::check_execution_space_constructor_precondition(

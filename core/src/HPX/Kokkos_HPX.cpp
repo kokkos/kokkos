@@ -78,7 +78,7 @@ std::atomic<uint32_t> HPX::m_next_instance_id{HPX::impl_default_instance_id() +
 uint32_t HPX::m_active_parallel_region_count{0};
 hpx::spinlock HPX::m_active_parallel_region_count_mutex;
 hpx::condition_variable_any HPX::m_active_parallel_region_count_cond;
-HPX::instance_data HPX::m_default_instance_data;
+Kokkos::Impl::HostSharedPtr<HPX::instance_data> HPX::m_default_instance_data;
 
 void HPX::print_configuration(std::ostream &os, const bool) const {
   os << "Host Parallel Execution Space\n";
@@ -126,9 +126,9 @@ void HPX::impl_static_fence(const std::string &name) {
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
       [&]() {
-        auto &s = m_default_instance_data.m_sender;
+        auto &s = m_default_instance_data->m_sender;
         std::unique_lock<hpx::spinlock> l(
-            m_default_instance_data.m_sender_mutex);
+            m_default_instance_data->m_sender_mutex);
 
         // This is a loose fence. Any work scheduled before this will be waited
         // for, but work scheduled while waiting may also be waited for.
@@ -173,9 +173,18 @@ void HPX::impl_initialize(InitializationSettings const &settings) {
 
     m_hpx_initialized = true;
   }
+
+  // Create the default instance data.
+  m_default_instance_data = Kokkos::Impl::HostSharedPtr(new instance_data());
 }
 
 void HPX::impl_finalize() {
+  m_default_instance_data->fence(
+      "Kokkos::Experimental::HPX: fence "
+      "to drain internal sender on finalize");
+
+  m_default_instance_data = nullptr;
+
   if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
