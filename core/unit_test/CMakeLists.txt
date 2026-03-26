@@ -777,14 +777,29 @@ if(KOKKOS_ENABLE_LIBDL)
     target_compile_features(kokkosprinter-tool PUBLIC cxx_std_14)
   endif()
 
+  kokkos_add_test_library(kokkos-empty-profiling-tool SHARED SOURCES tools/empty-tool.cpp)
+
   kokkos_add_test_executable(ProfilingAllCalls tools/TestAllCalls.cpp)
 
   kokkos_add_test_executable(ToolsInitialization UnitTestMain.cpp tools/TestToolsInitialization.cpp)
+
+  kokkos_add_test_executable(EmptyProfilingLibraryDeathTest UnitTestMain.cpp tools/TestEmptyProfilingLibrary.cpp)
 
   set(ADDRESS_REGEX "0x[0-9a-f]*")
   set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
   set(SIZE_REGEX "[0-9]*")
   set(SKIP_SCRATCH_INITIALIZATION_REGEX ".*")
+
+  # check that loading a library with no profiling callbacks produces an error
+  kokkos_add_test(
+    SKIP_TRIBITS
+    NAME
+    ProfilingTestErrorNoCallbacks
+    EXE
+    EmptyProfilingLibraryDeathTest
+    TOOL
+    kokkos-empty-profiling-tool
+  )
 
   # check help works via environment variable
   kokkos_add_test(
