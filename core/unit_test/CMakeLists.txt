@@ -543,6 +543,10 @@ endif()
 
 if(Kokkos_ENABLE_HPX)
   kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES})
+  kokkos_add_executable_and_test(
+    CoreUnitTest_HPXDefaultInstanceFencesOnFinalize SOURCES UnitTestMain.cpp
+    hpx/TestHPX_DefaultInstanceFencesOnFinalize.cpp
+  )
   kokkos_add_executable_and_test(CoreUnitTest_HPXInterOp SOURCES UnitTestMain.cpp hpx/TestHPX_InterOp.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HPX_IndependentInstances
