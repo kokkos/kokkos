@@ -249,6 +249,35 @@ class CombinedReduceFunctorSameType {
   }
 };
 
+template <class ValueType, class DeviceType>
+class CombinedReduceFunctorManySameType {
+ public:
+  using size_type = int64_t;
+
+  const size_type nwork;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit CombinedReduceFunctorManySameType(
+      const size_type& arg_nwork)
+      : nwork(arg_nwork) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(size_type iwork, ValueType& dst1, ValueType& dst2,
+                  ValueType& dst3, ValueType& dst4, ValueType& dst5,
+                  ValueType& dst6, ValueType& dst7, ValueType& dst8,
+                  ValueType& dst9) const {
+    dst1 += 1;
+    dst2 += 2;
+    dst3 += 3;
+    dst4 += -1;
+    dst5 += -2;
+    dst6 += -3;
+    dst7 += iwork + 1;
+    dst8 += nwork - iwork;
+    dst9 += 0;
+  }
+};
+
 namespace {
 
 template <typename ScalarType, class DeviceType>
@@ -536,6 +565,25 @@ TEST(TEST_CATEGORY, int64_t_reduce_dynamic_view) {
 
 // FIXME_OPENACC: Not yet implemented.
 #ifndef KOKKOS_ENABLE_OPENACC
+TEST(TEST_CATEGORY, int16_combined_reduce) {
+  using functor_type = CombinedReduceFunctorSameType<int16_t, TEST_EXECSPACE>;
+  constexpr uint64_t nw = 10;
+
+  uint64_t nsum = (nw / 2) * (nw + 1);
+
+  int16_t result1 = 0;
+  int16_t result2 = 0;
+  int16_t result3 = 0;
+
+  Kokkos::parallel_reduce("int16_combined_reduce",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+                          functor_type(nw), result1, result2, result3);
+
+  ASSERT_EQ(nw, uint64_t(result1));
+  ASSERT_EQ(nsum, uint64_t(result2));
+  ASSERT_EQ(nsum, uint64_t(result3));
+}
+
 TEST(TEST_CATEGORY, int_combined_reduce) {
   using functor_type = CombinedReduceFunctorSameType<int64_t, TEST_EXECSPACE>;
   constexpr uint64_t nw = 1000;
@@ -553,6 +601,72 @@ TEST(TEST_CATEGORY, int_combined_reduce) {
   ASSERT_EQ(nw, uint64_t(result1));
   ASSERT_EQ(nsum, uint64_t(result2));
   ASSERT_EQ(nsum, uint64_t(result3));
+}
+
+TEST(TEST_CATEGORY, many_int8_combined_reduce) {
+  using functor_type =
+      CombinedReduceFunctorManySameType<int8_t, TEST_EXECSPACE>;
+  constexpr int64_t nw = 10;
+
+  int64_t nsum = (nw / 2) * (nw + 1);
+
+  int8_t result1 = 0;
+  int8_t result2 = 0;
+  int8_t result3 = 0;
+  int8_t result4 = 0;
+  int8_t result5 = 0;
+  int8_t result6 = 0;
+  int8_t result7 = 0;
+  int8_t result8 = 0;
+  int8_t result9 = 0;
+
+  Kokkos::parallel_reduce("many_int8_combined_reduce",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+                          functor_type(nw), result1, result2, result3, result4,
+                          result5, result6, result7, result8, result9);
+
+  ASSERT_EQ(nw, int64_t(result1));
+  ASSERT_EQ(2 * nw, int64_t(result2));
+  ASSERT_EQ(3 * nw, int64_t(result3));
+  ASSERT_EQ(-nw, int64_t(result4));
+  ASSERT_EQ(-2 * nw, int64_t(result5));
+  ASSERT_EQ(-3 * nw, int64_t(result6));
+  ASSERT_EQ(nsum, int64_t(result7));
+  ASSERT_EQ(nsum, int64_t(result8));
+  ASSERT_EQ(0, int64_t(result9));
+}
+
+TEST(TEST_CATEGORY, many_int16_combined_reduce) {
+  using functor_type =
+      CombinedReduceFunctorManySameType<int16_t, TEST_EXECSPACE>;
+  constexpr int64_t nw = 10;
+
+  int64_t nsum = (nw / 2) * (nw + 1);
+
+  int16_t result1 = 0;
+  int16_t result2 = 0;
+  int16_t result3 = 0;
+  int16_t result4 = 0;
+  int16_t result5 = 0;
+  int16_t result6 = 0;
+  int16_t result7 = 0;
+  int16_t result8 = 0;
+  int16_t result9 = 0;
+
+  Kokkos::parallel_reduce("many_int16_combined_reduce",
+                          Kokkos::RangePolicy<TEST_EXECSPACE>(0, nw),
+                          functor_type(nw), result1, result2, result3, result4,
+                          result5, result6, result7, result8, result9);
+
+  ASSERT_EQ(nw, int64_t(result1));
+  ASSERT_EQ(2 * nw, int64_t(result2));
+  ASSERT_EQ(3 * nw, int64_t(result3));
+  ASSERT_EQ(-nw, int64_t(result4));
+  ASSERT_EQ(-2 * nw, int64_t(result5));
+  ASSERT_EQ(-3 * nw, int64_t(result6));
+  ASSERT_EQ(nsum, int64_t(result7));
+  ASSERT_EQ(nsum, int64_t(result8));
+  ASSERT_EQ(0, int64_t(result9));
 }
 
 TEST(TEST_CATEGORY, mdrange_combined_reduce) {
