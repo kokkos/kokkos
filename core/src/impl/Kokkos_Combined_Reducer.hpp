@@ -11,7 +11,6 @@
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_AnonymousSpace.hpp>
 
-#include <algorithm>
 #include <utility>
 
 namespace Kokkos {
