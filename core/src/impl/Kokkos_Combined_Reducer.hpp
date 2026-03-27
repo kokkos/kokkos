@@ -42,29 +42,22 @@ struct CombinedReducerValueItemImpl {
 
 //==============================================================================
 
-// Dummy struct used to get the alignment of CombinedReducerValueImpl.
-template <class IdxSeq, class... ValueTypes>
-struct DummyCombinedReducerValueImpl;
-
-template <size_t... Idxs, class... Types>
-struct DummyCombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
-                                     Types...>
-    : CombinedReducerValueItemImpl<Idxs, Types>... {};
+// Dummy struct used to align CombinedReducerValueImpl to at least alignof(int).
+// CombinedReducerValueImpl has to be aligned to at least alignof(int) and its
+// sizeof must be a multiple of sizeof(int), as we might access it through an
+// int* in the CUDA and HIP reduction kernels.
+struct alignas(int) AlignmentHelper {};
 
 template <class IdxSeq, class... ValueTypes>
 struct CombinedReducerValueImpl;
 
-// CombinedReducerValueImpl has to be aligned to at least alignof(int) and its
-// sizeof must be a multiple of sizeof(int), as we might access it through an
-// int* in the CUDA and HIP reduction kernels.
 template <size_t... Idxs, class... ValueTypes>
-struct alignas(
-    std::max(alignof(int),
-             alignof(DummyCombinedReducerValueImpl<
-                     std::integer_sequence<size_t, Idxs...>, ValueTypes...>)))
-    CombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
-                             ValueTypes...>
-    : CombinedReducerValueItemImpl<Idxs, ValueTypes>... {
+struct CombinedReducerValueImpl<std::integer_sequence<size_t, Idxs...>,
+                                ValueTypes...> :
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+    AlignmentHelper,
+#endif
+    CombinedReducerValueItemImpl<Idxs, ValueTypes>... {
  public:
   KOKKOS_DEFAULTED_FUNCTION
   constexpr CombinedReducerValueImpl() = default;
