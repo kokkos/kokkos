@@ -40,7 +40,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 // fully inlined into cuda_parallel_launch_local_memory, MachineLICM crashes
 // with a null pointer dereference. noinline on exec_range keeps the loop body
 // in that kernel as a single call instruction, avoiding the crash.
-#if defined(KOKKOS_COMPILER_CLANG)  && KOKKOS_COMPILER_CLANG >= 2000 && KOKKOS_COMPILER_CLANG < 2300 && defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG >= 2000 && \
+    KOKKOS_COMPILER_CLANG < 2300 && defined(KOKKOS_ENABLE_CUDA)
 #define KOKKOS_IMPL_EXEC_RANGE_ATTRS __attribute__((noinline)) __device__
 #else
 #define KOKKOS_IMPL_EXEC_RANGE_ATTRS inline __device__
