@@ -195,8 +195,7 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
     std::string label = label_in;
     if (label_in.empty()) {
       using policy_type = std::remove_reference_t<decltype(policy)>;
-      using work_tag    = typename policy_type::work_tag;
-      Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
+      Kokkos::Impl::ParallelConstructName<Functor, policy_type> name(label);
       label = name.get();
     }
     auto tuner_iter = [&]() {
@@ -222,8 +221,7 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
     std::string label = label_in;
     if (label_in.empty()) {
       using policy_type = std::remove_reference_t<decltype(policy)>;
-      using work_tag    = typename policy_type::work_tag;
-      Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
+      Kokkos::Impl::ParallelConstructName<Functor, policy_type> name(label);
       label = name.get();
     }
     auto tuner_iter = [&]() {
@@ -414,8 +412,7 @@ void generic_report_results(const std::string& label_in, Map& map,
     std::string label = label_in;
     if (label_in.empty()) {
       using policy_type = std::remove_reference_t<decltype(policy)>;
-      using work_tag    = typename policy_type::work_tag;
-      Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
+      Kokkos::Impl::ParallelConstructName<Functor, policy_type> name(label);
       label = name.get();
     }
     auto tuner_iter = map[label];
@@ -484,9 +481,7 @@ auto begin_parallel_for(const ExecPolicy& policy, FunctorType& functor,
       Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag>
-        name(label);
+    Kokkos::Impl::ParallelConstructName<FunctorType, ExecPolicy> name(label);
     Kokkos::Tools::beginParallelFor(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
@@ -529,9 +524,7 @@ auto begin_parallel_scan(const ExecPolicy& policy, FunctorType& functor,
       Kokkos::Tools::Impl::ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag>
-        name(label);
+    Kokkos::Impl::ParallelConstructName<FunctorType, ExecPolicy> name(label);
     Kokkos::Tools::beginParallelScan(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
@@ -573,9 +566,7 @@ auto begin_parallel_reduce(const ExecPolicy& policy, FunctorType& functor,
   using response_type = ToolResponse<ExecPolicy, FunctorType>;
   response_type response{policy};
   if (Kokkos::Tools::profileLibraryLoaded()) {
-    Kokkos::Impl::ParallelConstructName<FunctorType,
-                                        typename ExecPolicy::work_tag>
-        name(label);
+    Kokkos::Impl::ParallelConstructName<FunctorType, ExecPolicy> name(label);
     Kokkos::Tools::beginParallelReduce(
         name.get(), Kokkos::Profiling::Experimental::device_id(policy.space()),
         &kpID);
