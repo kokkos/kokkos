@@ -66,8 +66,16 @@ void test_kernel_name_parallel_for() {
     Kokkos::parallel_for(my_policy, my_lambda);
     ASSERT_EQ(last_parallel_for,
               typeid_name(my_lambda) + "/" + typeid_name(my_policy));
-    ASSERT_FALSE(last_parallel_for.starts_with("const "))
-        << last_parallel_for << " is const-qualified";
+    {
+      auto const pos = last_parallel_for.find('/');
+      ASSERT_NE(pos, std::string::npos);
+      auto const functor_name = last_parallel_for.substr(0, pos);
+      ASSERT_FALSE(functor_name.starts_with("const "))
+          << functor_name << " is const-qualified";
+      auto const policy_name = last_parallel_for.substr(pos + 1);
+      ASSERT_FALSE(policy_name.starts_with("const "))
+          << policy_name << " is const-qualified";
+    }
 
     auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int){};
     auto const my_policy_with_tag =
@@ -78,8 +86,16 @@ void test_kernel_name_parallel_for() {
     Kokkos::parallel_for(my_policy_with_tag, my_lambda_with_tag);
     ASSERT_EQ(last_parallel_for, typeid_name(my_lambda_with_tag) + "/" +
                                      typeid_name(my_policy_with_tag));
-    ASSERT_FALSE(last_parallel_for.starts_with("const "))
-        << last_parallel_for << " is const-qualified";
+    {
+      auto const pos = last_parallel_for.find('/');
+      ASSERT_NE(pos, std::string::npos);
+      auto const functor_name = last_parallel_for.substr(0, pos);
+      ASSERT_FALSE(functor_name.starts_with("const "))
+          << functor_name << " is const-qualified";
+      auto const policy_name = last_parallel_for.substr(pos + 1);
+      ASSERT_FALSE(policy_name.starts_with("const "))
+          << policy_name << " is const-qualified";
+    }
   }
 
   Kokkos::Tools::Experimental::set_begin_parallel_for_callback(nullptr);
@@ -110,8 +126,16 @@ void test_kernel_name_parallel_reduce() {
                             // but the name should still include the lambda as
                             // template parameter
 #endif
-    ASSERT_FALSE(last_parallel_reduce.starts_with("const "))
-        << last_parallel_reduce << " is const-qualified";
+    {
+      auto const pos = last_parallel_reduce.rfind('/');
+      ASSERT_NE(pos, std::string::npos);
+      auto const functor_name = last_parallel_reduce.substr(0, pos);
+      ASSERT_FALSE(functor_name.starts_with("const "))
+          << functor_name << " is const-qualified";
+      auto const policy_name = last_parallel_reduce.substr(pos + 1);
+      ASSERT_FALSE(policy_name.starts_with("const "))
+          << policy_name << " is const-qualified";
+    }
 
     auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&){};
     auto const my_policy_with_tag =
@@ -124,8 +148,16 @@ void test_kernel_name_parallel_reduce() {
     auto const suffix = std::string("/") + typeid_name(my_policy_with_tag);
     ASSERT_EQ(last_parallel_reduce.find(suffix),
               last_parallel_reduce.length() - suffix.length());
-    ASSERT_FALSE(last_parallel_reduce.starts_with("const "))
-        << last_parallel_reduce << " is const-qualified";
+    {
+      auto const pos = last_parallel_reduce.rfind('/');
+      ASSERT_NE(pos, std::string::npos);
+      auto const functor_name = last_parallel_reduce.substr(0, pos);
+      ASSERT_FALSE(functor_name.starts_with("const "))
+          << functor_name << " is const-qualified";
+      auto const policy_name = last_parallel_reduce.substr(pos + 1);
+      ASSERT_FALSE(policy_name.starts_with("const "))
+          << policy_name << " is const-qualified";
+    }
   }
 
   Kokkos::Tools::Experimental::set_begin_parallel_reduce_callback(nullptr);
@@ -148,8 +180,16 @@ void test_kernel_name_parallel_scan() {
     Kokkos::parallel_scan(my_policy, my_lambda);
     ASSERT_EQ(last_parallel_scan,
               typeid_name(my_lambda) + "/" + typeid_name(my_policy));
-    ASSERT_FALSE(last_parallel_scan.starts_with("const "))
-        << last_parallel_scan << " is const-qualified";
+    {
+      auto const pos = last_parallel_scan.find('/');
+      ASSERT_NE(pos, std::string::npos);
+      auto const functor_name = last_parallel_scan.substr(0, pos);
+      ASSERT_FALSE(functor_name.starts_with("const "))
+          << functor_name << " is const-qualified";
+      auto const policy_name = last_parallel_scan.substr(pos + 1);
+      ASSERT_FALSE(policy_name.starts_with("const "))
+          << policy_name << " is const-qualified";
+    }
 
     auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&, bool){};
     auto const my_policy_with_tag =
@@ -160,8 +200,16 @@ void test_kernel_name_parallel_scan() {
     Kokkos::parallel_scan(my_policy_with_tag, my_lambda_with_tag);
     ASSERT_EQ(last_parallel_scan, typeid_name(my_lambda_with_tag) + "/" +
                                       typeid_name(my_policy_with_tag));
-    ASSERT_FALSE(last_parallel_scan.starts_with("const "))
-        << last_parallel_scan << " is const-qualified";
+    {
+      auto const pos = last_parallel_scan.find('/');
+      ASSERT_NE(pos, std::string::npos);
+      auto const functor_name = last_parallel_scan.substr(0, pos);
+      ASSERT_FALSE(functor_name.starts_with("const "))
+          << functor_name << " is const-qualified";
+      auto const policy_name = last_parallel_scan.substr(pos + 1);
+      ASSERT_FALSE(policy_name.starts_with("const "))
+          << policy_name << " is const-qualified";
+    }
   }
 
   Kokkos::Tools::Experimental::set_begin_parallel_scan_callback(nullptr);
@@ -186,6 +234,14 @@ TEST(kokkosp, kernel_name_internal) {
       empty_label);
   ASSERT_EQ(empty_pcn.get(),
             typeid_name(MockFunctor{}) + "/" + typeid_name(MockPolicy{}));
+  {
+    auto const name = empty_pcn.get();
+    auto const pos  = name.find('/');
+    ASSERT_NE(pos, std::string::npos);
+    auto const policy_name = name.substr(pos + 1);
+    ASSERT_FALSE(policy_name.starts_with("const "))
+        << policy_name << " is const-qualified";
+  }
 }
 
 }  // namespace
