@@ -54,32 +54,30 @@ void test_kernel_name_parallel_for() {
       get_parallel_for_kernel_name);
 
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
+
   {
     std::string const my_label = "my_parallel_for_range_policy";
 
     auto const my_lambda = KOKKOS_LAMBDA(int){};
-    Kokkos::parallel_for(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
-                         my_lambda);
+    auto const my_policy = Kokkos::RangePolicy<ExecutionSpace>(0, 1);
+    Kokkos::parallel_for(my_label, my_policy, my_lambda);
     ASSERT_EQ(last_parallel_for, my_label);
 
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
+    Kokkos::parallel_for(my_policy, my_lambda);
     ASSERT_EQ(last_parallel_for,
-              typeid_name(my_lambda) + "/" +
-                  typeid_name(Kokkos::RangePolicy<ExecutionSpace>{}));
+              typeid_name(my_lambda) + "/" + typeid_name(my_policy));
     ASSERT_FALSE(last_parallel_for.starts_with("const "))
         << last_parallel_for << " is const-qualified";
 
     auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int){};
-    Kokkos::parallel_for(my_label,
-                         Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
-                         my_lambda_with_tag);
+    auto const my_policy_with_tag =
+        Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1);
+    Kokkos::parallel_for(my_label, my_policy_with_tag, my_lambda_with_tag);
     ASSERT_EQ(last_parallel_for, my_label);
 
-    Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
-                         my_lambda_with_tag);
-    ASSERT_EQ(last_parallel_for,
-              typeid_name(my_lambda_with_tag) + "/" +
-                  typeid_name(Kokkos::RangePolicy<ExecutionSpace, WorkTag>{}));
+    Kokkos::parallel_for(my_policy_with_tag, my_lambda_with_tag);
+    ASSERT_EQ(last_parallel_for, typeid_name(my_lambda_with_tag) + "/" +
+                                     typeid_name(my_policy_with_tag));
     ASSERT_FALSE(last_parallel_for.starts_with("const "))
         << last_parallel_for << " is const-qualified";
   }
@@ -98,12 +96,11 @@ void test_kernel_name_parallel_reduce() {
     float my_result;
 
     auto const my_lambda = KOKKOS_LAMBDA(int, float&){};
-    Kokkos::parallel_reduce(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
-                            my_lambda, my_result);
+    auto const my_policy = Kokkos::RangePolicy<ExecutionSpace>(0, 1);
+    Kokkos::parallel_reduce(my_label, my_policy, my_lambda, my_result);
     ASSERT_EQ(last_parallel_reduce, my_label);
 
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace>(0, 1),
-                            my_lambda, my_result);
+    Kokkos::parallel_reduce(my_policy, my_lambda, my_result);
 #ifndef KOKKOS_COMPILER_MSVC
     ASSERT_NE(last_parallel_reduce.find(typeid_name(my_lambda)),
               std::string::npos)
@@ -117,16 +114,14 @@ void test_kernel_name_parallel_reduce() {
         << last_parallel_reduce << " is const-qualified";
 
     auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&){};
-    Kokkos::parallel_reduce(my_label,
-                            Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
-                            my_lambda_with_tag, my_result);
+    auto const my_policy_with_tag =
+        Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1);
+    Kokkos::parallel_reduce(my_label, my_policy_with_tag, my_lambda_with_tag,
+                            my_result);
     ASSERT_EQ(last_parallel_reduce, my_label);
 
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
-                            my_lambda_with_tag, my_result);
-    auto const suffix =
-        std::string("/") +
-        typeid_name(Kokkos::RangePolicy<ExecutionSpace, WorkTag>{});
+    Kokkos::parallel_reduce(my_policy_with_tag, my_lambda_with_tag, my_result);
+    auto const suffix = std::string("/") + typeid_name(my_policy_with_tag);
     ASSERT_EQ(last_parallel_reduce.find(suffix),
               last_parallel_reduce.length() - suffix.length());
     ASSERT_FALSE(last_parallel_reduce.starts_with("const "))
@@ -146,28 +141,25 @@ void test_kernel_name_parallel_scan() {
     std::string const my_label = "my_parallel_scan_range_policy";
 
     auto const my_lambda = KOKKOS_LAMBDA(int, float&, bool){};
-    Kokkos::parallel_scan(my_label, Kokkos::RangePolicy<ExecutionSpace>(0, 1),
-                          my_lambda);
+    auto const my_policy = Kokkos::RangePolicy<ExecutionSpace>(0, 1);
+    Kokkos::parallel_scan(my_label, my_policy, my_lambda);
     ASSERT_EQ(last_parallel_scan, my_label);
 
-    Kokkos::parallel_scan(Kokkos::RangePolicy<ExecutionSpace>(0, 1), my_lambda);
+    Kokkos::parallel_scan(my_policy, my_lambda);
     ASSERT_EQ(last_parallel_scan,
-              typeid_name(my_lambda) + "/" +
-                  typeid_name(Kokkos::RangePolicy<ExecutionSpace>{}));
+              typeid_name(my_lambda) + "/" + typeid_name(my_policy));
     ASSERT_FALSE(last_parallel_scan.starts_with("const "))
         << last_parallel_scan << " is const-qualified";
 
     auto const my_lambda_with_tag = KOKKOS_LAMBDA(WorkTag, int, float&, bool){};
-    Kokkos::parallel_scan(my_label,
-                          Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
-                          my_lambda_with_tag);
+    auto const my_policy_with_tag =
+        Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1);
+    Kokkos::parallel_scan(my_label, my_policy_with_tag, my_lambda_with_tag);
     ASSERT_EQ(last_parallel_scan, my_label);
 
-    Kokkos::parallel_scan(Kokkos::RangePolicy<ExecutionSpace, WorkTag>(0, 1),
-                          my_lambda_with_tag);
-    ASSERT_EQ(last_parallel_scan,
-              typeid_name(my_lambda_with_tag) + "/" +
-                  typeid_name(Kokkos::RangePolicy<ExecutionSpace, WorkTag>{}));
+    Kokkos::parallel_scan(my_policy_with_tag, my_lambda_with_tag);
+    ASSERT_EQ(last_parallel_scan, typeid_name(my_lambda_with_tag) + "/" +
+                                      typeid_name(my_policy_with_tag));
     ASSERT_FALSE(last_parallel_scan.starts_with("const "))
         << last_parallel_scan << " is const-qualified";
   }
@@ -184,31 +176,16 @@ TEST(kokkosp, kernel_name_parallel_reduce) {
 TEST(kokkosp, kernel_name_parallel_scan) { test_kernel_name_parallel_scan(); }
 
 TEST(kokkosp, kernel_name_internal) {
-  struct ThisType {};
+  struct MockFunctor {};
   struct MockPolicy {};
-  struct MockPolicyWithTag {
-    struct work_tag {};
-  };
-  {
-    std::string const label("my_label");
-    Kokkos::Impl::ParallelConstructName<ThisType, MockPolicy> pcn(label);
-    ASSERT_EQ(pcn.get(), label);
-    std::string const empty_label("");
-    Kokkos::Impl::ParallelConstructName<ThisType, MockPolicy> empty_pcn(
-        empty_label);
-    ASSERT_EQ(empty_pcn.get(),
-              typeid_name(ThisType{}) + "/" + typeid_name(MockPolicy{}));
-  }
-  {
-    std::string const label("my_label");
-    Kokkos::Impl::ParallelConstructName<ThisType, MockPolicyWithTag> pcn(label);
-    ASSERT_EQ(pcn.get(), label);
-    std::string const empty_label("");
-    Kokkos::Impl::ParallelConstructName<ThisType, MockPolicyWithTag> empty_pcn(
-        empty_label);
-    ASSERT_EQ(empty_pcn.get(),
-              typeid_name(ThisType{}) + "/" + typeid_name(MockPolicyWithTag{}));
-  }
+  std::string const label("my_label");
+  Kokkos::Impl::ParallelConstructName<MockFunctor, MockPolicy> pcn(label);
+  ASSERT_EQ(pcn.get(), label);
+  std::string const empty_label("");
+  Kokkos::Impl::ParallelConstructName<MockFunctor, MockPolicy> empty_pcn(
+      empty_label);
+  ASSERT_EQ(empty_pcn.get(),
+            typeid_name(MockFunctor{}) + "/" + typeid_name(MockPolicy{}));
 }
 
 }  // namespace
