@@ -194,8 +194,7 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
   if (should_tune(policy)) {
     std::string label = label_in;
     if (label_in.empty()) {
-      using policy_type = std::remove_reference_t<decltype(policy)>;
-      Kokkos::Impl::ParallelConstructName<Functor, policy_type> name(label);
+      Kokkos::Impl::ParallelConstructName<Functor, Policy> name(label);
       label = name.get();
     }
     auto tuner_iter = [&]() {
@@ -220,8 +219,7 @@ auto generic_tune_policy(const std::string& label_in, Map& map,
   if (should_tune(policy)) {
     std::string label = label_in;
     if (label_in.empty()) {
-      using policy_type = std::remove_reference_t<decltype(policy)>;
-      Kokkos::Impl::ParallelConstructName<Functor, policy_type> name(label);
+      Kokkos::Impl::ParallelConstructName<Functor, Policy> name(label);
       label = name.get();
     }
     auto tuner_iter = [&]() {
@@ -411,8 +409,7 @@ void generic_report_results(const std::string& label_in, Map& map,
   if (should_tune(policy)) {
     std::string label = label_in;
     if (label_in.empty()) {
-      using policy_type = std::remove_reference_t<decltype(policy)>;
-      Kokkos::Impl::ParallelConstructName<Functor, policy_type> name(label);
+      Kokkos::Impl::ParallelConstructName<Functor, Policy> name(label);
       label = name.get();
     }
     auto tuner_iter = map[label];
