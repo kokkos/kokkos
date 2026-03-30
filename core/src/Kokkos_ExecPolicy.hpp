@@ -1277,7 +1277,7 @@ struct ParallelConstructName {
           "/" + std::string(TypeInfo<std::remove_const_t<PolicyType>>::name());
 #else
       default_name = std::string(typeid(FunctorType).name()) + "/" +
-                     std::string(typeid(PolicyType).name());
+                     typeid(PolicyType).name();
 #endif
     }
   }
