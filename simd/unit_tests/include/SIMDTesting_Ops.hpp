@@ -17,96 +17,96 @@ import kokkos.simd;
 
 class plus {
  public:
-  template <class T>
-  auto on_host(T const& a, T const& b) const {
+  template <class T, class U>
+  auto on_host(T const& a, U const& b) const {
     return a + b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
     return a + b;
   }
 };
 
 class plus_eq {
  public:
-  template <class T>
-  auto on_host(T&& a, T&& b) const {
+  template <class T, class U>
+  auto on_host(T&& a, U&& b) const {
     return a += b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a += b;
   }
 };
 
 class minus {
  public:
-  template <class T>
-  auto on_host(T const& a, T const& b) const {
+  template <class T, class U>
+  auto on_host(T const& a, U const& b) const {
     return a - b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
     return a - b;
   }
 };
 
 class minus_eq {
  public:
-  template <class T>
-  auto on_host(T&& a, T&& b) const {
+  template <class T, class U>
+  auto on_host(T&& a, U&& b) const {
     return a -= b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a -= b;
   }
 };
 
 class multiplies {
  public:
-  template <class T>
-  auto on_host(T const& a, T const& b) const {
+  template <class T, class U>
+  auto on_host(T const& a, U const& b) const {
     return a * b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
     return a * b;
   }
 };
 
 class multiplies_eq {
  public:
-  template <class T>
-  auto on_host(T&& a, T&& b) const {
+  template <class T, class U>
+  auto on_host(T&& a, U&& b) const {
     return a *= b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a *= b;
   }
 };
 
 class divides {
  public:
-  template <class T>
-  auto on_host(T const& a, T const& b) const {
+  template <class T, class U>
+  auto on_host(T const& a, U const& b) const {
     return a / b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, T const& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U const& b) const {
     return a / b;
   }
 };
 
 class divides_eq {
  public:
-  template <class T>
-  auto on_host(T&& a, T&& b) const {
+  template <class T, class U>
+  auto on_host(T&& a, U&& b) const {
     return a /= b;
   }
-  template <class T>
-  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, T&& b) const {
+  template <class T, class U>
+  KOKKOS_INLINE_FUNCTION auto on_device(T&& a, U&& b) const {
     return a /= b;
   }
 };
