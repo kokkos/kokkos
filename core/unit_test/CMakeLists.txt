@@ -90,23 +90,23 @@ kokkos_add_executable(CoreTestCompileOnly SOURCES TestCompileMain.cpp ${COMPILE_
 
 # Smoke tests, one per major API category
 set(SMOKE_TEST_NAMES
-  Abort
-  BlockSizeDeduction
-  ExecutionSpace
-  CommonPolicyInterface
-  RangePolicy
-  Graph
-  MDRange_a
-  Reductions
-  Atomics
-  TeamBasic
-  TeamMDRange
-  TeamVectorRange
-  ViewAPI_a
-  DeepCopy_Assignment
-  WorkGraph
-  SharedAlloc
-  Complex
+    Abort
+    BlockSizeDeduction
+    ExecutionSpace
+    CommonPolicyInterface
+    RangePolicy
+    Graph
+    MDRange_a
+    Reductions
+    Atomics
+    TeamBasic
+    TeamMDRange
+    TeamVectorRange
+    ViewAPI_a
+    DeepCopy_Assignment
+    WorkGraph
+    SharedAlloc
+    Complex
 )
 
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
@@ -386,8 +386,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
         set(file ${dir}/Test${Tag}_${Name}.cpp)
         list(APPEND ${Tag}_SOURCES_SMOKE ${file})
       endforeach()
-      kokkos_add_executable_and_test(CoreUnitTest_${Tag}_Smoke
-        SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
+      kokkos_add_executable_and_test(CoreUnitTest_${Tag}_Smoke SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
     endif()
   endif()
 endforeach()
