@@ -114,6 +114,9 @@ whether it was given with the wrong case, e.g. `-DKokkos_Enable_Tests`,
 and then defines a regular (non-cache) variable `KOKKOS_ENABLE_TESTS` to `ON` or `OFF`
 depending on the given default and whether the option was specified.
 
+`KOKKOS_ENABLE_OPTION(SMOKE_TEST ...)` defines `Kokkos_ENABLE_SMOKE_TEST` for an optional curated core unit test subset.
+Smoke targets (for each enabled backend) are `Kokkos_CoreUnitTest_<Backend>_SmokeTest`; they are built when both `Kokkos_ENABLE_SMOKE_TEST` and `Kokkos_ENABLE_TESTS` are `ON`.
+
 ### Defining Kokkos Config Macros
 
 Sometimes you may want to add `#define Kokkos_X` macros to the config header.
