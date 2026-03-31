@@ -4,8 +4,9 @@
 
 <!-- Link any related issues or PRs. -->
 
-### Changelog Status
-<!-- Select option for changelog status by the time the PR is ready to merge. -->
-- [ ] Entry added
-- [ ] Entry not required
-- [ ] Unsure
+### Changelog Entry
+<!-- 
+If this PR would require a changelog entry, add one here, or choose one of the following to add:
+  - Not required
+  - Unsure
+-->
