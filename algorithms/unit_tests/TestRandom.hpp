@@ -632,6 +632,26 @@ TEST(TEST_CATEGORY, Random_XorShift1024_0) {
       .run();
 }
 
+TEST(TEST_CATEGORY, Random_SFC64) {
+  using ExecutionSpace = TEST_EXECSPACE;
+
+#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
+    defined(KOKKOS_ENABLE_HIP)
+  const int num_draws = 132141141;
+#else  // SERIAL, HPX, OPENMP
+  const int num_draws = 10240000;
+#endif
+  AlgoRandomImpl::test_random<Kokkos::Random_SFC64_Pool<ExecutionSpace>>(
+      num_draws);
+  AlgoRandomImpl::test_random<Kokkos::Random_SFC64_Pool<
+      Kokkos::Device<ExecutionSpace, typename ExecutionSpace::memory_space>>>(
+      num_draws);
+  AlgoRandomImpl::TestDynRankView<ExecutionSpace,
+                                  Kokkos::Random_SFC64_Pool<ExecutionSpace>>(
+      10000)
+      .run();
+}
+
 TEST(TEST_CATEGORY, Multi_streams) {
   using ExecutionSpace = TEST_EXECSPACE;
 #if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
@@ -643,15 +663,23 @@ TEST(TEST_CATEGORY, Multi_streams) {
   using Pool64   = Kokkos::Random_XorShift64_Pool<ExecutionSpace>;
   using Pool1024 = Kokkos::Random_XorShift1024_Pool<ExecutionSpace>;
 
+  using SFC64Pool = Kokkos::Random_SFC64_Pool<ExecutionSpace>;
+
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool64>();
   AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, Pool1024>();
+
+  AlgoRandomImpl::test_duplicate_stream<ExecutionSpace, SFC64Pool>();
 
   // Test with construction from seed
   AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool64>(42);
   AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool1024>(42);
+
+  AlgoRandomImpl::test_async_initialization<ExecutionSpace, SFC64Pool>(42);
   // Test with construction from seed and num_states
   AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool64>(42, 1);
   AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool1024>(42, 1);
+
+  AlgoRandomImpl::test_async_initialization<ExecutionSpace, SFC64Pool>(42, 1);
 }
 
 }  // namespace Test
