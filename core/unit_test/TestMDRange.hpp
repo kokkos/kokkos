@@ -3,6 +3,7 @@
 
 #include <cstdio>
 #include <sstream>
+#include <type_traits>
 
 #include <gtest/gtest.h>
 
@@ -83,6 +84,36 @@ struct TestMDRange_ReduceArray_2D {
 
       ASSERT_EQ(sums[0], 6 * N0 * N1);
       ASSERT_EQ(sums[1], 3 * N0 * N1);
+    }
+  }
+};
+
+template <typename ExecSpace>
+struct TestMDRange_1D {
+  static void test_reduce1(const int N0) {
+#if defined(KOKKOS_ENABLE_OPENACC)
+    if constexpr (std::is_same_v<ExecSpace, Kokkos::Experimental::OpenACC>) {
+      GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
+    } else
+#endif
+    {
+      using range_type =
+          typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<1>,
+                                         Kokkos::IndexType<int>>;
+      Kokkos::View<int *, ExecSpace> values("values", N0);
+
+      range_type range({{0}}, {{N0}}, {{3}});
+
+      parallel_for(
+          "rank1-init", range,
+          KOKKOS_LAMBDA(const int i) { values(i) = i + 1; });
+
+      int sum = 0;
+      parallel_reduce(
+          "rank1-sum", range,
+          KOKKOS_LAMBDA(const int i, int &lsum) { lsum += values(i); }, sum);
+
+      ASSERT_EQ(sum, N0 * (N0 + 1) / 2);
     }
   }
 };

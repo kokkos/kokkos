@@ -5,6 +5,10 @@
 
 namespace Test {
 
+TEST(TEST_CATEGORY, mdrange_1d) {
+  TestMDRange_1D<TEST_EXECSPACE>::test_reduce1(127);
+}
+
 TEST(TEST_CATEGORY, mdrange_2d) {
   TestMDRange_2D<TEST_EXECSPACE>::test_reduce2(100, 100);
   TestMDRange_2D<TEST_EXECSPACE>::test_for2(100, 100);
