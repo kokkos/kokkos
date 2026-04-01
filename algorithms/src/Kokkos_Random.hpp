@@ -1530,49 +1530,41 @@ class Random_SFC64_Pool {
  public:
   using generator_type = Random_SFC64<DeviceType>;
 
-  KOKKOS_INLINE_FUNCTION
   Random_SFC64_Pool() = default;
 
-  KOKKOS_INLINE_FUNCTION
   Random_SFC64_Pool(uint64_t seed) {
     init_impl(execution_space(), seed, 0, execution_space().concurrency());
     execution_space().fence("Random_SFC64_Pool: Constructor");
   }
 
-  KOKKOS_INLINE_FUNCTION
   Random_SFC64_Pool(uint64_t seed, uint64_t num_states) {
     init_impl(execution_space(), seed, 0, num_states);
     execution_space().fence("Random_SFC64_Pool: Constructor");
   }
 
   // Usefull it distributed settings to be reproductible
-  KOKKOS_INLINE_FUNCTION
   Random_SFC64_Pool(uint64_t seed_low, uint64_t seed_high,
                     uint64_t num_states) {
     init_impl(execution_space(), seed_low, seed_high, num_states);
     execution_space().fence("Random_SFC64_Pool: Constructor");
   }
 
-  KOKKOS_INLINE_FUNCTION
   Random_SFC64_Pool(const execution_space& exec, uint64_t seed) {
     init_impl(exec, seed, 0, exec.concurrency());
   }
 
-  KOKKOS_INLINE_FUNCTION
   Random_SFC64_Pool(const execution_space& exec, uint64_t seed,
                     uint64_t num_states) {
     init_impl(exec, seed, 0, num_states);
   }
 
   // Usefull it distributed settings to be reproductible
-  KOKKOS_INLINE_FUNCTION
   Random_SFC64_Pool(const execution_space& exec, uint64_t seed_low,
                     uint64_t seed_high, uint64_t num_states) {
     init_impl(exec, seed_low, seed_high, num_states);
   }
 
  private:
-  KOKKOS_INLINE_FUNCTION
   void init_impl(execution_space const& exec, uint64_t seed_low,
                  uint64_t seed_high, uint64_t num_states) {
     num_states_ = num_states;
