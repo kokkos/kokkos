@@ -1432,6 +1432,77 @@ TEST(TEST_CATEGORY, graph_then_tag) {
   ASSERT_TRUE(contains(exec, data, 5 * value_then));
 }
 
+// Functors for graph scratch/replay tests, at namespace scope for CUDA
+// compatibility.
+template <class ExecSpace>
+struct GraphScratchFunctor {
+  using mem_space   = typename ExecSpace::memory_space;
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename team_policy::member_type;
+  using scratch_view =
+      Kokkos::View<int*, typename ExecSpace::scratch_memory_space,
+                   Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
+  Kokkos::View<int*, mem_space> out;
+  int scratch_elems;
+  KOKKOS_FUNCTION void operator()(const member_type& team) const {
+    scratch_view scratch(team.team_scratch(0), scratch_elems);
+    const int tid = team.team_rank();
+    scratch(tid)  = team.league_rank() * scratch_elems + tid + 1;
+    team.team_barrier();
+    out(team.league_rank() * scratch_elems + tid) = scratch(tid);
+  }
+};
+
+template <class ExecSpace>
+struct GraphLBFunctor {
+  using mem_space   = typename ExecSpace::memory_space;
+  using team_policy = Kokkos::TeamPolicy<ExecSpace, Kokkos::LaunchBounds<128>>;
+  using member_type = typename team_policy::member_type;
+  Kokkos::View<int*, mem_space> out;
+  KOKKOS_FUNCTION void operator()(const member_type& team) const {
+    if (team.team_rank() == 0) out(team.league_rank()) = team.league_rank() + 1;
+  }
+};
+
+// Test TeamPolicy with L0 scratch memory in graph nodes.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), team_scratch_in_graph) {
+  using exec_space   = TEST_EXECSPACE;
+  using mem_space    = typename exec_space::memory_space;
+  using team_policy  = Kokkos::TeamPolicy<exec_space>;
+  using functor_type = GraphScratchFunctor<exec_space>;
+  using scratch_view = typename functor_type::scratch_view;
+
+  const int team_size     = std::min(32, ex.concurrency());
+  const int num_teams     = 2;
+  const int N             = num_teams * team_size;
+  const int scratch_ints  = team_size;
+  const int scratch_bytes = scratch_view::shmem_size(scratch_ints);
+
+  Kokkos::View<int*, mem_space> result("result", N);
+
+  team_policy policy(num_teams, team_size);
+  policy.set_scratch_size(0, Kokkos::PerTeam(scratch_bytes));
+
+  auto graph = Kokkos::Experimental::create_graph(
+      Kokkos::Experimental::get_device_handle(ex), [&](auto root) {
+        root.then_parallel_for("TeamScratchGraph", policy,
+                               functor_type{result, scratch_ints});
+      });
+  graph.submit(ex);
+  ex.fence();
+
+  auto result_h =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, result);
+  bool pass = true;
+  for (int i = 0; i < N; ++i) {
+    if (result_h(i) != i + 1) {
+      pass = false;
+      break;
+    }
+  }
+  ASSERT_TRUE(pass);
+}
+
 // Test that lvalue policies (stored in variables) work with then_parallel_for
 // and then_parallel_reduce. Before the remove_cvref_t fix in GraphNode.hpp,
 // passing any lvalue policy caused a compilation failure because the forwarding
@@ -1498,17 +1569,6 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), lvalue_policies_reduce) {
   graph2.submit(ex);
   ASSERT_TRUE(contains(ex, reduction_out2, 99));
 }
-
-template <class ExecSpace>
-struct GraphLBFunctor {
-  using mem_space   = typename ExecSpace::memory_space;
-  using team_policy = Kokkos::TeamPolicy<ExecSpace, Kokkos::LaunchBounds<128>>;
-  using member_type = typename team_policy::member_type;
-  Kokkos::View<int*, mem_space> out;
-  KOKKOS_FUNCTION void operator()(const member_type& team) const {
-    if (team.team_rank() == 0) out(team.league_rank()) = team.league_rank() + 1;
-  }
-};
 
 // Test TeamPolicy with LaunchBounds in graph nodes.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), team_launch_bounds_in_graph) {

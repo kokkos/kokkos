@@ -702,6 +702,14 @@ if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(CoreUnitTest_CudaGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
 
   kokkos_add_executable_and_test(
+    CoreUnitTest_CudaGraphScratch SOURCES UnitTestMainInit.cpp cuda/TestCuda_GraphScratch.cpp
+  )
+
+  kokkos_add_executable_and_test(
+    CoreUnitTest_CudaLargeScratch SOURCES UnitTestMainInit.cpp cuda/TestCuda_LargeScratch.cpp
+  )
+
+  kokkos_add_executable_and_test(
     CoreUnitTest_CudaTimingBased SOURCES UnitTestMainInit.cpp cuda/TestCuda_DebugSerialExecution.cpp
     cuda/TestCuda_DebugPinUVMSpace.cpp
   )

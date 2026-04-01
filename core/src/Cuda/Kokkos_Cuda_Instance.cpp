@@ -209,6 +209,10 @@ void CudaInternal::print_configuration(std::ostream &s) const {
       << '\n'
       << "  Shared Memory per Block: "
       << human_memory_size(prop.sharedMemPerBlock) << '\n'
+      << "  Shared Memory per Block (Optin): "
+      << human_memory_size(prop.sharedMemPerBlockOptin) << '\n'
+      << "  Reserved Shared Memory per Block: "
+      << human_memory_size(prop.reservedSharedMemPerBlock) << '\n'
       << "  Can access system allocated memory: " << prop.pageableMemoryAccess
       << '\n'
       << "    via Address Translation Service: "
