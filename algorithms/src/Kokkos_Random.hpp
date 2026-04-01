@@ -1353,10 +1353,10 @@ class Random_SFC64 {
   using execution_space = typename DeviceType::execution_space;
 
  private:
+  const uint64_t state_idx_;
   Impl::Random_SFC64_State<
       Impl::Random_SFC64_UseCArrayState<execution_space>::value>
       state_;
-  const uint64_t state_idx_;
   friend class Random_SFC64_Pool<DeviceType>;
 
  public:
