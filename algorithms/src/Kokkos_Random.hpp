@@ -738,7 +738,7 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
 #else
-    auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();
+    auto item           = sycl::ext::oneapi::experimental::this_nd_item<3>();
 #endif
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
@@ -966,7 +966,7 @@ class Random_XorShift64_Pool {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
   KOKKOS_DEFAULTED_FUNCTION Random_XorShift64_Pool() = default;
 #else
-  Random_XorShift64_Pool() = default;
+  Random_XorShift64_Pool()   = default;
 #endif
 
   Random_XorShift64_Pool(uint64_t seed) {
