@@ -127,6 +127,12 @@ class ThreadsExecTeamMember {
   KOKKOS_INLINE_FUNCTION int team_rank() const { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const { return m_team_size; }
 
+  /** \brief Number of vector lanes per thread (1 for Threads). */
+  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() { return 1; }
+
+  /** \brief Maximum concurrency at team level (team_size). */
+  KOKKOS_INLINE_FUNCTION int concurrency() const { return team_size(); }
+
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
     team_fan_in();
     team_fan_out();

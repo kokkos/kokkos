@@ -617,6 +617,16 @@ struct HPXTeamMember {
   KOKKOS_INLINE_FUNCTION int team_rank() const noexcept { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const noexcept { return m_team_size; }
 
+  /** \brief Number of vector lanes per thread (1 for HPX). */
+  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() noexcept {
+    return 1;
+  }
+
+  /** \brief Maximum concurrency at team level (1 for HPX). */
+  KOKKOS_INLINE_FUNCTION int concurrency() const noexcept {
+    return team_size() * vector_length();
+  }
+
   template <class... Properties>
   constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
       const TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
