@@ -860,6 +860,8 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>> {
         _mm256_div_pd(static_cast<__m256d>(lhs), static_cast<__m256d>(rhs)));
   }
 
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(lhs),
@@ -1219,6 +1221,8 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>> {
     return basic_simd(_mm_div_ps(lhs.m_value, rhs.m_value));
   }
 
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(_mm_cmpeq_ps(lhs.m_value, rhs.m_value));
@@ -1573,6 +1577,8 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(_mm256_div_ps(lhs.m_value, rhs.m_value));
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -1941,6 +1947,10 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
     return basic_simd(
         _mm_mullo_epi32(static_cast<__m128i>(lhs), static_cast<__m128i>(rhs)));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd([&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator&(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
@@ -1974,6 +1984,9 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>> {
       basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(_mm_slli_epi32(static_cast<__m128i>(lhs), rhs));
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -2281,6 +2294,10 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>> {
     return basic_simd(_mm256_mullo_epi32(static_cast<__m256i>(lhs),
                                          static_cast<__m256i>(rhs)));
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd([&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator&(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
@@ -2314,6 +2331,9 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>> {
       basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd(_mm256_srai_epi32(static_cast<__m256i>(lhs), rhs));
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -2628,6 +2648,10 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd([&](Impl::simd_size_t i) { return lhs[i] * rhs[i]; });
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd([&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator&(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
@@ -2664,6 +2688,9 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>> {
       basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return basic_simd([&](Impl::simd_size_t i) { return lhs[i] >> rhs; });
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   // AVX2 only has eq and gt comparisons for int64
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
@@ -2980,6 +3007,10 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd([&](Impl::simd_size_t i) { return lhs[i] * rhs[i]; });
   }
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator/(
+      basic_simd const& lhs, basic_simd const& rhs) noexcept {
+    return basic_simd([&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
+  }
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd operator&(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return basic_simd(
@@ -3013,6 +3044,9 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> {
       basic_simd const& lhs, Impl::simd_size_t rhs) noexcept {
     return _mm256_srli_epi64(static_cast<__m256i>(lhs), rhs);
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator==(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
