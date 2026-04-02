@@ -20,6 +20,7 @@
 #include <Kokkos_Vectorization.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
+#include <type_traits>
 #include <typeinfo>
 
 //----------------------------------------------------------------------------
@@ -61,6 +62,7 @@ class CudaTeamMember {
   using execution_space      = Kokkos::Cuda;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = CudaTeamMember;
+  using thread_handle        = Kokkos::ThreadHandle<team_handle>;
 
  private:
   mutable void* m_team_reduce;
@@ -97,6 +99,17 @@ class CudaTeamMember {
   KOKKOS_INLINE_FUNCTION int team_size() const {
     KOKKOS_IF_ON_DEVICE((return blockDim.y;))
     KOKKOS_IF_ON_HOST((return 1;))
+  }
+
+  /** \brief Number of vector lanes per thread (blockDim.x). */
+  KOKKOS_INLINE_FUNCTION int vector_length() const {
+    KOKKOS_IF_ON_DEVICE((return blockDim.x;))
+    KOKKOS_IF_ON_HOST((return 1;))
+  }
+
+  /** \brief Maximum concurrency at team level (team_size * vector_length). */
+  KOKKOS_INLINE_FUNCTION int concurrency() const {
+    return team_size() * vector_length();
   }
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
@@ -478,6 +491,8 @@ Impl::VectorSingleStruct<Impl::CudaTeamMember> PerThread(
  *  Executes closure(iType i) for each i=[0..N).
  *
  * The range [0..N) is mapped to all threads of the the calling thread team.
+ * If the closure accepts (thread_handle, iType) or (thread_handle),
+ * the thread handle is passed to enable further vector-level parallelism.
  */
 template <typename iType, class Closure>
 KOKKOS_INLINE_FUNCTION void parallel_for(
@@ -487,8 +502,20 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   (void)loop_boundaries;
   (void)closure;
   KOKKOS_IF_ON_DEVICE(
-      (for (iType i = loop_boundaries.start + threadIdx.y;
-            i < loop_boundaries.end; i += blockDim.y) { closure(i); }))
+      (auto const thread_handle =
+           Kokkos::ThreadHandle<Impl::CudaTeamMember>(loop_boundaries.member);
+       for (iType i = loop_boundaries.start + threadIdx.y;
+            i < loop_boundaries.end; i += blockDim.y) {
+         if constexpr (std::is_invocable_v<Closure, decltype((thread_handle)),
+                                           iType>) {
+           closure(thread_handle, i);
+         } else if constexpr (std::is_invocable_v<Closure,
+                                                  decltype((thread_handle))>) {
+           closure(thread_handle);
+         } else {
+           closure(i);
+         }
+       }))
 }
 
 //----------------------------------------------------------------------------
@@ -573,10 +600,22 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Closure& closure) {
   (void)loop_boundaries;
   (void)closure;
-  KOKKOS_IF_ON_DEVICE((for (iType i = loop_boundaries.start +
-                                      threadIdx.y * blockDim.x + threadIdx.x;
-                            i < loop_boundaries.end;
-                            i += blockDim.y * blockDim.x) { closure(i); }))
+  KOKKOS_IF_ON_DEVICE(
+      (auto const thread_handle =
+           Kokkos::ThreadHandle<Impl::CudaTeamMember>(loop_boundaries.member);
+       for (iType i =
+                loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x;
+            i < loop_boundaries.end; i += blockDim.y * blockDim.x) {
+         if constexpr (std::is_invocable_v<Closure, decltype((thread_handle)),
+                                           iType>) {
+           closure(thread_handle, i);
+         } else if constexpr (std::is_invocable_v<Closure,
+                                                  decltype((thread_handle))>) {
+           closure(thread_handle);
+         } else {
+           closure(i);
+         }
+       }))
 }
 
 template <typename iType, class Closure, class ReducerType>
@@ -691,8 +730,6 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
                      : ((1 << blockDim.x) - 1)
                            << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
 }
-
-//----------------------------------------------------------------------------
 
 /** \brief  Intra-thread vector parallel_reduce.
  *

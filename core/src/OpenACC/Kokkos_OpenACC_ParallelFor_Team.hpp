@@ -96,6 +96,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda) {
+  auto const thread_handle =
+      Kokkos::ThreadHandle<Impl::OpenACCTeamMember>(loop_boundaries.member);
   iType j_start = loop_boundaries.member.team_rank() %
                   loop_boundaries.member.vector_length();
   iType j_end  = loop_boundaries.end;
@@ -103,7 +105,15 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   if (j_start >= loop_boundaries.start) {
 #pragma acc loop seq
     for (iType j = j_start; j < j_end; j += j_step) {
-      lambda(j);
+      if constexpr (std::is_invocable_v<Lambda, decltype((thread_handle)),
+                                        iType>) {
+        lambda(thread_handle, j);
+      } else if constexpr (std::is_invocable_v<Lambda,
+                                               decltype((thread_handle))>) {
+        lambda(thread_handle);
+      } else {
+        lambda(j);
+      }
     }
   }
 }
@@ -187,9 +197,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda) {
+  auto const thread_handle =
+      Kokkos::ThreadHandle<Impl::OpenACCTeamMember>(loop_boundaries.member);
 #pragma acc loop vector
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    lambda(i);
+    if constexpr (std::is_invocable_v<Lambda, decltype((thread_handle)),
+                                      iType>) {
+      lambda(thread_handle, i);
+    } else if constexpr (std::is_invocable_v<Lambda,
+                                             decltype((thread_handle))>) {
+      lambda(thread_handle);
+    } else {
+      lambda(i);
+    }
   }
 }
 

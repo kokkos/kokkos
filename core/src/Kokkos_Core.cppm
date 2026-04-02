@@ -181,6 +181,7 @@ export {
   using ::Kokkos::TeamThreadRange;
   using ::Kokkos::TeamVectorMDRange;
   using ::Kokkos::TeamVectorRange;
+  using ::Kokkos::ThreadHandle;
   using ::Kokkos::ThreadVectorMDRange;
   using ::Kokkos::ThreadVectorRange;
   using ::Kokkos::WorkGraphPolicy;

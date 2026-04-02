@@ -11,8 +11,9 @@
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostBarrier.hpp>
 
-#include <limits>     // std::numeric_limits
-#include <algorithm>  // std::max
+#include <limits>       // std::numeric_limits
+#include <algorithm>    // std::max
+#include <type_traits>  // std::is_invocable_v
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -379,6 +380,7 @@ class HostThreadTeamMember {
   using thread_team_member      = HostThreadTeamMember;
   using host_thread_team_member = HostThreadTeamMember;
   using team_handle             = HostThreadTeamMember;
+  using thread_handle           = Kokkos::ThreadHandle<team_handle>;
 
  private:
   scratch_memory_space m_scratch;
@@ -409,6 +411,14 @@ class HostThreadTeamMember {
 
   KOKKOS_INLINE_FUNCTION
   int team_size() const noexcept { return m_data.m_team_size; }
+
+  /** \brief Number of vector lanes per thread (1 for host). */
+  KOKKOS_INLINE_FUNCTION
+  static constexpr int vector_length() noexcept { return 1; }
+
+  /** \brief Maximum concurrency at team level (team_size for host). */
+  KOKKOS_INLINE_FUNCTION
+  int concurrency() const noexcept { return m_data.m_team_size; }
 
   KOKKOS_INLINE_FUNCTION
   int league_rank() const noexcept { return m_league_rank; }
@@ -732,9 +742,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     Closure const& closure,
     std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
         nullptr) {
+  auto const thread_handle =
+      Kokkos::ThreadHandle<Member>(loop_boundaries.member);
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
-    closure(i);
+    if constexpr (std::is_invocable_v<Closure, decltype((thread_handle)),
+                                      iType>) {
+      closure(thread_handle, i);
+    } else if constexpr (std::is_invocable_v<Closure,
+                                             decltype((thread_handle))>) {
+      closure(thread_handle);
+    } else {
+      closure(i);
+    }
   }
 }
 

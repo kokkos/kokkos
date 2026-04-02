@@ -52,6 +52,10 @@ class SYCLTeamMember {
   int league_size() const { return m_league_size; }
   int team_rank() const { return m_item.get_local_id(0); }
   int team_size() const { return m_item.get_local_range(0); }
+  /** \brief Number of vector lanes per thread (dimension 1). */
+  int vector_length() const { return m_item.get_local_range(1); }
+  /** \brief Maximum concurrency at team level (team_size * vector_length). */
+  int concurrency() const { return team_size() * vector_length(); }
   void team_barrier() const { sycl::group_barrier(m_item.get_group()); }
 
   const sycl::nd_item<2>& item() const { return m_item; }
@@ -642,6 +646,8 @@ template <typename iType, class Closure>
 void parallel_for(const Impl::TeamVectorRangeBoundariesStruct<
                       iType, Impl::SYCLTeamMember>& loop_boundaries,
                   const Closure& closure) {
+  auto const thread_handle =
+      Kokkos::ThreadHandle<Impl::SYCLTeamMember>(loop_boundaries.member);
   const iType tidx0 = loop_boundaries.member.item().get_local_id(0);
   const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
 
@@ -649,8 +655,17 @@ void parallel_for(const Impl::TeamVectorRangeBoundariesStruct<
   const iType grange1 = loop_boundaries.member.item().get_local_range(1);
 
   for (iType i = loop_boundaries.start + tidx0 * grange1 + tidx1;
-       i < loop_boundaries.end; i += grange0 * grange1)
-    closure(i);
+       i < loop_boundaries.end; i += grange0 * grange1) {
+    if constexpr (std::is_invocable_v<Closure, decltype((thread_handle)),
+                                      iType>) {
+      closure(thread_handle, i);
+    } else if constexpr (std::is_invocable_v<Closure,
+                                             decltype((thread_handle))>) {
+      closure(thread_handle);
+    } else {
+      closure(i);
+    }
+  }
 }
 
 template <typename iType, class Closure, class ReducerType>
