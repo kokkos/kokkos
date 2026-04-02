@@ -59,6 +59,11 @@ class OpenACCTeamMember {
   KOKKOS_FUNCTION int vector_length() const { return m_vector_length; }
   KOKKOS_FUNCTION int team_size() const { return m_team_size; }
 
+  /** \brief Maximum concurrency at team level (team_size * vector_length). */
+  KOKKOS_FUNCTION int concurrency() const {
+    return team_size() * vector_length();
+  }
+
   // FIXME_OPENACC: OpenACC does not provide any explicit barrier constructs
   // for device kernels.
   KOKKOS_FUNCTION void team_barrier() const {
