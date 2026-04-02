@@ -45,6 +45,9 @@ namespace Impl {
 #elif defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)
 // FIXME_SYCL SYCL doesn't abort
 #define KOKKOS_IMPL_ABORT_NORETURN
+#elif defined(KOKKOS_ENABLE_NEXTSILICON)
+// NextSilicon aborts
+#define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
 #elif !defined(KOKKOS_ENABLE_OPENACC)
 // Host aborts
 #define KOKKOS_IMPL_ABORT_NORETURN [[noreturn]]
