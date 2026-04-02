@@ -416,6 +416,16 @@ jobs:
       # optimizer cache across runs. If this doesn't get mapped, nextsystemd will
       # create this directory and use it as a cache, but the contents will be lost
       # when the container exits
+      - name: test_kokkos_telemetryless
+        working-directory: kokkos/build
+        env:
+          # FIXME_NEXTSILICON: death tests require fork, not supported by runtime
+          GTEST_FILTER: -*DeathTest*
+          KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS: 1
+          XDG_CACHE_HOME: $HOME/optimizer-cache
+        run: |
+          ctest -V --timeout 3600
+
       - name: test_kokkos
         working-directory: kokkos/build
         env:
