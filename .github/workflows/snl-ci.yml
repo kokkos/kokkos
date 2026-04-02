@@ -420,6 +420,8 @@ jobs:
       - name: test_kokkos
         working-directory: kokkos/build
         env:
+          # FIXME_NEXTSILICON: death tests require fork, not supported by runtime
+          GTEST_FILTER: -*DeathTest*
           XDG_CACHE_HOME: $HOME/optimizer-cache
         run: |
           ctest -V --timeout 3600 -R Kokkos_IncrementalTest_NEXTSILICON
