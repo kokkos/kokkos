@@ -560,6 +560,9 @@ struct rand<Generator, Kokkos::complex<double>> {
 template <class DeviceType>
 class Random_XorShift1024_Pool;
 
+template <class DeviceType>
+class Random_SFC64;
+
 namespace Impl {
 
 template <bool UseCArrayState>
@@ -674,6 +677,40 @@ template <>
 struct Random_SFC64_UseCArrayState<Kokkos::Experimental::OpenACC>
     : std::false_type {};
 #endif
+
+template <class DeviceType = Kokkos::DefaultExecutionSpace>
+struct Random_SFC64_Pool_Init {
+  using device_type     = typename DeviceType::device_type;
+  using execution_space = typename device_type::execution_space;
+
+  using locks_type      = View<int**, device_type>;
+  using state_data_type = View<uint64_t* [4], device_type>;
+
+  locks_type locks_;
+  state_data_type state_;
+  uint64_t seed_low_;
+  uint64_t seed_high_;
+
+  Random_SFC64_Pool_Init(locks_type locks, state_data_type states,
+                         uint64_t seed_low, uint64_t seed_high)
+      : locks_(locks),
+        state_(states),
+        seed_low_(seed_low),
+        seed_high_(seed_high) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const int i) const {
+    state_(i, 0) = seed_low_;
+    state_(i, 1) = seed_high_ + i;
+    state_(i, 2) = ~state_(i, 0) ^ state_(i, 1);
+    state_(i, 3) = 1;
+
+    Random_SFC64<execution_space> gen(state_, i);
+    for (int j = 0; j < 18; j++) gen.rand64();  // 12 could be enough
+
+    locks_(i, 0) = 0;
+  }
+};
 
 template <class DeviceType>
 struct Random_UniqueIndex {
@@ -1581,20 +1618,11 @@ class Random_SFC64_Pool {
     state_ = state_data_type(view_alloc(exec, "Kokkos::Random_SFC64::state"),
                              num_states_);
 
-    Kokkos::parallel_for(
-        "Kokkos::Random_SFC64_Pool::Initialization",
-        Kokkos::RangePolicy<execution_space>(0, num_states_),
-        KOKKOS_CLASS_LAMBDA(const int i) {
-          state_(i, 0) = seed_low;
-          state_(i, 1) = seed_high + i;
-          state_(i, 2) = ~state_(i, 0) ^ state_(i, 1);
-          state_(i, 3) = 1;
-
-          Random_SFC64<execution_space> gen(state_, i);
-          for (int j = 0; j < 18; j++) gen.rand64();  // 12 could be enough
-
-          locks_(i, 0) = 0;
-        });
+    Impl::Random_SFC64_Pool_Init parallel_init(locks_, state_, seed_low,
+                                               seed_high);
+    Kokkos::parallel_for("Kokkos::Random_SFC64_Pool::Initialization",
+                         Kokkos::RangePolicy<execution_space>(0, num_states_),
+                         parallel_init);
   }
 
  public:
