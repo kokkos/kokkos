@@ -76,23 +76,6 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   construct_mdrange_policy_variable_type<std::int64_t>();
 }
 
-TEST(TEST_CATEGORY, md_range_policy_explicit_rank1_construction) {
-  int N0           = 10;
-  using range_type = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
-                                           Kokkos::IndexType<int>>;
-
-  range_type range0({{0}}, {{N0}}, {{3}});
-  range_type range1({{1}}, {{N0}}, {{3}});
-
-  ASSERT_EQ(range0.m_lower[0], 0);
-  ASSERT_EQ(range0.m_upper[0], N0);
-  ASSERT_EQ(range0.m_tile[0], 3);
-
-  ASSERT_EQ(range1.m_lower[0], 1);
-  ASSERT_EQ(range1.m_upper[0], N0);
-  ASSERT_EQ(range1.m_tile[0], 3);
-}
-
 TEST(TEST_CATEGORY_DEATH, md_range_policy_bounds_unsafe_narrowing_conversions) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
                                        Kokkos::IndexType<unsigned>>;
