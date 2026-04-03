@@ -1436,4 +1436,108 @@ TEST(TEST_CATEGORY, graph_then_tag) {
   ASSERT_TRUE(contains(exec, data, 5 * value_then));
 }
 
+// Test that lvalue policies (stored in variables) work with then_parallel_for
+// and then_parallel_reduce. Before the remove_cvref_t fix in GraphNode.hpp,
+// passing any lvalue policy caused a compilation failure because the forwarding
+// reference deduced Policy as a reference type.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), lvalue_policies) {
+  using exec_space = TEST_EXECSPACE;
+
+  auto graph = Kokkos::Experimental::create_graph(
+      Kokkos::Experimental::get_device_handle(ex), [&](auto root) {
+        // RangePolicy as lvalue
+        Kokkos::RangePolicy<exec_space> range_pol(0, 1);
+        auto n1 = root.then_parallel_for("range_lval", range_pol,
+                                         set_functor{count, 0});
+
+        // MDRangePolicy as lvalue
+        Kokkos::MDRangePolicy<exec_space, Kokkos::Rank<2>> md_pol({0, 0},
+                                                                  {1, 1});
+        auto n2 = n1.then_parallel_for("md_lval", md_pol,
+                                       count_functor{count, bugs, 0, 0});
+
+        // TeamPolicy as lvalue
+        Kokkos::TeamPolicy<exec_space> team_pol(1, 1);
+        auto n3 = n2.then_parallel_for("team_lval", team_pol,
+                                       count_functor{count, bugs, 1, 1});
+
+        // TeamPolicy with set_chunk_size as lvalue
+        Kokkos::TeamPolicy<exec_space> team_pol_chunk(1, 1);
+        team_pol_chunk.set_chunk_size(1);
+        n3.then_parallel_for("team_chunk_lval", team_pol_chunk,
+                             count_functor{count, bugs, 2, 2});
+      });
+
+  graph.submit(ex);
+
+  ASSERT_TRUE(contains(ex, count, 3));
+  ASSERT_TRUE(contains(ex, bugs, 0));
+}
+
+// Test lvalue policies with then_parallel_reduce.
+// This exercises both the remove_cvref_t fix and the new (Label, Policy,
+// Functor, ReturnType) overload for then_parallel_reduce.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), lvalue_policies_reduce) {
+  using exec_space = TEST_EXECSPACE;
+  view_type reduction_out{"reduction_out"};
+  view_type reduction_out2{"reduction_out2"};
+
+  // Test 1: integer-size overload (already worked before)
+  auto graph = Kokkos::Experimental::create_graph(
+      Kokkos::Experimental::get_device_handle(ex), [&](auto root) {
+        auto n1 = root.then_parallel_for(1, set_functor{count, 42});
+        n1.then_parallel_reduce(1, set_result_functor{count}, reduction_out);
+      });
+  graph.submit(ex);
+  ASSERT_TRUE(contains(ex, reduction_out, 42));
+
+  // Test 2: explicit lvalue RangePolicy with label
+  auto graph2 = Kokkos::Experimental::create_graph(
+      Kokkos::Experimental::get_device_handle(ex), [&](auto root) {
+        auto n1 = root.then_parallel_for(1, set_functor{count, 99});
+        Kokkos::RangePolicy<exec_space> range_pol(0, 1);
+        n1.then_parallel_reduce("reduce_lval", range_pol,
+                                set_result_functor{count}, reduction_out2);
+      });
+  graph2.submit(ex);
+  ASSERT_TRUE(contains(ex, reduction_out2, 99));
+}
+
+template <class ExecSpace>
+struct GraphLBFunctor {
+  using mem_space   = typename ExecSpace::memory_space;
+  using team_policy = Kokkos::TeamPolicy<ExecSpace, Kokkos::LaunchBounds<128>>;
+  using member_type = typename team_policy::member_type;
+  Kokkos::View<int*, mem_space> out;
+  KOKKOS_FUNCTION void operator()(const member_type& team) const {
+    if (team.team_rank() == 0) out(team.league_rank()) = team.league_rank() + 1;
+  }
+};
+
+// Test TeamPolicy with LaunchBounds in graph nodes.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), team_launch_bounds_in_graph) {
+  using exec_space   = TEST_EXECSPACE;
+  using mem_space    = typename exec_space::memory_space;
+  using functor_type = GraphLBFunctor<exec_space>;
+  using team_policy  = typename functor_type::team_policy;
+
+  const int num_teams = 4;
+  const int team_size = std::min(32, ex.concurrency());
+  Kokkos::View<int*, mem_space> result("result", num_teams);
+
+  auto graph = Kokkos::Experimental::create_graph(
+      Kokkos::Experimental::get_device_handle(ex), [&](auto root) {
+        root.then_parallel_for("TeamLBGraph", team_policy(num_teams, team_size),
+                               functor_type{result});
+      });
+  graph.submit(ex);
+  ex.fence();
+
+  auto result_h =
+      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, result);
+  for (int i = 0; i < num_teams; ++i) {
+    ASSERT_EQ(result_h(i), i + 1);
+  }
+}
+
 }  // end namespace Test
