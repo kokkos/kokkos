@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-/*--------------------------------------------------------------------------*/
-/* Kokkos interfaces */
-
 #ifndef KOKKOS_TEST_DUALVIEW_HPP
 #define KOKKOS_TEST_DUALVIEW_HPP
 
 #include <iostream>
 #include <cstdlib>
-#include <cstdio>
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+import kokkos.dual_view;
+#else
+#include <Kokkos_Core.hpp>
 #include <Kokkos_DualView.hpp>
 #include <Kokkos_Abort.hpp>
+#endif
 #include <Kokkos_Timer.hpp>
 
 namespace Performance {
@@ -30,11 +33,10 @@ struct SumViewEntriesFunctor {
   ViewType view;
   SumViewEntriesFunctor(const ViewType& view_) : view(view_) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, value_type& sum) const {
-    for (size_t j = 0; j < view.extent(1); ++j) {
-      sum += view(i, j);
-    }
+  template <typename I, typename J>
+  KOKKOS_INLINE_FUNCTION void operator()(const I i, const J j,
+                                         value_type& sum) const {
+    sum += view(i, j);
   }
 };
 
@@ -44,11 +46,9 @@ struct IncrViewEntriesFunctor {
   ViewType view;
   IncrViewEntriesFunctor(const ViewType& view_) : view(view_) {}
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const int i) const {
-    for (size_t j = 0; j < view.extent(1); ++j) {
-      view(i, j)++;
-    }
+  template <typename I, typename J>
+  KOKKOS_INLINE_FUNCTION void operator()(const I i, const J j) const {
+    view(i, j)++;
   }
 };
 
@@ -83,7 +83,8 @@ struct test_dualview_with_datacheck {
 
     timer.reset();
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<device_space>(0, n),
+        Kokkos::MDRangePolicy<device_space, Kokkos::Rank<2>>({{0, 0}},
+                                                             {{n, m}}),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
             a.view_device()),
         a_d_sum);
@@ -95,14 +96,15 @@ struct test_dualview_with_datacheck {
     Kokkos::deep_copy(b, a);
     timer.reset();
     b.template sync<host_space>();
-    times.t_sync_to_device += timer.seconds();
+    times.t_sync_to_host += timer.seconds();
 
     // Perform same checks on b as done on a
     // Check device view is initialized as expected
     scalar_type b_d_sum = 0;
     timer.reset();
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<device_space>(0, n),
+        Kokkos::MDRangePolicy<device_space, Kokkos::Rank<2>>({{0, 0}},
+                                                             {{n, m}}),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
             b.view_device()),
         b_d_sum);
@@ -149,7 +151,10 @@ struct test_dualview_sync {
       // Update on host
       timer.reset();
       Kokkos::parallel_for(
-          Kokkos::RangePolicy<host_space>(0, n),
+          Kokkos::MDRangePolicy<
+              host_space,
+              Kokkos::Rank<2, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+              {{0, 0}}, {{n, m}}),
           IncrViewEntriesFunctor<scalar_type, typename ViewType::t_host>(
               a.view_host()));
       Kokkos::fence();
@@ -164,7 +169,10 @@ struct test_dualview_sync {
       // Update on device
       timer.reset();
       Kokkos::parallel_for(
-          Kokkos::RangePolicy<device_space>(0, n),
+          Kokkos::MDRangePolicy<
+              device_space,
+              Kokkos::Rank<2, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+              {{0, 0}}, {{n, m}}),
           IncrViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
               a.view_device()));
       Kokkos::fence();
@@ -176,7 +184,10 @@ struct test_dualview_sync {
         static_cast<scalar_type>(n) * static_cast<scalar_type>(m);
     scalar_type a_d_sum = 0;
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<device_space>(0, n),
+        Kokkos::MDRangePolicy<
+            device_space,
+            Kokkos::Rank<2, Kokkos::Iterate::Left, Kokkos::Iterate::Left>>(
+            {{0, 0}}, {{n, m}}),
         SumViewEntriesFunctor<scalar_type, typename ViewType::t_dev>(
             a.view_device()),
         a_d_sum);
