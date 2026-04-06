@@ -251,18 +251,18 @@ class ImplRangePolicy<ExecSpace, Properties...>
         if constexpr (std::is_signed_v<IndexType> !=
                       std::is_signed_v<member_type>) {
           // check signed to unsigned
-          if constexpr (std::is_signed_v<IndexType>) warn |= (bound < 0);
+          if constexpr (std::is_signed_v<IndexType>) error |= (bound < 0);
 
           // check unsigned to signed
           if constexpr (std::is_signed_v<member_type>) {
             // avoid overflow warnings by checking the size of the types e.g.
-            // conversion ‘long int’ to ‘int’ changes value
-            // from ‘9223372036854775807’ to ‘-1’
+            // conversion ‘unsigned int’ to ‘int’ changes value
+            // from ‘4294967295’ to ‘-1’ (when IndexType is narrower)
             if constexpr (sizeof(member_type) <= sizeof(IndexType))
               // safely cast member_type max to IndexType because member_type is
               // the same size or smaller.
-              warn |= (bound > static_cast<IndexType>(
-                                   std::numeric_limits<member_type>::max()));
+              error |= (bound > static_cast<IndexType>(
+                                    std::numeric_limits<member_type>::max()));
           }
         }
       }
