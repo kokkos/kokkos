@@ -37,6 +37,7 @@
 
 ### Build System Changes
 * Warn about multiple device architectures enabled by `find_package(HIP)` [\#8938](https://github.com/kokkos/kokkos/pull/8938)
+* Change CMake to detect ROCm TPL using `find_package(HIP)` [\#8747](https://github.com/kokkos/kokkos/pull/8747)
 
 ### Incompatibilities (i.e. breaking changes)
 * Execution spaces can only be constructed after `Kokkos::initialize()` has been called and must be destructed before `Kokkos::finalize()` [\#8546](https://github.com/kokkos/kokkos/pull/8546) [\#8677](https://github.com/kokkos/kokkos/pull/8677)
