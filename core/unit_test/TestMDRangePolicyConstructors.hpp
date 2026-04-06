@@ -109,6 +109,20 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
   ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg1);
 }
 
+TEST(TEST_CATEGORY_DEATH,
+     md_range_policy_rank1_invalid_nested_initializer_list_sizes) {
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>>;
+
+  std::string msg =
+      "MDRangePolicy: Constructor initializer lists have wrong size";
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  ASSERT_DEATH({ (void)Policy({{0}, {1}}, {{2}}); }, msg);
+  ASSERT_DEATH({ (void)Policy({{0, 1}}, {{2}}); }, msg);
+  ASSERT_DEATH({ (void)Policy({{0}}, {{2}}, {{1, 1}}); }, msg);
+}
+
 // Verify that we get an error if the user requests tile dimensions too large
 // for the specified LaunchBounds.
 TEST(TEST_CATEGORY_DEATH, md_range_policy_tile_dims_exceed_launch_bounds) {
@@ -198,7 +212,7 @@ void test_get_tile_size_for_ranks(std::integer_sequence<int, Ranks...>) {
 // Check that tile_size_recommended() returns valid tile sizes consistent with
 // internal tile dimensions
 TEST(TEST_CATEGORY, md_range_policy_get_tile_size) {
-  constexpr auto ranks = std::integer_sequence<int, 2, 3, 4, 5, 6>{};
+  constexpr auto ranks = std::integer_sequence<int, 1, 2, 3, 4, 5, 6>{};
   test_get_tile_size_for_ranks(ranks);
 }
 
@@ -227,7 +241,7 @@ void test_default_tiles_respect_launch_bounds() {
       << (InnerDirection == Kokkos::Iterate::Left ? "Left" : "Right");
 }
 
-// Expand ranks (2, 3, 4, 5, 6)
+// Expand ranks (1, 2, 3, 4, 5, 6)
 template <int MaxTperB, Kokkos::Iterate InnerDirection, int... Ranks>
 void test_default_tiles_for_ranks(std::integer_sequence<int, Ranks...>) {
   (test_default_tiles_respect_launch_bounds<Ranks, MaxTperB, InnerDirection>(),
@@ -238,7 +252,7 @@ void test_default_tiles_for_ranks(std::integer_sequence<int, Ranks...>) {
 template <int... MaxTperBs>
 void test_default_tiles_for_all_configs(
     std::integer_sequence<int, MaxTperBs...>) {
-  constexpr auto ranks = std::integer_sequence<int, 2, 3, 4, 5, 6>{};
+  constexpr auto ranks = std::integer_sequence<int, 1, 2, 3, 4, 5, 6>{};
   (test_default_tiles_for_ranks<MaxTperBs, Kokkos::Iterate::Left>(ranks), ...);
   (test_default_tiles_for_ranks<MaxTperBs, Kokkos::Iterate::Right>(ranks), ...);
 }

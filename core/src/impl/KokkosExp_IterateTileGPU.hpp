@@ -56,7 +56,7 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
 // ------------------------------------------------------------------------- //
 // Compute GPU launch parameters (grid/block dimensions) for MDRangePolicy
 //
-// Ranks 2-3: Direct mapping - each policy dimension maps to one GPU dimension.
+// Ranks 1-3: Direct mapping - each policy dimension maps to one GPU dimension.
 // Ranks 4-6: Dimension packing - pairs of policy dimensions are packed
 //            into single GPU dimensions to fit the 3D hardware limit.
 //
@@ -80,7 +80,10 @@ auto compute_device_launch_params(
   array_index_type grid_1 = 1;
   array_index_type grid_2 = 1;
 
-  if constexpr (Policy::inner_direction == Iterate::Left) {
+  if constexpr (Policy::rank == 1) {
+    block.x = policy.m_tile[0];
+    grid_0  = policy.m_tile_end[0];
+  } else if constexpr (Policy::inner_direction == Iterate::Left) {
     if constexpr (Policy::rank == 2) {
       block.x = policy.m_tile[0];
       block.y = policy.m_tile[1];
