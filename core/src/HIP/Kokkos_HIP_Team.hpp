@@ -8,6 +8,7 @@
 
 #if defined(__HIPCC__)
 
+#include <type_traits>
 #include <utility>
 #include <Kokkos_Parallel.hpp>
 
