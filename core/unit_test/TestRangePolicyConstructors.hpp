@@ -177,6 +177,8 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
   using IntIndexType  = Kokkos::IndexType<int>;
   using UIntPolicy    = Kokkos::RangePolicy<TEST_EXECSPACE, UIntIndexType>;
   using IntPolicy     = Kokkos::RangePolicy<TEST_EXECSPACE, IntIndexType>;
+  using DefaultExecPolicy =
+      Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>;
 
   std::string msg =
       "Kokkos::RangePolicy bound type error: an unsafe implicit conversion is "
@@ -204,7 +206,7 @@ TEST(TEST_CATEGORY_DEATH, range_policy_implicitly_converted_bounds) {
     ASSERT_DEATH({ (void)IntPolicy(0, test_val); },
                  get_error_msg(expected, test_val));
 
-    ASSERT_DEATH({ (void)DefaultPolicy(0, test_val); },
+    ASSERT_DEATH({ (void)DefaultExecPolicy(0, test_val); },
                  get_error_msg(expected, test_val));
   }
   {
