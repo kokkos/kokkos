@@ -580,7 +580,8 @@ struct HPXTeamMember {
   using execution_space = Kokkos::Experimental::HPX;
   using scratch_memory_space =
       Kokkos::ScratchMemorySpace<Kokkos::Experimental::HPX>;
-  using team_handle = HPXTeamMember;
+  using team_handle   = HPXTeamMember;
+  using thread_handle = Kokkos::ThreadHandle<team_handle>;
 
  private:
   scratch_memory_space m_team_shared;
@@ -1788,9 +1789,20 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda) {
+  auto const thread_handle =
+      Kokkos::ThreadHandle<Impl::HPXTeamMember>(loop_boundaries.member);
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
-    lambda(i);
+       i += loop_boundaries.increment) {
+    if constexpr (std::is_invocable_v<Lambda, decltype((thread_handle)),
+                                      iType>) {
+      lambda(thread_handle, i);
+    } else if constexpr (std::is_invocable_v<Lambda,
+                                             decltype((thread_handle))>) {
+      lambda(thread_handle);
+    } else {
+      lambda(i);
+    }
+  }
 }
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,
