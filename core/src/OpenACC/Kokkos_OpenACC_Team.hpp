@@ -476,6 +476,18 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
       : start(arg_begin), end(arg_end), member(arg_thread) {}
 };
 
+template <typename iType>
+struct InlineRangeBoundariesStruct<iType, OpenACCTeamMember> {
+  using index_type = iType;
+  const index_type start;
+  const index_type end;
+
+  KOKKOS_INLINE_FUNCTION
+  InlineRangeBoundariesStruct(Kokkos::ThreadHandle<OpenACCTeamMember> const&,
+                              index_type arg_begin, index_type arg_end)
+      : start(arg_begin), end(arg_end) {}
+};
+
 }  // namespace Impl
 }  // namespace Kokkos
 

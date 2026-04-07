@@ -1899,6 +1899,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   }
 }
 
+/** \brief  Serial parallel_for nested under a thread handle (inline range). */
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::HPXTeamMember>
+        &loop_boundaries,
+    const Lambda &lambda) {
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    lambda(i);
+  }
+}
+
 /** \brief  Intra-thread vector parallel_reduce. Executes lambda(iType i,
  * ValueType & val) for each i=0..N-1.
  *

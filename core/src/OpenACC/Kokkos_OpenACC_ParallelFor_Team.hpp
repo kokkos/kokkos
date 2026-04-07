@@ -112,6 +112,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   }
 }
 
+// Hierarchical Parallelism -> Inline (serial) range under thread handle
+#pragma acc routine seq
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
+    const Lambda& lambda) {
+#pragma acc loop seq
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    lambda(i);
+  }
+}
+
 // Hierarchical Parallelism -> Team vector level implementation
 #pragma acc routine seq
 template <typename iType, class Lambda>
@@ -222,6 +235,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Lambda& lambda) {
 #pragma acc loop vector
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
+}
+
+// Hierarchical Parallelism -> Inline (serial) range under thread handle
+#pragma acc routine vector
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
+    const Lambda& lambda) {
+#pragma acc loop seq
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    lambda(i);
+  }
 }
 
 // Hierarchical Parallelism -> Team vector level implementation

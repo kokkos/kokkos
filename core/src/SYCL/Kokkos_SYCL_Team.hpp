@@ -428,6 +428,19 @@ struct ThreadVectorRangeBoundariesStruct<iType, SYCLTeamMember> {
       : member(arg_thread), start(arg_begin), end(arg_end) {}
 };
 
+template <typename iType>
+struct InlineRangeBoundariesStruct<iType, SYCLTeamMember> {
+  using index_type = iType;
+  const SYCLTeamMember& member;
+  const index_type start;
+  const index_type end;
+
+  KOKKOS_INLINE_FUNCTION
+  InlineRangeBoundariesStruct(Kokkos::ThreadHandle<SYCLTeamMember> const& th,
+                              index_type arg_begin, index_type arg_end)
+      : member(th.member), start(arg_begin), end(arg_end) {}
+};
+
 }  // namespace Impl
 
 template <typename iType>
@@ -781,6 +794,23 @@ void parallel_for(const Impl::ThreadVectorRangeBoundariesStruct<
   // implementation leads to a deadlock only for SYCL+CUDA if not all threads in
   // a subgroup see this barrier. For SYCL on Intel GPUs, the subgroup barrier
   // is essentially a no-op (only a memory fence), though.
+  sycl::group_barrier(loop_boundaries.member.item().get_sub_group());
+}
+
+/** \brief  Serial parallel_for nested under a thread handle (inline range). */
+template <typename iType, class Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::SYCLTeamMember>&
+        loop_boundaries,
+    const Closure& closure) {
+  const iType tidx1 = loop_boundaries.member.item().get_local_id(1);
+
+  if (tidx1 == 0) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+      closure(i);
+    }
+  }
+
   sycl::group_barrier(loop_boundaries.member.item().get_sub_group());
 }
 

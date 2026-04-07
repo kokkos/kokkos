@@ -409,6 +409,18 @@ struct ThreadVectorRangeBoundariesStruct<iType, HIPTeamMember> {
       : start(arg_begin), end(arg_end) {}
 };
 
+template <typename iType>
+struct InlineRangeBoundariesStruct<iType, HIPTeamMember> {
+  using index_type = iType;
+  const index_type start;
+  const index_type end;
+
+  KOKKOS_INLINE_FUNCTION
+  InlineRangeBoundariesStruct(Kokkos::ThreadHandle<HIPTeamMember> const&,
+                              index_type arg_begin, index_type arg_end)
+      : start(arg_begin), end(arg_end) {}
+};
+
 }  // namespace Impl
 
 template <typename iType>
@@ -763,6 +775,24 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   for (iType i = loop_boundaries.start + threadIdx.x; i < loop_boundaries.end;
        i += blockDim.x) {
     closure(i);
+  }
+#else
+  (void)loop_boundaries;
+  (void)closure;
+#endif
+}
+
+/** \brief  Serial parallel_for nested under a thread handle (inline range). */
+template <typename iType, class Closure>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::HIPTeamMember>&
+        loop_boundaries,
+    const Closure& closure) {
+#ifdef __HIP_DEVICE_COMPILE__
+  if (threadIdx.x == 0) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end; ++i) {
+      closure(i);
+    }
   }
 #else
   (void)loop_boundaries;
