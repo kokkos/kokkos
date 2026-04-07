@@ -1858,11 +1858,11 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
   }
 
   if constexpr (std::is_same_v<PolicyType, Impl::CopySeqTag>) {
-    if (dst.span_is_contiguous()) {
-      // FIXME We might want to check the traits for customization here but we
-      // aren't aware of a use case where that is necessary.
-      if constexpr (std::is_same_v<decltype(dst.data()),
-                                   typename View<DT, DP...>::element_type*>) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
+    if constexpr (std::is_same_v<decltype(dst.data()),
+                                 typename View<DT, DP...>::element_type*>) {
+      if (dst.span_is_contiguous()) {
         Impl::local_deep_copy_contiguous(dst, value);
         return;
       }
@@ -1870,11 +1870,11 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
 
     Impl::local_deep_copy_sequential(dst, value);
   } else {
-    if (dst.span_is_contiguous()) {
-      // FIXME We might want to check the traits for customization here but we
-      // aren't aware of a use case where that is necessary.
-      if constexpr (std::is_same_v<decltype(dst.data()),
-                                   typename View<DT, DP...>::element_type*>) {
+    // FIXME We might want to check the traits for customization here but we
+    // aren't aware of a use case where that is necessary.
+    if constexpr (std::is_same_v<decltype(dst.data()),
+                                 typename View<DT, DP...>::element_type*>) {
+      if (dst.span_is_contiguous()) {
         Impl::local_deep_copy_contiguous(policy, dst, value);
         return;
       }
@@ -1925,7 +1925,9 @@ KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy(const TeamType& team,
                          const Kokkos::View<DT, DP...>& dst,
                          const Kokkos::View<ST, SP...>& src) {
+  team.team_barrier();
   Kokkos::Experimental::deep_copy(copy_team(team), dst, src);
+  team.team_barrier();
 }
 
 template <class DT, class... DP, class ST, class... SP>
@@ -1968,7 +1970,9 @@ KOKKOS_DEPRECATED_WITH_COMMENT(
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy(
     const TeamType& team, const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
+  team.team_barrier();
   Kokkos::Experimental::deep_copy(copy_team(team), dst, value);
+  team.team_barrier();
 }
 
 template <class DT, class... DP>
