@@ -1378,20 +1378,21 @@ inline constexpr bool is_local_deep_copy_policy_v =
     is_local_deep_copy_policy<T>::value;
 }  // namespace Impl
 
-/// @brief Returns a tag used with deep copy to do a sequential copy
+/** \brief Returns a tag used with deep copy to do a sequential copy */
 KOKKOS_FORCEINLINE_FUNCTION Impl::CopySeqTag copy_seq() {
   return Impl::CopySeqTag{};
 }
 
-/// @brief Returns a tag used with deep copy to copy using all threads of a team
+/** \brief Returns a tag used with deep copy to copy using all threads of a team
+ */
 template <typename TeamMemberType>
 KOKKOS_FORCEINLINE_FUNCTION Impl::CopyTeamTag<TeamMemberType> copy_team(
     const TeamMemberType& team_member) {
   return Impl::CopyTeamTag<TeamMemberType>{team_member};
 }
 
-/// @brief Returns a tag used with deep copy to copy using the calling thread in
-/// a team
+/** \brief Returns a tag used with deep copy to copy using the calling thread's
+ * vector lanes in a team */
 template <typename TeamMemberType>
 KOKKOS_FORCEINLINE_FUNCTION Impl::CopyThreadTag<TeamMemberType> copy_thread(
     const TeamMemberType& team_member) {
@@ -1892,10 +1893,11 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
+#if defined(KOKKOS_ENABLE_DEPRECATED_CODE_5)
 template <class TeamType, class DT, class... DP, class ST, class... SP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), "
+    "use "
+    "Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_team(team), "
     "dst, src) with contiguous views instead")
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const TeamType& team,
@@ -1907,8 +1909,7 @@ KOKKOS_FORCEINLINE_FUNCTION
 template <class DT, class... DP, class ST, class... SP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
     "use Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(), "
-    "dst, src) with contiguous views "
-    "instead")
+    "dst, src) with contiguous views instead")
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy_contiguous(const Kokkos::View<DT, DP...>& dst,
                                     const Kokkos::View<ST, SP...>& src) {
@@ -1917,7 +1918,8 @@ KOKKOS_FORCEINLINE_FUNCTION
 
 template <class TeamType, class DT, class... DP, class ST, class... SP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), "
+    "use "
+    "Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_team(team), "
     "dst, src) instead")
 KOKKOS_FORCEINLINE_FUNCTION
     void local_deep_copy(const TeamType& team,
@@ -1939,7 +1941,8 @@ KOKKOS_FORCEINLINE_FUNCTION
 //----------------------------------------------------------------------------
 template <class TeamType, class DT, class... DP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), "
+    "use "
+    "Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_team(team), "
     "dst, value) with a contiguous view instead")
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
     const TeamType& team, const Kokkos::View<DT, DP...>& dst,
@@ -1950,8 +1953,7 @@ KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
 template <class DT, class... DP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
     "use Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(), "
-    "dst, value) with a contiguous view "
-    "instead")
+    "dst, value) with a contiguous view instead")
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
     const Kokkos::View<DT, DP...>& dst,
     const typename Kokkos::ViewTraits<DT, DP...>::const_value_type& value) {
@@ -1960,7 +1962,8 @@ KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy_contiguous(
 
 template <class TeamType, class DT, class... DP>
 KOKKOS_DEPRECATED_WITH_COMMENT(
-    "use Kokkos::Experimental::deep_copy(Kokkos::TeamVectorRange(team, 0), "
+    "use "
+    "Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_team(team), "
     "dst, value) instead")
 KOKKOS_FORCEINLINE_FUNCTION void local_deep_copy(
     const TeamType& team, const Kokkos::View<DT, DP...>& dst,
