@@ -93,8 +93,8 @@ struct TestRange {
 
     // Test negative offset
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace, ScheduleType, NegOffsetTag>(
-            (-1) * offset, N - offset),
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, NegOffsetTag>(-offset,
+                                                                   N - offset),
         *this);
     Kokkos::parallel_for(
         std::string("TestKernelFor"),
@@ -187,8 +187,8 @@ struct TestRange {
     ASSERT_EQ(size_t((N) * (N + 1) / 2), size_t(total));
 
     Kokkos::parallel_reduce(
-        Kokkos::RangePolicy<ExecSpace, ScheduleType, NegOffsetTag>(
-            (-1) * offset, N - offset),
+        Kokkos::RangePolicy<ExecSpace, ScheduleType, NegOffsetTag>(-offset,
+                                                                   N - offset),
         *this, total);
     // sum( 1 .. N )
     ASSERT_EQ(size_t((N) * (N + 1) / 2), size_t(total));
