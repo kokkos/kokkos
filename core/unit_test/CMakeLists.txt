@@ -137,8 +137,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       HostSharedPtr
       HostSharedPtrAccessOnDevice
       JoinBackwardCompatibility
-      LocalDeepCopy1
-      LocalDeepCopy2
+      LocalDeepCopy
       MathematicalConstants
       MathematicalFunctions1
       MathematicalFunctions2
