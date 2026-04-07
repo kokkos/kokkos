@@ -177,7 +177,7 @@ struct TestMDRange_1D {
   TestMDRange_1D(const DataType N0) : input_view("input_view", N0) {}
 
   // Exercise the accepted 1D constructor spellings.
-  static void construct_policies(const int N0) {
+  static void test_construct_policies(const int N0) {
     const int s0 = 1;
     ExecSpace exec_space;
     (void)range_type(point_type{{0}}, point_type{{N0}}, tile_type{{3}});
