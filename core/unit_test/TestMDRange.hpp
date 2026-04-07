@@ -259,7 +259,6 @@ struct TestMDRange_1D {
   }
 
   static void test_for1(const int N0) {
-    construct_policies(N0);
     if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
       GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
     } else {
