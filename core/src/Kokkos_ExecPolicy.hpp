@@ -1388,12 +1388,11 @@ concept ExecutionTypeConcept = ExecutionSpace<ExecType> || TeamHandle<ExecType>;
 // Deduction guide
 
 // Instances for the execution space specialization
-RangePolicy() -> RangePolicy<DefaultExecutionSpace>;
-RangePolicy(int64_t, int64_t) -> RangePolicy<DefaultExecutionSpace>;
-RangePolicy(int64_t, int64_t, ChunkSize const&)
-    -> RangePolicy<DefaultExecutionSpace>;
+RangePolicy() -> RangePolicy<>;
+RangePolicy(int64_t, int64_t) -> RangePolicy<>;
+RangePolicy(int64_t, int64_t, ChunkSize const&) -> RangePolicy<>;
 RangePolicy(const DefaultExecutionSpace&, int64_t, int64_t, ChunkSize const&)
-    -> RangePolicy<DefaultExecutionSpace>;
+    -> RangePolicy<>;
 template <Impl::ExecutionTypeConcept Exec>
 RangePolicy(const Exec&, int64_t, int64_t, ChunkSize const&)
     -> RangePolicy<Exec>;
@@ -1401,8 +1400,7 @@ RangePolicy(const Exec&, int64_t, int64_t, ChunkSize const&)
 // Instances for both execution space and team handle specializations.
 // Must be callable on device.
 KOKKOS_DEDUCTION_GUIDE RangePolicy(const DefaultExecutionSpace&, int64_t,
-                                   int64_t)
-    -> RangePolicy<DefaultExecutionSpace>;
+                                   int64_t) -> RangePolicy<>;
 template <Impl::ExecutionTypeConcept Exec>
 KOKKOS_DEDUCTION_GUIDE RangePolicy(const Exec&, int64_t, int64_t)
     -> RangePolicy<Exec>;

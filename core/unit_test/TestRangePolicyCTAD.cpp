@@ -39,83 +39,57 @@ struct TestRangePolicyCTAD {
   // RangePolicy()
 
   [[maybe_unused]] static inline auto rp = Kokkos::RangePolicy{};
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rp)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rp)>);
 
   // RangePolicy(index_type, index_type)
 
   [[maybe_unused]] static inline auto rpi64i64 = Kokkos::RangePolicy(i64, i64);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi64i64)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i64)>);
 
   [[maybe_unused]] static inline auto rpi64i32 = Kokkos::RangePolicy(i64, i32);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi64i32)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i32)>);
 
   [[maybe_unused]] static inline auto rpi32i64 = Kokkos::RangePolicy(i32, i64);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi32i64)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i64)>);
 
   [[maybe_unused]] static inline auto rpi32i32 = Kokkos::RangePolicy(i32, i32);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi32i32)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i32)>);
 
   // RangePolicy(index_type, index_type, ChunkSize)
 
   [[maybe_unused]] static inline auto rpi64i64cs =
       Kokkos::RangePolicy(i64, i64, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi64i64cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i64cs)>);
 
   [[maybe_unused]] static inline auto rpi64i32cs =
       Kokkos::RangePolicy(i64, i32, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi64i32cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi64i32cs)>);
 
   [[maybe_unused]] static inline auto rpi32i64cs =
       Kokkos::RangePolicy(i32, i64, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi32i64cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i64cs)>);
 
   [[maybe_unused]] static inline auto rpi32i32cs =
       Kokkos::RangePolicy(i32, i32, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpi32i32cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpi32i32cs)>);
 
   // RangePolicy(execution_space, index_type, index_type)
 
   [[maybe_unused]] static inline auto rpdesi64i64 =
       Kokkos::RangePolicy(des, i64, i64);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpdesi64i64)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi64i64)>);
 
   [[maybe_unused]] static inline auto rpdesi32i32 =
       Kokkos::RangePolicy(des, i32, i32);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpdesi32i32)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi32i32)>);
 
   [[maybe_unused]] static inline auto rpnesi64i64 =
       Kokkos::RangePolicy(nes, i64, i64);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpnesi64i64)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi64i64)>);
 
   [[maybe_unused]] static inline auto rpnesi32i32 =
       Kokkos::RangePolicy(nes, i32, i32);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpnesi32i32)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi32i32)>);
 
   [[maybe_unused]] static inline auto rpsesi64i64 =
       Kokkos::RangePolicy(ses, i64, i64);
@@ -131,27 +105,19 @@ struct TestRangePolicyCTAD {
 
   [[maybe_unused]] static inline auto rpdesi64i64cs =
       Kokkos::RangePolicy(des, i64, i64, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpdesi64i64cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi64i64cs)>);
 
   [[maybe_unused]] static inline auto rpdesi32i32cs =
       Kokkos::RangePolicy(des, i32, i32, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpdesi32i32cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpdesi32i32cs)>);
 
   [[maybe_unused]] static inline auto rpnesi64i64cs =
       Kokkos::RangePolicy(nes, i64, i64, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpnesi64i64cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi64i64cs)>);
 
   [[maybe_unused]] static inline auto rpnesi32i32cs =
       Kokkos::RangePolicy(nes, i32, i32, cs);
-  static_assert(
-      std::is_same_v<Kokkos::RangePolicy<Kokkos::DefaultExecutionSpace>,
-                     decltype(rpnesi32i32cs)>);
+  static_assert(std::is_same_v<Kokkos::RangePolicy<>, decltype(rpnesi32i32cs)>);
 
   [[maybe_unused]] static inline auto rpsesi64i64cs =
       Kokkos::RangePolicy(ses, i64, i64, cs);
