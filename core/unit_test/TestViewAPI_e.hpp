@@ -165,6 +165,7 @@ TEST(TEST_CATEGORY, view_stride_method) {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_stride_precondition_violation) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   std::string const poor_msg = "r < static_cast<iType>\\(rank\\(\\)\\)";
 
   Kokkos::View<float*, TEST_EXECSPACE> v1("v1", 5);
