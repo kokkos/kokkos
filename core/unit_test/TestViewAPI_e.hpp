@@ -164,6 +164,20 @@ TEST(TEST_CATEGORY, view_stride_method) {
   test_stride<double********>(1, 2, 3, 4, 5, 6, 7, 8);
 }
 
+TEST(TEST_CATEGORY_DEATH, view_stride_precondition_violation) {
+  std::string const poor_msg = "r < static_cast<iType>\\(rank\\(\\)\\)";
+
+  Kokkos::View<float*, TEST_EXECSPACE> v1("v1", 5);
+  ASSERT_DEATH({ (void)v1.stride(1); }, poor_msg);
+  ASSERT_DEATH({ (void)v1.stride(2); }, poor_msg);
+  ASSERT_DEATH({ (void)v1.stride(3); }, poor_msg);
+
+  Kokkos::View<int***, TEST_EXECSPACE> v3("v3", 3, 7, 13);
+  ASSERT_DEATH({ (void)v3.stride(3); }, poor_msg);
+  ASSERT_DEATH({ (void)v3.stride(4); }, poor_msg);
+  ASSERT_DEATH({ (void)v3.stride(5); }, poor_msg);
+}
+
 inline void test_anonymous_space() {
   /* apparently TEST_EXECSPACE is sometimes a memory space. */
   using ExecSpace = TEST_EXECSPACE::execution_space;
