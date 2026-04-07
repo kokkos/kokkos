@@ -178,7 +178,7 @@ struct TestMDRange_1D {
 
   // Exercise the accepted 1D constructor spellings.
   static void test_construct_policies(const int N0) {
-    const int s0 = 1;
+    [[maybe_unused]] const int s0 = 1;
     ExecSpace exec_space;
     (void)range_type(point_type{{0}}, point_type{{N0}}, tile_type{{3}});
     (void)range_type({{0}}, {{N0}}, {{3}});
