@@ -287,6 +287,38 @@ struct CheckCase<6, ExecSpace> {
   }
 };
 
+template <class ExecSpace>
+struct CheckCase<7, ExecSpace> {
+  void operator()() const {
+    float_tensor4_t<ExecSpace> M;
+    allocate<ExecSpace>(M);
+    Kokkos::deep_copy(M, 0.f);
+
+    using team_t          = team_member_t<ExecSpace>;
+    using thread_handle   = team_t::thread_handle;
+    const int num_leagues = M.extent_int(0);
+    Kokkos::parallel_for(
+        "case7", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        KOKKOS_LAMBDA(const team_t& team) {
+          auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
+                                       Kokkos::ALL(), Kokkos::ALL());
+          Kokkos::parallel_for(
+              Kokkos::RangePolicy(team, 0, 1),
+              [&](const thread_handle& th) {
+                Kokkos::parallel_for(
+                    Kokkos::RangePolicy(Kokkos::InlineHandle<thread_handle>(th),
+                                        0, 1),
+                    [&](int) {
+                      sum_views(Kokkos::InlineHandle<thread_handle>(th), M_sub,
+                                8.f);
+                    });
+              });
+        });
+
+    verify<ExecSpace>(M, 8.f, "check_case1");
+  }
+};
+
 }  // namespace
 
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case0) {
@@ -315,4 +347,8 @@ TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case5) {
 
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case6) {
   CheckCase<6, TEST_EXECSPACE>{}();
+}
+
+TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case7) {
+  CheckCase<7, TEST_EXECSPACE>{}();
 }
