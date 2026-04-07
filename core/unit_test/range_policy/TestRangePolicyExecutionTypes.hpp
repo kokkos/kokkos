@@ -188,7 +188,8 @@ void test_self_similar_sum_views_exec_and_team() {
 //
 // Nesting lvl3 inside lvl2: parallel_for(RangePolicy(team, ...), f) binds like
 // TeamVectorRange; if f is invocable with team_t::thread_handle, we pass that
-//  handle (and the index when the closure accepts it).
+// handle (and the index when the closure accepts it). Otherwise f(i) is used
+// and the caller may construct Kokkos::ThreadHandle<team_t>(team) inside f.
 
 void test_self_similar_sum_views_nested_exec_team_thread() {
   const size_t N         = 16;
@@ -259,12 +260,85 @@ void test_self_similar_sum_views_nested_exec_team_thread() {
   ASSERT_EQ(result, num_teams * N * 6);
 }
 
+// Same pattern as test_self_similar_sum_views_nested_exec_team_thread, but the
+// inner parallel_for uses the index-only closure form instead of passing
+// ThreadHandle. The thread handle is obtained from the team member inside the
+// lambda (ThreadHandle<team_t>(team)).
+void test_self_similar_sum_views_nested_exec_team_thread_acquire_thread_in_inner() {
+  const size_t N         = 16;
+  const size_t num_teams = 4;
+
+  Kokkos::View<float*> v_x("v_x", N), v_y("v_y", N);
+  Kokkos::View<float**> M_x("M_x", num_teams, N),
+      M_add2("M_add2", num_teams, N), M_add4("M_add4", num_teams, N);
+
+  Kokkos::parallel_for(
+      "init_v", Kokkos::RangePolicy<>(0, N), KOKKOS_LAMBDA(const size_t i) {
+        v_x(i) = 0.f;
+        v_y(i) = 1.f;
+      });
+  Kokkos::parallel_for(
+      "init_M", Kokkos::RangePolicy<>(0, num_teams),
+      KOKKOS_LAMBDA(const size_t i) {
+        for (size_t j = 0; j < N; j++) {
+          M_x(i, j)    = 0.f;
+          M_add2(i, j) = 2.f;
+          M_add4(i, j) = 4.f;
+        }
+      });
+
+  sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
+
+  using team_t = typename Kokkos::TeamPolicy<>::member_type;
+  Kokkos::parallel_for(
+      "nested_team", Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
+      KOKKOS_LAMBDA(const team_t& team) {
+        auto row_x = Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL());
+        auto row_add2 =
+            Kokkos::subview(M_add2, team.league_rank(), Kokkos::ALL());
+        sum_views(team, row_x, row_add2);
+
+        auto row_add4 =
+            Kokkos::subview(M_add4, team.league_rank(), Kokkos::ALL());
+        // This would avoid adding the pF overload if folks have strong
+        // opinions about that. Currently I feel that the pF overload for the
+        // addintional invocable signature is not a foot-gun.
+        Kokkos::parallel_for(Kokkos::RangePolicy(team, 0, 1), [&](const int i) {
+          (void)i;
+          sum_views(Kokkos::ThreadHandle<team_t>(team), row_x, row_add4);
+        });
+      });
+
+  size_t result = 0;
+  Kokkos::parallel_reduce(
+      "check_v", N,
+      KOKKOS_LAMBDA(size_t i, size_t & s) { s += static_cast<size_t>(v_x(i)); },
+      result);
+  ASSERT_EQ(result, N);
+
+  result = 0;
+  Kokkos::parallel_reduce(
+      "check_M", Kokkos::RangePolicy<>(0, num_teams * N),
+      KOKKOS_LAMBDA(size_t i, size_t & s) {
+        int row = i / N;
+        int col = i % N;
+        s += static_cast<size_t>(M_x(row, col));
+      },
+      result);
+  ASSERT_EQ(result, num_teams * N * 6);
+}
+
 TEST(TEST_CATEGORY, self_similar_range_policy_runtime) {
   test_self_similar_range_policy_runtime();
 }
 
 TEST(TEST_CATEGORY, self_similar_sum_views_nested_team_thread) {
   test_self_similar_sum_views_nested_exec_team_thread();
+}
+
+TEST(TEST_CATEGORY,
+     self_similar_sum_views_nested_team_thread_acquire_thread_in_inner) {
+  test_self_similar_sum_views_nested_exec_team_thread_acquire_thread_in_inner();
 }
 
 TEST(TEST_CATEGORY, handle_concurrency) { test_handle_concurrency(); }
