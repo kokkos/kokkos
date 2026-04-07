@@ -121,7 +121,7 @@ function(kokkos_check)
 
     endforeach()
     if(_found_removed_options)
-      message(WARNING "The following options have been removed from Kokkos_${arg}: ${_found_removed_options}")
+      message(DEPRECATION "The following options have been removed from Kokkos_${arg}: ${_found_removed_options}")
     endif()
     if(NOT KOKKOS_CHECK_SUCCESS AND NOT KOKKOS_CHECK_RETURN_VALUE)
       message(STATUS "Could NOT find Kokkos_${arg} (missing: ${MISSING_OPTIONS})")
