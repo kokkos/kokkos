@@ -6,6 +6,7 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, mdrange_1d) {
+  TestMDRange_1D<TEST_EXECSPACE>::test_construct_policies(127);
   TestMDRange_1D<TEST_EXECSPACE>::test_for1(127);
   TestMDRange_1D<TEST_EXECSPACE>::test_reduce1(127);
 }
