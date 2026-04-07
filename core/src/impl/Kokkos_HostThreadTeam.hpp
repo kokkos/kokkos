@@ -802,6 +802,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   }
 }
 
+/** \brief Serial parallel_for nested under a thread handle (inline range). */
+template <typename iType, class Closure, class Member>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::InlineRangeBoundariesStruct<iType, Member> const& loop_boundaries,
+    Closure const& closure,
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
+        nullptr) {
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    closure(i);
+  }
+}
+
 //----------------------------------------------------------------------------
 
 template <typename iType, class Closure, class Reducer, class Member>
