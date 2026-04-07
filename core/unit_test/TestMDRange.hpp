@@ -3800,7 +3800,6 @@ struct TestMDRange_1D_NegIdx {
   }
 
   static void test_1D_negidx(const int N0) {
-    TestMDRange_1D<ExecSpace>::construct_policies(N0);
     if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
       GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
     } else {
