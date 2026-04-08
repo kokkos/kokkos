@@ -23,6 +23,7 @@ jobs:
     strategy:
       matrix:
         view_legacy: [ON, OFF]
+        dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -45,6 +46,7 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }} \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -83,6 +85,7 @@ jobs:
     strategy:
       matrix:
         view_legacy: [ON, OFF]
+        dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -105,6 +108,7 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }} \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -139,6 +143,10 @@ jobs:
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
     continue-on-error: true
 
+    strategy:
+      matrix:
+        dep_code_5: [ON, OFF]
+
     steps:
       - name: checkout_kokkos
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -161,6 +169,7 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
@@ -197,6 +206,7 @@ jobs:
     strategy:
       matrix:
         view_legacy: [ON, OFF]
+        dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -217,6 +227,7 @@ jobs:
             -DKokkos_ARCH_SPR=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }} \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -255,6 +266,7 @@ jobs:
     strategy:
       matrix:
         view_legacy: [ON, OFF]
+        dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -276,6 +288,7 @@ jobs:
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
