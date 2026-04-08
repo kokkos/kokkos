@@ -166,6 +166,19 @@ TEST(TEST_CATEGORY, view_stride_method) {
 
 TEST(TEST_CATEGORY_DEATH, view_stride_precondition_violation) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  {
+    bool checked_assertions = false;
+    // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
+    KOKKOS_ASSERT(checked_assertions = true);
+    if (!checked_assertions) {
+      GTEST_SKIP() << "Preconditions are not checked.";
+    }
+  }
+
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  GTEST_SKIP() << "Using the legacy view implementation.";
+#endif
+
   std::string const poor_msg = "r < static_cast<iType>\\(rank\\(\\)\\)";
 
   Kokkos::View<float*, TEST_EXECSPACE> v1("v1", 5);
