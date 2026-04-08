@@ -692,6 +692,15 @@ void constrain_tile_sizes(std::map<int, Mapped>& cont,
 
 // Entry point for applying tile constraints. Filters out invalid tiles that
 // exceed hardware limits based on the rank of the policy.
+inline void apply_tiles_constraints(std::vector<int>& cont,
+                                    const std::array<int, 3>& hw_tile_limits,
+                                    int policy_rank) {
+  std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
+  constrain_tile_sizes(cont, hw_tile_limits, current_tile, 0, policy_rank);
+}
+
+// Entry point for applying tile constraints. Filters out invalid tiles that
+// exceed hardware limits based on the rank of the policy.
 template <typename Mapped>
 void apply_tiles_constraints(std::map<int, Mapped>& cont,
                              const std::array<int, 3>& hw_tile_limits,
@@ -715,26 +724,36 @@ struct MDRangeTuner : public ExtendableTunerMixin<MDRangeTuner<MDRangeRank>> {
           std::declval<std::vector<std::string>>()));
   TunerType tuner;
 
- public:
-  MDRangeTuner() = default;
   template <typename Functor, typename TagType, typename Calculator,
             typename... Properties>
-  MDRangeTuner(const std::string& name,
-               const Kokkos::MDRangePolicy<Properties...>& policy,
-               const Functor& functor, const TagType& tag, Calculator calc) {
+  static TunerType make_tuner(
+      const std::string& name,
+      const Kokkos::MDRangePolicy<Properties...>& policy,
+      const Functor& functor, const TagType& tag, Calculator calc) {
+    std::vector<std::string> feature_names;
+    feature_names.reserve(rank);
+
     SpaceDescription desc;
     int max_tile_size =
         calc.get_mdrange_max_tile_size_product(policy, functor, tag);
 
     Impl::fill_tile(desc, max_tile_size);
     Impl::apply_tiles_constraints(desc, policy.m_max_threads_dimensions, rank);
-    std::vector<std::string> feature_names;
     for (int x = 0; x < rank; ++x) {
       feature_names.push_back(name + "_tile_size_" + std::to_string(x));
     }
-    tuner = make_multidimensional_sparse_tuning_problem<max_slices>(
+    return make_multidimensional_sparse_tuning_problem<max_slices>(
         desc, feature_names);
   }
+
+ public:
+  MDRangeTuner() = default;
+  template <typename Functor, typename TagType, typename Calculator,
+            typename... Properties>
+  MDRangeTuner(const std::string& name,
+               const Kokkos::MDRangePolicy<Properties...>& policy,
+               const Functor& functor, const TagType& tag, Calculator calc)
+      : tuner(make_tuner(name, policy, functor, tag, calc)) {}
   template <typename Policy, typename Tuple, size_t... Indices>
   void set_policy_tile(Policy& policy, const Tuple& tuple,
                        const std::index_sequence<Indices...>&) {
