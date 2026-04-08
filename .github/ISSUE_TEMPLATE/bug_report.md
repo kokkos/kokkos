@@ -12,6 +12,7 @@ Please check already existing issues first. Filtering by our labels can help to 
 **Describe the bug**
 
 Please provide a concise, clear description of the bug, as well as any available error logs.  Feel free to contact the Kokkos Slack `# build` channel for further discussion of your issue.
+Please add labels to the issue. In particular, the `Backend-*` labels and the `Spack` and `CMake` labels help the dev-team to quickly identify a developer to help you.
 
 **Please include the following for a minimal reproducer**
 
