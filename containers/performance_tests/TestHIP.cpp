@@ -10,8 +10,6 @@
 #include <sstream>
 #include <fstream>
 
-#include <gtest/gtest.h>
-
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
@@ -27,26 +25,36 @@ import kokkos.unordered_map;
 
 namespace Performance {
 
-TEST(TEST_CATEGORY, dynrankview_perf) {
-  std::cout << "HIP" << std::endl;
+void dynrankview_perf() {
+  std::cout << "HIP: dynrankview_perf" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
   test_dynrankview_op_perf<Kokkos::HIP>(40960);
 }
 
-TEST(TEST_CATEGORY, global_2_local) {
-  std::cout << "HIP" << std::endl;
+void global_2_local() {
+  std::cout << "HIP: global_2_local" << std::endl;
   std::cout << "size, create, generate, fill, find" << std::endl;
   for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
        i *= Performance::id_step)
     test_global_to_local_ids<Kokkos::HIP>(i);
 }
 
-TEST(TEST_CATEGORY, unordered_map_performance_near) {
+void unordered_map_performance_near() {
+  std::cout << "HIP: unordered_map_performance_near" << std::endl;
   Perf::run_performance_tests<Kokkos::HIP, true>("hip-near");
 }
 
-TEST(TEST_CATEGORY, unordered_map_performance_far) {
+void unordered_map_performance_far() {
+  std::cout << "HIP: unordered_map_performance_far" << std::endl;
   Perf::run_performance_tests<Kokkos::HIP, false>("hip-far");
 }
 
 }  // namespace Performance
+
+int main() {
+  Kokkos::ScopeGuard scope_guard;
+  Performance::dynrankview_perf();
+  Performance::global_2_local();
+  Performance::unordered_map_performance_near();
+  Performance::unordered_map_performance_far();
+}

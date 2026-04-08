@@ -14,6 +14,7 @@ import kokkos.unordered_map;
 #endif
 #include <vector>
 #include <algorithm>
+#include <iostream>
 
 #include <Kokkos_Timer.hpp>
 
@@ -166,7 +167,7 @@ void test_global_to_local_ids(unsigned num_ids) {
   elasped_time = timer.seconds();
   std::cout << elasped_time << std::endl;
 
-  ASSERT_EQ(num_errors, 0u);
+  if (num_errors != 0) Kokkos::abort("There were errors!");
 }
 
 }  // namespace Performance

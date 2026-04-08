@@ -7,8 +7,7 @@ foreach(Tag Threads;OpenMP;Cuda;HPX;HIP)
   string(TOLOWER ${Tag} dir)
 
   if(Kokkos_ENABLE_${DEVICE})
-    set(SOURCES TestMain.cpp Test${Tag}.cpp)
-
-    kokkos_add_executable_and_test(ContainersPerformanceTest_${Tag} SOURCES ${SOURCES})
+    kokkos_add_executable(ContainersPerformanceTest_${Tag} SOURCES Test${Tag}.cpp)
+    add_test(NAME ContainersPerformanceTest_${Tag} COMMAND Kokkos_ContainersPerformanceTest_${Tag})
   endif()
 endforeach()

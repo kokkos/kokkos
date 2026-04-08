@@ -3,9 +3,6 @@
 
 #include <Kokkos_Macros.hpp>
 
-#include <gtest/gtest.h>
-
-#include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 import kokkos.unordered_map;
@@ -27,21 +24,22 @@ import kokkos.unordered_map;
 
 namespace Performance {
 
-TEST(openmp, dynrankview_perf) {
-  std::cout << "OpenMP" << std::endl;
+void dynrankview_perf() {
+  std::cout << "OpenMP: dynrankview_perf" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
   test_dynrankview_op_perf<Kokkos::OpenMP>(8192);
 }
 
-TEST(openmp, global_2_local) {
-  std::cout << "OpenMP" << std::endl;
+void global_2_local() {
+  std::cout << "OpenMP: global_2_local" << std::endl;
   std::cout << "size, create, generate, fill, find" << std::endl;
   for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
        i *= Performance::id_step)
     test_global_to_local_ids<Kokkos::OpenMP>(i);
 }
 
-TEST(openmp, unordered_map_performance_near) {
+void unordered_map_performance_near() {
+  std::cout << "OpenMP: unordered_map_performance_near" << std::endl;
   unsigned num_openmp = 4;
   if (Kokkos::hwloc::available()) {
     num_openmp = Kokkos::hwloc::get_available_numa_count() *
@@ -53,7 +51,8 @@ TEST(openmp, unordered_map_performance_near) {
   Perf::run_performance_tests<Kokkos::OpenMP, true>(base_file_name.str());
 }
 
-TEST(openmp, unordered_map_performance_far) {
+void unordered_map_performance_far() {
+  std::cout << "OpenMP: unordered_map_performance_far" << std::endl;
   unsigned num_openmp = 4;
   if (Kokkos::hwloc::available()) {
     num_openmp = Kokkos::hwloc::get_available_numa_count() *
@@ -65,8 +64,8 @@ TEST(openmp, unordered_map_performance_far) {
   Perf::run_performance_tests<Kokkos::OpenMP, false>(base_file_name.str());
 }
 
-TEST(openmp, scatter_view) {
-  std::cout << "ScatterView data-duplicated test:\n";
+void scatter_view() {
+  std::cout << "OpenMP: ScatterView data-duplicated test:\n";
   Perf::test_scatter_view<Kokkos::OpenMP, Kokkos::LayoutRight,
                           Kokkos::Experimental::ScatterDuplicated,
                           Kokkos::Experimental::ScatterNonAtomic>(10,
@@ -78,3 +77,12 @@ TEST(openmp, scatter_view) {
 }
 
 }  // namespace Performance
+
+int main() {
+  Kokkos::ScopeGuard scope_guard;
+  Performance::dynrankview_perf();
+  Performance::global_2_local();
+  Performance::unordered_map_performance_near();
+  Performance::unordered_map_performance_far();
+  Performance::scatter_view();
+}

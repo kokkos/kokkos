@@ -2,10 +2,6 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <Kokkos_Macros.hpp>
-
-#include <gtest/gtest.h>
-
-#include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 import kokkos.unordered_map;
@@ -27,21 +23,22 @@ import kokkos.unordered_map;
 
 namespace Performance {
 
-TEST(hpx, dynrankview_perf) {
-  std::cout << "HPX" << std::endl;
+void dynrankview_perf() {
+  std::cout << "HPX: dynrankview_perf" << std::endl;
   std::cout << " DynRankView vs View: Initialization Only " << std::endl;
   test_dynrankview_op_perf<Kokkos::Experimental::HPX>(8192);
 }
 
-TEST(hpx, global_2_local) {
-  std::cout << "HPX" << std::endl;
+void global_2_local() {
+  std::cout << "HPX: global_2_local" << std::endl;
   std::cout << "size, create, generate, fill, find" << std::endl;
   for (unsigned i = Performance::begin_id_size; i <= Performance::end_id_size;
        i *= Performance::id_step)
     test_global_to_local_ids<Kokkos::Experimental::HPX>(i);
 }
 
-TEST(hpx, unordered_map_performance_near) {
+void unordered_map_performance_near() {
+  std::cout << "HPX: unordered_map_performance_near" << std::endl;
   unsigned num_hpx = 4;
   std::ostringstream base_file_name;
   base_file_name << "hpx-" << num_hpx << "-near";
@@ -49,7 +46,8 @@ TEST(hpx, unordered_map_performance_near) {
       base_file_name.str());
 }
 
-TEST(hpx, unordered_map_performance_far) {
+void unordered_map_performance_far() {
+  std::cout << "HPX: unordered_map_performance_near" << std::endl;
   unsigned num_hpx = 4;
   std::ostringstream base_file_name;
   base_file_name << "hpx-" << num_hpx << "-far";
@@ -57,8 +55,8 @@ TEST(hpx, unordered_map_performance_far) {
       base_file_name.str());
 }
 
-TEST(hpx, scatter_view) {
-  std::cout << "ScatterView data-duplicated test:\n";
+void scatter_view() {
+  std::cout << "HPX: ScatterView data-duplicated test:\n";
   Perf::test_scatter_view<Kokkos::Experimental::HPX, Kokkos::LayoutRight,
                           Kokkos::Experimental::ScatterDuplicated,
                           Kokkos::Experimental::ScatterNonAtomic>(10,
@@ -70,3 +68,12 @@ TEST(hpx, scatter_view) {
 }
 
 }  // namespace Performance
+
+int main() {
+  Kokkos::ScopeGuard scope_guard;
+  Performance::dynrankview_perf();
+  Performance::global_2_local();
+  Performance::unordered_map_performance_near();
+  Performance::unordered_map_performance_far();
+  Performance::scatter_view();
+}
