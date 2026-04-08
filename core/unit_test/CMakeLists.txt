@@ -380,7 +380,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
     # Smoke test: minimal subset for quick iteration.
-    if(Kokkos_ENABLE_SMOKE_TEST AND Kokkos_ENABLE_TESTS)
+    if(Kokkos_ENABLE_SMOKE_TESTS AND Kokkos_ENABLE_TESTS)
       set(${Tag}_SOURCES_SMOKE)
       foreach(Name IN LISTS SMOKE_TEST_NAMES)
         set(file ${dir}/Test${Tag}_${Name}.cpp)

@@ -114,8 +114,7 @@ whether it was given with the wrong case, e.g. `-DKokkos_Enable_Tests`,
 and then defines a regular (non-cache) variable `KOKKOS_ENABLE_TESTS` to `ON` or `OFF`
 depending on the given default and whether the option was specified.
 
-`KOKKOS_ENABLE_OPTION(SMOKE_TEST ...)` defines `Kokkos_ENABLE_SMOKE_TEST` for an optional curated core unit test subset.
-Smoke targets (for each enabled backend) are `Kokkos_CoreUnitTest_<Backend>_SmokeTest`; they are built when both `Kokkos_ENABLE_SMOKE_TEST` and `Kokkos_ENABLE_TESTS` are `ON`.
+`kokkos_dependent_option(ENABLE_SMOKE_TESTS ...)` defines `Kokkos_ENABLE_SMOKE_TESTS` to build a subset of the unit tests when `Kokkos_ENABLE_TESTS` is `ON`. Smoke targets are named `Kokkos_CoreUnitTest_<Backend>_SmokeTest`. As a guideline we suggest to include one test case per major API category or feature block. Do not duplicate by adding variations. Measure compilation time to quantify impact.
 
 ### Defining Kokkos Config Macros
 
