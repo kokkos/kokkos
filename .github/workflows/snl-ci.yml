@@ -23,6 +23,7 @@ jobs:
     strategy:
       matrix:
         view_legacy: [ON, OFF]
+        dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -45,6 +46,7 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -105,6 +107,7 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -161,6 +164,7 @@ jobs:
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
@@ -197,6 +201,7 @@ jobs:
     strategy:
       matrix:
         view_legacy: [ON, OFF]
+        dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -217,6 +222,7 @@ jobs:
             -DKokkos_ARCH_SPR=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -276,6 +282,7 @@ jobs:
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON

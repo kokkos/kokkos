@@ -169,6 +169,20 @@
 * Work around a performance regression related to index computation in the mdspan-based View [\#8476](https://github.com/kokkos/kokkos/pull/8476)
 * Fix a failure at configure time when SVE is enabled and the tests are disabled [\#8661](https://github.com/kokkos/kokkos/pull/8661)
 
+## 4.7.03
+
+### CUDA
+* Fix compiling with Cuda 13.1 [\#9020](https://github.com/kokkos/kokkos/pull/9020)
+
+### HIP
+* Disable MallocAsync for ROCm by default and thus supporting ROCM 7 [\#9022](https://github.com/kokkos/kokkos/pull/9022)
+* Adding support for AMD MI355 and MI350 [\#9025]((https://github.com/kokkos/kokkos/pull/9025)
+
+### Bug Fixes
+* Identify homebrew llvm and hombrew gcc as KOKKOS_COMPILER_CLANG and KOKKOS_COMPILER_GNU [\#9019](https://github.com/kokkos/kokkos/pull/9019)
+* Relax compiler flags checks fatal error to warning [\#9024](https://github.com/kokkos/kokkos/pull/9024)
+* Fix misalignment issues for CUDA and HIP combined reducers [\#9026]((https://github.com/kokkos/kokkos/pull/9026)
+
 ## 4.7.02
 
 [Full Changelog](https://github.com/kokkos/kokkos/compare/4.7.01...4.7.02)
