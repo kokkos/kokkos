@@ -168,8 +168,12 @@ TEST(TEST_CATEGORY, view_stride_method) {
 template <typename V>
   requires(Kokkos::is_view_v<V>)
 void test_view_stride_precondition_violation(V v) {
-  for (size_t r = 0; r < V::rank(); ++r) {
-    (void)v.stride(r);
+  // workaround "pointless comparison of unsigned integer with zero" warnings
+  // with NVCC
+  if constexpr (V::rank() > 0) {
+    for (size_t r = 0; r < V::rank(); ++r) {
+      (void)v.stride(r);
+    }
   }
   std::string const poor_msg = "r < static_cast<iType>\\(rank\\(\\)\\)";
   for (size_t r = V::rank(); r < 8; ++r) {
