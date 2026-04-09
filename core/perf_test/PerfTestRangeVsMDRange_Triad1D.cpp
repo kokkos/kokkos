@@ -45,8 +45,7 @@ struct TriadFixture {
     for (auto _ : state) {
       Kokkos::Timer timer;
       Kokkos::parallel_for(
-          "triad1d", policy,
-          KOKKOS_LAMBDA(const index_type i) {
+          "triad1d", policy, KOKKOS_LAMBDA(const index_type i) {
             local_c(i) = local_a(i) + triad_scalar * local_b(i);
           });
       execution_space().fence();
@@ -97,20 +96,20 @@ void MDRangePolicyTriad(benchmark::State& state, int tile_size) {
   BENCHMARK_HANDLE->Arg(RANGE_VS_MDRANGE_TRIAD1D_SMALL_ARG_SIZE)  \
       ->Arg(RANGE_VS_MDRANGE_TRIAD1D_SMALL_ARG_SIZE_UNALIGNED)    \
       ->Arg(RANGE_VS_MDRANGE_TRIAD1D_LARGE_ARG_SIZE)              \
-      ->UseManualTime()                                            \
+      ->UseManualTime()                                           \
       ->Unit(benchmark::kMicrosecond);
 
 RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(BENCHMARK(RangePolicyTriad))
-RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(
-    BENCHMARK_CAPTURE(MDRangePolicyTriad, Default, 0))
-RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(
-    BENCHMARK_CAPTURE(MDRangePolicyTriad, Tile64, 64))
-RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(
-    BENCHMARK_CAPTURE(MDRangePolicyTriad, Tile128, 128))
-RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(
-    BENCHMARK_CAPTURE(MDRangePolicyTriad, Tile256, 256))
-RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(
-    BENCHMARK_CAPTURE(MDRangePolicyTriad, Tile512, 512))
+RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(BENCHMARK_CAPTURE(MDRangePolicyTriad,
+                                                          Default, 0))
+RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(BENCHMARK_CAPTURE(MDRangePolicyTriad,
+                                                          Tile64, 64))
+RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(BENCHMARK_CAPTURE(MDRangePolicyTriad,
+                                                          Tile128, 128))
+RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(BENCHMARK_CAPTURE(MDRangePolicyTriad,
+                                                          Tile256, 256))
+RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS(BENCHMARK_CAPTURE(MDRangePolicyTriad,
+                                                          Tile512, 512))
 
 #undef RANGE_VS_MDRANGE_TRIAD1D_BENCHMARK_ARGS
 #undef RANGE_VS_MDRANGE_TRIAD1D_SMALL_ARG_SIZE
