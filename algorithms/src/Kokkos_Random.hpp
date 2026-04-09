@@ -1429,6 +1429,12 @@ class Random_SFC64 {
   }
 
   KOKKOS_INLINE_FUNCTION
+  bool operator==(const Random_SFC64& other) const {
+    return (state_[0] == other.state_[0] && state_[1] == other.state_[1] &&
+            state_[2] == other.state_[2] && state_[3] == other.state_[3]);
+  }
+
+  KOKKOS_INLINE_FUNCTION
   uint32_t urand() {
     uint64_t tmp = urand64();
 
@@ -1573,7 +1579,7 @@ class Random_SFC64_Pool {
     execution_space().fence("Random_SFC64_Pool: Constructor");
   }
 
-  // Usefull it distributed settings to be reproductible
+  // Usefull in distributed settings to be reproductible
   Random_SFC64_Pool(uint64_t seed_low, uint64_t seed_high,
                     uint64_t num_states) {
     init_impl(execution_space(), seed_low, seed_high, num_states);
@@ -1589,10 +1595,27 @@ class Random_SFC64_Pool {
     init_impl(exec, seed, 0, num_states);
   }
 
-  // Usefull it distributed settings to be reproductible
+  // Usefull in distributed settings to be reproductible
   Random_SFC64_Pool(const execution_space& exec, uint64_t seed_low,
                     uint64_t seed_high, uint64_t num_states) {
     init_impl(exec, seed_low, seed_high, num_states);
+  }
+
+  bool operator==(const Random_SFC64_Pool& other) const {
+    if (num_states_ != other.num_states_) return false;
+
+    bool all_states_are_equals;  // Uninitialized, set by parallel_reduce
+    Kokkos::parallel_reduce(
+        "Random_SFC64_Pool::Comparison",
+        Kokkos::RangePolicy<execution_space>(0, num_states_),
+        KOKKOS_CLASS_LAMBDA(const uint64_t i, bool& local_comp) {
+          local_comp &= (state_(i, 0) == other.state_(i, 0));
+          local_comp &= (state_(i, 1) == other.state_(i, 1));
+          local_comp &= (state_(i, 2) == other.state_(i, 2));
+          local_comp &= (state_(i, 3) == other.state_(i, 3));
+        },
+        Kokkos::LAnd<bool>(all_states_are_equals));
+    return all_states_are_equals;
   }
 
  private:
