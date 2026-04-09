@@ -706,7 +706,7 @@ struct Random_SFC64_Pool_Init {
     state_(i, 3) = 1;
 
     Random_SFC64<execution_space> gen(state_, i);
-    for (int j = 0; j < 18; j++) gen.rand64();  // 12 could be enough
+    for (int j = 0; j < 18; j++) gen.urand64();  // 12 could be enough
 
     locks_(i, 0) = 0;
   }
@@ -1429,14 +1429,8 @@ class Random_SFC64 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  uint64_t urand() {
-    enum { BARREL_SHIFT = 24, RSHIFT = 11, LSHIFT = 3 };
-    uint64_t tmp = state_[0] + state_[1] + state_[3]++;
-    state_[0]    = state_[1] ^ (state_[1] >> RSHIFT);
-    state_[1]    = state_[2] + (state_[2] << LSHIFT);
-    state_[2] =
-        ((state_[2] << BARREL_SHIFT) | (state_[2] >> (64 - BARREL_SHIFT))) +
-        tmp;
+  uint32_t urand() {
+    uint64_t tmp = urand64();
 
     // Not sure about this part, but it follows the Random_XorShift*.urand()
     // approach.
