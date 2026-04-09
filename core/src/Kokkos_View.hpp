@@ -299,7 +299,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     // base class doesn't have constraint
     // FIXME: Eventually we need to deprecate this behavior and just use
     // BasicView implementation
-    KOKKOS_ASSERT(r < static_cast<iType>(rank()));
+    // Casting to int in order to avoid warning about pointless comparison
+    // when rank is zero
+    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
     return base_t::stride(r);
   }
 
