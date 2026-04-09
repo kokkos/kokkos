@@ -128,6 +128,20 @@ struct Foo {
   int use_count() { return ptr.use_count(); }
 };
 
+// Workaround for clang 21.x MachineLICM ICE (llvm.org/PR???): when Foo's copy
+// assignment (which contains a HostSharedPtr) is fully inlined into
+// cuda_parallel_launch_local_memory via exec_range, the MachineLICM pass
+// crashes with a null pointer dereference. Keeping the assignment in a
+// separate noinline device function breaks the inlining chain.
+#if defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA)
+KOKKOS_FUNCTION __attribute__((noinline))
+#else
+KOKKOS_FUNCTION
+#endif
+void assign_foo(Foo* dst, const Foo& src) noexcept {
+  *dst = src;
+}
+
 template <class DevMemSpace, class HostMemSpace>
 void host_shared_ptr_test_reference_counting() {
   using ExecSpace = typename DevMemSpace::execution_space;
@@ -190,7 +204,7 @@ void host_shared_ptr_test_reference_counting() {
     fp_h() = Foo();
     Kokkos::parallel_for(
         Kokkos::RangePolicy<ExecSpace>(0, 1),
-        KOKKOS_LAMBDA(int) { fp_d() = f1; });
+        KOKKOS_LAMBDA(int) { assign_foo(fp_d.data(), f1); });
     Kokkos::fence();
     Kokkos::deep_copy(fp_h, fp_d);
 
