@@ -1401,209 +1401,66 @@ KOKKOS_FORCEINLINE_FUNCTION Impl::CopyThreadTag<TeamMemberType> copy_thread(
 
 namespace Impl {
 //----------------------------------------------------------------------------
+template <class DestViewType, class SrcViewType>
+struct MDCopyFunctor {
+  DestViewType dst;
+  SrcViewType src;
+
+  KOKKOS_INLINE_FUNCTION MDCopyFunctor(DestViewType dst_, SrcViewType src_)
+      : dst(dst_), src(src_) {}
+
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION void operator()(const Indices... indices) const {
+    dst(indices...) = src(indices...);
+  }
+};
+
+template <class DestViewType, class ValueType>
+struct MDValueCopyFunctor {
+  DestViewType dst;
+  ValueType value;
+
+  KOKKOS_INLINE_FUNCTION MDValueCopyFunctor(DestViewType dst_, ValueType value_)
+      : dst(dst_), value(value_) {}
+
+  template <typename... Indices>
+  KOKKOS_INLINE_FUNCTION void operator()(const Indices... indices) const {
+    dst(indices...) = value;
+  }
+};
 //----------------------------------------------------------------------------
-/** \brief  Deep copy a value into a view.  */
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 1)>* = nullptr) {
-  for (size_t i = 0; i < dst.extent(0); ++i) {
-    dst(i) = src(i);
+
+/** \brief  Sequential view to view and value to view copy.  */
+template <std::size_t Extent = 0, std::size_t Rank, class ViewType,
+          class Functor>
+KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential_iteration(
+    const ViewType& dst, Kokkos::Array<std::size_t, Rank>& idx,
+    const Functor& functor) {
+  if constexpr (Extent == Rank) {
+    [&]<std::size_t... Is>(std::index_sequence<Is...>) {
+      functor(idx[Is]...);
+    }(std::make_index_sequence<Rank>{});
+  } else {
+    for (idx[Extent] = 0; idx[Extent] < dst.extent(Extent); ++idx[Extent]) {
+      local_deep_copy_sequential_iteration<Extent + 1>(dst, idx, functor);
+    }
   }
 }
-//----------------------------------------------------------------------------
+
 template <class DT, class... DP, class ST, class... SP>
 KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 2)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1) dst(i0, i1) = src(i0, i1);
+    const View<DT, DP...>& dst, const View<ST, SP...>& src) {
+  Kokkos::Array<std::size_t, View<DT, DP...>::rank> idx{};
+  local_deep_copy_sequential_iteration(dst, idx, MDCopyFunctor{dst, src});
 }
-//----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 3)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        dst(i0, i1, i2) = src(i0, i1, i2);
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 4)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          dst(i0, i1, i2, i3) = src(i0, i1, i2, i3);
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 5)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            dst(i0, i1, i2, i3, i4) = src(i0, i1, i2, i3, i4);
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 6)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
-              dst(i0, i1, i2, i3, i4, i5) = src(i0, i1, i2, i3, i4, i5);
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 7)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
-              for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
-                dst(i0, i1, i2, i3, i4, i5, i6) =
-                    src(i0, i1, i2, i3, i4, i5, i6);
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 8 &&
-                      unsigned(ViewTraits<ST, SP...>::rank) == 8)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
-              for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
-                for (size_t i7 = 0; i7 < dst.extent(7); ++i7)
-                  dst(i0, i1, i2, i3, i4, i5, i6, i7) =
-                      src(i0, i1, i2, i3, i4, i5, i6, i7);
-}
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-/** \brief  Deep copy a value into a view.  */
+
 template <class DT, class... DP>
 KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
     const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 1)>* = nullptr) {
-  for (size_t i = 0; i < dst.extent(0); ++i) {
-    dst(i) = value;
-  }
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 2)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1) dst(i0, i1) = value;
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 3)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2) dst(i0, i1, i2) = value;
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 4)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          dst(i0, i1, i2, i3) = value;
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 5)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            dst(i0, i1, i2, i3, i4) = value;
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 6)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
-              dst(i0, i1, i2, i3, i4, i5) = value;
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 7)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
-              for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
-                dst(i0, i1, i2, i3, i4, i5, i6) = value;
-}
-//----------------------------------------------------------------------------
-template <class DT, class... DP>
-KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential(
-    const View<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<(unsigned(ViewTraits<DT, DP...>::rank) == 8)>* = nullptr) {
-  for (size_t i0 = 0; i0 < dst.extent(0); ++i0)
-    for (size_t i1 = 0; i1 < dst.extent(1); ++i1)
-      for (size_t i2 = 0; i2 < dst.extent(2); ++i2)
-        for (size_t i3 = 0; i3 < dst.extent(3); ++i3)
-          for (size_t i4 = 0; i4 < dst.extent(4); ++i4)
-            for (size_t i5 = 0; i5 < dst.extent(5); ++i5)
-              for (size_t i6 = 0; i6 < dst.extent(6); ++i6)
-                for (size_t i7 = 0; i7 < dst.extent(7); ++i7)
-                  dst(i0, i1, i2, i3, i4, i5, i6, i7) = value;
+    typename ViewTraits<DT, DP...>::const_value_type& value) {
+  Kokkos::Array<std::size_t, View<DT, DP...>::rank> idx{};
+  local_deep_copy_sequential_iteration(dst, idx,
+                                       MDValueCopyFunctor{dst, value});
 }
 
 //----------------------------------------------------------------------------
@@ -1720,35 +1577,6 @@ KOKKOS_INLINE_FUNCTION void md_local_deep_copy(
     }
   }
 }
-
-//----------------------------------------------------------------------------
-template <class DestViewType, class SrcViewType>
-struct MDCopyFunctor {
-  DestViewType dst;
-  SrcViewType src;
-
-  KOKKOS_INLINE_FUNCTION MDCopyFunctor(DestViewType dst_, SrcViewType src_)
-      : dst(dst_), src(src_) {}
-
-  template <typename... Indices>
-  KOKKOS_INLINE_FUNCTION void operator()(const Indices... indices) const {
-    dst(indices...) = src(indices...);
-  }
-};
-
-template <class DestViewType, class ValueType>
-struct MDValueCopyFunctor {
-  DestViewType dst;
-  ValueType value;
-
-  KOKKOS_INLINE_FUNCTION MDValueCopyFunctor(DestViewType dst_, ValueType value_)
-      : dst(dst_), value(value_) {}
-
-  template <typename... Indices>
-  KOKKOS_INLINE_FUNCTION void operator()(const Indices... indices) const {
-    dst(indices...) = value;
-  }
-};
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
