@@ -9,6 +9,7 @@ import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <Kokkos_Assert.hpp>
 #include <sstream>
 #include <iostream>
 
