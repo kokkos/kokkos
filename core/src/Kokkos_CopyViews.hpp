@@ -1816,6 +1816,12 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
          unsigned(ViewTraits<DT, DP...>::rank) >= 1 &&
          unsigned(ViewTraits<DT, DP...>::rank) ==
              unsigned(ViewTraits<ST, SP...>::rank))>* = nullptr) {
+  using DV = View<DT, DP...>;
+
+  static_assert(std::is_same_v<typename DV::value_type,
+                               typename DV::non_const_value_type>,
+                "deep_copy requires non-const destination type");
+
   if (dst.data() == nullptr) {
     return;
   }
@@ -1853,6 +1859,12 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
         (Impl::is_local_deep_copy_policy_v<PolicyType> &&
          std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
          unsigned(ViewTraits<DT, DP...>::rank) >= 1)>* = nullptr) {
+  using DV = View<DT, DP...>;
+
+  static_assert(std::is_same_v<typename DV::value_type,
+                               typename DV::non_const_value_type>,
+                "deep_copy requires non-const destination type");
+
   if (dst.data() == nullptr) {
     return;
   }
