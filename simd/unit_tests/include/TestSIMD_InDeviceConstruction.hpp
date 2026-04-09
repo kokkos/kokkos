@@ -151,8 +151,10 @@ TEST(simd, host_simd_construction_in_device_build) {
     GTEST_SKIP();
   }
 
+#ifndef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
   test_host_simd_construction_in_device_functor{}(0);
   Kokkos::parallel_for(1, test_host_simd_construction_in_device_functor{});
+#endif
 }
 
 #endif

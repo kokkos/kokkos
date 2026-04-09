@@ -50,7 +50,7 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>
   KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
 
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      value_type value) noexcept
+      [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_castsi256_pd(_mm256_set1_epi64x(-std::int64_t(value))))
 #endif
@@ -78,7 +78,7 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
+      [[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_castsi256_pd(_mm256_setr_epi64x(
             -std::int64_t(gen(std::integral_constant<Impl::simd_size_t, 0>())),
@@ -174,7 +174,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>
   KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
 
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      value_type value) noexcept
+     [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_castsi128_ps(_mm_set1_epi32(-std::int32_t(value))))
 #endif
@@ -196,7 +196,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
+      [[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_castsi128_ps(_mm_setr_epi32(
             -std::int32_t(gen(std::integral_constant<Impl::simd_size_t, 0>())),
@@ -290,7 +290,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      value_type value) noexcept
+     [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_castsi256_ps(_mm256_set1_epi32(-std::int32_t(value))))
 #endif
@@ -312,7 +312,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
+      [[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_castsi256_ps(_mm256_setr_epi32(
             -std::int32_t(gen(std::integral_constant<Impl::simd_size_t, 0>())),
@@ -410,7 +410,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      value_type value) noexcept
+      [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_set1_epi32(-std::int32_t(value)))
 #endif
@@ -432,7 +432,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
+      [[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_setr_epi32(
             -std::int32_t(gen(std::integral_constant<Impl::simd_size_t, 0>())),
@@ -526,7 +526,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      value_type value) noexcept
+      [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_epi32(-std::int32_t(value)))
 #endif
@@ -548,7 +548,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
+      [[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_setr_epi32(
             -std::int32_t(gen(std::integral_constant<Impl::simd_size_t, 0>())),
@@ -646,7 +646,7 @@ class basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      value_type value) noexcept
+      [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_epi64x(-std::int64_t(value)))
 #endif
@@ -672,7 +672,7 @@ class basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
+      [[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_setr_epi64x(
             -std::int64_t(gen(std::integral_constant<Impl::simd_size_t, 0>())),
@@ -766,7 +766,7 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 
   KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
-      value_type value) noexcept
+      [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_epi64x(-std::int64_t(value)))
 #endif
@@ -792,7 +792,7 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd_mask(
-      G&& gen) noexcept
+      [[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_setr_epi64x(
             -std::int64_t(gen(std::integral_constant<Impl::simd_size_t, 0>())),
@@ -867,7 +867,7 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<float, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<float, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtps_pd(static_cast<__m128>(other)))
 #endif
@@ -876,7 +876,7 @@ basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtepi32_pd(static_cast<__m128i>(other)))
 #endif
@@ -885,7 +885,7 @@ basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::int64_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::int64_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_castsi256_pd(static_cast<__m256i>(other)))
 #endif
@@ -894,7 +894,7 @@ basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::uint64_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::uint64_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_castsi256_pd(static_cast<__m256i>(other)))
 #endif
@@ -903,7 +903,7 @@ basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm_cvtepi32_ps(static_cast<__m128i>(other)))
 #endif
@@ -912,7 +912,7 @@ basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>::basic_simd_mask(
-    basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_castsi256_ps(static_cast<__m256i>(other)))
 #endif
@@ -921,7 +921,7 @@ basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<float, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<float, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm_castps_si128(static_cast<__m128>(other)))
 #endif
@@ -930,7 +930,7 @@ basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>::basic_simd_mask(
-    basic_simd_mask<float, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<float, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_castps_si256(static_cast<__m256>(other)))
 #endif
@@ -939,7 +939,7 @@ basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtepi32_epi64(static_cast<__m128i>(other)))
 #endif
@@ -948,7 +948,7 @@ basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<double, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<double, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_castpd_si256(static_cast<__m256d>(other)))
 #endif
@@ -957,7 +957,7 @@ basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::uint64_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::uint64_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(static_cast<__m256i>(other))
 #endif
@@ -966,7 +966,7 @@ basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtepi32_epi64(static_cast<__m128i>(other)))
 #endif
@@ -975,7 +975,7 @@ basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<double, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<double, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_castpd_si256(static_cast<__m256d>(other)))
 #endif
@@ -984,7 +984,7 @@ basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd_mask(
-    basic_simd_mask<std::int64_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd_mask<std::int64_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(static_cast<__m256i>(other))
 #endif
@@ -1013,7 +1013,7 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] U&& value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_pd(value_type(value)))
 #endif
@@ -1037,7 +1037,7 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
     requires Impl::InvocableWithReturnType<
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd([[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             _mm256_setr_pd(gen(std::integral_constant<Impl::simd_size_t, 0>()),
@@ -1049,7 +1049,7 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             std::is_same_v<FlagType, simd_flags<simd_alignment_vector_aligned>>
@@ -1060,36 +1060,13 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_pd(
             ptr, _mm256_castpd_si256(static_cast<__m256d>(mask))))
 #endif
   {
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       element_aligned_tag) {
-    m_value = _mm256_loadu_pd(ptr);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       vector_aligned_tag) {
-    m_value = _mm256_load_pd(ptr);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm256_storeu_pd(ptr, m_value);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
-                                                     vector_aligned_tag) const {
-    _mm256_store_pd(ptr, m_value);
-  }
-#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator implementation_type()
       const noexcept {
@@ -1378,7 +1355,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(U&& value)
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] U&& value)
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_set1_ps(value_type(value)))
 #endif
@@ -1399,7 +1376,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
     requires Impl::InvocableWithReturnType<
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(G&& gen) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             _mm_setr_ps(gen(std::integral_constant<Impl::simd_size_t, 0>()),
@@ -1411,7 +1388,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             std::is_same_v<FlagType, simd_flags<simd_alignment_vector_aligned>>
@@ -1422,36 +1399,13 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             _mm_maskload_ps(ptr, _mm_castps_si128(static_cast<__m128>(mask))))
 #endif
   {
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       element_aligned_tag) {
-    m_value = _mm_loadu_ps(ptr);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       vector_aligned_tag) {
-    m_value = _mm_load_ps(ptr);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm_storeu_ps(ptr, m_value);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
-                                                     vector_aligned_tag) const {
-    _mm_store_ps(ptr, m_value);
-  }
-#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator implementation_type()
       const noexcept {
@@ -1723,7 +1677,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] U&& value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_ps(value_type(value)))
 #endif
@@ -1745,7 +1699,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
     requires Impl::InvocableWithReturnType<
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(G&& gen)
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] G&& gen)
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             _mm256_setr_ps(gen(std::integral_constant<Impl::simd_size_t, 0>()),
@@ -1761,7 +1715,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             std::is_same_v<FlagType, simd_flags<simd_alignment_vector_aligned>>
@@ -1772,36 +1726,13 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_ps(
             ptr, _mm256_castps_si256(static_cast<__m256>(mask))))
 #endif
   {
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       element_aligned_tag) {
-    m_value = _mm256_loadu_ps(ptr);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       vector_aligned_tag) {
-    m_value = _mm256_load_ps(ptr);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm256_storeu_ps(ptr, m_value);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
-                                                     vector_aligned_tag) const {
-    _mm256_store_ps(ptr, m_value);
-  }
-#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator implementation_type()
       const {
@@ -2085,7 +2016,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(U&& value)
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] U&& value)
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_set1_epi32(value_type(value)))
 #endif
@@ -2106,7 +2037,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
     requires Impl::InvocableWithReturnType<
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd([[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             _mm_setr_epi32(gen(std::integral_constant<Impl::simd_size_t, 0>()),
@@ -2118,7 +2049,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             std::is_same_v<FlagType, simd_flags<simd_alignment_vector_aligned>>
@@ -2129,35 +2060,12 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_maskload_epi32(ptr, static_cast<__m128i>(mask)))
 #endif
   {
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       element_aligned_tag) {
-    m_value = _mm_maskload_epi32(ptr, static_cast<__m128i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       vector_aligned_tag) {
-    m_value = _mm_maskload_epi32(ptr, static_cast<__m128i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm_maskstore_epi32(ptr, static_cast<__m128i>(mask_type(true)), m_value);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
-                                                     vector_aligned_tag) const {
-    _mm_maskstore_epi32(ptr, static_cast<__m128i>(mask_type(true)), m_value);
-  }
-#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator implementation_type()
       const {
@@ -2443,7 +2351,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] U&& value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_epi32(value_type(value)))
 #endif
@@ -2462,7 +2370,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
     requires Impl::InvocableWithReturnType<
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd([[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_setr_epi32(
             gen(std::integral_constant<Impl::simd_size_t, 0>()),
@@ -2478,7 +2386,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             std::is_same_v<FlagType, simd_flags<simd_alignment_vector_aligned>>
@@ -2489,35 +2397,12 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_epi32(ptr, static_cast<__m256i>(mask)))
 #endif
   {
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       element_aligned_tag) {
-    m_value = _mm256_maskload_epi32(ptr, static_cast<__m256i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       vector_aligned_tag) {
-    m_value = _mm256_maskload_epi32(ptr, static_cast<__m256i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm256_maskstore_epi32(ptr, static_cast<__m256i>(mask_type(true)), m_value);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
-                                                     vector_aligned_tag) const {
-    _mm256_maskstore_epi32(ptr, static_cast<__m256i>(mask_type(true)), m_value);
-  }
-#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator implementation_type()
       const {
@@ -2801,7 +2686,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] U&& value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_epi64x(value_type(value)))
 #endif
@@ -2822,7 +2707,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
     requires Impl::InvocableWithReturnType<
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd([[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_setr_epi64x(
             gen(std::integral_constant<Impl::simd_size_t, 0>()),
@@ -2834,7 +2719,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             std::is_same_v<FlagType, simd_flags<simd_alignment_vector_aligned>>
@@ -2845,40 +2730,13 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                       static_cast<__m256i>(mask)))
 #endif
   {
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       element_aligned_tag) {
-    m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
-                                    static_cast<__m256i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       vector_aligned_tag) {
-    m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
-                                    static_cast<__m256i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm256_maskstore_epi64(reinterpret_cast<long long*>(ptr),
-                           static_cast<__m256i>(mask_type(true)), m_value);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
-                                                     vector_aligned_tag) const {
-    _mm256_maskstore_epi64(reinterpret_cast<long long*>(ptr),
-                           static_cast<__m256i>(mask_type(true)), m_value);
-  }
-#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator implementation_type()
       const {
@@ -3164,7 +3022,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd(U&& value) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION basic_simd([[maybe_unused]] U&& value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_set1_epi64x(
             Kokkos::bit_cast<std::int64_t>(value_type(value))))
@@ -3177,7 +3035,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   template <typename U>
   KOKKOS_FORCEINLINE_FUNCTION explicit(
       Impl::needs_explicit_conversion_v<U, value_type>)
-      basic_simd(basic_simd<U, abi_type> const& other) noexcept
+      basic_simd([[maybe_unused]] basic_simd<U, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(basic_simd([&](Impl::simd_size_t i) {
           return static_cast<value_type>(other[i]);
@@ -3193,7 +3051,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
     requires Impl::InvocableWithReturnType<
         G, value_type, Kokkos::Impl::integral_constant<Impl::simd_size_t, 0>>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
-  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd([[maybe_unused]] G&& gen) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_setr_epi64x(
             gen(std::integral_constant<Impl::simd_size_t, 0>()),
@@ -3205,7 +3063,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             std::is_same_v<FlagType, simd_flags<simd_alignment_vector_aligned>>
@@ -3216,40 +3074,13 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr, mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                       static_cast<__m256i>(mask)))
 #endif
   {
   }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       element_aligned_tag) {
-    m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
-                                    static_cast<__m256i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_load() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_from(value_type const* ptr,
-                                                       vector_aligned_tag) {
-    m_value = _mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
-                                    static_cast<__m256i>(mask_type(true)));
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(
-      value_type* ptr, element_aligned_tag) const {
-    _mm256_maskstore_epi64(reinterpret_cast<long long*>(ptr),
-                           static_cast<__m256i>(mask_type(true)), m_value);
-  }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use simd_unchecked_store() instead")
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void copy_to(value_type* ptr,
-                                                     vector_aligned_tag) const {
-    _mm256_maskstore_epi64(reinterpret_cast<long long*>(ptr),
-                           static_cast<__m256i>(mask_type(true)), m_value);
-  }
-#endif
 
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit operator implementation_type()
       const {
@@ -3517,7 +3348,7 @@ KOKKOS_SIMD_IMPL_MASKED_BINARY_MATH_FUNCTION(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<double, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<float, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<float, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtps_pd(static_cast<__m128>(other)))
 #endif
@@ -3526,7 +3357,7 @@ basic_simd<double, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<double, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtepi32_pd(static_cast<__m128i>(other)))
 #endif
@@ -3535,7 +3366,7 @@ basic_simd<double, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<float, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<double, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<double, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtpd_ps(static_cast<__m256d>(other)))
 #endif
@@ -3544,7 +3375,7 @@ basic_simd<float, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<float, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm_cvtepi32_ps(static_cast<__m128i>(other)))
 #endif
@@ -3553,7 +3384,7 @@ basic_simd<float, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<float, simd_abi::avx2_fixed_size<8>>::basic_simd(
-    basic_simd<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtepi32_ps(static_cast<__m256i>(other)))
 #endif
@@ -3562,7 +3393,7 @@ basic_simd<float, simd_abi::avx2_fixed_size<8>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<float, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<float, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm_cvtps_epi32(static_cast<__m128>(other)))
 #endif
@@ -3571,7 +3402,7 @@ basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<double, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<double, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtpd_epi32(static_cast<__m256d>(other)))
 #endif
@@ -3580,7 +3411,7 @@ basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>::basic_simd(
-    basic_simd<float, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<float, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtps_epi32(static_cast<__m256>(other)))
 #endif
@@ -3589,7 +3420,7 @@ basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtepi32_epi64(static_cast<__m128i>(other)))
 #endif
@@ -3598,7 +3429,7 @@ basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<std::uint64_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<std::uint64_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(static_cast<__m256i>(other))
 #endif
@@ -3607,7 +3438,7 @@ basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<std::int32_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<std::int32_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(_mm256_cvtepi32_epi64(static_cast<__m128i>(other)))
 #endif
@@ -3616,7 +3447,7 @@ basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
 
 KOKKOS_FORCEINLINE_FUNCTION
 basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>::basic_simd(
-    basic_simd<std::int64_t, abi_type> const& other) noexcept
+    [[maybe_unused]] basic_simd<std::int64_t, abi_type> const& other) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
     : m_value(static_cast<__m256i>(other))
 #endif
