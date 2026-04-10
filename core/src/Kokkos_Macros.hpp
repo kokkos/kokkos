@@ -611,4 +611,9 @@
 #define KOKKOS_IMPL_EXPORT
 #endif
 
+// Some of the compiler versions we support don't fully support C++20 ranges
+#if defined(__cpp_lib_ranges) && (__cpp_lib_ranges >= 201911L)
+#define KOKKOS_IMPL_COMPILER_SUPPORTS_CXX20_RANGES
+#endif
+
 #endif  // #ifndef KOKKOS_MACROS_HPP
