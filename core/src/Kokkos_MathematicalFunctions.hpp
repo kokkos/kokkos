@@ -15,6 +15,7 @@
 #include <type_traits>
 
 #ifdef KOKKOS_ENABLE_SYCL
+#include <cstdint>
 #include <sycl/sycl.hpp>
 #endif
 
@@ -529,8 +530,12 @@ KOKKOS_INLINE_FUNCTION double nan(char const* arg) { return ::nan(arg); }
 // sycl::nan does not follow the C/C++ standard library and takes an unsigned
 // integer as argument.  The current implementation does not attempt to convert
 // the character string arg into the quiet NaN value.
-KOKKOS_INLINE_FUNCTION float nanf(char const*) { return sycl::nan(0u); }
-KOKKOS_INLINE_FUNCTION double nan(char const*) { return sycl::nan(0ul); }
+KOKKOS_INLINE_FUNCTION float nanf(char const*) {
+  return sycl::nan(std::uint32_t(0));
+}
+KOKKOS_INLINE_FUNCTION double nan(char const*) {
+  return sycl::nan(std::uint64_t(0));
+}
 #endif
 inline long double nanl(char const* arg) { return ::nanl(arg); }
 // Exponential functions
