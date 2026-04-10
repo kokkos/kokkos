@@ -138,6 +138,7 @@ KOKKOS_INLINE_FUNCTION void check_host_simd_construction_all_abis(
   (check_host_simd_construction_all_types<Abis>(DataTypes()), ...);
 }
 
+template <typename = void>
 struct test_host_simd_construction_in_device_functor {
   KOKKOS_INLINE_FUNCTION void operator()(int) const {
     check_host_simd_construction_all_abis(
