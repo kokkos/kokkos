@@ -7,6 +7,7 @@
 #if defined(KOKKOS_ENABLE_NEXTSILICON)
 #include <NextSilicon/Kokkos_NextSilicon.hpp>
 #include <NextSilicon/Kokkos_NextSiliconSpace.hpp>
+#include <NextSilicon/Kokkos_NextSilicon_DeepCopy.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_ZeroMemset.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_SharedAllocationRecord.hpp>
 #endif
