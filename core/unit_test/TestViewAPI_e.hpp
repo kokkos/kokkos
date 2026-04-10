@@ -177,6 +177,7 @@ void test_view_stride_precondition_violation(V v) {
   }
   std::string const poor_msg =
       "static_cast<int>\\(r\\) < static_cast<int>\\(rank\\(\\)\\)";
+
   for (size_t r = V::rank(); r < 8; ++r) {
     ASSERT_DEATH({ (void)v.stride(r); }, poor_msg);
   }

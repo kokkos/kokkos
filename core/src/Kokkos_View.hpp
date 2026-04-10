@@ -292,18 +292,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
         base_t::mapping());
   }
 
-  template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
-                                                    size_t>
-  stride(iType r) const {
-    // base class doesn't have constraint
-    // FIXME: Eventually we need to deprecate this behavior and just use
-    // BasicView implementation
-    // Casting to int in order to avoid warning about pointless comparison
-    // when rank is zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
-    return base_t::stride(r);
-  }
+  using base_t::stride;
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride([[maybe_unused]] iType* const s) const {

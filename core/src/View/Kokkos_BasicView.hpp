@@ -780,6 +780,9 @@ class BasicView {
     return m_map.is_strided();
   }
   KOKKOS_FUNCTION constexpr index_type stride(rank_type r) const {
+    // Need to cast in order to avoid warning for rank zero about pointless
+    // comparison to zero
+    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
     return m_map.stride(r);
   }
 
