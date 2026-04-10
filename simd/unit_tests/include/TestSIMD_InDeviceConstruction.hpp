@@ -14,9 +14,13 @@ import kokkos.simd;
 
 template <typename T>
 KOKKOS_INLINE_FUNCTION void test_simd_constructions() {
-  using simd_type = T;
+  using simd_type  = T;
+  using value_type = typename simd_type::value_type;
+
+  value_type arr[1];
 
   [[maybe_unused]] simd_type a{0};
+  [[maybe_unused]] simd_type b(arr, Kokkos::Experimental::simd_flag_default);
   [[maybe_unused]] simd_type gen(
       KOKKOS_LAMBDA(Kokkos::Experimental::Impl::simd_size_t i) { return i; });
   [[maybe_unused]] simd_type copy(a);
