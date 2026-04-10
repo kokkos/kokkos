@@ -1310,6 +1310,7 @@ TEST(TEST_CATEGORY, execution_policy_with_default_execution_space_instance) {
   if (exec == TEST_EXECSPACE{}) {
     GTEST_SKIP();
   } else {
+    ::testing::FLAGS_gtest_death_test_style = "threadsafe";
     ASSERT_DEATH(graph.root_node().then_parallel_for(
                      Kokkos::RangePolicy(exec, 0, 1), NoOp{}),
                  "The execution space instance of the execution policy of a "
