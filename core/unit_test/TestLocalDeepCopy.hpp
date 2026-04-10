@@ -17,6 +17,56 @@ import kokkos.core;
 namespace Test {
 
 template <typename ExecSpace, typename ViewType>
+void impl_test_local_deepcopy_thread_rank_0(const int N) {
+  // Allocate matrices on device.
+  ViewType A("A", N, N);
+  ViewType B("B", N, N);
+
+  // Initialize matrix A
+  Kokkos::parallel_for(
+      "Init_rank0",
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0}, {N, N}),
+      KOKKOS_LAMBDA(const int i0, const int i1) {
+        A(i0, i1) = 1.0 + i0 + i1 * N;
+      });
+
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  // Deep Copy
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto subSrc = Kokkos::subview(A, lid, Kokkos::ALL());
+        auto subDst = Kokkos::subview(B, lid, Kokkos::ALL());
+        Kokkos::parallel_for(
+            Kokkos::TeamThreadRange(teamMember, N), [=](const int i) {
+              auto subSrcThread = Kokkos::subview(subSrc, i);
+              auto subDstThread = Kokkos::subview(subDst, i);
+              Kokkos::Experimental::deep_copy(
+                  Kokkos::Experimental::copy_thread(teamMember), subDstThread,
+                  subSrcThread);
+            });
+      });
+
+  // Verify results
+  int errors = 0;
+  Kokkos::parallel_reduce(
+      "Verify_rank0",
+      Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>>({0, 0}, {N, N}),
+      KOKKOS_LAMBDA(const int i0, const int i1, int& err) {
+        double expected = 1.0 + i0 + i1 * N;
+        if (B(i0, i1) != expected) {
+          err++;
+        }
+      },
+      errors);
+
+  ASSERT_EQ(errors, 0);
+}
+//-------------------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename ViewType>
 void impl_test_local_deepcopy_thread_rank_1(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N);
@@ -458,6 +508,46 @@ void impl_test_local_deepcopy_thread_rank_7(const int N) {
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
+void impl_test_local_deepcopy_team_rank_0(const int N) {
+  // Allocate matrices on device.
+  ViewType A("A", N);
+  ViewType B("B", N);
+
+  // Initialize matrix A
+  Kokkos::parallel_for(
+      "Init_rank0", Kokkos::RangePolicy<ExecSpace>(0, N),
+      KOKKOS_LAMBDA(const int i) { A(i) = 1.0 + i; });
+
+  using team_policy = Kokkos::TeamPolicy<ExecSpace>;
+  using member_type = typename Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+  // Deep Copy
+  Kokkos::parallel_for(
+      team_policy(N, Kokkos::AUTO),
+      KOKKOS_LAMBDA(const member_type& teamMember) {
+        int lid = teamMember.league_rank();  // returns a number between 0 and N
+        auto subSrc = Kokkos::subview(A, lid);
+        auto subDst = Kokkos::subview(B, lid);
+        Kokkos::Experimental::deep_copy(
+            Kokkos::Experimental::copy_team(teamMember), subDst, subSrc);
+      });
+
+  // Verify results
+  int errors = 0;
+  Kokkos::parallel_reduce(
+      "Verify_rank0", Kokkos::RangePolicy<ExecSpace>(0, N),
+      KOKKOS_LAMBDA(const int i, int& err) {
+        double expected = 1.0 + i;
+        if (B(i) != expected) {
+          err++;
+        }
+      },
+      errors);
+
+  ASSERT_EQ(errors, 0);
+}
+//-------------------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename ViewType>
 void impl_test_local_deepcopy_team_rank_1(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N);
@@ -831,6 +921,41 @@ void impl_test_local_deepcopy_team_rank_7(const int N) {
 }
 //-------------------------------------------------------------------------------------------------------------
 template <typename ExecSpace, typename ViewType>
+void impl_test_local_deepcopy_sequential_rank_0(const int N) {
+  // Allocate matrices on device.
+  ViewType A("A", N);
+  ViewType B("B", N);
+
+  // Initialize matrix A
+  Kokkos::parallel_for(
+      "Init_range_rank0", Kokkos::RangePolicy<ExecSpace>(0, N),
+      KOKKOS_LAMBDA(const int i) { A(i) = 1.0 + i; });
+
+  // Deep Copy
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const int& i) {
+        auto subSrc = Kokkos::subview(A, i);
+        auto subDst = Kokkos::subview(B, i);
+        Kokkos::Experimental::deep_copy(Kokkos::Experimental::copy_seq(),
+                                        subDst, subSrc);
+      });
+
+  // Verify results
+  int errors = 0;
+  Kokkos::parallel_reduce(
+      "Verify_range_rank0", Kokkos::RangePolicy<ExecSpace>(0, N),
+      KOKKOS_LAMBDA(const int i, int& err) {
+        double expected = 1.0 + i;
+        if (B(i) != expected) {
+          err++;
+        }
+      },
+      errors);
+
+  ASSERT_EQ(errors, 0);
+}
+//-------------------------------------------------------------------------------------------------------------
+template <typename ExecSpace, typename ViewType>
 void impl_test_local_deepcopy_sequential_rank_1(const int N) {
   // Allocate matrices on device.
   ViewType A("A", N, N);
@@ -1171,6 +1296,10 @@ void impl_test_local_deepcopy_sequential_rank_7(const int N) {
 TEST(TEST_CATEGORY, local_deepcopy_thread_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
 
+  {  // Rank-0
+    using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, ExecSpace>;
+    impl_test_local_deepcopy_thread_rank_0<ExecSpace, ViewType>(5);
+  }
   {  // Rank-1
     using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, ExecSpace>;
     impl_test_local_deepcopy_thread_rank_1<ExecSpace, ViewType>(5);
@@ -1205,6 +1334,10 @@ TEST(TEST_CATEGORY, local_deepcopy_thread_layoutleft) {
 TEST(TEST_CATEGORY, local_deepcopy_team_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
 
+  {  // Rank-0
+    using ViewType = Kokkos::View<double*, Kokkos::LayoutLeft, ExecSpace>;
+    impl_test_local_deepcopy_team_rank_0<ExecSpace, ViewType>(5);
+  }
   {  // Rank-1
     using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, ExecSpace>;
     impl_test_local_deepcopy_team_rank_1<ExecSpace, ViewType>(5);
@@ -1239,6 +1372,10 @@ TEST(TEST_CATEGORY, local_deepcopy_team_layoutleft) {
 TEST(TEST_CATEGORY, local_deepcopy_sequential_layoutleft) {
   using ExecSpace = TEST_EXECSPACE;
 
+  {  // Rank-0
+    using ViewType = Kokkos::View<double*, Kokkos::LayoutLeft, ExecSpace>;
+    impl_test_local_deepcopy_sequential_rank_0<ExecSpace, ViewType>(5);
+  }
   {  // Rank-1
     using ViewType = Kokkos::View<double**, Kokkos::LayoutLeft, ExecSpace>;
     impl_test_local_deepcopy_sequential_rank_1<ExecSpace, ViewType>(5);
@@ -1273,6 +1410,10 @@ TEST(TEST_CATEGORY, local_deepcopy_sequential_layoutleft) {
 TEST(TEST_CATEGORY, local_deepcopy_thread_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
 
+  {  // Rank-0
+    using ViewType = Kokkos::View<double**, Kokkos::LayoutRight, ExecSpace>;
+    impl_test_local_deepcopy_thread_rank_0<ExecSpace, ViewType>(5);
+  }
   {  // Rank-1
     using ViewType = Kokkos::View<double**, Kokkos::LayoutRight, ExecSpace>;
     impl_test_local_deepcopy_thread_rank_1<ExecSpace, ViewType>(5);
@@ -1308,6 +1449,10 @@ TEST(TEST_CATEGORY, local_deepcopy_thread_layoutright) {
 TEST(TEST_CATEGORY, local_deepcopy_team_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
 
+  {  // Rank-0
+    using ViewType = Kokkos::View<double*, Kokkos::LayoutRight, ExecSpace>;
+    impl_test_local_deepcopy_team_rank_0<ExecSpace, ViewType>(5);
+  }
   {  // Rank-1
     using ViewType = Kokkos::View<double**, Kokkos::LayoutRight, ExecSpace>;
     impl_test_local_deepcopy_team_rank_1<ExecSpace, ViewType>(5);
@@ -1343,6 +1488,10 @@ TEST(TEST_CATEGORY, local_deepcopy_team_layoutright) {
 TEST(TEST_CATEGORY, local_deepcopy_sequential_layoutright) {
   using ExecSpace = TEST_EXECSPACE;
 
+  {  // Rank-0
+    using ViewType = Kokkos::View<double*, Kokkos::LayoutRight, ExecSpace>;
+    impl_test_local_deepcopy_sequential_rank_0<ExecSpace, ViewType>(5);
+  }
   {  // Rank-1
     using ViewType = Kokkos::View<double**, Kokkos::LayoutRight, ExecSpace>;
     impl_test_local_deepcopy_sequential_rank_1<ExecSpace, ViewType>(5);

@@ -1617,12 +1617,15 @@ KOKKOS_INLINE_FUNCTION void local_deep_copy_contiguous(
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-template <class DT, class... DP, class ST, class... SP>
-KOKKOS_INLINE_FUNCTION bool views_have_same_extents(
-    const View<DT, DP...>& dst, const View<ST, SP...>& src) {
-  for (unsigned i = 0; i < ViewTraits<DT, DP...>::rank; i++) {
-    if (src.extent(i) != dst.extent(i)) {
-      return false;
+template <class DstViewType, class SrcViewType>
+KOKKOS_INLINE_FUNCTION bool views_have_same_extents(const DstViewType& dst,
+                                                    const SrcViewType& src) {
+  // nvcc warns about pointless comparison of unsigned integer with 0
+  if constexpr (DstViewType::rank > 0) {
+    for (unsigned i = 0; i < DstViewType::rank; i++) {
+      if (src.extent(i) != dst.extent(i)) {
+        return false;
+      }
     }
   }
   return true;
@@ -1640,15 +1643,16 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
     std::enable_if_t<
         (Impl::is_local_deep_copy_policy_v<PolicyType> &&
          std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
-         std::is_void_v<typename ViewTraits<ST, SP...>::specialize> &&
-         unsigned(ViewTraits<DT, DP...>::rank) >= 1 &&
-         unsigned(ViewTraits<DT, DP...>::rank) ==
-             unsigned(ViewTraits<ST, SP...>::rank))>* = nullptr) {
+         std::is_void_v<typename ViewTraits<ST, SP...>::specialize>)>* =
+        nullptr) {
   using DV = View<DT, DP...>;
+  using SV = View<ST, SP...>;
 
   static_assert(std::is_same_v<typename DV::value_type,
                                typename DV::non_const_value_type>,
                 "deep_copy requires non-const destination type");
+  static_assert((unsigned(DV::rank) == unsigned(SV::rank)),
+                "deep_copy requires Views of equal rank");
 
   if (dst.data() == nullptr) {
     return;
@@ -1658,7 +1662,7 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
     Kokkos::abort("Error: Kokkos::deep_copy extents of views don't match");
   }
 
-  if constexpr (std::is_same_v<PolicyType, Impl::CopySeqTag>) {
+  if constexpr (std::is_same_v<PolicyType, Impl::CopySeqTag> || DV::rank == 0) {
     if (dst.span_is_contiguous() && src.span_is_contiguous()) {
       Impl::local_deep_copy_contiguous(dst, src);
     } else {
@@ -1668,8 +1672,8 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
     if (dst.span_is_contiguous() && src.span_is_contiguous()) {
       Impl::local_deep_copy_contiguous(policy, dst, src);
     } else {
-      Impl::MDCopyFunctor<View<DT, DP...>, View<ST, SP...>> functor(dst, src);
-      if constexpr (ViewTraits<DT, DP...>::rank == 1) {
+      Impl::MDCopyFunctor<DV, SV> functor(dst, src);
+      if constexpr (DV::rank == 1) {
         Impl::flat_local_deep_copy(policy, dst, functor);
       } else {
         Impl::md_local_deep_copy(policy, dst, functor);
@@ -1685,8 +1689,8 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
     typename ViewTraits<DT, DP...>::const_value_type& value,
     std::enable_if_t<
         (Impl::is_local_deep_copy_policy_v<PolicyType> &&
-         std::is_void_v<typename ViewTraits<DT, DP...>::specialize> &&
-         unsigned(ViewTraits<DT, DP...>::rank) >= 1)>* = nullptr) {
+         std::is_void_v<typename ViewTraits<DT, DP...>::specialize>)>* =
+        nullptr) {
   using DV = View<DT, DP...>;
 
   static_assert(std::is_same_v<typename DV::value_type,
@@ -1697,11 +1701,11 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
     return;
   }
 
-  if constexpr (std::is_same_v<PolicyType, Impl::CopySeqTag>) {
+  if constexpr (std::is_same_v<PolicyType, Impl::CopySeqTag> || DV::rank == 0) {
     // FIXME We might want to check the traits for customization here but we
     // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
-                                 typename View<DT, DP...>::element_type*>) {
+                                 typename DV::element_type*>) {
       if (dst.span_is_contiguous()) {
         Impl::local_deep_copy_contiguous(dst, value);
         return;
@@ -1713,17 +1717,16 @@ KOKKOS_INLINE_FUNCTION void deep_copy(
     // FIXME We might want to check the traits for customization here but we
     // aren't aware of a use case where that is necessary.
     if constexpr (std::is_same_v<decltype(dst.data()),
-                                 typename View<DT, DP...>::element_type*>) {
+                                 typename DV::element_type*>) {
       if (dst.span_is_contiguous()) {
         Impl::local_deep_copy_contiguous(policy, dst, value);
         return;
       }
     }
 
-    Impl::MDValueCopyFunctor<View<DT, DP...>,
-                             typename ViewTraits<DT, DP...>::const_value_type>
-        functor(dst, value);
-    if constexpr (ViewTraits<DT, DP...>::rank == 1) {
+    Impl::MDValueCopyFunctor<DV, typename DV::const_value_type> functor(dst,
+                                                                        value);
+    if constexpr (DV::rank == 1) {
       Impl::flat_local_deep_copy(policy, dst, functor);
     } else {
       Impl::md_local_deep_copy(policy, dst, functor);
