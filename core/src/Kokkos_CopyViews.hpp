@@ -1431,10 +1431,10 @@ struct MDValueCopyFunctor {
 //----------------------------------------------------------------------------
 
 /** \brief  Sequential view to view and value to view copy.  */
-template <std::size_t Extent = 0, std::size_t Rank, class ViewType,
+template <std::size_t Extent = 0, std::size_t Rank, class DstViewType,
           class Functor>
 KOKKOS_INLINE_FUNCTION void local_deep_copy_sequential_iteration(
-    const ViewType& dst, Kokkos::Array<std::size_t, Rank>& idx,
+    const DstViewType& dst, Kokkos::Array<std::size_t, Rank>& idx,
     const Functor& functor) {
   if constexpr (Extent == Rank) {
     [&]<std::size_t... Is>(std::index_sequence<Is...>) {
@@ -1485,9 +1485,9 @@ KOKKOS_INLINE_FUNCTION
 }
 
 /** \brief  Deep copy with 1D views.  */
-template <class PolicyType, class ViewType, class Functor>
+template <class PolicyType, class DstViewType, class Functor>
 KOKKOS_INLINE_FUNCTION void flat_local_deep_copy(const PolicyType& policy,
-                                                 const ViewType& dst,
+                                                 const DstViewType& dst,
                                                  const Functor& functor) {
   const size_t N = dst.extent(0);
   if (N >= static_cast<size_t>(finite_max_v<int>)) {
@@ -1533,12 +1533,12 @@ md_local_deep_copy_policy(Impl::CopyThreadTag<TeamMemberType> const& policy,
   }
 }
 
-/** \brief  Deep copy with multidimensional views.  */
-template <class PolicyType, class Functor, class DataType, class... Properties>
-KOKKOS_INLINE_FUNCTION void md_local_deep_copy(
-    const PolicyType& policy, const Kokkos::View<DataType, Properties...>& dst,
-    const Functor& functor) {
-  constexpr std::size_t rank = ViewTraits<DataType, Properties...>::rank;
+/** \brief  Deep copy using multidimensional policies.  */
+template <class PolicyType, class Functor, class DstViewType>
+KOKKOS_INLINE_FUNCTION void md_local_deep_copy(const PolicyType& policy,
+                                               const DstViewType& dst,
+                                               const Functor& functor) {
+  constexpr std::size_t rank = DstViewType::rank;
 
   const Kokkos::Iterate iterate = Kokkos::Impl::get_iteration_order(dst);
   if (dst.span() >= static_cast<size_t>(finite_max_v<int>)) {
@@ -1580,7 +1580,7 @@ KOKKOS_INLINE_FUNCTION void md_local_deep_copy(
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
-/** \brief  Deep copy between contiguous views.  */
+/** \brief  Deep copy with contiguous views.  */
 
 template <class DT, class... DP, class ST, class... SP>
 KOKKOS_INLINE_FUNCTION void local_deep_copy_contiguous(
