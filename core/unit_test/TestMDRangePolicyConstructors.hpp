@@ -32,9 +32,9 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
     // Check that rank-1 construction from actual 1-element bounds objects
     // works.
     using IndexType = unsigned long long;
-    Kokkos::Array<IndexType, 1> lower{{0}};
-    Kokkos::Array<IndexType, 1> upper{{2}};
-    Kokkos::Array<IndexType, 1> tile{{4}};
+    Kokkos::Array<IndexType, 1> lower{0};
+    Kokkos::Array<IndexType, 1> upper{2};
+    Kokkos::Array<IndexType, 1> tile{4};
     IndexType lower_c_array[1] = {0};
     IndexType upper_c_array[1] = {2};
     IndexType tile_c_array[1]  = {4};
