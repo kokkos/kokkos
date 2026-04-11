@@ -29,6 +29,30 @@ void construct_mdrange_policy_variable_type() {
 
 TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
   {
+    // Check that rank-1 construction from actual 1-element bounds objects
+    // works.
+    using IndexType = unsigned long long;
+    Kokkos::Array<IndexType, 1> lower{{0}};
+    Kokkos::Array<IndexType, 1> upper{{2}};
+    Kokkos::Array<IndexType, 1> tile{{4}};
+    IndexType lower_c_array[1] = {0};
+    IndexType upper_c_array[1] = {2};
+    IndexType tile_c_array[1]  = {4};
+
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
+                          Kokkos::IndexType<IndexType>>
+        p1(lower, upper);
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
+                          Kokkos::IndexType<IndexType>>
+        p2(lower, upper, tile);
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
+                          Kokkos::IndexType<IndexType>>
+        p3(lower_c_array, upper_c_array);
+    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
+                          Kokkos::IndexType<IndexType>>
+        p4(lower_c_array, upper_c_array, tile_c_array);
+  }
+  {
     // Check that construction from Kokkos::Array of the specified index type
     // works.
     using IndexType = unsigned long long;
@@ -91,6 +115,22 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_bounds_unsafe_narrowing_conversions) {
   ASSERT_DEATH({ (void)Policy({-1, 0}, {2, 3}); }, expected);
 }
 
+TEST(TEST_CATEGORY_DEATH,
+     md_range_policy_rank1_bounds_unsafe_narrowing_conversions) {
+  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
+                                       Kokkos::IndexType<unsigned>>;
+
+  std::string msg =
+      "Kokkos::MDRangePolicy bound type error: an unsafe implicit conversion "
+      "is "
+      "performed on a bound (-1) in dimension (0), which may not preserve its "
+      "original value.\n";
+  std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
+
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  ASSERT_DEATH({ (void)Policy({-1}, {2}); }, expected);
+}
+
 TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
 
@@ -109,18 +149,17 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
   ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg1);
 }
 
-TEST(TEST_CATEGORY_DEATH,
-     md_range_policy_rank1_invalid_nested_initializer_list_sizes) {
+TEST(TEST_CATEGORY_DEATH, md_range_policy_rank1_invalid_bounds) {
   using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>>;
-
-  std::string msg =
-      "MDRangePolicy: Constructor initializer lists have wrong size";
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  ASSERT_DEATH({ (void)Policy({{0}, {1}}, {{2}}); }, msg);
-  ASSERT_DEATH({ (void)Policy({{0, 1}}, {{2}}); }, msg);
-  ASSERT_DEATH({ (void)Policy({{0}}, {{2}}, {{1, 1}}); }, msg);
+  std::string msg =
+      "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
+      "than its upper bound (90) in dimension 0.\n";
+
+  msg = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
+  ASSERT_DEATH({ (void)Policy({100}, {90}); }, msg);
 }
 
 // Verify that we get an error if the user requests tile dimensions too large

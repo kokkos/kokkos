@@ -262,68 +262,8 @@ struct MDRangePolicy<P, Properties...>
     return m_space;
   }
 
- private:
-  template <class Array, class T>
-  static constexpr Array rank1_nested_initializer_list_to_array(
-      std::initializer_list<std::initializer_list<T>> init,
-      bool allow_shorter = false) {
-    static_assert(rank == 1);
-    if (init.size() == 0 && allow_shorter) {
-      return Array{};
-    }
-    if (init.size() != 1) {
-      Kokkos::abort(
-          "MDRangePolicy: Constructor initializer lists have wrong size");
-    }
-
-    auto const& inner = *init.begin();
-    if ((allow_shorter && inner.size() > rank) ||
-        (!allow_shorter && inner.size() != rank)) {
-      Kokkos::abort(
-          "MDRangePolicy: Constructor initializer lists have wrong size");
-    }
-
-    using value_type = typename Array::value_type;
-    Array a{};
-    std::size_t i = 0;
-    for (auto const& value : inner) {
-      a[i] = Impl::checked_narrow_cast<value_type>(value, i);
-      (void)Impl::checked_narrow_cast<index_type>(value, i);
-      ++i;
-    }
-    return a;
-  }
-
  public:
   MDRangePolicy() = default;
-
-  template <typename LT, typename UT, typename TT = array_index_type,
-            typename = std::enable_if_t<(rank == 1) && std::is_integral_v<LT> &&
-                                        std::is_integral_v<UT> &&
-                                        std::is_integral_v<TT>>>
-  MDRangePolicy(std::initializer_list<std::initializer_list<LT>> lower,
-                std::initializer_list<std::initializer_list<UT>> upper,
-                std::initializer_list<std::initializer_list<TT>> tile = {})
-      : MDRangePolicy(
-            rank1_nested_initializer_list_to_array<decltype(m_lower)>(lower),
-            rank1_nested_initializer_list_to_array<decltype(m_upper)>(upper),
-            rank1_nested_initializer_list_to_array<decltype(m_tile)>(tile,
-                                                                     true)) {}
-
-  template <typename LT, typename UT, typename TT = array_index_type,
-            typename = std::enable_if_t<(rank == 1) && std::is_integral_v<LT> &&
-                                        std::is_integral_v<UT> &&
-                                        std::is_integral_v<TT>>>
-  MDRangePolicy(const typename traits::execution_space& work_space,
-                std::initializer_list<std::initializer_list<LT>> lower,
-                std::initializer_list<std::initializer_list<UT>> upper,
-                std::initializer_list<std::initializer_list<TT>> tile = {})
-      : MDRangePolicy(
-            work_space,
-            rank1_nested_initializer_list_to_array<decltype(m_lower)>(lower),
-            rank1_nested_initializer_list_to_array<decltype(m_upper)>(upper),
-            rank1_nested_initializer_list_to_array<decltype(m_tile)>(tile,
-                                                                     true)) {}
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
             typename TT = array_index_type, std::size_t TN = rank,
