@@ -63,8 +63,6 @@ struct TestMDRange_ReduceArray_1D {
     using range_type =
         typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<1>,
                                        Kokkos::IndexType<int>>;
-    using tile_type  = typename range_type::tile_type;
-    using point_type = typename range_type::point_type;
 
     range_type_init range_init(0, N0, 3);
     range_type range(0, N0, 3);
