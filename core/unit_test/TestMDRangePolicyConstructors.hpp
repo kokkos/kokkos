@@ -128,7 +128,7 @@ TEST(TEST_CATEGORY_DEATH,
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_DEATH({ (void)Policy({-1}, {2}); }, expected);
+  ASSERT_DEATH({ (void)Policy(-1, 2); }, expected);
 }
 
 TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
@@ -159,7 +159,7 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_rank1_invalid_bounds) {
       "than its upper bound (90) in dimension 0.\n";
 
   msg = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
-  ASSERT_DEATH({ (void)Policy({100}, {90}); }, msg);
+  ASSERT_DEATH({ (void)Policy(100, 90); }, msg);
 }
 
 // Verify that we get an error if the user requests tile dimensions too large

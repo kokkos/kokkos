@@ -66,8 +66,8 @@ struct TestMDRange_ReduceArray_1D {
     using tile_type  = typename range_type::tile_type;
     using point_type = typename range_type::point_type;
 
-    range_type_init range_init(point_type{0}, point_type{N0}, tile_type{3});
-    range_type range({0}, {N0}, {3});
+    range_type_init range_init(0, N0, 3);
+    range_type range(0, N0, 3);
     if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
       GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
     } else {
@@ -179,20 +179,29 @@ struct TestMDRange_1D {
   static void test_construct_policies(const int N0) {
     [[maybe_unused]] const int s0 = 1;
     ExecSpace exec_space;
+    (void)range_type(0, N0, 3);
+    (void)range_type(s0, N0, 3);
+    (void)range_type(0, N0);
     (void)range_type(point_type{0}, point_type{N0}, tile_type{3});
     (void)range_type({0}, {N0}, {3});
     (void)range_type({s0}, {N0}, {3});
     (void)range_type(point_type{0}, point_type{N0});
     (void)range_type({0}, {N0});
+    (void)range_type(exec_space, 0, N0, 3);
+    (void)range_type(exec_space, 0, N0);
     (void)range_type(exec_space, point_type{0}, point_type{N0}, tile_type{3});
     (void)range_type(exec_space, {0}, {N0}, {3});
     (void)range_type(exec_space, point_type{0}, point_type{N0});
     (void)range_type(exec_space, {0}, {N0});
 
+    (void)range_type_init(0, N0, 3);
+    (void)range_type_init(0, N0);
     (void)range_type_init(point_type{0}, point_type{N0}, tile_type{3});
     (void)range_type_init({0}, {N0}, {3});
     (void)range_type_init(point_type{0}, point_type{N0});
     (void)range_type_init({0}, {N0});
+    (void)range_type_init(exec_space, 0, N0, 3);
+    (void)range_type_init(exec_space, 0, N0);
     (void)range_type_init(exec_space, point_type{0}, point_type{N0},
                           tile_type{3});
     (void)range_type_init(exec_space, {0}, {N0}, {3});
@@ -220,6 +229,15 @@ struct TestMDRange_1D {
     if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
       GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
     } else {
+      {
+        range_type range(0, N0);
+        double sum = 0.0;
+        parallel_reduce(
+            range,
+            KOKKOS_LAMBDA(const int /*i*/, double &lsum) { lsum += 1.0; }, sum);
+        ASSERT_EQ(sum, N0);
+      }
+
       {
         range_type range(point_type{0}, point_type{N0}, tile_type{3});
         double sum = 0.0;
@@ -3805,8 +3823,7 @@ struct TestMDRange_1D_NegIdx {
       const point_type upper{N0};
       const tile_type tile{8};
 
-      range_type range(point_type{lower[0]}, point_type{upper[0]},
-                       tile_type{tile[0]});
+      range_type range(lower[0], upper[0], tile[0]);
       TestMDRange_1D_NegIdx functor(lower[0], upper[0]);
 
       parallel_for(range, functor);

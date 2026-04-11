@@ -112,6 +112,17 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   return a;
 }
 
+template <class IndexType, class Array, class U,
+          class = std::enable_if_t<std::is_integral_v<U>>>
+constexpr Array to_array_potentially_narrowing(U value) {
+  using T = typename Array::value_type;
+  Array a{};
+  static_assert(a.size() == 1);
+  a[0] = checked_narrow_cast<T>(value, 0);
+  (void)checked_narrow_cast<IndexType>(value, 0);  // see note above
+  return a;
+}
+
 struct TileSizeProperties {
   int max_threads;  // (per SM, CU)
   int max_total_tile_size;
@@ -264,6 +275,34 @@ struct MDRangePolicy<P, Properties...>
 
  public:
   MDRangePolicy() = default;
+
+  template <typename LT, typename UT, typename TT = array_index_type,
+            typename = std::enable_if_t<(rank == 1) && std::is_integral_v<LT> &&
+                                        std::is_integral_v<UT> &&
+                                        std::is_integral_v<TT>>>
+  MDRangePolicy(LT lower, UT upper, TT tile = TT{})
+      : MDRangePolicy(
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {}
+
+  template <typename LT, typename UT, typename TT = array_index_type,
+            typename = std::enable_if_t<(rank == 1) && std::is_integral_v<LT> &&
+                                        std::is_integral_v<UT> &&
+                                        std::is_integral_v<TT>>>
+  MDRangePolicy(const typename traits::execution_space& work_space, LT lower,
+                UT upper, TT tile = TT{})
+      : MDRangePolicy(
+            work_space,
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_lower)>(
+                lower),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_upper)>(
+                upper),
+            Impl::to_array_potentially_narrowing<index_type, decltype(m_tile)>(
+                tile)) {}
 
   template <typename LT, std::size_t LN, typename UT, std::size_t UN,
             typename TT = array_index_type, std::size_t TN = rank,
