@@ -31,10 +31,11 @@ struct TriadFixture {
   view_type c;
 
   explicit TriadFixture(index_type n) : a("a", n), b("b", n), c("c", n) {
-    Kokkos::deep_copy(a, 1.0f);
-    Kokkos::deep_copy(b, 2.0f);
-    Kokkos::deep_copy(c, 0.0f);
-    execution_space().fence();
+    execution_space exec{};
+    Kokkos::deep_copy(exec, a, 1.0f);
+    Kokkos::deep_copy(exec, b, 2.0f);
+    Kokkos::deep_copy(exec, c, 0.0f);
+    exec.fence();
   }
 
   template <class Policy>
@@ -42,13 +43,14 @@ struct TriadFixture {
     const auto local_a = a;
     const auto local_b = b;
     const auto local_c = c;
+    const auto& exec   = policy.space();
     for (auto _ : state) {
       Kokkos::Timer timer;
       Kokkos::parallel_for(
           "triad1d", policy, KOKKOS_LAMBDA(const index_type i) {
             local_c(i) = local_a(i) + triad_scalar * local_b(i);
           });
-      execution_space().fence();
+      exec.fence();
       KokkosBenchmark::report_results(state, c, 3, timer.seconds());
     }
     state.counters["Tile"] = benchmark::Counter(tile_size);

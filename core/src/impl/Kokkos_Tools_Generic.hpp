@@ -418,11 +418,8 @@ void generic_report_results(const std::string& label_in, Map& map,
       Kokkos::Impl::ParallelConstructName<Functor, work_tag> name(label);
       label = name.get();
     }
-    auto tuner_iter = map.find(label);
-    KOKKOS_ASSERT(tuner_iter != map.end());
-    if (tuner_iter != map.end()) {
-      tuner_iter->second.end();
-    }
+    auto tuner_iter = map[label];
+    tuner_iter.end();
   }
 }
 
