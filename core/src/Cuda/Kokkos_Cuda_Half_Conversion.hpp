@@ -4,6 +4,8 @@
 #ifndef KOKKOS_CUDA_HALF_HPP_
 #define KOKKOS_CUDA_HALF_HPP_
 
+#ifdef _CUDACC_
+
 #include <Kokkos_Half.hpp>
 #include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 
@@ -299,5 +301,7 @@ cast_from_bhalf(bhalf_t val) {
 #endif
 
 }  // namespace Kokkos::Experimental
+
+#endif
 
 #endif

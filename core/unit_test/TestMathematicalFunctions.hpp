@@ -2907,11 +2907,15 @@ KE::half_t ref_test_fallback_half(KE::half_t) {
   // When SYCL is enabled, half_t is available on both the GPU and the CPU.
   return KE::half_t(0.f);
 #elif defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && KOKKOS_HALF_T_IS_FLOAT
+  return KE::half_t(1.f);
+#else
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
     return KE::half_t(0.f);
   } else {
     return KE::half_t(1.f);
   }
+#endif
 #elif defined(KOKKOS_ENABLE_HIP)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::HIP>) {
     return KE::half_t(0.f);
