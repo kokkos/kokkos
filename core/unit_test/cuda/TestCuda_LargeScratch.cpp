@@ -73,7 +73,8 @@ TEST(TEST_CATEGORY, large_scratch_progressive_increase) {
   const int team_size = 128;
 
   for (auto scratch_kib : {48ul, 64ul, 80ul}) {
-    const int scratch_elems = static_cast<int>(scratch_kib * 1024 / sizeof(double));
+    const int scratch_elems =
+        static_cast<int>(scratch_kib * 1024 / sizeof(double));
     const int scratch_bytes = scratch_view::shmem_size(scratch_elems);
 
     Kokkos::View<double*, mem_space> result("result", num_teams);
