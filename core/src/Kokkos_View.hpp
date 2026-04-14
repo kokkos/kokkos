@@ -115,6 +115,12 @@ KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
   static_assert(std::is_pointer_v<HandleType>);
   return handle;
 }
+
+template <class LView, class RView, size_t... I>
+KOKKOS_INLINE_FUNCTION constexpr bool view_equal_extents_impl(
+    const LView& lhs, const RView& rhs, std::index_sequence<I...>) {
+  return ((lhs.extent(I) == rhs.extent(I)) && ...);
+}
 }  // namespace Impl
 
 template <class DataType, class... Properties>
@@ -1490,10 +1496,8 @@ KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
                         typename rhs_traits::memory_space> &&
          View<LT, LP...>::rank() == View<RT, RP...>::rank() &&
          lhs.data() == rhs.data() && lhs.span() == rhs.span() &&
-         lhs.extent(0) == rhs.extent(0) && lhs.extent(1) == rhs.extent(1) &&
-         lhs.extent(2) == rhs.extent(2) && lhs.extent(3) == rhs.extent(3) &&
-         lhs.extent(4) == rhs.extent(4) && lhs.extent(5) == rhs.extent(5) &&
-         lhs.extent(6) == rhs.extent(6) && lhs.extent(7) == rhs.extent(7);
+         Kokkos::Impl::view_equal_extents_impl(
+             lhs, rhs, std::make_index_sequence<lhs_view::rank()>{});
 }
 
 template <class LT, class... LP, class RT, class... RP>
