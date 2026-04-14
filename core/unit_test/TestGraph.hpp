@@ -1466,6 +1466,10 @@ struct GraphLBFunctor {
 
 // Test TeamPolicy with L0 scratch memory in graph nodes.
 TEST_F(TEST_CATEGORY_FIXTURE(graph), team_scratch_in_graph) {
+#ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
+  GTEST_SKIP() << "skipping since scratch memory is not yet implemented in the "
+                  "OpenACC backend";
+#endif
   using exec_space   = TEST_EXECSPACE;
   using mem_space    = typename exec_space::memory_space;
   using team_policy  = Kokkos::TeamPolicy<exec_space>;
