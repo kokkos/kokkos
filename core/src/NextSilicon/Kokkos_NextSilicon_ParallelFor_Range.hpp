@@ -6,6 +6,7 @@
 
 #include <NextSilicon/Kokkos_NextSilicon.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_Intrinsics.hpp>
+#include <NextSilicon/Kokkos_NextSilicon_InParallelRegion.hpp>
 
 #include <Kokkos_Parallel.hpp>
 
@@ -30,6 +31,11 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
       : m_functor(functor), m_policy(policy) {}
 
   void execute() const {
+    // Set the flag to true to indicate that we are in a parallel region. This
+    // is in RAII context to set the flag to true when the object is created and
+    // to false when the object is destroyed.
+    Kokkos::Impl::NextSiliconParallelRegionScopeGuard parallel_region_flag{};
+
     // Clone the driver to prevent the stack from getting migrated to device.
     auto internal_instance = m_policy.space().impl_internal_space_instance();
     auto cloned_driver     = internal_instance->clone_driver(*this);
