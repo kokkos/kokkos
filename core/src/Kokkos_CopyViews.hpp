@@ -35,6 +35,25 @@ struct ViewFillLayoutSelector<Kokkos::LayoutRight> {
   static const Kokkos::Iterate iterate = Kokkos::Iterate::Right;
 };
 
+template <class DstView, class SrcView, size_t... I>
+KOKKOS_INLINE_FUNCTION constexpr bool view_equal_extents(
+    const DstView& dst, const SrcView& src, std::index_sequence<I...>) {
+  return ((dst.extent(I) == src.extent(I)) && ...);
+}
+
+template <class ViewType, size_t... I>
+void append_view_extents(std::string& message, const ViewType& view,
+                         std::index_sequence<I...>) {
+  ((message += (I == 0 ? "" : ","), message += std::to_string(view.extent(I))),
+   ...);
+}
+
+template <class DstView, class SrcView, size_t... I>
+KOKKOS_INLINE_FUNCTION constexpr bool view_equal_strides(
+    const DstView& dst, const SrcView& src, std::index_sequence<I...>) {
+  return ((dst.stride(I) == src.stride(I)) && ...);
+}
+
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -1202,28 +1221,20 @@ inline void deep_copy(
 
   if (dst.data() == nullptr || src.data() == nullptr) {
     // throw if dimension mismatch
-    if ((src.extent(0) != dst.extent(0)) || (src.extent(1) != dst.extent(1)) ||
-        (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
-        (src.extent(4) != dst.extent(4)) || (src.extent(5) != dst.extent(5)) ||
-        (src.extent(6) != dst.extent(6)) || (src.extent(7) != dst.extent(7))) {
+    if (!Kokkos::Impl::view_equal_extents(
+            dst, src, std::make_index_sequence<dst_type::rank()>{})) {
       std::string message(
           "Deprecation Error: Kokkos::deep_copy extents of views don't "
           "match: ");
       message += dst.label();
       message += "(";
-      message += std::to_string(dst.extent(0));
-      for (size_t r = 1; r < dst_type::rank; r++) {
-        message += ",";
-        message += std::to_string(dst.extent(r));
-      }
+      Kokkos::Impl::append_view_extents(
+          message, dst, std::make_index_sequence<dst_type::rank()>{});
       message += ") ";
       message += src.label();
       message += "(";
-      message += std::to_string(src.extent(0));
-      for (size_t r = 1; r < src_type::rank; r++) {
-        message += ",";
-        message += std::to_string(src.extent(r));
-      }
+      Kokkos::Impl::append_view_extents(
+          message, src, std::make_index_sequence<src_type::rank()>{});
       message += ") ";
 
       Kokkos::Impl::throw_runtime_exception(message);
@@ -1281,27 +1292,19 @@ inline void deep_copy(
   }
 
   // Check for same extents
-  if ((src.extent(0) != dst.extent(0)) || (src.extent(1) != dst.extent(1)) ||
-      (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
-      (src.extent(4) != dst.extent(4)) || (src.extent(5) != dst.extent(5)) ||
-      (src.extent(6) != dst.extent(6)) || (src.extent(7) != dst.extent(7))) {
+  if (!Kokkos::Impl::view_equal_extents(
+          dst, src, std::make_index_sequence<dst_type::rank()>{})) {
     std::string message(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label();
     message += "(";
-    message += std::to_string(dst.extent(0));
-    for (size_t r = 1; r < dst_type::rank; r++) {
-      message += ",";
-      message += std::to_string(dst.extent(r));
-    }
+    Kokkos::Impl::append_view_extents(
+        message, dst, std::make_index_sequence<dst_type::rank()>{});
     message += ") ";
     message += src.label();
     message += "(";
-    message += std::to_string(src.extent(0));
-    for (size_t r = 1; r < src_type::rank; r++) {
-      message += ",";
-      message += std::to_string(src.extent(r));
-    }
+    Kokkos::Impl::append_view_extents(
+        message, src, std::make_index_sequence<src_type::rank()>{});
     message += ") ";
 
     Kokkos::Impl::throw_runtime_exception(message);
@@ -1316,14 +1319,8 @@ inline void deep_copy(
                       typename src_type::array_layout> ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
       dst.span_is_contiguous() && src.span_is_contiguous() &&
-      ((dst_type::rank < 1) || (dst.stride(0) == src.stride(0))) &&
-      ((dst_type::rank < 2) || (dst.stride(1) == src.stride(1))) &&
-      ((dst_type::rank < 3) || (dst.stride(2) == src.stride(2))) &&
-      ((dst_type::rank < 4) || (dst.stride(3) == src.stride(3))) &&
-      ((dst_type::rank < 5) || (dst.stride(4) == src.stride(4))) &&
-      ((dst_type::rank < 6) || (dst.stride(5) == src.stride(5))) &&
-      ((dst_type::rank < 7) || (dst.stride(6) == src.stride(6))) &&
-      ((dst_type::rank < 8) || (dst.stride(7) == src.stride(7)))) {
+      Kokkos::Impl::view_equal_strides(
+          dst, src, std::make_index_sequence<dst_type::rank()>{})) {
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     const size_t nbytes = allocation_size_from_mapping_and_accessor(
                               src.mapping(), src.accessor()) *
@@ -2442,28 +2439,20 @@ inline void deep_copy(
       ((std::ptrdiff_t(dst_start) == std::ptrdiff_t(src_start)) &&
        (std::ptrdiff_t(dst_end) == std::ptrdiff_t(src_end)))) {
     // throw if dimension mismatch
-    if ((src.extent(0) != dst.extent(0)) || (src.extent(1) != dst.extent(1)) ||
-        (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
-        (src.extent(4) != dst.extent(4)) || (src.extent(5) != dst.extent(5)) ||
-        (src.extent(6) != dst.extent(6)) || (src.extent(7) != dst.extent(7))) {
+    if (!Kokkos::Impl::view_equal_extents(
+            dst, src, std::make_index_sequence<dst_type::rank()>{})) {
       std::string message(
           "Deprecation Error: Kokkos::deep_copy extents of views don't "
           "match: ");
       message += dst.label();
       message += "(";
-      message += std::to_string(dst.extent(0));
-      for (size_t r = 1; r < dst_type::rank; r++) {
-        message += ",";
-        message += std::to_string(dst.extent(r));
-      }
+      Kokkos::Impl::append_view_extents(
+          message, dst, std::make_index_sequence<dst_type::rank()>{});
       message += ") ";
       message += src.label();
       message += "(";
-      message += std::to_string(src.extent(0));
-      for (size_t r = 1; r < src_type::rank; r++) {
-        message += ",";
-        message += std::to_string(src.extent(r));
-      }
+      Kokkos::Impl::append_view_extents(
+          message, src, std::make_index_sequence<src_type::rank()>{});
       message += ") ";
 
       Kokkos::Impl::throw_runtime_exception(message);
@@ -2495,27 +2484,19 @@ inline void deep_copy(
   }
 
   // Check for same extents
-  if ((src.extent(0) != dst.extent(0)) || (src.extent(1) != dst.extent(1)) ||
-      (src.extent(2) != dst.extent(2)) || (src.extent(3) != dst.extent(3)) ||
-      (src.extent(4) != dst.extent(4)) || (src.extent(5) != dst.extent(5)) ||
-      (src.extent(6) != dst.extent(6)) || (src.extent(7) != dst.extent(7))) {
+  if (!Kokkos::Impl::view_equal_extents(
+          dst, src, std::make_index_sequence<dst_type::rank()>{})) {
     std::string message(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
     message += dst.label();
     message += "(";
-    message += std::to_string(dst.extent(0));
-    for (size_t r = 1; r < dst_type::rank; r++) {
-      message += ",";
-      message += std::to_string(dst.extent(r));
-    }
+    Kokkos::Impl::append_view_extents(
+        message, dst, std::make_index_sequence<dst_type::rank()>{});
     message += ") ";
     message += src.label();
     message += "(";
-    message += std::to_string(src.extent(0));
-    for (size_t r = 1; r < src_type::rank; r++) {
-      message += ",";
-      message += std::to_string(src.extent(r));
-    }
+    Kokkos::Impl::append_view_extents(
+        message, src, std::make_index_sequence<src_type::rank()>{});
     message += ") ";
 
     Kokkos::Impl::throw_runtime_exception(message);
@@ -2530,14 +2511,8 @@ inline void deep_copy(
                       typename src_type::array_layout> ||
        (dst_type::rank == 1 && src_type::rank == 1)) &&
       dst.span_is_contiguous() && src.span_is_contiguous() &&
-      ((dst_type::rank < 1) || (dst.stride(0) == src.stride(0))) &&
-      ((dst_type::rank < 2) || (dst.stride(1) == src.stride(1))) &&
-      ((dst_type::rank < 3) || (dst.stride(2) == src.stride(2))) &&
-      ((dst_type::rank < 4) || (dst.stride(3) == src.stride(3))) &&
-      ((dst_type::rank < 5) || (dst.stride(4) == src.stride(4))) &&
-      ((dst_type::rank < 6) || (dst.stride(5) == src.stride(5))) &&
-      ((dst_type::rank < 7) || (dst.stride(6) == src.stride(6))) &&
-      ((dst_type::rank < 8) || (dst.stride(7) == src.stride(7)))) {
+      Kokkos::Impl::view_equal_strides(
+          dst, src, std::make_index_sequence<dst_type::rank()>{})) {
     const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
     if ((void*)dst.data() != (void*)src.data() && 0 < nbytes) {
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space, ExecSpace>(
@@ -2591,11 +2566,14 @@ namespace Impl {
 template <typename ViewType>
 bool size_mismatch(const ViewType& view, unsigned int max_extent,
                    const size_t new_extents[8]) {
-  for (unsigned int dim = 0; dim < max_extent; ++dim)
+  constexpr unsigned int rank = ViewType::rank();
+  const unsigned int checked_extent = rank < max_extent ? rank : max_extent;
+
+  for (unsigned int dim = 0; dim < checked_extent; ++dim)
     if (new_extents[dim] != view.extent(dim)) {
       return true;
     }
-  for (unsigned int dim = max_extent; dim < 8; ++dim)
+  for (unsigned int dim = checked_extent; dim < 8; ++dim)
     if (new_extents[dim] != KOKKOS_IMPL_CTOR_DEFAULT_ARG) {
       return true;
     }
