@@ -64,24 +64,26 @@ concept sized_range = range<R> && []() {
 }();
 
 template <class R>
-concept contiguous_range =
-    range<R> &&
-#if defined(__cpp_lib_concepts) && (__cpp_lib_concepts >= 202002L)
-    std::contiguous_iterator<iterator_t<R> > && requires(R& r) {
-      { data(r) } -> std::same_as<std::add_pointer_t<range_reference_t<R> > >;
-    };
-#else
-    requires(R& r, iterator_t<R>& it) {
-      ++it;
-      --it;
-      it += 2;
-      it -= 2;
-      *it;
-      it[0];
-      requires std::is_same_v<decltype(data(r)),
-                              std::add_pointer_t<range_reference_t<R> > >;
-    };
-#endif
+concept contiguous_range = range<R> && requires(R& r, iterator_t<R>& it) {
+  { ++it } -> std::same_as<iterator_t<R>&>;
+  { --it } -> std::same_as<iterator_t<R>&>;
+  { it + 2 } -> std::same_as<iterator_t<R> >;
+  { it - 2 } -> std::same_as<iterator_t<R> >;
+  { it += 2 } -> std::same_as<iterator_t<R>&>;
+  { it -= 2 } -> std::same_as<iterator_t<R>&>;
+  {
+    it - it
+  } -> std::same_as<typename std::iterator_traits<
+      std::remove_cvref_t<iterator_t<R> > >::difference_type>;
+  { *it } -> std::same_as<range_reference_t<R> >;
+  { it[0] } -> std::same_as<range_reference_t<R> >;
+  { it < it } -> std::same_as<bool>;
+  { it > it } -> std::same_as<bool>;
+  { it <= it } -> std::same_as<bool>;
+  { it >= it } -> std::same_as<bool>;
+  requires std::is_same_v<decltype(data(r)),
+                          std::add_pointer_t<range_reference_t<R> > >;
+};
 
 template <range R>
 using range_value_t = typename std::iterator_traits<
