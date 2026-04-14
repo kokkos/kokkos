@@ -7,20 +7,41 @@
 #include <impl/Kokkos_HostSharedPtr.hpp>
 
 #include <cstdint>
+#include <cstddef>
 #include <iosfwd>
 #include <string>
+#include <memory>
+
+#include <NextSilicon/Kokkos_NextSilicon_HeapBuffer.hpp>
 
 namespace Kokkos::Experimental::Impl {
 
 class NextSiliconInternal {
+  Impl::NextSiliconHeapBuffer functorBuffer_;
+
   NextSiliconInternal(const NextSiliconInternal&)            = delete;
   NextSiliconInternal& operator=(const NextSiliconInternal&) = delete;
+
+  std::byte* resize_functor_buffer(size_t requested);
 
  public:
   static Kokkos::Impl::HostSharedPtr<NextSiliconInternal> default_instance;
 
   NextSiliconInternal();
   ~NextSiliconInternal();
+
+  template <class Driver>
+  auto clone_driver(const Driver& driver) {
+    // Helper to clone the driver before going into the handoff function. This
+    // prevents the stack from getting migrated into device.
+    size_t functor_size = sizeof(Driver);
+    std::byte* buffer   = resize_functor_buffer(functor_size);
+    auto deleter        = [](Driver* const p) {
+      if (p) p->~Driver();
+    };
+    return std::unique_ptr<Driver, decltype(deleter)>(
+        new (buffer) Driver(driver), deleter);
+  }
 
   void print_configuration(std::ostream& os) const;
 

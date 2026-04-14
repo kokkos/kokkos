@@ -10,6 +10,7 @@
 #include <impl/Kokkos_Profiling.hpp>
 #include <ostream>
 #include <cstdint>
+#include <cstddef>
 
 namespace Kokkos::Experimental::Impl {
 
@@ -41,6 +42,13 @@ void NextSiliconInternal::fence(std::string const &name) const {
 uint32_t NextSiliconInternal::instance_id() const noexcept {
   return Kokkos::Tools::Experimental::Impl::idForInstance<
       Kokkos::Experimental::NextSilicon>(reinterpret_cast<uintptr_t>(this));
+}
+
+std::byte *NextSiliconInternal::resize_functor_buffer(size_t requested) {
+  constexpr static size_t MIN_FUNCTOR_BUFFER_SIZE = 4 * 1024 * 1024;  // 4 MB
+  requested = std::max(requested, MIN_FUNCTOR_BUFFER_SIZE);
+
+  return functorBuffer_.ensure("functor heap buffer", requested);
 }
 
 }  // namespace Kokkos::Experimental::Impl
