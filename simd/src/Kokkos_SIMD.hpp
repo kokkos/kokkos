@@ -192,15 +192,6 @@ using native_abi = typename ForSpace<Space>::template simd_abi<T, N>;
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-template <class T, class Space>
-using ForSpace =
-    typename Impl::ForSpace<typename Space::execution_space>::template type<T>;
-
-template <class T>
-using native = ForSpace<T, Kokkos::DefaultExecutionSpace>;
-#endif
-
 }  // namespace simd_abi
 
 template <class T, Impl::simd_size_t N = 0>

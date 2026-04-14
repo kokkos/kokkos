@@ -139,103 +139,12 @@ concept SimdIntegral = SimdVecType<V> && std::integral<typename V::value_type>;
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-// class template declarations for const_where_expression and where_expression
-
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-template <class M, class T>
-class KOKKOS_DEPRECATED const_where_expression {
- protected:
-  T& m_value;
-  M const& m_mask;
-
- public:
-  const_where_expression(M const& mask_arg, T const& value_arg)
-      : m_value(const_cast<T&>(value_arg)), m_mask(mask_arg) {}
-  KOKKOS_FORCEINLINE_FUNCTION T const& value() const { return this->m_value; }
-};
-
-template <class M, class T>
-class KOKKOS_DEPRECATED where_expression : public const_where_expression<M, T> {
-  using base_type = const_where_expression<M, T>;
-
- public:
-  where_expression(M const& mask_arg, T& value_arg)
-      : base_type(mask_arg, value_arg) {}
-  KOKKOS_FORCEINLINE_FUNCTION T& value() { return this->m_value; }
-};
-
-// specializations of where expression templates for the case when the
-// mask type is bool, to allow generic code to use where() on both
-// SIMD types and non-SIMD builtin arithmetic types
-
-template <class T>
-class KOKKOS_DEPRECATED const_where_expression<bool, T> {
- protected:
-  T& m_value;
-  bool m_mask;
-
- public:
-  KOKKOS_FORCEINLINE_FUNCTION
-  const_where_expression(bool mask_arg, T const& value_arg)
-      : m_value(const_cast<T&>(value_arg)), m_mask(mask_arg) {}
-  KOKKOS_FORCEINLINE_FUNCTION T const& value() const { return this->m_value; }
-};
-
-template <class T>
-class KOKKOS_DEPRECATED where_expression<bool, T>
-    : public const_where_expression<bool, T> {
-  using base_type = const_where_expression<bool, T>;
-
- public:
-  KOKKOS_FORCEINLINE_FUNCTION
-  where_expression(bool mask_arg, T& value_arg)
-      : base_type(mask_arg, value_arg) {}
-  KOKKOS_FORCEINLINE_FUNCTION T& value() { return this->m_value; }
-  template <class U,
-            std::enable_if_t<std::is_convertible_v<U, T>, bool> = false>
-  KOKKOS_FORCEINLINE_FUNCTION void operator=(U const& x) {
-    if (this->m_mask) this->m_value = x;
-  }
-};
-
-template <class T, class Abi>
-KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    where_expression<basic_simd_mask<T, Abi>, basic_simd<T, Abi>>
-    where(typename basic_simd<T, Abi>::mask_type const& mask,
-          basic_simd<T, Abi>& value) {
-  return where_expression(mask, value);
-}
-
-template <class T, class Abi>
-KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
-    const_where_expression<basic_simd_mask<T, Abi>, basic_simd<T, Abi>>
-    where(typename basic_simd<T, Abi>::mask_type const& mask,
-          basic_simd<T, Abi> const& value) {
-  return const_where_expression(mask, value);
-}
-
-template <class T>
-KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION where_expression<bool, T> where(
-    bool mask, T& value) {
-  return where_expression(mask, value);
-}
-
-template <class T>
-KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION const_where_expression<bool, T>
-where(bool mask, T const& value) {
-  return const_where_expression(mask, value);
-}
-
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
-
 // The code below provides:
 // operator@(basic_simd<T, Abi>, Arithmetic)
 // operator@(Arithmetic, basic_simd<T, Abi>)
 // operator@=(basic_simd<T, Abi>&, U&&)
 
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] + rhs);
@@ -243,7 +152,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs + rhs[0]);
@@ -258,18 +167,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator+=(
   return lhs;
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-template <class M, class T, class U>
-KOKKOS_DEPRECATED KOKKOS_FORCEINLINE_FUNCTION where_expression<M, T>&
-operator+=(where_expression<M, T>& lhs, U&& rhs) {
-  lhs = lhs.value() + std::forward<U>(rhs);
-  return lhs;
-}
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
-
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] - rhs);
@@ -277,7 +175,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs - rhs[0]);
@@ -292,18 +190,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator-=(
   return lhs;
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-template <class M, class T, class U>
-KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>&
-operator-=(where_expression<M, T>& lhs, U&& rhs) {
-  lhs = lhs.value() - std::forward<U>(rhs);
-  return lhs;
-}
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
-
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] * rhs);
@@ -311,7 +198,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs * rhs[0]);
@@ -326,18 +213,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator*=(
   return lhs;
 }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-template <class M, class T, class U>
-KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>&
-operator*=(where_expression<M, T>& lhs, U&& rhs) {
-  lhs = lhs.value() * std::forward<U>(rhs);
-  return lhs;
-}
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
-
-template <std::integral T, class Abi>
+template <std::integral T, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
     Experimental::basic_simd<T, Abi> const& lhs,
     Experimental::basic_simd<T, Abi> const& rhs) {
@@ -345,7 +221,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
       [&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
 }
 
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
     Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] / rhs);
@@ -353,7 +229,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
-template <class T, Impl::Arithmetic U, class Abi>
+template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
     U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs / rhs[0]);
@@ -367,17 +243,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator/=(
   lhs = lhs / std::forward<U>(rhs);
   return lhs;
 }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-template <class M, class T, class U>
-KOKKOS_DEPRECATED KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION where_expression<M, T>&
-operator/=(where_expression<M, T>& lhs, U&& rhs) {
-  lhs = lhs.value() / std::forward<U>(rhs);
-  return lhs;
-}
-KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
 
 template <class T, Impl::NonScalarAbi Abi>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask<T, Abi>& operator&=(

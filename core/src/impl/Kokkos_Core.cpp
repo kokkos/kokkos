@@ -127,6 +127,9 @@ int get_device_count() {
 #elif defined(KOKKOS_ENABLE_OPENACC)
   return acc_get_num_devices(
       Kokkos::Experimental::Impl::OpenACC_Traits::dev_type);
+#elif defined(KOKKOS_ENABLE_NEXTSILICON)
+  // FIXME_NEXTSILICON: Need NextAPI support for querying the number of devices
+  return 1;
 #else
   Kokkos::abort("implementation bug");
   return -1;

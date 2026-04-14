@@ -68,17 +68,12 @@ TEST(TEST_CATEGORY, view_copy_tests) {
       typename TEST_EXECSPACE::memory_space>::accessible;
 
   // Contiguous copies
-  { Kokkos::deep_copy(defaulted, defaulted); }
   {
     Kokkos::deep_copy(a, 0);
     ASSERT_TRUE(run_check(a, 0));
   }
   {
     Kokkos::deep_copy(a, 1);
-    ASSERT_TRUE(run_check(a, 1));
-  }
-  {
-    Kokkos::deep_copy(a, a);
     ASSERT_TRUE(run_check(a, 1));
   }
   {
@@ -180,17 +175,12 @@ TEST(TEST_CATEGORY, view_copy_tests) {
   }
 
   // Contiguous copies
-  { Kokkos::deep_copy(dev, defaulted, defaulted); }
   {
     Kokkos::deep_copy(dev, a, 0);
     ASSERT_TRUE(run_check(a, 0));
   }
   {
     Kokkos::deep_copy(dev, a, 1);
-    ASSERT_TRUE(run_check(a, 1));
-  }
-  {
-    Kokkos::deep_copy(dev, a, a);
     ASSERT_TRUE(run_check(a, 1));
   }
   {
@@ -259,17 +249,12 @@ TEST(TEST_CATEGORY, view_copy_tests) {
   }
 
   // Contiguous copies
-  { Kokkos::deep_copy(host, defaulted, defaulted); }
   {
     Kokkos::deep_copy(host, a, 0);
     ASSERT_TRUE(run_check(a, 0));
   }
   {
     Kokkos::deep_copy(host, a, 1);
-    ASSERT_TRUE(run_check(a, 1));
-  }
-  {
-    Kokkos::deep_copy(host, a, a);
     ASSERT_TRUE(run_check(a, 1));
   }
   {

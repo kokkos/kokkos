@@ -292,47 +292,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
         base_t::mapping());
   }
 
-  // clang-format off
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(0) instead") KOKKOS_FUNCTION constexpr size_t stride_0() const { return stride(0); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(1) instead") KOKKOS_FUNCTION constexpr size_t stride_1() const { return stride(1); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(2) instead") KOKKOS_FUNCTION constexpr size_t stride_2() const { return stride(2); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(3) instead") KOKKOS_FUNCTION constexpr size_t stride_3() const { return stride(3); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(4) instead") KOKKOS_FUNCTION constexpr size_t stride_4() const { return stride(4); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(5) instead") KOKKOS_FUNCTION constexpr size_t stride_5() const { return stride(5); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(6) instead") KOKKOS_FUNCTION constexpr size_t stride_6() const { return stride(6); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(7) instead") KOKKOS_FUNCTION constexpr size_t stride_7() const { return stride(7); }
-#endif
-  // clang-format on
-
-  template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
-                                                    size_t>
-  stride(iType r) const {
-    // base class doesn't have constraint
-    // FIXME: Eventually we need to deprecate this behavior and just use
-    // BasicView implementation
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    using LayoutType = typename mdspan_type::layout_type;
-    if (r >= static_cast<iType>(rank())) {
-      if constexpr (rank() == 0) return 1;
-      if constexpr (std::is_same_v<LayoutType, layout_right> ||
-                    Impl::IsLayoutRightPadded<LayoutType>::value) {
-        return 1;
-      }
-      if constexpr (std::is_same_v<LayoutType, layout_left> ||
-                    Impl::IsLayoutLeftPadded<LayoutType>::value) {
-        return base_t::stride(rank() - 1) * extent(rank() - 1);
-      }
-      if constexpr (std::is_same_v<LayoutType, layout_stride>) {
-        return 0;
-      }
-    }
-#else
-    KOKKOS_ASSERT(r < static_cast<iType>(rank()));
-#endif
-    return base_t::stride(r);
-  }
+  using base_t::stride;
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride([[maybe_unused]] iType* const s) const {
@@ -694,7 +654,8 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 // Define the workaround here since this condition will be re-used.
 // We undef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND later.
 #if defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \
-    (defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA))
+    (defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG < 1600 && \
+     defined(KOKKOS_ENABLE_CUDA))
 #define KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND 1
 #endif
 #ifdef KOKKOS_IMPL_VIEW_HOOKS_NVCC_WORKAROUND

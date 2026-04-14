@@ -155,13 +155,7 @@ OpenMPInternal::OpenMPInternal(int arg_pool_size)
       constexpr char msg[] =
           "Kokkos::OpenMP instances can only be created outside OpenMP "
           "regions!";
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-      if (Kokkos::show_warnings()) {
-        std::cerr << msg << '\n';
-      }
-#else
       Kokkos::abort(msg);
-#endif
     }
     std::scoped_lock lock(all_instances_mutex);
     all_instances.push_back(this);

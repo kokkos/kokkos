@@ -9,6 +9,7 @@ import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <Kokkos_Assert.hpp>
 #include <sstream>
 #include <iostream>
 
@@ -95,12 +96,6 @@ void test_left_stride(Extents... extents) {
     expected_stride *= view.extent(i);
   }
   ASSERT_EQ(all_strides[view_type::rank()], expected_stride);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  for (size_t i = view_type::rank(); i < size_t(8); ++i) {
-    ASSERT_EQ(view.stride(i), view.stride(view_type::rank() - 1) *
-                                  view.extent(view_type::rank() - 1));
-  }
-#endif
 }
 
 template <typename DataType, typename... Extents>
@@ -118,11 +113,6 @@ void test_right_stride(Extents... extents) {
     expected_stride *= view.extent(i);
   }
   ASSERT_EQ(all_strides[view_type::rank()], expected_stride);
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  for (size_t i = view_type::rank(); i < size_t(8); ++i) {
-    ASSERT_EQ(view.stride(i), size_t(1));
-  }
-#endif
 }
 
 template <typename DataType, typename... Extents>
@@ -148,11 +138,6 @@ void test_stride_stride(Extents... extents) {
     }
     ASSERT_EQ(all_strides[view_type::rank()],
               max_stride * view.extent(max_stride_idx));
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    for (size_t i = view_type::rank(); i < size_t(8); ++i) {
-      ASSERT_EQ(view.stride(i), size_t(0));
-    }
-#endif
   };
 
   Kokkos::View<DataType, Kokkos::LayoutRight, Kokkos::HostSpace> view_right(
@@ -178,6 +163,49 @@ TEST(TEST_CATEGORY, view_stride_method) {
   // factorial(8) = 40320
   test_stride<double[1][2][3][4][5][6][7][8]>();
   test_stride<double********>(1, 2, 3, 4, 5, 6, 7, 8);
+}
+
+template <typename V>
+  requires(Kokkos::is_view_v<V>)
+void test_view_stride_precondition_violation(V v) {
+  // workaround "pointless comparison of unsigned integer with zero" warnings
+  // with NVCC
+  if constexpr (V::rank() > 0) {
+    for (size_t r = 0; r < V::rank(); ++r) {
+      (void)v.stride(r);
+    }
+  }
+  std::string const poor_msg =
+      "static_cast<int>\\(r\\) < static_cast<int>\\(rank\\(\\)\\)";
+
+  for (size_t r = V::rank(); r < 8; ++r) {
+    ASSERT_DEATH({ (void)v.stride(r); }, poor_msg);
+  }
+}
+
+TEST(TEST_CATEGORY_DEATH, view_stride_precondition_violation) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  {
+    bool checked_assertions = false;
+    // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
+    KOKKOS_ASSERT(checked_assertions = true);
+    if (!checked_assertions) {
+      GTEST_SKIP() << "Preconditions are not checked.";
+    }
+  }
+
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  GTEST_SKIP() << "Using the legacy view implementation.";
+#endif
+
+  test_view_stride_precondition_violation(
+      Kokkos::View<double, TEST_EXECSPACE>("v0"));
+  test_view_stride_precondition_violation(
+      Kokkos::View<float*, TEST_EXECSPACE>("v1", 5));
+  test_view_stride_precondition_violation(
+      Kokkos::View<int***, TEST_EXECSPACE>("v3", 3, 7, 13));
+  test_view_stride_precondition_violation(
+      Kokkos::View<int********, TEST_EXECSPACE>("v8", 1, 2, 3, 4, 5, 6, 7, 8));
 }
 
 inline void test_anonymous_space() {

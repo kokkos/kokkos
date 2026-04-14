@@ -128,8 +128,16 @@ class Cuda {
   KOKKOS_FUNCTION Cuda& operator=(Cuda&& other) noexcept {
     return *this = static_cast<const Cuda&>(other);
   }
-  ~Cuda();
   Cuda();
+
+  // This destructor is never actually called on device, but, for the implicitly
+  // defined ~RangePolicy<ExecSpace>(), we need destructor to be __host__
+  // __device__ to avoid nvcc warnings. This destructor will only execute
+  // internals on host.
+  KOKKOS_FUNCTION ~Cuda() {
+    KOKKOS_IF_ON_HOST(
+        (Impl::check_execution_space_destructor_precondition(name());))
+  }
 
   explicit Cuda(cudaStream_t stream) : Cuda(stream, Impl::ManageStream::no) {}
 

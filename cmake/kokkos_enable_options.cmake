@@ -59,18 +59,6 @@ else()
   set(DEBUG_DEFAULT OFF)
 endif()
 kokkos_enable_option(DEBUG ${DEBUG_DEFAULT} "Whether to activate extra debug features - may increase compile times")
-kokkos_enable_option(DEBUG_DUALVIEW_MODIFY_CHECK ON "Debug check on dual views")
-if(NOT Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK)
-  if(KOKKOS_ENABLE_DEPRECATED_CODE_4)
-    message(
-      DEPRECATION
-        "Setting Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK is deprecated. DualView modify is always checked. Forcing -DKokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK=ON"
-    )
-    set(Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK ON CACHE BOOL "Kokkos turned debug dualview modify check ON!" FORCE)
-  else()
-    message(FATAL_ERROR "Kokkos_ENABLE_DEBUG_DUALVIEW_MODIFY_CHECK has been removed and is always enabled")
-  endif()
-endif()
 
 unset(_UPPERCASE_CMAKE_BUILD_TYPE)
 kokkos_enable_option(LARGE_MEM_TESTS OFF "Whether to perform extra large memory tests")

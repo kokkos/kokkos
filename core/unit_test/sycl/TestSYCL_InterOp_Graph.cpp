@@ -79,8 +79,13 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
   // We could write a check against the full kernel's function signature, but
   // it would make the test rely too much on internal implementation details.
   // Therefore, we just look for the functor and policy. Note that the
-  // signature is mangled in the 'dot' output.
+  // signature is mangled in the 'dot' output before icpx 2026.
+#if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
+    KOKKOS_COMPILER_INTEL_LLVM >= 20260100
+  const std::string expected("Increment<Kokkos::View<int, Kokkos::SYCL> >");
+#else
   const std::string expected("[A-Za-z0-9_]+Increment[A-Za-z0-9_]+RangePolicy");
+#endif
 
   std::stringstream buffer;
   buffer << std::ifstream(dot).rdbuf();

@@ -37,6 +37,7 @@
 
 ### Build System Changes
 * Warn about multiple device architectures enabled by `find_package(HIP)` [\#8938](https://github.com/kokkos/kokkos/pull/8938)
+* Detect ROCm TPL using `find_package(HIP)` [\#8747](https://github.com/kokkos/kokkos/pull/8747)
 
 ### Incompatibilities (i.e. breaking changes)
 * Execution spaces can only be constructed after `Kokkos::initialize()` has been called and must be destructed before `Kokkos::finalize()` [\#8546](https://github.com/kokkos/kokkos/pull/8546) [\#8677](https://github.com/kokkos/kokkos/pull/8677)
@@ -167,6 +168,20 @@
 * Cuda,HIP: Launch work graph on the specified instance [\#8576](https://github.com/kokkos/kokkos/pull/8576)
 * Work around a performance regression related to index computation in the mdspan-based View [\#8476](https://github.com/kokkos/kokkos/pull/8476)
 * Fix a failure at configure time when SVE is enabled and the tests are disabled [\#8661](https://github.com/kokkos/kokkos/pull/8661)
+
+## 4.7.03
+
+### CUDA
+* Fix compiling with Cuda 13.1 [\#9020](https://github.com/kokkos/kokkos/pull/9020)
+
+### HIP
+* Disable MallocAsync for ROCm by default and thus supporting ROCM 7 [\#9022](https://github.com/kokkos/kokkos/pull/9022)
+* Adding support for AMD MI355 and MI350 [\#9025]((https://github.com/kokkos/kokkos/pull/9025)
+
+### Bug Fixes
+* Identify homebrew llvm and hombrew gcc as KOKKOS_COMPILER_CLANG and KOKKOS_COMPILER_GNU [\#9019](https://github.com/kokkos/kokkos/pull/9019)
+* Relax compiler flags checks fatal error to warning [\#9024](https://github.com/kokkos/kokkos/pull/9024)
+* Fix misalignment issues for CUDA and HIP combined reducers [\#9026]((https://github.com/kokkos/kokkos/pull/9026)
 
 ## 4.7.02
 

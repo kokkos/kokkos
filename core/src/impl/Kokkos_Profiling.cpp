@@ -261,6 +261,7 @@ bool eventSetsEqual(const EventSet& l, const EventSet& r) {
          l.request_output_values == r.request_output_values &&
          l.declare_optimization_goal == r.declare_optimization_goal;
 }
+
 enum class MayRequireGlobalFencing : bool { No, Yes };
 template <typename Callback, typename... Args>
 inline void invoke_kokkosp_callback(
@@ -617,6 +618,36 @@ void initialize(const std::string& profileLibrary) {
     return;
   }
 
+  Experimental::no_profiling.init     = nullptr;
+  Experimental::no_profiling.finalize = nullptr;
+
+  Experimental::no_profiling.begin_parallel_for    = nullptr;
+  Experimental::no_profiling.begin_parallel_scan   = nullptr;
+  Experimental::no_profiling.begin_parallel_reduce = nullptr;
+  Experimental::no_profiling.end_parallel_scan     = nullptr;
+  Experimental::no_profiling.end_parallel_for      = nullptr;
+  Experimental::no_profiling.end_parallel_reduce   = nullptr;
+
+  Experimental::no_profiling.push_region     = nullptr;
+  Experimental::no_profiling.pop_region      = nullptr;
+  Experimental::no_profiling.allocate_data   = nullptr;
+  Experimental::no_profiling.deallocate_data = nullptr;
+
+  Experimental::no_profiling.begin_deep_copy = nullptr;
+  Experimental::no_profiling.end_deep_copy   = nullptr;
+
+  Experimental::no_profiling.create_profile_section  = nullptr;
+  Experimental::no_profiling.start_profile_section   = nullptr;
+  Experimental::no_profiling.stop_profile_section    = nullptr;
+  Experimental::no_profiling.destroy_profile_section = nullptr;
+
+  Experimental::no_profiling.profile_event = nullptr;
+
+  Experimental::no_profiling.declare_input_type    = nullptr;
+  Experimental::no_profiling.declare_output_type   = nullptr;
+  Experimental::no_profiling.request_output_values = nullptr;
+  Experimental::no_profiling.end_tuning_context    = nullptr;
+
   if (auto end_first_library = profileLibrary.find(';');
       end_first_library != 0) {
     auto profileLibraryName = profileLibrary.substr(0, end_first_library);
@@ -709,6 +740,15 @@ void initialize(const std::string& profileLibrary) {
           Experimental::current_callbacks.provide_tool_programming_interface);
       lookup_function(firstProfileLibrary, "kokkosp_request_tool_settings",
                       Experimental::current_callbacks.request_tool_settings);
+
+      if (Experimental::eventSetsEqual(Experimental::current_callbacks,
+                                       Experimental::no_profiling)) {
+        std::stringstream msg;
+        msg << "Error: No profiling interface symbols were found "
+               "in profiling library "
+            << profileLibraryName << ".\n";
+        Kokkos::abort(msg.str().c_str());
+      }
     }
   }
 #else
@@ -749,36 +789,6 @@ void initialize(const std::string& profileLibrary) {
       Experimental::declare_input_type("kokkos.kernel_type", kernel_type);
 
 #endif
-
-  Experimental::no_profiling.init     = nullptr;
-  Experimental::no_profiling.finalize = nullptr;
-
-  Experimental::no_profiling.begin_parallel_for    = nullptr;
-  Experimental::no_profiling.begin_parallel_scan   = nullptr;
-  Experimental::no_profiling.begin_parallel_reduce = nullptr;
-  Experimental::no_profiling.end_parallel_scan     = nullptr;
-  Experimental::no_profiling.end_parallel_for      = nullptr;
-  Experimental::no_profiling.end_parallel_reduce   = nullptr;
-
-  Experimental::no_profiling.push_region     = nullptr;
-  Experimental::no_profiling.pop_region      = nullptr;
-  Experimental::no_profiling.allocate_data   = nullptr;
-  Experimental::no_profiling.deallocate_data = nullptr;
-
-  Experimental::no_profiling.begin_deep_copy = nullptr;
-  Experimental::no_profiling.end_deep_copy   = nullptr;
-
-  Experimental::no_profiling.create_profile_section  = nullptr;
-  Experimental::no_profiling.start_profile_section   = nullptr;
-  Experimental::no_profiling.stop_profile_section    = nullptr;
-  Experimental::no_profiling.destroy_profile_section = nullptr;
-
-  Experimental::no_profiling.profile_event = nullptr;
-
-  Experimental::no_profiling.declare_input_type    = nullptr;
-  Experimental::no_profiling.declare_output_type   = nullptr;
-  Experimental::no_profiling.request_output_values = nullptr;
-  Experimental::no_profiling.end_tuning_context    = nullptr;
 
   updateProfileLibraryState();
 }

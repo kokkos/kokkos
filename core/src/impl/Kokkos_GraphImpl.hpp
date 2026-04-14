@@ -10,7 +10,6 @@
 #include <Kokkos_Graph_fwd.hpp>
 
 #include <Kokkos_Concepts.hpp>  // is_execution_policy
-#include <Kokkos_PointerOwnership.hpp>
 #include <impl/Kokkos_GraphImpl_fwd.hpp>
 
 #include <memory>  // std::make_shared

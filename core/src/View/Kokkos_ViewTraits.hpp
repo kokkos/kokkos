@@ -32,16 +32,6 @@ struct ALL_t {
   constexpr bool operator==(const ALL_t&) const { return true; }
 };
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-namespace Impl {
-// TODO This alias declaration forces us to fully qualify ALL_t inside the
-// Kokkos::Impl namespace to avoid deprecation warnings. Replace the
-// fully-qualified name when we remove Kokkos::Impl::ALL_t.
-using ALL_t KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::ALL_t instead!") =
-    Kokkos::ALL_t;
-}  // namespace Impl
-#endif
-
 inline constexpr Kokkos::ALL_t ALL{};
 
 namespace Impl {
@@ -559,14 +549,6 @@ struct ViewTraits {
                       decltype(customize_view_arguments(
                           Impl::ViewArguments<value_type, array_layout,
                                               device_type, memory_traits>()))>;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED static constexpr bool is_hostspace =
-      std::is_same_v<MemorySpace, HostSpace>;
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use !MemoryTraits::is_unmanaged instead.")
-  static constexpr bool is_managed = !MemoryTraits::is_unmanaged;
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use MemoryTraits::is_random_access instead.")
-  static constexpr bool is_random_access = MemoryTraits::is_random_access;
-#endif
   //------------------------------------
 };
 
