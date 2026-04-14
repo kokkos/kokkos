@@ -199,7 +199,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     constexpr size_t max_l1_scratch_size =
         static_cast<size_t>(80) * 1024 * 1024;
 
-    auto const& props = Cuda().cuda_device_prop();
+    auto const& props = Impl::CudaInternal::m_deviceProp;
     size_t max_shmem =
         props.sharedMemPerBlockOptin - props.reservedSharedMemPerBlock;
     return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team
