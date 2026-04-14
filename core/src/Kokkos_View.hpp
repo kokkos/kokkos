@@ -62,9 +62,9 @@ struct is_assignable_impl<extents<IdxDst, ExtsDst...>,
 
  public:
   // Example:
-  //   extents<int, dynamic_extent> is always assignable to extents<int,
-  //   dynamic_extent> extents<int, dynamic_extent> may be assignable to
-  //   extents<int, 2>, need runtime check
+  //   - extents<int, dynamic_extent> is always assignable to extents<int,
+  //     dynamic_extent> extents<int, dynamic_extent> may be assignable to
+  //   - extents<int, 2>, need runtime check
 
   // is it always (statically known)  assignable
   constexpr static bool value =
@@ -76,13 +76,12 @@ struct is_assignable_impl<extents<IdxDst, ExtsDst...>,
     if constexpr ((dst_t::rank() == 0) || value) {
       return true;
     } else {
-      using rank_type   = typename dst_t::rank_type;
-      bool return_value = true;
+      using rank_type = typename dst_t::rank_type;
       for (rank_type r = 0; r < dst_t::rank(); r++)
-        return_value =
-            return_value && (dst_t::static_extent(r) == dynamic_extent ||
-                             dst_t::static_extent(r) == src.extent(r));
-      return return_value;
+        if (!(dst_t::static_extent(r) == dynamic_extent ||
+              dst_t::static_extent(r) == src.extent(r)))
+          return false;
+      return true;
     }
   }
 };
