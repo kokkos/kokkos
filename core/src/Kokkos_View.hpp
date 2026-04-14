@@ -39,55 +39,97 @@ template <class ParentView>
 struct ViewTracker;
 } /* namespace Impl */
 
-template <class T1, class T2>
-struct is_always_assignable_impl;
+namespace Impl {
 
-template <class... ViewTDst, class... ViewTSrc>
-struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
-                                 Kokkos::View<ViewTSrc...> > {
-  using dst_mdspan = typename Kokkos::View<ViewTDst...>::mdspan_type;
-  using src_mdspan = typename Kokkos::View<ViewTSrc...>::mdspan_type;
+template <class TDst, class TSrc, bool same_rank = TDst::rank() == TSrc::rank()>
+struct is_assignable_impl {
+  // is it always (statically known) assignable
+  constexpr static bool value = false;
 
-  constexpr static bool value =
-      std::is_constructible_v<dst_mdspan, src_mdspan> &&
-      static_cast<int>(Kokkos::View<ViewTDst...>::rank_dynamic) >=
-          static_cast<int>(Kokkos::View<ViewTSrc...>::rank_dynamic);
+  // runtime check
+  KOKKOS_FUNCTION
+  static constexpr bool impl_runtime_value(const TDst&, const TSrc&) {
+    return false;
+  }
 };
 
+template <class IdxDst, size_t... ExtsDst, class IdxSrc, size_t... ExtsSrc>
+struct is_assignable_impl<extents<IdxDst, ExtsDst...>,
+                          extents<IdxSrc, ExtsSrc...>, true> {
+ private:
+  using dst_t = extents<IdxDst, ExtsDst...>;
+  using src_t = extents<IdxSrc, ExtsSrc...>;
+
+ public:
+  // Example:
+  //   extents<int, dynamic_extent> is always assignable to extents<int,
+  //   dynamic_extent> extents<int, dynamic_extent> may be assignable to
+  //   extents<int, 2>, need runtime check
+
+  // is it always (statically known)  assignable
+  constexpr static bool value =
+      ((ExtsDst == dynamic_extent || ExtsDst == ExtsSrc) && ... && true);
+
+  // runtime check
+  KOKKOS_FUNCTION
+  static constexpr bool impl_runtime_value(const dst_t&, const src_t& src) {
+    if constexpr ((dst_t::rank() == 0) || value) {
+      return true;
+    } else {
+      using rank_type   = typename dst_t::rank_type;
+      bool return_value = true;
+      for (rank_type r = 0; r < dst_t::rank(); r++)
+        return_value =
+            return_value && (dst_t::static_extent(r) == dynamic_extent ||
+                             dst_t::static_extent(r) == src.extent(r));
+      return return_value;
+    }
+  }
+};
+
+template <class... ViewTDst, class... ViewTSrc>
+struct is_assignable_impl<View<ViewTDst...>, View<ViewTSrc...>, true> {
+ private:
+  using dst_t                = View<ViewTDst...>;
+  using src_t                = View<ViewTSrc...>;
+  using dst_mdspan           = typename View<ViewTDst...>::mdspan_type;
+  using src_mdspan           = typename View<ViewTSrc...>::mdspan_type;
+  using is_assignable_exts_t = is_assignable_impl<typename dst_t::extents_type,
+                                                  typename src_t::extents_type>;
+
+ public:
+  // is it always (statically known) assignable
+  constexpr static bool value =
+      std::is_constructible_v<dst_mdspan, src_mdspan> &&
+      is_assignable_exts_t::value;
+
+  // runtime check
+  KOKKOS_FUNCTION
+  static constexpr bool impl_runtime_value(const dst_t& dst, const src_t& src) {
+    return std::is_constructible_v<dst_mdspan, src_mdspan> &&
+           is_assignable_exts_t::impl_runtime_value(dst.extents(),
+                                                    src.extents());
+  }
+};
+}  // namespace Impl
+
+// Don't remove const from destination, since you can't assign
+// to a 'const View<...>'
 template <class View1, class View2>
-using is_always_assignable = is_always_assignable_impl<
-    std::remove_reference_t<View1>,
-    std::remove_const_t<std::remove_reference_t<View2> > >;
+using is_always_assignable = Impl::is_assignable_impl<
+    std::remove_reference_t<std::remove_volatile_t<View1> >,
+    std::remove_cvref_t<View2> >;
 
 template <class T1, class T2>
 inline constexpr bool is_always_assignable_v =
     is_always_assignable<T1, T2>::value;
 
+// FIXME: this should be a device callable function
 template <class... ViewTDst, class... ViewTSrc>
 constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
                              const Kokkos::View<ViewTSrc...>& src) {
-  using dst_mdspan = typename Kokkos::View<ViewTDst...>::mdspan_type;
-  using src_mdspan = typename Kokkos::View<ViewTSrc...>::mdspan_type;
-
-  return is_always_assignable_v<Kokkos::View<ViewTDst...>,
-                                Kokkos::View<ViewTSrc...> > ||
-         (std::is_constructible_v<dst_mdspan, src_mdspan> &&
-          ((dst_mdspan::rank_dynamic() >= 1) ||
-           (dst.static_extent(0) == src.extent(0))) &&
-          ((dst_mdspan::rank_dynamic() >= 2) ||
-           (dst.static_extent(1) == src.extent(1))) &&
-          ((dst_mdspan::rank_dynamic() >= 3) ||
-           (dst.static_extent(2) == src.extent(2))) &&
-          ((dst_mdspan::rank_dynamic() >= 4) ||
-           (dst.static_extent(3) == src.extent(3))) &&
-          ((dst_mdspan::rank_dynamic() >= 5) ||
-           (dst.static_extent(4) == src.extent(4))) &&
-          ((dst_mdspan::rank_dynamic() >= 6) ||
-           (dst.static_extent(5) == src.extent(5))) &&
-          ((dst_mdspan::rank_dynamic() >= 7) ||
-           (dst.static_extent(6) == src.extent(6))) &&
-          ((dst_mdspan::rank_dynamic() == 8) ||
-           (dst.static_extent(7) == src.extent(7))));
+  return is_always_assignable<View<ViewTDst...>,
+                              View<ViewTSrc...> >::impl_runtime_value(dst, src);
 }
 
 namespace Impl {
