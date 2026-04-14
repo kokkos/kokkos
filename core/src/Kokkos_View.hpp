@@ -1487,6 +1487,8 @@ KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
   // Same data, layout, dimensions
   using lhs_traits = ViewTraits<LT, LP...>;
   using rhs_traits = ViewTraits<RT, RP...>;
+  using lhs_view   = View<LT, LP...>;
+  using rhs_view   = View<RT, RP...>;
 
   return std::is_same_v<typename lhs_traits::const_value_type,
                         typename rhs_traits::const_value_type> &&
