@@ -149,12 +149,8 @@ struct TileSizeRecommended {
   static auto get(Policy const& policy);
 };
 
-// Recommend tile sizes for each rank of MDRangePolicy.
-// Each rank is tiled with a default size of 2, except the innermost rank which
-// is set to its full work range length.
-template <typename ExecutionSpace>
 template <typename Policy>
-auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
+auto get_default_tile_size_recommended(Policy const& policy) {
   constexpr auto InnerDirection = Policy::inner_direction;
   constexpr int Rank            = Policy::rank;
 
@@ -185,6 +181,15 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
     recommended_tile_sizes[i] = rank_tile_size;
   }
   return recommended_tile_sizes;
+}
+
+// Recommend tile sizes for each rank of MDRangePolicy.
+// Each rank is tiled with a default size of 2, except the innermost rank which
+// is set to its full work range length.
+template <typename ExecutionSpace>
+template <typename Policy>
+auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
+  return get_default_tile_size_recommended(policy);
 }
 
 }  // namespace Impl
