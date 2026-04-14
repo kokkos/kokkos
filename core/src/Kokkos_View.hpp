@@ -115,10 +115,10 @@ struct is_assignable_impl<View<ViewTDst...>, View<ViewTSrc...>, true> {
 
 // Don't remove const from destination, since you can't assign
 // to a 'const View<...>'
-template <class View1, class View2>
+template <class DstView, class SrcView>
 using is_always_assignable = Impl::is_assignable_impl<
-    std::remove_reference_t<std::remove_volatile_t<View1> >,
-    std::remove_cvref_t<View2> >;
+    std::remove_volatile_t<std::remove_reference_t<DstView> >,
+    std::remove_cvref_t<SrcView> >;
 
 template <class T1, class T2>
 inline constexpr bool is_always_assignable_v =
@@ -126,10 +126,16 @@ inline constexpr bool is_always_assignable_v =
 
 // FIXME: this should be a device callable function
 template <class... ViewTDst, class... ViewTSrc>
-constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
+constexpr bool is_assignable(Kokkos::View<ViewTDst...>& dst,
                              const Kokkos::View<ViewTSrc...>& src) {
   return is_always_assignable<View<ViewTDst...>,
                               View<ViewTSrc...> >::impl_runtime_value(dst, src);
+}
+
+template <class... ViewTDst, class... ViewTSrc>
+constexpr bool is_assignable(const Kokkos::View<ViewTDst...>&,
+                             const Kokkos::View<ViewTSrc...>&) {
+  return false;
 }
 
 namespace Impl {
