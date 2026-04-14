@@ -1439,19 +1439,23 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   KOKKOS_FUNCTION
   constexpr typename base_t::index_type extent(size_t r) const noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // casting to int to avoid warning for pointless comparison of unsigned
     // with 0
     if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
       return 1;
+#endif
     return base_t::extent(r);
   }
 
   KOKKOS_FUNCTION
   static constexpr size_t static_extent(size_t r) noexcept {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // casting to int to avoid warning for pointless comparison of unsigned
     // with 0
     if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
       return 1;
+#endif
     size_t value = base_t::extents_type::static_extent(r);
     return value == Kokkos::dynamic_extent ? 0 : value;
   }
