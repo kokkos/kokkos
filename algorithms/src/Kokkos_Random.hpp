@@ -708,7 +708,7 @@ struct Random_SFC64_Pool_Init {
     Random_SFC64<execution_space> gen(state_, i);
     for (int j = 0; j < 18; j++) gen.urand64();  // 12 could be enough
 
-    locks_(i, 0) = 0;
+    locks_(i, 0) = 0;  // unlock the state
   }
 };
 
@@ -1628,11 +1628,15 @@ class Random_SFC64_Pool {
     // threads).
     padding_ = num_states_ < 1000 ? 64 : 1;
 
-    locks_ = locks_type(view_alloc(exec, "Kokkos::Random_SFC64::locks"),
+    locks_ = locks_type(view_alloc(exec, "Kokkos::Random_SFC64::locks",
+                                   Kokkos::WithoutInitializing),
                         num_states_, padding_);
+    deep_copy(locks_, 1);  // Locks the states to avoid usage before init
+    exec.fence("Kokkos::Random_SFC64::locks::init");
 
     // state should be padded too ?
-    state_ = state_data_type(view_alloc(exec, "Kokkos::Random_SFC64::state"),
+    state_ = state_data_type(view_alloc(exec, "Kokkos::Random_SFC64::state",
+                                        Kokkos::WithoutInitializing),
                              num_states_);
 
     Impl::Random_SFC64_Pool_Init parallel_init(locks_, state_, seed_low,
