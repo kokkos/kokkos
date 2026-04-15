@@ -57,6 +57,7 @@ class HIPTeamMember {
   using execution_space      = HIP;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = HIPTeamMember;
+  using thread_handle        = Kokkos::ThreadHandle<team_handle>;
 
  private:
   mutable void* m_team_reduce;
