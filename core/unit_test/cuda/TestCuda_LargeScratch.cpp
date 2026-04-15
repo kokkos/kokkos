@@ -12,6 +12,10 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, large_scratch_parallel_for) {
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
+  GTEST_SKIP() << "Per-block dynamic shared memory >48 KiB is not supported on "
+                  "Maxwell or Pascal";
+#endif
   using exec_space   = TEST_EXECSPACE;
   using mem_space    = typename exec_space::memory_space;
   using functor_type = LargeScratchForFunctor<exec_space>;
@@ -40,6 +44,10 @@ TEST(TEST_CATEGORY, large_scratch_parallel_for) {
 }
 
 TEST(TEST_CATEGORY, large_scratch_parallel_reduce) {
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
+  GTEST_SKIP() << "Per-block dynamic shared memory >48 KiB is not supported on "
+                  "Maxwell or Pascal";
+#endif
   using exec_space   = TEST_EXECSPACE;
   using functor_type = LargeScratchReduceFunctor<exec_space>;
   using scratch_view = typename functor_type::scratch_view;
@@ -62,8 +70,12 @@ TEST(TEST_CATEGORY, large_scratch_parallel_reduce) {
 }
 
 // Verify that the ensure_sufficient_shmem caching logic correctly
-// handles progressively increasing scratch sizes (48 -> 64 -> 80 KiB).
+// handles progressively increasing scratch sizes (32 -> 48 -> 64 -> 80 KiB).
 TEST(TEST_CATEGORY, large_scratch_progressive_increase) {
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
+  GTEST_SKIP() << "Per-block dynamic shared memory >48 KiB is not supported on "
+                  "Maxwell or Pascal";
+#endif
   using exec_space   = TEST_EXECSPACE;
   using mem_space    = typename exec_space::memory_space;
   using functor_type = LargeScratchForFunctor<exec_space>;
@@ -72,7 +84,7 @@ TEST(TEST_CATEGORY, large_scratch_progressive_increase) {
   const int num_teams = 2;
   const int team_size = 128;
 
-  for (auto scratch_kib : {48ul, 64ul, 80ul}) {
+  for (auto scratch_kib : {32ul, 48ul, 64ul, 80ul}) {
     const int scratch_elems =
         static_cast<int>(scratch_kib * 1024 / sizeof(double));
     const int scratch_bytes = scratch_view::shmem_size(scratch_elems);

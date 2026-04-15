@@ -9,6 +9,10 @@ namespace Test {
 
 // Large scratch graph tests only apply to CUDA (opt-in dynamic shared memory)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), large_scratch_graph_parallel_for) {
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
+  GTEST_SKIP() << "Per-block dynamic shared memory >48 KiB is not supported on "
+                  "Maxwell or Pascal";
+#endif
   using exec_space   = TEST_EXECSPACE;
   using mem_space    = typename exec_space::memory_space;
   using functor_type = LargeScratchForFunctor<exec_space>;
@@ -43,6 +47,10 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), large_scratch_graph_parallel_for) {
 // Test 4: then_parallel_reduce with TeamPolicy requesting >48KiB scratch (graph
 // node)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), large_scratch_graph_parallel_reduce) {
+#if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
+  GTEST_SKIP() << "Per-block dynamic shared memory >48 KiB is not supported on "
+                  "Maxwell or Pascal";
+#endif
   using exec_space   = TEST_EXECSPACE;
   using mem_space    = typename exec_space::memory_space;
   using functor_type = LargeScratchReduceFunctor<exec_space>;
