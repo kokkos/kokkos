@@ -489,9 +489,26 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Closure& closure) {
 #ifdef __HIP_DEVICE_COMPILE__
-  for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-       i += blockDim.y)
-    closure(i);
+  using thread_handle_t = Kokkos::ThreadHandle<Impl::HIPTeamMember>;
+  if constexpr (std::is_invocable_v<Closure, thread_handle_t const&, iType>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+         i += blockDim.y) {
+      closure(thread_handle, i);
+    }
+  } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+         i += blockDim.y) {
+      (void)i;
+      closure(thread_handle);
+    }
+  } else {
+    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+         i += blockDim.y) {
+      closure(i);
+    }
+  }
 #else
   (void)loop_boundaries;
   (void)closure;
@@ -651,20 +668,9 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Closure& closure) {
 #ifdef __HIP_DEVICE_COMPILE__
-  auto const thread_handle =
-      Kokkos::ThreadHandle<Impl::HIPTeamMember>(loop_boundaries.member);
   for (iType i = loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x;
-       i < loop_boundaries.end; i += blockDim.y * blockDim.x) {
-    if constexpr (std::is_invocable_v<Closure, decltype((thread_handle)),
-                                      iType>) {
-      closure(thread_handle, i);
-    } else if constexpr (std::is_invocable_v<Closure,
-                                             decltype((thread_handle))>) {
-      closure(thread_handle);
-    } else {
-      closure(i);
-    }
-  }
+       i < loop_boundaries.end; i += blockDim.y * blockDim.x)
+    closure(i);
 #else
   (void)loop_boundaries;
   (void)closure;
