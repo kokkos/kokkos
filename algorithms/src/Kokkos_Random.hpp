@@ -708,7 +708,8 @@ struct Random_SFC64_Pool_Init {
     Random_SFC64<execution_space> gen(state_, i);
     for (int j = 0; j < 18; j++) gen.urand64();  // 12 could be enough
 
-    locks_(i, 0) = 0;  // unlock the state
+    Kokkos::memory_fence();
+    Kokkos::atomic_store(&locks_(i, 0), 0);  // unlock the state
   }
 };
 
@@ -1657,6 +1658,16 @@ class Random_SFC64_Pool {
   // NOTE: state_idx MUST be unique and less than num_states
   KOKKOS_INLINE_FUNCTION
   Random_SFC64<DeviceType> get_state(const uint64_t state_idx) const {
+    int delay           = 1;
+    const int max_delay = 1024;  // Arbitrary value to void infinite wait
+    while (Kokkos::atomic_compare_exchange(&locks_(state_idx, 0), 0, 1)) {
+      // Exponential backoff spinlock pattern
+      for (int tick = 0; tick < delay; ++tick) {
+        Kokkos::load_fence();
+      }
+
+      if (delay < max_delay) delay *= 2;
+    }
     return Random_SFC64<DeviceType>(state_, state_idx);
   }
 
