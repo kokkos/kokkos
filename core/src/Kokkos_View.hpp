@@ -330,11 +330,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   KOKKOS_INLINE_FUNCTION constexpr int extent_int(size_t r) const {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-    return static_cast<int>(base_t::extent(r));
-#else
-    return static_cast<int>(extent(r));
-#endif
+    return static_cast<int>(this->extent(r));
   }
   //----------------------------------------
   // Allow specializations to query their specialized map
