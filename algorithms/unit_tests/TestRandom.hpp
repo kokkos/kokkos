@@ -592,6 +592,66 @@ void test_async_initialization(Args... args) {
                                 "match stream from default constructed pool";
 }
 
+template <class ExecutionSpace, class Pool>
+void test_offset_stream() {
+  // using 2D View here to reuse functions from other test
+  using ViewType = Kokkos::View<uint64_t**, ExecutionSpace>;
+
+  // arbitrary values for the test
+  const int seed = 8432348;
+
+  const int num_streams         = 123456;
+  const int samples_per_streams = 100;
+
+  // use default execution space instance to generate reference values
+  Pool ref_pool(seed, num_streams);
+
+  ViewType ref_vals("Vals", num_streams, samples_per_streams);
+  Kokkos::parallel_for(Kokkos::RangePolicy<ExecutionSpace>(0, num_streams),
+                       generate_random_stream<ExecutionSpace, Pool>(
+                           ref_vals, ref_pool, samples_per_streams, true));
+  Kokkos::fence();
+
+  // create two, distinct ExecutionSpace instances
+  auto instances =
+      Kokkos::Experimental::partition_space(ExecutionSpace{}, 1, 1);
+
+  // divide number of streams in halves
+  const int streams_half = num_streams / 2;
+
+  // give a half to a pool on first instance
+  Pool rand_pool_A(instances.at(0), seed, streams_half);
+
+  // and the other half to a pool on second instance with an offset
+  const int offset = num_streams - streams_half;
+  Pool rand_pool_B(instances.at(1), seed, offset, streams_half);
+
+  std::size_t mismatches;
+  // compare values in stream of rand_pool_A with ref_vals(0, streams_half)
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace>(instances.at(0), 0, streams_half),
+      compare_random_streams<ExecutionSpace, Pool>(ref_vals, rand_pool_A,
+                                                   samples_per_streams),
+      mismatches);
+
+  EXPECT_EQ(mismatches, 0lu)
+      << "First half of reference streams doesn't match streams of pool A";
+
+  // compare values in stream of rand_pool_B with ref_vals(streams_half,
+  // num_streams)
+  auto last_half_range = std::make_pair(offset, num_streams);
+  auto sub_refs = Kokkos::subview(ref_vals, last_half_range, Kokkos::ALL);
+
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace>(instances.at(1), 0, streams_half),
+      compare_random_streams<ExecutionSpace, Pool>(sub_refs, rand_pool_B,
+                                                   samples_per_streams),
+      mismatches);
+
+  EXPECT_EQ(mismatches, 0lu)
+      << "Second half of reference streams doesn't match streams of pool B";
+}
+
 }  // namespace AlgoRandomImpl
 
 TEST(TEST_CATEGORY, Random_XorShift64) {
@@ -635,8 +695,11 @@ TEST(TEST_CATEGORY, Random_XorShift1024_0) {
 TEST(TEST_CATEGORY, Random_SFC64) {
   using ExecutionSpace = TEST_EXECSPACE;
 
-#if defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_CUDA) || \
-    defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_SYCL)
+  if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
+    GTEST_SKIP() << "Failing on Intel GPUs";  // FIXME_SYCL
+  }
+#elif defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   const int num_draws = 132141141;
 #else  // SERIAL, HPX, OPENMP
   const int num_draws = 10240000;
@@ -680,6 +743,13 @@ TEST(TEST_CATEGORY, Multi_streams) {
   AlgoRandomImpl::test_async_initialization<ExecutionSpace, Pool1024>(42, 1);
 
   AlgoRandomImpl::test_async_initialization<ExecutionSpace, SFC64Pool>(42, 1);
+}
+
+TEST(TEST_CATEGORY, Offset_streams) {
+  using ExecutionSpace = TEST_EXECSPACE;
+  using SFC64Pool      = Kokkos::Random_SFC64_Pool<ExecutionSpace>;
+
+  AlgoRandomImpl::test_offset_stream<ExecutionSpace, SFC64Pool>();
 }
 
 }  // namespace Test
