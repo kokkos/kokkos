@@ -57,7 +57,6 @@ class Crs {
   using execution_space = typename traits::execution_space;
   using memory_space    = typename traits::memory_space;
   using device_type     = typename traits::device_type;
-  using index_type      = typename traits::index_type;
   using size_type       = SizeType;
 
   using staticcrsgraph_type = Crs<DataType, Arg1Type, Arg2Type, SizeType>;
@@ -131,7 +130,7 @@ class GetCrsTransposeCounts {
  public:
   using execution_space = typename InCrs::execution_space;
   using self_type       = GetCrsTransposeCounts<InCrs, OutCounts>;
-  using index_type      = typename InCrs::index_type;
+  using index_type      = typename InCrs::size_type;
 
  private:
   InCrs in;
@@ -158,7 +157,7 @@ class CrsRowMapFromCounts {
  public:
   using execution_space = typename InCounts::execution_space;
   using value_type      = typename OutRowMap::value_type;
-  using index_type      = typename InCounts::index_type;
+  using index_type      = typename InCounts::size_type;
   using last_value_type =
       Kokkos::View<value_type, typename InCounts::device_type>;
 
@@ -204,7 +203,7 @@ class FillCrsTransposeEntries {
   using execution_space = typename InCrs::execution_space;
   using memory_space    = typename InCrs::memory_space;
   using value_type      = typename OutCrs::entries_type::value_type;
-  using index_type      = typename InCrs::index_type;
+  using index_type      = typename InCrs::size_type;
 
  private:
   using counters_type = View<index_type*, memory_space>;
@@ -288,7 +287,6 @@ struct CountAndFillBase;
 template <class CrsType, class Functor, class ExecutionSpace>
 struct CountAndFillBase {
   using data_type    = typename CrsType::data_type;
-  using index_type   = typename CrsType::index_type;
   using size_type    = typename CrsType::size_type;
   using row_map_type = typename CrsType::row_map_type;
   using counts_type  = row_map_type;
@@ -296,11 +294,11 @@ struct CountAndFillBase {
   Functor m_functor;
   counts_type m_counts;
   struct Count {};
-  KOKKOS_FUNCTION void operator()(Count, index_type i) const {
+  KOKKOS_FUNCTION void operator()(Count, size_type i) const {
     m_counts(i) = m_functor(i, nullptr);
   }
   struct Fill {};
-  KOKKOS_FUNCTION void operator()(Fill, index_type i) const {
+  KOKKOS_FUNCTION void operator()(Fill, size_type i) const {
     auto j = m_crs.row_map(i);
     /* we don't want to access entries(entries.size()), even if its just to get
        its address and never use it. this can happen when row (i) is empty and
@@ -322,7 +320,6 @@ struct CountAndFill : public CountAndFillBase<CrsType, Functor> {
   using typename base_type::counts_type;
   using typename base_type::data_type;
   using typename base_type::Fill;
-  using typename base_type::index_type;
   using typename base_type::size_type;
   using entries_type = typename CrsType::entries_type;
   using self_type    = CountAndFill<CrsType, Functor>;
@@ -331,7 +328,7 @@ struct CountAndFill : public CountAndFillBase<CrsType, Functor> {
     using execution_space = typename CrsType::execution_space;
     this->m_counts        = counts_type("counts", nrows);
     {
-      using count_policy_type = RangePolicy<index_type, execution_space, Count>;
+      using count_policy_type = RangePolicy<size_type, execution_space, Count>;
       using count_closure_type =
           Kokkos::Impl::ParallelFor<self_type, count_policy_type>;
       const count_closure_type closure(*this, count_policy_type(0, nrows));
@@ -342,7 +339,7 @@ struct CountAndFill : public CountAndFillBase<CrsType, Functor> {
     this->m_counts = counts_type();
     this->m_crs.entries = entries_type("entries", nentries);
     {
-      using fill_policy_type = RangePolicy<index_type, execution_space, Fill>;
+      using fill_policy_type = RangePolicy<size_type, execution_space, Fill>;
       using fill_closure_type =
           Kokkos::Impl::ParallelFor<self_type, fill_policy_type>;
       const fill_closure_type closure(*this, fill_policy_type(0, nrows));
