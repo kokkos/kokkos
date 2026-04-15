@@ -899,9 +899,26 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<
         iType, Impl::ThreadsExecTeamMember>& loop_boundaries,
     const Lambda& lambda) {
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment)
-    lambda(i);
+  using thread_handle_t = Kokkos::ThreadHandle<Impl::ThreadsExecTeamMember>;
+  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&, iType>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(thread_handle, i);
+    }
+  } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      (void)i;
+      lambda(thread_handle);
+    }
+  } else {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(i);
+    }
+  }
 }
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,

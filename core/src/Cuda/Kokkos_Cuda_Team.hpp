@@ -501,21 +501,28 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Closure& closure) {
   (void)loop_boundaries;
   (void)closure;
-  KOKKOS_IF_ON_DEVICE(
-      (auto const thread_handle =
-           Kokkos::ThreadHandle<Impl::CudaTeamMember>(loop_boundaries.member);
-       for (iType i = loop_boundaries.start + threadIdx.y;
-            i < loop_boundaries.end; i += blockDim.y) {
-         if constexpr (std::is_invocable_v<Closure, decltype((thread_handle)),
-                                           iType>) {
-           closure(thread_handle, i);
-         } else if constexpr (std::is_invocable_v<Closure,
-                                                  decltype((thread_handle))>) {
-           closure(thread_handle);
-         } else {
-           closure(i);
-         }
-       }))
+  KOKKOS_IF_ON_DEVICE((
+      using thread_handle_t = Kokkos::ThreadHandle<Impl::CudaTeamMember>;
+      if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                        iType>) {
+        auto const thread_handle = thread_handle_t(loop_boundaries.member);
+        for (iType i = loop_boundaries.start + threadIdx.y;
+             i < loop_boundaries.end; i += blockDim.y) {
+          closure(thread_handle, i);
+        }
+      } else if constexpr (std::is_invocable_v<Closure,
+                                               thread_handle_t const&>) {
+        auto const thread_handle = thread_handle_t(loop_boundaries.member);
+        for (iType i = loop_boundaries.start + threadIdx.y;
+             i < loop_boundaries.end; i += blockDim.y) {
+          (void)i;
+          closure(thread_handle);
+        }
+      } else {
+        for (iType i = loop_boundaries.start + threadIdx.y;
+             i < loop_boundaries.end; i += blockDim.y)
+          closure(i);
+      }))
 }
 
 //----------------------------------------------------------------------------
@@ -600,22 +607,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Closure& closure) {
   (void)loop_boundaries;
   (void)closure;
-  KOKKOS_IF_ON_DEVICE(
-      (auto const thread_handle =
-           Kokkos::ThreadHandle<Impl::CudaTeamMember>(loop_boundaries.member);
-       for (iType i =
-                loop_boundaries.start + threadIdx.y * blockDim.x + threadIdx.x;
-            i < loop_boundaries.end; i += blockDim.y * blockDim.x) {
-         if constexpr (std::is_invocable_v<Closure, decltype((thread_handle)),
-                                           iType>) {
-           closure(thread_handle, i);
-         } else if constexpr (std::is_invocable_v<Closure,
-                                                  decltype((thread_handle))>) {
-           closure(thread_handle);
-         } else {
-           closure(i);
-         }
-       }))
+  KOKKOS_IF_ON_DEVICE((for (iType i = loop_boundaries.start +
+                                      threadIdx.y * blockDim.x + threadIdx.x;
+                            i < loop_boundaries.end;
+                            i += blockDim.y * blockDim.x) { closure(i); }))
 }
 
 template <typename iType, class Closure, class ReducerType>
@@ -730,6 +725,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
                      : ((1 << blockDim.x) - 1)
                            << (threadIdx.y % (32 / blockDim.x)) * blockDim.x);))
 }
+
+//----------------------------------------------------------------------------
 
 /** \brief  Intra-thread vector parallel_reduce.
  *
