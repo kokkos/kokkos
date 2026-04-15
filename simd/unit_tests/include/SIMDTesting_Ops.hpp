@@ -649,6 +649,42 @@ class masked_reduce {
   }
 };
 
+class masked_reduce_default_params {
+ public:
+  template <typename T, typename U, typename MaskType>
+  auto on_host(T const& a, U, MaskType mask) const {
+    return Kokkos::Experimental::reduce(a, mask);
+  }
+  template <typename T, typename U, typename MaskType>
+  auto on_host_serial(T const& a, U, MaskType mask) const {
+    U result = Kokkos::Experimental::Impl::Identity<U, std::plus<>>();
+
+    if (Kokkos::Experimental::none_of(mask)) return result;
+
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
+      if (mask[i]) result = result + a[i];
+    }
+    return result;
+  }
+
+  template <typename T, typename U, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device(T const& a, U, MaskType mask) const {
+    return Kokkos::Experimental::reduce(a, mask);
+  }
+  template <typename T, typename U, typename MaskType>
+  KOKKOS_INLINE_FUNCTION auto on_device_serial(T const& a, U,
+                                               MaskType mask) const {
+    U result = Kokkos::Experimental::Impl::Identity<U, std::plus<>>();
+
+    if (Kokkos::Experimental::none_of(mask)) return result;
+
+    for (Kokkos::Experimental::Impl::simd_size_t i = 0; i < T::size(); ++i) {
+      if (mask[i]) result = result + a[i];
+    }
+    return result;
+  }
+};
+
 #if defined(KOKKOS_ENABLE_DEPRECATED_CODE_4)
 #define KOKKOS_IMPL_SIMD_UNARY_TEST_OP(FUNC)                         \
   class FUNC##_op {                                                  \
