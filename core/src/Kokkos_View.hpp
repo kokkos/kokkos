@@ -29,6 +29,26 @@ class ViewMapping;
 #include <View/Kokkos_ViewMapping.hpp>
 #include <Kokkos_MinMax.hpp>
 
+namespace Kokkos {
+template <class DataType, class... Properties>
+struct ViewTraits;
+
+template <class DataType, class... Properties>
+class View;
+
+template <class>
+struct is_view : public std::false_type {};
+
+template <class D, class... P>
+struct is_view<View<D, P...> > : public std::true_type {};
+
+template <class D, class... P>
+struct is_view<const View<D, P...> > : public std::true_type {};
+
+template <class T>
+inline constexpr bool is_view_v = is_view<T>::value;
+}  // namespace Kokkos
+
 // Class to provide a uniform type
 namespace Kokkos {
 namespace Impl {
@@ -42,20 +62,20 @@ struct ViewTracker;
 namespace Impl {
 
 template <class TDst, class TSrc, bool same_rank = TDst::rank() == TSrc::rank()>
-struct is_assignable_impl {
+struct is_assignable_extents {
   // is it always (statically known) assignable
   constexpr static bool value = false;
 
   // runtime check
   KOKKOS_FUNCTION
-  static constexpr bool impl_runtime_value(const TDst&, const TSrc&) {
+  static constexpr bool runtime_value(const TDst&, const TSrc&) {
     return false;
   }
 };
 
 template <class IdxDst, size_t... ExtsDst, class IdxSrc, size_t... ExtsSrc>
-struct is_assignable_impl<extents<IdxDst, ExtsDst...>,
-                          extents<IdxSrc, ExtsSrc...>, true> {
+struct is_assignable_extents<extents<IdxDst, ExtsDst...>,
+                             extents<IdxSrc, ExtsSrc...>, true> {
  private:
   using dst_t = extents<IdxDst, ExtsDst...>;
   using src_t = extents<IdxSrc, ExtsSrc...>;
@@ -72,7 +92,7 @@ struct is_assignable_impl<extents<IdxDst, ExtsDst...>,
 
   // runtime check
   KOKKOS_FUNCTION
-  static constexpr bool impl_runtime_value(const dst_t&, const src_t& src) {
+  static constexpr bool runtime_value(const dst_t&, const src_t& src) {
     if constexpr ((dst_t::rank() == 0) || value) {
       return true;
     } else {
@@ -86,36 +106,35 @@ struct is_assignable_impl<extents<IdxDst, ExtsDst...>,
   }
 };
 
+template <class TDst, class TSrc, bool same_rank = TDst::rank() == TSrc::rank()>
+struct is_assignable_view {
+  // is it always (statically known) assignable
+  constexpr static bool value = false;
+};
+
 template <class... ViewTDst, class... ViewTSrc>
-struct is_assignable_impl<View<ViewTDst...>, View<ViewTSrc...>, true> {
+struct is_assignable_view<View<ViewTDst...>, View<ViewTSrc...>, true> {
  private:
-  using dst_t                = View<ViewTDst...>;
-  using src_t                = View<ViewTSrc...>;
-  using dst_mdspan           = typename View<ViewTDst...>::mdspan_type;
-  using src_mdspan           = typename View<ViewTSrc...>::mdspan_type;
-  using is_assignable_exts_t = is_assignable_impl<typename dst_t::extents_type,
-                                                  typename src_t::extents_type>;
+  using dst_t      = View<ViewTDst...>;
+  using src_t      = View<ViewTSrc...>;
+  using dst_mdspan = typename View<ViewTDst...>::mdspan_type;
+  using src_mdspan = typename View<ViewTSrc...>::mdspan_type;
+  using is_assignable_exts_t =
+      is_assignable_extents<typename dst_t::extents_type,
+                            typename src_t::extents_type>;
 
  public:
   // is it always (statically known) assignable
   constexpr static bool value =
       std::is_constructible_v<dst_mdspan, src_mdspan> &&
       is_assignable_exts_t::value;
-
-  // runtime check
-  KOKKOS_FUNCTION
-  static constexpr bool impl_runtime_value(const dst_t& dst, const src_t& src) {
-    return std::is_constructible_v<dst_mdspan, src_mdspan> &&
-           is_assignable_exts_t::impl_runtime_value(dst.extents(),
-                                                    src.extents());
-  }
 };
 }  // namespace Impl
 
 // Don't remove const from destination, since you can't assign
 // to a 'const View<...>'
 template <class DstView, class SrcView>
-using is_always_assignable = Impl::is_assignable_impl<
+using is_always_assignable = Impl::is_assignable_view<
     std::remove_volatile_t<std::remove_reference_t<DstView> >,
     std::remove_cvref_t<SrcView> >;
 
@@ -124,16 +143,21 @@ inline constexpr bool is_always_assignable_v =
     is_always_assignable<T1, T2>::value;
 
 // FIXME: this should be a device callable function
-template <class... ViewTDst, class... ViewTSrc>
-constexpr bool is_assignable(Kokkos::View<ViewTDst...>& dst,
-                             const Kokkos::View<ViewTSrc...>& src) {
-  return is_always_assignable<View<ViewTDst...>,
-                              View<ViewTSrc...> >::impl_runtime_value(dst, src);
+template <class DstView, class SrcView>
+  requires(is_view_v<DstView> && is_view_v<SrcView> &&
+           !std::is_const_v<DstView>)
+constexpr bool is_assignable(DstView& dst, const SrcView& src) {
+  using is_assignable_exts_t =
+      Impl::is_assignable_extents<typename DstView::extents_type,
+                                  typename SrcView::extents_type>;
+  return std::is_constructible_v<typename DstView::mdspan_type,
+                                 typename SrcView::mdspan_type> &&
+         is_assignable_exts_t::runtime_value(dst.extents(), src.extents());
 }
 
-template <class... ViewTDst, class... ViewTSrc>
-constexpr bool is_assignable(const Kokkos::View<ViewTDst...>&,
-                             const Kokkos::View<ViewTSrc...>&) {
+template <class DstView, class SrcView>
+  requires(is_view_v<DstView> && is_view_v<SrcView> && std::is_const_v<DstView>)
+constexpr bool is_assignable(DstView&, const SrcView&) {
   return false;
 }
 
@@ -163,24 +187,6 @@ KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
   return handle;
 }
 }  // namespace Impl
-
-template <class DataType, class... Properties>
-struct ViewTraits;
-
-template <class DataType, class... Properties>
-class View;
-
-template <class>
-struct is_view : public std::false_type {};
-
-template <class D, class... P>
-struct is_view<View<D, P...> > : public std::true_type {};
-
-template <class D, class... P>
-struct is_view<const View<D, P...> > : public std::true_type {};
-
-template <class T>
-inline constexpr bool is_view_v = is_view<T>::value;
 
 // FIXME spurious warnings like
 // error: 'SR.14123' may be used uninitialized [-Werror=maybe-uninitialized]
