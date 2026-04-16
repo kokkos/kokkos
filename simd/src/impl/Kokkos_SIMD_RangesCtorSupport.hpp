@@ -8,6 +8,9 @@
 
 // FIXME: Some of the compiler versions we support are compatible with standard
 // library implementations which don't fully support C++20 ranges
+// This file implements the minimal set of functionality to make the SIMD type
+// ctors that take ranges work for types which otherwise would rely on ranges
+// interop (e.g. standard containers).
 #if defined(__cpp_lib_ranges) && (__cpp_lib_ranges >= 201911L)
 #define KOKKOS_IMPL_COMPILER_SUPPORTS_CXX20_RANGES
 #endif
