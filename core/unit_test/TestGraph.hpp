@@ -1469,42 +1469,43 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), team_scratch_in_graph) {
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
   GTEST_SKIP() << "skipping since scratch memory is not yet implemented in the "
                   "OpenACC backend";
-#endif
-  using exec_space   = TEST_EXECSPACE;
-  using mem_space    = typename exec_space::memory_space;
-  using team_policy  = Kokkos::TeamPolicy<exec_space>;
-  using functor_type = GraphScratchFunctor<exec_space>;
-  using scratch_view = typename functor_type::scratch_view;
+#else
+    using exec_space   = TEST_EXECSPACE;
+    using mem_space    = typename exec_space::memory_space;
+    using team_policy  = Kokkos::TeamPolicy<exec_space>;
+    using functor_type = GraphScratchFunctor<exec_space>;
+    using scratch_view = typename functor_type::scratch_view;
 
-  const int team_size     = std::min(32, ex.concurrency());
-  const int num_teams     = 2;
-  const int N             = num_teams * team_size;
-  const int scratch_ints  = team_size;
-  const int scratch_bytes = scratch_view::shmem_size(scratch_ints);
+    const int team_size     = std::min(32, ex.concurrency());
+    const int num_teams     = 2;
+    const int N             = num_teams * team_size;
+    const int scratch_ints  = team_size;
+    const int scratch_bytes = scratch_view::shmem_size(scratch_ints);
 
-  Kokkos::View<int*, mem_space> result("result", N);
+    Kokkos::View<int*, mem_space> result("result", N);
 
-  team_policy policy(num_teams, team_size);
-  policy.set_scratch_size(0, Kokkos::PerTeam(scratch_bytes));
+    team_policy policy(num_teams, team_size);
+    policy.set_scratch_size(0, Kokkos::PerTeam(scratch_bytes));
 
-  auto graph = Kokkos::Experimental::create_graph(
-      Kokkos::Experimental::get_device_handle(ex), [&](auto root) {
-        root.then_parallel_for("TeamScratchGraph", policy,
-                               functor_type{result, scratch_ints});
-      });
-  graph.submit(ex);
-  ex.fence();
+    auto graph = Kokkos::Experimental::create_graph(
+        Kokkos::Experimental::get_device_handle(ex), [&](auto root) {
+          root.then_parallel_for("TeamScratchGraph", policy,
+                                 functor_type{result, scratch_ints});
+        });
+    graph.submit(ex);
+    ex.fence();
 
-  auto result_h =
-      Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, result);
-  bool pass = true;
-  for (int i = 0; i < N; ++i) {
-    if (result_h(i) != i + 1) {
-      pass = false;
-      break;
+    auto result_h =
+        Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, result);
+    bool pass = true;
+    for (int i = 0; i < N; ++i) {
+      if (result_h(i) != i + 1) {
+        pass = false;
+        break;
+      }
     }
-  }
-  ASSERT_TRUE(pass);
+    ASSERT_TRUE(pass);
+#endif
 }
 
 // Test that lvalue policies (stored in variables) work with then_parallel_for
