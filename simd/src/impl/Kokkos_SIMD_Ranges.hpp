@@ -26,7 +26,10 @@ using std::ranges::sized_range;
 
 namespace Kokkos::Experimental::Impl::Ranges {
 
-namespace {
+// Use another nested Impl namespace to prevent accidental explicit
+// usage of these symbols in the SIMD code - we want to only use
+// the minimal set necessary for the constructors that take ranges
+namespace Impl {
 // We need to rely on ADL but "using" declarations cannot be used inside a
 // requires clause, we use an immediately-invoked lambda returning the requires
 // clause as an alternative.
@@ -50,44 +53,45 @@ using iterator_t = decltype(begin(std::declval<R&>()));
 
 template <class R>
 using range_reference_t = decltype(*std::declval<iterator_t<R>&>());
-}  // namespace
+}  // namespace Impl
 
-inline constexpr auto data = []<range R>(R&& r) {
+inline constexpr auto data = []<Impl::range R>(R&& r) {
   using std::data;
   return data(r);
 };
 
 template <class R>
-concept sized_range = range<R> && []() {
+concept sized_range = Impl::range<R> && []() {
   using std::size;
   return requires(R& r) { size(r); };
 }();
 
 template <class R>
-concept contiguous_range = range<R> && requires(R& r, iterator_t<R>& it) {
-  { ++it } -> std::same_as<iterator_t<R>&>;
-  { --it } -> std::same_as<iterator_t<R>&>;
-  { it + 2 } -> std::same_as<iterator_t<R> >;
-  { it - 2 } -> std::same_as<iterator_t<R> >;
-  { it += 2 } -> std::same_as<iterator_t<R>&>;
-  { it -= 2 } -> std::same_as<iterator_t<R>&>;
-  {
-    it - it
-  } -> std::same_as<typename std::iterator_traits<
-      std::remove_cvref_t<iterator_t<R> > >::difference_type>;
-  { *it } -> std::same_as<range_reference_t<R> >;
-  { it[0] } -> std::same_as<range_reference_t<R> >;
-  { it < it } -> std::same_as<bool>;
-  { it > it } -> std::same_as<bool>;
-  { it <= it } -> std::same_as<bool>;
-  { it >= it } -> std::same_as<bool>;
-  requires std::is_same_v<decltype(data(r)),
-                          std::add_pointer_t<range_reference_t<R> > >;
-};
+concept contiguous_range =
+    Impl::range<R> && requires(R& r, Impl::iterator_t<R>& it) {
+      { ++it } -> std::same_as<Impl::iterator_t<R>&>;
+      { --it } -> std::same_as<Impl::iterator_t<R>&>;
+      { it + 2 } -> std::same_as<Impl::iterator_t<R> >;
+      { it - 2 } -> std::same_as<Impl::iterator_t<R> >;
+      { it += 2 } -> std::same_as<Impl::iterator_t<R>&>;
+      { it -= 2 } -> std::same_as<Impl::iterator_t<R>&>;
+      {
+        it - it
+      } -> std::same_as<typename std::iterator_traits<
+          std::remove_cvref_t<Impl::iterator_t<R> > >::difference_type>;
+      { *it } -> std::same_as<Impl::range_reference_t<R> >;
+      { it[0] } -> std::same_as<Impl::range_reference_t<R> >;
+      { it < it } -> std::same_as<bool>;
+      { it > it } -> std::same_as<bool>;
+      { it <= it } -> std::same_as<bool>;
+      { it >= it } -> std::same_as<bool>;
+      requires std::is_same_v<decltype(data(r)),
+                              std::add_pointer_t<Impl::range_reference_t<R> > >;
+    };
 
-template <range R>
+template <Impl::range R>
 using range_value_t = typename std::iterator_traits<
-    std::remove_cvref_t<iterator_t<R> > >::value_type;
+    std::remove_cvref_t<Impl::iterator_t<R> > >::value_type;
 
 }  // namespace Kokkos::Experimental::Impl::Ranges
 #endif
