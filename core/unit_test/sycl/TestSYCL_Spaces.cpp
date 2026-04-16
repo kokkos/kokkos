@@ -175,10 +175,6 @@ TEST(sycl, space_access) {
                      Kokkos::Device<Kokkos::HostSpace::execution_space,
                                     Kokkos::SYCLSharedUSMSpace>>);
 
-  static_assert(
-      Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::SYCL>::Space,
-                                 Kokkos::HostSpace>::accessible);
-
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::SYCLDeviceUSMSpace>::Space,
                 Kokkos::HostSpace>::accessible);

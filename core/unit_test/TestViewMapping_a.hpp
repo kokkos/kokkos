@@ -1031,8 +1031,8 @@ void test_view_mapping() {
 // FIXME_NVCC For some reason, the use count is higher (but still constant) when
 // using nvcc. Replacing the lambda with a functor doesn't show this behavior.
 #if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC))
-    using host_exec_space =
-        typename Kokkos::Impl::HostMirror<Space>::execution_space;
+    using host_exec_space = typename Kokkos::Impl::HostMirror<
+        typename Space::memory_space>::execution_space;
 
     int errors = 0;
     Kokkos::parallel_reduce(

@@ -183,10 +183,6 @@ TEST(hip, space_access) {
                      Kokkos::Device<Kokkos::HostSpace::execution_space,
                                     Kokkos::HIPManagedSpace>>);
 
-  static_assert(
-      Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::HIP>::Space,
-                                 Kokkos::HostSpace>::accessible);
-
 #ifndef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::HIPSpace>::Space,
