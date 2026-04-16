@@ -169,6 +169,13 @@
 * Work around a performance regression related to index computation in the mdspan-based View [\#8476](https://github.com/kokkos/kokkos/pull/8476)
 * Fix a failure at configure time when SVE is enabled and the tests are disabled [\#8661](https://github.com/kokkos/kokkos/pull/8661)
 
+## 4.7.04
+
+### Bug Fixes
+* Add a missing include for legacy View [\#9062](https://github.com/kokkos/kokkos/pull/9062)
+* Add a missing include for configure time checking ARM support in CMake [\#9061](https://github.com/kokkos/kokkos/pull/9061)
+* Fix compile time bug on MSVC with oneAPI [\#9060](https://github.com/kokkos/kokkos/pull/9060)
+
 ## 4.7.03
 
 ### CUDA
