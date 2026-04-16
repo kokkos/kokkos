@@ -101,24 +101,22 @@ namespace Impl {
 static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
                                               Kokkos::HostSpace>::assignable);
 
-template <typename S>
+template <typename MemSpace>
 struct HostMirror {
  private:
-  using is_space_ = typename Kokkos::is_space<S>;
-  static_assert(is_space_::value);
+  static_assert(is_memory_space_v<MemSpace>);
 
   // If input execution space can access HostSpace then keep it.
   // Example: Kokkos::OpenMP can access, Kokkos::Cuda cannot
   enum {
-    keep_exe = Kokkos::SpaceAccessibility<typename S::execution_space,
+    keep_exe = Kokkos::SpaceAccessibility<typename MemSpace::execution_space,
                                           Kokkos::HostSpace>::accessible
   };
   // If HostSpace can access memory space then keep it.
   // Example: Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
   enum {
     keep_mem =
-        Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
-                                        typename S::memory_space>::accessible
+        Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace, MemSpace>::accessible
   };
 
  public:
@@ -129,26 +127,22 @@ struct HostMirror {
 
   // keep_exe | keep_mem | Result
   // ---------|----------|-------
-  //    T     |    T     | S::device_type
-  //    F     |    T     | Device<HostSpace::execution_space, S::memory_space>
+  //    T     |    T     | MemSpace::device_type
+  //    F     |    T     | Device<HostSpace::execution_space, MemSpace>
   //    T     |    F     | HostSpace::device_type
   //    F     |    F     | HostSpace::device_type
 
   using Device = std::conditional_t<
       keep_mem,
-      std::conditional_t<keep_exe, typename S::device_type,
-                         Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                        typename S::memory_space>>,
+      std::conditional_t<
+          keep_exe, typename MemSpace::device_type,
+          Kokkos::Device<Kokkos::HostSpace::execution_space, MemSpace>>,
       Kokkos::HostSpace::device_type>;
 
   using execution_space = typename Device::execution_space;
   using memory_space    = typename Device::memory_space;
 
-  // Construct mirror type matching the template parameter type
-  using Space =
-      std::conditional_t<Kokkos::is_execution_space<S>::value, execution_space,
-                         std::conditional_t<Kokkos::is_memory_space<S>::value,
-                                            memory_space, Device>>;
+  using Space = memory_space;
 };
 
 }  // namespace Impl

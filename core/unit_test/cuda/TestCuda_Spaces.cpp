@@ -191,10 +191,6 @@ TEST(cuda, space_access) {
                      Kokkos::Device<Kokkos::HostSpace::execution_space,
                                     Kokkos::CudaUVMSpace>>);
 
-  static_assert(
-      Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::Cuda>::Space,
-                                 Kokkos::HostSpace>::accessible);
-
 #ifndef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
   static_assert(Kokkos::SpaceAccessibility<
                 Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
