@@ -5,9 +5,8 @@
 # Validate options are given with correct case and define an internal
 # upper-case version for use within
 
-set(Kokkos_OPTIONS_NOT_TO_EXPORT
-    Kokkos_ENABLE_BENCHMARKS Kokkos_ENABLE_EXAMPLES Kokkos_ENABLE_TESTS Kokkos_ENABLE_HEADER_SELF_CONTAINMENT_TESTS
-    Kokkos_ENABLE_COMPILER_WARNINGS
+set(Kokkos_OPTIONS_NOT_TO_EXPORT Kokkos_ENABLE_BENCHMARKS Kokkos_ENABLE_EXAMPLES Kokkos_ENABLE_TESTS
+                                 Kokkos_ENABLE_HEADER_SELF_CONTAINMENT_TESTS Kokkos_ENABLE_COMPILER_WARNINGS
 )
 
 #

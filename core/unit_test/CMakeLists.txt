@@ -374,10 +374,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       list(APPEND ${Tag}_SOURCES_SMOKE ${file})
     endforeach()
     # Fails serial.atomics_tpetra_max_abs when we test with Clacc (same as CoreUnitTest_Serial1).
-    if(Tag STREQUAL "Serial"
-       AND KOKKOS_ENABLE_OPENACC
-       AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang
-    )
+    if(Tag STREQUAL "Serial" AND KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
     endif()
     kokkos_add_executable_and_test(CoreUnitTest_${Tag}_SmokeTest SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
