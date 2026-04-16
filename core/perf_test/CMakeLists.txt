@@ -131,7 +131,6 @@ kokkos_add_benchmark(
 )
 
 kokkos_add_benchmark(PerformanceTest_MDRangePolicy_Stream SOURCES PerfTestMDRange_Stream.cpp)
-kokkos_add_benchmark(PerformanceTest_RangeVsMDRange_Triad1D SOURCES PerfTestRangeVsMDRange_Triad1D.cpp)
 
 # FIXME_NVHPC
 if(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
