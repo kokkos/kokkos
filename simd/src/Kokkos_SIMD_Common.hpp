@@ -12,12 +12,12 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 #include <impl/Kokkos_SIMD_Impl_Macros.hpp>
+#include <impl/Kokkos_SIMD_RangesCtorSupport.hpp>
 #include <cstdint>
 #include <cstring>
 #include <functional>
 #include <utility>
 #include <type_traits>
-#include <ranges>
 
 namespace Kokkos {
 
