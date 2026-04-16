@@ -173,7 +173,7 @@
 
 ### Bug Fixes
 * Add a missing include for legacy View [\#9062](https://github.com/kokkos/kokkos/pull/9062)
-* Add a missing include for configure time checking ARM support in CMake [\#9061](https://github.com/kokkos/kokkos/pull/9061)
+* Add a missing CMake include for configure time checking ARM SVE support [\#9061](https://github.com/kokkos/kokkos/pull/9061)
 * Fix compile time bug on MSVC with oneAPI [\#9060](https://github.com/kokkos/kokkos/pull/9060)
 
 ## 4.7.03
