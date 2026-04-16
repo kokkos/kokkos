@@ -410,8 +410,7 @@ jobs:
       - name: build_kokkos
         working-directory: kokkos
         run: |
-          cmake --build build --parallel $(nproc) \
-            --target Kokkos_IncrementalTest_NEXTSILICON
+          cmake --build build --parallel $(nproc)
 
       # the SNL runners map a named volume to $HOME/optimizer-cache for a persistent
       # optimizer cache across runs. If this doesn't get mapped, nextsystemd will
@@ -424,4 +423,4 @@ jobs:
           GTEST_FILTER: -*DeathTest*
           XDG_CACHE_HOME: $HOME/optimizer-cache
         run: |
-          ctest -V --timeout 3600 -R Kokkos_IncrementalTest_NEXTSILICON
+          ctest -V --timeout 3600
