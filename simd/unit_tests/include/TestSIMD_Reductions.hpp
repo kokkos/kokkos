@@ -187,6 +187,8 @@ KOKKOS_INLINE_FUNCTION void device_check_all_reductions(
                                           args);
   device_check_reduction_all_loaders<Abi>(masked_reduce<std::multiplies<>>(), n,
                                           args);
+  device_check_reduction_all_loaders<Abi>(masked_reduce_default_params(), n,
+                                          args);
 }
 
 template <typename Abi, typename DataType>
