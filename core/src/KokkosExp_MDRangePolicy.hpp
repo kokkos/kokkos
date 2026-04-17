@@ -9,6 +9,7 @@ static_assert(false,
 #ifndef KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 #define KOKKOS_CORE_EXP_MD_RANGE_POLICY_HPP
 
+#include <concepts>
 #include <initializer_list>
 
 #include <Kokkos_Layout.hpp>
@@ -112,8 +113,7 @@ constexpr NVCC_WONT_LET_ME_CALL_YOU_Array to_array_potentially_narrowing(
   return a;
 }
 
-template <class IndexType, class Array, class U,
-          class = std::enable_if_t<std::is_integral_v<U>>>
+template <class IndexType, class Array, std::integral U>
 constexpr Array to_array_potentially_narrowing(U value) {
   using T = typename Array::value_type;
   Array a{};
