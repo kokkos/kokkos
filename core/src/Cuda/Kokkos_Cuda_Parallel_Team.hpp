@@ -190,10 +190,19 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     // reductions. They also use one int64_t in static shared memory for a
     // shared ID. Furthermore, they use additional scratch memory in some
     // reduction scenarios, which depend on the size of the value_type and is
-    // NOT captured here.
-    constexpr size_t max_possible_team_size = 1024;
+    // NOT captured here. There is also the chance that RDC or the potential
+    // inclusion of CCCL/other libraries in the future could add extra static
+    // shared memory requirements that can't be captured without knowing
+    // details of the function itself.
+    //
+    // These potential scenarios are addressed in an ad-hoc fashion by the
+    // 16KiB "shared memory fudge factor"; more robust solutions to this
+    // are being considered in #9089.
+    constexpr size_t max_possible_team_size              = 1024;
+    constexpr size_t ad_hoc_shared_memory_overallocation = 16 * 1024;
     constexpr size_t max_reserved_shared_mem_per_team =
-        (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t);
+        (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t) +
+        ad_hoc_shared_memory_overallocation;
     // arbitrarily setting level 1 scratch limit to 20MB, for a
     // Volta V100 that would give us about 3.2GB for 2 teams per SM
     constexpr size_t max_l1_scratch_size =
