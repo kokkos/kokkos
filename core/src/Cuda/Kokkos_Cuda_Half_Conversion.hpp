@@ -101,7 +101,7 @@ cast_from_half(half_t val) {
 
 #if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
 
-// if architecture is older than Amper
+// if architecture is older than Ampere
 #if KOKKOS_IMPL_ARCH_NVIDIA_GPU < 80
 
 KOKKOS_INLINE_FUNCTION
