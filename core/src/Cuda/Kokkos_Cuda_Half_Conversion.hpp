@@ -306,9 +306,9 @@ cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
 
-#endif  // !KOKKOS_BHALF_T_IS_FLOAT
+#endif // KOKKOS_IMPL_ARCH_NVIDIA_GPU < 80
 
-#endif
+#endif // !KOKKOS_BHALF_T_IS_FLOAT
 
 }  // namespace Kokkos::Experimental
 
