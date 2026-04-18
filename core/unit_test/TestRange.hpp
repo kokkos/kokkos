@@ -409,8 +409,8 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
                                Kokkos::HostSpace>) {
     GTEST_SKIP() << "Disabling for host backends";
   }
-#ifdef KOKKOS_ARCH_MAXWELL50
-  GTEST_SKIP() << "skipping for Maxwell50 devices (not enough memory)";
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+  GTEST_SKIP() << "skipping for GPUs with not enough memory";
 #endif
   test_large_parallel_for_reduce();
 }
