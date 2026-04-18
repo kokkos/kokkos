@@ -4,8 +4,6 @@
 #ifndef KOKKOS_CUDA_HALF_HPP_
 #define KOKKOS_CUDA_HALF_HPP_
 
-#ifdef _CUDACC_
-
 #include <Kokkos_Half.hpp>
 #include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 
@@ -14,6 +12,9 @@
 namespace Kokkos::Experimental {
 
 /************************** half conversions **********************************/
+
+#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(half_t val) { return val; }
 
@@ -94,9 +95,15 @@ cast_from_half(half_t val) {
   return static_cast<T>(cast_from_half<unsigned long long>(val));
 }
 
+#endif  // !KOKKOS_HALF_T_IS_FLOAT
+
 /************************** bhalf conversions *********************************/
-// if architecture is older than Ampere
+
+#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+
+// if architecture is older than Amper
 #if KOKKOS_IMPL_ARCH_NVIDIA_GPU < 80
+
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 
@@ -298,10 +305,11 @@ KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, unsigned long>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(cast_from_bhalf<unsigned long long>(val));
 }
+
+#endif  // !KOKKOS_BHALF_T_IS_FLOAT
+
 #endif
 
 }  // namespace Kokkos::Experimental
-
-#endif
 
 #endif
