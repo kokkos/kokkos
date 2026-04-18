@@ -299,6 +299,9 @@ TEST(TEST_CATEGORY, view_allocation_large_rank) {
 #ifdef KOKKOS_IMPL_32BIT
   GTEST_SKIP() << "skipping for 32-bit builds";
 #endif
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+  GTEST_SKIP() << "skipping for GPUs with not enough memory";
+#endif
   using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
   using MemorySpace    = typename TEST_EXECSPACE::memory_space;
   constexpr int dim    = 15;
