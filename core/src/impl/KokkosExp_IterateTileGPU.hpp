@@ -489,7 +489,7 @@ struct DeviceIterateTile {
         bool in_bounds      = true;
 
         // LL
-        if (PolicyType::inner_direction == Iterate::Left) {
+        if constexpr (PolicyType::inner_direction == Iterate::Left) {
           for (int i = 0; i < PolicyType::rank; ++i) {
             m_offset[i] =
                 (tile_idx % m_policy.m_tile_end[i]) * m_policy.m_tile[i] +

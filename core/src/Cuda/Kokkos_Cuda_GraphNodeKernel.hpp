@@ -14,7 +14,6 @@
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
-#include <Kokkos_PointerOwnership.hpp>
 
 #include <Cuda/Kokkos_Cuda.hpp>
 

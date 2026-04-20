@@ -380,9 +380,11 @@ class GraphNodeRef {
         with_properties_if_unset(std::forward<Props>(props),
                                  graph_ptr->get_device_handle(), "[unlabeled]");
 
-    auto policy = Experimental::require(
-        Policy(Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
-               Kokkos::Impl::get_property<device_handle_t>(full_props).m_exec),
+    using policy_type = std::remove_cvref_t<Policy>;
+    auto policy       = Experimental::require(
+        policy_type(
+            Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
+            Kokkos::Impl::get_property<device_handle_t>(full_props).m_exec),
         Kokkos::Impl::KernelInGraphProperty{});
 
     using next_policy_t = decltype(policy);
@@ -522,9 +524,11 @@ class GraphNodeRef {
     // End of Kokkos reducer disaster
     //----------------------------------------
 
-    auto policy = Experimental::require(
-        Policy(Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
-               Kokkos::Impl::get_property<device_handle_t>(full_props).m_exec),
+    using policy_type = std::remove_cvref_t<Policy>;
+    auto policy       = Experimental::require(
+        policy_type(
+            Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
+            Kokkos::Impl::get_property<device_handle_t>(full_props).m_exec),
         Kokkos::Impl::KernelInGraphProperty{});
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
@@ -565,6 +569,16 @@ class GraphNodeRef {
                             ReturnType&& return_value) const {
     return this->then_parallel_reduce(node_props(), (Policy&&)arg_policy,
                                       (Functor&&)functor,
+                                      (ReturnType&&)return_value);
+  }
+
+  template <class Label, class Policy, class Functor, class ReturnType>
+    requires(ExecutionPolicyOn<std::remove_cvref_t<Policy>, ExecutionSpace> &&
+             Kokkos::Impl::is_view_label_v<std::remove_cvref_t<Label>>)
+  auto then_parallel_reduce(Label&& label, Policy&& policy, Functor&& functor,
+                            ReturnType&& return_value) const {
+    return this->then_parallel_reduce(node_props(std::forward<Label>(label)),
+                                      (Policy&&)policy, (Functor&&)functor,
                                       (ReturnType&&)return_value);
   }
 

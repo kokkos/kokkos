@@ -571,8 +571,6 @@ void Cuda::impl_finalize() {
   Impl::CudaInternal::default_instance = nullptr;
 }
 
-Cuda::~Cuda() { Impl::check_execution_space_destructor_precondition(name()); }
-
 Cuda::Cuda()
     : m_space_instance(
           (Impl::check_execution_space_constructor_precondition(name()),

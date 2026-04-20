@@ -10,7 +10,6 @@
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
-#include <Kokkos_PointerOwnership.hpp>
 
 #include <SYCL/Kokkos_SYCL_GraphNode_Impl.hpp>
 

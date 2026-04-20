@@ -229,8 +229,6 @@ AMD-MI300A:
     - export CTEST_BUILD_NAME="AMD-MI300A"
     - export HSA_XNACK=1
     - export KOKKOS_DEVICE_ID=3
-    # FIXME Reenable hip.graph_capture for rocm 7 testing
-    - export GTEST_FILTER="-hip.graph_capture"
     - ctest -VV
       -D CDASH_MODEL=${CDASH_MODEL}
       -D GITHUB_PR_ID="${GITHUB_PR_ID}"

@@ -29,6 +29,26 @@ class ViewMapping;
 #include <View/Kokkos_ViewMapping.hpp>
 #include <Kokkos_MinMax.hpp>
 
+namespace Kokkos {
+template <class DataType, class... Properties>
+struct ViewTraits;
+
+template <class DataType, class... Properties>
+class View;
+
+template <class>
+struct is_view : public std::false_type {};
+
+template <class D, class... P>
+struct is_view<View<D, P...> > : public std::true_type {};
+
+template <class D, class... P>
+struct is_view<const View<D, P...> > : public std::true_type {};
+
+template <class T>
+inline constexpr bool is_view_v = is_view<T>::value;
+}  // namespace Kokkos
+
 // Class to provide a uniform type
 namespace Kokkos {
 namespace Impl {
@@ -39,55 +59,106 @@ template <class ParentView>
 struct ViewTracker;
 } /* namespace Impl */
 
-template <class T1, class T2>
-struct is_always_assignable_impl;
+namespace Impl {
 
-template <class... ViewTDst, class... ViewTSrc>
-struct is_always_assignable_impl<Kokkos::View<ViewTDst...>,
-                                 Kokkos::View<ViewTSrc...> > {
-  using dst_mdspan = typename Kokkos::View<ViewTDst...>::mdspan_type;
-  using src_mdspan = typename Kokkos::View<ViewTSrc...>::mdspan_type;
+template <class TDst, class TSrc, bool same_rank = TDst::rank() == TSrc::rank()>
+struct is_assignable_extents {
+  // is it always (statically known) assignable
+  constexpr static bool value = false;
 
-  constexpr static bool value =
-      std::is_constructible_v<dst_mdspan, src_mdspan> &&
-      static_cast<int>(Kokkos::View<ViewTDst...>::rank_dynamic) >=
-          static_cast<int>(Kokkos::View<ViewTSrc...>::rank_dynamic);
+  // runtime check
+  KOKKOS_FUNCTION
+  static constexpr bool runtime_value(const TDst&, const TSrc&) {
+    return false;
+  }
 };
 
-template <class View1, class View2>
-using is_always_assignable = is_always_assignable_impl<
-    std::remove_reference_t<View1>,
-    std::remove_const_t<std::remove_reference_t<View2> > >;
+template <class IdxDst, size_t... ExtsDst, class IdxSrc, size_t... ExtsSrc>
+struct is_assignable_extents<extents<IdxDst, ExtsDst...>,
+                             extents<IdxSrc, ExtsSrc...>, true> {
+ private:
+  using dst_t = extents<IdxDst, ExtsDst...>;
+  using src_t = extents<IdxSrc, ExtsSrc...>;
+
+ public:
+  // Example:
+  //   - extents<int, dynamic_extent> is always assignable to extents<int,
+  //     dynamic_extent> extents<int, dynamic_extent> may be assignable to
+  //   - extents<int, 2>, need runtime check
+
+  // is it always (statically known)  assignable
+  constexpr static bool value =
+      ((ExtsDst == dynamic_extent || ExtsDst == ExtsSrc) && ... && true);
+
+  // runtime check
+  KOKKOS_FUNCTION
+  static constexpr bool runtime_value(const dst_t&, const src_t& src) {
+    if constexpr ((dst_t::rank() == 0) || value) {
+      return true;
+    } else {
+      using rank_type = typename dst_t::rank_type;
+      for (rank_type r = 0; r < dst_t::rank(); r++)
+        if (!(dst_t::static_extent(r) == dynamic_extent ||
+              dst_t::static_extent(r) == src.extent(r)))
+          return false;
+      return true;
+    }
+  }
+};
+
+template <class TDst, class TSrc, bool same_rank = TDst::rank() == TSrc::rank()>
+struct is_assignable_view {
+  // is it always (statically known) assignable
+  constexpr static bool value = false;
+};
+
+template <class... ViewTDst, class... ViewTSrc>
+struct is_assignable_view<View<ViewTDst...>, View<ViewTSrc...>, true> {
+ private:
+  using dst_t      = View<ViewTDst...>;
+  using src_t      = View<ViewTSrc...>;
+  using dst_mdspan = typename View<ViewTDst...>::mdspan_type;
+  using src_mdspan = typename View<ViewTSrc...>::mdspan_type;
+  using is_assignable_exts_t =
+      is_assignable_extents<typename dst_t::extents_type,
+                            typename src_t::extents_type>;
+
+ public:
+  // is it always (statically known) assignable
+  constexpr static bool value =
+      std::is_constructible_v<dst_mdspan, src_mdspan> &&
+      is_assignable_exts_t::value;
+};
+}  // namespace Impl
+
+// Don't remove const from destination, since you can't assign
+// to a 'const View<...>'
+template <class DstView, class SrcView>
+using is_always_assignable = Impl::is_assignable_view<
+    std::remove_volatile_t<std::remove_reference_t<DstView> >,
+    std::remove_cvref_t<SrcView> >;
 
 template <class T1, class T2>
 inline constexpr bool is_always_assignable_v =
     is_always_assignable<T1, T2>::value;
 
-template <class... ViewTDst, class... ViewTSrc>
-constexpr bool is_assignable(const Kokkos::View<ViewTDst...>& dst,
-                             const Kokkos::View<ViewTSrc...>& src) {
-  using dst_mdspan = typename Kokkos::View<ViewTDst...>::mdspan_type;
-  using src_mdspan = typename Kokkos::View<ViewTSrc...>::mdspan_type;
+// FIXME: this should be a device callable function
+template <class DstView, class SrcView>
+  requires(is_view_v<DstView> && is_view_v<SrcView> &&
+           !std::is_const_v<DstView>)
+constexpr bool is_assignable(DstView& dst, const SrcView& src) {
+  using is_assignable_exts_t =
+      Impl::is_assignable_extents<typename DstView::extents_type,
+                                  typename SrcView::extents_type>;
+  return std::is_constructible_v<typename DstView::mdspan_type,
+                                 typename SrcView::mdspan_type> &&
+         is_assignable_exts_t::runtime_value(dst.extents(), src.extents());
+}
 
-  return is_always_assignable_v<Kokkos::View<ViewTDst...>,
-                                Kokkos::View<ViewTSrc...> > ||
-         (std::is_constructible_v<dst_mdspan, src_mdspan> &&
-          ((dst_mdspan::rank_dynamic() >= 1) ||
-           (dst.static_extent(0) == src.extent(0))) &&
-          ((dst_mdspan::rank_dynamic() >= 2) ||
-           (dst.static_extent(1) == src.extent(1))) &&
-          ((dst_mdspan::rank_dynamic() >= 3) ||
-           (dst.static_extent(2) == src.extent(2))) &&
-          ((dst_mdspan::rank_dynamic() >= 4) ||
-           (dst.static_extent(3) == src.extent(3))) &&
-          ((dst_mdspan::rank_dynamic() >= 5) ||
-           (dst.static_extent(4) == src.extent(4))) &&
-          ((dst_mdspan::rank_dynamic() >= 6) ||
-           (dst.static_extent(5) == src.extent(5))) &&
-          ((dst_mdspan::rank_dynamic() >= 7) ||
-           (dst.static_extent(6) == src.extent(6))) &&
-          ((dst_mdspan::rank_dynamic() == 8) ||
-           (dst.static_extent(7) == src.extent(7))));
+template <class DstView, class SrcView>
+  requires(is_view_v<DstView> && is_view_v<SrcView> && std::is_const_v<DstView>)
+constexpr bool is_assignable(DstView&, const SrcView&) {
+  return false;
 }
 
 namespace Impl {
@@ -116,24 +187,6 @@ KOKKOS_INLINE_FUNCTION constexpr auto ptr_from_data_handle(
   return handle;
 }
 }  // namespace Impl
-
-template <class DataType, class... Properties>
-struct ViewTraits;
-
-template <class DataType, class... Properties>
-class View;
-
-template <class>
-struct is_view : public std::false_type {};
-
-template <class D, class... P>
-struct is_view<View<D, P...> > : public std::true_type {};
-
-template <class D, class... P>
-struct is_view<const View<D, P...> > : public std::true_type {};
-
-template <class T>
-inline constexpr bool is_view_v = is_view<T>::value;
 
 // FIXME spurious warnings like
 // error: 'SR.14123' may be used uninitialized [-Werror=maybe-uninitialized]
@@ -292,47 +345,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
         base_t::mapping());
   }
 
-  // clang-format off
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(0) instead") KOKKOS_FUNCTION constexpr size_t stride_0() const { return stride(0); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(1) instead") KOKKOS_FUNCTION constexpr size_t stride_1() const { return stride(1); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(2) instead") KOKKOS_FUNCTION constexpr size_t stride_2() const { return stride(2); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(3) instead") KOKKOS_FUNCTION constexpr size_t stride_3() const { return stride(3); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(4) instead") KOKKOS_FUNCTION constexpr size_t stride_4() const { return stride(4); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(5) instead") KOKKOS_FUNCTION constexpr size_t stride_5() const { return stride(5); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(6) instead") KOKKOS_FUNCTION constexpr size_t stride_6() const { return stride(6); }
-  KOKKOS_DEPRECATED_WITH_COMMENT("Use stride(7) instead") KOKKOS_FUNCTION constexpr size_t stride_7() const { return stride(7); }
-#endif
-  // clang-format on
-
-  template <typename iType>
-  KOKKOS_INLINE_FUNCTION constexpr std::enable_if_t<std::is_integral_v<iType>,
-                                                    size_t>
-  stride(iType r) const {
-    // base class doesn't have constraint
-    // FIXME: Eventually we need to deprecate this behavior and just use
-    // BasicView implementation
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-    using LayoutType = typename mdspan_type::layout_type;
-    if (r >= static_cast<iType>(rank())) {
-      if constexpr (rank() == 0) return 1;
-      if constexpr (std::is_same_v<LayoutType, layout_right> ||
-                    Impl::IsLayoutRightPadded<LayoutType>::value) {
-        return 1;
-      }
-      if constexpr (std::is_same_v<LayoutType, layout_left> ||
-                    Impl::IsLayoutLeftPadded<LayoutType>::value) {
-        return base_t::stride(rank() - 1) * extent(rank() - 1);
-      }
-      if constexpr (std::is_same_v<LayoutType, layout_stride>) {
-        return 0;
-      }
-    }
-#else
-    KOKKOS_ASSERT(r < static_cast<iType>(rank()));
-#endif
-    return base_t::stride(r);
-  }
+  using base_t::stride;
 
   template <typename iType>
   KOKKOS_INLINE_FUNCTION void stride([[maybe_unused]] iType* const s) const {
@@ -370,7 +383,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   }
 
   KOKKOS_INLINE_FUNCTION constexpr int extent_int(size_t r) const {
-    return static_cast<int>(base_t::extent(r));
+    return static_cast<int>(this->extent(r));
   }
   //----------------------------------------
   // Allow specializations to query their specialized map

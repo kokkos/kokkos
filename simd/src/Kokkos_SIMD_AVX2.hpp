@@ -3297,7 +3297,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
     double, simd_abi::avx2_fixed_size<4>, {
       __m128i idx = static_cast<__m128i>(
           basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>{indices});
-      return V(_mm256_i32gather_pd(std::ranges::data(in), idx, 8));
+      return V(_mm256_i32gather_pd(Impl::Ranges::data(in), idx, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3309,7 +3309,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       __m256d mmask =
           static_cast<__m256d>(basic_simd_mask<double, abi_type>{mask});
       return V(_mm256_mask_i32gather_pd(_mm256_set1_pd(value_type{}),
-                                        std::ranges::data(in), idx, mmask, 8));
+                                        Impl::Ranges::data(in), idx, mmask, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3346,7 +3346,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
     float, simd_abi::avx2_fixed_size<4>, {
       __m128i idx = static_cast<__m128i>(
           basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>{indices});
-      return V(_mm_i32gather_ps(std::ranges::data(in), idx, 4));
+      return V(_mm_i32gather_ps(Impl::Ranges::data(in), idx, 4));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3358,7 +3358,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       __m128 mmask =
           static_cast<__m128>(basic_simd_mask<float, abi_type>{mask});
       return V(_mm_mask_i32gather_ps(_mm_set1_ps(value_type{}),
-                                     std::ranges::data(in), idx, mmask, 4));
+                                     Impl::Ranges::data(in), idx, mmask, 4));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3395,7 +3395,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
     float, simd_abi::avx2_fixed_size<8>, {
       __m256i idx = static_cast<__m256i>(
           basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>{indices});
-      return V(_mm256_i32gather_ps(std::ranges::data(in), idx, 4));
+      return V(_mm256_i32gather_ps(Impl::Ranges::data(in), idx, 4));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3407,7 +3407,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       __m256 mmask =
           static_cast<__m256>(basic_simd_mask<float, abi_type>{mask});
       return V(_mm256_mask_i32gather_ps(_mm256_set1_ps(value_type{}),
-                                        std::ranges::data(in), idx, mmask, 4));
+                                        Impl::Ranges::data(in), idx, mmask, 4));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3444,7 +3444,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
     std::int32_t, simd_abi::avx2_fixed_size<4>, {
       __m128i idx = static_cast<__m128i>(
           basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>{indices});
-      return V(_mm_i32gather_epi32(std::ranges::data(in), idx, 4));
+      return V(_mm_i32gather_epi32(Impl::Ranges::data(in), idx, 4));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3456,7 +3456,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       __m128i mmask =
           static_cast<__m128i>(basic_simd_mask<std::int32_t, abi_type>{mask});
       return V(_mm_mask_i32gather_epi32(_mm_set1_epi32(value_type{}),
-                                        std::ranges::data(in), idx, mmask, 4));
+                                        Impl::Ranges::data(in), idx, mmask, 4));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3493,7 +3493,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
     std::int32_t, simd_abi::avx2_fixed_size<8>, {
       __m256i idx = static_cast<__m256i>(
           basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>{indices});
-      return V(_mm256_i32gather_epi32(std::ranges::data(in), idx, 4));
+      return V(_mm256_i32gather_epi32(Impl::Ranges::data(in), idx, 4));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3505,7 +3505,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
       __m256i mmask =
           static_cast<__m256i>(basic_simd_mask<std::int32_t, abi_type>{mask});
       return V(_mm256_mask_i32gather_epi32(_mm256_set1_epi32(value_type{}),
-                                           std::ranges::data(in), idx, mmask,
+                                           Impl::Ranges::data(in), idx, mmask,
                                            4));
     })
 
@@ -3544,7 +3544,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
       __m128i idx = static_cast<__m128i>(
           basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>{indices});
       return V(_mm256_i32gather_epi64(
-          reinterpret_cast<long long const*>(std::ranges::data(in)), idx, 8));
+          reinterpret_cast<long long const*>(Impl::Ranges::data(in)), idx, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3557,8 +3557,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
           static_cast<__m256i>(basic_simd_mask<std::int64_t, abi_type>{mask});
       return V(_mm256_mask_i32gather_epi64(
           _mm256_set1_epi64x(value_type{}),
-          reinterpret_cast<long long const*>(std::ranges::data(in)), idx, mmask,
-          8));
+          reinterpret_cast<long long const*>(Impl::Ranges::data(in)), idx,
+          mmask, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
@@ -3596,7 +3596,7 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
       __m128i idx = static_cast<__m128i>(
           basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>{indices});
       return V(_mm256_i32gather_epi64(
-          reinterpret_cast<long long const*>(std::ranges::data(in)), idx, 8));
+          reinterpret_cast<long long const*>(Impl::Ranges::data(in)), idx, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
@@ -3609,8 +3609,8 @@ KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
           static_cast<__m256i>(basic_simd_mask<std::int64_t, abi_type>{mask});
       return V(_mm256_mask_i32gather_epi64(
           _mm256_set1_epi64x(value_type{}),
-          reinterpret_cast<long long const*>(std::ranges::data(in)), idx, mmask,
-          8));
+          reinterpret_cast<long long const*>(Impl::Ranges::data(in)), idx,
+          mmask, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(

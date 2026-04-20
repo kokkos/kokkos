@@ -10,7 +10,6 @@
 
 #include <Kokkos_Parallel.hpp>
 #include <Kokkos_Parallel_Reduce.hpp>
-#include <Kokkos_PointerOwnership.hpp>
 
 #include <HIP/Kokkos_HIP_GraphNode_Impl.hpp>
 
