@@ -153,10 +153,11 @@ TEST(sycl, space_access) {
                 Kokkos::Impl::HostMirror<Kokkos::SYCLDeviceUSMSpace>::Space,
                 Kokkos::HostSpace>);
 
-  static_assert(std::is_same_v<
-                Kokkos::Impl::HostMirror<Kokkos::SYCLSharedUSMSpace>::Device,
-                Kokkos::Device<Kokkos::HostSpace::execution_space,
-                               Kokkos::SYCLSharedUSMSpace>>);
+  static_assert(
+      std::is_same_v<
+          Kokkos::Impl::HostMirror<Kokkos::SYCLSharedUSMSpace>::device_type,
+          Kokkos::Device<Kokkos::HostSpace::execution_space,
+                         Kokkos::SYCLSharedUSMSpace>>);
 
   static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::SYCLHostUSMSpace,
                                                 Kokkos::HostSpace>::accessible);

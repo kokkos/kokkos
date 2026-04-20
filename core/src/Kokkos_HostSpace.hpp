@@ -132,16 +132,17 @@ struct HostMirror {
   //    T     |    F     | HostSpace::device_type
   //    F     |    F     | HostSpace::device_type
 
-  using Device = std::conditional_t<
+  using device_type = std::conditional_t<
       keep_mem,
       std::conditional_t<
           keep_exe, typename MemSpace::device_type,
           Kokkos::Device<Kokkos::HostSpace::execution_space, MemSpace>>,
       Kokkos::HostSpace::device_type>;
 
-  using execution_space = typename Device::execution_space;
-  using memory_space    = typename Device::memory_space;
+  using execution_space = typename device_type::execution_space;
+  using memory_space    = typename device_type::memory_space;
 
+  // FIXME: should be deprecated eventually
   using Space = memory_space;
 };
 
