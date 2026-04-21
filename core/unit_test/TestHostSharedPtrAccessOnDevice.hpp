@@ -128,17 +128,20 @@ struct Foo {
   int use_count() { return ptr.use_count(); }
 };
 
-// Workaround for clang 21.x MachineLICM ICE (llvm.org/PR???): when Foo's copy
+// Workaround for clang 19/20/21/22 MachineLICM ICE
+// (https://github.com/llvm/llvm-project/issues/190853): when Foo's copy
 // assignment (which contains a HostSharedPtr) is fully inlined into
 // cuda_parallel_launch_local_memory via exec_range, the MachineLICM pass
-// crashes with a null pointer dereference. Keeping the assignment in a
+// crashes. Keeping the assignment in a
 // separate noinline device function breaks the inlining chain.
 #if defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA)
-KOKKOS_FUNCTION __attribute__((noinline))
+KOKKOS_FUNCTION
+    __attribute__((noinline))
 #else
 KOKKOS_FUNCTION
 #endif
-void assign_foo(Foo* dst, const Foo& src) noexcept {
+    void
+    assign_foo(Foo* dst, const Foo& src) noexcept {
   *dst = src;
 }
 
