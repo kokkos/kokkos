@@ -111,6 +111,8 @@ TEST(TEST_CATEGORY_DEATH, range_policy_check_exceeding_min) {
 struct W {  // round-trip conversion check for narrowing should "fire"
   W() : val_(1) {}
   W(int const* ptr) : val_(*ptr) {}
+  // Deliberately discards the int value so W -> member_type -> W loses
+  // information for val_ != 1 (exercises the round-trip check).
   W(int const) : val_(1) {}
   operator int() const { return val_; }
   int val_;
@@ -124,13 +126,11 @@ TEST(TEST_CATEGORY_DEATH, range_policy_round_trip_conversion_fires) {
   static_assert(std::is_convertible_v<W, Policy::index_type>);
   static_assert(std::is_convertible_v<Policy::index_type, W>);
 
-  // FIXME: The following ASSERT_DEATH was disabled because the round-trip
-  // conversion check does not trigger with the current check_conversion_safety
-  // logic. Re-enable once the expected failure is understood and implemented.
-  // [[maybe_unused]] std::string msg =
-  //     "Kokkos::RangePolicy bound type error: an unsafe implicit conversion is
-  //     " "performed";
-  // ASSERT_DEATH((void)Policy(0, W(&n)), msg);
+  int const n = 5;
+  [[maybe_unused]] std::string msg =
+      "Kokkos::RangePolicy bound type error: an unsafe implicit conversion is "
+      "performed";
+  ASSERT_DEATH((void)Policy(0, W(&n)), msg);
 }
 
 struct B {  // round-trip conversion would not compile

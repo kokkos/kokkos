@@ -240,42 +240,44 @@ class ImplRangePolicy<ExecSpace, Properties...>
     }
   }
 
-  // To be replaced with std::in_range (c++20)
+  // Arithmetic member_type and IndexType: signedness / numeric_limits checks.
+  // Always run the round-trip check below as well; for non-arithmetic IndexType
+  // only that line applies inside the is_convertible gate.
   template <typename IndexType>
   static void check_conversion_safety([[maybe_unused]] const IndexType bound) {
-    // Checking that the round-trip conversion preserves input index value
     if constexpr (std::is_convertible_v<member_type, IndexType>) {
       bool error = false;
 
-      if constexpr (std::is_arithmetic_v<member_type>) {
+      if constexpr (std::is_arithmetic_v<member_type> &&
+                    std::is_arithmetic_v<IndexType>) {
         if constexpr (std::is_signed_v<IndexType> !=
                       std::is_signed_v<member_type>) {
-          // check signed to unsigned
           if constexpr (std::is_signed_v<IndexType>) error |= (bound < 0);
-
-          // check unsigned to signed
           if constexpr (std::is_signed_v<member_type>) {
-            // avoid overflow warnings by checking the size of the types e.g.
-            // conversion ‘unsigned int’ to ‘int’ changes value
-            // from ‘4294967295’ to ‘-1’ (when IndexType is narrower)
             if constexpr (sizeof(member_type) <= sizeof(IndexType))
-              // safely cast member_type max to IndexType because member_type is
-              // the same size or smaller.
               error |= (bound > static_cast<IndexType>(
                                     std::numeric_limits<member_type>::max()));
+            else {
+              error |= (bound > std::numeric_limits<IndexType>::max());
+            }
           }
         }
       }
-      // check narrowing
+
       error |=
           (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);
 
       if (error) {
+        std::string bound_to_text = []<typename T>(const T& b) {
+          if constexpr (std::is_arithmetic_v<T>)
+            return std::to_string(b);
+          else
+            return std::to_string(static_cast<member_type>(b));
+        }(bound);
         std::string msg =
             "Kokkos::RangePolicy bound type error: an unsafe implicit "
             "conversion is performed on a bound (" +
-            std::to_string(bound) +
-            "), which may not preserve its original value.\n";
+            bound_to_text + "), which may not preserve its original value.\n";
 
         Kokkos::abort(msg.c_str());
       }
