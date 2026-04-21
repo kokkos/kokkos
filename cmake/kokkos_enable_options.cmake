@@ -63,6 +63,7 @@ kokkos_enable_option(DEBUG ${DEBUG_DEFAULT} "Whether to activate extra debug fea
 unset(_UPPERCASE_CMAKE_BUILD_TYPE)
 kokkos_enable_option(LARGE_MEM_TESTS OFF "Whether to perform extra large memory tests")
 kokkos_enable_option(DEBUG_BOUNDS_CHECK OFF "Whether to use bounds checking - will increase runtime")
+kokkos_enable_option(DEBUG_HWLOC OFF "Whether to enable extra hwloc debug messages - will increase runtime")
 kokkos_enable_option(COMPILER_WARNINGS OFF "Whether to print all compiler warnings")
 kokkos_enable_option(TUNING OFF "Whether to create bindings for tuning tools")
 kokkos_enable_option(AGGRESSIVE_VECTORIZATION OFF "Whether to aggressively vectorize loops")

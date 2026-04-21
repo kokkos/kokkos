@@ -816,6 +816,90 @@ struct TestViewMirror {
     ASSERT_TRUE(u3.is_allocated());
   }
 
+#ifdef KOKKOS_ENABLE_HWLOC
+  // get hwloc area membind map of a view
+  template <typename T_View>
+  KOKKOS_INLINE_FUNCTION
+  static hwloc_bitmap_t get_area_membind(T_View& v, hwloc_bitmap_t nodeset) {
+    using value_type = typename T_View::value_type;
+    hwloc_topology_t topology = Kokkos::hwloc::get_topology();
+    hwloc_membind_policy_t policy;
+    int flags = (HWLOC_MEMBIND_BYNODESET | HWLOC_MEMBIND_STRICT);
+    hwloc_bitmap_zero(nodeset);
+
+    hwloc_get_area_membind(topology, v.data(), v.span() * sizeof(value_type),
+                           nodeset, &policy, flags);
+    return nodeset;
+  }
+
+  static void test_allocated_hwloc() {
+    using ExecutionSpace = Kokkos::DefaultHostExecutionSpace;
+    using dynamic_view   = Kokkos::View<int *, ExecutionSpace>;
+    using static_view    = Kokkos::View<int[5], ExecutionSpace>;
+    using unmanaged_view =
+        Kokkos::View<int *, ExecutionSpace,
+                     Kokkos::MemoryTraits<Kokkos::Unmanaged> >;
+    int const N = 100;
+
+    // user-given hwloc bitmap as nodeset, use current membind as example
+    hwloc_bitmap_t direct_nodeset = Kokkos::hwloc::get_membind_set();
+
+    // user-given array of node IDs (non-existent nodes will be ignored)
+    // default = Kokkos::ID_type::Physical
+    Kokkos::NUMANodes<4> numa_ids = {0, 1, 2, 3};
+    Kokkos::NUMANodes<4, Kokkos::ID_type::Physical> numa_ids_p = {0, 1, 2, 3};
+    Kokkos::NUMANodes<4, Kokkos::ID_type::Logical>  numa_ids_l = {0, 1, 2, 3};
+
+    dynamic_view d1;
+    static_view s1;
+    unmanaged_view u1;
+    ASSERT_FALSE(d1.is_allocated());
+    ASSERT_FALSE(s1.is_allocated());
+    ASSERT_FALSE(u1.is_allocated());
+
+    // test all possible HostSpace with hwloc support
+    std::vector<Kokkos::HostSpace> space_list = {
+    // hwloc_memattr_id_e was introduced in version 2.3.0 (0x00020300)
+#if HWLOC_API_VERSION >= 0x00020300
+      Kokkos::HostSpace(HWLOC_MEMATTR_ID_BANDWIDTH),
+      Kokkos::HostSpace(HWLOC_MEMATTR_ID_LATENCY),
+      Kokkos::HostSpace(HWLOC_MEMATTR_ID_LOCALITY),
+      Kokkos::HostSpace(HWLOC_MEMATTR_ID_CAPACITY),
+#endif // HWLOC_API_VERSION
+      Kokkos::HostSpace(direct_nodeset),
+      Kokkos::HostSpace(numa_ids_p),
+      Kokkos::HostSpace(numa_ids_l),
+      Kokkos::HostSpace(numa_ids)
+    };
+
+    hwloc_bitmap_t set_d1 = hwloc_bitmap_alloc();
+    hwloc_bitmap_t set_s1 = hwloc_bitmap_alloc();
+    hwloc_bitmap_t set_u1 = hwloc_bitmap_alloc();
+
+    for (const auto& hspace : space_list) {
+      d1 = dynamic_view(Kokkos::view_alloc("d1", hspace), N);
+      s1 = static_view(Kokkos::view_alloc("s1", hspace));
+      u1 = unmanaged_view(d1.data(), N);
+      ASSERT_TRUE(d1.is_allocated());
+      ASSERT_TRUE(s1.is_allocated());
+      ASSERT_TRUE(u1.is_allocated());
+
+      get_area_membind(d1, set_d1);
+      get_area_membind(s1, set_s1);
+      get_area_membind(u1, set_u1);
+
+      // check that view's membind matches the hspace's one
+      ASSERT_TRUE(1 == hwloc_bitmap_isincluded(set_d1, hspace.get_membind_set()));
+      ASSERT_TRUE(1 == hwloc_bitmap_isincluded(set_s1, hspace.get_membind_set()));
+      ASSERT_TRUE(1 == hwloc_bitmap_isincluded(set_u1, hspace.get_membind_set()));
+    }
+
+    hwloc_bitmap_free(set_d1);
+    hwloc_bitmap_free(set_s1);
+    hwloc_bitmap_free(set_u1);
+  }
+#endif // KOKKOS_ENABLE_HWLOC
+
   static void test_mirror_copy_const_data_type() {
     using ExecutionSpace = typename DeviceType::execution_space;
     int const N          = 100;
@@ -880,6 +964,9 @@ struct TestViewMirror {
     test_mirror_copy<Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
     test_mirror_copy_const_data_type();
     test_allocated();
+#ifdef KOKKOS_ENABLE_HWLOC
+    test_allocated_hwloc();
+#endif // KOKKOS_ENABLE_HWLOC
     test_mirror_no_initialize<Kokkos::MemoryTraits<> >();
     test_mirror_no_initialize<Kokkos::MemoryTraits<Kokkos::Unmanaged> >();
   }
