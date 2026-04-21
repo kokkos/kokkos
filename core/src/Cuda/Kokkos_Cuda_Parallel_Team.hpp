@@ -198,8 +198,9 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     // These potential scenarios are addressed in an ad-hoc fashion by the
     // 16KiB "shared memory fudge factor"; more robust solutions to this
     // are being considered in #9089.
-    constexpr size_t max_possible_team_size              = 1024;
-    constexpr size_t ad_hoc_shared_memory_overallocation = 16 * 1024;
+    constexpr size_t max_possible_team_size = 1024;
+    constexpr size_t ad_hoc_shared_memory_overallocation =
+        static_cast<size_t>(16) * 1024;
     constexpr size_t max_reserved_shared_mem_per_team =
         (max_possible_team_size + 2) * sizeof(double) + sizeof(int64_t) +
         ad_hoc_shared_memory_overallocation;
