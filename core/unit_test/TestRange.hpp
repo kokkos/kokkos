@@ -362,7 +362,7 @@ struct TestStaticBatchSize {
 
 TEST(TEST_CATEGORY, range_dynamic_policy) {
 #if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
-    !defined(KOKKOS_ENABLE_SYCL)
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(0);
     f.test_dynamic_policy();
