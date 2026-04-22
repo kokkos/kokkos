@@ -11,6 +11,7 @@
 
 #include <Kokkos_Parallel.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 #include <Cuda/Kokkos_Cuda_Vectorization.hpp>
 
 //----------------------------------------------------------------------------
@@ -662,9 +663,15 @@ __device__ bool cuda_single_inter_block_reduce_scan(
     const FunctorType& functor, const Cuda::size_type block_id,
     const Cuda::size_type block_count, SizeType* const shared_data,
     SizeType* const global_data, Cuda::size_type* const global_flags) {
-  if (!DoScan && !std::is_pointer_v<typename FunctorType::reference_type>)
-    return Kokkos::Impl::CudaReductionsFunctor<
-        FunctorType, false, (sizeof(typename FunctorType::value_type) > 16)>::
+  using value_type = typename FunctorType::value_type;
+  constexpr bool is_half_wrapper =
+      Kokkos::Experimental::Impl::is_float16<value_type>::value ||
+      Kokkos::Experimental::Impl::is_bfloat16<value_type>::value;
+
+  if (!DoScan && !std::is_pointer_v<typename FunctorType::reference_type> &&
+      !is_half_wrapper)
+    return Kokkos::Impl::CudaReductionsFunctor<FunctorType, false,
+                                               (sizeof(value_type) > 16)>::
         scalar_inter_block_reduction(functor, block_id, block_count,
                                      shared_data, global_data, global_flags);
   else
