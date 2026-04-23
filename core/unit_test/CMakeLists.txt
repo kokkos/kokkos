@@ -146,6 +146,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       DeepCopy_Narrowing
       DeepCopy_SameArgument
       DeepCopyAlignment
+      Event
       ExecSpacePartitioning
       ExecSpaceThreadSafety
       FunctionAnnotationMacros
@@ -593,7 +594,9 @@ endif()
 
 if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
-    CoreUnitTest_Cuda1 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES1} cuda/TestCuda_ReducerViewSizeLimit.cpp
+    CoreUnitTest_Cuda1 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES1}
+    cuda/TestCuda_ReducerViewSizeLimit.cpp
+    cuda/TestCuda_CudaEvent.cpp
   )
 
   kokkos_add_executable_and_test(CoreUnitTest_Cuda2 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES2})
