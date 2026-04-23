@@ -136,7 +136,7 @@ struct Foo {
 // separate noinline device function breaks the inlining chain.
 #if defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA)
 KOKKOS_FUNCTION
-    __attribute__((noinline))
+__attribute__((noinline))
 #else
 KOKKOS_FUNCTION
 #endif
