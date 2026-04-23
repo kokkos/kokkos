@@ -34,7 +34,7 @@ namespace Impl {
       MemoryOrder order,                                                             \
       MemoryScope scope) {                                                           \
     using cas_t = atomic_compare_exchange_t<T>;                                      \
-    cas_t oldval = reinterpret_cast<cas_t&>(*dest);                                  \
+    cas_t oldval = *reinterpret_cast<cas_t*>(dest);                                  \
     cas_t assume = oldval;                                                           \
                                                                                      \
     do {                                                                             \
