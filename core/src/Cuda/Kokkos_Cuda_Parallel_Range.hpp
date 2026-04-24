@@ -99,7 +99,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     if constexpr (StaticBatchSize::batch_size != 1) {
       constexpr typename Policy::index_type batch_size =
           StaticBatchSize::batch_size;
-      nwork = range / batch_size + (range % batch_size == 0 ? 0 : 1);
+      nwork = (range + batch_size - 1) / batch_size;
     }
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
