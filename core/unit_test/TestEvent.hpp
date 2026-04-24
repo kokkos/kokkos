@@ -99,4 +99,33 @@ TEST(TEST_CATEGORY, event_move_semantics) {
   ASSERT_TRUE(evt2.is_complete());
 }
 
+TEST(TEST_CATEGORY, event_copy_semantics) {
+  using exec_space   = TEST_EXECSPACE;
+  using memory_space = typename exec_space::memory_space;
+  using view_type    = Kokkos::View<int*, memory_space>;
+
+  exec_space space_a;
+  exec_space space_b;
+  const int N = 1000;
+
+  view_type data("data", N);
+
+  Kokkos::parallel_for("fill", Kokkos::RangePolicy<exec_space>(space_a, 0, N),
+                       FillFunctor<view_type>{data});
+
+  Kokkos::Experimental::Event<exec_space> evt(space_a);
+  auto evt_copy = evt;
+
+  Kokkos::Experimental::space_depends_on(space_b, evt);
+  evt_copy.wait();
+
+  ASSERT_TRUE(evt_copy.is_complete());
+  ASSERT_TRUE(evt.is_complete());
+
+  auto h_data = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), data);
+  for (int i = 0; i < N; ++i) {
+    ASSERT_EQ(h_data(i), i + 1);
+  }
+}
+
 }  // namespace Test
