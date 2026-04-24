@@ -11,12 +11,12 @@
 /// API:
 ///   - space_depends_on(exec_space, event) — GPU-side dependency
 ///   (non-blocking on host)
-///   - event.wait()                        — host-side blocking synchronisation
+///   - event.fence()                       — host-side blocking synchronisation
 ///   - event.is_complete()                 — non-blocking query
 ///
 /// Currently only the CUDA backend provides a native implementation.
 /// For other backends the fallback records a fence on record() and
-/// space_depends_on / wait / is_complete are no-ops or trivially satisfied.
+/// space_depends_on / fence / is_complete are no-ops or trivially satisfied.
 
 #ifndef KOKKOS_EXPERIMENTAL_EVENT_HPP
 #define KOKKOS_EXPERIMENTAL_EVENT_HPP
@@ -45,7 +45,7 @@ namespace Experimental {
 ///  Portable fallback event for backends without native event support.
 ///
 /// On record(), a fence is issued so that subsequent space_depends_on()
-/// and wait() are trivially satisfied.  This preserves correctness at
+/// and fence() are trivially satisfied.  This preserves correctness at
 /// the cost of synchronisation -- the same trade-off existing Kokkos
 /// code already makes.
 ///
@@ -60,7 +60,7 @@ class Event {
 
   Event(const ExecutionSpace& exec_space) { record(exec_space); }
 
-  void wait() const { /* already fenced at record time */ }
+  void fence() const { /* already fenced at record time */ }
 
   bool is_complete() const { return true; }
 };
@@ -116,7 +116,7 @@ class Event<Kokkos::Cuda> {
         cudaEventRecord(m_handle->raw, exec_space.cuda_stream()));
   }
 
-  void wait() const {
+  void fence() const {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventSynchronize(m_handle->raw));
   }
 

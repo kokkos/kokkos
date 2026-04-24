@@ -110,15 +110,15 @@ TEST(TEST_CATEGORY, cuda_event_cross_stream_overlap) {
       << " s, Overlapped: " << t_overlap << " s";
 }
 
-// Verify that event.wait() blocks the host only until the recorded
+// Verify that event.fence() blocks the host only until the recorded
 // point, not until all later work on the stream completes.
 //
 // Timeline:
 //   stream: [short kernel] | event | [long kernel ~~~~~~~]
-//   host:    event.wait() returns here ^
+//   host:    event.fence() returns here ^
 //            stream.fence() returns here              ^
 //
-// If event.wait() were a full stream fence, t_event_wait ~ t_fence.
+// If event.fence() were a full stream fence, t_event_wait ~ t_fence.
 // With a real event, t_event_wait << t_fence.
 TEST(TEST_CATEGORY, cuda_event_host_wait_is_not_stream_fence) {
   // Match cuda_event_cross_stream_overlap long-kernel cost so host timers
@@ -151,7 +151,7 @@ TEST(TEST_CATEGORY, cuda_event_host_wait_is_not_stream_fence) {
 
   // Host waits on event -- should return before the long kernel finishes.
   Kokkos::Timer timer_evt;
-  evt.wait();
+  evt.fence();
   double t_event_wait = timer_evt.seconds();
 
   // Now fence the whole stream to get total time.
@@ -159,14 +159,14 @@ TEST(TEST_CATEGORY, cuda_event_host_wait_is_not_stream_fence) {
   stream.fence();
   double t_fence_after = timer_fence.seconds();
 
-  // The event wait should complete well before the remaining stream work.
-  // If the long kernel takes T, event.wait() should return ~0 while
-  // stream.fence() still takes ~T.  We check that event.wait() took
+  // The event fence should complete well before the remaining stream work.
+  // If the long kernel takes T, event.fence() should return ~0 while
+  // stream.fence() still takes ~T.  We check that event.fence() took
   // less than half of the total (event_wait + remaining fence).
   double t_total = t_event_wait + t_fence_after;
   EXPECT_LT(t_event_wait, t_total * 0.5)
-      << "event.wait() should return before the long kernel finishes.  "
-      << "event.wait(): " << t_event_wait
+      << "event.fence() should return before the long kernel finishes.  "
+      << "event.fence(): " << t_event_wait
       << " s, fence after: " << t_fence_after << " s";
 }
 
