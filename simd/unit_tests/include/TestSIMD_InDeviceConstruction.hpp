@@ -17,7 +17,7 @@ KOKKOS_INLINE_FUNCTION void test_simd_constructions() {
   using simd_type  = T;
   using value_type = typename simd_type::value_type;
 
-  value_type arr[1];
+  value_type arr[1] = {0};
 
   [[maybe_unused]] simd_type a{0};
   [[maybe_unused]] simd_type b(arr, Kokkos::Experimental::simd_flag_default);
@@ -42,9 +42,7 @@ template <typename T>
 KOKKOS_INLINE_FUNCTION void test_basic_simd_operators() {
   T a{0}, b{1};
   (void)(a[0]);
-  if constexpr (std::is_signed_v<typename T::value_type>) {
-    (void)(-a);
-  }
+  (void)(-a);
   (void)(a + b);
   (void)(a - b);
   (void)(a * b);

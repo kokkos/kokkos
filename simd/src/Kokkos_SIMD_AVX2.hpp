@@ -102,6 +102,7 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>
       basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -151,6 +152,7 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>
   impl_operator_ne(T const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
+#endif
 };
 
 template <>
@@ -221,6 +223,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>
       basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -269,6 +272,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>
   impl_operator_ne(T const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
+#endif
 };
 
 template <>
@@ -342,6 +346,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>
       basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -390,6 +395,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>
   impl_operator_ne(T const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
+#endif
 };
 
 template <>
@@ -458,6 +464,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>
       basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -507,6 +514,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>
   impl_operator_ne(T const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
+#endif
 };
 
 template <>
@@ -579,6 +587,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>
       basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -628,6 +637,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>
   impl_operator_ne(T const& rhs) const noexcept {
     return impl_operator_eq(rhs).impl_operator_lnot();
   }
+#endif
 };
 
 template <>
@@ -700,6 +710,7 @@ class basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>
       basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -749,6 +760,7 @@ class basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>
   impl_operator_ne(T const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
+#endif
 };
 
 template <>
@@ -821,6 +833,7 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
       basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -870,6 +883,7 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   impl_operator_ne(T const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
+#endif
 };
 
 KOKKOS_FORCEINLINE_FUNCTION
@@ -1078,8 +1092,8 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      [[maybe_unused]] const value_type* ptr, mask_type const& mask,
-      FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr,
+      [[maybe_unused]] mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_pd(
             ptr, _mm256_castpd_si256(static_cast<__m256d>(mask))))
@@ -1098,6 +1112,7 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
       basic_simd<double, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -1172,6 +1187,7 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(m_value),
                                    static_cast<__m256d>(rhs), _CMP_LT_OS));
   }
+#endif
 };
 
 }  // namespace Experimental
@@ -1419,8 +1435,8 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      [[maybe_unused]] const value_type* ptr, mask_type const& mask,
-      FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr,
+      [[maybe_unused]] mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(
             _mm_maskload_ps(ptr, _mm_castps_si128(static_cast<__m128>(mask))))
@@ -1439,6 +1455,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
       basic_simd<float, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -1503,6 +1520,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
   impl_operator_lt(T const& rhs) const noexcept {
     return mask_type(_mm_cmplt_ps(m_value, rhs.m_value));
   }
+#endif
 };
 
 }  // namespace Experimental
@@ -1748,8 +1766,8 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      [[maybe_unused]] const value_type* ptr, mask_type const& mask,
-      FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr,
+      [[maybe_unused]] mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_ps(
             ptr, _mm256_castps_si256(static_cast<__m256>(mask))))
@@ -1768,6 +1786,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
       basic_simd<float, simd_abi::avx2_fixed_size<8>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -1838,6 +1857,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
     return mask_type(_mm256_cmp_ps(static_cast<__m256>(m_value),
                                    static_cast<__m256>(rhs), _CMP_LT_OS));
   }
+#endif
 };
 
 }  // namespace Experimental
@@ -2085,8 +2105,8 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      [[maybe_unused]] const value_type* ptr, mask_type const& mask,
-      FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr,
+      [[maybe_unused]] mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm_maskload_epi32(ptr, static_cast<__m128i>(mask)))
 #endif
@@ -2104,6 +2124,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
       basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -2222,6 +2243,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
   impl_operator_le(T const& rhs) const noexcept {
     return impl_operator_lt(rhs) || impl_operator_eq(rhs);
   }
+#endif
 };
 
 }  // namespace Experimental
@@ -2425,8 +2447,8 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      [[maybe_unused]] const value_type* ptr, mask_type const& mask,
-      FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr,
+      [[maybe_unused]] mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_epi32(ptr, static_cast<__m256i>(mask)))
 #endif
@@ -2444,6 +2466,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
       basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -2560,6 +2583,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
   impl_operator_lt(T const& rhs) const noexcept {
     return !impl_operator_ge(rhs);
   }
+#endif
 };
 
 }  // namespace Experimental
@@ -2761,8 +2785,8 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      [[maybe_unused]] const value_type* ptr, mask_type const& mask,
-      FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr,
+      [[maybe_unused]] mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                       static_cast<__m256i>(mask)))
@@ -2781,6 +2805,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
       basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -2899,6 +2924,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
   impl_operator_lt(T const& rhs) const noexcept {
     return !impl_operator_ge(rhs);
   }
+#endif
 };
 
 }  // namespace Experimental
@@ -3108,8 +3134,8 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   }
   template <typename FlagType>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      [[maybe_unused]] const value_type* ptr, mask_type const& mask,
-      FlagType) noexcept
+      [[maybe_unused]] const value_type* ptr,
+      [[maybe_unused]] mask_type const& mask, FlagType) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
       : m_value(_mm256_maskload_epi64(reinterpret_cast<long long const*>(ptr),
                                       static_cast<__m256i>(mask)))
@@ -3128,6 +3154,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
       basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>>;
 #endif
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
   template <typename T = value_type>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
   impl_subscript_operator(Impl::simd_size_t i) const {
@@ -3146,7 +3173,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 
   template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(static_cast<__m256i>(m_value));
+    return T(~value_type(0)) - m_value;
   }
   template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
@@ -3258,6 +3285,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
   impl_operator_lt(T const& rhs) const noexcept {
     return rhs > m_value;
   }
+#endif
 };
 
 }  // namespace Experimental

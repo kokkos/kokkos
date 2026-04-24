@@ -5,7 +5,7 @@
 #define KOKKOS_SIMD_BASE_HPP
 
 #include <Kokkos_SIMD_Common.hpp>
-#include "impl/Kokkos_SIMD_Impl_Macros.hpp"
+#include <impl/Kokkos_SIMD_Impl_Macros.hpp>
 
 #ifdef KOKKOS_SIMD_COMMON_MATH_HPP
 #error \
@@ -71,13 +71,13 @@ class basic_simd_base {
   KOKKOS_SIMD_IMPL_BINARY_OPERATOR(^, operator_xor, Derived const&,
                                    Derived const&)
   KOKKOS_SIMD_IMPL_BINARY_OPERATOR(<<, operator_sll, Derived const&,
-                                   Impl::simd_size_t)
-  KOKKOS_SIMD_IMPL_BINARY_OPERATOR(<<, operator_sll, Derived const&,
                                    Derived const&)
   KOKKOS_SIMD_IMPL_BINARY_OPERATOR(>>, operator_sra, Derived const&,
-                                   Impl::simd_size_t)
-  KOKKOS_SIMD_IMPL_BINARY_OPERATOR(>>, operator_sra, Derived const&,
                                    Derived const&)
+  KOKKOS_SIMD_IMPL_SHIFT_SCALAR_OPERATOR(<<, operator_sll, Derived const&,
+                                         Impl::simd_size_t)
+  KOKKOS_SIMD_IMPL_SHIFT_SCALAR_OPERATOR(>>, operator_sra, Derived const&,
+                                         Impl::simd_size_t)
 
   KOKKOS_SIMD_IMPL_COMPOUND_ASSIGNMENT_OPERATOR(+=, operator_pluseq,
                                                 Derived const&)
@@ -97,6 +97,12 @@ class basic_simd_base {
                                                 Derived const&)
   KOKKOS_SIMD_IMPL_COMPOUND_ASSIGNMENT_OPERATOR(>>=, operator_sraeq,
                                                 Derived const&)
+  KOKKOS_SIMD_IMPL_SHIFT_SCALAR_ASSIGN_OPERATOR(<<=, operator_slleq,
+                                                Derived const&,
+                                                Impl::simd_size_t)
+  KOKKOS_SIMD_IMPL_SHIFT_SCALAR_ASSIGN_OPERATOR(>>=, operator_sraeq,
+                                                Derived const&,
+                                                Impl::simd_size_t)
 
   KOKKOS_SIMD_IMPL_COMPARISON_OPERATOR(==, operator_eq, Derived const&)
   KOKKOS_SIMD_IMPL_COMPARISON_OPERATOR(!=, operator_ne, Derived const&)
