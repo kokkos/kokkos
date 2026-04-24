@@ -103,53 +103,47 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     return (_mm256_movemask_pd(m_value) & (1 << i)) != 0;
   }
 
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_lnot() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lnot() const noexcept {
     return impl_operator_bnot();
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_pd(m_value, T(true).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bnot() const noexcept {
+    return basic_simd_mask(
+        _mm256_andnot_pd(m_value, basic_simd_mask(true).m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_land(T const& rhs) const noexcept {
-    return T(_mm256_and_pd(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_land(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_pd(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_lor(T const& rhs) const noexcept {
-    return T(_mm256_or_pd(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_pd(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_pd(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_band(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_pd(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_pd(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_pd(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_pd(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_xor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_xor_pd(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_eq(T const& rhs) const noexcept {
-    return T(_mm256_movemask_pd(m_value) == _mm256_movemask_pd(rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_eq(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_movemask_pd(m_value) ==
+                           _mm256_movemask_pd(rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_ne(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_ne(basic_simd_mask const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
 #endif
@@ -224,52 +218,46 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     return (_mm_movemask_ps(m_value) & (1 << i)) != 0;
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_lnot() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lnot() const noexcept {
     return impl_operator_bnot();
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm_andnot_ps(m_value, T(true).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bnot() const noexcept {
+    return basic_simd_mask(
+        _mm_andnot_ps(m_value, basic_simd_mask(true).m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_land(T const& rhs) const noexcept {
-    return T(_mm_and_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_land(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_and_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_lor(T const& rhs) const noexcept {
-    return T(_mm_or_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_or_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm_and_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_band(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_and_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm_or_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_or_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm_xor_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_xor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_xor_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_eq(T const& rhs) const noexcept {
-    return T(_mm_movemask_ps(m_value) == _mm_movemask_ps(rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_eq(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_movemask_ps(m_value) ==
+                           _mm_movemask_ps(rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_ne(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_ne(basic_simd_mask const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
 #endif
@@ -347,52 +335,46 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     return (_mm256_movemask_ps(m_value) & (1 << i)) != 0;
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_lnot() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lnot() const noexcept {
     return impl_operator_bnot();
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_ps(m_value, T(true).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bnot() const noexcept {
+    return basic_simd_mask(
+        _mm256_andnot_ps(m_value, basic_simd_mask(true).m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_land(T const& rhs) const noexcept {
-    return T(_mm256_and_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_land(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_lor(T const& rhs) const noexcept {
-    return T(_mm256_or_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_band(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_xor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_xor_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_eq(T const& rhs) const noexcept {
-    return T(_mm256_movemask_ps(m_value) == _mm256_movemask_ps(rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_eq(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_movemask_ps(m_value) ==
+                           _mm256_movemask_ps(rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_ne(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_ne(basic_simd_mask const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
 #endif
@@ -465,53 +447,46 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     return (_mm_movemask_ps(_mm_castsi128_ps(m_value)) & (1 << i)) != 0;
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_lnot() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lnot() const noexcept {
     return impl_operator_bnot();
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm_andnot_si128(m_value, T(true).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bnot() const noexcept {
+    return basic_simd_mask(
+        _mm_andnot_si128(m_value, basic_simd_mask(true).m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_land(T const& rhs) const noexcept {
-    return T(_mm_and_si128(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_land(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_and_si128(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_lor(T const& rhs) const noexcept {
-    return T(_mm_or_si128(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_or_si128(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm_and_si128(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_band(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_and_si128(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm_or_si128(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_or_si128(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm_xor_si128(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_xor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_xor_si128(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_eq(T const& rhs) const noexcept {
-    return T(_mm_movemask_ps(_mm_castsi128_ps(m_value)) ==
-             _mm_movemask_ps(_mm_castsi128_ps(rhs.m_value)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_eq(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm_movemask_ps(_mm_castsi128_ps(m_value)) ==
+                           _mm_movemask_ps(_mm_castsi128_ps(rhs.m_value)));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_ne(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_ne(basic_simd_mask const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
 #endif
@@ -588,53 +563,47 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     return (_mm256_movemask_ps(_mm256_castsi256_ps(m_value)) & (1 << i)) != 0;
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_lnot() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lnot() const noexcept {
     return impl_operator_bnot();
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_si256(m_value, T(true).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bnot() const noexcept {
+    return basic_simd_mask(
+        _mm256_andnot_si256(m_value, basic_simd_mask(true).m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_land(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_land(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_lor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_band(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_xor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_xor_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_eq(T const& rhs) const noexcept {
-    return T(_mm256_movemask_ps(_mm256_castsi256_ps(m_value)) ==
-             _mm256_movemask_ps(_mm256_castsi256_ps(rhs.m_value)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_eq(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(
+        _mm256_movemask_ps(_mm256_castsi256_ps(m_value)) ==
+        _mm256_movemask_ps(_mm256_castsi256_ps(rhs.m_value)));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_ne(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_ne(basic_simd_mask const& rhs) const noexcept {
     return impl_operator_eq(rhs).impl_operator_lnot();
   }
 #endif
@@ -711,53 +680,47 @@ class basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     return (_mm256_movemask_pd(_mm256_castsi256_pd(m_value)) & (1 << i)) != 0;
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_lnot() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lnot() const noexcept {
     return impl_operator_bnot();
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_si256(m_value, T(true).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bnot() const noexcept {
+    return basic_simd_mask(
+        _mm256_andnot_si256(m_value, basic_simd_mask(true).m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_land(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_land(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_lor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_band(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_xor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_xor_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_eq(T const& rhs) const noexcept {
-    return T(_mm256_movemask_pd(_mm256_castsi256_pd(m_value)) ==
-             _mm256_movemask_pd(_mm256_castsi256_pd(rhs.m_value)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_eq(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(
+        _mm256_movemask_pd(_mm256_castsi256_pd(m_value)) ==
+        _mm256_movemask_pd(_mm256_castsi256_pd(rhs.m_value)));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_ne(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_ne(basic_simd_mask const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
 #endif
@@ -834,53 +797,47 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     return (_mm256_movemask_pd(_mm256_castsi256_pd(m_value)) & (1 << i)) != 0;
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_lnot() const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lnot() const noexcept {
     return impl_operator_bnot();
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_si256(m_value, T(true).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bnot() const noexcept {
+    return basic_simd_mask(
+        _mm256_andnot_si256(m_value, basic_simd_mask(true).m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_lor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_lor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_land(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_land(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_band(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_and_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_bor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_or_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_si256(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_xor(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(_mm256_xor_si256(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_eq(T const& rhs) const noexcept {
-    return T(_mm256_movemask_pd(_mm256_castsi256_pd(m_value)) ==
-             _mm256_movemask_pd(_mm256_castsi256_pd(rhs.m_value)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_eq(basic_simd_mask const& rhs) const noexcept {
+    return basic_simd_mask(
+        _mm256_movemask_pd(_mm256_castsi256_pd(m_value)) ==
+        _mm256_movemask_pd(_mm256_castsi256_pd(rhs.m_value)));
   }
-  template <typename T = basic_simd_mask>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_ne(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask
+  impl_operator_ne(basic_simd_mask const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
 #endif
@@ -1113,77 +1070,67 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     value_type tmp[size()];
     _mm256_storeu_pd(tmp, m_value);
     return tmp[i];
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(_mm256_sub_pd(_mm256_set1_pd(0.0), static_cast<__m256d>(m_value)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_neg() const noexcept {
+    return basic_simd(
+        _mm256_sub_pd(_mm256_set1_pd(0.0), static_cast<__m256d>(m_value)));
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_plus(T const& rhs) const noexcept {
-    return T(_mm256_add_pd(static_cast<__m256d>(m_value),
-                           static_cast<__m256d>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_plus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_add_pd(static_cast<__m256d>(m_value),
+                                    static_cast<__m256d>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_minus(T const& rhs) const noexcept {
-    return T(_mm256_sub_pd(static_cast<__m256d>(m_value),
-                           static_cast<__m256d>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_minus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_sub_pd(static_cast<__m256d>(m_value),
+                                    static_cast<__m256d>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_mul(T const& rhs) const noexcept {
-    return T(_mm256_mul_pd(static_cast<__m256d>(m_value),
-                           static_cast<__m256d>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_mul(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_mul_pd(static_cast<__m256d>(m_value),
+                                    static_cast<__m256d>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_div(T const& rhs) const noexcept {
-    return T(_mm256_div_pd(static_cast<__m256d>(m_value),
-                           static_cast<__m256d>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_div(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_div_pd(static_cast<__m256d>(m_value),
+                                    static_cast<__m256d>(rhs)));
   }
 
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_eq(T const& rhs) const noexcept {
+  impl_operator_eq(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(m_value),
                                    static_cast<__m256d>(rhs), _CMP_EQ_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ne(T const& rhs) const noexcept {
+  impl_operator_ne(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(m_value),
                                    static_cast<__m256d>(rhs), _CMP_NEQ_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ge(T const& rhs) const noexcept {
+  impl_operator_ge(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(m_value),
                                    static_cast<__m256d>(rhs), _CMP_GE_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_le(T const& rhs) const noexcept {
+  impl_operator_le(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(m_value),
                                    static_cast<__m256d>(rhs), _CMP_LE_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_gt(T const& rhs) const noexcept {
+  impl_operator_gt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(m_value),
                                    static_cast<__m256d>(rhs), _CMP_GT_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_lt(T const& rhs) const noexcept {
+  impl_operator_lt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_pd(static_cast<__m256d>(m_value),
                                    static_cast<__m256d>(rhs), _CMP_LT_OS));
   }
@@ -1456,68 +1403,57 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     auto index = _mm_cvtsi32_si128(i);
     auto tmp   = _mm_permutevar_ps(m_value, index);
     return _mm_cvtss_f32(tmp);
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(_mm_sub_ps(_mm_set1_ps(0.0), m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_neg() const noexcept {
+    return basic_simd(_mm_sub_ps(_mm_set1_ps(0.0), m_value));
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_plus(T const& rhs) const noexcept {
-    return T(_mm_add_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_plus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_add_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_minus(T const& rhs) const noexcept {
-    return T(_mm_sub_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_minus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_sub_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_mul(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_mul(basic_simd const& rhs) const noexcept {
     return basic_simd(_mm_mul_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_div(T const& rhs) const noexcept {
-    return T(_mm_div_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_div(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_div_ps(m_value, rhs.m_value));
   }
 
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_eq(T const& rhs) const noexcept {
+  impl_operator_eq(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmpeq_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ne(T const& rhs) const noexcept {
+  impl_operator_ne(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmpneq_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ge(T const& rhs) const noexcept {
+  impl_operator_ge(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmpge_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_le(T const& rhs) const noexcept {
+  impl_operator_le(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmple_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_gt(T const& rhs) const noexcept {
+  impl_operator_gt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmpgt_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_lt(T const& rhs) const noexcept {
+  impl_operator_lt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmplt_ps(m_value, rhs.m_value));
   }
 #endif
@@ -1787,73 +1723,62 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     auto index = _mm256_set1_epi32(i);
     auto tmp   = _mm256_permutevar8x32_ps(m_value, index);
     return _mm256_cvtss_f32(tmp);
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(_mm256_sub_ps(_mm256_set1_ps(0.0), m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_neg() const noexcept {
+    return basic_simd(_mm256_sub_ps(_mm256_set1_ps(0.0), m_value));
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_plus(T const& rhs) const noexcept {
-    return T(_mm256_add_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_plus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_add_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_minus(T const& rhs) const noexcept {
-    return T(_mm256_sub_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_minus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_sub_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_mul(T const& rhs) const noexcept {
-    return T(_mm256_mul_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_mul(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_mul_ps(m_value, rhs.m_value));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_div(T const& rhs) const noexcept {
-    return T(_mm256_div_ps(m_value, rhs.m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_div(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_div_ps(m_value, rhs.m_value));
   }
 
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_eq(T const& rhs) const noexcept {
+  impl_operator_eq(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_ps(static_cast<__m256>(m_value),
                                    static_cast<__m256>(rhs), _CMP_EQ_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ne(T const& rhs) const noexcept {
+  impl_operator_ne(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_ps(static_cast<__m256>(m_value),
                                    static_cast<__m256>(rhs), _CMP_NEQ_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ge(T const& rhs) const noexcept {
+  impl_operator_ge(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_ps(static_cast<__m256>(m_value),
                                    static_cast<__m256>(rhs), _CMP_GE_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_le(T const& rhs) const noexcept {
+  impl_operator_le(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_ps(static_cast<__m256>(m_value),
                                    static_cast<__m256>(rhs), _CMP_LE_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_gt(T const& rhs) const noexcept {
+  impl_operator_gt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_ps(static_cast<__m256>(m_value),
                                    static_cast<__m256>(rhs), _CMP_GT_OS));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_lt(T const& rhs) const noexcept {
+  impl_operator_lt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmp_ps(static_cast<__m256>(m_value),
                                    static_cast<__m256>(rhs), _CMP_LT_OS));
   }
@@ -2125,8 +2050,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     switch (i) {
       case 0: return _mm_extract_epi32(m_value, 0x0);
@@ -2142,105 +2066,91 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
 #endif
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(_mm_sub_epi32(_mm_set1_epi32(0), static_cast<__m128i>(m_value)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_neg() const noexcept {
+    return basic_simd(
+        _mm_sub_epi32(_mm_set1_epi32(0), static_cast<__m128i>(m_value)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm_andnot_si128(m_value, T(~value_type(0)).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bnot() const noexcept {
+    return basic_simd(
+        _mm_andnot_si128(m_value, basic_simd(~value_type(0)).m_value));
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_plus(T const& rhs) const noexcept {
-    return T(_mm_add_epi32(static_cast<__m128i>(m_value),
-                           static_cast<__m128i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_plus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_add_epi32(static_cast<__m128i>(m_value),
+                                    static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_minus(T const& rhs) const noexcept {
-    return T(_mm_sub_epi32(static_cast<__m128i>(m_value),
-                           static_cast<__m128i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_minus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_sub_epi32(static_cast<__m128i>(m_value),
+                                    static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_mul(T const& rhs) const noexcept {
-    return T(_mm_mullo_epi32(static_cast<__m128i>(m_value),
-                             static_cast<__m128i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_mul(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_mullo_epi32(static_cast<__m128i>(m_value),
+                                      static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm_and_si128(static_cast<__m128i>(m_value),
-                           static_cast<__m128i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_band(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_and_si128(static_cast<__m128i>(m_value),
+                                    static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bor(basic_simd const& rhs) const noexcept {
+    return basic_simd(
         _mm_or_si128(static_cast<__m128i>(m_value), static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm_xor_si128(static_cast<__m128i>(m_value),
-                           static_cast<__m128i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_xor(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_xor_si128(static_cast<__m128i>(m_value),
+                                    static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sll(T const& rhs) const noexcept {
-    return T(_mm_sllv_epi32(static_cast<__m128i>(m_value),
-                            static_cast<__m128i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sll(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_sllv_epi32(static_cast<__m128i>(m_value),
+                                     static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sra(T const& rhs) const noexcept {
-    return T(_mm_srav_epi32(static_cast<__m128i>(m_value),
-                            static_cast<__m128i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sra(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm_srav_epi32(static_cast<__m128i>(m_value),
+                                     static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sll(int rhs) const noexcept {
-    return T(_mm_slli_epi32(static_cast<__m128i>(m_value), rhs));
+    return basic_simd(_mm_slli_epi32(static_cast<__m128i>(m_value), rhs));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sra(int rhs) const noexcept {
-    return T(_mm_srai_epi32(static_cast<__m128i>(m_value), rhs));
+    return basic_simd(_mm_srai_epi32(static_cast<__m128i>(m_value), rhs));
   }
 
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_eq(T const& rhs) const noexcept {
+  impl_operator_eq(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmpeq_epi32(static_cast<__m128i>(m_value),
                                      static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ne(T const& rhs) const noexcept {
+  impl_operator_ne(basic_simd const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_lt(T const& rhs) const noexcept {
+  impl_operator_lt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmplt_epi32(static_cast<__m128i>(m_value),
                                      static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_gt(T const& rhs) const noexcept {
+  impl_operator_gt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm_cmpgt_epi32(static_cast<__m128i>(m_value),
                                      static_cast<__m128i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ge(T const& rhs) const noexcept {
+  impl_operator_ge(basic_simd const& rhs) const noexcept {
     return impl_operator_gt(rhs) || impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_le(T const& rhs) const noexcept {
+  impl_operator_le(basic_simd const& rhs) const noexcept {
     return impl_operator_lt(rhs) || impl_operator_eq(rhs);
   }
 #endif
@@ -2467,8 +2377,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
 // _mm256_cvtsi256_si32 was not added in GCC until 11
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
@@ -2482,105 +2391,90 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
 #endif
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_neg() const noexcept {
+    return basic_simd(
         _mm256_sub_epi32(_mm256_set1_epi32(0), static_cast<__m256i>(m_value)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_si256(m_value, T(~value_type(0)).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bnot() const noexcept {
+    return basic_simd(
+        _mm256_andnot_si256(m_value, basic_simd(~value_type(0)).m_value));
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_plus(T const& rhs) const noexcept {
-    return T(_mm256_add_epi32(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_plus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_add_epi32(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_minus(T const& rhs) const noexcept {
-    return T(_mm256_sub_epi32(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_minus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_sub_epi32(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_mul(T const& rhs) const noexcept {
-    return T(_mm256_mullo_epi32(static_cast<__m256i>(m_value),
-                                static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_mul(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_mullo_epi32(static_cast<__m256i>(m_value),
+                                         static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_band(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_and_si256(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(static_cast<__m256i>(m_value),
-                             static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bor(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_or_si256(static_cast<__m256i>(m_value),
+                                      static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_si256(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_xor(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_xor_si256(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sll(T const& rhs) const noexcept {
-    return T(_mm256_sllv_epi32(static_cast<__m256i>(m_value),
-                               static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sll(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_sllv_epi32(static_cast<__m256i>(m_value),
+                                        static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sra(T const& rhs) const noexcept {
-    return T(_mm256_srav_epi32(static_cast<__m256i>(m_value),
-                               static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sra(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_srav_epi32(static_cast<__m256i>(m_value),
+                                        static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sll(Impl::simd_size_t rhs) const noexcept {
-    return T(_mm256_slli_epi32(static_cast<__m256i>(m_value), rhs));
+    return basic_simd(_mm256_slli_epi32(static_cast<__m256i>(m_value), rhs));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sra(Impl::simd_size_t rhs) const noexcept {
-    return T(_mm256_srai_epi32(static_cast<__m256i>(m_value), rhs));
+    return basic_simd(_mm256_srai_epi32(static_cast<__m256i>(m_value), rhs));
   }
 
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_eq(T const& rhs) const noexcept {
+  impl_operator_eq(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmpeq_epi32(static_cast<__m256i>(m_value),
                                         static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ne(T const& rhs) const noexcept {
+  impl_operator_ne(basic_simd const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ge(T const& rhs) const noexcept {
+  impl_operator_ge(basic_simd const& rhs) const noexcept {
     return impl_operator_gt(rhs) || impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_le(T const& rhs) const noexcept {
+  impl_operator_le(basic_simd const& rhs) const noexcept {
     return impl_operator_lt(rhs) || impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_gt(T const& rhs) const noexcept {
+  impl_operator_gt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmpgt_epi32(static_cast<__m256i>(m_value),
                                         static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_lt(T const& rhs) const noexcept {
+  impl_operator_lt(basic_simd const& rhs) const noexcept {
     return !impl_operator_ge(rhs);
   }
 #endif
@@ -2806,8 +2700,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     switch (i) {
       case 0: return _mm256_extract_epi64(m_value, 0x0);
@@ -2818,110 +2711,96 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
     }
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_neg() const noexcept {
+    return basic_simd(
         _mm256_sub_epi64(_mm256_set1_epi64x(0), static_cast<__m256i>(m_value)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_si256(m_value, T(~value_type(0)).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bnot() const noexcept {
+    return basic_simd(
+        _mm256_andnot_si256(m_value, basic_simd(~value_type(0)).m_value));
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_plus(T const& rhs) const noexcept {
-    return T(_mm256_add_epi64(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_plus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_add_epi64(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_minus(T const& rhs) const noexcept {
-    return T(_mm256_sub_epi64(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_minus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_sub_epi64(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
   // fallback basic_simd multiplication using generator constructor
   // multiplying vectors of 64-bit signed integers is not available in AVX2
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_mul(T const& rhs) const noexcept {
-    return T([&](Impl::simd_size_t i) { return m_value[i] * rhs[i]; });
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_mul(basic_simd const& rhs) const noexcept {
+    return basic_simd([&](Impl::simd_size_t i) { return m_value[i] * rhs[i]; });
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_band(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_and_si256(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(static_cast<__m256i>(m_value),
-                             static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bor(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_or_si256(static_cast<__m256i>(m_value),
+                                      static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_si256(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_xor(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_xor_si256(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sll(T const& rhs) const noexcept {
-    return T(_mm256_sllv_epi64(static_cast<__m256i>(m_value),
-                               static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sll(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_sllv_epi64(static_cast<__m256i>(m_value),
+                                        static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
   // fallback basic_simd shift right arithmetic using generator constructor
   // Shift right arithmetic for 64bit packed ints is not availalbe in AVX2
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sra(T const& rhs) const noexcept {
-    return T([&](Impl::simd_size_t i) { return m_value[i] >> rhs[i]; });
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sra(basic_simd const& rhs) const noexcept {
+    return basic_simd(
+        [&](Impl::simd_size_t i) { return m_value[i] >> rhs[i]; });
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sll(Impl::simd_size_t rhs) const noexcept {
-    return T(_mm256_slli_epi64(static_cast<__m256i>(m_value), rhs));
+    return basic_simd(_mm256_slli_epi64(static_cast<__m256i>(m_value), rhs));
   }
   // fallback basic_simd shift right arithmetic using generator constructor
   // Shift right arithmetic for 64bit packed ints is not availalbe in AVX2
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sra(Impl::simd_size_t rhs) const noexcept {
-    return T([&](Impl::simd_size_t i) { return m_value[i] >> rhs; });
+    return basic_simd([&](Impl::simd_size_t i) { return m_value[i] >> rhs; });
   }
 
   // AVX2 only has eq and gt comparisons for int64
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_eq(T const& rhs) const noexcept {
+  impl_operator_eq(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmpeq_epi64(static_cast<__m256i>(m_value),
                                         static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ne(T const& rhs) const noexcept {
+  impl_operator_ne(basic_simd const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ge(T const& rhs) const noexcept {
+  impl_operator_ge(basic_simd const& rhs) const noexcept {
     return impl_operator_gt(rhs) || impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_le(T const& rhs) const noexcept {
+  impl_operator_le(basic_simd const& rhs) const noexcept {
     return impl_operator_lt(rhs) || impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_gt(T const& rhs) const noexcept {
+  impl_operator_gt(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmpgt_epi64(static_cast<__m256i>(m_value),
                                         static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_lt(T const& rhs) const noexcept {
+  impl_operator_lt(basic_simd const& rhs) const noexcept {
     return !impl_operator_ge(rhs);
   }
 #endif
@@ -3155,8 +3034,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 #endif
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-  template <typename T = value_type>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION value_type
   impl_subscript_operator(Impl::simd_size_t i) const {
     switch (i) {
       case 0: return _mm256_extract_epi64(m_value, 0x0);
@@ -3171,99 +3049,85 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 #endif
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_neg() const noexcept {
-    return T(~value_type(0)) - m_value;
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_neg() const noexcept {
+    return basic_simd(~value_type(0)) - m_value;
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T impl_operator_bnot() const noexcept {
-    return T(_mm256_andnot_si256(m_value, T(~value_type(0)).m_value));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bnot() const noexcept {
+    return basic_simd(
+        _mm256_andnot_si256(m_value, basic_simd(~value_type(0)).m_value));
   }
 
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_plus(T const& rhs) const noexcept {
-    return T(_mm256_add_epi64(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_plus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_add_epi64(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_minus(T const& rhs) const noexcept {
-    return T(_mm256_sub_epi64(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_minus(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_sub_epi64(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
   // fallback basic_simd multiplication using generator constructor
   // multiplying vectors of 64-bit unsigned integers is not available in AVX2
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_mul(T const& rhs) const noexcept {
-    return T([&](Impl::simd_size_t i) { return m_value[i] * rhs[i]; });
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_mul(basic_simd const& rhs) const noexcept {
+    return basic_simd([&](Impl::simd_size_t i) { return m_value[i] * rhs[i]; });
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_band(T const& rhs) const noexcept {
-    return T(_mm256_and_si256(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_band(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_and_si256(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_bor(T const& rhs) const noexcept {
-    return T(_mm256_or_si256(static_cast<__m256i>(m_value),
-                             static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_bor(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_or_si256(static_cast<__m256i>(m_value),
+                                      static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_xor(T const& rhs) const noexcept {
-    return T(_mm256_xor_si256(static_cast<__m256i>(m_value),
-                              static_cast<__m256i>(rhs)));
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_xor(basic_simd const& rhs) const noexcept {
+    return basic_simd(_mm256_xor_si256(static_cast<__m256i>(m_value),
+                                       static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sll(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sll(basic_simd const& rhs) const noexcept {
     return _mm256_sllv_epi64(static_cast<__m256i>(m_value),
                              static_cast<__m256i>(rhs));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
-  impl_operator_sra(T const& rhs) const noexcept {
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
+  impl_operator_sra(basic_simd const& rhs) const noexcept {
     return _mm256_srlv_epi64(static_cast<__m256i>(m_value),
                              static_cast<__m256i>(rhs));
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sll(Impl::simd_size_t rhs) const noexcept {
     return _mm256_slli_epi64(static_cast<__m256i>(m_value), rhs);
   }
-  template <typename T = basic_simd>
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd
   impl_operator_sra(Impl::simd_size_t rhs) const noexcept {
     return _mm256_srli_epi64(static_cast<__m256i>(m_value), rhs);
   }
 
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_eq(T const& rhs) const noexcept {
+  impl_operator_eq(basic_simd const& rhs) const noexcept {
     return mask_type(_mm256_cmpeq_epi64(static_cast<__m256i>(m_value),
                                         static_cast<__m256i>(rhs)));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ne(T const& rhs) const noexcept {
+  impl_operator_ne(basic_simd const& rhs) const noexcept {
     return !impl_operator_eq(rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_ge(T const& rhs) const noexcept {
+  impl_operator_ge(basic_simd const& rhs) const noexcept {
     return !(m_value < rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_le(T const& rhs) const noexcept {
+  impl_operator_le(basic_simd const& rhs) const noexcept {
     return !(m_value > rhs);
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_gt(T const& rhs) const noexcept {
+  impl_operator_gt(basic_simd const& rhs) const noexcept {
     // We use the following bit trick to compute the unsigned comparison from
     // the signed values since there is no intrinsic for unsigned int comparison
     // in AVX2: (a < 0) ^ (b < 0) ^ (a > b)
@@ -3280,9 +3144,8 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
     return static_cast<mask_type>((signed_lhs < 0) ^ (signed_rhs < 0) ^
                                   (signed_lhs > signed_rhs));
   }
-  template <typename T = basic_simd>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION mask_type
-  impl_operator_lt(T const& rhs) const noexcept {
+  impl_operator_lt(basic_simd const& rhs) const noexcept {
     return rhs > m_value;
   }
 #endif
