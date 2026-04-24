@@ -28,7 +28,7 @@ TEST(TEST_CATEGORY, event_record_and_wait) {
 
   Kokkos::Experimental::Event<exec_space> evt;
   evt.record(space);
-  evt.wait();
+  evt.fence();
 
   auto h_data = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), data);
   for (int i = 0; i < N; ++i) {
@@ -43,7 +43,7 @@ TEST(TEST_CATEGORY, event_is_complete) {
 
   Kokkos::Experimental::Event<exec_space> evt;
   evt.record(space);
-  evt.wait();
+  evt.fence();
 
   ASSERT_TRUE(evt.is_complete());
 }
@@ -95,7 +95,7 @@ TEST(TEST_CATEGORY, event_move_semantics) {
 
   Kokkos::Experimental::Event<exec_space> evt2(std::move(evt1));
 
-  evt2.wait();
+  evt2.fence();
   ASSERT_TRUE(evt2.is_complete());
 }
 
@@ -117,7 +117,7 @@ TEST(TEST_CATEGORY, event_copy_semantics) {
   auto evt_copy = evt;
 
   Kokkos::Experimental::space_depends_on(space_b, evt);
-  evt_copy.wait();
+  evt_copy.fence();
 
   ASSERT_TRUE(evt_copy.is_complete());
   ASSERT_TRUE(evt.is_complete());
