@@ -424,9 +424,6 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     KOKKOS_EXPECTS(!bool(graph_node));
 
     if (!Impl::is_empty_launch(grid, block)) {
-      Impl::check_shmem_request(cuda_instance, shmem);
-      Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
-          cuda_instance, base_t::get_kernel_func(), shmem);
       if constexpr (DriverType::Policy::
                         experimental_contains_desired_occupancy) {
         int desired_occupancy =
@@ -436,6 +433,9 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
             cuda_instance->m_cudaDev, base_t::get_kernel_func(),
             cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
       }
+      Impl::check_shmem_request(cuda_instance, shmem);
+      Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
+          cuda_instance, base_t::get_kernel_func(), shmem);
 
       void const* args[] = {&driver};
 
@@ -532,9 +532,6 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
     KOKKOS_EXPECTS(!bool(graph_node));
 
     if (!Impl::is_empty_launch(grid, block)) {
-      Impl::check_shmem_request(cuda_instance, shmem);
-      Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
-          cuda_instance, base_t::get_kernel_func(), shmem);
       if constexpr (DriverType::Policy::
                         experimental_contains_desired_occupancy) {
         int desired_occupancy =
@@ -544,6 +541,9 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
             cuda_instance, base_t::get_kernel_func(), block_size, shmem,
             desired_occupancy);
       }
+      Impl::check_shmem_request(cuda_instance, shmem);
+      Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
+          cuda_instance, base_t::get_kernel_func(), shmem);
 
       auto* driver_ptr = Impl::allocate_driver_storage_for_kernel(
           CudaSpace::impl_create(cuda_instance->m_cudaDev,
