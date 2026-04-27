@@ -73,6 +73,9 @@
 // implementation of the RAII wrapper is using Kokkos::single.
 #include <Kokkos_AcquireUniqueTokenImpl.hpp>
 
+// RangePolicy parallel_for for team/thread handles (see header comment).
+#include <Kokkos_Parallel_RangePolicyHandles.hpp>
+
 //----------------------------------------------------------------------------
 // Redefinition of the macros min and max if we pushed them at entry of
 // Kokkos_Core.hpp

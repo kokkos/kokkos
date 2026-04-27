@@ -944,6 +944,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                   Kokkos::Experimental::HPX> {
  private:
@@ -1030,6 +1032,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 template <class CombinedFunctorReducerType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::Experimental::HPX> {
  private:
@@ -1244,6 +1248,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::HPX> {
  private:
@@ -1346,6 +1352,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 };
 
 template <class FunctorType, class ReturnType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::HPX> {
  private:
