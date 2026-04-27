@@ -701,9 +701,11 @@ DEFINE_TYPE_NAME(long double)
 template <class Space, class Func, class Arg, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathUnaryFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg val_[N];
   Ret res_[N];
-  TestMathUnaryFunction(const Arg (&val)[N]) {
+  TestMathUnaryFunction(const Arg (&val)[N]) : KOKKOS_INIT_ERROR_REPORTER(10) {
     std::copy(val, val + N, val_);
     std::transform(val, val + N, res_,
                    [](auto x) { return Func::eval_std(x); });
@@ -711,20 +713,14 @@ struct TestMathUnaryFunction {
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, N), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int i, int& e) const {
-    bool ar = KokkosTest::FloatingPointComparison::compare(
-        Func::eval(val_[i]), res_[i], Func::ulp_factor());
-    if (!ar) {
-      ++e;
-      Kokkos::printf("value at %f which is %f was expected to be %f\n",
-                     (double)val_[i], (double)Func::eval(val_[i]),
-                     (double)res_[i]);
-    }
+  KOKKOS_FUNCTION void operator()(int i) const {
+    KOKKOS_EXPECT_NEAR_ULPS(Func::eval(val_[i]), res_[i], Func::ulp_factor());
   }
 };
 
@@ -764,9 +760,12 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
 
 template <class Space, class Func, class Arg, std::size_t N>
 struct TestIntMathUnaryFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg val_[N];
   int res_[N];
-  TestIntMathUnaryFunction(const Arg (&val)[N]) {
+  TestIntMathUnaryFunction(const Arg (&val)[N])
+      : KOKKOS_INIT_ERROR_REPORTER(10) {
     std::copy(val, val + N, val_);
     std::transform(val, val + N, res_,
                    [](auto x) { return Func::eval_std(x); });
@@ -774,20 +773,14 @@ struct TestIntMathUnaryFunction {
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, N), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, N), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int i, int& e) const {
-    bool ar =
-        KokkosTest::IntegerComparison::compare(Func::eval(val_[i]), res_[i]);
-    if (!ar) {
-      ++e;
-      Kokkos::printf("value at %f which is %f was expected to be %f\n",
-                     (double)val_[i], (double)Func::eval(val_[i]),
-                     (double)res_[i]);
-    }
+  KOKKOS_FUNCTION void operator()(int i) const {
+    KOKKOS_EXPECT_EQ(Func::eval(val_[i]), res_[i]);
   }
 };
 
@@ -829,30 +822,29 @@ void do_test_int_half_math_unary_function(const Arg (&x)[N]) {
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathBinaryFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg1 val1_;
   Arg2 val2_;
   Ret res_;
   TestMathBinaryFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
+      : KOKKOS_INIT_ERROR_REPORTER(10),
+        val1_(val1),
+        val2_(val2),
+        res_(Func::eval_std(val1, val2)) {
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = KokkosTest::FloatingPointComparison::compare(
-        Func::eval(val1_, val2_), res_, Func::ulp_factor());
-    if (!ar) {
-      ++e;
-      Kokkos::printf("value at %f, %f which is %f was expected to be %f\n",
-                     (double)val1_, (double)val2_,
-                     (double)Func::eval(val1_, val2_), (double)res_);
-    }
+  KOKKOS_FUNCTION void operator()(int) const {
+    KOKKOS_EXPECT_NEAR_ULPS(Func::eval(val1_, val2_), res_, Func::ulp_factor());
   }
 };
 
@@ -865,30 +857,29 @@ void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_unary_function_return_type_t<Arg1>>
 struct TestMathBinaryIntFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg1 val1_;
   Arg2 val2_;
   Ret res_;
   TestMathBinaryIntFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
+      : KOKKOS_INIT_ERROR_REPORTER(10),
+        val1_(val1),
+        val2_(val2),
+        res_(Func::eval_std(val1, val2)) {
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = KokkosTest::FloatingPointComparison::compare(
-        Func::eval(val1_, val2_), res_, Func::ulp_factor());
-    if (!ar) {
-      ++e;
-      Kokkos::printf("value at %f, %f which is %f was expected to be %f\n",
-                     (double)val1_, (double)val2_,
-                     (double)Func::eval(val1_, val2_), (double)res_);
-    }
+  KOKKOS_FUNCTION void operator()(int) const {
+    KOKKOS_EXPECT_NEAR_ULPS(Func::eval(val1_, val2_), res_, Func::ulp_factor());
   }
 };
 
@@ -901,34 +892,31 @@ void do_test_math_binary_int_function(Arg1 arg1, Arg2 arg2) {
 template <class Space, class Func, class Arg,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathBinaryPtrFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg val_;
   Ret res_frac_;
   Ret res_int_;
   const char* m_name;
   TestMathBinaryPtrFunction(Arg val)
-      : val_(val), m_name(math_function_name<Func>::name) {
+      : KOKKOS_INIT_ERROR_REPORTER(10),
+        val_(val),
+        m_name(math_function_name<Func>::name) {
     res_frac_ = Func::eval_std(val_, &res_int_);
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed " << m_name << " check for "
                          << type_helper<Arg>::name();
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
+  KOKKOS_FUNCTION void operator()(int) const {
     Ret iptr;
-    Ret frac     = Func::eval(val_, &iptr);
-    bool ar_frac = KokkosTest::FloatingPointComparison::compare(
-        frac, res_frac_, Func::ulp_factor());
-    bool ar_int = KokkosTest::FloatingPointComparison::compare(
-        iptr, res_int_, Func::ulp_factor());
-    if (!ar_frac || !ar_int) {
-      ++e;
-      Kokkos::printf("%s failed: Val %f -> Frac %f (exp %f), Int %f (exp %f)\n",
-                     m_name, (double)val_, (double)frac, (double)res_frac_,
-                     (double)iptr, (double)res_int_);
-    }
+    Ret frac = Func::eval(val_, &iptr);
+    KOKKOS_EXPECT_NEAR_ULPS(frac, res_frac_, Func::ulp_factor());
+    KOKKOS_EXPECT_NEAR_ULPS(iptr, res_int_, Func::ulp_factor());
   }
 };
 
@@ -946,30 +934,29 @@ void do_test_math_binary_ptr_function(Arg x) {
 
 template <class Space, class Func, class Arg1, class Arg2>
 struct TestMathBinaryPredicate {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg1 val1_;
   Arg2 val2_;
   bool res_;
   TestMathBinaryPredicate(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
+      : KOKKOS_INIT_ERROR_REPORTER(10),
+        val1_(val1),
+        val2_(val2),
+        res_(Func::eval_std(val1, val2)) {
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = Func::eval(val1_, val2_) == res_;
-    if (!ar) {
-      ++e;
-      Kokkos::printf("value at %f, %f which is %s was expected to be %s\n",
-                     (double)val1_, (double)val2_,
-                     Func::eval(val1_, val2_) ? "true" : "false",
-                     res_ ? "true" : "false");
-    }
+  KOKKOS_FUNCTION void operator()(int) const {
+    KOKKOS_EXPECT_EQ(Func::eval(val1_, val2_), res_);
   }
 };
 
@@ -982,33 +969,31 @@ void do_test_math_binary_predicate(Arg1 arg1, Arg2 arg2) {
 template <class Space, class Func, class Arg,
           class Ret = math_unary_function_return_type_t<Arg>>
 struct TestMathBinaryIntPtrFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg val_;
   int res1_;
   Ret res2_;
   TestMathBinaryIntPtrFunction(Arg val)
-      : val_(val), res2_(Func::eval_std(val, &res1_)) {
+      : KOKKOS_INIT_ERROR_REPORTER(10),
+        val_(val),
+        res2_(Func::eval_std(val, &res1_)) {
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
+  KOKKOS_FUNCTION void operator()(int) const {
     int res1;
     Ret res2 = Func::eval(val_, &res1);
-    bool ar1 = (res1 == res1_);
-    bool ar2 = KokkosTest::FloatingPointComparison::compare(res2, res2_,
-                                                            Func::ulp_factor());
-    if (!(ar1 && ar2)) {
-      ++e;
-      Kokkos::printf(
-          "values at %f which are %f, %f were expected to be %f, %f\n",
-          (double)val_, (double)res1, (double)res2, (double)res1_,
-          (double)res2_);
-    }
+
+    KOKKOS_EXPECT_EQ(res1, res1_);
+    KOKKOS_EXPECT_NEAR_ULPS(res2, res2_, Func::ulp_factor());
   }
 };
 
@@ -1027,34 +1012,33 @@ void do_test_math_binary_int_ptr_function(Arg x) {
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
 struct TestMathTernaryIntPtrFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg1 val1_;
   Arg2 val2_;
   int val_;
   Ret res_;
   TestMathTernaryIntPtrFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2, &val_)) {
+      : KOKKOS_INIT_ERROR_REPORTER(10),
+        val1_(val1),
+        val2_(val2),
+        res_(Func::eval_std(val1, val2, &val_)) {
     run();
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
+  KOKKOS_FUNCTION void operator()(int) const {
     int val;
-    auto res  = Func::eval(val1_, val2_, &val);
-    bool ar_1 = KokkosTest::FloatingPointComparison::compare(
-        res, res_, Func::ulp_factor());
-    bool ar_2 = (val_ == val);
-    if (!(ar_1 && ar_2)) {
-      ++e;
-      Kokkos::printf(
-          "value at %f, %f which is %f and %i was expected to be %f and %i\n",
-          (double)val1_, (double)val2_, (double)res, val, (double)res_, val_);
-    }
+    auto res = Func::eval(val1_, val2_, &val);
+    KOKKOS_EXPECT_NEAR_ULPS(res, res_, Func::ulp_factor());
+    KOKKOS_EXPECT_EQ(val_, val);
   }
 };
 
@@ -1068,12 +1052,15 @@ void do_test_math_ternary_int_ptr_function(Arg1 arg1, Arg2 arg2) {
 template <class Space, class Func, class Arg1, class Arg2, class Arg3,
           class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
 struct TestMathTernaryFunction {
+  KOKKOS_DEFINE_ERROR_REPORTER(2048, Space);
+
   Arg1 val1_;
   Arg2 val2_;
   Arg3 val3_;
   Ret res_;
   TestMathTernaryFunction(Arg1 val1, Arg2 val2, Arg3 val3)
-      : val1_(val1),
+      : KOKKOS_INIT_ERROR_REPORTER(10),
+        val1_(val1),
         val2_(val2),
         val3_(val3),
         res_(Func::eval_std(val1, val2, val3)) {
@@ -1081,22 +1068,17 @@ struct TestMathTernaryFunction {
   }
   void run() {
     int errors = 0;
-    Kokkos::parallel_reduce(Kokkos::RangePolicy<Space>(0, 1), *this, errors);
+    Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);
+    KOKKOS_RETRIEVE_ERRORS(errors);
     ASSERT_EQ(errors, 0) << "Failed check no error for "
                          << math_function_name<Func>::name << "("
                          << type_helper<Arg1>::name() << ", "
                          << type_helper<Arg2>::name() << ", "
                          << type_helper<Arg3>::name() << ")";
   }
-  KOKKOS_FUNCTION void operator()(int, int& e) const {
-    bool ar = KokkosTest::FloatingPointComparison::compare(
-        Func::eval(val1_, val2_, val3_), res_, Func::ulp_factor());
-    if (!ar) {
-      ++e;
-      Kokkos::printf("value at %f, %f, %f which is %f was expected to be %f\n",
-                     (double)val1_, (double)val2_, (double)val3_,
-                     (double)Func::eval(val1_, val2_, val3_), (double)res_);
-    }
+  KOKKOS_FUNCTION void operator()(int) const {
+    KOKKOS_EXPECT_NEAR_ULPS(Func::eval(val1_, val2_, val3_), res_,
+                            Func::ulp_factor());
   }
 };
 
@@ -2774,9 +2756,13 @@ DEFINE_UNARY_FUNCTION_EVAL_CUSTOM(test_fallback_bhalf, 0,
 
 TEST(TEST_CATEGORY, mathematical_functions_impl_half_fallback) {
   TestMathUnaryFunction<TEST_EXECSPACE, MathUnaryFunction_test_fallback_half,
-                        KE::half_t, 1>({KE::half_t(1.f)});
+                        KE::half_t, 1>
+      test_half({KE::half_t(1.f)});
+  (void)test_half;
   TestMathUnaryFunction<TEST_EXECSPACE, MathUnaryFunction_test_fallback_bhalf,
-                        KE::bhalf_t, 1>({KE::bhalf_t(1.f)});
+                        KE::bhalf_t, 1>
+      test_bhalf({KE::bhalf_t(1.f)});
+  (void)test_bhalf;
 }
 
 KOKKOS_DEVICE_TEST(TestNextAfterHalf, FP16Type) {
