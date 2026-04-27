@@ -62,6 +62,8 @@ void OpenACCParallelForRangePolicy(Schedule<Dynamic>, int chunk_size,
 }  // namespace Kokkos::Experimental::Impl
 
 template <class Functor, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::Experimental::OpenACC> {
   using Policy = Kokkos::RangePolicy<Traits...>;

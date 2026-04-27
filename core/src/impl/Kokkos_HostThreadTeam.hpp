@@ -660,6 +660,17 @@ class HostThreadTeamMember {
   }
 };
 
+template <typename iType, class HostExecSpace>
+struct TeamVectorRangeBoundariesStruct<iType,
+                                       HostThreadTeamMember<HostExecSpace>>
+    : public TeamThreadRangeBoundariesStruct<
+          iType, HostThreadTeamMember<HostExecSpace>> {
+  using Base =
+      TeamThreadRangeBoundariesStruct<iType,
+                                      HostThreadTeamMember<HostExecSpace>>;
+  using Base::Base;
+};
+
 }  // namespace Impl
 }  // namespace Kokkos
 
@@ -689,22 +700,22 @@ TeamThreadRange(
 }
 
 template <typename iType, typename Member>
-KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<iType, Member>
+KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<iType, Member>
 TeamVectorRange(
     Member const& member, iType count,
     std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
         nullptr) {
-  return Impl::TeamThreadRangeBoundariesStruct<iType, Member>(member, 0, count);
+  return Impl::TeamVectorRangeBoundariesStruct<iType, Member>(member, 0, count);
 }
 
 template <typename iType1, typename iType2, typename Member>
-KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
+KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
     std::common_type_t<iType1, iType2>, Member>
 TeamVectorRange(
     Member const& member, iType1 begin, iType2 end,
     std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
         nullptr) {
-  return Impl::TeamThreadRangeBoundariesStruct<
+  return Impl::TeamVectorRangeBoundariesStruct<
       std::common_type_t<iType1, iType2>, Member>(member, begin, end);
 }
 
@@ -761,6 +772,21 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
          i += loop_boundaries.increment) {
       closure(i);
     }
+  }
+}
+
+template <typename iType, class Closure, class HostExecSpace>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::TeamVectorRangeBoundariesStruct<
+        iType, Impl::HostThreadTeamMember<HostExecSpace>> const&
+        loop_boundaries,
+    Closure const& closure) {
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    closure(i);
   }
 }
 
