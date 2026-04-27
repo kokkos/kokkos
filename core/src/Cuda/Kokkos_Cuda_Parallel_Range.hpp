@@ -56,28 +56,20 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
   Policy const& get_policy() const { return m_policy; }
 
   inline __device__ void operator()() const {
-    const auto work_stride = Member(blockDim.y) * gridDim.x;
-    const Member work_end  = m_policy.end();
+    constexpr auto batch_size = Member(StaticBatchSize::batch_size);
+    const auto work_stride    = Member(blockDim.y) * gridDim.x;
+    const Member work_end     = m_policy.end();
 
-    if constexpr (StaticBatchSize::batch_size == 1) {
-      for (Member iwork = m_policy.begin() + threadIdx.y +
-                          static_cast<Member>(blockDim.y) * blockIdx.x;
-           iwork < work_end;
-           iwork = iwork < static_cast<Member>(work_end - work_stride)
-                       ? iwork + work_stride
-                       : work_end) {
+    for (Member iwork = m_policy.begin() + threadIdx.y +
+                        static_cast<Member>(blockDim.y) * blockIdx.x;
+         iwork < work_end;
+         iwork =
+             iwork < static_cast<Member>(work_end - work_stride * batch_size)
+                 ? iwork + work_stride * batch_size
+                 : work_end) {
+      if constexpr (batch_size == 1) {
         this->template exec_range<WorkTag>(iwork);
-      }
-    } else {
-      constexpr auto batch_size = Member(StaticBatchSize::batch_size);
-
-      for (Member iwork = m_policy.begin() + threadIdx.y +
-                          static_cast<Member>(blockDim.y) * blockIdx.x;
-           iwork < work_end;
-           iwork =
-               iwork < static_cast<Member>(work_end - work_stride * batch_size)
-                   ? iwork + work_stride * batch_size
-                   : work_end) {
+      } else {
 #if defined(KOKKOS_COMPILER_NVCC)
 #pragma unroll
 #endif
