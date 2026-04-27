@@ -48,7 +48,7 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() noexcept = default;
 
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
       [[maybe_unused]] value_type value) noexcept
@@ -169,7 +169,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() noexcept = default;
 
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
       [[maybe_unused]] value_type value) noexcept
@@ -283,7 +283,7 @@ class basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 8> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
       [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
@@ -400,7 +400,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
       [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
@@ -512,7 +512,7 @@ class basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 8> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
       [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
@@ -629,7 +629,7 @@ class basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
       [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
@@ -746,7 +746,7 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd_mask() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION explicit basic_simd_mask(
       [[maybe_unused]] value_type value) noexcept
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
@@ -997,7 +997,7 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd() noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
@@ -1331,7 +1331,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       implementation_type const& value_in) noexcept
       : m_value(value_in) {}
@@ -1649,7 +1649,7 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 8> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd() noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
@@ -1978,7 +1978,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       implementation_type const& value_in) noexcept
       : m_value(value_in) {}
@@ -2303,7 +2303,7 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 8> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       implementation_type const& value_in) noexcept
       : m_value(value_in) {}
@@ -2627,7 +2627,7 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd() noexcept = default;
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       implementation_type const& value_in) noexcept
       : m_value(value_in) {}
@@ -2956,7 +2956,7 @@ class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 
   static constexpr Kokkos::Impl::integral_constant<Impl::simd_size_t, 4> size{};
 
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd() noexcept = default;
+  KOKKOS_DEFAULTED_FUNCTION basic_simd() noexcept = default;
   template <class U>
     requires std::convertible_to<U, value_type>
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
