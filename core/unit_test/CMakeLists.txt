@@ -731,6 +731,7 @@ set(DEFAULT_DEVICE_SOURCES
     default/TestDefaultDeviceType_b3.cpp
     default/TestDefaultDeviceType_c3.cpp
     default/TestDefaultDeviceTypeResize.cpp
+    default/TestDefaultDeviceTypeCopyViewsBugs.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
 )
 # FIXME_OPENACC do not provide a MemorySpace that can be accessed from all ExecSpaces

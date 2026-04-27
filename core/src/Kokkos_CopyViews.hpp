@@ -2850,13 +2850,7 @@ inline std::enable_if_t<Impl::is_view_ctor_property<I>::value ||
                         Kokkos::is_execution_space<I>::value>
 resize(const I& arg_prop, Kokkos::View<T, P...>& v,
        const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_resize(arg_prop, v, layout);
-}
-
-template <class ExecutionSpace, class T, class... P>
-inline void resize(const ExecutionSpace& exec_space, Kokkos::View<T, P...>& v,
-                   const typename Kokkos::View<T, P...>::array_layout& layout) {
-  impl_resize(Impl::ViewCtorProp<>(), exec_space, v, layout);
+  impl_resize(Kokkos::view_alloc(arg_prop), v, layout);
 }
 
 template <class T, class... P>
