@@ -4,7 +4,6 @@
 #define TEST_COPY_VIEWS_BUGS_HPP_
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
-#include <iostream>
 
 namespace TestCopyViewsBugs {
 
@@ -16,7 +15,6 @@ void test_resize_exec_space_with_layout() {
   Kokkos::deep_copy(v, 99);
   typename view_type::array_layout new_layout(6, 7);
 
-  // This is problematic. which is in line 2857. in Kokkos_CopyViews.hpp
   Kokkos::resize(exec_space{}, v, new_layout);
 
   EXPECT_EQ(v.extent(0), 6u);
@@ -69,16 +67,9 @@ void test_resize_with_view_alloc_and_layout() {
   }
 
   EXPECT_TRUE(data_preserved);
-
-  if (data_preserved) {
-    std::cout << " PASSED " << std::endl;
-  } else {
-    std::cout << " FAILED " << std::endl;
-  }
 }
 
 template <class DeviceType>
-
 void testCopyViewsBugs() {
   test_resize_exec_space_with_layout<DeviceType>();
   test_resize_with_view_alloc_and_layout<DeviceType>();
