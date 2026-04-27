@@ -10,6 +10,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Threads> {
  private:
@@ -86,6 +88,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 };
 
 template <class FunctorType, class ReturnType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Threads> {
  private:

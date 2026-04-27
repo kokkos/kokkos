@@ -12,6 +12,8 @@
 #include <vector>
 
 template <class CombinedFunctorReducerType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class Kokkos::Impl::ParallelReduce<
     CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>, Kokkos::SYCL> {
  public:

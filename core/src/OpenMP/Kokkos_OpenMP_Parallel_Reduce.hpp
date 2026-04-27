@@ -16,6 +16,8 @@ namespace Impl {
 //----------------------------------------------------------------------------
 
 template <class CombinedFunctorReducerType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::OpenMP> {
  private:
