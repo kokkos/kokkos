@@ -14,6 +14,32 @@ namespace Kokkos::Experimental::Impl {
 template <class Functor>
 void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
                                      Functor const& functor,
+                                     OpenACCMDRangeBegin<1> const& begin,
+                                     OpenACCMDRangeEnd<1> const& end,
+                                     int async_arg) {
+  auto begin0 = begin[0];
+  auto end0   = end[0];
+// clang-format off
+#pragma acc parallel loop gang vector copyin(functor) async(async_arg)
+  // clang-format on
+  for (auto i0 = begin0; i0 < end0; ++i0) {
+    functor(i0);
+  }
+}
+
+template <class Functor>
+void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
+                                     Functor const& functor,
+                                     OpenACCMDRangeBegin<1> const& begin,
+                                     OpenACCMDRangeEnd<1> const& end,
+                                     int async_arg) {
+  OpenACCParallelForMDRangePolicy(OpenACCCollapse(), OpenACCIterateLeft(),
+                                  functor, begin, end, async_arg);
+}
+
+template <class Functor>
+void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
+                                     Functor const& functor,
                                      OpenACCMDRangeBegin<2> const& begin,
                                      OpenACCMDRangeEnd<2> const& end,
                                      int async_arg) {
@@ -861,7 +887,7 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
   }
 
   void execute() const {
-    static_assert(1 < Policy::rank && Policy::rank < 7);
+    static_assert(0 < Policy::rank && Policy::rank < 7);
     static_assert(Policy::inner_direction == Iterate::Left ||
                   Policy::inner_direction == Iterate::Right);
     constexpr int rank = Policy::rank;

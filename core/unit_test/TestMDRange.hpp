@@ -21,7 +21,7 @@ namespace {
 using namespace Kokkos;
 
 template <typename ExecSpace>
-constexpr bool mdrange_rank1_runtime_supported =
+constexpr bool mdrange_array_reduce_runtime_supported =
 #if defined(KOKKOS_ENABLE_OPENACC)
     !std::is_same_v<ExecSpace, Kokkos::Experimental::OpenACC>;
 #else
@@ -66,8 +66,8 @@ struct TestMDRange_ReduceArray_1D {
 
     range_type_init range_init(0, N0, 3);
     range_type range(0, N0, 3);
-    if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
-      GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
+    if constexpr (!mdrange_array_reduce_runtime_supported<ExecSpace>) {
+      GTEST_SKIP() << "OpenACC MDRangePolicy does not support array reductions";
     } else {
       const unsigned array_size = 2;
       TestMDRange_ReduceArray_1D functor(N0, array_size);
@@ -117,7 +117,9 @@ struct TestMDRange_ReduceArray_2D {
   }
 
   static void test_arrayreduce2(const int N0, const int N1) {
-    {
+    if constexpr (!mdrange_array_reduce_runtime_supported<ExecSpace>) {
+      GTEST_SKIP() << "OpenACC MDRangePolicy does not support array reductions";
+    } else {
       using range_type_init =
           typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<2>,
                                          Kokkos::IndexType<int>, InitTag>;
@@ -224,9 +226,7 @@ struct TestMDRange_1D {
   }
 
   static void test_reduce1(const int N0) {
-    if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
-      GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
-    } else {
+    {
       {
         range_type range(0, N0);
         double sum = 0.0;
@@ -273,9 +273,7 @@ struct TestMDRange_1D {
   }
 
   static void test_for1(const int N0) {
-    if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
-      GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
-    } else {
+    {
       {
         const int s0 = 1;
         range_type range({s0}, {N0}, {3});
@@ -403,7 +401,9 @@ struct TestMDRange_ReduceArray_3D {
   }
 
   static void test_arrayreduce3(const int N0, const int N1, const int N2) {
-    {
+    if constexpr (!mdrange_array_reduce_runtime_supported<ExecSpace>) {
+      GTEST_SKIP() << "OpenACC MDRangePolicy does not support array reductions";
+    } else {
       using range_type_init =
           typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<3>,
                                          Kokkos::IndexType<int>, InitTag>;
@@ -3814,9 +3814,7 @@ struct TestMDRange_1D_NegIdx {
   }
 
   static void test_1D_negidx(const int N0) {
-    if constexpr (!mdrange_rank1_runtime_supported<ExecSpace>) {
-      GTEST_SKIP() << "OpenACC MDRangePolicy runtime does not support Rank<1>";
-    } else {
+    {
       const point_type lower{-1};
       const point_type upper{N0};
       const tile_type tile{8};
