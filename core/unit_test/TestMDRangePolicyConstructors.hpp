@@ -255,25 +255,40 @@ TEST(TEST_CATEGORY, md_range_policy_get_tile_size) {
   test_get_tile_size_for_ranks(ranks);
 }
 
+template <class ExecSpace>
+void test_rank1_default_tile_matches_range_policy() {
+  using index_type     = int;
+  using md_policy_t    = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<1>,
+                                            Kokkos::IndexType<index_type>>;
+  using range_policy_t = typename md_policy_t::impl_range_policy;
+
+  constexpr index_type begin = 0;
+  constexpr index_type end   = 1 << 20;
+
+  md_policy_t md_policy(ExecSpace{}, begin, end);
+  range_policy_t range_policy(ExecSpace{}, begin, end);
+
+  EXPECT_EQ(md_policy.tile_size_recommended()[0], range_policy.chunk_size());
+  EXPECT_EQ(md_policy.m_tile[0], range_policy.chunk_size());
+  EXPECT_EQ(md_policy.m_num_tiles,
+            (end - begin + range_policy.chunk_size() - 1) /
+                range_policy.chunk_size());
+  EXPECT_LT(md_policy.m_tile[0], end - begin);
+  EXPECT_GT(md_policy.m_num_tiles, 1);
+}
+
 TEST(TEST_CATEGORY, md_range_policy_rank1_openmp_default_tile_matches_range) {
 #if defined(KOKKOS_ENABLE_OPENMP)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) {
-    using index_type  = int;
-    using md_policy_t = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
-                                              Kokkos::IndexType<index_type>>;
-    using range_policy_t = typename md_policy_t::impl_range_policy;
+    test_rank1_default_tile_matches_range_policy<TEST_EXECSPACE>();
+  }
+#endif
+}
 
-    constexpr index_type begin = 0;
-    constexpr index_type end   = 1 << 20;
-
-    md_policy_t md_policy(begin, end);
-    range_policy_t range_policy(TEST_EXECSPACE{}, begin, end);
-
-    EXPECT_EQ(md_policy.tile_size_recommended()[0], range_policy.chunk_size());
-    EXPECT_EQ(md_policy.m_tile[0], range_policy.chunk_size());
-    EXPECT_EQ(md_policy.m_num_tiles,
-              (end - begin + range_policy.chunk_size() - 1) /
-                  range_policy.chunk_size());
+TEST(TEST_CATEGORY, md_range_policy_rank1_threads_default_tile_matches_range) {
+#if defined(KOKKOS_ENABLE_THREADS)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>) {
+    test_rank1_default_tile_matches_range_policy<TEST_EXECSPACE>();
   }
 #endif
 }
