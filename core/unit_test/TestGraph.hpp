@@ -1664,4 +1664,41 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), property_by_const_lvalue) {
       NoOpReduceFunctor<TEST_EXECSPACE, int>{}, count);
 }
 
+// Check that node device handles are correct.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), node_device_handle) {
+  const auto [exec_A, exec_B, exec_C, exec_D] =
+      Kokkos::Experimental::partition_space(TEST_EXECSPACE{}, 1, 1, 1, 1);
+
+  const auto device_handle_A = Kokkos::Experimental::get_device_handle(exec_A);
+  const auto device_handle_B = Kokkos::Experimental::get_device_handle(exec_B);
+  const auto device_handle_C = Kokkos::Experimental::get_device_handle(exec_C);
+  const auto device_handle_D = Kokkos::Experimental::get_device_handle(exec_D);
+
+  Kokkos::Experimental::Graph<TEST_EXECSPACE> graph{};
+
+  const auto node_A = graph.root_node().then_parallel_for(
+      Kokkos::Experimental::node_props(device_handle_A),
+      Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), NoOp{});
+  const auto node_B =
+      node_A.then(Kokkos::Experimental::node_props(device_handle_B), NoOp{});
+  const auto node_C =
+      node_A.then(Kokkos::Experimental::node_props(device_handle_C), NoOp{});
+  const auto node_D =
+      Kokkos::Experimental::when_all(node_B, node_C)
+          .then(Kokkos::Experimental::node_props(device_handle_D), NoOp{});
+
+  ASSERT_EQ(
+      Kokkos::Impl::GraphAccess::get_node_ptr(node_A)->get_device_handle(),
+      device_handle_A);
+  ASSERT_EQ(
+      Kokkos::Impl::GraphAccess::get_node_ptr(node_B)->get_device_handle(),
+      device_handle_B);
+  ASSERT_EQ(
+      Kokkos::Impl::GraphAccess::get_node_ptr(node_C)->get_device_handle(),
+      device_handle_C);
+  ASSERT_EQ(
+      Kokkos::Impl::GraphAccess::get_node_ptr(node_D)->get_device_handle(),
+      device_handle_D);
+}
+
 }  // end namespace Test
