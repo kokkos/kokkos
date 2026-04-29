@@ -278,19 +278,20 @@ void test_rank1_default_tile_matches_range_policy() {
 }
 
 TEST(TEST_CATEGORY, md_range_policy_rank1_default_tile_matches_range) {
-bool skipped = true;
+  bool skipped = true;
 #if defined(KOKKOS_ENABLE_OPENMP)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) {
     skipped = false;
     test_rank1_default_tile_matches_range_policy<TEST_EXECSPACE>();
   }
 #elif defined(KOKKOS_ENABLE_THREADS)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>) {
-    skipped = false;
-    test_rank1_default_tile_matches_range_policy<TEST_EXECSPACE>();
-  }
+    if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>) {
+      skipped = false;
+      test_rank1_default_tile_matches_range_policy<TEST_EXECSPACE>();
+    }
 #endif
-if (skipped) GTEST_SKIP() << "tile size tested only for OpenMP or Threads backend";
+  if (skipped)
+    GTEST_SKIP() << "tile size tested only for OpenMP or Threads backend";
 }
 
 template <int Rank, int MaxTperB, Kokkos::Iterate InnerDirection>
