@@ -1650,4 +1650,20 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), team_launch_bounds_in_graph) {
   }
 }
 
+// Ensure that node properties can be passed by const lvalue.
+TEST_F(TEST_CATEGORY_FIXTURE(graph), property_by_const_lvalue) {
+  Kokkos::Experimental::Graph<TEST_EXECSPACE> graph{};
+
+  const auto node_props = Kokkos::Experimental::node_props(
+      "property by const lvalue",
+      Kokkos::Experimental::get_device_handle(TEST_EXECSPACE{}));
+
+  const auto node_then = graph.root_node().then(node_props, NoOp{});
+  const auto node_pfor = node_then.then_parallel_for(
+      node_props, Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1), NoOp{});
+  [[maybe_unused]] const auto node_pred = node_pfor.then_parallel_reduce(
+      node_props, Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+      NoOpReduceFunctor<TEST_EXECSPACE, int>{}, count);
+}
+
 }  // end namespace Test
