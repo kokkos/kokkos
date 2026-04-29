@@ -278,7 +278,6 @@ struct MDRangePolicy<P, Properties...>
     return m_space;
   }
 
- public:
   MDRangePolicy() = default;
 
   template <typename LT, typename UT, typename TT = array_index_type,
