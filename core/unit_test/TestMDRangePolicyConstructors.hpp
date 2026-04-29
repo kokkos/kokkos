@@ -128,7 +128,7 @@ TEST(TEST_CATEGORY_DEATH,
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_DEATH({ (void)Policy(-1, 2); }, expected);
+  ASSERT_DEATH({ (void)Policy({-1}, {2}); }, expected);
 }
 
 TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
@@ -159,7 +159,7 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_rank1_invalid_bounds) {
       "than its upper bound (90) in dimension 0.\n";
 
   msg = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
-  ASSERT_DEATH({ (void)Policy(100, 90); }, msg);
+  ASSERT_DEATH({ (void)Policy({100}, {90}); }, msg);
 }
 
 // Verify that we get an error if the user requests tile dimensions too large
@@ -264,8 +264,10 @@ void test_rank1_default_tile_matches_range_policy() {
 
   constexpr index_type begin = 0;
   constexpr index_type end   = 1 << 20;
+  typename md_policy_t::point_type lower{begin};
+  typename md_policy_t::point_type upper{end};
 
-  md_policy_t md_policy(ExecSpace{}, begin, end);
+  md_policy_t md_policy(ExecSpace{}, lower, upper);
   range_policy_t range_policy(ExecSpace{}, begin, end);
 
   EXPECT_EQ(md_policy.tile_size_recommended()[0], range_policy.chunk_size());

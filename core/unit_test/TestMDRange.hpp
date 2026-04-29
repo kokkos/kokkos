@@ -64,8 +64,11 @@ struct TestMDRange_ReduceArray_1D {
         typename Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<1>,
                                        Kokkos::IndexType<int>>;
 
-    range_type_init range_init(0, N0, 3);
-    range_type range(0, N0, 3);
+    using point_type = typename range_type::point_type;
+    using tile_type  = typename range_type::tile_type;
+
+    range_type_init range_init(point_type{0}, point_type{N0}, tile_type{3});
+    range_type range(point_type{0}, point_type{N0}, tile_type{3});
     if constexpr (!mdrange_array_reduce_runtime_supported<ExecSpace>) {
       GTEST_SKIP() << "OpenACC MDRangePolicy does not support array reductions";
     } else {
@@ -179,29 +182,20 @@ struct TestMDRange_1D {
   static void test_construct_policies(const int N0) {
     [[maybe_unused]] const int s0 = 1;
     ExecSpace exec_space;
-    (void)range_type(0, N0, 3);
-    (void)range_type(s0, N0, 3);
-    (void)range_type(0, N0);
     (void)range_type(point_type{0}, point_type{N0}, tile_type{3});
     (void)range_type({0}, {N0}, {3});
     (void)range_type({s0}, {N0}, {3});
     (void)range_type(point_type{0}, point_type{N0});
     (void)range_type({0}, {N0});
-    (void)range_type(exec_space, 0, N0, 3);
-    (void)range_type(exec_space, 0, N0);
     (void)range_type(exec_space, point_type{0}, point_type{N0}, tile_type{3});
     (void)range_type(exec_space, {0}, {N0}, {3});
     (void)range_type(exec_space, point_type{0}, point_type{N0});
     (void)range_type(exec_space, {0}, {N0});
 
-    (void)range_type_init(0, N0, 3);
-    (void)range_type_init(0, N0);
     (void)range_type_init(point_type{0}, point_type{N0}, tile_type{3});
     (void)range_type_init({0}, {N0}, {3});
     (void)range_type_init(point_type{0}, point_type{N0});
     (void)range_type_init({0}, {N0});
-    (void)range_type_init(exec_space, 0, N0, 3);
-    (void)range_type_init(exec_space, 0, N0);
     (void)range_type_init(exec_space, point_type{0}, point_type{N0},
                           tile_type{3});
     (void)range_type_init(exec_space, {0}, {N0}, {3});
@@ -228,7 +222,7 @@ struct TestMDRange_1D {
   static void test_reduce1(const int N0) {
     {
       {
-        range_type range(0, N0);
+        range_type range(point_type{0}, point_type{N0});
         double sum = 0.0;
         parallel_reduce(
             range,
@@ -3819,7 +3813,7 @@ struct TestMDRange_1D_NegIdx {
       const point_type upper{N0};
       const tile_type tile{8};
 
-      range_type range(lower[0], upper[0], tile[0]);
+      range_type range(lower, upper, tile);
       TestMDRange_1D_NegIdx functor(lower[0], upper[0]);
 
       parallel_for(range, functor);
