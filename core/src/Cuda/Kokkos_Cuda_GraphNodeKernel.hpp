@@ -106,11 +106,9 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   using Policy       = PolicyType;
   using graph_kernel = GraphNodeKernelImpl;
 
-  // TODO Ensure the execution space of the graph is the same as the one
-  //      attached to the policy?
   // TODO @graph kernel name info propagation
   template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(std::string label_, Cuda const&, Functor arg_functor,
+  GraphNodeKernelImpl(std::string label_, Functor arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
       // This is super ugly, but it works for now and is the most minimal change
       // to the codebase for now...
@@ -118,11 +116,9 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
                (ArgsDeduced&&)args...),
         label(std::move(label_)) {}
 
-  // FIXME @graph Forward through the instance once that works in the backends
   template <class PolicyDeduced>
-  GraphNodeKernelImpl(Kokkos::Cuda const& ex, Functor arg_functor,
-                      PolicyDeduced&& arg_policy)
-      : GraphNodeKernelImpl("[unlabeled]", ex, std::move(arg_functor),
+  GraphNodeKernelImpl(Functor arg_functor, PolicyDeduced&& arg_policy)
+      : GraphNodeKernelImpl("[unlabeled]", std::move(arg_functor),
                             (PolicyDeduced&&)arg_policy) {}
 
   void set_cuda_graph_ptr(cudaGraph_t* arg_graph_ptr) {

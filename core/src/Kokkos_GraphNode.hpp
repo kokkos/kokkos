@@ -132,7 +132,8 @@ class GraphNodeRef {
   // TODO kernel name propagation and exposure
 
   template <class NextKernelDeduced>
-  auto _then_kernel(NextKernelDeduced&& arg_kernel) const {
+  auto _then_kernel(const device_handle_t& device_handle,
+                    NextKernelDeduced&& arg_kernel) const {
     static_assert(
         Kokkos::Impl::is_graph_kernel_v<std::remove_cvref_t<NextKernelDeduced>>,
         "Kokkos internal error");
@@ -148,8 +149,7 @@ class GraphNodeRef {
         m_graph_impl,
         Kokkos::Impl::GraphAccess::make_node_shared_ptr<
             typename return_t::node_impl_t>(
-            m_node_impl->get_device_handle(),
-            Kokkos::Impl::_graph_node_kernel_ctor_tag{},
+            device_handle, Kokkos::Impl::_graph_node_kernel_ctor_tag{},
             (NextKernelDeduced&&)arg_kernel,
             // *this is the predecessor
             Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
@@ -235,13 +235,14 @@ class GraphNodeRef {
                                         std::remove_cvref_t<Functor>>;
     auto graph_ptr = m_graph_impl.lock();
     KOKKOS_EXPECTS(bool(graph_ptr))
-    auto full_props = Kokkos::Impl::with_properties_if_unset(
-        std::forward<Props>(props), graph_ptr->get_device_handle(),
-        "[unlabeled]");
-    return this->_then_kernel(next_kernel_t{
-        Kokkos::Impl::extract_property<std::string>(full_props),
-        Kokkos::Impl::extract_property<device_handle_t>(full_props).m_exec,
-        std::forward<Policy>(policy), std::forward<Functor>(functor)});
+    auto [device_handle, label] =
+        Kokkos::Impl::get_properties_or<device_handle_t, std::string>(
+            std::forward<Props>(props), graph_ptr->get_device_handle(),
+            "[unlabeled]");
+    return this->_then_kernel(
+        device_handle, next_kernel_t{std::move(label), device_handle.m_exec,
+                                     std::forward<Policy>(policy),
+                                     std::forward<Functor>(functor)});
   }
 
   template <typename Props, typename Functor>
@@ -378,7 +379,7 @@ class GraphNodeRef {
           m_graph_impl,
           Kokkos::Impl::GraphAccess::make_node_shared_ptr<
               typename return_t::node_impl_t>(
-              m_node_impl->get_device_handle(),
+              Kokkos::Experimental::get_device_handle(exec),
               Kokkos::Impl::_graph_node_capture_ctor_tag{},
               std::forward<Functor>(functor),
               Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
@@ -410,15 +411,16 @@ class GraphNodeRef {
 
     auto graph_ptr = m_graph_impl.lock();
     KOKKOS_EXPECTS(bool(graph_ptr))
-    auto full_props =
-        with_properties_if_unset(std::forward<Props>(props),
-                                 graph_ptr->get_device_handle(), "[unlabeled]");
+
+    auto [device_handle, label] =
+        Kokkos::Impl::get_properties_or<device_handle_t, std::string>(
+            std::forward<Props>(props), graph_ptr->get_device_handle(),
+            "[unlabeled]");
 
     using policy_type = std::remove_cvref_t<Policy>;
     auto policy       = Experimental::require(
-        policy_type(
-            Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
-            Kokkos::Impl::get_property<device_handle_t>(full_props).m_exec),
+        policy_type(Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
+                          device_handle.m_exec),
         Kokkos::Impl::KernelInGraphProperty{});
 
     using next_policy_t = decltype(policy);
@@ -426,10 +428,9 @@ class GraphNodeRef {
         Kokkos::Impl::GraphNodeKernelImpl<ExecutionSpace, next_policy_t,
                                           std::decay_t<Functor>,
                                           Kokkos::ParallelForTag>;
-    return this->_then_kernel(next_kernel_t{
-        Kokkos::Impl::extract_property<std::string>(full_props),
-        Kokkos::Impl::extract_property<device_handle_t>(full_props).m_exec,
-        (Functor&&)functor, std::move(policy)});
+    return this->_then_kernel(
+        std::move(device_handle),
+        next_kernel_t{std::move(label), (Functor&&)functor, std::move(policy)});
   }
 
   template <class Policy, class Functor>
@@ -498,10 +499,6 @@ class GraphNodeRef {
     // needs static assertion of constraint:
     //   DataParallelReductionFunctor<Functor, ReturnType>
 
-    auto full_props = with_properties_if_unset(
-        std::forward<Props>(props), graph_impl_ptr->get_device_handle(),
-        "[unlabeled]");
-
     // This is also just an expectation, but it's one that we expect the user
     // to interact with (even in release mode), so we should throw an exception
     // with an explanation rather than just doing a contract assertion.
@@ -556,11 +553,15 @@ class GraphNodeRef {
     // End of Kokkos reducer disaster
     //----------------------------------------
 
+    auto [device_handle, label] =
+        Kokkos::Impl::get_properties_or<device_handle_t, std::string>(
+            std::forward<Props>(props), graph_impl_ptr->get_device_handle(),
+            "[unlabeled]");
+
     using policy_type = std::remove_cvref_t<Policy>;
     auto policy       = Experimental::require(
-        policy_type(
-            Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
-            Kokkos::Impl::get_property<device_handle_t>(full_props).m_exec),
+        policy_type(Kokkos::Impl::PolicyUpdate{}, (Policy&&)arg_policy,
+                          device_handle.m_exec),
         Kokkos::Impl::KernelInGraphProperty{});
 
     using passed_reducer_type = typename return_value_adapter::reducer_type;
@@ -587,12 +588,12 @@ class GraphNodeRef {
                                           decltype(functor_reducer),
                                           Kokkos::ParallelReduceTag>;
 
-    return this->_then_kernel(next_kernel_t{
-        Kokkos::Impl::extract_property<std::string>(full_props),
-        Kokkos::Impl::extract_property<device_handle_t>(full_props).m_exec,
-        std::move(functor_reducer), std::move(policy),
-        return_value_adapter::return_value(return_value,
-                                           std::forward<Functor>(functor))});
+    return this->_then_kernel(
+        std::move(device_handle),
+        next_kernel_t{std::move(label), std::move(functor_reducer),
+                      std::move(policy),
+                      return_value_adapter::return_value(
+                          return_value, std::forward<Functor>(functor))});
   }
 
   template <class Policy, class Functor, class ReturnType>
