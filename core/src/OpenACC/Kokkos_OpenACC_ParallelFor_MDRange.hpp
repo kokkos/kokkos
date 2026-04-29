@@ -11,12 +11,14 @@
 
 namespace Kokkos::Experimental::Impl {
 
-template <class Functor>
-void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
+template <class Direction, class Functor>
+void OpenACCParallelForMDRangePolicy(OpenACCCollapse, Direction,
                                      Functor const& functor,
                                      OpenACCMDRangeBegin<1> const& begin,
                                      OpenACCMDRangeEnd<1> const& end,
                                      int async_arg) {
+  static_assert(Direction::value == Iterate::Left ||
+                Direction::value == Iterate::Right);
   auto begin0 = begin[0];
   auto end0   = end[0];
 // clang-format off
@@ -25,16 +27,6 @@ void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateLeft,
   for (auto i0 = begin0; i0 < end0; ++i0) {
     functor(i0);
   }
-}
-
-template <class Functor>
-void OpenACCParallelForMDRangePolicy(OpenACCCollapse, OpenACCIterateRight,
-                                     Functor const& functor,
-                                     OpenACCMDRangeBegin<1> const& begin,
-                                     OpenACCMDRangeEnd<1> const& end,
-                                     int async_arg) {
-  OpenACCParallelForMDRangePolicy(OpenACCCollapse(), OpenACCIterateLeft(),
-                                  functor, begin, end, async_arg);
 }
 
 template <class Functor>
