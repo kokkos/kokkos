@@ -117,15 +117,18 @@ void HPX::impl_instance_fence(const std::string &name) const {
 }
 
 void HPX::impl_static_fence(const std::string &name) {
+  // Check if runtime still valid and return if not.
+  if (hpx::get_runtime_ptr() == nullptr) return;
+
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::HPX>(
       name,
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
       [&]() {
-        auto &s = HPX().impl_get_sender();
-
-        std::unique_lock<hpx::spinlock> l(HPX().impl_get_sender_mutex());
+        auto &s = m_default_instance_data.m_sender;
+        std::unique_lock<hpx::spinlock> l(
+            m_default_instance_data.m_sender_mutex);
 
         // This is a loose fence. Any work scheduled before this will be waited
         // for, but work scheduled while waiting may also be waited for.
