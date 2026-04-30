@@ -49,7 +49,7 @@
         } else {                                                            \
           return Derived([&](simd_size_t i) { return lhs[i] OP rhs[i]; });  \
         }))                                                                 \
-    return Derived{};                                                       \
+    KOKKOS_IF_ON_DEVICE((return Derived{};))                                \
   }
 
 #define KOKKOS_SIMD_IMPL_SHIFT_SCALAR_OPERATOR(OP, FN_NAME, ARG_TYPE1,   \
@@ -65,7 +65,7 @@
         } else {                                                         \
           return Derived([&](simd_size_t i) { return lhs[i] OP rhs; });  \
         }))                                                              \
-    return Derived{};                                                    \
+    KOKKOS_IF_ON_DEVICE((return Derived{};))                             \
   }
 
 #define KOKKOS_SIMD_IMPL_COMPOUND_ASSIGNMENT_OPERATOR(OP, FN_NAME, ARG_TYPE)   \
@@ -80,7 +80,7 @@
           lhs = lhs OP rhs;                                                    \
           return lhs;                                                          \
         }))                                                                    \
-    return Derived{};                                                          \
+    KOKKOS_IF_ON_DEVICE((return Derived{};))                                   \
   }
 
 #define KOKKOS_SIMD_IMPL_SHIFT_SCALAR_ASSIGN_OPERATOR(OP, FN_NAME, ARG_TYPE1, \
@@ -97,7 +97,7 @@
           lhs = lhs OP std::forward<ARG_TYPE2>(rhs);                          \
           return lhs;                                                         \
         }))                                                                   \
-    return Derived{};                                                         \
+    KOKKOS_IF_ON_DEVICE((return Derived{};))                                  \
   }
 
 #define KOKKOS_SIMD_IMPL_COMPARISON_OPERATOR(OP, FN_NAME, ARG_TYPE)            \
