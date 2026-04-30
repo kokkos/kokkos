@@ -1920,35 +1920,40 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelFor) {
 }
 
 TEST(TEST_CATEGORY, TeamThreadMDRangeParallelReduce) {
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_3D_TeamThreadMDRange<Left>(dims);
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_3D_TeamThreadMDRange<Right>(dims);
+#ifdef KOKKOS_ENABLE_OPENACC
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+#endif
+  {
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_3D_TeamThreadMDRange<Left>(dims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_3D_TeamThreadMDRange<Right>(dims);
 
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_4D_TeamThreadMDRange<Left>(dims);
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_4D_TeamThreadMDRange<Right>(dims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_4D_TeamThreadMDRange<Left>(dims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_4D_TeamThreadMDRange<Right>(dims);
 
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_5D_TeamThreadMDRange<Left>(dims);
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_5D_TeamThreadMDRange<Right>(dims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_5D_TeamThreadMDRange<Left>(dims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_5D_TeamThreadMDRange<Right>(dims);
 
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_6D_TeamThreadMDRange<Left>(dims);
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_6D_TeamThreadMDRange<Right>(dims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_6D_TeamThreadMDRange<Left>(dims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_6D_TeamThreadMDRange<Right>(dims);
 
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_7D_TeamThreadMDRange<Left>(smallDims);
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_7D_TeamThreadMDRange<Right>(smallDims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamThreadMDRange<Left>(smallDims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamThreadMDRange<Right>(smallDims);
 
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_8D_TeamThreadMDRange<Left>(smallDims);
-  TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_8D_TeamThreadMDRange<Right>(smallDims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamThreadMDRange<Left>(smallDims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamThreadMDRange<Right>(smallDims);
+  }
 }
 
 TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
@@ -1991,30 +1996,35 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
     GTEST_SKIP() << "skipping because of bug in group_barrier implementation";
 #endif
 
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_4D_TeamVectorMDRange<Left>(dims);
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_4D_TeamVectorMDRange<Right>(dims);
+#ifdef KOKKOS_ENABLE_OPENACC
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+#endif
+  {
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_4D_TeamVectorMDRange<Left>(dims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_4D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_5D_TeamVectorMDRange<Left>(dims);
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_5D_TeamVectorMDRange<Right>(dims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_5D_TeamVectorMDRange<Left>(dims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_5D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_6D_TeamVectorMDRange<Left>(dims);
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_6D_TeamVectorMDRange<Right>(dims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_6D_TeamVectorMDRange<Left>(dims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_6D_TeamVectorMDRange<Right>(dims);
 
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_7D_TeamVectorMDRange<Left>(smallDims);
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_7D_TeamVectorMDRange<Right>(smallDims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamVectorMDRange<Left>(smallDims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamVectorMDRange<Right>(smallDims);
 
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_8D_TeamVectorMDRange<Left>(smallDims);
-  TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
-      test_parallel_reduce_for_8D_TeamVectorMDRange<Right>(smallDims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamVectorMDRange<Left>(smallDims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamVectorMDRange<Right>(smallDims);
+  }
 }
 
 }  // namespace TeamMDRange

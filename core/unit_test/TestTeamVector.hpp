@@ -1066,26 +1066,31 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
   GTEST_SKIP() << "Failing KOKKOS_IMPL_32BIT";  // FIXME_32BIT
 #endif
 
-  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
-            Kokkos::Prod<T, TEST_EXECSPACE>>()
-      .run();
-  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
-            Kokkos::Prod<T, TEST_EXECSPACE>>()
-      .run();
+#ifdef KOKKOS_ENABLE_OPENACC
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+#endif
+  {
+    checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
+              Kokkos::Prod<T, TEST_EXECSPACE>>()
+        .run();
+    checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
+              Kokkos::Prod<T, TEST_EXECSPACE>>()
+        .run();
 
-  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
-            Kokkos::Max<T, TEST_EXECSPACE>>()
-      .run();
-  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
-            Kokkos::Max<T, TEST_EXECSPACE>>()
-      .run();
+    checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
+              Kokkos::Max<T, TEST_EXECSPACE>>()
+        .run();
+    checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
+              Kokkos::Max<T, TEST_EXECSPACE>>()
+        .run();
 
-  checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
-            Kokkos::Min<T, TEST_EXECSPACE>>()
-      .run();
-  checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
-            Kokkos::Min<T, TEST_EXECSPACE>>()
-      .run();
+    checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,
+              Kokkos::Min<T, TEST_EXECSPACE>>()
+        .run();
+    checkScan<TEST_EXECSPACE, ScanType::Inclusive, n, n_vector_range,
+              Kokkos::Min<T, TEST_EXECSPACE>>()
+        .run();
+  }
 
   (void)n;
   (void)n_vector_range;

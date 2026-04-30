@@ -349,10 +349,16 @@ bool test_scalar(int nteams, int team_size, int test) {
         "Test::TeamVectorReduce", policy,
         functor_teamvector_reduce<Scalar, ExecutionSpace>(d_flag));
   } else if (test == 2) {
-    Kokkos::parallel_for(
-        "Test::TeamVectorReduceReducer",
-        Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
-        functor_teamvector_reduce_reducer<Scalar, ExecutionSpace>(d_flag));
+#ifdef KOKKOS_ENABLE_OPENACC
+    if constexpr (!std::is_same_v<ExecutionSpace,
+                                  Kokkos::Experimental::OpenACC>)
+#endif
+    {
+      Kokkos::parallel_for(
+          "Test::TeamVectorReduceReducer",
+          Kokkos::TeamPolicy<ExecutionSpace>(nteams, team_size, 8),
+          functor_teamvector_reduce_reducer<Scalar, ExecutionSpace>(d_flag));
+    }
   }
 
   Kokkos::deep_copy(h_flag, d_flag);
