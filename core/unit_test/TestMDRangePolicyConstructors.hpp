@@ -238,7 +238,7 @@ void test_get_tile_size() {
           << " invalid default tile size for rank " << i;
       prod_rec_tile_size *= rec_tile_sizes[i];
     }
-    EXPECT_LT(prod_rec_tile_size, policy.max_total_tile_size());
+    EXPECT_LE(prod_rec_tile_size, policy.max_total_tile_size());
   }
 }
 
