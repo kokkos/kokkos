@@ -1067,7 +1067,9 @@ TEST(TEST_CATEGORY, parallel_scan_with_reducers) {
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENACC
-  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP() << "Team level parallel_scan is not supported on OpenACC";
+  } else
 #endif
   {
     checkScan<TEST_EXECSPACE, ScanType::Exclusive, n, n_vector_range,

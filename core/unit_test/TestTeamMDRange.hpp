@@ -1921,7 +1921,10 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelFor) {
 
 TEST(TEST_CATEGORY, TeamThreadMDRangeParallelReduce) {
 #ifdef KOKKOS_ENABLE_OPENACC
-  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP()
+        << "Team level reductions are not fully implemented on OpenACC";
+  } else
 #endif
   {
     TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
@@ -1997,7 +2000,10 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
 #endif
 
 #ifdef KOKKOS_ENABLE_OPENACC
-  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP()
+        << "Team level reductions are not fully implemented on OpenACC";
+  } else
 #endif
   {
     TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::

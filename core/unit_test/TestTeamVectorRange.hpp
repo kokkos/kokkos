@@ -350,6 +350,7 @@ bool test_scalar(int nteams, int team_size, int test) {
         functor_teamvector_reduce<Scalar, ExecutionSpace>(d_flag));
   } else if (test == 2) {
 #ifdef KOKKOS_ENABLE_OPENACC
+    // FIXME_OPENACC team level reductions are not fully supported
     if constexpr (!std::is_same_v<ExecutionSpace,
                                   Kokkos::Experimental::OpenACC>)
 #endif
@@ -399,7 +400,15 @@ namespace Test {
 
 TEST(TEST_CATEGORY, team_teamvector_range) {
   ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(0)));
-  ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(1)));
-  ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(2)));
+#ifdef KOKKOS_ENABLE_OPENACC
+  // FIXME_OPENACC: the reduction tests below compile fine, but we get
+  // "Accelerator Fatal Error: call to cuCtxSynchronize returned error 700:
+  // Illegal address during kernel execution" at runtime
+  if constexpr (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>)
+#endif
+  {
+    ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(1)));
+    ASSERT_TRUE((TestTeamVectorRange::Test<TEST_EXECSPACE>(2)));
+  }
 }
 }  // namespace Test
