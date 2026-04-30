@@ -3,20 +3,19 @@
 
 #include <gtest/gtest.h>
 #include "TestResize.hpp"
-#include "TestCopyViewsBugs.hpp"
 
 namespace Test {
 
 TEST(kokkosresize, host_space_access) {
   // Test with the default device type.
   using TestViewResize::testResize;
-  using device_type = Kokkos::View<int *>::device_type;
+  using device_type = Kokkos::View<int*>::device_type;
   testResize<device_type>();
 }
 
 TEST(kokkosresize, view_ctor_prop) {
-  using device_type = Kokkos::View<int *>::device_type;
-  TestCopyViewsBugs::testCopyViewsBugs<device_type>();
+  using device_type = Kokkos::View<int*>::device_type;
+  TestViewResize::testCopyViewsOverloads<device_type>();
 }
 
 }  // namespace Test
