@@ -998,6 +998,8 @@ struct TeamThreadMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
+  static_assert(N >= 2u, "Kokkos Error: TeamThreadMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
@@ -1034,6 +1036,9 @@ struct ThreadVectorMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
+  static_assert(N >= 2u,
+                "Kokkos Error: ThreadVectorMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
@@ -1071,6 +1076,8 @@ struct TeamVectorMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
+  static_assert(N >= 2u, "Kokkos Error: TeamVectorMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
