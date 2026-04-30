@@ -700,15 +700,8 @@ void constrain_tile_sizes(std::map<int, Mapped>& cont,
 
 // Entry point for applying tile constraints. Filters out invalid tiles that
 // exceed hardware limits based on the rank of the policy.
-inline void apply_tiles_constraints(std::vector<int>& cont,
-                                    const std::array<int, 3>& hw_tile_limits,
-                                    int policy_rank) {
-  std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
-  constrain_tile_sizes(cont, hw_tile_limits, current_tile, 0, policy_rank);
-}
-
-template <typename Mapped>
-void apply_tiles_constraints(std::map<int, Mapped>& cont,
+template <typename Container>
+void apply_tiles_constraints(Container& cont,
                              const std::array<int, 3>& hw_tile_limits,
                              int policy_rank) {
   std::array<int, 6> current_tile{1, 1, 1, 1, 1, 1};
