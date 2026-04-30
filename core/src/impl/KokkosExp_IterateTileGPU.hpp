@@ -174,7 +174,7 @@ auto compute_device_launch_params(
 // ------------------------------------------------------------------------- //
 // ParallelFor iteration pattern - maps GPU threads to N-D iteration space
 //
-// For ranks 2-3: Direct mapping of hardware threads to iteration space
+// For ranks 1-3: Direct mapping of hardware threads to iteration space
 // dimensions.
 // For ranks 4-6: Multiple logical indices are packed into single
 // hardware dimensions.
