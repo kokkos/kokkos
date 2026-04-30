@@ -163,8 +163,14 @@ void HPX::impl_initialize(InitializationSettings const &settings) {
   if (rt == nullptr) {
     hpx::init_params i;
     if (settings.has_num_threads()) {
-      i.cfg.emplace_back("hpx.os_threads=" +
-                         std::to_string(settings.get_num_threads()));
+      // HPX throws if asked to oversubscribe beyond available processing units.
+      // KOKKOS_NUM_THREADS can be larger than what HPX allows, so clamp.
+      const int requested = settings.get_num_threads();
+      const int available = hpx::threads::hardware_concurrency();
+      const int clamped   = (requested > 0 && available > 0)
+                                ? std::min(requested, available)
+                                : requested;
+      i.cfg.emplace_back("hpx.os_threads=" + std::to_string(clamped));
     }
     int argc_hpx     = 1;
     char name[]      = "kokkos_hpx";
@@ -186,6 +192,9 @@ void HPX::impl_finalize() {
   m_default_instance_data = nullptr;
 
   if (m_hpx_initialized) {
+    // Draining the instance sender (fence + ~instance_data) may run HPX work
+    // that stops the runtime before we get here, in which case
+    // get_runtime_ptr() is already null. Only finalize/stop when still active.
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
 #if HPX_VERSION_FULL >= 0x010900
@@ -194,11 +203,8 @@ void HPX::impl_finalize() {
       hpx::apply([]() { hpx::finalize(); });
 #endif
       hpx::stop();
-    } else {
-      Kokkos::abort(
-          "Kokkos::Experimental::HPX::impl_finalize: Kokkos started "
-          "HPX but something else already stopped HPX\n");
     }
+    m_hpx_initialized = false;
   }
 }
 

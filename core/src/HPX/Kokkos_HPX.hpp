@@ -124,7 +124,12 @@ class HPX {
     instance_data() = default;
     // NOLINTNEXTLINE(bugprone-exception-escape)
     ~instance_data() {
-      fence("Kokkos::Experimental::HPX: fence on destruction");
+      // The HPX runtime may already be shut down (e.g. if finalization is
+      // triggered while draining work). Avoid calling into HPX when the runtime
+      // is no longer active.
+      if (hpx::get_runtime_ptr() != nullptr) {
+        fence("Kokkos::Experimental::HPX: fence on destruction");
+      }
     }
     instance_data(uint32_t instance_id) : m_instance_id(instance_id) {}
     instance_data(uint32_t instance_id,
@@ -137,11 +142,13 @@ class HPX {
     instance_data &operator=(instance_data)         = delete;
 
     void fence(const std::string &name) {
+      if (hpx::get_runtime_ptr() == nullptr) return;
       std::lock_guard<hpx::spinlock> l(m_sender_mutex);
       fence_locked(name);
     }
 
     void fence_locked(const std::string &name) {
+      if (hpx::get_runtime_ptr() == nullptr) return;
       Kokkos::Tools::Experimental::Impl::profile_fence_event<
           Kokkos::Experimental::HPX>(
           name,
@@ -1579,7 +1586,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     const auto buffer_size = std::min(nchunks, num_worker_threads);
     buffer.resize(buffer_size, value_size + m_shared);
 
-    for (int t = 0; t < num_worker_threads; ++t) {
+    for (int t = 0; t < buffer_size; ++t) {
       reducer.init(reinterpret_cast<pointer_type>(buffer.get(t)));
     }
   }
@@ -1618,8 +1625,11 @@ class ParallelReduce<CombinedFunctorReducerType,
     hpx_thread_buffer &buffer    = m_policy.space().impl_get_buffer();
     const ReducerType &reducer   = m_functor_reducer.get_reducer();
     const int num_worker_threads = m_policy.space().concurrency();
+    const auto nchunks =
+        get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
+    const auto buffer_size = std::min(nchunks, num_worker_threads);
     const pointer_type ptr = reinterpret_cast<pointer_type>(buffer.get(0));
-    for (int t = 1; t < num_worker_threads; ++t) {
+    for (int t = 1; t < buffer_size; ++t) {
       reducer.join(ptr, reinterpret_cast<pointer_type>(buffer.get(t)));
     }
 
