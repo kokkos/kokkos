@@ -37,8 +37,8 @@ __device__ std::enable_if_t<sizeof(T) == 4, T> device_atomic_compare_exchange(
   static_assert(sizeof(unsigned int) == 4,
                 "this function assumes an unsigned int is 32-bit");
   unsigned int return_val = atomicCAS(reinterpret_cast<unsigned int*>(dest),
-                                      reinterpret_cast<unsigned int&>(compare),
-                                      reinterpret_cast<unsigned int&>(value));
+                                      *reinterpret_cast<unsigned int*>(&compare),
+                                      *reinterpret_cast<unsigned int*>(&value));
   return reinterpret_cast<T&>(return_val);
 }
 template <class T, class MemoryScope>
@@ -48,8 +48,8 @@ __device__ std::enable_if_t<sizeof(T) == 8, T> device_atomic_compare_exchange(
                 "this function assumes an unsigned long long is 64-bit");
   unsigned long long int return_val =
       atomicCAS(reinterpret_cast<unsigned long long int*>(dest),
-                reinterpret_cast<unsigned long long int&>(compare),
-                reinterpret_cast<unsigned long long int&>(value));
+                *reinterpret_cast<unsigned long long int*>(&compare),
+                *reinterpret_cast<unsigned long long int*>(&value));
   return reinterpret_cast<T&>(return_val);
 }
 
@@ -90,7 +90,7 @@ __device__ std::enable_if_t<sizeof(T) == 4, T> device_atomic_exchange(
   static_assert(sizeof(unsigned int) == 4,
                 "this function assumes an unsigned int is 32-bit");
   unsigned int return_val = atomicExch(reinterpret_cast<unsigned int*>(dest),
-                                       reinterpret_cast<unsigned int&>(value));
+                                       *reinterpret_cast<unsigned int*>(&value));
   return reinterpret_cast<T&>(return_val);
 }
 template <class T, class MemoryScope>
@@ -100,7 +100,7 @@ __device__ std::enable_if_t<sizeof(T) == 8, T> device_atomic_exchange(
                 "this function assumes an unsigned long long is 64-bit");
   unsigned long long int return_val =
       atomicExch(reinterpret_cast<unsigned long long int*>(dest),
-                 reinterpret_cast<unsigned long long int&>(value));
+                 *reinterpret_cast<unsigned long long int*>(&value));
   return reinterpret_cast<T&>(return_val);
 }
 

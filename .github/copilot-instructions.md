@@ -118,6 +118,10 @@ ctest -j$(nproc)                       # Parallel execution
 **Test structure:** `core/unit_test/` (main), `algorithms/unit_tests/`, `containers/unit_tests/`, `simd/unit_tests/`, `example/` (integration)
 **Naming:** `Kokkos_<Component>UnitTest_<Backend>_<TestName>`
 **Note:** Tests are backend-specific. Some disabled for certain backends (see `# FIXME_<BACKEND>` comments in CMakeLists.txt).
+**Smoke test:** A small subset of core unit tests for quicker compilation and execution. Requires `Kokkos_ENABLE_TESTS=ON`. Run with
+```bash
+ctest --test-dir builddir -R SmokeTest --output-on-failure
+```
 
 ## Critical Rules
 

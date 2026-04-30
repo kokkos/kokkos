@@ -700,19 +700,19 @@ KOKKOS_IMPL_MATH_BINARY_FUNCTION(copysign)
 // FIXME_NVHPC nvhpc's fpclassify return FP_ZERO for subnormal values.
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_SYCL) || \
     defined(KOKKOS_COMPILER_NVHPC)
-#define KOKKOS_IMPL_MATH_FPCLASSIFY(SPECIFIER, TYPE)                       \
-  SPECIFIER int fpclassify(TYPE x) {                                       \
-    if (x != x) {                                                          \
-      return FP_NAN;                                                       \
-    } else if (x == 0) {                                                   \
-      return FP_ZERO;                                                      \
-    } else if (Kokkos::abs(x) < Kokkos::Experimental::norm_min_v<TYPE>) {  \
-      return FP_SUBNORMAL;                                                 \
-    } else if (Kokkos::abs(x) == Kokkos::Experimental::infinity_v<TYPE>) { \
-      return FP_INFINITE;                                                  \
-    } else {                                                               \
-      return FP_NORMAL;                                                    \
-    }                                                                      \
+#define KOKKOS_IMPL_MATH_FPCLASSIFY(SPECIFIER, TYPE)         \
+  SPECIFIER int fpclassify(TYPE x) {                         \
+    if (x != x) {                                            \
+      return FP_NAN;                                         \
+    } else if (x == 0) {                                     \
+      return FP_ZERO;                                        \
+    } else if (Kokkos::abs(x) < Kokkos::norm_min_v<TYPE>) {  \
+      return FP_SUBNORMAL;                                   \
+    } else if (Kokkos::abs(x) == Kokkos::infinity_v<TYPE>) { \
+      return FP_INFINITE;                                    \
+    } else {                                                 \
+      return FP_NORMAL;                                      \
+    }                                                        \
   }
 
 KOKKOS_IMPL_MATH_FPCLASSIFY(KOKKOS_INLINE_FUNCTION, float)
@@ -737,11 +737,11 @@ KOKKOS_IMPL_MATH_UNARY_PREDICATE(isfinite)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isinf)
 KOKKOS_IMPL_MATH_UNARY_PREDICATE(isnan)
 #if defined(KOKKOS_ENABLE_CUDA)
-#define KOKKOS_IMPL_MATH_ISNORMAL(SPECIFIER, TYPE)            \
-  SPECIFIER bool isnormal(TYPE x) {                           \
-    auto const abs = Kokkos::abs(x);                          \
-    return (abs >= Kokkos::Experimental::norm_min_v<TYPE>)&&( \
-        abs <= Kokkos::Experimental::finite_max_v<TYPE>);     \
+#define KOKKOS_IMPL_MATH_ISNORMAL(SPECIFIER, TYPE)                          \
+  SPECIFIER bool isnormal(TYPE x) {                                         \
+    auto const abs = Kokkos::abs(x);                                        \
+    return (abs >= Kokkos::norm_min_v<TYPE>)&&(abs <=                       \
+                                               Kokkos::finite_max_v<TYPE>); \
   }
 
 KOKKOS_IMPL_MATH_ISNORMAL(KOKKOS_INLINE_FUNCTION, float)

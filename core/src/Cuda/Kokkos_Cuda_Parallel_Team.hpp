@@ -197,7 +197,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
     // arbitrarily setting level 1 scratch limit to 20MB, for a
     // Volta V100 that would give us about 3.2GB for 2 teams per SM
     constexpr size_t max_l1_scratch_size =
-        static_cast<size_t>(20) * 1024 * 1024;
+        static_cast<size_t>(80) * 1024 * 1024;
 
     size_t max_shmem = Cuda().cuda_device_prop().sharedMemPerBlock;
     return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team

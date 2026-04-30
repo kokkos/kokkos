@@ -142,7 +142,6 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
                          Kokkos::Threads::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
 };
 
 }  // namespace Impl

@@ -154,7 +154,6 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
                          Kokkos::OpenMP::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
 };
 
 }  // namespace Impl

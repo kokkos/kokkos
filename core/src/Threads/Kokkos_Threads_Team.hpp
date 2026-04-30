@@ -640,7 +640,7 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
 
   inline static int scratch_size_max(int level) {
     return (level == 0 ? 1024 * 32 :  // Roughly L1 size
-                20 * 1024 * 1024);    // Limit to keep compatibility with CUDA
+                80 * 1024 * 1024);    // Limit to keep compatibility with CUDA
   }
 
   //----------------------------------------

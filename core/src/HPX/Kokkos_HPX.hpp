@@ -473,7 +473,6 @@ struct MemorySpaceAccess<Kokkos::Experimental::HPX::memory_space,
                          Kokkos::Experimental::HPX::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
-  enum : bool { deepcopy = false };
 };
 
 template <>

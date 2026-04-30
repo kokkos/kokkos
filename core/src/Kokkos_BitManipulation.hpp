@@ -121,7 +121,7 @@ struct CountlZero {
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
     // From Hacker's Delight (2nd edition) section 5-3
     unsigned int y = 0;
-    using ::Kokkos::Experimental::digits_v;
+    using ::Kokkos::digits_v;
     int n = digits_v<T>;
     int c = digits_v<T> / 2;
     do {
@@ -147,7 +147,7 @@ struct CountlZero</*constant_evaluated=*/false, /*device=*/true> {
       return __clzll(reinterpret_cast<long long int&>(x));
     if constexpr (sizeof(T) == sizeof(int))
       return __clz(reinterpret_cast<int&>(x));
-    using ::Kokkos::Experimental::digits_v;
+    using ::Kokkos::digits_v;
     constexpr int shift = digits_v<unsigned int> - digits_v<T>;
     return __clz(x) - shift;
 #elif defined(KOKKOS_ENABLE_SYCL)
@@ -164,7 +164,7 @@ template <bool constant_evaluated>
 struct CountlZero<constant_evaluated, /*device=*/false> {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-    using ::Kokkos::Experimental::digits_v;
+    using ::Kokkos::digits_v;
     if (x == 0) return digits_v<T>;
     if constexpr (std::is_same_v<T, unsigned long long>) {
       return __builtin_clzll(x);
@@ -186,7 +186,7 @@ template <bool constant_evaluated, bool device>
 struct CountrZero {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-    using ::Kokkos::Experimental::digits_v;
+    using ::Kokkos::digits_v;
     return digits_v<T> -
            CountlZero<constant_evaluated, device>::do_compute(
                static_cast<T>(static_cast<T>(~x) & static_cast<T>(x - 1)));
@@ -199,7 +199,7 @@ template <>
 struct CountrZero</*constant_evaluated=*/false, /*device=*/true> {
   template <class T>
   static KOKKOS_IMPL_DEVICE_FUNCTION T do_compute(T x) noexcept {
-    using ::Kokkos::Experimental::digits_v;
+    using ::Kokkos::digits_v;
     if (x == 0) return digits_v<T>;
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
     if constexpr (sizeof(T) == sizeof(long long int))
@@ -219,7 +219,7 @@ template <bool constant_evaluated>
 struct CountrZero<constant_evaluated, /*device=*/false> {
   template <class T>
   static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
-    using ::Kokkos::Experimental::digits_v;
+    using ::Kokkos::digits_v;
     if (x == 0) return digits_v<T>;
     if constexpr (std::is_same_v<T, unsigned long long>) {
       return __builtin_ctzll(x);
@@ -318,30 +318,30 @@ KOKKOS_FUNCTION constexpr T byteswap(T value) noexcept {
 //<editor-fold desc="[bit.count], counting">
 template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countl_zero(T x) noexcept {
-  using ::Kokkos::Experimental::digits_v;
+  using ::Kokkos::digits_v;
   if (x == 0) return digits_v<T>;
   return Impl::dispatch_helper<Impl::CountlZero>(x);
 }
 
 template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countl_one(T x) noexcept {
-  using ::Kokkos::Experimental::digits_v;
-  using ::Kokkos::Experimental::finite_max_v;
+  using ::Kokkos::digits_v;
+  using ::Kokkos::finite_max_v;
   if (x == finite_max_v<T>) return digits_v<T>;
   return countl_zero(static_cast<T>(~x));
 }
 
 template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countr_zero(T x) noexcept {
-  using ::Kokkos::Experimental::digits_v;
+  using ::Kokkos::digits_v;
   if (x == 0) return digits_v<T>;
   return Impl::dispatch_helper<Impl::CountrZero>(x);
 }
 
 template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int countr_one(T x) noexcept {
-  using ::Kokkos::Experimental::digits_v;
-  using ::Kokkos::Experimental::finite_max_v;
+  using ::Kokkos::digits_v;
+  using ::Kokkos::finite_max_v;
   if (x == finite_max_v<T>) return digits_v<T>;
   return countr_zero(static_cast<T>(~x));
 }
@@ -362,21 +362,21 @@ KOKKOS_FUNCTION constexpr bool has_single_bit(T x) noexcept {
 template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr T bit_ceil(T x) noexcept {
   if (x <= 1) return 1;
-  using ::Kokkos::Experimental::digits_v;
+  using ::Kokkos::digits_v;
   return T{1} << (digits_v<T> - countl_zero(static_cast<T>(x - 1)));
 }
 
 template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr T bit_floor(T x) noexcept {
   if (x == 0) return 0;
-  using ::Kokkos::Experimental::digits_v;
+  using ::Kokkos::digits_v;
   return T{1} << (digits_v<T> - 1 - countl_zero(x));
 }
 
 template <Impl::StandardUnsignedInteger T>
 KOKKOS_FUNCTION constexpr int bit_width(T x) noexcept {
   if (x == 0) return 0;
-  using ::Kokkos::Experimental::digits_v;
+  using ::Kokkos::digits_v;
   return digits_v<T> - countl_zero(x);
 }
 //</editor-fold>
@@ -384,7 +384,7 @@ KOKKOS_FUNCTION constexpr int bit_width(T x) noexcept {
 //<editor-fold desc="[bit.rotate], rotating">
 template <Impl::StandardUnsignedInteger T>
 [[nodiscard]] KOKKOS_FUNCTION constexpr T rotl(T x, int s) noexcept {
-  using Experimental::digits_v;
+  using ::Kokkos::digits_v;
   constexpr auto dig = digits_v<T>;
   int const rem      = s % dig;
   if (rem == 0) return x;
@@ -394,7 +394,7 @@ template <Impl::StandardUnsignedInteger T>
 
 template <Impl::StandardUnsignedInteger T>
 [[nodiscard]] KOKKOS_FUNCTION constexpr T rotr(T x, int s) noexcept {
-  using Experimental::digits_v;
+  using ::Kokkos::digits_v;
   constexpr auto dig = digits_v<T>;
   int const rem      = s % dig;
   if (rem == 0) return x;

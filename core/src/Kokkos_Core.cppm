@@ -316,7 +316,41 @@ export {
   using ::Kokkos::rotr;
 
   // numeric limits
-  namespace Experimental {
+  using ::Kokkos::denorm_min;
+  using ::Kokkos::denorm_min_v;
+  using ::Kokkos::digits;
+  using ::Kokkos::digits10;
+  using ::Kokkos::digits10_v;
+  using ::Kokkos::digits_v;
+  using ::Kokkos::epsilon;
+  using ::Kokkos::epsilon_v;
+  using ::Kokkos::finite_max;
+  using ::Kokkos::finite_max_v;
+  using ::Kokkos::finite_min;
+  using ::Kokkos::finite_min_v;
+  using ::Kokkos::infinity;
+  using ::Kokkos::infinity_v;
+  using ::Kokkos::max_digits10;
+  using ::Kokkos::max_digits10_v;
+  using ::Kokkos::max_exponent;
+  using ::Kokkos::max_exponent10;
+  using ::Kokkos::max_exponent10_v;
+  using ::Kokkos::max_exponent_v;
+  using ::Kokkos::min_exponent;
+  using ::Kokkos::min_exponent10;
+  using ::Kokkos::min_exponent10_v;
+  using ::Kokkos::min_exponent_v;
+  using ::Kokkos::norm_min;
+  using ::Kokkos::norm_min_v;
+  using ::Kokkos::quiet_NaN;
+  using ::Kokkos::quiet_NaN_v;
+  using ::Kokkos::radix;
+  using ::Kokkos::radix_v;
+  using ::Kokkos::round_error;
+  using ::Kokkos::round_error_v;
+  using ::Kokkos::signaling_NaN;
+  using ::Kokkos::signaling_NaN_v;
+  namespace Experimental {  // for backward compatibility
   using ::Kokkos::Experimental::denorm_min;
   using ::Kokkos::Experimental::denorm_min_v;
   using ::Kokkos::Experimental::digits;

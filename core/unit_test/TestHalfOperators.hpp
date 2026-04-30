@@ -968,7 +968,7 @@ struct Functor_TestHalfOperators {
 
 template <class half_type>
 void _test_half_operators(half_type h_lhs, half_type h_rhs) {
-  half_type epsilon = Kokkos::Experimental::epsilon<half_type>::value;
+  half_type epsilon = Kokkos::epsilon<half_type>::value;
 
   Functor_TestHalfOperators<ViewType, half_type> f_device(h_lhs, h_rhs);
   Functor_TestHalfOperators<ViewTypeHost, half_type> f_host(h_lhs, h_rhs);

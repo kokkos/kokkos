@@ -50,6 +50,7 @@ jobs:
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
             ./
@@ -111,6 +112,7 @@ jobs:
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
 
       - name: build_and_install_kokkos
@@ -167,6 +169,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
 
       - name: build_and_install_kokkos
@@ -226,6 +229,7 @@ jobs:
             -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }}
 
@@ -285,6 +289,7 @@ jobs:
             -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON
 
       - name: build_and_install_kokkos
@@ -335,6 +340,7 @@ jobs:
             -DKokkos_ENABLE_HWLOC=ON \
             -DKokkos_ENABLE_HPX=ON \
             -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
             -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
             -DKokkos_ENABLE_EXAMPLES=ON \

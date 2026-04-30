@@ -218,9 +218,9 @@ simd_unchecked_load(const T* ptr,
   return simd_unchecked_load<basic_simd<T, simd_abi::scalar>>(ptr, flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto unchecked_gather_from(
     R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
@@ -228,9 +228,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto unchecked_gather_from(
       basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(in, indices, flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::ScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_FORCEINLINE_FUNCTION auto unchecked_gather_from(
     R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
@@ -238,9 +238,9 @@ KOKKOS_FORCEINLINE_FUNCTION auto unchecked_gather_from(
                                                                 flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
@@ -250,9 +250,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto unchecked_gather_from(
                                                            flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::ScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_FORCEINLINE_FUNCTION auto unchecked_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
@@ -261,9 +261,9 @@ KOKKOS_FORCEINLINE_FUNCTION auto unchecked_gather_from(
                                                                 indices, flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto partial_gather_from(
     R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
@@ -271,9 +271,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto partial_gather_from(
       basic_simd<T, simd_abi::Impl::host_fixed_native<T>>>(in, indices, flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::ScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_FORCEINLINE_FUNCTION auto partial_gather_from(
     R&& in, const I& indices, simd_flags<Flags...> flag = simd_flag_default) {
@@ -281,9 +281,9 @@ KOKKOS_FORCEINLINE_FUNCTION auto partial_gather_from(
                                                               flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::NonScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto partial_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,
@@ -293,9 +293,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto partial_gather_from(
                                                            flag);
 }
 
-template <std::ranges::contiguous_range R, Impl::SimdIntegral I,
-          typename... Flags, typename T = std::ranges::range_value_t<R>>
-  requires std::ranges::sized_range<R> &&
+template <Impl::Ranges::contiguous_range R, Impl::SimdIntegral I,
+          typename... Flags, typename T = Impl::Ranges::range_value_t<R>>
+  requires Impl::Ranges::sized_range<R> &&
            Impl::ScalarAbi<simd_abi::Impl::host_fixed_native<T>>
 KOKKOS_FORCEINLINE_FUNCTION auto partial_gather_from(
     R&& in, const typename I::mask_type& mask, const I& indices,

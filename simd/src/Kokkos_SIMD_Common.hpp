@@ -12,12 +12,12 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 #include <impl/Kokkos_SIMD_Impl_Macros.hpp>
+#include <impl/Kokkos_SIMD_RangesCtorSupport.hpp>
 #include <cstdint>
 #include <cstring>
 #include <functional>
 #include <utility>
 #include <type_traits>
-#include <ranges>
 
 namespace Kokkos {
 
@@ -350,6 +350,7 @@ KOKKOS_FORCEINLINE_FUNCTION auto round_half_to_nearest_even(T const& x) {
 
 // common implementations of host only simd reductions:
 template <class T, class Abi, class BinaryOperation = std::plus<>>
+  requires requires(T x, BinaryOperation op) { op(x, x); }
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION T reduce(const basic_simd<T, Abi>& x,
                                                BinaryOperation binary_op = {}) {
   T result = x[0];

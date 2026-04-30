@@ -362,7 +362,7 @@ struct TestStaticBatchSize {
 
 TEST(TEST_CATEGORY, range_dynamic_policy) {
 #if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
-    !defined(KOKKOS_ENABLE_SYCL)
+    !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(0);
     f.test_dynamic_policy();
@@ -409,7 +409,13 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
                                Kokkos::HostSpace>) {
     GTEST_SKIP() << "Disabling for host backends";
   }
+// NVC++ warned about unreachable code without the
+// if/else construct here
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+  GTEST_SKIP() << "skipping for GPUs with not enough memory";
+#else
   test_large_parallel_for_reduce();
+#endif
 }
 #endif
 

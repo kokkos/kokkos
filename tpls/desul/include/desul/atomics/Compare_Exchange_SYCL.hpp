@@ -76,7 +76,7 @@ std::enable_if_t<sizeof(T) == 8, T> device_atomic_exchange(T* const dest,
   sycl_atomic_ref<unsigned long long int, MemoryOrder, MemoryScope> dest_ref(
       *reinterpret_cast<unsigned long long int*>(dest));
   unsigned long long int return_val =
-      dest_ref.exchange(reinterpret_cast<unsigned long long int&>(value));
+      dest_ref.exchange(*reinterpret_cast<unsigned long long int*>(&value));
   return reinterpret_cast<T&>(return_val);
 }
 

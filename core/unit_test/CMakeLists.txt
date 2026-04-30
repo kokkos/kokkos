@@ -88,6 +88,27 @@ endif()
 
 kokkos_add_executable(CoreTestCompileOnly SOURCES TestCompileMain.cpp ${COMPILE_ONLY_SOURCES})
 
+# Smoke tests, one per major API category
+set(SMOKE_TEST_NAMES
+    Abort
+    Atomics
+    BlockSizeDeduction
+    CommonPolicyInterface
+    Complex
+    DeepCopy_Assignment
+    ExecutionSpace
+    Graph
+    MDRange_a
+    RangePolicy
+    Reductions
+    SharedAlloc
+    TeamBasic
+    TeamMDRange
+    TeamVectorRange
+    ViewAPI_a
+    WorkGraph
+)
+
 foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
   string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
@@ -101,7 +122,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
     set(${Tag}_SOURCES1A)
     foreach(
       Name
-      Abort
       ArrayOps
       AtomicOperations_complexdouble
       AtomicOperations_complexfloat
@@ -115,25 +135,18 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       AtomicOperations_shared
       AtomicOperations_unsignedint
       AtomicOperations_unsignedlongint
-      Atomics
       AtomicViews
       BitManipulationBuiltins
-      BlockSizeDeduction
       CheckedIntegerOps
       CommonPolicyConstructors
-      CommonPolicyInterface
-      Complex
       Concepts
       Crs
-      DeepCopy_Assignment
       DeepCopy_Narrowing
       DeepCopy_SameArgument
       DeepCopyAlignment
       ExecSpacePartitioning
       ExecSpaceThreadSafety
-      ExecutionSpace
       FunctorAnalysis
-      Graph
       GraphNodeCtorProps
       HostSharedPtr
       HostSharedPtrAccessOnDevice
@@ -155,7 +168,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
 
     set(${Tag}_SOURCES1B)
     set(${Tag}_TESTNAMES1B
-        MDRange_a
         MDRange_b
         MDRange_c
         MDRange_d
@@ -175,7 +187,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
         CustomScalarParallelScan
         Printf
         QuadPrecisionMath
-        RangePolicy
         RangePolicyConstructors
         RangePolicyRequire
         ReducerCTADs
@@ -184,9 +195,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
         Reducers_c
         Reducers_d
         Reducers_e
-        Reductions
         Reductions_DeviceView
-        SharedAlloc
         SpaceAwareAccessorAccessViolation
         SpaceAwareAccessor
         Swap
@@ -219,19 +228,15 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
 
     set(${Tag}_SOURCES2A)
     set(${Tag}_TESTNAMES2A
-        TeamBasic
         TeamCombinedReducers
-        TeamMDRange
         TeamPolicyConstructors
         TeamReductionScan
         TeamScan
         TeamScratch
         TeamTeamSize
-        TeamVectorRange
         Timer
         UniqueToken
         View_64bit
-        ViewAPI_a
         ViewAPI_b
         ViewAPI_c
         ViewAPI_d
@@ -254,7 +259,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
         ViewOfViews
         ViewOutOfBoundsAccess
         ViewResize
-        WorkGraph
         WithoutInitializing
     )
     # Workaround to internal compiler error with intel classic compilers
@@ -358,6 +362,31 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       endforeach()
       kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
+    # Smoke test: minimal subset for quick iteration (generate sources not built with main targets).
+    foreach(Name IN LISTS SMOKE_TEST_NAMES)
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n" "#include <Test${Name}.hpp>\n")
+      configure_file(${dir}/dummy.cpp ${file})
+    endforeach()
+    set(${Tag}_SOURCES_SMOKE)
+    foreach(Name IN LISTS SMOKE_TEST_NAMES)
+      set(file ${dir}/Test${Tag}_${Name}.cpp)
+      list(APPEND ${Tag}_SOURCES_SMOKE ${file})
+    endforeach()
+    # Fails serial.atomics_tpetra_max_abs when we test with Clacc (same as CoreUnitTest_Serial1).
+    if(Tag STREQUAL "Serial" AND KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
+
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
+    endif()
+    # WorkGraph is not supported for SYCL in unit tests (historically excluded from CoreUnitTest_SYCL2A).
+    if(Tag STREQUAL "SYCL")
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_WorkGraph.cpp)
+    endif()
+    # Same as OpenACC_SOURCES (WorkGraph removed from the main OpenACC unit-test bundle).
+    if(Tag STREQUAL "OpenACC")
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_WorkGraph.cpp)
+    endif()
+    kokkos_add_executable_and_test(CoreUnitTest_${Tag}_SmokeTest SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
   endif()
 endforeach()
 
@@ -392,8 +421,8 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
       file(WRITE ${dir}/dummy.cpp "#include <Test${DEVICE}${SPACE}_Category.hpp>\n" "#include <Test${Name}.hpp>\n")
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${DEVICE}_SOURCES3 ${file})
+      list(APPEND ${DEVICE}_SOURCES ${file})
     endforeach()
-    list(APPEND ${DEVICE}_SOURCES ${${DEVICE}_SOURCES3})
   endif()
 endforeach()
 
@@ -411,7 +440,6 @@ if(Kokkos_ENABLE_OPENACC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamMDRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamReductionScan.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamScan.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_TeamVectorRange.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewAPI_e.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewMapping_subview.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewOfClass.cpp
@@ -530,8 +558,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
       ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_ViewAPI_c.cpp
     )
   endif()
-  # Fails serial.atomics_tpetra_max_abs when we test with Clacc.
-  list(REMOVE_ITEM Serial_SOURCES1 ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Atomics.cpp)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
@@ -651,8 +677,6 @@ if(Kokkos_ENABLE_HIP)
 endif()
 
 if(Kokkos_ENABLE_SYCL)
-  list(REMOVE_ITEM SYCL_SOURCES2A ${CMAKE_CURRENT_BINARY_DIR}/sycl/TestSYCL_WorkGraph.cpp)
-
   kokkos_add_executable_and_test(CoreUnitTest_SYCL1A SOURCES UnitTestMainInit.cpp ${SYCL_SOURCES1A})
 
   kokkos_add_executable_and_test(CoreUnitTest_SYCL1B SOURCES UnitTestMainInit.cpp ${SYCL_SOURCES1B})

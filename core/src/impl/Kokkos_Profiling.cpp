@@ -29,7 +29,6 @@
 #include <unordered_set>
 #include <vector>
 #include <sstream>
-#include <iostream>
 
 namespace {
 void warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(char const* arg) {
@@ -1023,13 +1022,13 @@ static size_t& get_context_counter() {
 }
 static size_t& get_variable_counter() {
   static size_t x;
-  return ++x;
+  return x;
 }
 
 size_t get_new_context_id() { return ++get_context_counter(); }
 size_t get_current_context_id() { return get_context_counter(); }
 void decrement_current_context_id() { --get_context_counter(); }
-size_t get_new_variable_id() { return get_variable_counter(); }
+size_t get_new_variable_id() { return ++get_variable_counter(); }
 
 size_t declare_output_type(const std::string& variableName, VariableInfo info) {
   size_t variableId = get_new_variable_id();

@@ -108,7 +108,7 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) KOKKOS_IMPL_
         const IndexType idx          = local_offset + thread_id;
         ValueType update;
         final_reducer.init(&update);
-        if ((idx > begin) && (idx < end)) functor(idx - 1, update, false);
+        if (idx < end) functor(idx, update, false);
         KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(thread_id) = update;
       }
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
@@ -163,10 +163,7 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) KOKKOS_IMPL_
         const IndexType idx          = local_offset + thread_id;
         ValueType update;
         final_reducer.init(&update);
-        if (thread_id == 0) {
-          final_reducer.join(&update, &offset_values(team_id));
-        }
-        if ((idx > begin) && (idx < end)) functor(idx - 1, update, false);
+        if (idx < end) functor(idx, update, false);
         KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(thread_id) = update;
       }
       for (IndexType step_size = 1; step_size < chunk_size; step_size *= 2) {
@@ -195,8 +192,16 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang vector_length(chunk_size) KOKKOS_IMPL_
       for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
         const IndexType local_offset = team_id * chunk_size + begin;
         const IndexType idx          = local_offset + thread_id;
-        ValueType update             = KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
-            current_step * chunk_size + thread_id);
+        ValueType update;
+        final_reducer.init(&update);
+        final_reducer.join(&update, &offset_values(team_id));
+        // Reconstruct the exclusive prefix from the chunk-local inclusive scan
+        // to avoid rereading the previous chunk tail.
+        if (thread_id > 0) {
+          final_reducer.join(&update,
+                             &KOKKOS_IMPL_ACC_ACCESS_ELEMENTS(
+                                 current_step * chunk_size + thread_id - 1));
+        }
         if (idx < end) functor(idx, update, true);
         if (idx == end - 1) {
           if (m_result_ptr_device_accessible) {

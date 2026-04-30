@@ -47,8 +47,8 @@ std::enable_if_t<host_atomic_always_lock_free<T>, T> host_atomic_compare_exchang
     T* dest, T compare, T value, MemoryOrder, MemoryScope) {
   using cas_t = atomic_compare_exchange_t<T>;
   cas_t retval = __sync_val_compare_and_swap(reinterpret_cast<volatile cas_t*>(dest),
-                                             reinterpret_cast<cas_t&>(compare),
-                                             reinterpret_cast<cas_t&>(value));
+                                             *reinterpret_cast<cas_t*>(&compare),
+                                             *reinterpret_cast<cas_t*>(&value));
   return reinterpret_cast<T&>(retval);
 }
 

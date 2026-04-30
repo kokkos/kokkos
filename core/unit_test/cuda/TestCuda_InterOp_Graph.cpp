@@ -122,8 +122,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
   GTEST_SKIP() << "Graph instantiation flag inspection requires Cuda 12.";
 #else
   graph->instantiate();
-  unsigned long long flags =
-      Kokkos::Experimental::finite_max_v<unsigned long long>;
+  unsigned long long flags = Kokkos::finite_max_v<unsigned long long>;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaGraphExecGetFlags(graph->native_graph_exec(), &flags));
 
