@@ -11,10 +11,15 @@ import kokkos.core;
 
 #include <gtest/gtest.h>
 
+#include <type_traits>
+
 namespace {
 
 using ExecSpace  = Kokkos::DefaultHostExecutionSpace;
 using TeamMember = Kokkos::TeamPolicy<ExecSpace>::member_type;
+
+static_assert(std::is_default_constructible_v<
+              Kokkos::Tools::Experimental::MDRangeTuner<1>>);
 
 struct TestTeamFunctor {
   KOKKOS_FUNCTION void operator()(TeamMember) const {}

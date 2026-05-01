@@ -71,6 +71,7 @@ struct ValueHierarchyNode {
 template <typename ValueType>
 struct ValueHierarchyNode<ValueType, void> {
   std::vector<ValueType> root_values;
+  ValueHierarchyNode() = default;
   explicit ValueHierarchyNode(std::vector<ValueType> rv)
       : root_values(std::move(rv)) {}
   void add_root_value(const ValueType& in) { root_values.push_back(in); }
