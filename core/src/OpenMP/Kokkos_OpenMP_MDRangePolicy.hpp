@@ -9,23 +9,6 @@
 namespace Kokkos {
 namespace Impl {
 
-template <>
-struct TileSizeRecommended<Kokkos::OpenMP> {
-  template <typename Policy>
-  static auto get(Policy const& policy) {
-    if constexpr (Policy::rank == 1) {
-      using range_policy = typename Policy::impl_range_policy;
-      typename Policy::tile_type tile{};
-      range_policy range_policy_1d(policy.space(), policy.m_lower[0],
-                                   policy.m_upper[0]);
-      tile[0] = range_policy_1d.chunk_size();
-      return tile;
-    } else {
-      return get_default_tile_size_recommended(policy);
-    }
-  }
-};
-
 // Settings for TeamMDRangePolicy
 template <typename Rank, TeamMDRangeThreadAndVector ThreadAndVector>
 struct ThreadAndVectorNestLevel<Rank, OpenMP, ThreadAndVector>

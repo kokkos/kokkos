@@ -228,47 +228,6 @@ TEST(TEST_CATEGORY, md_range_policy_get_tile_size) {
   test_get_tile_size_for_ranks(ranks);
 }
 
-template <class ExecSpace>
-void test_rank1_default_tile_matches_range_policy() {
-  using index_type     = int;
-  using md_policy_t    = Kokkos::MDRangePolicy<ExecSpace, Kokkos::Rank<1>,
-                                            Kokkos::IndexType<index_type>>;
-  using range_policy_t = typename md_policy_t::impl_range_policy;
-
-  constexpr index_type begin = 0;
-  constexpr index_type end   = 1 << 20;
-  typename md_policy_t::point_type lower{begin};
-  typename md_policy_t::point_type upper{end};
-
-  md_policy_t md_policy(ExecSpace{}, lower, upper);
-  range_policy_t range_policy(ExecSpace{}, begin, end);
-
-  EXPECT_EQ(md_policy.tile_size_recommended()[0], range_policy.chunk_size());
-  EXPECT_EQ(md_policy.m_tile[0], range_policy.chunk_size());
-  EXPECT_EQ(md_policy.m_num_tiles,
-            (end - begin + range_policy.chunk_size() - 1) /
-                range_policy.chunk_size());
-  EXPECT_LT(md_policy.m_tile[0], end - begin);
-  EXPECT_GT(md_policy.m_num_tiles, 1);
-}
-
-TEST(TEST_CATEGORY, md_range_policy_rank1_default_tile_matches_range) {
-  bool skipped = true;
-#if defined(KOKKOS_ENABLE_OPENMP)
-  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) {
-    skipped = false;
-    test_rank1_default_tile_matches_range_policy<TEST_EXECSPACE>();
-  }
-#elif defined(KOKKOS_ENABLE_THREADS)
-    if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>) {
-      skipped = false;
-      test_rank1_default_tile_matches_range_policy<TEST_EXECSPACE>();
-    }
-#endif
-  if (skipped)
-    GTEST_SKIP() << "tile size tested only for OpenMP or Threads backend";
-}
-
 template <int Rank, int MaxTperB, Kokkos::Iterate InnerDirection>
 void test_default_tiles_respect_launch_bounds() {
   using policy_t =
