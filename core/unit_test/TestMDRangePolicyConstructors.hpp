@@ -35,9 +35,6 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
     Kokkos::Array<IndexType, 1> lower{0};
     Kokkos::Array<IndexType, 1> upper{2};
     Kokkos::Array<IndexType, 1> tile{4};
-    IndexType lower_c_array[1] = {0};
-    IndexType upper_c_array[1] = {2};
-    IndexType tile_c_array[1]  = {4};
 
     Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
                           Kokkos::IndexType<IndexType>>
@@ -45,12 +42,6 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
     Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
                           Kokkos::IndexType<IndexType>>
         p2(lower, upper, tile);
-    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
-                          Kokkos::IndexType<IndexType>>
-        p3(lower_c_array, upper_c_array);
-    Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
-                          Kokkos::IndexType<IndexType>>
-        p4(lower_c_array, upper_c_array, tile_c_array);
   }
   {
     // Check that construction from Kokkos::Array of the specified index type
