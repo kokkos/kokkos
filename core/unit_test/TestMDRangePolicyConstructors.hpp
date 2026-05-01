@@ -101,8 +101,10 @@ TEST(TEST_CATEGORY, md_range_policy_construction_from_arrays) {
 }
 
 TEST(TEST_CATEGORY_DEATH, md_range_policy_bounds_unsafe_narrowing_conversions) {
-  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
-                                       Kokkos::IndexType<unsigned>>;
+  using Rank1Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
+                                            Kokkos::IndexType<unsigned>>;
+  using Rank2Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>,
+                                            Kokkos::IndexType<unsigned>>;
 
   std::string msg =
       "Kokkos::MDRangePolicy bound type error: an unsafe implicit conversion "
@@ -112,53 +114,34 @@ TEST(TEST_CATEGORY_DEATH, md_range_policy_bounds_unsafe_narrowing_conversions) {
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_DEATH({ (void)Policy({-1, 0}, {2, 3}); }, expected);
-}
-
-TEST(TEST_CATEGORY_DEATH,
-     md_range_policy_rank1_bounds_unsafe_narrowing_conversions) {
-  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>,
-                                       Kokkos::IndexType<unsigned>>;
-
-  std::string msg =
-      "Kokkos::MDRangePolicy bound type error: an unsafe implicit conversion "
-      "is performed on a bound (-1) in dimension (0), which may not preserve its "
-      "original value.\n";
-  std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
-
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_DEATH({ (void)Policy({-1}, {2}); }, expected);
+  ASSERT_DEATH({ (void)Rank1Policy({-1}, {2}); }, expected);
+  ASSERT_DEATH({ (void)Rank2Policy({-1, 0}, {2, 3}); }, expected);
 }
 
 TEST(TEST_CATEGORY_DEATH, md_range_policy_invalid_bounds) {
-  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
+  using Rank1Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>>;
+  using Rank2Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
 
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
-  auto dim0 = (Policy::inner_direction == Kokkos::Iterate::Right) ? 1 : 0;
+  auto rank2_dim0 =
+      (Rank2Policy::inner_direction == Kokkos::Iterate::Right) ? 1 : 0;
 
-  std::string msg1 =
-      "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
-      "than its upper bound (90) in dimension " +
-      std::to_string(dim0) + ".\n";
+  auto expected_msg = [](int dimension) {
+    std::string msg =
+        "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
+        "than its upper bound (90) in dimension " +
+        std::to_string(dimension) + ".\n";
+    // escape the parentheses in the regex to match the error message
+    return std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
+  };
 
-  // escape the parentheses in the regex to match the error message
-  msg1 = std::regex_replace(msg1, std::regex("\\(|\\)"), "\\$&");
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  ASSERT_DEATH({ (void)Policy({100, 100}, {90, 90}); }, msg1);
-}
-
-TEST(TEST_CATEGORY_DEATH, md_range_policy_rank1_invalid_bounds) {
-  using Policy = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<1>>;
-
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
-  std::string msg =
-      "Kokkos::MDRangePolicy bounds error: The lower bound (100) is greater "
-      "than its upper bound (90) in dimension 0.\n";
-
-  msg = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
-  ASSERT_DEATH({ (void)Policy({100}, {90}); }, msg);
+  ASSERT_DEATH({ (void)Rank1Policy({100}, {90}); }, expected_msg(0));
+  ASSERT_DEATH(
+      {
+        (void)Rank2Policy({100, 100}, {90, 90});
+      },
+      expected_msg(rank2_dim0));
 }
 
 // Verify that we get an error if the user requests tile dimensions too large
