@@ -122,8 +122,7 @@ TEST(TEST_CATEGORY_DEATH,
 
   std::string msg =
       "Kokkos::MDRangePolicy bound type error: an unsafe implicit conversion "
-      "is "
-      "performed on a bound (-1) in dimension (0), which may not preserve its "
+      "is performed on a bound (-1) in dimension (0), which may not preserve its "
       "original value.\n";
   std::string expected = std::regex_replace(msg, std::regex("\\(|\\)"), "\\$&");
 
