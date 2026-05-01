@@ -218,8 +218,14 @@ void Kokkos::Impl::ExecSpaceManager::initialize_spaces(
 }
 
 void Kokkos::Impl::ExecSpaceManager::finalize_spaces() {
-  for (auto& to_finalize : exec_space_factory_list) {
-    to_finalize.second->finalize();
+  // Finalize and remove each backend immediately. Otherwise a later finalize()
+  // (or code it runs, e.g. deallocation) can call Kokkos::fence(), which
+  // dispatches static_fence() to every entry still in the map — including
+  // backends already torn down.
+  for (auto it = exec_space_factory_list.begin();
+       it != exec_space_factory_list.end();) {
+    it->second->finalize();
+    it = exec_space_factory_list.erase(it);
   }
 }
 
