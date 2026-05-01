@@ -22,7 +22,7 @@ using namespace Kokkos;
 
 template <typename ExecSpace>
 constexpr bool mdrange_array_reduce_runtime_supported =
-#if defined(KOKKOS_ENABLE_OPENACC)
+#if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
     !std::is_same_v<ExecSpace, Kokkos::Experimental::OpenACC>;
 #else
     true;
