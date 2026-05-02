@@ -29,7 +29,6 @@
 // strictly better than global launch - which means the light weight/heavy
 // weight property can be ignored - the only thing that matters is the size of
 // the functor.
-#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 /** \brief  Access to constant memory on the device */
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 
@@ -42,7 +41,6 @@ __device__ __constant__ unsigned long kokkos_impl_cuda_constant_memory_buffer
     [Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long)];
 
 #endif
-#endif  // !KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 
 template <typename T>
 inline __device__ T* kokkos_impl_cuda_shared_memory() {
@@ -60,7 +58,6 @@ namespace Impl {
 // function qualifier which could be used to improve performance.
 //----------------------------------------------------------------------------
 
-#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 template <class DriverType>
 __global__ static void cuda_parallel_launch_constant_memory() {
   const DriverType& driver =
@@ -78,6 +75,7 @@ __global__ __launch_bounds__(
   driver();
 }
 
+#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 template <class DriverType>
 __global__ static void cuda_parallel_launch_local_memory(
     const DriverType driver) {
@@ -260,28 +258,29 @@ struct DeduceCudaLaunchMechanism {
       Kokkos::Experimental::WorkItemProperty::HintLightWeight;
   constexpr static auto heavy_weight =
       Kokkos::Experimental::WorkItemProperty::HintHeavyWeight;
-  constexpr static typename DriverType::Policy::work_item_property property{};
+  constexpr static typename DriverType::Policy::work_item_property property =
+      typename DriverType::Policy::work_item_property();
 
   static constexpr CudaLaunchMechanism valid_launch_mechanism =
       // BuildValidMask
       (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
            ? CudaLaunchMechanism::LocalMemory
            : CudaLaunchMechanism::Default) |
-#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
       (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage
            ? CudaLaunchMechanism::ConstantMemory
            : CudaLaunchMechanism::Default) |
-#endif
       CudaLaunchMechanism::GlobalMemory;
 
   static constexpr CudaLaunchMechanism requested_launch_mechanism =
 #ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-      CudaLaunchMechanism::LocalMemory |
+      (((property & heavy_weight) == heavy_weight)
+           ? CudaLaunchMechanism::ConstantMemory
+           : CudaLaunchMechanism::LocalMemory) |
 #else
       (((property & light_weight) == light_weight)
            ? CudaLaunchMechanism::LocalMemory
            : CudaLaunchMechanism::ConstantMemory) |
-#endif
+#endif  // KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
       CudaLaunchMechanism::GlobalMemory;
 
   static constexpr CudaLaunchMechanism default_launch_mechanism =
@@ -296,11 +295,14 @@ struct DeduceCudaLaunchMechanism {
           : ((sizeof(DriverType) < CudaTraits::ConstantMemoryUsage)
                  ? CudaLaunchMechanism::ConstantMemory
                  : CudaLaunchMechanism::GlobalMemory);
-#endif
+#endif  // KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 
   static constexpr CudaLaunchMechanism launch_mechanism =
 #ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-      default_launch_mechanism;
+      (((property & heavy_weight) == heavy_weight) and
+       (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage))
+          ? CudaLaunchMechanism::ConstantMemory
+          : default_launch_mechanism;
 #else
       // Logic mask for choosing launch mechanism by functor size (F) and
       // Kernel Property. First column is restriction by size (local L,
@@ -563,7 +565,6 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
 //------------------------------------------------------------------------------
 // <editor-fold desc="Constant Memory"> {{{2
-#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 template <class DriverType, unsigned int MaxThreadsPerBlock,
           unsigned int MinBlocksPerSM>
 struct CudaParallelLaunchKernelFunc<
@@ -654,7 +655,6 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
         driver, grid, block, shmem, cuda_instance);
   }
 };
-#endif  // !KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 
 // </editor-fold> end Constant Memory }}}2
 //------------------------------------------------------------------------------
