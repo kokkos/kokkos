@@ -438,10 +438,10 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
   // The following are shortcuts to allow implicit integer precision
   // in offset calculations - meaning index calculation happens in the common
-  // type of the used indices. If and when these are not needed, the data access
-  // operator should come from BasicView only. BasicView will not support this
-  // directly, since BasicView anyway requires you to be explicit about the
-  // desired index_type
+  // type of the mapping index type and the used indices. If and when these are
+  // not needed, the data access operator should come from BasicView only.
+  // BasicView will not support this directly, since BasicView anyway requires
+  // you to be explicit about the desired index_type.
 
   // ROCM: The below code segfaults the compiler with ROCM 6.3 and ROCM 6.2
   // We will simply avoid the performance optimization code path for those.
@@ -462,11 +462,15 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   template <class IndexOffset>
   KOKKOS_FUNCTION constexpr auto compute_offset(
       std::index_sequence<0>, IndexOffset index_offset) const {
+    using idx_type =
+        std::common_type_t<typename base_t::mapping_type::index_type,
+                           IndexOffset>;
     if constexpr (std::is_same_v<typename base_t::layout_type,
                                  Kokkos::layout_stride>)
-      return index_offset * static_cast<IndexOffset>(m_map.stride(0));
+      return static_cast<idx_type>(index_offset) *
+             static_cast<idx_type>(m_map.stride(0));
     else
-      return index_offset;
+      return static_cast<idx_type>(index_offset);
   }
 
   // Rank > 1
@@ -475,7 +479,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
   template <size_t... I, class... IndexOffsets>
   KOKKOS_FUNCTION constexpr auto compute_offset(
       std::index_sequence<I...>, IndexOffsets... index_offsets) const {
-    using idx_type = std::common_type_t<IndexOffsets...>;
+    using idx_type =
+        std::common_type_t<typename base_t::mapping_type::index_type,
+                           IndexOffsets...>;
 
     if constexpr (Kokkos::Impl::IsLayoutLeftPadded<
                       typename base_t::layout_type>::value) {
