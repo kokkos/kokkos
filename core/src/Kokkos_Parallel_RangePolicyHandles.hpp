@@ -10,13 +10,15 @@ static_assert(false,
 #define KOKKOS_PARALLEL_RANGE_POLICY_HANDLES_HPP
 
 /// \file Kokkos_Parallel_RangePolicyHandles.hpp
-/// \brief `parallel_for` overloads for `RangePolicy` over team / thread handles.
+/// \brief `parallel_for` overloads for `RangePolicy` over team / thread
+/// handles.
 ///
 /// This header is included from `Kokkos_Core.hpp` after
 /// `KokkosCore_Config_DeclareBackend.hpp` so enabled backends have already
 /// declared `TeamVectorRange`, `ThreadVectorRange`, and the matching nested
-/// `parallel_for` overloads. It must not be included from `Kokkos_Parallel.hpp`:
-/// that file is pulled in by backend team headers before those declarations exist.
+/// `parallel_for` overloads. It must not be included from
+/// `Kokkos_Parallel.hpp`: that file is pulled in by backend team headers before
+/// those declarations exist.
 
 #include <Kokkos_Parallel.hpp>
 
@@ -40,10 +42,9 @@ template <class... Traits, class FunctorType>
 KOKKOS_INLINE_FUNCTION void parallel_for(RangePolicy<Traits...> const& policy,
                                          FunctorType const& functor) {
   auto const& thread_handle = policy.space();
-  Kokkos::parallel_for(
-      Kokkos::ThreadVectorRange(thread_handle.member, policy.begin(),
-                                policy.end()),
-      functor);
+  Kokkos::parallel_for(Kokkos::ThreadVectorRange(thread_handle.member,
+                                                 policy.begin(), policy.end()),
+                       functor);
 }
 
 }  // namespace Kokkos
