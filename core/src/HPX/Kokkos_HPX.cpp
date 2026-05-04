@@ -117,9 +117,6 @@ void HPX::impl_instance_fence(const std::string &name) const {
 }
 
 void HPX::impl_static_fence(const std::string &name) {
-  // Check if runtime still valid and return if not.
-  if (hpx::get_runtime_ptr() == nullptr) return;
-
   Kokkos::Tools::Experimental::Impl::profile_fence_event<
       Kokkos::Experimental::HPX>(
       name,

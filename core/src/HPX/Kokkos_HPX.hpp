@@ -124,12 +124,7 @@ class HPX {
     instance_data() = default;
     // NOLINTNEXTLINE(bugprone-exception-escape)
     ~instance_data() {
-      // The HPX runtime may already be shut down (e.g. if finalization is
-      // triggered while draining work). Avoid calling into HPX when the runtime
-      // is no longer active.
-      if (hpx::get_runtime_ptr() != nullptr) {
-        fence("Kokkos::Experimental::HPX: fence on destruction");
-      }
+      fence("Kokkos::Experimental::HPX: fence on destruction");
     }
     instance_data(uint32_t instance_id) : m_instance_id(instance_id) {}
     instance_data(uint32_t instance_id,
@@ -142,20 +137,17 @@ class HPX {
     instance_data &operator=(instance_data)         = delete;
 
     void fence(const std::string &name) {
-      if (hpx::get_runtime_ptr() == nullptr) return;
       std::lock_guard<hpx::spinlock> l(m_sender_mutex);
       fence_locked(name);
     }
 
     void fence_locked(const std::string &name) {
-      if (hpx::get_runtime_ptr() == nullptr) return;
       Kokkos::Tools::Experimental::Impl::profile_fence_event<
           Kokkos::Experimental::HPX>(
           name,
           Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{m_instance_id},
           [&]() {
             auto &s = m_sender;
-
             hpx::this_thread::experimental::sync_wait(std::move(s));
             s = hpx::execution::experimental::unique_any_sender<>(
                 hpx::execution::experimental::just());
