@@ -216,7 +216,7 @@ struct SubviewExtents {
 
     return set(domain_rank + 1, range_rank + 1, dim, args...)
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (e <= b + dim.extent(domain_rank))
+           && (b <= e) && (e <= b + dim.extent(domain_rank))
 #endif
         ;
   }
@@ -237,7 +237,7 @@ struct SubviewExtents {
 
     return set(domain_rank + 1, range_rank + 1, dim, args...)
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (e <= b + dim.extent(domain_rank))
+           && (b <= e) && (e <= b + dim.extent(domain_rank))
 #endif
         ;
   }
@@ -249,6 +249,9 @@ struct SubviewExtents {
                                        const ViewDimension<DimArgs...>& dim,
                                        const std::initializer_list<T>& val,
                                        Args... args) {
+    // Runtime check: must have exactly 2 elements before array access
+    if (val.size() != 2) return false;
+
     const size_t b = static_cast<size_t>(val.begin()[0]);
     const size_t e = static_cast<size_t>(val.begin()[1]);
 
@@ -258,7 +261,7 @@ struct SubviewExtents {
 
     return set(domain_rank + 1, range_rank + 1, dim, args...)
 #if defined(KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK)
-           && (val.size() == 2) && (e <= b + dim.extent(domain_rank))
+           && (b <= e) && (e <= b + dim.extent(domain_rank))
 #endif
         ;
   }
@@ -300,13 +303,22 @@ struct SubviewExtents {
   void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
              const ViewDimension<DimArgs...>& dim, const std::pair<T, T>& val,
              Args... args) const {
-    // d <= e - b
-    const int n = std::min(
-        buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
-                          static_cast<unsigned long>(dim.extent(domain_rank)),
-                          static_cast<unsigned long>(val.second),
-                          static_cast<unsigned long>(val.first),
-                          int(sizeof...(Args) ? ',' : ')')));
+    int n = 0;
+    // Check for invalid range: begin > end
+    if (val.first > val.second) {
+      n = std::min(buf_len, snprintf(buf, buf_len, " begin %lu > end %lu %c",
+                                     static_cast<unsigned long>(val.first),
+                                     static_cast<unsigned long>(val.second),
+                                     int(sizeof...(Args) ? ',' : ')')));
+    } else {
+      // d <= e - b
+      n = std::min(buf_len,
+                   snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
+                            static_cast<unsigned long>(dim.extent(domain_rank)),
+                            static_cast<unsigned long>(val.second),
+                            static_cast<unsigned long>(val.first),
+                            int(sizeof...(Args) ? ',' : ')')));
+    }
 
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
   }
@@ -316,13 +328,22 @@ struct SubviewExtents {
   void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
              const ViewDimension<DimArgs...>& dim,
              const Kokkos::pair<T, T>& val, Args... args) const {
-    // d <= e - b
-    const int n = std::min(
-        buf_len, snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
-                          static_cast<unsigned long>(dim.extent(domain_rank)),
-                          static_cast<unsigned long>(val.second),
-                          static_cast<unsigned long>(val.first),
-                          int(sizeof...(Args) ? ',' : ')')));
+    int n = 0;
+    // Check for invalid range: begin > end
+    if (val.first > val.second) {
+      n = std::min(buf_len, snprintf(buf, buf_len, " begin %lu > end %lu %c",
+                                     static_cast<unsigned long>(val.first),
+                                     static_cast<unsigned long>(val.second),
+                                     int(sizeof...(Args) ? ',' : ')')));
+    } else {
+      // d <= e - b
+      n = std::min(buf_len,
+                   snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
+                            static_cast<unsigned long>(dim.extent(domain_rank)),
+                            static_cast<unsigned long>(val.second),
+                            static_cast<unsigned long>(val.first),
+                            int(sizeof...(Args) ? ',' : ')')));
+    }
 
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
   }
@@ -332,19 +353,25 @@ struct SubviewExtents {
   void error(char* buf, int buf_len, unsigned domain_rank, unsigned range_rank,
              const ViewDimension<DimArgs...>& dim,
              const std::initializer_list<T>& val, Args... args) const {
-    // d <= e - b
     int n = 0;
-    if (val.size() == 2) {
-      n = std::min(buf_len,
-                   snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
-                            static_cast<unsigned long>(dim.extent(domain_rank)),
-                            static_cast<unsigned long>(val.begin()[0]),
-                            static_cast<unsigned long>(val.begin()[1]),
-                            int(sizeof...(Args) ? ',' : ')')));
-    } else {
+    if (val.size() != 2) {
       n = std::min(buf_len, snprintf(buf, buf_len, " { ... }.size() == %u %c",
                                      unsigned(val.size()),
                                      int(sizeof...(Args) ? ',' : ')')));
+    } else if (val.begin()[0] > val.begin()[1]) {
+      // Check for invalid range: begin > end
+      n = std::min(buf_len, snprintf(buf, buf_len, " begin %lu > end %lu %c",
+                                     static_cast<unsigned long>(val.begin()[0]),
+                                     static_cast<unsigned long>(val.begin()[1]),
+                                     int(sizeof...(Args) ? ',' : ')')));
+    } else {
+      // d <= e - b
+      n = std::min(buf_len,
+                   snprintf(buf, buf_len, " %lu <= %lu - %lu %c",
+                            static_cast<unsigned long>(dim.extent(domain_rank)),
+                            static_cast<unsigned long>(val.begin()[1]),
+                            static_cast<unsigned long>(val.begin()[0]),
+                            int(sizeof...(Args) ? ',' : ')')));
     }
 
     error(buf + n, buf_len - n, domain_rank + 1, range_rank + 1, dim, args...);
