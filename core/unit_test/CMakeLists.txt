@@ -594,8 +594,7 @@ endif()
 
 if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
-    CoreUnitTest_Cuda1 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES1}
-    cuda/TestCuda_ReducerViewSizeLimit.cpp
+    CoreUnitTest_Cuda1 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES1} cuda/TestCuda_ReducerViewSizeLimit.cpp
   )
 
   kokkos_add_executable_and_test(CoreUnitTest_Cuda2 SOURCES UnitTestMainInit.cpp ${Cuda_SOURCES2})
