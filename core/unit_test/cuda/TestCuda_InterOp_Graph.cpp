@@ -55,24 +55,24 @@ class TEST_CATEGORY_FIXTURE(GraphInterOp) : public ::testing::Test {
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), promises_on_native_objects) {
   // Before instantiation, the Cuda graph is valid, but the Cuda executable
   // graph is still null.
-  cudaGraph_t cuda_graph = graph->native_graph();
+  cudaGraph_t cuda_graph = graph->cuda_graph();
 
   ASSERT_NE(cuda_graph, nullptr);
-  ASSERT_EQ(graph->native_graph_exec(), nullptr);
+  ASSERT_EQ(graph->cuda_graph_exec(), nullptr);
 
   // After instantiation, both native objects are valid.
   graph->instantiate();
 
-  cudaGraphExec_t cuda_graph_exec = graph->native_graph_exec();
+  cudaGraphExec_t cuda_graph_exec = graph->cuda_graph_exec();
 
-  ASSERT_EQ(graph->native_graph(), cuda_graph);
+  ASSERT_EQ(graph->cuda_graph(), cuda_graph);
   ASSERT_NE(cuda_graph_exec, nullptr);
 
   // Submission should not affect the underlying objects.
   graph->submit();
 
-  ASSERT_EQ(graph->native_graph(), cuda_graph);
-  ASSERT_EQ(graph->native_graph_exec(), cuda_graph_exec);
+  ASSERT_EQ(graph->cuda_graph(), cuda_graph);
+  ASSERT_EQ(graph->cuda_graph_exec(), cuda_graph_exec);
 }
 
 // Count the number of nodes. This is useful to ensure no spurious
@@ -83,7 +83,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), count_nodes) {
   size_t num_nodes;
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaGraphGetNodes(graph->native_graph(), nullptr, &num_nodes));
+      cudaGraphGetNodes(graph->cuda_graph(), nullptr, &num_nodes));
 
   ASSERT_EQ(num_nodes, 2u);
 }
@@ -96,7 +96,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
 
   // Convert path to string then to const char * to make it work on Windows.
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaGraphDebugDotPrint(graph->native_graph(), dot.string().c_str(),
+      cudaGraphDebugDotPrint(graph->cuda_graph(), dot.string().c_str(),
                              cudaGraphDebugDotFlagsVerbose));
 
   ASSERT_TRUE(std::filesystem::exists(dot));
@@ -124,7 +124,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
   graph->instantiate();
   unsigned long long flags = Kokkos::finite_max_v<unsigned long long>;
   KOKKOS_IMPL_CUDA_SAFE_CALL(
-      cudaGraphExecGetFlags(graph->native_graph_exec(), &flags));
+      cudaGraphExecGetFlags(graph->cuda_graph_exec(), &flags));
 
   ASSERT_EQ(flags, 0u);
 #endif
@@ -132,13 +132,13 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
 
 // Build a Kokkos::Graph from an existing cudaGraph_t.
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), construct_from_native) {
-  cudaGraph_t native_graph = nullptr;
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphCreate(&native_graph, 0));
+  cudaGraph_t cuda_graph = nullptr;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphCreate(&cuda_graph, 0));
 
   Kokkos::Experimental::Graph graph_from_native(
-      Kokkos::Experimental::get_device_handle(this->exec), native_graph);
+      Kokkos::Experimental::get_device_handle(this->exec), cuda_graph);
 
-  ASSERT_EQ(native_graph, graph_from_native.native_graph());
+  ASSERT_EQ(cuda_graph, graph_from_native.cuda_graph());
 
   graph_from_native.root_node().then_parallel_for(1, Increment<view_t>{data});
 

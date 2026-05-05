@@ -27,11 +27,15 @@ struct Increment {
 };
 
 TEST(TEST_CATEGORY, graph_get_native_return_types_are_references) {
-  using graph_t = Kokkos::Experimental::Graph<Kokkos::SYCL>;
+  using graph_t           = Kokkos::Experimental::Graph<Kokkos::SYCL>;
+  using graph_impl_t      = Kokkos::Impl::GraphImpl<Kokkos::SYCL>;
+  using sycl_graph_t      = typename graph_impl_t::sycl_graph_t;
+  using sycl_graph_exec_t = typename graph_impl_t::sycl_graph_exec_t;
+  static_assert(std::same_as<decltype(std::declval<graph_t>().sycl_graph()),
+                             const sycl_graph_t&>);
   static_assert(
-      std::is_reference_v<decltype(std::declval<graph_t>().native_graph())>);
-  static_assert(std::is_reference_v<
-                decltype(std::declval<graph_t>().native_graph_exec())>);
+      std::same_as<decltype(std::declval<graph_t>().sycl_graph_exec()),
+                   const std::optional<sycl_graph_exec_t>&>);
 }
 
 // This test checks the promises of Kokkos::Graph against its
@@ -44,12 +48,12 @@ TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
   // no check is needed.
   // However, the executable SYCL command graph is stored as an optional,
   // so let's check it is empty for now.
-  ASSERT_FALSE(graph.native_graph_exec().has_value());
+  ASSERT_FALSE(graph.sycl_graph_exec().has_value());
 
   // After instantiation, both native objects are valid.
   graph.instantiate();
 
-  ASSERT_TRUE(graph.native_graph_exec().has_value());
+  ASSERT_TRUE(graph.sycl_graph_exec().has_value());
 }
 
 // Use native SYCL graph to generate a DOT representation.
@@ -67,11 +71,11 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
   graph.instantiate();
 
-  ASSERT_EQ(graph.native_graph().get_nodes().size(), 2u);
+  ASSERT_EQ(graph.sycl_graph().get_nodes().size(), 2u);
 
   const auto dot = std::filesystem::temp_directory_path() / "sycl_graph.dot";
 
-  graph.native_graph().print_graph(dot, true);
+  graph.sycl_graph().print_graph(dot, true);
 
   ASSERT_TRUE(std::filesystem::exists(dot));
   ASSERT_GT(std::filesystem::file_size(dot), 0u);
@@ -97,18 +101,18 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 
 // Build a Kokkos::Graph from an existing SYCL command graph.
 TEST(TEST_CATEGORY, graph_construct_from_native) {
-  using graph_impl_t   = Kokkos::Impl::GraphImpl<Kokkos::SYCL>;
-  using native_graph_t = typename graph_impl_t::native_graph_t;
+  using graph_impl_t = Kokkos::Impl::GraphImpl<Kokkos::SYCL>;
+  using sycl_graph_t = typename graph_impl_t::sycl_graph_t;
 
   using view_t = Kokkos::View<int, Kokkos::SYCLSharedUSMSpace>;
 
   const Kokkos::SYCL exec{};
 
-  native_graph_t native_graph(exec.sycl_queue().get_context(),
-                              exec.sycl_queue().get_device());
+  sycl_graph_t sycl_graph(exec.sycl_queue().get_context(),
+                          exec.sycl_queue().get_device());
 
   Kokkos::Experimental::Graph graph_from_native(
-      Kokkos::Experimental::get_device_handle(exec), std::move(native_graph));
+      Kokkos::Experimental::get_device_handle(exec), std::move(sycl_graph));
 
   const view_t data(Kokkos::view_alloc(exec, "witness"));
 
