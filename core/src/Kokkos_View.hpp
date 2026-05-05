@@ -469,7 +469,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
       using idx_type = std::common_type_t<IndexOffset>;
       if (std::numeric_limits<idx_type>::max() < m_map.required_span_size())
-        Kokkos::abort("Kokkos::View ERROR: index type cannot represent the full index range of the view");
+        Kokkos::abort(
+            "Kokkos::View ERROR: index type cannot represent the full index "
+            "range of the view");
 #endif
       return index_offset * static_cast<IndexOffset>(m_map.stride(0));
     } else
@@ -486,7 +488,9 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if (std::numeric_limits<idx_type>::max() < m_map.required_span_size())
-      Kokkos::abort("Kokkos::View ERROR: index type cannot represent span");
+      Kokkos::abort(
+          "Kokkos::View ERROR: index type cannot represent the full index "
+          "range of the view");
 #endif
 
     if constexpr (Kokkos::Impl::IsLayoutLeftPadded<
