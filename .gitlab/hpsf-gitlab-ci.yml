@@ -252,6 +252,12 @@ NVIDIA-GRACE-GRACE:
   script:
     - apt-get update && apt-get install -y cmake git g++
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
+    - git clone https://github.com/kokkos/mdspan
+    - cd mdspan
+    - git reset --hard $(cat ../tpls/mdspan-hash.txt)
+    - cmake -B build -DCMAKE_INSTALL_PREFIX=/tmp/mdspan-install -S .
+    - cmake --build build --target install
+    - cd ..
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=g++"
@@ -262,6 +268,8 @@ NVIDIA-GRACE-GRACE:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_DEPRECATED_CODE_5=OFF"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_MDSPAN_EXTERNAL=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D mdspan_ROOT=/tmp/mdspan-install"
     - export CTEST_BUILD_NAME="NVIDIA-GRACE-GRACE"
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}

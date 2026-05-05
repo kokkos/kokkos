@@ -646,6 +646,7 @@ class HostThreadTeamMember {
     KOKKOS_IF_ON_DEVICE(((void)value; (void)global;
                          Kokkos::abort("HostThreadTeamMember team_scan\n");
                          return T();))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 };
 

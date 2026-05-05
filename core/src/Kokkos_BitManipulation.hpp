@@ -33,6 +33,7 @@ KOKKOS_FUNCTION constexpr auto dispatch_helper(T x) noexcept {
   KOKKOS_IF_ON_DEVICE((return Op<true, true>::do_compute(x);))
 #endif
 #endif
+  KOKKOS_IMPL_UNREACHABLE();
 }
 
 template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
@@ -40,11 +41,7 @@ template <template <bool /*constant_evaluated*/, bool /*device*/> class Op,
 KOKKOS_FUNCTION constexpr auto dispatch_helper_builtin(T x) noexcept {
   KOKKOS_IF_ON_HOST((return Op<false, false>::do_compute(x);))
   KOKKOS_IF_ON_DEVICE((return Op<false, true>::do_compute(x);))
-
-  // FIXME_NVHPC: erroneous warning about return from non-void function
-#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
-  return T();
-#endif
+  KOKKOS_IMPL_UNREACHABLE();
 }
 
 #if defined(KOKKOS_COMPILER_CLANG) || defined(KOKKOS_COMPILER_INTEL_LLVM) || \

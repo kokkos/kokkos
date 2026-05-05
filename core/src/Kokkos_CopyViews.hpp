@@ -2733,8 +2733,7 @@ resize(Kokkos::View<T, P...>& v, const size_t n0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
 
 template <class I, class T, class... P>
 inline std::enable_if_t<
-    (Impl::is_view_ctor_property<I>::value ||
-     Kokkos::is_execution_space<I>::value) &&
+    Impl::is_view_ctor_property<I>::value &&
     (std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
                     Kokkos::LayoutLeft> ||
      std::is_same_v<typename Kokkos::View<T, P...>::array_layout,
@@ -2846,10 +2845,9 @@ inline void resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
 }
 
 template <class I, class T, class... P>
-inline std::enable_if_t<Impl::is_view_ctor_property<I>::value ||
-                        Kokkos::is_execution_space<I>::value>
-resize(const I& arg_prop, Kokkos::View<T, P...>& v,
-       const typename Kokkos::View<T, P...>::array_layout& layout) {
+inline std::enable_if_t<Impl::is_view_ctor_property<I>::value> resize(
+    const I& arg_prop, Kokkos::View<T, P...>& v,
+    const typename Kokkos::View<T, P...>::array_layout& layout) {
   impl_resize(Kokkos::view_alloc(arg_prop), v, layout);
 }
 

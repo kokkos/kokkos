@@ -86,9 +86,20 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
   // covers and we're not modifying it
   cudaGraph_t const* m_graph_ptr    = nullptr;
   cudaGraphNode_t* m_graph_node_ptr = nullptr;
+
+  struct DriverStorageDeleter {
+    std::string label;
+    CudaSpace mem;
+
+    void operator()(base_t* const ptr) const {
+      mem.deallocate(label.c_str(), ptr, sizeof(base_t));
+    }
+  };
+
   // Basically, we have to make this mutable for the same reasons that the
   // global kernel buffers in the Cuda instance are mutable...
-  mutable std::shared_ptr<base_t> m_driver_storage = nullptr;
+  mutable std::unique_ptr<base_t, DriverStorageDeleter> m_driver_storage =
+      nullptr;
   std::string label;
 
  public:
@@ -127,16 +138,12 @@ class GraphNodeKernelImpl<Kokkos::Cuda, PolicyType, Functor, PatternTag,
     KOKKOS_EXPECTS(m_driver_storage == nullptr)
     std::string alloc_label =
         label + " - GraphNodeKernel global memory functor storage";
-    m_driver_storage = std::shared_ptr<base_t>(
+    m_driver_storage = std::unique_ptr<base_t, DriverStorageDeleter>(
         static_cast<base_t*>(mem.allocate(alloc_label.c_str(), sizeof(base_t))),
-        [alloc_label, mem](base_t* ptr) {
-          mem.deallocate(alloc_label.c_str(), ptr, sizeof(base_t));
-        });
+        DriverStorageDeleter{.label = alloc_label, .mem = mem});
     KOKKOS_ENSURES(m_driver_storage != nullptr)
     return m_driver_storage.get();
   }
-
-  auto get_driver_storage() const { return m_driver_storage; }
 };
 
 struct CudaGraphNodeAggregate {};

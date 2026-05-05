@@ -4,6 +4,8 @@
 #ifndef KOKKOS_HIP_PARALLEL_FOR_RANGE_HPP
 #define KOKKOS_HIP_PARALLEL_FOR_RANGE_HPP
 
+#include <cstdint>
+
 #include <Kokkos_Parallel.hpp>
 
 #include <HIP/Kokkos_HIP_BlockSize_Deduction.hpp>
@@ -75,7 +77,7 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
         StaticBatchSize::batch_size;
 
     if constexpr (batch_size != 1) {
-      nwork = (nwork + batch_size - 1) / batch_size;
+      nwork = (uint64_t(nwork) + batch_size - 1) / batch_size;
     }
 
     using DriverType = ParallelFor<FunctorType, Policy, Kokkos::HIP>;

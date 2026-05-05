@@ -15,18 +15,12 @@ import kokkos.core;
 
 namespace {
 
-#ifdef KOKKOS_COMPILER_NVHPC
-#define THREAD_SAFETY_TEST_UNREACHABLE() __builtin_unreachable()
-#else
-#define THREAD_SAFETY_TEST_UNREACHABLE() static_assert(true)
-#endif
-
 #ifdef KOKKOS_ENABLE_OPENACC  // FIXME_OPENACC
 #define KOKKOS_TEST_SKIP_IF_OPENACC()                                       \
   GTEST_SKIP()                                                              \
       << "skipping OpenACC test since unsupported host-side atomics cause " \
          "race conditions during shared allocation reference counting";     \
-  THREAD_SAFETY_TEST_UNREACHABLE();
+  KOKKOS_IMPL_UNREACHABLE();
 #else
 #define KOKKOS_TEST_SKIP_IF_OPENACC()
 #endif

@@ -626,6 +626,7 @@ struct Random_UniqueIndex {
         (return DeviceType::execution_space::impl_hardware_thread_id();))
 
     KOKKOS_IF_ON_DEVICE((return 0;))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 };
 
@@ -662,6 +663,7 @@ struct Random_UniqueIndex<
 
         return i;))
     KOKKOS_IF_ON_HOST(((void)locks_; return 0;))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 };
 

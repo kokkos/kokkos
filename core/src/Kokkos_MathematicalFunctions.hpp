@@ -285,10 +285,12 @@ using promote_3_t = typename promote_3<T, U, V>::type;
   KOKKOS_INLINE_FUNCTION bool FUNC(float x, float y) {                         \
     KOKKOS_IF_ON_DEVICE(return OP;)                                            \
     KOKKOS_IF_ON_HOST(using std::FUNC; return FUNC(x, y);)                     \
+    KOKKOS_IMPL_UNREACHABLE();                                                 \
   }                                                                            \
   KOKKOS_INLINE_FUNCTION bool FUNC(double x, double y) {                       \
     KOKKOS_IF_ON_DEVICE(return OP;)                                            \
     KOKKOS_IF_ON_HOST(using std::FUNC; return FUNC(x, y);)                     \
+    KOKKOS_IMPL_UNREACHABLE();                                                 \
   }                                                                            \
   inline bool FUNC(long double x, long double y) {                             \
     using std::FUNC;                                                           \
@@ -306,6 +308,7 @@ using promote_3_t = typename promote_3<T, U, V>::type;
     auto y         = static_cast<Promoted>(b);                                 \
     KOKKOS_IF_ON_DEVICE(return OP;)                                            \
     KOKKOS_IF_ON_HOST(using std::FUNC; return FUNC(x, y);)                     \
+    KOKKOS_IMPL_UNREACHABLE();                                                 \
   }                                                                            \
   template <class T1, class T2>                                                \
   inline std::enable_if_t<std::is_arithmetic_v<T1> &&                          \

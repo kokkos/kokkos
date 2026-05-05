@@ -116,6 +116,7 @@ class SharedAllocationRecord<void, void> {
   static KOKKOS_FUNCTION int tracking_enabled() {
     KOKKOS_IF_ON_HOST(return t_tracking_enabled;)
     KOKKOS_IF_ON_DEVICE(return 0;)
+    KOKKOS_IMPL_UNREACHABLE();
   }
 #if defined(__EDG__)
 #pragma pop
@@ -503,6 +504,7 @@ class SharedAllocationRecord
         (return new SharedAllocationRecord(arg_space, arg_label, arg_alloc);))
     KOKKOS_IF_ON_DEVICE(
         ((void)arg_space; (void)arg_label; (void)arg_alloc; return nullptr;))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 
   template <typename ExecutionSpace>
@@ -514,6 +516,7 @@ class SharedAllocationRecord
                                            arg_alloc);))
     KOKKOS_IF_ON_DEVICE(((void)exec_space; (void)arg_space; (void)arg_label;
                          (void)arg_alloc; return nullptr;))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 };
 
@@ -593,6 +596,7 @@ union SharedAllocationTracker {
                        return (tmp ? tmp->use_count() : 0);))
 
     KOKKOS_IF_ON_DEVICE((return 0;))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 
   KOKKOS_INLINE_FUNCTION bool has_record() const {

@@ -119,6 +119,7 @@ inline int OpenMP::impl_thread_pool_rank() noexcept {
   KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
 
   KOKKOS_IF_ON_DEVICE((return -1;))
+  KOKKOS_IMPL_UNREACHABLE();
 }
 
 inline int OpenMP::impl_thread_pool_size(int depth) const {
@@ -130,6 +131,7 @@ int OpenMP::impl_hardware_thread_id() noexcept {
   KOKKOS_IF_ON_HOST((return omp_get_thread_num();))
 
   KOKKOS_IF_ON_DEVICE((return -1;))
+  KOKKOS_IMPL_UNREACHABLE();
 }
 
 namespace Tools {

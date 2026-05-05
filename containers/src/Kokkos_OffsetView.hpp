@@ -471,6 +471,7 @@ class OffsetView : public View<DataType, Properties...> {
     KOKKOS_IF_ON_HOST((return runtime_check_begins_ends_host(begins, ends);))
     KOKKOS_IF_ON_DEVICE(
         (return runtime_check_begins_ends_device(begins, ends);))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 
   // Constructor around unmanaged data after checking begins < ends for all

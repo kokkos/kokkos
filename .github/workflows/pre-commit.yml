@@ -2,6 +2,10 @@ name: pre-commit
 
 on:
   workflow_call:
+  pull_request:
+    paths:
+      - '**/*.md'
+    types: [ opened, reopened, synchronize ]
 
 permissions: read-all
 

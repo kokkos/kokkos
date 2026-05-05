@@ -202,6 +202,8 @@ class ThreadsExecTeamMember {
         team_fan_out();
 
         return accum;))
+
+    KOKKOS_IMPL_UNREACHABLE();
   }
 
   template <typename ReducerType>
@@ -328,6 +330,7 @@ class ThreadsExecTeamMember {
         team_fan_out();
 
         return *work_value;))
+    KOKKOS_IMPL_UNREACHABLE();
   }
 
   /** \brief  Intra-team exclusive prefix sum with team_rank() ordering.

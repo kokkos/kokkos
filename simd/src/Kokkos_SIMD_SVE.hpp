@@ -100,7 +100,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION static vls_bool_t get_pred(
   } else if constexpr (nbits == 64) {
     return svwhilele_b64(0, static_cast<std::int32_t>(lane));
   } else {
-    __builtin_unreachable();
+    KOKKOS_IMPL_UNREACHABLE();
   }
 }
 

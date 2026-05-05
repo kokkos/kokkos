@@ -26,21 +26,6 @@ struct AccessorArg_t {
   size_t value{};
 };
 
-template <typename>
-struct is_view_ctor_property : public std::false_type {};
-
-template <>
-struct is_view_ctor_property<SequentialHostInit_t> : public std::true_type {};
-
-template <>
-struct is_view_ctor_property<WithoutInitializing_t> : public std::true_type {};
-
-template <>
-struct is_view_ctor_property<AllowPadding_t> : public std::true_type {};
-
-template <>
-struct is_view_ctor_property<AccessorArg_t> : public std::true_type {};
-
 //----------------------------------------------------------------------------
 /**\brief Whether a type can be used for a view label */
 
@@ -63,6 +48,30 @@ template <typename T>
 concept ViewLabel = is_view_label_v<T>;
 
 //----------------------------------------------------------------------------
+
+template <typename>
+struct is_view_ctor_property : public std::false_type {};
+
+template <>
+struct is_view_ctor_property<SequentialHostInit_t> : public std::true_type {};
+
+template <>
+struct is_view_ctor_property<WithoutInitializing_t> : public std::true_type {};
+
+template <>
+struct is_view_ctor_property<AllowPadding_t> : public std::true_type {};
+
+template <>
+struct is_view_ctor_property<AccessorArg_t> : public std::true_type {};
+
+template <ExecutionSpace ExecSpace>
+struct is_view_ctor_property<ExecSpace> : public std::true_type {};
+
+template <MemorySpace MemSpace>
+struct is_view_ctor_property<MemSpace> : public std::true_type {};
+
+template <ViewLabel Label>
+struct is_view_ctor_property<Label> : public std::true_type {};
 
 template <typename... P>
 struct ViewCtorProp;

@@ -153,7 +153,7 @@ if(Kokkos_ENABLE_IMPL_MDSPAN)
   if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
     global_set(KOKKOS_MDSPAN_VERSION "unknown")
     message(STATUS "Using external mdspan")
-    target_link_libraries(kokkoscore PUBLIC std::mdspan)
+    target_link_libraries(kokkoscore PUBLIC mdspan::mdspan)
   else()
     target_include_directories(kokkoscore SYSTEM PUBLIC $<BUILD_INTERFACE:${KOKKOS_SOURCE_DIR}/tpls/mdspan/include>)
 

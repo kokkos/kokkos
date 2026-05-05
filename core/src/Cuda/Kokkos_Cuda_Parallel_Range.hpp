@@ -8,6 +8,7 @@
 #if defined(KOKKOS_ENABLE_CUDA)
 
 #include <algorithm>
+#include <cstdint>
 #include <string>
 
 #include <Kokkos_Parallel.hpp>
@@ -67,25 +68,32 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
              iwork < static_cast<Member>(work_end - work_stride * batch_size)
                  ? iwork + work_stride * batch_size
                  : work_end) {
+      if constexpr (batch_size == 1) {
+        this->template exec_range<WorkTag>(iwork);
+      } else {
 #if defined(KOKKOS_COMPILER_NVCC)
 #pragma unroll
 #endif
-      for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
-                         i < work_end - iwork;
-           i = (i < static_cast<Member>(work_end - work_stride - iwork))
-                   ? i + work_stride
-                   : work_end - iwork) {
-        this->template exec_range<WorkTag>(iwork + i);
+        for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
+                           i < work_end - iwork;
+             i = (i < static_cast<Member>(work_end - work_stride - iwork))
+                     ? i + work_stride
+                     : work_end - iwork) {
+          this->template exec_range<WorkTag>(iwork + i);
+        }
       }
     }
   }
 
   inline void execute() const {
-    constexpr typename Policy::index_type batch_size =
-        StaticBatchSize::batch_size;
-    const typename Policy::index_type nwork =
-        (m_policy.end() - m_policy.begin()) / batch_size +
-        ((m_policy.end() - m_policy.begin()) % batch_size == 0 ? 0 : 1);
+    const typename Policy::index_type range = m_policy.end() - m_policy.begin();
+    typename Policy::index_type nwork       = range;
+
+    if constexpr (StaticBatchSize::batch_size != 1) {
+      constexpr typename Policy::index_type batch_size =
+          StaticBatchSize::batch_size;
+      nwork = (uint64_t(range) + batch_size - 1) / batch_size;
+    }
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
             m_policy.space().impl_internal_space_instance());
