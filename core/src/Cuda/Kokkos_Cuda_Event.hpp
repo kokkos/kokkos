@@ -26,32 +26,31 @@ namespace Kokkos {
 namespace Impl {
 
 template <>
-struct EventHandle<Kokkos::Cuda> {
-  cudaEvent_t raw = nullptr;
-  int device      = -1;
+struct EventResource<Kokkos::Cuda> {
+  cudaEvent_t m_event = nullptr;
+  int m_cudaDev       = -1;
 
-  EventHandle() : device(Kokkos::Cuda().cuda_device()) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device));
+  EventResource() : m_cudaDev(Kokkos::Cuda().cuda_device()) {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaEventCreateWithFlags(&raw, cudaEventDisableTiming));
+        cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
   }
 
-  explicit EventHandle(const Kokkos::Cuda& exec_space)
-      : device(exec_space.cuda_device()) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device));
+  explicit EventResource(const Kokkos::Cuda& exec_space)
+      : m_cudaDev(exec_space.cuda_device()) {
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaEventCreateWithFlags(&raw, cudaEventDisableTiming));
+        cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
   }
 
-  ~EventHandle() {
-    if (raw != nullptr) {
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(device));
-      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(raw));
+  ~EventResource() {
+    if (m_event != nullptr) {
+      KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(m_event));
     }
   }
 
-  EventHandle(const EventHandle&)            = delete;
-  EventHandle& operator=(const EventHandle&) = delete;
+  EventResource(const EventResource&)            = delete;
+  EventResource& operator=(const EventResource&) = delete;
 };
 
 }  // namespace Impl
@@ -72,7 +71,8 @@ template <>
 class Event<Kokkos::Cuda> {
  public:
   Event()
-      : m_handle(std::make_shared<Kokkos::Impl::EventHandle<Kokkos::Cuda>>()) {}
+      : m_handle(
+            std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>()) {}
 
   Event(const Event&)            = default;
   Event& operator=(const Event&) = default;
@@ -81,41 +81,37 @@ class Event<Kokkos::Cuda> {
   ~Event()                       = default;
 
   Event(const Kokkos::Cuda& exec_space)
-      : m_handle(std::make_shared<Kokkos::Impl::EventHandle<Kokkos::Cuda>>(
+      : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
             exec_space)) {
     record(exec_space);
   }
 
   void record(const Kokkos::Cuda& exec_space) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec_space.cuda_device()));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaEventRecord(m_handle->raw, exec_space.cuda_stream()));
+        cudaEventRecord(m_handle->m_event, exec_space.cuda_stream()));
   }
 
   void fence() const {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_handle->device));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventSynchronize(m_handle->raw));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventSynchronize(m_handle->m_event));
   }
 
   bool is_complete() const {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_handle->device));
-    cudaError_t err = cudaEventQuery(m_handle->raw);
+    cudaError_t err = cudaEventQuery(m_handle->m_event);
     if (err == cudaSuccess) return true;
     if (err == cudaErrorNotReady) return false;
     KOKKOS_IMPL_CUDA_SAFE_CALL(err);
     return false;
   }
 
-  cudaEvent_t cuda_event() const noexcept { return m_handle->raw; }
+  cudaEvent_t cuda_event() const noexcept { return m_handle->m_event; }
 
  private:
-  std::shared_ptr<Kokkos::Impl::EventHandle<Kokkos::Cuda>> m_handle;
+  std::shared_ptr<Kokkos::Impl::EventResource<Kokkos::Cuda>> m_handle;
 };
 
 /// CUDA: insert a stream wait for the recorded event (non-blocking on host).
 inline void space_depends_on(const Kokkos::Cuda& exec_space,
                              const Event<Kokkos::Cuda>& event) {
-  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(exec_space.cuda_device()));
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaStreamWaitEvent(exec_space.cuda_stream(), event.cuda_event(), 0));
 }
