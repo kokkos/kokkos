@@ -16,6 +16,7 @@ import kokkos.core;
 #include <HPX/Kokkos_HPX.hpp>
 
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_Error.hpp>
 
 #include <hpx/condition_variable.hpp>
 #include <hpx/init.hpp>
@@ -167,6 +168,13 @@ void HPX::impl_initialize(InitializationSettings const &settings) {
       const int clamped   = (requested > 0 && available > 0)
                                 ? std::min(requested, available)
                                 : requested;
+      if (clamped != requested) {
+        Kokkos::Impl::log_warning("Requested " + std::to_string(requested) +
+                                  " threads, but HPX only allows " +
+                                  std::to_string(available) +
+                                  "; Setting the number of threads to " +
+                                  std::to_string(clamped) + ".");
+      }
       i.cfg.emplace_back("hpx.os_threads=" + std::to_string(clamped));
     }
     int argc_hpx     = 1;
@@ -189,9 +197,6 @@ void HPX::impl_finalize() {
   m_default_instance_data = nullptr;
 
   if (m_hpx_initialized) {
-    // Draining the instance sender (fence + ~instance_data) may run HPX work
-    // that stops the runtime before we get here, in which case
-    // get_runtime_ptr() is already null. Only finalize/stop when still active.
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
 #if HPX_VERSION_FULL >= 0x010900
