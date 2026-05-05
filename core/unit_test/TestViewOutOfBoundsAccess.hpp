@@ -8,6 +8,7 @@ import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <cstdint>
 #include <sstream>
 
 #include <gtest/gtest.h>
@@ -157,6 +158,30 @@ TEST(TEST_CATEGORY_DEATH, view_out_of_bounds_access) {
 #endif
 
   test_view_out_of_bounds_access<ExecutionSpace>();
+}
+
+TEST(TEST_CATEGORY_DEATH, view_index_type_cannot_represent_full_range) {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
+  // Test on rank 1
+  Kokkos::LayoutStride layout_rank_1(40000, 1);
+  Kokkos::View<int*, Kokkos::LayoutStride, Kokkos::HostSpace> v1("view_rank_1",
+                                                                 layout_rank_1);
+  std::int16_t i1 = 0;
+  EXPECT_DEATH(
+      { (void)v1(i1); },
+      "Kokkos::View ERROR: index type cannot represent the full index range "
+      "of the view");
+
+  // Test on rank 2
+  Kokkos::View<int**, Kokkos::LayoutRight, Kokkos::HostSpace> v2("view_rank_2",
+                                                                 200, 200);
+  std::int16_t i2 = 0;
+  std::int16_t j2 = 0;
+  EXPECT_DEATH(
+      { (void)v2(i2, j2); },
+      "Kokkos::View ERROR: index type cannot represent the full index range "
+      "of the view");
 }
 
 #endif
