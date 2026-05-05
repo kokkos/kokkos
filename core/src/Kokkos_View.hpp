@@ -28,8 +28,7 @@ class ViewMapping;
 }
 #include <View/Kokkos_ViewMapping.hpp>
 #include <Kokkos_MinMax.hpp>
-
-#include <limits>
+#include <Kokkos_NumericTraits.hpp>
 
 namespace Kokkos {
 template <class DataType, class... Properties>
@@ -468,7 +467,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
                                  Kokkos::layout_stride>) {
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
       using idx_type = std::common_type_t<IndexOffset>;
-      if (std::numeric_limits<idx_type>::max() < m_map.required_span_size())
+      if (Kokkos::finite_max_v<idx_type> < m_map.required_span_size())
         Kokkos::abort(
             "Kokkos::View ERROR: index type cannot represent the full index "
             "range of the view");
@@ -487,7 +486,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     using idx_type = std::common_type_t<IndexOffsets...>;
 
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
-    if (std::numeric_limits<idx_type>::max() < m_map.required_span_size())
+    if (Kokkos::finite_max_v<idx_type> < m_map.required_span_size())
       Kokkos::abort(
           "Kokkos::View ERROR: index type cannot represent the full index "
           "range of the view");
