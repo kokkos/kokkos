@@ -6,6 +6,8 @@
 
 #include <Kokkos_Core.hpp>
 
+#include <concepts>
+
 // Functors shared between the portable Event tests (TestEvent.hpp) and the
 // CUDA-specific Event tests (cuda/TestCuda_CudaEvent.cpp).
 // NVCC cannot handle extended __host__ __device__ lambdas inside the private
@@ -16,21 +18,29 @@ namespace Test {
 template <class ViewType>
 struct FillFunctor {
   ViewType data;
-  KOKKOS_FUNCTION void operator()(int i) const { data(i) = i + 1; }
+  template <std::integral T>
+  KOKKOS_FUNCTION void operator()(T i) const {
+    data(i) = i + 1;
+  }
 };
 
 template <class ViewType>
 struct ProduceFunctor {
   ViewType data;
-  KOKKOS_FUNCTION void operator()(int i) const { data(i) = i * 2; }
+  template <std::integral T>
+  KOKKOS_FUNCTION void operator()(T i) const {
+    data(i) = i * 2;
+  }
 };
 
 template <class ViewType, class ResultType>
 struct ConsumeFunctor {
   ViewType data;
   ResultType result;
-  KOKKOS_FUNCTION void operator()(int i) const {
-    Kokkos::atomic_add(&result(), static_cast<int64_t>(data(i)));
+  template <std::integral T>
+  KOKKOS_FUNCTION void operator()(T i) const {
+    Kokkos::atomic_add(&result(),
+                       static_cast<typename ResultType::value_type>(data(i)));
   }
 };
 

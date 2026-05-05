@@ -19,11 +19,12 @@ TEST(TEST_CATEGORY, event_record_and_wait) {
   using view_type    = Kokkos::View<int*, memory_space>;
 
   exec_space space;
-  const int N = 1000;
+  constexpr int N = 1000;
 
-  view_type data("data", N);
+  view_type data(Kokkos::view_alloc(space, "data", Kokkos::WithoutInitializing),
+                 N);
 
-  Kokkos::parallel_for("fill", Kokkos::RangePolicy<exec_space>(space, 0, N),
+  Kokkos::parallel_for("fill", Kokkos::RangePolicy(space, 0, N),
                        FillFunctor<view_type>{data});
 
   Kokkos::Experimental::Event<exec_space> evt;
@@ -52,13 +53,14 @@ TEST(TEST_CATEGORY, event_space_depends_on) {
   using exec_space   = TEST_EXECSPACE;
   using memory_space = typename exec_space::memory_space;
   using view_type    = Kokkos::View<int*, memory_space>;
-  using result_type  = Kokkos::View<int64_t, memory_space>;
+  using result_type  = Kokkos::View<int, memory_space>;
 
   exec_space space_a;
   exec_space space_b;
-  const int N = 10000;
+  constexpr int N = 10000;
 
-  view_type data("data", N);
+  view_type data(
+      Kokkos::view_alloc(space_a, "data", Kokkos::WithoutInitializing), N);
 
   Kokkos::parallel_for("produce",
                        Kokkos::RangePolicy<exec_space>(space_a, 0, N),
@@ -68,8 +70,7 @@ TEST(TEST_CATEGORY, event_space_depends_on) {
   evt.record(space_a);
   Kokkos::Experimental::space_depends_on(space_b, evt);
 
-  result_type result("result");
-  Kokkos::deep_copy(space_b, result, static_cast<int64_t>(0));
+  result_type result(Kokkos::view_alloc(space_b, "result"));
 
   Kokkos::parallel_for("consume",
                        Kokkos::RangePolicy<exec_space>(space_b, 0, N),
@@ -106,9 +107,10 @@ TEST(TEST_CATEGORY, event_copy_semantics) {
 
   exec_space space_a;
   exec_space space_b;
-  const int N = 1000;
+  constexpr int N = 1000;
 
-  view_type data("data", N);
+  view_type data(
+      Kokkos::view_alloc(space_a, "data", Kokkos::WithoutInitializing), N);
 
   Kokkos::parallel_for("fill", Kokkos::RangePolicy<exec_space>(space_a, 0, N),
                        FillFunctor<view_type>{data});

@@ -31,7 +31,7 @@
 namespace Kokkos {
 namespace Impl {
 template <class ExecutionSpace>
-struct EventHandle;
+struct EventResource;
 }  // namespace Impl
 
 namespace Experimental {
