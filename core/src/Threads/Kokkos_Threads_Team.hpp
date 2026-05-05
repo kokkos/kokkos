@@ -37,6 +37,7 @@ class ThreadsExecTeamMember {
   using execution_space      = Kokkos::Threads;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = ThreadsExecTeamMember;
+  using thread_handle        = Kokkos::ThreadHandle<team_handle>;
 
  private:
   using space = execution_space::scratch_memory_space;
