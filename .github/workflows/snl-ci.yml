@@ -413,9 +413,14 @@ jobs:
           cmake --build build --parallel $(nproc) \
             --target Kokkos_IncrementalTest_NEXTSILICON
 
+      # the SNL runners map a named volume to $HOME/optimizer-cache for a persistent
+      # optimizer cache across runs. If this doesn't get mapped, nextsystemd will
+      # create this directory and use it as a cache, but the contents will be lost
+      # when the container exits
       - name: test_kokkos
         working-directory: kokkos/build
         run: |
+          export XDG_CACHE_HOME=$HOME/optimizer-cache
           nextsystemd --ui-collector-address none &
           NEXTSYSTEMD_PID=$!
 
