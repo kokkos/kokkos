@@ -36,7 +36,7 @@ struct ViewFillLayoutSelector<Kokkos::LayoutRight> {
 };
 
 template <class DstView, class SrcView, size_t... I>
-KOKKOS_INLINE_FUNCTION constexpr bool view_equal_extents(
+KOKKOS_INLINE_FUNCTION constexpr bool check_equal_extents(
     const DstView& dst, const SrcView& src, std::index_sequence<I...>) {
   return ((dst.extent(I) == src.extent(I)) && ...);
 }
@@ -1221,7 +1221,7 @@ inline void deep_copy(
 
   if (dst.data() == nullptr || src.data() == nullptr) {
     // throw if dimension mismatch
-    if (!Kokkos::Impl::view_equal_extents(
+    if (!Kokkos::Impl::check_equal_extents(
             dst, src, std::make_index_sequence<dst_type::rank()>{})) {
       std::string message(
           "Deprecation Error: Kokkos::deep_copy extents of views don't "
@@ -1292,7 +1292,7 @@ inline void deep_copy(
   }
 
   // Check for same extents
-  if (!Kokkos::Impl::view_equal_extents(
+  if (!Kokkos::Impl::check_equal_extents(
           dst, src, std::make_index_sequence<dst_type::rank()>{})) {
     std::string message(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
@@ -2439,7 +2439,7 @@ inline void deep_copy(
       ((std::ptrdiff_t(dst_start) == std::ptrdiff_t(src_start)) &&
        (std::ptrdiff_t(dst_end) == std::ptrdiff_t(src_end)))) {
     // throw if dimension mismatch
-    if (!Kokkos::Impl::view_equal_extents(
+    if (!Kokkos::Impl::check_equal_extents(
             dst, src, std::make_index_sequence<dst_type::rank()>{})) {
       std::string message(
           "Deprecation Error: Kokkos::deep_copy extents of views don't "
@@ -2484,7 +2484,7 @@ inline void deep_copy(
   }
 
   // Check for same extents
-  if (!Kokkos::Impl::view_equal_extents(
+  if (!Kokkos::Impl::check_equal_extents(
           dst, src, std::make_index_sequence<dst_type::rank()>{})) {
     std::string message(
         "Deprecation Error: Kokkos::deep_copy extents of views don't match: ");
