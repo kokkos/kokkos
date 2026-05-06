@@ -27,8 +27,8 @@ struct Increment {
 };
 
 // This test checks the promises of Kokkos::Graph against its
-// underlying HIP native objects.
-TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
+// underlying HIP graph objects.
+TEST(TEST_CATEGORY, graph_promises_on_hip_objects) {
   Kokkos::Experimental::Graph<Kokkos::HIP> graph{};
   // Before instantiation, the HIP graph is valid, but the HIP executable
   // graph is still null.
@@ -37,7 +37,7 @@ TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
   ASSERT_NE(hip_graph, nullptr);
   ASSERT_EQ(graph.hip_graph_exec(), nullptr);
 
-  // After instantiation, both native objects are valid.
+  // After instantiation, both HIP objects are valid.
   graph.instantiate();
 
   hipGraphExec_t hip_graph_exec = graph.hip_graph_exec();
@@ -52,7 +52,7 @@ TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
   ASSERT_EQ(graph.hip_graph_exec(), hip_graph_exec);
 }
 
-// Use native HIP graph to generate a DOT representation.
+// Use HIP graph to generate a DOT representation.
 TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
   using view_t = Kokkos::View<int, Kokkos::HIP>;
 
@@ -97,7 +97,7 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 }
 
 // Build a Kokkos::Graph from an existing hipGraph_t.
-TEST(TEST_CATEGORY, graph_construct_from_native) {
+TEST(TEST_CATEGORY, graph_construct_from_hip_graph) {
   using view_t = Kokkos::View<int, Kokkos::HIPManagedSpace>;
 
   hipGraph_t hip_graph = nullptr;
@@ -105,16 +105,17 @@ TEST(TEST_CATEGORY, graph_construct_from_native) {
 
   const Kokkos::HIP exec{};
 
-  Kokkos::Experimental::Graph graph_from_native(
+  Kokkos::Experimental::Graph graph_from_hip_graph(
       Kokkos::Experimental::get_device_handle(exec), hip_graph);
 
-  ASSERT_EQ(hip_graph, graph_from_native.hip_graph());
+  ASSERT_EQ(hip_graph, graph_from_hip_graph.hip_graph());
 
   const view_t data(Kokkos::view_alloc(exec, "witness"));
 
-  graph_from_native.root_node().then_parallel_for(1, Increment<view_t>{data});
+  graph_from_hip_graph.root_node().then_parallel_for(1,
+                                                     Increment<view_t>{data});
 
-  graph_from_native.submit(exec);
+  graph_from_hip_graph.submit(exec);
 
   exec.fence();
 

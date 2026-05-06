@@ -26,7 +26,7 @@ struct Increment {
   void operator()(const int) const { ++data(); }
 };
 
-TEST(TEST_CATEGORY, graph_get_native_return_types_are_references) {
+TEST(TEST_CATEGORY, graph_get_sycl_objects_return_types_are_references) {
   using graph_t           = Kokkos::Experimental::Graph<Kokkos::SYCL>;
   using graph_impl_t      = Kokkos::Impl::GraphImpl<Kokkos::SYCL>;
   using sycl_graph_t      = typename graph_impl_t::sycl_graph_t;
@@ -39,8 +39,8 @@ TEST(TEST_CATEGORY, graph_get_native_return_types_are_references) {
 }
 
 // This test checks the promises of Kokkos::Graph against its
-// underlying SYCL native objects.
-TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
+// underlying SYCL command graph objects.
+TEST(TEST_CATEGORY, graph_promises_on_sycl_objects) {
   Kokkos::Experimental::Graph<Kokkos::SYCL> graph{};
 
   // Before instantiation, the SYCL graph is valid, but the SYCL executable
@@ -50,13 +50,13 @@ TEST(TEST_CATEGORY, graph_promises_on_native_objects) {
   // so let's check it is empty for now.
   ASSERT_FALSE(graph.sycl_graph_exec().has_value());
 
-  // After instantiation, both native objects are valid.
+  // After instantiation, both SYCL objects are valid.
   graph.instantiate();
 
   ASSERT_TRUE(graph.sycl_graph_exec().has_value());
 }
 
-// Use native SYCL graph to generate a DOT representation.
+// Use SYCL command graph to generate a DOT representation.
 TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
   using view_t = Kokkos::View<int, Kokkos::SYCL>;
 
@@ -100,7 +100,7 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
 }
 
 // Build a Kokkos::Graph from an existing SYCL command graph.
-TEST(TEST_CATEGORY, graph_construct_from_native) {
+TEST(TEST_CATEGORY, graph_construct_from_sycl_command_graph) {
   using graph_impl_t = Kokkos::Impl::GraphImpl<Kokkos::SYCL>;
   using sycl_graph_t = typename graph_impl_t::sycl_graph_t;
 
@@ -111,14 +111,15 @@ TEST(TEST_CATEGORY, graph_construct_from_native) {
   sycl_graph_t sycl_graph(exec.sycl_queue().get_context(),
                           exec.sycl_queue().get_device());
 
-  Kokkos::Experimental::Graph graph_from_native(
+  Kokkos::Experimental::Graph graph_from_sycl_cmd_graph(
       Kokkos::Experimental::get_device_handle(exec), std::move(sycl_graph));
 
   const view_t data(Kokkos::view_alloc(exec, "witness"));
 
-  graph_from_native.root_node().then_parallel_for(1, Increment<view_t>{data});
+  graph_from_sycl_cmd_graph.root_node().then_parallel_for(
+      1, Increment<view_t>{data});
 
-  graph_from_native.submit(exec);
+  graph_from_sycl_cmd_graph.submit(exec);
 
   exec.fence();
 

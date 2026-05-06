@@ -51,8 +51,8 @@ class TEST_CATEGORY_FIXTURE(GraphInterOp) : public ::testing::Test {
 };
 
 // This test checks the promises of Kokkos::Graph against its
-// underlying Cuda native objects.
-TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), promises_on_native_objects) {
+// underlying CUDA graph objects.
+TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), promises_on_cuda_objects) {
   // Before instantiation, the Cuda graph is valid, but the Cuda executable
   // graph is still null.
   cudaGraph_t cuda_graph = graph->cuda_graph();
@@ -60,7 +60,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), promises_on_native_objects) {
   ASSERT_NE(cuda_graph, nullptr);
   ASSERT_EQ(graph->cuda_graph_exec(), nullptr);
 
-  // After instantiation, both native objects are valid.
+  // After instantiation, both CUDA objects are valid.
   graph->instantiate();
 
   cudaGraphExec_t cuda_graph_exec = graph->cuda_graph_exec();
@@ -88,7 +88,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), count_nodes) {
   ASSERT_EQ(num_nodes, 2u);
 }
 
-// Use native Cuda graph to generate a DOT representation.
+// Use CUDA graph to generate a DOT representation.
 TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), debug_dot_print) {
   graph->instantiate();
 
@@ -131,18 +131,19 @@ TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), instantiation_flags) {
 }
 
 // Build a Kokkos::Graph from an existing cudaGraph_t.
-TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), construct_from_native) {
+TEST_F(TEST_CATEGORY_FIXTURE(GraphInterOp), construct_from_cuda_graph) {
   cudaGraph_t cuda_graph = nullptr;
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaGraphCreate(&cuda_graph, 0));
 
-  Kokkos::Experimental::Graph graph_from_native(
+  Kokkos::Experimental::Graph graph_from_cuda_graph(
       Kokkos::Experimental::get_device_handle(this->exec), cuda_graph);
 
-  ASSERT_EQ(cuda_graph, graph_from_native.cuda_graph());
+  ASSERT_EQ(cuda_graph, graph_from_cuda_graph.cuda_graph());
 
-  graph_from_native.root_node().then_parallel_for(1, Increment<view_t>{data});
+  graph_from_cuda_graph.root_node().then_parallel_for(1,
+                                                      Increment<view_t>{data});
 
-  graph_from_native.submit(this->exec);
+  graph_from_cuda_graph.submit(this->exec);
 
   this->exec.fence();
 
