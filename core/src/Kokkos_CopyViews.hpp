@@ -2566,7 +2566,7 @@ namespace Impl {
 template <typename ViewType>
 bool size_mismatch(const ViewType& view, unsigned int max_extent,
                    const size_t new_extents[8]) {
-  constexpr unsigned int rank = ViewType::rank();
+  constexpr unsigned int rank       = ViewType::rank();
   const unsigned int checked_extent = rank < max_extent ? rank : max_extent;
 
   for (unsigned int dim = 0; dim < checked_extent; ++dim)
