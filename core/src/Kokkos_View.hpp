@@ -1496,7 +1496,7 @@ KOKKOS_INLINE_FUNCTION bool operator==(const View<LT, LP...>& lhs,
                         typename rhs_traits::array_layout> &&
          std::is_same_v<typename lhs_traits::memory_space,
                         typename rhs_traits::memory_space> &&
-         View<LT, LP...>::rank() == View<RT, RP...>::rank() &&
+         lhs_view::rank() == rhs_view::rank() &&
          lhs.data() == rhs.data() && lhs.span() == rhs.span() &&
          Kokkos::Impl::view_equal_extents_impl(
              lhs, rhs, std::make_index_sequence<lhs_view::rank()>{});
