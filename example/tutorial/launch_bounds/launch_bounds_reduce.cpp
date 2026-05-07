@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <Kokkos_Core.hpp>
-#include <cstdio>
 
 //
 // First reduction (parallel_reduce) example:
@@ -101,8 +100,7 @@ int main(int argc, char* argv[]) {
   Kokkos::initialize(argc, argv);
   const int n = 10000;
 
-  // Compute and count hash collisions in
-  // parallel, using Kokkos.
+  // Compute and count hash collisions in parallel, using Kokkos.
   // This is not really a useful algorithm, but it demonstrates the
   // LaunchBounds functionality
   int sum1 = 0;
@@ -128,17 +126,15 @@ int main(int argc, char* argv[]) {
       Kokkos::RangePolicy<Kokkos::LaunchBounds<512, min_blocks>>(0, n),
       collision(), sum2);
 
-  printf(
+  Kokkos::printf(
       "Number of collisions, "
       "computed in parallel, is %i\n",
       sum1);
 
   if (sum1 != sum2) {
-    printf("Uh-oh! Results do not match\n");
-    return -1;
+    Kokkos::printf("Uh-oh! Results do not match\n");
   }
 
   Kokkos::finalize();
-
   return 0;
 }
