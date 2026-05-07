@@ -616,6 +616,10 @@ struct Random_XorShift1024_UseCArrayState<Kokkos::Cuda> : std::false_type {};
 template <>
 struct Random_XorShift1024_UseCArrayState<Kokkos::HIP> : std::false_type {};
 #endif
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct Random_XorShift1024_UseCArrayState<Kokkos::SYCL> : std::false_type {};
+#endif
 #ifdef KOKKOS_ENABLE_OPENACC
 template <>
 struct Random_XorShift1024_UseCArrayState<Kokkos::Experimental::OpenACC>
@@ -671,6 +675,10 @@ struct Random_SFC64_UseCArrayState<Kokkos::Cuda> : std::false_type {};
 #ifdef KOKKOS_ENABLE_HIP
 template <>
 struct Random_SFC64_UseCArrayState<Kokkos::HIP> : std::false_type {};
+#endif
+#ifdef KOKKOS_ENABLE_SYCL
+template <>
+struct Random_SFC64_UseCArrayState<Kokkos::SYCL> : std::false_type {};
 #endif
 #ifdef KOKKOS_ENABLE_OPENACC
 template <>

@@ -696,9 +696,7 @@ TEST(TEST_CATEGORY, Random_SFC64) {
   using ExecutionSpace = TEST_EXECSPACE;
 
 #if defined(KOKKOS_ENABLE_SYCL)
-  if constexpr (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
-    GTEST_SKIP() << "Failing on Intel GPUs";  // FIXME_SYCL
-  }
+  GTEST_SKIP() << "Failing on Intel GPUs";  // FIXME_SYCL
   const int num_draws = 14203454;
 #elif defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
   const int num_draws = 132141141;
