@@ -419,7 +419,8 @@ jobs:
       # when the container exits
       - name: test_kokkos
         working-directory: kokkos/build
-        env: XDG_CACHE_HOME=$HOME/optimizer-cache
+        env:
+          XDG_CACHE_HOME: $HOME/optimizer-cache
         run: |
           nextsystemd --ui-collector-address none &
           NEXTSYSTEMD_PID=$!
