@@ -418,9 +418,9 @@ jobs:
       # create this directory and use it as a cache, but the contents will be lost
       # when the container exits
       - name: test_kokkos
-        working-directory: kokkos/build
-        run: |
-          export XDG_CACHE_HOME=$HOME/optimizer-cache
+working-directory: kokkos/build
+env: XDG_CACHE_HOME=$HOME/optimizer-cache
+run: |
           nextsystemd --ui-collector-address none &
           NEXTSYSTEMD_PID=$!
 
