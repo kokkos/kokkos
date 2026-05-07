@@ -16,8 +16,8 @@ struct collision {
   // We use parallel_reduce to count the total collisions
   // Note that we're just counting collisions within the 10 generated
   // one i.
-  // This function was chosen as one that very simply can increase the
-  // register count.
+  // The body keeps many scalars active (illustrative workload only; how that
+  // maps to occupancy or register use is backend- and toolchain-specific).
   using value_type = int;
 
   KOKKOS_INLINE_FUNCTION
@@ -103,35 +103,35 @@ int main(int argc, char* argv[]) {
   // Compute and count hash collisions in parallel, using Kokkos.
   // This is not really a useful algorithm, but it demonstrates the
   // LaunchBounds functionality
-  int sum1 = 0;
-  int sum2 = 0;
+  int sum_default = 0;
+  int sum_bounds  = 0;
 
-  // Without LaunchBounds, the kernel uses 56 registers
-  Kokkos::parallel_reduce(n, collision(), sum1);
+  // Default reduction (no LaunchBounds trait on the range policy).
+  Kokkos::parallel_reduce(n, collision(), sum_default);
 
-  // With LaunchBounds, we can reduce the register usage to 32
+  // Same reduction with LaunchBounds<512, min_blocks> carried on the policy.
+  // That is only a hint; resource usage and correctness should be verified on
+  // your target GPU and Kokkos build.
   const int min_blocks =
 #if defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_ADA89) || \
     defined(KOKKOS_ARCH_AMPERE86)
-      // The architectures above have a lower maximum number of resident
-      // threads, so
-      // we only use 2 blocks to stay below 1024 threads per SM:
+      // We only use 2 blocks to stay below 1024 threads per SM.
       2;
 #else
-      // We have a maximum of 2048 resident threads per SM:
+      // We have a maximum of 2048 resident threads per SM.
       4;
 #endif
 
   Kokkos::parallel_reduce(
       Kokkos::RangePolicy<Kokkos::LaunchBounds<512, min_blocks>>(0, n),
-      collision(), sum2);
+      collision(), sum_bounds);
 
   Kokkos::printf(
       "Number of collisions, "
       "computed in parallel, is %i\n",
-      sum1);
+      sum_default);
 
-  if (sum1 != sum2) {
+  if (sum_default != sum_bounds) {
     Kokkos::printf("Uh-oh! Results do not match\n");
   }
 
