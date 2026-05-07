@@ -113,14 +113,12 @@ void test_view_equality_operator() {
   }
 
   {
-    using v_t =
-        Kokkos::View<T[3][5], Kokkos::LayoutLeft, TEST_EXECSPACE>;
-    using col_t =
-        Kokkos::View<T[3], Kokkos::LayoutLeft, TEST_EXECSPACE,
-                     Kokkos::MemoryUnmanaged>;
+    using v_t   = Kokkos::View<T[3][5], Kokkos::LayoutLeft, TEST_EXECSPACE>;
+    using col_t = Kokkos::View<T[3], Kokkos::LayoutLeft, TEST_EXECSPACE,
+                               Kokkos::MemoryUnmanaged>;
 
     v_t v_0("A_layoutleft_extent_rank_eq");
-    auto col_0    = Kokkos::subview(v_0, Kokkos::ALL, 0);
+    auto col_0 = Kokkos::subview(v_0, Kokkos::ALL, 0);
     col_t alias_to_col_0(col_0.data());
     ASSERT_TRUE(check_equal(col_0, alias_to_col_0));
   }
