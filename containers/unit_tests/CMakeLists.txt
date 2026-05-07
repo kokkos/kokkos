@@ -28,6 +28,7 @@ foreach(Tag Threads;Serial;OpenMP;HPX;Cuda;HIP;SYCL)
       ScatterView
       WithoutInitializing
       UnorderedMap
+      UnorderedSet
       ViewCtorPropEmbeddedDim
     )
       # Write to a temporary intermediate file and call configure_file to avoid

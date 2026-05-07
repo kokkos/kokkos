@@ -707,7 +707,7 @@ class UnorderedMap {
             m_keys[new_index] = k;
 #endif
 
-            if (!is_set) {
+            if constexpr (!is_set) {
               KOKKOS_IMPL_NONTEMPORAL_PREFETCH_STORE(&m_values[new_index]);
 #ifdef KOKKOS_ENABLE_SYCL
               Kokkos::atomic_store(&m_values[new_index], v);
@@ -933,7 +933,7 @@ class UnorderedMap {
       Kokkos::deep_copy(exec_space, m_hash_lists, src.m_hash_lists);
       Kokkos::deep_copy(exec_space, m_next_index, src.m_next_index);
       Kokkos::deep_copy(exec_space, m_keys, src.m_keys);
-      if (!is_set) {
+      if constexpr (!is_set) {
         Kokkos::deep_copy(exec_space, m_values, src.m_values);
       }
       Kokkos::deep_copy(exec_space, m_scalars, src.m_scalars);
