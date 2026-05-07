@@ -1551,7 +1551,7 @@ class Random_SFC64_Pool {
     execution_space().fence("Random_SFC64_Pool: Constructor");
   }
 
-  // Usefull in distributed settings to be reproductible
+  // Useful in distributed settings to be reproducible
   Random_SFC64_Pool(uint64_t seed_low, uint64_t seed_high,
                     uint64_t num_states) {
     init_impl(execution_space(), seed_low, seed_high, num_states);
@@ -1567,7 +1567,7 @@ class Random_SFC64_Pool {
     init_impl(exec, seed, 0, num_states);
   }
 
-  // Usefull in distributed settings to be reproductible
+  // Useful in distributed settings to be reproducible
   Random_SFC64_Pool(const execution_space& exec, uint64_t seed_low,
                     uint64_t seed_high, uint64_t num_states) {
     init_impl(exec, seed_low, seed_high, num_states);
@@ -1631,7 +1631,7 @@ class Random_SFC64_Pool {
   KOKKOS_INLINE_FUNCTION
   Random_SFC64<DeviceType> get_state(const uint64_t state_idx) const {
     int delay           = 1;
-    const int max_delay = 1024;  // Arbitrary value to void infinite wait
+    const int max_delay = 1024;  // Arbitrary value to avoid infinite wait
     while (Kokkos::atomic_compare_exchange(&locks_(state_idx, 0), 0, 1)) {
       // Exponential backoff spinlock pattern
       for (int tick = 0; tick < delay; ++tick) {
