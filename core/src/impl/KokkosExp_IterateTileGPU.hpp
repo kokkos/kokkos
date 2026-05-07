@@ -179,9 +179,9 @@ struct DeviceIterateNoStride {
   KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE bool check_bounds(
       std::index_sequence<R...>, Idxs... idxs) const {
     if constexpr (Layout == Iterate::Left) {
-      return ((idxs < m_upper[R]) && ...);
+      return ((idxs < static_cast<index_type>(m_upper[R])) && ...);
     } else {
-      return ((idxs < m_upper[Rank - 1 - R]) && ...);
+      return ((idxs < static_cast<index_type>(m_upper[Rank - 1 - R])) && ...);
     }
   }
 

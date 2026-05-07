@@ -181,9 +181,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     check_block_sizes(block);
 
     // Check if the grid covers the full iteration space (no stride needed).
-    using comp_t = std::common_type_t<std::make_unsigned_t<index_type>,
-                                      std::make_unsigned_t<array_index_type>,
-                                      unsigned int>;
+    using comp_t = std::common_type_t<index_type, array_index_type>;
 
     const comp_t max_grid_x = static_cast<comp_t>(m_max_grid_size[0]);
     const comp_t max_grid_y = static_cast<comp_t>(m_max_grid_size[1]);
