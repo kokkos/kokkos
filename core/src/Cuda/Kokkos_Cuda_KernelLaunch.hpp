@@ -250,15 +250,11 @@ inline void ensure_sufficient_shmem(const CudaInternal* cuda_instance,
   const auto& func_attr =
       get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_instance,
                                                                 func);
-  if (shmem <= func_attr.maxDynamicSharedSizeBytes) return;
-
-  auto set_max_shmem = [&] {
-    KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_func_set_attribute_wrapper(
-        func, cudaFuncAttributeMaxDynamicSharedMemorySize, shmem)));
-    return shmem;
-  };
-  static int cached_max = set_max_shmem();
-  if (cached_max < shmem) cached_max = set_max_shmem();
+  static int cached_max = func_attr.maxDynamicSharedSizeBytes;
+  if (shmem <= cached_max) return;
+  KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_func_set_attribute_wrapper(
+      func, cudaFuncAttributeMaxDynamicSharedMemorySize, shmem)));
+  cached_max = shmem;
 }
 
 // </editor-fold> end Some helper functions for launch code readability }}}1
