@@ -248,7 +248,7 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
 // exceeds the default limit.
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
 inline void configure_max_dynamic_shmem(const CudaInternal* cuda_instance,
-                                    const KernelFuncPtr& func, int shmem) {
+                                        const KernelFuncPtr& func, int shmem) {
   const auto& func_attr =
       get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_instance,
                                                                 func);

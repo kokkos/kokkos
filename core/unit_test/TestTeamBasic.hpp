@@ -203,20 +203,19 @@ void test_exceed_max_team_scratch_size_0() {
   policy = Kokkos::TeamPolicy<TEST_EXECSPACE>(1, max_team_size_with_scratch);
   auto new_max_scratch_size = policy.scratch_size_max(level);
 
-  // FIXME need a tighter bound for Cuda and HIP, see #9089
 #ifdef KOKKOS_ENABLE_CUDA
   // due to the 16KiB "fudge factor" (see #9012) we need a large
   // rescale factor so this test still behaves as expected on, for ex,
-  // Pascal w/64KiB shared.
+  // Pascal w/64KiB shared. We do need a better way to handle this.
   auto oversize_factor = 2.0;
 #else
+  // FIXME test a tighter bound for HIP
   auto oversize_factor = 1.1;
 #endif
 
   ASSERT_THROW(
       {
         try {
-          // FIXME test a tighter bound for Cuda and HIP
           Kokkos::parallel_for(policy.set_scratch_size(
                                    level, Kokkos::PerTeam(new_max_scratch_size *
                                                           oversize_factor)),
