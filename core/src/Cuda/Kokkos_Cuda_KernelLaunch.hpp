@@ -252,7 +252,13 @@ inline void configure_max_dynamic_shmem(const CudaInternal* cuda_instance,
   const auto& func_attr =
       get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_instance,
                                                                 func);
-  static int cached_max = func_attr.maxDynamicSharedSizeBytes;
+  const auto cuda_device = cuda_instance->m_cudaDev;
+  static std::map<int, int> cached_max_per_device;
+  if (cached_max_per_device.find(cuda_device) == cached_max_per_device.end()) {
+    cached_max_per_device.emplace(cuda_device,
+                                  func_attr.maxDynamicSharedSizeBytes);
+  }
+  int& cached_max = cached_max_per_device[cuda_device];
   if (shmem <= cached_max) return;
   KOKKOS_IMPL_CUDA_SAFE_CALL((cuda_instance->cuda_func_set_attribute_wrapper(
       func, cudaFuncAttributeMaxDynamicSharedMemorySize, shmem)));
