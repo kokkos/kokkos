@@ -74,10 +74,6 @@ void space_depends_on(const ExecutionSpace& /*exec_space*/,
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#if defined(KOKKOS_ENABLE_CUDA)
-#include <Cuda/Kokkos_Cuda_Event.hpp>
-#endif
-
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_EVENT
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_EVENT

@@ -30,11 +30,7 @@ struct EventResource<Kokkos::Cuda> {
   cudaEvent_t m_event = nullptr;
   int m_cudaDev       = -1;
 
-  EventResource() : m_cudaDev(Kokkos::Cuda().cuda_device()) {
-    KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
-    KOKKOS_IMPL_CUDA_SAFE_CALL(
-        cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
-  }
+  EventResource() : EventResource(Kokkos::Cuda{}) {}
 
   explicit EventResource(const Kokkos::Cuda& exec_space)
       : m_cudaDev(exec_space.cuda_device()) {
@@ -73,12 +69,6 @@ class Event<Kokkos::Cuda> {
   Event()
       : m_handle(
             std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>()) {}
-
-  Event(const Event&)            = default;
-  Event& operator=(const Event&) = default;
-  Event(Event&&)                 = default;
-  Event& operator=(Event&&)      = default;
-  ~Event()                       = default;
 
   Event(const Kokkos::Cuda& exec_space)
       : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
