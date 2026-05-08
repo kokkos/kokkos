@@ -1,13 +1,47 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <gtest/gtest.h>
 
-#include <TestEventHelpers.hpp>
+#include <concepts>
 
 namespace Test {
+
+template <class ViewType>
+struct FillFunctor {
+  ViewType data;
+  template <std::integral T>
+  KOKKOS_FUNCTION void operator()(T i) const {
+    data(i) = i + 1;
+  }
+};
+
+template <class ViewType>
+struct ProduceFunctor {
+  ViewType data;
+  template <std::integral T>
+  KOKKOS_FUNCTION void operator()(T i) const {
+    data(i) = i * 2;
+  }
+};
+
+template <class ViewType, class ResultType>
+struct ConsumeFunctor {
+  ViewType data;
+  ResultType result;
+  template <std::integral T>
+  KOKKOS_FUNCTION void operator()(T i) const {
+    Kokkos::atomic_add(&result(),
+                       static_cast<typename ResultType::value_type>(data(i)));
+  }
+};
 
 // ============================================================================
 // Portable tests -- run for every enabled backend via TEST_EXECSPACE
