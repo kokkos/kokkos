@@ -69,7 +69,7 @@ TEST(TEST_CATEGORY, large_scratch_parallel_reduce) {
   ASSERT_DOUBLE_EQ(result, expected);
 }
 
-// Verify that the ensure_sufficient_shmem caching logic correctly
+// Verify that the configure_max_dynamic_shmem caching logic correctly
 // handles progressively increasing scratch sizes (32 -> 48 -> 64 -> 80 KiB).
 TEST(TEST_CATEGORY, large_scratch_progressive_increase) {
 #if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)

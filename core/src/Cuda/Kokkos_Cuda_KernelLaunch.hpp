@@ -244,8 +244,10 @@ inline void configure_shmem_preference(const CudaInternal* cuda_instance,
   }
 }
 
+// Opt in to the maximum dynamic shared memory size when the request
+// exceeds the default limit.
 template <class DriverType, class LaunchBounds, class KernelFuncPtr>
-inline void ensure_sufficient_shmem(const CudaInternal* cuda_instance,
+inline void configure_max_dynamic_shmem(const CudaInternal* cuda_instance,
                                     const KernelFuncPtr& func, int shmem) {
   const auto& func_attr =
       get_cuda_kernel_func_attributes<DriverType, LaunchBounds>(cuda_instance,
@@ -401,7 +403,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
                             CudaInternal const* cuda_instance) {
     // Set cuda device before launching kernel
     cuda_instance->set_cuda_device();
-    Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
+    Impl::configure_max_dynamic_shmem<DriverType, LaunchBounds>(
         cuda_instance, base_t::get_kernel_func(), shmem);
 
     (base_t::
@@ -430,7 +432,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
             cuda_instance->m_deviceProp, block_size, shmem, desired_occupancy);
       }
       Impl::check_shmem_request(cuda_instance, shmem);
-      Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
+      Impl::configure_max_dynamic_shmem<DriverType, LaunchBounds>(
           cuda_instance, base_t::get_kernel_func(), shmem);
 
       void const* args[] = {&driver};
@@ -509,7 +511,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     // Set cuda device before launching kernel
     cuda_instance->set_cuda_device();
-    Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
+    Impl::configure_max_dynamic_shmem<DriverType, LaunchBounds>(
         cuda_instance, base_t::get_kernel_func(), shmem);
 
     (base_t::
@@ -538,7 +540,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
             desired_occupancy);
       }
       Impl::check_shmem_request(cuda_instance, shmem);
-      Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
+      Impl::configure_max_dynamic_shmem<DriverType, LaunchBounds>(
           cuda_instance, base_t::get_kernel_func(), shmem);
 
       auto* driver_ptr = Impl::allocate_driver_storage_for_kernel(
@@ -649,7 +651,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
     // Set cuda device before launching kernel
     cuda_instance->set_cuda_device();
-    Impl::ensure_sufficient_shmem<DriverType, LaunchBounds>(
+    Impl::configure_max_dynamic_shmem<DriverType, LaunchBounds>(
         cuda_instance, base_t::get_kernel_func(), shmem);
 
     // Invoke the driver function on the device
