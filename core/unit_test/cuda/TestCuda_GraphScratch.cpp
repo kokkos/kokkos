@@ -44,8 +44,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), large_scratch_graph_parallel_for) {
   }
 }
 
-// Test 4: then_parallel_reduce with TeamPolicy requesting >48KiB scratch (graph
-// node)
+// then_parallel_reduce with TeamPolicy requesting >48 KiB scratch (graph node)
 TEST_F(TEST_CATEGORY_FIXTURE(graph), large_scratch_graph_parallel_reduce) {
 #if defined(KOKKOS_ARCH_MAXWELL) || defined(KOKKOS_ARCH_PASCAL)
   GTEST_SKIP() << "Per-block dynamic shared memory >48 KiB is not supported on "
