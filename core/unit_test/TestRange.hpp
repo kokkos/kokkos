@@ -103,7 +103,7 @@ struct TestRange {
 
     Kokkos::deep_copy(host_flags, m_flags);
 
-    // host_flag is at inital values again
+    // host_flag is at initial values again
     error_count = 0;
     for (int i = 0; i < N; ++i) {
       if (i - offset != host_flags(i)) ++error_count;
