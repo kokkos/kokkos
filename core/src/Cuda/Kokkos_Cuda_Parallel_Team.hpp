@@ -992,9 +992,9 @@ class ParallelReduce<CombinedFunctorReducerType,
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
 
-    auto const& dev_props_r    = m_policy.space().cuda_device_prop();
-    const int maxShmemPerBlock = dev_props_r.sharedMemPerBlockOptin -
-                                 dev_props_r.reservedSharedMemPerBlock;
+    auto const& dev_props = m_policy.space().cuda_device_prop();
+    const int maxShmemPerBlock = dev_props.sharedMemPerBlockOptin -
+                                 dev_props.reservedSharedMemPerBlock;
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
 
     if (!Kokkos::has_single_bit<unsigned>(m_team_size) && !UseShflReduction) {
