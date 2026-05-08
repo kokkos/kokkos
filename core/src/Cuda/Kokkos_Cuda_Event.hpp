@@ -13,9 +13,7 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_CUDA)
 
-#ifndef KOKKOS_EVENT_HPP
 #include <Kokkos_Event.hpp>
-#endif
 
 #include <Cuda/Kokkos_Cuda.hpp>
 #include <Cuda/Kokkos_Cuda_Error.hpp>
