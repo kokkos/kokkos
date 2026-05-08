@@ -4,7 +4,12 @@
 #ifndef KOKKOS_TEST_EVENT_HELPERS_HPP
 #define KOKKOS_TEST_EVENT_HELPERS_HPP
 
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core;
+#else
 #include <Kokkos_Core.hpp>
+#endif
 
 #include <concepts>
 
