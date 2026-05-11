@@ -141,7 +141,7 @@ macro(kokkos_export_cmake_tpl NAME)
   #X_DIR or X_ROOT variables set prior to calling find_package
 
   #If Kokkos was configured to find the TPL through a _DIR variable
-  #make sure thar DIR variable is available to downstream packages
+  #make sure that DIR variable is available to downstream packages
   if(DEFINED ${NAME}_DIR)
     #The downstream project may override the TPL location that Kokkos used
     #Check if the downstream project chose its own TPL location
@@ -518,7 +518,7 @@ macro(kokkos_find_library VAR_NAME LIB TPL_NAME)
     set(TPL_SUFFIXES lib lib64)
   endif()
 
-  set(${VAR_NAME} "${VARNAME}-NOTFOUND")
+  set(${VAR_NAME} "${VAR_NAME}-NOTFOUND")
   set(HAVE_CUSTOM_PATHS FALSE)
 
   if(DEFINED ${TPL_NAME}_ROOT
@@ -1058,7 +1058,7 @@ function(kokkos_compilation)
     PATH_SUFFIXES bin
   )
 
-  if(NOT Kokkos_COMPILE_LAUNCHER)
+  if(NOT Kokkos_NVCC_WRAPPER)
     message(
       FATAL_ERROR "Kokkos could not find 'nvcc_wrapper'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/nvcc_wrapper'"
     )
