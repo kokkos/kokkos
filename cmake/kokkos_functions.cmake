@@ -518,6 +518,7 @@ macro(kokkos_find_library VAR_NAME LIB TPL_NAME)
     set(TPL_SUFFIXES lib lib64)
   endif()
 
+  # Follow standard CMake <VAR_NAME>-NOTFOUND convention to improve readability.
   set(${VAR_NAME} "${VAR_NAME}-NOTFOUND")
   set(HAVE_CUSTOM_PATHS FALSE)
 
