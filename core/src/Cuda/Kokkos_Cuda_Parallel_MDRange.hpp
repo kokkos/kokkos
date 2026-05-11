@@ -80,9 +80,7 @@ class ParallelForMDRange<FunctorType, UseStride,
   const array_type m_extent;  // tile_size * num_tiles
 
  public:
-  ParallelForMDRange()                                     = delete;
-  ParallelForMDRange(ParallelForMDRange const&)            = default;
-  ParallelForMDRange& operator=(ParallelForMDRange const&) = delete;
+  ParallelForMDRange() = delete;
 
   Policy const& get_policy() const { return m_policy; }
 

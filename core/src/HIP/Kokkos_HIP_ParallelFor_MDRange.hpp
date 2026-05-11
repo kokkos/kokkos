@@ -45,9 +45,7 @@ class ParallelForMDRange<FunctorType, UseStride,
   const array_type m_extent;  // tile_size * num_tiles
 
  public:
-  ParallelForMDRange()                                     = delete;
-  ParallelForMDRange(ParallelForMDRange const&)            = default;
-  ParallelForMDRange& operator=(ParallelForMDRange const&) = delete;
+  ParallelForMDRange() = delete;
 
   inline __device__ void operator()() const {
     DeviceIteratePattern(m_lower, m_upper, m_extent, m_functor).exec_range();
