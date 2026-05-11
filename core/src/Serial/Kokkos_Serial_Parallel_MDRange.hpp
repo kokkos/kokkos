@@ -41,7 +41,7 @@ class FlatIterate<MDRP, Functor, Tag> {
 
   void exec() const {
     point_type p;
-    if constexpr (iteration_pattern::inner_direction == Iterate::Left) {
+    if constexpr (iteration_pattern::inner_direction == Iterate::Right) {
       exec_rank(std::make_integer_sequence<int, rank>{}, p, m_tag);
     } else {
       exec_rank(make_reverse_integer_sequence<int, rank>{}, p, m_tag);
