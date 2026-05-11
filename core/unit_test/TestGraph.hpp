@@ -1476,8 +1476,11 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), team_scratch_in_graph) {
     using functor_type = GraphScratchFunctor<exec_space>;
     using scratch_view = typename functor_type::scratch_view;
 
-    const int team_size     = std::min(32, ex.concurrency());
-    const int num_teams     = 2;
+    const int num_teams = 2;
+    const int team_size_max =
+        team_policy(num_teams, 1)
+            .team_size_max(functor_type{}, Kokkos::ParallelForTag());
+    const int team_size     = std::min(32, team_size_max);
     const int N             = num_teams * team_size;
     const int scratch_ints  = team_size;
     const int scratch_bytes = scratch_view::shmem_size(scratch_ints);
