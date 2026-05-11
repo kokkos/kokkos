@@ -41,7 +41,7 @@ class TEST_CATEGORY_FIXTURE(GraphInterOp) : public ::testing::Test {
   using graph_t         = Kokkos::Experimental::Graph<execution_space>;
 
   void SetUp() override {
-    data = view_t(Kokkos::view_alloc(exec, "witness"));
+    data = view_t(Kokkos::view_alloc("witness"));
 
     graph = Kokkos::Experimental::create_graph(
         Kokkos::Experimental::get_device_handle(exec), [&](const auto& root) {

@@ -638,6 +638,19 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
 
   // TODO @graph parallel scan, deep copy, etc.
+
+  static constexpr GraphNodeKind node_kind = []() {
+    if constexpr (requires { node_impl_t::node_kind; }) {
+      return node_impl_t::node_kind;
+    } else {
+      return GraphNodeKind::TypeErased;
+    }
+  }();
+
+  GraphNodeKind get_node_kind() const noexcept {
+    KOKKOS_EXPECTS(bool(m_node_impl));
+    return m_node_impl->get_node_kind();
+  }
 };
 
 }  // end namespace Experimental

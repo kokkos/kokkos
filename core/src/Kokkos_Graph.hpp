@@ -37,7 +37,7 @@ struct [[nodiscard]] Graph {
 
   using execution_space = ExecutionSpace;
   using graph           = Graph;
-  using root_t          = GraphNodeRef<ExecutionSpace>;
+  using root_t          = GraphNodeRef<ExecutionSpace, GraphNodeRootTag>;
 
   // </editor-fold> end public member types }}}2
   //----------------------------------------------------------------------------
@@ -56,11 +56,10 @@ struct [[nodiscard]] Graph {
   //----------------------------------------------------------------------------
   // <editor-fold desc="private data members"> {{{2
 
-  using impl_t      = Kokkos::Impl::GraphImpl<ExecutionSpace>;
-  using root_impl_t = typename impl_t::root_node_impl_t;
+  using impl_t = Kokkos::Impl::GraphImpl<ExecutionSpace>;
 
-  std::shared_ptr<impl_t> m_impl_ptr  = nullptr;
-  std::shared_ptr<root_impl_t> m_root = nullptr;
+  std::shared_ptr<impl_t> m_impl_ptr                                = nullptr;
+  std::shared_ptr<Kokkos::Impl::root_impl_t<ExecutionSpace>> m_root = nullptr;
 
   // </editor-fold> end private data members }}}2
   //----------------------------------------------------------------------------

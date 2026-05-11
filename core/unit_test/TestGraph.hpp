@@ -820,20 +820,12 @@ struct ThenFunctor {
   KOKKOS_FUNCTION void operator()(const TimesTwo) const { data() += 2 * value; }
 };
 
-// Supported graph node types.
-enum class GraphNodeType {
-  KERNEL    = 12,
-  AGGREGATE = 42,
-  THEN      = 66,
-  CAPTURE   = 666
-};
-
 template <typename Exec>
 struct GraphNodeTypes {
   // Type of a root node.
   using node_ref_root_t =
       Kokkos::Experimental::GraphNodeRef<Exec,
-                                         Kokkos::Experimental::TypeErasedTag,
+                                         Kokkos::Experimental::GraphNodeRootTag,
                                          Kokkos::Experimental::TypeErasedTag>;
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -845,6 +837,12 @@ struct GraphNodeTypes {
 #else
   static constexpr bool support_capture = false;
 #endif
+
+  // Fully type-erased node.
+  using erased_t =
+      Kokkos::Experimental::GraphNodeRef<Exec,
+                                         Kokkos::Experimental::TypeErasedTag,
+                                         Kokkos::Experimental::TypeErasedTag>;
 
   // Type of a kernel node built using a Kokkos parallel construct.
   using kernel_t =
@@ -939,6 +937,33 @@ TEST(TEST_CATEGORY, when_all_type) {
   auto agg    = Kokkos::Experimental::when_all(node_A, node_B);
   auto tail   = agg.then_parallel_for(1, kernel_functor_t{});
 
+  static_assert(decltype(root)::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::Root);
+  static_assert(decltype(node_A)::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::Kernel);
+  static_assert(decltype(node_B)::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::Kernel);
+  static_assert(decltype(agg)::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::Aggregate);
+
+  static_assert(decltype(types::erased_t(root))::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::TypeErased);
+  static_assert(decltype(types::erased_t(node_A))::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::TypeErased);
+  static_assert(decltype(types::erased_t(node_B))::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::TypeErased);
+  static_assert(decltype(types::erased_t(agg))::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::TypeErased);
+
+  ASSERT_EQ(types::erased_t(root).get_node_kind(),
+            Kokkos::Experimental::GraphNodeKind::Root);
+  ASSERT_EQ(types::erased_t(node_A).get_node_kind(),
+            Kokkos::Experimental::GraphNodeKind::Kernel);
+  ASSERT_EQ(types::erased_t(node_B).get_node_kind(),
+            Kokkos::Experimental::GraphNodeKind::Kernel);
+  ASSERT_EQ(types::erased_t(agg).get_node_kind(),
+            Kokkos::Experimental::GraphNodeKind::Aggregate);
+
   static_assert(std::is_same_v<decltype(graph), graph_t>);
   static_assert(
       std::is_same_v<decltype(root), typename types::node_ref_root_t>);
@@ -949,7 +974,8 @@ TEST(TEST_CATEGORY, when_all_type) {
 }
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
-template <GraphNodeType value, typename DstType, typename... SrcTypes>
+template <Kokkos::Experimental::GraphNodeKind value, typename DstType,
+          typename... SrcTypes>
 __global__ void set_to(DstType* const dst, const SrcTypes* const... srcs) {
   dst[threadIdx.y] += (srcs[threadIdx.y] + ...) + static_cast<DstType>(value);
 }
@@ -982,7 +1008,7 @@ struct ExternalCapture {
   template <typename DstType, typename... SrcTypes>
   static void compute(const Kokkos::Cuda& exec, DstType* const dst,
                       const SrcTypes* const... srcs) {
-    set_to<GraphNodeType::CAPTURE>
+    set_to<Kokkos::Experimental::GraphNodeKind::Capture>
         <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.cuda_stream()>>>(dst, srcs...);
   }
 #endif
@@ -990,7 +1016,7 @@ struct ExternalCapture {
   template <typename DstType, typename... SrcTypes>
   static void compute(const Kokkos::HIP& exec, DstType* const dst,
                       const SrcTypes* const... srcs) {
-    set_to<GraphNodeType::CAPTURE>
+    set_to<Kokkos::Experimental::GraphNodeKind::Capture>
         <<<dim3(1, 1, 1), dim3(1, 1, 1), 0, exec.hip_stream()>>>(dst, srcs...);
   }
 #endif
@@ -1001,7 +1027,8 @@ struct ExternalCapture {
     exec.sycl_queue().submit([&](sycl::handler& cgh) {
       cgh.parallel_for(sycl::range<1>(1), [=](int) {
         dst[0] +=
-            (srcs[0] + ...) + static_cast<DstType>(GraphNodeType::CAPTURE);
+            (srcs[0] + ...) +
+            static_cast<DstType>(Kokkos::Experimental::GraphNodeKind::Capture);
       });
     });
   }
@@ -1052,6 +1079,11 @@ void test_graph_capture() {
   auto captured_right =
       ExternalCapture<Exec>::add(memset_right, exec_left, data_3, data_4);
 
+  static_assert(decltype(captured_left)::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::Capture);
+  static_assert(decltype(captured_right)::node_kind ==
+                Kokkos::Experimental::GraphNodeKind::Capture);
+
   // We don't keep a reference to the created external nodes, to mimic that
   // someone used capture in some deep-down library call (e.g. in
   // Kokkos Kernels).
@@ -1088,14 +1120,22 @@ void test_graph_capture() {
 
   graph.submit(exec_graph);
 
-  ASSERT_TRUE(contains(exec_graph, data_1,
-                       offset_left + static_cast<int>(GraphNodeType::CAPTURE)));
-  ASSERT_TRUE(
-      contains(exec_graph, data_3,
-               offset_right + static_cast<int>(GraphNodeType::CAPTURE)));
-  ASSERT_TRUE(contains(exec_graph, data_2,
-                       offset_left + offset_right +
-                           3 * static_cast<int>(GraphNodeType::CAPTURE)));
+  // Ensure the value added by the capture nodes was non-zero.
+  static_assert(
+      static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture) != 0);
+
+  ASSERT_TRUE(contains(
+      exec_graph, data_1,
+      offset_left +
+          static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture)));
+  ASSERT_TRUE(contains(
+      exec_graph, data_3,
+      offset_right +
+          static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture)));
+  ASSERT_TRUE(contains(
+      exec_graph, data_2,
+      offset_left + offset_right +
+          3 * static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture)));
 }
 
 TEST(TEST_CATEGORY, graph_capture) {
@@ -1207,7 +1247,8 @@ TEST(TEST_CATEGORY, then_host) {
   {
     // clang-format off
     auto graph = Kokkos::Experimental::create_graph(Kokkos::Experimental::get_device_handle(exec), [&](const auto& root) {
-      root.then_host("lonely", functor_h_t{{counter, view_h_t(Kokkos::view_alloc("internal buffer - lonely - host"))}});
+      auto host_node = root.then_host("lonely", functor_h_t{{counter, view_h_t(Kokkos::view_alloc("internal buffer - lonely - host"))}});
+      static_assert(decltype(host_node)::node_kind == Kokkos::Experimental::GraphNodeKind::Host);
     });
     // clang-format on
 
