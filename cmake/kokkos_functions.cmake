@@ -1061,7 +1061,7 @@ function(kokkos_compilation)
 
   if(NOT Kokkos_NVCC_WRAPPER)
     message(
-      FATAL_ERROR "Kokkos could not find 'nvcc_wrapper'. Please set '-DKokkos_COMPILE_LAUNCHER=/path/to/nvcc_wrapper'"
+      FATAL_ERROR "Kokkos could not find 'nvcc_wrapper'. Please set '-DKokkos_NVCC_WRAPPER=/path/to/nvcc_wrapper'"
     )
   endif()
 
