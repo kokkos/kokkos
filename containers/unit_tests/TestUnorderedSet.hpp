@@ -82,15 +82,10 @@ TEST(TEST_CATEGORY, UnorderedSet_insert_erase_and_rehash) {
 
   // Always try to erase truly random indices by initializing the random pool
   // randomly.
-  std::random_device dev;
-  std::mt19937 rng(dev());
-  std::uniform_int_distribution<uint64_t> dist(
-      0, std::numeric_limits<uint64_t>::max());
+  std::mt19937 rng(testing::UnitTest::GetInstance()->random_seed());
+  const uint64_t seed = std::uniform_int_distribution<uint64_t>{}(rng);
 
   // Generate random indices between 0 and size_all. Those will be erased.
-  const uint64_t seed = dist(rng);
-  SCOPED_TRACE("Random seed: " + std::to_string(seed));
-
   Kokkos::Random_XorShift64_Pool<TEST_EXECSPACE> generator(seed);
   key_view_type keys_erased(
       Kokkos::view_alloc(Kokkos::WithoutInitializing, exec,
