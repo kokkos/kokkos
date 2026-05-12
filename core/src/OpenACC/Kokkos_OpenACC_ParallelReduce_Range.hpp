@@ -171,8 +171,8 @@ void OpenACCParallelReduceCustom(Schedule<Static>, Policy const& apolicy,
 KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(n_chunks) num_workers(1) vector_length(chunk_size) KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE1 present(functor, reducer, gang_red_temp) async(async_arg))
   /* clang-format on */
   for (IndexType team_id = 0; team_id < n_chunks; ++team_id) {
-    IndexType tSize = chunk_size;
-    IndexType tStep;
+    std::size_t tSize = static_cast<std::size_t>(chunk_size);
+    std::size_t tStep;
 #pragma acc loop vector
     for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
       const IndexType local_offset = team_id * chunk_size + begin;
@@ -210,8 +210,8 @@ KOKKOS_IMPL_ACC_PRAGMA(parallel loop gang num_gangs(n_chunks) num_workers(1) vec
 KOKKOS_IMPL_ACC_PRAGMA(parallel num_gangs(1) num_workers(1) vector_length(chunk_size) KOKKOS_IMPL_OPENACC_VECTOR_RED_TEMP_CLAUSE2 present(reducer, gang_red_temp) copyin(m_result_view) async(async_arg))
   /* clang-format on */
   {
-    IndexType tSize = chunk_size;
-    IndexType tStep;
+    std::size_t tSize = static_cast<std::size_t>(chunk_size);
+    std::size_t tStep;
 #pragma acc loop vector
     for (IndexType thread_id = 0; thread_id < chunk_size; ++thread_id) {
       IndexType idx;
