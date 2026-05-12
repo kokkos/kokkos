@@ -240,16 +240,41 @@ KOKKOS_INLINE_FUNCTION void expect_equal_extents(
   KOKKOS_EXPECTS(a.extent(0) == b.extent(0));
 }
 
+// Returns whether two views have the same extent (rank-1).
+// Use this when the caller needs a boolean (e.g. to early-return),
+// rather than asserting via KOKKOS_EXPECTS.
+template <typename DataType1, typename... Properties1, typename DataType2,
+          typename... Properties2>
+KOKKOS_INLINE_FUNCTION bool have_equal_extents(
+    const ::Kokkos::View<DataType1, Properties1...>& a,
+    const ::Kokkos::View<DataType2, Properties2...>& b) {
+  return a.extent(0) == b.extent(0);
+}
+
 //
 // Check if the destination view is large enough to hold the data from the
-// source
+// source (i.e. a.extent(0) <= b.extent(0)).
 //
 template <typename DataType1, typename... Properties1, typename DataType2,
           typename... Properties2>
-KOKKOS_INLINE_FUNCTION void expect_less_than_extents(
+KOKKOS_INLINE_FUNCTION void expect_less_or_equal_extents(
     [[maybe_unused]] const ::Kokkos::View<DataType1, Properties1...>& a,
     [[maybe_unused]] const ::Kokkos::View<DataType2, Properties2...>& b) {
   KOKKOS_EXPECTS(a.extent(0) <= b.extent(0));
+}
+
+//
+// Check that both views have at least `count` elements in their first
+// extent (used by count-based algorithms such as copy_n).
+//
+template <typename DataType1, typename... Properties1, typename DataType2,
+          typename... Properties2, typename Size>
+KOKKOS_INLINE_FUNCTION void expect_extents_of_at_least(
+    [[maybe_unused]] const ::Kokkos::View<DataType1, Properties1...>& a,
+    [[maybe_unused]] const ::Kokkos::View<DataType2, Properties2...>& b,
+    [[maybe_unused]] Size count) {
+  KOKKOS_EXPECTS(a.extent(0) >= count);
+  KOKKOS_EXPECTS(b.extent(0) >= count);
 }
 
 }  // namespace Impl

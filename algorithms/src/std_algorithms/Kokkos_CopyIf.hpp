@@ -45,7 +45,7 @@ auto copy_if(const ExecutionSpace& ex,
              Predicate pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_less_than_extents(source, dest);
+  Impl::expect_less_or_equal_extents(source, dest);
 
   return Impl::copy_if_exespace_impl("Kokkos::copy_if_view_api_default", ex,
                                      cbegin(source), cend(source), begin(dest),
@@ -62,7 +62,7 @@ auto copy_if(const std::string& label, const ExecutionSpace& ex,
              Predicate pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_less_than_extents(source, dest);
+  Impl::expect_less_or_equal_extents(source, dest);
 
   return Impl::copy_if_exespace_impl(label, ex, cbegin(source), cend(source),
                                      begin(dest), std::move(pred));
@@ -90,7 +90,7 @@ KOKKOS_FUNCTION auto copy_if(
     const ::Kokkos::View<DataType2, Properties2...>& dest, Predicate pred) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_less_than_extents(source, dest);
+  Impl::expect_less_or_equal_extents(source, dest);
 
   return Impl::copy_if_team_impl(teamHandle, cbegin(source), cend(source),
                                  begin(dest), std::move(pred));

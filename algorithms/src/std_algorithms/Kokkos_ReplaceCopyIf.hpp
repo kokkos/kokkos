@@ -52,7 +52,7 @@ auto replace_copy_if(const ExecutionSpace& ex,
                      PredicateType pred, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  Impl::expect_less_than_extents(view_from, view_dest);
+  Impl::expect_less_or_equal_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::replace_copy_if_exespace_impl(
@@ -71,7 +71,7 @@ auto replace_copy_if(const std::string& label, const ExecutionSpace& ex,
                      PredicateType pred, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  Impl::expect_less_than_extents(view_from, view_dest);
+  Impl::expect_less_or_equal_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::replace_copy_if_exespace_impl(
@@ -108,7 +108,7 @@ KOKKOS_FUNCTION auto replace_copy_if(
     PredicateType pred, const ValueType& new_value) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_from);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view_dest);
-  Impl::expect_less_than_extents(view_from, view_dest);
+  Impl::expect_less_or_equal_extents(view_from, view_dest);
 
   namespace KE = ::Kokkos::Experimental;
   return Impl::replace_copy_if_team_impl(teamHandle, KE::cbegin(view_from),

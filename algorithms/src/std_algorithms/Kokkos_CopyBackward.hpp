@@ -40,7 +40,7 @@ auto copy_backward(const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_less_than_extents(source, dest);
+  Impl::expect_less_or_equal_extents(source, dest);
 
   return Impl::copy_backward_exespace_impl(
       "Kokkos::copy_backward_view_api_default", ex, cbegin(source),
@@ -56,7 +56,7 @@ auto copy_backward(const std::string& label, const ExecutionSpace& ex,
                    const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_less_than_extents(source, dest);
+  Impl::expect_less_or_equal_extents(source, dest);
 
   return Impl::copy_backward_exespace_impl(label, ex, cbegin(source),
                                            cend(source), end(dest));
@@ -84,7 +84,7 @@ KOKKOS_FUNCTION auto copy_backward(
     const ::Kokkos::View<DataType2, Properties2...>& dest) {
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(source);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(dest);
-  Impl::expect_less_than_extents(source, dest);
+  Impl::expect_less_or_equal_extents(source, dest);
 
   return Impl::copy_backward_team_impl(teamHandle, cbegin(source), cend(source),
                                        end(dest));

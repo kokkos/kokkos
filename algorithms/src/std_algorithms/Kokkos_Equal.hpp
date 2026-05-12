@@ -71,7 +71,7 @@ bool equal(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
-  if (view1.extent(0) != view2.extent(0)) {
+  if (!Impl::have_equal_extents(view1, view2)) {
     return false;
   }
 
@@ -91,7 +91,7 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
-  if (view1.extent(0) != view2.extent(0)) {
+  if (!Impl::have_equal_extents(view1, view2)) {
     return false;
   }
 
@@ -111,7 +111,7 @@ bool equal(const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
-  if (view1.extent(0) != view2.extent(0)) {
+  if (!Impl::have_equal_extents(view1, view2)) {
     return false;
   }
 
@@ -132,7 +132,7 @@ bool equal(const std::string& label, const ExecutionSpace& ex,
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
-  if (view1.extent(0) != view2.extent(0)) {
+  if (!Impl::have_equal_extents(view1, view2)) {
     return false;
   }
 
@@ -234,7 +234,7 @@ KOKKOS_FUNCTION bool equal(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
-  if (view1.extent(0) != view2.extent(0)) {
+  if (!Impl::have_equal_extents(view1, view2)) {
     return false;
   }
 
@@ -255,7 +255,7 @@ KOKKOS_FUNCTION bool equal(
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view1);
   Impl::static_assert_is_admissible_to_kokkos_std_algorithms(view2);
 
-  if (view1.extent(0) != view2.extent(0)) {
+  if (!Impl::have_equal_extents(view1, view2)) {
     return false;
   }
 
