@@ -10,6 +10,7 @@ import kokkos.core;
 #else
 #include <Kokkos_Core.hpp>
 #endif
+#include <Kokkos_Iterator.hpp>
 #include <Kokkos_Assert.hpp>
 
 #include <Kokkos_DetectionIdiom.hpp>

@@ -80,8 +80,8 @@ struct are_random_access_iterators;
 template <class T>
 struct are_random_access_iterators<T> {
   static constexpr bool value =
-      is_iterator_v<T> && std::is_base_of<std::random_access_iterator_tag,
-                                          typename T::iterator_category>::value;
+      is_iterator_v<T> && std::is_base_of_v<std::random_access_iterator_tag,
+                                            typename T::iterator_category>;
 };
 
 template <class Head, class... Tail>
