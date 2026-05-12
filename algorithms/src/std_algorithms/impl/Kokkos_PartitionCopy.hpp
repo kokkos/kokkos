@@ -186,22 +186,12 @@ partition_copy_team_impl(const TeamHandleType& teamHandle,
   if (from_first == from_last) {
     return {to_first_true, to_first_false};
   }
-  (void)pred;
 
   const std::size_t num_elements =
       Kokkos::Experimental::distance(from_first, from_last);
 
-  if constexpr (stdalgo_must_use_kokkos_single_for_team_scan<
-                    typename TeamHandleType::execution_space>::value
-// FIXME_CUDA we get an illegal memory error if we use the parallel_scan
-// that seems related to the use of StdPartitionCopyScalar
-#if defined KOKKOS_ENABLE_CUDA
-                || std::is_same_v<typename TeamHandleType::execution_space,
-                                  Kokkos::CUDA>
-#endif
-  )
-
-  {
+  if constexpr (stdalgo_must_use_kokkos_single_for_team_scan_v<
+                    typename TeamHandleType::execution_space>) {
     using counts_t  = ::Kokkos::pair<std::size_t, std::size_t>;
     counts_t counts = {};
     Kokkos::single(

@@ -28,6 +28,15 @@ struct stdalgo_must_use_kokkos_single_for_team_scan<
     Kokkos::Experimental::OpenACC> : std::true_type {};
 #endif
 
+// FIXME_CUDA team parallel_scan with a compound scan value (e.g.
+// StdPartitionCopyScalar in partition_copy) can provoke illegal memory
+// accesses
+#if defined(KOKKOS_ENABLE_CUDA)
+template <>
+struct stdalgo_must_use_kokkos_single_for_team_scan<Kokkos::Cuda>
+    : std::true_type {};
+#endif
+
 template <typename T>
 inline constexpr bool stdalgo_must_use_kokkos_single_for_team_scan_v =
     stdalgo_must_use_kokkos_single_for_team_scan<T>::value;
