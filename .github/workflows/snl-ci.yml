@@ -422,24 +422,4 @@ jobs:
         env:
           XDG_CACHE_HOME: $HOME/optimizer-cache
         run: |
-          nextsystemd --ui-collector-address none &
-          NEXTSYSTEMD_PID=$!
-
-          # need to make sure nextcli application wait starts before the binary we're waiting on
-          # expect that optimizer is idle since current test has no grid code
-          (nextcli application wait --timeout 30 2>&1 | grep IDLE) &
-          WAIT_PID=$!
-
-          # binary under test
-          ctest --output-on-failure --timeout 3600 -R Kokkos_IncrementalTest_NEXTSILICON
-
-          # wait for nextcli application wait to complete
-          # returns code from backgrounded command
-          wait "$WAIT_PID"
-
-          # FIXME_NEXTSILICON: `nextcli system terminate` will soon block but doesn't yet
-          nextcli system terminate || true
-          wait "$NEXTSYSTEMD_PID"
-
-          # make sure nextsystemd shut down properly
-          nextcli system status | grep "Service: DOWN"
+          ctest -V --timeout 3600 -R Kokkos_IncrementalTest_NEXTSILICON
