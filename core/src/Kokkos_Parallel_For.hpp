@@ -48,8 +48,7 @@ namespace Kokkos {
  */
 template <class Label, Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
   requires(std::is_constructible_v<std::string, const Label&> &&
-           !TeamHandle<typename ExecPolicy::execution_type> &&
-           !ThreadHandleType<typename ExecPolicy::execution_type>)
+           Kokkos::ExecutionSpace<typename ExecPolicy::execution_type>)
 inline void parallel_for([[maybe_unused]] const Label& label,
                          const ExecPolicy& policy, const FunctorType& functor) {
   // Work around unsuppressable warning of calling host (constexpr) function
@@ -79,8 +78,7 @@ inline void parallel_for([[maybe_unused]] const Label& label,
 }
 
 template <Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
-  requires(!TeamHandle<typename ExecPolicy::execution_type> &&
-           !ThreadHandleType<typename ExecPolicy::execution_type>)
+  requires Kokkos::ExecutionSpace<typename ExecPolicy::execution_type>
 KOKKOS_INLINE_FUNCTION void parallel_for(const ExecPolicy& policy,
                                          const FunctorType& functor) {
   KOKKOS_IF_ON_DEVICE(
