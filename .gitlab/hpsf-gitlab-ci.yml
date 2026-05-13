@@ -86,7 +86,6 @@ NVIDIA-GH200:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
-        -D CTEST_NOTES_FILES=build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
@@ -280,6 +279,7 @@ NVIDIA-GRACE-GRACE:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   after_script:
     - sed -n "s/[0-9]*:[ ]\[[ ]*OK \] \([^ ]*\) (\([0-9]*\) ms)/\2 \1/p" test_results.txt | sort -nr | head
