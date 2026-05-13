@@ -86,6 +86,7 @@ NVIDIA-GH200:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
