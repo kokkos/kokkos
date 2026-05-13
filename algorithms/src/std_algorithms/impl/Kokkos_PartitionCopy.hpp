@@ -28,21 +28,27 @@ struct StdPartitionCopyScalar {
   KOKKOS_DEFAULTED_FUNCTION
   StdPartitionCopyScalar() = default;
 
-  KOKKOS_DEFAULTED_FUNCTION
-  StdPartitionCopyScalar(const StdPartitionCopyScalar&) = default;
+  KOKKOS_FUNCTION StdPartitionCopyScalar& operator=(ValueType o) {
+    true_count_  = o;
+    false_count_ = o;
+    return *this;
+  }
 
-  KOKKOS_DEFAULTED_FUNCTION
-  StdPartitionCopyScalar& operator=(const StdPartitionCopyScalar&) = default;
+  KOKKOS_FUNCTION StdPartitionCopyScalar(ValueType true_count,
+                                         ValueType false_count)
+      : true_count_(true_count), false_count_(false_count) {}
 
-  KOKKOS_FUNCTION
-  StdPartitionCopyScalar(const volatile StdPartitionCopyScalar& o)
+  // Non-explicit: team_scan scratch uses `type accum = 0` for generic ArgType.
+  KOKKOS_FUNCTION StdPartitionCopyScalar(ValueType o)
+      : StdPartitionCopyScalar(o, o) {}
+
+  // Threads team_scan returns through volatile scratch; copy from volatile.
+  KOKKOS_FUNCTION StdPartitionCopyScalar(
+      volatile StdPartitionCopyScalar const& o)
       : true_count_(o.true_count_), false_count_(o.false_count_) {}
 
-  KOKKOS_FUNCTION
-  void operator=(const StdPartitionCopyScalar& o) volatile {
-    true_count_  = o.true_count_;
-    false_count_ = o.false_count_;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  StdPartitionCopyScalar& operator=(StdPartitionCopyScalar const&) = default;
 
   KOKKOS_FUNCTION
   StdPartitionCopyScalar& operator+=(StdPartitionCopyScalar const& o) {

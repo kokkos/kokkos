@@ -1933,7 +1933,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
   static_assert(std::is_same_v<functor_value_type, ValueType>,
                 "Non-matching value types of functor and return type");
 
-  ValueType scan_val{};
+  ValueType scan_val = ValueType();
 
   // Intra-member scan
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
