@@ -28,27 +28,15 @@ struct StdPartitionCopyScalar {
   KOKKOS_DEFAULTED_FUNCTION
   StdPartitionCopyScalar() = default;
 
-  // this is needed because the impl of
-  // scan in some places uses "type value = 0"
-  KOKKOS_FUNCTION StdPartitionCopyScalar(int zero) {
-    KOKKOS_EXPECTS(zero == 0);
-    true_count_  = zero;
-    false_count_ = zero;
-  }
+  KOKKOS_DEFAULTED_FUNCTION
+  StdPartitionCopyScalar(const StdPartitionCopyScalar&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  StdPartitionCopyScalar& operator=(const StdPartitionCopyScalar&) = default;
 
   KOKKOS_FUNCTION
   StdPartitionCopyScalar(const volatile StdPartitionCopyScalar& o)
       : true_count_(o.true_count_), false_count_(o.false_count_) {}
-
-  // this assignement is needed because the impl of
-  // scan in some places uses "value = 0"
-  KOKKOS_FUNCTION
-  StdPartitionCopyScalar& operator=(int zero) {
-    KOKKOS_EXPECTS(zero == 0);
-    true_count_  = zero;
-    false_count_ = zero;
-    return *this;
-  }
 
   KOKKOS_FUNCTION
   void operator=(const StdPartitionCopyScalar& o) volatile {
@@ -111,10 +99,7 @@ struct StdPartitionCopyFunctor {
   }
 
   KOKKOS_FUNCTION
-  void init(value_type& update) const {
-    update.true_count_  = 0;
-    update.false_count_ = 0;
-  }
+  void init(value_type& update) const { update = value_type{}; }
 
   KOKKOS_FUNCTION
   void join(value_type& update, const value_type& input) const {
