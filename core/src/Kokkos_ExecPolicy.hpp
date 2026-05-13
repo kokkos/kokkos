@@ -1355,7 +1355,7 @@ class ImplRangePolicy<Handle, Properties...>
   using member_type      = typename traits::index_type;
   using index_type       = typename traits::index_type;
 
-  KOKKOS_INLINE_FUNCTION const typename traits::team_handle& space() const {
+  KOKKOS_INLINE_FUNCTION Handle const& space() const {
     return static_cast<const base_t*>(this)->member;
   }
 
@@ -1374,8 +1374,6 @@ class ImplRangePolicy<Handle, Properties...>
   }
 };
 
-// Specialization of RangePolicy for thread-level parallelism (ThreadVectorRange
-// semantics)
 template <ThreadHandleType Handle, class... Properties>
 class ImplRangePolicy<Handle, Properties...>
     : public Impl::ThreadVectorRangeBoundariesStruct<
@@ -1384,9 +1382,6 @@ class ImplRangePolicy<Handle, Properties...>
   using base_t = typename Impl::ThreadVectorRangeBoundariesStruct<
       typename Impl::PolicyTraits<Properties...>::index_type,
       typename Handle::member_type>;
-
- private:
-  Handle m_handle;
 
  public:
   using traits = typename Impl::PolicyTraits<Properties...>;
@@ -1397,6 +1392,10 @@ class ImplRangePolicy<Handle, Properties...>
   using member_type      = typename traits::index_type;
   using index_type       = typename traits::index_type;
 
+ private:
+  Handle m_handle;
+
+ public:
   template <typename IndexType1, typename IndexType2>
   KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
                                          IndexType1 work_begin,
@@ -1411,9 +1410,7 @@ class ImplRangePolicy<Handle, Properties...>
       : base_t(handle.member, static_cast<index_type>(work_count)),
         m_handle(handle) {}
 
-  KOKKOS_INLINE_FUNCTION const typename traits::thread_handle& space() const {
-    return m_handle;
-  }
+  KOKKOS_INLINE_FUNCTION Handle const& space() const { return m_handle; }
 
   KOKKOS_INLINE_FUNCTION member_type begin() const {
     return static_cast<const base_t*>(this)->start;
@@ -1422,7 +1419,10 @@ class ImplRangePolicy<Handle, Properties...>
     return static_cast<const base_t*>(this)->end;
   }
 
-  KOKKOS_INLINE_FUNCTION member_type chunk_size() const { return 1; }
+  KOKKOS_INLINE_FUNCTION member_type chunk_size() const {
+    // Same rationale as ImplRangePolicy<TeamHandle, ...>::chunk_size().
+    return 1;
+  }
 };
 }  // namespace Impl
 
