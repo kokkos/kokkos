@@ -25,7 +25,7 @@ if [[ -n "${KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS:-}" ]]; then
 
     # configure nextsystemd for telemetry-less mode
     echo -e "optimizer-pi:\n  enable-telemetry-less: true" > ${patch_dir}/kokkos.patch
-    
+
     # start nextsystemd without profiling tools data collection
     nextsystemd --ui-collector-address none --cfg-file ${patch_dir}/kokkos.patch &
     NEXTSYSTEMD_PID=$!
@@ -45,17 +45,29 @@ else
     # training run
     ./"$1" "${@:2}"
 
-    # if there are mills, we will get to optimized
-    # if there are no mills, we'll get to idle really fast
+   # wait for optimization/projection to finish, up to 5 minutes
+   SECONDS=0
+   while [ $SECONDS -lt 300 ]; do
+       # check current state
+       ret=0
+       status="$(nextcli application status | grep 'Optimization state:')"
+       if [[ $status == *IDLE* ]]; then
+           # no mills found, return
+           exit 0
+       elif [[ $status == *IMPROVED* ]]; then
+           # optimization/projection finished, do device run
+           ./"$1" "${@:2}"
+           exit
+       elif [[ $status == *OPTIMIZING* ]]; then
+           # optimization/projection still running, wait 10 more seconds
+           sleep 10
+           continue
+       else
+           # in some other state, something went wrong
+           exit 2
+       fi
+   done
 
-    # if there are no mills, we will get to idle really fast
-    status="$(nextcli application wait --timeout 10 2>&1 || true)"
-
-    if [[ $status != *IDLE* ]]; then
-        # If there are mills (status is not IDLE), then we will eventually get to OPTIMIZED (or error)
-        nextcli application wait --timeout 300
-        # handoff run
-        ./"$1" "${@:2}"
-    fi
-
+   echo "error: timed out" >&2
+   exit 127
 fi
