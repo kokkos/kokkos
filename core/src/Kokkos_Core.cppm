@@ -138,6 +138,15 @@ export {
   using ::Kokkos::Experimental::SubscribableViewHooks;
   }  // namespace Experimental
 
+  // View iterators (Kokkos_Iterator.hpp)
+  namespace Experimental {
+  using ::Kokkos::Experimental::begin;
+  using ::Kokkos::Experimental::cbegin;
+  using ::Kokkos::Experimental::cend;
+  using ::Kokkos::Experimental::distance;
+  using ::Kokkos::Experimental::end;
+  }  // namespace Experimental
+
   // execution policies
   using ::Kokkos::AUTO;
   using ::Kokkos::AUTO_t;

@@ -74,6 +74,20 @@ export {
   using ::Kokkos::Impl::WithoutInitializing_t;
   }  // namespace Impl
 
+  // Kokkos view iterators
+  namespace Experimental {
+  namespace Impl {
+  using ::Kokkos::Experimental::Impl::are_iterators;
+  using ::Kokkos::Experimental::Impl::are_iterators_v;
+  using ::Kokkos::Experimental::Impl::are_random_access_iterators;
+  using ::Kokkos::Experimental::Impl::are_random_access_iterators_v;
+  using ::Kokkos::Experimental::Impl::is_iterable_view;
+  using ::Kokkos::Experimental::Impl::is_iterator;
+  using ::Kokkos::Experimental::Impl::is_iterator_v;
+  using ::Kokkos::Experimental::Impl::RandomAccessIterator;
+  }  // namespace Impl
+  }  // namespace Experimental
+
   // execution policies
   namespace Impl {
   using ::Kokkos::Impl::ParallelConstructName;
