@@ -48,7 +48,27 @@ struct StdPartitionCopyScalar {
       : true_count_(o.true_count_), false_count_(o.false_count_) {}
 
   KOKKOS_DEFAULTED_FUNCTION
+  StdPartitionCopyScalar(StdPartitionCopyScalar const&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION
   StdPartitionCopyScalar& operator=(StdPartitionCopyScalar const&) = default;
+
+  // Threads team_scan writes through volatile scratch. Return void so GCC
+  // -Wvolatile does not warn on *volatile_ptr = rhs (discarded volatile ref).
+  KOKKOS_FUNCTION
+  void operator=(StdPartitionCopyScalar const& o) volatile {
+    true_count_  = o.true_count_;
+    false_count_ = o.false_count_;
+  }
+
+  KOKKOS_DEFAULTED_FUNCTION
+  StdPartitionCopyScalar(StdPartitionCopyScalar&&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  StdPartitionCopyScalar& operator=(StdPartitionCopyScalar&&) = default;
+
+  KOKKOS_DEFAULTED_FUNCTION
+  ~StdPartitionCopyScalar() = default;
 
   KOKKOS_FUNCTION
   StdPartitionCopyScalar& operator+=(StdPartitionCopyScalar const& o) {
