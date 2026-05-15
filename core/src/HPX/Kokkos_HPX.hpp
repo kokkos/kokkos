@@ -683,18 +683,18 @@ struct HPXTeamMember {
 template <typename iType>
 struct TeamVectorRangeBoundariesStruct<iType, HPXTeamMember> {
  private:
-  KOKKOS_INLINE_FUNCTION static iType ibegin(const iType& arg_begin,
-                                             const iType& arg_end,
-                                             const iType& arg_rank,
-                                             const iType& arg_size) {
+  KOKKOS_INLINE_FUNCTION static iType ibegin(const iType &arg_begin,
+                                             const iType &arg_end,
+                                             const iType &arg_rank,
+                                             const iType &arg_size) {
     return arg_begin +
            ((arg_end - arg_begin + arg_size - 1) / arg_size) * arg_rank;
   }
 
-  KOKKOS_INLINE_FUNCTION static iType iend(const iType& arg_begin,
-                                           const iType& arg_end,
-                                           const iType& arg_rank,
-                                           const iType& arg_size) {
+  KOKKOS_INLINE_FUNCTION static iType iend(const iType &arg_begin,
+                                           const iType &arg_end,
+                                           const iType &arg_rank,
+                                           const iType &arg_size) {
     const iType end_ =
         arg_begin +
         ((arg_end - arg_begin + arg_size - 1) / arg_size) * (arg_rank + 1);
@@ -706,19 +706,19 @@ struct TeamVectorRangeBoundariesStruct<iType, HPXTeamMember> {
   const iType start;
   const iType end;
   enum { increment = 1 };
-  const HPXTeamMember& member;
+  const HPXTeamMember &member;
 
   KOKKOS_INLINE_FUNCTION
-  TeamVectorRangeBoundariesStruct(const HPXTeamMember& arg_thread,
-                                  const iType& arg_count)
+  TeamVectorRangeBoundariesStruct(const HPXTeamMember &arg_thread,
+                                  const iType &arg_count)
       : start(ibegin(0, arg_count, arg_thread.team_rank(),
                      arg_thread.team_size())),
         end(iend(0, arg_count, arg_thread.team_rank(), arg_thread.team_size())),
         member(arg_thread) {}
 
   KOKKOS_INLINE_FUNCTION
-  TeamVectorRangeBoundariesStruct(const HPXTeamMember& arg_thread,
-                                  const iType& arg_begin, const iType& arg_end)
+  TeamVectorRangeBoundariesStruct(const HPXTeamMember &arg_thread,
+                                  const iType &arg_begin, const iType &arg_end)
       : start(ibegin(arg_begin, arg_end, arg_thread.team_rank(),
                      arg_thread.team_size())),
         end(iend(arg_begin, arg_end, arg_thread.team_rank(),
@@ -1881,8 +1881,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
  */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
-    const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>&
-        loop_boundaries,
+    const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
+        &loop_boundaries,
     const Lambda &lambda) {
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep

@@ -17,6 +17,7 @@
 #include <SYCL/Kokkos_SYCL_ParallelFor_Range.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelFor_MDRange.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelFor_Team.hpp>
+#include <Kokkos_Parallel_RangePolicyHandles.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelReduce_Range.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelReduce_MDRange.hpp>
 #include <SYCL/Kokkos_SYCL_ParallelReduce_Team.hpp>

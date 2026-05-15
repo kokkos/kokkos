@@ -452,6 +452,73 @@ void self_similar_range_policy_sum_views_case6() {
       });
 }
 
+// Level-3 pattern from the self-similar RangePolicy interface: inside a team,
+// parallel_for(RangePolicy(team, ...), closure(thread_handle)) obtains a
+// thread_handle and uses RangePolicy(th, ...) for thread-vector work (e.g. via
+// sum_views). Uses a degenerate team range [0, 1) so each team thread runs the
+// closure once with its handle (TeamThreadRange dispatch).
+void self_similar_range_policy_sum_views_case8() {
+  const size_t N         = 16;
+  const size_t num_teams = 4;
+
+  Kokkos::View<float*> v_x("v_x", N), v_y("v_y", N);
+  Kokkos::View<float**> M_x("M_x", num_teams, N),
+      M_add2("M_add2", num_teams, N), M_add4("M_add4", num_teams, N);
+
+  Kokkos::parallel_for(
+      "init_v", Kokkos::RangePolicy<>(0, N), KOKKOS_LAMBDA(const size_t i) {
+        v_x(i) = 0.f;
+        v_y(i) = 1.f;
+      });
+  Kokkos::parallel_for(
+      "init_M", Kokkos::RangePolicy<>(0, num_teams),
+      KOKKOS_LAMBDA(const size_t i) {
+        for (size_t j = 0; j < N; j++) {
+          M_x(i, j)    = 0.f;
+          M_add2(i, j) = 2.f;
+          M_add4(i, j) = 4.f;
+        }
+      });
+
+  sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
+
+  using team_t        = typename Kokkos::TeamPolicy<>::member_type;
+  using thread_handle = team_t::thread_handle;
+  Kokkos::parallel_for(
+      "nested_range_policy_thread_handle",
+      Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
+      KOKKOS_LAMBDA(const team_t& team) {
+        auto row_x = Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL());
+        auto row_add2 =
+            Kokkos::subview(M_add2, team.league_rank(), Kokkos::ALL());
+        sum_views(team, row_x, row_add2);
+
+        auto row_add4 =
+            Kokkos::subview(M_add4, team.league_rank(), Kokkos::ALL());
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy(team, 0, 1),
+            [&](const thread_handle& th) { sum_views(th, row_x, row_add4); });
+      });
+
+  size_t result = 0;
+  Kokkos::parallel_reduce(
+      "check_v_case8", N,
+      KOKKOS_LAMBDA(size_t i, size_t & s) { s += static_cast<size_t>(v_x(i)); },
+      result);
+  ASSERT_EQ(result, N);
+
+  result = 0;
+  Kokkos::parallel_reduce(
+      "check_M_case8", Kokkos::RangePolicy<>(0, num_teams * N),
+      KOKKOS_LAMBDA(size_t i, size_t & s) {
+        int row = i / N;
+        int col = i % N;
+        s += static_cast<size_t>(M_x(row, col));
+      },
+      result);
+  ASSERT_EQ(result, num_teams * N * 6);
+}
+
 void self_similar_range_policy_case7() {
   using team_t = typename Kokkos::TeamPolicy<>::member_type;
   int nerrs    = 0;
@@ -515,6 +582,13 @@ TEST(TEST_CATEGORY, self_similar_range_policy_case7) {
   // Case 7: handle concurrency queries. TeamHandle concurrency is
   // team_size*vector_length; ThreadHandle concurrency is vector_length.
   self_similar_range_policy_case7();
+}
+
+TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case8) {
+  // Case 8: nested parallel_for(RangePolicy(team, 0, 1),
+  // closure(thread_handle)) then sum_views(th, ...) using RangePolicy(th, ...)
+  // (ThreadVectorRange).
+  self_similar_range_policy_sum_views_case8();
 }
 
 }  // namespace Test

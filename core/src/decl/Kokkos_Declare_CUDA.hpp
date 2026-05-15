@@ -16,6 +16,7 @@
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
 #include <Cuda/Kokkos_Cuda_View.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
+#include <Kokkos_Parallel_RangePolicyHandles.hpp>
 #include <Cuda/Kokkos_Cuda_MDRangePolicy.hpp>
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>
 #include <Cuda/Kokkos_Cuda_ZeroMemset.hpp>

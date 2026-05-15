@@ -16,6 +16,7 @@
 #include <HIP/Kokkos_HIP_ParallelFor_Range.hpp>
 #include <HIP/Kokkos_HIP_ParallelFor_MDRange.hpp>
 #include <HIP/Kokkos_HIP_ParallelFor_Team.hpp>
+#include <Kokkos_Parallel_RangePolicyHandles.hpp>
 #include <HIP/Kokkos_HIP_ParallelReduce_Range.hpp>
 #include <HIP/Kokkos_HIP_ParallelReduce_MDRange.hpp>
 #include <HIP/Kokkos_HIP_ParallelReduce_Team.hpp>
