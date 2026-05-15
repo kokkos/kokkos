@@ -6,6 +6,7 @@
 
 #if defined(KOKKOS_ENABLE_SERIAL)
 #include <Serial/Kokkos_Serial.hpp>
+#include <Kokkos_Parallel_RangePolicyHandles.hpp>
 #include <Serial/Kokkos_Serial_MDRangePolicy.hpp>
 #include <Serial/Kokkos_Serial_ZeroMemset.hpp>
 #endif
