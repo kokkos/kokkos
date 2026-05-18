@@ -1488,11 +1488,11 @@ class Random_SFC64 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  float frand() { return urand64() / static_cast<float>(MAX_URAND64); }
+  float frand() { return (urand64() - 1) / static_cast<float>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
   float frand(const float& range) {
-    return range * urand64() / static_cast<float>(MAX_URAND64);
+    return range * (urand64() - 1) / static_cast<float>(MAX_URAND64);
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1501,11 +1501,11 @@ class Random_SFC64 {
   }
 
   KOKKOS_INLINE_FUNCTION
-  double drand() { return urand64() / static_cast<double>(MAX_URAND64); }
+  double drand() { return (urand64() - 1) / static_cast<double>(MAX_URAND64); }
 
   KOKKOS_INLINE_FUNCTION
   double drand(const double& range) {
-    return range * urand64() / static_cast<double>(MAX_URAND64);
+    return range * (urand64() - 1) / static_cast<double>(MAX_URAND64);
   }
 
   KOKKOS_INLINE_FUNCTION
