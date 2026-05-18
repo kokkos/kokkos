@@ -289,6 +289,11 @@ CudaInternal::CudaInternal(cudaStream_t stream) : m_stream(stream) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cuda_event_create_with_flags_wrapper(
         &constantMemReusablePerDevice[m_cudaDev], cudaEventDisableTiming));
 
+  // Accessing the mutex (for constant memory launch) through
+  // std::map::operator[] will ensure the mutex is default constructed (and
+  // initialized)
+  constantMemMutexPerDevice[m_cudaDev];
+
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
   // and scratch space for partial reduction values.
