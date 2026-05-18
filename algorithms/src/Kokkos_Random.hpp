@@ -709,7 +709,11 @@ struct Random_SFC64_Pool_Init {
     state_(i, 3) = 1;
 
     Random_SFC64<execution_space> gen(state_, i);
-    for (int j = 0; j < 18; j++) gen.urand64();  // 12 could be enough
+    // Mix the state to 'escape zeroland' if a bad seed is provided. The number
+    // of iterations is arbitrary. PractRand historically used 18
+    // (conservative), though 12 is now recommended. Kept 18 as performance
+    // impact is negligible.
+    for (int j = 0; j < 18; j++) gen.urand64();
 
     Kokkos::memory_fence();  // Ensure that the state has been written
     Kokkos::atomic_store(&locks_(i, 0), 0);  // unlock the state
@@ -1564,9 +1568,8 @@ class Random_SFC64_Pool {
   }
 
   // Useful in distributed settings to be reproducible
-  Random_SFC64_Pool(uint64_t seed_low, uint64_t seed_high,
-                    uint64_t num_states) {
-    init_impl(execution_space(), seed_low, seed_high, num_states);
+  Random_SFC64_Pool(uint64_t seed, uint64_t seed_offset, uint64_t num_states) {
+    init_impl(execution_space(), seed, seed_offset, num_states);
     execution_space().fence("Random_SFC64_Pool: Constructor");
   }
 
@@ -1580,9 +1583,9 @@ class Random_SFC64_Pool {
   }
 
   // Useful in distributed settings to be reproducible
-  Random_SFC64_Pool(const execution_space& exec, uint64_t seed_low,
-                    uint64_t seed_high, uint64_t num_states) {
-    init_impl(exec, seed_low, seed_high, num_states);
+  Random_SFC64_Pool(const execution_space& exec, uint64_t seed,
+                    uint64_t seed_offset, uint64_t num_states) {
+    init_impl(exec, seed, seed_offset, num_states);
   }
 
   bool operator==(const Random_SFC64_Pool& other) const {
