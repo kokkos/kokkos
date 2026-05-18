@@ -899,6 +899,19 @@ else()
   compiler_specific_options(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID MSVC /Zc:preprocessor)
 endif()
 
+# MSVC requires /EHsc for C++ exception handling (unwind semantics); without it
+# STL headers like <chrono> trigger C4530.  For CUDA nvcc already forwards /EHsc
+# to the host compiler automatically, so only inject it for non-NVIDIA builds.
+if(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+  compiler_specific_options(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID MSVC /EHsc)
+endif()
+
+# nvcc-generated .cudafe1.cpp files can exceed the default COFF section count
+# limit (C1128) on MSVC; pass /bigobj to the host compiler via -Xcompiler.
+if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+  compiler_specific_options(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID MSVC -Xcompiler=/bigobj)
+endif()
+
 #Right now we cannot get the compiler ID when cross-compiling, so just check
 #that HIP is enabled
 if(KOKKOS_ENABLE_HIP)
