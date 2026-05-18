@@ -109,7 +109,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
     const comp_t bz         = static_cast<comp_t>(block.z);
 
     bool need_grid_stride = true;
-    if constexpr (Policy::rank == 2) {
+    if constexpr (Policy::rank == 1) {
+      if ((max_grid_x * bx) >= static_cast<comp_t>(m_extent[0])) {
+        need_grid_stride = false;
+      }
+    } else if constexpr (Policy::rank == 2) {
       if ((max_grid_x * bx) >= static_cast<comp_t>(m_extent[0]) &&
           (max_grid_y * by) >= static_cast<comp_t>(m_extent[1])) {
         need_grid_stride = false;
