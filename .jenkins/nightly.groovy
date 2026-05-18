@@ -150,12 +150,12 @@ pipeline {
                         }
                     }
                 }
-                stage('HIP-ROCM-7.2-MI210-CXX23') {
+                stage('HIP-ROCM-7.2.3-MI210-CXX23') {
                     agent {
                         dockerfile {
                             filename 'Dockerfile.hipcc'
                             dir 'scripts/docker'
-                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:7.2-complete --build-arg CMAKE_VERSION=3.31.3'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:7.2.3-complete --build-arg CMAKE_VERSION=3.31.3'
                             label 'rocm-docker && AMD_Radeon_Instinct_MI210'
                             args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
                         }
