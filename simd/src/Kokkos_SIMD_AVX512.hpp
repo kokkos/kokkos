@@ -2859,8 +2859,6 @@ template <typename FlagType>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& simd,
     std::uint32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
-  // Flagging to see if this a correct usage. Should this be only using aligned
-  // stores?
   if constexpr (std::is_same_v<FlagType,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_store_epi32(ptr, static_cast<__m512i>(simd));
@@ -2878,8 +2876,6 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& mask,
     FlagType) {
-  // Flagging to see if this a correct usage. Should this be only using aligned
-  // stores?
   if constexpr (std::is_same_v<FlagType,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
