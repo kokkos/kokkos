@@ -648,7 +648,7 @@ struct Random_SFC64_State {
 template <>
 struct Random_SFC64_State<false> {
   uint64_t* state_;
-  const int stride_;
+  const uint64_t stride_;
   KOKKOS_FUNCTION
   Random_SFC64_State() : state_(nullptr), stride_(1) {}
 
@@ -656,13 +656,15 @@ struct Random_SFC64_State<false> {
   KOKKOS_FUNCTION Random_SFC64_State(const StateViewType& v, uint64_t state_idx)
       : state_(&v(state_idx, 0)), stride_(v.stride(1)) {}
 
-  // NOLINTBEGIN(bugprone-implicit-widening-of-multiplication-result)
   KOKKOS_FUNCTION
-  uint64_t operator[](const int i) const { return state_[i * stride_]; }
+  uint64_t operator[](const int i) const {
+    return state_[static_cast<uint64_t>(i) * stride_];
+  }
 
   KOKKOS_FUNCTION
-  uint64_t& operator[](const int i) { return state_[i * stride_]; }
-  // NOLINTEND(bugprone-implicit-widening-of-multiplication-result)
+  uint64_t& operator[](const int i) {
+    return state_[static_cast<uint64_t>(i) * stride_];
+  }
 };
 
 template <class ExecutionSpace>
@@ -1603,6 +1605,7 @@ class Random_SFC64_Pool {
  private:
   void init_impl(execution_space const& exec, uint64_t seed_low,
                  uint64_t seed_high, uint64_t num_states) {
+    KOKKOS_EXPECTS(num_states < (std::numeric_limits<uint64_t>::max() / 4));
     num_states_ = num_states;
 
     if (seed_low == 0) seed_low = uint64_t(1318319);
