@@ -24,7 +24,7 @@ jobs:
     - name: configure
       shell: bash
       run: |
-        cmake -B build -DCMAKE_CUDA_FLAGS="-Xcompiler=-bigobj" -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
+        cmake -B build -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_CUDA=ON -DKokkos_ARCH_VOLTA70=ON -DKokkos_ENABLE_TESTS=ON -DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON
     - name: build library
       shell: bash
       run: |
