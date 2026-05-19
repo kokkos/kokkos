@@ -128,8 +128,7 @@ inline void parallel_for([[maybe_unused]] const Label& label,
   KOKKOS_IF_ON_HOST(str = std::string(label);)
 
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_for", policy, str.c_str());
+  Impl::check_parallel_precondition("parallel_for", policy, str);
 
   uint64_t kpID = 0;
   /** Request a tuned policy from the tools subsystem */
@@ -157,8 +156,8 @@ KOKKOS_INLINE_FUNCTION void parallel_for(const ExecPolicy& policy,
   // device.
   KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_PUSH()
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_for",
-                                                              policy);
+  Impl::check_parallel_precondition("parallel_for", policy);
+
   Kokkos::parallel_for("", policy, functor);
   KOKKOS_IMPL_DISABLE_CALLING_HOST_FROM_DEVICE_WARNINGS_POP()
 }
@@ -167,8 +166,7 @@ template <class FunctorType>
 inline void parallel_for(const std::string& str, const size_t work_count,
                          const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_for", work_count, str.c_str());
+  Impl::check_parallel_precondition("parallel_for", work_count, str);
 
   using execution_space =
       typename Impl::FunctorPolicyExecutionSpace<FunctorType,
@@ -182,8 +180,7 @@ inline void parallel_for(const std::string& str, const size_t work_count,
 template <class FunctorType>
 inline void parallel_for(const size_t work_count, const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_for",
-                                                              work_count);
+  Impl::check_parallel_precondition("parallel_for", work_count);
 
   ::Kokkos::parallel_for("", work_count, functor);
 }
@@ -365,8 +362,7 @@ template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", policy, str.c_str());
+  Impl::check_parallel_precondition("parallel_scan", policy, str);
 
   uint64_t kpID = 0;
   /** Request a tuned policy from the tools subsystem */
@@ -388,8 +384,7 @@ template <Kokkos::ExecutionPolicy ExecutionPolicy, class FunctorType>
 inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              policy);
+  Impl::check_parallel_precondition("parallel_scan", policy);
 
   ::Kokkos::parallel_scan("", policy, functor);
 }
@@ -398,8 +393,7 @@ template <class FunctorType>
 inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", work_count, str.c_str());
+  Impl::check_parallel_precondition("parallel_scan", work_count, str);
 
   using execution_space =
       typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
@@ -414,8 +408,7 @@ inline void parallel_scan(const std::string& str, const size_t work_count,
 template <class FunctorType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              work_count);
+  Impl::check_parallel_precondition("parallel_scan", work_count);
 
   ::Kokkos::parallel_scan("", work_count, functor);
 }
@@ -426,8 +419,7 @@ inline void parallel_scan(const std::string& str, const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", policy, str.c_str());
+  Impl::check_parallel_precondition("parallel_scan", policy, str);
 
   uint64_t kpID                = 0;
   ExecutionPolicy inner_policy = policy;
@@ -463,8 +455,7 @@ inline void parallel_scan(const ExecutionPolicy& policy,
                           const FunctorType& functor,
                           ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              policy);
+  Impl::check_parallel_precondition("parallel_scan", policy);
 
   ::Kokkos::parallel_scan("", policy, functor, return_value);
 }
@@ -474,8 +465,7 @@ inline void parallel_scan(const std::string& str, const size_t work_count,
                           const FunctorType& functor,
                           ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check(
-      "parallel_scan", work_count, str.c_str());
+  Impl::check_parallel_precondition("parallel_scan", work_count, str);
 
   using execution_space =
       typename Kokkos::Impl::FunctorPolicyExecutionSpace<FunctorType,
@@ -491,8 +481,7 @@ template <class FunctorType, class ReturnType>
 inline void parallel_scan(const size_t work_count, const FunctorType& functor,
                           ReturnType& return_value) {
   /** Enforce correct use **/
-  Impl::CheckUsage<Impl::UsageRequires::insideExecEnv>::check("parallel_scan",
-                                                              work_count);
+  Impl::check_parallel_precondition("parallel_scan", work_count);
 
   ::Kokkos::parallel_scan("", work_count, functor, return_value);
 }

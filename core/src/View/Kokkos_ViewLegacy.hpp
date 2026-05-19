@@ -21,6 +21,7 @@ static_assert(false,
 #include <Kokkos_ExecPolicy.hpp>
 #include <View/Hooks/Kokkos_ViewHooks.hpp>
 
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Utilities.hpp>
@@ -1054,25 +1055,11 @@ class View : public ViewTraits<DataType, Properties...> {
       std::enable_if_t<!Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout> const& arg_layout)
       : m_track(), m_map() {
-    if (bool was_finalized = is_finalized();
-        was_finalized || !is_initialized()) {
-      std::stringstream ss;
-      ss << "Kokkos ERROR: View ";
-      constexpr bool has_label = Impl::ViewCtorProp<P...>::has_label;
-      if constexpr (has_label) {
-        auto const& lbl = Impl::get_property<Impl::LabelTag>(arg_prop);
-        ss << "(label=\"" << lbl << "\") ";
-      }
-      ss << "is being constructed ";
-      if (was_finalized) {
-        ss << "after finalize() ";
-      } else {
-        ss << "before initialize() ";
-      }
-      ss << "has been called";
-      auto const err = ss.str();
-      abort(err.c_str());
-    }
+    if constexpr (Impl::ViewCtorProp<P...>::has_label)
+      Impl::check_view_allocation_precondition(
+          Impl::get_property<Impl::LabelTag>(arg_prop));
+    else
+      Impl::check_view_allocation_precondition({});
     // Copy the input allocation properties with possibly defaulted properties
     // We need to split it in two to avoid MSVC compiler errors
     auto prop_copy_tmp =
