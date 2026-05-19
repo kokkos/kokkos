@@ -907,8 +907,9 @@ if(NOT KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
 endif()
 
 # nvcc-generated .cudafe1.cpp files can exceed the default COFF section count
-# limit (C1128) on MSVC; pass /bigobj to the host compiler via -Xcompiler.
-if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA)
+# limit (C1128) on MSVC; in fact /bigobj is only needed for test targets,
+# not for the whole library.
+if(KOKKOS_CXX_COMPILER_ID STREQUAL NVIDIA AND Kokkos_ENABLE_TESTS)
   compiler_specific_options(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID MSVC -Xcompiler=/bigobj)
 endif()
 
