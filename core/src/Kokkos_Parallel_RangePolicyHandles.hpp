@@ -4,7 +4,7 @@
 #ifndef KOKKOS_PARALLEL_RANGEPOLICYHANDLES_HPP
 #define KOKKOS_PARALLEL_RANGEPOLICYHANDLES_HPP
 
-#include <Kokkos_Concepts.hpp>
+#include <Kokkos_ExecPolicy.hpp>
 #include <type_traits>
 
 // Included at the end of Kokkos_ExecPolicy.hpp after RangePolicy and team range
