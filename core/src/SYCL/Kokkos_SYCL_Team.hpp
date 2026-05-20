@@ -1021,6 +1021,10 @@ void single(const Impl::ThreadSingleStruct<Impl::SYCLTeamMember>& single_struct,
 
 }  // namespace Kokkos
 
+#include <Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
+KOKKOS_IMPL_PARALLEL_FOR_RANGE_POLICY_TEAM_DISPATCH(
+    Kokkos::Impl::SYCLTeamMember)
+
 #endif
 
 #endif /* #ifndef KOKKOS_SYCL_TEAM_HPP */

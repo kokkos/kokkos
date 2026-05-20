@@ -126,6 +126,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 
 }  // namespace Kokkos
 
+#include <Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
+KOKKOS_IMPL_PARALLEL_FOR_RANGE_POLICY_TEAM_DISPATCH(
+    Kokkos::Impl::OpenACCTeamMember)
+
 #else  // KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS
 
 //----------------------------------------------------------------------------
@@ -222,6 +226,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 }
 
 }  // namespace Kokkos
+
+#include <Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
+KOKKOS_IMPL_PARALLEL_FOR_RANGE_POLICY_TEAM_DISPATCH(
+    Kokkos::Impl::OpenACCTeamMember)
 
 #endif /* #ifdef KOKKOS_ENABLE_OPENACC_COLLAPSE_HIERARCHICAL_CONSTRUCTS */
 
