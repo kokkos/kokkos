@@ -210,8 +210,7 @@ class TeamPolicyInternal<Kokkos::Cuda, Properties...>
         static_cast<size_t>(80) * 1024 * 1024;
 
     auto const& props = Impl::CudaInternal::m_deviceProp;
-    size_t max_shmem =
-        props.sharedMemPerBlockOptin - props.reservedSharedMemPerBlock;
+    size_t max_shmem  = get_max_shared_mem_per_block(props);
     return (level == 0 ? max_shmem - max_reserved_shared_mem_per_team
                        : max_l1_scratch_size);
   }
@@ -596,7 +595,7 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
     auto const& dev_props = m_policy.space().cuda_device_prop();
     const int maxShmemPerBlock =
-        dev_props.sharedMemPerBlockOptin - dev_props.reservedSharedMemPerBlock;
+        static_cast<int>(get_max_shared_mem_per_block(dev_props));
     const int shmem_size_total = m_shmem_begin + m_shmem_size;
     if (maxShmemPerBlock < shmem_size_total) {
       std::stringstream error;
@@ -994,7 +993,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     auto const& dev_props = m_policy.space().cuda_device_prop();
     const int maxShmemPerBlock =
-        dev_props.sharedMemPerBlockOptin - dev_props.reservedSharedMemPerBlock;
+        static_cast<int>(get_max_shared_mem_per_block(dev_props));
     const int shmem_size_total = m_team_begin + m_shmem_begin + m_shmem_size;
 
     if (!Kokkos::has_single_bit<unsigned>(m_team_size) && !UseShflReduction) {
