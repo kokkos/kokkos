@@ -1004,16 +1004,11 @@ KOKKOS_INLINE_FUNCTION void md_parallel_impl(TeamMDPolicy const& policy,
 template <typename Rank, typename TeamHandle, typename iType = int>
 struct TeamThreadMDRange;
 
-<<<<<<< HEAD
-template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
-struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
-  static_assert(N >= 2u, "Kokkos Error: TeamThreadMDRange requires rank >= 2");
-
-=======
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle,
           typename iType>
 struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
->>>>>>> 098ee96c0 (Add constructors and index template to team-level mdranges)
+  static_assert(N >= 2u, "Kokkos Error: TeamThreadMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using IndexType      = iType;
   using TeamHandleType = TeamHandle;
@@ -1059,17 +1054,12 @@ KOKKOS_DEDUCTION_GUIDE TeamThreadMDRange(TeamHandle const&, Args&&...)
 template <typename Rank, typename TeamHandle, typename iType = int>
 struct ThreadVectorMDRange;
 
-<<<<<<< HEAD
-template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
-struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
-  static_assert(N >= 2u,
-                "Kokkos Error: ThreadVectorMDRange requires rank >= 2");
-
-=======
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle,
           typename iType>
 struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
->>>>>>> 098ee96c0 (Add constructors and index template to team-level mdranges)
+  static_assert(N >= 2u,
+                "Kokkos Error: ThreadVectorMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using IndexType      = iType;
   using TeamHandleType = TeamHandle;
