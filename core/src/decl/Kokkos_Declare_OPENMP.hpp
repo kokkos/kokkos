@@ -6,6 +6,7 @@
 
 #if defined(KOKKOS_ENABLE_OPENMP)
 #include <OpenMP/Kokkos_OpenMP.hpp>
+#include <Kokkos_Parallel_RangePolicyHandles.hpp>
 #include <OpenMP/Kokkos_OpenMP_MDRangePolicy.hpp>
 #include <OpenMP/Kokkos_OpenMP_UniqueToken.hpp>
 #include <OpenMP/Kokkos_OpenMP_Parallel_For.hpp>
