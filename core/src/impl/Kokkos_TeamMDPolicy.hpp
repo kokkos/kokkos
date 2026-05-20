@@ -98,30 +98,30 @@ struct AcceleratorBasedNestLevel {
   static constexpr int invalid = -2;
 };
 
-template <typename TeamHandle>
+template <typename TeamHandle, typename iType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::NotParVector>,
-    TeamHandle const& team, int begin, int end) {
+    TeamHandle const& team, iType begin, iType end) {
   return TeamThreadRange(team, begin, end);
 }
 
-template <typename TeamHandle>
+template <typename TeamHandle, typename iType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::NotParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, int begin, int end) {
+    TeamHandle const& team, iType begin, iType end) {
   return ThreadVectorRange(team, begin, end);
 }
 
-template <typename TeamHandle>
+template <typename TeamHandle, typename iType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, int begin, int end) {
+    TeamHandle const& team, iType begin, iType end) {
   return TeamVectorRange(team, begin, end);
 }
 
