@@ -160,28 +160,64 @@ TEST(TEST_CATEGORY_DEATH, view_out_of_bounds_access) {
   test_view_out_of_bounds_access<ExecutionSpace>();
 }
 
+template <class View>
+struct TestViewIndexTypeCannotRepresentFullRangeRank1 {
+  View view;
+
+  KOKKOS_FUNCTION void operator()(int) const {
+    std::int16_t i = 0;
+    ++view(i);
+  }
+};
+
+template <class View>
+struct TestViewIndexTypeCannotRepresentFullRangeRank2 {
+  View view;
+
+  KOKKOS_FUNCTION void operator()(int) const {
+    std::int16_t i = 0;
+    std::int16_t j = 0;
+    ++view(i, j);
+  }
+};
+
+template <class ExecutionSpace>
+void test_view_index_type_cannot_represent_full_range() {
+  ExecutionSpace const exec_space{};
+  using MemorySpace = typename ExecutionSpace::memory_space;
+  constexpr char const* message =
+      "Kokkos::View ERROR: index type cannot represent the full index range "
+      "of the view";
+
+  Kokkos::LayoutStride layout_rank_1(40000, 1);
+  Kokkos::View<int*, Kokkos::LayoutStride, MemorySpace> view_1("view_rank_1",
+                                                               layout_rank_1);
+  EXPECT_DEATH(
+      {
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(exec_space, 0, 1),
+            TestViewIndexTypeCannotRepresentFullRangeRank1<decltype(view_1)>{
+                view_1});
+        Kokkos::fence();
+      },
+      message);
+
+  Kokkos::View<int**, Kokkos::LayoutRight, MemorySpace> view_2("view_rank_2",
+                                                               200, 200);
+  EXPECT_DEATH(
+      {
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy<ExecutionSpace>(exec_space, 0, 1),
+            TestViewIndexTypeCannotRepresentFullRangeRank2<decltype(view_2)>{
+                view_2});
+        Kokkos::fence();
+      },
+      message);
+}
+
 TEST(TEST_CATEGORY_DEATH, view_index_type_cannot_represent_full_range) {
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
-  // Test on rank 1
-  Kokkos::LayoutStride layout_rank_1(40000, 1);
-  Kokkos::View<int*, Kokkos::LayoutStride, Kokkos::HostSpace> v1("view_rank_1",
-                                                                 layout_rank_1);
-  std::int16_t i1 = 0;
-  EXPECT_DEATH(
-      { (void)v1(i1); },
-      "Kokkos::View ERROR: index type cannot represent the full index range "
-      "of the view");
-
-  // Test on rank 2
-  Kokkos::View<int**, Kokkos::LayoutRight, Kokkos::HostSpace> v2("view_rank_2",
-                                                                 200, 200);
-  std::int16_t i2 = 0;
-  std::int16_t j2 = 0;
-  EXPECT_DEATH(
-      { (void)v2(i2, j2); },
-      "Kokkos::View ERROR: index type cannot represent the full index range "
-      "of the view");
+  test_view_index_type_cannot_represent_full_range<TEST_EXECSPACE>();
 }
 
 #endif
