@@ -55,19 +55,19 @@ struct TestTeamMDParallelFor {
   static void check_result_4D(HostViewType h_view, FillFunctor& fillFunctor,
                               // For 4D, tests may not start at index 0
                               std::array<int, 4> const& lower = {0, 0, 0, 0}) {
-    for (size_t i = lower[0]; i < h_view.extent(0); ++i) {
-      for (size_t j = lower[1]; j < h_view.extent(1); ++j) {
-        for (size_t k = lower[2]; k < h_view.extent(2); ++k) {
-          for (size_t l = lower[3]; l < h_view.extent(3); ++l) {
+    for (auto i = lower[0]; i < h_view.extent_int(0); ++i) {
+      for (auto j = lower[1]; j < h_view.extent_int(1); ++j) {
+        for (auto k = lower[2]; k < h_view.extent_int(2); ++k) {
+          for (auto l = lower[3]; l < h_view.extent_int(3); ++l) {
             EXPECT_EQ(h_view(i, j, k, l), fillFunctor(i, j, k, l));
           }
         }
       }
     }
-    for (size_t i = 0; i < lower[0]; ++i) {
-      for (size_t j = 0; j < lower[1]; ++j) {
-        for (size_t k = 0; k < lower[2]; ++k) {
-          for (size_t l = 0; l < lower[3]; ++l) {
+    for (auto i = 0; i < lower[0]; ++i) {
+      for (auto j = 0; j < lower[1]; ++j) {
+        for (auto k = 0; k < lower[2]; ++k) {
+          for (auto l = 0; l < lower[3]; ++l) {
             EXPECT_EQ(h_view(i, j, k, l),
                       typename decltype(h_view)::value_type());
           }
