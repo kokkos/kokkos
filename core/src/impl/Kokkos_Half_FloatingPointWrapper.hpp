@@ -12,14 +12,14 @@
 #include <string>
 #include <cstdint>
 
-#ifdef KOKKOS_ENABLE_CUDA
+#if defined(KOKKOS_ENABLE_CUDA)
 #include <Cuda/Kokkos_Cuda_Half_Impl_Type.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_HIP
+#elif defined(KOKKOS_ENABLE_HIP)
 #include <HIP/Kokkos_HIP_Half_Impl_Type.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_SYCL
+#elif defined(KOKKOS_ENABLE_SYCL)
 #include <SYCL/Kokkos_SYCL_Half_Impl_Type.hpp>
+#else
+#include <impl/Kokkos_STD_Half_Impl_Type.hpp>
 #endif
 
 namespace Kokkos::Experimental::Impl {
@@ -279,7 +279,7 @@ class alignas(FloatType) floating_point_wrapper {
   // In-class initialization and defaulted default constructors not used
   // since Cuda supports half precision initialization via the below constructor
   KOKKOS_FUNCTION
-  floating_point_wrapper() : val(0.0F) {}
+  floating_point_wrapper() : val() {}
 
   KOKKOS_FUNCTION
   floating_point_wrapper(bit_comparison_type rhs) {
