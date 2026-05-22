@@ -208,7 +208,18 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(M, M, M, M, M, M,
                                                              M, M, A&) const);
 
-    using type = decltype(deduce(&F::operator()));
+    template <typename FF, typename = void>
+    struct deduce_operator_type {
+      using type = void;
+    };
+
+    template <typename FF>
+    struct deduce_operator_type<
+        FF, std::void_t<decltype(deduce(&FF::operator()))>> {
+      using type = decltype(deduce(&FF::operator()));
+    };
+
+    using type = typename deduce_operator_type<F>::type;
   };
 
   template <typename F>
@@ -283,7 +294,18 @@ struct FunctorAnalysis {
                                                              M, M, M, M, M, M,
                                                              A&) const);
 
-    using type = decltype(deduce(&F::operator()));
+    template <typename FF, typename = void>
+    struct deduce_operator_type {
+      using type = void;
+    };
+
+    template <typename FF>
+    struct deduce_operator_type<
+        FF, std::void_t<decltype(deduce(&FF::operator()))>> {
+      using type = decltype(deduce(&FF::operator()));
+    };
+
+    using type = typename deduce_operator_type<F>::type;
   };
 
   template <typename F>
@@ -291,7 +313,18 @@ struct FunctorAnalysis {
     template <typename M, typename A, typename I>
     KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(M, A&, I) const);
 
-    using type = decltype(deduce(&F::operator()));
+    template <typename FF, typename = void>
+    struct deduce_operator_type {
+      using type = void;
+    };
+
+    template <typename FF>
+    struct deduce_operator_type<
+        FF, std::void_t<decltype(deduce(&FF::operator()))>> {
+      using type = decltype(deduce(&FF::operator()));
+    };
+
+    using type = typename deduce_operator_type<F>::type;
   };
 
   template <typename F>
@@ -304,7 +337,18 @@ struct FunctorAnalysis {
     KOKKOS_INLINE_FUNCTION static A deduce(void (Functor::*)(WTag const&, M, A&,
                                                              I) const);
 
-    using type = decltype(deduce(&F::operator()));
+    template <typename FF, typename = void>
+    struct deduce_operator_type {
+      using type = void;
+    };
+
+    template <typename FF>
+    struct deduce_operator_type<
+        FF, std::void_t<decltype(deduce(&FF::operator()))>> {
+      using type = decltype(deduce(&FF::operator()));
+    };
+
+    using type = typename deduce_operator_type<F>::type;
   };
 
   //----------------------------------------
