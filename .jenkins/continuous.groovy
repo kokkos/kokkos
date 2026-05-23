@@ -35,6 +35,44 @@ pipeline {
         }
         stage('Build-1') {
             parallel {
+                stage('spack-rocm') {
+                    agent {
+                        dockerfile {
+                            filename 'Dockerfile.hipcc'
+                            dir 'scripts/docker'
+                            additionalBuildArgs '--build-arg BASE=rocm/dev-ubuntu-24.04:7.2.1-complete'
+                            label 'rocm-docker && AMD_Radeon_Instinct_MI210'
+                            args '-v /tmp/ccache.kokkos:/tmp/ccache --device=/dev/kfd --device=/dev/dri --security-opt seccomp=unconfined --group-add video --env HIP_VISIBLE_DEVICES=$HIP_VISIBLE_DEVICES'
+                        }
+                    }
+                    steps {
+                        sh '''
+                          DEBIAN_FRONTEND=noninteractive && \
+                          apt-get update && apt-get upgrade -y && apt-get install -y \
+                          build-essential \
+                          git \
+                          bc \
+                          python3-dev \
+                          gfortran \
+                          unzip \
+                          && \
+                          apt-get clean && rm -rf /var/lib/apt/lists/*
+
+                          export CDASH_ARGS="${SPACK_CDASH_ARGS} --cdash-build=spack-rocm"
+                          rm -rf spack && \
+                          git clone https://github.com/spack/spack.git && \
+                          . ./spack/share/spack/setup-env.sh && \
+                          spack config add config:installer:old && \
+                          spack install -v --only=dependencies kokkos@develop+rocm+tests amdgpu_target=gfx90a ^hip@7 && \
+                          spack install -v --only=package ${CDASH_ARGS} kokkos@develop+rocm+tests amdgpu_target=gfx90a ^hip@7 && \
+                          spack load cmake  && \
+                          spack load hip && \
+                          spack load kokkos && \
+                          spack test run ${CDASH_ARGS} kokkos && \
+                          spack test results -l
+                          '''
+                    }
+                }
                 stage('C++20-Modules-Clang-19') {
                     agent {
                         dockerfile {
