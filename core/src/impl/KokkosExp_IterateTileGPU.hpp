@@ -50,151 +50,6 @@ KOKKOS_IMPL_FORCEINLINE_FUNCTION void _tag_invoke_array(Functor const& f,
 }
 
 // ------------------------------------------------------------------------- //
-// ParallelFor iteration pattern without stride
-// When the backend API is sufficient for iterating over the ND-range
-//
-template <int Rank, typename array_index_type, typename index_type,
-          typename Functor, Kokkos::Iterate Layout, typename Tag>
-struct DeviceIterateNoStride {
-  using array_type = Kokkos::Array<array_index_type, Rank>;
-
- private:
-  const array_type m_lower;
-  const array_type m_upper;
-  const array_type m_extent;  // tile_size * num_tiles
-  const Functor& m_functor;
-
-#ifdef KOKKOS_ENABLE_SYCL
-  const EmulateCUDADim3<index_type> gridDim;
-  const EmulateCUDADim3<index_type> blockDim;
-  const EmulateCUDADim3<index_type> blockIdx;
-  const EmulateCUDADim3<index_type> threadIdx;
-#endif
-
- public:
-#ifdef KOKKOS_ENABLE_SYCL
-  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateNoStride(
-      const array_type& lower, const array_type& upper,
-      const array_type& extent, const Functor& functor,
-      const EmulateCUDADim3<index_type> gridDim_,
-      const EmulateCUDADim3<index_type> blockDim_,
-      const EmulateCUDADim3<index_type> blockIdx_,
-      const EmulateCUDADim3<index_type> threadIdx_)
-      : m_lower(lower),
-        m_upper(upper),
-        m_extent(extent),
-        m_functor(functor),
-        gridDim(gridDim_),
-        blockDim(blockDim_),
-        blockIdx(blockIdx_),
-        threadIdx(threadIdx_) {}
-#else
-  KOKKOS_IMPL_DEVICE_FUNCTION DeviceIterateNoStride(const array_type& lower,
-                                                    const array_type& upper,
-                                                    const array_type& extent,
-                                                    const Functor& functor)
-      : m_lower(lower), m_upper(upper), m_extent(extent), m_functor(functor) {}
-#endif
-
-  KOKKOS_IMPL_DEVICE_FUNCTION
-  void exec_range() const { iterate(std::integral_constant<unsigned, Rank>()); }
-
- private:
-  // Runtime expression to determine if Dim is part of a packed pair
-  // Packing occurs on consecutive dimension pairs for rank > 3
-  template <unsigned Dim>
-  KOKKOS_IMPL_DEVICE_FUNCTION static consteval bool is_packed_index() {
-    return ((Dim == 0 || Dim == 1) && Rank > 3) ||
-           ((Dim == 2 || Dim == 3) && Rank > 4) ||
-           ((Dim == 4 || Dim == 5) && Rank > 5);
-  }
-
-  // Packed: returns flat hardware thread index (unpacking happens in iterate())
-  // Unpacked: hardware thread index (blockIdx * blockDim + threadIdx)
-  template <unsigned R>
-  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
-  my_thIdx() const noexcept {
-    static_assert(R < 6);
-    if constexpr (is_packed_index<R>()) {
-      if constexpr (R == 0 || R == 1) {
-        return blockIdx.x * blockDim.x + threadIdx.x;
-      } else if constexpr (R == 2 || R == 3) {
-        return blockIdx.y * blockDim.y + threadIdx.y;
-      } else if constexpr (R == 4 || R == 5) {
-        return blockIdx.z * blockDim.z + threadIdx.z;
-      }
-    } else {
-      // No packed index
-      if constexpr (Rank < 4) {
-        if constexpr (R == 0) {
-          return blockIdx.x * blockDim.x + threadIdx.x;
-        } else if constexpr (R == 1) {
-          return blockIdx.y * blockDim.y + threadIdx.y;
-        } else if constexpr (R == 2) {
-          return blockIdx.z * blockDim.z + threadIdx.z;
-        }
-      } else {
-        // Mix of packed and unpacked for Rank 4 and 5
-        if constexpr (R == 2) {
-          return blockIdx.y * blockDim.y + threadIdx.y;
-        } else if constexpr (R == 3 || R == 4) {
-          return blockIdx.z * blockDim.z + threadIdx.z;
-        }
-      }
-    }
-    return index_type{0};
-  }
-
-  template <unsigned R, typename... Idxs>
-  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
-      std::integral_constant<unsigned, R>, Idxs... idxs) const {
-    constexpr unsigned rankIdx = R - 1;
-    const index_type thIdx     = my_thIdx<rankIdx>();
-
-    if constexpr (is_packed_index<rankIdx>()) {
-      static_assert(R >= 2);
-      // Unpack two consecutive indices
-      constexpr unsigned rankId1 = (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
-      constexpr unsigned rankId2 = (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
-
-      const index_type id_1 = thIdx % m_extent[rankId1] + m_lower[rankId1];
-      const index_type id_2 = thIdx / m_extent[rankId1] + m_lower[rankId2];
-
-      if constexpr (Layout == Iterate::Left) {
-        iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2, idxs...);
-      } else {
-        iterate(std::integral_constant<unsigned, R - 2>(), idxs..., id_2, id_1);
-      }
-    } else {
-      const index_type idx = thIdx + m_lower[rankIdx];
-      if constexpr (Layout == Iterate::Left) {
-        iterate(std::integral_constant<unsigned, R - 1>(), idx, idxs...);
-      } else {
-        iterate(std::integral_constant<unsigned, R - 1>(), idxs..., idx);
-      }
-    }
-  }
-
-  template <size_t... R, typename... Idxs>
-  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE bool check_bounds(
-      std::index_sequence<R...>, Idxs... idxs) const {
-    if constexpr (Layout == Iterate::Left) {
-      return ((idxs < static_cast<index_type>(m_upper[R])) && ...);
-    } else {
-      return ((idxs < static_cast<index_type>(m_upper[Rank - 1 - R])) && ...);
-    }
-  }
-
-  template <typename... Idxs>
-  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
-      std::integral_constant<unsigned, 0u>, Idxs... idxs) const {
-    if (check_bounds(std::make_index_sequence<Rank>{}, idxs...)) {
-      Impl::_tag_invoke<Tag>(m_functor, idxs...);
-    }
-  }
-};
-
-// ------------------------------------------------------------------------- //
 // Compute GPU launch parameters (grid/block dimensions) for MDRangePolicy
 //
 // Ranks 1-3: Direct mapping - each policy dimension maps to one GPU dimension.
@@ -312,6 +167,51 @@ auto compute_device_launch_params(
 #endif
 }
 
+#ifndef KOKKOS_ENABLE_SYCL
+// Check if the grid covers the full iteration space (no grid stride needed)
+template <size_t Rank, typename array_type>
+bool need_grid_stride_loop(const Kokkos::Array<array_type, 3>& max_grid_size,
+                           const dim3& block,
+                           const Kokkos::Array<array_type, Rank>& m_extent) {
+  bool need_grid_stride = true;
+  if constexpr (Rank == 1) {
+    if ((max_grid_size[0] * block.x) >= m_extent[0]) {
+      need_grid_stride = false;
+    }
+  } else if constexpr (Rank == 2) {
+    if ((max_grid_size[0] * block.x) >= m_extent[0] &&
+        (max_grid_size[1] * block.y) >= m_extent[1]) {
+      need_grid_stride = false;
+    }
+  } else if constexpr (Rank == 3) {
+    if ((max_grid_size[0] * block.x) >= m_extent[0] &&
+        (max_grid_size[1] * block.y) >= m_extent[1] &&
+        (max_grid_size[2] * block.z) >= m_extent[2]) {
+      need_grid_stride = false;
+    }
+  } else if constexpr (Rank == 4) {
+    if ((max_grid_size[0] * block.x) >= m_extent[0] * m_extent[1] &&
+        (max_grid_size[1] * block.y) >= m_extent[2] &&
+        (max_grid_size[2] * block.z) >= m_extent[3]) {
+      need_grid_stride = false;
+    }
+  } else if constexpr (Rank == 5) {
+    if ((max_grid_size[0] * block.x) >= m_extent[0] * m_extent[1] &&
+        (max_grid_size[1] * block.y) >= m_extent[2] * m_extent[3] &&
+        (max_grid_size[2] * block.z) >= m_extent[4]) {
+      need_grid_stride = false;
+    }
+  } else if constexpr (Rank == 6) {
+    if ((max_grid_size[0] * block.x) >= m_extent[0] * m_extent[1] &&
+        (max_grid_size[1] * block.y) >= m_extent[2] * m_extent[3] &&
+        (max_grid_size[2] * block.z) >= m_extent[4] * m_extent[5]) {
+      need_grid_stride = false;
+    }
+  }
+  return need_grid_stride;
+}
+#endif
+
 // ------------------------------------------------------------------------- //
 // ParallelFor iteration pattern - maps GPU threads to N-D iteration space
 //
@@ -325,7 +225,8 @@ auto compute_device_launch_params(
 // 3. Bounds check against m_upper to filter out-of-bounds iterations.
 //
 template <int Rank, typename array_index_type, typename index_type,
-          typename Functor, Kokkos::Iterate Layout, typename Tag>
+          Kokkos::Iterate Layout, bool grid_stride, typename Functor,
+          typename Tag>
 struct DeviceIterate {
   using array_type = Kokkos::Array<array_index_type, Rank>;
 
@@ -485,6 +386,52 @@ struct DeviceIterate {
     }
   }
 
+  // Packed: returns flat hardware thread index (unpacking happens in iterate())
+  // Unpacked: hardware thread index (blockIdx * blockDim + threadIdx)
+  template <unsigned R>
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
+  my_thIdx() const noexcept {
+    static_assert(R < 6);
+    if constexpr (is_packed_index<R>()) {
+      if constexpr (R == 0 || R == 1) {
+        return blockIdx.x * blockDim.x + threadIdx.x;
+      } else if constexpr (R == 2 || R == 3) {
+        return blockIdx.y * blockDim.y + threadIdx.y;
+      } else if constexpr (R == 4 || R == 5) {
+        return blockIdx.z * blockDim.z + threadIdx.z;
+      }
+    } else {
+      // No packed index
+      if constexpr (Rank < 4) {
+        if constexpr (R == 0) {
+          return blockIdx.x * blockDim.x + threadIdx.x;
+        } else if constexpr (R == 1) {
+          return blockIdx.y * blockDim.y + threadIdx.y;
+        } else if constexpr (R == 2) {
+          return blockIdx.z * blockDim.z + threadIdx.z;
+        }
+      } else {
+        // Mix of packed and unpacked for Rank 4 and 5
+        if constexpr (R == 2) {
+          return blockIdx.y * blockDim.y + threadIdx.y;
+        } else if constexpr (R == 3 || R == 4) {
+          return blockIdx.z * blockDim.z + threadIdx.z;
+        }
+      }
+    }
+    return index_type{0};
+  }
+
+  template <size_t... R, typename... Idxs>
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE bool check_bounds(
+      std::index_sequence<R...>, Idxs... idxs) const {
+    if constexpr (Layout == Iterate::Left) {
+      return ((idxs < static_cast<index_type>(m_upper[R])) && ...);
+    } else {
+      return ((idxs < static_cast<index_type>(m_upper[Rank - 1 - R])) && ...);
+    }
+  }
+
   // ----------------------------------------------------------------------- //
   // Nested loops with recursive template instantiation
   //
@@ -503,7 +450,9 @@ struct DeviceIterate {
   //
   template <unsigned R, typename... Idxs>
   KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
-      std::integral_constant<unsigned, R>, Idxs... idxs) const {
+      std::integral_constant<unsigned, R>, Idxs... idxs) const
+    requires(grid_stride)
+  {
     constexpr unsigned rankIdx = R - 1;
     const index_type start     = my_begin<rankIdx>();
     const index_type end       = my_end<rankIdx>();
@@ -513,13 +462,15 @@ struct DeviceIterate {
       if constexpr (is_packed_index<rankIdx>()) {
         static_assert(R >= 2);
         // Unpack two consecutive indices
-        constexpr unsigned idx1 = (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
-        constexpr unsigned idx2 = (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
+        constexpr unsigned rankIdx1 =
+            (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
+        constexpr unsigned rankIdx2 =
+            (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
 
-        const index_type id_1 = idx % m_extent[idx1] + m_lower[idx1];
-        const index_type id_2 = idx / m_extent[idx1] + m_lower[idx2];
+        const index_type id_1 = idx % m_extent[rankIdx1] + m_lower[rankIdx1];
+        const index_type id_2 = idx / m_extent[rankIdx1] + m_lower[rankIdx2];
 
-        if (id_1 < m_upper[idx1] && id_2 < m_upper[idx2]) {
+        if (id_1 < m_upper[rankIdx1] && id_2 < m_upper[rankIdx2]) {
           if constexpr (Layout == Iterate::Left) {
             iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2,
                     idxs...);
@@ -538,10 +489,52 @@ struct DeviceIterate {
     }
   }
 
+  // Iteration pattern without grid stride. When the backend API is sufficient
+  // for iterating over the ND-range
+  template <unsigned R, typename... Idxs>
+  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
+      std::integral_constant<unsigned, R>, Idxs... idxs) const
+    requires(!grid_stride)
+  {
+    constexpr unsigned rankIdx = R - 1;
+    const index_type thIdx     = my_thIdx<rankIdx>();
+
+    if constexpr (is_packed_index<rankIdx>()) {
+      static_assert(R >= 2);
+      // Unpack two consecutive indices
+      constexpr unsigned rankIdx1 =
+          (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
+      constexpr unsigned rankIdx2 =
+          (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
+
+      const index_type id_1 = thIdx % m_extent[rankIdx1] + m_lower[rankIdx1];
+      const index_type id_2 = thIdx / m_extent[rankIdx1] + m_lower[rankIdx2];
+
+      if constexpr (Layout == Iterate::Left) {
+        iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2, idxs...);
+      } else {
+        iterate(std::integral_constant<unsigned, R - 2>(), idxs..., id_2, id_1);
+      }
+    } else {
+      const index_type idx = thIdx + m_lower[rankIdx];
+      if constexpr (Layout == Iterate::Left) {
+        iterate(std::integral_constant<unsigned, R - 1>(), idx, idxs...);
+      } else {
+        iterate(std::integral_constant<unsigned, R - 1>(), idxs..., idx);
+      }
+    }
+  }
+
   template <typename... Idxs>
   KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate(
       std::integral_constant<unsigned, 0u>, Idxs... idxs) const {
-    Impl::_tag_invoke<Tag>(m_functor, idxs...);
+    if constexpr (grid_stride) {
+      Impl::_tag_invoke<Tag>(m_functor, idxs...);
+    } else {  // !grid_stride
+      if (check_bounds(std::make_index_sequence<Rank>{}, idxs...)) {
+        Impl::_tag_invoke<Tag>(m_functor, idxs...);
+      }
+    }
   }
 };
 
