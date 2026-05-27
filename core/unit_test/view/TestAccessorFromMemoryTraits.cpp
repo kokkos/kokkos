@@ -18,6 +18,13 @@ namespace {
 template <class T, class Space>
 constexpr bool test_equivalence() {
   // Checking that the aliases lead to expected accessor
+  static_assert(std::is_same_v<
+                Kokkos::Experimental::Accessor<T>,
+                Kokkos::Impl::CheckedReferenceCountedAccessor<
+                    T, typename Kokkos::DefaultExecutionSpace::memory_space>>);
+  static_assert(std::is_same_v<Kokkos::Experimental::Accessor<T, Space>,
+                               Kokkos::Impl::CheckedReferenceCountedAccessor<
+                                   T, typename Space::memory_space>>);
   static_assert(
       std::is_same_v<
           Kokkos::Experimental::Accessor<T, Space, Kokkos::MemoryTraits<>>,
@@ -51,28 +58,27 @@ constexpr bool test_equivalence() {
   // Default ones should stay default
   static_assert(
       std::is_same_v<
-          decltype(Kokkos::Experimental::Accessor<
-                   T, Space, Kokkos::MemoryTraits<>>::impl_memory_traits()),
+          Kokkos::Impl::MemoryTraitsFromAccessor<
+              Kokkos::Experimental::Accessor<T, Space, Kokkos::MemoryTraits<>>>,
           Kokkos::MemoryTraits<>>);
   // Unmanaged and Atomic are propagated now
-  static_assert(std::is_same_v<
-                decltype(Kokkos::Experimental::Accessor<
-                         T, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>::
-                             impl_memory_traits()),
-                Kokkos::MemoryTraits<Kokkos::Unmanaged>>);
   static_assert(
-      std::is_same_v<decltype(Kokkos::Experimental::Accessor<
-                              T, Space, Kokkos::MemoryTraits<Kokkos::Atomic>>::
-                                  impl_memory_traits()),
-                     Kokkos::MemoryTraits<Kokkos::Atomic>>);
+      std::is_same_v<
+          Kokkos::Impl::MemoryTraitsFromAccessor<Kokkos::Experimental::Accessor<
+              T, Space, Kokkos::MemoryTraits<Kokkos::Unmanaged>>>,
+          Kokkos::MemoryTraits<Kokkos::Unmanaged>>);
+  static_assert(
+      std::is_same_v<
+          Kokkos::Impl::MemoryTraitsFromAccessor<Kokkos::Experimental::Accessor<
+              T, Space, Kokkos::MemoryTraits<Kokkos::Atomic>>>,
+          Kokkos::MemoryTraits<Kokkos::Atomic>>);
   // RandomAccess is dropped, since no accessor currently implements this
   static_assert(
-      std::is_same_v<decltype(Kokkos::Experimental::Accessor<
-                              T, Space,
-                              Kokkos::MemoryTraits<Kokkos::Atomic |
-                                                   Kokkos::RandomAccess>>::
-                                  impl_memory_traits()),
-                     Kokkos::MemoryTraits<Kokkos::Atomic>>);
+      std::is_same_v<
+          Kokkos::Impl::MemoryTraitsFromAccessor<Kokkos::Experimental::Accessor<
+              T, Space,
+              Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>>,
+          Kokkos::MemoryTraits<Kokkos::Atomic>>);
   return true;
 }
 

@@ -426,7 +426,7 @@ class ReferenceCountedAccessor {
     return MemoryTraits<(mt::is_random_access ? RandomAccess : 0) |
                         (mt::is_atomic ? Atomic : 0) |
                         (mt::is_restrict ? Restrict : 0) |
-                        (mt::is_aligned ? Kokkos::Aligned : 0)>();
+                        (mt::is_aligned ? Aligned : 0)>();
   }
 
   KOKKOS_DEFAULTED_FUNCTION

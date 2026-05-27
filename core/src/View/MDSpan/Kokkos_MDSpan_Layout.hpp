@@ -58,9 +58,7 @@ struct LayoutFromArrayLayout<LayoutStride> {
 };
 
 template <class Layout>
-struct ArrayLayoutFromLayout {
-  using type = void;
-};
+struct ArrayLayoutFromLayout;
 
 template <>
 struct ArrayLayoutFromLayout<layout_left> {

@@ -27,7 +27,6 @@ export {
   using ::Kokkos::Impl::append_formatted_multidimensional_index;
   using ::Kokkos::Impl::ApplyToViewOfStaticRank;
   using ::Kokkos::Impl::are_integral;
-  using ::Kokkos::Impl::ArrayLayoutFromLayout;
   using ::Kokkos::Impl::as_view_of_rank_n;
   using ::Kokkos::Impl::AtomicAccessorRelaxed;
   using ::Kokkos::Impl::check_view_ctor_args_create_mirror;

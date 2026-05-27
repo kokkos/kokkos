@@ -44,7 +44,9 @@ struct ViewTestHarness {
     Kokkos::parallel_reduce(
         p,
         KOKKOS_LAMBDA(Extents... idx, size_t & lerr) {
-          if (a(idx...) != (idx + ... + extra_val)) lerr++;
+          if (a(idx...) != static_cast<typename ViewT::element_type>(
+                               (idx + ... + extra_val)))
+            lerr++;
         },
         errors);
     return errors;
@@ -151,8 +153,8 @@ struct ViewTestHarness {
 };
 
 TEST(TEST_CATEGORY, view_minimal_mdspan_args_access) {
-  ViewTestHarness<int, Kokkos::extents<int, 3, 7>>::access(3, 7);
-  ViewTestHarness<float, Kokkos::extents<int, Kokkos::dynamic_extent,
+  ViewTestHarness<int, Kokkos::extents<unsigned, 3, 7>>::access(3, 7);
+  ViewTestHarness<float, Kokkos::extents<unsigned, Kokkos::dynamic_extent,
                                          Kokkos::dynamic_extent, 7>>::access(3,
                                                                              5,
                                                                              7);
@@ -162,9 +164,9 @@ TEST(TEST_CATEGORY, view_minimal_mdspan_args_access) {
 }
 
 TEST(TEST_CATEGORY, view_minimal_mdspan_args_deep_copy) {
-  ViewTestHarness<int, Kokkos::extents<int, 3, 7>>::deep_copy(3, 7);
+  ViewTestHarness<int, Kokkos::extents<unsigned, 3, 7>>::deep_copy(3, 7);
   ViewTestHarness<float,
-                  Kokkos::extents<int, Kokkos::dynamic_extent,
+                  Kokkos::extents<unsigned, Kokkos::dynamic_extent,
                                   Kokkos::dynamic_extent, 7>>::deep_copy(3, 5,
                                                                          7);
   ViewTestHarness<int, Kokkos::dextents<size_t, 6>,
@@ -173,9 +175,9 @@ TEST(TEST_CATEGORY, view_minimal_mdspan_args_deep_copy) {
 }
 
 TEST(TEST_CATEGORY, view_minimal_mdspan_args_create_mirror) {
-  ViewTestHarness<int, Kokkos::extents<int, 3, 7>>::create_mirror(3, 7);
+  ViewTestHarness<int, Kokkos::extents<unsigned, 3, 7>>::create_mirror(3, 7);
   ViewTestHarness<float,
-                  Kokkos::extents<int, Kokkos::dynamic_extent,
+                  Kokkos::extents<unsigned, Kokkos::dynamic_extent,
                                   Kokkos::dynamic_extent, 7>>::create_mirror(3,
                                                                              5,
                                                                              7);
