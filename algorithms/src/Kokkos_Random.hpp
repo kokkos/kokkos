@@ -758,7 +758,7 @@ struct Random_UniqueIndex<
              i_offset) %
             locks_.extent(0);
         while (Kokkos::atomic_compare_exchange(&locks_(i, 0), 0, 1)) {
-          i += blockDim.x * blockDim.y * blockDim.z;
+          i += static_cast<uint64_t>(blockDim.x) * blockDim.y * blockDim.z;
           if (i >= static_cast<uint64_t>(locks_.extent(0))) {
             i = i_offset;
           }
