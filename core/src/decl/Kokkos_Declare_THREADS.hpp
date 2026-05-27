@@ -16,7 +16,6 @@
 #include <Threads/Kokkos_Threads_ParallelReduce_Team.hpp>
 #include <Threads/Kokkos_Threads_ParallelScan_Range.hpp>
 #include <Threads/Kokkos_Threads_Team.hpp>
-#include <Kokkos_Parallel_RangePolicyHandles.hpp>
 #include <Threads/Kokkos_Threads_UniqueToken.hpp>
 #include <Threads/Kokkos_Threads_ZeroMemset.hpp>
 #endif
