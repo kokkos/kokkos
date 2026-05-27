@@ -25,11 +25,18 @@ struct ViewTestHarness {
   using rank_indicies =
       decltype(std::make_index_sequence<new_view_t::rank()>());
 
+  // function to get zeros in a fold expression
+  // , operator and ternary result in warnings
+  template <class T>
+  static long unsigned make_zero(const T&) {
+    return 0lu;
+  }
+
   template <class ViewT, class... Extents>
   static void init_view(ViewT a, size_t extra_val, Extents... extents) {
     using exec_t = typename ViewT::execution_space;
     auto p = Kokkos::MDRangePolicy<exec_t, Kokkos::Rank<new_view_t::rank()>>(
-        {(extents ? 0lu : 0lu)...}, {static_cast<long unsigned>(extents)...});
+        {(make_zero(extents))...}, {static_cast<long unsigned>(extents)...});
     Kokkos::parallel_for(
         p,
         KOKKOS_LAMBDA(Extents... idx) { a(idx...) = (idx + ... + extra_val); });
@@ -39,7 +46,7 @@ struct ViewTestHarness {
   static size_t check_view(ViewT a, size_t extra_val, Extents... extents) {
     using exec_t = typename ViewT::execution_space;
     auto p = Kokkos::MDRangePolicy<exec_t, Kokkos::Rank<new_view_t::rank()>>(
-        {(extents ? 0lu : 0lu)...}, {static_cast<long unsigned>(extents)...});
+        {(make_zero(extents))...}, {static_cast<long unsigned>(extents)...});
     size_t errors = 0;
     Kokkos::parallel_reduce(
         p,
