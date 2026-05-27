@@ -16,7 +16,6 @@ static_assert(false,
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
-#include <impl/Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
 #include <Kokkos_View.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
@@ -549,47 +548,6 @@ struct FunctorTeamShmemSize<FunctorType, true, true> {
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
-
-template <class iType, class HostExecSpace, class Closure>
-struct ParallelForTeamVectorRangePolicyDispatch<
-    iType, HostThreadTeamMember<HostExecSpace>, Closure> {
-  static KOKKOS_INLINE_FUNCTION void apply(
-      TeamVectorRangeBoundariesStruct<
-          iType, HostThreadTeamMember<HostExecSpace>> const& bounds,
-      Closure const& closure) {
-    Kokkos::parallel_for(bounds, closure);
-  }
-};
-
-template <class iType, class HostExecSpace, class Closure>
-struct ParallelForTeamThreadRangePolicyDispatch<
-    iType, HostThreadTeamMember<HostExecSpace>, Closure> {
-  static KOKKOS_INLINE_FUNCTION void apply(
-      TeamThreadRangeBoundariesStruct<
-          iType, HostThreadTeamMember<HostExecSpace>> const& bounds,
-      Closure const& closure) {
-    Kokkos::parallel_for(bounds, closure);
-  }
-};
-
-template <class iType, class Member, class Closure>
-KOKKOS_INLINE_FUNCTION void parallel_for_team_vector_range_policy(
-    TeamVectorRangeBoundariesStruct<iType, Member> const& bounds,
-    Closure const& closure) {
-  ParallelForTeamVectorRangePolicyDispatch<iType, Member, Closure>::apply(
-      bounds, closure);
-}
-
-template <class iType, class Member, class Closure>
-KOKKOS_INLINE_FUNCTION void parallel_for_team_thread_range_policy(
-    TeamThreadRangeBoundariesStruct<iType, Member> const& bounds,
-    Closure const& closure) {
-  ParallelForTeamThreadRangePolicyDispatch<iType, Member, Closure>::apply(
-      bounds, closure);
-}
-
-}  // namespace Impl
 
 /** \brief Nested parallel_for for RangePolicy(team, ...).
  *
@@ -622,16 +580,16 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
                 std::is_invocable_v<Closure, iType const&>) {
     team_vector_bounds_t const& bounds =
         static_cast<team_vector_bounds_t const&>(policy);
-    Kokkos::Impl::parallel_for_team_vector_range_policy(bounds, closure);
+    Kokkos::parallel_for(bounds, closure);
   } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
                                            iType> ||
                        std::is_invocable_v<Closure, thread_handle_t const&>) {
     team_thread_bounds_t const bounds(team, policy.begin(), policy.end());
-    Kokkos::Impl::parallel_for_team_thread_range_policy(bounds, closure);
+    Kokkos::parallel_for(bounds, closure);
   } else {
     team_vector_bounds_t const& bounds =
         static_cast<team_vector_bounds_t const&>(policy);
-    Kokkos::Impl::parallel_for_team_vector_range_policy(bounds, closure);
+    Kokkos::parallel_for(bounds, closure);
   }
 }
 

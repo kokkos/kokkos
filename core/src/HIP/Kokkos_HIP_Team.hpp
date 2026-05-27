@@ -1032,9 +1032,6 @@ KOKKOS_INLINE_FUNCTION void single(
 
 }  // namespace Kokkos
 
-#include <impl/Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
-KOKKOS_IMPL_PARALLEL_FOR_RANGE_POLICY_TEAM_DISPATCH(Kokkos::Impl::HIPTeamMember)
-
 #endif /* defined( __HIPCC__ ) */
 
 #endif /* #ifndef KOKKOS_HIP_TEAM_HPP */
