@@ -1165,6 +1165,7 @@ struct TestViewMapOperator {
   }
 
   void run() {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     ASSERT_EQ(
         v.extent(0),
         (size_t)(0 < ViewType::rank ? TestViewMapOperator<ViewType>::N0 : 1));
@@ -1193,6 +1194,24 @@ struct TestViewMapOperator {
     ASSERT_LE(v.extent(0) * v.extent(1) * v.extent(2) * v.extent(3) *
                   v.extent(4) * v.extent(5) * v.extent(6) * v.extent(7),
               v.span());
+#else
+    if constexpr (0 < ViewType::rank)
+      ASSERT_EQ(v.extent(0), (size_t)TestViewMapOperator<ViewType>::N0);
+    if constexpr (1 < ViewType::rank)
+      ASSERT_EQ(v.extent(1), (size_t)TestViewMapOperator<ViewType>::N1);
+    if constexpr (2 < ViewType::rank)
+      ASSERT_EQ(v.extent(2), (size_t)TestViewMapOperator<ViewType>::N2);
+    if constexpr (3 < ViewType::rank)
+      ASSERT_EQ(v.extent(3), (size_t)TestViewMapOperator<ViewType>::N3);
+    if constexpr (4 < ViewType::rank)
+      ASSERT_EQ(v.extent(4), (size_t)TestViewMapOperator<ViewType>::N4);
+    if constexpr (5 < ViewType::rank)
+      ASSERT_EQ(v.extent(5), (size_t)TestViewMapOperator<ViewType>::N5);
+    if constexpr (6 < ViewType::rank)
+      ASSERT_EQ(v.extent(6), (size_t)TestViewMapOperator<ViewType>::N6);
+    if constexpr (7 < ViewType::rank)
+      ASSERT_EQ(v.extent(7), (size_t)TestViewMapOperator<ViewType>::N7);
+#endif
 
     int64_t error_count;
     Kokkos::RangePolicy<typename ViewType::execution_space> range(0,
