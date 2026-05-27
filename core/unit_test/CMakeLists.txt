@@ -361,7 +361,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       )
       if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
         list(APPEND BV_TestNames ViewCustomizationAccessorArg ViewCustomizationAllocationType
-             ViewCustomizationAccessorFromMapping
+             ViewCustomizationAccessorFromMapping MinimalViewMDSpanTemplateArgumentViability
         )
       endif()
       if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)

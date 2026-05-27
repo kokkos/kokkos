@@ -3139,7 +3139,10 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     if constexpr (std::is_constructible_v<
                       typename dst_type::accessor_type,
                       typename Kokkos::View<T, P...>::accessor_type>)
-      return dst_type(prop_copy, src.mapping(), src.accessor());
+      return dst_type(
+          prop_copy,
+          static_cast<typename dst_type::mapping_type>(src.mapping()),
+          static_cast<typename dst_type::accessor_type>(src.accessor()));
     else
       return dst_type(prop_copy, src.layout());
 #else
