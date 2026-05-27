@@ -2194,8 +2194,5 @@ KOKKOS_INLINE_FUNCTION void single(
 
 }  // namespace Kokkos
 
-#include <impl/Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
-KOKKOS_IMPL_PARALLEL_FOR_RANGE_POLICY_TEAM_DISPATCH(Kokkos::Impl::HPXTeamMember)
-
 #endif /* #if defined( KOKKOS_ENABLE_HPX ) */
 #endif /* #ifndef KOKKOS_HPX_HPP */
