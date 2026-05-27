@@ -126,7 +126,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 
 }  // namespace Kokkos
 
-#include <Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
+#include <impl/Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
 KOKKOS_IMPL_PARALLEL_FOR_RANGE_POLICY_TEAM_DISPATCH(
     Kokkos::Impl::OpenACCTeamMember)
 
@@ -227,7 +227,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 
 }  // namespace Kokkos
 
-#include <Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
+#include <impl/Kokkos_Parallel_RangePolicyHandlesDispatch.hpp>
 KOKKOS_IMPL_PARALLEL_FOR_RANGE_POLICY_TEAM_DISPATCH(
     Kokkos::Impl::OpenACCTeamMember)
 
