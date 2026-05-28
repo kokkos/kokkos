@@ -37,9 +37,13 @@ inline void host_test_simd_traits() {
   [[maybe_unused]] simd_type ptr_simd(values);
   [[maybe_unused]] simd_type ptr_flag_simd(
       values, Kokkos::Experimental::simd_flag_default);
+  [[maybe_unused]] simd_type ptr_flag_aligned_simd(
+      values, Kokkos::Experimental::simd_flag_aligned);
   [[maybe_unused]] simd_type ptr_mask_simd(values, mask);
   [[maybe_unused]] simd_type ptr_mask_flag_simd(
       values, mask, Kokkos::Experimental::simd_flag_default);
+  [[maybe_unused]] simd_type ptr_mask_flag_aligned_simd(
+      values, mask, Kokkos::Experimental::simd_flag_aligned);
   simd_type test_simd(KOKKOS_LAMBDA(std::size_t i) { return (i % 2 == 0); });
   simd_type copy_simd(test_simd);
   simd_type move_simd(std::move(copy_simd));
@@ -163,9 +167,13 @@ KOKKOS_INLINE_FUNCTION void device_test_simd_traits() {
   [[maybe_unused]] simd_type ptr_simd(values);
   [[maybe_unused]] simd_type ptr_flag_simd(
       values, Kokkos::Experimental::simd_flag_default);
+  [[maybe_unused]] simd_type ptr_flag_aligned_simd(
+      values, Kokkos::Experimental::simd_flag_aligned);
   [[maybe_unused]] simd_type ptr_mask_simd(values, mask);
   [[maybe_unused]] simd_type ptr_mask_flag_simd(
       values, mask, Kokkos::Experimental::simd_flag_default);
+  [[maybe_unused]] simd_type ptr_mask_flag_aligned_simd(
+      values, mask, Kokkos::Experimental::simd_flag_aligned);
   simd_type test_simd(KOKKOS_LAMBDA(std::size_t i) { return (i % 2 == 0); });
   simd_type copy_simd(test_simd);
   simd_type move_simd(std::move(copy_simd));
