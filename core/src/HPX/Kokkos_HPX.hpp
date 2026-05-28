@@ -1852,7 +1852,14 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         &loop_boundaries,
     const Lambda &lambda) {
   using thread_handle_t = Kokkos::ThreadHandle<Impl::HPXTeamMember>;
-  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &, iType>) {
+  if constexpr (std::is_invocable_v<Lambda, iType> ||
+                std::is_invocable_v<Lambda, iType const &>) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      lambda(i);
+    }
+  } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &,
+                                           iType>) {
     auto const thread_handle = thread_handle_t(loop_boundaries.member);
     for (iType i = loop_boundaries.start; i < loop_boundaries.end;
          i += loop_boundaries.increment) {
@@ -1866,10 +1873,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       lambda(thread_handle);
     }
   } else {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(i);
-    }
+    static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                  "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                  "invocable with (iType), (ThreadHandle, iType), or "
+                  "(ThreadHandle)");
   }
 }
 

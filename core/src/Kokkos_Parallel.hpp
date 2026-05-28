@@ -587,9 +587,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     team_thread_bounds_t const bounds(team, policy.begin(), policy.end());
     Kokkos::parallel_for(bounds, closure);
   } else {
-    team_vector_bounds_t const& bounds =
-        static_cast<team_vector_bounds_t const&>(policy);
-    Kokkos::parallel_for(bounds, closure);
+    static_assert(Kokkos::Impl::always_false<Closure>::value,
+                  "Kokkos::parallel_for(RangePolicy): closure must be "
+                  "invocable with (iType), (ThreadHandle, iType), or "
+                  "(ThreadHandle)");
   }
 }
 

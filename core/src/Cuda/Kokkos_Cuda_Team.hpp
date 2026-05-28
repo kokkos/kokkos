@@ -503,8 +503,13 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   (void)closure;
   KOKKOS_IF_ON_DEVICE((
       using thread_handle_t = Kokkos::ThreadHandle<Impl::CudaTeamMember>;
-      if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
-                                        iType>) {
+      if constexpr (std::is_invocable_v<Closure, iType> ||
+                    std::is_invocable_v<Closure, iType const&>) {
+        for (iType i = loop_boundaries.start + threadIdx.y;
+             i < loop_boundaries.end; i += blockDim.y)
+          closure(i);
+      } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                               iType>) {
         auto const thread_handle = thread_handle_t(loop_boundaries.member);
         for (iType i = loop_boundaries.start + threadIdx.y;
              i < loop_boundaries.end; i += blockDim.y) {
@@ -519,9 +524,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
           closure(thread_handle);
         }
       } else {
-        for (iType i = loop_boundaries.start + threadIdx.y;
-             i < loop_boundaries.end; i += blockDim.y)
-          closure(i);
+        static_assert(Kokkos::Impl::always_false<Closure>::value,
+                      "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                      "invocable with (iType), (ThreadHandle, iType), or "
+                      "(ThreadHandle)");
       }))
 }
 

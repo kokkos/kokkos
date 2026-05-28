@@ -64,7 +64,14 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   iType j_step = loop_boundaries.member.team_size();
   if (j_start >= loop_boundaries.start) {
     using thread_handle_t = Kokkos::ThreadHandle<Impl::OpenACCTeamMember>;
-    if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&, iType>) {
+    if constexpr (std::is_invocable_v<Lambda, iType> ||
+                  std::is_invocable_v<Lambda, iType const&>) {
+#pragma acc loop seq
+      for (iType j = j_start; j < j_end; j += j_step) {
+        lambda(j);
+      }
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                             iType>) {
       auto const thread_handle = thread_handle_t(loop_boundaries.member);
 #pragma acc loop seq
       for (iType j = j_start; j < j_end; j += j_step) {
@@ -78,10 +85,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         lambda(thread_handle);
       }
     } else {
-#pragma acc loop seq
-      for (iType j = j_start; j < j_end; j += j_step) {
-        lambda(j);
-      }
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                    "invocable with (iType), (ThreadHandle, iType), or "
+                    "(ThreadHandle)");
     }
   }
 }
@@ -178,7 +185,14 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Lambda& lambda) {
   using thread_handle_t = Kokkos::ThreadHandle<Impl::OpenACCTeamMember>;
-  if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&, iType>) {
+  if constexpr (std::is_invocable_v<Lambda, iType> ||
+                std::is_invocable_v<Lambda, iType const&>) {
+#pragma acc loop worker
+    for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
+      lambda(j);
+    }
+  } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                           iType>) {
     auto const thread_handle = thread_handle_t(loop_boundaries.member);
 #pragma acc loop worker
     for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
@@ -192,10 +206,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       lambda(thread_handle);
     }
   } else {
-#pragma acc loop worker
-    for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
-      lambda(j);
-    }
+    static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                  "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                  "invocable with (iType), (ThreadHandle, iType), or "
+                  "(ThreadHandle)");
   }
 }
 
