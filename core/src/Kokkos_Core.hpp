@@ -30,6 +30,7 @@
 #include <Kokkos_Core_fwd.hpp>
 
 #include <KokkosCore_Config_DeclareBackend.hpp>
+#include <impl/Kokkos_Parallel_NestedTeamRange.hpp>
 
 #include <Kokkos_Half.hpp>
 #include <Kokkos_AnonymousSpace.hpp>

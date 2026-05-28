@@ -660,17 +660,6 @@ class HostThreadTeamMember {
   }
 };
 
-template <typename iType, class HostExecSpace>
-struct TeamVectorRangeBoundariesStruct<iType,
-                                       HostThreadTeamMember<HostExecSpace>>
-    : public TeamThreadRangeBoundariesStruct<
-          iType, HostThreadTeamMember<HostExecSpace>> {
-  using Base =
-      TeamThreadRangeBoundariesStruct<iType,
-                                      HostThreadTeamMember<HostExecSpace>>;
-  using Base::Base;
-};
-
 }  // namespace Impl
 }  // namespace Kokkos
 
