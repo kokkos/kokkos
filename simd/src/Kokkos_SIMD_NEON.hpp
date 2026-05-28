@@ -433,14 +433,14 @@ class basic_simd<double, simd_abi::neon_fixed_size<2>> {
     m_value = vsetq_lane_f64(
         gen(std::integral_constant<Impl::simd_size_t, 1>()), m_value, 1);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1q_f64(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<float64x2_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -798,14 +798,14 @@ class basic_simd<float, simd_abi::neon_fixed_size<2>> {
     m_value = vset_lane_f32(gen(std::integral_constant<Impl::simd_size_t, 1>()),
                             m_value, 1);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1_f32(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<float32x2_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -1154,14 +1154,14 @@ class basic_simd<float, simd_abi::neon_fixed_size<4>> {
     m_value = vsetq_lane_f32(
         gen(std::integral_constant<Impl::simd_size_t, 3>()), m_value, 3);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1q_f32(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<float32x4_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -1521,14 +1521,14 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<2>> {
     m_value = vset_lane_s32(gen(std::integral_constant<Impl::simd_size_t, 1>()),
                             m_value, 1);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1_s32(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<int32x2_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -1883,14 +1883,14 @@ class basic_simd<std::int32_t, simd_abi::neon_fixed_size<4>> {
     m_value = vsetq_lane_s32(
         gen(std::integral_constant<Impl::simd_size_t, 3>()), m_value, 3);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1q_s32(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<int32x4_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -2255,14 +2255,14 @@ class basic_simd<std::uint32_t, simd_abi::neon_fixed_size<2>> {
     m_value = vset_lane_u32(gen(std::integral_constant<Impl::simd_size_t, 1>()),
                             m_value, 1);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1_u32(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<uint32x2_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -2613,14 +2613,14 @@ class basic_simd<std::uint32_t, simd_abi::neon_fixed_size<4>> {
     m_value = vsetq_lane_u32(
         gen(std::integral_constant<Impl::simd_size_t, 3>()), m_value, 3);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1q_u32(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<uint32x4_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -2981,14 +2981,14 @@ class basic_simd<std::int64_t, simd_abi::neon_fixed_size<2>> {
     m_value = vsetq_lane_s64(
         gen(std::integral_constant<Impl::simd_size_t, 1>()), m_value, 1);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1q_s64(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<int64x2_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));
@@ -3344,14 +3344,14 @@ class basic_simd<std::uint64_t, simd_abi::neon_fixed_size<2>> {
     m_value = vsetq_lane_u64(
         gen(std::integral_constant<Impl::simd_size_t, 1>()), m_value, 1);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     m_value = vld1q_u64(ptr);
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     m_value = static_cast<uint64x2_t>(basic_simd([=](Impl::simd_size_t i) {
       return (mask[i]) ? ptr[i] : value_type();
     }));

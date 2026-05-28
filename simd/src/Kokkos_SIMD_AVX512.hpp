@@ -339,9 +339,9 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
             gen(std::integral_constant<Impl::simd_size_t, 5>()),
             gen(std::integral_constant<Impl::simd_size_t, 6>()),
             gen(std::integral_constant<Impl::simd_size_t, 7>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_pd(ptr);
@@ -349,9 +349,9 @@ class basic_simd<double, simd_abi::avx512_fixed_size<8>> {
       m_value = _mm512_loadu_pd(ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_maskz_load_pd(static_cast<__mmask8>(mask), ptr);
@@ -742,9 +742,9 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
             gen(std::integral_constant<Impl::simd_size_t, 5>()),
             gen(std::integral_constant<Impl::simd_size_t, 6>()),
             gen(std::integral_constant<Impl::simd_size_t, 7>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm256_load_ps(ptr);
@@ -752,9 +752,9 @@ class basic_simd<float, simd_abi::avx512_fixed_size<8>> {
       m_value = _mm256_loadu_ps(ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm256_maskz_load_ps(static_cast<__mmask8>(mask), ptr);
@@ -1123,9 +1123,9 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
             gen(std::integral_constant<Impl::simd_size_t, 13>()),
             gen(std::integral_constant<Impl::simd_size_t, 14>()),
             gen(std::integral_constant<Impl::simd_size_t, 15>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_ps(ptr);
@@ -1133,9 +1133,9 @@ class basic_simd<float, simd_abi::avx512_fixed_size<16>> {
       m_value = _mm512_loadu_ps(ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_maskz_load_ps(static_cast<__mmask16>(mask), ptr);
@@ -1503,9 +1503,9 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
             gen(std::integral_constant<Impl::simd_size_t, 5>()),
             gen(std::integral_constant<Impl::simd_size_t, 6>()),
             gen(std::integral_constant<Impl::simd_size_t, 7>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value =
@@ -1515,9 +1515,9 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> {
           _mm256_maskz_loadu_epi32(static_cast<__mmask8>(mask_type(true)), ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm256_maskz_load_epi32(static_cast<__mmask8>(mask), ptr);
@@ -1880,9 +1880,9 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
             gen(std::integral_constant<Impl::simd_size_t, 13>()),
             gen(std::integral_constant<Impl::simd_size_t, 14>()),
             gen(std::integral_constant<Impl::simd_size_t, 15>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_epi32(ptr);
@@ -1891,9 +1891,9 @@ class basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> {
       m_value = _mm512_maskz_loadu_epi32(static_cast<__mmask16>(mask), ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_maskz_load_epi32(static_cast<__mmask16>(mask), ptr);
@@ -2255,9 +2255,9 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
             gen(std::integral_constant<Impl::simd_size_t, 5>()),
             gen(std::integral_constant<Impl::simd_size_t, 6>()),
             gen(std::integral_constant<Impl::simd_size_t, 7>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value =
@@ -2267,9 +2267,9 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> {
           _mm256_maskz_loadu_epi32(static_cast<__mmask8>(mask_type(true)), ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm256_maskz_load_epi32(static_cast<__mmask8>(mask), ptr);
@@ -2626,9 +2626,9 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
             gen(std::integral_constant<Impl::simd_size_t, 13>()),
             gen(std::integral_constant<Impl::simd_size_t, 14>()),
             gen(std::integral_constant<Impl::simd_size_t, 15>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_epi32(ptr);
@@ -2637,9 +2637,9 @@ class basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> {
       m_value = _mm512_maskz_loadu_epi32(static_cast<__mmask16>(mask), ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_maskz_load_epi32(static_cast<__mmask16>(mask), ptr);
@@ -2996,9 +2996,9 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
             gen(std::integral_constant<Impl::simd_size_t, 5>()),
             gen(std::integral_constant<Impl::simd_size_t, 6>()),
             gen(std::integral_constant<Impl::simd_size_t, 7>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_si512(ptr);
@@ -3006,9 +3006,9 @@ class basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> {
       m_value = _mm512_loadu_si512(ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_maskz_load_epi64(static_cast<__mmask8>(mask), ptr);
@@ -3368,9 +3368,9 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
             gen(std::integral_constant<Impl::simd_size_t, 5>()),
             gen(std::integral_constant<Impl::simd_size_t, 6>()),
             gen(std::integral_constant<Impl::simd_size_t, 7>()))) {}
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType) noexcept {
+      value_type const* ptr, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_load_si512(ptr);
@@ -3378,9 +3378,9 @@ class basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> {
       m_value = _mm512_loadu_si512(ptr);
     }
   }
-  template <typename FlagType>
+  template <typename FlagType = simd_flags<>>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType) noexcept {
+      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
     if constexpr (std::is_same_v<FlagType,
                                  simd_flags<simd_alignment_vector_aligned>>) {
       m_value = _mm512_maskz_load_epi64(static_cast<__mmask8>(mask), ptr);
