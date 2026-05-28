@@ -1065,6 +1065,7 @@ struct TestViewMapOperator {
 
   ViewType v;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   KOKKOS_INLINE_FUNCTION
   void test_left(size_t i0, int64_t& error_count) const {
     typename ViewType::value_type* const base_ptr =
@@ -1124,6 +1125,183 @@ struct TestViewMapOperator {
 
     if (v.span() <= size_t(offset)) ++error_count;
   }
+#else
+  // Test per rank as extents outside of rank are not defaulting to 1 anymore
+  // thus collapsing the loops for rank > 1
+  KOKKOS_INLINE_FUNCTION
+  void test_left(size_t i0, int64_t& error_count) const {
+    typename ViewType::value_type* const base_ptr =
+        &v.access(0, 0, 0, 0, 0, 0, 0, 0);
+    int64_t offset = 0;
+
+    auto check_at = [&](size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                        size_t i6, size_t i7) {
+      const int64_t d = &v.access(i0, i1, i2, i3, i4, i5, i6, i7) - base_ptr;
+      if (d < offset) ++error_count;
+      offset = d;
+    };
+
+    if constexpr (ViewType::rank <= 1) {
+      check_at(0, 0, 0, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 2) {
+      const size_t n1 = v.extent(1);
+      for (size_t i1 = 0; i1 < n1; ++i1) check_at(i1, 0, 0, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 3) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      for (size_t i2 = 0; i2 < n2; ++i2)
+        for (size_t i1 = 0; i1 < n1; ++i1) check_at(i1, i2, 0, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 4) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      for (size_t i3 = 0; i3 < n3; ++i3)
+        for (size_t i2 = 0; i2 < n2; ++i2)
+          for (size_t i1 = 0; i1 < n1; ++i1) check_at(i1, i2, i3, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 5) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      for (size_t i4 = 0; i4 < n4; ++i4)
+        for (size_t i3 = 0; i3 < n3; ++i3)
+          for (size_t i2 = 0; i2 < n2; ++i2)
+            for (size_t i1 = 0; i1 < n1; ++i1)
+              check_at(i1, i2, i3, i4, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 6) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      const size_t n5 = v.extent(5);
+      for (size_t i5 = 0; i5 < n5; ++i5)
+        for (size_t i4 = 0; i4 < n4; ++i4)
+          for (size_t i3 = 0; i3 < n3; ++i3)
+            for (size_t i2 = 0; i2 < n2; ++i2)
+              for (size_t i1 = 0; i1 < n1; ++i1)
+                check_at(i1, i2, i3, i4, i5, 0, 0);
+    } else if constexpr (ViewType::rank == 7) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      const size_t n5 = v.extent(5);
+      const size_t n6 = v.extent(6);
+      for (size_t i6 = 0; i6 < n6; ++i6)
+        for (size_t i5 = 0; i5 < n5; ++i5)
+          for (size_t i4 = 0; i4 < n4; ++i4)
+            for (size_t i3 = 0; i3 < n3; ++i3)
+              for (size_t i2 = 0; i2 < n2; ++i2)
+                for (size_t i1 = 0; i1 < n1; ++i1)
+                  check_at(i1, i2, i3, i4, i5, i6, 0);
+    } else {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      const size_t n5 = v.extent(5);
+      const size_t n6 = v.extent(6);
+      const size_t n7 = v.extent(7);
+      for (size_t i7 = 0; i7 < n7; ++i7)
+        for (size_t i6 = 0; i6 < n6; ++i6)
+          for (size_t i5 = 0; i5 < n5; ++i5)
+            for (size_t i4 = 0; i4 < n4; ++i4)
+              for (size_t i3 = 0; i3 < n3; ++i3)
+                for (size_t i2 = 0; i2 < n2; ++i2)
+                  for (size_t i1 = 0; i1 < n1; ++i1)
+                    check_at(i1, i2, i3, i4, i5, i6, i7);
+    }
+
+    if (v.span() <= size_t(offset)) ++error_count;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void test_right(size_t i0, int64_t& error_count) const {
+    typename ViewType::value_type* const base_ptr =
+        &v.access(0, 0, 0, 0, 0, 0, 0, 0);
+    int64_t offset = 0;
+
+    auto check_at = [&](size_t i1, size_t i2, size_t i3, size_t i4, size_t i5,
+                        size_t i6, size_t i7) {
+      const int64_t d = &v.access(i0, i1, i2, i3, i4, i5, i6, i7) - base_ptr;
+      if (d < offset) ++error_count;
+      offset = d;
+    };
+
+    if constexpr (ViewType::rank <= 1) {
+      check_at(0, 0, 0, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 2) {
+      const size_t n1 = v.extent(1);
+      for (size_t i1 = 0; i1 < n1; ++i1) check_at(i1, 0, 0, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 3) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      for (size_t i1 = 0; i1 < n1; ++i1)
+        for (size_t i2 = 0; i2 < n2; ++i2) check_at(i1, i2, 0, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 4) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      for (size_t i1 = 0; i1 < n1; ++i1)
+        for (size_t i2 = 0; i2 < n2; ++i2)
+          for (size_t i3 = 0; i3 < n3; ++i3) check_at(i1, i2, i3, 0, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 5) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      for (size_t i1 = 0; i1 < n1; ++i1)
+        for (size_t i2 = 0; i2 < n2; ++i2)
+          for (size_t i3 = 0; i3 < n3; ++i3)
+            for (size_t i4 = 0; i4 < n4; ++i4)
+              check_at(i1, i2, i3, i4, 0, 0, 0);
+    } else if constexpr (ViewType::rank == 6) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      const size_t n5 = v.extent(5);
+      for (size_t i1 = 0; i1 < n1; ++i1)
+        for (size_t i2 = 0; i2 < n2; ++i2)
+          for (size_t i3 = 0; i3 < n3; ++i3)
+            for (size_t i4 = 0; i4 < n4; ++i4)
+              for (size_t i5 = 0; i5 < n5; ++i5)
+                check_at(i1, i2, i3, i4, i5, 0, 0);
+    } else if constexpr (ViewType::rank == 7) {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      const size_t n5 = v.extent(5);
+      const size_t n6 = v.extent(6);
+      for (size_t i1 = 0; i1 < n1; ++i1)
+        for (size_t i2 = 0; i2 < n2; ++i2)
+          for (size_t i3 = 0; i3 < n3; ++i3)
+            for (size_t i4 = 0; i4 < n4; ++i4)
+              for (size_t i5 = 0; i5 < n5; ++i5)
+                for (size_t i6 = 0; i6 < n6; ++i6)
+                  check_at(i1, i2, i3, i4, i5, i6, 0);
+    } else {
+      const size_t n1 = v.extent(1);
+      const size_t n2 = v.extent(2);
+      const size_t n3 = v.extent(3);
+      const size_t n4 = v.extent(4);
+      const size_t n5 = v.extent(5);
+      const size_t n6 = v.extent(6);
+      const size_t n7 = v.extent(7);
+      for (size_t i1 = 0; i1 < n1; ++i1)
+        for (size_t i2 = 0; i2 < n2; ++i2)
+          for (size_t i3 = 0; i3 < n3; ++i3)
+            for (size_t i4 = 0; i4 < n4; ++i4)
+              for (size_t i5 = 0; i5 < n5; ++i5)
+                for (size_t i6 = 0; i6 < n6; ++i6)
+                  for (size_t i7 = 0; i7 < n7; ++i7)
+                    check_at(i1, i2, i3, i4, i5, i6, i7);
+    }
+
+    if (v.span() <= size_t(offset)) ++error_count;
+  }
+#endif
 
   KOKKOS_INLINE_FUNCTION
   void operator()(size_t i, int64_t& error_count) const {
@@ -1194,28 +1372,44 @@ struct TestViewMapOperator {
     ASSERT_LE(v.extent(0) * v.extent(1) * v.extent(2) * v.extent(3) *
                   v.extent(4) * v.extent(5) * v.extent(6) * v.extent(7),
               v.span());
-#else
-    if constexpr (0 < ViewType::rank)
-      ASSERT_EQ(v.extent(0), (size_t)TestViewMapOperator<ViewType>::N0);
-    if constexpr (1 < ViewType::rank)
-      ASSERT_EQ(v.extent(1), (size_t)TestViewMapOperator<ViewType>::N1);
-    if constexpr (2 < ViewType::rank)
-      ASSERT_EQ(v.extent(2), (size_t)TestViewMapOperator<ViewType>::N2);
-    if constexpr (3 < ViewType::rank)
-      ASSERT_EQ(v.extent(3), (size_t)TestViewMapOperator<ViewType>::N3);
-    if constexpr (4 < ViewType::rank)
-      ASSERT_EQ(v.extent(4), (size_t)TestViewMapOperator<ViewType>::N4);
-    if constexpr (5 < ViewType::rank)
-      ASSERT_EQ(v.extent(5), (size_t)TestViewMapOperator<ViewType>::N5);
-    if constexpr (6 < ViewType::rank)
-      ASSERT_EQ(v.extent(6), (size_t)TestViewMapOperator<ViewType>::N6);
-    if constexpr (7 < ViewType::rank)
-      ASSERT_EQ(v.extent(7), (size_t)TestViewMapOperator<ViewType>::N7);
-#endif
 
+#else
+    if constexpr (0 < ViewType::rank) {
+      ASSERT_EQ(v.extent(0), (size_t)TestViewMapOperator<ViewType>::N0);
+    }
+    if constexpr (1 < ViewType::rank) {
+      ASSERT_EQ(v.extent(1), (size_t)TestViewMapOperator<ViewType>::N1);
+    }
+    if constexpr (2 < ViewType::rank) {
+      ASSERT_EQ(v.extent(2), (size_t)TestViewMapOperator<ViewType>::N2);
+    }
+    if constexpr (3 < ViewType::rank) {
+      ASSERT_EQ(v.extent(3), (size_t)TestViewMapOperator<ViewType>::N3);
+    }
+    if constexpr (4 < ViewType::rank) {
+      ASSERT_EQ(v.extent(4), (size_t)TestViewMapOperator<ViewType>::N4);
+    }
+    if constexpr (5 < ViewType::rank) {
+      ASSERT_EQ(v.extent(5), (size_t)TestViewMapOperator<ViewType>::N5);
+    }
+    if constexpr (6 < ViewType::rank) {
+      ASSERT_EQ(v.extent(6), (size_t)TestViewMapOperator<ViewType>::N6);
+    }
+    if constexpr (7 < ViewType::rank) {
+      ASSERT_EQ(v.extent(7), (size_t)TestViewMapOperator<ViewType>::N7);
+    }
+
+#endif
+    size_t extent;
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    extent = v.extent(0);
+#else
+    // Make sure the view is at least of size 1
+    extent = 1;
+    if constexpr (ViewType::rank > 0) extent = v.extent(0);
+#endif
     int64_t error_count;
-    Kokkos::RangePolicy<typename ViewType::execution_space> range(0,
-                                                                  v.extent(0));
+    Kokkos::RangePolicy<typename ViewType::execution_space> range(0, extent);
     Kokkos::parallel_reduce(range, *this, error_count);
     ASSERT_EQ(0, error_count);
   }
