@@ -106,9 +106,28 @@
 #define KOKKOS_LAMBDA [=]
 #endif
 
+#if defined(KOKKOS_COMPILER_MSVC)
+#define KOKKOS_INLINE_ATTR [[msvc::forceinline]]
+#else
+#define KOKKOS_INLINE_ATTR [[gnu::always_inline]]
+#endif  // #if defined(KOKKOS_COMPILER_MSVC)
+
+// KOKKOS_LAMBDA_INLINE can be used to force compiler to inline lambda functions
+#if !defined(KOKKOS_LAMBDA_INLINE)
+#define KOKKOS_LAMBDA_INLINE KOKKOS_LAMBDA KOKKOS_INLINE_ATTR
+#endif  // #if !defined(KOKKOS_LAMBDA_INLINE)
+
 #if !defined(KOKKOS_CLASS_LAMBDA)
 #define KOKKOS_CLASS_LAMBDA [ =, *this ]
 #endif
+
+// user can force all lambda to be inlined with KOKKOS_LAMBDA_FORCEINLINE_ALL
+#if defined(KOKKOS_LAMBDA_FORCEINLINE_ALL)
+#undef KOKKOS_LAMBDA
+#undef KOKKOS_CLASS_LAMBDA
+#define KOKKOS_LAMBDA KOKKOS_LAMBDA_INLINE
+#define KOKKOS_CLASS_LAMBDA [ =, *this ] KOKKOS_INLINE_ATTR
+#endif  // #if defined(KOKKOS_LAMBDA_FORCEINLINE_ALL)
 
 // #if !defined( __CUDA_ARCH__ ) // Not compiling Cuda code to 'ptx'.
 
