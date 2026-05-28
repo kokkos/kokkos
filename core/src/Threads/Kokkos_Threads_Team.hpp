@@ -520,58 +520,6 @@ class ThreadsExecTeamMember {
   }
 };
 
-// RangePolicy(team, ...) uses TeamVectorRangeBoundariesStruct. The primary
-// template inherits TeamThreadRangeBoundariesStruct, which lets overload
-// resolution pick parallel_for(TeamThreadRange, ...) and dispatch
-// closure(thread_handle, i). Specialize to a standalone struct (same fields
-// and partition logic as TeamThreadRange) so only team-vector parallel_for
-// applies, matching CUDA's non-inheriting TeamVectorRangeBoundariesStruct.
-template <typename iType>
-struct TeamVectorRangeBoundariesStruct<iType, ThreadsExecTeamMember> {
- private:
-  KOKKOS_INLINE_FUNCTION static iType ibegin(const iType& arg_begin,
-                                             const iType& arg_end,
-                                             const iType& arg_rank,
-                                             const iType& arg_size) {
-    return arg_begin +
-           ((arg_end - arg_begin + arg_size - 1) / arg_size) * arg_rank;
-  }
-
-  KOKKOS_INLINE_FUNCTION static iType iend(const iType& arg_begin,
-                                           const iType& arg_end,
-                                           const iType& arg_rank,
-                                           const iType& arg_size) {
-    const iType end_ =
-        arg_begin +
-        ((arg_end - arg_begin + arg_size - 1) / arg_size) * (arg_rank + 1);
-    return end_ < arg_end ? end_ : arg_end;
-  }
-
- public:
-  using index_type = iType;
-  const iType start;
-  const iType end;
-  enum { increment = 1 };
-  const ThreadsExecTeamMember& member;
-
-  KOKKOS_INLINE_FUNCTION
-  TeamVectorRangeBoundariesStruct(const ThreadsExecTeamMember& arg_thread,
-                                  const iType& arg_count)
-      : start(ibegin(0, arg_count, arg_thread.team_rank(),
-                     arg_thread.team_size())),
-        end(iend(0, arg_count, arg_thread.team_rank(), arg_thread.team_size())),
-        member(arg_thread) {}
-
-  KOKKOS_INLINE_FUNCTION
-  TeamVectorRangeBoundariesStruct(const ThreadsExecTeamMember& arg_thread,
-                                  const iType& arg_begin, const iType& arg_end)
-      : start(ibegin(arg_begin, arg_end, arg_thread.team_rank(),
-                     arg_thread.team_size())),
-        end(iend(arg_begin, arg_end, arg_thread.team_rank(),
-                 arg_thread.team_size())),
-        member(arg_thread) {}
-};
-
 } /* namespace Impl */
 } /* namespace Kokkos */
 
@@ -887,21 +835,21 @@ TeamThreadRange(const Impl::ThreadsExecTeamMember& thread, const iType1& begin,
 
 template <typename iType>
 KOKKOS_INLINE_FUNCTION
-    Impl::TeamThreadRangeBoundariesStruct<iType, Impl::ThreadsExecTeamMember>
+    Impl::TeamVectorRangeBoundariesStruct<iType, Impl::ThreadsExecTeamMember>
     TeamVectorRange(const Impl::ThreadsExecTeamMember& thread,
                     const iType& count) {
-  return Impl::TeamThreadRangeBoundariesStruct<iType,
+  return Impl::TeamVectorRangeBoundariesStruct<iType,
                                                Impl::ThreadsExecTeamMember>(
       thread, count);
 }
 
 template <typename iType1, typename iType2>
-KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
+KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
     std::common_type_t<iType1, iType2>, Impl::ThreadsExecTeamMember>
 TeamVectorRange(const Impl::ThreadsExecTeamMember& thread, const iType1& begin,
                 const iType2& end) {
   using iType = std::common_type_t<iType1, iType2>;
-  return Impl::TeamThreadRangeBoundariesStruct<iType,
+  return Impl::TeamVectorRangeBoundariesStruct<iType,
                                                Impl::ThreadsExecTeamMember>(
       thread, iType(begin), iType(end));
 }
