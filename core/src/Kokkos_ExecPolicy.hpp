@@ -48,23 +48,23 @@ namespace Impl {
  */
 template <class TeamMemberType>
 struct ThreadHandle {
-  TeamMemberType const& member;
+  TeamMemberType const& team_member;
   using member_type     = TeamMemberType;
   using execution_space = typename TeamMemberType::execution_space;
   using thread_handle   = ThreadHandle;
 
   KOKKOS_INLINE_FUNCTION
-  constexpr ThreadHandle(TeamMemberType const& m) : member(m) {}
+  constexpr ThreadHandle(TeamMemberType const& m) : team_member(m) {}
 
   KOKKOS_INLINE_FUNCTION
-  int team_rank() const { return member.team_rank(); }
+  int team_rank() const { return team_member.team_rank(); }
 
   KOKKOS_INLINE_FUNCTION
-  int team_size() const { return member.team_size(); }
+  int team_size() const { return team_member.team_size(); }
 
   /** \brief Maximum concurrency within this team thread (vector_length). */
   KOKKOS_INLINE_FUNCTION
-  int concurrency() const { return member.vector_length(); }
+  int concurrency() const { return team_member.vector_length(); }
 };
 
 // Private tag that can be used to make a copy of another execution policy
@@ -1400,14 +1400,14 @@ class ImplRangePolicy<Handle, Properties...>
   KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
                                          IndexType1 work_begin,
                                          IndexType2 work_end)
-      : base_t(handle.member, static_cast<index_type>(work_begin),
+      : base_t(handle.team_member, static_cast<index_type>(work_begin),
                static_cast<index_type>(work_end)),
         m_handle(handle) {}
 
   template <typename IndexType>
   KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
                                          IndexType work_count)
-      : base_t(handle.member, static_cast<index_type>(work_count)),
+      : base_t(handle.team_member, static_cast<index_type>(work_count)),
         m_handle(handle) {}
 
   KOKKOS_INLINE_FUNCTION Handle const& space() const { return m_handle; }
