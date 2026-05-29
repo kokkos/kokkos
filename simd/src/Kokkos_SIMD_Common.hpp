@@ -10,7 +10,9 @@ import kokkos.core;
 import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
+#include <impl/Kokkos_Utilities.hpp>
 #endif
+
 #include <impl/Kokkos_SIMD_Impl_Macros.hpp>
 #include <impl/Kokkos_SIMD_RangesCtorSupport.hpp>
 #include <cstdint>
@@ -18,6 +20,19 @@ import kokkos.core_impl;
 #include <functional>
 #include <utility>
 #include <type_traits>
+
+#if (defined(__GNUC__) && __GNUC__ >= 13) || \
+    (defined(__clang__) && __clang_major__ >= 16)
+#define KOKKOS_IMPL_FRIEND_BASE_ACCESS_RESTRICTION
+#endif
+
+// FIXME Temporary flag to identify which simd types have not yet been modified
+// to be device constructible. To be removed when the rest of simd types are
+// device constructible
+#if defined(KOKKOS_ARCH_AVX512XEON) || defined(KOKKOS_ARCH_ARM_SVE) || \
+    defined(KOKKOS_ARCH_ARM_NEON)
+#define KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+#endif
 
 namespace Kokkos {
 
@@ -145,157 +160,265 @@ concept SimdIntegral = SimdVecType<V> && std::integral<typename V::value_type>;
 // operator@=(basic_simd<T, Abi>&, U&&)
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator+(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] + rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) +
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator+(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator+(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs + rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) +
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator+=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator+=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs + std::forward<U>(rhs);
   return lhs;
 }
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator-(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] - rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) -
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator-(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator-(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs - rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) -
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator-=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator-=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs - std::forward<U>(rhs);
   return lhs;
 }
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator*(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] * rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) *
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator*(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator*(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs * rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) *
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator*=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator*=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs * std::forward<U>(rhs);
   return lhs;
 }
 
 template <std::integral T, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
-    Experimental::basic_simd<T, Abi> const& lhs,
-    Experimental::basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator/(Experimental::basic_simd<T, Abi> const& lhs,
+              Experimental::basic_simd<T, Abi> const& rhs) {
   return Experimental::basic_simd<T, Abi>(
       [&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
 }
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator/(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] / rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) /
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, Impl::Arithmetic U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION auto operator/(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    auto
+    operator/(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs / rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) /
          Experimental::basic_simd<result_member, Abi>(rhs);
 }
 
 template <class T, class U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator/=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator/=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs / std::forward<U>(rhs);
   return lhs;
 }
 
 template <class T, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask<T, Abi>& operator&=(
-    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd_mask<T, Abi>&
+    operator&=(basic_simd_mask<T, Abi>& lhs,
+               basic_simd_mask<T, Abi> const& rhs) {
   lhs = lhs & rhs;
   return lhs;
 }
 
 template <class T, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask<T, Abi>& operator|=(
-    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd_mask<T, Abi>&
+    operator|=(basic_simd_mask<T, Abi>& lhs,
+               basic_simd_mask<T, Abi> const& rhs) {
   lhs = lhs | rhs;
   return lhs;
 }
 
 template <class T, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd_mask<T, Abi>& operator^=(
-    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd_mask<T, Abi>&
+    operator^=(basic_simd_mask<T, Abi>& lhs,
+               basic_simd_mask<T, Abi> const& rhs) {
   lhs = lhs ^ rhs;
   return lhs;
 }
 
 template <class T, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator&=(
-    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator&=(basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
   lhs = lhs & rhs;
   return lhs;
 }
 
 template <class T, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator|=(
-    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator|=(basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
   lhs = lhs | rhs;
   return lhs;
 }
 
 template <class T, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator^=(
-    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator^=(basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
   lhs = lhs ^ rhs;
   return lhs;
 }
 
 template <class T, class U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator>>=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator>>=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs >> std::forward<U>(rhs);
   return lhs;
 }
 
 template <class T, class U, Impl::NonScalarAbi Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION basic_simd<T, Abi>& operator<<=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    basic_simd<T, Abi>&
+    operator<<=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs << std::forward<U>(rhs);
   return lhs;
 }
@@ -312,8 +435,13 @@ KOKKOS_FORCEINLINE_FUNCTION bool none_of(bool a) { return !a; }
 // fallback implementations of reductions across basic_simd_mask:
 
 template <class T, class Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
-    basic_simd_mask<T, Abi> const& a) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    bool
+    all_of(basic_simd_mask<T, Abi> const& a) {
   for (Impl::simd_size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
     if (!a[i]) return false;
   }
@@ -321,8 +449,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool all_of(
 }
 
 template <class T, class Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
-    basic_simd_mask<T, Abi> const& a) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    bool
+    any_of(basic_simd_mask<T, Abi> const& a) {
   for (Impl::simd_size_t i = 0; i < basic_simd_mask<T, Abi>::size(); ++i) {
     if (a[i]) return true;
   }
@@ -330,8 +463,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool any_of(
 }
 
 template <class T, class Abi>
-KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION bool none_of(
-    basic_simd_mask<T, Abi> const& a) {
+#ifdef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
+KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
+#else
+KOKKOS_INLINE_FUNCTION
+#endif
+    bool
+    none_of(basic_simd_mask<T, Abi> const& a) {
   return !any_of(a);
 }
 
