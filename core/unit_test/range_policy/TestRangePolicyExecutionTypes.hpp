@@ -21,6 +21,8 @@ KOKKOS_INLINE_FUNCTION int check_runtime_inputs(
   return nerrs;
 }
 
+using team_t = typename Kokkos::TeamPolicy<>::member_type;
+
 void check_runtime_values() {
   using IndexType = typename Kokkos::DefaultExecutionSpace::size_type;
 
@@ -35,7 +37,6 @@ void check_runtime_values() {
   ASSERT_EQ(nerrs_exec_space, 0);
 
   int nerrs_team_handle;
-  using team_t = typename Kokkos::TeamPolicy<>::member_type;
   Kokkos::parallel_reduce(
       "check_runtime", Kokkos::TeamPolicy(1, Kokkos::AUTO()),
       KOKKOS_LAMBDA(const team_t& team, int& nerrs) {
@@ -65,6 +66,75 @@ KOKKOS_INLINE_FUNCTION void sum_views(const Exec& exec, const X& x,
   auto policy = Kokkos::RangePolicy(exec, 0, x.extent(0));
   Kokkos::parallel_for(
       policy, KOKKOS_LAMBDA(const int& i) { x(i) += y(i); });
+}
+
+void init_self_similar_sum_views(const size_t N, const size_t num_teams,
+                                 Kokkos::View<float*>& v_x,
+                                 Kokkos::View<float*>& v_y,
+                                 Kokkos::View<float**>& M_x,
+                                 Kokkos::View<float**>& M_add2,
+                                 Kokkos::View<float**>& M_add4) {
+  Kokkos::parallel_for(
+      "init_v", Kokkos::RangePolicy<>(0, N), KOKKOS_LAMBDA(const size_t i) {
+        v_x(i) = 0.f;
+        v_y(i) = 1.f;
+      });
+  Kokkos::parallel_for(
+      "init_M", Kokkos::RangePolicy<>(0, num_teams),
+      KOKKOS_LAMBDA(const size_t i) {
+        for (size_t j = 0; j < N; j++) {
+          M_x(i, j)    = 0.f;
+          M_add2(i, j) = 2.f;
+          M_add4(i, j) = 4.f;
+        }
+      });
+}
+
+void verify_v_x_sum(const Kokkos::View<float*>& v_x, const size_t N,
+                    const char* label) {
+  size_t result = 0;
+  Kokkos::parallel_reduce(
+      label, N,
+      KOKKOS_LAMBDA(size_t i, size_t & s) { s += static_cast<size_t>(v_x(i)); },
+      result);
+  ASSERT_EQ(result, N);
+}
+
+void verify_M_x_sum(const Kokkos::View<float**>& M_x, const size_t N,
+                    const size_t num_teams, const size_t per_element,
+                    const char* label) {
+  size_t result = 0;
+  Kokkos::parallel_reduce(
+      label, Kokkos::RangePolicy<>(0, num_teams * N),
+      KOKKOS_LAMBDA(size_t i, size_t & s) {
+        const int row = i / N;
+        const int col = i % N;
+        s += static_cast<size_t>(M_x(row, col));
+      },
+      result);
+  ASSERT_EQ(result, num_teams * N * per_element);
+}
+
+template <class InnerWork>
+void run_self_similar_sum_views_nested(
+    const size_t N, const size_t num_teams, Kokkos::View<float*>& v_x,
+    Kokkos::View<float*>& v_y, Kokkos::View<float**>& M_x,
+    Kokkos::View<float**>& M_add2, Kokkos::View<float**>& M_add4,
+    const char* label, InnerWork inner_work) {
+  sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
+
+  Kokkos::parallel_for(
+      label, Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
+      KOKKOS_LAMBDA(const team_t& team) {
+        auto row_x = Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL());
+        auto row_add2 =
+            Kokkos::subview(M_add2, team.league_rank(), Kokkos::ALL());
+        sum_views(team, row_x, row_add2);
+
+        auto row_add4 =
+            Kokkos::subview(M_add4, team.league_rank(), Kokkos::ALL());
+        inner_work(team, row_x, row_add4);
+      });
 }
 
 // Two-level self-similar pattern: the same sum_views template is used at each
@@ -107,7 +177,6 @@ void self_similar_range_policy_sum_views_case1() {
   sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
 
   // Call sum_views(TeamHandle)
-  using team_t = typename Kokkos::TeamPolicy<>::member_type;
   Kokkos::parallel_for(
       "apxyFromTeam", Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
       KOKKOS_LAMBDA(const team_t& team) {
@@ -180,41 +249,15 @@ void self_similar_range_policy_sum_views_case2() {
   Kokkos::View<float**> M_x("M_x", num_teams, N),
       M_add2("M_add2", num_teams, N), M_add4("M_add4", num_teams, N);
 
-  Kokkos::parallel_for(
-      "init_v", Kokkos::RangePolicy<>(0, N), KOKKOS_LAMBDA(const size_t i) {
-        v_x(i) = 0.f;
-        v_y(i) = 1.f;
-      });
-  Kokkos::parallel_for(
-      "init_M", Kokkos::RangePolicy<>(0, num_teams),
-      KOKKOS_LAMBDA(const size_t i) {
-        for (size_t j = 0; j < N; j++) {
-          M_x(i, j)    = 0.f;
-          M_add2(i, j) = 2.f;
-          M_add4(i, j) = 4.f;
-        }
-      });
+  init_self_similar_sum_views(N, num_teams, v_x, v_y, M_x, M_add2, M_add4);
 
-  // lvl1: sum_views with ExecutionSpace -> RangePolicy<ExecSpace>
-  sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
-
-  // lvl2: sum_views with TeamHandle -> RangePolicy<TeamHandle>
-  // (TeamVectorRange)
-  using team_t        = typename Kokkos::TeamPolicy<>::member_type;
   using thread_handle = team_t::thread_handle;
-  Kokkos::parallel_for(
-      "nested_team", Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
-      KOKKOS_LAMBDA(const team_t& team) {
-        auto row_x = Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL());
-        auto row_add2 =
-            Kokkos::subview(M_add2, team.league_rank(), Kokkos::ALL());
-        sum_views(team, row_x, row_add2);
-
+  run_self_similar_sum_views_nested(
+      N, num_teams, v_x, v_y, M_x, M_add2, M_add4, "nested_team",
+      KOKKOS_LAMBDA(const team_t& team, auto row_x, auto row_add4) {
         // lvl3: TeamThreadRange — closure(thread_handle, i) exercises the
         // two-argument team-thread dispatch; sum_views uses RangePolicy(th,
         // ...).
-        auto row_add4 =
-            Kokkos::subview(M_add4, team.league_rank(), Kokkos::ALL());
         Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1),
                              [&](const thread_handle& th, int i) {
                                (void)i;
@@ -222,25 +265,8 @@ void self_similar_range_policy_sum_views_case2() {
                              });
       });
 
-  // Verify: v_x = v_y (each element = 1)
-  size_t result = 0;
-  Kokkos::parallel_reduce(
-      "check_v", N,
-      KOKKOS_LAMBDA(size_t i, size_t & s) { s += static_cast<size_t>(v_x(i)); },
-      result);
-  ASSERT_EQ(result, N);
-
-  // Verify: M_x gets +2 (lvl2) +4 (lvl3) = 6 per element
-  result = 0;
-  Kokkos::parallel_reduce(
-      "check_M", Kokkos::RangePolicy<>(0, num_teams * N),
-      KOKKOS_LAMBDA(size_t i, size_t & s) {
-        int row = i / N;
-        int col = i % N;
-        s += static_cast<size_t>(M_x(row, col));
-      },
-      result);
-  ASSERT_EQ(result, num_teams * N * 6);
+  verify_v_x_sum(v_x, N, "check_v");
+  verify_M_x_sum(M_x, N, num_teams, 6, "check_M");
 }
 
 // Same pattern as self_similar_range_policy_sum_views_case2, but the
@@ -254,57 +280,19 @@ void self_similar_range_policy_sum_views_case3() {
   Kokkos::View<float**> M_x("M_x", num_teams, N),
       M_add2("M_add2", num_teams, N), M_add4("M_add4", num_teams, N);
 
-  Kokkos::parallel_for(
-      "init_v", Kokkos::RangePolicy<>(0, N), KOKKOS_LAMBDA(const size_t i) {
-        v_x(i) = 0.f;
-        v_y(i) = 1.f;
-      });
-  Kokkos::parallel_for(
-      "init_M", Kokkos::RangePolicy<>(0, num_teams),
-      KOKKOS_LAMBDA(const size_t i) {
-        for (size_t j = 0; j < N; j++) {
-          M_x(i, j)    = 0.f;
-          M_add2(i, j) = 2.f;
-          M_add4(i, j) = 4.f;
-        }
-      });
+  init_self_similar_sum_views(N, num_teams, v_x, v_y, M_x, M_add2, M_add4);
 
-  sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
-
-  using team_t = typename Kokkos::TeamPolicy<>::member_type;
-  Kokkos::parallel_for(
-      "nested_team", Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
-      KOKKOS_LAMBDA(const team_t& team) {
-        auto row_x = Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL());
-        auto row_add2 =
-            Kokkos::subview(M_add2, team.league_rank(), Kokkos::ALL());
-        sum_views(team, row_x, row_add2);
-
-        auto row_add4 =
-            Kokkos::subview(M_add4, team.league_rank(), Kokkos::ALL());
+  run_self_similar_sum_views_nested(
+      N, num_teams, v_x, v_y, M_x, M_add2, M_add4, "nested_team",
+      KOKKOS_LAMBDA(const team_t& team, auto row_x, auto row_add4) {
         Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](int i) {
           (void)i;
           sum_views(Kokkos::ThreadHandle<team_t>(team), row_x, row_add4);
         });
       });
 
-  size_t result = 0;
-  Kokkos::parallel_reduce(
-      "check_v", N,
-      KOKKOS_LAMBDA(size_t i, size_t & s) { s += static_cast<size_t>(v_x(i)); },
-      result);
-  ASSERT_EQ(result, N);
-
-  result = 0;
-  Kokkos::parallel_reduce(
-      "check_M", Kokkos::RangePolicy<>(0, num_teams * N),
-      KOKKOS_LAMBDA(size_t i, size_t & s) {
-        int row = i / N;
-        int col = i % N;
-        s += static_cast<size_t>(M_x(row, col));
-      },
-      result);
-  ASSERT_EQ(result, num_teams * N * 6);
+  verify_v_x_sum(v_x, N, "check_v");
+  verify_M_x_sum(M_x, N, num_teams, 6, "check_M");
 }
 
 void self_similar_range_policy_sum_views_case4() {
@@ -322,7 +310,6 @@ void self_similar_range_policy_sum_views_case4() {
         }
       });
 
-  using team_t = typename Kokkos::TeamPolicy<>::member_type;
   Kokkos::parallel_for(
       "team_then_thread_handle", Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
       KOKKOS_LAMBDA(const team_t& team) {
@@ -334,16 +321,7 @@ void self_similar_range_policy_sum_views_case4() {
         });
       });
 
-  size_t result = 0;
-  Kokkos::parallel_reduce(
-      "check_M_thread_handle", Kokkos::RangePolicy<>(0, num_teams * N),
-      KOKKOS_LAMBDA(size_t i, size_t & s) {
-        int row = i / N;
-        int col = i % N;
-        s += static_cast<size_t>(M_x(row, col));
-      },
-      result);
-  ASSERT_EQ(result, num_teams * N * 4);
+  verify_M_x_sum(M_x, N, num_teams, 4, "check_M_thread_handle");
 }
 
 // Like self_similar_range_policy_sum_views_case2, but the inner
@@ -357,57 +335,19 @@ void self_similar_range_policy_sum_views_case5() {
   Kokkos::View<float**> M_x("M_x", num_teams, N),
       M_add2("M_add2", num_teams, N), M_add4("M_add4", num_teams, N);
 
-  Kokkos::parallel_for(
-      "init_v", Kokkos::RangePolicy<>(0, N), KOKKOS_LAMBDA(const size_t i) {
-        v_x(i) = 0.f;
-        v_y(i) = 1.f;
-      });
-  Kokkos::parallel_for(
-      "init_M", Kokkos::RangePolicy<>(0, num_teams),
-      KOKKOS_LAMBDA(const size_t i) {
-        for (size_t j = 0; j < N; j++) {
-          M_x(i, j)    = 0.f;
-          M_add2(i, j) = 2.f;
-          M_add4(i, j) = 4.f;
-        }
-      });
+  init_self_similar_sum_views(N, num_teams, v_x, v_y, M_x, M_add2, M_add4);
 
-  sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
-
-  using team_t        = typename Kokkos::TeamPolicy<>::member_type;
   using thread_handle = team_t::thread_handle;
-  Kokkos::parallel_for(
-      "nested_team_th_only", Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
-      KOKKOS_LAMBDA(const team_t& team) {
-        auto row_x = Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL());
-        auto row_add2 =
-            Kokkos::subview(M_add2, team.league_rank(), Kokkos::ALL());
-        sum_views(team, row_x, row_add2);
-
-        auto row_add4 =
-            Kokkos::subview(M_add4, team.league_rank(), Kokkos::ALL());
+  run_self_similar_sum_views_nested(
+      N, num_teams, v_x, v_y, M_x, M_add2, M_add4, "nested_team_th_only",
+      KOKKOS_LAMBDA(const team_t& team, auto row_x, auto row_add4) {
         Kokkos::parallel_for(
             Kokkos::TeamThreadRange(team, 1),
             [&](const thread_handle& th) { sum_views(th, row_x, row_add4); });
       });
 
-  size_t result = 0;
-  Kokkos::parallel_reduce(
-      "check_v_th_only", N,
-      KOKKOS_LAMBDA(size_t i, size_t & s) { s += static_cast<size_t>(v_x(i)); },
-      result);
-  ASSERT_EQ(result, N);
-
-  result = 0;
-  Kokkos::parallel_reduce(
-      "check_M_th_only", Kokkos::RangePolicy<>(0, num_teams * N),
-      KOKKOS_LAMBDA(size_t i, size_t & s) {
-        int row = i / N;
-        int col = i % N;
-        s += static_cast<size_t>(M_x(row, col));
-      },
-      result);
-  ASSERT_EQ(result, num_teams * N * 6);
+  verify_v_x_sum(v_x, N, "check_v_th_only");
+  verify_M_x_sum(M_x, N, num_teams, 6, "check_M_th_only");
 }
 
 // RangePolicy(team, ...) maps to TeamVectorRange. So no further concurrency is
@@ -425,7 +365,6 @@ void self_similar_range_policy_sum_views_case6() {
       "count_i");
   Kokkos::deep_copy(count_i, 0);
 
-  using team_t        = typename Kokkos::TeamPolicy<>::member_type;
   using thread_handle = team_t::thread_handle;
 
   struct Closure {
@@ -465,63 +404,24 @@ void self_similar_range_policy_sum_views_case8() {
   Kokkos::View<float**> M_x("M_x", num_teams, N),
       M_add2("M_add2", num_teams, N), M_add4("M_add4", num_teams, N);
 
-  Kokkos::parallel_for(
-      "init_v", Kokkos::RangePolicy<>(0, N), KOKKOS_LAMBDA(const size_t i) {
-        v_x(i) = 0.f;
-        v_y(i) = 1.f;
-      });
-  Kokkos::parallel_for(
-      "init_M", Kokkos::RangePolicy<>(0, num_teams),
-      KOKKOS_LAMBDA(const size_t i) {
-        for (size_t j = 0; j < N; j++) {
-          M_x(i, j)    = 0.f;
-          M_add2(i, j) = 2.f;
-          M_add4(i, j) = 4.f;
-        }
-      });
+  init_self_similar_sum_views(N, num_teams, v_x, v_y, M_x, M_add2, M_add4);
 
-  sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
-
-  using team_t        = typename Kokkos::TeamPolicy<>::member_type;
   using thread_handle = team_t::thread_handle;
-  Kokkos::parallel_for(
+  run_self_similar_sum_views_nested(
+      N, num_teams, v_x, v_y, M_x, M_add2, M_add4,
       "nested_range_policy_thread_handle",
-      Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
-      KOKKOS_LAMBDA(const team_t& team) {
-        auto row_x = Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL());
-        auto row_add2 =
-            Kokkos::subview(M_add2, team.league_rank(), Kokkos::ALL());
-        sum_views(team, row_x, row_add2);
-
-        auto row_add4 =
-            Kokkos::subview(M_add4, team.league_rank(), Kokkos::ALL());
+      KOKKOS_LAMBDA(const team_t& team, auto row_x, auto row_add4) {
         Kokkos::parallel_for(
             Kokkos::RangePolicy(team, 0, 1),
             [&](const thread_handle& th) { sum_views(th, row_x, row_add4); });
       });
 
-  size_t result = 0;
-  Kokkos::parallel_reduce(
-      "check_v_case8", N,
-      KOKKOS_LAMBDA(size_t i, size_t & s) { s += static_cast<size_t>(v_x(i)); },
-      result);
-  ASSERT_EQ(result, N);
-
-  result = 0;
-  Kokkos::parallel_reduce(
-      "check_M_case8", Kokkos::RangePolicy<>(0, num_teams * N),
-      KOKKOS_LAMBDA(size_t i, size_t & s) {
-        int row = i / N;
-        int col = i % N;
-        s += static_cast<size_t>(M_x(row, col));
-      },
-      result);
-  ASSERT_EQ(result, num_teams * N * 6);
+  verify_v_x_sum(v_x, N, "check_v_case8");
+  verify_M_x_sum(M_x, N, num_teams, 6, "check_M_case8");
 }
 
 void self_similar_range_policy_case7() {
-  using team_t = typename Kokkos::TeamPolicy<>::member_type;
-  int nerrs    = 0;
+  int nerrs = 0;
   Kokkos::parallel_reduce(
       "check_concurrency", Kokkos::TeamPolicy(1, Kokkos::AUTO()),
       KOKKOS_LAMBDA(const team_t& team, int& errs) {
