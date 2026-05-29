@@ -225,7 +225,7 @@ bool need_grid_stride_loop(const Kokkos::Array<array_type, 3>& max_grid_size,
 // 3. Bounds check against m_upper to filter out-of-bounds iterations.
 //
 template <int Rank, typename array_index_type, typename index_type,
-          Kokkos::Iterate Layout, bool grid_stride, typename Functor,
+          Kokkos::Iterate IterateDir, bool grid_stride, typename Functor,
           typename Tag>
 struct DeviceIterate {
   using array_type = Kokkos::Array<array_index_type, Rank>;
@@ -386,46 +386,47 @@ struct DeviceIterate {
     }
   }
 
-  // Packed: returns flat hardware thread index (unpacking happens in iterate())
-  // Unpacked: hardware thread index (blockIdx * blockDim + threadIdx)
-  template <unsigned R>
+  // \brief Returns the global thread index for dimension RIdx
+  // Packed: returns flat hardware thread ID (unpacking happens in iterate())
+  // Unpacked: returns global thread index (blockIdx * blockDim + threadIdx)
+  // \tparam RIdx rank index
+  // \return global thread index
+  template <unsigned RIdx>
   KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
   my_thIdx() const noexcept {
-    static_assert(R < 6);
-    if constexpr (is_packed_index<R>()) {
-      if constexpr (R == 0 || R == 1) {
+    static_assert(RIdx < 6);
+    if constexpr (Rank < 4) {
+      // No packed index
+      if constexpr (RIdx == 0) {
         return blockIdx.x * blockDim.x + threadIdx.x;
-      } else if constexpr (R == 2 || R == 3) {
+      } else if constexpr (RIdx == 1) {
         return blockIdx.y * blockDim.y + threadIdx.y;
-      } else if constexpr (R == 4 || R == 5) {
+      } else if constexpr (RIdx == 2) {
         return blockIdx.z * blockDim.z + threadIdx.z;
       }
-    } else {
-      // No packed index
-      if constexpr (Rank < 4) {
-        if constexpr (R == 0) {
+    } else {  // Ranks 4, 5, 6
+      if constexpr (is_packed_index<RIdx>()) {
+        if constexpr (RIdx == 0 || RIdx == 1) {
           return blockIdx.x * blockDim.x + threadIdx.x;
-        } else if constexpr (R == 1) {
+        } else if constexpr (RIdx == 2 || RIdx == 3) {
           return blockIdx.y * blockDim.y + threadIdx.y;
-        } else if constexpr (R == 2) {
+        } else if constexpr (RIdx == 4 || RIdx == 5) {
           return blockIdx.z * blockDim.z + threadIdx.z;
         }
-      } else {
-        // Mix of packed and unpacked for Rank 4 and 5
-        if constexpr (R == 2) {
+      } else {  // Unpacked indices of Ranks 4 and 5
+        if constexpr (RIdx == 2) {
           return blockIdx.y * blockDim.y + threadIdx.y;
-        } else if constexpr (R == 3 || R == 4) {
+        } else if constexpr (RIdx == 3 || RIdx == 4) {
           return blockIdx.z * blockDim.z + threadIdx.z;
         }
       }
     }
-    return index_type{0};
   }
 
   template <size_t... R, typename... Idxs>
   KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE bool check_bounds(
       std::index_sequence<R...>, Idxs... idxs) const {
-    if constexpr (Layout == Iterate::Left) {
+    if constexpr (IterateDir == Iterate::Left) {
       return ((idxs < static_cast<index_type>(m_upper[R])) && ...);
     } else {
       return ((idxs < static_cast<index_type>(m_upper[Rank - 1 - R])) && ...);
@@ -471,7 +472,7 @@ struct DeviceIterate {
         const index_type id_2 = idx / m_extent[rankIdx1] + m_lower[rankIdx2];
 
         if (id_1 < m_upper[rankIdx1] && id_2 < m_upper[rankIdx2]) {
-          if constexpr (Layout == Iterate::Left) {
+          if constexpr (IterateDir == Iterate::Left) {
             iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2,
                     idxs...);
           } else {
@@ -480,7 +481,7 @@ struct DeviceIterate {
           }
         }
       } else {
-        if constexpr (Layout == Iterate::Left) {
+        if constexpr (IterateDir == Iterate::Left) {
           iterate(std::integral_constant<unsigned, R - 1>(), idx, idxs...);
         } else {
           iterate(std::integral_constant<unsigned, R - 1>(), idxs..., idx);
@@ -510,14 +511,14 @@ struct DeviceIterate {
       const index_type id_1 = thIdx % m_extent[rankIdx1] + m_lower[rankIdx1];
       const index_type id_2 = thIdx / m_extent[rankIdx1] + m_lower[rankIdx2];
 
-      if constexpr (Layout == Iterate::Left) {
+      if constexpr (IterateDir == Iterate::Left) {
         iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2, idxs...);
       } else {
         iterate(std::integral_constant<unsigned, R - 2>(), idxs..., id_2, id_1);
       }
     } else {
       const index_type idx = thIdx + m_lower[rankIdx];
-      if constexpr (Layout == Iterate::Left) {
+      if constexpr (IterateDir == Iterate::Left) {
         iterate(std::integral_constant<unsigned, R - 1>(), idx, idxs...);
       } else {
         iterate(std::integral_constant<unsigned, R - 1>(), idxs..., idx);

@@ -5,6 +5,7 @@
 #define KOKKOS_CUDA_PARALLEL_MD_RANGE_HPP
 
 #include <Kokkos_Macros.hpp>
+#if defined(KOKKOS_ENABLE_CUDA)
 
 #include <algorithm>
 
@@ -479,5 +480,6 @@ class ParallelReduce<CombinedFunctorReducerType,
 };
 
 }  // namespace Kokkos::Impl
+#endif
 
 #endif  // KOKKOS_CUDA_PARALLEL_MD_RANGE_HPP
