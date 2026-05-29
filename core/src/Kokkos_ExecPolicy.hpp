@@ -1028,7 +1028,7 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
                                          ArrayLayout>::outer_iteration_pattern
                                    : iter;
 
-  // Constructor for range {[0, arg1), [1, arg2), ...}
+  // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
   KOKKOS_FUNCTION TeamThreadMDRange(TeamHandleType const& team_, Args&&... args)
       : team(team_), upper{static_cast<IndexType>(args)...} {
@@ -1079,7 +1079,7 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
                                          ArrayLayout>::outer_iteration_pattern
                                    : iter;
 
-  // Constructor for range {[0, arg1), [1, arg2), ...}
+  // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
   KOKKOS_INLINE_FUNCTION ThreadVectorMDRange(TeamHandleType const& team_,
                                              Args&&... args)
@@ -1130,7 +1130,7 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
                                      ArrayLayout>::outer_iteration_pattern
                                : iter;
 
-  // Constructor for range {[0, arg1), [1, arg2), ...}
+  // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
   KOKKOS_INLINE_FUNCTION TeamVectorMDRange(TeamHandleType const& team_,
                                            Args&&... args)
