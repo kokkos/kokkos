@@ -488,14 +488,15 @@ class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
 #endif
   }
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType = {}) noexcept {
+      value_type const* ptr, simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(svptrue_b64(), ptr);
   }
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
+      const value_type* ptr, mask_type const& mask,
+      simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(static_cast<vls_bool_t>(mask), ptr);
   }
 
@@ -928,14 +929,15 @@ class basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
 #endif
   }
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType = {}) noexcept {
+      value_type const* ptr, simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(svptrue_b32(), ptr);
   }
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
+      const value_type* ptr, mask_type const& mask,
+      simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(static_cast<vls_bool_t>(mask), ptr);
   }
 
@@ -1361,14 +1363,15 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
 #endif
   }
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType = {}) noexcept {
+      value_type const* ptr, simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(svptrue_b32(), ptr);
   }
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
+      const value_type* ptr, mask_type const& mask,
+      simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(static_cast<vls_bool_t>(mask), ptr);
   }
 
@@ -1858,14 +1861,15 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
 #endif
   }
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType = {}) noexcept {
+      value_type const* ptr, simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(svptrue_b32(), ptr);
   }
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
+      const value_type* ptr, mask_type const& mask,
+      simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(static_cast<vls_bool_t>(mask), ptr);
   }
 
@@ -2317,14 +2321,15 @@ class basic_simd<std::int64_t,
 #endif
   }
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType = {}) noexcept {
+      value_type const* ptr, simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(svptrue_b64(), ptr);
   }
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
+      const value_type* ptr, mask_type const& mask,
+      simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(static_cast<vls_bool_t>(mask), ptr);
   }
 
@@ -2799,14 +2804,15 @@ class basic_simd<std::uint64_t,
 #endif
   }
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType = {}) noexcept {
+      value_type const* ptr, simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(svptrue_b64(), ptr);
   }
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept {
+      const value_type* ptr, mask_type const& mask,
+      simd_flags<Flags...> = {}) noexcept {
     m_value = svld1(static_cast<vls_bool_t>(mask), ptr);
   }
 
@@ -3251,14 +3257,15 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
       G&& gen) noexcept
       : base_type(gen) {}
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, FlagType = {}) noexcept
+      value_type const* ptr, simd_flags<Flags...> = {}) noexcept
       : base_type(ptr, FlagType{}) {}
 
-  template <typename FlagType = simd_flags<>>
+  template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType = {}) noexcept
+      const value_type* ptr, mask_type const& mask,
+      simd_flags<Flags...> = {}) noexcept
       : base_type(ptr, mask, FlagType{}) {}
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
