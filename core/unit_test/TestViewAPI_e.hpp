@@ -216,13 +216,20 @@ void test_view_extent_precondition_violation(V v) {
   if constexpr (V::rank() > 0) {
     for (size_t r = 0; r < V::rank(); ++r) {
       (void)v.extent(r);
+      (void)v.extent_int(r);
     }
   }
-  std::string const poor_msg =
-      "static_cast<int>\\(r\\) < static_cast<int>\\(rank\\(\\)\\)";
 
   for (size_t r = V::rank(); r < 8; ++r) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    ASSERT_EQ(v.extent(r), 1u);
+    ASSERT_EQ(v.extent_int(r), 1);
+#else
+    std::string const poor_msg =
+        "static_cast<int>\\(r\\) < static_cast<int>\\(rank\\(\\)\\)";
     ASSERT_DEATH({ (void)v.extent(r); }, poor_msg);
+    ASSERT_DEATH({ (void)v.extent_int(r); }, poor_msg);
+#endif
   }
 }
 
@@ -237,10 +244,6 @@ TEST(TEST_CATEGORY_DEATH, view_extent_precondition_violation) {
     }
   }
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-  GTEST_SKIP() << "Using deprecated view extent handling.";
-#endif
-
 #ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   GTEST_SKIP() << "Using the legacy view implementation.";
 #endif
@@ -252,53 +255,6 @@ TEST(TEST_CATEGORY_DEATH, view_extent_precondition_violation) {
   test_view_extent_precondition_violation(
       Kokkos::View<int***, TEST_EXECSPACE>("v3", 3, 7, 13));
   test_view_extent_precondition_violation(
-      Kokkos::View<int********, TEST_EXECSPACE>("v8", 1, 2, 3, 4, 5, 6, 7, 8));
-}
-
-template <typename V>
-  requires(Kokkos::is_view_v<V>)
-void test_view_extent_int_precondition_violation(V v) {
-  // workaround "pointless comparison of unsigned integer with zero" warnings
-  // with NVCC
-  if constexpr (V::rank() > 0) {
-    for (size_t r = 0; r < V::rank(); ++r) {
-      (void)v.extent_int(r);
-    }
-  }
-  std::string const poor_msg =
-      "static_cast<int>\\(r\\) < static_cast<int>\\(rank\\(\\)\\)";
-
-  for (size_t r = V::rank(); r < 8; ++r) {
-    ASSERT_DEATH({ (void)v.extent_int(r); }, poor_msg);
-  }
-}
-
-TEST(TEST_CATEGORY_DEATH, view_extent_int_precondition_violation) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  {
-    bool checked_assertions = false;
-    // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
-    KOKKOS_ASSERT(checked_assertions = true);
-    if (!checked_assertions) {
-      GTEST_SKIP() << "Preconditions are not checked.";
-    }
-  }
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-  GTEST_SKIP() << "Using deprecated view extent handling.";
-#endif
-
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  GTEST_SKIP() << "Using the legacy view implementation.";
-#endif
-
-  test_view_extent_int_precondition_violation(
-      Kokkos::View<double, TEST_EXECSPACE>("v0"));
-  test_view_extent_int_precondition_violation(
-      Kokkos::View<float*, TEST_EXECSPACE>("v1", 5));
-  test_view_extent_int_precondition_violation(
-      Kokkos::View<int***, TEST_EXECSPACE>("v3", 3, 7, 13));
-  test_view_extent_int_precondition_violation(
       Kokkos::View<int********, TEST_EXECSPACE>("v8", 1, 2, 3, 4, 5, 6, 7, 8));
 }
 
