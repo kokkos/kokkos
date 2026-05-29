@@ -55,21 +55,16 @@ struct TestTeamMDParallelFor {
   static void check_result_4D(HostViewType h_view, FillFunctor& fillFunctor,
                               // For 4D, tests may not start at index 0
                               std::array<int, 4> const& lower = {0, 0, 0, 0}) {
-    for (auto i = lower[0]; i < h_view.extent_int(0); ++i) {
-      for (auto j = lower[1]; j < h_view.extent_int(1); ++j) {
-        for (auto k = lower[2]; k < h_view.extent_int(2); ++k) {
-          for (auto l = lower[3]; l < h_view.extent_int(3); ++l) {
-            EXPECT_EQ(h_view(i, j, k, l), fillFunctor(i, j, k, l));
-          }
-        }
-      }
-    }
-    for (auto i = 0; i < lower[0]; ++i) {
-      for (auto j = 0; j < lower[1]; ++j) {
-        for (auto k = 0; k < lower[2]; ++k) {
-          for (auto l = 0; l < lower[3]; ++l) {
-            EXPECT_EQ(h_view(i, j, k, l),
-                      typename decltype(h_view)::value_type());
+    for (auto i = 0; i < h_view.extent_int(0); ++i) {
+      for (auto j = 0; j < h_view.extent_int(1); ++j) {
+        for (auto k = 0; k < h_view.extent_int(2); ++k) {
+          for (auto l = 0; l < h_view.extent_int(3); ++l) {
+            if (i < lower[0] || j < lower[1] || k < lower[2] || l < lower[3]) {
+              EXPECT_EQ(h_view(i, j, k, l),
+                        typename decltype(h_view)::value_type());
+            } else {
+              EXPECT_EQ(h_view(i, j, k, l), fillFunctor(i, j, k, l));
+            }
           }
         }
       }
@@ -1140,8 +1135,9 @@ struct TestTeamThreadMDRangeParallelReduce : public TestTeamMDParallelReduce {
     EXPECT_EQ(finalSum, expectedSum);
   }
 
-  // MDRangePolicy only allows up to rank of 6. Because of this, expectedSum
-  // array had to be constructed from a nested parallel_for loop.
+  // MDRangePolicy only allows up to rank of 6. Because of this,
+  // expectedSum array had to be constructed from a nested parallel_for
+  // loop.
   template <Kokkos::Iterate Direction = Kokkos::Iterate::Default>
   static void test_parallel_reduce_for_7D_TeamThreadMDRange(
       DimsType const& dims) {
@@ -1861,7 +1857,8 @@ constexpr auto Left  = Kokkos::Iterate::Left;
 constexpr auto Right = Kokkos::Iterate::Right;
 
 // Using prime numbers makes debugging easier
-// small dimensions were needed for larger dimensions to reduce test run time
+// small dimensions were needed for larger dimensions to reduce test run
+// time
 int dims[]      = {3, 5, 7, 11, 13, 17, 19, 23};
 int smallDims[] = {2, 3, 2, 3, 5, 2, 3, 5};
 
