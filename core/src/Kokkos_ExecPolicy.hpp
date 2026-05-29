@@ -1030,10 +1030,10 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
 
   // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
+    requires(sizeof...(Args) == total_nest_level &&
+             (std::convertible_to<Args, IndexType> && ...))
   KOKKOS_FUNCTION TeamThreadMDRange(TeamHandleType const& team_, Args&&... args)
-      : team(team_), upper{static_cast<IndexType>(args)...} {
-    static_assert(sizeof...(Args) == total_nest_level);
-  }
+      : team(team_), upper{static_cast<IndexType>(args)...} {}
 
   // Constructor range between lower and upper bounds
   KOKKOS_INLINE_FUNCTION TeamThreadMDRange(TeamHandleType const& team_,
@@ -1081,11 +1081,11 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
 
   // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
+    requires(sizeof...(Args) == total_nest_level &&
+             (std::convertible_to<Args, IndexType> && ...))
   KOKKOS_INLINE_FUNCTION ThreadVectorMDRange(TeamHandleType const& team_,
                                              Args&&... args)
-      : team(team_), upper{static_cast<IndexType>(args)...} {
-    static_assert(sizeof...(Args) == total_nest_level);
-  }
+      : team(team_), upper{static_cast<IndexType>(args)...} {}
 
   // Constructor range between lower and upper bounds
   KOKKOS_INLINE_FUNCTION ThreadVectorMDRange(TeamHandleType const& team_,
@@ -1132,11 +1132,11 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, iType> {
 
   // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
+    requires(sizeof...(Args) == total_nest_level &&
+             (std::convertible_to<Args, IndexType> && ...))
   KOKKOS_INLINE_FUNCTION TeamVectorMDRange(TeamHandleType const& team_,
                                            Args&&... args)
-      : team(team_), upper{static_cast<IndexType>(args)...} {
-    static_assert(sizeof...(Args) == total_nest_level);
-  }
+      : team(team_), upper{static_cast<IndexType>(args)...} {}
 
   // Constructor range between lower and upper bounds
   KOKKOS_INLINE_FUNCTION TeamVectorMDRange(TeamHandleType const& team_,
