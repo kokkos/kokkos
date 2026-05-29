@@ -466,8 +466,7 @@ class View : public Impl::BasicViewFromTraits<DataType, Properties...>::type {
     if constexpr (std::is_same_v<typename base_t::layout_type,
                                  Kokkos::layout_stride>) {
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
-      using idx_type = std::common_type_t<IndexOffset>;
-      if (Kokkos::finite_max_v<idx_type> < m_map.required_span_size())
+      if (Kokkos::finite_max_v<IndexOffset> < m_map.required_span_size())
         Kokkos::abort(
             "Kokkos::View ERROR: index type cannot represent the full index "
             "range of the view");
