@@ -19,7 +19,7 @@ void test_create_mirror_view_and_copy() {
   original_view_type original_view("original_view", N);
   Kokkos::deep_copy(original_view, 1);
   auto original_view_copy = Kokkos::create_mirror_view_and_copy(original_view);
-  using copy_memory_space = decltype(original_view_copy)::memory_space;
+  using copy_memory_space = typename decltype(original_view_copy)::memory_space;
   static_assert(std::is_same_v<
                 decltype(original_view_copy),
                 typename Kokkos::Impl::MirrorViewType<
