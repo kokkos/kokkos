@@ -3259,14 +3259,14 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>
 
   template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      value_type const* ptr, simd_flags<Flags...> = {}) noexcept
-      : base_type(ptr, FlagType{}) {}
+      value_type const* ptr, simd_flags<Flags...> flags = {}) noexcept
+      : base_type(ptr, flags) {}
 
   template <typename... Flags>
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       const value_type* ptr, mask_type const& mask,
-      simd_flags<Flags...> = {}) noexcept
-      : base_type(ptr, mask, FlagType{}) {}
+      simd_flags<Flags...> flags = {}) noexcept
+      : base_type(ptr, mask, flags) {}
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION explicit basic_simd(
       basic_simd<std::uint64_t, abi_type> const& other) noexcept
