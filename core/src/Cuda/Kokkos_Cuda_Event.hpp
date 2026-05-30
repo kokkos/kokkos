@@ -19,31 +19,33 @@ static_assert(false,
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 #include <memory>
+#include <string>
 
 namespace Kokkos {
 namespace Impl {
 
-struct CudaEventResource {
+template <>
+struct EventResource<Kokkos::Cuda> {
+  std::string label   = "unknown";
   cudaEvent_t m_event = nullptr;
   int m_cudaDev       = -1;
 
-  CudaEventResource() : CudaEventResource(Kokkos::Cuda{}) {}
-
-  explicit CudaEventResource(const Kokkos::Cuda& exec_space)
-      : m_cudaDev(exec_space.cuda_device()) {
+  explicit EventResource(const std::string& label,
+                         const Kokkos::Cuda& exec_space)
+      : m_label(label), m_cudaDev(exec_space.cuda_device()) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
   }
 
-  ~CudaEventResource() {
+  ~EventResource() {
     if (m_event != nullptr) {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(m_event));
     }
   }
 
-  CudaEventResource(const CudaEventResource&)            = delete;
-  CudaEventResource& operator=(const CudaEventResource&) = delete;
+  EventResource(const EventResource&)            = delete;
+  EventResource& operator=(const EventResource&) = delete;
 };
 
 }  // namespace Impl
@@ -63,11 +65,13 @@ namespace Experimental {
 template <>
 class Event<Kokkos::Cuda> {
  public:
-  Event() : m_handle(std::make_shared<Kokkos::Impl::CudaEventResource>()) {}
+  Event(const std::string& label)
+      : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
+            label, Kokkos::Cuda())) {}
 
-  Event(const Kokkos::Cuda& exec_space)
-      : m_handle(
-            std::make_shared<Kokkos::Impl::CudaEventResource>(exec_space)) {
+  Event(const std::string& label, const Kokkos::Cuda& exec_space)
+      : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
+            label, exec_space)) {
     record(exec_space);
   }
 
@@ -88,10 +92,11 @@ class Event<Kokkos::Cuda> {
     return false;
   }
 
+  const std::string& label() const { return m_handle->m_label; }
   cudaEvent_t cuda_event() const noexcept { return m_handle->m_event; }
 
  private:
-  std::shared_ptr<Kokkos::Impl::CudaEventResource> m_handle;
+  std::shared_ptr<Kokkos::Impl::EventResource<Kokkos::Cuda>> m_handle;
 };
 
 /// CUDA: insert a stream wait for the recorded event (non-blocking on host).
