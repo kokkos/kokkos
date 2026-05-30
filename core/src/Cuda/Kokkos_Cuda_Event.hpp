@@ -19,19 +19,20 @@ static_assert(false,
 #include <Cuda/Kokkos_Cuda_Error.hpp>
 
 #include <memory>
+#include <string>
 
 namespace Kokkos {
 namespace Impl {
 
 template <>
 struct EventResource<Kokkos::Cuda> {
+  std::string label   = "unknown";
   cudaEvent_t m_event = nullptr;
   int m_cudaDev       = -1;
 
-  EventResource() : EventResource(Kokkos::Cuda{}) {}
-
-  explicit EventResource(const Kokkos::Cuda& exec_space)
-      : m_cudaDev(exec_space.cuda_device()) {
+  explicit EventResource(const std::string& label,
+                         const Kokkos::Cuda& exec_space)
+      : m_label(label), m_cudaDev(exec_space.cuda_device()) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
@@ -64,13 +65,13 @@ namespace Experimental {
 template <>
 class Event<Kokkos::Cuda> {
  public:
-  Event()
-      : m_handle(
-            std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>()) {}
-
-  Event(const Kokkos::Cuda& exec_space)
+  Event(const std::string& label)
       : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
-            exec_space)) {
+            label, Kokkos::Cuda())) {}
+
+  Event(const std::string& label, const Kokkos::Cuda& exec_space)
+      : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
+            label, exec_space)) {
     record(exec_space);
   }
 
@@ -91,6 +92,7 @@ class Event<Kokkos::Cuda> {
     return false;
   }
 
+  const std::string& label() const { return m_handle->m_label; }
   cudaEvent_t cuda_event() const noexcept { return m_handle->m_event; }
 
  private:

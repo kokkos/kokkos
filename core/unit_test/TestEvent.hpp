@@ -61,7 +61,7 @@ TEST(TEST_CATEGORY, event_record_and_wait) {
   Kokkos::parallel_for("fill", Kokkos::RangePolicy(space, 0, N),
                        FillFunctor<view_type>{data});
 
-  Kokkos::Experimental::Event<exec_space> evt;
+  Kokkos::Experimental::Event<exec_space> evt("test_event");
   evt.record(space);
   evt.fence();
 
@@ -76,7 +76,7 @@ TEST(TEST_CATEGORY, event_is_complete) {
 
   exec_space space;
 
-  Kokkos::Experimental::Event<exec_space> evt;
+  Kokkos::Experimental::Event<exec_space> evt("test_event");
   evt.record(space);
   evt.fence();
 
@@ -100,7 +100,7 @@ TEST(TEST_CATEGORY, event_space_depends_on) {
                        Kokkos::RangePolicy<exec_space>(space_a, 0, N),
                        ProduceFunctor<view_type>{data});
 
-  Kokkos::Experimental::Event<exec_space> evt;
+  Kokkos::Experimental::Event<exec_space> evt("test_event");
   evt.record(space_a);
   Kokkos::Experimental::space_depends_on(space_b, evt);
 
@@ -125,7 +125,7 @@ TEST(TEST_CATEGORY, event_move_semantics) {
 
   exec_space space;
 
-  Kokkos::Experimental::Event<exec_space> evt1;
+  Kokkos::Experimental::Event<exec_space> evt1("test_event");
   evt1.record(space);
 
   Kokkos::Experimental::Event<exec_space> evt2(std::move(evt1));
@@ -149,7 +149,7 @@ TEST(TEST_CATEGORY, event_copy_semantics) {
   Kokkos::parallel_for("fill", Kokkos::RangePolicy<exec_space>(space_a, 0, N),
                        FillFunctor<view_type>{data});
 
-  Kokkos::Experimental::Event<exec_space> evt(space_a);
+  Kokkos::Experimental::Event<exec_space> evt("test_event", space_a);
   auto evt_copy = evt;
 
   Kokkos::Experimental::space_depends_on(space_b, evt);
