@@ -957,7 +957,6 @@ class Random_XorShift64 {
     if (urange <= static_cast<uint64_t>(MAX_RAND64))
       return rand64(static_cast<int64_t>(urange)) + start;
     return static_cast<int64_t>(urand64(urange) + static_cast<uint64_t>(start));
-    return rand64(end - staddrt) + start;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -1208,7 +1207,6 @@ class Random_XorShift1024 {
     if (urange <= static_cast<uint32_t>(MAX_RAND))
       return rand(static_cast<int>(urange)) + start;
     return static_cast<int>(urand(urange) + static_cast<uint32_t>(start));
-    return rand(end - start) + start;
   }
 
   KOKKOS_INLINE_FUNCTION
