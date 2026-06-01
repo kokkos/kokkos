@@ -785,7 +785,7 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
 #else
-    auto item          = sycl::ext::oneapi::experimental::this_nd_item<3>();
+    auto item           = sycl::ext::oneapi::experimental::this_nd_item<3>();
 #endif
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
