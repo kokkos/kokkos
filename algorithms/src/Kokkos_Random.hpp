@@ -951,8 +951,6 @@ class Random_XorShift64 {
     // INT64_MAX.
     const uint64_t urange =
         static_cast<uint64_t>(end) - static_cast<uint64_t>(start);
-    if (urange <= static_cast<uint64_t>(MAX_RAND64))
-      return rand64(static_cast<int64_t>(urange)) + start;
     return static_cast<int64_t>(urand64(urange) + static_cast<uint64_t>(start));
   }
 
