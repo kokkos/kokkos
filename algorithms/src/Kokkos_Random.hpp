@@ -1491,8 +1491,6 @@ class Random_SFC64 {
     // Unsigned subtraction avoids signed-overflow UB when end-start > INT_MAX.
     const uint32_t urange =
         static_cast<uint32_t>(end) - static_cast<uint32_t>(start);
-    if (urange <= static_cast<uint32_t>(MAX_RAND))
-      return rand(static_cast<int>(urange)) + start;
     return static_cast<int>(urand(urange) + static_cast<uint32_t>(start));
   }
 
