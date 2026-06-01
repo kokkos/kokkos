@@ -11,12 +11,24 @@ static_assert(false,
 
 #include <cstdio>
 #include <cstddef>
+#include <type_traits>
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
+
+namespace Impl {
+
+// Customization point for backend-specific address-space hints on
+// compile-time-level scratch allocations.
+template <class MemorySpace, int Level>
+struct ScratchPointerAnnotation {
+  KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) { return p; }
+};
+
+}  // namespace Impl
 
 /** \brief  Scratch memory space associated with an execution space.
  *
@@ -68,6 +80,36 @@ class ScratchMemorySpace {
                                                           level);
   }
 
+  // Compile-time-level overloads with tag-dispatch.
+  template <typename IntType, int Level>
+  KOKKOS_INLINE_FUNCTION void* get_shmem(
+      const IntType& size, std::integral_constant<int, Level>) const {
+    return get_shmem_common_annotated</*alignment_requested*/ false, Level>(
+        size, 1);
+  }
+
+  template <typename IntType, int Level>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(
+      const IntType& size, const ptrdiff_t alignment,
+      std::integral_constant<int, Level>) const {
+    return get_shmem_common_annotated</*alignment_requested*/ true, Level>(
+        size, alignment);
+  }
+
+  // Compile-time-level overloads with explicit template parameters.
+  template <int Level, typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem(const IntType& size) const {
+    return get_shmem_common_annotated</*alignment_requested*/ false, Level>(
+        size, 1);
+  }
+
+  template <int Level, typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_aligned(
+      const IntType& size, const ptrdiff_t alignment) const {
+    return get_shmem_common_annotated</*alignment_requested*/ true, Level>(
+        size, alignment);
+  }
+
  private:
   template <bool alignment_requested, typename IntType>
   KOKKOS_INLINE_FUNCTION void* get_shmem_common(
@@ -110,6 +152,16 @@ class ScratchMemorySpace {
       m_iter += increment;
     }
     return tmp;
+  }
+
+  template <bool alignment_requested, int Level, typename IntType>
+  KOKKOS_INLINE_FUNCTION void* get_shmem_common_annotated(
+      const IntType& size, const ptrdiff_t alignment) const {
+    static_assert(Level == 0 || Level == 1,
+                  "ScratchMemorySpace level must be 0 or 1");
+    return Impl::ScratchPointerAnnotation<ScratchMemorySpace<ExecSpace>,
+                                          Level>::annotate(
+        get_shmem_common<alignment_requested>(size, alignment, Level));
   }
 
  public:

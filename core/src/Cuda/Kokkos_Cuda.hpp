@@ -203,6 +203,24 @@ struct MemorySpaceAccess<Kokkos::CudaSpace,
   enum : bool { accessible = true };
 };
 
+// Compile-time-level scratch annotation gives device codegen the pointer's
+// address-space provenance for scratch allocations.
+template <>
+struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 0> {
+  KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
+    KOKKOS_IF_ON_DEVICE((__builtin_assume(__isShared(p));))
+    return p;
+  }
+};
+
+template <>
+struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 1> {
+  KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
+    KOKKOS_IF_ON_DEVICE((__builtin_assume(__isGlobal(p));))
+    return p;
+  }
+};
+
 }  // namespace Impl
 }  // namespace Kokkos
 
