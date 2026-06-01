@@ -652,6 +652,39 @@ void test_offset_stream() {
       << "Second half of reference streams doesn't match streams of pool B";
 }
 
+// Test rand/rand64 with ranges that previously caused signed-overflow UB.
+template <class GeneratorPool>
+void test_rand_range_overflow() {
+  using exec_space = typename GeneratorPool::device_type::execution_space;
+
+  GeneratorPool pool(42);
+
+  int64_t n_nonmin32 = 0;
+  Kokkos::parallel_reduce(
+      "test_rand_range_overflow_32", Kokkos::RangePolicy<exec_space>(0, 1000),
+      KOKKOS_LAMBDA(int /*i*/, int64_t& n) {
+        auto gen = pool.get_state();
+        for (int k = 0; k < 64; ++k)
+          if (gen.rand(INT_MIN, INT_MAX) != INT_MIN) ++n;
+        pool.free_state(gen);
+      },
+      n_nonmin32);
+  EXPECT_GT(n_nonmin32, 0) << "rand(INT_MIN,INT_MAX) always returned INT_MIN";
+
+  int64_t n_nonmin64 = 0;
+  Kokkos::parallel_reduce(
+      "test_rand_range_overflow_64", Kokkos::RangePolicy<exec_space>(0, 1000),
+      KOKKOS_LAMBDA(int /*i*/, int64_t& n) {
+        auto gen = pool.get_state();
+        for (int k = 0; k < 64; ++k)
+          if (gen.rand64(INT64_MIN, INT64_MAX) != INT64_MIN) ++n;
+        pool.free_state(gen);
+      },
+      n_nonmin64);
+  EXPECT_GT(n_nonmin64, 0)
+      << "rand64(INT64_MIN,INT64_MAX) always returned INT64_MIN";
+}
+
 }  // namespace AlgoRandomImpl
 
 TEST(TEST_CATEGORY, Random_XorShift64) {
@@ -712,6 +745,24 @@ TEST(TEST_CATEGORY, Random_SFC64) {
                                   Kokkos::Random_SFC64_Pool<ExecutionSpace>>(
       10000)
       .run();
+}
+
+TEST(TEST_CATEGORY, Random_XorShift64_rand_range_overflow) {
+  AlgoRandomImpl::test_rand_range_overflow<
+      Kokkos::Random_XorShift64_Pool<TEST_EXECSPACE>>();
+}
+
+TEST(TEST_CATEGORY, Random_XorShift1024_rand_range_overflow) {
+  AlgoRandomImpl::test_rand_range_overflow<
+      Kokkos::Random_XorShift1024_Pool<TEST_EXECSPACE>>();
+}
+
+TEST(TEST_CATEGORY, Random_SFC64_rand_range_overflow) {
+#if defined(KOKKOS_ENABLE_SYCL)
+  GTEST_SKIP() << "Failing on Intel GPUs";  // FIXME_SYCL
+#endif
+  AlgoRandomImpl::test_rand_range_overflow<
+      Kokkos::Random_SFC64_Pool<TEST_EXECSPACE>>();
 }
 
 TEST(TEST_CATEGORY, Multi_streams) {
