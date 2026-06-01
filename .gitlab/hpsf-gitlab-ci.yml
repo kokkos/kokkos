@@ -44,6 +44,7 @@ NVIDIA-RTX5080:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
@@ -86,6 +87,7 @@ NVIDIA-GH200:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
@@ -119,6 +121,7 @@ NVIDIA-P100:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
@@ -160,6 +163,7 @@ INTEL-DATA-CENTER-MAX-1100:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
@@ -199,6 +203,7 @@ INTEL-DATA-CENTER-MAX-1100-OUT-OF-ORDER:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
@@ -237,6 +242,7 @@ AMD-MI300A:
       -S scripts/CTestRun.cmake
       -D CTEST_SITE="gitlab.spack.io"
       -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+      -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
@@ -316,6 +322,7 @@ NVIDIA-DGX-SPARK:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab.spack.io"
         -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
   artifacts:
     when: always
