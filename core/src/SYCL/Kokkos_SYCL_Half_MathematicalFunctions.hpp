@@ -130,7 +130,7 @@ KOKKOS_SYCL_HALF_UNARY_FUNCTION(rsqrt)
         Experimental::bhalf_t::impl_type(x));      \
   }
 
-Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(
+inline Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(
     Kokkos::Experimental::bhalf_t) {
   return Kokkos::Experimental::bhalf_t(0.f);
 }
