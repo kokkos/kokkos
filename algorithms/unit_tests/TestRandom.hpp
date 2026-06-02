@@ -656,6 +656,12 @@ void test_offset_stream() {
 template <class GeneratorPool>
 void test_rand_range_overflow() {
   using exec_space = typename GeneratorPool::device_type::execution_space;
+  using gen_type   = typename GeneratorPool::generator_type;
+
+  constexpr int32_t start32 = -gen_type::MAX_RAND - 1;
+  constexpr int32_t end32   = gen_type::MAX_RAND;
+  constexpr int64_t start64 = -gen_type::MAX_RAND64 - 1;
+  constexpr int64_t end64   = gen_type::MAX_RAND64;
 
   GeneratorPool pool(42);
 
@@ -664,9 +670,6 @@ void test_rand_range_overflow() {
       "test_rand_range_overflow_32", Kokkos::RangePolicy<exec_space>(0, 1000),
       KOKKOS_LAMBDA(int /*i*/, int64_t& n) {
         auto gen = pool.get_state();
-        constexpr int start32 =
-            -typename GeneratorPool::generator_type::MAX_RAND - 1;
-        constexpr int end32 = typename GeneratorPool::generator_type::MAX_RAND;
         for (int k = 0; k < 64; ++k)
           if (gen.rand(start32, end32) != start32) ++n;
         pool.free_state(gen);
@@ -679,10 +682,6 @@ void test_rand_range_overflow() {
       "test_rand_range_overflow_64", Kokkos::RangePolicy<exec_space>(0, 1000),
       KOKKOS_LAMBDA(int /*i*/, int64_t& n) {
         auto gen = pool.get_state();
-        constexpr int64_t start64 =
-            -typename GeneratorPool::generator_type::MAX_RAND64 - 1;
-        constexpr int64_t end64 =
-            typename GeneratorPool::generator_type::MAX_RAND64;
         for (int k = 0; k < 64; ++k)
           if (gen.rand64(start64, end64) != start64) ++n;
         pool.free_state(gen);
