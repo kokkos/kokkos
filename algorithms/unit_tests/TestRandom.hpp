@@ -664,8 +664,11 @@ void test_rand_range_overflow() {
       "test_rand_range_overflow_32", Kokkos::RangePolicy<exec_space>(0, 1000),
       KOKKOS_LAMBDA(int /*i*/, int64_t& n) {
         auto gen = pool.get_state();
+        constexpr int start32 =
+            -typename GeneratorPool::generator_type::MAX_RAND - 1;
+        constexpr int end32 = typename GeneratorPool::generator_type::MAX_RAND;
         for (int k = 0; k < 64; ++k)
-          if (gen.rand(INT_MIN, INT_MAX) != INT_MIN) ++n;
+          if (gen.rand(start32, end32) != start32) ++n;
         pool.free_state(gen);
       },
       n_nonmin32);
