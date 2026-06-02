@@ -288,8 +288,9 @@ struct DeviceIterate {
   // \tparam RIdx rank index
   // \return Flat hardware thread ID (packed) or global index (unpacked)
   template <unsigned RIdx>
-  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
-  my_begin() const noexcept {
+  KOKKOS_IMPL_DEVICE_FUNCTION
+      KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE constexpr index_type
+      my_begin() const noexcept {
     static_assert(RIdx < 6);
     if constexpr (Rank < 4) {
       // No packed index
@@ -326,8 +327,9 @@ struct DeviceIterate {
   // \tparam RIdx rank index
   // \return product of the extents (packed) or upper bound (unpacked)
   template <unsigned RIdx>
-  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
-  my_end() const noexcept {
+  KOKKOS_IMPL_DEVICE_FUNCTION
+      KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE constexpr index_type
+      my_end() const noexcept {
     static_assert(RIdx < 6);
     if constexpr (is_packed_index<RIdx>()) {
       if constexpr (RIdx % 2 == 0) {
@@ -346,8 +348,9 @@ struct DeviceIterate {
   // \tparam RIdx rank index
   // \return The stride used for this rank index
   template <unsigned RIdx>
-  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
-  my_stride() const noexcept {
+  KOKKOS_IMPL_DEVICE_FUNCTION
+      KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE constexpr index_type
+      my_stride() const noexcept {
     // revisit the need for static_cast<index_type>
     static_assert(RIdx < 6);
     if constexpr (Rank < 4) {
@@ -392,8 +395,9 @@ struct DeviceIterate {
   // \tparam RIdx rank index
   // \return global thread index
   template <unsigned RIdx>
-  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE constexpr index_type
-  my_thIdx() const noexcept {
+  KOKKOS_IMPL_DEVICE_FUNCTION
+      KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE constexpr index_type
+      my_thIdx() const noexcept {
     static_assert(RIdx < 6);
     if constexpr (Rank < 4) {
       // No packed index
@@ -424,8 +428,8 @@ struct DeviceIterate {
   }
 
   template <size_t... R, typename... Idxs>
-  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE bool check_bounds(
-      std::index_sequence<R...>, Idxs... idxs) const {
+  KOKKOS_IMPL_DEVICE_FUNCTION KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE bool
+  check_bounds(std::index_sequence<R...>, Idxs... idxs) const {
     if constexpr (IterateDir == Iterate::Left) {
       return ((idxs < static_cast<index_type>(m_upper[R])) && ...);
     } else {
