@@ -473,12 +473,12 @@ ThreadVectorRange(const Impl::SYCLTeamMember& thread, iType1 arg_begin,
       thread, iType(arg_begin), iType(arg_end));
 }
 
-Impl::ThreadSingleStruct<Impl::SYCLTeamMember> PerTeam(
+inline Impl::ThreadSingleStruct<Impl::SYCLTeamMember> PerTeam(
     const Impl::SYCLTeamMember& thread) {
   return Impl::ThreadSingleStruct<Impl::SYCLTeamMember>(thread);
 }
 
-Impl::VectorSingleStruct<Impl::SYCLTeamMember> PerThread(
+inline Impl::VectorSingleStruct<Impl::SYCLTeamMember> PerThread(
     const Impl::SYCLTeamMember& thread) {
   return Impl::VectorSingleStruct<Impl::SYCLTeamMember>(thread);
 }
