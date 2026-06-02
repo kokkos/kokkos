@@ -1175,7 +1175,7 @@ class TestDynViewAPI {
     auto hvx = Kokkos::create_mirror_view(vx);
     Kokkos::deep_copy(hvx, vx);
     ASSERT_EQ(rank(hvx), rank(hmx));
-    for (unsigned r = 0; r < rank(hvx); ++r) {
+    for (int r = 0; r < static_cast<int>(rank(hvx)); ++r) {
       ASSERT_EQ(hvx.extent(r), hmx.extent(r));
     }
 
@@ -1186,7 +1186,7 @@ class TestDynViewAPI {
     auto hvy = Kokkos::create_mirror_view(vy);
     Kokkos::deep_copy(hvy, vy);
     ASSERT_EQ(rank(hvy), rank(hmy));
-    for (unsigned r = 0; r < rank(hvy); ++r) {
+    for (int r = 0; r < static_cast<int>(rank(hvy)); ++r) {
       ASSERT_EQ(hvy.extent(r), hmy.extent(r));
     }
 
