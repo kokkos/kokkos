@@ -1,0 +1,23 @@
+#!/bin/bash
+
+# If CMAKE_FORMAT_EXE exists in the environment,
+# it is used instead of 'cmake-format'.
+CMAKE_FORMAT_EXECUTABLE=${CMAKE_FORMAT_EXE:-cmake-format}
+
+if ! command -v "${CMAKE_FORMAT_EXECUTABLE}" >/dev/null 2>&1; then
+  echo "***   ${CMAKE_FORMAT_EXECUTABLE} could not be found."
+  exit 1
+fi
+
+BASE_DIR="$(git rev-parse --show-toplevel)"
+cd "${BASE_DIR}"
+if [ ! -f "scripts/apply-cmake-format" ]; then
+  echo "***   The indenting script must be executed from within the Kokkos clone!"
+  exit 1
+fi
+
+echo "***   Running cmake-format"
+find . \( -path './.git' -prune \) -o \
+  \( -name '*.cmake' -o -name 'CMakeLists.txt' \) -type f \
+  -exec "${CMAKE_FORMAT_EXECUTABLE}" -i {} \;
+echo "***   Running cmake-format - done"
