@@ -25,14 +25,6 @@ struct Tensor4 {
 };
 
 template <class Handle, class X>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 1> sum_views(
-    const Handle& handle, const X& x, const float c) {
-  Kokkos::parallel_for(
-      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
-      KOKKOS_LAMBDA(const int i) { x(i) += c; });
-}
-
-template <class Handle, class X>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 2> sum_views(
     const Handle& handle, const X& x, const float c) {
   Kokkos::parallel_for(
