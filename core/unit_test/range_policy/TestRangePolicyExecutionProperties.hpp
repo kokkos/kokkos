@@ -77,8 +77,9 @@ struct CheckRuntimeValues {
 template <class ExecSpace>
 struct CheckInvocationOrder {
   void operator()() const {
-    using D             = Tensor4<ExecSpace>;
-    using thread_handle = typename team_member_t<ExecSpace>::thread_handle;
+    using thread_handle    = typename team_member_t<ExecSpace>::thread_handle;
+    const int num_leagues  = Tensor4<ExecSpace>::leagues;
+    const int num_elements = Tensor4<ExecSpace>::elements;
 
     struct Closure {
       KOKKOS_INLINE_FUNCTION void operator()(const int) const {}
@@ -99,9 +100,9 @@ struct CheckInvocationOrder {
 
     Kokkos::parallel_for(
         "check_invocation_order",
-        Kokkos::TeamPolicy<ExecSpace>(D::leagues, Kokkos::AUTO()),
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_member_t<ExecSpace>& team) {
-          Kokkos::parallel_for(Kokkos::RangePolicy(team, 0, D::elements),
+          Kokkos::parallel_for(Kokkos::RangePolicy(team, 0, num_elements),
                                Closure{});
         });
   }

@@ -151,15 +151,15 @@ struct CheckCase<2, ExecSpace> {
 
     using team_t          = team_member_t<ExecSpace>;
     using thread_handle   = team_t::thread_handle;
-    using D               = Tensor4<ExecSpace>;
     const int num_leagues = M.extent_int(0);
+    const int num_threads = M.extent_int(1);
     Kokkos::parallel_for(
         "case2", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
-          // TeamThreadRange(team, D::threads) with (thread_handle, i).
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, D::threads),
+          // TeamThreadRange(team, num_threads) with (thread_handle, i).
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, num_threads),
                                [&](const thread_handle& th, int i) {
                                  auto M_sub_sub = Kokkos::subview(
                                      M_sub, i, Kokkos::ALL(), Kokkos::ALL());
@@ -236,7 +236,6 @@ struct CheckCase<5, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
         "case5", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
@@ -263,17 +262,17 @@ struct CheckCase<6, ExecSpace> {
 
     using team_t          = team_member_t<ExecSpace>;
     using thread_handle   = team_t::thread_handle;
-    using D               = Tensor4<ExecSpace>;
     const int num_leagues = M.extent_int(0);
+    const int num_threads = M.extent_int(1);
     Kokkos::parallel_for(
         "case6", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
           Kokkos::parallel_for(
-              Kokkos::RangePolicy(team, 0, D::threads),
-              // Outer: RangePolicy(team, 0, D::threads). Because the closure is
-              // invocable with (thread_handle, i), Kokkos dispatches to
+              Kokkos::RangePolicy(team, 0, num_threads),
+              // Outer: RangePolicy(team, 0, num_threads). Because the closure
+              // is invocable with (thread_handle, i), Kokkos dispatches to
               // TeamThreadRange (see Kokkos_Parallel_NestedTeamRange.hpp).
               // Inner (sum_views): RangePolicy(th, 0, M_sub_sub.extent_int(0))
               // with (int) -> ThreadVectorRange (policy handle type).
