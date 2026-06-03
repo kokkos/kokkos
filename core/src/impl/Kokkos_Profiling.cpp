@@ -808,12 +808,22 @@ void finalize() {
 #ifdef KOKKOS_ENABLE_TUNING
   // clean up string candidate set
   for (auto& metadata_pair : Experimental::variable_metadata) {
-    auto metadata = metadata_pair.second;
-    if ((metadata.type == Experimental::ValueType::kokkos_value_string) &&
-        (metadata.valueQuantity ==
-         Experimental::CandidateValueType::kokkos_value_set)) {
-      auto candidate_set = metadata.candidates.set;
-      delete[] candidate_set.values.string_value;
+    const auto& metadata = metadata_pair.second;
+    if (metadata.valueQuantity !=
+        Experimental::CandidateValueType::kokkos_value_set) {
+      continue;
+    }
+    const auto candidate_set = metadata.candidates.set;
+    switch (metadata.type) {
+      case Experimental::ValueType::kokkos_value_string:
+        delete[] candidate_set.values.string_value;
+        break;
+      case Experimental::ValueType::kokkos_value_int64:
+        delete[] candidate_set.values.int_value;
+        break;
+      case Experimental::ValueType::kokkos_value_double:
+        delete[] candidate_set.values.double_value;
+        break;
     }
   }
 #endif
