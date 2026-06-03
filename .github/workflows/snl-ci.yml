@@ -316,6 +316,48 @@ jobs:
         working-directory: kokkos/build_examples
         run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure
 
+  LLVM_14_0_6:
+    name: SNL_SERIAL_LLVM_14_0_6
+    runs-on: [llvm-14.0.6_x86-64-latest-latest]
+    continue-on-error: true
+
+    strategy:
+      matrix:
+        dep_code_5: [ON, OFF]
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER=clang++-14 \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -Werror" \
+            -DKokkos_ENABLE_SERIAL=ON \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
 # FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
   HPX_GCC_15_1_1:
     name: SNL_HPX_GCC_15_1_1
