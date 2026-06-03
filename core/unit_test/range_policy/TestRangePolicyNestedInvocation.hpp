@@ -28,7 +28,7 @@ template <class Handle, class X>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 1> sum_views(
     const Handle& handle, const X& x, const float c) {
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(handle, 0, x.extent(0)),
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
       KOKKOS_LAMBDA(const int i) { x(i) += c; });
 }
 
@@ -36,8 +36,9 @@ template <class Handle, class X>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 2> sum_views(
     const Handle& handle, const X& x, const float c) {
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(handle, 0, x.extent(0)), KOKKOS_LAMBDA(const int i) {
-        for (int j = 0; j < x.extent(1); ++j) {
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i) {
+        for (int j = 0; j < x.extent_int(1); ++j) {
           x(i, j) += c;
         }
       });
@@ -47,9 +48,10 @@ template <class Handle, class X>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 3> sum_views(
     const Handle& handle, const X& x, const float c) {
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(handle, 0, x.extent(0)), KOKKOS_LAMBDA(const int i) {
-        for (int j = 0; j < x.extent(1); ++j) {
-          for (int k = 0; k < x.extent(2); ++k) {
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i) {
+        for (int j = 0; j < x.extent_int(1); ++j) {
+          for (int k = 0; k < x.extent_int(2); ++k) {
             x(i, j, k) += c;
           }
         }
@@ -60,32 +62,17 @@ template <class Handle, class X>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 4> sum_views(
     const Handle& handle, const X& x, const float c) {
   Kokkos::parallel_for(
-      Kokkos::RangePolicy(handle, 0, x.extent(0)), KOKKOS_LAMBDA(const int i) {
-        for (int j = 0; j < x.extent(1); ++j) {
-          for (int k = 0; k < x.extent(2); ++k) {
-            for (int l = 0; l < x.extent(3); ++l) {
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i) {
+        for (int j = 0; j < x.extent_int(1); ++j) {
+          for (int k = 0; k < x.extent_int(2); ++k) {
+            for (int l = 0; l < x.extent_int(3); ++l) {
               x(i, j, k, l) += c;
             }
           }
         }
       });
 }
-
-// template <class Handle, class X>
-// KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 3> sum_views_stacked(
-//     const Handle& handle, const X& x, const float c) {
-//   auto x_sub =
-//       Kokkos::subview(x, handle.thread_rank(), Kokkos::ALL(), Kokkos::ALL());
-//   Kokkos::parallel_for(
-//       Kokkos::RangePolicy(handle, 0, x_sub.extent(0)),
-//       KOKKOS_LAMBDA(const int i) {
-//         for (int j = 0; j < x.extent(1); ++j) {
-//           for (int k = 0; k < x.extent(2); ++k) {
-//             x(i, j, k) += c;
-//           }
-//         }
-//       });
-// }
 
 template <class ExecSpace>
 void verify(const float_tensor4_t<ExecSpace>& M, const float expected,
@@ -131,8 +118,8 @@ struct CheckCase<0, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     const ExecSpace exec;
-    // Calls RangePolicy(exec, 0, M.extent(0)).
-    // Maps to TeamVectorRange(exec, 0, M.extent(0)).
+    // sum_views(exec, ...): RangePolicy(exec, 0, M.extent_int(0)) over the
+    // execution space.
     sum_views(exec, M, 1.f);
 
     verify<ExecSpace>(M, 1.f, "check_case0");
@@ -151,8 +138,8 @@ struct CheckCase<1, ExecSpace> {
     Kokkos::parallel_for(
         "case1", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
-          // Calls RangePolicy(team_handle, 0, M.extent(0)).
-          // Maps to TeamVectorRange(team, 0, M.extent(0)).
+          // sum_views(team, ...): RangePolicy(team, 0, M_sub.extent_int(0)) ->
+          // TeamVectorRange.
           sum_views(team,
                     Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                     Kokkos::ALL(), Kokkos::ALL()),
@@ -172,18 +159,22 @@ struct CheckCase<2, ExecSpace> {
 
     using team_t          = team_member_t<ExecSpace>;
     using thread_handle   = team_t::thread_handle;
+    using D               = Tensor4<ExecSpace>;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
         "case2", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1),
-                               [&](const thread_handle& th, int) {
-                                 // Calls RangePolicy(thread_handle, 0,
-                                 // M.extent(0)). Maps to
-                                 // ThreadVectorRange(exec, 0, M.extent(0)).
-                                 sum_views(th, M_sub, 3.f);
+          // TeamThreadRange(team, D::threads) with (thread_handle, i).
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, D::threads),
+                               [&](const thread_handle& th, int i) {
+                                 auto M_sub_sub = Kokkos::subview(
+                                     M_sub, i, Kokkos::ALL(), Kokkos::ALL());
+                                 // Inner (sum_views): RangePolicy(th, 0,
+                                 // M_sub_sub.extent_int(0)) with (int) ->
+                                 // ThreadVectorRange.
+                                 sum_views(th, M_sub_sub, 3.f);
                                });
         });
 
@@ -208,10 +199,9 @@ struct CheckCase<3, ExecSpace> {
                                        Kokkos::ALL(), Kokkos::ALL());
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1),
                                [&](const thread_handle& th) {
-                                 // Calls RangePolicy(thread_handle, 0,
-                                 // M.extent(0)). Maps to
-                                 // ThreadVectorRange(thread_handle, 0,
-                                 // M.extent(0)).
+                                 // Inner (sum_views): RangePolicy(th, 0,
+                                 // M_sub.extent_int(0)) with (int) ->
+                                 // ThreadVectorRange.
                                  sum_views(th, M_sub, 4.f);
                                });
         });
@@ -236,8 +226,8 @@ struct CheckCase<4, ExecSpace> {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
           Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](int) {
-            // Calls RangePolicy(thread_handle, 0, M.extent(0)).
-            // Maps to ThreadVectorRange(exec, 0, M.extent(0)).
+            // Inner (sum_views): RangePolicy(thread_handle, 0,
+            // M_sub.extent_int(0)) with (int) -> ThreadVectorRange.
             sum_views(thread_handle(team), M_sub, 5.f);
           });
         });
@@ -262,8 +252,8 @@ struct CheckCase<5, ExecSpace> {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
           Kokkos::single(Kokkos::PerTeam(team), [&]() {
-            // Calls RangePolicy(thread_handle, 0, M.extent(0)).
-            // Maps to ThreadVectorRange(exec, 0, M.extent(0)).
+            // Inner (sum_views): RangePolicy(thread_handle, 0,
+            // M_sub.extent_int(0)) with (int) -> ThreadVectorRange.
             sum_views(Kokkos::ThreadHandle<team_t>(team), M_sub, 6.f);
           });
         });
@@ -281,6 +271,7 @@ struct CheckCase<6, ExecSpace> {
 
     using team_t          = team_member_t<ExecSpace>;
     using thread_handle   = team_t::thread_handle;
+    using D               = Tensor4<ExecSpace>;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
         "case6", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
@@ -288,10 +279,17 @@ struct CheckCase<6, ExecSpace> {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
           Kokkos::parallel_for(
-              Kokkos::RangePolicy(team, 0, 1),
-              // Calls RangePolicy(thread_handle, 0, M.extent(0)).
-              // Maps to ThreadVectorRange(exec, 0, M.extent(0)).
-              [&](const thread_handle& th) { sum_views(th, M_sub, 7.f); });
+              Kokkos::RangePolicy(team, 0, D::threads),
+              // Outer: RangePolicy(team, 0, D::threads). Because the closure is
+              // invocable with (thread_handle, i), Kokkos dispatches to
+              // TeamThreadRange (see Kokkos_Parallel_NestedTeamRange.hpp).
+              // Inner (sum_views): RangePolicy(th, 0, M_sub_sub.extent_int(0))
+              // with (int) -> ThreadVectorRange (policy handle type).
+              [&](const thread_handle& th, int i) {
+                auto M_sub_sub =
+                    Kokkos::subview(M_sub, i, Kokkos::ALL(), Kokkos::ALL());
+                sum_views(th, M_sub_sub, 7.f);
+              });
         });
 
     verify<ExecSpace>(M, 7.f, "check_case1");
