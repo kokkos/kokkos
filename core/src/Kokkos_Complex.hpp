@@ -64,14 +64,9 @@ class
   /// because std::complex's methods and nonmember functions are not
   /// marked as CUDA device functions.
   complex(const std::complex<RealType>& src) noexcept
-      // We can use this aspect of the standard to avoid calling
-      // non-device-marked functions `std::real` and `std::imag`: "For any
-      // object z of type complex<T>, reinterpret_cast<T(&)[2]>(z)[0] is the
-      // real part of z and reinterpret_cast<T(&)[2]>(z)[1] is the imaginary
-      // part of z." Now we don't have to provide a whole bunch of the overloads
-      // of things taking either Kokkos::complex or std::complex
-      : re_(reinterpret_cast<const RealType (&)[2]>(src)[0]),
-        im_(reinterpret_cast<const RealType (&)[2]>(src)[1]) {}
+      // Because this constructor is host-only, we can call .real() and .imag()
+      // instead of reinterpret_cast
+      : re_(src.real()), im_(src.imag()) {}
 
   /// \brief Conversion operator to std::complex.
   ///
