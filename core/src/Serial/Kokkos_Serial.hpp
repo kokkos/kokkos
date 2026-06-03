@@ -30,6 +30,7 @@ static_assert(false,
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_HostSharedPtr.hpp>
 #include <impl/Kokkos_InitializationSettings.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 
 namespace Kokkos {
 
@@ -107,7 +108,14 @@ class Serial {
   KOKKOS_FUNCTION Serial& operator=(Serial&& other) noexcept {
     return *this = static_cast<const Serial&>(other);
   }
-  ~Serial();
+  // This destructor is never actually called on device, but, for the implicitly
+  // defined ~RangePolicy<ExecSpace>(), we need destructor to be __host__
+  // __device__ to avoid nvcc warnings. This destructor will only execute
+  // internals on host.
+  KOKKOS_FUNCTION ~Serial() {
+    KOKKOS_IF_ON_HOST(
+        (Impl::check_execution_space_destructor_precondition(name());))
+  }
   Serial();
 
   explicit Serial(NewInstance);
