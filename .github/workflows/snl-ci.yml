@@ -323,7 +323,6 @@ jobs:
 
     strategy:
       matrix:
-        dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
@@ -338,13 +337,10 @@ jobs:
           cmake -S . -B build \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_COMPILER=clang++-14 \
-            -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_FLAGS="-stdlib=libc++ -Werror" \
-            -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-            -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON
 
