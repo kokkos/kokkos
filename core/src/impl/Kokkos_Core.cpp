@@ -725,6 +725,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1103");
 #elif defined(KOKKOS_ARCH_AMD_GFX1151)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1151");
+#elif defined(KOKKOS_ARCH_AMD_GFX1152)
+  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1152");
 #elif defined(KOKKOS_ARCH_AMD_GFX1201)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1201");
 #else
