@@ -56,7 +56,11 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
                                            iType> ||
                        std::is_invocable_v<Closure, thread_handle_t const&>) {
-    team_thread_bounds_t const bounds(team, policy.begin(), policy.end());
+    // policy.begin()/end() are per-thread TeamVectorRange slices;
+    // TeamThreadRange must receive the full range and partition once (see
+    // work_begin/end on ImplRangePolicy<TeamHandle>).
+    team_thread_bounds_t const bounds(team, policy.work_begin(),
+                                      policy.work_end());
     Kokkos::parallel_for(bounds, closure);
   } else {
     static_assert(Kokkos::Impl::always_false<Closure>::value,
