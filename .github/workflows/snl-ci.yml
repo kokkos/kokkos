@@ -321,9 +321,6 @@ jobs:
     runs-on: [llvm-14.0.6_x86-64-latest-latest]
     continue-on-error: true
 
-    strategy:
-      matrix:
-
     steps:
       - name: checkout_kokkos
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
