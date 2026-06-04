@@ -1345,8 +1345,6 @@ class ImplRangePolicy<Handle, Properties...>
       typename Impl::PolicyTraits<Properties...>::index_type, Handle>;
 
  public:
-  using base_t::base_t;
-
   using traits = typename Impl::PolicyTraits<Properties...>;
   static_assert(std::same_as<typename traits::execution_type, Handle>);
 
@@ -1354,6 +1352,31 @@ class ImplRangePolicy<Handle, Properties...>
   using work_tag         = typename traits::work_tag;
   using member_type      = typename traits::index_type;
   using index_type       = typename traits::index_type;
+
+ private:
+  // Unpartitioned range passed to RangePolicy(team, work_begin, work_end).
+  // begin()/end() below are this thread's TeamVectorRange slice (base_t::start/
+  // end). Nested TeamThreadRange dispatch must use work_begin()/work_end() so
+  // the range is not partitioned twice.
+  index_type m_work_begin;
+  index_type m_work_end;
+
+ public:
+  template <typename IndexType1, typename IndexType2>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType1 work_begin,
+                                         IndexType2 work_end)
+      : base_t(handle, static_cast<index_type>(work_begin),
+               static_cast<index_type>(work_end)),
+        m_work_begin(static_cast<index_type>(work_begin)),
+        m_work_end(static_cast<index_type>(work_end)) {}
+
+  template <typename IndexType>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType work_count)
+      : base_t(handle, static_cast<index_type>(work_count)),
+        m_work_begin(static_cast<index_type>(0)),
+        m_work_end(static_cast<index_type>(work_count)) {}
 
   KOKKOS_INLINE_FUNCTION Handle const& space() const {
     return static_cast<const base_t*>(this)->member;
@@ -1365,6 +1388,10 @@ class ImplRangePolicy<Handle, Properties...>
   KOKKOS_INLINE_FUNCTION member_type end() const {
     return static_cast<const base_t*>(this)->end;
   }
+
+  // Full team-level range; see m_work_begin/m_work_end.
+  KOKKOS_INLINE_FUNCTION index_type work_begin() const { return m_work_begin; }
+  KOKKOS_INLINE_FUNCTION index_type work_end() const { return m_work_end; }
 
   KOKKOS_INLINE_FUNCTION member_type chunk_size() const {
     // Chunk size has no meaning currently in this specialization.
