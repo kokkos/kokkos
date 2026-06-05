@@ -256,16 +256,15 @@ class View
   using const_value_type     = typename traits::const_value_type;
   using non_const_value_type = typename traits::non_const_value_type;
   using data_type            = typename basic_view_from_traits::data_type;
-
-  using const_data_type     = typename traits::const_data_type;
-  using non_const_data_type = typename traits::non_const_data_type;
-  using view_tracker_type   = Impl::ViewTracker<View>;
-  using array_layout        = typename traits::array_layout;
-  using device_type         = typename traits::device_type;
-  using execution_space     = typename traits::execution_space;
-  using memory_space        = typename traits::memory_space;
-  using memory_traits       = typename traits::memory_traits;
-  using host_mirror_space   = typename traits::host_mirror_space;
+  using const_data_type      = typename traits::const_data_type;
+  using non_const_data_type  = typename traits::non_const_data_type;
+  using view_tracker_type    = Impl::ViewTracker<View>;
+  using array_layout         = typename traits::array_layout;
+  using device_type          = typename traits::device_type;
+  using execution_space      = typename traits::execution_space;
+  using memory_space         = typename traits::memory_space;
+  using memory_traits        = typename traits::memory_traits;
+  using host_mirror_space    = typename traits::host_mirror_space;
   using typename base_t::index_type;
 
   // aliases from BasicView

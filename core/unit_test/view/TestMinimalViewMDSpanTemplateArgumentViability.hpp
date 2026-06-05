@@ -146,6 +146,18 @@ struct ViewTestHarness {
       ASSERT_EQ(a.extents(), h_a.extents());
     }
     {
+      auto h_a     = Kokkos::create_mirror(Kokkos::HostSpace(), a);
+      using h_type = decltype(h_a);
+      // since create_mirror still uses old-style template args
+      // the extents type isn't necessarily the same index_type
+      static_assert(
+          std::is_same_v<typename h_type::memory_space, Kokkos::HostSpace>);
+      static_assert(std::is_same_v<typename h_type::element_type,
+                                   typename new_view_t::element_type>);
+
+      ASSERT_EQ(a.extents(), h_a.extents());
+    }
+    {
       auto h_a = Kokkos::create_mirror_view(a);
       ASSERT_EQ(a.extents(), h_a.extents());
     }
