@@ -70,7 +70,7 @@ struct Foo {
 };
 template <class T>
 KOKKOS_DEDUCTION_GUIDE Foo(T) -> Foo<T>;
-static_assert(sizeof(Foo(3.14)) > 0);
+static_assert(sizeof(Foo(3.14)) > 0);  // NOLINT(bugprone-sizeof-expression)
 
 struct Bar {
   int m_val = 3;
