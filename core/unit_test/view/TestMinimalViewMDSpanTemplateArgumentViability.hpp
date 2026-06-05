@@ -12,6 +12,18 @@ import kokkos.core_impl;
 #endif
 #include <cstddef>
 
+using view_t_64bit_idx =
+    Kokkos::View<int, Kokkos::dextents<int64_t, 4>, Kokkos::layout_left,
+                 Kokkos::Experimental::Accessor<int, Kokkos::HostSpace>>;
+using view_t_32bit_idx =
+    Kokkos::View<int, Kokkos::dextents<int32_t, 4>, Kokkos::layout_left,
+                 Kokkos::Experimental::Accessor<int, Kokkos::HostSpace>>;
+
+// Just a minimal check that the object storage actually changes
+// Doing exact numbers would require a bunch of compiler ifdefs
+// due to missing full support of no-unique-address in some cases
+static_assert(sizeof(view_t_64bit_idx) > sizeof(view_t_32bit_idx));
+
 template <class ElementType, class Exts,
           class LayoutType = typename Kokkos::View<int>::layout_type>
 struct ViewTestHarness {
