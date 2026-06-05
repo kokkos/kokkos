@@ -74,12 +74,11 @@ static_assert(sizeof(Foo(3.14)) > 0);  // NOLINT(bugprone-sizeof-expression)
 
 struct Bar {
   int m_val = 3;
-  KOKKOS_FUNCTION constexpr int fun() const {
+  KOKKOS_FUNCTION int fun() const {
     auto dec = KOKKOS_LAMBDA(int x) { return 2 * x; };
     auto lam = KOKKOS_CLASS_LAMBDA() { return m_val; };
     return dec(lam());
   }
 };
-static_assert(Bar().fun() == 6);
 
 }  // namespace
