@@ -70,7 +70,7 @@ struct Foo /* NOLINT(cppcoreguidelines-special-member-functions) */ {
 };
 template <class T>
 KOKKOS_DEDUCTION_GUIDE Foo(T) -> Foo<T>;
-static_assert(sizeof(Foo(3.14)) > 0);  // NOLINT(bugprone-sizeof-expression)
+[[maybe_unused]] auto FooDeduced = Foo(3.14);
 
 struct Bar {
   int m_val = 3;
@@ -80,5 +80,6 @@ struct Bar {
     return dec(lam());
   }
 };
+[[maybe_unused]] auto Fun = Bar{}.fun();
 
 }  // namespace
