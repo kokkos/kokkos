@@ -44,6 +44,7 @@ set(COMPILE_ONLY_SOURCES
     TestDetectionIdiom.cpp
     TestBitManipulation.cpp
     TestFunctionAnnotationMacros.cpp
+    TestHalfCommonType.cpp
     TestInterOp.cpp
     TestRangePolicyCTAD.cpp
     TestStringManipulation.cpp
