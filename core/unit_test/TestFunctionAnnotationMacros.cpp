@@ -61,7 +61,7 @@ KOKKOS_TEST_FUNCTION_ANNOTATION(KOKKOS_INLINE_FUNCTION);
 KOKKOS_TEST_FUNCTION_ANNOTATION(KOKKOS_FORCEINLINE_FUNCTION);
 
 template <class T>
-struct Foo {
+struct Foo /* NOLINT(cppcoreguidelines-special-member-functions) */ {
   KOKKOS_INLINE_FUNCTION_DELETED Foo(Foo const&)            = delete;
   KOKKOS_INLINE_FUNCTION_DELETED Foo& operator-(Foo const&) = delete;
   KOKKOS_DEFAULTED_FUNCTION Foo()                           = default;
