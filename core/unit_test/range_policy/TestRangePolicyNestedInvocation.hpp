@@ -25,6 +25,14 @@ struct Tensor4 {
 };
 
 template <class Handle, class X>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 1> sum_views(
+    const Handle& handle, const X& x, const float c) {
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy(handle, 0, x.extent_int(0)),
+      KOKKOS_LAMBDA(const int i) { x(i) += c; });
+}
+
+template <class Handle, class X>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<X::rank == 2> sum_views(
     const Handle& handle, const X& x, const float c) {
   Kokkos::parallel_for(
@@ -297,20 +305,26 @@ struct CheckCase<7, ExecSpace> {
     using team_t          = team_member_t<ExecSpace>;
     using thread_handle   = team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
+    const int num_threads = M.extent_int(1);
+    const int num_vectors = M.extent_int(2);
     Kokkos::parallel_for(
         "case7", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
           Kokkos::parallel_for(
-              Kokkos::RangePolicy(team, 0, 1),
-              [&](const thread_handle& th) {
+              Kokkos::RangePolicy(team, 0, num_threads),
+              [&](const thread_handle& th, int i) {
+                auto M_sub_sub =
+                    Kokkos::subview(M_sub, i, Kokkos::ALL(), Kokkos::ALL());
                 Kokkos::parallel_for(
                     Kokkos::RangePolicy(Kokkos::InlineHandle<thread_handle>(th),
-                                        0, 1),
-                    [&](int) {
-                      sum_views(Kokkos::InlineHandle<thread_handle>(th), M_sub,
-                                8.f);
+                                        0, num_vectors),
+                    [&](int j) {
+                      auto M_sub_sub_sub =
+                          Kokkos::subview(M_sub_sub, j, Kokkos::ALL());
+                      sum_views(Kokkos::InlineHandle<thread_handle>(th),
+                                M_sub_sub_sub, 8.f);
                     });
               });
         });

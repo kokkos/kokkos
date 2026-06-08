@@ -438,7 +438,7 @@ struct InlineRangeBoundariesStruct<iType, SYCLTeamMember> {
   KOKKOS_INLINE_FUNCTION
   InlineRangeBoundariesStruct(Kokkos::ThreadHandle<SYCLTeamMember> const& th,
                               index_type arg_begin, index_type arg_end)
-      : member(th.member), start(arg_begin), end(arg_end) {}
+      : member(th.team_member), start(arg_begin), end(arg_end) {}
 };
 
 }  // namespace Impl

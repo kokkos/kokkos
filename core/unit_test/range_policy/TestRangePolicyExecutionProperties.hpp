@@ -59,12 +59,15 @@ struct CheckRuntimeValues {
 
     int nerrs_thread_handle;
     Kokkos::parallel_reduce(
-        "check_runtime_thread", Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO()),
+        "check_runtime_thread",
+        Kokkos::TeamPolicy<ExecSpace>(1, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_member_t<ExecSpace>& team, int& nerrs) {
-          using thread_handle_t = Kokkos::ThreadHandle<team_member_t<ExecSpace>>;
-          auto p_threadhandle   = Kokkos::RangePolicy(thread_handle_t(team), beg, end);
-          auto tvr              = Kokkos::ThreadVectorRange(team, beg, end);
-          nerrs = check_runtime_inputs(p_threadhandle, tvr.start, tvr.end);
+          using thread_handle_t =
+              Kokkos::ThreadHandle<team_member_t<ExecSpace>>;
+          auto p_threadhandle =
+              Kokkos::RangePolicy(thread_handle_t(team), beg, end);
+          auto tvr = Kokkos::ThreadVectorRange(team, beg, end);
+          nerrs    = check_runtime_inputs(p_threadhandle, tvr.start, tvr.end);
 
           auto p_inline = Kokkos::RangePolicy(
               Kokkos::InlineHandle<thread_handle_t>(thread_handle_t(team)), beg,
@@ -86,9 +89,8 @@ struct CheckRuntimeValues {
               Kokkos::ThreadHandle<team_member_t<ExecSpace>>(team);
           if (thread_handle.concurrency() != team.vector_length()) ++errs;
 
-          auto inline_handle =
-              Kokkos::InlineHandle<Kokkos::ThreadHandle<team_member_t<ExecSpace>>>(
-                  thread_handle);
+          auto inline_handle = Kokkos::InlineHandle<
+              Kokkos::ThreadHandle<team_member_t<ExecSpace>>>(thread_handle);
           if (inline_handle.concurrency() != 1) ++errs;
         },
         nerrs_concurrency);
