@@ -158,7 +158,7 @@ struct CheckCase<2, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = team_t::thread_handle;
+    using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     const int num_threads = M.extent_int(1);
     Kokkos::parallel_for(
@@ -190,7 +190,7 @@ struct CheckCase<3, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = team_t::thread_handle;
+    using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
         "case3", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
@@ -218,7 +218,7 @@ struct CheckCase<4, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = team_t::thread_handle;
+    using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
         "case4", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
@@ -269,7 +269,7 @@ struct CheckCase<6, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = team_t::thread_handle;
+    using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     const int num_threads = M.extent_int(1);
     Kokkos::parallel_for(
@@ -303,7 +303,7 @@ struct CheckCase<7, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = team_t::thread_handle;
+    using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     const int num_threads = M.extent_int(1);
     const int num_vectors = M.extent_int(2);
