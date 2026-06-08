@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_IMPL_PARALLEL_NESTED_TEAM_RANGE_HPP
-#define KOKKOS_IMPL_PARALLEL_NESTED_TEAM_RANGE_HPP
+#ifndef KOKKOS_IMPL_PARALLEL_NESTED_POLICY_DISPATCH_HPP
+#define KOKKOS_IMPL_PARALLEL_NESTED_POLICY_DISPATCH_HPP
 
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
@@ -28,13 +28,13 @@ namespace Kokkos {
  * This header is included from Kokkos_Core after backend team implementations
  * so Kokkos::parallel_for(TeamVectorRangeBoundariesStruct, ...) overloads
  * exist.
+ *
+ * Additional handle-built policies (MDRangePolicy) and patterns
+ * (parallel_reduce, parallel_scan) will be added here.
  */
 template <class... Properties, class Closure>
-  requires(
-      Kokkos::TeamHandle<
-          typename Kokkos::Impl::PolicyTraits<Properties...>::execution_type> &&
-      !Kokkos::ExecutionSpace<
-          typename Kokkos::Impl::PolicyTraits<Properties...>::execution_type>)
+  requires Kokkos::TeamHandle<
+      typename Kokkos::Impl::PolicyTraits<Properties...>::execution_type>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     Kokkos::RangePolicy<Properties...> const& policy, Closure const& closure) {
   using Member = typename Kokkos::RangePolicy<Properties...>::execution_type;
@@ -72,4 +72,4 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 
 }  // namespace Kokkos
 
-#endif /* KOKKOS_IMPL_PARALLEL_NESTED_TEAM_RANGE_HPP */
+#endif /* KOKKOS_IMPL_PARALLEL_NESTED_POLICY_DISPATCH_HPP */

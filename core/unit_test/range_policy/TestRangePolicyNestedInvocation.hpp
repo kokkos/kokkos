@@ -273,7 +273,7 @@ struct CheckCase<6, ExecSpace> {
               Kokkos::RangePolicy(team, 0, num_threads),
               // Outer: RangePolicy(team, 0, num_threads). Because the closure
               // is invocable with (thread_handle, i), Kokkos dispatches to
-              // TeamThreadRange (see Kokkos_Parallel_NestedTeamRange.hpp).
+              // TeamThreadRange (see Kokkos_Parallel_NestedPolicyDispatch.hpp).
               // Inner (sum_views): RangePolicy(th, 0, M_sub_sub.extent_int(0))
               // with (int) -> ThreadVectorRange (policy handle type).
               [&](const thread_handle& th, int i) {
