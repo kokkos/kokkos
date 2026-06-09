@@ -47,6 +47,7 @@ export {
   using ::Kokkos::Impl::LabelTag;
   using ::Kokkos::Impl::LayoutFromArrayLayout;
   using ::Kokkos::Impl::MDSpanViewTraits;
+  using ::Kokkos::Impl::MemoryTraitsFromAccessor;
   using ::Kokkos::Impl::MirrorViewType;
   using ::Kokkos::Impl::ParseViewExtents;
   using ::Kokkos::Impl::rank_dynamic;

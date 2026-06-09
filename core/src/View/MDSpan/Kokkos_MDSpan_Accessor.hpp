@@ -423,10 +423,7 @@ class ReferenceCountedAccessor {
     using mt = decltype(nested_accessor_type::impl_memory_traits());
     // we need to add Managed, which means we need to remove Unmanaged but
     // maintain all others
-    return MemoryTraits<(mt::is_random_access ? RandomAccess : 0) |
-                        (mt::is_atomic ? Atomic : 0) |
-                        (mt::is_restrict ? Restrict : 0) |
-                        (mt::is_aligned ? Aligned : 0)>();
+    return MemoryTraits<mt::impl_value & ~Kokkos::Unmanaged>{};
   }
 
   KOKKOS_DEFAULTED_FUNCTION
