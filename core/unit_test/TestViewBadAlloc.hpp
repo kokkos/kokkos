@@ -16,7 +16,7 @@ namespace {
 
 template <class MemorySpace>
 void test_view_bad_alloc() {
-  auto too_large    = std::numeric_limits<size_t>::max() - 42;
+  auto too_large    = std::numeric_limits<size_t>::max() / sizeof(double) - 42;
   std::string label = "my_label";
   try {
     auto should_always_fail =
@@ -37,7 +37,7 @@ void test_view_bad_alloc() {
 
 template <class MemorySpace>
 void test_view_bad_alloc_typed_catch() {
-  auto too_large    = std::numeric_limits<size_t>::max() - 42;
+  auto too_large    = std::numeric_limits<size_t>::max() / sizeof(double) - 42;
   std::string label = "my_label";
   try {
     auto should_always_fail =
