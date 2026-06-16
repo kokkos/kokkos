@@ -263,11 +263,11 @@ KOKKOS_FUNCTION OptionalString<string_capacity> expect_near_ulps(
                                                     ulps)) {
     auto* log = test_reporter.emplace_report();
     if (log != nullptr) {
-      log->error_message
-          << file << ":" << line
-          << ": Failure\nExpected: " KOKKOS_IMPL_STRINGIFY(float1) " within "
-          << ulps << " ulps of " KOKKOS_IMPL_STRINGIFY(float2) ", \n  Actual: "
-          << float1_val << " vs " << float2_val << "\n";
+      log->error_message << file << ":" << line
+                         << ": Failure\nExpected: " << float1 << " within "
+                         << ulps << " ulps of " << float2
+                         << ", \n  Actual: " << float1_val << " vs "
+                         << float2_val << "\n";
 
       return OptionalString<string_capacity>(&log->error_message);
     }
