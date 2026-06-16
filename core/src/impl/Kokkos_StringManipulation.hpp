@@ -195,7 +195,7 @@ KOKKOS_FUNCTION constexpr to_chars_result to_chars_i(char *first, char *last,
 template <std::size_t capacity>
 class StaticString {
   // Need room to guarantee we can at least print the trunc pattern
-  static_assert(capacity >= 3, "capacity too low for StaticString");
+  static_assert(capacity >= 4, "capacity too low for StaticString");
 
   char m_data[capacity];
   // String can be full even with size < capacity if we tried to add something
