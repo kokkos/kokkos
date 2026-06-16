@@ -719,7 +719,8 @@ struct TestMathUnaryFunction {
                          << type_helper<Arg>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int i) const {
-    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val_[i]), res_[i], Func::ulp_factor());
+    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val_[i]), res_[i],
+                            Func::ulp_factor());
   }
 };
 
@@ -825,9 +826,7 @@ struct TestMathBinaryFunction {
   Arg2 val2_;
   Ret res_;
   TestMathBinaryFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1),
-        val2_(val2),
-        res_(Func::eval_std(val1, val2)) {
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
     run();
   }
   void run() {
@@ -839,7 +838,8 @@ struct TestMathBinaryFunction {
                          << type_helper<Arg2>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int) const {
-    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val1_, val2_), res_, Func::ulp_factor());
+    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val1_, val2_), res_,
+                            Func::ulp_factor());
   }
 };
 
@@ -858,9 +858,7 @@ struct TestMathBinaryIntFunction {
   Arg2 val2_;
   Ret res_;
   TestMathBinaryIntFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1),
-        val2_(val2),
-        res_(Func::eval_std(val1, val2)) {
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
     run();
   }
   void run() {
@@ -872,7 +870,8 @@ struct TestMathBinaryIntFunction {
                          << type_helper<Arg2>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int) const {
-    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val1_, val2_), res_, Func::ulp_factor());
+    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val1_, val2_), res_,
+                            Func::ulp_factor());
   }
 };
 
@@ -892,8 +891,7 @@ struct TestMathBinaryPtrFunction {
   Ret res_int_;
   const char* m_name;
   TestMathBinaryPtrFunction(Arg val)
-      : val_(val),
-        m_name(math_function_name<Func>::name) {
+      : val_(val), m_name(math_function_name<Func>::name) {
     res_frac_ = Func::eval_std(val_, &res_int_);
     run();
   }
@@ -906,8 +904,10 @@ struct TestMathBinaryPtrFunction {
   KOKKOS_FUNCTION void operator()(int) const {
     Ret iptr;
     Ret frac = Func::eval(val_, &iptr);
-    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, frac, res_frac_, Func::ulp_factor());
-    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, iptr, res_int_, Func::ulp_factor());
+    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, frac, res_frac_,
+                            Func::ulp_factor());
+    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, iptr, res_int_,
+                            Func::ulp_factor());
   }
 };
 
@@ -931,9 +931,7 @@ struct TestMathBinaryPredicate {
   Arg2 val2_;
   bool res_;
   TestMathBinaryPredicate(Arg1 val1, Arg2 val2)
-      : val1_(val1),
-        val2_(val2),
-        res_(Func::eval_std(val1, val2)) {
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2)) {
     run();
   }
   void run() {
@@ -964,8 +962,7 @@ struct TestMathBinaryIntPtrFunction {
   int res1_;
   Ret res2_;
   TestMathBinaryIntPtrFunction(Arg val)
-      : val_(val),
-        res2_(Func::eval_std(val, &res1_)) {
+      : val_(val), res2_(Func::eval_std(val, &res1_)) {
     run();
   }
   void run() {
@@ -1006,9 +1003,7 @@ struct TestMathTernaryIntPtrFunction {
   int val_;
   Ret res_;
   TestMathTernaryIntPtrFunction(Arg1 val1, Arg2 val2)
-      : val1_(val1),
-        val2_(val2),
-        res_(Func::eval_std(val1, val2, &val_)) {
+      : val1_(val1), val2_(val2), res_(Func::eval_std(val1, val2, &val_)) {
     run();
   }
   void run() {
@@ -1060,8 +1055,8 @@ struct TestMathTernaryFunction {
                          << type_helper<Arg3>::name() << ")";
   }
   KOKKOS_FUNCTION void operator()(int) const {
-    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val1_, val2_, val3_), res_,
-                            Func::ulp_factor());
+    KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, Func::eval(val1_, val2_, val3_),
+                            res_, Func::ulp_factor());
   }
 };
 
@@ -1969,17 +1964,21 @@ KOKKOS_DEVICE_TEST(TestFloatingPointRemainderFunction) {
   KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, fmod(6.2f, 4.f), 2.2f, 1);
   KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, fmod(-6.2f, 4.f), -2.2f, 1);
 
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       fmod(static_cast<KE::half_t>(6.2f), static_cast<KE::half_t>(4.f)),
       static_cast<KE::half_t>(2.2f), 1);
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       fmod(static_cast<KE::half_t>(-6.2f), static_cast<KE::half_t>(4.f)),
       static_cast<KE::half_t>(-2.2f), 1);
 
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       fmod(static_cast<KE::bhalf_t>(6.2f), static_cast<KE::bhalf_t>(4.f)),
       static_cast<KE::bhalf_t>(2.2f), 1);
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       fmod(static_cast<KE::bhalf_t>(-6.2f), static_cast<KE::bhalf_t>(4.f)),
       static_cast<KE::bhalf_t>(-2.2f), 1);
 
@@ -2028,17 +2027,21 @@ KOKKOS_DEVICE_TEST(TestIEEEFloatingPointRemainderFunction) {
   KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, remainder(6.2f, 4.f), -1.8f, 2);
   KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, remainder(-6.2f, 4.f), 1.8f, 2);
 
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       remainder(static_cast<KE::half_t>(6.2f), static_cast<KE::half_t>(4.f)),
       static_cast<KE::half_t>(-1.8f), 2);
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       remainder(static_cast<KE::half_t>(-6.2f), static_cast<KE::half_t>(4.f)),
       static_cast<KE::half_t>(1.8f), 2);
 
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       remainder(static_cast<KE::bhalf_t>(6.2f), static_cast<KE::bhalf_t>(4.f)),
       static_cast<KE::bhalf_t>(-1.8f), 2);
-  KOKKOS_EXPECT_NEAR_ULPS(m_test_reporter, 
+  KOKKOS_EXPECT_NEAR_ULPS(
+      m_test_reporter,
       remainder(static_cast<KE::bhalf_t>(-6.2f), static_cast<KE::bhalf_t>(4.f)),
       static_cast<KE::bhalf_t>(1.8f), 2);
 
@@ -2117,12 +2120,14 @@ KOKKOS_DEVICE_TEST(TestIsFinite) {
 #if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_MSVC))
   KOKKOS_EXPECT_TRUE(m_test_reporter, isfinite(static_cast<KE::half_t>(2.f)));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(quiet_NaN<KE::half_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(signaling_NaN<KE::half_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isfinite(signaling_NaN<KE::half_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(infinity<KE::half_t>::value));
 
   KOKKOS_EXPECT_TRUE(m_test_reporter, isfinite(static_cast<KE::bhalf_t>(2.f)));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(quiet_NaN<KE::bhalf_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(signaling_NaN<KE::bhalf_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isfinite(signaling_NaN<KE::bhalf_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(infinity<KE::bhalf_t>::value));
 #endif
 
@@ -2134,7 +2139,8 @@ KOKKOS_DEVICE_TEST(TestIsFinite) {
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   KOKKOS_EXPECT_TRUE(m_test_reporter, isfinite(3.l));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(quiet_NaN<long double>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(signaling_NaN<long double>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isfinite(signaling_NaN<long double>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isfinite(infinity<long double>::value));
 #endif
   // special values
@@ -2190,7 +2196,8 @@ KOKKOS_DEVICE_TEST(TestIsInf) {
 
   KOKKOS_EXPECT_FALSE(m_test_reporter, isinf(static_cast<KE::bhalf_t>(2.f)));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isinf(quiet_NaN<KE::bhalf_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isinf(signaling_NaN<KE::bhalf_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isinf(signaling_NaN<KE::bhalf_t>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, isinf(infinity<KE::bhalf_t>::value));
 #endif
 
@@ -2202,7 +2209,8 @@ KOKKOS_DEVICE_TEST(TestIsInf) {
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   KOKKOS_EXPECT_FALSE(m_test_reporter, isinf(4.l));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isinf(quiet_NaN<long double>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isinf(signaling_NaN<long double>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isinf(signaling_NaN<long double>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, isinf(infinity<long double>::value));
 #endif
 
@@ -2272,25 +2280,34 @@ KOKKOS_DEVICE_TEST(TestFpClassify) {
   KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(-0.f), FP_ZERO);
   KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(1.f), FP_NORMAL);
 #if !__FINITE_MATH_ONLY__
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(signaling_NaN<float>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<float>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<float>::value), FP_INFINITE);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<float>::value), FP_SUBNORMAL);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(signaling_NaN<float>::value),
+                   FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<float>::value),
+                   FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<float>::value),
+                   FP_INFINITE);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<float>::value),
+                   FP_SUBNORMAL);
 #endif
   if (!runtime_fp_env_flushes_to_zero()) {
-    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<float>::value), FP_SUBNORMAL);
+    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<float>::value),
+                     FP_SUBNORMAL);
   }
 
   KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(0.), FP_ZERO);
   KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(-0.), FP_ZERO);
   KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(1.), FP_NORMAL);
 #if !__FINITE_MATH_ONLY__
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(signaling_NaN<double>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<double>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<double>::value), FP_INFINITE);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(signaling_NaN<double>::value),
+                   FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<double>::value),
+                   FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<double>::value),
+                   FP_INFINITE);
 #endif
   if (!runtime_fp_env_flushes_to_zero()) {
-    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<double>::value), FP_SUBNORMAL);
+    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<double>::value),
+                     FP_SUBNORMAL);
   }
 
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -2298,41 +2315,59 @@ KOKKOS_DEVICE_TEST(TestFpClassify) {
   KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(-0.l), FP_ZERO);
   KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(1.l), FP_NORMAL);
 #if !__FINITE_MATH_ONLY__
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(signaling_NaN<long double>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<long double>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<long double>::value), FP_INFINITE);
+  KOKKOS_EXPECT_EQ(m_test_reporter,
+                   fpclassify(signaling_NaN<long double>::value), FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<long double>::value),
+                   FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<long double>::value),
+                   FP_INFINITE);
   if (!runtime_fp_env_flushes_to_zero()) {
-    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<long double>::value), FP_SUBNORMAL);
+    KOKKOS_EXPECT_EQ(m_test_reporter,
+                     fpclassify(denorm_min<long double>::value), FP_SUBNORMAL);
   }
 #endif
 #endif
 
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::half_t>(0.f)), FP_ZERO);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::half_t>(-0.f)), FP_ZERO);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::half_t>(1.f)), FP_NORMAL);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::half_t>(0.f)),
+                   FP_ZERO);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::half_t>(-0.f)),
+                   FP_ZERO);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::half_t>(1.f)),
+                   FP_NORMAL);
 #if !__FINITE_MATH_ONLY__
 #if !(defined(KOKKOS_ENABLE_CUDA) &&                         \
       defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE) && \
       defined(KOKKOS_COMPILER_CLANG))
   // FIXME internal compiler error for Clang+Cuda and RDC
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(signaling_NaN<KE::half_t>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<KE::half_t>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<KE::half_t>::value), FP_INFINITE);
+  KOKKOS_EXPECT_EQ(m_test_reporter,
+                   fpclassify(signaling_NaN<KE::half_t>::value), FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<KE::half_t>::value),
+                   FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<KE::half_t>::value),
+                   FP_INFINITE);
   if (!runtime_fp_env_flushes_to_zero()) {
-    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<KE::half_t>::value), FP_SUBNORMAL);
+    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<KE::half_t>::value),
+                     FP_SUBNORMAL);
   }
 #endif
 #endif
 
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::bhalf_t>(0.f)), FP_ZERO);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::bhalf_t>(-0.f)), FP_ZERO);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::bhalf_t>(1.f)), FP_NORMAL);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::bhalf_t>(0.f)),
+                   FP_ZERO);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::bhalf_t>(-0.f)),
+                   FP_ZERO);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(static_cast<KE::bhalf_t>(1.f)),
+                   FP_NORMAL);
 #if !__FINITE_MATH_ONLY__
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(signaling_NaN<KE::bhalf_t>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<KE::bhalf_t>::value), FP_NAN);
-  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<KE::bhalf_t>::value), FP_INFINITE);
+  KOKKOS_EXPECT_EQ(m_test_reporter,
+                   fpclassify(signaling_NaN<KE::bhalf_t>::value), FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(quiet_NaN<KE::bhalf_t>::value),
+                   FP_NAN);
+  KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(infinity<KE::bhalf_t>::value),
+                   FP_INFINITE);
   if (!runtime_fp_env_flushes_to_zero()) {
-    KOKKOS_EXPECT_EQ(m_test_reporter, fpclassify(denorm_min<KE::bhalf_t>::value), FP_SUBNORMAL);
+    KOKKOS_EXPECT_EQ(m_test_reporter,
+                     fpclassify(denorm_min<KE::bhalf_t>::value), FP_SUBNORMAL);
   }
 #endif
 }
@@ -2445,7 +2480,8 @@ KOKKOS_DEVICE_TEST(TestIsNormal) {
   // FIXME internal compiler error for Clang+Cuda and RDC
 #if !__FINITE_MATH_ONLY__
   KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(quiet_NaN<KE::half_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(signaling_NaN<KE::half_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isnormal(signaling_NaN<KE::half_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(infinity<KE::half_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(denorm_min<KE::half_t>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, isnormal(norm_min<KE::half_t>::value));
@@ -2457,9 +2493,11 @@ KOKKOS_DEVICE_TEST(TestIsNormal) {
   KOKKOS_EXPECT_TRUE(m_test_reporter, isnormal(static_cast<KE::bhalf_t>(-2.f)));
 #if !__FINITE_MATH_ONLY__
   KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(quiet_NaN<KE::bhalf_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(signaling_NaN<KE::bhalf_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isnormal(signaling_NaN<KE::bhalf_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(infinity<KE::bhalf_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(denorm_min<KE::bhalf_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isnormal(denorm_min<KE::bhalf_t>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, isnormal(norm_min<KE::bhalf_t>::value));
 #endif
 #endif
@@ -2484,9 +2522,11 @@ KOKKOS_DEVICE_TEST(TestIsNormal) {
   KOKKOS_EXPECT_TRUE(m_test_reporter, isnormal(-4.l));
 #if !__FINITE_MATH_ONLY__
   KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(quiet_NaN<long double>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(signaling_NaN<long double>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isnormal(signaling_NaN<long double>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(infinity<long double>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, isnormal(denorm_min<long double>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      isnormal(denorm_min<long double>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, isnormal(norm_min<long double>::value));
 #endif
   KOKKOS_EXPECT_TRUE(m_test_reporter, isnormal(LDBL_MAX));
@@ -2563,19 +2603,24 @@ KOKKOS_DEVICE_TEST(TestSignbit) {
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(infinity<KE::half_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(denorm_min<KE::half_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(quiet_NaN<KE::half_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(signaling_NaN<KE::half_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      signbit(signaling_NaN<KE::half_t>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(finite_min<KE::half_t>::value));
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::half_t>(infinity<KE::half_t>::value)));
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::half_t>(denorm_min<KE::half_t>::value)));
   // https://docs.nvidia.com/cuda/cuda-programming-guide/05-appendices/mathematical-functions.html#cuda-and-ieee-754-compliance:
   // "[...] result in the sign of a NaN being updated in an
   // implementation-defined manner."
 #ifndef KOKKOS_ENABLE_CUDA
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::half_t>(quiet_NaN<KE::half_t>::value)));
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::half_t>(signaling_NaN<KE::half_t>::value)));
 #endif
 #endif
@@ -2585,18 +2630,23 @@ KOKKOS_DEVICE_TEST(TestSignbit) {
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(infinity<KE::bhalf_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(denorm_min<KE::bhalf_t>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(quiet_NaN<KE::bhalf_t>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(signaling_NaN<KE::bhalf_t>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      signbit(signaling_NaN<KE::bhalf_t>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(static_cast<KE::bhalf_t>(-0.f)));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(finite_min<KE::bhalf_t>::value));
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::bhalf_t>(infinity<KE::bhalf_t>::value)));
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::bhalf_t>(denorm_min<KE::bhalf_t>::value)));
 // the bhalf test also fails for SYCL+Cuda
 #ifndef KOKKOS_IMPL_ARCH_NVIDIA_GPU
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::bhalf_t>(quiet_NaN<KE::bhalf_t>::value)));
-  KOKKOS_EXPECT_TRUE(m_test_reporter, 
+  KOKKOS_EXPECT_TRUE(
+      m_test_reporter,
       signbit(-static_cast<KE::bhalf_t>(signaling_NaN<KE::bhalf_t>::value)));
 #endif
 #endif
@@ -2621,14 +2671,16 @@ KOKKOS_DEVICE_TEST(TestSignbit) {
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(infinity<long double>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(denorm_min<long double>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(quiet_NaN<long double>::value));
-  KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(signaling_NaN<long double>::value));
+  KOKKOS_EXPECT_FALSE(m_test_reporter,
+                      signbit(signaling_NaN<long double>::value));
   KOKKOS_EXPECT_FALSE(m_test_reporter, signbit(0.l));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(-.8l));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(finite_min<long double>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(-infinity<long double>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(-denorm_min<long double>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(-quiet_NaN<long double>::value));
-  KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(-signaling_NaN<long double>::value));
+  KOKKOS_EXPECT_TRUE(m_test_reporter,
+                     signbit(-signaling_NaN<long double>::value));
   KOKKOS_EXPECT_TRUE(m_test_reporter, signbit(-0.l));
 #endif
 
@@ -2774,18 +2826,22 @@ KOKKOS_DEVICE_TEST(TestNextAfterHalf, FP16Type) {
   const FP16Type neg_inf = -static_cast<FP16Type>(infinity<FP16Type>::value);
 
   // NaN Handling
-  KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(quiet_NaN<FP16Type>::value, pos_one));
-  KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(signaling_NaN<FP16Type>::value, pos_one));
-  KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(pos_one, quiet_NaN<FP16Type>::value));
-  KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(pos_one, signaling_NaN<FP16Type>::value));
-  KOKKOS_EXPECT_NAN(m_test_reporter, 
-      nextafter(quiet_NaN<FP16Type>::value, quiet_NaN<FP16Type>::value));
-  KOKKOS_EXPECT_NAN(m_test_reporter, 
-      nextafter(quiet_NaN<FP16Type>::value, signaling_NaN<FP16Type>::value));
-  KOKKOS_EXPECT_NAN(m_test_reporter, 
-      nextafter(signaling_NaN<FP16Type>::value, quiet_NaN<FP16Type>::value));
+  KOKKOS_EXPECT_NAN(m_test_reporter,
+                    nextafter(quiet_NaN<FP16Type>::value, pos_one));
+  KOKKOS_EXPECT_NAN(m_test_reporter,
+                    nextafter(signaling_NaN<FP16Type>::value, pos_one));
+  KOKKOS_EXPECT_NAN(m_test_reporter,
+                    nextafter(pos_one, quiet_NaN<FP16Type>::value));
+  KOKKOS_EXPECT_NAN(m_test_reporter,
+                    nextafter(pos_one, signaling_NaN<FP16Type>::value));
+  KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(quiet_NaN<FP16Type>::value,
+                                               quiet_NaN<FP16Type>::value));
+  KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(quiet_NaN<FP16Type>::value,
+                                               signaling_NaN<FP16Type>::value));
   KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(signaling_NaN<FP16Type>::value,
-                              signaling_NaN<FP16Type>::value));
+                                               quiet_NaN<FP16Type>::value));
+  KOKKOS_EXPECT_NAN(m_test_reporter, nextafter(signaling_NaN<FP16Type>::value,
+                                               signaling_NaN<FP16Type>::value));
 
   // Equality (from==toward) Handling
   KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(pos_one, pos_one), pos_one);
@@ -2807,9 +2863,11 @@ KOKKOS_DEVICE_TEST(TestNextAfterHalf, FP16Type) {
       std::uint16_t(Kokkos::bit_cast<std::uint16_t>(neg_one) - 1));
   const FP16Type before_neg_one = Kokkos::bit_cast<FP16Type>(
       std::uint16_t(Kokkos::bit_cast<std::uint16_t>(neg_one) + 1));
-  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(neg_smallest, pos_zero), neg_zero);
+  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(neg_smallest, pos_zero),
+                   neg_zero);
   KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(neg_one, pos_one), after_neg_one);
-  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(neg_one, neg_two), before_neg_one);
+  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(neg_one, neg_two),
+                   before_neg_one);
   KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(neg_max, neg_inf), neg_inf);
 
   // From Positive Non Zero Handling
@@ -2817,8 +2875,10 @@ KOKKOS_DEVICE_TEST(TestNextAfterHalf, FP16Type) {
       std::uint16_t(Kokkos::bit_cast<std::uint16_t>(pos_one) + 1));
   const FP16Type before_pos_one = Kokkos::bit_cast<FP16Type>(
       std::uint16_t(Kokkos::bit_cast<std::uint16_t>(pos_one) - 1));
-  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(pos_smallest, neg_zero), pos_zero);
-  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(pos_one, neg_one), before_pos_one);
+  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(pos_smallest, neg_zero),
+                   pos_zero);
+  KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(pos_one, neg_one),
+                   before_pos_one);
   KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(pos_one, pos_two), after_pos_one);
   KOKKOS_EXPECT_EQ(m_test_reporter, nextafter(pos_max, pos_inf), pos_inf);
 

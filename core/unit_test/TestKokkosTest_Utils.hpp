@@ -14,37 +14,36 @@ import kokkos.core;
 
 #include "KokkosTest_Utils.hpp"
 
-//KOKKOS_FUNCTION void toto() {
-//  KOKKOS_EXPECT_NE(m_test_reporter, 1,1);
-//}
+// KOKKOS_FUNCTION void toto() {
+//   KOKKOS_EXPECT_NE(m_test_reporter, 1,1);
+// }
 
-#define TEST_UNARY_EXPECT(TESTER)                                            \
-  template <typename Space, typename type>                                   \
-  struct Test_##TESTER {                                                     \
-    bool expect_pass_;                                                       \
-    type val_;                                                               \
-                                                                             \
-    KokkosTest::TestReporter<Space, 2048> m_test_reporter;                     \
-                                                                             \
-    Test_##TESTER(bool expectation, const type& val)                         \
-        : expect_pass_(expectation),                                         \
-          val_(val) {}                                                       \
-                                                                             \
-    KOKKOS_FUNCTION void operator()(int) const {                             \
-      TESTER(m_test_reporter, val_);                                         \
-    }                                                                        \
-                                                                             \
-    void run(const char* file, int line) {                                   \
-      Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);         \
-      std::stringstream os;                                                       \
-      int expected_error = (expect_pass_ ? 0 : 1);                           \
-      int nerrors        = m_test_reporter.print_errors(os);                 \
-      ASSERT_EQ(nerrors, expected_error)                                     \
-          << file << ":" << line << ":\n"                                    \
-          << KOKKOS_IMPL_STRINGIFY(TESTER) " returned " << (bool)nerrors     \
-          << ", expected " << (bool)expected_error                           \
-          << "\n\tfor value: " << val_;                                      \
-    }                                                                        \
+#define TEST_UNARY_EXPECT(TESTER)                                        \
+  template <typename Space, typename type>                               \
+  struct Test_##TESTER {                                                 \
+    bool expect_pass_;                                                   \
+    type val_;                                                           \
+                                                                         \
+    KokkosTest::TestReporter<Space, 2048> m_test_reporter;               \
+                                                                         \
+    Test_##TESTER(bool expectation, const type& val)                     \
+        : expect_pass_(expectation), val_(val) {}                        \
+                                                                         \
+    KOKKOS_FUNCTION void operator()(int) const {                         \
+      TESTER(m_test_reporter, val_);                                     \
+    }                                                                    \
+                                                                         \
+    void run(const char* file, int line) {                               \
+      Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);     \
+      std::stringstream os;                                              \
+      int expected_error = (expect_pass_ ? 0 : 1);                       \
+      int nerrors        = m_test_reporter.print_errors(os);             \
+      ASSERT_EQ(nerrors, expected_error)                                 \
+          << file << ":" << line << ":\n"                                \
+          << KOKKOS_IMPL_STRINGIFY(TESTER) " returned " << (bool)nerrors \
+          << ", expected " << (bool)expected_error                       \
+          << "\n\tfor value: " << val_;                                  \
+    }                                                                    \
   }
 
 #define TEST_BINARY_EXPECT(TESTER)                                        \
@@ -54,12 +53,10 @@ import kokkos.core;
     type1 val1_;                                                          \
     type2 val2_;                                                          \
                                                                           \
-    KokkosTest::TestReporter<Space, 2048> m_test_reporter;                  \
+    KokkosTest::TestReporter<Space, 2048> m_test_reporter;                \
                                                                           \
     Test_##TESTER(bool expectation, const type1& val1, const type2& val2) \
-        : expect_pass_(expectation),                                      \
-          val1_(val1),                                                    \
-          val2_(val2) {}                                                  \
+        : expect_pass_(expectation), val1_(val1), val2_(val2) {}          \
                                                                           \
     KOKKOS_FUNCTION void operator()(int) const {                          \
       TESTER(m_test_reporter, val1_, val2_);                              \
@@ -67,7 +64,7 @@ import kokkos.core;
                                                                           \
     void run(const char* file, int line) {                                \
       Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);      \
-      std::stringstream os;                                                    \
+      std::stringstream os;                                               \
       int expected_error = (expect_pass_ ? 0 : 1);                        \
       int nerrors        = m_test_reporter.print_errors(os);              \
       ASSERT_EQ(nerrors, expected_error)                                  \
@@ -86,14 +83,11 @@ import kokkos.core;
     type2 val2_;                                                               \
     type3 val3_;                                                               \
                                                                                \
-    KokkosTest::TestReporter<Space, 2048> m_test_reporter;                       \
+    KokkosTest::TestReporter<Space, 2048> m_test_reporter;                     \
                                                                                \
     Test_##TESTER(bool expectation, const type1& val1, const type2& val2,      \
                   const type3& val3)                                           \
-        : expect_pass_(expectation),                                           \
-          val1_(val1),                                                         \
-          val2_(val2),                                                         \
-          val3_(val3) {}                                                       \
+        : expect_pass_(expectation), val1_(val1), val2_(val2), val3_(val3) {}  \
                                                                                \
     KOKKOS_FUNCTION void operator()(int) const {                               \
       TESTER(m_test_reporter, val1_, val2_, val3_);                            \
@@ -101,7 +95,7 @@ import kokkos.core;
                                                                                \
     void run(const char* file, int line) {                                     \
       Kokkos::parallel_for(Kokkos::RangePolicy<Space>(0, 1), *this);           \
-      std::stringstream os;                                                         \
+      std::stringstream os;                                                    \
       int expected_error = (expect_pass_ ? 0 : 1);                             \
       int nerrors        = m_test_reporter.print_errors(os);                   \
       ASSERT_EQ(nerrors, expected_error)                                       \
@@ -317,5 +311,5 @@ TEST(Test_Utils, test_expects) {
   //                 Kokkos::bit_cast<double>(0xFFEFFFFFFFFFFFFFllu),
   //                 Kokkos::bit_cast<double>(0xFFEFFFFFFFFFFFFBllu), 3);
 
-  //toto();
+  // toto();
 }
