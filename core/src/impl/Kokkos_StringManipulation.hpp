@@ -5,7 +5,7 @@
 #define KOKKOS_STRING_MANIPULATION_HPP
 
 #include <Kokkos_Macros.hpp>
-#include <Kokkos_Half.hpp>
+#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
 #include <concepts>
 #include <cstddef>
 #include <ostream>
