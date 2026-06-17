@@ -286,11 +286,11 @@ do
   # -Werror=kind,... will be split into two parts, those kinds that belong to nvcc (see above) go there, while all others go towards the host compiler
   -Werror=*)
     kinds_str="${1:8}" # strip -Werror=
-    IFS="," read -r -a kinds <<< ${kinds_str}
+    IFS="," read -r -a kinds <<< "${kinds_str}"
     first_werror_cuda=1
     first_werror_host=1
     xcompiler_args_werror=
-    # loop over all kinds that are sparated via ','
+    # loop over all kinds that are separated via ','
     for kind in "${kinds[@]}"
     do
       case ${kind} in
@@ -368,13 +368,13 @@ do
   -A)
     ;;
 
-  #strip of -std=c++98 due to nvcc warnings and Tribits will place both -std=c++11 and -std=c++98
+  #strip off -std=c++98 due to nvcc warnings and Tribits will place both -std=c++11 and -std=c++98
   -std=c++98|--std=c++98)
     ;;
-  #strip of pedantic because it produces endless warnings about #LINE added by the preprocessor
+  #strip off pedantic because it produces endless warnings about #LINE added by the preprocessor
   -pedantic|-pedantic-errors|-Wpedantic|-ansi)
     ;;
-  #strip of -Woverloaded-virtual to avoid "cc1: warning: command line option ‘-Woverloaded-virtual’ is valid for C++/ObjC++ but not for C"
+  #strip off -Woverloaded-virtual to avoid "cc1: warning: command line option ‘-Woverloaded-virtual’ is valid for C++/ObjC++ but not for C"
   -Woverloaded-virtual)
     ;;
   #strip -Xcompiler because we add it
@@ -448,7 +448,7 @@ do
     fi
     ;;
   #Handle -code argument (if its not set use a default) this is the version with = sign
-  -code*)
+  -code=*)
     cuda_args="$cuda_args $1"
     ;;
   #Handle -code argument (if its not set use a default) this is the version without = sign
@@ -528,6 +528,7 @@ fi
 
 #Remove duplicate object files
 if [ $remove_duplicate_link_files -eq 1 ]; then
+object_files_reverse=""
 for obj in $object_files
 do
   object_files_reverse="$obj $object_files_reverse"
