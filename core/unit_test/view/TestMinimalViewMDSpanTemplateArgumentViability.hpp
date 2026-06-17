@@ -31,6 +31,17 @@ struct ViewTestHarness {
   using accessor_type = typename Kokkos::View<ElementType>::accessor_type;
   using new_view_t = Kokkos::View<ElementType, Exts, LayoutType, accessor_type>;
 
+  // check that the index_type (and thus the template argument style) propagates
+  static_assert(std::is_same_v<typename new_view_t::type::index_type,
+                               typename new_view_t::index_type>);
+  static_assert(std::is_same_v<typename new_view_t::const_type::index_type,
+                               typename new_view_t::index_type>);
+  static_assert(std::is_same_v<typename new_view_t::non_const_type::index_type,
+                               typename new_view_t::index_type>);
+  static_assert(
+      std::is_same_v<typename new_view_t::host_mirror_type::index_type,
+                     typename new_view_t::index_type>);
+
   using old_view_t = Kokkos::View<
       typename new_view_t::data_type, typename new_view_t::array_layout,
       typename new_view_t::device_type, typename new_view_t::memory_traits>;
@@ -148,9 +159,6 @@ struct ViewTestHarness {
   template <class... Extents>
   static void create_mirror(Extents... extents) {
     new_view_t a("A", extents...);
-    static_assert(
-        std::is_same_v<typename new_view_t::host_mirror_type::index_type,
-                       size_t>);
     {
       auto h_a = Kokkos::create_mirror(a);
       static_assert(
@@ -160,8 +168,6 @@ struct ViewTestHarness {
     {
       auto h_a     = Kokkos::create_mirror(Kokkos::HostSpace(), a);
       using h_type = decltype(h_a);
-      // since create_mirror still uses old-style template args
-      // the extents type isn't necessarily the same index_type
       static_assert(
           std::is_same_v<typename h_type::memory_space, Kokkos::HostSpace>);
       static_assert(std::is_same_v<typename h_type::element_type,
@@ -170,7 +176,26 @@ struct ViewTestHarness {
       ASSERT_EQ(a.extents(), h_a.extents());
     }
     {
-      auto h_a = Kokkos::create_mirror_view(a);
+      typename new_view_t::const_type ac = a;
+      static_assert(
+          std::is_same_v<typename new_view_t::const_type::element_type,
+                         typename new_view_t::element_type const>);
+
+      auto h_ac    = Kokkos::create_mirror(Kokkos::HostSpace(), ac);
+      using h_type = decltype(h_ac);
+      static_assert(
+          std::is_same_v<typename h_type::memory_space, Kokkos::HostSpace>);
+      static_assert(std::is_same_v<typename h_type::element_type,
+                                   typename new_view_t::element_type>);
+
+      ASSERT_EQ(a.extents(), h_ac.extents());
+    }
+    {
+      auto h_a     = Kokkos::create_mirror_view(a);
+      using h_type = decltype(h_a);
+      static_assert(std::is_same_v<typename h_type::element_type,
+                                   typename new_view_t::element_type>);
+
       ASSERT_EQ(a.extents(), h_a.extents());
     }
     {
