@@ -68,6 +68,7 @@ class ParallelForMDRange<FunctorType, UseStride,
   using DeviceIteratePattern =
       Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
                                   Policy::inner_direction, UseStride,
+                                  typename Policy::static_batch_size,
                                   FunctorType, typename Policy::work_tag>;
 
   const FunctorType m_functor;
@@ -107,6 +108,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   using LaunchBounds     = typename Policy::launch_bounds;
   using MaxGridSize      = Kokkos::Array<array_index_type, 3>;
   using array_type       = typename Policy::point_type;
+  using StaticBatchSize  = typename Policy::static_batch_size;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -126,9 +128,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
 
   inline __device__ void operator()() const {
     Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
-                                Policy::inner_direction, true, FunctorType,
-                                typename Policy::work_tag>(m_lower, m_upper,
-                                                           m_extent, m_functor)
+                                Policy::inner_direction, true, StaticBatchSize,
+                                FunctorType, typename Policy::work_tag>(
+        m_lower, m_upper, m_extent, m_functor)
         .exec_range();
   }
 
@@ -168,7 +170,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
                     grid.z <= static_cast<unsigned int>(m_max_grid_size[2]));
     };
 
-    const auto [grid, block] =
+    auto [grid, block] =
         Kokkos::Impl::compute_device_launch_params(m_policy, m_max_grid_size);
 
     // ensure we don't exceed the capability of the device
@@ -186,6 +188,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
     } else {
       // launch the kernel with or without grid stride
       if (need_grid_stride) {
+        // adjust grid.z according to static batch size
+        scale_gridz_by_batch_size<index_type, StaticBatchSize::batch_size>(
+            grid, block, m_max_grid_size[2]);
+
         using ClosureType = ParallelForMDRange<FunctorType, true, Policy>;
         ClosureType closure(m_functor, m_policy, m_lower, m_upper, m_extent);
         CudaParallelLaunch<ClosureType, LaunchBounds>(

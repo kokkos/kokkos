@@ -210,6 +210,24 @@ bool need_grid_stride_loop(const Kokkos::Array<array_type, 3>& max_grid_size,
   }
   return need_grid_stride;
 }
+
+// Adjust grid.z according to static batch size for CUDA and HIP
+template <typename index_type, unsigned int StaticBatchSize = 1>
+void scale_gridz_by_batch_size(dim3& grid, const dim3& block,
+                               const index_type max_grid_size_z) {
+  index_type grid_dim, block_dim, nwork;
+
+  grid_dim  = grid.z;
+  block_dim = block.z;
+
+  nwork    = grid_dim * block_dim;
+  nwork    = (nwork + StaticBatchSize - 1) / StaticBatchSize;
+  grid_dim = std::min(index_type((nwork + block_dim - 1) / block_dim),
+                      max_grid_size_z);
+
+  grid.z = grid_dim;
+}
+
 #endif
 
 // ------------------------------------------------------------------------- //
@@ -225,8 +243,8 @@ bool need_grid_stride_loop(const Kokkos::Array<array_type, 3>& max_grid_size,
 // 3. Bounds check against m_upper to filter out-of-bounds iterations.
 //
 template <int Rank, typename array_index_type, typename index_type,
-          Kokkos::Iterate IterateDir, bool grid_stride, typename Functor,
-          typename Tag>
+          Kokkos::Iterate IterateDir, bool grid_stride,
+          typename StaticBatchSize, typename Functor, typename Tag>
 struct DeviceIterate {
   using array_type = Kokkos::Array<array_index_type, Rank>;
 
@@ -459,35 +477,52 @@ struct DeviceIterate {
     const index_type end       = my_end<rankIdx>();
     const index_type stride    = my_stride<rankIdx>();
 
-    for (index_type idx = start; idx < end; idx += stride) {
-      if constexpr (is_packed_index<rankIdx>()) {
-        static_assert(R >= 2);
-        // Unpack two consecutive indices
-        constexpr unsigned rankIdx1 =
-            (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
-        constexpr unsigned rankIdx2 =
-            (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
+    [[maybe_unused]] constexpr auto batch_size = StaticBatchSize::batch_size;
 
-        const index_type id_1 = idx % m_extent[rankIdx1] + m_lower[rankIdx1];
-        const index_type id_2 = idx / m_extent[rankIdx1] + m_lower[rankIdx2];
-
-        if (id_1 < m_upper[rankIdx1] && id_2 < m_upper[rankIdx2]) {
-          if constexpr (IterateDir == Iterate::Left) {
-            iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2,
-                    idxs...);
-          } else {
-            iterate(std::integral_constant<unsigned, R - 2>(), idxs..., id_2,
-                    id_1);
-          }
-        }
-      } else {
-        if constexpr (IterateDir == Iterate::Left) {
-          iterate(std::integral_constant<unsigned, R - 1>(), idx, idxs...);
-        } else {
-          iterate(std::integral_constant<unsigned, R - 1>(), idxs..., idx);
+// Static batch size currently implemented for CUDA and HIP backends only
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+    // unroll only the outer-most loop of the thread grid
+    // this loop is encountered when rank index == Rank - 1
+    // FIXME: batch_size == 1 can be treated without nested loops.
+    // Range Policy faced issue with cuda-12.6.2 on Hopper90 GPU
+    // (compiler hangs) when implementing that
+    // FIXME: Switching between code paths based on the check
+    // (rankIdx == Rank - 1) could lead to same compiler issues.
+    // Unlike ignoring batch_size == 1, this condition needs to be
+    // dealt with. We cannot unroll all ranks.
+    // Other compile-time approaches could be tried.
+    if constexpr (rankIdx == Rank - 1) {
+      for (index_type istride = start; istride < end;
+           istride =
+               istride < static_cast<index_type>(end - stride * batch_size)
+                   ? istride + stride * batch_size
+                   : end) {
+// Even though "#pragma unroll" directive is possible for AMD GPUs,
+// it leads to considerable warnings of the form "loop not unrolled:
+// the optimizer was unable to perform the requested transformation;
+// the transformation might be disabled or specified as part of an
+// unsupported transformation ordering"
+#if defined(KOKKOS_COMPILER_NVCC)
+#pragma unroll
+#endif
+        for (index_type i = 0;
+             i < static_cast<index_type>(stride * batch_size) &&
+             i < end - istride;
+             i = (i < static_cast<index_type>(end - istride - stride))
+                     ? i + stride
+                     : end - istride) {
+          index_type idx = istride + i;
+          iterate_rank_idx<R, rankIdx>(idx, idxs...);
         }
       }
+    } else {
+#endif
+      for (index_type idx = start; idx < end; idx += stride) {
+        iterate_rank_idx<R, rankIdx>(idx, idxs...);
+      }
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
     }
+#endif
   }
 
   // Iteration pattern without grid stride. When the backend API is sufficient
@@ -534,6 +569,36 @@ struct DeviceIterate {
     } else {  // !grid_stride
       if (check_bounds(std::make_index_sequence<Rank>{}, idxs...)) {
         Impl::_tag_invoke<Tag>(m_functor, idxs...);
+      }
+    }
+  }
+
+  template <unsigned R, unsigned rankIdx, typename... Idxs>
+  KOKKOS_IMPL_DEVICE_FUNCTION inline void iterate_rank_idx(const index_type idx,
+                                                           Idxs... idxs) const {
+    if constexpr (is_packed_index<rankIdx>()) {
+      static_assert(R >= 2);
+      // Unpack two consecutive indices
+      constexpr unsigned idx1 = (rankIdx % 2 == 0) ? rankIdx : (rankIdx - 1);
+      constexpr unsigned idx2 = (rankIdx % 2 == 0) ? (rankIdx + 1) : rankIdx;
+
+      const index_type id_1 = idx % m_extent[idx1] + m_lower[idx1];
+      const index_type id_2 = idx / m_extent[idx1] + m_lower[idx2];
+
+      if (id_1 < m_upper[idx1] && id_2 < m_upper[idx2]) {
+        if constexpr (IterateDir == Iterate::Left) {
+          iterate(std::integral_constant<unsigned, R - 2>(), id_1, id_2,
+                  idxs...);
+        } else {
+          iterate(std::integral_constant<unsigned, R - 2>(), idxs..., id_2,
+                  id_1);
+        }
+      }
+    } else {
+      if constexpr (IterateDir == Iterate::Left) {
+        iterate(std::integral_constant<unsigned, R - 1>(), idx, idxs...);
+      } else {
+        iterate(std::integral_constant<unsigned, R - 1>(), idxs..., idx);
       }
     }
   }

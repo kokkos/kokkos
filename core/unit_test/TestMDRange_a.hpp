@@ -19,4 +19,35 @@ TEST(TEST_CATEGORY, mdrange_5d) {
 #endif
 }
 
+TEST(TEST_CATEGORY, mdrange_5d_static_batch_size) {
+  {
+    Test5DStaticBatchSize<TEST_EXECSPACE,
+                          Kokkos::Experimental::StaticBatchSize<1>>
+        f(16, 16, 16, 16, 16);
+    f.test_batch_size();
+  }
+  {
+    Test5DStaticBatchSize<TEST_EXECSPACE,
+                          Kokkos::Experimental::StaticBatchSize<4>>
+        f(8, 16, 32, 16, 8);
+    f.test_batch_size();
+  }
+
+  // md range dim not divisible by static batch size
+  {
+    Test5DStaticBatchSize<TEST_EXECSPACE,
+                          Kokkos::Experimental::StaticBatchSize<8>>
+        f(17, 15, 31, 7, 19);
+    f.test_batch_size();
+  }
+
+  // md range dim smaller than static batch size
+  {
+    Test5DStaticBatchSize<TEST_EXECSPACE,
+                          Kokkos::Experimental::StaticBatchSize<16>>
+        f(3, 2, 1, 2, 3);
+    f.test_batch_size();
+  }
+}
+
 }  // namespace Test

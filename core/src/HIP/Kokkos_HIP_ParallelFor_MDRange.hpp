@@ -33,6 +33,7 @@ class ParallelForMDRange<FunctorType, UseStride,
   using DeviceIteratePattern =
       Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
                                   Policy::inner_direction, UseStride,
+                                  typename Policy::static_batch_size,
                                   FunctorType, typename Policy::work_tag>;
 
   const FunctorType m_functor;
@@ -68,6 +69,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   using LaunchBounds     = typename Policy::launch_bounds;
   using MaxGridSize      = Kokkos::Array<array_index_type, 3>;
   using array_type       = typename Policy::point_type;
+  using StaticBatchSize  = typename Policy::static_batch_size;
 
   const FunctorType m_functor;
   const Policy m_policy;
@@ -82,16 +84,16 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
 
   inline __device__ void operator()() const {
     Kokkos::Impl::DeviceIterate<Policy::rank, array_index_type, index_type,
-                                Policy::inner_direction, true, FunctorType,
-                                typename Policy::work_tag>(m_lower, m_upper,
-                                                           m_extent, m_functor)
+                                Policy::inner_direction, true, StaticBatchSize,
+                                FunctorType, typename Policy::work_tag>(
+        m_lower, m_upper, m_extent, m_functor)
         .exec_range();
   }
 
   inline void execute() const {
     if (m_policy.m_num_tiles == 0) return;
 
-    const auto [grid, block] =
+    auto [grid, block] =
         Kokkos::Impl::compute_device_launch_params(m_policy, m_max_grid_size);
 
     const bool need_grid_stride =
@@ -104,6 +106,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
     } else {
       // launch the kernel
       if (need_grid_stride) {
+        // adjust grid.z according to static batch size
+        scale_gridz_by_batch_size<index_type, StaticBatchSize::batch_size>(
+            grid, block, m_max_grid_size[2]);
+
         using ClosureType = ParallelForMDRange<FunctorType, true, Policy>;
         ClosureType closure(m_functor, m_lower, m_upper, m_extent);
         hip_parallel_launch<ClosureType, LaunchBounds>(
