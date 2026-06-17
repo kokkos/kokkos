@@ -1,13 +1,18 @@
+
 <div align="center">
 
-[<img src="https://avatars2.githubusercontent.com/u/10199860?s=200&v=4"
-  width="10%">](https://kokkos.org)&emsp;&emsp;&emsp;
+[<img src="https://github.com/kokkos/kokkos.github.io/blob/main/assets/img/kokkos-logo.png" width="50%">](https://kokkos.org)
+
+</div>
+
+<div align="center">
+
 [<img src="https://github.com/hpsfoundation/hpsf-logos/blob/main/Logos/PNG/Horizontal/HPSF_horizontal-tagline-color.png"
-  width="30%" style="vertical-align: middle;">](https://hpsf.io)&emsp;&emsp;&emsp;
+  width="23%" style="vertical-align: middle;">](https://hpsf.io)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
 [<img src="https://github.com/hpsfoundation/hpsf-logos/blob/main/Badges/HPSF_Project_Badge_Established.png?raw=true"
-  width="10%" style="vertical-align: middle;">](https://hpsf.io/projects/#tab-established)&emsp;&emsp;&emsp;
+  width="8%" style="vertical-align: middle;">](https://hpsf.io/projects/#tab-established)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
 [<img src="https://www.linuxfoundation.org/hubfs/lf-stacked-color.svg"
-  width="30%" style="vertical-align: middle;">](https://linuxfoundation.org)
+  width="23%" style="vertical-align: middle;">](https://linuxfoundation.org)
 
 </div>
 
