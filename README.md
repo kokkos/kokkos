@@ -1,4 +1,15 @@
-[![Kokkos](https://avatars2.githubusercontent.com/u/10199860?s=200&v=4)](https://kokkos.org)
+<div align="center">
+
+[<img src="https://avatars2.githubusercontent.com/u/10199860?s=200&v=4"
+  width="10%">](https://kokkos.org)&emsp;&emsp;&emsp;
+[<img src="https://github.com/hpsfoundation/hpsf-logos/blob/main/Logos/PNG/Horizontal/HPSF_horizontal-tagline-color.png"
+  width="30%" style="vertical-align: middle;">](https://hpsf.io)&emsp;&emsp;&emsp;
+[<img src="https://github.com/hpsfoundation/hpsf-logos/blob/main/Badges/HPSF_Project_Badge_Established.png?raw=true"
+  width="10%" style="vertical-align: middle;">](https://hpsf.io/projects/#tab-established)&emsp;&emsp;&emsp;
+[<img src="https://www.linuxfoundation.org/hubfs/lf-stacked-color.svg"
+  width="30%" style="vertical-align: middle;">](https://linuxfoundation.org)
+
+</div>
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9344/badge)](https://www.bestpractices.dev/projects/9344)
 
