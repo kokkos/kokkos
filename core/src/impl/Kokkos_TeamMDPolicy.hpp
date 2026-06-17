@@ -98,30 +98,30 @@ struct AcceleratorBasedNestLevel {
   static constexpr int invalid = -2;
 };
 
-template <typename TeamHandle, typename iType>
+template <typename TeamHandle, typename LowerIndexType, typename UpperIndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::NotParVector>,
-    TeamHandle const& team, iType begin, iType end) {
+    TeamHandle const& team, LowerIndexType begin, UpperIndexType end) {
   return TeamThreadRange(team, begin, end);
 }
 
-template <typename TeamHandle, typename iType>
+template <typename TeamHandle, typename LowerIndexType, typename UpperIndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::NotParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, iType begin, iType end) {
+    TeamHandle const& team, LowerIndexType begin, UpperIndexType end) {
   return ThreadVectorRange(team, begin, end);
 }
 
-template <typename TeamHandle, typename iType>
+template <typename TeamHandle, typename LowerIndexType, typename UpperIndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, iType begin, iType end) {
+    TeamHandle const& team, LowerIndexType begin, UpperIndexType end) {
   return TeamVectorRange(team, begin, end);
 }
 
@@ -170,8 +170,10 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
       TeamMDRangeNestingTracker<Rank, ParThreadNestLevel, ParVectorNestLevel,
                                 next_nest_level>;
   using TeamMDNextMode = typename NextNestingTracker::RangeMode;
+  using LoopType       = std::common_type_t<typename Policy::LowerIndexType,
+                                      typename Policy::UpperIndexType>;
 
-  for (auto i = policy.lower[CurrentNestLevel];
+  for (LoopType i = policy.lower[CurrentNestLevel];
        i < policy.upper[CurrentNestLevel]; ++i) {
     // FIXME
     // NOLINTBEGIN(bugprone-use-after-move)
@@ -205,7 +207,8 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
   using TeamMDNextMode = typename NextNestingTracker::RangeMode;
 
   // This recursively processes ranks from [0..TotalNestLevel-1]
-  // args... is passed by value because it should always be ints
+  // args... is passed by value because it should always be inexpensive index
+  // values
   parallel_for(
       nested_policy(mode, policy.team, policy.lower[CurrentNestLevel],
                     policy.upper[CurrentNestLevel]),
