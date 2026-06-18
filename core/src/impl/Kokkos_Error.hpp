@@ -31,7 +31,7 @@ namespace Kokkos::Experimental {
 /// catch blocks that catch std::runtime_error still work.  Provides structured
 /// access to the memory space, requested allocation size, and label of the
 /// allocation that failed.
-class BadAllocation : public std::runtime_error {
+class BadAlloc : public std::runtime_error {
   std::string m_memory_space_name;
   std::size_t m_allocation_size;
   std::string m_label;
@@ -47,8 +47,8 @@ class BadAllocation : public std::runtime_error {
   }
 
  public:
-  BadAllocation(std::string_view memory_space_name, std::size_t size,
-                std::string_view label)
+  BadAlloc(std::string_view memory_space_name, std::size_t size,
+           std::string_view label)
       : std::runtime_error(make_message(memory_space_name, size, label)),
         m_memory_space_name(memory_space_name),
         m_allocation_size(size),

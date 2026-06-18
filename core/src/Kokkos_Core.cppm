@@ -247,7 +247,7 @@ export {
   using ::Kokkos::tie;
   using ::Kokkos::to_array;
   namespace Experimental {
-  using ::Kokkos::Experimental::BadAllocation;
+  using ::Kokkos::Experimental::BadAlloc;
   }  // namespace Experimental
 
   // reducers

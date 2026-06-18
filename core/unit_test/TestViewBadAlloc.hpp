@@ -43,7 +43,7 @@ void test_view_bad_alloc_typed_catch() {
     auto should_always_fail =
         Kokkos::View<double *, MemorySpace>(label, too_large);
     FAIL() << "It should have thrown.";
-  } catch (Kokkos::Experimental::BadAllocation const &error) {
+  } catch (Kokkos::Experimental::BadAlloc const &error) {
     ASSERT_EQ(error.memory_space_name(), MemorySpace::name());
     ASSERT_GE(error.allocation_size(), too_large * sizeof(double));
     ASSERT_EQ(error.label(), label);

@@ -19,7 +19,7 @@ void Kokkos::Impl::throw_runtime_exception(const std::string &msg) {
 
 void Kokkos::Impl::throw_bad_alloc(std::string_view memory_space_name,
                                    std::size_t size, std::string_view label) {
-  throw Kokkos::Experimental::BadAllocation(memory_space_name, size, label);
+  throw Kokkos::Experimental::BadAlloc(memory_space_name, size, label);
 }
 
 void Kokkos::Impl::log_warning(const std::string &msg) {
