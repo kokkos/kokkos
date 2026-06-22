@@ -286,10 +286,10 @@ struct ViewTypeDefs<ViewType, false, false> {
 // so this is independent of that parameter value
 template <class ViewType, bool HasHooksPolicy>
 struct ViewTypeDefs<ViewType, HasHooksPolicy, true> {
-  using element_type    = typename ViewType::element_type;
-  using nc_element_type = std::remove_const_t<element_type>;
-  using extents_type    = typename ViewType::extents_type;
-  using layout_type     = typename ViewType::layout_type;
+  using element_type           = typename ViewType::element_type;
+  using non_const_element_type = std::remove_const_t<element_type>;
+  using extents_type           = typename ViewType::extents_type;
+  using layout_type            = typename ViewType::layout_type;
 
   //----------------------------------------
   // Compatible view of a data type
@@ -305,16 +305,16 @@ struct ViewTypeDefs<ViewType, HasHooksPolicy, true> {
 
   // Compatible view of non-const data type
   using non_const_type =
-      View<nc_element_type, extents_type, layout_type,
-           Kokkos::Experimental::Accessor<nc_element_type,
+      View<non_const_element_type, extents_type, layout_type,
+           Kokkos::Experimental::Accessor<non_const_element_type,
                                           typename ViewType::memory_space,
                                           typename ViewType::memory_traits> >;
 
   // Compatible host mirror view
   using host_mirror_type =
-      View<nc_element_type, extents_type, layout_type,
+      View<non_const_element_type, extents_type, layout_type,
            Kokkos::Experimental::Accessor<
-               nc_element_type,
+               non_const_element_type,
                typename ViewType::host_mirror_space::memory_space> >;
 };
 
