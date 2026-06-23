@@ -156,10 +156,14 @@ class BasicView {
   }
   KOKKOS_FUNCTION static constexpr size_t static_extent(rank_type r) noexcept {
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
-    // Need to cast in order to avoid warning for rank zero about pointless
-    // comparison to zero
-    if (!std::is_constant_evaluated())
+// FIXME_CUDA is_constant_evaluated only available in host code
+#ifndef KOKKOS_ENABLE_CUDA
+    if (!std::is_constant_evaluated()) {
+      // Need to cast in order to avoid warning for rank zero about pointless
+      // comparison to zero
       KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    }
+#endif
 #endif
     return extents_type::static_extent(r);
   }

@@ -1497,8 +1497,14 @@ class View
     return value == Kokkos::dynamic_extent ? 0 : value;
 #else
     size_t value = base_t::static_extent(r);
-    if (!std::is_constant_evaluated())
+// FIXME_CUDA is_constant_evaluated only available in host code
+#ifndef KOKKOS_ENABLE_CUDA
+    if (!std::is_constant_evaluated()) {
+      // Need to cast in order to avoid warning for rank zero about pointless
+      // comparison to zero
       KOKKOS_ASSERT(base_t::static_extent(r) != Kokkos::dynamic_extent);
+    }
+#endif
     return value;
 #endif
   }

@@ -210,9 +210,8 @@ TEST(TEST_CATEGORY, SortByKeyStaticExtents) {
   // checking that it does not throw
   Kokkos::Experimental::sort_by_key(space, keys, values_dynamic);
 
-  Kokkos::Experimental::sort_by_key(
-      space, keys, values_dynamic,
-      KOKKOS_LAMBDA(int a, int b) { return a < b; });
+  Kokkos::Experimental::sort_by_key(space, keys, values_dynamic,
+                                    SortImpl::Less{});
 }
 
 template <typename ExecutionSpace, typename Keys, typename Values>
