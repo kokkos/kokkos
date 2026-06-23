@@ -209,6 +209,10 @@ TEST(TEST_CATEGORY, SortByKeyStaticExtents) {
   Kokkos::View<int *, ExecutionSpace> values_dynamic("values_dynamic", 10);
   // checking that it does not throw
   Kokkos::Experimental::sort_by_key(space, keys, values_dynamic);
+
+  Kokkos::Experimental::sort_by_key(
+      space, keys, values_dynamic,
+      KOKKOS_LAMBDA(int a, int b) { return a < b; });
 }
 
 template <typename ExecutionSpace, typename Keys, typename Values>

@@ -1493,9 +1493,14 @@ class View
     // with 0
     if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
       return 1;
-#endif
-    size_t value = base_t::extents_type::static_extent(r);
+    size_t value = base_t::static_extent(r);
     return value == Kokkos::dynamic_extent ? 0 : value;
+#else
+    size_t value = base_t::static_extent(r);
+    if (!std::is_constant_evaluated())
+      KOKKOS_ASSERT(base_t::static_extent(r) != Kokkos::dynamic_extent);
+    return value;
+#endif
   }
 };
 

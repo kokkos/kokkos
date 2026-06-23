@@ -158,7 +158,8 @@ class BasicView {
 #ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // Need to cast in order to avoid warning for rank zero about pointless
     // comparison to zero
-    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+    if (!std::is_constant_evaluated())
+      KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
 #endif
     return extents_type::static_extent(r);
   }
