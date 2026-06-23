@@ -702,7 +702,7 @@ struct Random_SFC64_Pool_Init {
   uint64_t seed_high_;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i) const {
+  void operator()(const size_t i) const {
     state_(i, 0) = seed_low_;
     state_(i, 1) = seed_high_ + i;
     state_(i, 2) = ~state_(i, 0) ^ state_(i, 1);
@@ -714,6 +714,11 @@ struct Random_SFC64_Pool_Init {
     // (conservative), though 12 is now recommended. Kept 18 as performance
     // impact is negligible.
     for (int j = 0; j < 18; j++) gen.urand64();
+
+    state_(i, 0) = gen.state_[0];
+    state_(i, 1) = gen.state_[1];
+    state_(i, 2) = gen.state_[2];
+    state_(i, 3) = gen.state_[3];
 
     Kokkos::memory_fence();  // Ensure that the state has been written
     Kokkos::atomic_store(&locks_(i, 0), 0);  // unlock the state
@@ -1398,7 +1403,9 @@ class Random_SFC64 {
   Impl::Random_SFC64_State<
       Impl::Random_SFC64_UseCArrayState<execution_space>::value>
       state_;
+
   friend class Random_SFC64_Pool<DeviceType>;
+  friend struct Impl::Random_SFC64_Pool_Init<DeviceType>;
 
  public:
   using pool_type   = Random_SFC64_Pool<DeviceType>;
