@@ -64,6 +64,7 @@ set(COMPILE_ONLY_SOURCES
     view/TestConversionFromPointer.cpp
     view/TestMemoryTraitTypes.cpp
     view/TestViewMDSpanTemplateArgumentEquivalence.cpp
+    view/TestViewMDSpanTemplateArgumentTypeDefs.cpp
 )
 
 # FIXME_NEXTSILICON: whitelisted tests
@@ -79,6 +80,7 @@ if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR Kokkos_ENABLE_IMPL_VIEW_LEGACY)
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestAccessorFromMemoryTraits.cpp)
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewCustomization.cpp)
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewMDSpanTemplateArgumentEquivalence.cpp)
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewMDSpanTemplateArgumentTypeDefs.cpp)
 endif()
 
 #testing if windows.h and Kokkos_Core.hpp can be included

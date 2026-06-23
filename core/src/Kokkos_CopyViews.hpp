@@ -3057,6 +3057,7 @@ namespace Kokkos {
 namespace Impl {
 
 // Deduce Mirror Types
+// Variant for classic View template argument style
 template <class Space, class T, class... P>
 struct MirrorViewType {
   // The incoming view_type
@@ -3068,11 +3069,39 @@ struct MirrorViewType {
       std::is_same_v<memory_space, typename src_view_type::memory_space>;
   // The array_layout
   using array_layout = typename src_view_type::array_layout;
-  // The data type (we probably want it non-const since otherwise we can't even
+  // The data type (we want it non-const since otherwise we can't even
   // deep_copy to it.
   using data_type = typename src_view_type::non_const_data_type;
   // The destination view type if it is not the same memory space
   using dest_view_type = Kokkos::View<data_type, array_layout, Space>;
+  // If it is the same memory_space return the existsing view_type
+  // This will also keep the unmanaged trait if necessary
+  using view_type =
+      std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
+};
+
+// Specialization for Views with mdspan style template arguments
+template <class Space, class T, class IndexType, size_t... Extents, class... P>
+struct MirrorViewType<Space, T, Kokkos::extents<IndexType, Extents...>, P...> {
+  using extents_type = Kokkos::extents<IndexType, Extents...>;
+  // The incoming view_type
+  using src_view_type = typename Kokkos::View<T, extents_type, P...>;
+  // The memory space for the mirror view
+  using memory_space = typename Space::memory_space;
+  // Check whether it is the same memory space
+  static constexpr bool is_same_memspace =
+      std::is_same_v<memory_space, typename src_view_type::memory_space>;
+  // The array_layout
+  using layout_type = typename src_view_type::layout_type;
+  // The element type (we want it non-const since otherwise we can't even
+  // deep_copy to it.
+  using element_type =
+      std::remove_const_t<typename src_view_type::element_type>;
+  // The destination view type if it is not the same memory space
+  using dest_view_type =
+      Kokkos::View<element_type, extents_type, layout_type,
+                   Kokkos::Experimental::Accessor<element_type, memory_space,
+                                                  Kokkos::MemoryTraits<>>>;
   // If it is the same memory_space return the existsing view_type
   // This will also keep the unmanaged trait if necessary
   using view_type =

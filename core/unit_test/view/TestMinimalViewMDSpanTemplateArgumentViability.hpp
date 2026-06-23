@@ -28,10 +28,13 @@ template <class ElementType, class Exts,
           class LayoutType = typename Kokkos::View<int>::layout_type>
 struct ViewTestHarness {
   // using the default accessor type
-  using accessor_type = typename Kokkos::View<ElementType>::accessor_type;
+  using accessor_type =
+      typename Kokkos::View<ElementType, TEST_EXECSPACE>::accessor_type;
   using new_view_t = Kokkos::View<ElementType, Exts, LayoutType, accessor_type>;
 
   // check that the index_type (and thus the template argument style) propagates
+  // this is just a sanity check, the real check is in
+  // TestViewMDSpanTemplateArgumentTypeDefs.cpp
   static_assert(std::is_same_v<typename new_view_t::type::index_type,
                                typename new_view_t::index_type>);
   static_assert(std::is_same_v<typename new_view_t::const_type::index_type,
@@ -156,47 +159,84 @@ struct ViewTestHarness {
     }
   }
 
+  // This checks that create_mirror works
+  // correct return types are checked in
+  // TestViewMDSpanTemplateArgumentTypeDefs.cpp
   template <class... Extents>
   static void create_mirror(Extents... extents) {
     new_view_t a("A", extents...);
+
+    // Note: only for APU builds - i.e. making default GPU memory space
+    // host accessible the two bools below are not the same in this test.
+    constexpr bool is_host_space =
+        std::is_same_v<typename new_view_t::memory_space, Kokkos::HostSpace>;
+    constexpr bool host_accessible = Kokkos::SpaceAccessibility<
+        Kokkos::DefaultHostExecutionSpace,
+        typename new_view_t::memory_space>::accessible;
+
     {
       auto h_a = Kokkos::create_mirror(a);
-      static_assert(
-          std::is_same_v<decltype(h_a), typename new_view_t::host_mirror_type>);
       ASSERT_EQ(a.extents(), h_a.extents());
-    }
-    {
-      auto h_a     = Kokkos::create_mirror(Kokkos::HostSpace(), a);
-      using h_type = decltype(h_a);
-      static_assert(
-          std::is_same_v<typename h_type::memory_space, Kokkos::HostSpace>);
-      static_assert(std::is_same_v<typename h_type::element_type,
-                                   typename new_view_t::element_type>);
-
-      ASSERT_EQ(a.extents(), h_a.extents());
+      ASSERT_EQ(a.data() == h_a.data(), false);
     }
     {
       typename new_view_t::const_type ac = a;
-      static_assert(
-          std::is_same_v<typename new_view_t::const_type::element_type,
-                         typename new_view_t::element_type const>);
-
-      auto h_ac    = Kokkos::create_mirror(Kokkos::HostSpace(), ac);
-      using h_type = decltype(h_ac);
-      static_assert(
-          std::is_same_v<typename h_type::memory_space, Kokkos::HostSpace>);
-      static_assert(std::is_same_v<typename h_type::element_type,
-                                   typename new_view_t::element_type>);
-
+      auto h_ac                          = Kokkos::create_mirror(ac);
       ASSERT_EQ(a.extents(), h_ac.extents());
+      ASSERT_EQ(a.data() == h_ac.data(), false);
     }
     {
-      auto h_a     = Kokkos::create_mirror_view(a);
-      using h_type = decltype(h_a);
-      static_assert(std::is_same_v<typename h_type::element_type,
-                                   typename new_view_t::element_type>);
-
+      auto h_a = Kokkos::create_mirror(Kokkos::HostSpace(), a);
       ASSERT_EQ(a.extents(), h_a.extents());
+      ASSERT_EQ(a.data() == h_a.data(), false);
+    }
+    {
+      typename new_view_t::const_type ac = a;
+      auto h_ac = Kokkos::create_mirror(Kokkos::HostSpace(), ac);
+      ASSERT_EQ(a.extents(), h_ac.extents());
+      ASSERT_EQ(a.data() == h_ac.data(), false);
+    }
+    {
+      auto h_a = Kokkos::create_mirror_view(a);
+      ASSERT_EQ(a.extents(), h_a.extents());
+      ASSERT_EQ(a.data() == h_a.data(), host_accessible);
+    }
+    // There is an inconsistency here where for constant element type
+    // create_mirror_view without space arg always returns a new allocation
+    // while if you give a space arg it doesn't.
+    {
+      typename new_view_t::const_type ac = a;
+      auto h_ac                          = Kokkos::create_mirror_view(ac);
+      ASSERT_EQ(a.extents(), h_ac.extents());
+      ASSERT_EQ(a.data() == h_ac.data(), false);
+    }
+    {
+      auto h_a = Kokkos::create_mirror_view(Kokkos::HostSpace(), a);
+      ASSERT_EQ(a.extents(), h_a.extents());
+      ASSERT_EQ(a.data() == h_a.data(), is_host_space);
+    }
+    {
+      typename new_view_t::const_type ac = a;
+      auto h_ac = Kokkos::create_mirror_view(Kokkos::HostSpace(), ac);
+      ASSERT_EQ(a.extents(), h_ac.extents());
+      ASSERT_EQ(a.data() == h_ac.data(), is_host_space);
+    }
+    {
+      init_view(a, 1, extents...);
+      auto h_a = Kokkos::create_mirror_view_and_copy(a);
+      ASSERT_EQ(a.extents(), h_a.extents());
+      size_t errors = check_view(h_a, 1, extents...);
+      ASSERT_EQ(errors, 0lu);
+      ASSERT_EQ(a.data() == h_a.data(), host_accessible);
+    }
+    {
+      init_view(a, 1, extents...);
+      typename new_view_t::const_type ac = a;
+      auto h_ac = Kokkos::create_mirror_view_and_copy(ac);
+      ASSERT_EQ(a.extents(), h_ac.extents());
+      size_t errors = check_view(h_ac, 1, extents...);
+      ASSERT_EQ(errors, 0lu);
+      ASSERT_EQ(a.data() == h_ac.data(), host_accessible);
     }
     {
       init_view(a, 1, extents...);
@@ -204,6 +244,47 @@ struct ViewTestHarness {
       ASSERT_EQ(a.extents(), h_a.extents());
       size_t errors = check_view(h_a, 1, extents...);
       ASSERT_EQ(errors, 0lu);
+      ASSERT_EQ(a.data() == h_a.data(), is_host_space);
+    }
+    {
+      init_view(a, 1, extents...);
+      typename new_view_t::const_type ac = a;
+      auto h_ac = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), ac);
+      ASSERT_EQ(a.extents(), h_ac.extents());
+      size_t errors = check_view(h_ac, 1, extents...);
+      ASSERT_EQ(errors, 0lu);
+      ASSERT_EQ(a.data() == h_ac.data(), is_host_space);
+    }
+    // Sanity check that the classical View args show
+    // the same inconsistency in the return value for create_mirror_view
+    // with respect to constant element types.
+    {
+      Kokkos::View<int, Kokkos::HostSpace> b("A");
+      Kokkos::View<const int, Kokkos::HostSpace> bc(b);
+      {
+        auto h_b  = create_mirror_view(b);
+        auto h_bc = create_mirror_view(bc);
+        ASSERT_EQ(b.data(), h_b.data());
+        ASSERT_NE(b.data(), h_bc.data());
+      }
+      {
+        auto h_b  = create_mirror_view(Kokkos::HostSpace(), b);
+        auto h_bc = create_mirror_view(Kokkos::HostSpace(), bc);
+        ASSERT_EQ(b.data(), h_b.data());
+        ASSERT_EQ(b.data(), h_bc.data());
+      }
+      {
+        auto h_b  = create_mirror_view_and_copy(b);
+        auto h_bc = create_mirror_view_and_copy(bc);
+        ASSERT_EQ(b.data(), h_b.data());
+        ASSERT_EQ(b.data(), h_bc.data());
+      }
+      {
+        auto h_b  = create_mirror_view_and_copy(Kokkos::HostSpace(), b);
+        auto h_bc = create_mirror_view_and_copy(Kokkos::HostSpace(), bc);
+        ASSERT_EQ(b.data(), h_b.data());
+        ASSERT_EQ(b.data(), h_bc.data());
+      }
     }
   }
 };
