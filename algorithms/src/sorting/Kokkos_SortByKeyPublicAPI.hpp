@@ -41,8 +41,8 @@ void sort_by_key(
       "Kokkos::sort: execution space instance is not able to access "
       "the memory space of the values View argument!");
 
-  static_assert(KeysType::static_extent(0) == 0 ||
-                ValuesType::static_extent(0) == 0 ||
+  static_assert(KeysType::rank_dynamic() == 1 ||
+                ValuesType::rank_dynamic() == 1 ||
                 KeysType::static_extent(0) == ValuesType::static_extent(0));
   if (values.size() != keys.size())
     Kokkos::abort((std::string("values and keys extents must be the same. The "
@@ -87,8 +87,8 @@ void sort_by_key(
       "Kokkos::sort: execution space instance is not able to access "
       "the memory space of the values View argument!");
 
-  static_assert(KeysType::static_extent(0) == 0 ||
-                ValuesType::static_extent(0) == 0 ||
+  static_assert(KeysType::rank_dynamic() == 1 ||
+                ValuesType::rank_dynamic() == 1 ||
                 KeysType::static_extent(0) == ValuesType::static_extent(0));
   if (values.size() != keys.size())
     Kokkos::abort((std::string("values and keys extents must be the same. The "
