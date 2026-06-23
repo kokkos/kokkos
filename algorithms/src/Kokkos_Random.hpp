@@ -702,7 +702,7 @@ struct Random_SFC64_Pool_Init {
   uint64_t seed_high_;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t i) const {
+  void operator()(const uint64_t i) const {
     state_(i, 0) = seed_low_;
     state_(i, 1) = seed_high_ + i;
     state_(i, 2) = ~state_(i, 0) ^ state_(i, 1);
@@ -1661,7 +1661,8 @@ class Random_SFC64_Pool {
                                                            seed_low, seed_high};
     Kokkos::parallel_for(
         "Kokkos::Random_SFC64_Pool::Initialization",
-        Kokkos::RangePolicy<execution_space>(exec, 0, num_states_),
+        Kokkos::RangePolicy<execution_space, IndexType<uint64_t>>(exec, 0,
+                                                                  num_states_),
         parallel_init);
   }
 
