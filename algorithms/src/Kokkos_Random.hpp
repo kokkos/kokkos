@@ -1673,22 +1673,6 @@ class Random_SFC64_Pool {
     return Random_SFC64<DeviceType>(state_, state_idx);
   }
 
-  // NOTE: state_idx MUST be less than num_states
-  KOKKOS_INLINE_FUNCTION
-  Random_SFC64<DeviceType> get_state_safely(const uint64_t state_idx) const {
-    int delay           = 1;
-    const int max_delay = 1024;  // Arbitrary value to avoid infinite wait
-    while (Kokkos::atomic_compare_exchange(&locks_(state_idx, 0), 0, 1)) {
-      // Exponential backoff spinlock pattern
-      for (int tick = 0; tick < delay; ++tick) {
-        Kokkos::load_fence();
-      }
-
-      if (delay < max_delay) delay *= 2;
-    }
-    return Random_SFC64<DeviceType>(state_, state_idx);
-  }
-
   KOKKOS_INLINE_FUNCTION
   void free_state(const Random_SFC64<DeviceType>& state) const {
     for (int i = 0; i < 4; i++) state_(state.state_idx_, i) = state.state_[i];
