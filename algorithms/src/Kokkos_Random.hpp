@@ -708,7 +708,7 @@ struct Random_SFC64_Pool_Init {
     state_(i, 2) = ~state_(i, 0) ^ state_(i, 1);
     state_(i, 3) = 1;
 
-    Random_SFC64<execution_space> gen(state_, i);
+    Random_SFC64<DeviceType> gen(state_, i);
     // Mix the state to 'escape zeroland' if a bad seed is provided. The number
     // of iterations is arbitrary. PractRand historically used 18
     // (conservative), though 12 is now recommended. Kept 18 as performance
