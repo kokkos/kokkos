@@ -688,6 +688,43 @@ struct Random_SFC64_UseCArrayState<Kokkos::Experimental::OpenACC>
     : std::false_type {};
 #endif
 
+template <class DeviceType = Kokkos::DefaultExecutionSpace>
+struct Random_SFC64_Pool_Init {
+  using device_type     = typename DeviceType::device_type;
+  using execution_space = typename device_type::execution_space;
+
+  using locks_type      = View<int**, device_type>;
+  using state_data_type = View<uint64_t* [4], device_type>;
+
+  locks_type locks_;
+  state_data_type state_;
+  uint64_t seed_low_;
+  uint64_t seed_high_;
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const uint64_t i) const {
+    state_(i, 0) = seed_low_;
+    state_(i, 1) = seed_high_ + i;
+    state_(i, 2) = ~state_(i, 0) ^ state_(i, 1);
+    state_(i, 3) = 1;
+
+    Random_SFC64<DeviceType> gen(state_, i);
+    // Mix the state to 'escape zeroland' if a bad seed is provided. The number
+    // of iterations is arbitrary. PractRand historically used 18
+    // (conservative), though 12 is now recommended. Kept 18 as performance
+    // impact is negligible.
+    for (int j = 0; j < 18; j++) gen.urand64();
+
+    state_(i, 0) = gen.state_[0];
+    state_(i, 1) = gen.state_[1];
+    state_(i, 2) = gen.state_[2];
+    state_(i, 3) = gen.state_[3];
+
+    Kokkos::memory_fence();  // Ensure that the state has been written
+    Kokkos::atomic_store(&locks_(i, 0), 0);  // unlock the state
+  }
+};
+
 template <class DeviceType>
 struct Random_UniqueIndex {
   using locks_view_type = View<int**, DeviceType>;
@@ -1368,6 +1405,7 @@ class Random_SFC64 {
       state_;
 
   friend class Random_SFC64_Pool<DeviceType>;
+  friend struct Impl::Random_SFC64_Pool_Init<DeviceType>;
 
  public:
   using pool_type   = Random_SFC64_Pool<DeviceType>;
@@ -1598,36 +1636,6 @@ class Random_SFC64_Pool {
   }
 
  private:
-  struct InitFunctor {
-    locks_type locks_;
-    state_data_type state_;
-    uint64_t seed_low_;
-    uint64_t seed_high_;
-
-    KOKKOS_INLINE_FUNCTION
-    void operator()(const uint64_t i) const {
-      state_(i, 0) = seed_low_;
-      state_(i, 1) = seed_high_ + i;
-      state_(i, 2) = ~state_(i, 0) ^ state_(i, 1);
-      state_(i, 3) = 1;
-
-      Random_SFC64<DeviceType> gen(state_, i);
-      // Mix the state to 'escape zeroland' if a bad seed is provided. The
-      // number of iterations is arbitrary. PractRand historically used 18
-      // (conservative), though 12 is now recommended. Kept 18 as performance
-      // impact is negligible.
-      for (int j = 0; j < 18; j++) gen.urand64();
-
-      state_(i, 0) = gen.state_[0];
-      state_(i, 1) = gen.state_[1];
-      state_(i, 2) = gen.state_[2];
-      state_(i, 3) = gen.state_[3];
-
-      Kokkos::memory_fence();  // Ensure that the state has been written
-      Kokkos::atomic_store(&locks_(i, 0), 0);  // unlock the state
-    }
-  };
-
   void init_impl(execution_space const& exec, uint64_t seed_low,
                  uint64_t seed_high, uint64_t num_states) {
     KOKKOS_EXPECTS(num_states < (std::numeric_limits<uint64_t>::max() / 4));
@@ -1649,7 +1657,8 @@ class Random_SFC64_Pool {
                                         Kokkos::WithoutInitializing),
                              num_states_);
 
-    InitFunctor parallel_init{locks_, state_, seed_low, seed_high};
+    Impl::Random_SFC64_Pool_Init<DeviceType> parallel_init{locks_, state_,
+                                                           seed_low, seed_high};
     Kokkos::parallel_for(
         "Kokkos::Random_SFC64_Pool::Initialization",
         Kokkos::RangePolicy<execution_space, IndexType<uint64_t>>(exec, 0,
