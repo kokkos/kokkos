@@ -690,8 +690,7 @@ struct Random_SFC64_UseCArrayState<Kokkos::Experimental::OpenACC>
 
 template <class DeviceType = Kokkos::DefaultExecutionSpace>
 struct Random_SFC64_Pool_Init {
-  using device_type     = typename DeviceType::device_type;
-  using execution_space = typename device_type::execution_space;
+  using device_type = typename DeviceType::device_type;
 
   using locks_type      = View<int**, device_type>;
   using state_data_type = View<uint64_t* [4], device_type>;
