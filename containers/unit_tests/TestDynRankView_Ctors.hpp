@@ -40,9 +40,26 @@ void test_dyn_rank_view_ctor_from_members() {
     ASSERT_EQ(data.data(), drv.data());
   }
 }
+template <class DataType, class ExecSpace, class LayOut>
+static void test_required_allocation_size() {
+  using DynRankType  = Kokkos::DynRankView<DataType, LayOut, ExecSpace>;
+  const size_t bytes = sizeof(DataType);
+  auto size_length_1 = DynRankType::required_allocation_size(10);
+  DynRankType rank_1("Initiate", 10);
+  ASSERT_EQ(size_length_1, 10 * bytes);
+  auto size_length_2 = DynRankType::required_allocation_size(10, 20);
+  ASSERT_EQ(size_length_2, 10 * 20 * bytes);
+  auto size_length_3 = DynRankType::required_allocation_size(10, 20, 3);
+  ASSERT_EQ(size_length_3, 10 * 20 * 3 * bytes);
+  auto size_length_8 =
+      DynRankType::required_allocation_size(2, 3, 4, 5, 6, 7, 8, 9);
+  ASSERT_NE(size_length_8, 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * bytes);
+}
 
 TEST(TEST_CATEGORY, dyn_rank_view_ctor_from_members) {
   test_dyn_rank_view_ctor_from_members();
+  test_required_allocation_size<double, TEST_EXECSPACE, Kokkos::LayoutRight>();
+  test_required_allocation_size<int, TEST_EXECSPACE, Kokkos::LayoutRight>();
 }
 
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
