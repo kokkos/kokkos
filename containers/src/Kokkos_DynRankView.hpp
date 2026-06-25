@@ -1041,13 +1041,16 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
-  // FIXME: this function needs to be tested
   static constexpr size_t required_allocation_size(
       const size_t arg_N0 = 1, const size_t arg_N1 = 1, const size_t arg_N2 = 1,
       const size_t arg_N3 = 1, const size_t arg_N4 = 1, const size_t arg_N5 = 1,
       const size_t arg_N6                  = 1,
       [[maybe_unused]] const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    // FIXME: check that arg_N7 is not set by user (in debug mode)
+#ifdef KOKKOS_ENABLE_DEBUG
+    KOKKOS_ASSERT(arg_N7 == KOKKOS_INVALID_INDEX &&
+                  "DynRankView: Cannot allocate 8 dimensions!");
+#endif
+
     return view_type::required_allocation_size(arg_N0, arg_N1, arg_N2, arg_N3,
                                                arg_N4, arg_N5, arg_N6);
   }

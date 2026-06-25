@@ -45,15 +45,18 @@ static void test_required_allocation_size() {
   using DynRankType  = Kokkos::DynRankView<DataType, LayOut, ExecSpace>;
   const size_t bytes = sizeof(DataType);
   auto size_length_1 = DynRankType::required_allocation_size(10);
-  DynRankType rank_1("Initiate", 10);
   ASSERT_EQ(size_length_1, 10 * bytes);
   auto size_length_2 = DynRankType::required_allocation_size(10, 20);
   ASSERT_EQ(size_length_2, 10 * 20 * bytes);
   auto size_length_3 = DynRankType::required_allocation_size(10, 20, 3);
   ASSERT_EQ(size_length_3, 10 * 20 * 3 * bytes);
-  auto size_length_8 =
-      DynRankType::required_allocation_size(2, 3, 4, 5, 6, 7, 8, 9);
-  ASSERT_NE(size_length_8, 2 * 3 * 4 * 5 * 6 * 7 * 8 * 9 * bytes);
+  auto size_length_7 =
+      DynRankType::required_allocation_size(2, 3, 4, 5, 6, 7, 8);
+  ASSERT_EQ(size_length_7, 2 * 3 * 4 * 5 * 6 * 7 * 8 * bytes);
+#ifdef KOKKOS_ENABLE_DEBUG
+  ASSERT_DEATH(DynRankType::required_allocation_size(2, 3, 4, 5, 6, 7, 8, 9),
+               "Cannot allocate 8 dimensions");
+#endif
 }
 
 TEST(TEST_CATEGORY, dyn_rank_view_ctor_from_members) {
