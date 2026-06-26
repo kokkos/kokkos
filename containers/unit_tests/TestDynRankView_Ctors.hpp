@@ -59,7 +59,7 @@ static void test_required_allocation_size() {
 #endif
 }
 
-TEST(TEST_CATEGORY, dyn_rank_view_ctor_from_members) {
+TEST(TEST_CATEGORY_DEATH, dyn_rank_view_ctor_from_members) {
   test_dyn_rank_view_ctor_from_members();
   test_required_allocation_size<double, TEST_EXECSPACE, Kokkos::LayoutRight>();
   test_required_allocation_size<int, TEST_EXECSPACE, Kokkos::LayoutRight>();
