@@ -118,30 +118,28 @@ class layout_left::mapping {
     /**
      * Converting constructor from `layout_left_padded::mapping`.
      *
-     * This overload participates in overload resolution only if Mapping is a layout_left_padded mapping and
-     * extents_type is constructible from Mapping::extents_type.
+     * This overload participates in overload resolution only if Mapping is a
+     * layout_left_padded mapping and extents_type is constructible from
+     * Mapping::extents_type.
      *
-     * \note There is currently a difference from p2642r2, where this function is specified as taking
-     * `layout_left_padded< padding_value >::mapping< Extents>`. However, this makes `padding_value` non-deducible.
+     * \note There is currently a difference from p2642r2, where this function
+     * is specified as taking `layout_left_padded< padding_value >::mapping<
+     * Extents>`. However, this makes `padding_value` non-deducible.
      */
     MDSPAN_TEMPLATE_REQUIRES(
-      class Mapping,
-      /* requires */ (
-        MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::is_layout_left_padded_mapping<Mapping>::value
-        && std::is_constructible_v<extents_type, typename Mapping::extents_type>
-      )
-    )
-    MDSPAN_CONDITIONAL_EXPLICIT((!std::is_convertible_v<typename Mapping::extents_type, extents_type>))
-    MDSPAN_INLINE_FUNCTION constexpr
-    mapping(const Mapping& other) noexcept
-      : m_extents(other.extents())
-    {
-      MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::
-          check_padded_layout_converting_constructor_mandates<
-            extents_type, Mapping>(detail::with_rank<extents_type::rank()>{});
-      MDSPAN_IMPL_PROPOSED_NAMESPACE::detail::
-          check_padded_layout_converting_constructor_preconditions<
-              extents_type>(detail::with_rank<extents_type::rank()>{}, other);
+        class Mapping,
+        /* requires */ (detail::is_layout_left_padded_mapping<Mapping>::value
+                            &&std::is_constructible_v<
+                                extents_type, typename Mapping::extents_type>))
+    MDSPAN_CONDITIONAL_EXPLICIT(
+        (!std::is_convertible_v<typename Mapping::extents_type, extents_type>))
+    MDSPAN_INLINE_FUNCTION constexpr mapping(const Mapping &other) noexcept
+        : m_extents(other.extents()) {
+      detail::check_padded_layout_converting_constructor_mandates<extents_type,
+                                                                  Mapping>(
+          detail::with_rank<extents_type::rank()>{});
+      detail::check_padded_layout_converting_constructor_preconditions<
+          extents_type>(detail::with_rank<extents_type::rank()>{}, other);
     }
 #endif
 

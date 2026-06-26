@@ -439,7 +439,12 @@ public:
            sizeof...(OtherIndexTypes) == m_rank_dynamic)))
   MDSPAN_INLINE_FUNCTION
   constexpr explicit extents(OtherIndexTypes... dynvals) noexcept
-      : m_vals(static_cast<index_type>(dynvals)...) {}
+      : m_vals(static_cast<index_type>(dynvals)...) {
+#if MDSPAN_HAS_CXX_17
+    MDSPAN_IMPL_PRECONDITION(
+        detail::all_values_are_nonnegative_and_representable<index_type>(dynvals...));
+#endif
+  }
 
   MDSPAN_TEMPLATE_REQUIRES(
       class OtherIndexType, size_t N,
@@ -452,7 +457,13 @@ public:
   MDSPAN_INLINE_FUNCTION
   MDSPAN_CONDITIONAL_EXPLICIT(N != m_rank_dynamic)
   constexpr extents(const std::array<OtherIndexType, N> &exts) noexcept
-      : m_vals(std::move(exts)) {}
+      : m_vals(std::move(exts)) {
+#if MDSPAN_HAS_CXX_17
+    MDSPAN_IMPL_PRECONDITION(
+        detail::range_is_nonnegative_and_representable<index_type>(
+            std::begin(exts), std::end(exts)));
+#endif
+  }
 
 #ifdef __cpp_lib_span
   MDSPAN_TEMPLATE_REQUIRES(
@@ -464,7 +475,11 @@ public:
   MDSPAN_INLINE_FUNCTION
   MDSPAN_CONDITIONAL_EXPLICIT(N != m_rank_dynamic)
   constexpr extents(const std::span<OtherIndexType, N> &exts) noexcept
-      : m_vals(std::move(exts)) {}
+      : m_vals(std::move(exts)) {
+    MDSPAN_IMPL_PRECONDITION(
+        detail::range_is_nonnegative_and_representable<index_type>(
+            std::begin(exts), std::end(exts)));
+  }
 #endif
 
 private:
@@ -536,10 +551,16 @@ public:
                                ...) ||
                               (std::numeric_limits<index_type>::max() <
                                std::numeric_limits<OtherIndexType>::max()))
-  constexpr extents(const extents<OtherIndexType, OtherExtents...> &other) noexcept
+  constexpr extents(
+      const extents<OtherIndexType, OtherExtents...> &other) noexcept
       : m_vals(impl_construct_vals_from_extents(
             std::integral_constant<size_t, 0>(),
-            std::integral_constant<size_t, 0>(), other)) {}
+            std::integral_constant<size_t, 0>(), other)) {
+#if MDSPAN_HAS_CXX_17
+    MDSPAN_IMPL_PRECONDITION(
+        detail::extent_is_representable<index_type>(other));
+#endif
+  }
 
   // Comparison operator
   template <class OtherIndexType, size_t... OtherExtents>

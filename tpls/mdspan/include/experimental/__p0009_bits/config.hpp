@@ -45,11 +45,13 @@
 #else
 #define MDSPAN_CXX_STD_23 202100L
 #endif
+#define MDSPAN_CXX_STD_26 202603L
 
 #define MDSPAN_HAS_CXX_14 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14)
 #define MDSPAN_HAS_CXX_17 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_17)
 #define MDSPAN_HAS_CXX_20 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_20)
 #define MDSPAN_HAS_CXX_23 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_23)
+#define MDSPAN_HAS_CXX_26 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_26)
 
 static_assert(MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14 or later.");
 
@@ -302,4 +304,8 @@ static_assert(MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14
 #  define MDSPAN_IMPL_OP4(mds, a, b, c, d) mds(a,b,c,d)
 #  define MDSPAN_IMPL_OP5(mds, a, b, c, d, e) mds(a,b,c,d,e)
 #  define MDSPAN_IMPL_OP6(mds, a, b, c, d, e, f) mds(a,b,c,d,e,f)
+#endif
+
+#if ! defined(MDSPAN_IMPL_ENABLE_P3663)
+#  define MDSPAN_IMPL_ENABLE_P3663 1
 #endif

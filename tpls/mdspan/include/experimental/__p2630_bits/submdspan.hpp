@@ -17,6 +17,7 @@
 #pragma once
 
 #include "submdspan_extents.hpp"
+#include "submdspan_canonicalize_slices.hpp"
 #include "submdspan_mapping.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
@@ -26,7 +27,19 @@ MDSPAN_INLINE_FUNCTION
 constexpr auto
 submdspan(const mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy> &src,
           SliceSpecifiers... slices) {
-  const auto sub_submdspan_mapping_result = submdspan_mapping(src.mapping(), slices...);
+
+  // Avoid instantiating expensive slice mandate check here for known layouts
+  // These layouts will check again anyway
+  if constexpr (
+    !(std::is_same_v<LayoutPolicy, layout_left> ||
+     std::is_same_v<LayoutPolicy, layout_right> ||
+     std::is_same_v<LayoutPolicy, layout_stride> ||
+     detail::is_layout_left_padded<LayoutPolicy>::value ||
+     detail::is_layout_right_padded<LayoutPolicy>::value
+    )) detail::check_submdspan_slice_mandates<Extents>(std::make_index_sequence<Extents::rank()>(), slices...);
+
+  const auto sub_submdspan_mapping_result = submdspan_mapping(src.mapping(),
+        detail::canonical_slice<typename Extents::index_type>(slices)...);
   // NVCC has a problem with the deduction so lets figure out the type
   using sub_mapping_t = std::remove_cv_t<decltype(sub_submdspan_mapping_result.mapping)>;
   using sub_extents_t = typename sub_mapping_t::extents_type;
