@@ -20,6 +20,13 @@ static_assert(false,
 // mdspan layout is that the array layouts can have state, but don't have the
 // nested mapping. This file provides interoperability helpers.
 
+namespace Kokkos::Experimental {
+template <size_t Pad = Kokkos::dynamic_extent>
+using layout_left_padded = Kokkos::layout_left_padded<Pad>;
+template <size_t Pad = Kokkos::dynamic_extent>
+using layout_right_padded = Kokkos::layout_right_padded<Pad>;
+}  // namespace Kokkos::Experimental
+
 namespace Kokkos::Impl {
 // We do have implementation detail versions of these in our mdspan impl
 // However they are not part of the public standard interface
