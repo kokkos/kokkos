@@ -571,6 +571,7 @@ public:
     } else if constexpr (extents_type::rank() == 1) {
       return exts.extent(0);
     } else {
+      if (exts.extent(0) == 0) return 0;
       index_type value = padded_stride.value(0);
       for (rank_type r = 1; r < extents_type::rank(); ++r) {
         value *= exts.extent(r);
@@ -964,6 +965,7 @@ public:
     } else if constexpr (extents_type::rank() == 1) {
       return exts.extent(0);
     } else {
+      if (exts.extent(extents_type::rank()-1) == 0) return 0;
       index_type value = padded_stride.value(0);
       for (rank_type r = 0; r < extent_to_pad_idx; ++r) {
         value *= exts.extent(r);
