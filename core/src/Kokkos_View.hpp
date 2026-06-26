@@ -1548,6 +1548,27 @@ class View
       return this->data_handle().use_count();
     }
   }
+
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  KOKKOS_FUNCTION
+  constexpr typename base_t::index_type extent(size_t r) const noexcept {
+    // casting to int to avoid warning for pointless comparison of unsigned
+    // with 0
+    if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
+      return 1;
+    return base_t::extent(r);
+  }
+
+  KOKKOS_FUNCTION
+  static constexpr size_t static_extent(size_t r) noexcept {
+    // casting to int to avoid warning for pointless comparison of unsigned
+    // with 0
+    if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
+      return 1;
+    size_t value = base_t::extents_type::static_extent(r);
+    return value == Kokkos::dynamic_extent ? 0 : value;
+  }
+#endif
 };
 
 #if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU >= 1500
