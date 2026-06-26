@@ -143,35 +143,19 @@ class BasicView {
     return extents_type::rank_dynamic();
   }
   KOKKOS_FUNCTION static constexpr size_t static_extent(rank_type r) noexcept {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-    // casting to int to avoid warning for pointless comparison of unsigned
-    // with 0
-    if (static_cast<int>(r) >= static_cast<int>(extents_type::rank())) return 1;
-#else
 // FIXME_CUDA is_constant_evaluated only available in host code
 #ifndef KOKKOS_ENABLE_CUDA
+    // we can't call Kokkos::abort in a constexpr context
     if (!std::is_constant_evaluated()) {
       // Need to cast in order to avoid warning for rank zero about pointless
       // comparison to zero
       KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
     }
 #endif
-#endif
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-    size_t value = extents_type::static_extent(r);
-    return value == Kokkos::dynamic_extent ? 0 : value;
-#else
     return extents_type::static_extent(r);
-#endif
   }
   KOKKOS_FUNCTION constexpr index_type extent(rank_type r) const noexcept {
-    // Need to cast in order to avoid warning for rank zero about pointless
-    // comparison to zero
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
-    if (static_cast<int>(r) >= static_cast<int>(rank())) return 1;
-#else
     KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
-#endif
     return m_map.extents().extent(r);
   }
 
