@@ -42,6 +42,8 @@ void test_dyn_rank_view_ctor_from_members() {
 }
 template <class DataType, class ExecSpace, class LayOut>
 static void test_required_allocation_size() {
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+
   using DynRankType  = Kokkos::DynRankView<DataType, LayOut, ExecSpace>;
   const size_t bytes = sizeof(DataType);
   auto size_length_1 = DynRankType::required_allocation_size(10);
@@ -53,16 +55,30 @@ static void test_required_allocation_size() {
   auto size_length_7 =
       DynRankType::required_allocation_size(2, 3, 4, 5, 6, 7, 8);
   ASSERT_EQ(size_length_7, bytes * 2 * 3 * 4 * 5 * 6 * 7 * 8);
-#ifdef KOKKOS_ENABLE_DEBUG
+}
+
+template <class DataType, class ExecSpace, class LayOut>
+static void test_required_allocation_size_death() {
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_5) && defined(KOKKOS_ENABLE_DEBUG)
+  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  using DynRankType = Kokkos::DynRankView<DataType, LayOut, ExecSpace>;
   ASSERT_DEATH(DynRankType::required_allocation_size(2, 3, 4, 5, 6, 7, 8, 9),
                "Cannot allocate 8 dimensions");
 #endif
 }
 
-TEST(TEST_CATEGORY_DEATH, dyn_rank_view_ctor_from_members) {
+TEST(TEST_CATEGORY, dyn_rank_view_ctor_from_members) {
   test_dyn_rank_view_ctor_from_members();
+}
+
+TEST(TEST_CATEGORY, dyn_rank_view_required_allocation_size) {
   test_required_allocation_size<double, TEST_EXECSPACE, Kokkos::LayoutRight>();
   test_required_allocation_size<int, TEST_EXECSPACE, Kokkos::LayoutRight>();
+}
+
+TEST(TEST_CATEGORY_DEATH, dyn_rank_view_required_allocation_size_death) {
+  test_required_allocation_size_death<double, TEST_EXECSPACE,
+                                      Kokkos::LayoutRight>();
 }
 
 #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY

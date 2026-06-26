@@ -1046,9 +1046,10 @@ class DynRankView : private View<DataType*******, Properties...> {
       const size_t arg_N3 = 1, const size_t arg_N4 = 1, const size_t arg_N5 = 1,
       const size_t arg_N6                  = 1,
       [[maybe_unused]] const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_5)
     KOKKOS_ASSERT(arg_N7 == KOKKOS_INVALID_INDEX &&
                   "DynRankView: Cannot allocate 8 dimensions!");
-
+#endif
     return view_type::required_allocation_size(arg_N0, arg_N1, arg_N2, arg_N3,
                                                arg_N4, arg_N5, arg_N6);
   }
