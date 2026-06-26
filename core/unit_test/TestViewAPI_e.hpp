@@ -212,6 +212,7 @@ void test_view_extent_precondition_violation(V v) {
     for (size_t r = 0; r < V::rank(); ++r) {
       (void)v.extent(r);
       (void)v.extent_int(r);
+      (void)v.static_extent(r);
     }
   }
 
@@ -219,11 +220,21 @@ void test_view_extent_precondition_violation(V v) {
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     ASSERT_EQ(v.extent(r), 1u);
     ASSERT_EQ(v.extent_int(r), 1);
+    ASSERT_EQ(v.static_extent(r), 1);
 #else
     std::string const poor_msg =
         "static_cast<int>\\(r\\) < static_cast<int>\\(rank\\(\\)\\)";
     ASSERT_DEATH({ (void)v.extent(r); }, poor_msg);
     ASSERT_DEATH({ (void)v.extent_int(r); }, poor_msg);
+    ASSERT_DEATH({ (void)v.static_extent(r); }, poor_msg);
+#endif
+  }
+
+  for (size_t r = 0; r < V::rank_dynamic(); ++r) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    ASSERT_EQ(v.static_extent(r), 0);
+#else
+    ASSERT_EQ(v.static_extent(r), Kokkos::dynamic_extent);
 #endif
   }
 }
@@ -246,6 +257,14 @@ TEST(TEST_CATEGORY_DEATH, view_extent_precondition_violation) {
       Kokkos::View<int***, TEST_EXECSPACE>("v3", 3, 7, 13));
   test_view_extent_precondition_violation(
       Kokkos::View<int********, TEST_EXECSPACE>("v8", 1, 2, 3, 4, 5, 6, 7, 8));
+  test_view_extent_precondition_violation(
+      Kokkos::View<double[1], TEST_EXECSPACE>("v0"));
+  test_view_extent_precondition_violation(
+      Kokkos::View<float* [2], TEST_EXECSPACE>("v1", 5));
+  test_view_extent_precondition_violation(
+      Kokkos::View<int* [3][7], TEST_EXECSPACE>("v3", 13));
+  test_view_extent_precondition_violation(
+      Kokkos::View<int***** [1][2][3], TEST_EXECSPACE>("v8", 4, 5, 6, 7, 8));
 }
 
 inline void test_anonymous_space() {
