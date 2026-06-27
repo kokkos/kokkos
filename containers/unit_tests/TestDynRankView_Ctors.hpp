@@ -59,7 +59,11 @@ static void test_required_allocation_size() {
 
 template <class DataType, class ExecSpace, class LayOut>
 static void test_required_allocation_size_death() {
-#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_5) && defined(KOKKOS_ENABLE_DEBUG)
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
+#ifndef KOKKOS_ENABLE_DEBUG
+  GTEST_SKIP() << "only enforced when debug checks are enabled";
+  KOKKOS_IMPL_UNREACHABLE();
+#endif
   ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   using DynRankType = Kokkos::DynRankView<DataType, LayOut, ExecSpace>;
   ASSERT_DEATH(DynRankType::required_allocation_size(2, 3, 4, 5, 6, 7, 8, 9),
