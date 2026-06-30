@@ -11,6 +11,9 @@ namespace Kokkos {
 namespace Impl {
 bool is_unsigned_int(const char* str);
 bool check_arg(char const* arg, char const* expected);
+bool check_arg_starts_with(char const* arg, char const* expected);
+bool check_arg_starts_with_optional_leading_dash(char const* arg,
+                                                 char const* expected);
 bool check_arg_bool(char const* arg, char const* name, bool& val);
 bool check_arg_int(char const* arg, char const* name, int& val);
 bool check_arg_str(char const* arg, char const* name, std::string& val);

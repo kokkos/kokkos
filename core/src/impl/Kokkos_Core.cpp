@@ -25,7 +25,6 @@
 #include <functional>
 #include <cerrno>
 #include <random>
-#include <regex>
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -924,8 +923,8 @@ void Kokkos::Impl::parse_command_line_arguments(
       }
       settings.set_map_device_id_by(map_device_id_by);
       remove_flag = true;
-    } else if (std::regex_match(argv[iarg],
-                                std::regex("-?-kokkos.*", std::regex::egrep))) {
+    } else if (check_arg_starts_with_optional_leading_dash(argv[iarg],
+                                                           "-kokkos")) {
       warn_not_recognized_command_line_argument(argv[iarg]);
     }
 

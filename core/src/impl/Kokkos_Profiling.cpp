@@ -106,8 +106,8 @@ void parse_command_line_arguments(int& argc, char* argv[],
       help = InitArguments::PossiblyUnsetOption::on;
       warn_cmd_line_arg_ignored_when_kokkos_tools_disabled(argv[iarg]);
       remove_flag = true;
-    } else if (std::regex_match(argv[iarg], std::regex("-?-kokkos-tool.*",
-                                                       std::regex::egrep))) {
+    } else if (Kokkos::Impl::check_arg_starts_with_optional_leading_dash(
+                   argv[iarg], "-kokkos-tool")) {
       std::cerr << "Warning: command line argument '" << argv[iarg]
                 << "' is not recognized."
                 << " Raised by Kokkos::initialize()." << std::endl;
