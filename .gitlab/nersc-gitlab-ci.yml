@@ -37,7 +37,7 @@ clang-cuda:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CUDA_FLAGS=-Wno-pass-failed -Wno-unknown-cuda-version"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
-    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-omp-cuda13-clang21"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-a100-omp-cuda13-clang21"
 
 gcc-cuda:
   stage: test
@@ -50,7 +50,7 @@ gcc-cuda:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_CUDA=ON"
-    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-omp-cuda13-gcc/13.2"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-a100-omp-cuda13-gcc/13.2"
 
 nvhpc-cuda:
   stage: test
@@ -62,7 +62,7 @@ nvhpc-cuda:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=nvc++"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_CUDA=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_OPENMP=ON"
-    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-omp-cuda13-nvhpc/25.5"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-a100-omp-cuda13-nvhpc/24.5"
 
 clang-cuda-cxx23:
   stage: test
@@ -79,7 +79,7 @@ clang-cuda-cxx23:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILE_AS_CMAKE_LANGUAGE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_POSITION_INDEPENDENT_CODE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_STANDARD=23"
-    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-omp-cuda13-clang21-cxx23"
+    - ctest -VV -D CDASH_MODEL="Nightly" -D CTEST_SITE="nersc" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S ${SCRIPT_FILE} -D CTEST_BUILD_NAME="zen3-a100-omp-cuda13-clang21-cxx23"
 
 clear-ci-builds:
   stage: clean_up
