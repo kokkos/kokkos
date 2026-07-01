@@ -23,7 +23,8 @@ constexpr bool test_create_mirror_types() {
       Kokkos::SpaceAccessibility<Kokkos::DefaultHostExecutionSpace,
                                  MemSpace>::accessible;
 
-  constexpr bool const_T = std::is_const_v<T>;
+  // explicitly not using is_const_v to work around nvc++ compiler issue
+  constexpr bool const_T = std::is_const<T>::value;
 
   using host_mirror_space_t =
       std::conditional_t<host_accessible, MemSpace, Kokkos::HostSpace>;
