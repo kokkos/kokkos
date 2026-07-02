@@ -504,7 +504,7 @@ TEST(TEST_CATEGORY, view_mdspan_conversion) {
 
 // FIXME_NVHPC: Skipping for NVHPC with the Serial backend because running this
 // test causes a race condition in serial.self_similar_range_policy_computation.
-#if !defined(KOKKOS_COMPILER_NVHPC) || !defined(KOKKOS_ENABLE_SERIAL)
+#if !(defined(KOKKOS_COMPILER_NVHPC) && defined(KOKKOS_ENABLE_OPENACC))
 TEST(TEST_CATEGORY, view_mdspan_conversion_with_stride) {
   {
     Kokkos::View<int ***, Kokkos::LayoutLeft> source("S", 20, 40, 70);
