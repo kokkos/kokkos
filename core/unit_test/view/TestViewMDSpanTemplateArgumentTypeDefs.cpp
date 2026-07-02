@@ -23,8 +23,7 @@ constexpr bool test_create_mirror_types() {
       Kokkos::SpaceAccessibility<Kokkos::DefaultHostExecutionSpace,
                                  MemSpace>::accessible;
 
-  // explicitly not using is_const_v to work around nvc++ compiler issue
-  constexpr bool const_T = std::is_const<T>::value;
+  constexpr bool const_T = std::is_const_v<T>;
 
   using host_mirror_space_t =
       std::conditional_t<host_accessible, MemSpace, Kokkos::HostSpace>;
@@ -147,7 +146,10 @@ static_assert(test_derived_types<f,  Kokkos::extents<unsigned, 2, 3>,       LL, 
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 8>,         LR, SD, Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>());
 static_assert(test_derived_types<f,  Kokkos::extents<unsigned, d, d, 2, 3>, LL, SD, Kokkos::MemoryTraits<Kokkos::RandomAccess>>());
 
+// FIXME_OPENACC, FIXME_NVHPC This particular case causes internal compiler errors with NVHPC 23.7
+#ifndef KOKKOS_ENABLE_OPENACC
 static_assert(test_derived_types<f,  Kokkos::dextents<unsigned, 0>,         LL, SH, Kokkos::MemoryTraits<>>());
+#endif
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 2>,         LR, SH, Kokkos::MemoryTraits<Kokkos::Unmanaged>>());
 static_assert(test_derived_types<f,  Kokkos::extents<unsigned, 2, 3>,       LL, SH, Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::Atomic>>());
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 8>,         LR, SH, Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>());
