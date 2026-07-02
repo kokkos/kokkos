@@ -469,5 +469,6 @@ jobs:
           # FIXME_NEXTSILICON: death tests require fork, not supported by runtime
           GTEST_FILTER: -*DeathTest*
           XDG_CACHE_HOME: $HOME/optimizer-cache
+        # FIXME_NEXTSILICON: exclusions are CS-737, OOM in main() teardown, observed in 1.3.0-395
         run: |
-          ctest -V --timeout 3600
+          ctest -V --timeout 3600 -E "ToolIndependence|ProfilingTestErrorNoCallbacks|CTestDevice"
