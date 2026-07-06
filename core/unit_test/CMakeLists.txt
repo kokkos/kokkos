@@ -935,6 +935,10 @@ if(KOKKOS_ENABLE_LIBDL)
   target_compile_definitions(Kokkos_CoreUnitTest_ToolIndependence PUBLIC KOKKOS_TOOLS_INDEPENDENT_BUILD)
   kokkos_add_test_library(kokkosprinter-tool SHARED SOURCES tools/printing-tool.cpp)
 
+  kokkos_add_test_library(kokkoshwmtracker-tool SHARED SOURCES tools/memory-hwm-tool.cpp)
+  
+  
+
   if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
     target_compile_features(kokkosprinter-tool PUBLIC cxx_std_14)
   endif()
