@@ -9,21 +9,38 @@
 #include <Kokkos_Random.hpp>
 
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 
 #include <Kokkos_SIMD.hpp>
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+using ExecSpace = Kokkos::DefaultHostExecutionSpace;
+#elif defined(KOKKOS_ENABLE_CUDA)
 using ExecSpace = Kokkos::Cuda;
 #elif defined(KOKKOS_ENABLE_HIP)
 using ExecSpace = Kokkos::HIP;
 #else
-#error "Kokkos SIMD tensor-core examples require CUDA or HIP"
+#error "Kokkos SIMD tensor-core examples require AMX, CUDA, or HIP"
 #endif
 
 using Layout = Kokkos::LayoutLeft;
-using Scalar = double;
 
-#if defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+using Scalar            = float;
+constexpr int WARP_SIZE = 1;
+constexpr int WMMA_M    = 16;
+constexpr int WMMA_N    = 16;
+constexpr int WMMA_K    = 32;
+constexpr int BM        = 64;
+constexpr int BN        = 64;
+constexpr int BK        = 64;
+constexpr Kokkos::Experimental::PrecisionType InputPrecision =
+    Kokkos::Experimental::PrecisionType::BF16;
+constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
+    Kokkos::Experimental::PrecisionType::Float;
+#elif defined(KOKKOS_ENABLE_HIP)
+using Scalar            = double;
 constexpr int WARP_SIZE = 64;
 constexpr int WMMA_M    = 16;
 constexpr int WMMA_N    = 16;
@@ -31,7 +48,12 @@ constexpr int WMMA_K    = 4;
 constexpr int BM        = 64;
 constexpr int BN        = 64;
 constexpr int BK        = 32;
+constexpr Kokkos::Experimental::PrecisionType InputPrecision =
+    Kokkos::Experimental::PrecisionType::Double;
+constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
+    Kokkos::Experimental::PrecisionType::Double;
 #else
+using Scalar            = double;
 constexpr int WARP_SIZE = 32;
 constexpr int WMMA_M    = 8;
 constexpr int WMMA_N    = 8;
@@ -39,16 +61,15 @@ constexpr int WMMA_K    = 4;
 constexpr int BM        = 64;
 constexpr int BN        = 32;
 constexpr int BK        = 32;
-#endif
-
-constexpr int M         = 256;
-constexpr int N         = 256;
-constexpr int K         = 256;
-
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
     Kokkos::Experimental::PrecisionType::Double;
+#endif
+
+constexpr int M = 256;
+constexpr int N = 256;
+constexpr int K = 256;
 
 using Matrix        = Kokkos::View<Scalar**, Layout, ExecSpace>;
 using TeamPolicy    = Kokkos::TeamPolicy<ExecSpace>;
@@ -75,13 +96,37 @@ inline void random_matrix(Matrix mat, RandPool pool) {
       });
 }
 
+KOKKOS_INLINE_FUNCTION uint16_t float_to_bf16_bits(float value) {
+  uint32_t bits = 0;
+  std::memcpy(&bits, &value, sizeof(bits));
+
+  const uint32_t lsb           = (bits >> 16) & 1;
+  const uint32_t rounding_bias = 0x7fff + lsb;
+  return static_cast<uint16_t>((bits + rounding_bias) >> 16);
+}
+
+KOKKOS_INLINE_FUNCTION float bf16_bits_to_float(uint16_t bits) {
+  uint32_t word = uint32_t(bits) << 16;
+  float value   = 0.0f;
+  std::memcpy(&value, &word, sizeof(value));
+  return value;
+}
+
+KOKKOS_INLINE_FUNCTION float round_to_bf16_float(float value) {
+  return bf16_bits_to_float(float_to_bf16_bits(value));
+}
+
 inline void reference_matmul(Matrix A, Matrix B, Matrix C) {
   Kokkos::parallel_for(
       "reference_matmul", Range2D({0, 0}, {M, N}),
       KOKKOS_LAMBDA(const int i, const int j) {
         Scalar sum = 0.0;
         for (int k = 0; k < K; ++k) {
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+          sum += round_to_bf16_float(A(i, k)) * round_to_bf16_float(B(k, j));
+#else
           sum += A(i, k) * B(k, j);
+#endif
         }
         C(i, j) = sum;
       });

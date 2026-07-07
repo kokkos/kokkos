@@ -46,7 +46,8 @@
 
 #include <Kokkos_SIMD_Common_Math.hpp>
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
 #include <Kokkos_SIMD_TensorCore.hpp>
 #endif
 

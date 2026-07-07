@@ -71,7 +71,8 @@ export {
   using ::Kokkos::Experimental::unchecked_gather_from;
   using ::Kokkos::Experimental::unchecked_scatter_to;
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
   using ::Kokkos::Experimental::accumulator;
   using ::Kokkos::Experimental::accumulator_extents;
   using ::Kokkos::Experimental::fill_fragment;

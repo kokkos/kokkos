@@ -37,10 +37,20 @@ function(kokkos_simd_add_tensor_core_operation_contract_tests BACKEND EXE_NAME)
     EXE ${EXE_NAME}
     ARGS int8-matmul
   )
+
+  if("${BACKEND}" MATCHES "^AMX")
+    kokkos_add_test(
+      NAME UnitTest_SIMD_TensorCoreOperationContract_${BACKEND}_Valid_distinct_accumulators
+      EXE ${EXE_NAME}
+      ARGS amx-distinct-accumulators
+    )
+  endif()
 endfunction()
 
 set(KOKKOS_SIMD_TENSOR_CORE_BACKEND)
-if(Kokkos_ENABLE_CUDA)
+if(Kokkos_ENABLE_EXPERIMENTAL_SIMD_AMX)
+  set(KOKKOS_SIMD_TENSOR_CORE_BACKEND AMX)
+elseif(Kokkos_ENABLE_CUDA)
   set(KOKKOS_SIMD_TENSOR_CORE_BACKEND CUDA)
 elseif(Kokkos_ENABLE_HIP)
   set(KOKKOS_SIMD_TENSOR_CORE_BACKEND HIP)
@@ -53,7 +63,34 @@ if(KOKKOS_SIMD_TENSOR_CORE_BACKEND AND NOT WIN32)
     SOURCES tensor_core/operation_contract.cpp
   )
 
-  if(KOKKOS_SIMD_TENSOR_CORE_BACKEND STREQUAL "CUDA")
+  if(KOKKOS_SIMD_TENSOR_CORE_BACKEND STREQUAL "AMX")
+    kokkos_add_executable(
+      UnitTest_SIMD_TensorCoreMatmulAMX32
+      SOURCES tensor_core/matmul.cpp
+    )
+    kokkos_add_executable(
+      UnitTest_SIMD_TensorCoreOperationContractAMX32
+      SOURCES tensor_core/operation_contract.cpp
+    )
+
+    target_compile_definitions(Kokkos_UnitTest_SIMD_TensorCoreMatmulAMX32
+      PRIVATE
+        KOKKOS_SIMD_TEST_WMMA_M=32
+        KOKKOS_SIMD_TEST_WMMA_N=32
+        KOKKOS_SIMD_TEST_WMMA_K=32
+    )
+    target_compile_definitions(Kokkos_UnitTest_SIMD_TensorCoreOperationContractAMX32
+      PRIVATE
+        KOKKOS_SIMD_TEST_WMMA_M=32
+        KOKKOS_SIMD_TEST_WMMA_N=32
+        KOKKOS_SIMD_TEST_WMMA_K=32
+    )
+
+    kokkos_simd_add_tensor_core_matmul_tests(AMX_Shape16x16x32 UnitTest_SIMD_TensorCoreMatmul "64,64,64" "32,64,64")
+    kokkos_simd_add_tensor_core_matmul_tests(AMX_Shape32x32x32 UnitTest_SIMD_TensorCoreMatmulAMX32 "64,64,64")
+    kokkos_simd_add_tensor_core_operation_contract_tests(AMX_Shape16x16x32 UnitTest_SIMD_TensorCoreOperationContract)
+    kokkos_simd_add_tensor_core_operation_contract_tests(AMX_Shape32x32x32 UnitTest_SIMD_TensorCoreOperationContractAMX32)
+  elseif(KOKKOS_SIMD_TENSOR_CORE_BACKEND STREQUAL "CUDA")
     kokkos_simd_add_tensor_core_matmul_tests(CUDA UnitTest_SIMD_TensorCoreMatmul "64,32,32" "32,32,32")
     kokkos_simd_add_tensor_core_operation_contract_tests(CUDA UnitTest_SIMD_TensorCoreOperationContract)
   elseif(KOKKOS_SIMD_TENSOR_CORE_BACKEND STREQUAL "HIP")

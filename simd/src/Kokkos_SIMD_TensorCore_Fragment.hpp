@@ -95,6 +95,10 @@ KOKKOS_INLINE_FUNCTION void mma_sync(ExecutionSpaceTag<ExecSpace>, DFragT&,
 #include <impl/Kokkos_SIMD_TensorCore_HIP.hpp>
 #endif
 
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+#include <impl/Kokkos_SIMD_TensorCore_AMX.hpp>
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -129,7 +133,9 @@ inline constexpr bool fragment_extents_match_v =
 template <class MatrixType>
 struct FragmentUseFromMatrixType;
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+using DefaultMMAExecutionSpace = Kokkos::DefaultHostExecutionSpace;
+#elif defined(KOKKOS_ENABLE_CUDA)
 using DefaultMMAExecutionSpace = Kokkos::Cuda;
 #elif defined(KOKKOS_ENABLE_HIP)
 using DefaultMMAExecutionSpace = Kokkos::HIP;

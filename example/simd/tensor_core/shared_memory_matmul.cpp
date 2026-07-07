@@ -6,8 +6,8 @@
 #include "utils.hpp"
 
 // The MMA instruction shape is backend-specific. The rest of the example is
-// written in terms of WMMA_M/N/K so the kernel structure is the same for CUDA
-// and HIP.
+// written in terms of WMMA_M/N/K so the kernel structure is the same for CUDA,
+// HIP, and AMX.
 
 template <class AFragT, class BFragT, class CFragT>
 struct SharedMemoryMatmul {
@@ -159,10 +159,12 @@ bool run_example() {
   reference_matmul(A, B, C_ref);
   ExecSpace().fence();
 
-#if defined(KOKKOS_ENABLE_HIP)
-  constexpr double tol = 1e-7;
-#else
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+  constexpr double tol = 1e-2;
+#elif defined(KOKKOS_ENABLE_CUDA)
   constexpr double tol = 1e-15;
+#elif defined(KOKKOS_ENABLE_HIP)
+  constexpr double tol = 1e-7;
 #endif
 
   const double rel_err = relative_error(C, C_ref);

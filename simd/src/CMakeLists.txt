@@ -46,6 +46,10 @@ kokkos_lib_include_directories(
 
 kokkos_link_internal_library(kokkossimd kokkoscore)
 
+if(Kokkos_ENABLE_EXPERIMENTAL_SIMD_AMX AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|IntelLLVM")
+  target_compile_options(kokkossimd PUBLIC -mamx-tile -mamx-bf16 -mamx-int8)
+endif()
+
 # If ARM-SVE, check and warn for available arm_neon_sve_bridge.h
 if(KOKKOS_ARCH_ARM_SVE)
   include(CheckIncludeFileCXX)

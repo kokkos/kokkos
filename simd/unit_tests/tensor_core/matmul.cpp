@@ -5,20 +5,29 @@
 #include <Kokkos_Macros.hpp>
 #include <Kokkos_Random.hpp>
 
+#include <cstdint>
 #include <cstdlib>
+#include <cstring>
 
 #include <Kokkos_SIMD.hpp>
 
-#if defined(KOKKOS_ENABLE_CUDA)
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+using ExecSpace = Kokkos::DefaultHostExecutionSpace;
+#elif defined(KOKKOS_ENABLE_CUDA)
 using ExecSpace = Kokkos::Cuda;
 #elif defined(KOKKOS_ENABLE_HIP)
 using ExecSpace = Kokkos::HIP;
 #else
-#error "Kokkos SIMD tensor-core matmul tests require CUDA or HIP"
+#error "Kokkos SIMD tensor-core matmul tests require AMX, CUDA, or HIP"
 #endif
 
 using Layout = Kokkos::LayoutLeft;
+
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+using Scalar = float;
+#else
 using Scalar = double;
+#endif
 
 using Matrix = Kokkos::View<Scalar**, Layout, ExecSpace>;
 
@@ -33,7 +42,9 @@ using RandPool = Kokkos::Random_XorShift64_Pool<ExecSpace>;
 
 using range2d = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ExecSpace>;
 
-#if defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+constexpr int WARP_SIZE = 1;
+#elif defined(KOKKOS_ENABLE_HIP)
 constexpr int WARP_SIZE = 64;
 constexpr int WMMA_M    = 16;
 constexpr int WMMA_N    = 16;
@@ -45,10 +56,29 @@ constexpr int WMMA_N    = 8;
 constexpr int WMMA_K    = 4;
 #endif
 
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+#ifndef KOKKOS_SIMD_TEST_WMMA_M
+#define KOKKOS_SIMD_TEST_WMMA_M 16
+#endif
+#ifndef KOKKOS_SIMD_TEST_WMMA_N
+#define KOKKOS_SIMD_TEST_WMMA_N 16
+#endif
+#ifndef KOKKOS_SIMD_TEST_WMMA_K
+#define KOKKOS_SIMD_TEST_WMMA_K 32
+#endif
+constexpr int WMMA_M = KOKKOS_SIMD_TEST_WMMA_M;
+constexpr int WMMA_N = KOKKOS_SIMD_TEST_WMMA_N;
+constexpr int WMMA_K = KOKKOS_SIMD_TEST_WMMA_K;
+constexpr Kokkos::Experimental::PrecisionType InputPrecision =
+    Kokkos::Experimental::PrecisionType::BF16;
+constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
+    Kokkos::Experimental::PrecisionType::Float;
+#else
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
     Kokkos::Experimental::PrecisionType::Double;
+#endif
 
 void fill_matrix(Matrix& mat, Scalar val) {
   range2d policy({0, 0}, {mat.extent(0), mat.extent(1)});
@@ -100,6 +130,44 @@ void naive_matmul(Matrix A, Matrix B, Matrix C) {
         Scalar sum = 0.0;
 
         for (int k = 0; k < A.extent(1); ++k) sum += A(i, k) * B(k, j);
+
+        C(i, j) = sum;
+      });
+}
+
+KOKKOS_INLINE_FUNCTION uint16_t float_to_bf16_bits(float value) {
+  uint32_t bits = 0;
+  std::memcpy(&bits, &value, sizeof(bits));
+
+  const uint32_t lsb           = (bits >> 16) & 1;
+  const uint32_t rounding_bias = 0x7fff + lsb;
+
+  return static_cast<uint16_t>((bits + rounding_bias) >> 16);
+}
+
+KOKKOS_INLINE_FUNCTION float bf16_bits_to_float(uint16_t bits) {
+  uint32_t word = uint32_t(bits) << 16;
+  float value   = 0.0f;
+  std::memcpy(&value, &word, sizeof(value));
+  return value;
+}
+
+KOKKOS_INLINE_FUNCTION float round_to_bf16_float(float value) {
+  return bf16_bits_to_float(float_to_bf16_bits(value));
+}
+
+void naive_matmul_bf16(Matrix A, Matrix B, Matrix C) {
+  range2d policy({0, 0}, {C.extent(0), C.extent(1)});
+
+  Kokkos::parallel_for(
+      "NaiveMatMulBF16", policy, KOKKOS_LAMBDA(const int i, const int j) {
+        float sum = 0.0f;
+        for (int k = 0; k < A.extent(1); ++k) {
+          const float a = round_to_bf16_float(A(i, k));
+          const float b = round_to_bf16_float(B(k, j));
+
+          sum += a * b;
+        }
 
         C(i, j) = sum;
       });
@@ -189,9 +257,15 @@ struct WarpLevelHardwareAcceleratedMatmul {
   }
 };
 
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+constexpr int DEFAULT_BM = 64;
+constexpr int DEFAULT_BN = 64;
+constexpr int DEFAULT_BK = 64;
+#else
 constexpr int DEFAULT_BM = 64;
 constexpr int DEFAULT_BN = 32;
 constexpr int DEFAULT_BK = 32;
+#endif
 
 template <int M, int N, int K, int BM = DEFAULT_BM, int BN = DEFAULT_BN,
           int BK = DEFAULT_BK>
@@ -282,13 +356,19 @@ bool run_matmul_case() {
     Kokkos::fence();
 
     // carry out naive matmul
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+    naive_matmul_bf16(A, B, C_ref);
+#else
     naive_matmul(A, B, C_ref);
+#endif
     Kokkos::fence();
 
-#if defined(KOKKOS_ENABLE_HIP)
-    double tol = 1e-7;
-#else
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+    double tol = 1e-2;
+#elif defined(KOKKOS_ENABLE_CUDA)
     double tol = 1e-15;
+#elif defined(KOKKOS_ENABLE_HIP)
+    double tol = 1e-7;
 #endif
 
     double rel_err;
@@ -327,7 +407,10 @@ bool run_block_case(int size) {
 }
 
 bool run_selected_case(int size, int bm, int bn, int bk) {
-#if defined(KOKKOS_ENABLE_HIP)
+#if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+  if (bm == 64 && bn == 64 && bk == 64) return run_block_case<64, 64, 64>(size);
+  if (bm == 32 && bn == 64 && bk == 64) return run_block_case<32, 64, 64>(size);
+#elif defined(KOKKOS_ENABLE_HIP)
   if (bm == 64 && bn == 64 && bk == 32) return run_block_case<64, 64, 32>(size);
   if (bm == 32 && bn == 64 && bk == 32) return run_block_case<32, 64, 32>(size);
 #else
