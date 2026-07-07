@@ -66,7 +66,6 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
     add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
   endif()
 
-
 endmacro()
 
 # FIXME_OPENACC - temporarily disabled due to unimplemented features
@@ -88,48 +87,48 @@ if(KOKKOS_ENABLE_TESTS)
 endif()
 
 set(BENCHMARK_SOURCES
-  PerfTestGramSchmidt.cpp
-  PerfTest_CustomReduction.cpp
-  PerfTest_ExecSpacePartitioning.cpp
-  PerfTest_Gemv.cpp
-  PerfTestHexGrad.cpp
-  PerfTest_MallocFree.cpp
-  PerfTest_Stream.cpp
-  PerfTestMDRange_Stencil.cpp
-  PerfTest_ViewAllocate.cpp
-  PerfTest_ViewCopy_a123.cpp
-  PerfTest_ViewCopy_b123.cpp
-  PerfTest_ViewCopy_c123.cpp
-  PerfTest_ViewCopy_d123.cpp
-  PerfTest_ViewCopy_a45.cpp
-  PerfTest_ViewCopy_b45.cpp
-  PerfTest_ViewCopy_c45.cpp
-  PerfTest_ViewCopy_d45.cpp
-  PerfTest_ViewCopy_a6.cpp
-  PerfTest_ViewCopy_b6.cpp
-  PerfTest_ViewCopy_c6.cpp
-  PerfTest_ViewCopy_d6.cpp
-  PerfTest_ViewCopy_a7.cpp
-  PerfTest_ViewCopy_b7.cpp
-  PerfTest_ViewCopy_c7.cpp
-  PerfTest_ViewCopy_d7.cpp
-  PerfTest_ViewCopy_a8.cpp
-  PerfTest_ViewCopy_b8.cpp
-  PerfTest_ViewCopy_c8.cpp
-  PerfTest_ViewCopy_d8.cpp
-  PerfTest_ViewCopy_Raw.cpp
-  PerfTest_ViewFill_123.cpp
-  PerfTest_ViewFill_45.cpp
-  PerfTest_ViewFill_6.cpp
-  PerfTest_ViewFill_7.cpp
-  PerfTest_ViewFill_8.cpp
-  PerfTest_ViewFill_Raw.cpp
-  PerfTest_ViewResize_123.cpp
-  PerfTest_ViewResize_45.cpp
-  PerfTest_ViewResize_6.cpp
-  PerfTest_ViewResize_7.cpp
-  PerfTest_ViewResize_8.cpp
-  PerfTest_ViewResize_Raw.cpp
+    PerfTestGramSchmidt.cpp
+    PerfTest_CustomReduction.cpp
+    PerfTest_ExecSpacePartitioning.cpp
+    PerfTest_Gemv.cpp
+    PerfTestHexGrad.cpp
+    PerfTest_MallocFree.cpp
+    PerfTest_Stream.cpp
+    PerfTestMDRange_Stencil.cpp
+    PerfTest_ViewAllocate.cpp
+    PerfTest_ViewCopy_a123.cpp
+    PerfTest_ViewCopy_b123.cpp
+    PerfTest_ViewCopy_c123.cpp
+    PerfTest_ViewCopy_d123.cpp
+    PerfTest_ViewCopy_a45.cpp
+    PerfTest_ViewCopy_b45.cpp
+    PerfTest_ViewCopy_c45.cpp
+    PerfTest_ViewCopy_d45.cpp
+    PerfTest_ViewCopy_a6.cpp
+    PerfTest_ViewCopy_b6.cpp
+    PerfTest_ViewCopy_c6.cpp
+    PerfTest_ViewCopy_d6.cpp
+    PerfTest_ViewCopy_a7.cpp
+    PerfTest_ViewCopy_b7.cpp
+    PerfTest_ViewCopy_c7.cpp
+    PerfTest_ViewCopy_d7.cpp
+    PerfTest_ViewCopy_a8.cpp
+    PerfTest_ViewCopy_b8.cpp
+    PerfTest_ViewCopy_c8.cpp
+    PerfTest_ViewCopy_d8.cpp
+    PerfTest_ViewCopy_Raw.cpp
+    PerfTest_ViewFill_123.cpp
+    PerfTest_ViewFill_45.cpp
+    PerfTest_ViewFill_6.cpp
+    PerfTest_ViewFill_7.cpp
+    PerfTest_ViewFill_8.cpp
+    PerfTest_ViewFill_Raw.cpp
+    PerfTest_ViewResize_123.cpp
+    PerfTest_ViewResize_45.cpp
+    PerfTest_ViewResize_6.cpp
+    PerfTest_ViewResize_7.cpp
+    PerfTest_ViewResize_8.cpp
+    PerfTest_ViewResize_Raw.cpp
 )
 
 kokkos_add_benchmark(PerformanceTest_Benchmark SOURCES ${BENCHMARK_SOURCES})
