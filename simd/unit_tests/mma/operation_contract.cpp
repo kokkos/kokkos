@@ -19,24 +19,24 @@ using ExecSpace = Kokkos::Cuda;
 using ExecSpace = Kokkos::HIP;
 #else
 #error \
-    "Kokkos SIMD tensor-core operation contract tests require AMX, CUDA, or HIP"
+    "Kokkos SIMD MMA operation contract tests require AMX, CUDA, or HIP"
 #endif
 
 #if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
 using Scalar            = float;
 constexpr int WARP_SIZE = 1;
-#ifndef KOKKOS_SIMD_TEST_WMMA_M
-#define KOKKOS_SIMD_TEST_WMMA_M 16
+#ifndef KOKKOS_SIMD_TEST_MMA_M
+#define KOKKOS_SIMD_TEST_MMA_M 16
 #endif
-#ifndef KOKKOS_SIMD_TEST_WMMA_N
-#define KOKKOS_SIMD_TEST_WMMA_N 16
+#ifndef KOKKOS_SIMD_TEST_MMA_N
+#define KOKKOS_SIMD_TEST_MMA_N 16
 #endif
-#ifndef KOKKOS_SIMD_TEST_WMMA_K
-#define KOKKOS_SIMD_TEST_WMMA_K 32
+#ifndef KOKKOS_SIMD_TEST_MMA_K
+#define KOKKOS_SIMD_TEST_MMA_K 32
 #endif
-constexpr int WMMA_M = KOKKOS_SIMD_TEST_WMMA_M;
-constexpr int WMMA_N = KOKKOS_SIMD_TEST_WMMA_N;
-constexpr int WMMA_K = KOKKOS_SIMD_TEST_WMMA_K;
+constexpr int MMA_M = KOKKOS_SIMD_TEST_MMA_M;
+constexpr int MMA_N = KOKKOS_SIMD_TEST_MMA_N;
+constexpr int MMA_K = KOKKOS_SIMD_TEST_MMA_K;
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::BF16;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -44,9 +44,9 @@ constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
 #elif defined(KOKKOS_ENABLE_HIP)
 using Scalar            = double;
 constexpr int WARP_SIZE = 64;
-constexpr int WMMA_M    = 16;
-constexpr int WMMA_N    = 16;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 16;
+constexpr int MMA_N    = 16;
+constexpr int MMA_K    = 4;
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -54,9 +54,9 @@ constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
 #else
 using Scalar            = double;
 constexpr int WARP_SIZE = 32;
-constexpr int WMMA_M    = 8;
-constexpr int WMMA_N    = 8;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 8;
+constexpr int MMA_N    = 8;
+constexpr int MMA_K    = 4;
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -89,24 +89,24 @@ using InputFragDType =
 using AccumFragDType =
     typename Kokkos::Experimental::FragmentDType<ExecSpace,
                                                  AccumPrecision>::type;
-using MMAShape = Kokkos::Experimental::mma_shape<WMMA_M, WMMA_N, WMMA_K>;
+using MMAShape = Kokkos::Experimental::mma_shape<MMA_M, MMA_N, MMA_K>;
 
 template <class OperandLayoutT>
 using AFrag = Kokkos::Experimental::fragment<
-    InputFragDType, Kokkos::Experimental::matrix_a_extents<WMMA_M, WMMA_K>,
+    InputFragDType, Kokkos::Experimental::matrix_a_extents<MMA_M, MMA_K>,
     OperandLayoutT,
     Kokkos::Experimental::mma_policy<MMAShape, Kokkos::Experimental::matrix_a,
                                      OperandLayoutT, ExecSpace>>;
 
 template <class OperandLayoutT>
 using BFrag = Kokkos::Experimental::fragment<
-    InputFragDType, Kokkos::Experimental::matrix_b_extents<WMMA_K, WMMA_N>,
+    InputFragDType, Kokkos::Experimental::matrix_b_extents<MMA_K, MMA_N>,
     OperandLayoutT,
     Kokkos::Experimental::mma_policy<MMAShape, Kokkos::Experimental::matrix_b,
                                      OperandLayoutT, ExecSpace>>;
 
 using CFrag = Kokkos::Experimental::fragment<
-    AccumFragDType, Kokkos::Experimental::accumulator_extents<WMMA_M, WMMA_N>,
+    AccumFragDType, Kokkos::Experimental::accumulator_extents<MMA_M, MMA_N>,
     Kokkos::layout_right,
     Kokkos::Experimental::mma_policy<MMAShape,
                                      Kokkos::Experimental::accumulator,
@@ -132,13 +132,13 @@ KOKKOS_INLINE_FUNCTION Scalar reference_operand_value(Scalar value) {
 template <class Layout>
 void fill_operands(Matrix<Layout> a, Matrix<Layout> b) {
   Kokkos::parallel_for(
-      "fill_a_contract", Range2D({0, 0}, {WMMA_M, WMMA_K}),
+      "fill_a_contract", Range2D({0, 0}, {MMA_M, MMA_K}),
       KOKKOS_LAMBDA(const int i, const int k) {
         a(i, k) = Scalar(0.125) * Scalar((i + 1) + 2 * (k + 1));
       });
 
   Kokkos::parallel_for(
-      "fill_b_contract", Range2D({0, 0}, {WMMA_K, WMMA_N}),
+      "fill_b_contract", Range2D({0, 0}, {MMA_K, MMA_N}),
       KOKKOS_LAMBDA(const int k, const int j) {
         b(k, j) = Scalar(0.0625) * Scalar((k + 1) - (j + 1));
       });
@@ -147,7 +147,7 @@ void fill_operands(Matrix<Layout> a, Matrix<Layout> b) {
 template <class Layout>
 void fill_constant(Matrix<Layout> matrix, const Scalar value) {
   Kokkos::parallel_for(
-      "fill_constant_contract", Range2D({0, 0}, {WMMA_M, WMMA_N}),
+      "fill_constant_contract", Range2D({0, 0}, {MMA_M, MMA_N}),
       KOKKOS_LAMBDA(const int i, const int j) { matrix(i, j) = value; });
 }
 
@@ -155,10 +155,10 @@ template <class Layout>
 void reference_matmul(Matrix<Layout> a, Matrix<Layout> b, Matrix<Layout> c,
                       const Scalar initial_value = Scalar(0.0)) {
   Kokkos::parallel_for(
-      "reference_contract_matmul", Range2D({0, 0}, {WMMA_M, WMMA_N}),
+      "reference_contract_matmul", Range2D({0, 0}, {MMA_M, MMA_N}),
       KOKKOS_LAMBDA(const int i, const int j) {
         Scalar sum = initial_value;
-        for (int k = 0; k < WMMA_K; ++k) {
+        for (int k = 0; k < MMA_K; ++k) {
           sum += reference_operand_value(a(i, k)) *
                  reference_operand_value(b(k, j));
         }
@@ -171,7 +171,7 @@ double relative_error(Matrix<Layout> result, Matrix<Layout> reference) {
   double err  = 0.0;
   double norm = 0.0;
   Kokkos::parallel_reduce(
-      "operation_contract_relative_error", Range2D({0, 0}, {WMMA_M, WMMA_N}),
+      "operation_contract_relative_error", Range2D({0, 0}, {MMA_M, MMA_N}),
       KOKKOS_LAMBDA(const int i, const int j, double& err_l, double& norm_l) {
         const double e = double(result(i, j)) - double(reference(i, j));
         const double r = double(reference(i, j));
@@ -196,12 +196,12 @@ struct OneTileMatmul {
 
     Kokkos::Experimental::fill_fragment(c_frag, Scalar(0.0));
 
-    auto a_tile = Kokkos::subview(A, Kokkos::pair<int, int>(0, WMMA_M),
-                                  Kokkos::pair<int, int>(0, WMMA_K));
-    auto b_tile = Kokkos::subview(B, Kokkos::pair<int, int>(0, WMMA_K),
-                                  Kokkos::pair<int, int>(0, WMMA_N));
-    auto c_tile = Kokkos::subview(C, Kokkos::pair<int, int>(0, WMMA_M),
-                                  Kokkos::pair<int, int>(0, WMMA_N));
+    auto a_tile = Kokkos::subview(A, Kokkos::pair<int, int>(0, MMA_M),
+                                  Kokkos::pair<int, int>(0, MMA_K));
+    auto b_tile = Kokkos::subview(B, Kokkos::pair<int, int>(0, MMA_K),
+                                  Kokkos::pair<int, int>(0, MMA_N));
+    auto c_tile = Kokkos::subview(C, Kokkos::pair<int, int>(0, MMA_M),
+                                  Kokkos::pair<int, int>(0, MMA_N));
 
     Kokkos::Experimental::load_matrix_sync(a_frag, a_tile);
     Kokkos::Experimental::load_matrix_sync(b_frag, b_tile);
@@ -214,10 +214,10 @@ template <class Layout>
 bool run_valid_layout_case(const char* name) {
   using OperandLayoutT = typename OperandLayout<Layout>::type;
 
-  Matrix<Layout> a("A", WMMA_M, WMMA_K);
-  Matrix<Layout> b("B", WMMA_K, WMMA_N);
-  Matrix<Layout> c("C", WMMA_M, WMMA_N);
-  Matrix<Layout> reference("Reference", WMMA_M, WMMA_N);
+  Matrix<Layout> a("A", MMA_M, MMA_K);
+  Matrix<Layout> b("B", MMA_K, MMA_N);
+  Matrix<Layout> c("C", MMA_M, MMA_N);
+  Matrix<Layout> reference("Reference", MMA_M, MMA_N);
 
   fill_operands(a, b);
   reference_matmul(a, b, reference);
@@ -239,7 +239,7 @@ bool run_valid_layout_case(const char* name) {
   const bool success   = rel_err < tol;
   if (!success) {
     std::printf(
-        "Kokkos SIMD tensor-core operation contract %s failed: rel_err=%.4e "
+        "Kokkos SIMD MMA operation contract %s failed: rel_err=%.4e "
         "tol=%.4e\n",
         name, rel_err, tol);
   }
@@ -261,18 +261,18 @@ struct AMXDistinctAccumulators {
     CFrag c_frag;
     CFrag in_place_frag;
 
-    auto a_tile = Kokkos::subview(A, Kokkos::pair<int, int>(0, WMMA_M),
-                                  Kokkos::pair<int, int>(0, WMMA_K));
-    auto b_tile = Kokkos::subview(B, Kokkos::pair<int, int>(0, WMMA_K),
-                                  Kokkos::pair<int, int>(0, WMMA_N));
-    auto d_tile = Kokkos::subview(D, Kokkos::pair<int, int>(0, WMMA_M),
-                                  Kokkos::pair<int, int>(0, WMMA_N));
+    auto a_tile = Kokkos::subview(A, Kokkos::pair<int, int>(0, MMA_M),
+                                  Kokkos::pair<int, int>(0, MMA_K));
+    auto b_tile = Kokkos::subview(B, Kokkos::pair<int, int>(0, MMA_K),
+                                  Kokkos::pair<int, int>(0, MMA_N));
+    auto d_tile = Kokkos::subview(D, Kokkos::pair<int, int>(0, MMA_M),
+                                  Kokkos::pair<int, int>(0, MMA_N));
     auto c_after_tile =
-        Kokkos::subview(CAfterDistinct, Kokkos::pair<int, int>(0, WMMA_M),
-                        Kokkos::pair<int, int>(0, WMMA_N));
+        Kokkos::subview(CAfterDistinct, Kokkos::pair<int, int>(0, MMA_M),
+                        Kokkos::pair<int, int>(0, MMA_N));
     auto in_place_tile =
-        Kokkos::subview(InPlace, Kokkos::pair<int, int>(0, WMMA_M),
-                        Kokkos::pair<int, int>(0, WMMA_N));
+        Kokkos::subview(InPlace, Kokkos::pair<int, int>(0, MMA_M),
+                        Kokkos::pair<int, int>(0, MMA_N));
 
     Kokkos::Experimental::load_matrix_sync(a_frag, a_tile);
     Kokkos::Experimental::load_matrix_sync(b_frag, b_tile);
@@ -290,15 +290,15 @@ struct AMXDistinctAccumulators {
 };
 
 bool run_amx_distinct_accumulator_case() {
-  Matrix<Kokkos::LayoutLeft> a("A_distinct_accum", WMMA_M, WMMA_K);
-  Matrix<Kokkos::LayoutLeft> b("B_distinct_accum", WMMA_K, WMMA_N);
-  Matrix<Kokkos::LayoutLeft> d("D_distinct_accum", WMMA_M, WMMA_N);
-  Matrix<Kokkos::LayoutLeft> c_after("C_after_distinct_accum", WMMA_M, WMMA_N);
-  Matrix<Kokkos::LayoutLeft> in_place("InPlace_distinct_accum", WMMA_M, WMMA_N);
-  Matrix<Kokkos::LayoutLeft> reference("Reference_distinct_accum", WMMA_M,
-                                       WMMA_N);
-  Matrix<Kokkos::LayoutLeft> c_reference("C_reference_distinct_accum", WMMA_M,
-                                         WMMA_N);
+  Matrix<Kokkos::LayoutLeft> a("A_distinct_accum", MMA_M, MMA_K);
+  Matrix<Kokkos::LayoutLeft> b("B_distinct_accum", MMA_K, MMA_N);
+  Matrix<Kokkos::LayoutLeft> d("D_distinct_accum", MMA_M, MMA_N);
+  Matrix<Kokkos::LayoutLeft> c_after("C_after_distinct_accum", MMA_M, MMA_N);
+  Matrix<Kokkos::LayoutLeft> in_place("InPlace_distinct_accum", MMA_M, MMA_N);
+  Matrix<Kokkos::LayoutLeft> reference("Reference_distinct_accum", MMA_M,
+                                       MMA_N);
+  Matrix<Kokkos::LayoutLeft> c_reference("C_reference_distinct_accum", MMA_M,
+                                         MMA_N);
 
   fill_operands(a, b);
   reference_matmul(a, b, reference, Scalar(1.5));
@@ -317,7 +317,7 @@ bool run_amx_distinct_accumulator_case() {
       d_rel_err < tol && c_rel_err < tol && in_place_rel_err < tol;
   if (!success) {
     std::printf(
-        "Kokkos SIMD tensor-core AMX distinct accumulator contract failed: "
+        "Kokkos SIMD MMA AMX distinct accumulator contract failed: "
         "d_rel_err=%.4e c_rel_err=%.4e in_place_rel_err=%.4e tol=%.4e\n",
         d_rel_err, c_rel_err, in_place_rel_err, tol);
   }
@@ -434,7 +434,7 @@ bool run_int8_matmul_case() {
 
   if (max_abs_err != 0) {
     std::printf(
-        "Kokkos SIMD tensor-core INT8 contract failed: max_abs_err=%d\n",
+        "Kokkos SIMD MMA INT8 contract failed: max_abs_err=%d\n",
         max_abs_err);
   }
   return max_abs_err == 0;
@@ -474,12 +474,12 @@ int main(int argc, char* argv[]) {
   Kokkos::finalize();
 
   if (!success) {
-    std::printf("Kokkos SIMD tensor-core operation contract test FAILED: %s\n",
+    std::printf("Kokkos SIMD MMA operation contract test FAILED: %s\n",
                 argv[1]);
     return 1;
   }
 
-  std::printf("Kokkos SIMD tensor-core operation contract test PASSED: %s\n",
+  std::printf("Kokkos SIMD MMA operation contract test PASSED: %s\n",
               argv[1]);
   return 0;
 }

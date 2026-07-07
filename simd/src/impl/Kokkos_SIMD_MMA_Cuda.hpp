@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_SIMD_TENSORCORE_IMPL_CUDA_HPP
-#define KOKKOS_SIMD_TENSORCORE_IMPL_CUDA_HPP
+#ifndef KOKKOS_SIMD_MMA_IMPL_CUDA_HPP
+#define KOKKOS_SIMD_MMA_IMPL_CUDA_HPP
 
 #ifndef KOKKOS_ENABLE_CUDA
-#error "Kokkos_SIMD_TensorCore_Cuda.hpp requires KOKKOS_ENABLE_CUDA"
+#error "Kokkos_SIMD_MMA_Cuda.hpp requires KOKKOS_ENABLE_CUDA"
 #endif
 
 #include <cuda.h>

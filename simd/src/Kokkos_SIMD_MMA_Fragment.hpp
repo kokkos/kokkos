@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_SIMD_TENSORCORE_FRAGMENT_HPP
-#define KOKKOS_SIMD_TENSORCORE_FRAGMENT_HPP
+#ifndef KOKKOS_SIMD_MMA_FRAGMENT_HPP
+#define KOKKOS_SIMD_MMA_FRAGMENT_HPP
 
 #include <type_traits>
 
@@ -88,15 +88,15 @@ KOKKOS_INLINE_FUNCTION void mma_sync(ExecutionSpaceTag<ExecSpace>, DFragT&,
 }  // namespace Kokkos
 
 #if defined(KOKKOS_ENABLE_CUDA)
-#include <impl/Kokkos_SIMD_TensorCore_Cuda.hpp>
+#include <impl/Kokkos_SIMD_MMA_Cuda.hpp>
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
-#include <impl/Kokkos_SIMD_TensorCore_HIP.hpp>
+#include <impl/Kokkos_SIMD_MMA_HIP.hpp>
 #endif
 
 #if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
-#include <impl/Kokkos_SIMD_TensorCore_AMX.hpp>
+#include <impl/Kokkos_SIMD_MMA_AMX.hpp>
 #endif
 
 namespace Kokkos {
@@ -185,7 +185,7 @@ struct FragmentUseFromMatrixType<accumulator> {
 ///
 ///   D[M, N] = A[M, K] * B[K, N] + C[M, N]
 ///
-/// for a single tensor-core instruction-level tile. The supported values
+/// for a single MMA instruction-level tile. The supported values
 /// depend on the selected backend and element types; unsupported combinations
 /// fail when the fragment's native backend storage type is instantiated.
 template <int M, int N, int K>

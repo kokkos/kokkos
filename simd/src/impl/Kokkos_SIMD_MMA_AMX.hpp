@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_SIMD_TENSORCORE_IMPL_AMX_HPP
-#define KOKKOS_SIMD_TENSORCORE_IMPL_AMX_HPP
+#ifndef KOKKOS_SIMD_MMA_IMPL_AMX_HPP
+#define KOKKOS_SIMD_MMA_IMPL_AMX_HPP
 
 #ifndef KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX
-#error "Kokkos_SIMD_TensorCore_AMX.hpp requires CPU backend that is AMX-capable"
+#error "Kokkos_SIMD_MMA_AMX.hpp requires CPU backend that is AMX-capable"
 #endif
 
 #include <asm/prctl.h>
@@ -90,7 +90,7 @@ struct alignas(64) AMXTileConfig {
 template <class ValueT, int MMA_M, int MMA_N, int MMA_K>
 struct AMXShapeLayout {
   static_assert(amx_supported_shape_v<ValueT, MMA_M, MMA_N, MMA_K>,
-                "Kokkos SIMD tensor-core AMX supports BF16 "
+                "Kokkos SIMD MMA AMX supports BF16 "
                 "mma_shape<16,16,32>/mma_shape<32,32,32> and INT8 "
                 "mma_shape<16,16,16>");
 
@@ -262,7 +262,7 @@ inline void amx_ensure_tile_config_shape(int mma_m, int mma_n, int mma_k,
 
   if (!bf16_shape && !int8_shape) {
     std::fprintf(stderr,
-                 "Kokkos SIMD tensor-core AMX supports BF16 "
+                 "Kokkos SIMD MMA AMX supports BF16 "
                  "mma_shape<16,16,32>/mma_shape<32,32,32> and INT8 "
                  "mma_shape<16,16,16>\n");
     std::abort();
@@ -555,7 +555,7 @@ template <FragmentUse U, int MMA_M, int MMA_N, int MMA_K, class DType,
 struct NativeFragmentTImpl<Kokkos::DefaultHostExecutionSpace, U, MMA_M, MMA_N,
                            MMA_K, DType, Layout> {
   static_assert(amx_supported_fragment_v<U, MMA_M, MMA_N, MMA_K, DType>,
-                "Kokkos SIMD tensor-core AMX supports BF16 "
+                "Kokkos SIMD MMA AMX supports BF16 "
                 "mma_shape<16,16,32>/mma_shape<32,32,32> and INT8 "
                 "mma_shape<16,16,16>");
 

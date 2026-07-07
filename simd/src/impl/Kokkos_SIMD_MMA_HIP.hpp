@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_SIMD_TENSORCORE_IMPL_HIP_HPP
-#define KOKKOS_SIMD_TENSORCORE_IMPL_HIP_HPP
+#ifndef KOKKOS_SIMD_MMA_IMPL_HIP_HPP
+#define KOKKOS_SIMD_MMA_IMPL_HIP_HPP
 
 #ifndef KOKKOS_ENABLE_HIP
-#error "Kokkos_SIMD_TensorCore_HIP.hpp requires KOKKOS_ENABLE_HIP"
+#error "Kokkos_SIMD_MMA_HIP.hpp requires KOKKOS_ENABLE_HIP"
 #endif
 
 #include <rocwmma/rocwmma.hpp>

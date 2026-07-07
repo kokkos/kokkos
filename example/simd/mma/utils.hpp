@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_SIMD_TENSORCORE_EXAMPLES_UTILS_HPP
-#define KOKKOS_SIMD_TENSORCORE_EXAMPLES_UTILS_HPP
+#ifndef KOKKOS_SIMD_MMA_EXAMPLES_UTILS_HPP
+#define KOKKOS_SIMD_MMA_EXAMPLES_UTILS_HPP
 
 #include <Kokkos_Core.hpp>
 #include <Kokkos_Macros.hpp>
@@ -21,7 +21,7 @@ using ExecSpace = Kokkos::Cuda;
 #elif defined(KOKKOS_ENABLE_HIP)
 using ExecSpace = Kokkos::HIP;
 #else
-#error "Kokkos SIMD tensor-core examples require AMX, CUDA, or HIP"
+#error "Kokkos SIMD MMA examples require AMX, CUDA, or HIP"
 #endif
 
 using Layout = Kokkos::LayoutLeft;
@@ -29,9 +29,9 @@ using Layout = Kokkos::LayoutLeft;
 #if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
 using Scalar            = float;
 constexpr int WARP_SIZE = 1;
-constexpr int WMMA_M    = 16;
-constexpr int WMMA_N    = 16;
-constexpr int WMMA_K    = 32;
+constexpr int MMA_M    = 16;
+constexpr int MMA_N    = 16;
+constexpr int MMA_K    = 32;
 constexpr int BM        = 64;
 constexpr int BN        = 64;
 constexpr int BK        = 64;
@@ -42,9 +42,9 @@ constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
 #elif defined(KOKKOS_ENABLE_HIP)
 using Scalar            = double;
 constexpr int WARP_SIZE = 64;
-constexpr int WMMA_M    = 16;
-constexpr int WMMA_N    = 16;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 16;
+constexpr int MMA_N    = 16;
+constexpr int MMA_K    = 4;
 constexpr int BM        = 64;
 constexpr int BN        = 64;
 constexpr int BK        = 32;
@@ -55,9 +55,9 @@ constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
 #else
 using Scalar            = double;
 constexpr int WARP_SIZE = 32;
-constexpr int WMMA_M    = 8;
-constexpr int WMMA_N    = 8;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 8;
+constexpr int MMA_N    = 8;
+constexpr int MMA_K    = 4;
 constexpr int BM        = 64;
 constexpr int BN        = 32;
 constexpr int BK        = 32;

@@ -35,9 +35,9 @@ using u128 = unsigned __int128;
 
 // One hardware INT8 MMA tile shape supported by every backend (CUDA WMMA s8,
 // rocWMMA s8, and AMX _tile_dpbssd all accept 16x16x16).
-constexpr int WMMA_M = 16;
-constexpr int WMMA_N = 16;
-constexpr int WMMA_K = 16;
+constexpr int MMA_M = 16;
+constexpr int MMA_N = 16;
+constexpr int MMA_K = 16;
 
 // Team (block) tile of the output that one Kokkos team computes. The problem
 // dimensions must be multiples of these (and these of the warp tile below).
@@ -52,8 +52,8 @@ constexpr int BK = 32;
 // and MMA operand traffic are amortized instead of repeated per 16x16 tile.
 constexpr int WARP_TILE_M = 4;
 constexpr int WARP_TILE_N = 4;
-constexpr int WARP_M      = WARP_TILE_M * WMMA_M;
-constexpr int WARP_N      = WARP_TILE_N * WMMA_N;
+constexpr int WARP_M      = WARP_TILE_M * MMA_M;
+constexpr int WARP_N      = WARP_TILE_N * MMA_N;
 
 using Layout     = Kokkos::LayoutLeft;
 using DMatrix    = Kokkos::View<double**, Layout, ExecSpace>;
@@ -152,24 +152,24 @@ struct Int8TiledGemm {
 
       member.team_barrier();
 
-      for (int kk = 0; kk < BK; kk += WMMA_K) {
+      for (int kk = 0; kk < BK; kk += MMA_K) {
         // Load this warp's column of A fragments and row of B fragments once,
         // then reuse them across the whole WARP_TILE_M x WARP_TILE_N grid.
         AFragT a_frag[WARP_TILE_M];
         BFragT b_frag[WARP_TILE_N];
 
         for (int wm = 0; wm < WARP_TILE_M; ++wm) {
-          const int r0 = warp_m0 + wm * WMMA_M;
+          const int r0 = warp_m0 + wm * MMA_M;
           auto a_tile =
-              Kokkos::subview(a_shared, Kokkos::pair<int, int>(r0, r0 + WMMA_M),
-                              Kokkos::pair<int, int>(kk, kk + WMMA_K));
+              Kokkos::subview(a_shared, Kokkos::pair<int, int>(r0, r0 + MMA_M),
+                              Kokkos::pair<int, int>(kk, kk + MMA_K));
           Kokkos::Experimental::load_matrix_sync(a_frag[wm], a_tile);
         }
         for (int wn = 0; wn < WARP_TILE_N; ++wn) {
-          const int c0 = warp_n0 + wn * WMMA_N;
+          const int c0 = warp_n0 + wn * MMA_N;
           auto b_tile =
-              Kokkos::subview(b_shared, Kokkos::pair<int, int>(kk, kk + WMMA_K),
-                              Kokkos::pair<int, int>(c0, c0 + WMMA_N));
+              Kokkos::subview(b_shared, Kokkos::pair<int, int>(kk, kk + MMA_K),
+                              Kokkos::pair<int, int>(c0, c0 + MMA_N));
           Kokkos::Experimental::load_matrix_sync(b_frag[wn], b_tile);
         }
 
@@ -184,10 +184,10 @@ struct Int8TiledGemm {
 
     for (int wm = 0; wm < WARP_TILE_M; ++wm) {
       for (int wn = 0; wn < WARP_TILE_N; ++wn) {
-        const int i = tile_m0 + warp_m0 + wm * WMMA_M;
-        const int j = tile_n0 + warp_n0 + wn * WMMA_N;
-        auto g_tile = Kokkos::subview(G, Kokkos::pair<int, int>(i, i + WMMA_M),
-                                      Kokkos::pair<int, int>(j, j + WMMA_N));
+        const int i = tile_m0 + warp_m0 + wm * MMA_M;
+        const int j = tile_n0 + warp_n0 + wn * MMA_N;
+        auto g_tile = Kokkos::subview(G, Kokkos::pair<int, int>(i, i + MMA_M),
+                                      Kokkos::pair<int, int>(j, j + MMA_N));
         Kokkos::Experimental::store_matrix_sync(g_tile, c_frag[wm][wn]);
       }
     }
@@ -398,7 +398,7 @@ static double max_componentwise_error(int m, int n, DMatrix C, DMatrix Cref,
 }
 
 bool run_example(int m, int n, int k) {
-  static_assert(BM % WARP_M == 0 && BN % WARP_N == 0 && BK % WMMA_K == 0,
+  static_assert(BM % WARP_M == 0 && BN % WARP_N == 0 && BK % MMA_K == 0,
                 "Block tile must be divisible by the warp tile");
   static_assert((BM / WARP_M) * (BN / WARP_N) * WARP_SIZE <= 1024,
                 "team_size * vector_length must be <= 1024");
@@ -423,20 +423,20 @@ bool run_example(int m, int n, int k) {
   using I32FragDType =
       Kokkos::Experimental::FragmentDType<ExecSpace,
                                           Kokkos::Experimental::Int32>::type;
-  using MMAShape = Kokkos::Experimental::mma_shape<WMMA_M, WMMA_N, WMMA_K>;
+  using MMAShape = Kokkos::Experimental::mma_shape<MMA_M, MMA_N, MMA_K>;
 
   using AFragT = Kokkos::Experimental::fragment<
-      I8FragDType, Kokkos::Experimental::matrix_a_extents<WMMA_M, WMMA_K>,
+      I8FragDType, Kokkos::Experimental::matrix_a_extents<MMA_M, MMA_K>,
       Kokkos::layout_left,
       Kokkos::Experimental::mma_policy<MMAShape,
                                        Kokkos::Experimental::matrix_a>>;
   using BFragT = Kokkos::Experimental::fragment<
-      I8FragDType, Kokkos::Experimental::matrix_b_extents<WMMA_K, WMMA_N>,
+      I8FragDType, Kokkos::Experimental::matrix_b_extents<MMA_K, MMA_N>,
       Kokkos::layout_left,
       Kokkos::Experimental::mma_policy<MMAShape,
                                        Kokkos::Experimental::matrix_b>>;
   using CFragT = Kokkos::Experimental::fragment<
-      I32FragDType, Kokkos::Experimental::accumulator_extents<WMMA_M, WMMA_N>,
+      I32FragDType, Kokkos::Experimental::accumulator_extents<MMA_M, MMA_N>,
       Kokkos::layout_right,
       Kokkos::Experimental::mma_policy<MMAShape,
                                        Kokkos::Experimental::accumulator>>;
@@ -487,7 +487,7 @@ bool run_example(int m, int n, int k) {
   const double oz_ms = timer.seconds() * 1e3 / iters;
 
   std::printf(
-      "Kokkos SIMD tensor-core Ozaki-II INT8 DGEMM\n"
+      "Kokkos SIMD MMA Ozaki-II INT8 DGEMM\n"
       "  problem        : M,N,K = (%d, %d, %d)\n"
       "  scheme         : moduli = %d, kA = kB = %d, INT8 GEMMs/call = %d\n"
       "  accuracy       : max componentwise err vs FP64 = %.3e "
@@ -516,7 +516,7 @@ int main(int argc, char* argv[]) {
   int rc = 0;
   {
     const bool success = run_example(m, n, k);
-    std::printf("Kokkos SIMD tensor-core Ozaki-II INT8 DGEMM: %s\n",
+    std::printf("Kokkos SIMD MMA Ozaki-II INT8 DGEMM: %s\n",
                 success ? "PASSED" : "FAILED");
     rc = success ? 0 : 1;
   }

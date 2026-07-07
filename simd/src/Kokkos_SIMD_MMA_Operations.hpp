@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#ifndef KOKKOS_SIMD_TENSORCORE_OPERATIONS_HPP
-#define KOKKOS_SIMD_TENSORCORE_OPERATIONS_HPP
+#ifndef KOKKOS_SIMD_MMA_OPERATIONS_HPP
+#define KOKKOS_SIMD_MMA_OPERATIONS_HPP
 
-#include <Kokkos_SIMD_TensorCore_Fragment.hpp>
+#include <Kokkos_SIMD_MMA_Fragment.hpp>
 
 namespace Kokkos {
 namespace Experimental {
@@ -27,16 +27,15 @@ struct matrix_rank<MatrixT, std::void_t<decltype(MatrixT::rank)>>
 template <class MatrixT>
 inline constexpr int matrix_rank_v = matrix_rank<MatrixT>::value;
 
-// Tensor cores/matrix cores operate on tiny matrices to perform a
-// hardware-accelerated matrix multiplication. Thus, it is implicitly assumed
-// that the inputs/output of tensor cores are matrices. All tensors with rank >
-// 2 must be matricized using alternate Views/Subviews before using tensor core
-// operations.
+// MMA operations target tiny matrices for hardware-accelerated matrix
+// multiplication. Thus, it is implicitly assumed that the inputs/output of MMA
+// operations are matrices. All tensors with rank > 2 must be matricized using
+// alternate Views/Subviews before using MMA operations.
 template <class MatrixT>
 KOKKOS_INLINE_FUNCTION void check_rank2_matrix_tile(const MatrixT&) {
   static_assert(
       matrix_rank_v<MatrixT> == 2,
-      "Kokkos SIMD tensor-core matrix operations expect a rank-2 Kokkos "
+      "Kokkos SIMD MMA matrix operations expect a rank-2 Kokkos "
       "view/subview representing a matricized MMA tile");
 }
 

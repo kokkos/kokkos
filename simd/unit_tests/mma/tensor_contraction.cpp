@@ -24,9 +24,9 @@ using ExecSpace = Kokkos::HIP;
 #if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
 using Scalar            = float;
 constexpr int WARP_SIZE = 1;
-constexpr int WMMA_M    = 16;
-constexpr int WMMA_N    = 16;
-constexpr int WMMA_K    = 32;
+constexpr int MMA_M    = 16;
+constexpr int MMA_N    = 16;
+constexpr int MMA_K    = 32;
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::BF16;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -34,9 +34,9 @@ constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
 #elif defined(KOKKOS_ENABLE_HIP)
 using Scalar            = double;
 constexpr int WARP_SIZE = 64;
-constexpr int WMMA_M    = 16;
-constexpr int WMMA_N    = 16;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 16;
+constexpr int MMA_N    = 16;
+constexpr int MMA_K    = 4;
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -44,9 +44,9 @@ constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
 #elif defined(KOKKOS_ENABLE_CUDA)
 using Scalar            = double;
 constexpr int WARP_SIZE = 32;
-constexpr int WMMA_M    = 8;
-constexpr int WMMA_N    = 8;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 8;
+constexpr int MMA_N    = 8;
+constexpr int MMA_K    = 4;
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -173,17 +173,17 @@ void reference_contract(Matrix<Layout> op, Tensor tensor, Matrix<Layout> ref) {
 }
 
 template <int Size, class Layout, class AFragT, class BFragT, class CFragT>
-struct DirectTensorCoreMatmul {
+struct DirectMMAMatmul {
   Matrix<Layout> A;
   Matrix<Layout> B;
   Matrix<Layout> C;
 
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
-    const int n_tiles_n = (Size * Size) / WMMA_N;
+    const int n_tiles_n = (Size * Size) / MMA_N;
     const int tile_m    = member.league_rank() / n_tiles_n;
     const int tile_n    = member.league_rank() % n_tiles_n;
-    const int i         = tile_m * WMMA_M;
-    const int j         = tile_n * WMMA_N;
+    const int i         = tile_m * MMA_M;
+    const int j         = tile_n * MMA_N;
 
     AFragT a_frag;
     BFragT b_frag;
@@ -191,64 +191,64 @@ struct DirectTensorCoreMatmul {
 
     Kokkos::Experimental::fill_fragment(c_frag, Scalar(0.0));
 
-    for (int k0 = 0; k0 < Size; k0 += WMMA_K) {
-      auto a_tile = Kokkos::subview(A, Kokkos::pair<int, int>(i, i + WMMA_M),
-                                    Kokkos::pair<int, int>(k0, k0 + WMMA_K));
-      auto b_tile = Kokkos::subview(B, Kokkos::pair<int, int>(k0, k0 + WMMA_K),
-                                    Kokkos::pair<int, int>(j, j + WMMA_N));
+    for (int k0 = 0; k0 < Size; k0 += MMA_K) {
+      auto a_tile = Kokkos::subview(A, Kokkos::pair<int, int>(i, i + MMA_M),
+                                    Kokkos::pair<int, int>(k0, k0 + MMA_K));
+      auto b_tile = Kokkos::subview(B, Kokkos::pair<int, int>(k0, k0 + MMA_K),
+                                    Kokkos::pair<int, int>(j, j + MMA_N));
 
       Kokkos::Experimental::load_matrix_sync(a_frag, a_tile);
       Kokkos::Experimental::load_matrix_sync(b_frag, b_tile);
       Kokkos::Experimental::mma_sync(c_frag, a_frag, b_frag, c_frag);
     }
 
-    auto c_tile = Kokkos::subview(C, Kokkos::pair<int, int>(i, i + WMMA_M),
-                                  Kokkos::pair<int, int>(j, j + WMMA_N));
+    auto c_tile = Kokkos::subview(C, Kokkos::pair<int, int>(i, i + MMA_M),
+                                  Kokkos::pair<int, int>(j, j + MMA_N));
     Kokkos::Experimental::store_matrix_sync(c_tile, c_frag);
   }
 };
 
 template <int Size, class Layout>
-void tensor_core_contract(Matrix<Layout> op, Matrix<Layout> input,
+void mma_contract(Matrix<Layout> op, Matrix<Layout> input,
                           Matrix<Layout> output) {
   using InputFragDType =
       Kokkos::Experimental::FragmentDType<ExecSpace, InputPrecision>::type;
   using AccumFragDType =
       Kokkos::Experimental::FragmentDType<ExecSpace, AccumPrecision>::type;
-  using MMAShape = Kokkos::Experimental::mma_shape<WMMA_M, WMMA_N, WMMA_K>;
+  using MMAShape = Kokkos::Experimental::mma_shape<MMA_M, MMA_N, MMA_K>;
   using OperandLayoutT = typename OperandLayout<Layout>::type;
 
   using AFragT = Kokkos::Experimental::fragment<
-      InputFragDType, Kokkos::Experimental::matrix_a_extents<WMMA_M, WMMA_K>,
+      InputFragDType, Kokkos::Experimental::matrix_a_extents<MMA_M, MMA_K>,
       OperandLayoutT,
       Kokkos::Experimental::mma_policy<MMAShape, Kokkos::Experimental::matrix_a,
                                        OperandLayoutT>>;
 
   using BFragT = Kokkos::Experimental::fragment<
-      InputFragDType, Kokkos::Experimental::matrix_b_extents<WMMA_K, WMMA_N>,
+      InputFragDType, Kokkos::Experimental::matrix_b_extents<MMA_K, MMA_N>,
       OperandLayoutT,
       Kokkos::Experimental::mma_policy<MMAShape, Kokkos::Experimental::matrix_b,
                                        OperandLayoutT>>;
 
   using CFragT = Kokkos::Experimental::fragment<
-      AccumFragDType, Kokkos::Experimental::accumulator_extents<WMMA_M, WMMA_N>,
+      AccumFragDType, Kokkos::Experimental::accumulator_extents<MMA_M, MMA_N>,
       Kokkos::layout_right,
       Kokkos::Experimental::mma_policy<MMAShape,
                                        Kokkos::Experimental::accumulator>>;
 
-  static_assert(Size % WMMA_M == 0);
-  static_assert((Size * Size) % WMMA_N == 0);
-  static_assert(Size % WMMA_K == 0);
+  static_assert(Size % MMA_M == 0);
+  static_assert((Size * Size) % MMA_N == 0);
+  static_assert(Size % MMA_K == 0);
 
   constexpr int team_size = 1;
   static_assert(team_size * WARP_SIZE <= 1024);
 
-  DirectTensorCoreMatmul<Size, Layout, AFragT, BFragT, CFragT> functor{
+  DirectMMAMatmul<Size, Layout, AFragT, BFragT, CFragT> functor{
       op, input, output};
-  TeamPolicy policy((Size / WMMA_M) * ((Size * Size) / WMMA_N), team_size,
+  TeamPolicy policy((Size / MMA_M) * ((Size * Size) / MMA_N), team_size,
                     WARP_SIZE);
 
-  Kokkos::parallel_for("tensor_core_contract", policy, functor);
+  Kokkos::parallel_for("mma_contract", policy, functor);
   ExecSpace().fence();
 }
 
@@ -277,14 +277,14 @@ bool run_axis_layout_case() {
   Tensor tensor("tensor", Size, Size, Size);
   Matrix<Layout> op("operator", Size, Size);
   Matrix<Layout> input("input_matrix", Size, Size * Size);
-  Matrix<Layout> output("tc_output", Size, Size * Size);
+  Matrix<Layout> output("mma_output", Size, Size * Size);
   Matrix<Layout> ref("ref_output", Size, Size * Size);
 
   fill_random(tensor, pool);
   fill_random(op, pool);
   matricize_tensor<Size, Axis>(tensor, input);
   reference_contract<Size, Axis>(op, tensor, ref);
-  tensor_core_contract<Size>(op, input, output);
+  mma_contract<Size>(op, input, output);
 
 #if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
   constexpr double tol = 1e-2;
@@ -298,7 +298,7 @@ bool run_axis_layout_case() {
   const bool success   = rel_err < tol;
   if (!success) {
     printf(
-        "Kokkos SIMD tensor-core tensor contraction failed: axis=%d, "
+        "Kokkos SIMD MMA tensor contraction failed: axis=%d, "
         "rel_err=%.4e, "
         "tol=%.4e, size=%d\n",
         Axis, rel_err, tol, Size);
@@ -314,7 +314,7 @@ bool run_layout_case(int axis) {
     case 2: return run_axis_layout_case<Size, 2, Layout>();
     default:
       printf(
-          "Kokkos SIMD tensor-core tensor contraction test: unsupported axis "
+          "Kokkos SIMD MMA tensor contraction test: unsupported axis "
           "%d\n",
           axis);
       return false;
@@ -334,7 +334,7 @@ bool run_size_case(int size, int axis) {
     case 32: return run_layout_case<32, Layout>(axis);
     default:
       printf(
-          "Kokkos SIMD tensor-core tensor contraction test: unsupported size "
+          "Kokkos SIMD MMA tensor contraction test: unsupported size "
           "%d\n",
           size);
       return false;
@@ -346,7 +346,7 @@ bool run_selected_case(int size, int axis, int layout_id) {
   if (layout_id == 1) return run_size_case<Kokkos::LayoutRight>(size, axis);
 
   printf(
-      "Kokkos SIMD tensor-core tensor contraction test: unsupported layout id "
+      "Kokkos SIMD MMA tensor contraction test: unsupported layout id "
       "%d\n",
       layout_id);
   return false;
@@ -366,12 +366,12 @@ int main(int argc, char* argv[]) {
   {
     const bool success = run_selected_case(size, axis, layout_id);
     if (!success) {
-      printf("Kokkos SIMD tensor-core tensor contraction test: FAILED\n");
+      printf("Kokkos SIMD MMA tensor contraction test: FAILED\n");
       Kokkos::finalize();
       return 1;
     }
 
-    printf("Kokkos SIMD tensor-core tensor contraction test: PASSED\n");
+    printf("Kokkos SIMD MMA tensor contraction test: PASSED\n");
   }
   Kokkos::finalize();
 

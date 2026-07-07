@@ -18,7 +18,7 @@ using ExecSpace = Kokkos::Cuda;
 #elif defined(KOKKOS_ENABLE_HIP)
 using ExecSpace = Kokkos::HIP;
 #else
-#error "Kokkos SIMD tensor-core matmul tests require AMX, CUDA, or HIP"
+#error "Kokkos SIMD MMA matmul tests require AMX, CUDA, or HIP"
 #endif
 
 using Layout = Kokkos::LayoutLeft;
@@ -46,29 +46,29 @@ using range2d = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ExecSpace>;
 constexpr int WARP_SIZE = 1;
 #elif defined(KOKKOS_ENABLE_HIP)
 constexpr int WARP_SIZE = 64;
-constexpr int WMMA_M    = 16;
-constexpr int WMMA_N    = 16;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 16;
+constexpr int MMA_N    = 16;
+constexpr int MMA_K    = 4;
 #else
 constexpr int WARP_SIZE = 32;
-constexpr int WMMA_M    = 8;
-constexpr int WMMA_N    = 8;
-constexpr int WMMA_K    = 4;
+constexpr int MMA_M    = 8;
+constexpr int MMA_N    = 8;
+constexpr int MMA_K    = 4;
 #endif
 
 #if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
-#ifndef KOKKOS_SIMD_TEST_WMMA_M
-#define KOKKOS_SIMD_TEST_WMMA_M 16
+#ifndef KOKKOS_SIMD_TEST_MMA_M
+#define KOKKOS_SIMD_TEST_MMA_M 16
 #endif
-#ifndef KOKKOS_SIMD_TEST_WMMA_N
-#define KOKKOS_SIMD_TEST_WMMA_N 16
+#ifndef KOKKOS_SIMD_TEST_MMA_N
+#define KOKKOS_SIMD_TEST_MMA_N 16
 #endif
-#ifndef KOKKOS_SIMD_TEST_WMMA_K
-#define KOKKOS_SIMD_TEST_WMMA_K 32
+#ifndef KOKKOS_SIMD_TEST_MMA_K
+#define KOKKOS_SIMD_TEST_MMA_K 32
 #endif
-constexpr int WMMA_M = KOKKOS_SIMD_TEST_WMMA_M;
-constexpr int WMMA_N = KOKKOS_SIMD_TEST_WMMA_N;
-constexpr int WMMA_K = KOKKOS_SIMD_TEST_WMMA_K;
+constexpr int MMA_M = KOKKOS_SIMD_TEST_MMA_M;
+constexpr int MMA_N = KOKKOS_SIMD_TEST_MMA_N;
+constexpr int MMA_K = KOKKOS_SIMD_TEST_MMA_K;
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::BF16;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -173,7 +173,7 @@ void naive_matmul_bf16(Matrix A, Matrix B, Matrix C) {
       });
 }
 
-/// Warp-level tensor core functor
+/// Warp-level MMA functor
 template <class ABufferT, class BBufferT, class CBufferT, class AFragT,
           class BFragT, class CFragT, int BM, int BN, int BK, int M, int N,
           int K>
@@ -203,12 +203,12 @@ struct WarpLevelHardwareAcceleratedMatmul {
     // find output warp tile
     const int warp_id = member.team_rank();
 
-    const int n_warps_N = BN / WMMA_N;
+    const int n_warps_N = BN / MMA_N;
     const int warp_m    = warp_id / n_warps_N;
     const int warp_n    = warp_id % n_warps_N;
 
-    const int i = tile_m0 + warp_m * WMMA_M;
-    const int j = tile_n0 + warp_n * WMMA_N;
+    const int i = tile_m0 + warp_m * MMA_M;
+    const int j = tile_n0 + warp_n * MMA_N;
 
     ScratchMatrix A_tile(member.team_scratch(0), BM, BK);
     ScratchMatrix B_tile(member.team_scratch(0), BK, BN);
@@ -233,14 +233,14 @@ struct WarpLevelHardwareAcceleratedMatmul {
           });
       member.team_barrier();
 
-      for (int wmma_k = 0; wmma_k < BK; wmma_k += WMMA_K) {
+      for (int mma_k = 0; mma_k < BK; mma_k += MMA_K) {
         auto a_tile = Kokkos::subview(
             A_tile,
-            Kokkos::pair<int, int>(warp_m * WMMA_M, (warp_m + 1) * WMMA_M),
-            Kokkos::pair<int, int>(wmma_k, wmma_k + WMMA_K));
+            Kokkos::pair<int, int>(warp_m * MMA_M, (warp_m + 1) * MMA_M),
+            Kokkos::pair<int, int>(mma_k, mma_k + MMA_K));
         auto b_tile = Kokkos::subview(
-            B_tile, Kokkos::pair<int, int>(wmma_k, wmma_k + WMMA_K),
-            Kokkos::pair<int, int>(warp_n * WMMA_N, (warp_n + 1) * WMMA_N));
+            B_tile, Kokkos::pair<int, int>(mma_k, mma_k + MMA_K),
+            Kokkos::pair<int, int>(warp_n * MMA_N, (warp_n + 1) * MMA_N));
 
         Kokkos::Experimental::load_matrix_sync(a_frag, a_tile);
         Kokkos::Experimental::load_matrix_sync(b_frag, b_tile);
@@ -251,8 +251,8 @@ struct WarpLevelHardwareAcceleratedMatmul {
       member.team_barrier();
     }
 
-    auto c_tile = Kokkos::subview(C, Kokkos::pair<int, int>(i, i + WMMA_M),
-                                  Kokkos::pair<int, int>(j, j + WMMA_N));
+    auto c_tile = Kokkos::subview(C, Kokkos::pair<int, int>(i, i + MMA_M),
+                                  Kokkos::pair<int, int>(j, j + MMA_N));
     Kokkos::Experimental::store_matrix_sync(c_tile, c_frag);
   }
 };
@@ -272,11 +272,11 @@ template <int M, int N, int K, int BM = DEFAULT_BM, int BN = DEFAULT_BN,
 bool run_matmul_case() {
   static_assert(M % BM == 0 && N % BN == 0 && K % BK == 0,
                 "Problem dimensions must be divisible by block dimensions");
-  static_assert(BM % WMMA_M == 0 && BN % WMMA_N == 0 && BK % WMMA_K == 0,
+  static_assert(BM % MMA_M == 0 && BN % MMA_N == 0 && BK % MMA_K == 0,
                 "Block dimensions must be divisible by WMMA dimensions");
 
-  constexpr int warps_m   = BM / WMMA_M;
-  constexpr int warps_n   = BN / WMMA_N;
+  constexpr int warps_m   = BM / MMA_M;
+  constexpr int warps_n   = BN / MMA_N;
   constexpr int team_size = warps_m * warps_n;
 
   static_assert(team_size * WARP_SIZE <= 1024,
@@ -302,23 +302,23 @@ bool run_matmul_case() {
         Kokkos::Experimental::FragmentDType<ExecSpace, InputPrecision>::type;
     using AccumFragDType =
         Kokkos::Experimental::FragmentDType<ExecSpace, AccumPrecision>::type;
-    using MMAShape = Kokkos::Experimental::mma_shape<WMMA_M, WMMA_N, WMMA_K>;
+    using MMAShape = Kokkos::Experimental::mma_shape<MMA_M, MMA_N, MMA_K>;
 
     using AFragT = Kokkos::Experimental::fragment<
-        InputFragDType, Kokkos::Experimental::matrix_a_extents<WMMA_M, WMMA_K>,
+        InputFragDType, Kokkos::Experimental::matrix_a_extents<MMA_M, MMA_K>,
         Kokkos::layout_left,
         Kokkos::Experimental::mma_policy<MMAShape,
                                          Kokkos::Experimental::matrix_a>>;
 
     using BFragT = Kokkos::Experimental::fragment<
-        InputFragDType, Kokkos::Experimental::matrix_b_extents<WMMA_K, WMMA_N>,
+        InputFragDType, Kokkos::Experimental::matrix_b_extents<MMA_K, MMA_N>,
         Kokkos::layout_left,
         Kokkos::Experimental::mma_policy<MMAShape,
                                          Kokkos::Experimental::matrix_b>>;
 
     using CFragT = Kokkos::Experimental::fragment<
         AccumFragDType,
-        Kokkos::Experimental::accumulator_extents<WMMA_M, WMMA_N>,
+        Kokkos::Experimental::accumulator_extents<MMA_M, MMA_N>,
         Kokkos::layout_right,
         Kokkos::Experimental::mma_policy<MMAShape,
                                          Kokkos::Experimental::accumulator>>;
@@ -345,7 +345,7 @@ bool run_matmul_case() {
     policy = policy.set_scratch_size(0, Kokkos::PerTeam(scratch_size));
 
     // run the functor
-    Kokkos::parallel_for("naive_tc_matmul", policy, hamm);
+    Kokkos::parallel_for("naive_mma_matmul", policy, hamm);
     ExecSpace().fence();
 
     // check results
@@ -376,10 +376,10 @@ bool run_matmul_case() {
     const bool success = rel_err < tol;
     if (!success) {
       printf(
-          "Kokkos SIMD tensor-core matmul failed: M,N,K=(%d,%d,%d), "
+          "Kokkos SIMD MMA matmul failed: M,N,K=(%d,%d,%d), "
           "BM,BN,BK=(%d,%d,%d), "
-          "WMMA_M,N,K=(%d,%d,%d), rel_err=%.4e, tol=%.4e\n",
-          M, N, K, BM, BN, BK, WMMA_M, WMMA_N, WMMA_K, rel_err, tol);
+          "MMA_M,N,K=(%d,%d,%d), rel_err=%.4e, tol=%.4e\n",
+          M, N, K, BM, BN, BK, MMA_M, MMA_N, MMA_K, rel_err, tol);
     }
     return success;
   }
@@ -395,7 +395,7 @@ bool run_size_case(int size) {
     case 1024: return run_matmul_case<1024, 1024, 1024, BM, BN, BK>();
     case 2048: return run_matmul_case<2048, 2048, 2048, BM, BN, BK>();
     default:
-      printf("Kokkos SIMD tensor-core matmul test: unsupported size %d\n",
+      printf("Kokkos SIMD MMA matmul test: unsupported size %d\n",
              size);
       return false;
   }
@@ -419,7 +419,7 @@ bool run_selected_case(int size, int bm, int bn, int bk) {
 #endif
 
   printf(
-      "Kokkos SIMD tensor-core matmul test: unsupported block size "
+      "Kokkos SIMD MMA matmul test: unsupported block size "
       "(%d,%d,%d)\n",
       bm, bn, bk);
   return false;
@@ -441,12 +441,12 @@ int main(int argc, char* argv[]) {
     const bool success = run_selected_case(size, bm, bn, bk);
 
     if (!success) {
-      printf("Kokkos SIMD tensor-core matmul test: FAILED\n");
+      printf("Kokkos SIMD MMA matmul test: FAILED\n");
       Kokkos::finalize();
       return 1;
     }
 
-    printf("Kokkos SIMD tensor-core matmul test: PASSED\n");
+    printf("Kokkos SIMD MMA matmul test: PASSED\n");
   }
   Kokkos::finalize();
 

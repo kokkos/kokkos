@@ -48,7 +48,7 @@
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
-#include <Kokkos_SIMD_TensorCore.hpp>
+#include <Kokkos_SIMD_MMA.hpp>
 #endif
 
 namespace Kokkos {

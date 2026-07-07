@@ -1,1 +1,1 @@
-kokkos_add_example_directories(tensor_core)
+kokkos_add_example_directories(mma)

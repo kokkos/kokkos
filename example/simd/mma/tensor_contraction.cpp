@@ -9,7 +9,7 @@
 //
 //   C(i,j,l,m) = sum_k A(i,j,k) * B(k,l,m)
 //
-// Tensor cores do not consume that rank-3 indexing directly. They consume
+// MMA operations do not consume that rank-3 indexing directly. They consume
 // small matrix fragments, so the kernel below forms matrix-shaped tiles:
 //
 //   A_tile(row=i*J+j, k)
@@ -83,29 +83,29 @@ struct TensorContraction {
 
   KOKKOS_INLINE_FUNCTION void operator()(const MemberType& member) const {
     // C_matrix has shape (I*J) x (L*M). One team computes one
-    // WMMA_M x WMMA_N matrix tile of that matricized result.
-    const int n_tiles_n = RIGHT_COLS / WMMA_N;
+    // MMA_M x MMA_N matrix tile of that matricized result.
+    const int n_tiles_n = RIGHT_COLS / MMA_N;
     const int tile_m    = member.league_rank() / n_tiles_n;
     const int tile_n    = member.league_rank() % n_tiles_n;
-    const int row0      = tile_m * WMMA_M;
-    const int col0      = tile_n * WMMA_N;
+    const int row0      = tile_m * MMA_M;
+    const int col0      = tile_n * MMA_N;
 
-    ScratchA a_matrix_tile(member.team_scratch(0), WMMA_M, WMMA_K);
-    ScratchB b_matrix_tile(member.team_scratch(0), WMMA_K, WMMA_N);
+    ScratchA a_matrix_tile(member.team_scratch(0), MMA_M, MMA_K);
+    ScratchB b_matrix_tile(member.team_scratch(0), MMA_K, MMA_N);
 
     AFragT a_frag;
     BFragT b_frag;
     CFragT c_frag;
     Kokkos::Experimental::fill_fragment(c_frag, Scalar(0.0));
 
-    for (int k0 = 0; k0 < K_EXTENT; k0 += WMMA_K) {
+    for (int k0 = 0; k0 < K_EXTENT; k0 += MMA_K) {
       // Form the A operand matrix tile from the original rank-3 tensor. The
       // local row maps to global row=row0+local_row, then to tensor indices
       // (i,j) via row=i*J+j. The local column is the contracted k index.
       Kokkos::parallel_for(
-          Kokkos::TeamVectorRange(member, WMMA_M * WMMA_K), [&](const int idx) {
-            const int local_row = idx / WMMA_K;
-            const int local_k   = idx % WMMA_K;
+          Kokkos::TeamVectorRange(member, MMA_M * MMA_K), [&](const int idx) {
+            const int local_row = idx / MMA_K;
+            const int local_k   = idx % MMA_K;
             int i;
             int j;
             row_to_left_indices(row0 + local_row, i, j);
@@ -116,9 +116,9 @@ struct TensorContraction {
       // index, while col=col0+local_col maps back to tensor indices (l,m) via
       // col=l*M+m.
       Kokkos::parallel_for(
-          Kokkos::TeamVectorRange(member, WMMA_K * WMMA_N), [&](const int idx) {
-            const int local_k   = idx / WMMA_N;
-            const int local_col = idx % WMMA_N;
+          Kokkos::TeamVectorRange(member, MMA_K * MMA_N), [&](const int idx) {
+            const int local_k   = idx / MMA_N;
+            const int local_col = idx % MMA_N;
             int l;
             int m;
             col_to_right_indices(col0 + local_col, l, m);
@@ -129,7 +129,7 @@ struct TensorContraction {
 
       // At this point the rank-3 tensor data has been matricized into two
       // rank-2 scratch tiles. load_matrix_sync sees only those matrix-like
-      // subviews, which is the representation tensor cores require.
+      // subviews, which is the representation MMAs require.
       auto a_tile =
           Kokkos::subview(a_matrix_tile, Kokkos::ALL(), Kokkos::ALL());
       auto b_tile =
@@ -142,42 +142,42 @@ struct TensorContraction {
       member.team_barrier();
     }
 
-    // Store the matrix result tile to C_matrix[row0:row0+WMMA_M,
-    // col0:col0+WMMA_N]. A separate dematricization step maps that matrix
+    // Store the matrix result tile to C_matrix[row0:row0+MMA_M,
+    // col0:col0+MMA_N]. A separate dematricization step maps that matrix
     // result back to C(i,j,l,m).
     auto c_tile =
-        Kokkos::subview(C_matrix, Kokkos::pair<int, int>(row0, row0 + WMMA_M),
-                        Kokkos::pair<int, int>(col0, col0 + WMMA_N));
+        Kokkos::subview(C_matrix, Kokkos::pair<int, int>(row0, row0 + MMA_M),
+                        Kokkos::pair<int, int>(col0, col0 + MMA_N));
     Kokkos::Experimental::store_matrix_sync(c_tile, c_frag);
   }
 };
 
 bool run_example() {
-  static_assert(LEFT_ROWS % WMMA_M == 0);
-  static_assert(RIGHT_COLS % WMMA_N == 0);
-  static_assert(K_EXTENT % WMMA_K == 0);
+  static_assert(LEFT_ROWS % MMA_M == 0);
+  static_assert(RIGHT_COLS % MMA_N == 0);
+  static_assert(K_EXTENT % MMA_K == 0);
   static_assert(WARP_SIZE <= 1024);
 
   using InputFragDType =
       Kokkos::Experimental::FragmentDType<ExecSpace, InputPrecision>::type;
   using AccumFragDType =
       Kokkos::Experimental::FragmentDType<ExecSpace, AccumPrecision>::type;
-  using MMAShape = Kokkos::Experimental::mma_shape<WMMA_M, WMMA_N, WMMA_K>;
+  using MMAShape = Kokkos::Experimental::mma_shape<MMA_M, MMA_N, MMA_K>;
 
   using AFragT = Kokkos::Experimental::fragment<
-      InputFragDType, Kokkos::Experimental::matrix_a_extents<WMMA_M, WMMA_K>,
+      InputFragDType, Kokkos::Experimental::matrix_a_extents<MMA_M, MMA_K>,
       Kokkos::layout_left,
       Kokkos::Experimental::mma_policy<MMAShape,
                                        Kokkos::Experimental::matrix_a>>;
 
   using BFragT = Kokkos::Experimental::fragment<
-      InputFragDType, Kokkos::Experimental::matrix_b_extents<WMMA_K, WMMA_N>,
+      InputFragDType, Kokkos::Experimental::matrix_b_extents<MMA_K, MMA_N>,
       Kokkos::layout_left,
       Kokkos::Experimental::mma_policy<MMAShape,
                                        Kokkos::Experimental::matrix_b>>;
 
   using CFragT = Kokkos::Experimental::fragment<
-      AccumFragDType, Kokkos::Experimental::accumulator_extents<WMMA_M, WMMA_N>,
+      AccumFragDType, Kokkos::Experimental::accumulator_extents<MMA_M, MMA_N>,
       Kokkos::layout_right,
       Kokkos::Experimental::mma_policy<MMAShape,
                                        Kokkos::Experimental::accumulator>>;
@@ -195,11 +195,11 @@ bool run_example() {
 
   // The driver gets the original tensors. It is responsible for choosing a
   // matricization and forming matrix tiles before calling Kokkos SIMD
-  // tensor-core.
+  // MMA.
   TensorContraction<AFragT, BFragT, CFragT> contraction{a, b, c_matrix};
-  TeamPolicy policy((LEFT_ROWS / WMMA_M) * (RIGHT_COLS / WMMA_N), 1, WARP_SIZE);
-  const int scratch_size = ScratchA::shmem_size(WMMA_M, WMMA_K) +
-                           ScratchB::shmem_size(WMMA_K, WMMA_N);
+  TeamPolicy policy((LEFT_ROWS / MMA_M) * (RIGHT_COLS / MMA_N), 1, WARP_SIZE);
+  const int scratch_size = ScratchA::shmem_size(MMA_M, MMA_K) +
+                           ScratchB::shmem_size(MMA_K, MMA_N);
   policy = policy.set_scratch_size(0, Kokkos::PerTeam(scratch_size));
 
   Kokkos::parallel_for("tensor_contraction", policy, contraction);
@@ -219,7 +219,7 @@ bool run_example() {
 
   const double rel_err = relative_error_rank4(c, c_ref);
   printf(
-      "Kokkos SIMD tensor-core tensor contraction: A(%d,%d,%d) x B(%d,%d,%d), "
+      "Kokkos SIMD MMA tensor contraction: A(%d,%d,%d) x B(%d,%d,%d), "
       "rel_err=%.4e\n",
       I_EXTENT, J_EXTENT, K_EXTENT, K_EXTENT, L_EXTENT, M_EXTENT, rel_err);
 
@@ -231,12 +231,12 @@ int main(int argc, char* argv[]) {
   {
     const bool success = run_example();
     if (!success) {
-      printf("Kokkos SIMD tensor-core tensor contraction: FAILED\n");
+      printf("Kokkos SIMD MMA tensor contraction: FAILED\n");
       Kokkos::finalize();
       return 1;
     }
 
-    printf("Kokkos SIMD tensor-core tensor contraction: PASSED\n");
+    printf("Kokkos SIMD MMA tensor contraction: PASSED\n");
   }
   Kokkos::finalize();
   return 0;
