@@ -935,10 +935,6 @@ if(KOKKOS_ENABLE_LIBDL)
   target_compile_definitions(Kokkos_CoreUnitTest_ToolIndependence PUBLIC KOKKOS_TOOLS_INDEPENDENT_BUILD)
   kokkos_add_test_library(kokkosprinter-tool SHARED SOURCES tools/printing-tool.cpp)
 
-  kokkos_add_test_library(kokkoshwmtracker-tool SHARED SOURCES tools/memory-hwm-tool.cpp)
-  
-  
-
   if((NOT (Kokkos_ENABLE_CUDA AND WIN32)) AND (NOT ("${KOKKOS_CXX_COMPILER_ID}" STREQUAL "Fujitsu")))
     target_compile_features(kokkosprinter-tool PUBLIC cxx_std_14)
   endif()
@@ -953,7 +949,11 @@ if(KOKKOS_ENABLE_LIBDL)
   endif()
 
   kokkos_add_test_executable(EmptyProfilingLibraryDeathTest UnitTestMain.cpp tools/TestEmptyProfilingLibrary.cpp)
-  kokkos_add_executable_and_test(ExcessMemoryAllocationErrorsInTesting SOURCES tools/TestExcessMemoryAllocation.cpp)
+
+  if(NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
+    kokkos_add_test_library(kokkoshwmtracker-tool SHARED SOURCES tools/memory-hwm-tool.cpp)
+    kokkos_add_executable_and_test(ExcessMemoryAllocationErrorsInTesting SOURCES tools/TestExcessMemoryAllocation.cpp)
+  endif()
 
   set(ADDRESS_REGEX "0x[0-9a-f]*")
   set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
