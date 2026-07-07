@@ -7,14 +7,16 @@
 void allocate_large_view() {
   Kokkos::initialize();
   size_t very_large_size = 5 << 30;
-  Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace> a("A",very_large_size);
+  Kokkos::View<double *, Kokkos::DefaultHostExecutionSpace> a("A",
+                                                              very_large_size);
   Kokkos::finalize();
 }
 
-TEST(ExcessMemoryAllocationErrorsInTesting, ExcessMemoryAllocationErrorsInTesting){
-    ASSERT_DEATH(allocate_large_view(), ".*WARNING!.*Total allocation.*GB.*exceeds.*GB limit!");
+TEST(ExcessMemoryAllocationErrorsInTesting,
+     ExcessMemoryAllocationErrorsInTesting) {
+  ASSERT_DEATH(allocate_large_view(),
+               ".*WARNING!.*Total allocation.*GB.*exceeds.*GB limit!");
 }
-
 
 int main(int argc, char **argv) {
   testing::InitGoogleTest(&argc, argv);
