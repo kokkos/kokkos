@@ -4,7 +4,7 @@ kokkos_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #-----------------------------------------------------------------------------
 
-file(GLOB SIMD_HEADERS *.hpp)
+file(GLOB SIMD_HEADERS *.hpp impl/*.hpp)
 file(GLOB SIMD_SOURCES *.cpp)
 
 install(

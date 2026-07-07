@@ -71,6 +71,25 @@ export {
   using ::Kokkos::Experimental::unchecked_gather_from;
   using ::Kokkos::Experimental::unchecked_scatter_to;
 
+#if defined(KOKKOS_ENABLE_CUDA)
+  using ::Kokkos::Experimental::accumulator;
+  using ::Kokkos::Experimental::accumulator_extents;
+  using ::Kokkos::Experimental::fill_fragment;
+  using ::Kokkos::Experimental::fragment;
+  using ::Kokkos::Experimental::FragmentDType;
+  using ::Kokkos::Experimental::FragmentUse;
+  using ::Kokkos::Experimental::load_matrix_sync;
+  using ::Kokkos::Experimental::matrix_a;
+  using ::Kokkos::Experimental::matrix_a_extents;
+  using ::Kokkos::Experimental::matrix_b;
+  using ::Kokkos::Experimental::matrix_b_extents;
+  using ::Kokkos::Experimental::mma_policy;
+  using ::Kokkos::Experimental::mma_shape;
+  using ::Kokkos::Experimental::mma_sync;
+  using ::Kokkos::Experimental::PrecisionType;
+  using ::Kokkos::Experimental::store_matrix_sync;
+#endif
+
   using ::Kokkos::Experimental::operator+=;
   using ::Kokkos::Experimental::operator*=;
   using ::Kokkos::Experimental::operator-=;

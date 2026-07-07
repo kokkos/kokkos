@@ -1,0 +1,1 @@
+kokkos_add_example_directories(tensor_core)

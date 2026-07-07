@@ -46,6 +46,10 @@
 
 #include <Kokkos_SIMD_Common_Math.hpp>
 
+#if defined(KOKKOS_ENABLE_CUDA)
+#include <Kokkos_SIMD_TensorCore.hpp>
+#endif
+
 namespace Kokkos {
 namespace Experimental {
 
