@@ -79,6 +79,8 @@ using ScratchMatrix = Kokkos::View<Scalar**, Layout, ScratchSpace,
                                    Kokkos::MemoryTraits<Kokkos::Unmanaged>>;
 using RandPool      = Kokkos::Random_XorShift64_Pool<ExecSpace>;
 using Range2D       = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ExecSpace>;
+using Range3D       = Kokkos::MDRangePolicy<Kokkos::Rank<3>, ExecSpace>;
+using Range4D       = Kokkos::MDRangePolicy<Kokkos::Rank<4>, ExecSpace>;
 
 inline void fill_matrix(Matrix mat, Scalar value) {
   Kokkos::parallel_for(
@@ -92,6 +94,19 @@ inline void random_matrix(Matrix mat, RandPool pool) {
       KOKKOS_LAMBDA(const int i, const int j) {
         auto gen  = pool.get_state();
         mat(i, j) = gen.frand();
+        pool.free_state(gen);
+      });
+}
+
+template <class TensorT>
+inline void random_rank3_view(TensorT tensor, RandPool pool) {
+  Kokkos::parallel_for(
+      "random_rank3_view",
+      Range3D({0, 0, 0},
+              {tensor.extent(0), tensor.extent(1), tensor.extent(2)}),
+      KOKKOS_LAMBDA(const int i, const int j, const int k) {
+        auto gen        = pool.get_state();
+        tensor(i, j, k) = gen.frand();
         pool.free_state(gen);
       });
 }
@@ -141,6 +156,28 @@ inline double relative_error(Matrix result, Matrix reference) {
       KOKKOS_LAMBDA(const int i, const int j, double& err_l, double& norm_l) {
         const double e = double(result(i, j)) - double(reference(i, j));
         const double r = double(reference(i, j));
+        err_l += e * e;
+        norm_l += r * r;
+      },
+      err, norm);
+
+  return std::sqrt(err) / std::sqrt(norm);
+}
+
+template <class TensorT>
+inline double relative_error_rank4(TensorT result, TensorT reference) {
+  double err  = 0.0;
+  double norm = 0.0;
+
+  Kokkos::parallel_reduce(
+      "relative_error_rank4",
+      Range4D({0, 0, 0, 0}, {result.extent(0), result.extent(1),
+                             result.extent(2), result.extent(3)}),
+      KOKKOS_LAMBDA(const int i, const int j, const int k, const int l,
+                    double& err_l, double& norm_l) {
+        const double e =
+            double(result(i, j, k, l)) - double(reference(i, j, k, l));
+        const double r = double(reference(i, j, k, l));
         err_l += e * e;
         norm_l += r * r;
       },

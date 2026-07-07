@@ -12,9 +12,17 @@ if(KOKKOS_SIMD_TENSOR_CORE_EXAMPLE_BACKEND AND NOT WIN32)
     example_simd_tensor_core_shared_memory_matmul
     SOURCES shared_memory_matmul.cpp
   )
+  kokkos_add_executable(
+    example_simd_tensor_core_tensor_contraction
+    SOURCES tensor_contraction.cpp
+  )
 
   add_test(
     NAME Kokkos_Example_SIMD_TensorCore_SharedMemoryMatmul
     COMMAND Kokkos_example_simd_tensor_core_shared_memory_matmul
+  )
+  add_test(
+    NAME Kokkos_Example_SIMD_TensorCore_TensorContraction
+    COMMAND Kokkos_example_simd_tensor_core_tensor_contraction
   )
 endif()
