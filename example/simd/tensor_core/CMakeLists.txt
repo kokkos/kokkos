@@ -16,6 +16,10 @@ if(KOKKOS_SIMD_TENSOR_CORE_EXAMPLE_BACKEND AND NOT WIN32)
     example_simd_tensor_core_tensor_contraction
     SOURCES tensor_contraction.cpp
   )
+  kokkos_add_executable(
+    example_simd_tensor_core_ozaki2_dgemm
+    SOURCES ozaki2_dgemm.cpp
+  )
 
   add_test(
     NAME Kokkos_Example_SIMD_TensorCore_SharedMemoryMatmul
@@ -24,5 +28,9 @@ if(KOKKOS_SIMD_TENSOR_CORE_EXAMPLE_BACKEND AND NOT WIN32)
   add_test(
     NAME Kokkos_Example_SIMD_TensorCore_TensorContraction
     COMMAND Kokkos_example_simd_tensor_core_tensor_contraction
+  )
+  add_test(
+    NAME Kokkos_Example_SIMD_TensorCore_Ozaki2DGEMM
+    COMMAND Kokkos_example_simd_tensor_core_ozaki2_dgemm 128 128 128
   )
 endif()
