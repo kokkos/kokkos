@@ -3,7 +3,7 @@
 
 #include <cstdint>
 #include <cstdio>
-
+#include <cstdlib>
 #include <mutex>
 #include <vector>
 #include <tuple>
@@ -68,9 +68,12 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
   total_allocated += size;
 
   if (total_allocated > WARNING_THRESHOLD) {
-    fprintf(stderr, "\nTotal allocation (%.4f GB) exceeds %.2f GB limit!\n",
-            total_allocated / (1024.0 * 1024.0 * 1024.0),
-            WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
+    fprintf(
+        stderr,
+        "\n [ WARNING! ] Total allocation (%.4f GB) exceeds %.2f GB limit!\n",
+        total_allocated / (1024.0 * 1024.0 * 1024.0),
+        WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
+    exit(1);
   }
 
   space_size_track[space_i].push_back(
@@ -106,14 +109,13 @@ extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
 }
 
 extern "C" void kokkosp_finalize_library() {
-  #if defined(KOKKOS_ENABLE_DEBUG)
+#if defined(KOKKOS_ENABLE_DEBUG)
   printf("\nKokkosP: Finalization of profiling library.\n");
 
   struct rusage sys_resources;
   getrusage(RUSAGE_SELF, &sys_resources);
 
-
   printf("KokkosP: High water mark memory consumption: %" PRIu64 " kB\n\n",
          (uint64_t)sys_resources.ru_maxrss * RU_MAXRSS_UNITS);
-        #endif
+#endif
 }
