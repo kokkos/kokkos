@@ -11,17 +11,26 @@
 
 #include <Kokkos_SIMD.hpp>
 
-#if !defined(KOKKOS_ENABLE_CUDA)
-#error "Kokkos SIMD tensor-core operation contract tests require CUDA"
+#if defined(KOKKOS_ENABLE_CUDA)
+using ExecSpace = Kokkos::Cuda;
+#elif defined(KOKKOS_ENABLE_HIP)
+using ExecSpace = Kokkos::HIP;
+#else
+#error "Kokkos SIMD tensor-core operation contract tests require CUDA or HIP"
 #endif
 
-using ExecSpace = Kokkos::Cuda;
-
 using Scalar            = double;
+#if defined(KOKKOS_ENABLE_HIP)
+constexpr int WARP_SIZE = 64;
+constexpr int WMMA_M    = 16;
+constexpr int WMMA_N    = 16;
+constexpr int WMMA_K    = 4;
+#else
 constexpr int WARP_SIZE = 32;
 constexpr int WMMA_M    = 8;
 constexpr int WMMA_N    = 8;
 constexpr int WMMA_K    = 4;
+#endif
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
 constexpr Kokkos::Experimental::PrecisionType AccumPrecision =
@@ -178,7 +187,11 @@ bool run_valid_layout_case(const char* name) {
                        TeamPolicy(1, 1, WARP_SIZE), functor);
   ExecSpace().fence();
 
+#if defined(KOKKOS_ENABLE_HIP)
+  constexpr double tol = 1e-7;
+#else
   constexpr double tol = 1e-15;
+#endif
 
   const double rel_err = relative_error(c, reference);
   const bool success   = rel_err < tol;

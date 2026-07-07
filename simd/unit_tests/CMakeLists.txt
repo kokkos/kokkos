@@ -39,13 +39,25 @@ function(kokkos_simd_add_tensor_core_operation_contract_tests BACKEND EXE_NAME)
   )
 endfunction()
 
-if(Kokkos_ENABLE_CUDA AND NOT WIN32)
+set(KOKKOS_SIMD_TENSOR_CORE_BACKEND)
+if(Kokkos_ENABLE_CUDA)
+  set(KOKKOS_SIMD_TENSOR_CORE_BACKEND CUDA)
+elseif(Kokkos_ENABLE_HIP)
+  set(KOKKOS_SIMD_TENSOR_CORE_BACKEND HIP)
+endif()
+
+if(KOKKOS_SIMD_TENSOR_CORE_BACKEND AND NOT WIN32)
   kokkos_add_executable(UnitTest_SIMD_TensorCoreMatmul SOURCES tensor_core/matmul.cpp)
   kokkos_add_executable(
     UnitTest_SIMD_TensorCoreOperationContract
     SOURCES tensor_core/operation_contract.cpp
   )
 
-  kokkos_simd_add_tensor_core_matmul_tests(CUDA UnitTest_SIMD_TensorCoreMatmul "64,32,32" "32,32,32")
-  kokkos_simd_add_tensor_core_operation_contract_tests(CUDA UnitTest_SIMD_TensorCoreOperationContract)
+  if(KOKKOS_SIMD_TENSOR_CORE_BACKEND STREQUAL "CUDA")
+    kokkos_simd_add_tensor_core_matmul_tests(CUDA UnitTest_SIMD_TensorCoreMatmul "64,32,32" "32,32,32")
+    kokkos_simd_add_tensor_core_operation_contract_tests(CUDA UnitTest_SIMD_TensorCoreOperationContract)
+  elseif(KOKKOS_SIMD_TENSOR_CORE_BACKEND STREQUAL "HIP")
+    kokkos_simd_add_tensor_core_matmul_tests(HIP UnitTest_SIMD_TensorCoreMatmul "64,64,32" "32,64,32")
+    kokkos_simd_add_tensor_core_operation_contract_tests(HIP UnitTest_SIMD_TensorCoreOperationContract)
+  endif()
 endif()

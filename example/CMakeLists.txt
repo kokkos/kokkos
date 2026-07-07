@@ -13,6 +13,6 @@ if(_DEVICE_PARALLEL STREQUAL "NoTypeDefined"
 endif()
 kokkos_add_example_directories(tutorial)
 
-if(Kokkos_ENABLE_CUDA)
+if(Kokkos_ENABLE_CUDA OR Kokkos_ENABLE_HIP)
   kokkos_add_example_directories(simd)
 endif()

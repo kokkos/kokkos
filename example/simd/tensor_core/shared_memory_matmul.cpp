@@ -5,8 +5,9 @@
 
 #include "utils.hpp"
 
-// The CUDA tensor-core instruction shape is captured by WMMA_M/N/K so the
-// surrounding tiling logic stays separate from the backend fragment type.
+// The MMA instruction shape is backend-specific. The rest of the example is
+// written in terms of WMMA_M/N/K so the kernel structure is the same for CUDA
+// and HIP.
 
 template <class AFragT, class BFragT, class CFragT>
 struct SharedMemoryMatmul {
@@ -149,8 +150,8 @@ bool run_example() {
       ScratchMatrix::shmem_size(BM, BK) + ScratchMatrix::shmem_size(BK, BN);
   policy = policy.set_scratch_size(0, Kokkos::PerTeam(scratch_size));
 
-  // Launch one team per output block. The vector length is the warp size so
-  // the native MMA operation sees the expected lanes.
+  // Launch one team per output block. The vector length is the backend warp
+  // or wavefront size so the native MMA operation sees the expected lanes.
   SharedMemoryMatmul<AFragT, BFragT, CFragT> matmul{A, B, C};
   Kokkos::parallel_for("shared_memory_matmul", policy, matmul);
   ExecSpace().fence();
@@ -158,7 +159,11 @@ bool run_example() {
   reference_matmul(A, B, C_ref);
   ExecSpace().fence();
 
+#if defined(KOKKOS_ENABLE_HIP)
+  constexpr double tol = 1e-7;
+#else
   constexpr double tol = 1e-15;
+#endif
 
   const double rel_err = relative_error(C, C_ref);
   printf(

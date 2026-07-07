@@ -9,11 +9,13 @@
 
 #include <Kokkos_SIMD.hpp>
 
-#if !defined(KOKKOS_ENABLE_CUDA)
-#error "Kokkos SIMD tensor-core matmul tests require CUDA"
-#endif
-
+#if defined(KOKKOS_ENABLE_CUDA)
 using ExecSpace = Kokkos::Cuda;
+#elif defined(KOKKOS_ENABLE_HIP)
+using ExecSpace = Kokkos::HIP;
+#else
+#error "Kokkos SIMD tensor-core matmul tests require CUDA or HIP"
+#endif
 
 using Layout = Kokkos::LayoutLeft;
 using Scalar = double;
@@ -31,10 +33,17 @@ using RandPool = Kokkos::Random_XorShift64_Pool<ExecSpace>;
 
 using range2d = Kokkos::MDRangePolicy<Kokkos::Rank<2>, ExecSpace>;
 
+#if defined(KOKKOS_ENABLE_HIP)
+constexpr int WARP_SIZE = 64;
+constexpr int WMMA_M    = 16;
+constexpr int WMMA_N    = 16;
+constexpr int WMMA_K    = 4;
+#else
 constexpr int WARP_SIZE = 32;
-constexpr int WMMA_M = 8;
-constexpr int WMMA_N = 8;
-constexpr int WMMA_K = 4;
+constexpr int WMMA_M    = 8;
+constexpr int WMMA_N    = 8;
+constexpr int WMMA_K    = 4;
+#endif
 
 constexpr Kokkos::Experimental::PrecisionType InputPrecision =
     Kokkos::Experimental::PrecisionType::Double;
@@ -252,8 +261,8 @@ bool run_matmul_case() {
         >
         hamm{A, B, C};
 
-    // Kokkos does not guarantee consecutive threads belong to a warp unless
-    // vector_length is set to the warp size.
+    // Kokkos does not guarantee consecutive threads belong to a wavefront/warp
+    // unless vector_length is set to the warp/wavefront size.
     TeamPolicy policy(league_size, team_size, WARP_SIZE);
 
     const int scratch_size =
@@ -276,7 +285,11 @@ bool run_matmul_case() {
     naive_matmul(A, B, C_ref);
     Kokkos::fence();
 
+#if defined(KOKKOS_ENABLE_HIP)
+    double tol = 1e-7;
+#else
     double tol = 1e-15;
+#endif
 
     double rel_err;
     compute_relative_err(C, C_ref, &rel_err);
@@ -314,8 +327,13 @@ bool run_block_case(int size) {
 }
 
 bool run_selected_case(int size, int bm, int bn, int bk) {
+#if defined(KOKKOS_ENABLE_HIP)
+  if (bm == 64 && bn == 64 && bk == 32) return run_block_case<64, 64, 32>(size);
+  if (bm == 32 && bn == 64 && bk == 32) return run_block_case<32, 64, 32>(size);
+#else
   if (bm == 64 && bn == 32 && bk == 32) return run_block_case<64, 32, 32>(size);
   if (bm == 32 && bn == 32 && bk == 32) return run_block_case<32, 32, 32>(size);
+#endif
 
   printf(
       "Kokkos SIMD tensor-core matmul test: unsupported block size "

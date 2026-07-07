@@ -12,10 +12,26 @@
 
 #include <Kokkos_SIMD.hpp>
 
+#if defined(KOKKOS_ENABLE_CUDA)
 using ExecSpace = Kokkos::Cuda;
-using Layout    = Kokkos::LayoutLeft;
-using Scalar    = double;
+#elif defined(KOKKOS_ENABLE_HIP)
+using ExecSpace = Kokkos::HIP;
+#else
+#error "Kokkos SIMD tensor-core examples require CUDA or HIP"
+#endif
 
+using Layout = Kokkos::LayoutLeft;
+using Scalar = double;
+
+#if defined(KOKKOS_ENABLE_HIP)
+constexpr int WARP_SIZE = 64;
+constexpr int WMMA_M    = 16;
+constexpr int WMMA_N    = 16;
+constexpr int WMMA_K    = 4;
+constexpr int BM        = 64;
+constexpr int BN        = 64;
+constexpr int BK        = 32;
+#else
 constexpr int WARP_SIZE = 32;
 constexpr int WMMA_M    = 8;
 constexpr int WMMA_N    = 8;
@@ -23,6 +39,8 @@ constexpr int WMMA_K    = 4;
 constexpr int BM        = 64;
 constexpr int BN        = 32;
 constexpr int BK        = 32;
+#endif
+
 constexpr int M         = 256;
 constexpr int N         = 256;
 constexpr int K         = 256;
