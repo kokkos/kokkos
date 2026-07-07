@@ -64,6 +64,9 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
     strncpy(space_name[num_spaces], handle.name, 64);
     num_spaces++;
   }
+
+  (void)ptr;
+
   space_size[space_i] += size;
   total_allocated += size;
 
