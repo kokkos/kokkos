@@ -27,6 +27,8 @@ extern "C" void kokkosp_init_library(
     const int loadSeq, const uint64_t interfaceVer,
     const uint32_t /*devInfoCount*/,
     Kokkos_Profiling_KokkosPDeviceInfo* /*deviceInfo*/) {
+  (void)interfaceVer;
+  (void)loadSeq;
 #if defined(KOKKOS_ENABLE_DEBUG)
   printf("Memory tracker initialized. \n");
 #endif
@@ -66,6 +68,7 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
   }
 
   (void)ptr;
+  (void)name;
 
   space_size[space_i] += size;
   total_allocated += size;
@@ -99,6 +102,10 @@ extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
     strncpy(space_name[num_spaces], handle.name, 64);
     num_spaces++;
   }
+
+  (void)ptr;
+  (void)name;
+
   if (space_size[space_i] >= size) {
     space_size[space_i] -= size;
     total_allocated -= size;
