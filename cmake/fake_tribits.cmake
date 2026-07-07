@@ -96,7 +96,9 @@ function(KOKKOS_ADD_TEST)
   if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
     string(FIND "${TEST_NAME}" "DefaultInstance" index)
     if((NOT TEST_TOOL) AND (${index} LESS 0) AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS))
-      set_property(TEST ${TEST_NAME} APPEND PROPERTY ENVIRONMENT_MODIFICATION KOKKOS_TOOLS_LIBS=set:$<TARGET_FILE:kokkoshwmtracker-tool>)
+      set_property(TEST ${TEST_NAME} APPEND PROPERTY ENVIRONMENT_MODIFICATION 
+                                                     KOKKOS_TOOLS_LIBS=set:$<TARGET_FILE:kokkoshwmtracker-tool>
+      )
     endif()
   endif()
 
