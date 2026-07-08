@@ -42,7 +42,7 @@ char space_name[16][64];
 int num_spaces;
 std::vector<std::tuple<uint64_t, uint64_t> > space_size_track[16];
 uint64_t space_size[16];
-#define WARNING_THRESHOLD 4ULL * 1024 * 1024 * 1024
+constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024
 static std::mutex m;
 static uint64_t total_allocated = 0;
 
