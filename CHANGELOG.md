@@ -42,7 +42,8 @@
 
 ### General Enhancements
 * Add `index_type` (signed) to execution space instance classes and harmonize with `size_type` (unsigned) across different backends [\#7441](https://github.com/kokkos/kokkos/pull/7441)
-* Add noexcept annotations to move constructors and assignment operators of execution spaces [\#8990](https://github.com/kokkos/kokkos/pull/8990)
+* Add `noexcept` annotations to move constructors and assignment operators of execution spaces [\#8990](https://github.com/kokkos/kokkos/pull/8990)
+* Make View move constructor `noexcept` [\#8792](https://github.com/kokkos/kokkos/pull/8792)
 * Add `std::uint32_t` support in Kokkos SIMD Neon backend [\#8942](https://github.com/kokkos/kokkos/pull/8942)
 * Import math constants from the standard library [\#9016](https://github.com/kokkos/kokkos/pull/9016)
 * Increase max level 1 team scratch size from 20MB to 80MB per team [\#9084](https://github.com/kokkos/kokkos/pull/9084)
