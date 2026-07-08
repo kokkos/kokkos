@@ -119,10 +119,6 @@ extern "C" void kokkosp_finalize_library() {
 #if defined(KOKKOS_ENABLE_DEBUG)
   printf("\nKokkosP: Finalization of profiling library.\n");
 
-  struct rusage sys_resources;
-  getrusage(RUSAGE_SELF, &sys_resources);
-
-  printf("KokkosP: High water mark memory consumption: %" PRIu64 " kB\n\n",
-         (uint64_t)sys_resources.ru_maxrss * RU_MAXRSS_UNITS);
+  printf("KokkosP: High water mark memory consumption: %" PRIu64 " kB\n\n", max_mem_usage());
 #endif
 }
