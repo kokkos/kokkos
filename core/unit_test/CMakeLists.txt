@@ -54,6 +54,7 @@ set(COMPILE_ONLY_SOURCES
     TestTypeList.cpp
     TestMDRangePolicyCTAD.cpp
     TestTeamPolicyCTAD.cpp
+    TestTeamPolicyCompileOnly.cpp
     TestTeamMDRangePolicyCTAD.cpp
     TestNestedReducerCTAD.cpp
     view/TestAccessorFromMemoryTraits.cpp
