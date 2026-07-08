@@ -212,24 +212,6 @@ inline void amx_tile_stored(void* base, const int stride) {
   }
 }
 
-template <int DTileId, int ATileId, int BTileId>
-inline void amx_tile_dpbf16ps() {
-  static_assert(DTileId >= 0 && DTileId <= 7, "AMX tile id must be in [0, 7]");
-  static_assert(ATileId >= 0 && ATileId <= 7, "AMX tile id must be in [0, 7]");
-  static_assert(BTileId >= 0 && BTileId <= 7, "AMX tile id must be in [0, 7]");
-
-  _tile_dpbf16ps(DTileId, ATileId, BTileId);
-}
-
-template <int DTileId, int ATileId, int BTileId>
-inline void amx_tile_dpbssd() {
-  static_assert(DTileId >= 0 && DTileId <= 7, "AMX tile id must be in [0, 7]");
-  static_assert(ATileId >= 0 && ATileId <= 7, "AMX tile id must be in [0, 7]");
-  static_assert(BTileId >= 0 && BTileId <= 7, "AMX tile id must be in [0, 7]");
-
-  _tile_dpbssd(DTileId, ATileId, BTileId);
-}
-
 inline void amx_request_tiledata_permission() {
   static std::once_flag once;
   std::call_once(once, [] {
@@ -517,14 +499,14 @@ inline void mma_sync(ExecutionSpaceTag<Kokkos::DefaultHostExecutionSpace>,
     amx_load_accumulator_tile<0, 0, 0>(c_frag);
     amx_load_matrix_a_tile<1, 0>(a_frag);
     amx_load_matrix_b_tile<2, 0>(b_frag);
-    amx_tile_dpbssd<0, 1, 2>();
+    _tile_dpbssd(0, 1, 2);
     amx_store_accumulator_tile<0, 0, 0>(d_frag);
   } else if constexpr (DFragT::mma_m == 16 && DFragT::mma_n == 16 &&
                        DFragT::mma_k == 32) {
     amx_load_accumulator_tile<0, 0, 0>(c_frag);
     amx_load_matrix_a_tile<1, 0>(a_frag);
     amx_load_matrix_b_tile<2, 0>(b_frag);
-    amx_tile_dpbf16ps<0, 1, 2>();
+    _tile_dpbf16ps(0, 1, 2);
     amx_store_accumulator_tile<0, 0, 0>(d_frag);
   } else if constexpr (DFragT::mma_m == 32 && DFragT::mma_n == 32 &&
                        DFragT::mma_k == 32) {
@@ -538,10 +520,10 @@ inline void mma_sync(ExecutionSpaceTag<Kokkos::DefaultHostExecutionSpace>,
     amx_load_matrix_b_tile<6, 0>(b_frag);
     amx_load_matrix_b_tile<7, 1>(b_frag);
 
-    amx_tile_dpbf16ps<0, 4, 6>();
-    amx_tile_dpbf16ps<1, 4, 7>();
-    amx_tile_dpbf16ps<2, 5, 6>();
-    amx_tile_dpbf16ps<3, 5, 7>();
+    _tile_dpbf16ps(0, 4, 6);
+    _tile_dpbf16ps(1, 4, 7);
+    _tile_dpbf16ps(2, 5, 6);
+    _tile_dpbf16ps(3, 5, 7);
 
     amx_store_accumulator_tile<0, 0, 0>(d_frag);
     amx_store_accumulator_tile<1, 0, 1>(d_frag);

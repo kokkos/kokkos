@@ -111,8 +111,8 @@ if(KOKKOS_SIMD_MMA_BACKEND AND NOT WIN32)
         KOKKOS_SIMD_TEST_MMA_K=32
     )
 
-    kokkos_simd_add_mma_matmul_tests(AMX_Shape16x16x32 UnitTest_SIMD_MMAMatmul "64,64,64" "32,64,64")
-    kokkos_simd_add_mma_matmul_tests(AMX_Shape32x32x32 UnitTest_SIMD_MMAMatmulAMX32 "64,64,64")
+    kokkos_simd_add_mma_matmul_tests(AMX_Shape16x16x32 UnitTest_SIMD_MMAMatmul "64,64,32" "32,64,64")
+    kokkos_simd_add_mma_matmul_tests(AMX_Shape32x32x32 UnitTest_SIMD_MMAMatmulAMX32 "64,64,32" "32,64,64")
     kokkos_simd_add_mma_tensor_contraction_tests(AMX 32)
     kokkos_simd_add_mma_operation_contract_tests(AMX_Shape16x16x32 UnitTest_SIMD_MMAOperationContract)
     kokkos_simd_add_mma_operation_contract_tests(AMX_Shape32x32x32 UnitTest_SIMD_MMAOperationContractAMX32)

@@ -408,7 +408,7 @@ bool run_block_case(int size) {
 
 bool run_selected_case(int size, int bm, int bn, int bk) {
 #if defined(KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
-  if (bm == 64 && bn == 64 && bk == 64) return run_block_case<64, 64, 64>(size);
+  if (bm == 64 && bn == 64 && bk == 32) return run_block_case<64, 64, 32>(size);
   if (bm == 32 && bn == 64 && bk == 64) return run_block_case<32, 64, 64>(size);
 #elif defined(KOKKOS_ENABLE_HIP)
   if (bm == 64 && bn == 64 && bk == 32) return run_block_case<64, 64, 32>(size);
