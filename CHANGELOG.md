@@ -76,7 +76,7 @@
 * (Partial) Remove code guarded by KOKKOS_ENABLE_DEPRECATED_CODE_4 in Kokkos 5.0 [\#9013](https://github.com/kokkos/kokkos/pull/9013)
 * Remove deprecated code path disabling enforcement of RangePolicy preconditions [\#9007](https://github.com/kokkos/kokkos/pull/9007)
 * Remove miscellaneous deprecated code [\#9005](https://github.com/kokkos/kokkos/pull/9005)
-* Remove untracked deprecated code 4 [\#9029](https://github.com/kokkos/kokkos/pull/9005)
+* Remove untracked deprecated code 4 [\#9029](https://github.com/kokkos/kokkos/pull/9029)
 * Remove all SIMD deprecated code [\#9008](https://github.com/kokkos/kokkos/pull/9008)
 * Remove (deprecated) CUDA_UVM macro and option [\#8968](https://github.com/kokkos/kokkos/pull/8968)
 * Remove deprecated CUDA_LAMBDA and CUDA_LDG_INTRINSIC macros and options [\#8960](https://github.com/kokkos/kokkos/pull/8960)
