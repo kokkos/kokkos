@@ -145,7 +145,7 @@ else()
 endif()
 kokkos_enable_option(IMPL_VIEW_LEGACY ${VIEW_LEGACY_DEFAULT} "Whether to use the legacy implementation of View")
 mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY STREQUAL "OFF" AND NOT Kokkos_ENABLE_IMPL_MDSPAN STREQUAL "ON")
+if(Kokkos_ENABLE_IMPL_VIEW_LEGACY OR NOT Kokkos_ENABLE_IMPL_MDSPAN)
   message(FATAL_ERROR "Kokkos_ENABLE_IMPL_MDSPAN must be set ON and Kokkos_ENABLE_IMPL_VIEW_LEGACY must be set OFF")
 endif()
 
