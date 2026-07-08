@@ -29,7 +29,7 @@ extern "C" void kokkosp_init_library(
     Kokkos_Profiling_KokkosPDeviceInfo* /*deviceInfo*/) {
   (void)interfaceVer;
   (void)loadSeq;
-#if defined(KOKKOS_ENABLE_DEBUG)
+#ifdef KOKKOS_ENABLE_DEBUG
   printf("Memory tracker initialized. \n");
 #endif
 }
@@ -38,11 +38,7 @@ struct SpaceHandle {
   char name[64];
 };
 
-char space_name[16][64];
-int num_spaces = 0;
-std::vector<std::tuple<uint64_t, uint64_t> > space_size_track[16];
-uint64_t space_size[16];
-constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024
+constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024;
 static std::mutex m;
 static uint64_t total_allocated = 0;
 
@@ -57,21 +53,15 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
                                       const char* name, const void* const ptr,
                                       uint64_t size) {
   std::lock_guard<std::mutex> lock(m);
+  bool allocation_flag = false;
 
-  int space_i = num_spaces;
-  for (int s = 0; s < num_spaces; ++s)
-    if (strcmp(space_name[s], handle.name) == 0) space_i = s;
-
-  if (space_i == num_spaces) {
-    strncpy(space_name[num_spaces], handle.name, 64);
-    num_spaces++;
+  if (strcmp(handle.name, "Host") == 0) {
+    total_allocated += size;
+    allocation_flag = true;
   }
 
   (void)ptr;
   (void)name;
-
-  space_size[space_i] += size;
-  total_allocated += size;
 
   if (total_allocated > WARNING_THRESHOLD) {
     fprintf(
@@ -82,43 +72,36 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
     exit(1);
   }
 
-#if defined(KOKKOS_ENABLE_DEBUG)
-  printf("Allocated %" PRIu64 " kB\n ", max_mem_usage());
+#ifdef KOKKOS_ENABLE_DEBUG
+  if (allocation_flag)
+    printf("Allocated %" PRIu64 " kB at %s\n ", max_mem_usage(), handle.name);
 #endif
 }
 
 extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
                                         const void* ptr, uint64_t size) {
   std::lock_guard<std::mutex> lock(m);
-
-  int space_i = num_spaces;
-  for (int s = 0; s < num_spaces; s++)
-    if (strcmp(space_name[s], handle.name) == 0) space_i = s;
-
-  if (space_i == num_spaces) {
-    strncpy(space_name[num_spaces], handle.name, 64);
-    num_spaces++;
-  }
+  bool allocation_flag = false;
 
   (void)ptr;
   (void)name;
 
-  if (space_size[space_i] >= size) {
-    space_size[space_i] -= size;
+  if (strcmp(handle.name, "Host") == 0) {
     total_allocated -= size;
-    space_size_track[space_i].push_back(
-        std::make_tuple(space_size[space_i], max_mem_usage()));
-#if defined(KOKKOS_ENABLE_DEBUG)
-    printf("De-allocated %" PRIu64 " kB\n ",
-           std::get<1>(space_size_track[space_i].back()));
-#endif
+    allocation_flag = true;
   }
+#ifdef KOKKOS_ENABLE_DEBUG
+  if (allocation_flag)
+    printf("De-allocated %" PRIu64 " kB at %s\n ", max_mem_usage(),
+           handle.name);
+#endif
 }
 
 extern "C" void kokkosp_finalize_library() {
-#if defined(KOKKOS_ENABLE_DEBUG)
+#ifdef KOKKOS_ENABLE_DEBUG
   printf("\nKokkosP: Finalization of profiling library.\n");
 
-  printf("KokkosP: High water mark memory consumption: %" PRIu64 " kB\n\n", max_mem_usage());
+  printf("KokkosP: High water mark memory consumption: %" PRIu64 " kB\n\n",
+         max_mem_usage());
 #endif
 }
