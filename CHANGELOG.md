@@ -9,7 +9,7 @@
 * Introduce generic `parallel_for` with `RangePolicy` taking a team handle in hierarchical parallelism - enables writing generic functions with a nested `parallel_for` that can be called from host or device [\#8367](https://github.com/kokkos/kokkos/pull/8367)
 * create_mirror_view_and_copy one argument convenience overload [\#9185](https://github.com/kokkos/kokkos/pull/9185)
 * Add new Random Number generator type SFC64 [\#9017](https://github.com/kokkos/kokkos/pull/9017)
-* Support using `mdspan` style template arguments for `View` thus enabling explicit specification of `index_type` [\#8852](https://github.com/kokkos/kokkos/pull/8852)
+* Support using `mdspan` style template arguments for `View` thus enabling explicit specification of `index_type` [\#8852](https://github.com/kokkos/kokkos/pull/8852) [\#9303](https://github.com/kokkos/kokkos/pull/9303) [\#9276](https://github.com/kokkos/kokkos/pull/9276)
 
 ### Backend and Architecture Enhancements:
 
@@ -30,7 +30,7 @@
 * Fix OpenACC `parallel_scan` chunk boundary race [\#9078](https://github.com/kokkos/kokkos/pull/9078)
 
 #### NextSilicon:
-* Add `NextSilicon` execution space and `NextSiliconSharedSpace` memory space [\#8998](https://github.com/kokkos/kokkos/pull/8998)
+* Add `NextSilicon` execution space and `NextSiliconSharedSpace` memory space [\#8998](https://github.com/kokkos/kokkos/pull/8998) [\#9100](https://github.com/kokkos/kokkos/pull/9100)
 
 #### HPX:
 
