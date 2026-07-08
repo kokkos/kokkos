@@ -98,6 +98,7 @@
 * Fix segfaults when doing unaligned simd stores on AVX512 [\#9184](https://github.com/kokkos/kokkos/pull/9184)
 * Fix signed integer overflow UB in random generators’ range functions [\#9216](https://github.com/kokkos/kokkos/pull/9216)
 * Fixing memory error in `make_candidate_set` tuning function [\#7875](https://github.com/kokkos/kokkos/pull/7875)
+* `is_assignable` now returns false when querying if one can assign to a const `View` (not `View` of const elements`) [\#9073](https://github.com/kokkos/kokkos/pull/9073)
 
 ## 5.1.1
 
