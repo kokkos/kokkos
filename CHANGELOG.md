@@ -62,6 +62,7 @@
 ### Build System Changes
 * Build system prints output of compilation check [\#8986](https://github.com/kokkos/kokkos/pull/8986)
 * nvcc_wrapper: Handle response files. [\#9175](https://github.com/kokkos/kokkos/pull/9175)
+* Remove Kokkos_CXX_STANDARD user option (was an error to use). [\#8983](https://github.com/kokkos/kokkos/pull/8983)
 
 ### Incompatibilities (i.e. breaking changes)
 * Forbid passing identical view arguments to `deep_copy()` [\#9033](https://github.com/kokkos/kokkos/pull/9033)
