@@ -93,7 +93,7 @@
 * Fix an ambiguous call compile error when calling the masked version of simd reduce with default arguments [\#9079](https://github.com/kokkos/kokkos/pull/9079)
 * Add bounds check to prevent OOB access in tuner dimension indexing [\#9090](https://github.com/kokkos/kokkos/pull/9090)
 * Atomics: fix warning with lock free fetch op on pointers [\#9086](https://github.com/kokkos/kokkos/pull/9086) [\#9132](https://github.com/kokkos/kokkos/pull/9132)
-* Fix RangePolicy CUDA/HIP performance regression with static batch size 1 [introduced](github.com/kokkos/kokkos/pull/8164) in Kokkos 5.0 [\#9123](https://github.com/kokkos/kokkos/pull/9123), [\#9124](https://github.com/kokkos/kokkos/pull/9124)
+* Fix RangePolicy HIP performance regression with static batch size 1 [\#9124](https://github.com/kokkos/kokkos/pull/9124)
 * Fix bug in compiler detection for RISC-V preventing use of clang++ [\#9155](https://github.com/kokkos/kokkos/pull/9155)
 * Fix segfaults when doing unaligned simd stores on AVX512 [\#9184](https://github.com/kokkos/kokkos/pull/9184)
 * Fix signed integer overflow UB in random generators’ range functions [\#9216](https://github.com/kokkos/kokkos/pull/9216)
