@@ -53,11 +53,9 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
                                       const char* name, const void* const ptr,
                                       uint64_t size) {
   std::lock_guard<std::mutex> lock(m);
-  bool allocation_flag = false;
 
   if (strcmp(handle.name, "Host") == 0) {
     total_allocated += size;
-    allocation_flag = true;
   }
 
   (void)ptr;
@@ -73,27 +71,22 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
   }
 
 #ifdef KOKKOS_ENABLE_DEBUG
-  if (allocation_flag)
-    printf("Allocated %" PRIu64 " kB at %s\n ", max_mem_usage(), handle.name);
+  printf("Allocated %" PRIu64 " kB at %s\n ", max_mem_usage(), handle.name);
 #endif
 }
 
 extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
                                         const void* ptr, uint64_t size) {
   std::lock_guard<std::mutex> lock(m);
-  bool allocation_flag = false;
 
   (void)ptr;
   (void)name;
 
   if (strcmp(handle.name, "Host") == 0) {
     total_allocated -= size;
-    allocation_flag = true;
   }
 #ifdef KOKKOS_ENABLE_DEBUG
-  if (allocation_flag)
-    printf("De-allocated %" PRIu64 " kB at %s\n ", max_mem_usage(),
-           handle.name);
+  printf("De-allocated %" PRIu64 " kB at %s\n ", max_mem_usage(), handle.name);
 #endif
 }
 
