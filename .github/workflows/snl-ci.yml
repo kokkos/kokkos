@@ -22,7 +22,6 @@ jobs:
 
     strategy:
       matrix:
-        view_legacy: [ON, OFF]
         dep_code_5: [ON, OFF]
 
     steps:
@@ -47,12 +46,11 @@ jobs:
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
             ./
 
       - name: build_and_install_kokkos
@@ -83,10 +81,6 @@ jobs:
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
     continue-on-error: true
 
-    strategy:
-      matrix:
-        view_legacy: [ON, OFF]
-
     steps:
       - name: checkout_kokkos
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -109,7 +103,6 @@ jobs:
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
@@ -203,7 +196,6 @@ jobs:
 
     strategy:
       matrix:
-        view_legacy: [ON, OFF]
         dep_code_5: [ON, OFF]
 
     steps:
@@ -226,12 +218,11 @@ jobs:
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }}
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
 
       - name: build_and_install_kokkos
         working-directory: kokkos
@@ -262,10 +253,6 @@ jobs:
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
     continue-on-error: true
 
-    strategy:
-      matrix:
-        view_legacy: [ON, OFF]
-
     steps:
       - name: checkout_kokkos
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -285,7 +272,6 @@ jobs:
             -DKokkos_ARCH_INTEL_PVC=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -377,7 +363,7 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
