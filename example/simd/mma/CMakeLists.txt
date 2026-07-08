@@ -33,4 +33,18 @@ if(KOKKOS_SIMD_MMA_EXAMPLE_BACKEND AND NOT WIN32)
     NAME Kokkos_Example_SIMD_MMA_Ozaki2DGEMM
     COMMAND Kokkos_example_simd_mma_ozaki2_dgemm 128 128 128
   )
+
+  set(KOKKOS_SIMD_MMA_EXAMPLE_TARGETS
+    Kokkos_example_simd_mma_shared_memory_matmul
+    Kokkos_example_simd_mma_tensor_contraction
+    Kokkos_example_simd_mma_ozaki2_dgemm
+  )
+
+  set_property(GLOBAL APPEND PROPERTY KOKKOS_SIMD_MMA_TARGETS
+    ${KOKKOS_SIMD_MMA_EXAMPLE_TARGETS}
+  )
+
+  add_custom_target(Kokkos_Example_SIMD_MMA_All
+    DEPENDS ${KOKKOS_SIMD_MMA_EXAMPLE_TARGETS}
+  )
 endif()

@@ -250,6 +250,11 @@ kokkos_process_subpackages()
 
 kokkos_configure_core()
 
+get_property(KOKKOS_SIMD_MMA_TARGETS GLOBAL PROPERTY KOKKOS_SIMD_MMA_TARGETS)
+if(KOKKOS_SIMD_MMA_TARGETS)
+  add_custom_target(Kokkos_SIMD_MMA_All DEPENDS ${KOKKOS_SIMD_MMA_TARGETS})
+endif()
+
 if(NOT Kokkos_INSTALL_TESTING)
   add_library(kokkos INTERFACE)
   #Make sure in-tree projects can reference this as Kokkos::

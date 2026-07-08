@@ -125,4 +125,24 @@ if(KOKKOS_SIMD_MMA_BACKEND AND NOT WIN32)
     kokkos_simd_add_mma_tensor_contraction_tests(HIP 16 32)
     kokkos_simd_add_mma_operation_contract_tests(HIP UnitTest_SIMD_MMAOperationContract)
   endif()
+
+  set(KOKKOS_SIMD_MMA_TEST_TARGETS
+    Kokkos_UnitTest_SIMD_MMAMatmul
+    Kokkos_UnitTest_SIMD_MMATensorContraction
+    Kokkos_UnitTest_SIMD_MMAOperationContract
+  )
+  if(KOKKOS_SIMD_MMA_BACKEND STREQUAL "AMX")
+    list(APPEND KOKKOS_SIMD_MMA_TEST_TARGETS
+      Kokkos_UnitTest_SIMD_MMAMatmulAMX32
+      Kokkos_UnitTest_SIMD_MMAOperationContractAMX32
+    )
+  endif()
+
+  set_property(GLOBAL APPEND PROPERTY KOKKOS_SIMD_MMA_TARGETS
+    ${KOKKOS_SIMD_MMA_TEST_TARGETS}
+  )
+
+  add_custom_target(Kokkos_UnitTest_SIMD_MMA_All
+    DEPENDS ${KOKKOS_SIMD_MMA_TEST_TARGETS}
+  )
 endif()
