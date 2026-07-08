@@ -9,7 +9,7 @@
 * Introduce generic `parallel_for` with `RangePolicy` taking a team handle in hierarchical parallelism - enables writing generic functions with a nested `parallel_for` that can be called from host or device [\#8367](https://github.com/kokkos/kokkos/pull/8367)
 * create_mirror_view_and_copy one argument convenience overload [\#9185](https://github.com/kokkos/kokkos/pull/9185)
 * Add new Random Number generator type SFC64 [\#9017](https://github.com/kokkos/kokkos/pull/9017)
-* Support using `mdspan` style template arguments for `View` thus enabling explicit specification of `index_type` [\#9185](https://github.com/kokkos/kokkos/pull/8852)
+* Support using `mdspan` style template arguments for `View` thus enabling explicit specification of `index_type` [\#8852](https://github.com/kokkos/kokkos/pull/8852)
 
 ### Backend and Architecture Enhancements:
 
