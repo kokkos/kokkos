@@ -39,7 +39,7 @@ struct SpaceHandle {
 };
 
 char space_name[16][64];
-int num_spaces;
+int num_spaces = 0;
 std::vector<std::tuple<uint64_t, uint64_t> > space_size_track[16];
 uint64_t space_size[16];
 constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024
