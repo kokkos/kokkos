@@ -54,7 +54,6 @@
 * Check extent preconditions on Views in std::algorithms [\#6811](https://github.com/kokkos/kokkos/pull/6811)
 * Make the flag argument in simd constructors and load/store functions optional aligning with C++26 [\#9211](https://github.com/kokkos/kokkos/pull/9211) [\#9275](https://github.com/kokkos/kokkos/pull/9275)
 * Use C++11 style attributes in definition of `KOKKOS_FORCEINLINE_FUNCTION` and add MSVC support [\#9229](https://github.com/kokkos/kokkos/pull/9229)
-* Refactored nested for loops within host tiles to enhance readability and maintainability [\#9209](https://github.com/kokkos/kokkos/pull/9209)
 * Introduce `BadAlloc` exception thrown by out of memory allocation requests [\#9260](https://github.com/kokkos/kokkos/pull/9260)
 * `MDRangePolicy`: skip grid-stride loop when not needed (CUDA/HIP/SYCL) [\#9142](https://github.com/kokkos/kokkos/pull/9142) [\#9250](https://github.com/kokkos/kokkos/pull/9250)
 * Introduce KOKKOS_FORCEINLINE_[CLASS_]LAMBDA macros [\#9239](https://github.com/kokkos/kokkos/pull/9239)
