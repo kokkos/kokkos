@@ -17,7 +17,7 @@
 * Support more than 48kB of scratch memory request for level 0 (shared memory) [\#9012](https://github.com/kokkos/kokkos/pull/9012)
 
 #### HIP:
-* Improve performance of load/store atomic by leveraging HIP compiler built-ins instead of generating them via CAS [\#9040](https://github.com/kokkos/kokkos/pull/9040)
+* Improve performance of load/store atomic by leveraging compiler built-ins instead of generating them via CAS [\#9040](https://github.com/kokkos/kokkos/pull/9040) [\#9219](https://github.com/kokkos/kokkos/pull/9219)
 * Add AMD GFX1151 (Strix Halo / Radeon 8060S) architecture support [\#9179](https://github.com/kokkos/kokkos/pull/9179)
 * Add AMD Radeon 860M / RDNA3.5 / gfx1152 architecture support [\#9242](https://github.com/kokkos/kokkos/pull/9242)
 * Add AMD GFX1101 (Radeon RX 7800 XT, RX 7700 XT, RX 7700) architecture support [\#9230](https://github.com/kokkos/kokkos/pull/9230)
