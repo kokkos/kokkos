@@ -59,6 +59,11 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
   if((CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin") AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS
                                                                                      )
   )
+    if(NOT TARGET kokkoshwmtracker-tool)
+      kokkos_add_test_library(
+        kokkoshwmtracker-tool SHARED SOURCES ${KOKKOS_SOURCE_DIR}/core/unit_test/tools/memory-hwm-tool.cpp
+      )
+    endif()
     set(BENCHMARK_ENV "KOKKOS_TOOLS_LIBS=$<TARGET_FILE:kokkoshwmtracker-tool>")
     add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
     set_tests_properties(${BENCHMARK_NAME} PROPERTIES ENVIRONMENT "${BENCHMARK_ENV}")
