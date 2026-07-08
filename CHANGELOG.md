@@ -99,6 +99,9 @@
 * Fix signed integer overflow UB in random generators’ range functions [\#9216](https://github.com/kokkos/kokkos/pull/9216)
 * Fixing memory error in `make_candidate_set` tuning function [\#7875](https://github.com/kokkos/kokkos/pull/7875)
 * `is_assignable` now returns false when querying if one can assign to a const `View` (not `View` of const elements`) [\#9073](https://github.com/kokkos/kokkos/pull/9073)
+* Fixed nullptr dereference possibility with GCC 12.5.0 [\#9262](https://github.com/kokkos/kokkos/pull/9262)
+* Fix accumulator type in `parallel_scan` when using more exotic types (e.g., automatic differentiation frameworks) [\#9178](https://github.com/kokkos/kokkos/pull/9178)
+* simd-sve: replace memory load by zip-lane-set in gen-based simd constructors for improved performance [\#9192](https://github.com/kokkos/kokkos/pull/9192)
 
 ## 5.1.1
 
