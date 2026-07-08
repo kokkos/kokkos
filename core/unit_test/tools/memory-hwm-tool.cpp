@@ -82,11 +82,8 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
     exit(1);
   }
 
-  space_size_track[space_i].push_back(
-      std::make_tuple(space_size[space_i], max_mem_usage()));
 #if defined(KOKKOS_ENABLE_DEBUG)
-  printf("Allocated %" PRIu64 " kB\n ",
-         std::get<1>(space_size_track[space_i].back()));
+  printf("Allocated %" PRIu64 " kB\n ", max_mem_usage());
 #endif
 }
 
