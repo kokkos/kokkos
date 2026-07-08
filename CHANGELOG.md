@@ -87,8 +87,7 @@
 ### Bug Fixes
 
 * Fix `View::extent_int(r)` to behave as `View::extent(r)` with `r>=rank` [\#9072](https://github.com/kokkos/kokkos/pull/9072)
-* Fix failures when using combined reducers with 8 or 16 bit datatypes on CUDA and HIP [\#8989](https://github.com/kokkos/kokkos/pull/8989)
-* Only use __atomic_max_fetch with floating point types from LLVM 22.1 on [\#8991](https://github.com/kokkos/kokkos/pull/8989)
+* Only use __atomic_max_fetch with floating point types from LLVM 22.1 on [\#8991](https://github.com/kokkos/kokkos/pull/8991)
 * Fix simd arithmetic operators calling host-only functions on device [\#9004](https://github.com/kokkos/kokkos/pull/9004)
 * Fix compile failures on AppleClang 14 and Clang 14 and 15 when using simd [\#9065](https://github.com/kokkos/kokkos/pull/9065)
 * Fix error message at compile time when index type is specified twice as template argument to the execution policy [\#9085](https://github.com/kokkos/kokkos/pull/9085)
