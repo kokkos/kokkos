@@ -8,8 +8,8 @@ void allocate_large_view() {
   Kokkos::initialize();
   {
     size_t very_large_size = 5 << 30;
-    Kokkos::View<double *, Kokkos::DefaultHostExecutionSpace> a("A",
-                                                              very_large_size);
+    Kokkos::View<double *, Kokkos::DefaultHostExecutionSpace> a(
+        "A", very_large_size);
   }
   Kokkos::finalize();
 }
