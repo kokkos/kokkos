@@ -31,16 +31,24 @@ namespace Kokkos {
 void *HostSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
+void *HostSpace::allocate(const char *arg_label,
+                          const size_t arg_alloc_size) const {
+  return impl_allocate(arg_label, arg_alloc_size);
+}
 void *HostSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
   return impl_allocate(arg_label, arg_alloc_size, arg_logical_size);
 }
 void *HostSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_alloc_size, arg_handle);
+}
+void *HostSpace::impl_allocate(
+    const char *arg_label, const size_t arg_alloc_size,
     const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
-  const size_t reported_size =
-      (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+  const size_t reported_size = arg_logical_size;
   static_assert(sizeof(void *) == sizeof(uintptr_t),
                 "Error sizeof(void*) != sizeof(uintptr_t)");
 
@@ -72,19 +80,33 @@ void HostSpace::deallocate(void *const arg_alloc_ptr,
 }
 
 void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
+                           const size_t arg_alloc_size) const {
+  if (arg_alloc_ptr)
+    Kokkos::fence("Kokkos::HostSpace::impl_deallocate before free");
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size);
+}
+
+void HostSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
                            const size_t arg_alloc_size,
                            const size_t arg_logical_size) const {
   if (arg_alloc_ptr)
     Kokkos::fence("Kokkos::HostSpace::impl_deallocate before free");
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
+
 void HostSpace::impl_deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const size_t arg_alloc_size,
+    const Kokkos::Tools::SpaceHandle arg_handle) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_alloc_size,
+                  arg_handle);
+}
+void HostSpace::impl_deallocate(
+    const char *arg_label, void *const arg_alloc_ptr,
+    const size_t /*arg_alloc_size*/, const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (arg_alloc_ptr) {
-    size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    const size_t reported_size = arg_logical_size;
     if (Kokkos::Profiling::profileLibraryLoaded()) {
       Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                         reported_size);
