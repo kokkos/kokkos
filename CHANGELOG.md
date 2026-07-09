@@ -15,6 +15,7 @@
 
 #### CUDA:
 * Support more than 48kB of scratch memory request for level 0 (shared memory) [\#9012](https://github.com/kokkos/kokkos/pull/9012)
+* Enable C++23 support with NVCC (available since CUDA 13.3.0) [\#9264](https://github.com/kokkos/kokkos/pull/9264)
 
 #### HIP:
 * Improve performance of load/store atomic by leveraging compiler built-ins instead of generating them via CAS [\#9040](https://github.com/kokkos/kokkos/pull/9040) [\#9219](https://github.com/kokkos/kokkos/pull/9219)
@@ -57,6 +58,7 @@
 * Introduce `BadAlloc` exception thrown by out of memory allocation requests [\#9260](https://github.com/kokkos/kokkos/pull/9260)
 * `MDRangePolicy`: skip grid-stride loop when not needed (CUDA/HIP/SYCL) [\#9142](https://github.com/kokkos/kokkos/pull/9142) [\#9250](https://github.com/kokkos/kokkos/pull/9250)
 * Introduce KOKKOS_FORCEINLINE_[CLASS_]LAMBDA macros [\#9239](https://github.com/kokkos/kokkos/pull/9239)
+* Ensure the C++20 module `kokkos.core` can be used with latest MSVC and gcc-16. [\#9148](https://github.com/kokkos/kokkos/pull/9148), [\#9149](https://github.com/kokkos/kokkos/pull/9149).
 
 ### Build System Changes
 * Build system prints output of compilation check [\#8986](https://github.com/kokkos/kokkos/pull/8986)
@@ -82,6 +84,7 @@
 * Remove (deprecated) DEBUG_DUALVIEW_MODIFY_CHECK macro and option [\#9010](https://github.com/kokkos/kokkos/pull/9010)
 * Remove SpaceAccessibility::deepcopy [\#9018](https://github.com/kokkos/kokkos/pull/9018)
 * Deprecate Experimental HIP and SYCL symbols [\#9232](https://github.com/kokkos/kokkos/pull/9232)
+* Deprecate `extents` for dimensions larger than the rank [\#9075](https://github.com/kokkos/kokkos/pull/9075)
 
 ### Bug Fixes
 
@@ -102,6 +105,9 @@
 * Fixed nullptr dereference possibility with GCC 12.5.0 [\#9262](https://github.com/kokkos/kokkos/pull/9262)
 * Fix accumulator type in `parallel_scan` when using more exotic types (e.g., automatic differentiation frameworks) [\#9178](https://github.com/kokkos/kokkos/pull/9178)
 * simd-sve: replace memory load by zip-lane-set in gen-based simd constructors for improved performance [\#9192](https://github.com/kokkos/kokkos/pull/9192)
+* Fix thread-safety for `parallel_scan` [\#9300](https://github.com/kokkos/kokkos/pull/9300)
+* Fix ambiguous overload in Kokkos::resize with ExecutionSpace [\#9128](https://github.com/kokkos/kokkos/pull/9128)
+* Fix subview construction between managed and unmanaged Views [\#8967](https://github.com/kokkos/kokkos/pull/8967)
 
 ## 5.1.1
 
