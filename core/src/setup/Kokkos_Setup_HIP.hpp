@@ -20,7 +20,14 @@ static_assert(false,
 #define KOKKOS_LAMBDA [=] __host__ __device__
 #define KOKKOS_CLASS_LAMBDA [ =, *this ] __host__ __device__
 
+// Starting from Clang 22.1, HIP target attributes on deduction guides are
+// deprecated and will be rejected in a future Clang release
+#if defined(__clang__) && \
+    (__clang_major__ > 22 || (__clang_major__ == 22 && __clang_minor__ >= 1))
+#define KOKKOS_DEDUCTION_GUIDE
+#else
 #define KOKKOS_DEDUCTION_GUIDE __host__ __device__
+#endif
 
 #define KOKKOS_IMPL_FORCEINLINE_FUNCTION __device__ __host__ __forceinline__
 #define KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE __forceinline__
