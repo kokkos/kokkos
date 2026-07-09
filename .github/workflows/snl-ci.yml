@@ -400,6 +400,43 @@ jobs:
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
 
+  OPENACC_CUDA_12_2_NVHPC_23_7_CPP20:
+    name: SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20
+    runs-on: [cuda-12.2_nvhpc-23.7_x86-64-latest]
+    continue-on-error: true
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          nvidia-smi
+          cd kokkos
+          cmake -B build \
+            -DCMAKE_CXX_COMPILER=nvc++ \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_OPENACC=ON \
+            -DKokkos_ARCH_VOLTA70=ON \
+            ./
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build -j36
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
   NextSilicon_1_2_0:
     name: SNL_NextSilicon_1_2_0
     runs-on: [ns-1.2.0]
