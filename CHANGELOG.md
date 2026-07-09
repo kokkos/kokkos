@@ -69,7 +69,7 @@
 * Forbid passing identical view arguments to `deep_copy()` [\#9033](https://github.com/kokkos/kokkos/pull/9033)
 
 ### Deprecations
-* Deprecate `[static_]extent(r)` calls with `r >= rank()` to align with `mdspan` preconditions [\#9076](https://github.com/kokkos/kokkos/pull/9076)
+* Deprecate `[static_]extent(r)` calls with `r >= rank()` to align with `mdspan` preconditions [\#9076](https://github.com/kokkos/kokkos/pull/9076) [\#9075](https://github.com/kokkos/kokkos/pull/9075) [\#9072](https://github.com/kokkos/kokkos/pull/9072)
 * Remove code guarded by KOKKOS_ENABLE_DEPRECATED_CODE_4 since Kokkos 4.2 and before [\#8957](https://github.com/kokkos/kokkos/pull/8957)
 * Remove code guarded by KOKKOS_ENABLE_DEPRECATED_CODE_4 since Kokkos 4.4 and before [\#8966](https://github.com/kokkos/kokkos/pull/8966)
 * Remove code guarded by KOKKOS_ENABLE_DEPRECATED_CODE_4 since Kokkos 4.6 and before [\#8980](https://github.com/kokkos/kokkos/pull/8980) [\#9009](https://github.com/kokkos/kokkos/pull/9009)
@@ -84,11 +84,9 @@
 * Remove (deprecated) DEBUG_DUALVIEW_MODIFY_CHECK macro and option [\#9010](https://github.com/kokkos/kokkos/pull/9010)
 * Remove SpaceAccessibility::deepcopy [\#9018](https://github.com/kokkos/kokkos/pull/9018)
 * Deprecate Experimental HIP and SYCL symbols [\#9232](https://github.com/kokkos/kokkos/pull/9232)
-* Deprecate `extents` for dimensions larger than the rank [\#9075](https://github.com/kokkos/kokkos/pull/9075)
 
 ### Bug Fixes
 
-* Fix `View::extent_int(r)` to behave as `View::extent(r)` with `r>=rank` [\#9072](https://github.com/kokkos/kokkos/pull/9072)
 * Only use __atomic_max_fetch with floating point types from LLVM 22.1 on [\#8991](https://github.com/kokkos/kokkos/pull/8991)
 * Fix simd arithmetic operators calling host-only functions on device [\#9004](https://github.com/kokkos/kokkos/pull/9004)
 * Fix compile failures on AppleClang 14 and Clang 14 and 15 when using simd [\#9065](https://github.com/kokkos/kokkos/pull/9065)
