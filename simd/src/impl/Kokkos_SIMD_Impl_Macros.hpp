@@ -4,6 +4,14 @@
 #ifndef KOKKOS_SIMD_IMPL_MACROS_HPP
 #define KOKKOS_SIMD_IMPL_MACROS_HPP
 
+#ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
+#if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+    (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
+    (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__))
+#define KOKKOS_SIMD_IMPL_DEVICE_SIMD
+#endif
+#endif
+
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(PREFIX, DATA_TYPE,    \
                                                     ABI_TYPE, EXPR)       \
   template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,        \

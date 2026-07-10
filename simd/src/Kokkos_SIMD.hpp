@@ -5,6 +5,7 @@
 #define KOKKOS_SIMD_HPP
 
 #include <Kokkos_SIMD_Common.hpp>
+#include <Kokkos_SIMD_Base.hpp>
 #include <Kokkos_SIMD_Scalar.hpp>
 #include <Kokkos_Macros.hpp>
 
@@ -318,10 +319,13 @@ using host_abi_set  = abi_set<simd_abi::scalar, simd_abi::avx512_fixed_size<8>,
 using data_type_set = data_types<std::int32_t, std::uint32_t, std::int64_t,
                                  std::uint64_t, double, float>;
 #elif defined(KOKKOS_ARCH_AVX2)
-using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx2_fixed_size<4>,
-                             simd_abi::avx2_fixed_size<8>>;
-using data_type_set =
-    data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;
+// using host_abi_set = abi_set<simd_abi::scalar, simd_abi::avx2_fixed_size<4>,
+//                              simd_abi::avx2_fixed_size<8>>;
+// using data_type_set =
+//     data_types<std::int32_t, std::int64_t, std::uint64_t, double, float>;
+using host_abi_set = abi_set<simd_abi::avx2_fixed_size<4>>;
+using data_type_set = data_types<double>;
+
 #elif defined(KOKKOS_ARCH_ARM_SVE)
 using host_abi_set =
     abi_set<simd_abi::scalar, simd_abi::sve_fixed_size<2>,
@@ -346,5 +350,9 @@ using device_abi_set = abi_set<simd_abi::scalar>;
 
 }  // namespace Experimental
 }  // namespace Kokkos
+
+#ifdef KOKKOS_SIMD_IMPL_DEVICE_SIMD
+#undef KOKKOS_SIMD_IMPL_DEVICE_SIMD
+#endif
 
 #endif
