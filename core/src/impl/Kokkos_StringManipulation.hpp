@@ -242,7 +242,7 @@ class StaticString {
 
   KOKKOS_FUNCTION constexpr std::size_t size() const { return m_size; }
 
-  KOKKOS_FUNCTION constexpr std::size_t is_full() const { return is_full(); }
+  KOKKOS_FUNCTION constexpr bool is_full() const { return m_is_full; }
 
   // Append cstring
   KOKKOS_FUNCTION constexpr StaticString<capacity> &operator<<(
