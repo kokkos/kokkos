@@ -12,6 +12,75 @@
 #endif
 #endif
 
+#define KOKKOS_SIMD_IMPL_DERIVED() \
+  KOKKOS_FORCEINLINE_FUNCTION      \
+  const Derived& derived() const { return static_cast<const Derived&>(*this); }
+
+#define KOKKOS_SIMD_IMPL_SUBSCRIPT_OP()                                \
+  KOKKOS_FORCEINLINE_FUNCTION                                          \
+  constexpr auto operator[](simd_size_t lane) const                    \
+    requires requires { Derived::impl_ops::extract(derived(), lane); } \
+  {                                                                    \
+    return Derived::impl_ops::extract(derived(), lane);                \
+  }
+
+#define KOKKOS_SIMD_IMPL_UNARY_OP(OP, IMPL_FN)                   \
+  KOKKOS_FORCEINLINE_FUNCTION                                    \
+  constexpr Derived operator OP() const noexcept                 \
+    requires requires { Derived::impl_ops::IMPL_FN(derived()); } \
+  {                                                              \
+    return Derived(Derived::impl_ops::IMPL_FN(derived()));       \
+  }
+
+#define KOKKOS_SIMD_IMPL_BINARY_OP(OP, IMPL_FN)                     \
+  KOKKOS_FORCEINLINE_FUNCTION                                       \
+  constexpr friend Derived operator OP(Derived const& lhs,          \
+                                       Derived const& rhs) noexcept \
+    requires requires { Derived::impl_ops::IMPL_FN(lhs, rhs); }     \
+  {                                                                 \
+    return Derived(Derived::impl_ops::IMPL_FN(lhs, rhs));           \
+  }
+
+#define KOKKOS_SIMD_IMPL_COMPOUND_OP(OP, IMPL_FN)                       \
+  KOKKOS_FORCEINLINE_FUNCTION                                           \
+  constexpr friend Derived& operator OP(Derived& lhs,                   \
+                                        Derived const& rhs) noexcept    \
+    requires requires { Derived::impl_ops::IMPL_FN(lhs.m_value, rhs); } \
+  {                                                                     \
+    Derived::impl_ops::IMPL_FN(lhs.m_value, rhs);                       \
+    return lhs;                                                         \
+  }
+
+#define KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(OP, IMPL_FN) \
+  KOKKOS_SIMD_IMPL_BINARY_OP(OP, IMPL_FN)
+
+#define KOKKOS_SIMD_IMPL_COMPARISON_OP(OP, IMPL_FN)                           \
+  KOKKOS_FORCEINLINE_FUNCTION                                                 \
+  constexpr friend auto operator OP(Derived const& lhs,                       \
+                                    Derived const& rhs) noexcept              \
+    requires requires { Derived::impl_ops::IMPL_FN(lhs, rhs); }               \
+  {                                                                           \
+    return typename Derived::mask_type(Derived::impl_ops::IMPL_FN(lhs, rhs)); \
+  }
+
+#define KOKKOS_SIMD_IMPL_SHIFT_OP(OP, IMPL_FN, RHS_TYPE)        \
+  KOKKOS_FORCEINLINE_FUNCTION                                   \
+  constexpr friend Derived operator OP(Derived const& lhs,      \
+                                       RHS_TYPE rhs) noexcept   \
+    requires requires { Derived::impl_ops::IMPL_FN(lhs, rhs); } \
+  {                                                             \
+    return Derived(Derived::impl_ops::IMPL_FN(lhs, rhs));       \
+  }
+
+#define KOKKOS_SIMD_IMPL_COMPOUND_SHIFT_OP(OP, IMPL_FN, RHS_TYPE)            \
+  KOKKOS_FORCEINLINE_FUNCTION                                                \
+  constexpr friend Derived& operator OP(Derived& lhs, RHS_TYPE rhs) noexcept \
+    requires requires { Derived::impl_ops::IMPL_FN(lhs.m_value, rhs); }      \
+  {                                                                          \
+    Derived::impl_ops::IMPL_FN(lhs.m_value, rhs);                            \
+    return lhs;                                                              \
+  }
+
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(PREFIX, DATA_TYPE,    \
                                                     ABI_TYPE, EXPR)       \
   template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,        \

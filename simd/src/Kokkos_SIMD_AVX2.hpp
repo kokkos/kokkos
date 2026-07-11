@@ -30,8 +30,8 @@ class basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>
 
 #ifdef KOKKOS_IMPL_BASE_FRIEND_FN_DERIVED_ACCESS_RESTRICTION_FIXED
  private:
-  friend class Impl::basic_simd_mask_base<basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>>;
 #endif
+  friend class Impl::basic_simd_mask_base<basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>>;
 
   using impl_ops = Impl::simd_mask_native_ops<double, simd_abi::avx2_fixed_size<4>, Impl::simd_backend_t>;
   using impl_vector_type = typename impl_ops::vector_type;
@@ -743,8 +743,8 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
 
 #ifdef KOKKOS_IMPL_BASE_FRIEND_FN_DERIVED_ACCESS_RESTRICTION_FIXED
  private:
-  friend class Impl::basic_simd_base<basic_simd<double, simd_abi::avx2_fixed_size<4>>>;
 #endif
+  friend class Impl::basic_simd_base<basic_simd<double, simd_abi::avx2_fixed_size<4>>>;
 
   using impl_ops = Impl::simd_native_ops<double, simd_abi::avx2_fixed_size<4>, Impl::simd_backend_t>;
   using impl_vector_type = typename impl_ops::vector_type;

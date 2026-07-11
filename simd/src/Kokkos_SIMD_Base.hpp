@@ -17,367 +17,75 @@ namespace Kokkos::Experimental::Impl {
 template <typename Derived>
 class basic_simd_mask_base {
  private:
-  // using impl_ops = typename Derived::impl_ops;
-  // using value_type = typename Derived::value_type;
-  // using vector_type = typename Derived::impl_vector_type;
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  const Derived& derived() const { return static_cast<const Derived&>(*this); }
+  KOKKOS_SIMD_IMPL_DERIVED()
 
  public:
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto operator[](simd_size_t lane) const
-    requires requires { Derived::impl_ops::extract(derived(), lane); }
-  {
-    return Derived::impl_ops::extract(derived(), lane);
-  }
+  KOKKOS_SIMD_IMPL_SUBSCRIPT_OP()
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto operator!() const noexcept
-    requires requires { Derived::impl_ops::lnot(derived()); }
-  {
-    return Derived(Derived::impl_ops::lnot(derived()));
-  }
+  KOKKOS_SIMD_IMPL_UNARY_OP(!, lnot)
+  KOKKOS_SIMD_IMPL_UNARY_OP(~, bnot)
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto operator~() const noexcept
-    requires requires { Derived::impl_ops::bnot(derived()); }
-  {
-    return Derived(Derived::impl_ops::bnot(derived()));
-  }
+  KOKKOS_SIMD_IMPL_BINARY_OP(&&, land)
+  KOKKOS_SIMD_IMPL_BINARY_OP(||, lor)
+  KOKKOS_SIMD_IMPL_BINARY_OP(&, band)
+  KOKKOS_SIMD_IMPL_BINARY_OP(|, bor)
+  KOKKOS_SIMD_IMPL_BINARY_OP(^, bxor)
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator&&(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::land(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::land(lhs, rhs));
-  }
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(&=, band_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(|=, bor_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(^=, bxor_eq)
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator||(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::lor(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::lor(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator&(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::band(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::band(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator|(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bor(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bor(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator^(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bxor(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bxor(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator&=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bandeq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bandeq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator|=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::boreq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::boreq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator^=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bxoreq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bxoreq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator==(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator!=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::neq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::neq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::ge(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::ge(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator<=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::le(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::le(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::gt(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::gt(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::lt(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::lt(lhs, rhs));
-  }
+  KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(==, eq)
+  KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(!=, neq)
+  KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(>=, ge)
+  KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(<=, le)
+  KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(>, gt)
+  KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(<, lt)
 };
 
 template <typename Derived>
 class basic_simd_base {
  private:
-  // using impl_ops = typename Derived::impl_ops;
-  // using value_type = typename Derived::value_type;
-  // using vector_type = typename Derived::impl_vector_type;
-  // using mask_type = typename Derived::mask_type;
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  const Derived& derived() const { return static_cast<const Derived&>(*this); }
+  KOKKOS_SIMD_IMPL_DERIVED()
 
  public:
-  // subscript
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto operator[](simd_size_t lane) const
-    requires requires { Derived::impl_ops::extract(derived(), lane); }
-  {
-    return Derived::impl_ops::extract(derived(), lane);
-  }
+  KOKKOS_SIMD_IMPL_SUBSCRIPT_OP()
 
-  // unary
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto operator-() const noexcept
-    requires requires { Derived::impl_ops::neg(derived()); }
-  {
-    return Derived(Derived::impl_ops::neg(derived()));
-  }
+  KOKKOS_SIMD_IMPL_UNARY_OP(-, neg)
+  KOKKOS_SIMD_IMPL_UNARY_OP(~, bnot)
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr auto operator~() const noexcept
-    requires requires { Derived::impl_ops::bnot(derived()); }
-  {
-    return Derived(Derived::impl_ops::bnot(derived()));
-  }
+  KOKKOS_SIMD_IMPL_BINARY_OP(+, plus)
+  KOKKOS_SIMD_IMPL_BINARY_OP(-, minus)
+  KOKKOS_SIMD_IMPL_BINARY_OP(*, multiply)
+  KOKKOS_SIMD_IMPL_BINARY_OP(/, divide)
+  KOKKOS_SIMD_IMPL_BINARY_OP(&, band)
+  KOKKOS_SIMD_IMPL_BINARY_OP(|, bor)
+  KOKKOS_SIMD_IMPL_BINARY_OP(^, bxor)
 
-  // binary
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator+(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::plus(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::plus(lhs, rhs));
-  }
+  KOKKOS_SIMD_IMPL_SHIFT_OP(<<, sll, Derived const&)
+  KOKKOS_SIMD_IMPL_SHIFT_OP(>>, sra, Derived const&)
+  KOKKOS_SIMD_IMPL_SHIFT_OP(<<, sll, simd_size_t)
+  KOKKOS_SIMD_IMPL_SHIFT_OP(>>, sra, simd_size_t)
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator-(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::minus(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::minus(lhs, rhs));
-  }
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(+=, plus_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(-=, minus_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(*=, multiply_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(/=, divide_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(&=, band_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(|=, bor_eq)
+  KOKKOS_SIMD_IMPL_COMPOUND_OP(^=, bxor_eq)
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator*(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::multiply(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::multiply(lhs, rhs));
-  }
+  KOKKOS_SIMD_IMPL_COMPOUND_SHIFT_OP(<<=, sll_eq, Derived const&)
+  KOKKOS_SIMD_IMPL_COMPOUND_SHIFT_OP(>>=, sra_eq, Derived const&)
+  KOKKOS_SIMD_IMPL_COMPOUND_SHIFT_OP(<<=, sll_eq, simd_size_t)
+  KOKKOS_SIMD_IMPL_COMPOUND_SHIFT_OP(>>=, sra_eq, simd_size_t)
 
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator/(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::divide(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::divide(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator&(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::band(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::band(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator|(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bor(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bor(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator^(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bxor(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bxor(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator<<(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::sll(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sll(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>>(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::sra(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sra(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator<<(Derived const& lhs, simd_size_t rhs) noexcept
-    requires requires { Derived::impl_ops::sll(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sll(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>>(Derived const& lhs, simd_size_t rhs) noexcept
-    requires requires { Derived::impl_ops::sra(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sra(lhs, rhs));
-  }
-
-  // compound
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator+=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::plus_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::plus_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator-=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::minus_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::minus_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator*=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::multiply_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::multiply_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator/=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::divide_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::divide_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator&=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::band_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::band_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator|=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bor_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bor_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator^=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::bxor_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::bxor_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator<<=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::sll_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sll_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>>=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::sra_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sra_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator<<=(Derived const& lhs, simd_size_t rhs) noexcept
-    requires requires { Derived::impl_ops::sll_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sll_eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>>=(Derived const& lhs, simd_size_t rhs) noexcept
-    requires requires { Derived::impl_ops::sra_eq(lhs, rhs); }
-  {
-    return Derived(Derived::impl_ops::sra_eq(lhs, rhs));
-  }
-
-  // comparison
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator==(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::eq(lhs, rhs); }
-  {
-    return typename Derived::mask_type(Derived::impl_ops::eq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator!=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::neq(lhs, rhs); }
-  {
-    return typename Derived::mask_type(Derived::impl_ops::neq(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::ge(lhs, rhs); }
-  {
-    return typename Derived::mask_type(Derived::impl_ops::ge(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator<=(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::le(lhs, rhs); }
-  {
-    return typename Derived::mask_type(Derived::impl_ops::le(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator>(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::gt(lhs, rhs); }
-  {
-    return typename Derived::mask_type(Derived::impl_ops::gt(lhs, rhs));
-  }
-
-  KOKKOS_FORCEINLINE_FUNCTION
-  constexpr friend auto operator<(Derived const& lhs, Derived const& rhs) noexcept
-    requires requires { Derived::impl_ops::lt(lhs, rhs); }
-  {
-    return typename Derived::mask_type(Derived::impl_ops::lt(lhs, rhs));
-  }
+  KOKKOS_SIMD_IMPL_COMPARISON_OP(==, eq)
+  KOKKOS_SIMD_IMPL_COMPARISON_OP(!=, neq)
+  KOKKOS_SIMD_IMPL_COMPARISON_OP(>=, ge)
+  KOKKOS_SIMD_IMPL_COMPARISON_OP(<=, le)
+  KOKKOS_SIMD_IMPL_COMPARISON_OP(>, gt)
+  KOKKOS_SIMD_IMPL_COMPARISON_OP(<, lt)
 };
 
 }  // namespace Kokkos::Experimental::Impl
