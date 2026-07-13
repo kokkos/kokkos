@@ -110,6 +110,7 @@
 * Fix thread-safety for `parallel_scan` [\#9300](https://github.com/kokkos/kokkos/pull/9300)
 * Fix ambiguous overload in Kokkos::resize with ExecutionSpace [\#9128](https://github.com/kokkos/kokkos/pull/9128)
 * Fix subview construction between managed and unmanaged Views [\#8967](https://github.com/kokkos/kokkos/pull/8967)
+* Fix using Kokkos::UnorderedMap as a set [\#6584](https://github.com/kokkos/kokkos/pull/6584)
 
 ## 5.1.1
 
