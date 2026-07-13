@@ -61,7 +61,7 @@
 * Introduce KOKKOS_FORCEINLINE_[CLASS_]LAMBDA macros [\#9239](https://github.com/kokkos/kokkos/pull/9239)
 * Ensure the C++20 module `kokkos.core` can be used with latest MSVC and gcc-16. [\#9148](https://github.com/kokkos/kokkos/pull/9148), [\#9149](https://github.com/kokkos/kokkos/pull/9149).
 * Make HostMirror return types consistent and simplify HostSpace selection [\#8252](https://github.com/kokkos/kokkos/pull/8252)
-* Allow access to backend-native node in Kokkos::Graph [\#9147](https://github.com/kokkos/kokkos/pull/9147) 
+* Allow access to backend-native node in Kokkos::Graph [\#9147](https://github.com/kokkos/kokkos/pull/9147)
 * Promote numeric traits from Experimental:: namespace into Kokkos:: [\#9082](https://github.com/kokkos/kokkos/pull/9082)
 
 ### Build System Changes
@@ -73,7 +73,7 @@
 * Forbid passing identical view arguments to `deep_copy()` [\#9033](https://github.com/kokkos/kokkos/pull/9033)
 
 ### Deprecations
-* Deprecate `[static_]extent(r)` calls with `r >= rank()` to align with `mdspan` preconditions [\#9076](https://github.com/kokkos/kokkos/pull/9076) [\#9075](https://github.com/kokkos/kokkos/pull/9075) [\#9072](https://github.com/kokkos/kokkos/pull/9072)
+* Deprecate `[static_]extent(r)` calls with `r >= rank()` to align with `mdspan` preconditions [\#9076](https://github.com/kokkos/kokkos/pull/9076) [\#9075](https://github.com/kokkos/kokkos/pull/9075) [\#9072](https://github.com/kokkos/kokkos/pull/9072) [\#9074](https://github.com/kokkos/kokkos/pull/9074)
 * Remove code guarded by KOKKOS_ENABLE_DEPRECATED_CODE_4 since Kokkos 4.2 and before [\#8957](https://github.com/kokkos/kokkos/pull/8957)
 * Remove code guarded by KOKKOS_ENABLE_DEPRECATED_CODE_4 since Kokkos 4.4 and before [\#8966](https://github.com/kokkos/kokkos/pull/8966)
 * Remove code guarded by KOKKOS_ENABLE_DEPRECATED_CODE_4 since Kokkos 4.6 and before [\#8980](https://github.com/kokkos/kokkos/pull/8980) [\#9009](https://github.com/kokkos/kokkos/pull/9009)
