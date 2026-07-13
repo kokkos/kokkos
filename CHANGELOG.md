@@ -61,6 +61,8 @@
 * Introduce KOKKOS_FORCEINLINE_[CLASS_]LAMBDA macros [\#9239](https://github.com/kokkos/kokkos/pull/9239)
 * Ensure the C++20 module `kokkos.core` can be used with latest MSVC and gcc-16. [\#9148](https://github.com/kokkos/kokkos/pull/9148), [\#9149](https://github.com/kokkos/kokkos/pull/9149).
 * Make HostMirror return types consistent and simplify HostSpace selection [\#8252](https://github.com/kokkos/kokkos/pull/8252)
+* Allow access to backend-native node in Kokkos::Graph [\#9147](https://github.com/kokkos/kokkos/pull/9147) 
+* Promote numeric traits from Experimental:: namespace into Kokkos:: [\#9082](https://github.com/kokkos/kokkos/pull/9082)
 
 ### Build System Changes
 * Build system prints output of compilation check [\#8986](https://github.com/kokkos/kokkos/pull/8986)
