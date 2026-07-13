@@ -120,11 +120,13 @@ class CudaInternal {
   size_t m_num_scratch_locks                      = 0;
 
   static std::set<int> cuda_devices;
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
   KOKKOS_IMPL_EXPORT static std::map<int, unsigned long*>
       constantMemHostStagingPerDevice;
   KOKKOS_IMPL_EXPORT static std::map<int, cudaEvent_t>
       constantMemReusablePerDevice;
   KOKKOS_IMPL_EXPORT static std::map<int, std::mutex> constantMemMutexPerDevice;
+#endif
 
   int verify_is_initialized(const char* const label) const;
 
