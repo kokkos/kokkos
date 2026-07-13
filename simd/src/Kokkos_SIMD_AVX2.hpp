@@ -786,14 +786,14 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
       G&& gen) noexcept
       : m_value(impl_ops::gen(gen)) {}
-  template <typename FlagType>
+  template <typename... Flags>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, FlagType f) noexcept
+      const value_type* ptr, simd_flags<Flags...> f = {}) noexcept
     : m_value(impl_ops::load(ptr, f)) {}
 
-  template <typename FlagType>
+  template <typename... Flags>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      const value_type* ptr, mask_type const& mask, FlagType f) noexcept
+      const value_type* ptr, mask_type const& mask, simd_flags<Flags...> f = {}) noexcept
     : m_value(impl_ops::masked_load(ptr, static_cast<impl_vector_type>(mask), f))
   {}
 
@@ -805,6 +805,7 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
 
 }  // namespace Experimental
 
+// TODO: these can evfentually just call be calling impl_ops:: ... (templated on T and abi)
 KOKKOS_FORCEINLINE_FUNCTION
 Experimental::basic_simd<double, Experimental::simd_abi::avx2_fixed_size<4>>
 copysign(Experimental::basic_simd<
@@ -951,6 +952,7 @@ min(Experimental::basic_simd<
 
 namespace Experimental {
 
+// TODO: these could prob be consolidated too (T, abi)
 template <typename SimdType, typename... Flags>
   requires std::same_as<typename SimdType::abi_type,
                         simd_abi::avx2_fixed_size<4>>
@@ -1005,30 +1007,30 @@ KOKKOS_FORCEINLINE_FUNCTION
   return basic_simd<double, simd_abi::avx2_fixed_size<4>>(ptr, mask, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<double, simd_abi::avx2_fixed_size<4>> const& simd, double* ptr,
-    [[maybe_unused]] FlagType flag = simd_flag_default) {
+    simd_flags<Flags...> flag = {}) {
   using impl_ops = Impl::simd_native_ops<double, simd_abi::avx2_fixed_size<4>, Impl::simd_backend_t>;
 
   impl_ops::store(ptr, simd, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<double, simd_abi::avx2_fixed_size<4>> const& simd, double* ptr,
     basic_simd_mask<double, simd_abi::avx2_fixed_size<4>> const& mask,
-    FlagType flag) {
+    simd_flags<Flags...> flag = {}) {
   using impl_ops = Impl::simd_native_ops<double, simd_abi::avx2_fixed_size<4>, Impl::simd_backend_t>;
 
   impl_ops::masked_store(ptr, simd, mask, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<double, simd_abi::avx2_fixed_size<4>> const& simd, double* ptr,
     basic_simd_mask<double, simd_abi::avx2_fixed_size<4>> const& mask,
-    FlagType flag) {
+    simd_flags<Flags...> flag = {}) {
   using impl_ops = Impl::simd_native_ops<double, simd_abi::avx2_fixed_size<4>, Impl::simd_backend_t>;
 
   impl_ops::masked_store(ptr, simd, mask, flag);
