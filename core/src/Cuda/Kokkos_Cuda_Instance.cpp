@@ -59,7 +59,8 @@ bool kokkos_impl_cuda_use_serial_execution() {
 }
 #endif
 
-#ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
+#if defined(KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY) && \
+    defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE)
 
 __device__ __constant__ unsigned long kokkos_impl_cuda_constant_memory_buffer
     [Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long)];
@@ -275,6 +276,7 @@ CudaInternal::CudaInternal(cudaStream_t stream) : m_stream(stream) {
 
   CudaInternal::cuda_devices.insert(m_cudaDev);
 
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
   // Allocate a staging buffer for constant mem in pinned host memory
   // and an event to avoid overwriting driver for previous kernel launches
   if (!constantMemHostStagingPerDevice[m_cudaDev]) {
@@ -293,6 +295,7 @@ CudaInternal::CudaInternal(cudaStream_t stream) : m_stream(stream) {
   // std::map::operator[] will ensure the mutex is default constructed (and
   // initialized)
   constantMemMutexPerDevice[m_cudaDev];
+#endif
 
   //----------------------------------
   // Multiblock reduction uses scratch flags for counters
@@ -560,6 +563,7 @@ void Cuda::impl_finalize() {
   (void)Impl::cuda_global_unique_token_locks(true);
   desul::Impl::finalize_lock_arrays();  // FIXME
 
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
   for (const auto cuda_device : Kokkos::Impl::CudaInternal::cuda_devices) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(cuda_device));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
@@ -568,6 +572,7 @@ void Cuda::impl_finalize() {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(
         Kokkos::Impl::CudaInternal::constantMemReusablePerDevice[cuda_device]));
   }
+#endif
 
   KOKKOS_IMPL_CUDA_SAFE_CALL(
       cudaStreamDestroy(Impl::cuda_get_deep_copy_stream()));
@@ -601,6 +606,12 @@ void Cuda::print_configuration(std::ostream &os, bool /*verbose*/) const {
   os << "Cuda Options:\n";
   os << "  KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE: ";
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
+  os << "yes\n";
+#else
+  os << "no\n";
+#endif
+  os << "  KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY: ";
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
   os << "yes\n";
 #else
   os << "no\n";
@@ -649,12 +660,14 @@ int CudaInternal::m_cudaArch = -1;
 KOKKOS_IMPL_EXPORT cudaDeviceProp CudaInternal::m_deviceProp;
 HostSharedPtr<CudaInternal> CudaInternal::default_instance;
 std::set<int> CudaInternal::cuda_devices = {};
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
 KOKKOS_IMPL_EXPORT std::map<int, unsigned long *>
     CudaInternal::constantMemHostStagingPerDevice = {};
 KOKKOS_IMPL_EXPORT std::map<int, cudaEvent_t>
     CudaInternal::constantMemReusablePerDevice = {};
 KOKKOS_IMPL_EXPORT std::map<int, std::mutex>
     CudaInternal::constantMemMutexPerDevice = {};
+#endif
 
 }  // namespace Impl
 
