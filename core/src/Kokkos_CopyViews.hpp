@@ -2234,17 +2234,14 @@ KOKKOS_INLINE_FUNCTION void deep_copy(const TeamMember& team,
     return;
   }
 
-  const size_t N = dst.extent(0) * dst.extent(1);
-
   team.team_barrier();
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     deep_copy_contiguous(team, dst, src);
   } else {
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0      = i % dst.extent(0);
-      int i1      = i / dst.extent(0);
-      dst(i0, i1) = src(i0, i1);
-    });
+    Kokkos::parallel_for(
+        Kokkos::TeamVectorMDRange<Kokkos::Rank<2>, TeamMember>(
+            team, dst.extent(0), dst.extent(1)),
+        [&](const int i0, const int i1) { dst(i0, i1) = src(i0, i1); });
   }
   team.team_barrier();
 }
@@ -2261,19 +2258,16 @@ KOKKOS_INLINE_FUNCTION void deep_copy(const TeamMember& team,
     return;
   }
 
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2);
-
   team.team_barrier();
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     deep_copy_contiguous(team, dst, src);
   } else {
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0          = i % dst.extent(0);
-      int itmp        = i / dst.extent(0);
-      int i1          = itmp % dst.extent(1);
-      int i2          = itmp / dst.extent(1);
-      dst(i0, i1, i2) = src(i0, i1, i2);
-    });
+    Kokkos::parallel_for(
+        Kokkos::TeamVectorMDRange<Kokkos::Rank<3>, TeamMember>(
+            team, dst.extent(0), dst.extent(1), dst.extent(2)),
+        [&](const int i0, const int i1, const int i2) {
+          dst(i0, i1, i2) = src(i0, i1, i2);
+        });
   }
   team.team_barrier();
 }
@@ -2290,22 +2284,16 @@ KOKKOS_INLINE_FUNCTION void deep_copy(const TeamMember& team,
     return;
   }
 
-  const size_t N =
-      dst.extent(0) * dst.extent(1) * dst.extent(2) * dst.extent(3);
-
   team.team_barrier();
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     deep_copy_contiguous(team, dst, src);
   } else {
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0              = i % dst.extent(0);
-      int itmp            = i / dst.extent(0);
-      int i1              = itmp % dst.extent(1);
-      itmp                = itmp / dst.extent(1);
-      int i2              = itmp % dst.extent(2);
-      int i3              = itmp / dst.extent(2);
-      dst(i0, i1, i2, i3) = src(i0, i1, i2, i3);
-    });
+    Kokkos::parallel_for(
+        Kokkos::TeamVectorMDRange<Kokkos::Rank<4>, TeamMember>(
+            team, dst.extent(0), dst.extent(1), dst.extent(2), dst.extent(3)),
+        [&](const int i0, const int i1, const int i2, const int i3) {
+          dst(i0, i1, i2, i3) = src(i0, i1, i2, i3);
+        });
   }
   team.team_barrier();
 }
@@ -2322,24 +2310,18 @@ KOKKOS_INLINE_FUNCTION void deep_copy(const TeamMember& team,
     return;
   }
 
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4);
-
   team.team_barrier();
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     deep_copy_contiguous(team, dst, src);
   } else {
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0                  = i % dst.extent(0);
-      int itmp                = i / dst.extent(0);
-      int i1                  = itmp % dst.extent(1);
-      itmp                    = itmp / dst.extent(1);
-      int i2                  = itmp % dst.extent(2);
-      itmp                    = itmp / dst.extent(2);
-      int i3                  = itmp % dst.extent(3);
-      int i4                  = itmp / dst.extent(3);
-      dst(i0, i1, i2, i3, i4) = src(i0, i1, i2, i3, i4);
-    });
+    Kokkos::parallel_for(
+        Kokkos::TeamVectorMDRange<Kokkos::Rank<5>, TeamMember>(
+            team, dst.extent(0), dst.extent(1), dst.extent(2), dst.extent(3),
+            dst.extent(4)),
+        [&](const int i0, const int i1, const int i2, const int i3,
+            const int i4) {
+          dst(i0, i1, i2, i3, i4) = src(i0, i1, i2, i3, i4);
+        });
   }
   team.team_barrier();
 }
@@ -2356,26 +2338,18 @@ KOKKOS_INLINE_FUNCTION void deep_copy(const TeamMember& team,
     return;
   }
 
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4) * dst.extent(5);
-
   team.team_barrier();
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     deep_copy_contiguous(team, dst, src);
   } else {
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0                      = i % dst.extent(0);
-      int itmp                    = i / dst.extent(0);
-      int i1                      = itmp % dst.extent(1);
-      itmp                        = itmp / dst.extent(1);
-      int i2                      = itmp % dst.extent(2);
-      itmp                        = itmp / dst.extent(2);
-      int i3                      = itmp % dst.extent(3);
-      itmp                        = itmp / dst.extent(3);
-      int i4                      = itmp % dst.extent(4);
-      int i5                      = itmp / dst.extent(4);
-      dst(i0, i1, i2, i3, i4, i5) = src(i0, i1, i2, i3, i4, i5);
-    });
+    Kokkos::parallel_for(
+        Kokkos::TeamVectorMDRange<Kokkos::Rank<6>, TeamMember>(
+            team, dst.extent(0), dst.extent(1), dst.extent(2), dst.extent(3),
+            dst.extent(4), dst.extent(5)),
+        [&](const int i0, const int i1, const int i2, const int i3,
+            const int i4, const int i5) {
+          dst(i0, i1, i2, i3, i4, i5) = src(i0, i1, i2, i3, i4, i5);
+        });
   }
   team.team_barrier();
 }
@@ -2392,29 +2366,18 @@ KOKKOS_INLINE_FUNCTION void deep_copy(const TeamMember& team,
     return;
   }
 
-  const size_t N = dst.extent(0) * dst.extent(1) * dst.extent(2) *
-                   dst.extent(3) * dst.extent(4) * dst.extent(5) *
-                   dst.extent(6);
-
   team.team_barrier();
   if (dst.span_is_contiguous() && src.span_is_contiguous()) {
     deep_copy_contiguous(team, dst, src);
   } else {
-    Kokkos::parallel_for(Kokkos::TeamVectorRange(team, N), [&](const int& i) {
-      int i0                          = i % dst.extent(0);
-      int itmp                        = i / dst.extent(0);
-      int i1                          = itmp % dst.extent(1);
-      itmp                            = itmp / dst.extent(1);
-      int i2                          = itmp % dst.extent(2);
-      itmp                            = itmp / dst.extent(2);
-      int i3                          = itmp % dst.extent(3);
-      itmp                            = itmp / dst.extent(3);
-      int i4                          = itmp % dst.extent(4);
-      itmp                            = itmp / dst.extent(4);
-      int i5                          = itmp % dst.extent(5);
-      int i6                          = itmp / dst.extent(5);
-      dst(i0, i1, i2, i3, i4, i5, i6) = src(i0, i1, i2, i3, i4, i5, i6);
-    });
+    Kokkos::parallel_for(
+        Kokkos::TeamVectorMDRange<Kokkos::Rank<7>, TeamMember>(
+            team, dst.extent(0), dst.extent(1), dst.extent(2), dst.extent(3),
+            dst.extent(4), dst.extent(5), dst.extent(6)),
+        [&](const int i0, const int i1, const int i2, const int i3,
+            const int i4, const int i5, const int i6) {
+          dst(i0, i1, i2, i3, i4, i5, i6) = src(i0, i1, i2, i3, i4, i5, i6);
+        });
   }
   team.team_barrier();
 }
