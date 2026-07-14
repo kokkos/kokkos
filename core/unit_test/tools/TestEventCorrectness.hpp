@@ -530,11 +530,12 @@ TEST(kokkosp, view) {
   ASSERT_TRUE(success);
 }
 
-TEST(kokkosp, empty_hostspace_view) {
+template <typename MemorySpace>
+void test_empty_view_allocation_events() {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
   auto success = validate_event_set(
-      [=]() { Kokkos::View<float*, Kokkos::HostSpace> dogs("dogs", 0); },
+      [=]() { Kokkos::View<float*, MemorySpace> dogs("dogs", 0); },
       [=](AllocateDataEvent alloc, DeallocateDataEvent free) {
         if (alloc.name != "dogs") {
           return MatchDiagnostic{false, {"No match on alloc name"}};
@@ -555,6 +556,16 @@ TEST(kokkosp, empty_hostspace_view) {
       });
   ASSERT_TRUE(success);
 }
+
+TEST(kokkosp, empty_hostspace_view) {
+  test_empty_view_allocation_events<Kokkos::HostSpace>();
+}
+
+#ifdef KOKKOS_ENABLE_CUDA
+TEST(kokkosp, empty_cudaspace_view) {
+  test_empty_view_allocation_events<Kokkos::CudaSpace>();
+}
+#endif
 
 TEST(kokkosp, sections) {
   using namespace Kokkos::Test::Tools;
