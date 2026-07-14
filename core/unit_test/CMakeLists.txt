@@ -950,7 +950,7 @@ if(KOKKOS_ENABLE_LIBDL)
 
   kokkos_add_test_executable(EmptyProfilingLibraryDeathTest UnitTestMain.cpp tools/TestEmptyProfilingLibrary.cpp)
 
-  if(NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
+  if((NOT KOKKOS_ENABLE_LARGE_MEM_TESTS) AND (NOT KOKKOS_ENABLE_THREADS))
     kokkos_add_test_library(kokkoshwmtracker-tool SHARED SOURCES tools/memory-hwm-tool.cpp)
     kokkos_add_executable_and_test(ExcessMemoryAllocationErrorsInTesting SOURCES tools/TestExcessMemoryAllocation.cpp)
   endif()

@@ -56,8 +56,8 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
   set(BENCHMARK_ARGS --benchmark_counters_tabular=true --benchmark_out=${BENCHMARK_NAME}_${BENCHMARK_TIME}.json)
 
   # If we are on linux/mac, we automatically load a tool to track memory usage.
-  if((CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin") AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS
-                                                                                     )
+  if((CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin") AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
+     AND (NOT KOKKOS_ENABLE_THREADS)
   )
     if(NOT TARGET kokkoshwmtracker-tool)
       kokkos_add_test_library(
