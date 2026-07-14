@@ -51,8 +51,8 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
-            -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
+            -DKokkos_ENABLE_BENCHMARKS=${{ matrix.build_type == 'Debug' && 'OFF' || 'ON' }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.build_type == 'Debug' && 'OFF' || 'ON' }} \
             ./
 
       - name: build_and_install_kokkos
