@@ -150,7 +150,7 @@ namespace {
 void *impl_allocate_common(const int device_id,
                            [[maybe_unused]] const cudaStream_t stream,
                            const char *arg_label, const size_t arg_alloc_size,
-                           const size_t arg_logical_size,
+                           const size_t arg_reported_size,
                            const Kokkos::Tools::SpaceHandle arg_handle,
                            [[maybe_unused]] bool stream_sync_only) {
   void *ptr = nullptr;
@@ -222,8 +222,8 @@ void *impl_allocate_common(const int device_id,
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr,
+                                    arg_reported_size);
   }
   return ptr;
 }
@@ -231,19 +231,19 @@ void *impl_allocate_common(const int device_id,
 
 void *CudaSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
-    const size_t arg_logical_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   return impl_allocate_common(m_device, m_stream, arg_label, arg_alloc_size,
-                              arg_logical_size, arg_handle, false);
+                              arg_reported_size, arg_handle, false);
 }
 
 void *CudaSpace::impl_allocate(
     const Cuda &exec_space, const char *arg_label, const size_t arg_alloc_size,
-    const size_t arg_logical_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   return impl_allocate_common(
       exec_space.cuda_device(), exec_space.cuda_stream(), arg_label,
-      arg_alloc_size, arg_logical_size, arg_handle, true);
+      arg_alloc_size, arg_reported_size, arg_handle, true);
 }
 
 void *CudaUVMSpace::allocate(const size_t arg_alloc_size) const {
@@ -259,7 +259,7 @@ void *CudaUVMSpace::allocate(const char *arg_label, const size_t arg_alloc_size,
 }
 void *CudaUVMSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
-    const size_t arg_logical_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
@@ -288,8 +288,8 @@ void *CudaUVMSpace::impl_allocate(
   Cuda::impl_static_fence(
       "Kokkos::CudaUVMSpace::impl_allocate: Post UVM Allocation");
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr,
+                                    arg_reported_size);
   }
   return ptr;
 }
@@ -307,7 +307,7 @@ void *CudaHostPinnedSpace::allocate(const char *arg_label,
 }
 void *CudaHostPinnedSpace::impl_allocate(
     const char *arg_label, const size_t arg_alloc_size,
-    const size_t arg_logical_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void *ptr = nullptr;
 
@@ -322,8 +322,8 @@ void *CudaHostPinnedSpace::impl_allocate(
     Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr,
+                                    arg_reported_size);
   }
   return ptr;
 }
@@ -345,12 +345,11 @@ void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
 }
 void CudaSpace::impl_deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const size_t arg_alloc_size, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
-                                      reported_size);
+                                      arg_reported_size);
   }
 #ifndef CUDART_VERSION
 #error CUDART_VERSION undefined!
@@ -392,14 +391,13 @@ void CudaUVMSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
 }
 void CudaUVMSpace::impl_deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
-    const size_t /*arg_alloc_size*/, const size_t arg_logical_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   Cuda::impl_static_fence(
       "Kokkos::CudaUVMSpace::impl_deallocate: Pre UVM Deallocation");
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
-                                      reported_size);
+                                      arg_reported_size);
   }
   if (arg_alloc_ptr != nullptr) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
@@ -427,12 +425,11 @@ void CudaHostPinnedSpace::deallocate(const char *arg_label,
 
 void CudaHostPinnedSpace::impl_deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
-    const size_t /*arg_alloc_size*/, const size_t arg_logical_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
-                                      reported_size);
+                                      arg_reported_size);
   }
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_device));
   KOKKOS_IMPL_CUDA_SAFE_CALL(cudaFreeHost(arg_alloc_ptr));

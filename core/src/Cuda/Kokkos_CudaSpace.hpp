@@ -105,16 +105,16 @@ class CudaSpace {
  private:
   void* impl_allocate(const Cuda& exec_space, const char* arg_label,
                       const size_t arg_alloc_size,
-                      const size_t arg_logical_size,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 
@@ -192,12 +192,12 @@ class CudaUVMSpace {
 
  private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 
@@ -297,12 +297,12 @@ class CudaHostPinnedSpace {
 
  private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 

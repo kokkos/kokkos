@@ -91,7 +91,7 @@ void* HIPSpace::impl_allocate(const int device_id,
                               [[maybe_unused]] const hipStream_t stream,
                               const char* arg_label,
                               const size_t arg_alloc_size,
-                              const size_t arg_logical_size,
+                              const size_t arg_reported_size,
                               [[maybe_unused]] bool stream_sync_only) const {
   void* ptr = nullptr;
   // Instead of trying to allocate zero memory, return early.
@@ -117,9 +117,9 @@ void* HIPSpace::impl_allocate(const int device_id,
     Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const auto arg_handle      = Kokkos::Tools::make_space_handle(name());
-    const size_t reported_size = arg_logical_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+    const auto arg_handle = Kokkos::Tools::make_space_handle(name());
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr,
+                                    arg_reported_size);
   }
 
   return ptr;
@@ -139,7 +139,7 @@ void* HIPHostPinnedSpace::allocate(const char* arg_label,
 }
 void* HIPHostPinnedSpace::impl_allocate(
     const char* arg_label, const size_t arg_alloc_size,
-    const size_t arg_logical_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void* ptr = nullptr;
 
@@ -153,8 +153,8 @@ void* HIPHostPinnedSpace::impl_allocate(
     Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr,
+                                    arg_reported_size);
   }
 
   return ptr;
@@ -174,7 +174,7 @@ void* HIPManagedSpace::allocate(const char* arg_label,
 }
 void* HIPManagedSpace::impl_allocate(
     const char* arg_label, const size_t arg_alloc_size,
-    const size_t arg_logical_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   void* ptr = nullptr;
 
@@ -216,8 +216,8 @@ Kokkos::HIP::runtime WARNING: Kokkos was not able to verify that xnack is enable
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
-    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
+    Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr,
+                                    arg_reported_size);
   }
 
   return ptr;
@@ -251,12 +251,11 @@ void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
 }
 void HIPSpace::impl_deallocate(
     const char* arg_label, void* const arg_alloc_ptr,
-    const size_t /*arg_alloc_size*/, const size_t arg_logical_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
-                                      reported_size);
+                                      arg_reported_size);
   }
 #ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
@@ -286,12 +285,11 @@ void HIPHostPinnedSpace::deallocate(const char* arg_label,
 }
 void HIPHostPinnedSpace::impl_deallocate(
     const char* arg_label, void* const arg_alloc_ptr,
-    const size_t /*arg_alloc_size*/, const size_t arg_logical_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
-                                      reported_size);
+                                      arg_reported_size);
   }
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipHostFree(arg_alloc_ptr));
@@ -315,12 +313,11 @@ void HIPManagedSpace::deallocate(const char* arg_label,
 }
 void HIPManagedSpace::impl_deallocate(
     const char* arg_label, void* const arg_alloc_ptr,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const size_t arg_alloc_size, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
-                                      reported_size);
+                                      arg_reported_size);
   }
   // We have to unset the CoarseGrain property manually as hipFree does not take
   // care of it. Otherwise, the allocation would continue to linger in the
