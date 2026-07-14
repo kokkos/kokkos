@@ -557,15 +557,17 @@ void test_empty_view_allocation_events() {
   ASSERT_TRUE(success);
 }
 
-TEST(kokkosp, empty_hostspace_view) {
+TEST(kokkosp, empty_view) {
   test_empty_view_allocation_events<Kokkos::HostSpace>();
-}
 
 #ifdef KOKKOS_ENABLE_CUDA
-TEST(kokkosp, empty_cudaspace_view) {
   test_empty_view_allocation_events<Kokkos::CudaSpace>();
-}
 #endif
+
+#ifdef KOKKOS_ENABLE_HIP
+  test_empty_view_allocation_events<Kokkos::HIPSpace>();
+#endif
+}
 
 TEST(kokkosp, sections) {
   using namespace Kokkos::Test::Tools;

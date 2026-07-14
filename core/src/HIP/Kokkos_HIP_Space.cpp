@@ -61,6 +61,11 @@ void* HIPSpace::allocate(const HIP& exec_space,
 }
 
 void* HIPSpace::allocate(const HIP& exec_space, const char* arg_label,
+                         const size_t arg_alloc_size) const {
+  return impl_allocate(exec_space.hip_device(), exec_space.hip_stream(),
+                       arg_label, arg_alloc_size, arg_alloc_size, true);
+}
+void* HIPSpace::allocate(const HIP& exec_space, const char* arg_label,
                          const size_t arg_alloc_size,
                          const size_t arg_logical_size) const {
   return impl_allocate(exec_space.hip_device(), exec_space.hip_stream(),
@@ -71,6 +76,11 @@ void* HIPSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
 
+void* HIPSpace::allocate(const char* arg_label,
+                         const size_t arg_alloc_size) const {
+  return impl_allocate(m_device, m_stream, arg_label, arg_alloc_size,
+                       arg_alloc_size, false);
+}
 void* HIPSpace::allocate(const char* arg_label, const size_t arg_alloc_size,
                          const size_t arg_logical_size) const {
   return impl_allocate(m_device, m_stream, arg_label, arg_alloc_size,
@@ -107,9 +117,8 @@ void* HIPSpace::impl_allocate(const int device_id,
     Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const auto arg_handle = Kokkos::Tools::make_space_handle(name());
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    const auto arg_handle      = Kokkos::Tools::make_space_handle(name());
+    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
 
@@ -118,6 +127,10 @@ void* HIPSpace::impl_allocate(const int device_id,
 
 void* HIPHostPinnedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
+}
+void* HIPHostPinnedSpace::allocate(const char* arg_label,
+                                   const size_t arg_alloc_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_alloc_size);
 }
 void* HIPHostPinnedSpace::allocate(const char* arg_label,
                                    const size_t arg_alloc_size,
@@ -140,8 +153,7 @@ void* HIPHostPinnedSpace::impl_allocate(
     Kokkos::Impl::throw_bad_alloc(name(), arg_alloc_size, arg_label);
   }
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
 
@@ -150,6 +162,10 @@ void* HIPHostPinnedSpace::impl_allocate(
 
 void* HIPManagedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
+}
+void* HIPManagedSpace::allocate(const char* arg_label,
+                                const size_t arg_alloc_size) const {
+  return impl_allocate(arg_label, arg_alloc_size, arg_alloc_size);
 }
 void* HIPManagedSpace::allocate(const char* arg_label,
                                 const size_t arg_alloc_size,
@@ -200,8 +216,7 @@ Kokkos::HIP::runtime WARNING: Kokkos was not able to verify that xnack is enable
   }
 
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::allocateData(arg_handle, arg_label, ptr, reported_size);
   }
 
@@ -226,17 +241,20 @@ void HIPSpace::deallocate(void* const arg_alloc_ptr,
   deallocate("[unlabeled]", arg_alloc_ptr, arg_alloc_size);
 }
 void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                          const size_t arg_alloc_size) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_alloc_size);
+}
+void HIPSpace::deallocate(const char* arg_label, void* const arg_alloc_ptr,
                           const size_t arg_alloc_size,
                           const size_t arg_logical_size) const {
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
 void HIPSpace::impl_deallocate(
     const char* arg_label, void* const arg_alloc_ptr,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
@@ -257,17 +275,21 @@ void HIPHostPinnedSpace::deallocate(void* const arg_alloc_ptr,
 
 void HIPHostPinnedSpace::deallocate(const char* arg_label,
                                     void* const arg_alloc_ptr,
+                                    const size_t arg_alloc_size) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_alloc_size);
+}
+void HIPHostPinnedSpace::deallocate(const char* arg_label,
+                                    void* const arg_alloc_ptr,
                                     const size_t arg_alloc_size,
                                     const size_t arg_logical_size) const {
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
 }
 void HIPHostPinnedSpace::impl_deallocate(
     const char* arg_label, void* const arg_alloc_ptr,
-    const size_t arg_alloc_size, const size_t arg_logical_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
@@ -282,6 +304,11 @@ void HIPManagedSpace::deallocate(void* const arg_alloc_ptr,
 
 void HIPManagedSpace::deallocate(const char* arg_label,
                                  void* const arg_alloc_ptr,
+                                 const size_t arg_alloc_size) const {
+  impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_alloc_size);
+}
+void HIPManagedSpace::deallocate(const char* arg_label,
+                                 void* const arg_alloc_ptr,
                                  const size_t arg_alloc_size,
                                  const size_t arg_logical_size) const {
   impl_deallocate(arg_label, arg_alloc_ptr, arg_alloc_size, arg_logical_size);
@@ -291,8 +318,7 @@ void HIPManagedSpace::impl_deallocate(
     const size_t arg_alloc_size, const size_t arg_logical_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
-    const size_t reported_size =
-        (arg_logical_size > 0) ? arg_logical_size : arg_alloc_size;
+    const size_t reported_size = arg_logical_size;
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
                                       reported_size);
   }
