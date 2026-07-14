@@ -19,9 +19,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 
 #if (defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) &&  \
-     !defined(DESUL_IMPL_CUDA_RDC)) ||                            \
-    (!defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) && \
-     defined(DESUL_IMPL_CUDA_RDC))
+     !defined(DESUL_IMPL_CUDA_RDC))
 #error Relocatable device code mode incompatible with desul atomics configuration
 #endif
 
