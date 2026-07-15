@@ -21,7 +21,7 @@ TEST(ExcessMemoryAllocationErrorsInTesting,
   GTEST_SKIP()
       << "Allocations > 4GB are not supported on 32-bit builds.";  // FIXME_32BIT
 #endif
-    ASSERT_DEATH(allocate_large_view(),
+  ASSERT_DEATH(allocate_large_view(),
                ".*WARNING!.*Total allocation.*GB.*exceeds.*GB limit!");
 }
 
