@@ -835,6 +835,9 @@ if(Kokkos_ENABLE_NEXTSILICON)
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp # MDRange parallel for
   )
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon SOURCES UnitTestMainInit.cpp ${NEXTSILICON_SOURCES})
+  kokkos_add_executable_and_test(
+    CoreUnitTest_NextSiliconInitializationCallbacks SOURCES nextsilicon/TestNextSilicon_InitializationCallbacks.cpp
+  )
 endif()
 
 set(DEFAULT_DEVICE_SOURCES

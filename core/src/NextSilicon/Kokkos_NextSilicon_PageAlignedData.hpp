@@ -4,8 +4,12 @@
 #ifndef KOKKOS_NEXTSILICON_PAGE_ALIGNED_DATA_HPP
 #define KOKKOS_NEXTSILICON_PAGE_ALIGNED_DATA_HPP
 
-#include <utility>
+#include <NextSilicon/Kokkos_NextSilicon_InitializationCallbacks.hpp>
+
 #include <nextapi/memory.h>
+
+#include <type_traits>
+#include <utility>
 
 namespace Kokkos::Impl {
 
@@ -23,6 +27,8 @@ enum class PageLocation {
 // cause problems when we try to access it from the host.
 template <typename T, PageLocation Location = PageLocation::Any>
 struct alignas(PAGE_SIZE) PageAlignedData {
+  static constexpr PageLocation location = Location;
+
   T data;
 
   operator T&() { return data; }
@@ -32,9 +38,19 @@ struct alignas(PAGE_SIZE) PageAlignedData {
     requires(!(sizeof...(Args) == 1 &&
                (std::is_same_v<std::decay_t<Args>, PageAlignedData> && ...)))
   PageAlignedData(Args&&... args) : data{std::forward<Args>(args)...} {
-    if constexpr (Location == PageLocation::Host) {
-      // Pin this variable to host memory to prevent migration to device.
-      nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_HOST, true);
+    if constexpr (location != PageLocation::Any) {
+      register_nextsilicon_initialization_callback(
+          "PageAlignedData pin in ctor", [this] {
+            if constexpr (location == PageLocation::Host) {
+              // Move this object to system DRAM and pin it there.
+              nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_HOST,
+                                  true /*pin*/);
+            } else if constexpr (location == PageLocation::Device) {
+              // Move this object to accelerator HBM and pin it there.
+              nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_DEVICE,
+                                  true /*pin*/);
+            }
+          });
     }
   }
 
