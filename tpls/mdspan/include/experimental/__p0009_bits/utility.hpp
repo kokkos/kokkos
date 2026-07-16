@@ -214,7 +214,7 @@ MDSPAN_INLINE_FUNCTION constexpr bool in_range(T t) noexcept {
 
 template <typename T >
 MDSPAN_INLINE_FUNCTION constexpr bool
-check_mul_result_is_nonnegative_and_representable(T a, T b) {
+check_mul_result_is_nonnegative_and_representable([[maybe_unused]] T a, [[maybe_unused]] T b) {
 // FIXME_SYCL The code below compiles to old_llvm.umul.with.overflow.i64
 // which isn't defined in device code
 #ifdef __SYCL_DEVICE_ONLY__
