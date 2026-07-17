@@ -567,6 +567,10 @@ TEST(kokkosp, empty_view) {
 #ifdef KOKKOS_ENABLE_HIP
   test_empty_view_allocation_events<Kokkos::HIPSpace>();
 #endif
+
+#ifdef KOKKOS_ENABLE_SYCL
+  test_empty_view_allocation_events<Kokkos::SYCLDeviceUSMSpace>();
+#endif
 }
 
 TEST(kokkosp, sections) {
