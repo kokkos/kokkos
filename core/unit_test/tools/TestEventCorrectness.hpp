@@ -575,6 +575,11 @@ TEST(kokkosp, empty_view) {
 #ifdef KOKKOS_ENABLE_OPENACC
   test_empty_view_allocation_events<Kokkos::Experimental::OpenACCSpace>();
 #endif
+
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  test_empty_view_allocation_events<
+      Kokkos::Experimental::NextSiliconSharedSpace>();
+#endif
 }
 
 TEST(kokkosp, sections) {
