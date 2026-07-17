@@ -105,15 +105,21 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
             m_result_ptr_device_accessible
                 ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
                 : static_cast<sycl::global_ptr<value_type>>(host_result_ptr);
-        cgh.single_task([=]() {
-          const CombinedFunctorReducerType& functor_reducer =
-              functor_reducer_wrapper.get_functor();
-          const ReducerType& reducer = functor_reducer.get_reducer();
-          reducer.init(results_ptr);
-          reducer.final(results_ptr);
-          if (device_accessible_result_ptr)
-            reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
-        });
+        cgh.single_task(
+#ifdef KOKKOS_IMPL_SYCL_VIRTUAL_FUNCTION_SUPPORT
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            [=]() {
+              const CombinedFunctorReducerType& functor_reducer =
+                  functor_reducer_wrapper.get_functor();
+              const ReducerType& reducer = functor_reducer.get_reducer();
+              reducer.init(results_ptr);
+              reducer.final(results_ptr);
+              if (device_accessible_result_ptr)
+                reducer.copy(device_accessible_result_ptr.get(),
+                             results_ptr.get());
+            });
       };
 
 #ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
@@ -175,6 +181,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         // implementation
         cgh.parallel_for(
             sycl::nd_range<1>{n_wgroups * wgroup_size, wgroup_size},
+#ifdef KOKKOS_IMPL_SYCL_VIRTUAL_FUNCTION_SUPPORT
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
             [=](sycl::nd_item<1> item) {
               const int local_id = item.get_local_linear_id();
               const CombinedFunctorReducerType& functor_reducer =

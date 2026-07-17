@@ -998,6 +998,18 @@ if(KOKKOS_ENABLE_SYCL)
     endif()
   endif()
 
+  if(KOKKOS_ENABLE_IMPL_SYCL_VIRTUAL_FUNCTIONS)
+    check_cxx_symbol_exists(
+      SYCL_EXT_ONEAPI_VIRTUAL_FUNCTIONS "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_VIRTUAL_FUNCTIONS
+    )
+    if(NOT KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_VIRTUAL_FUNCTIONS)
+      message(
+        FATAL_ERROR
+          "Kokkos_ENABLE_IMPL_SYCL_VIRTUAL_FUNCTIONS=ON requires an IntelLLVM compiler with SYCL virtual function support"
+      )
+    endif()
+  endif()
+
   check_cxx_symbol_exists(SYCL_EXT_ONEAPI_GRAPH "sycl/sycl.hpp" KOKKOS_IMPL_HAVE_SYCL_EXT_ONEAPI_GRAPH)
   unset(CMAKE_REQUIRED_FLAGS)
 endif()

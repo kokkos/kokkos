@@ -120,14 +120,24 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
             std::min<std::size_t>(launch_range, INT_MAX),
             sycl::ext::oneapi::experimental::auto_range<1>());
         cgh.parallel_for<
-            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
-                                                                         f);
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range,
+#ifdef KOKKOS_IMPL_SYCL_VIRTUAL_FUNCTION_SUPPORT
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            f);
 #else
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{
             policy.begin(), functor, actual_range};
         sycl::range<1> range(std::min<std::size_t>(actual_range, INT_MAX));
         cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
-            range, f);
+            range,
+#ifdef KOKKOS_IMPL_SYCL_VIRTUAL_FUNCTION_SUPPORT
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            f);
 #endif
       } else {
         // Use the chunk size as workgroup size. We need to make sure that the
@@ -142,8 +152,13 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         sycl::nd_range<1> range(std::min<std::size_t>(launch_range, INT_MAX),
                                 wgroup_size);
         cgh.parallel_for<
-            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
-                                                                         f);
+            FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(
+            range,
+#ifdef KOKKOS_IMPL_SYCL_VIRTUAL_FUNCTION_SUPPORT
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            f);
       }
     };
 

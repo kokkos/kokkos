@@ -45,6 +45,9 @@ endif()
 kokkos_enable_option(
   SYCL_RELOCATABLE_DEVICE_CODE ${SYCL_RDC_DEFAULT} "Whether to enable relocatable device code (RDC) for SYCL"
 )
+kokkos_enable_option(
+  IMPL_SYCL_VIRTUAL_FUNCTIONS OFF "Whether to allow virtual function calls in SYCL device code"
+)
 kokkos_enable_option(IMPL_SYCL_OUT_OF_ORDER_QUEUES OFF "Whether to make Kokkos use out-of-order queues internally")
 kokkos_enable_option(TESTS OFF "Whether to build the unit tests")
 kokkos_enable_option(BENCHMARKS OFF "Whether to build the benchmarks")
@@ -212,6 +215,7 @@ check_device_specific_options(
 check_device_specific_options(
   DEVICE HIP OPTIONS HIP_RELOCATABLE_DEVICE_CODE HIP_MULTIPLE_KERNEL_INSTANTIATIONS IMPL_HIP_MALLOC_ASYNC
 )
+check_device_specific_options(DEVICE SYCL OPTIONS IMPL_SYCL_VIRTUAL_FUNCTIONS)
 check_device_specific_options(DEVICE HPX OPTIONS IMPL_HPX_ASYNC_DISPATCH)
 check_device_specific_options(DEVICE OPENACC OPTIONS OPENACC_FORCE_HOST_AS_DEVICE)
 
