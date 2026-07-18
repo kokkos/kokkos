@@ -55,6 +55,8 @@ HIPManagedSpace::HIPManagedSpace()
 HIPManagedSpace::HIPManagedSpace(int device_id, hipStream_t stream)
     : m_device(device_id), m_stream(stream) {}
 
+// Allocations unrelated to a View do not provide arg_logical_size and report
+// arg_alloc_size. View-related allocations provide and report arg_logical_size.
 void* HIPSpace::allocate(const HIP& exec_space,
                          const size_t arg_alloc_size) const {
   return allocate(exec_space, "[unlabeled]", arg_alloc_size);

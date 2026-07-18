@@ -124,6 +124,8 @@ size_t memory_threshold_g = 40000;  // 40 kB
 //==============================================================================
 // <editor-fold desc="allocate()"> {{{1
 
+// Allocations unrelated to a View do not provide arg_logical_size and report
+// arg_alloc_size. View-related allocations provide and report arg_logical_size.
 void *CudaSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }
@@ -345,7 +347,8 @@ void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
 }
 void CudaSpace::impl_deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
-    const size_t arg_alloc_size, const size_t arg_reported_size,
+    [[maybe_unused]] const size_t arg_alloc_size,
+    const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,

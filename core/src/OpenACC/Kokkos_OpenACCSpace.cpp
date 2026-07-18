@@ -11,6 +11,8 @@
 
 #include <openacc.h>
 
+// Allocations unrelated to a View do not provide arg_logical_size and report
+// arg_alloc_size. View-related allocations provide and report arg_logical_size.
 void *Kokkos::Experimental::OpenACCSpace::allocate(
     const Kokkos::Experimental::OpenACC &exec_space,
     const size_t arg_alloc_size) const {

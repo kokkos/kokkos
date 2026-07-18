@@ -64,6 +64,8 @@ static_assert(pick_desired_page_size(120'000'000'000) == 16ULL << 30);
 
 }  //  namespace
 
+// Allocations unrelated to a View do not provide arg_logical_size and report
+// arg_alloc_size. View-related allocations provide and report arg_logical_size.
 void *NextSiliconSharedSpace::allocate(const size_t arg_alloc_size) const {
   return allocate("[unlabeled]", arg_alloc_size);
 }

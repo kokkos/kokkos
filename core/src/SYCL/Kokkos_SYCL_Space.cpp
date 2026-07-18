@@ -92,6 +92,8 @@ void* allocate_sycl(const char* arg_label, const size_t arg_alloc_size,
   return hostPtr;
 }
 
+// Allocations unrelated to a View do not provide arg_logical_size and report
+// arg_alloc_size. View-related allocations provide and report arg_logical_size.
 void* SYCLDeviceUSMSpace::allocate(const Kokkos::SYCL& exec_space,
                                    const size_t arg_alloc_size) const {
   return allocate(exec_space, "[unlabeled]", arg_alloc_size);
