@@ -12,17 +12,32 @@
 #endif
 #endif
 
+// SIMD_IMPL_NATIVE_OP/FN
 #define KOKKOS_SIMD_IMPL_NATIVE_FN(RET_TYPE, FN, ARG_TYPE, ...) \
   static RET_TYPE FN(ARG_TYPE v) { return __VA_ARGS__; }
 
 #define KOKKOS_SIMD_IMPL_NATIVE_FN_2ARGS(RET_TYPE, FN, ARG_TYPE, ...) \
   static RET_TYPE FN(ARG_TYPE lhs, ARG_TYPE rhs) { return __VA_ARGS__; }
 
+#define KOKKOS_SIMD_IMPL_NATIVE_FN_SHIFT_SCALAR(RET_TYPE, FN, ARG_TYPE, ...) \
+  static RET_TYPE FN(ARG_TYPE lhs, [[maybe_unused]] simd_size_t rhs) { return __VA_ARGS__; }
+
 #define KOKKOS_SIMD_IMPL_NATIVE_FN_3ARGS(RET_TYPE, FN, ARG_TYPE, ...) \
   static RET_TYPE FN(ARG_TYPE a, ARG_TYPE b, ARG_TYPE c) { return __VA_ARGS__; }
 
 #define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, TAG, ...) \
   static RET_TYPE FN(simd_vector_t<FROM, ABI, TAG> v) { return __VA_ARGS__; }
+
+  /*
+#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_FN(RET_TYPE, FN, ABI, TAG) \
+  static RET_TYPE FN(simd_vector_t<FROM, ABI, TAG> v)
+
+#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DEFN_FN(RET_TYPE, FN, ABI, TAG, ...) \
+  static RET_TYPE FN(simd_vector_t<FROM, ABI, TAG> v) { \
+
+
+  } \
+   */
 
 #define KOKKOS_SIMD_IMPL_NATIVE_LOAD(RET_TYPE, FN, SRC_TYPE, ...) \
   static RET_TYPE FN(SRC_TYPE ptr, simd_flags<Flags...> = {}) {  \
@@ -70,8 +85,22 @@
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, simd_host_tag, __VA_ARGS__)
 
 #define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(RET_TYPE, FN, FROM, ABI, ...) \
+  template <typename T, typename Abi> \
   KOKKOS_FORCEINLINE_FUNCTION \
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, simd_device_tag, __VA_ARGS__)
+
+/*
+#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_HOST(RET_TYPE, FN, FROM, ABI, ...) \
+  template <typename U> \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_FN(RET_TYPE, FN, FROM, ABI, simd_host_tag, __VA_ARGS__)
+
+#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_DEVICE(RET_TYPE, FN, FROM, ABI, ...) \
+  template <typename T, typename Abi> \
+  KOKKOS_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, simd_device_tag, __VA_ARGS__)
+*/
+
 
 #define KOKKOS_SIMD_IMPL_NATIVE_LOAD_HOST(RET_TYPE, FN, SRC_TYPE, ...) \
   template <typename... Flags> \
@@ -133,6 +162,14 @@
 #define KOKKOS_SIMD_IMPL_NATIVE_UNARY_MATH_OP_DEVICE(RET_TYPE, FN, ...) \
   KOKKOS_SIMD_IMPL_NATIVE_UNARY_OP_DEVICE(RET_TYPE, FN, __VA_ARGS__)
 
+#define KOKKOS_SIMD_IMPL_NATIVE_SHIFT_SCALAR_HOST(RET_TYPE, FN, ...) \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_FN_SHIFT_SCALAR(RET_TYPE, FN, vector_type, __VA_ARGS__)
+
+#define KOKKOS_SIMD_IMPL_NATIVE_SHIFT_SCALAR_DEVICE(RET_TYPE, FN, ...) \
+  KOKKOS_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_FN_SHIFT_SCALAR(RET_TYPE, FN, [[maybe_unused]] vector_type, __VA_ARGS__)
+
 #define KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(RET_TYPE, FN, ...) \
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
   KOKKOS_SIMD_IMPL_NATIVE_FN_2ARGS(RET_TYPE, FN, vector_type, __VA_ARGS__)
@@ -161,11 +198,12 @@
     using type = IMPL_TYPE;                                                 \
   };
 
-#define KOKKOS_SIMD_IMPL_DERIVED() \
+// SIMD_BASE_IMPL
+#define KOKKOS_SIMD_BASE_IMPL_DERIVED() \
   KOKKOS_FORCEINLINE_FUNCTION      \
   const Derived& derived() const { return static_cast<const Derived&>(*this); }
 
-#define KOKKOS_SIMD_IMPL_SUBSCRIPT_OP()                                \
+#define KOKKOS_SIMD_BASE_IMPL_SUBSCRIPT_OP()                                \
   KOKKOS_FORCEINLINE_FUNCTION                                          \
   constexpr auto operator[](simd_size_t lane) const                    \
     requires requires { Derived::impl_ops::extract(derived(), lane); } \
@@ -173,7 +211,7 @@
     return Derived::impl_ops::extract(derived(), lane);                \
   }
 
-#define KOKKOS_SIMD_IMPL_UNARY_OP(OP, IMPL_FN)                   \
+#define KOKKOS_SIMD_BASE_IMPL_UNARY_OP(OP, IMPL_FN)                   \
   KOKKOS_FORCEINLINE_FUNCTION                                    \
   constexpr Derived operator OP() const noexcept                 \
     requires requires { Derived::impl_ops::IMPL_FN(derived()); } \
@@ -181,7 +219,7 @@
     return Derived(Derived::impl_ops::IMPL_FN(derived()));       \
   }
 
-#define KOKKOS_SIMD_IMPL_BINARY_OP(OP, IMPL_FN)                     \
+#define KOKKOS_SIMD_BASE_IMPL_BINARY_OP(OP, IMPL_FN)                     \
   KOKKOS_FORCEINLINE_FUNCTION                                       \
   constexpr friend Derived operator OP(Derived const& lhs,          \
                                        Derived const& rhs) noexcept \
@@ -190,7 +228,7 @@
     return Derived(Derived::impl_ops::IMPL_FN(lhs, rhs));           \
   }
 
-#define KOKKOS_SIMD_IMPL_COMPOUND_OP(OP, IMPL_FN)                       \
+#define KOKKOS_SIMD_BASE_IMPL_COMPOUND_OP(OP, IMPL_FN)                       \
   KOKKOS_FORCEINLINE_FUNCTION                                           \
   constexpr friend Derived& operator OP(Derived& lhs,                   \
                                         Derived const& rhs) noexcept    \
@@ -200,10 +238,10 @@
     return lhs;                                                         \
   }
 
-#define KOKKOS_SIMD_IMPL_MASK_COMPARISON_OP(OP, IMPL_FN) \
-  KOKKOS_SIMD_IMPL_BINARY_OP(OP, IMPL_FN)
+#define KOKKOS_SIMD_BASE_IMPL_MASK_COMPARISON_OP(OP, IMPL_FN) \
+  KOKKOS_SIMD_BASE_IMPL_BINARY_OP(OP, IMPL_FN)
 
-#define KOKKOS_SIMD_IMPL_COMPARISON_OP(OP, IMPL_FN)                           \
+#define KOKKOS_SIMD_BASE_IMPL_COMPARISON_OP(OP, IMPL_FN)                           \
   KOKKOS_FORCEINLINE_FUNCTION                                                 \
   constexpr friend auto operator OP(Derived const& lhs,                       \
                                     Derived const& rhs) noexcept              \
@@ -212,7 +250,7 @@
     return typename Derived::mask_type(Derived::impl_ops::IMPL_FN(lhs, rhs)); \
   }
 
-#define KOKKOS_SIMD_IMPL_SHIFT_OP(OP, IMPL_FN, RHS_TYPE)        \
+#define KOKKOS_SIMD_BASE_IMPL_SHIFT_OP(OP, IMPL_FN, RHS_TYPE)        \
   KOKKOS_FORCEINLINE_FUNCTION                                   \
   constexpr friend Derived operator OP(Derived const& lhs,      \
                                        RHS_TYPE rhs) noexcept   \
@@ -221,7 +259,7 @@
     return Derived(Derived::impl_ops::IMPL_FN(lhs, rhs));       \
   }
 
-#define KOKKOS_SIMD_IMPL_COMPOUND_SHIFT_OP(OP, IMPL_FN, RHS_TYPE)            \
+#define KOKKOS_SIMD_BASE_IMPL_COMPOUND_SHIFT_OP(OP, IMPL_FN, RHS_TYPE)            \
   KOKKOS_FORCEINLINE_FUNCTION                                                \
   constexpr friend Derived& operator OP(Derived& lhs, RHS_TYPE rhs) noexcept \
     requires requires { Derived::impl_ops::IMPL_FN(lhs.m_value, rhs); }      \
@@ -229,6 +267,14 @@
     Derived::impl_ops::IMPL_FN(lhs.m_value, rhs);                            \
     return lhs;                                                              \
   }
+
+
+// TODO
+// will need stuff like KOKKOS_SIMD_DEFINE_BINARY_FN... or MEMORY_PERMUTE... etc for free functions
+
+// gather scatter
+// these should eventually be impl native
+// BUT can't be removed yet (used in other simd backend as well)
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(PREFIX, DATA_TYPE,    \
                                                     ABI_TYPE, EXPR)       \
