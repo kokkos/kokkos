@@ -70,6 +70,7 @@ struct simd_mask_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_device_ta
   KOKKOS_SIMD_IMPL_NATIVE_GEN_FN_DEVICE(vector_type, gen, vector_type{})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -96,6 +97,7 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_device_tag
   KOKKOS_SIMD_IMPL_NATIVE_GEN_FN_DEVICE(vector_type, gen, vector_type{})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -122,6 +124,7 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_device_tag
   KOKKOS_SIMD_IMPL_NATIVE_GEN_FN_DEVICE(vector_type, gen, vector_type{})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -148,6 +151,7 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>, simd_dev
   KOKKOS_SIMD_IMPL_NATIVE_GEN_FN_DEVICE(vector_type, gen, vector_type{})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -174,6 +178,7 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>, simd_dev
   KOKKOS_SIMD_IMPL_NATIVE_GEN_FN_DEVICE(vector_type, gen, vector_type{})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -200,6 +205,7 @@ struct simd_mask_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>, simd_dev
   KOKKOS_SIMD_IMPL_NATIVE_GEN_FN_DEVICE(vector_type, gen, vector_type{})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -226,6 +232,7 @@ struct simd_mask_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_de
   KOKKOS_SIMD_IMPL_NATIVE_GEN_FN_DEVICE(vector_type, gen, vector_type{})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -241,6 +248,14 @@ struct simd_mask_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_de
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_DEVICE(vector_type, eq, vector_type{})
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_DEVICE(vector_type, neq, vector_type{})
 };
+
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_mask_native_ops, double, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_mask_native_ops, float, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_mask_native_ops, float, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_mask_native_ops, std::int32_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_mask_native_ops, std::int32_t, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_mask_native_ops, std::int64_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_mask_native_ops, std::uint64_t, simd_abi::avx2_fixed_size<4>)
 
 // host
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
@@ -260,7 +275,7 @@ struct simd_mask_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_host_tag>
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, float, simd_abi::avx2_fixed_size<4>, _mm256_cvtps_pd(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm256_cvtepi32_pd(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int64_t, simd_abi::avx2_fixed_size<4>, _mm256_castsi256_pd(v))
-  // KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_HOST(vector_type, convert_from, simd_abi::avx2_fixed_size<4>)
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, return (_mm256_movemask_pd(v) & (1 << i)) != 0)
 
@@ -291,6 +306,7 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_host_tag> 
                                                                 -std::int32_t(v(std::integral_constant<simd_size_t, 3>())))))
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm_cvtepi32_ps(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, return (_mm_movemask_ps(v) & (1 << i)) != 0)
 
@@ -325,6 +341,7 @@ struct simd_mask_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_host_tag> 
                                                           -std::int32_t(v(std::integral_constant<simd_size_t, 7>())))))
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<8>, _mm256_castsi256_ps(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, return (_mm256_movemask_ps(v) & (1 << i)) != 0)
 
@@ -355,6 +372,7 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>, simd_hos
                                                           -std::int32_t(v(std::integral_constant<simd_size_t, 3>()))))
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, float, simd_abi::avx2_fixed_size<4>, _mm_castps_si128(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, return (_mm_movemask_ps(_mm_castsi128_ps(v)) & (1 << i)) != 0)
 
@@ -390,6 +408,7 @@ struct simd_mask_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>, simd_hos
                                                           -std::int32_t(v(std::integral_constant<simd_size_t, 7>()))))
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, float, simd_abi::avx2_fixed_size<8>, _mm256_castps_si256(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, return (_mm256_movemask_ps(_mm256_castsi256_ps(v)) & (1 << i)) != 0)
 
@@ -422,6 +441,7 @@ struct simd_mask_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>, simd_hos
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm256_cvtepi32_epi64(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, double, simd_abi::avx2_fixed_size<4>, _mm256_castpd_si256(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::uint64_t, simd_abi::avx2_fixed_size<4>, v)
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, return (_mm256_movemask_pd(_mm256_castsi256_pd(v)) & (1 << i)) != 0)
 
@@ -454,6 +474,7 @@ struct simd_mask_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_ho
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm256_cvtepi32_epi64(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, double, simd_abi::avx2_fixed_size<4>, _mm256_castpd_si256(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int64_t, simd_abi::avx2_fixed_size<4>, v)
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, return (_mm256_movemask_pd(_mm256_castsi256_pd(v)) & (1 << i)) != 0)
 
@@ -469,6 +490,15 @@ struct simd_mask_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_ho
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(value_type, eq, (_mm256_movemask_pd(_mm256_castsi256_pd(lhs)) == _mm256_movemask_pd(_mm256_castsi256_pd(rhs))))
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(value_type, neq, !eq(lhs, rhs))
 };
+
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_mask_native_ops, double, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_mask_native_ops, float, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_mask_native_ops, float, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_mask_native_ops, std::int32_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_mask_native_ops, std::int32_t, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_mask_native_ops, std::int64_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_mask_native_ops, std::uint64_t, simd_abi::avx2_fixed_size<4>)
+
 #endif
 
 template <typename T, typename Abi, typename Tag>
@@ -491,6 +521,7 @@ struct simd_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_device_tag> {
   KOKKOS_SIMD_IMPL_NATIVE_MASKED_STORE_DEVICE(masked_store, value_type*, vector_type, vector_type, {})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -542,6 +573,7 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_device_tag> {
   KOKKOS_SIMD_IMPL_NATIVE_MASKED_STORE_DEVICE(masked_store, value_type*, vector_type, vector_type, {})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -593,6 +625,7 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_device_tag> {
   KOKKOS_SIMD_IMPL_NATIVE_MASKED_STORE_DEVICE(masked_store, value_type*, vector_type, vector_type, {})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -644,6 +677,7 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>, simd_device_t
   KOKKOS_SIMD_IMPL_NATIVE_MASKED_STORE_DEVICE(masked_store, value_type*, vector_type, vector_type, {})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -698,6 +732,7 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>, simd_device_t
   KOKKOS_SIMD_IMPL_NATIVE_MASKED_STORE_DEVICE(masked_store, value_type*, vector_type, vector_type, {})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -752,6 +787,7 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>, simd_device_t
   KOKKOS_SIMD_IMPL_NATIVE_MASKED_STORE_DEVICE(masked_store, value_type*, vector_type, vector_type, {})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -806,6 +842,7 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_device_
   KOKKOS_SIMD_IMPL_NATIVE_MASKED_STORE_DEVICE(masked_store, value_type*, vector_type, vector_type, {})
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_DEVICE(vector_type, convert_from, T, Abi, vector_type{})
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_DEVICE(value_type, extract, return v[i])
 
@@ -844,6 +881,14 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_device_
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_MATH_OP_DEVICE(vector_type, min, vector_type{})
   KOKKOS_SIMD_IMPL_NATIVE_TERNARY_MATH_OP_DEVICE(vector_type, condition, vector_type{})
 };
+
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_native_ops, double, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_native_ops, float, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_native_ops, float, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_native_ops, std::int32_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_native_ops, std::int32_t, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_native_ops, std::int64_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(simd_native_ops, std::uint64_t, simd_abi::avx2_fixed_size<4>)
 
 // host
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
@@ -884,7 +929,7 @@ struct simd_native_ops<double, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, float, simd_abi::avx2_fixed_size<4>, _mm256_cvtps_pd(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm256_cvtepi32_pd(v))
-
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract, constexpr auto size = sizeof(vector_type) / sizeof(value_type);
                                                                                   value_type tmp[size];
@@ -980,6 +1025,7 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<4>, simd_host_tag> {
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, double, simd_abi::avx2_fixed_size<4>, _mm256_cvtpd_ps(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm_cvtepi32_ps(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract,
     auto index = _mm_cvtsi32_si128(i);
@@ -1071,6 +1117,7 @@ struct simd_native_ops<float, simd_abi::avx2_fixed_size<8>, simd_host_tag> {
   )
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<8>, _mm256_cvtepi32_ps(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_SIMD_IMPL_NATIVE_EXTRACT_FN_HOST(value_type, extract,
     auto index = _mm256_set1_epi32(i);
@@ -1159,6 +1206,7 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<4>, simd_host_tag
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, float, simd_abi::avx2_fixed_size<4>, _mm_cvtps_epi32(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, double, simd_abi::avx2_fixed_size<4>, _mm256_cvtpd_epi32(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   static value_type extract(vector_type v, simd_size_t i) {
@@ -1259,6 +1307,7 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>, simd_host_tag
   )
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, float, simd_abi::avx2_fixed_size<8>, _mm256_cvtps_epi32(v))
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<8>)
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   static value_type extract(vector_type v, simd_size_t i) {
@@ -1354,6 +1403,7 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>, simd_host_tag
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm256_cvtepi32_epi64(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::uint64_t, simd_abi::avx2_fixed_size<4>, v)
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   static value_type extract(vector_type v, simd_size_t i) {
@@ -1396,7 +1446,7 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>, simd_host_tag
   KOKKOS_SIMD_IMPL_NATIVE_SHIFT_SCALAR_HOST(vector_type, sra, gen([&](simd_size_t i) { return extract(lhs, i) >> rhs; }))
 
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(vector_type, eq, _mm256_cmpeq_epi64(lhs, rhs))
-  KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(vector_type, neq, neg(eq(lhs, rhs)))
+  KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(vector_type, neq, bnot(eq(lhs, rhs)))
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(vector_type, gt, _mm256_cmpgt_epi64(lhs, rhs))
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(vector_type, ge, bor(gt(lhs, rhs), eq(lhs, rhs)))
   KOKKOS_SIMD_IMPL_NATIVE_BINARY_OP_HOST(vector_type, lt, gt(rhs, lhs))
@@ -1465,6 +1515,7 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_host_ta
 
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int32_t, simd_abi::avx2_fixed_size<4>, _mm256_cvtepi32_epi64(v))
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN_HOST(vector_type, convert_from, std::int64_t, simd_abi::avx2_fixed_size<4>, v)
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(simd_abi::avx2_fixed_size<4>)
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   static value_type extract(vector_type v, simd_size_t i) {
@@ -1540,6 +1591,14 @@ struct simd_native_ops<std::uint64_t, simd_abi::avx2_fixed_size<4>, simd_host_ta
                                                                                       _mm256_castsi256_pd(static_cast<vector_type>(b)),
                                                                                       _mm256_castsi256_pd(static_cast<vector_type>(a)))))
 };
+
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_native_ops, double, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_native_ops, float, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_native_ops, float, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_native_ops, std::int32_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_native_ops, std::int32_t, simd_abi::avx2_fixed_size<8>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_native_ops, std::int64_t, simd_abi::avx2_fixed_size<4>)
+KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(simd_native_ops, std::uint64_t, simd_abi::avx2_fixed_size<4>)
 
 #endif
 

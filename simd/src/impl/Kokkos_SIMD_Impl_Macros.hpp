@@ -28,16 +28,9 @@
 #define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, TAG, ...) \
   static RET_TYPE FN(simd_vector_t<FROM, ABI, TAG> v) { return __VA_ARGS__; }
 
-  /*
-#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_FN(RET_TYPE, FN, ABI, TAG) \
-  static RET_TYPE FN(simd_vector_t<FROM, ABI, TAG> v)
-
-#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DEFN_FN(RET_TYPE, FN, ABI, TAG, ...) \
-  static RET_TYPE FN(simd_vector_t<FROM, ABI, TAG> v) { \
-
-
-  } \
-   */
+#define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_FN(ABI, TAG) \
+  static vector_type convert_from(                                             \
+      simd_vector_t<U, ABI, TAG> v);
 
 #define KOKKOS_SIMD_IMPL_NATIVE_LOAD(RET_TYPE, FN, SRC_TYPE, ...) \
   static RET_TYPE FN(SRC_TYPE ptr, simd_flags<Flags...> = {}) {  \
@@ -89,18 +82,41 @@
   KOKKOS_FORCEINLINE_FUNCTION \
   KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, simd_device_tag, __VA_ARGS__)
 
-/*
-#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_HOST(RET_TYPE, FN, FROM, ABI, ...) \
-  template <typename U> \
-  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
-  KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_FN(RET_TYPE, FN, FROM, ABI, simd_host_tag, __VA_ARGS__)
+#define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_HOST(ABI)                 \
+  template <typename U>                                                        \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                                        \
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_FN(ABI, simd_host_tag)
 
-#define KOKKOS_SIMD_IMPL_NATIVE_FALLLBACK_CONVERSION_DECL_DEVICE(RET_TYPE, FN, FROM, ABI, ...) \
-  template <typename T, typename Abi> \
-  KOKKOS_FORCEINLINE_FUNCTION \
-  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, simd_device_tag, __VA_ARGS__)
-*/
+#define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_DEVICE(ABI)                 \
+  template <typename U>                                                        \
+  KOKKOS_FORCEINLINE_FUNCTION                                                  \
+  KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DECL_FN(ABI, simd_device_tag)
 
+#define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_HOST(IMPL_OPS, TO, ABI)         \
+  template <typename From>                                                     \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION                                        \
+  auto IMPL_OPS<TO, ABI, simd_host_tag>::convert_from(   \
+      simd_vector_t<From, ABI, simd_host_tag> v)                          \
+      -> typename IMPL_OPS<TO, ABI, simd_host_tag>::vector_type \
+  {                                                                            \
+    using from_native_ops = IMPL_OPS<From, ABI, simd_host_tag>;     \
+    return gen([&](simd_size_t i) {                                            \
+      return static_cast<TO>(from_native_ops::extract(v, i));             \
+    });                                                                        \
+  }
+
+#define KOKKOS_SIMD_IMPL_NATIVE_CONVERSION_FALLBACK_DEFN_DEVICE(IMPL_OPS, TO, ABI)         \
+  template <typename From>                                                     \
+  KOKKOS_FORCEINLINE_FUNCTION                                                  \
+  auto IMPL_OPS<TO, ABI, simd_device_tag>::convert_from(   \
+      simd_vector_t<From, ABI, simd_device_tag> v)                          \
+      -> typename IMPL_OPS<TO, ABI, simd_device_tag>::vector_type \
+  {                                                                            \
+    using from_native_ops = IMPL_OPS<From, ABI, simd_device_tag>;     \
+    return gen(KOKKOS_LAMBDA(simd_size_t i) {                                            \
+      return static_cast<TO>(from_native_ops::extract(v, i));             \
+    });                                                                        \
+  }
 
 #define KOKKOS_SIMD_IMPL_NATIVE_LOAD_HOST(RET_TYPE, FN, SRC_TYPE, ...) \
   template <typename... Flags> \

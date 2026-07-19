@@ -447,14 +447,16 @@ class basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>
 // TODO: this could be converted to use initializer_lsit + helper function if compressed to be used for all types (as opposed to just double)
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask<double, simd_abi::avx2_fixed_size<4>>::
-basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd_mask([&](Impl::simd_size_t i) {
-          return static_cast<double>(other[i]);
-        });
-  }
+basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd_mask([&](Impl::simd_size_t i) {
+  //         return static_cast<double>(other[i]);
+  //       });
+  // }
 }
 
 // TODO
@@ -465,14 +467,15 @@ basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) n
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask<float, simd_abi::avx2_fixed_size<4>>::
-basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd_mask([&](Impl::simd_size_t i) {
-          return static_cast<float>(other[i]);
-        });
-  }
+basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd_mask([&](Impl::simd_size_t i) {
+  //         return static_cast<float>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -482,14 +485,15 @@ basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) n
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask<float, simd_abi::avx2_fixed_size<8>>::
-basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd_mask([&](Impl::simd_size_t i) {
-          return static_cast<float>(other[i]);
-        });
-  }
+basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd_mask([&](Impl::simd_size_t i) {
+  //         return static_cast<float>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -499,14 +503,15 @@ basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<8>> const& other) n
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<4>>::
-basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd_mask([&](Impl::simd_size_t i) {
-          return static_cast<float>(other[i]);
-        });
-  }
+basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd_mask([&](Impl::simd_size_t i) {
+  //         return static_cast<float>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -516,14 +521,15 @@ basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) n
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask<std::int32_t, simd_abi::avx2_fixed_size<8>>::
-basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd_mask([&](Impl::simd_size_t i) {
-          return static_cast<float>(other[i]);
-        });
-  }
+basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd_mask([&](Impl::simd_size_t i) {
+  //         return static_cast<float>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -543,14 +549,15 @@ basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<8>> const& other) n
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask<std::int64_t, simd_abi::avx2_fixed_size<4>>::
-basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd_mask([&](Impl::simd_size_t i) {
-          return static_cast<float>(other[i]);
-        });
-  }
+basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd_mask([&](Impl::simd_size_t i) {
+  //         return static_cast<float>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -570,14 +577,15 @@ basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) n
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd_mask<std::uint64_t, simd_abi::avx2_fixed_size<4>>::
-basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd_mask([&](Impl::simd_size_t i) {
-          return static_cast<float>(other[i]);
-        });
-  }
+basic_simd_mask(basic_simd_mask<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd_mask([&](Impl::simd_size_t i) {
+  //         return static_cast<float>(other[i]);
+  //       });
+  // }
 }
 
 template <>
@@ -2529,14 +2537,15 @@ basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>> condition(
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd<double, simd_abi::avx2_fixed_size<4>>::
-basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd([&](Impl::simd_size_t i) {
-          return static_cast<value_type>(other[i]);
-        });
-  }
+basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd([&](Impl::simd_size_t i) {
+  //         return static_cast<value_type>(other[i]);
+  //       });
+  // }
 }
 
 // TODO
@@ -2552,14 +2561,15 @@ basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd<float, simd_abi::avx2_fixed_size<4>>::
-basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd([&](Impl::simd_size_t i) {
-          return static_cast<value_type>(other[i]);
-        });
-  }
+basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd([&](Impl::simd_size_t i) {
+  //         return static_cast<value_type>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -2569,14 +2579,15 @@ basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd<float, simd_abi::avx2_fixed_size<8>>::
-basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd([&](Impl::simd_size_t i) {
-          return static_cast<value_type>(other[i]);
-        });
-  }
+basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd([&](Impl::simd_size_t i) {
+  //         return static_cast<value_type>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -2591,14 +2602,15 @@ basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept {
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>::
-basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd([&](Impl::simd_size_t i) {
-          return static_cast<value_type>(other[i]);
-        });
-  }
+basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd([&](Impl::simd_size_t i) {
+  //         return static_cast<value_type>(other[i]);
+  //       });
+  // }
 }
 
 
@@ -2609,14 +2621,15 @@ basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>::
-basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd([&](Impl::simd_size_t i) {
-          return static_cast<value_type>(other[i]);
-        });
-  }
+basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd([&](Impl::simd_size_t i) {
+  //         return static_cast<value_type>(other[i]);
+  //       });
+  // }
 }
 
 
@@ -2632,14 +2645,15 @@ basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<8>> const& other) noexcept {
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>::
-basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd([&](Impl::simd_size_t i) {
-          return static_cast<value_type>(other[i]);
-        });
-  }
+basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd([&](Impl::simd_size_t i) {
+  //         return static_cast<value_type>(other[i]);
+  //       });
+  // }
 }
 
 // KOKKOS_FORCEINLINE_FUNCTION
@@ -2654,14 +2668,15 @@ basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
 
 template <typename U>
 KOKKOS_FORCEINLINE_FUNCTION basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>::
-basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
-  if constexpr (requires { impl_ops::convert_from(other); }) {
-    m_value = impl_ops::convert_from(other);
-  } else {
-    m_value = basic_simd([&](Impl::simd_size_t i) {
-          return static_cast<value_type>(other[i]);
-        });
-  }
+basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept
+  : m_value(impl_ops::convert_from<U>(other)) {
+  // if constexpr (requires { impl_ops::convert_from(other); }) {
+  //   m_value = impl_ops::convert_from(other);
+  // } else {
+  //   m_value = basic_simd([&](Impl::simd_size_t i) {
+  //         return static_cast<value_type>(other[i]);
+  //       });
+  // }
 }
 
 
@@ -2694,28 +2709,26 @@ basic_simd(basic_simd<U, simd_abi::avx2_fixed_size<4>> const& other) noexcept {
   //   using impl_ops = Impl::simd_native_ops<double, simd_abi::avx2_fixed_size<4>, Impl::simd_backend_t>;
   //   // using simd_type = basic_simd<double, Experimental::simd_abi::avx2_fixed_size<4>>;
 
-  //   return V(impl_ops::unchecked_gather_from(in, indices, flag));
+  //   return V(impl_ops::unchecked_gather_from(in, static_cast<I::impl_vector_type>(indices), flag));
   // }
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM(
     double, simd_abi::avx2_fixed_size<4>, {
-      // __m128i idx = static_cast<__m128i>(
-      //     basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>{indices});
-      // return V(_mm256_i32gather_pd(Impl::Ranges::data(in), idx, 8));
-      return V{};
+      __m128i idx = static_cast<__m128i>(
+          basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>{indices});
+      return V(_mm256_i32gather_pd(Impl::Ranges::data(in), idx, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_UNCHECKED_GATHER_FROM_WITH_MASK(
     double, simd_abi::avx2_fixed_size<4>, {
-      // using value_type = typename V::value_type;
-      // using abi_type   = typename V::abi_type;
-      // __m128i idx =
-      //     static_cast<__m128i>(basic_simd<std::int32_t, abi_type>{indices});
-      // __m256d mmask =
-      //     static_cast<__m256d>(basic_simd_mask<double, abi_type>{mask});
-      // return V(_mm256_mask_i32gather_pd(_mm256_set1_pd(value_type{}),
-      //                                   Impl::Ranges::data(in), idx, mmask, 8));
-      return V{};
+      using value_type = typename V::value_type;
+      using abi_type   = typename V::abi_type;
+      __m128i idx =
+          static_cast<__m128i>(basic_simd<std::int32_t, abi_type>{indices});
+      __m256d mmask =
+          static_cast<__m256d>(basic_simd_mask<double, abi_type>{mask});
+      return V(_mm256_mask_i32gather_pd(_mm256_set1_pd(value_type{}),
+                                        Impl::Ranges::data(in), idx, mmask, 8));
     })
 
 KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_PARTIAL_GATHER_FROM(
