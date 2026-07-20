@@ -76,78 +76,81 @@ auto compute_device_launch_params(
   array_index_type grid_1 = 1;
   array_index_type grid_2 = 1;
 
+  auto tile     = policy.tile();
+  auto tile_end = policy.tile_end();
+
   if constexpr (Policy::rank == 1) {
-    block.x = policy.m_tile[0];
-    grid_0  = policy.m_tile_end[0];
+    block.x = tile[0];
+    grid_0  = tile_end[0];
   } else if constexpr (Policy::inner_direction == Iterate::Left) {
     if constexpr (Policy::rank == 2) {
-      block.x = policy.m_tile[0];
-      block.y = policy.m_tile[1];
-      grid_0  = policy.m_tile_end[0];
-      grid_1  = policy.m_tile_end[1];
+      block.x = tile[0];
+      block.y = tile[1];
+      grid_0  = tile_end[0];
+      grid_1  = tile_end[1];
     } else if constexpr (Policy::rank == 3) {
-      block.x = policy.m_tile[0];
-      block.y = policy.m_tile[1];
-      block.z = policy.m_tile[2];
-      grid_0  = policy.m_tile_end[0];
-      grid_1  = policy.m_tile_end[1];
-      grid_2  = policy.m_tile_end[2];
+      block.x = tile[0];
+      block.y = tile[1];
+      block.z = tile[2];
+      grid_0  = tile_end[0];
+      grid_1  = tile_end[1];
+      grid_2  = tile_end[2];
     } else if constexpr (Policy::rank == 4) {
-      block.x = policy.m_tile[0] * policy.m_tile[1];
-      block.y = policy.m_tile[2];
-      block.z = policy.m_tile[3];
-      grid_0  = policy.m_tile_end[0] * policy.m_tile_end[1];
-      grid_1  = policy.m_tile_end[2];
-      grid_2  = policy.m_tile_end[3];
+      block.x = tile[0] * tile[1];
+      block.y = tile[2];
+      block.z = tile[3];
+      grid_0  = tile_end[0] * tile_end[1];
+      grid_1  = tile_end[2];
+      grid_2  = tile_end[3];
     } else if constexpr (Policy::rank == 5) {
-      block.x = policy.m_tile[0] * policy.m_tile[1];
-      block.y = policy.m_tile[2] * policy.m_tile[3];
-      block.z = policy.m_tile[4];
-      grid_0  = policy.m_tile_end[0] * policy.m_tile_end[1];
-      grid_1  = policy.m_tile_end[2] * policy.m_tile_end[3];
-      grid_2  = policy.m_tile_end[4];
+      block.x = tile[0] * tile[1];
+      block.y = tile[2] * tile[3];
+      block.z = tile[4];
+      grid_0  = tile_end[0] * tile_end[1];
+      grid_1  = tile_end[2] * tile_end[3];
+      grid_2  = tile_end[4];
     } else if constexpr (Policy::rank == 6) {
-      block.x = policy.m_tile[0] * policy.m_tile[1];
-      block.y = policy.m_tile[2] * policy.m_tile[3];
-      block.z = policy.m_tile[4] * policy.m_tile[5];
-      grid_0  = policy.m_tile_end[0] * policy.m_tile_end[1];
-      grid_1  = policy.m_tile_end[2] * policy.m_tile_end[3];
-      grid_2  = policy.m_tile_end[4] * policy.m_tile_end[5];
+      block.x = tile[0] * tile[1];
+      block.y = tile[2] * tile[3];
+      block.z = tile[4] * tile[5];
+      grid_0  = tile_end[0] * tile_end[1];
+      grid_1  = tile_end[2] * tile_end[3];
+      grid_2  = tile_end[4] * tile_end[5];
     }
   } else {  // InnerDirection == Right
     if constexpr (Policy::rank == 2) {
-      block.x = policy.m_tile[1];
-      block.y = policy.m_tile[0];
-      grid_0  = policy.m_tile_end[1];
-      grid_1  = policy.m_tile_end[0];
+      block.x = tile[1];
+      block.y = tile[0];
+      grid_0  = tile_end[1];
+      grid_1  = tile_end[0];
     } else if constexpr (Policy::rank == 3) {
-      block.x = policy.m_tile[2];
-      block.y = policy.m_tile[1];
-      block.z = policy.m_tile[0];
-      grid_0  = policy.m_tile_end[2];
-      grid_1  = policy.m_tile_end[1];
-      grid_2  = policy.m_tile_end[0];
+      block.x = tile[2];
+      block.y = tile[1];
+      block.z = tile[0];
+      grid_0  = tile_end[2];
+      grid_1  = tile_end[1];
+      grid_2  = tile_end[0];
     } else if constexpr (Policy::rank == 4) {
-      block.x = policy.m_tile[3] * policy.m_tile[2];
-      block.y = policy.m_tile[1];
-      block.z = policy.m_tile[0];
-      grid_0  = policy.m_tile_end[3] * policy.m_tile_end[2];
-      grid_1  = policy.m_tile_end[1];
-      grid_2  = policy.m_tile_end[0];
+      block.x = tile[3] * tile[2];
+      block.y = tile[1];
+      block.z = tile[0];
+      grid_0  = tile_end[3] * tile_end[2];
+      grid_1  = tile_end[1];
+      grid_2  = tile_end[0];
     } else if constexpr (Policy::rank == 5) {
-      block.x = policy.m_tile[4] * policy.m_tile[3];
-      block.y = policy.m_tile[2] * policy.m_tile[1];
-      block.z = policy.m_tile[0];
-      grid_0  = policy.m_tile_end[4] * policy.m_tile_end[3];
-      grid_1  = policy.m_tile_end[2] * policy.m_tile_end[1];
-      grid_2  = policy.m_tile_end[0];
+      block.x = tile[4] * tile[3];
+      block.y = tile[2] * tile[1];
+      block.z = tile[0];
+      grid_0  = tile_end[4] * tile_end[3];
+      grid_1  = tile_end[2] * tile_end[1];
+      grid_2  = tile_end[0];
     } else if constexpr (Policy::rank == 6) {
-      block.x = policy.m_tile[5] * policy.m_tile[4];
-      block.y = policy.m_tile[3] * policy.m_tile[2];
-      block.z = policy.m_tile[1] * policy.m_tile[0];
-      grid_0  = policy.m_tile_end[5] * policy.m_tile_end[4];
-      grid_1  = policy.m_tile_end[3] * policy.m_tile_end[2];
-      grid_2  = policy.m_tile_end[1] * policy.m_tile_end[0];
+      block.x = tile[5] * tile[4];
+      block.y = tile[3] * tile[2];
+      block.z = tile[1] * tile[0];
+      grid_0  = tile_end[5] * tile_end[4];
+      grid_1  = tile_end[3] * tile_end[2];
+      grid_2  = tile_end[1] * tile_end[0];
     }
   }
 

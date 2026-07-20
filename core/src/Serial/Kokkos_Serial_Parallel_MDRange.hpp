@@ -21,9 +21,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
       MDRangePolicy, FunctorType, typename MDRangePolicy::work_tag, void>;
 
   const iterate_type m_iter;
+  const MDRangePolicy m_policy;
 
   void exec() const {
-    const typename Policy::member_type e = m_iter.m_rp.m_num_tiles;
+    const typename Policy::member_type e = m_policy.num_tiles();
     for (typename Policy::member_type i = 0; i < e; ++i) {
       m_iter(i);
     }
@@ -54,7 +55,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
   inline ParallelFor(const FunctorType& arg_functor,
                      const MDRangePolicy& arg_policy)
-      : m_iter(arg_policy, arg_functor) {}
+      : m_policy(arg_policy), m_iter(arg_policy, arg_functor) {}
 };
 
 template <class CombinedFunctorReducerType, class... Traits>

@@ -1524,9 +1524,14 @@ template <typename RP, typename Functor, typename Tag, typename ReferenceType>
 struct HostIterateTile {
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
+  using tile_type  = typename RP::tile_type;
 
   inline HostIterateTile(RP const& rp, Functor const& func)
-      : m_rp(rp), m_func(func) {}
+      : m_lower(rp.lower()),
+        m_upper(rp.upper()),
+        m_tile(rp.tile()),
+        m_tile_end(rp.tile_end()),
+        m_func(func) {}
 
   // ParallelFor
   template <typename IType>
@@ -1536,15 +1541,13 @@ struct HostIterateTile {
 
     if constexpr (RP::outer_direction == Iterate::Left) {
       for (int i = 0; i < RP::rank; ++i) {
-        m_offset[i] =
-            (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i];
-        tile_idx /= m_rp.m_tile_end[i];
+        m_offset[i] = (tile_idx % m_tile_end[i]) * m_tile[i] + m_lower[i];
+        tile_idx /= m_tile_end[i];
       }
     } else {
       for (int i = RP::rank - 1; i >= 0; --i) {
-        m_offset[i] =
-            (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i];
-        tile_idx /= m_rp.m_tile_end[i];
+        m_offset[i] = (tile_idx % m_tile_end[i]) * m_tile[i] + m_lower[i];
+        tile_idx /= m_tile_end[i];
       }
     }
 
@@ -1553,8 +1556,7 @@ struct HostIterateTile {
     const bool full_tile = check_iteration_bounds(m_tiledims, m_offset);
 
     Tile_Loop_Type<RP::rank, (RP::inner_direction == Iterate::Left), index_type,
-                   Tag>::apply(m_func, full_tile, m_offset, m_rp.m_tile,
-                               m_tiledims);
+                   Tag>::apply(m_func, full_tile, m_offset, m_tile, m_tiledims);
   }
 
   template <typename... Args>
@@ -1571,12 +1573,12 @@ struct HostIterateTile {
     bool is_full_tile = true;
 
     for (int i = 0; i < RP::rank; ++i) {
-      if ((offset[i] + m_rp.m_tile[i]) <= m_rp.m_upper[i]) {
-        partial_tile[i] = m_rp.m_tile[i];
+      if ((offset[i] + m_tile[i]) <= m_upper[i]) {
+        partial_tile[i] = m_tile[i];
       } else {
         is_full_tile = false;
         partial_tile[i] =
-            m_rp.m_upper[i] - offset[i];  // remaining elements in dimension i
+            m_upper[i] - offset[i];  // remaining elements in dimension i
       }
     }
 
@@ -1600,15 +1602,13 @@ struct HostIterateTile {
 
     if constexpr (RP::outer_direction == Iterate::Left) {
       for (int i = 0; i < RP::rank; ++i) {
-        m_offset[i] =
-            (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i];
-        tile_idx /= m_rp.m_tile_end[i];
+        m_offset[i] = (tile_idx % m_tile_end[i]) * m_tile[i] + m_lower[i];
+        tile_idx /= m_tile_end[i];
       }
     } else {
       for (int i = RP::rank - 1; i >= 0; --i) {
-        m_offset[i] =
-            (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i];
-        tile_idx /= m_rp.m_tile_end[i];
+        m_offset[i] = (tile_idx % m_tile_end[i]) * m_tile[i] + m_lower[i];
+        tile_idx /= m_tile_end[i];
       }
     }
 
@@ -1618,10 +1618,13 @@ struct HostIterateTile {
 
     Tile_Loop_Type<RP::rank, (RP::inner_direction == Iterate::Left), index_type,
                    Tag>::apply(val, m_func.get_functor(), full_tile, m_offset,
-                               m_rp.m_tile, m_tiledims);
+                               m_tile, m_tiledims);
   }
 
-  RP const m_rp;
+  const point_type m_lower;
+  const point_type m_upper;
+  const tile_type m_tile;
+  const point_type m_tile_end;
   Functor const m_func;
 };
 

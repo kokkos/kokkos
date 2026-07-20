@@ -151,9 +151,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline void execute() {
     ReducerType reducer = m_functor_reducer.get_reducer();
 
-    const auto nwork = m_policy.m_num_tiles;
+    const auto nwork = m_policy.num_tiles();
     if (nwork) {
-      int block_size = m_policy.m_prod_tile_dims;
+      int block_size = m_policy.prod_tile_dims();
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
       int exponent_pow_two = std::ceil(std::log2(block_size));
