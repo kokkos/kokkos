@@ -191,6 +191,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       MDRangePolicy, CombinedFunctorReducerType, WorkTag, reference_type>;
 
   OpenMPInternal* m_instance;
+  const MDRangePolicy m_policy;
   const iterate_type m_iter;
   const pointer_type m_result_ptr;
 
@@ -216,7 +217,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                                    0  // thread_local_bytes
     );
 
-    if (execute_in_serial(m_iter.m_rp.space())) {
+    if (execute_in_serial(m_policy.space())) {
       const pointer_type ptr =
           m_result_ptr
               ? m_result_ptr
@@ -225,7 +226,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       reference_type update = reducer.init(ptr);
 
-      ParallelReduce::exec_range(0, m_iter.m_rp.m_num_tiles, update);
+      ParallelReduce::exec_range(0, m_policy.impl_num_tiles(), update);
 
       reducer.final(ptr);
 
@@ -242,7 +243,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      data.set_work_partition(m_iter.m_rp.m_num_tiles, 1);
+      data.set_work_partition(m_policy.impl_num_tiles(), 1);
 
       if (is_dynamic) {
         // Make sure work partition is set before stealing
@@ -292,6 +293,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   ParallelReduce(const CombinedFunctorReducerType& arg_functor_reducer,
                  MDRangePolicy arg_policy, const ViewType& arg_view)
       : m_instance(nullptr),
+        m_policy(arg_policy),
         m_iter(arg_policy, arg_functor_reducer),
         m_result_ptr(arg_view.data()) {
     m_instance = arg_policy.space().impl_internal_space_instance();
