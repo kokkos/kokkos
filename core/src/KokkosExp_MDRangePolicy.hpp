@@ -180,7 +180,7 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
 
 // multi-dimensional iteration pattern
 template <typename... Properties>
-struct MDRangePolicy;
+class MDRangePolicy;
 
 // Note: If MDRangePolicy has a primary template, implicit CTAD (deduction
 // guides) are generated -> MDRangePolicy<> by some compilers, which is
@@ -190,8 +190,9 @@ struct MDRangePolicy;
 // "Kokkos::Error: MD iteration pattern not defined".  This template
 // specialization uses <P, Properties...> in all places for correctness.
 template <typename P, typename... Properties>
-struct MDRangePolicy<P, Properties...>
+class MDRangePolicy<P, Properties...>
     : public Kokkos::Impl::PolicyTraits<P, Properties...> {
+ public:
   using traits          = Kokkos::Impl::PolicyTraits<P, Properties...>;
   using execution_space = typename traits::execution_space;
   using range_policy    = RangePolicy<P, Properties...>;
@@ -205,7 +206,10 @@ struct MDRangePolicy<P, Properties...>
                                         // interrogation
 
   template <class... OtherProperties>
-  friend struct MDRangePolicy;
+  friend class MDRangePolicy;
+
+  template <typename ExecSpace>
+  friend struct Impl::TileSizeRecommended;
 
   static_assert(!std::is_void_v<typename traits::iteration_pattern>,
                 "Kokkos Error: MD iteration pattern not defined");
@@ -233,6 +237,7 @@ struct MDRangePolicy<P, Properties...>
   // as template parameter to the MDRangePolicy or static_cast the individual
   // values
 
+ private:
   execution_space m_space;
 
   point_type m_lower                          = {};
@@ -245,6 +250,7 @@ struct MDRangePolicy<P, Properties...>
   index_type m_max_total_tile_size            = 1;
   std::array<int, 3> m_max_threads_dimensions = {1, 1, 1};
 
+ public:
   static constexpr auto outer_direction =
       (iteration_pattern::outer_direction != Iterate::Default)
           ? iteration_pattern::outer_direction
@@ -255,11 +261,21 @@ struct MDRangePolicy<P, Properties...>
           ? iteration_pattern::inner_direction
           : default_inner_direction<typename traits::execution_space>::value;
 
-  static constexpr auto Right = Iterate::Right;
-  static constexpr auto Left  = Iterate::Left;
-
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return m_space;
+  }
+
+  KOKKOS_INLINE_FUNCTION const point_type& lower() const { return m_lower; }
+  KOKKOS_INLINE_FUNCTION const point_type& upper() const { return m_upper; }
+  KOKKOS_INLINE_FUNCTION const tile_type& tile() const { return m_tile; }
+  KOKKOS_INLINE_FUNCTION const point_type& tile_end() const {
+    return m_tile_end;
+  }
+  KOKKOS_INLINE_FUNCTION const index_type& num_tiles() const {
+    return m_num_tiles;
+  }
+  KOKKOS_INLINE_FUNCTION const index_type& prod_tile_dims() const {
+    return m_prod_tile_dims;
   }
 
   MDRangePolicy() = default;

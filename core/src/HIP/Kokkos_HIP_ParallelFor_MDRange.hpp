@@ -89,7 +89,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   }
 
   inline void execute() const {
-    if (m_policy.m_num_tiles == 0) return;
+    if (m_policy.num_tiles() == 0) return;
 
     const auto [grid, block] =
         Kokkos::Impl::compute_device_launch_params(m_policy, m_max_grid_size);
@@ -131,14 +131,14 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
     // Swap the fastest indexes to x dimension
     for (array_index_type i = 0; i < Policy::rank; ++i) {
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        m_lower[i]  = m_policy.m_lower[i];
-        m_upper[i]  = m_policy.m_upper[i];
-        m_extent[i] = m_policy.m_tile[i] * m_policy.m_tile_end[i];
+        m_lower[i]  = m_policy.lower()[i];
+        m_upper[i]  = m_policy.upper()[i];
+        m_extent[i] = m_policy.tile()[i] * m_policy.tile_end()[i];
       } else {
-        m_lower[i]  = m_policy.m_lower[Policy::rank - 1 - i];
-        m_upper[i]  = m_policy.m_upper[Policy::rank - 1 - i];
-        m_extent[i] = m_policy.m_tile[Policy::rank - 1 - i] *
-                      m_policy.m_tile_end[Policy::rank - 1 - i];
+        m_lower[i]  = m_policy.lower()[Policy::rank - 1 - i];
+        m_upper[i]  = m_policy.upper()[Policy::rank - 1 - i];
+        m_extent[i] = m_policy.tile()[Policy::rank - 1 - i] *
+                      m_policy.tile_end()[Policy::rank - 1 - i];
       }
     }
   }
