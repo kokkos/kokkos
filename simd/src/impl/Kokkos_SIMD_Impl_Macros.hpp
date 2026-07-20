@@ -118,6 +118,16 @@
     });                                                                        \
   }
 
+#define KOKKOS_SIMD_IMPL_NATIVE_GATHER_FROM_FN(RET_TYPE, PREFIX, ...) \
+  static RET_TYPE PREFIX##_gather_from(R&& in, const IndicesType& indices, [[maybe_unused]] simd_flags<Flags...> flag = {}) { \
+    return __VA_ARGS__; \
+  }
+
+#define KOKKOS_SIMD_IMPL_NATIVE_MASKED_GATHER_FROM_FN(RET_TYPE, PREFIX, ...) \
+  static RET_TYPE PREFIX##_gather_from(R&& in, IndicesType const& indices, MaskType const& mmask, [[maybe_unused]] simd_flags<Flags...> flag = {}) { \
+    return __VA_ARGS__; \
+  }
+
 #define KOKKOS_SIMD_IMPL_NATIVE_LOAD_HOST(RET_TYPE, FN, SRC_TYPE, ...) \
   template <typename... Flags> \
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
@@ -208,6 +218,26 @@
   KOKKOS_FORCEINLINE_FUNCTION \
   KOKKOS_SIMD_IMPL_NATIVE_FN_3ARGS(RET_TYPE, FN, [[maybe_unused]] vector_type, __VA_ARGS__)
 
+#define KOKKOS_SIMD_IMPL_NATIVE_GATHER_FROM_FN_HOST(RET_TYPE, PREFIX, ...) \
+  template <Impl::Ranges::contiguous_range R, typename IndicesType, typename... Flags>                       \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_GATHER_FROM_FN(RET_TYPE, PREFIX, __VA_ARGS__)
+
+#define KOKKOS_SIMD_IMPL_NATIVE_GATHER_FROM_FN_DEVICE(RET_TYPE, PREFIX, ...) \
+  template <Impl::Ranges::contiguous_range R, typename IndicesType, typename... Flags>                      \
+  KOKKOS_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_GATHER_FROM_FN(RET_TYPE, PREFIX, __VA_ARGS__)
+
+#define KOKKOS_SIMD_IMPL_NATIVE_MASKED_GATHER_FROM_FN_HOST(RET_TYPE, PREFIX, ...) \
+  template <Impl::Ranges::contiguous_range R, typename IndicesType, typename MaskType, typename... Flags>                      \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_MASKED_GATHER_FROM_FN(RET_TYPE, PREFIX, __VA_ARGS__)
+
+#define KOKKOS_SIMD_IMPL_NATIVE_MASKED_GATHER_FROM_FN_DEVICE(RET_TYPE, PREFIX, ...) \
+  template <Impl::Ranges::contiguous_range R, typename IndicesType, typename MaskType, typename... Flags>    \
+  KOKKOS_FORCEINLINE_FUNCTION \
+  KOKKOS_SIMD_IMPL_NATIVE_MASKED_GATHER_FROM_FN(RET_TYPE, PREFIX, __VA_ARGS__)
+
 #define KOKKOS_SIMD_IMPL_SIMD_HOST_VECTOR_IMPL(DATA_TYPE, ABI_TYPE, IMPL_TYPE) \
   template <>                                                               \
   struct simd_vector_impl<DATA_TYPE, ABI_TYPE, simd_host_tag> {             \
@@ -284,13 +314,80 @@
     return lhs;                                                              \
   }
 
-
 // TODO
 // will need stuff like KOKKOS_SIMD_DEFINE_BINARY_FN... or MEMORY_PERMUTE... etc for free functions
 
 // gather scatter
 // these should eventually be impl native
 // BUT can't be removed yet (used in other simd backend as well)
+
+#define KOKKOS_SIMD_DEFINE_GATHER_FROM(PREFIX, DATA_TYPE, ABI)           \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,             \
+            Impl::SimdIntegral I, typename... Flags>                           \
+    requires Impl::Ranges::sized_range<R> &&                                   \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                 \
+  KOKKOS_FORCEINLINE_FUNCTION                                                  \
+  constexpr V PREFIX##_gather_from(                                            \
+      R&& in, const I& indices,                                                \
+      simd_flags<Flags...> flag = simd_flag_default) {                         \
+    using impl_ops =                                                           \
+        Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;     \
+    using indices_type = basic_simd<std::int32_t, ABI>;                   \
+    auto idx = static_cast<typename indices_type::impl_vector_type>(            \
+        indices_type{indices});                                                \
+                                                                               \
+    return V(impl_ops::PREFIX##_gather_from(in, idx, flag));                   \
+  }
+
+#define KOKKOS_SIMD_DEFINE_MASKED_GATHER_FROM(                                 \
+    PREFIX, DATA_TYPE, MASK_DATA_TYPE, ABI)                             \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,             \
+            Impl::SimdIntegral I, typename... Flags>                           \
+    requires Impl::Ranges::sized_range<R> &&                                   \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                 \
+  KOKKOS_FORCEINLINE_FUNCTION                                                  \
+  constexpr V PREFIX##_gather_from(                                            \
+      R&& in, typename I::mask_type const& mask, const I& indices,             \
+      simd_flags<Flags...> flag = simd_flag_default) {                         \
+    using impl_ops =                                                           \
+        Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;     \
+    using indices_type = basic_simd<std::int32_t, ABI>;                   \
+    using mask_type = basic_simd_mask<MASK_DATA_TYPE, ABI>;              \
+    auto idx = static_cast<typename indices_type::impl_vector_type>(            \
+        indices_type{indices});                                                \
+    auto mmask = static_cast<typename mask_type::impl_vector_type>(             \
+        mask_type{mask});                                                      \
+                                                                               \
+    return V(impl_ops::PREFIX##_gather_from(in, idx, mmask, flag));            \
+  }
+
+#define KOKKOS_SIMD_DEFINE_SCATTER_TO(PREFIX, DATA_TYPE, ABI)           \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,          \
+            Impl::SimdIntegral I, typename... Flags>                        \
+    requires Impl::Ranges::sized_range<R> &&                                \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>               \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr void PREFIX##_scatter_to( \
+      const V& v, R&& out, const I& indices,                                \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {     \
+      for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) { \
+        out[indices[lane]] = v[lane]; \
+      } \
+  }
+
+#define KOKKOS_SIMD_DEFINE_MASKED_SCATTER_TO(                                 \
+    PREFIX, DATA_TYPE, ABI)                             \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,          \
+            Impl::SimdIntegral I, typename... Flags>                        \
+    requires Impl::Ranges::sized_range<R> &&                                \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>               \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr void PREFIX##_scatter_to( \
+      const V& v, R&& out, const typename I::mask_type& mask,               \
+      const I& indices,                                                     \
+      [[maybe_unused]] simd_flags<Flags...> flag = simd_flag_default) {     \
+      for (Impl::simd_size_t lane = 0; lane < v.size(); ++lane) { \
+        if (mask[lane]) out[indices[lane]] = v[lane]; \
+      } \
+  }
 
 #define KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_GATHER_FROM(PREFIX, DATA_TYPE,    \
                                                     ABI_TYPE, EXPR)       \
