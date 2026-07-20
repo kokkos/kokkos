@@ -349,8 +349,4 @@ using device_abi_set = abi_set<simd_abi::scalar>;
 }  // namespace Experimental
 }  // namespace Kokkos
 
-#ifdef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-#undef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-#endif
-
 #endif

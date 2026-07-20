@@ -154,14 +154,9 @@ TEST(simd, host_simd_construction_in_device) {
     GTEST_SKIP();
   }
 
-// FIXME Temporarily disabling this test for OpenACC; there isn't a
-// reliable, portable compile-time flag to detect the device compilation context
-// to gate the device-only path
-#ifndef KOKKOS_ENABLE_OPENACC
 #ifndef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
   test_host_simd_construction_in_device_functor{}(0);
   Kokkos::parallel_for(1, test_host_simd_construction_in_device_functor{});
-#endif
 #endif
 }
 
