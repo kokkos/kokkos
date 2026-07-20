@@ -347,8 +347,7 @@ void CudaSpace::deallocate(const char *arg_label, void *const arg_alloc_ptr,
 }
 void CudaSpace::impl_deallocate(
     const char *arg_label, void *const arg_alloc_ptr,
-    [[maybe_unused]] const size_t arg_alloc_size,
-    const size_t arg_reported_size,
+    const size_t /*arg_alloc_size*/, const size_t arg_reported_size,
     const Kokkos::Tools::SpaceHandle arg_handle) const {
   if (Kokkos::Profiling::profileLibraryLoaded()) {
     Kokkos::Profiling::deallocateData(arg_handle, arg_label, arg_alloc_ptr,
