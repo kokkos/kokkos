@@ -164,8 +164,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator+(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+    auto
+    operator+(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] + rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) +
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -177,8 +177,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator+(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+    auto
+    operator+(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs + rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) +
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -190,8 +190,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator+=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+    basic_simd<T, Abi>&
+    operator+=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs + std::forward<U>(rhs);
   return lhs;
 }
@@ -202,8 +202,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator-(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+    auto
+    operator-(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] - rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) -
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -215,8 +215,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator-(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+    auto
+    operator-(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs - rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) -
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -228,8 +228,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator-=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+    basic_simd<T, Abi>&
+    operator-=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs - std::forward<U>(rhs);
   return lhs;
 }
@@ -240,8 +240,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator*(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+    auto
+    operator*(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] * rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) *
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -253,8 +253,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator*(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+    auto
+    operator*(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs * rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) *
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -266,8 +266,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator*=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+    basic_simd<T, Abi>&
+    operator*=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs * std::forward<U>(rhs);
   return lhs;
 }
@@ -278,9 +278,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator/(
-    Experimental::basic_simd<T, Abi> const& lhs,
-    Experimental::basic_simd<T, Abi> const& rhs) {
+    auto
+    operator/(Experimental::basic_simd<T, Abi> const& lhs,
+              Experimental::basic_simd<T, Abi> const& rhs) {
   return Experimental::basic_simd<T, Abi>(
       [&](Impl::simd_size_t i) { return lhs[i] / rhs[i]; });
 }
@@ -291,8 +291,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator/(
-    Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
+    auto
+    operator/(Experimental::basic_simd<T, Abi> const& lhs, U rhs) {
   using result_member = decltype(lhs[0] / rhs);
   return Experimental::basic_simd<result_member, Abi>(lhs) /
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -304,8 +304,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-auto operator/(
-    U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
+    auto
+    operator/(U lhs, Experimental::basic_simd<T, Abi> const& rhs) {
   using result_member = decltype(lhs / rhs[0]);
   return Experimental::basic_simd<result_member, Abi>(lhs) /
          Experimental::basic_simd<result_member, Abi>(rhs);
@@ -317,8 +317,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator/=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+    basic_simd<T, Abi>&
+    operator/=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs / std::forward<U>(rhs);
   return lhs;
 }
@@ -329,8 +329,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd_mask<T, Abi>& operator&=(
-    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+    basic_simd_mask<T, Abi>&
+    operator&=(basic_simd_mask<T, Abi>& lhs,
+               basic_simd_mask<T, Abi> const& rhs) {
   lhs = lhs & rhs;
   return lhs;
 }
@@ -341,8 +342,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd_mask<T, Abi>& operator|=(
-    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+    basic_simd_mask<T, Abi>&
+    operator|=(basic_simd_mask<T, Abi>& lhs,
+               basic_simd_mask<T, Abi> const& rhs) {
   lhs = lhs | rhs;
   return lhs;
 }
@@ -353,8 +355,9 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd_mask<T, Abi>& operator^=(
-    basic_simd_mask<T, Abi>& lhs, basic_simd_mask<T, Abi> const& rhs) {
+    basic_simd_mask<T, Abi>&
+    operator^=(basic_simd_mask<T, Abi>& lhs,
+               basic_simd_mask<T, Abi> const& rhs) {
   lhs = lhs ^ rhs;
   return lhs;
 }
@@ -365,8 +368,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator&=(
-    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+    basic_simd<T, Abi>&
+    operator&=(basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
   lhs = lhs & rhs;
   return lhs;
 }
@@ -377,8 +380,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator|=(
-    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+    basic_simd<T, Abi>&
+    operator|=(basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
   lhs = lhs | rhs;
   return lhs;
 }
@@ -389,8 +392,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator^=(
-    basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
+    basic_simd<T, Abi>&
+    operator^=(basic_simd<T, Abi>& lhs, basic_simd<T, Abi> const& rhs) {
   lhs = lhs ^ rhs;
   return lhs;
 }
@@ -401,8 +404,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator>>=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+    basic_simd<T, Abi>&
+    operator>>=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs >> std::forward<U>(rhs);
   return lhs;
 }
@@ -413,8 +416,8 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
 #else
 KOKKOS_INLINE_FUNCTION
 #endif
-basic_simd<T, Abi>& operator<<=(
-    basic_simd<T, Abi>& lhs, U&& rhs) {
+    basic_simd<T, Abi>&
+    operator<<=(basic_simd<T, Abi>& lhs, U&& rhs) {
   lhs = lhs << std::forward<U>(rhs);
   return lhs;
 }
