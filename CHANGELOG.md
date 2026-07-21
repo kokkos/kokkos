@@ -36,12 +36,6 @@
 #### HPX:
 * Fix team parallel_reduce buffer indexing, clamp host thread count at startup, and unregister execution spaces on finalize [\#9138](https://github.com/kokkos/kokkos/pull/9138)
 
-#### Threads:
-
-#### OpenMP:
-
-#### Serial:
-
 ### General Enhancements
 * Add `index_type` (signed) to execution space instance classes and harmonize with `size_type` (unsigned) across different backends [\#7441](https://github.com/kokkos/kokkos/pull/7441)
 * Add `noexcept` annotations to move constructors and assignment operators of execution spaces [\#8990](https://github.com/kokkos/kokkos/pull/8990)
