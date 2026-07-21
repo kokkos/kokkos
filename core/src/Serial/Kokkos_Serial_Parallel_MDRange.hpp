@@ -38,8 +38,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #ifndef KOKKOS_ENABLE_ATOMICS_BYPASS
     // Make sure kernels are running sequentially even when using multiple
     // threads
-    auto* internal_instance =
-        m_iter.m_rp.space().impl_internal_space_instance();
+    auto* internal_instance = m_policy.space().impl_internal_space_instance();
     std::lock_guard<std::mutex> lock(internal_instance->m_instance_mutex);
 #endif
     this->exec();
@@ -77,9 +76,10 @@ class ParallelReduce<CombinedFunctorReducerType,
       MDRangePolicy, CombinedFunctorReducerType, WorkTag, reference_type>;
   const iterate_type m_iter;
   const pointer_type m_result_ptr;
+  const MDRangePolicy m_policy;
 
   inline void exec(reference_type update) const {
-    const typename Policy::member_type e = m_iter.m_rp.m_num_tiles;
+    const typename Policy::member_type e = m_policy.num_tiles();
     for (typename Policy::member_type i = 0; i < e; ++i) {
       m_iter(i, update);
     }
@@ -102,8 +102,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     const size_t team_shared_size  = 0;  // Never shrinks
     const size_t thread_local_size = 0;  // Never shrinks
 
-    auto* internal_instance =
-        m_iter.m_rp.space().impl_internal_space_instance();
+    auto* internal_instance = m_policy.space().impl_internal_space_instance();
 
     // caused a possibly codegen-related slowdown, especially in GCC 9-11
     // with KOKKOS_ARCH_NATIVE
