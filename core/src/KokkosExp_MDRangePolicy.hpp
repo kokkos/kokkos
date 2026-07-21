@@ -265,18 +265,12 @@ class MDRangePolicy<P, Properties...>
     return m_space;
   }
 
-  KOKKOS_INLINE_FUNCTION const point_type& lower() const { return m_lower; }
-  KOKKOS_INLINE_FUNCTION const point_type& upper() const { return m_upper; }
-  KOKKOS_INLINE_FUNCTION const tile_type& tile() const { return m_tile; }
-  KOKKOS_INLINE_FUNCTION const point_type& tile_end() const {
-    return m_tile_end;
-  }
-  KOKKOS_INLINE_FUNCTION const index_type& num_tiles() const {
-    return m_num_tiles;
-  }
-  KOKKOS_INLINE_FUNCTION const index_type& prod_tile_dims() const {
-    return m_prod_tile_dims;
-  }
+  inline point_type lower() const { return m_lower; }
+  inline point_type upper() const { return m_upper; }
+  inline tile_type tile() const { return m_tile; }
+  inline point_type tile_end() const { return m_tile_end; }
+  inline index_type num_tiles() const { return m_num_tiles; }
+  inline index_type prod_tile_dims() const { return m_prod_tile_dims; }
 
   MDRangePolicy() = default;
 
