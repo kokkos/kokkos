@@ -217,7 +217,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                                    0  // thread_local_bytes
     );
 
-    if (execute_in_serial(m_iter.m_rp.space())) {
+    if (execute_in_serial(m_policy.space())) {
       const pointer_type ptr =
           m_result_ptr
               ? m_result_ptr

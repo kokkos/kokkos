@@ -183,7 +183,7 @@ void test_get_tile_size() {
   {
     Policy policy_default(lower, upper);
     auto rec_tile_sizes      = policy_default.tile_size_recommended();
-    auto internal_tile_sizes = policy_default.m_tile;
+    auto internal_tile_sizes = policy_default.tile();
 
     for (std::size_t i = 0; i < Rank; ++i) {
       EXPECT_EQ(rec_tile_sizes[i], internal_tile_sizes[i])
@@ -242,7 +242,7 @@ void test_default_tiles_respect_launch_bounds() {
 
   policy_t policy_with_default_tile(lower, upper);
 
-  EXPECT_LE(policy_with_default_tile.m_prod_tile_dims,
+  EXPECT_LE(policy_with_default_tile.prod_tile_dims(),
             static_cast<index_type>(MaxTperB))
       << " for Rank-" << Rank << " with LaunchBounds<" << MaxTperB << ">"
       << " and InnerDirection "
@@ -304,8 +304,8 @@ TEST(TEST_CATEGORY, md_range_policy_impl_set_space) {
 
   const policy_t policy_new(Kokkos::Impl::PolicyUpdate{}, policy_old, exec_new);
   ASSERT_EQ(policy_new.space(), exec_new);
-  ASSERT_EQ(policy_new.m_lower, (typename policy_t::point_type{42, 47}));
-  ASSERT_EQ(policy_new.m_upper, (typename policy_t::point_type{666, 999}));
+  ASSERT_EQ(policy_new.lower(), (typename policy_t::point_type{42, 47}));
+  ASSERT_EQ(policy_new.upper(), (typename policy_t::point_type{666, 999}));
 }
 
 }  // namespace

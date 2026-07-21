@@ -883,8 +883,13 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
     static_assert(Policy::inner_direction == Iterate::Left ||
                   Policy::inner_direction == Iterate::Right);
     constexpr int rank = Policy::rank;
+
+    const auto lower_bound = m_policy.lower();
+    const auto upper_bound = m_policy.upper();
+    const auto tile_size   = m_policy.tile();
+
     for (int i = 0; i < rank; ++i) {
-      if (m_policy.m_lower[i] >= m_policy.m_upper[i]) {
+      if (lower_bound[i] >= upper_bound[i]) {
         return;
       }
     }
@@ -895,19 +900,19 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
         Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(
             Kokkos::Experimental::Impl::OpenACCCollapse(),
             std::integral_constant<Iterate, Policy::inner_direction>(),
-            m_functor, m_policy.m_lower, m_policy.m_upper, async_arg);
+            m_functor, lower_bound, upper_bound, async_arg);
         return;
       }
     }
     Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(
         Kokkos::Experimental::Impl::OpenACCTile(),
         std::integral_constant<Iterate, Policy::inner_direction>(), m_functor,
-        m_policy.m_lower, m_policy.m_upper, m_policy.m_tile, async_arg);
-#else
+        m_functor,
+        lower_bound, upper_bound, tile_size, async_arg);
     Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(
         Kokkos::Experimental::Impl::OpenACCCollapse(),
         std::integral_constant<Iterate, Policy::inner_direction>(), m_functor,
-        m_policy.m_lower, m_policy.m_upper, async_arg);
+        lower_bound, upper_bound, async_arg);
 #endif
   }
 };
