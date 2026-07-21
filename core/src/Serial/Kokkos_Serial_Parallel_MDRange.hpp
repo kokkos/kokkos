@@ -135,7 +135,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                  const MDRangePolicy& arg_policy,
                  const ViewType& arg_result_view)
       : m_iter(arg_policy, arg_functor_reducer),
-        m_result_ptr(arg_result_view.data()) {
+        m_result_ptr(arg_result_view.data()),
+        m_policy(arg_policy) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
 
