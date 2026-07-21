@@ -1003,7 +1003,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   void execute() const {
     const Member num_chunks =
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
-    m_iter.m_rp.space().impl_bulk_plain(
+    m_policy.space().impl_bulk_plain(
         false, is_light_weight_policy<MDRangePolicy>(), *this, num_chunks,
         hpx::threads::thread_stacksize::nostack);
   }
@@ -1160,7 +1160,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     const std::size_t value_size = reducer.value_size();
     const int num_worker_threads = m_policy.space().concurrency();
 
-    hpx_thread_buffer &buffer = m_iter.m_rp.space().impl_get_buffer();
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     buffer.resize(num_worker_threads, value_size);
 
     for (int t = 0; t < num_worker_threads; ++t) {
@@ -1169,7 +1169,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   void execute_range(const Member i_chunk) const {
-    hpx_thread_buffer &buffer = m_iter.m_rp.space().impl_get_buffer();
+    hpx_thread_buffer &buffer = m_policy.space().impl_get_buffer();
     reference_type update =
         ReducerType::reference(reinterpret_cast<pointer_type>(
             buffer.get(Kokkos::Experimental::HPX::impl_hardware_thread_id())));
@@ -1181,7 +1181,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   void finalize() const {
-    hpx_thread_buffer &buffer    = m_iter.m_rp.space().impl_get_buffer();
+    hpx_thread_buffer &buffer    = m_policy.space().impl_get_buffer();
     ReducerType reducer          = m_iter.m_func.get_reducer();
     const int num_worker_threads = m_policy.space().concurrency();
     for (int i = 1; i < num_worker_threads; ++i) {
@@ -1206,7 +1206,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   void execute() const {
     const Member num_chunks =
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
-    m_iter.m_rp.space().impl_bulk_setup_finalize(
+    m_policy.space().impl_bulk_setup_finalize(
         m_force_synchronous, is_light_weight_policy<MDRangePolicy>(), *this,
         num_chunks, hpx::threads::thread_stacksize::nostack);
   }

@@ -60,8 +60,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     const ReducerType& reducer = m_functor_reducer.get_reducer();
     reducer.init(&val);
 
+    const auto lower_bound = m_policy.lower();
+    const auto upper_bound = m_policy.upper();
+
     for (int i = 0; i < rank; ++i) {
-      if (m_policy.m_lower[i] >= m_policy.m_upper[i]) {
+      if (lower_bound[i] >= upper_bound[i]) {
         if (m_result_ptr_on_device) {
           acc_memcpy_to_device(m_result_ptr, &val, sizeof(ValueType));
         } else {

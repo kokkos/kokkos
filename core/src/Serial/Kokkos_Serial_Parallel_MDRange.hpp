@@ -54,7 +54,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   }
   inline ParallelFor(const FunctorType& arg_functor,
                      const MDRangePolicy& arg_policy)
-      : m_policy(arg_policy), m_iter(arg_policy, arg_functor) {}
+      : m_iter(arg_policy, arg_functor), m_policy(arg_policy) {}
 };
 
 template <class CombinedFunctorReducerType, class... Traits>
