@@ -8,8 +8,8 @@
 * Rank<1> MDRangePolicy support [\#9028 ](https://github.com/kokkos/kokkos/pull/9028)
 * Introduce generic `parallel_for` with `RangePolicy` taking a team handle in hierarchical parallelism - enables writing generic functions with a nested `parallel_for` that can be called from host or device [\#8367](https://github.com/kokkos/kokkos/pull/8367)
 * create_mirror_view_and_copy one argument convenience overload [\#9185](https://github.com/kokkos/kokkos/pull/9185)
-* Add new Random Number generator type SFC64 [\#9017](https://github.com/kokkos/kokkos/pull/9017)
-* Support using `mdspan` style template arguments for `View` thus enabling explicit specification of `index_type` [\#8852](https://github.com/kokkos/kokkos/pull/8852) [\#9303](https://github.com/kokkos/kokkos/pull/9303) [\#9276](https://github.com/kokkos/kokkos/pull/9276)
+* Add random number generator SFC64 [\#9017](https://github.com/kokkos/kokkos/pull/9017)
+* Support explicit specification of `index_type` in `View` [\#8852](https://github.com/kokkos/kokkos/pull/8852) [\#9303](https://github.com/kokkos/kokkos/pull/9303) [\#9276](https://github.com/kokkos/kokkos/pull/9276)
 
 ### Backend and Architecture Enhancements:
 
@@ -44,7 +44,7 @@
 * Import math constants from the standard library [\#9016](https://github.com/kokkos/kokkos/pull/9016)
 * Increase max level 1 team scratch size from 20MB to 80MB per team [\#9084](https://github.com/kokkos/kokkos/pull/9084)
 * core(graph): rename interoperability graph access with `<backend>_` prefix [\#9159](https://github.com/kokkos/kokkos/pull/9159)
-* core(graph): node kind enum [\#9170](https://github.com/kokkos/kokkos/pull/9170)
+* core(graph): add enum to identify node kind [\#9170](https://github.com/kokkos/kokkos/pull/9170)
 * Add `create_mirror_view_and_copy(a_view)` overload [\#9185](https://github.com/kokkos/kokkos/pull/9185)
 * Sepperated out (limited) iterator support from algorithms and moved to core [\#6684](https://github.com/kokkos/kokkos/pull/6684)
 * Check extent preconditions on Views in std::algorithms [\#6811](https://github.com/kokkos/kokkos/pull/6811)
