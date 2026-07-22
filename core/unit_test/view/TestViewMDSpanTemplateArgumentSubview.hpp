@@ -68,7 +68,8 @@ void compare_subview(V v, Slices... slices) {
 
   using mdspan_sub_t = decltype(Kokkos::submdspan(
       std::declval<typename V::mdspan_type>(),
-      Kokkos::Impl::transform_kokkos_slice_to_mdspan_slice(slices)...));
+      Kokkos::Impl::transform_kokkos_slice_to_mdspan_slice(
+          Kokkos::Impl::convert_to_kokkos_pair_if_std_pair(slices))...));
   static_assert(std::is_same_v<mdspan_sub_t, typename new_sub_t::mdspan_type>);
 
   static_assert(
