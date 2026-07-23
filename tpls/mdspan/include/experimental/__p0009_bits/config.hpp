@@ -99,6 +99,12 @@ static_assert(MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14
 #  endif
 #endif
 
+#ifndef MDSPAN_IMPL_HAS_OPENACC
+#  if defined(_OPENACC)
+#    define MDSPAN_IMPL_HAS_OPENACC _OPENACC
+#  endif
+#endif
+
 #ifndef MDSPAN_IMPL_HAS_CPP_ATTRIBUTE
 #  ifndef __has_cpp_attribute
 #    define MDSPAN_IMPL_HAS_CPP_ATTRIBUTE(x) 0
