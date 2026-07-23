@@ -36,12 +36,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     using index_type = typename Policy::index_type;
 
     BarePolicy(const Policy& policy)
-        : m_lower(policy.m_lower),
-          m_upper(policy.m_upper),
-          m_tile(policy.m_tile),
-          m_tile_end(policy.m_tile_end),
-          m_num_tiles(policy.m_num_tiles),
-          m_prod_tile_dims(policy.m_prod_tile_dims) {}
+        : m_lower(policy.lower()),
+          m_upper(policy.upper()),
+          m_tile(policy.tile()),
+          m_tile_end(policy.tile_end()),
+          m_num_tiles(policy.num_tiles()),
+          m_prod_tile_dims(policy.prod_tile_dims()) {}
 
     const typename Policy::point_type m_lower;
     const typename Policy::point_type m_upper;
@@ -76,7 +76,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         *m_space.impl_internal_space_instance();
     sycl::queue& q = m_space.sycl_queue();
 
-    const typename Policy::index_type n_tiles = m_policy.m_num_tiles;
+    const typename Policy::index_type n_tiles = m_policy.num_tiles();
     const unsigned int value_count =
         m_functor_reducer.get_reducer().value_count();
     sycl::global_ptr<value_type> results_ptr;
@@ -134,7 +134,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // to global memory and recurse until only one workgroup does the
       // reduction and thus gets the final value.
       const int wgroup_size = Kokkos::bit_ceil(
-          static_cast<unsigned int>(m_policy.m_prod_tile_dims));
+          static_cast<unsigned int>(m_policy.prod_tile_dims()));
 
       // FIXME_SYCL Find a better way to determine a good limit for the
       // maximum number of work groups, also see

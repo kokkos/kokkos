@@ -239,7 +239,7 @@ struct MDRange {
         policy(Kokkos::Array<int, dimension>{}, end, tile);
 
     for (int i = 0; i < dimension; i++) {
-      tile[i] = policy.m_tile[i];
+      tile[i] = policy.tile()[i];
     }
 
     return policy;

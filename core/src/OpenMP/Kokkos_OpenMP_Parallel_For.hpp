@@ -232,8 +232,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   inline ParallelFor(const FunctorType& arg_functor,
                      const MDRangePolicy& arg_policy)
       : m_instance(nullptr),
-        m_policy(arg_policy),
-        m_iter(arg_policy, arg_functor) {
+        m_iter(arg_policy, arg_functor),
+        m_policy(arg_policy) {
     m_instance = arg_policy.space().impl_internal_space_instance();
   }
 
