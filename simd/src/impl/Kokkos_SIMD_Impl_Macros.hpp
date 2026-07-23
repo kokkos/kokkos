@@ -5,9 +5,13 @@
 #define KOKKOS_SIMD_IMPL_MACROS_HPP
 
 #ifndef KOKKOS_SIMD_IMPL_DEVICE_SIMD
-#if (defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
-    (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
-    (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__))
+// FIXME Temporarily disabling for OpenACC; there isn't a
+// reliable, portable compile-time flag to detect the device compilation context
+// to gate the device-only path
+#if !defined(KOKKOS_ENABLE_OPENACC)&&
+((defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||
+ (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) ||
+ (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)))
 #define KOKKOS_SIMD_IMPL_DEVICE_SIMD
 #endif
 #endif
@@ -28,7 +32,9 @@
 
 #define KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FN(RET_TYPE, FN, FROM, ABI, TAG, \
                                               ...)                          \
-  static RET_TYPE FN(simd_vector_t<FROM, ABI, TAG> v) { return __VA_ARGS__; }
+  static RET_TYPE FN([[maybe_unused]] simd_vector_t<FROM, ABI, TAG> v) {    \
+    return __VA_ARGS__;                                                     \
+  }
 
 #define KOKKOS_SIMD_IMPL_DEFINE_CONVERSION_FALLBACK_DECL_FN(ABI, TAG) \
   static vector_type convert_from(simd_vector_t<U, ABI, TAG> v);
@@ -48,11 +54,11 @@
     __VA_ARGS__                                                         \
   }
 
-#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_STORE(FN, DST_TYPE, SRC_TYPE, \
-                                             MASK_TYPE, ...)         \
-  static void FN(DST_TYPE ptr, SRC_TYPE v, MASK_TYPE mask,           \
-                 simd_flags<Flags...> = {}) {                        \
-    __VA_ARGS__                                                      \
+#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_STORE(FN, DST_TYPE, SRC_TYPE,           \
+                                             MASK_TYPE, ...)                   \
+  static void FN([[maybe_unused]] DST_TYPE ptr, [[maybe_unused]] SRC_TYPE v,   \
+                 [[maybe_unused]] MASK_TYPE mask, simd_flags<Flags...> = {}) { \
+    __VA_ARGS__                                                                \
   }
 
 #define KOKKOS_SIMD_IMPL_DEFINE_EXTRACT_FN(RET_TYPE, FN, ...) \
@@ -125,11 +131,11 @@
     });                                                                       \
   }
 
-#define KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN(RET_TYPE, PREFIX, ...) \
-  static RET_TYPE PREFIX##_gather_from(                               \
-      R&& in, const IndicesType& indices,                             \
-      [[maybe_unused]] simd_flags<Flags...> flag = {}) {              \
-    return __VA_ARGS__;                                               \
+#define KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM_FN(RET_TYPE, PREFIX, ...)       \
+  static RET_TYPE PREFIX##_gather_from(                                     \
+      [[maybe_unused]] R&& in, [[maybe_unused]] const IndicesType& indices, \
+      [[maybe_unused]] simd_flags<Flags...> flag = {}) {                    \
+    return __VA_ARGS__;                                                     \
   }
 
 #define KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN(RET_TYPE, PREFIX, ...) \
