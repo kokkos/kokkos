@@ -895,7 +895,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
                                                                               \
       OpenACCParallelReduce##REDUCER(                                         \
           std::integral_constant<Iterate, Policy::inner_direction>(), val,    \
-          functor, policy.m_lower, policy.m_upper, async_arg);                \
+          functor, policy.lower(), policy.upper(), async_arg);                \
                                                                               \
       reducer.reference() = val;                                              \
     }                                                                         \
