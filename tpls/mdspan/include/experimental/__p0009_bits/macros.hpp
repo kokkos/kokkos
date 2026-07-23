@@ -131,12 +131,9 @@ MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* c
   assert(0);
 }
 #elif defined(MDSPAN_IMPL_HAS_OPENACC)
-MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* cond, const char* file, unsigned line)
+MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* /* cond */, const char* /* file */, unsigned /* line */)
 {
-  (void) cond;
-  (void) file;
-  (void) line;
-  assert(0);
+  assert(false);
 }
 #else
 MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* cond, const char* file, unsigned line)
