@@ -34,6 +34,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   // really need in DeviceIterateTile in a trivially copyable struct.
   struct BarePolicy {
     using index_type = typename Policy::index_type;
+    using point_type = typename Policy::point_type;
+    using tile_type  = typename Policy::tile_type;
 
     BarePolicy(const Policy& policy)
         : m_lower(policy.lower()),
@@ -43,12 +45,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
           m_num_tiles(policy.num_tiles()),
           m_prod_tile_dims(policy.prod_tile_dims()) {}
 
-    const typename Policy::point_type m_lower;
-    const typename Policy::point_type m_upper;
-    const typename Policy::tile_type m_tile;
-    const typename Policy::point_type m_tile_end;
-    const typename Policy::index_type m_num_tiles;
-    const typename Policy::index_type m_prod_tile_dims;
+    const point_type m_lower;
+    const point_type m_upper;
+    const tile_type m_tile;
+    const point_type m_tile_end;
+    const index_type m_num_tiles;
+    const index_type m_prod_tile_dims;
     static constexpr Iterate inner_direction = Policy::inner_direction;
     static constexpr int rank                = Policy::rank;
   };
@@ -76,7 +78,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         *m_space.impl_internal_space_instance();
     sycl::queue& q = m_space.sycl_queue();
 
-    const typename Policy::index_type n_tiles = m_policy.num_tiles();
+    const typename Policy::index_type n_tiles = m_policy.m_num_tiles;
     const unsigned int value_count =
         m_functor_reducer.get_reducer().value_count();
     sycl::global_ptr<value_type> results_ptr;
@@ -134,7 +136,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       // to global memory and recurse until only one workgroup does the
       // reduction and thus gets the final value.
       const int wgroup_size = Kokkos::bit_ceil(
-          static_cast<unsigned int>(m_policy.prod_tile_dims()));
+          static_cast<unsigned int>(m_policy.m_prod_tile_dims));
 
       // FIXME_SYCL Find a better way to determine a good limit for the
       // maximum number of work groups, also see

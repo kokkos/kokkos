@@ -896,7 +896,7 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
     int const async_arg = m_policy.space().acc_async_queue();
 #if 0  // FIXME_OPENACC: OpenACC requires tile size to be constant.
     for (int i = 0; i < rank; ++i) {
-      if (m_policy.m_tile[i] < 1) {
+      if (tile_size[i] < 1) {
         Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(
             Kokkos::Experimental::Impl::OpenACCCollapse(),
             std::integral_constant<Iterate, Policy::inner_direction>(),
