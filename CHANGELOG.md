@@ -18,14 +18,10 @@
 * Enable C++23 support with NVCC (available since CUDA 13.3.0) [\#9264](https://github.com/kokkos/kokkos/pull/9264)
 
 #### HIP:
-* Improve performance of load/store atomic by leveraging compiler built-ins instead of generating them via CAS [\#9040](https://github.com/kokkos/kokkos/pull/9040) [\#9219](https://github.com/kokkos/kokkos/pull/9219)
 * Add AMD GFX1151 (Strix Halo / Radeon 8060S) architecture support [\#9179](https://github.com/kokkos/kokkos/pull/9179)
 * Add AMD Radeon 860M / RDNA3.5 / gfx1152 architecture support [\#9242](https://github.com/kokkos/kokkos/pull/9242)
 * Add AMD GFX1101 (Radeon RX 7800 XT, RX 7700 XT, RX 7700) architecture support [\#9230](https://github.com/kokkos/kokkos/pull/9230)
 * Improve performance of `deep_copy(v, 0)` on MI300A [\#9125](https://github.com/kokkos/kokkos/pull/9125)
-
-#### SYCL:
-* Fix Windows build issues [\#9043](https://github.com/kokkos/kokkos/pull/9043)
 
 #### OpenACC:
 * Fix OpenACC `parallel_scan` chunk boundary race [\#9078](https://github.com/kokkos/kokkos/pull/9078)
@@ -37,6 +33,7 @@
 * Fix team `parallel_reduce` [\#9138](https://github.com/kokkos/kokkos/pull/9138)
 
 ### General Enhancements
+* Improve performance of load/store atomic by leveraging compiler built-ins instead of generating them via CAS [\#9040](https://github.com/kokkos/kokkos/pull/9040) [\#9219](https://github.com/kokkos/kokkos/pull/9219)
 * Add `index_type` (signed) to execution space instance classes and harmonize with `size_type` (unsigned) across different backends [\#7441](https://github.com/kokkos/kokkos/pull/7441)
 * Add `noexcept` annotations to move constructors and assignment operators of execution spaces [\#8990](https://github.com/kokkos/kokkos/pull/8990)
 * Make View move constructor `noexcept` [\#8792](https://github.com/kokkos/kokkos/pull/8792)
@@ -56,6 +53,7 @@
 * Ensure the C++20 module `kokkos.core` can be used with latest MSVC and gcc-16. [\#9148](https://github.com/kokkos/kokkos/pull/9148), [\#9149](https://github.com/kokkos/kokkos/pull/9149).
 * Allow access to backend-native node in `Kokkos::Graph` [\#9147](https://github.com/kokkos/kokkos/pull/9147)
 * Promote numeric traits from `Experimental::` namespace into `Kokkos::` [\#9082](https://github.com/kokkos/kokkos/pull/9082)
+* simd-sve: replace memory load by zip-lane-set in gen-based simd constructors for improved performance [\#9192](https://github.com/kokkos/kokkos/pull/9192)
 
 ### Build System Changes
 * Build system prints output of compilation check [\#8986](https://github.com/kokkos/kokkos/pull/8986)
@@ -64,6 +62,7 @@
 
 ### Incompatibilities (i.e. breaking changes)
 * Abort with identical view arguments to `deep_copy()` instead of silently doing nothing [\#9033](https://github.com/kokkos/kokkos/pull/9033)
+* `is_assignable` now returns false when querying if one can assign to a const `View` (not `View` of const elements`) [\#9073](https://github.com/kokkos/kokkos/pull/9073)
 
 ### Deprecations
 * Deprecate `[static_]extent(r)` calls with `r >= rank()` to align with `mdspan` preconditions [\#9076](https://github.com/kokkos/kokkos/pull/9076) [\#9075](https://github.com/kokkos/kokkos/pull/9075) [\#9072](https://github.com/kokkos/kokkos/pull/9072) [\#9074](https://github.com/kokkos/kokkos/pull/9074)
@@ -96,10 +95,8 @@
 * Fix segfaults when doing unaligned simd stores on AVX512 [\#9184](https://github.com/kokkos/kokkos/pull/9184)
 * Fix signed integer overflow UB in random generators’ range functions [\#9216](https://github.com/kokkos/kokkos/pull/9216)
 * Fixing memory error in `make_candidate_set` tuning function [\#7875](https://github.com/kokkos/kokkos/pull/7875)
-* `is_assignable` now returns false when querying if one can assign to a const `View` (not `View` of const elements`) [\#9073](https://github.com/kokkos/kokkos/pull/9073)
 * Fixed nullptr dereference possibility with GCC 12.5.0 [\#9262](https://github.com/kokkos/kokkos/pull/9262)
 * Fix accumulator type in `parallel_scan` when using more exotic types (e.g., automatic differentiation frameworks) [\#9178](https://github.com/kokkos/kokkos/pull/9178)
-* simd-sve: replace memory load by zip-lane-set in gen-based simd constructors for improved performance [\#9192](https://github.com/kokkos/kokkos/pull/9192)
 * Fix thread-safety for `parallel_scan` [\#9300](https://github.com/kokkos/kokkos/pull/9300)
 * Fix ambiguous overload in Kokkos::resize with ExecutionSpace [\#9128](https://github.com/kokkos/kokkos/pull/9128)
 * Fix construction of an unmanaged subview from a view [\#8967](https://github.com/kokkos/kokkos/pull/8967)
