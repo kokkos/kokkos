@@ -562,6 +562,8 @@ TEST(kokkosp, empty_view) {
 
 #ifdef KOKKOS_ENABLE_CUDA
   test_empty_view_allocation_events<Kokkos::CudaSpace>();
+  test_empty_view_allocation_events<Kokkos::CudaUVMSpace>();
+  test_empty_view_allocation_events<Kokkos::CudaHostPinnedSpace>();
 #endif
 
 #ifdef KOKKOS_ENABLE_HIP
