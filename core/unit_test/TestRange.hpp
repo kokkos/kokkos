@@ -466,6 +466,24 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
 }
 #endif
 
+void test_small_index_type() {
+  using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
+  constexpr int size   = 1024;
+  Kokkos::View<int *, TEST_EXECSPACE::memory_space> v("v", size);
+
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<short>>(0, size),
+      KOKKOS_LAMBDA(short i) { v(i) += i; });
+
+  int sum;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<short>>(0, size),
+      KOKKOS_LAMBDA(short i, int &partial_sum) { partial_sum += v(i); }, sum);
+  ASSERT_EQ(sum, ((size - 1) * size) / 2);
+}
+
+TEST(TEST_CATEGORY, small_index_type) { test_small_index_type(); }
+
 TEST(TEST_CATEGORY, check_batch_size) {
   ASSERT_TRUE(Kokkos::Experimental::StaticBatchSize<1>::batch_size == 1);
   ASSERT_TRUE(Kokkos::Experimental::StaticBatchSize<4>::batch_size == 4);
