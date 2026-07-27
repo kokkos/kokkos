@@ -12,6 +12,8 @@ import kokkos.core_impl;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <impl/Kokkos_ClockTic.hpp>
+
 #include <cstdint>
 #include <type_traits>
 #include <utility>
