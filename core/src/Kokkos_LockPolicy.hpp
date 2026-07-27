@@ -275,9 +275,6 @@ class LockGuard {
 
 // ExecutionSpace traits used for backend dispatch in atomic_locked_action
 template <typename ExecutionSpace>
-struct is_serial_execution_space : std::false_type {};
-
-template <typename ExecutionSpace>
 inline constexpr bool is_serial_execution_space_v = false;
 
 #if defined(KOKKOS_ENABLE_SERIAL)
@@ -293,9 +290,20 @@ template <>
 inline constexpr bool is_hip_execution_space_v<Kokkos::HIP> = true;
 #endif
 
-#if defined(KOKKOS_ENABLE_HIP)
-// Runs `action` atomically under `lock`, safe for AMD wavefronts that do not
-// guarantee independent forward progress between lanes.
+template <typename ExecutionSpace>
+inline constexpr bool is_cuda_execution_space_v = false;
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <>
+inline constexpr bool is_cuda_execution_space_v<Kokkos::Cuda> = true;
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_CUDA)
+// Runs `action` atomically under `lock`, safe for SIMT execution groups that
+// do not guarantee independent forward progress between lanes: AMD
+// wavefronts (always, on every ROCm/architecture combination we know of),
+// and NVIDIA warps on architectures older than Volta (compute capability
+// < 7.0), which predate Independent Thread Scheduling.
 //
 // This deliberately avoids warp-vote/shuffle intrinsics (__ballot, __shfl,
 // __activemask, and friends) for the lane-election logic itself. Their use
@@ -308,19 +316,19 @@ inline constexpr bool is_hip_execution_space_v<Kokkos::HIP> = true;
 // depending on that fix being present for whichever ROCm version and hardware
 // this ends up compiled against, and sidesteps the question entirely.
 //
-// Instead, every lane in the wavefront runs the "same" uniform, convergent
+// Instead, every lane in the group runs the "same" uniform, convergent
 // loop over lane indices. The loop structure never depends on any
 // other lane's state. Within that loop, only the lane whose own index
 // matches the current iteration ever touches `lock`, every other lane's
-// iteration is a no-op. This means at most one lane per wavefront is ever
+// iteration is a no-op. This means at most one lane per group is ever
 // inside the acquire/action/release sequence at a time, which is what
 // actually removes the lockstep hazard. Because only one lane is ever
 // spinning at a time, it's safe to reuse the same LockPolicy types used by
 // the generic path for the elected lane's own acquire/release.
 //
-// Cost: this serializes the whole wavefront through this call, one lane at
+// Cost: this serializes the whole group through this call, one lane at
 // a time, even when the individual locks are all different and
-// uncontended. It trades away all intra-wavefront parallelism for this
+// uncontended. It trades away all intra-group parallelism for this
 // operation in exchange for correctness on this hardware. (A better solution
 // could be considered, but it is not trivial.)
 //
@@ -329,15 +337,15 @@ inline constexpr bool is_hip_execution_space_v<Kokkos::HIP> = true;
 // implementation on top of __ballot/__shfl for ROCm versions known to have
 // the fix, selected at compile time via HIP_VERSION (or
 // HIP_VERSION_MAJOR/HIP_VERSION_MINOR), falling back to this uniform loop
-// to recover intra-wavefront parallelism for uncontended locks?
+// to recover intra-group parallelism for uncontended locks?
 //
-// NOTE: This does NOT remove the more general (and universal, CUDA included)
-// concern that a lock could be held by a thread in a different wavefront
-// that isn't currently scheduled. This also apply to CPU if a thread is never
-// rescheduled by the kernel, that's a launch/occupancy concern for any hardware
-// spinlock, not something fixable at this layer.
+// NOTE: This does NOT remove the more general (and universal, Volta+ CUDA
+// included) concern that a lock could be held by a thread in a different
+// group that isn't currently scheduled. This also apply to CPU if a thread is
+// never rescheduled by the kernel, that's a launch/occupancy concern for any
+// hardware spinlock, not something fixable at this layer.
 template <typename LockType, typename LockPolicy, typename Function>
-KOKKOS_INLINE_FUNCTION decltype(auto) hip_wavefront_serialized_locked_action(
+KOKKOS_INLINE_FUNCTION decltype(auto) lane_serialized_locked_action(
     LockType* lock, LockPolicy policy, Function&& action) {
   KOKKOS_IF_ON_HOST((Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
                      return action();))
@@ -363,8 +371,8 @@ KOKKOS_INLINE_FUNCTION decltype(auto) hip_wavefront_serialized_locked_action(
       } else {
         static_assert(
             std::is_default_constructible_v<ReturnType>,
-            "On HIP, atomic_locked_action requires the action's return "
-            "type to be default-constructible (or void).");
+            "atomic_locked_action's lane-serialized path requires the "
+            "action's return type to be default-constructible (or void).");
         ReturnType result{};
         for (unsigned int elected_lane = 0;
              elected_lane < static_cast<unsigned int>(warpSize);
@@ -379,7 +387,28 @@ KOKKOS_INLINE_FUNCTION decltype(auto) hip_wavefront_serialized_locked_action(
         return result;
       }))
 }
-#endif  // KOKKOS_ENABLE_HIP
+#endif  // KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_CUDA
+
+#if defined(KOKKOS_ENABLE_CUDA)
+// CUDA-specific dispatch: routes to the lane-serialized path above only on
+// pre-Volta architectures (compute capability < 7.0).
+template <typename LockType, typename LockPolicy, typename Function>
+KOKKOS_INLINE_FUNCTION decltype(auto) cuda_dispatch_locked_action(
+    LockType* lock, LockPolicy policy, Function&& action) {
+  KOKKOS_IF_ON_HOST((Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
+                     return action();))
+
+  KOKKOS_IF_ON_DEVICE((
+#if __CUDA_ARCH__ < 700
+      return Impl::lane_serialized_locked_action(
+                 lock, policy, std::forward<Function>(action));
+#else
+      Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
+      return action();
+#endif
+      ))
+}
+#endif  // KOKKOS_ENABLE_CUDA
 
 }  // namespace Impl
 
@@ -397,14 +426,15 @@ namespace LockPolicy {
 //
 // NOTE: taken on its own, those are naive algorithms with no special handling
 // for GPUs that do not guarantee independent forward progress within a
-// wavefront (e.g. AMD HIP): two lanes of the same wavefront contending for
-// the same lock can deadlock if one holds the lock while another spins
-// here, because the hardware may not reschedule the holder until the
-// waiter's SIMD step completes. `atomic_locked_action` (below) handles this
-// correctly for `ExecutionSpace = Kokkos::HIP` via wavefront-serialized
-// dispatch, see `hip_wavefront_serialized_locked_action`(above). Using these
-// LockPolicy types on HIP (or an other harware without forward progress)
-// outside a carefully crafted dispatch remain unsafe.
+// warp/wavefront (e.g. AMD HIP, and NVIDIA pre-Volta): two lanes of the same
+// group contending for the same lock can deadlock if one holds the lock
+// while another spins here, because the hardware may not reschedule the
+// holder until the waiter's SIMD step completes. `atomic_locked_action`
+// (below) handles this correctly for `ExecutionSpace = Kokkos::HIP` and for
+// pre-Volta `Kokkos::Cuda` via lane-serialized dispatch, see
+// `Impl::lane_serialized_locked_action` (above). Using these LockPolicy
+// types directly on such hardware (or any other lacking forward progress)
+// outside a carefully crafted dispatch remains unsafe.
 
 // ==============================================================================
 // SPINLOCK POLICIES
@@ -490,11 +520,15 @@ using ClockRandomBackoffTTAS =
 // Dispatch:
 //   - ExecutionSpace = Kokkos::Serial: no-op lock -- a single thread can
 //     never contend with itself, so `action` just runs directly.
-//   - ExecutionSpace = Kokkos::HIP: wavefront-serialized dispatch (see
-//     Impl::hip_wavefront_serialized_locked_action) to avoid the
-//     lockstep/forward-progress hazard.
-//   - Everything else (OpenMP, Threads, Cuda, SYCL, HPX, ...): the generic
-//     LockPolicy-based spin loop via Impl::LockGuard.
+//   - ExecutionSpace = Kokkos::HIP: lane-serialized dispatch (see
+//     Impl::lane_serialized_locked_action) to avoid the lockstep/forward-
+//     progress hazard.
+//   - ExecutionSpace = Kokkos::Cuda: lane-serialized dispatch too, but only
+//     on pre-Volta architectures (compute capability < 7.0). Volta and later
+//     have Independent Thread Scheduling and use the generic path below
+//     instead.
+//   - Everything else (OpenMP, Threads, Volta+ Cuda, SYCL, HPX, ...): the
+//     generic LockPolicy-based spin loop via Impl::LockGuard.
 //
 // Four overloads are provided, differing in how much you want to specify
 // explicitly (LockType and Function are always deduced from `lock` and
@@ -538,8 +572,14 @@ KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
   }
 #if defined(KOKKOS_ENABLE_HIP)
   else if constexpr (Impl::is_hip_execution_space_v<ExecutionSpace>) {
-    return Impl::hip_wavefront_serialized_locked_action(
-        lock, policy, std::forward<Function>(action));
+    return Impl::lane_serialized_locked_action(lock, policy,
+                                               std::forward<Function>(action));
+  }
+#endif
+#if defined(KOKKOS_ENABLE_CUDA)
+  else if constexpr (Impl::is_cuda_execution_space_v<ExecutionSpace>) {
+    return Impl::cuda_dispatch_locked_action(lock, policy,
+                                             std::forward<Function>(action));
   }
 #endif
   else {
