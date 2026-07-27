@@ -566,7 +566,8 @@ TEST(kokkosp, empty_view) {
   test_empty_view_allocation_events<Kokkos::CudaHostPinnedSpace>();
 #endif
 
-  test_empty_view_allocation_events<Kokkos::DefaultExecutionSpace::memory_space>();
+  test_empty_view_allocation_events<
+      Kokkos::DefaultExecutionSpace::memory_space>();
 #ifdef KOKKOS_HAS_SHARED_SPACE
   test_empty_view_allocation_events<Kokkos::SharedSpace>();
 #endif
