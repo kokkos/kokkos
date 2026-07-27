@@ -559,8 +559,6 @@ void test_empty_view_allocation_events() {
 
 TEST(kokkosp, empty_view) {
   test_empty_view_allocation_events<Kokkos::HostSpace>();
-
-
   test_empty_view_allocation_events<
       Kokkos::DefaultExecutionSpace::memory_space>();
 #ifdef KOKKOS_HAS_SHARED_SPACE
