@@ -566,25 +566,12 @@ TEST(kokkosp, empty_view) {
   test_empty_view_allocation_events<Kokkos::CudaHostPinnedSpace>();
 #endif
 
-#ifdef KOKKOS_ENABLE_HIP
-  test_empty_view_allocation_events<Kokkos::HIPSpace>();
-  test_empty_view_allocation_events<Kokkos::HIPManagedSpace>();
-  test_empty_view_allocation_events<Kokkos::HIPHostPinnedSpace>();
+  test_empty_view_allocation_events<Kokkos::DefaultExecutionSpace::memory_space>();
+#ifdef KOKKOS_HAS_SHARED_SPACE
+  test_empty_view_allocation_events<Kokkos::SharedSpace>();
 #endif
-
-#ifdef KOKKOS_ENABLE_SYCL
-  test_empty_view_allocation_events<Kokkos::SYCLDeviceUSMSpace>();
-  test_empty_view_allocation_events<Kokkos::SYCLSharedUSMSpace>();
-  test_empty_view_allocation_events<Kokkos::SYCLHostUSMSpace>();
-#endif
-
-#ifdef KOKKOS_ENABLE_OPENACC
-  test_empty_view_allocation_events<Kokkos::Experimental::OpenACCSpace>();
-#endif
-
-#ifdef KOKKOS_ENABLE_NEXTSILICON
-  test_empty_view_allocation_events<
-      Kokkos::Experimental::NextSiliconSharedSpace>();
+#ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
+  test_empty_view_allocation_events<Kokkos::SharedHostPinnedSpace>();
 #endif
 }
 
