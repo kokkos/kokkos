@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <impl/Kokkos_Utilities.hpp>  // type_list
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
 #include <traits/Kokkos_Traits_fwd.hpp>
 
@@ -23,11 +24,6 @@ namespace Impl {
 // ignored, and the trait can specialize PolicyTraitAdapterImpl to get the
 // desired behavior.
 
-//------------------------------------------------------------------------------
-
-
-
-//------------------------------------------------------------------------------
 // <editor-fold desc="PolicyTraitAdaptorImpl specializations"> {{{2
 
 // Matching version, replace the trait

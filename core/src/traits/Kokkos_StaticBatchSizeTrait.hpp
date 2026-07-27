@@ -7,6 +7,8 @@
 #include <Kokkos_Macros.hpp>
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
+
 
 namespace Kokkos::Experimental {
 
