@@ -275,17 +275,20 @@ class LockGuard {
 template <typename ExecutionSpace>
 struct is_serial_execution_space : std::false_type {};
 
+template <typename ExecutionSpace>
+inline constexpr bool is_serial_execution_space_v = false;
+
 #if defined(KOKKOS_ENABLE_SERIAL)
 template <>
-struct is_serial_execution_space<Kokkos::Serial> : std::true_type {};
+inline constexpr bool is_serial_execution_space_v<Kokkos::Serial> = true;
 #endif
 
 template <typename ExecutionSpace>
-struct is_hip_execution_space : std::false_type {};
+inline constexpr bool is_hip_execution_space_v = false;
 
 #if defined(KOKKOS_ENABLE_HIP)
 template <>
-struct is_hip_execution_space<Kokkos::HIP> : std::true_type {};
+inline constexpr bool is_hip_execution_space_v<Kokkos::HIP> = true;
 #endif
 
 #if defined(KOKKOS_ENABLE_HIP)
@@ -522,17 +525,17 @@ template <typename ExecutionSpace, typename LockType, typename LockPolicy,
 KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
                                                            LockPolicy policy,
                                                            Function&& action) {
-  static_assert(std::is_integral<LockType>::value,
+  static_assert(std::is_integral_v<LockType>,
                 "LockType must be an integral type supported by Kokkos "
                 "atomics.");
 
-  if constexpr (Impl::is_serial_execution_space<ExecutionSpace>::value) {
+  if constexpr (Impl::is_serial_execution_space_v<ExecutionSpace>) {
     // Serial: only one thread ever exists, so nothing else can be
     // contending for this lock. Skip the atomic dance entirely.
     return action();
   }
 #if defined(KOKKOS_ENABLE_HIP)
-  else if constexpr (Impl::is_hip_execution_space<ExecutionSpace>::value) {
+  else if constexpr (Impl::is_hip_execution_space_v<ExecutionSpace>) {
     return Impl::hip_wavefront_serialized_locked_action(
         lock, policy, std::forward<Function>(action));
   }
