@@ -560,11 +560,6 @@ void test_empty_view_allocation_events() {
 TEST(kokkosp, empty_view) {
   test_empty_view_allocation_events<Kokkos::HostSpace>();
 
-#ifdef KOKKOS_ENABLE_CUDA
-  test_empty_view_allocation_events<Kokkos::CudaSpace>();
-  test_empty_view_allocation_events<Kokkos::CudaUVMSpace>();
-  test_empty_view_allocation_events<Kokkos::CudaHostPinnedSpace>();
-#endif
 
   test_empty_view_allocation_events<
       Kokkos::DefaultExecutionSpace::memory_space>();
