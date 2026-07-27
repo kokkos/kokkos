@@ -11,7 +11,6 @@
 #include <type_traits>                           // is_void
 #include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
-
 namespace Kokkos {
 namespace Impl {
 

@@ -11,7 +11,6 @@
 #include <impl/Kokkos_Utilities.hpp>
 #include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
-
 namespace Kokkos {
 namespace Impl {
 
