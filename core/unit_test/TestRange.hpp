@@ -466,28 +466,36 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
 }
 #endif
 
+template <class IndexType>
 void test_small_index_type() {
   using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
   constexpr int size   = 1024;
   Kokkos::View<int*, TEST_EXECSPACE::memory_space> v("v", size);
 
   Kokkos::parallel_for(
-      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<short>>(0, size),
-      KOKKOS_LAMBDA(short i) { v(i) += i; });
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(0,
+                                                                        size),
+      KOKKOS_LAMBDA(IndexType i) { v(i) += i; });
 
   int sum;
   Kokkos::parallel_reduce(
-      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<short>>(0, size),
-      KOKKOS_LAMBDA(short i, int& partial_sum) { partial_sum += v(i); }, sum);
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(0,
+                                                                        size),
+      KOKKOS_LAMBDA(IndexType i, int& partial_sum) { partial_sum += v(i); },
+      sum);
   ASSERT_EQ(sum, ((size - 1) * size) / 2);
 }
 
 TEST(TEST_CATEGORY, small_index_type) {
 #if defined(KOKKOS_ENABLE_OPENACC)
-  GTEST_SKIP() << "OpenACC doesn't support index types smaller than int";
-#else
-  test_small_index_type();
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP() << "OpenACC doesn't support index types smaller than int";
+  } else
 #endif
+  {
+    test_small_index_type<short>();
+    test_small_index_type<unsigned short>();
+  }
 }
 
 TEST(TEST_CATEGORY, check_batch_size) {
