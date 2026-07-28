@@ -53,7 +53,7 @@ KOKKOS_INLINE_FUNCTION uint32_t get_hardware_thread_id() {
 KOKKOS_INLINE_FUNCTION uint32_t generate_thread_seed() {
   uint32_t tid = get_hardware_thread_id();
   auto tic     = static_cast<uint64_t>(Kokkos::Impl::clock_tic());
-  // Combine the tid and tic together as original seed
+  // Combine tid and tic together into the initial seed.
   uint32_t seed = tid ^ static_cast<uint32_t>(tic ^ (tic >> 32));
 
   // Thomas Wang's hash function to spread entropy.
@@ -119,7 +119,7 @@ class TickExponentialBackoff {
 
   KOKKOS_INLINE_FUNCTION void on_failed_attempt() {
     for (uint32_t tick = 0; tick < m_delay; ++tick) {
-      // The fence should keep the compiler from proving this loop has no
+      // The fence keeps the compiler from proving this loop has no
       // observable effect and hoisting or collapsing it away, and forces a
       // fresh read each iteration.
       Kokkos::load_fence();
@@ -156,8 +156,7 @@ class ClockExponentialBackoff {
     int shift               = (m_attempt < max_shift) ? m_attempt : max_shift;
     uint32_t raw_delay      = (static_cast<uint32_t>(1) << shift);
     auto delay              = static_cast<decltype(start)>(
-        raw_delay < m_max_delay ? raw_delay
-                                             : static_cast<uint64_t>(m_max_delay));
+        raw_delay < m_max_delay ? raw_delay : m_max_delay);
 
     while (static_cast<decltype(start)>(Kokkos::Impl::clock_tic()) - start <
            delay) {
@@ -249,7 +248,7 @@ class BackoffLockPolicy {
 
 // RAII guard. Using a guard instead of a manual acquire/action/release
 // sequence to ensure that the lock is still released if `action` throws on the
-// host side (device code never throws exeception, but a host lambda passed to
+// host side (device code never throws exceptions, but a host lambda passed to
 // the same generic API might).
 template <typename LockType, typename LockPolicy>
 class LockGuard {
@@ -314,13 +313,13 @@ inline constexpr bool is_sycl_execution_space_v<Kokkos::SYCL> = true;
 // NVIDIA warps on architectures older than Volta (compute capability
 // < 7.0), which predate Independent Thread Scheduling, and Intel sub-groups.
 //
-// Originally, this has deliberately avoiding the use of warp-vote/shuffle
-// intrinsics (__ballot, __shfl, __activemask, and friends) for the
-// lane-election logic itself because their use under divergent control flow
-// (like here) was affected by at least a confirmed HIP compiler bug that
-// produced wrong results (see ROCm/hip#952 and the follow-up ROCm/hip#2474),
-// reported present as late as 2022 and fixed in 2023. Now, it also allow to
-// have a common algorithm for HIP, CUDA pre-Volta, and Intel GPUs.
+// This deliberately avoids warp-vote/shuffle intrinsics (__ballot, __shfl,
+// __activemask, and friends) for the lane-election logic itself: their use
+// under divergent control flow (like here) was affected by at least a
+// confirmed HIP compiler bug that produced wrong results (see ROCm/hip#952
+// and the follow-up ROCm/hip#2474), reported present as late as 2022 and
+// fixed in 2023. This choice also lets HIP, pre-Volta CUDA, and SYCL share
+// the same algorithm.
 //
 // Every lane in the group runs the "same" uniform, convergent loop over lane
 // indices. The loop structure never depends on any other lane's state. Within
@@ -334,7 +333,7 @@ inline constexpr bool is_sycl_execution_space_v<Kokkos::SYCL> = true;
 // Cost: this serializes the whole group through this call, one lane at a time,
 // even when the individual locks are all different and uncontended. It trades
 // away all intra-group parallelism for this operation in exchange for
-// correctness on those hardware. (A better solution could be considered, but it
+// correctness on that hardware. (A better solution could be considered, but it
 // is not trivial.)
 //
 // Open question for a later pass: given the failure was a compiler bug and not
@@ -346,9 +345,9 @@ inline constexpr bool is_sycl_execution_space_v<Kokkos::SYCL> = true;
 //
 // NOTE: This does NOT remove the more general (and universal) concern that a
 // lock could be held by a thread in a different group that isn't currently
-// scheduled. This also apply to CPU if a thread is never rescheduled by the
-// kernel, that's a launch/occupancy concern for any hardware spinlock, not
-// something fixable at this layer.
+// scheduled. This also applies on CPU, where a thread might never be
+// rescheduled by the kernel: that's a launch/occupancy concern for any
+// hardware spinlock, not something fixable at this layer.
 template <typename LockType, typename LockPolicy, typename Function>
 KOKKOS_INLINE_FUNCTION decltype(auto) lane_serialized_locked_action_core(
     unsigned int my_lane, unsigned int group_size, LockType* lock,
@@ -410,8 +409,8 @@ KOKKOS_INLINE_FUNCTION decltype(auto) lane_serialized_locked_action(
 
 #if defined(KOKKOS_ENABLE_SYCL)
 // Getting the current sub-group requires
-// sycl::ext::oneapi::this_work_item::get_sub_group() an Intel DPC++ extension,
-// with no core SYCL equivalent to my knowledge.
+// sycl::ext::oneapi::this_work_item::get_sub_group(), an Intel DPC++
+// extension, with no core SYCL equivalent we know of.
 #if !defined(SYCL_EXT_ONEAPI_FREE_FUNCTION_QUERIES)
 #error \
     "atomic_locked_action's SYCL path needs sycl_ext_oneapi_free_function_queries " \
@@ -471,15 +470,15 @@ namespace LockPolicy {
 //
 // NOTE: taken on its own, those are naive algorithms with no special handling
 // for GPUs that do not guarantee independent forward progress within a
-// warp/wavefront (e.g. AMD HIP, and NVIDIA pre-Volta): two lanes of the same
-// group contending for the same lock can deadlock if one holds the lock
+// warp/wavefront (e.g. AMD HIP, NVIDIA pre-Volta, and SYCL): two lanes of the
+// same group contending for the same lock can deadlock if one holds the lock
 // while another spins here, because the hardware may not reschedule the
 // holder until the waiter's SIMD step completes. `atomic_locked_action`
-// (below) handles this correctly for `ExecutionSpace = Kokkos::HIP` and for
-// pre-Volta `Kokkos::Cuda` via lane-serialized dispatch, see
-// `Impl::lane_serialized_locked_action` (above). Using these LockPolicy
-// types directly on such hardware (or any other lacking forward progress)
-// outside a carefully crafted dispatch remains unsafe.
+// (below) handles this correctly for `ExecutionSpace = Kokkos::HIP`,
+// pre-Volta `Kokkos::Cuda`, and `Kokkos::SYCL` via lane-serialized dispatch,
+// see `Impl::lane_serialized_locked_action_core` (above). Using these
+// LockPolicy types directly on such hardware (or any other lacking forward
+// progress) outside a carefully crafted dispatch remains unsafe.
 
 // ==============================================================================
 // SPINLOCK POLICIES
@@ -490,7 +489,7 @@ struct PureSpinlock {
   template <typename LockType>
   KOKKOS_INLINE_FUNCTION void acquire(LockType* lock) const {
     while (!Impl::try_lock_cas(lock)) {
-      // The fence should prevent the compiler from optimizing this loop away
+      // The fence prevents the compiler from optimizing this loop away
       // and forces a fresh attempt each iteration.
       Kokkos::load_fence();
     }
@@ -572,8 +571,8 @@ using ClockRandomBackoffTTAS =
 //     on pre-Volta architectures (compute capability < 7.0). Volta and later
 //     have Independent Thread Scheduling and use the generic path below
 //     instead.
-//   - ExecutionSpace = Kokkos::SYCL: also the lane-serialized dispatch (see
-//     Impl::sycl_lane_serialized_locked_action).
+//   - ExecutionSpace = Kokkos::SYCL: also uses the lane-serialized dispatch
+//     (see Impl::sycl_lane_serialized_locked_action), unconditionally.
 //   - Everything else (OpenMP, Threads, Volta+ Cuda, HPX, ...): the generic
 //     LockPolicy-based spin loop via Impl::LockGuard.
 //
@@ -592,7 +591,7 @@ using ClockRandomBackoffTTAS =
 
 /**
  * @brief Acquires `lock` using `policy`, runs `action` atomically, then
- * releases `lock`. Dispatch using `ExecutionSpace`.
+ * releases `lock`. Dispatches on `ExecutionSpace`.
  *
  * @tparam ExecutionSpace The Kokkos execution space this call runs under.
  * @tparam LockType   Underlying type of the lock word (e.g. int32_t,
