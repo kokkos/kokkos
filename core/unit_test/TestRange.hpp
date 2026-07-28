@@ -487,6 +487,8 @@ void test_small_index_type() {
 }
 
 TEST(TEST_CATEGORY, small_index_type) {
+  // FIXME_OPENACC: device parallel loops using a type smaller than int for
+  // their loop variable are not executed
 #if defined(KOKKOS_ENABLE_OPENACC)
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
     GTEST_SKIP() << "OpenACC doesn't support index types smaller than int";
