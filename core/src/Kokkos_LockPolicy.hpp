@@ -234,6 +234,7 @@ class BackoffLockPolicy {
     while (!TryLock::try_lock(lock)) {
       backoff.on_failed_attempt();
     }
+    Kokkos::memory_fence();  // Prevent speculative execution of action()
   }
 
   template <typename LockType>
@@ -493,6 +494,7 @@ struct PureSpinlock {
       // and forces a fresh attempt each iteration.
       Kokkos::load_fence();
     }
+    Kokkos::memory_fence();  // Prevent speculative execution of action()
   }
 
   template <typename LockType>
@@ -513,6 +515,7 @@ struct SpinlockTTAS {
     while (!Impl::try_lock_ttas(lock)) {
       Kokkos::load_fence();
     }
+    Kokkos::memory_fence();  // Prevent speculative execution of action()
   }
 
   template <typename LockType>
