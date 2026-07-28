@@ -15,6 +15,7 @@ static_assert(false,
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_DetectionIdiom.hpp>
 #include <Kokkos_ExecPolicy.hpp>
+#include <impl/Kokkos_HostThreadTeam.hpp>
 #include <Kokkos_View.hpp>
 
 #include <impl/Kokkos_Tools.hpp>
@@ -116,7 +117,8 @@ namespace Kokkos {
  * If \c execution_space is not defined DefaultExecutionSpace will be used.
  */
 template <class Label, Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
-  requires(std::is_constructible_v<std::string, const Label&>)
+  requires(std::is_constructible_v<std::string, const Label&> &&
+           Kokkos::ExecutionSpace<typename ExecPolicy::execution_type>)
 inline void parallel_for([[maybe_unused]] const Label& label,
                          const ExecPolicy& policy, const FunctorType& functor) {
   // Work around unsuppressable warning of calling host (constexpr) function
@@ -146,6 +148,7 @@ inline void parallel_for([[maybe_unused]] const Label& label,
 }
 
 template <Kokkos::ExecutionPolicy ExecPolicy, class FunctorType>
+  requires Kokkos::ExecutionSpace<typename ExecPolicy::execution_type>
 KOKKOS_INLINE_FUNCTION void parallel_for(const ExecPolicy& policy,
                                          const FunctorType& functor) {
   KOKKOS_IF_ON_DEVICE(
@@ -540,8 +543,5 @@ struct FunctorTeamShmemSize<FunctorType, true, true> {
 
 }  // namespace Impl
 }  // namespace Kokkos
-
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
 
 #endif /* KOKKOS_PARALLEL_HPP */

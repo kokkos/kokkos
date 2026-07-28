@@ -27,6 +27,7 @@ class OpenACCTeamMember {
   using execution_space      = Kokkos::Experimental::OpenACC;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = OpenACCTeamMember;
+  using thread_handle        = Kokkos::ThreadHandle<team_handle>;
 
   scratch_memory_space m_team_shared;
   int m_team_scratch_size[2];
@@ -58,6 +59,11 @@ class OpenACCTeamMember {
   KOKKOS_FUNCTION int team_rank() const { return m_team_rank; }
   KOKKOS_FUNCTION int vector_length() const { return m_vector_length; }
   KOKKOS_FUNCTION int team_size() const { return m_team_size; }
+
+  /** \brief Maximum concurrency at team level (team_size * vector_length). */
+  KOKKOS_FUNCTION int concurrency() const {
+    return team_size() * vector_length();
+  }
 
   // FIXME_OPENACC: OpenACC does not provide any explicit barrier constructs
   // for device kernels.
@@ -474,6 +480,18 @@ struct TeamVectorRangeBoundariesStruct<iType, OpenACCTeamMember> {
   TeamVectorRangeBoundariesStruct(const OpenACCTeamMember& arg_thread,
                                   index_type arg_begin, index_type arg_end)
       : start(arg_begin), end(arg_end), member(arg_thread) {}
+};
+
+template <typename iType>
+struct InlineRangeBoundariesStruct<iType, OpenACCTeamMember> {
+  using index_type = iType;
+  const index_type start;
+  const index_type end;
+
+  KOKKOS_INLINE_FUNCTION
+  InlineRangeBoundariesStruct(Kokkos::ThreadHandle<OpenACCTeamMember> const&,
+                              index_type arg_begin, index_type arg_end)
+      : start(arg_begin), end(arg_end) {}
 };
 
 }  // namespace Impl

@@ -15,6 +15,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;

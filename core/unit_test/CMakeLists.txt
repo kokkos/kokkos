@@ -231,9 +231,16 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
     endforeach()
 
     # Add additional test(s) from subdirectory range_policy
-    set(file ${dir}/Test${Tag}_RangePolicyExecutionTypes.cpp)
+    set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
     file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                "#include <range_policy/TestRangePolicyExecutionTypes.hpp>\n"
+                                "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
+    )
+    configure_file(${dir}/dummy.cpp ${file})
+    list(APPEND ${Tag}_SOURCES1B ${file})
+
+    set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
+    file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
     )
     configure_file(${dir}/dummy.cpp ${file})
     list(APPEND ${Tag}_SOURCES1B ${file})

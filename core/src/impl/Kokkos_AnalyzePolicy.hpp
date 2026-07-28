@@ -11,6 +11,8 @@
 
 #include <traits/Kokkos_ExecutionSpaceTrait.hpp>
 #include <traits/Kokkos_TeamHandleTrait.hpp>
+#include <traits/Kokkos_ThreadHandleTrait.hpp>
+#include <traits/Kokkos_InlineHandleTrait.hpp>
 #include <traits/Kokkos_GraphKernelTrait.hpp>
 #include <traits/Kokkos_IndexTypeTrait.hpp>
 #include <traits/Kokkos_IterationPatternTrait.hpp>
@@ -165,6 +167,29 @@ struct DefaultExecutionSpaceSelector<T> {
   using type = typename T::execution_space;
 };
 
+template <Kokkos::ThreadHandleType T>
+struct DefaultExecutionSpaceSelector<T> {
+  using type = typename T::execution_space;
+};
+
+template <Kokkos::InlineHandleType T>
+struct DefaultExecutionSpaceSelector<T> {
+  using type = typename T::execution_space;
+};
+
+// Helper to get the primary handle type for execution space/type deduction
+template <class AnalysisResults>
+struct HandleSelector {
+  using type = std::conditional_t<
+      !AnalysisResults::inline_handle_is_defaulted,
+      typename AnalysisResults::inline_handle,
+      std::conditional_t<
+          !AnalysisResults::thread_handle_is_defaulted,
+          typename AnalysisResults::thread_handle,
+          std::conditional_t<!AnalysisResults::team_handle_is_defaulted,
+                             typename AnalysisResults::team_handle, void>>>;
+};
+
 //------------------------------------------------------------------------------
 // Used for defaults that depend on other analysis results
 template <class AnalysisResults>
@@ -172,24 +197,30 @@ struct ExecPolicyTraitsWithDefaults : AnalysisResults {
   using base_t = AnalysisResults;
   using base_t::base_t;
 
-  // It is invalid to explicitly define both ExecSpace and TeamHandle traits
-  static_assert(base_t::execution_space_is_defaulted ||
-                    base_t::team_handle_is_defaulted,
-                "Kokkos Error: Cannot give both ExecSpace and TeamHandle as "
-                "policy traits.");
+  // At most one of ExecSpace, TeamHandle, ThreadHandle, or InlineHandle may be
+  // specified
+  static_assert(
+      (int(!base_t::execution_space_is_defaulted) +
+       int(!base_t::team_handle_is_defaulted) +
+       int(!base_t::thread_handle_is_defaulted) +
+       int(!base_t::inline_handle_is_defaulted)) <= 1,
+      "Kokkos Error: Cannot give more than one policy trait (ExecSpace, "
+      "TeamHandle, ThreadHandle, or InlineHandle).");
+
+  // Handle used to select the default execution space when the execution space
+  // trait is not set explicitly.
+  using handle = typename HandleSelector<base_t>::type;
 
   // Query for the default execution space
-  using execution_space =
-      typename std::conditional_t<base_t::execution_space_is_defaulted,
-                                  typename DefaultExecutionSpaceSelector<
-                                      typename base_t::team_handle>::type,
-                                  typename base_t::execution_space>;
+  using execution_space = typename std::conditional_t<
+      base_t::execution_space_is_defaulted,
+      typename DefaultExecutionSpaceSelector<handle>::type,
+      typename base_t::execution_space>;
 
   // Define the "execution_type" to be whichever policy trait was explicitly set
-  // (default to execspace if neither is set)
+  // (default to execspace if no handle is set)
   using execution_type =
-      std::conditional_t<base_t::team_handle_is_defaulted, execution_space,
-                         typename base_t::team_handle>;
+      std::conditional_t<std::is_void_v<handle>, execution_space, handle>;
 
   // The old code turned this into an integral type for backwards compatibility,
   // so that's what we're doing here. The original comment was:

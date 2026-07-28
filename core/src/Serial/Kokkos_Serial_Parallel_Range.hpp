@@ -10,6 +10,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
  private:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -55,6 +57,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Serial> {
 /*--------------------------------------------------------------------------*/
 
 template <class CombinedFunctorReducerType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::Serial> {
  private:
@@ -146,6 +150,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
 /*--------------------------------------------------------------------------*/
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Serial> {
  private:
@@ -219,6 +225,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 
 /*--------------------------------------------------------------------------*/
 template <class FunctorType, class ReturnType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Serial> {
  private:

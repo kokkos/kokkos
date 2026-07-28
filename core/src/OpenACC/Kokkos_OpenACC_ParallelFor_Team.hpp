@@ -63,9 +63,32 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   iType j_end  = loop_boundaries.end;
   iType j_step = loop_boundaries.member.team_size();
   if (j_start >= loop_boundaries.start) {
+    using thread_handle_t = Kokkos::ThreadHandle<Impl::OpenACCTeamMember>;
+    if constexpr (std::is_invocable_v<Lambda, iType> ||
+                  std::is_invocable_v<Lambda, iType const&>) {
 #pragma acc loop seq
-    for (iType j = j_start; j < j_end; j += j_step) {
-      lambda(j);
+      for (iType j = j_start; j < j_end; j += j_step) {
+        lambda(j);
+      }
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                             iType>) {
+      auto const thread_handle = thread_handle_t(loop_boundaries.member);
+#pragma acc loop seq
+      for (iType j = j_start; j < j_end; j += j_step) {
+        lambda(thread_handle, j);
+      }
+    } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&>) {
+      auto const thread_handle = thread_handle_t(loop_boundaries.member);
+#pragma acc loop seq
+      for (iType j = j_start; j < j_end; j += j_step) {
+        (void)j;
+        lambda(thread_handle);
+      }
+    } else {
+      static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                    "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                    "invocable with (iType), (ThreadHandle, iType), or "
+                    "(ThreadHandle)");
     }
   }
 }
@@ -86,6 +109,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     for (iType j = j_start; j < j_end; j += j_step) {
       lambda(j);
     }
+  }
+}
+
+// Hierarchical Parallelism -> Inline (serial) range under thread handle
+#pragma acc routine seq
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
+    const Lambda& lambda) {
+#pragma acc loop seq
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
+    lambda(i);
   }
 }
 
@@ -161,9 +197,32 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
         loop_boundaries,
     const Lambda& lambda) {
+  using thread_handle_t = Kokkos::ThreadHandle<Impl::OpenACCTeamMember>;
+  if constexpr (std::is_invocable_v<Lambda, iType> ||
+                std::is_invocable_v<Lambda, iType const&>) {
 #pragma acc loop worker
-  for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
-    lambda(j);
+    for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
+      lambda(j);
+    }
+  } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&,
+                                           iType>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+#pragma acc loop worker
+    for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
+      lambda(thread_handle, j);
+    }
+  } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const&>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+#pragma acc loop worker
+    for (iType j = loop_boundaries.start; j < loop_boundaries.end; j++) {
+      (void)j;
+      lambda(thread_handle);
+    }
+  } else {
+    static_assert(Kokkos::Impl::always_false<Lambda>::value,
+                  "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                  "invocable with (iType), (ThreadHandle, iType), or "
+                  "(ThreadHandle)");
   }
 }
 
@@ -175,6 +234,17 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         iType, Impl::OpenACCTeamMember>& loop_boundaries,
     const Lambda& lambda) {
 #pragma acc loop vector
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
+}
+
+// Hierarchical Parallelism -> Inline (serial) range under thread handle
+#pragma acc routine vector
+template <typename iType, class Lambda>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    const Impl::InlineRangeBoundariesStruct<iType, Impl::OpenACCTeamMember>&
+        loop_boundaries,
+    const Lambda& lambda) {
+#pragma acc loop seq
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
     lambda(i);
   }
@@ -188,9 +258,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Lambda& lambda) {
 #pragma acc loop vector
-  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) {
-    lambda(i);
-  }
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++) lambda(i);
 }
 
 }  // namespace Kokkos

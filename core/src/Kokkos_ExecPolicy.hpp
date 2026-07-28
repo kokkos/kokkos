@@ -40,6 +40,56 @@ template <typename... Properties>
 class RangePolicy;
 
 namespace Impl {
+
+/** \brief Handle for thread-level parallelism within a team.
+ *
+ *  Use with RangePolicy to parallelize within a thread using vector resources
+ *  (ThreadVectorRange semantics). The public alias is Kokkos::ThreadHandle.
+ */
+template <class TeamMemberType>
+struct ThreadHandle {
+  TeamMemberType const& team_member;
+  using member_type     = TeamMemberType;
+  using execution_space = typename TeamMemberType::execution_space;
+  using thread_handle   = ThreadHandle;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr ThreadHandle(TeamMemberType const& m) : team_member(m) {}
+
+  KOKKOS_INLINE_FUNCTION
+  int team_rank() const { return team_member.team_rank(); }
+
+  KOKKOS_INLINE_FUNCTION
+  int team_size() const { return team_member.team_size(); }
+
+  /** \brief Maximum concurrency within this team thread (vector_length). */
+  KOKKOS_INLINE_FUNCTION
+  int concurrency() const { return team_member.vector_length(); }
+};
+
+/** \brief Handle for serial (inline) iteration nested under a thread handle.
+ *
+ *  Use with RangePolicy to run a range serially (no vector parallelism).
+ *  This is the innermost self-similar nesting level after ThreadHandle.
+ */
+template <class ThreadHandleType>
+struct InlineHandle {
+  static_assert(Kokkos::is_thread_handle_v<ThreadHandleType>,
+                "InlineHandle requires a Kokkos::ThreadHandle type.");
+  ThreadHandleType const& thread;
+  using thread_handle   = ThreadHandleType;
+  using member_type     = typename ThreadHandleType::member_type;
+  using execution_space = typename ThreadHandleType::execution_space;
+  using inline_handle   = InlineHandle;
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr explicit InlineHandle(ThreadHandleType const& th) : thread(th) {}
+
+  /** Serial execution: concurrency is 1. */
+  KOKKOS_INLINE_FUNCTION
+  int concurrency() const { return 1; }
+};
+
 // Private tag that can be used to make a copy of another execution policy
 // and set the underlying execution space instance.
 // It does NOT perform any sanity check.
@@ -328,6 +378,13 @@ class ImplRangePolicy<ExecSpace, Properties...>
 };
 
 }  // namespace Impl
+
+template <class TeamMemberType>
+using ThreadHandle = Impl::ThreadHandle<TeamMemberType>;
+
+template <class ThreadHandleType>
+using InlineHandle = Impl::InlineHandle<ThreadHandleType>;
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------
@@ -877,6 +934,27 @@ struct ThreadVectorRangeBoundariesStruct {
       : start(static_cast<index_type>(arg_begin)), end(arg_end) {}
 };
 
+/** Boundaries for serial iteration under a thread handle (inline range). */
+template <typename iType, class TeamMemberType>
+struct InlineRangeBoundariesStruct {
+  using index_type = iType;
+  const index_type start;
+  const index_type end;
+  enum { increment = 1 };
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr InlineRangeBoundariesStruct(
+      Kokkos::ThreadHandle<TeamMemberType> const&,
+      const index_type& arg_count) noexcept
+      : start(static_cast<index_type>(0)), end(arg_count) {}
+
+  KOKKOS_INLINE_FUNCTION
+  constexpr InlineRangeBoundariesStruct(
+      Kokkos::ThreadHandle<TeamMemberType> const&, const index_type& arg_begin,
+      const index_type& arg_end) noexcept
+      : start(static_cast<index_type>(arg_begin)), end(arg_end) {}
+};
+
 template <class TeamMemberType>
 struct ThreadSingleStruct {
   const TeamMemberType& team_member;
@@ -1314,15 +1392,40 @@ class ImplRangePolicy<Handle, Properties...>
       typename Impl::PolicyTraits<Properties...>::index_type, Handle>;
 
  public:
-  using base_t::base_t;
-
   using traits = typename Impl::PolicyTraits<Properties...>;
   static_assert(std::same_as<typename traits::execution_type, Handle>);
 
-  using member_type = typename traits::index_type;
-  using index_type  = typename traits::index_type;
+  using execution_policy = Kokkos::RangePolicy<Properties...>;
+  using work_tag         = typename traits::work_tag;
+  using member_type      = typename traits::index_type;
+  using index_type       = typename traits::index_type;
 
-  KOKKOS_INLINE_FUNCTION const typename traits::team_handle& space() const {
+ private:
+  // Unpartitioned range passed to RangePolicy(team, work_begin, work_end).
+  // begin()/end() below are this thread's TeamVectorRange slice (base_t::start/
+  // end). Nested TeamThreadRange dispatch must use work_begin()/work_end() so
+  // the range is not partitioned twice.
+  index_type m_work_begin;
+  index_type m_work_end;
+
+ public:
+  template <typename IndexType1, typename IndexType2>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType1 work_begin,
+                                         IndexType2 work_end)
+      : base_t(handle, static_cast<index_type>(work_begin),
+               static_cast<index_type>(work_end)),
+        m_work_begin(static_cast<index_type>(work_begin)),
+        m_work_end(static_cast<index_type>(work_end)) {}
+
+  template <typename IndexType>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType work_count)
+      : base_t(handle, static_cast<index_type>(work_count)),
+        m_work_begin(static_cast<index_type>(0)),
+        m_work_end(static_cast<index_type>(work_count)) {}
+
+  KOKKOS_INLINE_FUNCTION Handle const& space() const {
     return static_cast<const base_t*>(this)->member;
   }
 
@@ -1333,6 +1436,10 @@ class ImplRangePolicy<Handle, Properties...>
     return static_cast<const base_t*>(this)->end;
   }
 
+  // Full team-level range; see m_work_begin/m_work_end.
+  KOKKOS_INLINE_FUNCTION index_type work_begin() const { return m_work_begin; }
+  KOKKOS_INLINE_FUNCTION index_type work_end() const { return m_work_end; }
+
   KOKKOS_INLINE_FUNCTION member_type chunk_size() const {
     // Chunk size has no meaning currently in this specialization.
     // Returning 1 to allow self-similar code using RangePolicy<ExecSpace> to
@@ -1340,13 +1447,114 @@ class ImplRangePolicy<Handle, Properties...>
     return 1;
   }
 };
+
+template <ThreadHandleType Handle, class... Properties>
+class ImplRangePolicy<Handle, Properties...>
+    : public Impl::ThreadVectorRangeBoundariesStruct<
+          typename Impl::PolicyTraits<Properties...>::index_type,
+          typename Handle::member_type> {
+  using base_t = typename Impl::ThreadVectorRangeBoundariesStruct<
+      typename Impl::PolicyTraits<Properties...>::index_type,
+      typename Handle::member_type>;
+
+ public:
+  using traits = typename Impl::PolicyTraits<Properties...>;
+  static_assert(std::same_as<typename traits::execution_type, Handle>);
+
+  using execution_policy = Kokkos::RangePolicy<Properties...>;
+  using work_tag         = typename traits::work_tag;
+  using member_type      = typename traits::index_type;
+  using index_type       = typename traits::index_type;
+
+ private:
+  Handle m_handle;
+
+ public:
+  template <typename IndexType1, typename IndexType2>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType1 work_begin,
+                                         IndexType2 work_end)
+      : base_t(handle.team_member, static_cast<index_type>(work_begin),
+               static_cast<index_type>(work_end)),
+        m_handle(handle) {}
+
+  template <typename IndexType>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType work_count)
+      : base_t(handle.team_member, static_cast<index_type>(work_count)),
+        m_handle(handle) {}
+
+  KOKKOS_INLINE_FUNCTION Handle const& space() const { return m_handle; }
+
+  KOKKOS_INLINE_FUNCTION member_type begin() const {
+    return static_cast<const base_t*>(this)->start;
+  }
+  KOKKOS_INLINE_FUNCTION member_type end() const {
+    return static_cast<const base_t*>(this)->end;
+  }
+
+  KOKKOS_INLINE_FUNCTION member_type chunk_size() const {
+    // Same rationale as ImplRangePolicy<TeamHandle, ...>::chunk_size().
+    return 1;
+  }
+};
+
+// Specialization of RangePolicy for serial iteration under a thread handle
+template <InlineHandleType Handle, class... Properties>
+class ImplRangePolicy<Handle, Properties...>
+    : public Impl::InlineRangeBoundariesStruct<
+          typename Impl::PolicyTraits<Properties...>::index_type,
+          typename Handle::thread_handle::member_type> {
+  using base_t = Impl::InlineRangeBoundariesStruct<
+      typename Impl::PolicyTraits<Properties...>::index_type,
+      typename Handle::thread_handle::member_type>;
+
+ private:
+  Handle m_handle;
+
+ public:
+  using traits = typename Impl::PolicyTraits<Properties...>;
+  static_assert(std::same_as<typename traits::execution_type, Handle>);
+
+  using member_type = typename traits::index_type;
+  using index_type  = typename traits::index_type;
+
+  template <typename IndexType1, typename IndexType2>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType1 work_begin,
+                                         IndexType2 work_end)
+      : base_t(handle.thread, static_cast<index_type>(work_begin),
+               static_cast<index_type>(work_end)),
+        m_handle(handle) {}
+
+  template <typename IndexType>
+  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
+                                         IndexType work_count)
+      : base_t(handle.thread, static_cast<index_type>(work_count)),
+        m_handle(handle) {}
+
+  KOKKOS_INLINE_FUNCTION const typename traits::inline_handle& space() const {
+    return m_handle;
+  }
+
+  KOKKOS_INLINE_FUNCTION member_type begin() const {
+    return static_cast<const base_t*>(this)->start;
+  }
+  KOKKOS_INLINE_FUNCTION member_type end() const {
+    return static_cast<const base_t*>(this)->end;
+  }
+
+  KOKKOS_INLINE_FUNCTION member_type chunk_size() const { return 1; }
+};
 }  // namespace Impl
 
 /** \brief  Execution policy for work over a range of an integral type.
  *
- * RangePolicy has two partial specializations: RangePolicy<ExecSpace> and
- * RangePolicy<TeamHandle>. The former parallelizes over all resources of an
- * execution space, and the latter over all resources of a thread team.
+ * RangePolicy has partial specializations for an execution space, a team
+ * handle, a thread handle, and an inline handle: they parallelize over an
+ * execution space, over a thread team (TeamVectorRange), within a team thread
+ * (ThreadVectorRange), and serially under a thread (inline range),
+ * respectively.
  *
  * Valid template argument options:
  *
@@ -1394,9 +1602,11 @@ class RangePolicy
 };
 
 namespace Impl {
-// Helper concept for capturing both exec space and team handle
+// Helper concept for capturing exec space and all handle types
 template <class ExecType>
-concept ExecutionTypeConcept = ExecutionSpace<ExecType> || TeamHandle<ExecType>;
+concept ExecutionTypeConcept =
+    ExecutionSpace<ExecType> || TeamHandle<ExecType> ||
+    Kokkos::ThreadHandleType<ExecType> || Kokkos::InlineHandleType<ExecType>;
 }  // namespace Impl
 
 // Deduction guide

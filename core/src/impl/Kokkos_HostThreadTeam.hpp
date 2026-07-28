@@ -11,8 +11,9 @@
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_HostBarrier.hpp>
 
-#include <limits>     // std::numeric_limits
-#include <algorithm>  // std::max
+#include <limits>       // std::numeric_limits
+#include <algorithm>    // std::max
+#include <type_traits>  // std::is_invocable_v
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -379,6 +380,7 @@ class HostThreadTeamMember {
   using thread_team_member      = HostThreadTeamMember;
   using host_thread_team_member = HostThreadTeamMember;
   using team_handle             = HostThreadTeamMember;
+  using thread_handle           = Kokkos::ThreadHandle<team_handle>;
 
  private:
   scratch_memory_space m_scratch;
@@ -409,6 +411,14 @@ class HostThreadTeamMember {
 
   KOKKOS_INLINE_FUNCTION
   int team_size() const noexcept { return m_data.m_team_size; }
+
+  /** \brief Number of vector lanes per thread (1 for host). */
+  KOKKOS_INLINE_FUNCTION
+  static constexpr int vector_length() noexcept { return 1; }
+
+  /** \brief Maximum concurrency at team level (team_size for host). */
+  KOKKOS_INLINE_FUNCTION
+  int concurrency() const noexcept { return m_data.m_team_size; }
 
   KOKKOS_INLINE_FUNCTION
   int league_rank() const noexcept { return m_league_rank; }
@@ -679,22 +689,22 @@ TeamThreadRange(
 }
 
 template <typename iType, typename Member>
-KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<iType, Member>
+KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<iType, Member>
 TeamVectorRange(
     Member const& member, iType count,
     std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
         nullptr) {
-  return Impl::TeamThreadRangeBoundariesStruct<iType, Member>(member, 0, count);
+  return Impl::TeamVectorRangeBoundariesStruct<iType, Member>(member, 0, count);
 }
 
 template <typename iType1, typename iType2, typename Member>
-KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
+KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
     std::common_type_t<iType1, iType2>, Member>
 TeamVectorRange(
     Member const& member, iType1 begin, iType2 end,
     std::enable_if_t<Impl::is_thread_team_member<Member>::value> const** =
         nullptr) {
-  return Impl::TeamThreadRangeBoundariesStruct<
+  return Impl::TeamVectorRangeBoundariesStruct<
       std::common_type_t<iType1, iType2>, Member>(member, begin, end);
 }
 
@@ -732,6 +742,44 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     Closure const& closure,
     std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
         nullptr) {
+  using thread_handle_t = Kokkos::ThreadHandle<Member>;
+  if constexpr (std::is_invocable_v<Closure, iType> ||
+                std::is_invocable_v<Closure, iType const&>) {
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      closure(i);
+    }
+  } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                           iType>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      closure(thread_handle, i);
+    }
+  } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+         i += loop_boundaries.increment) {
+      (void)i;
+      closure(thread_handle);
+    }
+  } else {
+    static_assert(Kokkos::Impl::always_false<Closure>::value,
+                  "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                  "invocable with (iType), (ThreadHandle, iType), or "
+                  "(ThreadHandle)");
+  }
+}
+
+template <typename iType, class Closure, class HostExecSpace>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::TeamVectorRangeBoundariesStruct<
+        iType, Impl::HostThreadTeamMember<HostExecSpace>> const&
+        loop_boundaries,
+    Closure const& closure) {
+#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
+#pragma ivdep
+#endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     closure(i);
@@ -748,6 +796,19 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep
 #endif
+  for (iType i = loop_boundaries.start; i < loop_boundaries.end;
+       i += loop_boundaries.increment) {
+    closure(i);
+  }
+}
+
+/** \brief Serial parallel_for nested under a thread handle (inline range). */
+template <typename iType, class Closure, class Member>
+KOKKOS_INLINE_FUNCTION void parallel_for(
+    Impl::InlineRangeBoundariesStruct<iType, Member> const& loop_boundaries,
+    Closure const& closure,
+    std::enable_if_t<Impl::is_host_thread_team_member<Member>::value> const** =
+        nullptr) {
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
        i += loop_boundaries.increment) {
     closure(i);

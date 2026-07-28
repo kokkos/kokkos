@@ -116,6 +116,8 @@ void workgroup_scan(sycl::nd_item<dim> item, const FunctorType& final_reducer,
 }
 
 template <class FunctorType, class ValueType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanSYCLBase {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -382,6 +384,8 @@ class ParallelScanSYCLBase {
 }  // namespace Kokkos::Impl
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class Kokkos::Impl::ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                                  Kokkos::SYCL>
     : private ParallelScanSYCLBase<FunctorType, void, Traits...> {
@@ -407,6 +411,8 @@ class Kokkos::Impl::ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 //----------------------------------------------------------------------------
 
 template <class FunctorType, class ReturnType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class Kokkos::Impl::ParallelScanWithTotal<
     FunctorType, Kokkos::RangePolicy<Traits...>, ReturnType, Kokkos::SYCL>
     : public ParallelScanSYCLBase<FunctorType, ReturnType, Traits...> {

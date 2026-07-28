@@ -149,6 +149,10 @@ KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(execution_policy,
 KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(array_layout)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(reducer, Reducer)
 KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(team_handle, TeamHandle)
+KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(thread_handle,
+                                                  ThreadHandleType)
+KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(inline_handle,
+                                                  InlineHandleType)
 namespace Experimental {
 KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(work_item_property)
 KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(hooks_policy)
