@@ -52,11 +52,14 @@ namespace Impl {
 
 namespace {
 
-using ScratchGrain = Kokkos::HIP::size_type[Impl::HIPTraits::WarpSize];
-constexpr auto sizeScratchGrain = sizeof(ScratchGrain);
+std::size_t scratch_grain_size() {
+  return sizeof(Kokkos::HIP::size_type) *
+         static_cast<std::size_t>(Impl::HIPTraits::WarpSize());
+}
 
 std::size_t scratch_count(const std::size_t size) {
-  return (size + sizeScratchGrain - 1) / sizeScratchGrain;
+  auto const grain = scratch_grain_size();
+  return (size + grain - 1) / grain;
 }
 
 }  // namespace
@@ -173,13 +176,13 @@ HIPInternal::HIPInternal(hipStream_t stream) : m_stream(stream) {
     // Maximum number of warps,
     // at most one warp per thread in a warp for reduction.
     unsigned int maxWarpCount =
-        m_deviceProp.maxThreadsPerBlock / Impl::HIPTraits::WarpSize;
-    if (Impl::HIPTraits::WarpSize < maxWarpCount) {
-      maxWarpCount = Impl::HIPTraits::WarpSize;
+        m_deviceProp.maxThreadsPerBlock / Impl::HIPTraits::WarpSize();
+    if (Impl::HIPTraits::WarpSize() < static_cast<int>(maxWarpCount)) {
+      maxWarpCount = Impl::HIPTraits::WarpSize();
     }
 
     const unsigned reduce_block_count =
-        maxWarpCount * Impl::HIPTraits::WarpSize;
+        maxWarpCount * Impl::HIPTraits::WarpSize();
 
     (void)scratch_flags(static_cast<size_t>(reduce_block_count * 2) *
                         sizeof(size_type));
@@ -203,13 +206,13 @@ Kokkos::HIP::size_type *HIPInternal::scratch_space(const std::size_t size) {
 
     if (m_scratchSpace) {
       mem_space.deallocate(m_scratchSpace,
-                           m_scratchSpaceCount * sizeScratchGrain);
+                           m_scratchSpaceCount * scratch_grain_size());
     }
 
     m_scratchSpaceCount = scratch_count(size);
 
     std::size_t alloc_size =
-        multiply_overflow_abort(m_scratchSpaceCount, sizeScratchGrain);
+        multiply_overflow_abort(m_scratchSpaceCount, scratch_grain_size());
     m_scratchSpace = static_cast<size_type *>(
         mem_space.allocate("Kokkos::InternalScratchSpace", alloc_size));
   }
@@ -224,13 +227,13 @@ Kokkos::HIP::size_type *HIPInternal::scratch_flags(const std::size_t size) {
 
     if (m_scratchFlags) {
       mem_space.deallocate(m_scratchFlags,
-                           m_scratchFlagsCount * sizeScratchGrain);
+                           m_scratchFlagsCount * scratch_grain_size());
     }
 
     m_scratchFlagsCount = scratch_count(size);
 
     std::size_t alloc_size =
-        multiply_overflow_abort(m_scratchFlagsCount, sizeScratchGrain);
+        multiply_overflow_abort(m_scratchFlagsCount, scratch_grain_size());
     m_scratchFlags = static_cast<size_type *>(
         mem_space.allocate("Kokkos::InternalScratchFlags", alloc_size));
 
@@ -335,9 +338,9 @@ HIPInternal::~HIPInternal() {
   auto device_mem_space = Kokkos::HIPSpace::impl_create(m_hipDev, m_stream);
   if (nullptr != m_scratchSpace || nullptr != m_scratchFlags) {
     device_mem_space.deallocate(m_scratchFlags,
-                                m_scratchSpaceCount * sizeScratchGrain);
+                                m_scratchSpaceCount * scratch_grain_size());
     device_mem_space.deallocate(m_scratchSpace,
-                                m_scratchFlagsCount * sizeScratchGrain);
+                                m_scratchFlagsCount * scratch_grain_size());
 
     if (m_scratchFunctorSize > 0) {
       device_mem_space.deallocate(m_scratchFunctor, m_scratchFunctorSize);
@@ -357,6 +360,9 @@ HIPInternal::~HIPInternal() {
 }
 
 int HIPInternal::m_maxThreadsPerSM = 0;
+
+// default value
+int HIPTraits::m_host_warp_size = 64;
 
 hipDeviceProp_t HIPInternal::m_deviceProp;
 

@@ -139,7 +139,7 @@ class TeamPolicyInternal<HIP, Properties...>
 
   inline bool impl_auto_vector_length() const { return m_tune_vector_length; }
   inline bool impl_auto_team_size() const { return m_tune_team_size; }
-  static int vector_length_max() { return HIPTraits::WarpSize; }
+  static int vector_length_max() { return HIPTraits::WarpSize(); }
 
   static int impl_determine_vector_length(int requested) {
     // restrict requested between 1 and max
@@ -198,7 +198,7 @@ class TeamPolicyInternal<HIP, Properties...>
         m_vector_length(0),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(HIPTraits::WarpSize),
+        m_chunk_size(HIPTraits::WarpSize()),
         m_tune_team_size(false),
         m_tune_vector_length(false) {}
 
@@ -211,7 +211,7 @@ class TeamPolicyInternal<HIP, Properties...>
         m_vector_length(impl_determine_vector_length(vector_length_request)),
         m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
-        m_chunk_size(HIPTraits::WarpSize),
+        m_chunk_size(HIPTraits::WarpSize()),
         m_tune_team_size(bool(team_size_request <= 0)),
         m_tune_vector_length(bool(vector_length_request <= 0)) {
     // Make sure league size is permissible

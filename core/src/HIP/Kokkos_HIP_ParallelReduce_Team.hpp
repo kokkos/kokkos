@@ -201,7 +201,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         reducer.final(reinterpret_cast<value_type*>(shared));
       }
 
-      if (HIPTraits::WarpSize < word_count.value) {
+      if (HIPTraits::WarpSize() < word_count.value) {
         __syncthreads();
       }
 
@@ -368,7 +368,7 @@ class ParallelReduce<CombinedFunctorReducerType,
           "greater than 1 is not currently supported for HIP for dynamic "
           "sized reduction types.");
 
-    if ((m_team_size < HIPTraits::WarpSize) && !UseShflReduction)
+    if ((m_team_size < HIPTraits::WarpSize()) && !UseShflReduction)
       Impl::throw_runtime_exception(
           "Kokkos::parallel_reduce with a TeamPolicy using a team_size smaller "
           "than 64 is not currently supported with HIP for dynamic sized "

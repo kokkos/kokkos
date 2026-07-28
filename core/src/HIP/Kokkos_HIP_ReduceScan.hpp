@@ -46,9 +46,9 @@ struct HIPReductionsFunctor<FunctorType, true> {
       FunctorType const& functor, Scalar value, bool const skip,
       Scalar* my_global_team_buffer_element, unsigned int const shared_elements,
       Scalar* shared_team_buffer_element) {
-    constexpr unsigned int warp_size = HIPTraits::WarpSize;
-    unsigned int const warp_id       = (threadIdx.y * blockDim.x) / warp_size;
-    unsigned int const num_threads   = blockDim.x * blockDim.y;
+    const unsigned int warp_size   = HIPTraits::WarpSize();
+    unsigned int const warp_id     = (threadIdx.y * blockDim.x) / warp_size;
+    unsigned int const num_threads = blockDim.x * blockDim.y;
     Scalar* const my_shared_team_buffer_element =
         shared_team_buffer_element + warp_id % shared_elements;
 
@@ -95,10 +95,10 @@ struct HIPReductionsFunctor<FunctorType, true> {
         global_team_buffer_element + blockIdx.x;
     Scalar* shared_team_buffer_elements =
         reinterpret_cast<Scalar*>(shared_data);
-    Scalar value                     = shared_team_buffer_elements[threadIdx.y];
-    constexpr unsigned int warp_size = Impl::HIPTraits::WarpSize;
-    unsigned int shared_elements     = blockDim.x * blockDim.y / warp_size;
-    unsigned int global_elements     = block_count;
+    Scalar value                 = shared_team_buffer_elements[threadIdx.y];
+    const unsigned int warp_size = Impl::HIPTraits::WarpSize();
+    unsigned int shared_elements = blockDim.x * blockDim.y / warp_size;
+    unsigned int global_elements = block_count;
     __syncthreads();
 
     scalar_intra_block_reduction(functor, value, true,
@@ -144,13 +144,13 @@ struct HIPReductionsFunctor<FunctorType, false> {
   {
     if (width == 0) return;
     int const lane_id =
-        (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize;
+        (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize();
 // HIP added support for __syncwarp() in version 7.0
 // Using an unconditional 64bit mask here
 // In HIP the upper bits are unused when the warp size is 32
 #if HIP_VERSION_MAJOR >= 7
     unsigned long long mask = std::uint64_t(-1) >> (64 - width);
-    if (width != HIPTraits::WarpSize)
+    if (width != HIPTraits::WarpSize())
       mask <<= ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
     __syncwarp(mask);
 #else
@@ -176,9 +176,9 @@ struct HIPReductionsFunctor<FunctorType, false> {
   __device__ static inline void scalar_intra_block_reduction(
       FunctorType const& functor, Scalar value, bool const skip, Scalar* result,
       int const /*shared_elements*/, Scalar* shared_team_buffer_element) {
-    constexpr unsigned int warp_size = Impl::HIPTraits::WarpSize;
-    unsigned int const warp_id       = (threadIdx.y * blockDim.x) / warp_size;
-    const unsigned int num_threads   = blockDim.x * blockDim.y;
+    const unsigned int warp_size   = Impl::HIPTraits::WarpSize();
+    unsigned int const warp_id     = (threadIdx.y * blockDim.x) / warp_size;
+    const unsigned int num_threads = blockDim.x * blockDim.y;
     Scalar* const my_shared_team_buffer_element =
         shared_team_buffer_element + threadIdx.y * blockDim.x + threadIdx.x;
     *my_shared_team_buffer_element = value;
@@ -215,7 +215,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
     Scalar* shared_team_buffer_elements =
         reinterpret_cast<Scalar*>(shared_data);
     Scalar value        = shared_team_buffer_elements[threadIdx.y];
-    int shared_elements = (blockDim.x * blockDim.y) / HIPTraits::WarpSize;
+    int shared_elements = (blockDim.x * blockDim.y) / HIPTraits::WarpSize();
     int global_elements = block_count;
     __syncthreads();
 
@@ -271,8 +271,8 @@ __device__ void hip_intra_block_reduce_scan(
   // For that warp, we shift all indices logically to the end and ignore join
   // operations with unassigned indices in the warp when performing the intra
   // warp reduction/scan.
-  const bool is_full_warp = (((threadIdx.y >> HIPTraits::WarpIndexShift) + 1)
-                             << HIPTraits::WarpIndexShift) <= blockDim.y;
+  const bool is_full_warp = (((threadIdx.y >> HIPTraits::WarpIndexShift()) + 1)
+                             << HIPTraits::WarpIndexShift()) <= blockDim.y;
 
   auto block_reduce_step = [&functor](int const R, pointer_type const TD,
                                       int const S, pointer_type memory_start,
@@ -293,12 +293,12 @@ __device__ void hip_intra_block_reduce_scan(
     const unsigned mapped_idx =
         threadIdx.y + (is_full_warp ? 0
                                     : (not_less_power_of_two - blockDim.y) &
-                                          (HIPTraits::WarpSize - 1));
+                                          (HIPTraits::WarpSize() - 1));
     const pointer_type tdata_intra = base_data + value_count * threadIdx.y;
     const pointer_type warp_start =
-        base_data + value_count * ((threadIdx.y >> HIPTraits::WarpIndexShift)
-                                   << HIPTraits::WarpIndexShift);
-    for (; (1 << bit_shift) < HIPTraits::WarpSize; ++bit_shift) {
+        base_data + value_count * ((threadIdx.y >> HIPTraits::WarpIndexShift())
+                                   << HIPTraits::WarpIndexShift());
+    for (; (1 << bit_shift) < HIPTraits::WarpSize(); ++bit_shift) {
       block_reduce_step(mapped_idx, tdata_intra, bit_shift, warp_start, 0);
     }
   }
@@ -312,22 +312,22 @@ __device__ void hip_intra_block_reduce_scan(
     // following reduction, we shift all indices logically to the end of the
     // next power-of-two to the number of warps.
     const unsigned n_active_warps =
-        ((blockDim.y - 1) >> HIPTraits::WarpIndexShift) + 1;
+        ((blockDim.y - 1) >> HIPTraits::WarpIndexShift()) + 1;
     if (threadIdx.y < n_active_warps) {
       const bool is_full_warp_inter =
-          threadIdx.y < (blockDim.y >> HIPTraits::WarpIndexShift);
+          threadIdx.y < (blockDim.y >> HIPTraits::WarpIndexShift());
       pointer_type const tdata_inter =
           base_data +
           value_count * (is_full_warp_inter
-                             ? (threadIdx.y << HIPTraits::WarpIndexShift) +
-                                   (HIPTraits::WarpSize - 1)
+                             ? (threadIdx.y << HIPTraits::WarpIndexShift()) +
+                                   (HIPTraits::WarpSize() - 1)
                              : blockDim.y - 1);
       const unsigned index_shift =
           is_full_warp_inter
               ? 0
-              : blockDim.y - (threadIdx.y << HIPTraits::WarpIndexShift);
-      const int rtid_inter = (threadIdx.y << HIPTraits::WarpIndexShift) +
-                             (HIPTraits::WarpSize - 1) - index_shift;
+              : blockDim.y - (threadIdx.y << HIPTraits::WarpIndexShift());
+      const int rtid_inter = (threadIdx.y << HIPTraits::WarpIndexShift()) +
+                             (HIPTraits::WarpSize() - 1) - index_shift;
 
       for (; (1 << bit_shift) < BlockSizeMask; ++bit_shift) {
         block_reduce_step(rtid_inter, tdata_inter, bit_shift, base_data,
@@ -341,11 +341,11 @@ __device__ void hip_intra_block_reduce_scan(
   if (DoScan) {
     // Update all the values for the respective warps (except for the last one)
     // by adding from the last value of the previous warp.
-    const unsigned int WarpMask = HIPTraits::WarpSize - 1;
+    const unsigned int WarpMask = HIPTraits::WarpSize() - 1;
     const int is_last_thread_in_warp =
-        is_full_warp ? ((threadIdx.y & WarpMask) == HIPTraits::WarpSize - 1)
+        is_full_warp ? ((threadIdx.y & WarpMask) == HIPTraits::WarpSize() - 1)
                      : (threadIdx.y == blockDim.y - 1);
-    if (threadIdx.y >= HIPTraits::WarpSize && !is_last_thread_in_warp) {
+    if (threadIdx.y >= HIPTraits::WarpSize() && !is_last_thread_in_warp) {
       const int offset_to_previous_warp_total = (threadIdx.y & (~WarpMask)) - 1;
       functor.join(base_data + value_count * threadIdx.y,
                    base_data + value_count * offset_to_previous_warp_total);

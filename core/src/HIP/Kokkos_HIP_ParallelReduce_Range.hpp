@@ -139,7 +139,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         reducer.final(reinterpret_cast<value_type*>(shared));
       }
 
-      if (::Kokkos::Impl::HIPTraits::WarpSize < word_count.value) {
+      if (::Kokkos::Impl::HIPTraits::WarpSize() < word_count.value) {
         __syncthreads();
       }
 
@@ -230,7 +230,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         const unsigned int shared_memory_required =
             hip_single_inter_block_reduce_scan_shmem<false, WorkTag,
                                                      value_type>(
-                m_functor_reducer.get_functor(), HIPTraits::WarpSize);
+                m_functor_reducer.get_functor(), HIPTraits::WarpSize());
         const unsigned int shared_memory_available =
             m_policy.space()
                 .impl_internal_space_instance()
