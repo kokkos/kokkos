@@ -398,15 +398,17 @@ KOKKOS_INLINE_FUNCTION decltype(auto) cuda_dispatch_locked_action(
   KOKKOS_IF_ON_HOST((Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
                      return action();))
 
+#if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700)
   KOKKOS_IF_ON_DEVICE((
-#if __CUDA_ARCH__ < 700
       return Impl::lane_serialized_locked_action(
-                 lock, policy, std::forward<Function>(action));
+          lock, policy, std::forward<Function>(action));
+  ))
 #else
+  KOKKOS_IF_ON_DEVICE((
       Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
       return action();
+  ))
 #endif
-      ))
 }
 #endif  // KOKKOS_ENABLE_CUDA
 
