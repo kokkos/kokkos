@@ -8,6 +8,7 @@
 #include <Kokkos_Concepts.hpp>  // IndexType
 #include <traits/Kokkos_Traits_fwd.hpp>
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
 #include <traits/Kokkos_ExecutionSpaceTrait.hpp>
 #include <traits/Kokkos_TeamHandleTrait.hpp>
@@ -20,7 +21,6 @@
 #include <traits/Kokkos_ScheduleTrait.hpp>
 #include <traits/Kokkos_WorkItemPropertyTrait.hpp>
 #include <traits/Kokkos_WorkTagTrait.hpp>
-#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
 namespace Kokkos {
 namespace Impl {
