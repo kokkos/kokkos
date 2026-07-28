@@ -66,16 +66,3 @@ include:
   ref: main
   file:
     - /runners.yml
-
-clear-ci-builds:
-  stage: clean_up
-  extends:
-    - .frontier-shell-runner
-  variables:
-    GIT_STRATEGY: none
-    OLCF_SERVICE_ACCOUNT: ums018_auser
-  script:
-    - ls -la $HOME
-    - rm -rf $HOME/.jacamar-ci/{builds,cache}
-  rules:
-    - when: always
