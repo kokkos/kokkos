@@ -298,96 +298,141 @@ template <>
 inline constexpr bool is_cuda_execution_space_v<Kokkos::Cuda> = true;
 #endif
 
-#if defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_CUDA)
+template <typename ExecutionSpace>
+inline constexpr bool is_sycl_execution_space_v = false;
+
+#if defined(KOKKOS_ENABLE_SYCL)
+template <>
+inline constexpr bool is_sycl_execution_space_v<Kokkos::SYCL> = true;
+#endif
+
+#if defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_CUDA) || \
+    defined(KOKKOS_ENABLE_SYCL)
 // Runs `action` atomically under `lock`, safe for SIMT execution groups that
 // do not guarantee independent forward progress between lanes: AMD
 // wavefronts (always, on every ROCm/architecture combination we know of),
-// and NVIDIA warps on architectures older than Volta (compute capability
-// < 7.0), which predate Independent Thread Scheduling.
+// NVIDIA warps on architectures older than Volta (compute capability
+// < 7.0), which predate Independent Thread Scheduling, and Intel sub-groups.
 //
-// This deliberately avoids warp-vote/shuffle intrinsics (__ballot, __shfl,
-// __activemask, and friends) for the lane-election logic itself. Their use
-// under divergent control flow (like here) was affected by at least a confirmed
-// HIP compiler bug that produced wrong results (see ROCm/hip#952 and the
-// follow-up ROCm/hip#2474), reported present as late as 2022 and fixed in 2023.
-// The `_sync` variants (explicit participation mask) became available, and
-// enabled by default, starting with ROCm 7.0. Even though current ROCm is
-// expected to have this fixed, the plain uniform-loop approach below avoids
-// depending on that fix being present for whichever ROCm version and hardware
-// this ends up compiled against, and sidesteps the question entirely.
+// Originally, this has deliberately avoiding the use of warp-vote/shuffle
+// intrinsics (__ballot, __shfl, __activemask, and friends) for the
+// lane-election logic itself because their use under divergent control flow
+// (like here) was affected by at least a confirmed HIP compiler bug that
+// produced wrong results (see ROCm/hip#952 and the follow-up ROCm/hip#2474),
+// reported present as late as 2022 and fixed in 2023. Now, it also allow to
+// have a common algorithm for HIP, CUDA pre-Volta, and Intel GPUs.
 //
-// Instead, every lane in the group runs the "same" uniform, convergent
-// loop over lane indices. The loop structure never depends on any
-// other lane's state. Within that loop, only the lane whose own index
-// matches the current iteration ever touches `lock`, every other lane's
-// iteration is a no-op. This means at most one lane per group is ever
-// inside the acquire/action/release sequence at a time, which is what
-// actually removes the lockstep hazard. Because only one lane is ever
-// spinning at a time, it's safe to reuse the same LockPolicy types used by
-// the generic path for the elected lane's own acquire/release.
+// Every lane in the group runs the "same" uniform, convergent loop over lane
+// indices. The loop structure never depends on any other lane's state. Within
+// that loop, only the lane whose own index matches the current iteration ever
+// touches `lock`, every other lane's iteration is a no-op. This means at most
+// one lane per group is ever inside the acquire/action/release sequence at a
+// time, which is what actually removes the lockstep hazard. Because only one
+// lane is ever spinning at a time, it's safe to reuse the same LockPolicy types
+// used by the generic path for the elected lane's own acquire/release.
 //
-// Cost: this serializes the whole group through this call, one lane at
-// a time, even when the individual locks are all different and
-// uncontended. It trades away all intra-group parallelism for this
-// operation in exchange for correctness on this hardware. (A better solution
-// could be considered, but it is not trivial.)
+// Cost: this serializes the whole group through this call, one lane at a time,
+// even when the individual locks are all different and uncontended. It trades
+// away all intra-group parallelism for this operation in exchange for
+// correctness on those hardware. (A better solution could be considered, but it
+// is not trivial.)
 //
-// Open question for a later pass: given the failure was a compiler bug and
-// not a design limitation, would it be worth maintaining a second, faster
-// implementation on top of __ballot/__shfl for ROCm versions known to have
-// the fix, selected at compile time via HIP_VERSION (or
-// HIP_VERSION_MAJOR/HIP_VERSION_MINOR), falling back to this uniform loop
-// to recover intra-group parallelism for uncontended locks?
+// Open question for a later pass: given the failure was a compiler bug and not
+// a design limitation, would it be worth maintaining a second, faster
+// implementation on top of __ballot/__shfl for ROCm versions known to have the
+// fix, selected at compile time via HIP_VERSION (or
+// HIP_VERSION_MAJOR/HIP_VERSION_MINOR), falling back to this uniform loop to
+// recover intra-group parallelism for uncontended locks?
 //
-// NOTE: This does NOT remove the more general (and universal, Volta+ CUDA
-// included) concern that a lock could be held by a thread in a different
-// group that isn't currently scheduled. This also apply to CPU if a thread is
-// never rescheduled by the kernel, that's a launch/occupancy concern for any
-// hardware spinlock, not something fixable at this layer.
+// NOTE: This does NOT remove the more general (and universal) concern that a
+// lock could be held by a thread in a different group that isn't currently
+// scheduled. This also apply to CPU if a thread is never rescheduled by the
+// kernel, that's a launch/occupancy concern for any hardware spinlock, not
+// something fixable at this layer.
+template <typename LockType, typename LockPolicy, typename Function>
+KOKKOS_INLINE_FUNCTION decltype(auto) lane_serialized_locked_action_core(
+    unsigned int my_lane, unsigned int group_size, LockType* lock,
+    LockPolicy policy, Function&& action) {
+  // `my_lane` and `group_size` are computed by each backend-specific caller
+  // below using whatever native mechanism that backend exposes (CUDA/HIP:
+  // threadIdx + warpSize; SYCL: sub-group queries), since none of that is
+  // portable, but the election logic itself is identical once you have those
+  // two numbers.
+
+  using ReturnType = decltype(action());
+
+  // Handles void and non-void return type.
+  if constexpr (std::is_void_v<ReturnType>) {
+    for (unsigned int elected_lane = 0; elected_lane < group_size;
+         ++elected_lane) {
+      if (my_lane == elected_lane) {
+        Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
+        action();
+      }
+    }
+  } else {
+    static_assert(
+        std::is_default_constructible_v<ReturnType>,
+        "atomic_locked_action's lane-serialized path requires the "
+        "action's return type to be default-constructible (or void).");
+    ReturnType result{};
+    for (unsigned int elected_lane = 0; elected_lane < group_size;
+         ++elected_lane) {
+      if (my_lane == elected_lane) {
+        Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
+        result = action();
+      }
+    }
+    // The return is performed uniformly by each active lane outside the
+    // loop to avoid divergence.
+    return result;
+  }
+}
+#endif  // KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_CUDA || KOKKOS_ENABLE_SYCL
+
+#if defined(KOKKOS_ENABLE_HIP) || defined(KOKKOS_ENABLE_CUDA)
 template <typename LockType, typename LockPolicy, typename Function>
 KOKKOS_INLINE_FUNCTION decltype(auto) lane_serialized_locked_action(
     LockType* lock, LockPolicy policy, Function&& action) {
   KOKKOS_IF_ON_HOST((Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
                      return action();))
 
-  KOKKOS_IF_ON_DEVICE((
-      unsigned int flat_local_id =
-          threadIdx.x + blockDim.x * (threadIdx.y + blockDim.y * threadIdx.z);
-      unsigned int my_lane =
-          flat_local_id % static_cast<unsigned int>(warpSize);
-
-      using ReturnType = decltype(action());
-
-      // Handles void and non-void return type.
-      if constexpr (std::is_void_v<ReturnType>) {
-        for (unsigned int elected_lane = 0;
-             elected_lane < static_cast<unsigned int>(warpSize);
-             ++elected_lane) {
-          if (my_lane == elected_lane) {
-            Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
-            action();
-          }
-        }
-      } else {
-        static_assert(
-            std::is_default_constructible_v<ReturnType>,
-            "atomic_locked_action's lane-serialized path requires the "
-            "action's return type to be default-constructible (or void).");
-        ReturnType result{};
-        for (unsigned int elected_lane = 0;
-             elected_lane < static_cast<unsigned int>(warpSize);
-             ++elected_lane) {
-          if (my_lane == elected_lane) {
-            Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
-            result = action();
-          }
-        }
-        // The return is performed uniformly by each active lane outside the
-        // loop to avoid divergence.
-        return result;
-      }))
+  KOKKOS_IF_ON_DEVICE(
+      (unsigned int flat_local_id =
+           threadIdx.x + blockDim.x * (threadIdx.y + blockDim.y * threadIdx.z);
+       unsigned int my_lane =
+           flat_local_id % static_cast<unsigned int>(warpSize);
+       return lane_serialized_locked_action_core(
+           my_lane, static_cast<unsigned int>(warpSize), lock, policy,
+           std::forward<Function>(action));))
 }
 #endif  // KOKKOS_ENABLE_HIP || KOKKOS_ENABLE_CUDA
+
+#if defined(KOKKOS_ENABLE_SYCL)
+// Getting the current sub-group requires
+// sycl::ext::oneapi::this_work_item::get_sub_group() an Intel DPC++ extension,
+// with no core SYCL equivalent to my knowledge.
+#if !defined(SYCL_EXT_ONEAPI_FREE_FUNCTION_QUERIES)
+#error \
+    "atomic_locked_action's SYCL path needs sycl_ext_oneapi_free_function_queries " \
+    "to query the current sub-group without an nd_item in scope."
+#endif
+template <typename LockType, typename LockPolicy, typename Function>
+KOKKOS_INLINE_FUNCTION decltype(auto) sycl_lane_serialized_locked_action(
+    LockType* lock, LockPolicy policy, Function&& action) {
+  KOKKOS_IF_ON_HOST((Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
+                     return action();))
+
+  KOKKOS_IF_ON_DEVICE(
+      (auto sub_group = sycl::ext::oneapi::this_work_item::get_sub_group();
+       unsigned int my_lane =
+           static_cast<unsigned int>(sub_group.get_local_id()[0]);
+       unsigned int group_size =
+           static_cast<unsigned int>(sub_group.get_local_range()[0]);
+       return lane_serialized_locked_action_core(
+           my_lane, group_size, lock, policy, std::forward<Function>(action));))
+}
+#endif  // KOKKOS_ENABLE_SYCL
 
 #if defined(KOKKOS_ENABLE_CUDA)
 // CUDA-specific dispatch: routes to the lane-serialized path above only on
@@ -399,15 +444,13 @@ KOKKOS_INLINE_FUNCTION decltype(auto) cuda_dispatch_locked_action(
                      return action();))
 
 #if defined(__CUDA_ARCH__) && (__CUDA_ARCH__ < 700)
-  KOKKOS_IF_ON_DEVICE((
-      return Impl::lane_serialized_locked_action(
-          lock, policy, std::forward<Function>(action));
-  ))
+  KOKKOS_IF_ON_DEVICE(
+      (return Impl::lane_serialized_locked_action(
+                  lock, policy, std::forward<Function>(action));))
 #else
-  KOKKOS_IF_ON_DEVICE((
-      Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
-      return action();
-  ))
+  KOKKOS_IF_ON_DEVICE(
+      (Impl::LockGuard<LockType, LockPolicy> guard(lock, policy);
+       return action();))
 #endif
 }
 #endif  // KOKKOS_ENABLE_CUDA
@@ -529,8 +572,10 @@ using ClockRandomBackoffTTAS =
 //     on pre-Volta architectures (compute capability < 7.0). Volta and later
 //     have Independent Thread Scheduling and use the generic path below
 //     instead.
-//   - Everything else (OpenMP, Threads, Volta+ Cuda, SYCL, HPX, ...): the
-//     generic LockPolicy-based spin loop via Impl::LockGuard.
+//   - ExecutionSpace = Kokkos::SYCL: also the lane-serialized dispatch (see
+//     Impl::sycl_lane_serialized_locked_action).
+//   - Everything else (OpenMP, Threads, Volta+ Cuda, HPX, ...): the generic
+//     LockPolicy-based spin loop via Impl::LockGuard.
 //
 // Four overloads are provided, differing in how much you want to specify
 // explicitly (LockType and Function are always deduced from `lock` and
@@ -582,6 +627,12 @@ KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
   else if constexpr (Impl::is_cuda_execution_space_v<ExecutionSpace>) {
     return Impl::cuda_dispatch_locked_action(lock, policy,
                                              std::forward<Function>(action));
+  }
+#endif
+#if defined(KOKKOS_ENABLE_SYCL)
+  else if constexpr (Impl::is_sycl_execution_space_v<ExecutionSpace>) {
+    return Impl::sycl_lane_serialized_locked_action(
+        lock, policy, std::forward<Function>(action));
   }
 #endif
   else {
