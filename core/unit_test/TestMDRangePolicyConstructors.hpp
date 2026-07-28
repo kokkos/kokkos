@@ -242,7 +242,7 @@ void test_default_tiles_respect_launch_bounds() {
 
   policy_t policy_with_default_tile(lower, upper);
 
-  EXPECT_LE(policy_with_default_tile.prod_tile_dims(),
+  EXPECT_LE(policy_with_default_tile.impl_prod_tile_dims(),
             static_cast<index_type>(MaxTperB))
       << " for Rank-" << Rank << " with LaunchBounds<" << MaxTperB << ">"
       << " and InnerDirection "

@@ -43,7 +43,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelFor &self = *((const ParallelFor *)arg);
 
-    auto const num_tiles = self.m_policy.num_tiles();
+    auto const num_tiles = self.m_policy.impl_num_tiles();
     WorkRange range(Policy(0, num_tiles).set_chunk_size(1),
                     instance.pool_rank(), instance.pool_size());
 
@@ -57,7 +57,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelFor &self = *((const ParallelFor *)arg);
 
-    auto const num_tiles = self.m_policy.num_tiles();
+    auto const num_tiles = self.m_policy.impl_num_tiles();
     WorkRange range(Policy(0, num_tiles).set_chunk_size(1),
                     instance.pool_rank(), instance.pool_size());
 

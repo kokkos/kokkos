@@ -1010,7 +1010,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   inline ParallelFor(const FunctorType &arg_functor, MDRangePolicy arg_policy)
       : m_iter(arg_policy, arg_functor),
-        m_policy(Policy(0, arg_policy.m_num_tiles).set_chunk_size(1)) {}
+        m_policy(Policy(arg_policy.space(), 0, arg_policy.impl_num_tiles())
+                     .set_chunk_size(1)) {}
   template <typename Policy, typename Functor>
   static int max_tile_size_product(const Policy &, const Functor &) {
     /**
@@ -1215,7 +1216,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline ParallelReduce(const CombinedFunctorReducerType &arg_functor_reducer,
                         MDRangePolicy arg_policy, const ViewType &arg_view)
       : m_iter(arg_policy, arg_functor_reducer),
-        m_policy(Policy(0, arg_policy.m_num_tiles).set_chunk_size(1)),
+        m_policy(Policy(arg_policy.space(), 0, arg_policy.impl_num_tiles())
+                     .set_chunk_size(1)),
         m_result_ptr(arg_view.data()),
         m_force_synchronous(!arg_view.impl_track().has_record()) {
     static_assert(

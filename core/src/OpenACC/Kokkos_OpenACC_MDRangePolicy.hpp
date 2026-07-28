@@ -36,11 +36,12 @@ struct OpenACCTile {};
 using OpenACCIterateLeft  = std::integral_constant<Iterate, Iterate::Left>;
 using OpenACCIterateRight = std::integral_constant<Iterate, Iterate::Right>;
 template <int N>
-using OpenACCMDRangeBegin = MDRangePolicy<OpenACC, Rank<N>>::point_type;
+using OpenACCMDRangeBegin =
+    typename MDRangePolicy<OpenACC, Rank<N>>::point_type;
 template <int N>
-using OpenACCMDRangeEnd = MDRangePolicy<OpenACC, Rank<N>>::point_type;
+using OpenACCMDRangeEnd = typename MDRangePolicy<OpenACC, Rank<N>>::point_type;
 template <int N>
-using OpenACCMDRangeTile = MDRangePolicy<OpenACC, Rank<N>>::tile_type;
+using OpenACCMDRangeTile = typename MDRangePolicy<OpenACC, Rank<N>>::tile_type;
 
 }  // namespace Kokkos::Experimental::Impl
 

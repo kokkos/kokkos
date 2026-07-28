@@ -51,7 +51,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
-    const auto num_tiles = self.m_policy.num_tiles();
+    const auto num_tiles = self.m_policy.impl_num_tiles();
     const WorkRange range(Policy(0, num_tiles).set_chunk_size(1),
                           instance.pool_rank(), instance.pool_size());
 
@@ -68,7 +68,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
-    const auto num_tiles = self.m_policy.num_tiles();
+    const auto num_tiles = self.m_policy.impl_num_tiles();
     const WorkRange range(Policy(0, num_tiles).set_chunk_size(1),
                           instance.pool_rank(), instance.pool_size());
 

@@ -42,8 +42,8 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
           m_upper(policy.upper()),
           m_tile(policy.tile()),
           m_tile_end(policy.tile_end()),
-          m_num_tiles(policy.num_tiles()),
-          m_prod_tile_dims(policy.prod_tile_dims()) {}
+          m_num_tiles(policy.impl_num_tiles()),
+          m_prod_tile_dims(policy.impl_prod_tile_dims()) {}
 
     const point_type m_lower;
     const point_type m_upper;

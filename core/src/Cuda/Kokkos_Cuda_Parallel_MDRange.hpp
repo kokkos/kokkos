@@ -133,7 +133,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() const {
-    if (m_policy.num_tiles() == 0) return;
+    if (m_policy.impl_num_tiles() == 0) return;
 
     // maximum number of threads in each dimension of the block as fetched by
     // the API
@@ -392,9 +392,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-    const auto nwork = m_policy.num_tiles();
+    const auto nwork = m_policy.impl_num_tiles();
     if (nwork) {
-      int block_size = m_policy.prod_tile_dims();
+      int block_size = m_policy.impl_prod_tile_dims();
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
       int exponent_pow_two = std::ceil(std::log2(block_size));
