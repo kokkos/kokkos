@@ -89,7 +89,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
   }
 
   inline void execute() const {
-    if (m_policy.num_tiles() == 0) return;
+    if (m_policy.impl_num_tiles() == 0) return;
 
     const auto [grid, block] =
         Kokkos::Impl::compute_device_launch_params(m_policy, m_max_grid_size);

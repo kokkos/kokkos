@@ -170,7 +170,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp parallel for schedule(dynamic, 1) \
     num_threads(m_instance->thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (index_type iwork = 0; iwork < m_policy.num_tiles(); ++iwork) {
+    for (index_type iwork = 0; iwork < m_policy.impl_num_tiles(); ++iwork) {
       m_iter(iwork);
     }
   }
@@ -182,7 +182,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp parallel for schedule(static, 1) \
     num_threads(m_instance->thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (index_type iwork = 0; iwork < m_policy.num_tiles(); ++iwork) {
+    for (index_type iwork = 0; iwork < m_policy.impl_num_tiles(); ++iwork) {
       m_iter(iwork);
     }
   }
@@ -193,7 +193,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
     if (execute_in_serial(m_policy.space())) {
-      exec_range(0, m_policy.num_tiles());
+      exec_range(0, m_policy.impl_num_tiles());
       return;
     }
 
@@ -208,7 +208,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      data.set_work_partition(m_policy.num_tiles(), 1);
+      data.set_work_partition(m_policy.impl_num_tiles(), 1);
 
       if (is_dynamic) {
         // Make sure work partition is set before stealing

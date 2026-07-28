@@ -261,6 +261,13 @@ class MDRangePolicy<P, Properties...>
           ? iteration_pattern::inner_direction
           : default_inner_direction<typename traits::execution_space>::value;
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::Iterate::Right instead.")
+  static constexpr auto Right = Iterate::Right;
+  KOKKOS_DEPRECATED_WITH_COMMENT("Use Kokkos::Iterate::Left instead.")
+  static constexpr auto Left = Iterate::Left;
+#endif
+
   KOKKOS_INLINE_FUNCTION const typename traits::execution_space& space() const {
     return m_space;
   }
@@ -269,10 +276,6 @@ class MDRangePolicy<P, Properties...>
   KOKKOS_INLINE_FUNCTION point_type upper() const { return m_upper; }
   KOKKOS_INLINE_FUNCTION tile_type tile() const { return m_tile; }
   KOKKOS_INLINE_FUNCTION point_type tile_end() const { return m_tile_end; }
-  KOKKOS_INLINE_FUNCTION index_type num_tiles() const { return m_num_tiles; }
-  KOKKOS_INLINE_FUNCTION index_type prod_tile_dims() const {
-    return m_prod_tile_dims;
-  }
 
   MDRangePolicy() = default;
 
@@ -381,6 +384,18 @@ class MDRangePolicy<P, Properties...>
   void impl_change_tile_size(const point_type& tile) {
     this->m_tile = tile;
     this->update_tiling_properties();
+  }
+
+  KOKKOS_INLINE_FUNCTION index_type impl_num_tiles() const {
+    return m_num_tiles;
+  }
+
+  KOKKOS_INLINE_FUNCTION index_type impl_prod_tile_dims() const {
+    return m_prod_tile_dims;
+  }
+
+  std::array<int, 3> impl_max_threads_dimensions() const {
+    return m_max_threads_dimensions;
   }
 
   bool impl_tune_tile_size() const { return m_tune_tile_size; }

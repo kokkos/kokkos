@@ -629,8 +629,8 @@ struct DeviceIterateTile {
         m_upper(policy_.upper()),
         m_tile_end(policy_.tile_end()),
         m_tile(policy_.tile()),
-        m_num_tiles(policy_.num_tiles()),
-        m_prod_tile_dims(policy_.prod_tile_dims()),
+        m_num_tiles(policy_.impl_num_tiles()),
+        m_prod_tile_dims(policy_.impl_prod_tile_dims()),
         m_func(f_),
         m_v(v_) {}
 #endif

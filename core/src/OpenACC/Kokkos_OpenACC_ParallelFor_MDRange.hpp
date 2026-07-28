@@ -909,6 +909,7 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
         std::integral_constant<Iterate, Policy::inner_direction>(), m_functor,
         m_functor,
         lower_bound, upper_bound, tile_size, async_arg);
+#else
     Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(
         Kokkos::Experimental::Impl::OpenACCCollapse(),
         std::integral_constant<Iterate, Policy::inner_direction>(), m_functor,

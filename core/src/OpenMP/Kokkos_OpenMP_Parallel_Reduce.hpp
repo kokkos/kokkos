@@ -226,7 +226,7 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       reference_type update = reducer.init(ptr);
 
-      ParallelReduce::exec_range(0, m_policy.num_tiles(), update);
+      ParallelReduce::exec_range(0, m_policy.impl_num_tiles(), update);
 
       reducer.final(ptr);
 
@@ -243,7 +243,7 @@ class ParallelReduce<CombinedFunctorReducerType,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      data.set_work_partition(m_policy.num_tiles(), 1);
+      data.set_work_partition(m_policy.impl_num_tiles(), 1);
 
       if (is_dynamic) {
         // Make sure work partition is set before stealing

@@ -43,7 +43,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     const Kokkos::SYCL& space = m_policy.space();
     sycl::queue& q            = space.sycl_queue();
 
-    if (m_policy.num_tiles() == 0) return {};
+    if (m_policy.impl_num_tiles() == 0) return {};
 
     const auto lower_bound = m_lower;
     const auto upper_bound = m_upper;
