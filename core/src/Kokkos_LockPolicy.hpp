@@ -158,7 +158,7 @@ class ClockExponentialBackoff {
     auto delay              = static_cast<decltype(start)>(
         raw_delay < m_max_delay ? raw_delay : m_max_delay);
 
-    while (static_cast<decltype(start)>(Kokkos::Impl::clock_tic()) - start <
+    while (static_cast<decltype(delay)>(Kokkos::Impl::clock_tic() - start) <
            delay) {
       // Active, non-blocking wait on the cycle counter.
       Kokkos::load_fence();
@@ -200,7 +200,7 @@ class ClockRandomBackoff {
   KOKKOS_INLINE_FUNCTION void on_failed_attempt() {
     uint32_t delay = next_random_delay(m_seed, m_max_delay);
     auto start     = Kokkos::Impl::clock_tic();
-    while (static_cast<decltype(start)>(Kokkos::Impl::clock_tic()) - start <
+    while (static_cast<decltype(delay)>(Kokkos::Impl::clock_tic() - start) <
            delay) {
       Kokkos::load_fence();
     }
