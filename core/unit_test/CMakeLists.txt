@@ -147,6 +147,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       AtomicOperations_unsignedint
       AtomicOperations_unsignedlongint
       AtomicViews
+      BadAlloc
       BitManipulationBuiltins
       CheckedIntegerOps
       CommonPolicyConstructors
