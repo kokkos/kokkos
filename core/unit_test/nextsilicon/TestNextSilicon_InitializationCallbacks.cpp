@@ -30,14 +30,19 @@ TEST(nextsilicon, InitializationCallbacksRunImmediately) {
 
 int main(int argc, char* argv[]) {
   Kokkos::Impl::register_nextsilicon_initialization_callback(
-      "TestNextSilicon_InitializationCallbacks::deferred", [] {
+      "TestNextSilicon_InitializationCallbacks::deferred", [&] {
         callback_ran = true;
         Kokkos::Impl::register_nextsilicon_initialization_callback(
             "TestNextSilicon_InitializationCallbacks::while_draining",
-            [] { nested_callback_ran = true; });
+            [&] { nested_callback_ran = true; });
       });
 
   Kokkos::initialize(argc, argv);
+
+  // Force linker to pull in Kokkos_NextSilicon.cpp so NextSilicon backend get
+  // registered via initialize_space_factory
+  { Kokkos::Experimental::NextSilicon sp{}; }
+
   ::testing::InitGoogleTest(&argc, argv);
   int result = RUN_ALL_TESTS();
   Kokkos::finalize();
