@@ -77,3 +77,5 @@ clear-ci-builds:
   script:
     - ls -la $HOME
     - rm -rf $HOME/.jacamar-ci/{builds,cache}
+  rules:
+    - when: always
