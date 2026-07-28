@@ -151,6 +151,9 @@ endif()
 
 kokkos_enable_option(COMPLEX_ALIGN ON "Whether to align Kokkos::complex to 2*alignof(RealType)")
 
+kokkos_enable_option(IMPL_CPACK_SUPPORT OFF "Whether to enable CPack support in Kokkos")
+mark_as_advanced(Kokkos_IMPL_CPACK_SUPPORT)
+
 if(KOKKOS_ENABLE_TESTS)
   set(HEADER_SELF_CONTAINMENT_TESTS_DEFAULT ON)
 else()

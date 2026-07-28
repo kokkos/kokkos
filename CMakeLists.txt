@@ -281,3 +281,36 @@ if(HAS_PARENT)
     set_property(GLOBAL PROPERTY Kokkos_ENABLE_${DEV} ON)
   endforeach()
 endif()
+
+#support for binary packaging generation in our CI
+#meant to be used together with the information in scripts/cpack via Kokkos_IMPL_CPACK_SCRIPT=path/to/script
+if(Kokkos_ENABLE_IMPL_CPACK_SUPPORT)
+  if(NOT BUILD_SHARED_LIBS)
+    message(FATAL_ERROR "Currently only shared builds are allowed with binary packaging")
+  endif()
+
+  #general information for all packages
+  set(CPACK_PACKAGE_VERSION_MAJOR ${Kokkos_VERSION_MAJOR})
+  set(CPACK_PACKAGE_VERSION_MINOR ${Kokkos_VERSION_MINOR})
+  set(CPACK_PACKAGE_VERSION_PATCH ${Kokkos_VERSION_PATCH})
+  set(CPACK_PACKAGE_FILE_NAME "Kokkos_${Kokkos_VERSION}_${CMAKE_SYSTEM_NAME}_${CMAKE_HOST_SYSTEM_PROCESSOR}")
+  set(CPACK_PACKAGE_DESCRIPTION
+      "Kokkos Core implements a programming model in C++ for writing performance portable applications
+targeting all major HPC platforms. For that purpose it provides abstractions for both parallel
+execution of code and data management. Kokkos is designed to target complex node architectures
+with N-level memory hierarchies and multiple types of execution resources. It currently can use
+CUDA, HIP, SYCL, HPX, OpenMP and C++ threads as backend programming models with several other
+backends in development."
+  )
+  set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "The Kokkos performance portability library")
+  set(CPACK_PACKAGE_HOMEPAGE_URL "kokkos.org")
+  set(CPACK_PACKAGE_CONTACT "Kokkos Development Team")
+
+  if(NOT Kokkos_IMPL_CPACK_SCRIPT)
+    message(FATAL_ERROR "Please provide a CPack script via Kokkos_IMPL_CPACK_SCRIPT=/path/to/script")
+  else()
+    include(${Kokkos_IMPL_CPACK_SCRIPT})
+  endif()
+
+  include(CPack)
+endif()
