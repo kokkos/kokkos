@@ -19,7 +19,6 @@ namespace {
 struct NextSiliconInitializationCallbacks {
   std::mutex mutex;
   std::vector<NextSiliconInitializationCallbackEntry> pending;
-  bool initialized = false;
 };
 
 NextSiliconInitializationCallbacks& nextsilicon_initialization_callbacks() {
@@ -32,14 +31,8 @@ NextSiliconInitializationCallbacks& nextsilicon_initialization_callbacks() {
 void register_nextsilicon_initialization_callback(
     std::string label, std::function<void()> callback) {
   auto& callbacks = nextsilicon_initialization_callbacks();
-  {
-    std::lock_guard<std::mutex> lock(callbacks.mutex);
-    if (!callbacks.initialized) {
-      callbacks.pending.push_back({std::move(label), std::move(callback)});
-      return;
-    }
-  }
-  callback();
+  std::lock_guard<std::mutex> lock(callbacks.mutex);
+  callbacks.pending.push_back({std::move(label), std::move(callback)});
 }
 
 void run_nextsilicon_initialization_callbacks() {
@@ -48,7 +41,7 @@ void run_nextsilicon_initialization_callbacks() {
   for (auto& callback : callbacks.pending) {
     callback.callback();
   }
-  callbacks.initialized = true;
+  callbacks.pending.clear();
 }
 
 }  // namespace Kokkos::Impl

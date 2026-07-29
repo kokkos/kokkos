@@ -6,6 +6,8 @@
 
 #include <NextSilicon/Kokkos_NextSilicon_InitializationCallbacks.hpp>
 
+#include <impl/Kokkos_InitializeFinalize.hpp>
+
 #include <nextapi/memory.h>
 
 #include <type_traits>
@@ -39,18 +41,23 @@ struct alignas(PAGE_SIZE) PageAlignedData {
                (std::is_same_v<std::decay_t<Args>, PageAlignedData> && ...)))
   PageAlignedData(Args&&... args) : data{std::forward<Args>(args)...} {
     if constexpr (location != PageLocation::Any) {
-      register_nextsilicon_initialization_callback(
-          "PageAlignedData pin in ctor", [this] {
-            if constexpr (location == PageLocation::Host) {
-              // Move this object to system DRAM and pin it there.
-              nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_HOST,
-                                  true /*pin*/);
-            } else if constexpr (location == PageLocation::Device) {
-              // Move this object to accelerator HBM and pin it there.
-              nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_DEVICE,
-                                  true /*pin*/);
-            }
-          });
+      auto pin = [this] {
+        if constexpr (location == PageLocation::Host) {
+          // Move this object to system DRAM and pin it there.
+          nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_HOST,
+                              true /*pin*/);
+        } else if constexpr (location == PageLocation::Device) {
+          // Move this object to accelerator HBM and pin it there.
+          nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_DEVICE,
+                              true /*pin*/);
+        }
+      };
+      if (Kokkos::is_initialized()) {
+        pin();
+      } else {
+        register_nextsilicon_initialization_callback(
+            "PageAlignedData pin in ctor", std::move(pin));
+      }
     }
   }
 
