@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
 
   Kokkos::initialize(argc, argv);
 
-  // Force linker to pull in Kokkos_NextSilicon.cpp so NextSilicon backend get
+  // Force linker to pull in Kokkos_NextSilicon.cpp so NextSilicon backend gets
   // registered via initialize_space_factory
   { Kokkos::Experimental::NextSilicon sp{}; }
 
