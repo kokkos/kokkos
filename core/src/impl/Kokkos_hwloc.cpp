@@ -236,6 +236,7 @@ enum { MAX_CORE = 1024 };
 std::pair<unsigned, unsigned> s_core_topology(0, 0);
 unsigned s_core_capacity(0);
 hwloc_topology_t s_hwloc_topology(nullptr);
+hwloc_bitmap_t s_hwloc_membind_nodeset(nullptr);
 hwloc_bitmap_t s_hwloc_location(nullptr);
 hwloc_bitmap_t s_process_binding(nullptr);
 hwloc_bitmap_t s_core[MAX_CORE];
@@ -263,6 +264,7 @@ bool sentinel() {
 Sentinel::~Sentinel() {
   hwloc_topology_destroy(s_hwloc_topology);
   hwloc_bitmap_free(s_process_binding);
+  hwloc_bitmap_free(s_hwloc_membind_nodeset);
   hwloc_bitmap_free(s_hwloc_location);
 
   s_core_topology.first  = 0;
@@ -271,6 +273,7 @@ Sentinel::~Sentinel() {
   s_hwloc_topology       = nullptr;
   s_hwloc_location       = nullptr;
   s_process_binding      = nullptr;
+  s_hwloc_membind_nodeset = nullptr;
 }
 
 Sentinel::Sentinel() {
@@ -279,6 +282,8 @@ Sentinel::Sentinel() {
 #else
   static const bool remove_core_0 = false;
 #endif
+
+  hwloc_membind_policy_t membind_policy;
 
   s_core_topology   = std::pair<unsigned, unsigned>(0, 0);
   s_core_capacity   = 0;
@@ -293,7 +298,10 @@ Sentinel::Sentinel() {
 
   s_hwloc_location  = hwloc_bitmap_alloc();
   s_process_binding = hwloc_bitmap_alloc();
+  s_hwloc_membind_nodeset = hwloc_bitmap_alloc();
 
+  hwloc_get_membind(s_hwloc_topology, s_hwloc_membind_nodeset,
+    &membind_policy, HWLOC_MEMBIND_BYNODESET);
   hwloc_get_cpubind(s_hwloc_topology, s_process_binding, HWLOC_CPUBIND_PROCESS);
 
   if (hwloc_bitmap_iszero(s_process_binding)) {
@@ -521,6 +529,21 @@ unsigned get_available_threads_per_core() {
   return s_core_capacity;
 }
 
+hwloc_bitmap_t get_membind_set() {
+  sentinel();
+  return s_hwloc_membind_nodeset;
+}
+
+hwloc_bitmap_t get_process_binding() {
+  sentinel();
+  return s_process_binding;
+}
+
+hwloc_topology_t get_topology() {
+  sentinel();
+  return s_hwloc_topology;
+}
+
 bool can_bind_threads() {
   sentinel();
   return s_can_bind_threads;
@@ -690,6 +713,9 @@ bool can_bind_threads() { return false; }
 unsigned get_available_numa_count() { return 1; }
 unsigned get_available_cores_per_numa() { return 1; }
 unsigned get_available_threads_per_core() { return 1; }
+hwloc_bitmap_t get_membind_set() { return nullptr; }
+hwloc_bitmap_t get_process_binding() { return nullptr; }
+hwloc_topology_t get_topology() { return nullptr; }
 
 unsigned bind_this_thread(const unsigned, std::pair<unsigned, unsigned>[]) {
   return ~0;

@@ -71,6 +71,7 @@
 #cmakedefine KOKKOS_ENABLE_LIBQUADMATH
 #cmakedefine KOKKOS_ENABLE_ONEDPL
 #cmakedefine KOKKOS_ENABLE_ROCTHRUST
+#cmakedefine KOKKOS_ENABLE_DEBUG_HWLOC
 
 /* Embedded dependencies */
 #define KOKKOS_IMPL_DESUL_VERSION "@KOKKOS_DESUL_VERSION@"

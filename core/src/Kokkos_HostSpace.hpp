@@ -12,11 +12,17 @@ static_assert(false,
 #include <cstring>
 #include <string>
 #include <iosfwd>
+#include <iostream>
 #include <typeinfo>
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_Concepts.hpp>
 #include <Kokkos_MemoryTraits.hpp>
+
+#ifdef KOKKOS_ENABLE_HWLOC
+#include <Kokkos_hwloc.hpp>
+#include <Kokkos_NUMANodes.hpp>
+#endif // KOKKOS_ENABLE_HWLOC
 
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -53,6 +59,157 @@ class HostSpace {
 
   HostSpace() = default;
 
+#ifdef KOKKOS_ENABLE_HWLOC
+  HostSpace(const HostSpace& rhs) {
+    if (nullptr != rhs.membind_set) {
+      this->membind_set = hwloc_bitmap_dup(rhs.membind_set);
+      this->membind_policy = rhs.membind_policy;
+      this->membind_flags = rhs.membind_flags;
+#ifdef KOKKOS_ENABLE_DEBUG_HWLOC
+      char *set_str;
+      hwloc_bitmap_list_asprintf(&set_str, this->membind_set);
+      std::cout << "INFO: " << __PRETTY_FUNCTION__
+                << " membind_set: " << set_str
+                << " membind_policy: " << this->membind_policy
+                << " membind_flags: " << this->membind_flags
+                << std::endl;
+      free(set_str);
+#endif // KOKKOS_ENABLE_DEBUG_HWLOC
+    }
+  }
+
+  template<typename T,
+    std::enable_if_t<std::is_same_v<std::decay_t<T>, hwloc_bitmap_t>
+    // hwloc_memattr_id_e was introduced in version 2.3.0 (0x00020300)
+#if HWLOC_API_VERSION >= 0x00020300
+                  || std::is_same_v<std::decay_t<T>, hwloc_memattr_id_e>
+#endif // HWLOC_API_VERSION
+                  || Kokkos::is_kokkos_numanodes_v<T>
+                  , int> = 0>
+  HostSpace(T&& arg,
+    const hwloc_membind_policy_t policy = KOKKOS_HWLOC_DEFAULT_MEMBIND_POLICY,
+    const int flags = KOKKOS_HWLOC_DEFAULT_MEMBIND_FLAGS)
+  : membind_policy(policy), membind_flags(flags) {
+    hwloc_bitmap_t const membind_set_cur = static_cast<hwloc_bitmap_t>(
+        Kokkos::hwloc::get_membind_set());
+    const hwloc_topology_t topology = Kokkos::hwloc::get_topology();
+
+    hwloc_bitmap_t membind_set_asked = hwloc_bitmap_alloc();
+
+    if (nullptr == this->membind_set) {
+      this->membind_set = hwloc_bitmap_alloc();
+    }
+
+    // build the user-requested set
+    using rawT = std::decay_t<T>;
+
+    if constexpr (std::is_same_v<rawT, hwloc_bitmap_t>) {
+
+      hwloc_bitmap_copy(membind_set_asked, arg);
+
+    // hwloc_memattr_id_e was introduced in version 2.3.0 (0x00020300)
+#if HWLOC_API_VERSION >= 0x00020300
+    } else if constexpr (std::is_same_v<rawT, hwloc_memattr_id_e>) {
+
+      hwloc_bitmap_t process_binding = Kokkos::hwloc::get_process_binding();
+      hwloc_obj_t best_node;
+      struct hwloc_location initiator;
+      initiator.type = HWLOC_LOCATION_TYPE_CPUSET;
+      initiator.location.cpuset = process_binding;
+
+      int err = hwloc_memattr_get_best_target(topology, arg,
+            &initiator, 0, &best_node, nullptr);
+      if (0 == err) {
+        hwloc_bitmap_copy(membind_set_asked, best_node->nodeset);
+      }
+
+      // If the cpuset is spread across multiple Sockets or Packages, hwloc
+      // might fail to decide THE best target, since the best for a core
+      // may not be the best for another core. In this case, we need to do
+      // more dichotomy and gather the best target of each core in cpuset.
+      if (hwloc_bitmap_iszero(membind_set_asked)) {
+        unsigned id;
+        hwloc_bitmap_foreach_begin(id, process_binding) {
+          // get cpuset of this core
+          hwloc_obj_t obj_core = hwloc_get_obj_by_type(topology, HWLOC_OBJ_CORE, id);
+
+          // get best numa node of this core, then OR with membind_set_asked
+          if (nullptr != obj_core) {
+            initiator.location.cpuset = obj_core->cpuset;
+            err = hwloc_memattr_get_best_target(topology, arg, &initiator, 0, &best_node, nullptr);
+            if (0 == err) {
+              hwloc_bitmap_or(membind_set_asked, membind_set_asked, best_node->nodeset);
+            }
+          }
+
+        } hwloc_bitmap_foreach_end();
+      }
+      // Foolproof: mark bitmap as processed as nodeset
+      membind_flags |= HWLOC_MEMBIND_BYNODESET;
+#endif // HWLOC_API_VERSION
+
+    } else if constexpr (Kokkos::is_kokkos_numanodes_v<T>) {
+
+      const bool is_physical = arg.is_physical();
+      const int nb_nodes = hwloc_get_nbobjs_by_type(topology, HWLOC_OBJ_NUMANODE);
+      for (size_t i = 0; i < arg.size(); ++i) {
+        const unsigned id = arg[i];
+        // sanity check that asked node id exists
+        if (((int)id) >= nb_nodes) {
+#ifdef KOKKOS_ENABLE_DEBUG_HWLOC
+          std::cout << "WARNING: " << __PRETTY_FUNCTION__
+                    << " asked node id " << id << " does not exist"
+                    << " and will be ignored"
+                    << " (available nb_nodes = " << nb_nodes << ")"
+                    << std::endl;
+#endif // KOKKOS_ENABLE_DEBUG_HWLOC
+          continue;
+        }
+        hwloc_obj_t obj = is_physical
+                   ? hwloc_get_numanode_obj_by_os_index(topology, id)
+                   : hwloc_get_obj_by_type(topology, HWLOC_OBJ_NUMANODE, id);
+        if (nullptr != obj->nodeset) {
+          hwloc_bitmap_or(membind_set_asked, membind_set_asked, obj->nodeset);
+        }
+      }
+      // Foolproof: mark bitmap as processed as nodeset
+      membind_flags |= HWLOC_MEMBIND_BYNODESET;
+
+    } else {
+      __builtin_unreachable();
+    }
+
+    // fit in available nodes in membind_set_cur
+    // membind_set = membind_set_asked & membind_set_cur
+    hwloc_bitmap_and(this->membind_set, membind_set_asked, membind_set_cur);
+
+    // little check
+    if (hwloc_bitmap_iszero(this->membind_set)) {
+      char *set_cur, *set_asked;
+      hwloc_bitmap_list_asprintf(&set_cur, membind_set_cur);
+      hwloc_bitmap_list_asprintf(&set_asked, membind_set_asked);
+
+      std::cout << "ERROR: " << __PRETTY_FUNCTION__
+                << " membind_set is empty. Further allocation might fail."
+                << " Please review nodelist argument and/or numactl runtime."
+                << " Current membind nodeset: " << set_cur
+                << " Asked membind nodeset: " << set_asked
+                << std::endl;
+      free(set_cur);
+      free(set_asked);
+    }
+
+    hwloc_bitmap_free(membind_set_asked);
+  }
+
+  ~HostSpace() {
+    if (nullptr != membind_set) {
+      hwloc_bitmap_free(membind_set);
+      membind_set = nullptr;
+    }
+  }
+#endif  // KOKKOS_ENABLE_HWLOC
+
   /**\brief  Allocate untracked memory in the space */
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const size_t arg_alloc_size) const {
@@ -87,8 +244,27 @@ class HostSpace {
   /**\brief Return Name of the MemorySpace */
   static constexpr const char* name() { return m_name; }
 
+#ifdef KOKKOS_ENABLE_HWLOC
+  hwloc_bitmap_t get_membind_set(void) const {
+    return membind_set;
+  }
+  hwloc_membind_policy_t get_membind_policy(void) const {
+    return membind_policy;
+  }
+  int get_membind_flags(void) const {
+    return membind_flags;
+  }
+#endif  // KOKKOS_ENABLE_HWLOC
+
  private:
   static constexpr const char* m_name = "Host";
+
+#ifdef KOKKOS_ENABLE_HWLOC
+  hwloc_bitmap_t membind_set{nullptr};
+  hwloc_membind_policy_t membind_policy;
+  int membind_flags;
+#endif  // KOKKOS_ENABLE_HWLOC
+
 };
 
 }  // namespace Kokkos

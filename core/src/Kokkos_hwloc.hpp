@@ -11,6 +11,23 @@ static_assert(false,
 
 #include <Kokkos_Macros.hpp>
 
+#ifdef KOKKOS_ENABLE_HWLOC
+#include <hwloc.h>
+
+#ifndef KOKKOS_HWLOC_DEFAULT_MEMBIND_FLAGS
+// set NOCPUBIND to prevent OS from binding/moving threads to memory nodes
+#define KOKKOS_HWLOC_DEFAULT_MEMBIND_FLAGS  (HWLOC_MEMBIND_NOCPUBIND)
+#endif
+
+#ifndef KOKKOS_HWLOC_DEFAULT_MEMBIND_POLICY
+#define KOKKOS_HWLOC_DEFAULT_MEMBIND_POLICY (HWLOC_MEMBIND_DEFAULT)
+#endif
+
+#else
+typedef void* hwloc_bitmap_t;
+typedef void* hwloc_topology_t;
+#endif  // KOKKOS_ENABLE_HWLOC
+
 #include <utility>
 
 namespace Kokkos {
@@ -47,6 +64,15 @@ unsigned get_available_cores_per_numa();
 /** \brief  Query number of available "hard" threads per core; i.e.,
  * hyperthreads */
 unsigned get_available_threads_per_core();
+
+/** \brief  Query the current membind in nodeset (not cpuset) */
+hwloc_bitmap_t get_membind_set();
+
+/** \brief  Query the current process binding (cpuset) */
+hwloc_bitmap_t get_process_binding();
+
+/** \brief  Query the current hwloc topology */
+hwloc_topology_t get_topology();
 
 } /* namespace hwloc */
 } /* namespace Kokkos */
