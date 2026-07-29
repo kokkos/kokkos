@@ -91,7 +91,7 @@ template <typename T>
 constexpr hpx_range<T> get_chunk_range(const T i_chunk, const T offset,
                                        const T chunk_size, const T max) {
   const T begin = offset + i_chunk * chunk_size;
-  const T end   = (std::min)(begin + chunk_size, max);
+  const T end   = std::min(static_cast<T>(begin + chunk_size), max);
   return {begin, end};
 }
 
