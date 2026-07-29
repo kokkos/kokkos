@@ -9,6 +9,7 @@
 
 namespace Kokkos::Impl {
 
+// Callbacks must not register additional initialization callbacks.
 void register_nextsilicon_initialization_callback(
     std::string label, std::function<void()> callback);
 

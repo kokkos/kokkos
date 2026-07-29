@@ -8,16 +8,11 @@
 
 namespace {
 
-bool callback_ran        = false;
-bool nested_callback_ran = false;
+bool callback_ran = false;
 
 TEST(nextsilicon, InitializationCallbacksRun) { EXPECT_TRUE(callback_ran); }
 
-TEST(nextsilicon, InitializationNestedCallbacksRun) {
-  EXPECT_TRUE(nested_callback_ran);
-}
-
-// reset the callback state and check that the callback runs immediately
+// Check that callbacks registered after initialization run immediately.
 TEST(nextsilicon, InitializationCallbacksRunImmediately) {
   bool local_callback_ran = false;
   Kokkos::Impl::register_nextsilicon_initialization_callback(
@@ -30,12 +25,8 @@ TEST(nextsilicon, InitializationCallbacksRunImmediately) {
 
 int main(int argc, char* argv[]) {
   Kokkos::Impl::register_nextsilicon_initialization_callback(
-      "TestNextSilicon_InitializationCallbacks::deferred", [&] {
-        callback_ran = true;
-        Kokkos::Impl::register_nextsilicon_initialization_callback(
-            "TestNextSilicon_InitializationCallbacks::while_draining",
-            [&] { nested_callback_ran = true; });
-      });
+      "TestNextSilicon_InitializationCallbacks::deferred",
+      [] { callback_ran = true; });
 
   Kokkos::initialize(argc, argv);
 

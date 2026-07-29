@@ -44,22 +44,11 @@ void register_nextsilicon_initialization_callback(
 
 void run_nextsilicon_initialization_callbacks() {
   auto& callbacks = nextsilicon_initialization_callbacks();
-  while (true) {
-    std::vector<NextSiliconInitializationCallbackEntry> pending;
-    {
-      std::lock_guard<std::mutex> lock(callbacks.mutex);
-      if (callbacks.pending.empty()) {
-        callbacks.initialized = true;
-        return;
-      }
-      // Drop the mutex before running callbacks in case callback registers a
-      // callback. Next iteration will pick it up.
-      pending.swap(callbacks.pending);
-    }
-    for (auto& callback : pending) {
-      callback.callback();
-    }
+  std::lock_guard<std::mutex> lock(callbacks.mutex);
+  for (auto& callback : callbacks.pending) {
+    callback.callback();
   }
+  callbacks.initialized = true;
 }
 
 }  // namespace Kokkos::Impl
