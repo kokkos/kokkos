@@ -86,7 +86,7 @@ bool gpu_arch_can_access_system_allocations() {
 
   std::string_view const arch_name = props.gcnArchName;
   auto has_prefix                  = [&](std::string_view const prefix) {
-    return arch_name.find(prefix) == 0;
+    return arch_name.starts_with(prefix);
   };
 
   // Supported per ROCm/HIP documentation.
