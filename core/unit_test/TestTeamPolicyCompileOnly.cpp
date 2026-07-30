@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-// For research/prototyping it can be convenient to derive from TeamPolicy
-
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
@@ -12,6 +10,8 @@ import kokkos.core;
 
 namespace {
 
+// In a research prototype where we derived from TeamPolicy we saw
+// an issue with copy construction that this test reproduces.
 struct DerivedPolicy : Kokkos::TeamPolicy<> {
   using base = Kokkos::TeamPolicy<>;
 
