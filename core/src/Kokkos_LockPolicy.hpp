@@ -74,19 +74,30 @@ KOKKOS_INLINE_FUNCTION uint32_t next_random_delay(uint32_t& seed,
   return delay;
 }
 
+template <typename LockType>
+struct LockState {
+  static_assert(std::is_integral_v<LockType>,
+                "LockType must be an integral type supported by Kokkos "
+                "atomics.");
+  static constexpr LockType Free   = 0;
+  static constexpr LockType Locked = 1;
+};
+
 // Single compare-and-swap (CAS) attempt to acquire the lock.
 template <typename LockType>
 KOKKOS_INLINE_FUNCTION bool try_lock_cas(LockType* lock) {
-  return Kokkos::atomic_compare_exchange(lock, LockType(0), LockType(1)) ==
-         LockType(0);
+  using State = LockState<LockType>;
+  return Kokkos::atomic_compare_exchange(lock, State::Free, State::Locked) ==
+         State::Free;
 }
 
 // Single test-then-test-and-set (TTAS) attempt to acquire the lock.
 template <typename LockType>
 KOKKOS_INLINE_FUNCTION bool try_lock_ttas(LockType* lock) {
-  return Kokkos::atomic_load(lock) == LockType(0) &&
-         Kokkos::atomic_compare_exchange(lock, LockType(0), LockType(1)) ==
-             LockType(0);
+  using State = LockState<LockType>;
+  return Kokkos::atomic_load(lock) == State::Free &&
+         Kokkos::atomic_compare_exchange(lock, State::Free, State::Locked) ==
+             State::Free;
 }
 
 // TryLock strategies: the CAS/TTAS axis of variation, factored out so
@@ -240,7 +251,7 @@ class BackoffLockPolicy {
   template <typename LockType>
   KOKKOS_INLINE_FUNCTION void release(LockType* lock) const {
     Kokkos::memory_fence();
-    Kokkos::atomic_store(lock, LockType(0));
+    Kokkos::atomic_store(lock, LockState<LockType>::Free);
   }
 
  private:
@@ -501,7 +512,7 @@ struct PureSpinlock {
   KOKKOS_INLINE_FUNCTION void release(LockType* lock) const {
     Kokkos::memory_fence();  // Ensure writes made in the critical section
                              // are visible before the lock is cleared.
-    Kokkos::atomic_store(lock, LockType(0));
+    Kokkos::atomic_store(lock, Impl::LockState<LockType>::Free);
   }
 };
 
@@ -521,7 +532,7 @@ struct SpinlockTTAS {
   template <typename LockType>
   KOKKOS_INLINE_FUNCTION void release(LockType* lock) const {
     Kokkos::memory_fence();
-    Kokkos::atomic_store(lock, LockType(0));
+    Kokkos::atomic_store(lock, Impl::LockState<LockType>::Free);
   }
 };
 
