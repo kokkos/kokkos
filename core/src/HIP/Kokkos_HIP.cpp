@@ -58,7 +58,7 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
     std::string_view const arch_name =
         Impl::HIPInternal::m_deviceProp.gcnArchName;
     while (std::getline(enabled_arch_stream, enabled_arch, ',')) {
-      if (!enabled_arch.empty() && arch_name.find(enabled_arch) == 0) {
+      if (!enabled_arch.empty() && arch_name.starts_with(enabled_arch)) {
         found_matching_arch = true;
         break;
       }
