@@ -54,6 +54,7 @@
 #include <Kokkos_Complex.hpp>
 #include <Kokkos_CopyViews.hpp>
 #include <impl/Kokkos_TeamMDPolicy.hpp>
+#include <impl/Kokkos_Parallel_NestedPolicyDispatch.hpp>
 #include <impl/Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_ScopeGuard.hpp>
 #include <impl/Kokkos_PartitionSpace.hpp>

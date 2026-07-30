@@ -8,6 +8,7 @@
 
 #if defined(__HIPCC__)
 
+#include <type_traits>
 #include <utility>
 #include <Kokkos_Parallel.hpp>
 
@@ -56,6 +57,7 @@ class HIPTeamMember {
   using execution_space      = HIP;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = HIPTeamMember;
+  using thread_handle        = Kokkos::ThreadHandle<team_handle>;
 
  private:
   mutable void* m_team_reduce;
@@ -98,6 +100,20 @@ class HIPTeamMember {
 #else
     return 0;
 #endif
+  }
+
+  /** \brief Number of vector lanes per thread (blockDim.x). */
+  KOKKOS_INLINE_FUNCTION int vector_length() const {
+#ifdef __HIP_DEVICE_COMPILE__
+    return blockDim.x;
+#else
+    return 1;
+#endif
+  }
+
+  /** \brief Maximum concurrency at team level (team_size * vector_length). */
+  KOKKOS_INLINE_FUNCTION int concurrency() const {
+    return team_size() * vector_length();
   }
 
   KOKKOS_INLINE_FUNCTION void team_barrier() const {
@@ -474,9 +490,33 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
         loop_boundaries,
     const Closure& closure) {
 #ifdef __HIP_DEVICE_COMPILE__
-  for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
-       i += blockDim.y)
-    closure(i);
+  using thread_handle_t = Kokkos::ThreadHandle<Impl::HIPTeamMember>;
+  if constexpr (std::is_invocable_v<Closure, iType> ||
+                std::is_invocable_v<Closure, iType const&>) {
+    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+         i += blockDim.y) {
+      closure(i);
+    }
+  } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                           iType>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+         i += blockDim.y) {
+      closure(thread_handle, i);
+    }
+  } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start + threadIdx.y; i < loop_boundaries.end;
+         i += blockDim.y) {
+      (void)i;
+      closure(thread_handle);
+    }
+  } else {
+    static_assert(Kokkos::Impl::always_false<Closure>::value,
+                  "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                  "invocable with (iType), (ThreadHandle, iType), or "
+                  "(ThreadHandle)");
+  }
 #else
   (void)loop_boundaries;
   (void)closure;

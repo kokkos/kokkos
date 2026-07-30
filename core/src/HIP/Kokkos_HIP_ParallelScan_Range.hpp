@@ -14,6 +14,8 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class ValueType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanHIPBase {
  public:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -286,6 +288,8 @@ class ParallelScanHIPBase {
 };
 
 template <class FunctorType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
     : public ParallelScanHIPBase<FunctorType, void, Traits...> {
  public:
@@ -334,6 +338,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, HIP>
 //----------------------------------------------------------------------------
 
 template <class FunctorType, class ReturnType, class... Traits>
+  requires Kokkos::ExecutionSpace<
+      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, HIP>
     : public ParallelScanHIPBase<FunctorType, ReturnType, Traits...> {

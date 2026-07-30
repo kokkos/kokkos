@@ -9,6 +9,8 @@
 #ifdef KOKKOS_ENABLE_SYCL
 
 #include <utility>
+
+#include <Kokkos_ExecPolicy.hpp>
 #include <SYCL/Kokkos_SYCL_WorkgroupReduction.hpp>
 
 //----------------------------------------------------------------------------
@@ -24,6 +26,7 @@ class SYCLTeamMember {
   using execution_space      = Kokkos::SYCL;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = SYCLTeamMember;
+  using thread_handle        = Kokkos::ThreadHandle<team_handle>;
 
  private:
   mutable sycl::local_ptr<void> m_team_reduce;
@@ -52,6 +55,10 @@ class SYCLTeamMember {
   int league_size() const { return m_league_size; }
   int team_rank() const { return m_item.get_local_id(0); }
   int team_size() const { return m_item.get_local_range(0); }
+  /** \brief Number of vector lanes per thread (dimension 1). */
+  int vector_length() const { return m_item.get_local_range(1); }
+  /** \brief Maximum concurrency at team level (team_size * vector_length). */
+  int concurrency() const { return team_size() * vector_length(); }
   void team_barrier() const { sycl::group_barrier(m_item.get_group()); }
 
   const sycl::nd_item<2>& item() const { return m_item; }
@@ -490,16 +497,46 @@ inline Impl::VectorSingleStruct<Impl::SYCLTeamMember> PerThread(
  *  Executes closure(iType i) for each i=[0..N).
  *
  * The range [0..N) is mapped to all threads of the calling thread team.
+ * If the closure accepts (thread_handle, iType) or (thread_handle),
+ * the thread handle is passed to enable further vector-level parallelism.
  */
 template <typename iType, class Closure>
 void parallel_for(const Impl::TeamThreadRangeBoundariesStruct<
                       iType, Impl::SYCLTeamMember>& loop_boundaries,
                   const Closure& closure) {
-  for (iType i = loop_boundaries.start +
-                 loop_boundaries.member.item().get_local_id(0);
-       i < loop_boundaries.end;
-       i += loop_boundaries.member.item().get_local_range(0))
-    closure(i);
+  using thread_handle_t = Kokkos::ThreadHandle<Impl::SYCLTeamMember>;
+  if constexpr (std::is_invocable_v<Closure, iType> ||
+                std::is_invocable_v<Closure, iType const&>) {
+    for (iType i = loop_boundaries.start +
+                   loop_boundaries.member.item().get_local_id(0);
+         i < loop_boundaries.end;
+         i += loop_boundaries.member.item().get_local_range(0)) {
+      closure(i);
+    }
+  } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&,
+                                           iType>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start +
+                   loop_boundaries.member.item().get_local_id(0);
+         i < loop_boundaries.end;
+         i += loop_boundaries.member.item().get_local_range(0)) {
+      closure(thread_handle, i);
+    }
+  } else if constexpr (std::is_invocable_v<Closure, thread_handle_t const&>) {
+    auto const thread_handle = thread_handle_t(loop_boundaries.member);
+    for (iType i = loop_boundaries.start +
+                   loop_boundaries.member.item().get_local_id(0);
+         i < loop_boundaries.end;
+         i += loop_boundaries.member.item().get_local_range(0)) {
+      (void)i;
+      closure(thread_handle);
+    }
+  } else {
+    static_assert(Kokkos::Impl::always_false<Closure>::value,
+                  "Kokkos::parallel_for(TeamThreadRange): closure must be "
+                  "invocable with (iType), (ThreadHandle, iType), or "
+                  "(ThreadHandle)");
+  }
 }
 
 //----------------------------------------------------------------------------
