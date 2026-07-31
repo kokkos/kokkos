@@ -52,18 +52,20 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
 #ifdef KOKKOS_ARCH_AMD_GPU
   if (Kokkos::show_warnings()) {
     bool found_matching_arch         = false;
+    bool has_amdgcnspirv_target      = false;
     std::string const enabled_arches = KOKKOS_ARCH_AMD_GPU;
     std::stringstream enabled_arch_stream(enabled_arches);
     std::string enabled_arch;
     std::string_view const arch_name =
         Impl::HIPInternal::m_deviceProp.gcnArchName;
     while (std::getline(enabled_arch_stream, enabled_arch, ',')) {
+      if (enabled_arch == "amdgcnspirv") has_amdgcnspirv_target = true;
       if (!enabled_arch.empty() && arch_name.starts_with(enabled_arch)) {
         found_matching_arch = true;
         break;
       }
     }
-    if (!found_matching_arch) {
+    if (!found_matching_arch && !has_amdgcnspirv_target) {
       std::cerr
           << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
           << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
