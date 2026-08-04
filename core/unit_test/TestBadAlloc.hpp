@@ -80,6 +80,13 @@ TEST(TEST_CATEGORY, kokkos_malloc_bad_alloc_shared) {
 
 #ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
 TEST(TEST_CATEGORY, kokkos_malloc_bad_alloc_shared_host_pinned) {
+#ifdef KOKKOS_HAS_SHARED_SPACE
+  if constexpr (std::is_same_v<Kokkos::SharedHostPinnedSpace,
+                               Kokkos::SharedSpace>) {
+    GTEST_SKIP() << "SharedHostPinnedSpace is the same as SharedSpace";
+  }
+#endif
+
   if constexpr (!std::is_same_v<TEST_EXECSPACE,
                                 Kokkos::DefaultExecutionSpace> ||
                 std::is_same_v<Kokkos::DefaultExecutionSpace,
