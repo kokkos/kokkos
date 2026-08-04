@@ -98,7 +98,7 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
   // reduction and static shared memory for the inter warp reduction
   hip_intra_block_shuffle_reduction(value, reducer, max_active_thread);
 
-  int const id = threadIdx.y * blockDim.x + threadIdx.x;
+  const unsigned int id = threadIdx.y * blockDim.x + threadIdx.x;
 
   // One thread in the block writes block result to global scratch_memory
   if (id == 0) {
@@ -111,7 +111,7 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
   // block values from global scratch_memory
   bool last_block = false;
   __syncthreads();
-  const int warp_size = HIPTraits::WarpSize();
+  const unsigned int warp_size = static_cast<unsigned>(HIPTraits::WarpSize());
   if (id < warp_size) {
     HIP::size_type count;
 
@@ -129,10 +129,10 @@ __device__ inline bool hip_inter_block_shuffle_reduction(
       pointer_type const global = m_scratch_space;
 
       // Reduce all global values with splitting work over threads in one warp
-      const int step_size = blockDim.x * blockDim.y < warp_size
-                                ? blockDim.x * blockDim.y
-                                : warp_size;
-      for (int i = id; i < static_cast<int>(gridDim.x); i += step_size) {
+      const unsigned int step_size = (blockDim.x * blockDim.y) < warp_size
+                                         ? (blockDim.x * blockDim.y)
+                                         : warp_size;
+      for (unsigned int i = id; i < gridDim.x; i += step_size) {
         value_type tmp = global[i];
         reducer.join(&value, &tmp);
       }

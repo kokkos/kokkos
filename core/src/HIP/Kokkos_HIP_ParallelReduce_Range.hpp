@@ -139,7 +139,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         reducer.final(reinterpret_cast<value_type*>(shared));
       }
 
-      if (::Kokkos::Impl::HIPTraits::WarpSize() < word_count.value) {
+      if (static_cast<unsigned>(::Kokkos::Impl::HIPTraits::WarpSize()) <
+          word_count.value) {
         __syncthreads();
       }
 

@@ -132,7 +132,7 @@ unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
       }
     }
     block_size >>= 1;
-  } while (block_size >= HIPTraits::WarpSize());
+  } while (block_size >= static_cast<unsigned>(HIPTraits::WarpSize()));
 
   return min_block_size;
 }

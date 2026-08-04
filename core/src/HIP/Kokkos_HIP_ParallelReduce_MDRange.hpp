@@ -118,7 +118,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         reducer.final(reinterpret_cast<value_type*>(shared));
       }
 
-      if (Impl::HIPTraits::WarpSize() < word_count.value) {
+      if (static_cast<unsigned>(Impl::HIPTraits::WarpSize()) <
+          word_count.value) {
         __syncthreads();
       }
 

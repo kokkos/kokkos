@@ -341,11 +341,12 @@ __device__ void hip_intra_block_reduce_scan(
   if (DoScan) {
     // Update all the values for the respective warps (except for the last one)
     // by adding from the last value of the previous warp.
-    const unsigned int WarpMask = HIPTraits::WarpSize() - 1;
-    const int is_last_thread_in_warp =
-        is_full_warp ? ((threadIdx.y & WarpMask) == HIPTraits::WarpSize() - 1)
+    const unsigned int warp_size = static_cast<unsigned>(HIPTraits::WarpSize());
+    const unsigned int WarpMask  = warp_size - 1;
+    const bool is_last_thread_in_warp =
+        is_full_warp ? ((threadIdx.y & WarpMask) == (warp_size - 1))
                      : (threadIdx.y == blockDim.y - 1);
-    if (threadIdx.y >= HIPTraits::WarpSize() && !is_last_thread_in_warp) {
+    if (threadIdx.y >= warp_size && !is_last_thread_in_warp) {
       const int offset_to_previous_warp_total = (threadIdx.y & (~WarpMask)) - 1;
       functor.join(base_data + value_count * threadIdx.y,
                    base_data + value_count * offset_to_previous_warp_total);
