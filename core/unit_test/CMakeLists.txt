@@ -410,7 +410,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
     endif()
     # Fails for the OpenACC backend
-    if(Tag STREQUAL "Serial" AND (Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5 AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5))
+    if(Tag STREQUAL "Serial" AND (Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5
+                                  AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5)
+    )
 
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
     endif()
@@ -666,15 +668,12 @@ if(Kokkos_ENABLE_NEXTSILICON)
   )
 endif()
 
-if(Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5 AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5)
+if(Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5 AND KOKKOS_CXX_COMPILER_VERSION
+                                                                                  VERSION_LESS 26.5
+)
   #FIXME_OPENACC: some Serial tests fail if NVHPC version > 24.5
-  list(
-    REMOVE_ITEM
-    Serial_SOURCES1
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Other.cpp
-  )
+  list(REMOVE_ITEM Serial_SOURCES1 ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Other.cpp)
 endif()
-
 
 if(Kokkos_ENABLE_SERIAL)
   kokkos_add_executable_and_test(CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1})
