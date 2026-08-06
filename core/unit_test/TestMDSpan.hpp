@@ -49,7 +49,13 @@ void test_mdspan_minimal_functional() {
 namespace {
 
 TEST(TEST_CATEGORY, mdspan_minimal_functional) {
+#if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500)
+  // FIXME_OPENACC: compiling below fails if NVHPC version > 24.5.
+  GTEST_SKIP() << "skipping since the OpenACC backend fails when compiled with "
+                  "NVHPC version higher than 24.5";
+#else
   test_mdspan_minimal_functional();
+#endif
 }
 
 }  // namespace

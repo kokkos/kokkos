@@ -140,6 +140,9 @@ void test_view_memory_access_violations_from_device() {
   // clang-format on
 }
 
+#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
+      (KOKKOS_COMPILER_NVHPC < 260500))
+
 TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_host) {
   using ExecutionSpace = TEST_EXECSPACE;
 
@@ -184,3 +187,5 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
 
   test_view_memory_access_violations_from_device<ExecutionSpace>();
 }
+
+#endif
