@@ -1,5 +1,6 @@
 variables:
   FF_ENABLE_JOB_CLEANUP: 1
+  FF_GIT_URLS_WITHOUT_TOKENS: 1
 
 stages:
   - test
