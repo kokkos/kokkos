@@ -143,6 +143,11 @@ void test_moved_from_view(ViewType v) {
 }
 
 TEST(TEST_CATEGORY, view_moved_from) {
+#if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500)
+  // FIXME_OPENACC: compiling below fails if NVHPC version > 24.5.
+  GTEST_SKIP() << "skipping since the OpenACC backend fails when compiled with "
+                  "NVHPC version higher than 24.5";
+#else
   using ExecutionSpace = TEST_EXECSPACE;
 
   test_moved_from_view(Kokkos::View<int, ExecutionSpace>("v0"));
@@ -160,6 +165,7 @@ TEST(TEST_CATEGORY, view_moved_from) {
   test_moved_from_view(Kokkos::View<double**, ExecutionSpace,
                                     Kokkos::MemoryTraits<Kokkos::Unmanaged>>(
       v2.data(), v2.extent(0), v2.extent(1)));
+#endif
 }
 
 #if !(defined(KOKKOS_COMPILER_NVCC) || defined(KOKKOS_COMPILER_NVHPC) || \

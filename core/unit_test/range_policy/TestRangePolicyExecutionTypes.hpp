@@ -89,6 +89,8 @@ void test_self_similar_range_policy_computation() {
   // Call sum_views(ExecSpace):
   sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
 
+#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500))
+  // FIXME_OPENACC: compiling below fails if NVHPC version > 24.5.
   // Call sum_views(TeamHandle)
   using team_t = typename Kokkos::TeamPolicy<>::member_type;
   Kokkos::parallel_for(
@@ -97,6 +99,7 @@ void test_self_similar_range_policy_computation() {
         sum_views(team, Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL()),
                   Kokkos::subview(M_y, team.league_rank(), Kokkos::ALL()));
       });
+#endif
 
   // Check v_x
   size_t result = 0;
@@ -126,14 +129,22 @@ void test_self_similar_range_policy_computation() {
       result);
   size_t M_total      = num_teams * N;
   size_t expected_M_x = M_total * (M_total + 1);
+#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500))
   ASSERT_EQ(result, expected_M_x);
+#else
+  ASSERT_EQ(result, expected_M_x / 2);
+#endif
 
   // Check individual elements of M_x
   Kokkos::parallel_reduce(
       "Check2_elements", M_x.extent(0),
       KOKKOS_LAMBDA(int i, size_t& errors) {
         for (int j = 0; j < M_x.extent_int(1); j++) {
+#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500))
           float expected = static_cast<float>(2 * (i * N + j + 1));
+#else
+          float expected = static_cast<float>(i * N + j + 1);
+#endif
           if (M_x(i, j) != expected) ++errors;
         }
       },

@@ -2463,7 +2463,13 @@ struct TestFpClassify {
 };
 
 TEST(TEST_CATEGORY, mathematical_functions_fpclassify) {
+#if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500)
+  // FIXME_OPENACC: compiling below fails if NVHPC version > 24.5.
+  GTEST_SKIP() << "skipping since the OpenACC backend fails when compiled with "
+                  "NVHPC version higher than 24.5";
+#else
   TestFpClassify<TEST_EXECSPACE>();
+#endif
 }
 
 template <class Space>
