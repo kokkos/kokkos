@@ -17,6 +17,7 @@
 #endif
 
 #include <algorithm>
+#include <type_traits>
 
 namespace Kokkos {
 namespace Impl {
@@ -1526,6 +1527,7 @@ struct HostIterateTile;
 
 // For ParallelFor
 template <typename RP, typename Functor, typename Tag, typename ValueType>
+  requires(!std::is_same_v<typename RP::index_type, int>)
 struct HostIterateTile<RP, Functor, Tag, ValueType,
                        std::enable_if_t<std::is_void_v<ValueType>>> {
   using index_type = typename RP::index_type;
@@ -1602,7 +1604,17 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
   RP const m_rp;
   Functor const m_func;
   std::conditional_t<std::is_void_v<Tag>, int, Tag> m_tag{};
+  bool m_int_enough;
 };
+
+}  // namespace Impl
+}  // namespace Kokkos
+
+// HostIterateTile specialization for std::is_same_v<RP::index_type, int>
+#include <impl/KokkosExp_Host_IterateTileInt.hpp>
+
+namespace Kokkos {
+namespace Impl {
 
 // For ParallelReduce
 // ValueType - scalar: For reductions
