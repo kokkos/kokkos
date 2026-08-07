@@ -17,7 +17,7 @@ KOKKOS_INLINE_FUNCTION void test_simd_constructions() {
   using simd_type  = T;
   using value_type = typename simd_type::value_type;
 
-  value_type arr[1] = {0};
+  value_type arr[simd_type::size()] = {0};
 
   [[maybe_unused]] simd_type a{0};
   [[maybe_unused]] simd_type b(arr, Kokkos::Experimental::simd_flag_default);

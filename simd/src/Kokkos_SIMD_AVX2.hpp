@@ -459,10 +459,6 @@ class basic_simd<double, simd_abi::avx2_fixed_size<4>>
   }
 };
 
-}  // namespace Experimental
-
-namespace Experimental {
-
 template <>
 class basic_simd<float, simd_abi::avx2_fixed_size<4>>
     : public Impl::basic_simd_base<
@@ -526,10 +522,6 @@ class basic_simd<float, simd_abi::avx2_fixed_size<4>>
     return m_value;
   }
 };
-
-}  // namespace Experimental
-
-namespace Experimental {
 
 template <>
 class basic_simd<float, simd_abi::avx2_fixed_size<8>>
@@ -597,10 +589,6 @@ class basic_simd<float, simd_abi::avx2_fixed_size<8>>
   }
 };
 
-}  // namespace Experimental
-
-namespace Experimental {
-
 template <>
 class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
     : public Impl::basic_simd_base<
@@ -666,10 +654,6 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<4>>
     return m_value;
   }
 };
-
-}  // namespace Experimental
-
-namespace Experimental {
 
 template <>
 class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
@@ -737,10 +721,6 @@ class basic_simd<std::int32_t, simd_abi::avx2_fixed_size<8>>
   }
 };
 
-}  // namespace Experimental
-
-namespace Experimental {
-
 template <>
 class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
     : public Impl::basic_simd_base<
@@ -805,10 +785,6 @@ class basic_simd<std::int64_t, simd_abi::avx2_fixed_size<4>>
     return m_value;
   }
 };
-
-}  // namespace Experimental
-
-namespace Experimental {
 
 template <>
 class basic_simd<std::uint64_t, simd_abi::avx2_fixed_size<4>>

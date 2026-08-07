@@ -8,10 +8,10 @@
 // FIXME Temporarily disabling for OpenACC; there isn't a
 // reliable, portable compile-time flag to detect the device compilation context
 // to gate the device-only path
-#if !defined(KOKKOS_ENABLE_OPENACC)&&
-((defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||
- (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) ||
- (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)))
+#if !defined(KOKKOS_ENABLE_OPENACC) &&                                  \
+    ((defined(KOKKOS_ENABLE_CUDA) && defined(__CUDA_ARCH__)) ||         \
+     (defined(KOKKOS_ENABLE_HIP) && defined(__HIP_DEVICE_COMPILE__)) || \
+     (defined(KOKKOS_ENABLE_SYCL) && defined(__SYCL_DEVICE_ONLY__)))
 #define KOKKOS_SIMD_IMPL_DEVICE_SIMD
 #endif
 #endif
@@ -508,42 +508,45 @@
                                           masked_store)                      \
   KOKKOS_SIMD_IMPL_DEFINE_MASKED_STORE_FN(partial, DATA_TYPE, ABI, masked_store)
 
-#define KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM(PREFIX, DATA_TYPE, ABI)            \
-  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,             \
-            Impl::SimdIntegral I, typename... Flags>                           \
-    requires Impl::Ranges::sized_range<R> &&                                   \
-             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                       \
-  KOKKOS_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from(                \
-      R&& in, const I& indices,                                                \
-      simd_flags<Flags...> flag = simd_flag_default) {                         \
-    using impl_ops =                                                           \
-        Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;           \
-    using indices_type = basic_simd<std::int32_t, ABI>;                        \
-    auto idx           = static_cast<typename indices_type::impl_vector_type>( \
-        indices_type{indices});                                      \
-                                                                               \
-    return V(impl_ops::PREFIX##_gather_from(in, idx, flag));                   \
+#define KOKKOS_SIMD_IMPL_DEFINE_GATHER_FROM(PREFIX, DATA_TYPE, ABI)     \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,      \
+            Impl::SimdIntegral I, typename... Flags>                    \
+    requires Impl::Ranges::sized_range<R> &&                            \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from(         \
+      R&& in, const I& indices,                                         \
+      simd_flags<Flags...> flag = simd_flag_default) {                  \
+    using impl_ops =                                                    \
+        Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;    \
+    using indices_type = basic_simd<std::int32_t, ABI>;                 \
+    using native_indices_type =                                         \
+        Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;    \
+    auto idx = static_cast<native_indices_type>(indices_type{indices}); \
+                                                                        \
+    return V(impl_ops::PREFIX##_gather_from(in, idx, flag));            \
   }
 
-#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM(PREFIX, DATA_TYPE,          \
-                                                   MASK_DATA_TYPE, ABI)        \
-  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,             \
-            Impl::SimdIntegral I, typename... Flags>                           \
-    requires Impl::Ranges::sized_range<R> &&                                   \
-             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                       \
-  KOKKOS_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from(                \
-      R&& in, typename I::mask_type const& mask, const I& indices,             \
-      simd_flags<Flags...> flag = simd_flag_default) {                         \
-    using impl_ops =                                                           \
-        Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;           \
-    using indices_type = basic_simd<std::int32_t, ABI>;                        \
-    using mask_type    = basic_simd_mask<MASK_DATA_TYPE, ABI>;                 \
-    auto idx           = static_cast<typename indices_type::impl_vector_type>( \
-        indices_type{indices});                                      \
-    auto mmask =                                                               \
-        static_cast<typename mask_type::impl_vector_type>(mask_type{mask});    \
-                                                                               \
-    return V(impl_ops::PREFIX##_gather_from(in, idx, mmask, flag));            \
+#define KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM(PREFIX, DATA_TYPE,     \
+                                                   MASK_DATA_TYPE, ABI)   \
+  template <Impl::SimdVecType V, Impl::Ranges::contiguous_range R,        \
+            Impl::SimdIntegral I, typename... Flags>                      \
+    requires Impl::Ranges::sized_range<R> &&                              \
+             std::same_as<V, basic_simd<DATA_TYPE, ABI>>                  \
+  KOKKOS_FORCEINLINE_FUNCTION constexpr V PREFIX##_gather_from(           \
+      R&& in, typename I::mask_type const& mask, const I& indices,        \
+      simd_flags<Flags...> flag = simd_flag_default) {                    \
+    using impl_ops =                                                      \
+        Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;      \
+    using indices_type = basic_simd<std::int32_t, ABI>;                   \
+    using mask_type    = basic_simd_mask<MASK_DATA_TYPE, ABI>;            \
+    using native_indices_type =                                           \
+        Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;      \
+    using native_mask_type =                                              \
+        Impl::simd_vector_t<DATA_TYPE, ABI, Impl::simd_backend_t>;         \
+    auto idx   = static_cast<native_indices_type>(indices_type{indices}); \
+    auto mmask = static_cast<native_mask_type>(mask_type{mask});          \
+                                                                          \
+    return V(impl_ops::PREFIX##_gather_from(in, idx, mmask, flag));       \
   }
 
 #define KOKKOS_SIMD_IMPL_DEFINE_SCATTER_TO_AVX2(PREFIX, DATA_TYPE, ABI) \
