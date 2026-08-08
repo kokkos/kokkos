@@ -21,8 +21,9 @@ namespace Experimental {
 
 template <typename T, Impl::simd_size_t N>
   requires Impl::IsValidSimdType<T, simd_abi::avx2_fixed_size<N>>
-class basic_simd_mask<T, simd_abi::avx2_fixed_size<N>> :
-  public Impl::basic_simd_mask_base<basic_simd_mask<T, simd_abi::avx2_fixed_size<N>>> {
+class basic_simd_mask<T, simd_abi::avx2_fixed_size<N>>
+    : public Impl::basic_simd_mask_base<
+          basic_simd_mask<T, simd_abi::avx2_fixed_size<N>>> {
  public:
   using value_type = bool;
   using abi_type   = simd_abi::avx2_fixed_size<N>;
@@ -50,8 +51,7 @@ class basic_simd_mask<T, simd_abi::avx2_fixed_size<N>> :
       : m_value(impl_ops::set1(value)) {}
 
   template <typename U>
-  KOKKOS_FORCEINLINE_FUNCTION explicit(
-      Impl::needs_explicit_conversion_v<U, T>)
+  KOKKOS_FORCEINLINE_FUNCTION explicit(Impl::needs_explicit_conversion_v<U, T>)
       basic_simd_mask(basic_simd_mask<U, abi_type> const& other) noexcept
       : m_value(impl_ops::template convert_from<U>(other)) {}
 

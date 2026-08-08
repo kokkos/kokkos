@@ -520,7 +520,7 @@
         Impl::simd_native_ops<DATA_TYPE, ABI, Impl::simd_backend_t>;    \
     using indices_type = basic_simd<std::int32_t, ABI>;                 \
     using native_indices_type =                                         \
-        Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;    \
+        Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;   \
     auto idx = static_cast<native_indices_type>(indices_type{indices}); \
                                                                         \
     return V(impl_ops::PREFIX##_gather_from(in, idx, flag));            \
@@ -540,9 +540,9 @@
     using indices_type = basic_simd<std::int32_t, ABI>;                   \
     using mask_type    = basic_simd_mask<MASK_DATA_TYPE, ABI>;            \
     using native_indices_type =                                           \
-        Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;      \
+        Impl::simd_vector_t<std::int32_t, ABI, Impl::simd_backend_t>;     \
     using native_mask_type =                                              \
-        Impl::simd_vector_t<DATA_TYPE, ABI, Impl::simd_backend_t>;         \
+        Impl::simd_vector_t<DATA_TYPE, ABI, Impl::simd_backend_t>;        \
     auto idx   = static_cast<native_indices_type>(indices_type{indices}); \
     auto mmask = static_cast<native_mask_type>(mask_type{mask});          \
                                                                           \
