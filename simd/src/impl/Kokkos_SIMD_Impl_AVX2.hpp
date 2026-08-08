@@ -56,6 +56,9 @@ template <typename T, typename Abi, typename Tag>
   requires requires { typename simd_vector_impl<T, Abi, Tag>::type; }
 using simd_vector_t = typename simd_vector_impl<T, Abi, Tag>::type;
 
+template <typename T, typename Abi>
+concept IsValidSimdType = requires { typename simd_vector_impl<T, Abi, simd_host_tag>::type; };
+
 template <typename T, typename Abi, typename Tag>
 struct simd_mask_native_ops;
 
