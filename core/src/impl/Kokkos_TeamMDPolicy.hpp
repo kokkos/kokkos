@@ -98,30 +98,30 @@ struct AcceleratorBasedNestLevel {
   static constexpr int invalid = -2;
 };
 
-template <typename TeamHandle, typename LowerIndexType, typename UpperIndexType>
+template <typename TeamHandle, typename IndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::NotParVector>,
-    TeamHandle const& team, LowerIndexType begin, UpperIndexType end) {
+    TeamHandle const& team, IndexType begin, IndexType end) {
   return TeamThreadRange(team, begin, end);
 }
 
-template <typename TeamHandle, typename LowerIndexType, typename UpperIndexType>
+template <typename TeamHandle, typename IndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::NotParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, LowerIndexType begin, UpperIndexType end) {
+    TeamHandle const& team, IndexType begin, IndexType end) {
   return ThreadVectorRange(team, begin, end);
 }
 
-template <typename TeamHandle, typename LowerIndexType, typename UpperIndexType>
+template <typename TeamHandle, typename IndexType>
 KOKKOS_INLINE_FUNCTION auto nested_policy(
     TeamMDRangeMode<TeamMDRangeLastNestLevel::NotLastNestLevel,
                     TeamMDRangeParThread::ParThread,
                     TeamMDRangeParVector::ParVector>,
-    TeamHandle const& team, LowerIndexType begin, UpperIndexType end) {
+    TeamHandle const& team, IndexType begin, IndexType end) {
   return TeamVectorRange(team, begin, end);
 }
 
@@ -170,10 +170,8 @@ KOKKOS_INLINE_FUNCTION void nested_loop(
       TeamMDRangeNestingTracker<Rank, ParThreadNestLevel, ParVectorNestLevel,
                                 next_nest_level>;
   using TeamMDNextMode = typename NextNestingTracker::RangeMode;
-  using LoopType       = std::common_type_t<typename Policy::LowerIndexType,
-                                      typename Policy::UpperIndexType>;
 
-  for (LoopType i = policy.lower[CurrentNestLevel];
+  for (auto i = policy.lower[CurrentNestLevel];
        i < policy.upper[CurrentNestLevel]; ++i) {
     // FIXME
     // NOLINTBEGIN(bugprone-use-after-move)
