@@ -4,9 +4,10 @@
 #ifndef KOKKOS_CLAMP_HPP
 #define KOKKOS_CLAMP_HPP
 
-#include <impl/Kokkos_Error.hpp>
-#include <Kokkos_Assert.hpp>
 #include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+#include <Kokkos_Assert.hpp>
+#endif
 
 namespace Kokkos {
 
