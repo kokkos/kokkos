@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <Kokkos_Macros.hpp>
-#include <desul/atomics.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 import kokkos.core_impl;
