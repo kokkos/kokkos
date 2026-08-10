@@ -999,35 +999,25 @@ template <typename Rank, typename TeamMDPolicy, typename Lambda,
 KOKKOS_INLINE_FUNCTION void md_parallel_impl(TeamMDPolicy const& policy,
                                              Lambda const& lambda,
                                              ReductionValueType&& val);
-
-// Concept for determining if type is std::integral_constant
-template <typename T>
-inline constexpr bool is_integral_constant_v =
-    std::is_same_v<T, std::integral_constant<typename T::value_type, T::value>>;
-
 }  // namespace Impl
 
-template <typename Rank, typename TeamHandle, typename UpperIndex = int,
-          typename LowerIndex = std::integral_constant<UpperIndex, 0>>
+template <typename Rank, typename TeamHandle, typename Index = int>
 struct TeamThreadMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle,
-          typename UpperIndex, typename LowerIndex>
-struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, UpperIndex,
-                         LowerIndex> {
+          typename Index>
+struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, Index> {
   static_assert(N >= 2u, "Kokkos Error: TeamThreadMDRange requires rank >= 2");
 
   using NestLevelType  = int;
   using TeamHandleType = TeamHandle;
-  using LowerIndexType = LowerIndex;
-  using UpperIndexType = UpperIndex;
+  using IndexType      = Index;
   using ExecutionSpace = typename TeamHandleType::execution_space;
   using ArrayLayout    = typename ExecutionSpace::array_layout;
 
   static constexpr NestLevelType total_nest_level =
       Rank<N, OuterDir, InnerDir>::rank;
-  using LowerBoundaryType = Kokkos::Array<LowerIndexType, total_nest_level>;
-  using UpperBoundaryType = Kokkos::Array<UpperIndexType, total_nest_level>;
+  using BoundaryType = Kokkos::Array<IndexType, total_nest_level>;
 
   static constexpr Iterate iter    = OuterDir;
   static constexpr auto par_thread = Impl::TeamMDRangeParThread::ParThread;
@@ -1041,84 +1031,89 @@ struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, UpperIndex,
   // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
     requires(sizeof...(Args) == total_nest_level &&
-             (std::convertible_to<Args, UpperIndexType> && ...))
+             (std::convertible_to<Args, IndexType> && ...))
   KOKKOS_INLINE_FUNCTION TeamThreadMDRange(TeamHandleType const& team_,
                                            Args&&... args)
-      : team(team_), upper{static_cast<UpperIndexType>(args)...} {
-    // LowerIndexType is not required to be an integral_constant, in which case
-    // we must initialize to 0
-    if constexpr (!Impl::is_integral_constant_v<LowerIndexType>) {
-      for (std::size_t i = 0; i < total_nest_level; ++i) {
-        lower[i] = 0;
-      }
+      : team(team_), upper{static_cast<IndexType>(args)...} {
+    // Initialize lower bound to 0
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = 0;
     }
   }
 
   // Constructor for brace-initialized lower and upper bounds
   template <typename LT, typename UT>
-    requires(std::is_integral_v<LT> && std::is_integral_v<UT>)
+    requires(std::is_integral_v<LT> && std::is_integral_v<UT> &&
+             std::convertible_to<LT, IndexType> &&
+             std::convertible_to<UT, IndexType>)
   KOKKOS_INLINE_FUNCTION TeamThreadMDRange(TeamHandleType const& team_,
                                            LT const (&lower_)[total_nest_level],
                                            UT const (&upper_)[total_nest_level])
       : team(team_) {
-    for (std::size_t i = 0; i < total_nest_level; ++i) {
-      lower[i] = static_cast<LowerIndexType>(lower_[i]);
-      upper[i] = static_cast<UpperIndexType>(upper_[i]);
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = static_cast<IndexType>(lower_[i]);
+      upper[i] = static_cast<IndexType>(upper_[i]);
     }
   }
 
   // Constructor for Kokkos::Array lower and upper bounds
   template <typename LT, typename UT>
-    requires(std::is_integral_v<LT> && std::is_integral_v<UT>)
+    requires(std::is_integral_v<LT> && std::is_integral_v<UT> &&
+             std::convertible_to<LT, IndexType> &&
+             std::convertible_to<UT, IndexType>)
   KOKKOS_INLINE_FUNCTION TeamThreadMDRange(
       TeamHandleType const& team_,
       Kokkos::Array<LT, total_nest_level> const& lower_,
       Kokkos::Array<UT, total_nest_level> const& upper_)
-      : team(team_), lower(lower_), upper(upper_) {}
+      : team(team_) {
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = static_cast<IndexType>(lower_[i]);
+      upper[i] = static_cast<IndexType>(upper_[i]);
+    }
+  }
 
   TeamHandleType const& team;
-  LowerBoundaryType lower = {};
-  UpperBoundaryType upper = {};
+  BoundaryType lower = {};
+  BoundaryType upper = {};
 };
 
-template <typename TeamHandle, std::size_t N, typename LT, typename UT>
+template <typename TeamHandle, size_t N, typename LT, typename UT>
 KOKKOS_DEDUCTION_GUIDE TeamThreadMDRange(TeamHandle const&,
                                          Kokkos::Array<LT, N> const&,
                                          Kokkos::Array<UT, N> const&)
-    -> TeamThreadMDRange<Rank<N, Iterate::Default>, TeamHandle, UT, LT>;
+    -> TeamThreadMDRange<Rank<N, Iterate::Default>, TeamHandle,
+                         std::common_type_t<LT, UT>>;
 
-template <typename TeamHandle, std::size_t N, typename LT, typename UT>
+template <typename TeamHandle, size_t N, typename LT, typename UT>
 KOKKOS_DEDUCTION_GUIDE TeamThreadMDRange(TeamHandle const&, LT const (&)[N],
                                          UT const (&)[N])
-    -> TeamThreadMDRange<Rank<N, Iterate::Default>, TeamHandle, UT, LT>;
+    -> TeamThreadMDRange<Rank<N, Iterate::Default>, TeamHandle,
+                         std::common_type_t<LT, UT>>;
 
 template <typename TeamHandle, typename... Args>
   requires((std::is_integral_v<std::remove_cvref_t<Args>> && ...))
 KOKKOS_DEDUCTION_GUIDE TeamThreadMDRange(TeamHandle const&, Args&&...)
-    -> TeamThreadMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
+    -> TeamThreadMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle,
+                         std::common_type_t<std::remove_cvref_t<Args>...>>;
 
-template <typename Rank, typename TeamHandle, typename UpperIndex = int,
-          typename LowerIndex = std::integral_constant<UpperIndex, 0>>
+template <typename Rank, typename TeamHandle, typename Index = int>
 struct ThreadVectorMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle,
-          typename UpperIndex, typename LowerIndex>
-struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, UpperIndex,
-                           LowerIndex> {
+          typename Index>
+struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, Index> {
   static_assert(N >= 2u,
                 "Kokkos Error: ThreadVectorMDRange requires rank >= 2");
 
   using NestLevelType  = int;
   using TeamHandleType = TeamHandle;
-  using LowerIndexType = LowerIndex;
-  using UpperIndexType = UpperIndex;
+  using IndexType      = Index;
   using ExecutionSpace = typename TeamHandleType::execution_space;
   using ArrayLayout    = typename ExecutionSpace::array_layout;
 
   static constexpr NestLevelType total_nest_level =
       Rank<N, OuterDir, InnerDir>::rank;
-  using LowerBoundaryType = Kokkos::Array<LowerIndexType, total_nest_level>;
-  using UpperBoundaryType = Kokkos::Array<UpperIndexType, total_nest_level>;
+  using BoundaryType = Kokkos::Array<IndexType, total_nest_level>;
 
   static constexpr Iterate iter    = OuterDir;
   static constexpr auto par_thread = Impl::TeamMDRangeParThread::NotParThread;
@@ -1132,83 +1127,88 @@ struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, UpperIndex,
   // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
     requires(sizeof...(Args) == total_nest_level &&
-             (std::convertible_to<Args, UpperIndexType> && ...))
+             (std::convertible_to<Args, IndexType> && ...))
   KOKKOS_INLINE_FUNCTION ThreadVectorMDRange(TeamHandleType const& team_,
                                              Args&&... args)
-      : team(team_), upper{static_cast<UpperIndexType>(args)...} {
-    // LowerIndexType is not required to be an integral_constant, in which case
-    // we must initialize to 0
-    if constexpr (!Impl::is_integral_constant_v<LowerIndexType>) {
-      for (std::size_t i = 0; i < total_nest_level; ++i) {
-        lower[i] = 0;
-      }
+      : team(team_), upper{static_cast<IndexType>(args)...} {
+    // Initialize lower bound to 0
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = 0;
     }
   }
 
   // Constructor for brace-initialized lower and upper bounds
   template <typename LT, typename UT>
-    requires(std::is_integral_v<LT> && std::is_integral_v<UT>)
+    requires(std::is_integral_v<LT> && std::is_integral_v<UT> &&
+             std::convertible_to<LT, IndexType> &&
+             std::convertible_to<UT, IndexType>)
   KOKKOS_INLINE_FUNCTION ThreadVectorMDRange(
       TeamHandleType const& team_, LT const (&lower_)[total_nest_level],
       UT const (&upper_)[total_nest_level])
       : team(team_) {
-    for (std::size_t i = 0; i < total_nest_level; ++i) {
-      lower[i] = static_cast<LowerIndexType>(lower_[i]);
-      upper[i] = static_cast<UpperIndexType>(upper_[i]);
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = static_cast<IndexType>(lower_[i]);
+      upper[i] = static_cast<IndexType>(upper_[i]);
     }
   }
 
   // Constructor for Kokkos::Array lower and upper bounds
   template <typename LT, typename UT>
-    requires(std::is_integral_v<LT> && std::is_integral_v<UT>)
+    requires(std::is_integral_v<LT> && std::is_integral_v<UT> &&
+             std::convertible_to<LT, IndexType> &&
+             std::convertible_to<UT, IndexType>)
   KOKKOS_INLINE_FUNCTION ThreadVectorMDRange(
       TeamHandleType const& team_,
       Kokkos::Array<LT, total_nest_level> const& lower_,
       Kokkos::Array<UT, total_nest_level> const& upper_)
-      : team(team_), lower(lower_), upper(upper_) {}
+      : team(team_) {
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = static_cast<IndexType>(lower_[i]);
+      upper[i] = static_cast<IndexType>(upper_[i]);
+    }
+  }
 
   TeamHandleType const& team;
-  LowerBoundaryType lower = {};
-  UpperBoundaryType upper = {};
+  BoundaryType lower = {};
+  BoundaryType upper = {};
 };
 
-template <typename TeamHandle, std::size_t N, typename LT, typename UT>
+template <typename TeamHandle, size_t N, typename LT, typename UT>
 KOKKOS_DEDUCTION_GUIDE ThreadVectorMDRange(TeamHandle const&,
                                            Kokkos::Array<LT, N> const&,
                                            Kokkos::Array<UT, N> const&)
-    -> ThreadVectorMDRange<Rank<N, Iterate::Default>, TeamHandle, UT, LT>;
+    -> ThreadVectorMDRange<Rank<N, Iterate::Default>, TeamHandle,
+                           std::common_type_t<LT, UT>>;
 
-template <typename TeamHandle, std::size_t N, typename LT, typename UT>
+template <typename TeamHandle, size_t N, typename LT, typename UT>
 KOKKOS_DEDUCTION_GUIDE ThreadVectorMDRange(TeamHandle const&, LT const (&)[N],
                                            UT const (&)[N])
-    -> ThreadVectorMDRange<Rank<N, Iterate::Default>, TeamHandle, UT, LT>;
+    -> ThreadVectorMDRange<Rank<N, Iterate::Default>, TeamHandle,
+                           std::common_type_t<LT, UT>>;
 
 template <typename TeamHandle, typename... Args>
   requires((std::is_integral_v<std::remove_cvref_t<Args>> && ...))
 KOKKOS_DEDUCTION_GUIDE ThreadVectorMDRange(TeamHandle const&, Args&&...)
-    -> ThreadVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
+    -> ThreadVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle,
+                           std::common_type_t<std::remove_cvref_t<Args>...>>;
 
-template <typename Rank, typename TeamHandle, typename UpperIndex = int,
-          typename LowerIndex = std::integral_constant<UpperIndex, 0>>
+template <typename Rank, typename TeamHandle, typename Index = int>
 struct TeamVectorMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle,
-          typename UpperIndex, typename LowerIndex>
-struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, UpperIndex,
-                         LowerIndex> {
+          typename Index>
+struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, Index> {
   static_assert(N >= 2u, "Kokkos Error: TeamVectorMDRange requires rank >= 2");
 
   using NestLevelType  = int;
   using TeamHandleType = TeamHandle;
-  using LowerIndexType = LowerIndex;
-  using UpperIndexType = UpperIndex;
+  using IndexType      = Index;
   using ExecutionSpace = typename TeamHandleType::execution_space;
   using ArrayLayout    = typename ExecutionSpace::array_layout;
 
   static constexpr NestLevelType total_nest_level =
       Rank<N, OuterDir, InnerDir>::rank;
-  using LowerBoundaryType = Kokkos::Array<LowerIndexType, total_nest_level>;
-  using UpperBoundaryType = Kokkos::Array<UpperIndexType, total_nest_level>;
+  using BoundaryType = Kokkos::Array<IndexType, total_nest_level>;
 
   static constexpr Iterate iter    = OuterDir;
   static constexpr auto par_thread = Impl::TeamMDRangeParThread::ParThread;
@@ -1222,67 +1222,75 @@ struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle, UpperIndex,
   // Constructor for range {[0, arg1), [0, arg2), ...}
   template <class... Args>
     requires(sizeof...(Args) == total_nest_level &&
-             (std::convertible_to<Args, UpperIndexType> && ...))
+             (std::convertible_to<Args, IndexType> && ...))
   KOKKOS_INLINE_FUNCTION TeamVectorMDRange(TeamHandleType const& team_,
                                            Args&&... args)
-      : team(team_), upper{static_cast<UpperIndexType>(args)...} {
-    // LowerIndexType is not required to be an integral_constant, in which case
-    // we must initialize to 0
-    if constexpr (!Impl::is_integral_constant_v<LowerIndexType>) {
-      for (std::size_t i = 0; i < total_nest_level; ++i) {
-        lower[i] = 0;
-      }
+      : team(team_), upper{static_cast<IndexType>(args)...} {
+    // Initialize lower bound to 0
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = 0;
     }
   }
 
   // Constructor for brace-initialized lower and upper bounds
   template <typename LT, typename UT>
-    requires(std::is_integral_v<LT> && std::is_integral_v<UT>)
+    requires(std::is_integral_v<LT> && std::is_integral_v<UT> &&
+             std::convertible_to<LT, IndexType> &&
+             std::convertible_to<UT, IndexType>)
   KOKKOS_INLINE_FUNCTION TeamVectorMDRange(TeamHandleType const& team_,
                                            LT const (&lower_)[total_nest_level],
                                            UT const (&upper_)[total_nest_level])
       : team(team_) {
-    for (std::size_t i = 0; i < total_nest_level; ++i) {
-      lower[i] = static_cast<LowerIndexType>(lower_[i]);
-      upper[i] = static_cast<UpperIndexType>(upper_[i]);
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = static_cast<IndexType>(lower_[i]);
+      upper[i] = static_cast<IndexType>(upper_[i]);
     }
   }
 
   // Constructor for Kokkos::Array lower and upper bounds
   template <typename LT, typename UT>
-    requires(std::is_integral_v<LT> && std::is_integral_v<UT>)
+    requires(std::is_integral_v<LT> && std::is_integral_v<UT> &&
+             std::convertible_to<LT, IndexType> &&
+             std::convertible_to<UT, IndexType>)
   KOKKOS_INLINE_FUNCTION TeamVectorMDRange(
       TeamHandleType const& team_,
       Kokkos::Array<LT, total_nest_level> const& lower_,
       Kokkos::Array<UT, total_nest_level> const& upper_)
-      : team(team_), lower(lower_), upper(upper_) {}
+      : team(team_) {
+    for (size_t i = 0; i < total_nest_level; ++i) {
+      lower[i] = static_cast<IndexType>(lower_[i]);
+      upper[i] = static_cast<IndexType>(upper_[i]);
+    }
+  }
 
   TeamHandleType const& team;
-  LowerBoundaryType lower = {};
-  UpperBoundaryType upper = {};
+  BoundaryType lower = {};
+  BoundaryType upper = {};
 };
 
-template <typename TeamHandle, std::size_t N, typename LT, typename UT>
+template <typename TeamHandle, size_t N, typename LT, typename UT>
 KOKKOS_DEDUCTION_GUIDE TeamVectorMDRange(TeamHandle const&,
                                          Kokkos::Array<LT, N> const&,
                                          Kokkos::Array<UT, N> const&)
-    -> TeamVectorMDRange<Rank<N, Iterate::Default>, TeamHandle, UT, LT>;
+    -> TeamVectorMDRange<Rank<N, Iterate::Default>, TeamHandle,
+                         std::common_type_t<LT, UT>>;
 
-template <typename TeamHandle, std::size_t N, typename LT, typename UT>
+template <typename TeamHandle, size_t N, typename LT, typename UT>
 KOKKOS_DEDUCTION_GUIDE TeamVectorMDRange(TeamHandle const&, LT const (&)[N],
                                          UT const (&)[N])
-    -> TeamVectorMDRange<Rank<N, Iterate::Default>, TeamHandle, UT, LT>;
+    -> TeamVectorMDRange<Rank<N, Iterate::Default>, TeamHandle,
+                         std::common_type_t<LT, UT>>;
 
 template <typename TeamHandle, typename... Args>
   requires((std::is_integral_v<std::remove_cvref_t<Args>> && ...))
 KOKKOS_DEDUCTION_GUIDE TeamVectorMDRange(TeamHandle const&, Args&&...)
-    -> TeamVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle>;
+    -> TeamVectorMDRange<Rank<sizeof...(Args), Iterate::Default>, TeamHandle,
+                         std::common_type_t<std::remove_cvref_t<Args>...>>;
 
-template <typename Rank, typename TeamHandle, typename LowerIndexType,
-          typename UpperIndexType, typename Lambda, typename ReducerValueType>
+template <typename Rank, typename TeamHandle, typename Index, typename Lambda,
+          typename ReducerValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    TeamThreadMDRange<Rank, TeamHandle, LowerIndexType, UpperIndexType> const&
-        policy,
+    TeamThreadMDRange<Rank, TeamHandle, Index> const& policy,
     Lambda const& lambda, ReducerValueType& val) {
   static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
                 !std::is_array_v<ReducerValueType> &&
@@ -1296,18 +1304,17 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
       Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{val});
 }
 
-template <typename Rank, typename TeamHandle, typename UpperIndex,
-          typename LowerIndex, typename Lambda>
+template <typename Rank, typename TeamHandle, typename Index, typename Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
-    TeamThreadMDRange<Rank, TeamHandle, UpperIndex, LowerIndex> const& policy,
+    TeamThreadMDRange<Rank, TeamHandle, Index> const& policy,
     Lambda const& lambda) {
   Impl::md_parallel_impl<Rank>(policy, lambda, Impl::NoReductionTag());
 }
 
-template <typename Rank, typename TeamHandle, typename UpperIndex,
-          typename LowerIndex, typename Lambda, typename ReducerValueType>
+template <typename Rank, typename TeamHandle, typename Index, typename Lambda,
+          typename ReducerValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    ThreadVectorMDRange<Rank, TeamHandle, UpperIndex, LowerIndex> const& policy,
+    ThreadVectorMDRange<Rank, TeamHandle, Index> const& policy,
     Lambda const& lambda, ReducerValueType& val) {
   static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
                 !std::is_array_v<ReducerValueType> &&
@@ -1334,18 +1341,17 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
             val});
 }
 
-template <typename Rank, typename TeamHandle, typename UpperIndex,
-          typename LowerIndex, typename Lambda>
+template <typename Rank, typename TeamHandle, typename Index, typename Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
-    ThreadVectorMDRange<Rank, TeamHandle, UpperIndex, LowerIndex> const& policy,
+    ThreadVectorMDRange<Rank, TeamHandle, Index> const& policy,
     Lambda const& lambda) {
   Impl::md_parallel_impl<Rank>(policy, lambda, Impl::NoReductionTag());
 }
 
-template <typename Rank, typename TeamHandle, typename UpperIndex,
-          typename LowerIndex, typename Lambda, typename ReducerValueType>
+template <typename Rank, typename TeamHandle, typename Index, typename Lambda,
+          typename ReducerValueType>
 KOKKOS_INLINE_FUNCTION void parallel_reduce(
-    TeamVectorMDRange<Rank, TeamHandle, UpperIndex, LowerIndex> const& policy,
+    TeamVectorMDRange<Rank, TeamHandle, Index> const& policy,
     Lambda const& lambda, ReducerValueType& val) {
   static_assert(/*!Kokkos::is_view_v<ReducerValueType> &&*/
                 !std::is_array_v<ReducerValueType> &&
@@ -1374,10 +1380,9 @@ KOKKOS_INLINE_FUNCTION void parallel_reduce(
       Kokkos::Sum<ReducerValueType, typename TeamHandle::execution_space>{val});
 }
 
-template <typename Rank, typename TeamHandle, typename UpperIndex,
-          typename LowerIndex, typename Lambda>
+template <typename Rank, typename TeamHandle, typename Index, typename Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
-    TeamVectorMDRange<Rank, TeamHandle, UpperIndex, LowerIndex> const& policy,
+    TeamVectorMDRange<Rank, TeamHandle, Index> const& policy,
     Lambda const& lambda) {
   Impl::md_parallel_impl<Rank>(policy, lambda, Impl::NoReductionTag());
 }
