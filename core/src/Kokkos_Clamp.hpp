@@ -4,6 +4,7 @@
 #ifndef KOKKOS_CLAMP_HPP
 #define KOKKOS_CLAMP_HPP
 
+#include <impl/Kokkos_Error.hpp>
 #include <Kokkos_Assert.hpp>
 #include <Kokkos_Macros.hpp>
 
