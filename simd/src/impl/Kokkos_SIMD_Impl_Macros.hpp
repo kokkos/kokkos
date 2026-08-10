@@ -140,7 +140,8 @@
 
 #define KOKKOS_SIMD_IMPL_DEFINE_MASKED_GATHER_FROM_FN(RET_TYPE, PREFIX, ...) \
   static RET_TYPE PREFIX##_gather_from(                                      \
-      R&& in, IndicesType const& indices, MaskType const& mmask,             \
+      [[maybe_unused]] R&& in, [[maybe_unused]] IndicesType const& indices,  \
+      [[maybe_unused]] MaskType const& mmask,                                \
       [[maybe_unused]] simd_flags<Flags...> flag = {}) {                     \
     return __VA_ARGS__;                                                      \
   }
@@ -176,7 +177,7 @@
 #define KOKKOS_SIMD_IMPL_DEFINE_STORE_DEVICE(FN, DST_TYPE, SRC_TYPE, ...) \
   template <typename... Flags>                                            \
   KOKKOS_FORCEINLINE_FUNCTION KOKKOS_SIMD_IMPL_DEFINE_STORE(              \
-      FN, [[maybe_unused]] DST_TYPE, SRC_TYPE, __VA_ARGS__)
+      FN, [[maybe_unused]] DST_TYPE, [[maybe_unused]] SRC_TYPE, __VA_ARGS__)
 
 #define KOKKOS_SIMD_IMPL_DEFINE_MASKED_STORE_HOST(FN, DST_TYPE, SRC_TYPE,     \
                                                   MASK_TYPE, ...)             \
