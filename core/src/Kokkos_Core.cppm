@@ -130,11 +130,13 @@ export {
   namespace Experimental {
   using ::Kokkos::Experimental::Accessor;
   using ::Kokkos::Experimental::AppendExtent;
+  using ::Kokkos::Experimental::copy_seq;
+  using ::Kokkos::Experimental::copy_team;
+  using ::Kokkos::Experimental::copy_thread;
+  using ::Kokkos::Experimental::deep_copy;
   using ::Kokkos::Experimental::Extents;
   using ::Kokkos::Experimental::is_hooks_policy;
   using ::Kokkos::Experimental::is_hooks_policy_v;
-  using ::Kokkos::Experimental::local_deep_copy;
-  using ::Kokkos::Experimental::local_deep_copy_contiguous;
   using ::Kokkos::Experimental::PrependExtent;
   using ::Kokkos::Experimental::SubscribableViewHooks;
   }  // namespace Experimental
