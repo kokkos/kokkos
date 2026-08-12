@@ -64,6 +64,7 @@
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#include <Kokkos_Event.hpp>
 #include <Kokkos_Crs.hpp>
 #include <Kokkos_WorkGraphPolicy.hpp>
 // Including this in Kokkos_Parallel_Reduce.hpp led to a circular dependency
