@@ -39,8 +39,7 @@ struct SpaceHandle {
 };
 
 constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024;
-static std::mutex m;
-static uint64_t total_allocated = 0;
+static std::atomic<uint64_t> total_allocated = 0;
 
 uint64_t max_mem_usage() {
   struct rusage app_info;
