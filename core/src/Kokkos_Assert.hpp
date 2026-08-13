@@ -5,9 +5,9 @@
 #define KOKKOS_ASSERT_HPP
 
 #include <Kokkos_Macros.hpp>
-// For C++20 modules builds, Kokkos_Assert.hpp can't include any Kokkos headers
-// so we need to include Kokkos_Abort.hpp (or import kokkos.core) wherever the
-// Kokkos_Assert.hpp header is used.
+// Even for C++20 modules builds, Kokkos_Assert.hpp must be included
+// (and can't be part of the kokkos.core module). That means it
+// can't include other Kokkos headers to avoid symbol clashes.
 #ifndef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 #include <Kokkos_Abort.hpp>
 #endif
