@@ -5,12 +5,6 @@
 #define KOKKOS_CLAMP_HPP
 
 #include <Kokkos_Macros.hpp>
-// For C++20 modules builds, Kokkos_Assert.hpp can't include any Kokkos headers
-// so we need to include Kokkos_Abort.hpp (or import kokkos.core) wherever the
-// Kokkos_Assert.hpp header is used.
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-#include <Kokkos_Abort.hpp>
-#endif
 #include <Kokkos_Assert.hpp>
 
 namespace Kokkos {
