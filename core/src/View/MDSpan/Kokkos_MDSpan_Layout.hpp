@@ -16,6 +16,18 @@ static_assert(false,
 #include <iostream>
 #endif
 
+// backport padded layouts to experimental
+namespace Kokkos::Experimental {
+template <size_t Pad>
+using layout_left_padded KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::layout_left_padded instead.") =
+    Kokkos::layout_left_padded<Pad>;
+template <size_t Pad>
+using layout_right_padded KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::layout_right_padded instead.") =
+    Kokkos::layout_right_padded<Pad>;
+}  // namespace Kokkos::Experimental
+
 // The difference between a legacy Kokkos array layout and an
 // mdspan layout is that the array layouts can have state, but don't have the
 // nested mapping. This file provides interoperability helpers.
