@@ -1842,9 +1842,9 @@ struct simd_native_ops<std::int32_t, simd_abi::avx2_fixed_size<8>,
   static value_type extract(vector_type v, simd_size_t i) {
 // _mm256_cvtsi256_si32 was not added in GCC until 11
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU < 1100)
-    constexpr auto size = 8;
+    constexpr std::size_t size = 8;
     value_type tmp[size];
-    _mm256_maskstore_epi32(tmp, static_cast<__m256i>(set1(true)), v);
+    _mm256_maskstore_epi32(tmp, set1(-1), v);
     return tmp[i];
 #else
     auto index = _mm256_set1_epi32(i);

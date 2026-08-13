@@ -28,7 +28,7 @@ import kokkos.core_impl;
 // to be device constructible. To be removed when the rest of simd types are
 // device constructible
 #if defined(KOKKOS_ARCH_AVX512XEON) || defined(KOKKOS_ARCH_ARM_SVE) || \
-    defined(KOKKOS_ARCH_ARM_NEON)
+    defined(KOKKOS_ARCH_ARM_NEON) || defined(KOKKOS_ENABLE_OPENACC)
 #define KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
 #endif
 

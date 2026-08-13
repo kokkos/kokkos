@@ -418,6 +418,10 @@
   KOKKOS_SIMD_IMPL_DEFINE_MATH_BINARY_FN(max, DATA_TYPE, ABI)      \
   KOKKOS_SIMD_IMPL_DEFINE_MATH_BINARY_FN(min, DATA_TYPE, ABI)
 
+// Workaround for NVHPC/OpenACC constraint checking issue.
+// Referring directly to the function parameters in the requires expression
+// causes the constrained overload to be rejected during compilation. Using the
+// requires parameter list instead seems to resolve this issue.
 #define KOKKOS_SIMD_IMPL_DEFINE_MASKED_FN_AVX2(FN)                            \
   template <typename T, Experimental::Impl::simd_size_t N, typename... Args>  \
   KOKKOS_FORCEINLINE_FUNCTION                                                 \
@@ -425,10 +429,13 @@
       FN(Experimental::basic_simd_mask<                                       \
              T, Experimental::simd_abi::avx2_fixed_size<N>> const& a,         \
          Args const&... args)                                                 \
-    requires requires {                                                       \
+    requires requires(                                                        \
+        Experimental::basic_simd_mask<                                        \
+            T, Experimental::simd_abi::avx2_fixed_size<N>> const& m,          \
+        Args const&... xs) {                                                  \
       Experimental::Impl::simd_native_ops<                                    \
           T, Experimental::simd_abi::avx2_fixed_size<N>,                      \
-          Experimental::Impl::simd_backend_t>::FN(a, args...);                \
+          Experimental::Impl::simd_backend_t>::FN(m, xs...);                  \
     }                                                                         \
   {                                                                           \
     using impl_ops = Experimental::Impl::simd_native_ops<                     \
