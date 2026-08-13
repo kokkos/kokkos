@@ -162,12 +162,12 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   // mdspan compatibility
   // ==================================
 
-  // FIXME: This typedef caused some weird issue with MSVC+NVCC
-  // static_assert(std::is_same_v<typename ViewType::layout_type, Layout>);
-  // FIXME: Not supported yet
-  // static_assert(std::is_same_v<typename ViewType::extents_type, >);
-  // static_assert(std::is_same_v<typename ViewType::mapping_type, >);
-  // static_assert(std::is_same_v<typename ViewType::accessor_type, >);
+  static_assert(std::is_same_v<typename ViewType::layout_type, typename Kokkos::Impl::LayoutFromArrayLayout<Layout>::type>);
+  static_assert(std::is_same_v<typename ViewType::extents_type, typename Kokkos::Impl::ExtentsFromDataType<size_t, DataType>::type>);
+  static_assert(std::is_same_v<typename ViewType::mapping_type, typename ViewType::layout_type::template mapping<typename ViewType::extents_type>>);
+  static_assert(std::is_same_v<typename ViewType::accessor_type, Kokkos::Experimental::Accessor<ValueType, typename Space::memory_space, MemoryTraitsType>>);
+  static_assert(std::is_same_v<typename ViewType::mdspan_type,
+                               Kokkos::mdspan<typename ViewType::element_type, typename ViewType::extents_type, typename ViewType::layout_type, typename ViewType::accessor_type>>);
 
   static_assert(std::is_same_v<typename ViewType::element_type, ValueType>);
   // FIXME: should be remove_const_t<element_type>
