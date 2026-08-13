@@ -93,7 +93,7 @@ function(KOKKOS_ADD_TEST)
 
   # This tool will get applied by default unless DefaultInstance is specified in the test name
   # It uses the rusage struct, so it will only work on Linux or Mac.
-  if(CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  if(NOT WIN32)
     string(FIND "${TEST_NAME}" "DefaultInstance" index)
     if((NOT TEST_TOOL)
        AND (${index} LESS 0)
