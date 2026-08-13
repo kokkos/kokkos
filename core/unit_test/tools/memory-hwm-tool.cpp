@@ -71,9 +71,6 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
         WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
     exit(1);
   }
-
-#ifdef KOKKOS_ENABLE_DEBUG
-  printf("Allocated %" PRIu64 " kB at %s\n ", max_mem_usage(), handle.name);
 #endif
 }
 
