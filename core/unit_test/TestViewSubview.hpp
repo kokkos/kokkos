@@ -2076,8 +2076,7 @@ template <class Space>
 struct TestUnmanagedSubviewReset {
   Kokkos::View<int****, Space> a;
 
-  KOKKOS_INLINE_FUNCTION
-  void operator()(int) const noexcept {
+  KOKKOS_FUNCTION void operator()(int) const {
     auto sub_a = Kokkos::subview(a, 0, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
 
     for (int i = 0; i < int(a.extent(0)); ++i) {
@@ -2202,8 +2201,7 @@ struct TestSubviewStaticSizes {
   Kokkos::View<int* [10][5][2], Layout, Space> a;
   Kokkos::View<int[6][7][8], Layout, Space> b;
 
-  KOKKOS_INLINE_FUNCTION
-  int operator()() const noexcept {
+  KOKKOS_FUNCTION int operator()() const {
     /* Doesn't actually do anything; just static assertions */
 
     auto sub_a = Kokkos::subview(a, 0, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
