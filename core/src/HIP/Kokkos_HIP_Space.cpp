@@ -331,3 +331,92 @@ void HIPManagedSpace::impl_deallocate(
 }
 
 }  // namespace Kokkos
+
+namespace {
+
+template <typename DetectedMemorySpace, typename RequestedMemorySpace>
+void abort_incompatible_memory_spaces() {
+  Kokkos::abort(("Detected " + std::string(DetectedMemorySpace::name()) +
+                 " but " + "requested incompatible " +
+                 std::string(RequestedMemorySpace::name()))
+                    .c_str());
+}
+
+template <typename RequestedMemorySpace>
+void check_memory_space(hipMemoryType deduced_memory_type) {
+  switch (deduced_memory_type) {
+    case hipMemoryTypeHost:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::HIPHostPinnedSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::HIPHostPinnedSpace,
+                                         RequestedMemorySpace>();
+      return;
+    case hipMemoryTypeDevice:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::HIPSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::HIPSpace,
+                                         RequestedMemorySpace>();
+      return;
+    case hipMemoryTypeManaged:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::HIPManagedSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::HIPManagedSpace,
+                                         RequestedMemorySpace>();
+      return;
+    case hipMemoryTypeUnregistered:
+#ifdef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
+      return;
+#endif
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::HostSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::HostSpace,
+                                         RequestedMemorySpace>();
+      return;
+    default: Kokkos::abort("bug: unknown HIP memory type");
+  }
+}
+
+}  // namespace
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::HIPHostPinnedSpace>(const void* ptr,
+                                const Kokkos::HIPHostPinnedSpace&) {
+  hipPointerAttribute_t attributes;
+  hipError_t error = hipPointerGetAttributes(&attributes, ptr);
+  KOKKOS_IMPL_HIP_SAFE_CALL(error);
+  check_memory_space<Kokkos::HIPHostPinnedSpace>(attributes.type);
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::HIPManagedSpace>(const void* ptr, const Kokkos::HIPManagedSpace&) {
+  int hasPageableMemory = 0;  // false by default
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceGetAttribute(
+      &hasPageableMemory, hipDeviceAttributePageableMemoryAccess,
+      HIP{}.hip_device()));
+  if (!hasPageableMemory) return;
+
+  hipPointerAttribute_t attributes;
+  hipError_t error = hipPointerGetAttributes(&attributes, ptr);
+  KOKKOS_IMPL_HIP_SAFE_CALL(error);
+  check_memory_space<Kokkos::HIPManagedSpace>(attributes.type);
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HIPSpace>(
+    const void* ptr, const Kokkos::HIPSpace&) {
+  hipPointerAttribute_t attributes;
+  hipError_t error = hipPointerGetAttributes(&attributes, ptr);
+  KOKKOS_IMPL_HIP_SAFE_CALL(error);
+  check_memory_space<Kokkos::HIPSpace>(attributes.type);
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
+    const void* ptr, const Kokkos::HostSpace&) {
+  hipPointerAttribute_t attributes;
+  hipError_t error = hipPointerGetAttributes(&attributes, ptr);
+  KOKKOS_IMPL_HIP_SAFE_CALL(error);
+  check_memory_space<Kokkos::HostSpace>(attributes.type);
+}

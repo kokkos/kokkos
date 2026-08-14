@@ -1130,6 +1130,12 @@ class View : public ViewTraits<DataType, Properties...> {
         "Constructing View to wrap user memory must supply matching pointer "
         "type");
 
+    Impl::runtime_check_unmanaged_view_memory_space<
+        typename traits::memory_space>(
+        static_cast<const void*>(
+            Impl::get_property<Impl::PointerTag>(arg_prop)),
+        span());
+
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
     if constexpr (std::is_same_v<typename traits::array_layout,
                                  Kokkos::LayoutLeft> ||

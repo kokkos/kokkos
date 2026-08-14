@@ -472,6 +472,86 @@ void cuda_prefetch_pointer(cudaStream_t stream, const void *ptr, size_t bytes,
 }
 
 }  // namespace Impl
+
+namespace {
+
+template <typename DetectedMemorySpace, typename RequestedMemorySpace>
+void abort_incompatible_memory_spaces() {
+  Kokkos::abort(("Detected " + std::string(DetectedMemorySpace::name()) +
+                 " but " + "requested incompatible " +
+                 std::string(RequestedMemorySpace::name()))
+                    .c_str());
+}
+
+template <typename RequestedMemorySpace>
+void check_memory_space(cudaMemoryType deduced_memory_type) {
+  switch (deduced_memory_type) {
+    case cudaMemoryTypeHost:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::CudaHostPinnedSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::CudaHostPinnedSpace,
+                                         RequestedMemorySpace>();
+      return;
+    case cudaMemoryTypeDevice:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::CudaSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::CudaSpace,
+                                         RequestedMemorySpace>();
+      return;
+    case cudaMemoryTypeManaged:
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::CudaUVMSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::CudaUVMSpace,
+                                         RequestedMemorySpace>();
+      return;
+    case cudaMemoryTypeUnregistered:
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY
+      return;
+#endif
+      if (!Kokkos::SpaceAccessibility<RequestedMemorySpace,
+                                      Kokkos::HostSpace>::assignable)
+        abort_incompatible_memory_spaces<Kokkos::HostSpace,
+                                         RequestedMemorySpace>();
+      return;
+    default: Kokkos::abort("bug: unknown Cuda memory type");
+  }
+}
+
+}  // namespace
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::CudaHostPinnedSpace>(const void *ptr,
+                                 const Kokkos::CudaHostPinnedSpace &) {
+  cudaPointerAttributes attributes;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));
+  check_memory_space<Kokkos::CudaHostPinnedSpace>(attributes.type);
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<
+    Kokkos::CudaUVMSpace>(const void *ptr, const Kokkos::CudaUVMSpace &) {
+  cudaPointerAttributes attributes;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));
+  check_memory_space<Kokkos::CudaUVMSpace>(attributes.type);
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::CudaSpace>(
+    const void *ptr, const Kokkos::CudaSpace &) {
+  cudaPointerAttributes attributes;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));
+  check_memory_space<Kokkos::CudaSpace>(attributes.type);
+}
+
+template <>
+void Kokkos::Impl::runtime_check_memory_space_assignability<Kokkos::HostSpace>(
+    const void *ptr, const Kokkos::HostSpace &) {
+  cudaPointerAttributes attributes;
+  KOKKOS_IMPL_CUDA_SAFE_CALL(cudaPointerGetAttributes(&attributes, ptr));
+  check_memory_space<Kokkos::HostSpace>(attributes.type);
+}
+
 }  // namespace Kokkos
 
 //==============================================================================
