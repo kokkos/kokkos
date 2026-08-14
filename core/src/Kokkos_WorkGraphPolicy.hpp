@@ -52,6 +52,7 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   graph_type const m_graph;
   ints_type m_queue;
 
+  // NOLINTBEGIN(bugprone-exception-escape)
   KOKKOS_INLINE_FUNCTION
   void push_work(const std::int32_t w) const noexcept {
     const std::int32_t N = m_graph.numRows();
@@ -165,6 +166,7 @@ class WorkGraphPolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
     if (0 == count_queue[w]) push_work(w);
   }
+  // NOLINTEND(bugprone-exception-escape)
 
   execution_space space() const { return execution_space(); }
 
