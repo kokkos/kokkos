@@ -4,8 +4,8 @@
 #ifndef KOKKOS_CLAMP_HPP
 #define KOKKOS_CLAMP_HPP
 
-#include <Kokkos_Macros.hpp>
 #include <Kokkos_Assert.hpp>
+#include <Kokkos_Macros.hpp>
 
 namespace Kokkos {
 
