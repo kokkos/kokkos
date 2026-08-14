@@ -22,6 +22,13 @@ static_assert(std::is_same_v<std::common_type_t<bfloat16, double, float>, double
 static_assert(std::is_same_v<std::common_type_t<bfloat16, float, float>, float>);
 static_assert(std::is_same_v<std::common_type_t<bfloat16, float, bfloat16>, float>);
 static_assert(std::is_same_v<std::common_type_t<bfloat16, bfloat16, bfloat16>, bfloat16>);
+
+static_assert(std::is_same_v<std::common_type_t<bfloat16, int>, bfloat16>);
+static_assert(std::is_same_v<std::common_type_t<int, bfloat16>, bfloat16>);
+static_assert(std::is_same_v<std::common_type_t<bfloat16, long int>, bfloat16>);
+static_assert(std::is_same_v<std::common_type_t<long int, bfloat16>, bfloat16>);
+static_assert(std::is_same_v<std::common_type_t<bfloat16, long long int>, bfloat16>);
+static_assert(std::is_same_v<std::common_type_t<long long int, bfloat16>, bfloat16>);
 #endif
 
 #ifdef KOKKOS_IMPL_HALF_TYPE_DEFINED
@@ -39,6 +46,13 @@ static_assert(std::is_same_v<std::common_type_t<float16, double, float>, double>
 static_assert(std::is_same_v<std::common_type_t<float16, float, float>, float>);
 static_assert(std::is_same_v<std::common_type_t<float16, float, float16>, float>);
 static_assert(std::is_same_v<std::common_type_t<float16, float16, float16>, float16>);
+
+static_assert(std::is_same_v<std::common_type_t<float16, int>, float16>);
+static_assert(std::is_same_v<std::common_type_t<int, float16>, float16>);
+static_assert(std::is_same_v<std::common_type_t<float16, long int>, float16>);
+static_assert(std::is_same_v<std::common_type_t<long int, float16>, float16>);
+static_assert(std::is_same_v<std::common_type_t<float16, long long int>, float16>);
+static_assert(std::is_same_v<std::common_type_t<long long int, float16>, float16>);
 #endif
 
 #if defined(KOKKOS_IMPL_BHALF_TYPE_DEFINED) && \
