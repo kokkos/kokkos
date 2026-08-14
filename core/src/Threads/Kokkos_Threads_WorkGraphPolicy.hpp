@@ -24,18 +24,18 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
 
   template <class TagType>
   std::enable_if_t<std::is_void_v<TagType>> exec_one(
-      const std::int32_t w) const noexcept {
+      const std::int32_t w) const {
     m_functor(w);
   }
 
   template <class TagType>
   std::enable_if_t<!std::is_void_v<TagType>> exec_one(
-      const std::int32_t w) const noexcept {
+      const std::int32_t w) const {
     const TagType t{};
     m_functor(t, w);
   }
 
-  inline void exec_one_thread() const noexcept {
+  inline void exec_one_thread() const {
     // Spin until COMPLETED_TOKEN.
     // END_TOKEN indicates no work is currently available.
 
@@ -48,8 +48,7 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
     }
   }
 
-  static inline void thread_main(ThreadsInternal& instance,
-                                 const void* arg) noexcept {
+  static inline void thread_main(ThreadsInternal& instance, const void* arg) {
     const Self& self = *(static_cast<const Self*>(arg));
     self.exec_one_thread();
     instance.fan_in();
