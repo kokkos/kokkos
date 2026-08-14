@@ -1,4 +1,10 @@
 # CHANGELOG
+## 5.2.1
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.0...5.2.1)
+
+### Bug Fixes
+* Fix inverted `NDEBUG `logic in mdspan precondition checking [\#9405](https://github.com/kokkos/kokkos/pull/9405)
 
 ## 5.2.0
 
