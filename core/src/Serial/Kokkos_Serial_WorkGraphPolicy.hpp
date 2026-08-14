@@ -16,18 +16,20 @@ class ParallelFor<FunctorType, Kokkos::WorkGraphPolicy<Traits...>,
   Policy m_policy;
   FunctorType m_functor;
 
+  // NOLINTBEGIN(bugprone-exception-escape)
   template <class TagType>
   std::enable_if_t<std::is_void_v<TagType>> exec_one(
-      const std::int32_t w) const {
+      const std::int32_t w) const noexcept {
     m_functor(w);
   }
 
   template <class TagType>
   std::enable_if_t<!std::is_void_v<TagType>> exec_one(
-      const std::int32_t w) const {
+      const std::int32_t w) const noexcept {
     const TagType t{};
     m_functor(t, w);
   }
+  // NOLINTEND(bugprone-exception-escape)
 
  public:
   void execute() const {
