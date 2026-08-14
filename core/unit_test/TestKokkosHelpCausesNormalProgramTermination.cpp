@@ -7,10 +7,12 @@
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 #else
-#include <Kokkos_Core.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 #endif
 
 #include "KokkosExecutionEnvironmentNeverInitializedFixture.hpp"
+
+#include <cstdlib>
 
 namespace {
 
@@ -33,7 +35,7 @@ TEST_F(KokkosHelpCausesNormalProgramTermination_DeathTest,
   EXPECT_EXIT(
       {
         Kokkos::initialize(argc, const_cast<char **>(argv));
-        Kokkos::abort("better exit before getting there");
+        std::abort();  // should have exited and not reach that line
       },
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 

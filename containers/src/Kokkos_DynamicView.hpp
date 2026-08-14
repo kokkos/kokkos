@@ -275,12 +275,6 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   /** \brief  Must be accessible everywhere */
   using host_mirror_type = DynamicView;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible HostMirror view */
-  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_type instead.") = host_mirror_type;
-#endif
-
   /** \brief Unified types */
   using uniform_device =
       Kokkos::Device<typename traits::device_type::execution_space,
@@ -464,9 +458,9 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         m_chunk_mask(rhs.m_chunk_mask),
         m_chunk_max(rhs.m_chunk_max),
         m_chunk_size(rhs.m_chunk_size) {
-    using SrcTraits = typename DynamicView<RT, RP...>::traits;
-    using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits, void>;
-    static_assert(Mapping::is_assignable,
+    using src_view_t = View<RT, RP...>;
+    using dst_view_t = View<DataType, P...>;
+    static_assert(std::is_constructible_v<dst_view_t, src_view_t>,
                   "Incompatible DynamicView copy construction");
   }
 

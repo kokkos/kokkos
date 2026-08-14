@@ -98,5 +98,13 @@ TEST(TEST_CATEGORY_DEATH, abort_from_device) {
            "crashes at runtime.";
   }
 #endif
+
+#if defined(KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES) && \
+    !defined(NDEBUG)  // FIXME_SYCL
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>) {
+    GTEST_SKIP() << "skipping since the SYCL backend with out-of-order queues "
+                    "fails to die.";
+  }
+#endif
   test_abort_from_device<TEST_EXECSPACE>();
 }

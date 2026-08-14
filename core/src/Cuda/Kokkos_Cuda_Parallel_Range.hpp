@@ -99,10 +99,9 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     KOKKOS_ASSERT(block_size > 0);
     dim3 block(1, block_size, 1);
     const int maxGridSizeX = m_policy.space().cuda_device_prop().maxGridSize[0];
-    dim3 grid(
-        std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
-                 typename Policy::index_type(maxGridSizeX)),
-        1, 1);
+    dim3 grid(std::min(static_cast<uint32_t>((nwork + block.y - 1) / block.y),
+                       static_cast<uint32_t>(maxGridSizeX)),
+              1, 1);
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {
       block = dim3(1, 1, 1);
@@ -301,6 +300,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       const int block_size = local_block_size(m_functor_reducer.get_functor());
 
       KOKKOS_ASSERT(block_size > 0);
+
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
 
       // Intentionally do not downcast to word_size_type since we use Cuda
       // atomics in Kokkos_Cuda_ReduceScan.hpp
@@ -655,6 +659,11 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       // How many block are really needed for this much work:
       const int grid_x = (nwork + work_per_block - 1) / work_per_block;
 
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(),
@@ -981,6 +990,12 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
       const typename Analysis::Reducer& final_reducer =
           m_functor_reducer.get_reducer();
+
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(), final_reducer.value_size() * grid_x));

@@ -171,6 +171,9 @@ class HIPInternal {
   mutable size_type *m_scratchFunctorHost = nullptr;
   static std::mutex scratchFunctorMutex;
 
+  // mutex to access shared memory
+  mutable std::mutex m_mutexScratchSpace;
+
   hipStream_t m_stream = nullptr;
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<HIP>(

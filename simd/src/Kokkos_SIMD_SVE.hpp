@@ -767,33 +767,33 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
       ptr, mask, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         simd,
-    double* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    double* ptr, simd_flags<Flags...> = simd_flag_default) {
   svst1(svptrue_b64(), ptr, static_cast<vls_float64_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         simd,
     double* ptr,
     basic_simd_mask<
         double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_float64_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         simd,
     double* ptr,
     basic_simd_mask<
         double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_float64_t>(simd));
 }
 
@@ -1203,33 +1203,33 @@ simd_partial_load(
       ptr, mask, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const&
         simd,
-    float* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    float* ptr, simd_flags<Flags...> = simd_flag_default) {
   svst1(svptrue_b32(), ptr, static_cast<vls_float32_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const&
         simd,
     float* ptr,
     basic_simd_mask<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_float32_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const&
         simd,
     float* ptr,
     basic_simd_mask<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_float32_t>(simd));
 }
 
@@ -1698,33 +1698,33 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& simd,
-    std::int32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::int32_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   svst1(svptrue_b32(), ptr, static_cast<vls_int32_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& simd,
     std::int32_t* ptr,
     basic_simd_mask<std::int32_t,
                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_int32_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& simd,
     std::int32_t* ptr,
     basic_simd_mask<std::int32_t,
                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_int32_t>(simd));
 }
 
@@ -2185,33 +2185,33 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint32_t,
                simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& simd,
-    std::uint32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::uint32_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   svst1(svptrue_b32(), ptr, static_cast<vls_uint32_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint32_t,
                simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& simd,
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t,
                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_uint32_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::uint32_t,
                simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& simd,
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t,
                     simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> const& mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_uint32_t>(simd));
 }
 
@@ -2664,15 +2664,15 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
                                                                      flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int64_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
-    std::int64_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::int64_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   svst1(svptrue_b32(), ptr, static_cast<vls_int64_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int64_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
@@ -2680,11 +2680,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd_mask<std::int64_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_int64_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::int64_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
@@ -2692,7 +2692,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd_mask<std::int64_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_int64_t>(simd));
 }
 
@@ -3145,15 +3145,15 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
                                                                      flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint64_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
-    std::uint64_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::uint64_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   svst1(svptrue_b32(), ptr, static_cast<vls_uint64_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint64_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
@@ -3161,11 +3161,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd_mask<std::uint64_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_uint64_t>(simd));
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::uint64_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
@@ -3173,7 +3173,7 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd_mask<std::uint64_t,
                     simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> = simd_flag_default) {
   svst1(static_cast<vls_bool_t>(mask), ptr, static_cast<vls_uint64_t>(simd));
 }
 
@@ -3499,18 +3499,18 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
                                                                      flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
-    std::int32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::int32_t* ptr, simd_flags<Flags...> flag = simd_flag_default) {
   simd_unchecked_store<std::int32_t,
                        simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
       simd, ptr, flag);
 }
 
 // FIXME should be converted to use sve mask
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
@@ -3518,17 +3518,17 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd_mask<std::int32_t,
                     simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> flag = simd_flag_default) {
   basic_simd_mask<std::int32_t,
                   simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>>
       nmask([=](Impl::simd_size_t i) { return mask[i]; });
   simd_unchecked_store<std::int32_t,
                        simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
-      simd, ptr, nmask, FlagType{});
+      simd, ptr, nmask, flag);
 }
 
 // FIXME should be converted to use sve mask
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::int32_t,
                simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> const& simd,
@@ -3536,13 +3536,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd_mask<std::int32_t,
                     simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>> const&
         mask,
-    FlagType) {
+    simd_flags<Flags...> flag = simd_flag_default) {
   basic_simd_mask<std::int32_t,
                   simd_abi::neon_fixed_size<SVE_DOUBLES_IN_VECTOR>>
       nmask([=](Impl::simd_size_t i) { return mask[i]; });
   simd_partial_store<std::int32_t,
                      simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>>(
-      simd, ptr, nmask, FlagType{});
+      simd, ptr, nmask, flag);
 }
 
 // FIXME should be converted to use sve mask

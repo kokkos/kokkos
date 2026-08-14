@@ -63,11 +63,14 @@ class CudaSpace {
   /**\brief  Allocate untracked memory in the cuda space */
   void* allocate(const Cuda& exec_space, const size_t arg_alloc_size) const;
   void* allocate(const Cuda& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size) const;
+  void* allocate(const Cuda& exec_space, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
 #if defined(KOKKOS_ENABLE_IMPL_CUDA_UNIFIED_MEMORY)
   template <typename ExecutionSpace>
@@ -76,8 +79,13 @@ class CudaSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
 #endif
@@ -85,8 +93,10 @@ class CudaSpace {
   /**\brief  Deallocate untracked memory in the cuda space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
   static CudaSpace impl_create(int device_id, cudaStream_t stream) {
     return CudaSpace(device_id, stream);
@@ -95,16 +105,16 @@ class CudaSpace {
  private:
   void* impl_allocate(const Cuda& exec_space, const char* arg_label,
                       const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 
@@ -158,28 +168,36 @@ class CudaUVMSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   /**\brief  Deallocate untracked memory in the cuda space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
  private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 
@@ -251,19 +269,27 @@ class CudaHostPinnedSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   /**\brief  Deallocate untracked memory in the space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
   static CudaHostPinnedSpace impl_create(int device_id, cudaStream_t stream) {
     return CudaHostPinnedSpace(device_id, stream);
@@ -271,12 +297,12 @@ class CudaHostPinnedSpace {
 
  private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 

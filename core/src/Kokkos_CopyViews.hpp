@@ -711,6 +711,7 @@ void view_copy(const DstType& dst, const SrcType& src) {
   // Figure out iteration order in case we need it
   Kokkos::Iterate iterate = get_iteration_order(dst);
 
+  // NOLINTNEXTLINE(bugprone-branch-clone)
   if ((dst.span() >= size_t(std::numeric_limits<int>::max())) ||
       (src.span() >= size_t(std::numeric_limits<int>::max()))) {
     if (iterate == Kokkos::Iterate::Right)
@@ -1032,6 +1033,7 @@ inline void deep_copy(
       std::conditional_t<ViewType::rank == 0,
                          typename ViewType::uniform_runtime_type,
                          typename ViewType::uniform_runtime_nomemspace_type>;
+  // NOLINTNEXTLINE(bugprone-branch-clone)
   if (dst.span() > static_cast<size_t>(std::numeric_limits<int>::max())) {
     if (iterate == Kokkos::Iterate::Right)
       Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight,
@@ -2232,6 +2234,7 @@ inline void deep_copy(
         std::conditional_t<ViewType::rank == 0,
                            typename ViewType::uniform_runtime_type,
                            typename ViewType::uniform_runtime_nomemspace_type>;
+    // NOLINTNEXTLINE(bugprone-branch-clone)
     if (dst.span() > static_cast<size_t>(std::numeric_limits<int32_t>::max())) {
       if (iterate == Kokkos::Iterate::Right)
         Kokkos::Impl::ViewFill<ViewTypeUniform, Kokkos::LayoutRight, ExecSpace,
@@ -3080,6 +3083,7 @@ struct MirrorViewType {
       std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 
+#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 // Specialization for Views with mdspan style template arguments
 template <class Space, class T, class IndexType, size_t... Extents, class... P>
 struct MirrorViewType<Space, T, Kokkos::extents<IndexType, Extents...>, P...> {
@@ -3107,6 +3111,7 @@ struct MirrorViewType<Space, T, Kokkos::extents<IndexType, Extents...>, P...> {
   using view_type =
       std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
+#endif
 
 // collection of static asserts for create_mirror and create_mirror_view
 template <class... ViewCtorArgs>

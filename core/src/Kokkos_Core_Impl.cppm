@@ -36,6 +36,7 @@ export {
   using ::Kokkos::Impl::CheckedRelaxedAtomicAccessor;
   using ::Kokkos::Impl::choose_create_mirror;
   using ::Kokkos::Impl::CommonSubview;
+  using ::Kokkos::Impl::convert_to_kokkos_pair_if_std_pair;
   using ::Kokkos::Impl::DataTypeFromExtents;
   using ::Kokkos::Impl::DeepCopy;
   using ::Kokkos::Impl::ExtentsFromDataType;
@@ -62,6 +63,7 @@ export {
   using ::Kokkos::Impl::SpaceAwareAccessor;
   using ::Kokkos::Impl::SubviewExtents;
   using ::Kokkos::Impl::SubviewLegalArgsCompileTime;
+  using ::Kokkos::Impl::transform_kokkos_slice_to_mdspan_slice;
   using ::Kokkos::Impl::ViewArguments;
   using ::Kokkos::Impl::ViewArrayAnalysis;
   using ::Kokkos::Impl::ViewCopy;

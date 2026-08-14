@@ -18,6 +18,7 @@
 
 #include <complex>
 
+#include "constant_wrapper.hpp"
 #include "strided_slice.hpp"
 #include "../__p0009_bits/utility.hpp"
 
@@ -259,36 +260,6 @@ MDSPAN_INLINE_FUNCTION
 constexpr auto
 stride_of(const strided_slice<OffsetType, ExtentType, StrideType> &r) {
   return r.stride;
-}
-
-// divide which can deal with integral constant preservation
-template <class IndexT, class T0, class T1>
-MDSPAN_INLINE_FUNCTION
-constexpr auto divide(const T0 &v0, const T1 &v1) {
-  return IndexT(v0) / IndexT(v1);
-}
-
-template <class IndexT, class T0, T0 v0, class T1, T1 v1>
-MDSPAN_INLINE_FUNCTION
-constexpr auto divide(const std::integral_constant<T0, v0> &,
-                      const std::integral_constant<T1, v1> &) {
-  // cutting short division by zero
-  // this is used for strided_slice with zero extent/stride
-  return integral_constant<IndexT, v0 == 0 ? 0 : v0 / v1>();
-}
-
-// multiply which can deal with integral constant preservation
-template <class IndexT, class T0, class T1>
-MDSPAN_INLINE_FUNCTION
-constexpr auto multiply(const T0 &v0, const T1 &v1) {
-  return IndexT(v0) * IndexT(v1);
-}
-
-template <class IndexT, class T0, T0 v0, class T1, T1 v1>
-MDSPAN_INLINE_FUNCTION
-constexpr auto multiply(const std::integral_constant<T0, v0> &,
-                        const std::integral_constant<T1, v1> &) {
-  return integral_constant<IndexT, v0 * v1>();
 }
 
 // compute new static extent from range, preserving static knowledge

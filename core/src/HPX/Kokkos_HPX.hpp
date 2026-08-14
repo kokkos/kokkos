@@ -91,7 +91,7 @@ template <typename T>
 constexpr hpx_range<T> get_chunk_range(const T i_chunk, const T offset,
                                        const T chunk_size, const T max) {
   const T begin = offset + i_chunk * chunk_size;
-  const T end   = (std::min)(begin + chunk_size, max);
+  const T end   = std::min(static_cast<T>(begin + chunk_size), max);
   return {begin, end};
 }
 
@@ -790,6 +790,14 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     }
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
+  }
+
+  size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+
+  size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
   }
 
   inline static int scratch_size_max(int level) {

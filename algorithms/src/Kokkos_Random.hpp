@@ -1025,12 +1025,12 @@ class Random_XorShift64_Pool {
 
   Random_XorShift64_Pool(uint64_t seed) {
     init_impl(execution_space(), seed, execution_space().concurrency());
-    execution_space().fence("Random_XorShift64_Pool: Constructor");
+    execution_space().fence("Kokkos::Random_XorShift64_Pool: Constructor");
   }
 
   Random_XorShift64_Pool(uint64_t seed, uint64_t num_states) {
     init_impl(execution_space(), seed, num_states);
-    execution_space().fence("Random_XorShift64_Pool: Constructor");
+    execution_space().fence("Kokkos::Random_XorShift64_Pool: Constructor");
   }
 
   Random_XorShift64_Pool(const execution_space& exec, uint64_t seed) {
@@ -1067,7 +1067,7 @@ class Random_XorShift64_Pool {
     // if the host mirror is the device view, need to fence here
     // since the init was async.
     if (state_.data() == h_state.data())
-      exec.fence("Random_XorShift64_Pool::init UnifiedMemory");
+      exec.fence("Kokkos::Random_XorShift64_Pool::init UnifiedMemory");
 
     // Execute on the host_mirror_type's default execution space.
     Random_XorShift64<
@@ -1296,12 +1296,12 @@ class Random_XorShift1024_Pool {
 
   Random_XorShift1024_Pool(uint64_t seed) {
     init_impl(execution_space(), seed, execution_space().concurrency());
-    execution_space().fence("Random_XorShift1024_Pool: Constructor");
+    execution_space().fence("Kokkos::Random_XorShift1024_Pool: Constructor");
   }
 
   Random_XorShift1024_Pool(uint64_t seed, uint64_t num_states) {
     init_impl(execution_space(), seed, num_states);
-    execution_space().fence("Random_XorShift1024_Pool: Constructor");
+    execution_space().fence("Kokkos::Random_XorShift1024_Pool: Constructor");
   }
 
   Random_XorShift1024_Pool(const execution_space& exec, uint64_t seed) {
@@ -1340,7 +1340,7 @@ class Random_XorShift1024_Pool {
     // if the host mirror is the device view, need to fence here
     // since the init was async.
     if (state_.data() == h_state.data())
-      exec.fence("Random_XorShift1024_Pool::init UnifiedMemory");
+      exec.fence("Kokkos::Random_XorShift1024_Pool::init UnifiedMemory");
 
     // Execute on the host_mirror_type's default execution space.
     Random_XorShift64<
@@ -1588,18 +1588,18 @@ class Random_SFC64_Pool {
 
   Random_SFC64_Pool(uint64_t seed) {
     init_impl(execution_space(), seed, 0, execution_space().concurrency());
-    execution_space().fence("Random_SFC64_Pool: Constructor");
+    execution_space().fence("Kokkos::Random_SFC64_Pool: Constructor");
   }
 
   Random_SFC64_Pool(uint64_t seed, uint64_t num_states) {
     init_impl(execution_space(), seed, 0, num_states);
-    execution_space().fence("Random_SFC64_Pool: Constructor");
+    execution_space().fence("Kokkos::Random_SFC64_Pool: Constructor");
   }
 
   // Useful in distributed settings to be reproducible
   Random_SFC64_Pool(uint64_t seed, uint64_t seed_offset, uint64_t num_states) {
     init_impl(execution_space(), seed, seed_offset, num_states);
-    execution_space().fence("Random_SFC64_Pool: Constructor");
+    execution_space().fence("Kokkos::Random_SFC64_Pool: Constructor");
   }
 
   Random_SFC64_Pool(const execution_space& exec, uint64_t seed) {
@@ -2020,22 +2020,26 @@ void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type begin,
                  typename ViewType::const_value_type end) {
   Kokkos::fence(
-      "fill_random: fence before since no execution space instance provided");
+      "Kokkos::fill_random: fence before since no execution space instance "
+      "provided");
   typename ViewType::execution_space exec;
   fill_random(exec, a, g, begin, end);
   exec.fence(
-      "fill_random: fence after since no execution space instance provided");
+      "Kokkos::fill_random: fence after since no execution space instance "
+      "provided");
 }
 
 template <class ViewType, class RandomPool, class IndexType = int64_t>
 void fill_random(ViewType a, RandomPool g,
                  typename ViewType::const_value_type range) {
   Kokkos::fence(
-      "fill_random: fence before since no execution space instance provided");
+      "Kokkos::fill_random: fence before since no execution space instance "
+      "provided");
   typename ViewType::execution_space exec;
   fill_random(exec, a, g, 0, range);
   exec.fence(
-      "fill_random: fence after since no execution space instance provided");
+      "Kokkos::fill_random: fence after since no execution space instance "
+      "provided");
 }
 
 }  // namespace Kokkos

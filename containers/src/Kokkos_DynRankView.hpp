@@ -464,11 +464,7 @@ class DynRankView : private View<DataType*******, Properties...> {
   using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use non_const_data_type instead.") = non_const_data_type;
 #endif
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using specialize KOKKOS_DEPRECATED = void;
-#endif
-#else
+#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using specialize = typename view_type::specialize;
 #endif
 
@@ -526,11 +522,6 @@ class DynRankView : private View<DataType*******, Properties...> {
                                        typename drvtraits::array_layout,
                                        typename drvtraits::host_mirror_space>;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible HostMirror view */
-  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_type instead.") = host_mirror_type;
-#endif
   //----------------------------------------
   // Domain rank and extents
 
@@ -730,27 +721,6 @@ class DynRankView : private View<DataType*******, Properties...> {
   }
 #endif
 
-// This is an accomodation for Phalanx, that is usint the operator[] to access
-// all elements in a linear fashion even when the rank is not 1
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  KOKKOS_FUNCTION reference_type operator[](index_type i0) const {
-    if constexpr (std::is_same_v<typename drvtraits::value_type,
-                                 typename drvtraits::data_type>) {
-      return view_type::data()[i0];
-    } else {
-      const size_t dim_scalar = view_type::impl_map().dimension_scalar();
-      const size_t bytes      = view_type::span() / dim_scalar;
-
-      using tmp_view_type =
-          Kokkos::View<DataType*, typename traits::array_layout,
-                       typename traits::device_type,
-                       Kokkos::MemoryTraits<traits::memory_traits::impl_value |
-                                            unsigned(Kokkos::Unmanaged)>>;
-      tmp_view_type rankone_view(view_type::data(), bytes, dim_scalar);
-      return rankone_view(i0);
-    }
-  }
-#else
   KOKKOS_FUNCTION reference_type operator[](index_type i0) const {
 #ifdef KOKKOS_ENABLE_DEBUG
     if (rank() != 1u)
@@ -758,7 +728,6 @@ class DynRankView : private View<DataType*******, Properties...> {
 #endif
     return view_type::operator()(i0, 0, 0, 0, 0, 0, 0);
   }
-#endif
 
   KOKKOS_FUNCTION reference_type access(index_type i0 = 0, index_type i1 = 0,
                                         index_type i2 = 0, index_type i3 = 0,
@@ -1044,13 +1013,15 @@ class DynRankView : private View<DataType*******, Properties...> {
 
   //----------------------------------------
   // Memory span required to wrap these dimensions.
-  // FIXME: this function needs to be tested
   static constexpr size_t required_allocation_size(
       const size_t arg_N0 = 1, const size_t arg_N1 = 1, const size_t arg_N2 = 1,
       const size_t arg_N3 = 1, const size_t arg_N4 = 1, const size_t arg_N5 = 1,
       const size_t arg_N6                  = 1,
       [[maybe_unused]] const size_t arg_N7 = KOKKOS_INVALID_INDEX) {
-    // FIXME: check that arg_N7 is not set by user (in debug mode)
+#if !defined(KOKKOS_ENABLE_DEPRECATED_CODE_5)
+    KOKKOS_ASSERT(arg_N7 == KOKKOS_INVALID_INDEX &&
+                  "DynRankView: Cannot allocate 8 dimensions!");
+#endif
     return view_type::required_allocation_size(arg_N0, arg_N1, arg_N2, arg_N3,
                                                arg_N4, arg_N5, arg_N6);
   }
@@ -1161,6 +1132,26 @@ using Subdynrankview =
 template <class... DRVArgs, class SubArg0 = int, class SubArg1 = int,
           class SubArg2 = int, class SubArg3 = int, class SubArg4 = int,
           class SubArg5 = int, class SubArg6 = int>
+auto subdynrankview(const DynRankView<DRVArgs...>& drv,
+                    SubArg0 arg0 = SubArg0{}, SubArg1 arg1 = SubArg1{},
+                    SubArg2 arg2 = SubArg2{}, SubArg3 arg3 = SubArg3{},
+                    SubArg4 arg4 = SubArg4{}, SubArg5 arg5 = SubArg5{},
+                    SubArg6 arg6 = SubArg6{}) {
+  return subdynrankview(drv, Impl::convert_to_kokkos_pair_if_std_pair(arg0),
+                        Impl::convert_to_kokkos_pair_if_std_pair(arg1),
+                        Impl::convert_to_kokkos_pair_if_std_pair(arg2),
+                        Impl::convert_to_kokkos_pair_if_std_pair(arg3),
+                        Impl::convert_to_kokkos_pair_if_std_pair(arg4),
+                        Impl::convert_to_kokkos_pair_if_std_pair(arg5),
+                        Impl::convert_to_kokkos_pair_if_std_pair(arg6));
+}
+
+// std::pair isn't device-compatible
+template <class... DRVArgs, class SubArg0 = int, class SubArg1 = int,
+          class SubArg2 = int, class SubArg3 = int, class SubArg4 = int,
+          class SubArg5 = int, class SubArg6 = int>
+  requires(!Impl::ContainsStdPair<SubArg0, SubArg1, SubArg2, SubArg3, SubArg4,
+                                  SubArg5, SubArg6>)
 KOKKOS_INLINE_FUNCTION auto subdynrankview(
     const DynRankView<DRVArgs...>& drv, SubArg0 arg0 = SubArg0{},
     SubArg1 arg1 = SubArg1{}, SubArg2 arg2 = SubArg2{},

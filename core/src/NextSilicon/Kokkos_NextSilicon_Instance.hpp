@@ -20,8 +20,8 @@ namespace Kokkos::Experimental::Impl {
 
 class NextSiliconInternal {
   Impl::NextSiliconHeapBuffer functorBuffer_;
-  ::Kokkos::Impl::PageAlignedData<std::recursive_mutex,
-                                  ::Kokkos::Impl::PageLocation::Device>
+  ::Kokkos::Impl::PageAlignedData<std::mutex,
+                                  ::Kokkos::Impl::PageLocation::Host>
       device_mutex_;
 
   NextSiliconInternal(const NextSiliconInternal&)            = delete;

@@ -229,6 +229,12 @@ class TeamPolicyInternal<Kokkos::Experimental::OpenACC, Properties...>
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
+  size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+  size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
+  }
 
   Kokkos::Experimental::OpenACC space() const { return m_space; }
 

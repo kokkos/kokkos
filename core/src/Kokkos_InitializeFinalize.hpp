@@ -41,20 +41,9 @@ void finalize();
  */
 void push_finalize_hook(std::function<void()> f);
 
-/** \brief Print "Bill of Materials" */
-void print_configuration(std::ostream& os, bool verbose = false);
-
 [[nodiscard]] bool is_initialized() noexcept;
 [[nodiscard]] bool is_finalized() noexcept;
 
-[[nodiscard]] int device_id() noexcept;
-[[nodiscard]] int num_devices() noexcept;
-[[nodiscard]] int num_threads() noexcept;
-
-bool show_warnings() noexcept;
-bool tune_internals() noexcept;
-
-void fence(const std::string& name /*= "Kokkos::fence: Unnamed Global Fence"*/);
 }  // namespace Kokkos
 
 namespace Kokkos::Impl {
@@ -66,10 +55,6 @@ void post_initialize(const InitializationSettings& settings);
 void pre_finalize();
 
 void post_finalize();
-
-void declare_configuration_metadata(const std::string& category,
-                                    const std::string& key,
-                                    const std::string& value);
 
 }  // namespace Kokkos::Impl
 

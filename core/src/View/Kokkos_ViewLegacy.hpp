@@ -21,7 +21,7 @@ static_assert(false,
 #include <Kokkos_ExecPolicy.hpp>
 #include <View/Hooks/Kokkos_ViewHooks.hpp>
 
-#include <impl/Kokkos_InitializeFinalize.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Tools.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
@@ -288,12 +288,6 @@ class View : public ViewTraits<DataType, Properties...> {
       View<typename traits::non_const_data_type, typename traits::array_layout,
            Device<DefaultHostExecutionSpace,
                   typename traits::host_mirror_space::memory_space>>>;
-
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible host mirror view */
-  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_type instead.") = host_mirror_type;
-#endif
 
   /** \brief Unified types */
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;

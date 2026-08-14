@@ -40,6 +40,7 @@ class basic_simd_mask;
 class simd_alignment_vector_aligned {};
 
 template <typename... Flags>
+  requires(std::same_as<Flags, simd_alignment_vector_aligned> && ...)
 struct simd_flags {};
 
 inline constexpr simd_flags<> simd_flag_default{};

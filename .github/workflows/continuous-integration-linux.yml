@@ -100,7 +100,7 @@ jobs:
       image: ghcr.io/kokkos/ci-containers/${{ matrix.distro }}
     steps:
       - name: Checkout desul
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: desul/desul
           ref: 1c7564729c309fcffaa1262d036ec586a6a8b5cf
@@ -115,8 +115,8 @@ jobs:
           cmake -DDESUL_ENABLE_TESTS=OFF -DCMAKE_INSTALL_PREFIX=/usr/desul-install ..
           sudo cmake --build . --target install --parallel 2
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ccache
           key: kokkos-${{ matrix.arch }}-${{ matrix.distro }}-${{ matrix.cxx }}-${{ matrix.stdcxx }}-${{ matrix.cmake_build_type }}-${{ matrix.backend }}-${{ github.ref }}-${{ github.sha }}
@@ -140,7 +140,6 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=${{ (matrix.cmake_build_type != 'Debug') && 'ON' || 'OFF' }} \
             -DKokkos_ENABLE_EXAMPLES=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_CXX_FLAGS="-Werror ${{ matrix.cxx_extra_flags }}" \
             -DCMAKE_CXX_STANDARD=${{ matrix.stdcxx }} \

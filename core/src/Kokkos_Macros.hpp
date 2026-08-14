@@ -102,14 +102,6 @@
   __CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10
 #endif  // #if defined( __NVCC__ )
 
-#if !defined(KOKKOS_LAMBDA)
-#define KOKKOS_LAMBDA [=]
-#endif
-
-#if !defined(KOKKOS_CLASS_LAMBDA)
-#define KOKKOS_CLASS_LAMBDA [ =, *this ]
-#endif
-
 // #if !defined( __CUDA_ARCH__ ) // Not compiling Cuda code to 'ptx'.
 
 // Intel compiler for host code.
@@ -329,6 +321,45 @@
 
 #if !defined(KOKKOS_IMPL_DEVICE_FUNCTION)
 #define KOKKOS_IMPL_DEVICE_FUNCTION
+#endif
+
+#if !defined(KOKKOS_LAMBDA)
+#define KOKKOS_LAMBDA [=]
+#endif
+
+#if !defined(KOKKOS_CLASS_LAMBDA)
+#define KOKKOS_CLASS_LAMBDA [ =, *this ]
+#endif
+
+// since C++23
+#if !defined(KOKKOS_ENABLE_CXX20) && !defined(__clang__) && \
+    !defined(KOKKOS_COMPILER_NVCC)
+
+// FIXME_CLANG FIXME_NVCC Clang and nvcc don't accept GNU __attribute__((...))
+// in the lambda front-attr position
+
+#if !defined(KOKKOS_FORCEINLINE_LAMBDA)
+#define KOKKOS_FORCEINLINE_LAMBDA \
+  KOKKOS_LAMBDA KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE
+#endif
+
+#if !defined(KOKKOS_FORCEINLINE_CLASS_LAMBDA)
+#define KOKKOS_FORCEINLINE_CLASS_LAMBDA \
+  KOKKOS_CLASS_LAMBDA KOKKOS_IMPL_FORCEINLINE_ATTRIBUTE
+#endif
+
+#else  // C++20
+       // Attributes on lambda expressions would need to go after the parameter
+       // list which is not an option for us so we don't do anything.
+
+#if !defined(KOKKOS_FORCEINLINE_LAMBDA)
+#define KOKKOS_FORCEINLINE_LAMBDA KOKKOS_LAMBDA
+#endif
+
+#if !defined(KOKKOS_FORCEINLINE_CLASS_LAMBDA)
+#define KOKKOS_FORCEINLINE_CLASS_LAMBDA KOKKOS_CLASS_LAMBDA
+#endif
+
 #endif
 
 // FIXME_OPENACC
@@ -630,14 +661,13 @@
 #endif
 // clang-format on
 
-#if (defined(KOKKOS_COMPILER_GNU) || defined(KOKKOS_COMPILER_CLANG) ||        \
-     defined(KOKKOS_COMPILER_INTEL_LLVM) ||                                   \
-     defined(KOKKOS_COMPILER_NEXT_LLVM) || defined(KOKKOS_COMPILER_NVHPC)) && \
-    !defined(_WIN32) && !defined(__ANDROID__)
+#if !defined(_WIN32) && !defined(__ANDROID__)
 #if __has_include(<execinfo.h>)
 #define KOKKOS_IMPL_ENABLE_STACKTRACE
 #endif
+#if __has_include(<cxxabi.h>)
 #define KOKKOS_IMPL_ENABLE_CXXABI
+#endif
 #endif
 
 #if (defined(KOKKOS_IMPL_WINDOWS_CUDA) || defined(KOKKOS_COMPILER_MSVC)) && \

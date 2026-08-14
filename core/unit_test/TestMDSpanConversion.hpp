@@ -20,11 +20,10 @@ struct TestViewMDSpanConversion {
   using value_type = T;
 
   template <std::size_t Padding>
-  using layout_left_padded = Kokkos::Experimental::layout_left_padded<Padding>;
+  using layout_left_padded = Kokkos::layout_left_padded<Padding>;
 
   template <std::size_t Padding>
-  using layout_right_padded =
-      Kokkos::Experimental::layout_right_padded<Padding>;
+  using layout_right_padded = Kokkos::layout_right_padded<Padding>;
 
   struct TestAccessor {
     using offset_policy    = TestAccessor;
@@ -502,6 +501,9 @@ TEST(TEST_CATEGORY, view_mdspan_conversion) {
   TestViewMDSpanConversion<int, TEST_EXECSPACE>::run_test();
 }
 
+// FIXME_NVHPC: Skipping for NVHPC with the Serial backend because running this
+// test causes a race condition in serial.self_similar_range_policy_computation.
+#if !(defined(KOKKOS_COMPILER_NVHPC) && defined(KOKKOS_ENABLE_OPENACC))
 TEST(TEST_CATEGORY, view_mdspan_conversion_with_stride) {
   {
     Kokkos::View<int ***, Kokkos::LayoutLeft> source("S", 20, 40, 70);
@@ -551,4 +553,5 @@ TEST(TEST_CATEGORY, view_mdspan_conversion_with_stride) {
     ASSERT_EQ(static_cast<int>(sub_v2.stride(1)), 1);
   }
 }
+#endif
 }  // namespace

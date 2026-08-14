@@ -32,49 +32,57 @@ class NextSiliconSharedSpace {
 
   /**\brief  Allocate untracked memory in the space */
   template <typename ExecutionSpace>
-  void* allocate(const ExecutionSpace& exec_space,
+  void *allocate(const ExecutionSpace &exec_space,
                  const size_t arg_alloc_size) const {
     return allocate(exec_space, "[unlabeled]", arg_alloc_size);
   }
   template <typename ExecutionSpace>
-  void* allocate(const ExecutionSpace& exec_space, const char* arg_label,
+  void *allocate(const ExecutionSpace &exec_space, const char *arg_label,
+                 const size_t arg_alloc_size) const {
+    return impl_allocate(exec_space, arg_label, arg_alloc_size, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void *allocate(const ExecutionSpace &exec_space, const char *arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return impl_allocate(exec_space, arg_label, arg_alloc_size,
                          arg_logical_size);
   }
-  void* allocate(const size_t arg_alloc_size) const;
-  void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+  void *allocate(const size_t arg_alloc_size) const;
+  void *allocate(const char *arg_label, const size_t arg_alloc_size) const;
+  void *allocate(const char *arg_label, const size_t arg_alloc_size,
+                 const size_t arg_logical_size) const;
 
   /**\brief  Deallocate untracked memory in the space */
-  void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
-  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+  void deallocate(void *const arg_alloc_ptr, const size_t arg_alloc_size) const;
+  void deallocate(const char *arg_label, void *const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char *arg_label, void *const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
-  static constexpr char const* name() { return "NextSiliconSharedSpace"; }
+  static constexpr char const *name() { return "NextSiliconSharedSpace"; }
 
  private:
   template <typename ExecutionSpace>
-  void* impl_allocate(const ExecutionSpace& exec_space, const char* arg_label,
+  void *impl_allocate(const ExecutionSpace &exec_space, const char *arg_label,
                       const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle arg_handle =
                           Kokkos::Tools::make_space_handle(name())) const {
     if (!std::is_same_v<ExecutionSpace, Kokkos::Experimental::NextSilicon>) {
       exec_space.fence();
     }
-    return impl_allocate(arg_label, arg_alloc_size, arg_logical_size,
+    return impl_allocate(arg_label, arg_alloc_size, arg_reported_size,
                          arg_handle);
   }
-  void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+  void *impl_allocate(const char *arg_label, const size_t arg_alloc_size,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
-  void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
+  void impl_deallocate(const char *arg_label, void *const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 };

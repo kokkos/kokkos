@@ -5,7 +5,7 @@
 #define KOKKOS_SCOPE_GUARD_HPP
 
 #include <Kokkos_Abort.hpp>
-#include <impl/Kokkos_InitializeFinalize.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 
 #include <string>
 

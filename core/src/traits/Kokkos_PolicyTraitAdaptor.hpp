@@ -2,6 +2,7 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <impl/Kokkos_Utilities.hpp>  // type_list
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
 #include <traits/Kokkos_Traits_fwd.hpp>
 
@@ -23,28 +24,6 @@ namespace Impl {
 // ignored, and the trait can specialize PolicyTraitAdapterImpl to get the
 // desired behavior.
 
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
-// <editor-fold desc="PolicyTraitMatcher"> {{{2
-
-// To handle the WorkTag case, we need more than just a predicate; we need
-// something that we can default to in the unspecialized case, just like we
-// do for AnalyzeExecPolicy
-template <class TraitSpec, class Trait, class Enable = void>
-struct PolicyTraitMatcher : std::false_type {};
-
-template <class TraitSpec, class Trait>
-struct PolicyTraitMatcher<
-    TraitSpec, Trait,
-    std::enable_if_t<
-        TraitSpec::template trait_matches_specification<Trait>::value>>
-    : std::true_type {};
-
-// </editor-fold> end PolicyTraitMatcher }}}2
-//------------------------------------------------------------------------------
-
-//------------------------------------------------------------------------------
 // <editor-fold desc="PolicyTraitAdaptorImpl specializations"> {{{2
 
 // Matching version, replace the trait

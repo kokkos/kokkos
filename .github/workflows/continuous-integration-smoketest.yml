@@ -16,7 +16,7 @@ jobs:
 
     steps:
       - name: checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: kokkos
 
@@ -25,7 +25,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install ccache
 
-      - uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ccache
           key: kokkos-basic-test-${{ github.ref }}-${{ github.sha }}
@@ -44,7 +44,6 @@ jobs:
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DKokkos_ENABLE_ATOMICS_BYPASS=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ENABLE_TESTS=ON

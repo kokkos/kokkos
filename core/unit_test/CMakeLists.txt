@@ -43,7 +43,6 @@ set(COMPILE_ONLY_SOURCES
     TestCreateMirror.cpp
     TestDetectionIdiom.cpp
     TestBitManipulation.cpp
-    TestFunctionAnnotationMacros.cpp
     TestHalfCommonType.cpp
     TestInterOp.cpp
     TestRangePolicyCTAD.cpp
@@ -56,6 +55,7 @@ set(COMPILE_ONLY_SOURCES
     TestTypeList.cpp
     TestMDRangePolicyCTAD.cpp
     TestTeamPolicyCTAD.cpp
+    TestTeamPolicyCompileOnly.cpp
     TestTeamMDRangePolicyCTAD.cpp
     TestNestedReducerCTAD.cpp
     view/TestAccessorFromMemoryTraits.cpp
@@ -149,6 +149,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       AtomicOperations_unsignedint
       AtomicOperations_unsignedlongint
       AtomicViews
+      BadAlloc
       BitManipulationBuiltins
       CheckedIntegerOps
       CommonPolicyConstructors
@@ -159,6 +160,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       DeepCopyAlignment
       ExecSpacePartitioning
       ExecSpaceThreadSafety
+      FunctionAnnotationMacros
       FunctorAnalysis
       GraphNodeCtorProps
       HostSharedPtr
@@ -364,8 +366,14 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
           ViewCtorConvertibleToPtr
       )
       if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
-        list(APPEND BV_TestNames ViewCustomizationAccessorArg ViewCustomizationAllocationType
-             ViewCustomizationAccessorFromMapping MinimalViewMDSpanTemplateArgumentViability
+        list(
+          APPEND
+          BV_TestNames
+          ViewCustomizationAccessorArg
+          ViewCustomizationAllocationType
+          ViewCustomizationAccessorFromMapping
+          MinimalViewMDSpanTemplateArgumentViability
+          ViewMDSpanTemplateArgumentSubview
         )
       endif()
       if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
@@ -823,6 +831,7 @@ endif()
 if(Kokkos_ENABLE_NEXTSILICON)
   set(NEXTSILICON_SOURCES
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Abort.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BadAlloc.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MinMaxClamp.cpp
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp # MDRange parallel for
   )

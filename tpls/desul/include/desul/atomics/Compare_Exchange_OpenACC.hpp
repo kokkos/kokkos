@@ -12,15 +12,12 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #include <openacc.h>
 
 #include <desul/atomics/Common.hpp>
+#include <desul/atomics/Lock_Free_Types_OpenACC.hpp>
 #include <desul/atomics/Thread_Fence_OpenACC.hpp>
 #include <type_traits>
 
 namespace desul {
 namespace Impl {
-
-template <class T>
-inline constexpr bool device_atomic_always_lock_free<T, void> = (sizeof(T) == 4) ||
-                                                                (sizeof(T) == 8);
 
 #ifdef __NVCOMPILER
 

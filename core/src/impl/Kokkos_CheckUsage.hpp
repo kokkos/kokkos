@@ -6,7 +6,7 @@
 
 #include <Kokkos_Abort.hpp>
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_InitializeFinalize.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 
 #include <string>

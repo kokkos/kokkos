@@ -11,7 +11,7 @@
 
 #include <Kokkos_Abort.hpp>
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_InitializeFinalize.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 
 #include <KokkosCore_Config_DeclareBackend.hpp>  // FIXME
 

@@ -9,7 +9,7 @@ static_assert(false,
 #ifndef KOKKOS_BASIC_VIEW_HPP
 #define KOKKOS_BASIC_VIEW_HPP
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_InitializeFinalize.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <View/Kokkos_ViewAlloc.hpp>

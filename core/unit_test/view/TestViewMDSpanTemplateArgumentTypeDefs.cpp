@@ -146,7 +146,10 @@ static_assert(test_derived_types<f,  Kokkos::extents<unsigned, 2, 3>,       LL, 
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 8>,         LR, SD, Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>());
 static_assert(test_derived_types<f,  Kokkos::extents<unsigned, d, d, 2, 3>, LL, SD, Kokkos::MemoryTraits<Kokkos::RandomAccess>>());
 
+// FIXME_NVHPC This particular case causes internal compiler errors with NVHPC 23.7
+#ifndef KOKKOS_COMPILER_NVHPC
 static_assert(test_derived_types<f,  Kokkos::dextents<unsigned, 0>,         LL, SH, Kokkos::MemoryTraits<>>());
+#endif
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 2>,         LR, SH, Kokkos::MemoryTraits<Kokkos::Unmanaged>>());
 static_assert(test_derived_types<f,  Kokkos::extents<unsigned, 2, 3>,       LL, SH, Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::Atomic>>());
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 8>,         LR, SH, Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>());
@@ -155,7 +158,10 @@ static_assert(test_derived_types<f,  Kokkos::extents<unsigned, d, d, 2, 3>, LL, 
 #ifdef KOKKOS_HAS_SHARED_SPACE
 using SS = Kokkos::SharedSpace;
 
+// FIXME_NVHPC This particular case causes internal compiler errors with NVHPC 23.7
+#ifndef KOKKOS_COMPILER_NVHPC
 static_assert(test_derived_types<f,  Kokkos::dextents<unsigned, 0>,         LL, SS, Kokkos::MemoryTraits<>>());
+#endif
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 2>,         LR, SS, Kokkos::MemoryTraits<Kokkos::Unmanaged>>());
 static_assert(test_derived_types<f,  Kokkos::extents<unsigned, 2, 3>,       LL, SS, Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::Atomic>>());
 static_assert(test_derived_types<cf, Kokkos::dextents<unsigned, 8>,         LR, SS, Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>());

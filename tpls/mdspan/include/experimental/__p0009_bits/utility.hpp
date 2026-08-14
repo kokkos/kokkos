@@ -14,6 +14,14 @@
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
 namespace detail {
 
+// Backport of std::remove_cvref / std::remove_cvref_t (C++20)
+#if (__cplusplus >= 202002L)
+  using std::remove_cvref_t;
+#else
+  template<class T>
+  using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+#endif // __cplusplus >= 202002L
+
 // type alias used for rank-based tag dispatch
 //
 // this is used to enable alternatives to constexpr if when building for C++14
@@ -203,6 +211,8 @@ MDSPAN_INLINE_FUNCTION constexpr bool cmp_greater_equal(T t, U u) noexcept {
 
 template <class R, class T>
 MDSPAN_INLINE_FUNCTION constexpr bool in_range(T t) noexcept {
+  static_assert(std::is_integral_v<R> && std::is_integral_v<T>);
+
 #if defined(MDSPAN_IMPL_HAS_CUDA) && defined(__NVCC__) && (__CUDACC_VER_MAJOR__ * 100 + __CUDACC_VER_MINOR__ * 10 >= 1260)
   using cuda::std::numeric_limits;
 #else
@@ -212,12 +222,73 @@ MDSPAN_INLINE_FUNCTION constexpr bool in_range(T t) noexcept {
           cmp_less_equal(t, numeric_limits<R>::max());
 }
 
+template <class R, class T>
+MDSPAN_INLINE_FUNCTION constexpr bool is_nonnegative_and_representable(T t) noexcept {
+  // T might not be integral and thus invalid to pass to in_range
+  // Only check this if we can actually call in_range
+  if constexpr (std::is_integral_v<T>)
+  {
+    if constexpr (std::is_signed_v<T>) {
+      if (t < 0)
+        return false;
+    }
+
+    return in_range<R>(t);
+  } else
+  {
+    if constexpr (std::is_signed_v<R>) {
+      if (static_cast<R>(t) < 0)
+        return false;
+    }
+
+    return true;
+  }
+}
+
+template<class R, class... Values>
+MDSPAN_INLINE_FUNCTION constexpr bool
+all_values_are_representable(Values... values) noexcept {
+  return ( in_range<R>( values ) && ... );
+}
+
+template<class R, class... Values>
+MDSPAN_INLINE_FUNCTION constexpr bool
+all_values_are_nonnegative_and_representable(Values... values) noexcept {
+  return ( is_nonnegative_and_representable<R>( values ) && ... );
+}
+
+template<class R, class ContiguousIterator>
+MDSPAN_INLINE_FUNCTION constexpr bool
+  range_is_nonnegative_and_representable(ContiguousIterator begin, ContiguousIterator end) noexcept {
+  for ( auto it = begin; it < end; ++it )
+  {
+    if ( !is_nonnegative_and_representable<R>( *it ) )
+      return false;
+  }
+
+  return true;
+}
+
+template<class R, class Extents>
+MDSPAN_INLINE_FUNCTION constexpr bool
+extent_is_representable(const Extents &exts) noexcept {
+  for ( std::size_t r = 0; r < Extents::rank(); ++r )
+  {
+    if ( !is_nonnegative_and_representable<R>( exts.extent(r) ) )
+      return false;
+  }
+
+  return true;
+}
+
 template <typename T >
 MDSPAN_INLINE_FUNCTION constexpr bool
 check_mul_result_is_nonnegative_and_representable(T a, T b) {
 // FIXME_SYCL The code below compiles to old_llvm.umul.with.overflow.i64
 // which isn't defined in device code
 #ifdef __SYCL_DEVICE_ONLY__
+  (void) a;
+  (void) b;
   return true;
 #else
   if (b == 0 || a == 0)

@@ -507,14 +507,14 @@ struct Slice<Kokkos::layout_left, 1, V, Args...> {
 };
 
 template <size_t Pad, typename V, typename... Args>
-struct Slice<Kokkos::Experimental::layout_right_padded<Pad>, 1, V, Args...> {
+struct Slice<Kokkos::layout_right_padded<Pad>, 1, V, Args...> {
   static auto get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, i, args...);
   }
 };
 
 template <size_t Pad, typename V, typename... Args>
-struct Slice<Kokkos::Experimental::layout_left_padded<Pad>, 1, V, Args...> {
+struct Slice<Kokkos::layout_left_padded<Pad>, 1, V, Args...> {
   static auto get(V const& src, const size_t i, Args... args) {
     return Kokkos::subview(src, args..., i);
   }

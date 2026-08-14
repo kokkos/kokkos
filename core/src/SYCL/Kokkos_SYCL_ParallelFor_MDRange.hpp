@@ -156,6 +156,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
     bool need_grid_stride = true;
 
+    // NOLINTNEXTLINE(bugprone-branch-clone)
     if constexpr (Policy::rank == 1) {
       if ((m_max_grid_size[0] * local_range[0]) >=
           static_cast<std::size_t>(m_extent[0])) {

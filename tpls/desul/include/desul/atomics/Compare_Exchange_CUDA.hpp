@@ -11,6 +11,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <desul/atomics/Common.hpp>
 #include <desul/atomics/Lock_Array_CUDA.hpp>
+#include <desul/atomics/Lock_Free_Types_CUDA.hpp>
 #include <desul/atomics/Thread_Fence_CUDA.hpp>
 #include <type_traits>
 
@@ -135,18 +136,6 @@ __device__ std::enable_if_t<sizeof(T) == 4 || sizeof(T) == 8, T> device_atomic_e
 }  // namespace desul
 
 #endif
-
-namespace desul {
-namespace Impl {
-template <class T>
-inline constexpr bool device_atomic_always_lock_free<T, void> = (sizeof(T) == 4) ||
-#ifdef DESUL_HAVE_16BYTE_LOCK_FREE_ATOMICS_DEVICE
-                                                                (sizeof(T) == 16) ||
-#endif
-                                                                (sizeof(T) == 8);
-
-}  // namespace Impl
-}  // namespace desul
 
 // SeqCst is not directly supported by PTX, need the additional fences:
 

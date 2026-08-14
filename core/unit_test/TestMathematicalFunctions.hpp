@@ -227,10 +227,24 @@ struct ConvertibleTo {
   operator Floating() const;
 };
 
+// FIXME_CUDA nvcc 13.3.0 returns fixed-width floating point types.
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && \
+    !defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(FUNC, FP_TYPE, RET_TYPE) \
+  using test_return_type =                                                 \
+      decltype(FUNC(std::declval<ConvertibleTo<FP_TYPE>>()));              \
+  static_assert(std::is_floating_point_v<RET_TYPE> &&                      \
+                    (std::is_floating_point_v<test_return_type> &&         \
+                     std::is_convertible_v<test_return_type, RET_TYPE> &&  \
+                     sizeof(test_return_type) == sizeof(RET_TYPE)) ||      \
+                !std::is_floating_point_v<RET_TYPE> &&                     \
+                    std::is_same_v<test_return_type, RET_TYPE>);
+#else
 #define KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(FUNC, FP_TYPE, RET_TYPE)   \
   static_assert(                                                             \
       std::is_same_v<decltype(FUNC(std::declval<ConvertibleTo<FP_TYPE>>())), \
                      RET_TYPE>)
+#endif
 
 template <class>
 struct math_function_name;

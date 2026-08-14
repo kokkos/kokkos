@@ -95,6 +95,7 @@ kokkos_arch_option(ADA89 GPU "NVIDIA Ada generation CC 8.9" "KOKKOS_SHOW_CUDA_AR
 kokkos_arch_option(HOPPER90 GPU "NVIDIA Hopper generation CC 9.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL100 GPU "NVIDIA Blackwell generation CC 10.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL103 GPU "NVIDIA Blackwell generation CC 10.3" "KOKKOS_SHOW_CUDA_ARCHS")
+kokkos_arch_option(RUBIN107 GPU "NVIDIA Rubin generation CC 10.7" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL120 GPU "NVIDIA Blackwell generation CC 12.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL121 GPU "NVIDIA Blackwell generation CC 12.1" "KOKKOS_SHOW_CUDA_ARCHS")
 
@@ -1058,6 +1059,7 @@ check_cuda_arch(ADA89 sm_89)
 check_cuda_arch(HOPPER90 sm_90)
 check_cuda_arch(BLACKWELL100 sm_100)
 check_cuda_arch(BLACKWELL103 sm_103)
+check_cuda_arch(RUBIN107 sm_107)
 check_cuda_arch(BLACKWELL120 sm_120)
 check_cuda_arch(BLACKWELL121 sm_121)
 
@@ -1348,6 +1350,10 @@ if(KOKKOS_ARCH_BLACKWELL100
    OR KOKKOS_ARCH_BLACKWELL121
 )
   set(KOKKOS_ARCH_BLACKWELL ON)
+endif()
+
+if(KOKKOS_ARCH_RUBIN107)
+  set(KOKKOS_ARCH_RUBIN ON)
 endif()
 
 function(CHECK_AMD_APU ARCH)

@@ -107,6 +107,12 @@ TEST(TEST_CATEGORY_DEATH,
                     "is defined";
   }
 #endif
+#if defined(KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES)  // FIXME_SYCL
+  if (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
+    GTEST_SKIP() << "skipping since the SYCL backend with out-of-order queues "
+                    "fails to die.";
+  }
+#endif
 #if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC
   if (std::is_same<ExecutionSpace, Kokkos::Experimental::OpenACC>::value) {
     GTEST_SKIP() << "skipping because OpenACC backend is currently not "

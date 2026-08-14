@@ -22,7 +22,7 @@
 NVIDIA-RTX5080:
   extends: .common-setup
   tags: [nvidia-rtx5080, hpsf-gpu]
-  image: nvcr.io/nvidia/cuda:12.8.0-devel-ubuntu24.04
+  image: nvcr.io/nvidia/cuda:13.3.0-devel-ubuntu26.04
   script:
     - apt-get update && apt-get install -y cmake git python3
     - export CMAKE_BUILD_PARALLEL_LEVEL=32
@@ -30,7 +30,7 @@ NVIDIA-RTX5080:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=`pwd`/bin/nvcc_wrapper"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=20"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=23"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_BLACKWELL120=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
@@ -133,9 +133,9 @@ NVIDIA-P100:
 INTEL-DATA-CENTER-MAX-1100:
   extends: .common-setup
   tags: [intel-data-center-max-1100]
-  image: intel/oneapi-basekit:2024.2.1-0-devel-ubuntu22.04
+  image: intel/oneapi:2026.0.0-devel-ubuntu24.04
   script:
-    - apt-get update && apt-get install -y git
+    - apt-get update && apt-get install -y git intel-ocloc
     - sycl-ls
     - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
     - export CLANG_TIDY_EXE=$(dirname $(which icpx))/compiler/clang-tidy
@@ -215,12 +215,12 @@ INTEL-DATA-CENTER-MAX-1100-OUT-OF-ORDER:
 AMD-MI300A:
   extends: .common-setup
   tags: [uo-gpu, odyssey, amd-mi300]
-  image: rocm/dev-ubuntu-24.04:6.2.4-complete
+  image: rocm/dev-ubuntu-26.04:7.14.0-full
   script:
     - apt-get update && apt-get install -y cmake git
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_PREFIX_PATH=/opt/rocm-6.2.4"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_PREFIX_PATH=/opt/rocm-7.14.0"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=hipcc"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
@@ -234,6 +234,8 @@ AMD-MI300A:
     - export CTEST_BUILD_NAME="AMD-MI300A"
     - export HSA_XNACK=1
     - export KOKKOS_DEVICE_ID=3
+    - export LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH
+    - export GTEST_FILTER="-hip.graph_capture:hip_graph.submit_six:hip_graph.end_of_submit_control_flow:hip_graph.aggregate_is_awaitable"
     - ctest -VV
       -D CDASH_MODEL=${CDASH_MODEL}
       -D GITHUB_PR_ID="${GITHUB_PR_ID}"

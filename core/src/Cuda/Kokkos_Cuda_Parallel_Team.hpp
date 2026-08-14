@@ -852,6 +852,11 @@ class ParallelReduce<CombinedFunctorReducerType,
           1u, UseShflReduction ? std::min(m_league_size, size_type(1024 * 32))
                                : std::min(int(m_league_size), m_team_size));
 
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(),
