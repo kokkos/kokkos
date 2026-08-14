@@ -179,6 +179,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   return -1;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 [[nodiscard]] int Kokkos::num_devices() noexcept {
   if constexpr (std::is_same_v<DefaultExecutionSpace,
                                DefaultHostExecutionSpace>) {
