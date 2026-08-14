@@ -155,20 +155,20 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
 
   template <class... ReducersDeduced>
   KOKKOS_FUNCTION constexpr explicit CombinedReducerImpl(
-      value_type& value, ReducersDeduced&&... reducers) noexcept
+      value_type& value, ReducersDeduced&&... reducers)
       : CombinedReducerStorageImpl<Idxs, Reducers>(
             (ReducersDeduced&&)reducers)...,
         m_value_view(&value) {}
 
   KOKKOS_FUNCTION constexpr void join(value_type& dest,
-                                      value_type const& src) const noexcept {
+                                      value_type const& src) const {
     (this->CombinedReducerStorageImpl<Idxs, Reducers>::_join(
          dest.template get<Idxs, typename Reducers::value_type>(),
          src.template get<Idxs, typename Reducers::value_type>()),
      ...);
   }
 
-  KOKKOS_FUNCTION constexpr void init(value_type& dest) const noexcept {
+  KOKKOS_FUNCTION constexpr void init(value_type& dest) const {
     (this->CombinedReducerStorageImpl<Idxs, Reducers>::_init(
          dest.template get<Idxs, typename Reducers::value_type>()),
      ...);
@@ -216,14 +216,14 @@ struct CombinedReducerImpl<std::integer_sequence<size_t, Idxs...>, Space,
 
   template <int Idx, class View>
   KOKKOS_FUNCTION static void write_one_value_back_on_device(
-      View const& inputView, typename View::const_value_type& value) noexcept {
+      View const& inputView, typename View::const_value_type& value) {
     *inputView.data() = value;
   }
 
   template <typename... CombinedReducers>
   KOKKOS_FUNCTION void write_value_back_to_original_references_on_device(
       value_type const& value,
-      CombinedReducers const&... reducers_that_reference_original_values) noexcept {
+      CombinedReducers const&... reducers_that_reference_original_values) {
     (write_one_value_back_on_device<Idxs>(
          reducers_that_reference_original_values.view(),
          value.template get<Idxs, typename CombinedReducers::value_type>()),
