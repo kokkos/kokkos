@@ -157,6 +157,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       DeepCopy_Narrowing
       DeepCopy_SameArgument
       DeepCopyAlignment
+      Event
       ExecSpacePartitioning
       ExecSpaceThreadSafety
       FunctionAnnotationMacros
@@ -750,6 +751,7 @@ if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpGraphMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_GraphMultiGPU.cpp
   )
+
 endif()
 
 if(Kokkos_ENABLE_HIP)
