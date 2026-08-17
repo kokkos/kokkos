@@ -16,7 +16,7 @@ endif()
 
 find_package(CUDAToolkit REQUIRED)
 if(CUDAToolkit_VERSION VERSION_GREATER_EQUAL 13.0)
-  find_package(CCCL REQUIRED)
+  find_package(CCCL REQUIRED PATHS "${CUDAToolkit_LIBRARY_DIR}/cmake/cccl" NO_DEFAULT_PATH)
   list(APPEND TPL_CUDA_LIBRARIES CCCL::CCCL)
 endif()
 kokkos_create_imported_tpl(CUDA INTERFACE LINK_LIBRARIES ${TPL_CUDA_LIBRARIES})
