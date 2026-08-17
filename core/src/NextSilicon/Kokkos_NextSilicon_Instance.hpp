@@ -21,7 +21,7 @@ namespace Kokkos::Experimental::Impl {
 class NextSiliconInternal {
   Impl::NextSiliconHeapBuffer m_functor_buffer;
   Impl::NextSiliconHeapBuffer m_reduce_partial_buffer;
-  ::Kokkos::Impl::PageAlignedData<std::mutex,
+  ::Kokkos::Impl::PageAlignedData<std::recursive_mutex,
                                   ::Kokkos::Impl::PageLocation::Host>
       device_mutex_;
 
@@ -57,7 +57,12 @@ class NextSiliconInternal {
 
   uint32_t instance_id() const noexcept;
 
-  [[nodiscard]] std::lock_guard<std::mutex> lock_device();
+  [[nodiscard]] auto lock_device() {
+    KOKKOS_IF_ON_DEVICE(
+        (KOKKOS_ASSERT(false &&
+                       "lock_device should never be called on device");))
+    return std::lock_guard<std::recursive_mutex>(this->device_mutex_);
+  }
 };
 
 }  // namespace Kokkos::Experimental::Impl
