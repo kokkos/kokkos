@@ -4,12 +4,6 @@
 #ifndef KOKKOS_NEXTSILICON_PAGE_ALIGNED_DATA_HPP
 #define KOKKOS_NEXTSILICON_PAGE_ALIGNED_DATA_HPP
 
-#include <NextSilicon/Kokkos_NextSilicon_InitializationCallbacks.hpp>
-
-#include <impl/Kokkos_InitializeFinalize.hpp>
-
-#include <nextapi/memory.h>
-
 #include <type_traits>
 #include <utility>
 
@@ -22,6 +16,9 @@ enum class PageLocation {
   Device,
   Any,
 };
+
+template <PageLocation>
+void migrate_after_initialize(void* obj, size_t size);
 
 // This struct is aligned to 4096 bytes (page size) to work around
 // issues with NextSilicon page migration. It can be pinned to the host
@@ -40,24 +37,7 @@ struct alignas(PAGE_SIZE) PageAlignedData {
     requires(!(sizeof...(Args) == 1 &&
                (std::is_same_v<std::decay_t<Args>, PageAlignedData> && ...)))
   PageAlignedData(Args&&... args) : data{std::forward<Args>(args)...} {
-    if constexpr (location != PageLocation::Any) {
-      auto pin = [this] {
-        if constexpr (location == PageLocation::Host) {
-          // Move this object to system DRAM and pin it there.
-          nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_HOST,
-                              true /*pin*/);
-        } else if constexpr (location == PageLocation::Device) {
-          // Move this object to accelerator HBM and pin it there.
-          nextapi_mem_migrate(this, sizeof(*this), NEXTAPI_PAGE_LOC_DEVICE,
-                              true /*pin*/);
-        }
-      };
-      if (Kokkos::is_initialized()) {
-        pin();
-      } else {
-        register_nextsilicon_initialization_callback(std::move(pin));
-      }
-    }
+    migrate_after_initialize<location>(this, sizeof(*this));
   }
 
   PageAlignedData& operator=(const T& data_) {
