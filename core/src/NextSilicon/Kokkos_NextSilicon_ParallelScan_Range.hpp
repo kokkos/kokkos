@@ -72,7 +72,7 @@ class ParallelScanNextSilicon {
 
   void execute() const {
     // Acquire the device for potential handoff before kernel execution begins
-    const std::lock_guard<std::mutex> device_lock =
+    const std::lock_guard<std::recursive_mutex> device_lock =
         this->m_policy.space().impl_internal_space_instance()->lock_device();
 
     const IndexType input_count = m_policy.end() - m_policy.begin() + 1;
