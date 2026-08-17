@@ -8,16 +8,16 @@
 
 namespace {
 
-bool callback_ran = false;
+int callback_ran = 0;
 
-TEST(nextsilicon, InitializationCallbacksRun) { EXPECT_TRUE(callback_ran); }
+TEST(nextsilicon, InitializationCallbacksRun) { EXPECT_EQ(callback_ran, 1); }
 
 }  // namespace
 
 int main(int argc, char* argv[]) {
   Kokkos::Impl::register_nextsilicon_initialization_callback(
       "TestNextSilicon_InitializationCallbacks::deferred",
-      [] { callback_ran = true; });
+      [] { ++callback_ran; });
 
   Kokkos::initialize(argc, argv);
 
