@@ -86,6 +86,7 @@ set(BENCHMARK_SOURCES
     PerfTest_MallocFree.cpp
     PerfTest_Stream.cpp
     PerfTestMDRange_Stencil.cpp
+    PerfTest_TeamMDRange.cpp
     PerfTest_ViewAllocate.cpp
     PerfTest_ViewCopy_a123.cpp
     PerfTest_ViewCopy_b123.cpp
