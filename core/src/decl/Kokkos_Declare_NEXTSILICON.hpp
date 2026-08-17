@@ -12,8 +12,11 @@
 #include <NextSilicon/Kokkos_NextSilicon_MDRangePolicy.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_Parallel_MDRange.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_ParallelFor_Range.hpp>
+#include <NextSilicon/Kokkos_NextSilicon_ParallelFor_Team.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_ParallelReduce_Range.hpp>
+#include <NextSilicon/Kokkos_NextSilicon_ParallelReduce_Team.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_ParallelScan_Range.hpp>
+#include <NextSilicon/Kokkos_NextSilicon_ParallelScan_Team.hpp>
 #endif
 
 #endif
