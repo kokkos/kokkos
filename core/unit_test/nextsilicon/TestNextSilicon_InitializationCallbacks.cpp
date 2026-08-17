@@ -16,7 +16,6 @@ TEST(nextsilicon, InitializationCallbacksRun) { EXPECT_EQ(callback_ran, 1); }
 
 int main(int argc, char* argv[]) {
   Kokkos::Impl::register_nextsilicon_initialization_callback(
-      "TestNextSilicon_InitializationCallbacks::deferred",
       [] { ++callback_ran; });
 
   Kokkos::initialize(argc, argv);

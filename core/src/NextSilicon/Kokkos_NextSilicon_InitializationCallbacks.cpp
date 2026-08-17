@@ -9,16 +9,11 @@
 
 namespace Kokkos::Impl {
 
-struct NextSiliconInitializationCallbackEntry {
-  std::string label;
-  std::function<void()> callback;
-};
-
 namespace {
 
 struct NextSiliconInitializationCallbacks {
   std::mutex mutex;
-  std::vector<NextSiliconInitializationCallbackEntry> pending;
+  std::vector<std::function<void()>> pending;
 };
 
 NextSiliconInitializationCallbacks& nextsilicon_initialization_callbacks() {
@@ -29,17 +24,17 @@ NextSiliconInitializationCallbacks& nextsilicon_initialization_callbacks() {
 }  // namespace
 
 void register_nextsilicon_initialization_callback(
-    std::string label, std::function<void()> callback) {
+    std::function<void()> callback) {
   auto& callbacks = nextsilicon_initialization_callbacks();
   std::lock_guard<std::mutex> lock(callbacks.mutex);
-  callbacks.pending.push_back({std::move(label), std::move(callback)});
+  callbacks.pending.push_back(std::move(callback));
 }
 
 void run_nextsilicon_initialization_callbacks() {
   auto& callbacks = nextsilicon_initialization_callbacks();
   std::lock_guard<std::mutex> lock(callbacks.mutex);
   for (auto& callback : callbacks.pending) {
-    callback.callback();
+    callback();
   }
   callbacks.pending.clear();
 }

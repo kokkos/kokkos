@@ -55,8 +55,7 @@ struct alignas(PAGE_SIZE) PageAlignedData {
       if (Kokkos::is_initialized()) {
         pin();
       } else {
-        register_nextsilicon_initialization_callback(
-            "PageAlignedData pin in ctor", std::move(pin));
+        register_nextsilicon_initialization_callback(std::move(pin));
       }
     }
   }
