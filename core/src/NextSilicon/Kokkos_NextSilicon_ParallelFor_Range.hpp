@@ -73,7 +73,11 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
 
     // Invokes the functor itself. Expected to inline (if compiler visible) the
     // functor body while passing the extra this pointer.
-    (*functor)(index);
+    if constexpr (std::is_void_v<WorkTag>) {
+      (*functor)(index);
+    } else {
+      (*functor)(WorkTag{}, index);
+    }
   }
 };
 
