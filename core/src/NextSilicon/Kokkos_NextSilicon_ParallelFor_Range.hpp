@@ -64,10 +64,12 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::RangePolicy<Traits...>,
     //   of the mechanism and rationale.
     NextSiliconThreadSpaceGuard thread_guard{};
 
-    // Communicate to the compiler that the functor is a immutable and thread
+    // Communicate to the compiler that the functor is immutable and thread
     // invariant for the duration of the microtask.
-    Kokkos::Experimental::Impl::
-        __ns_immutable_thread_invariant_parameter_struct(functor);
+    if (__next_is_in_handed_off_code()) {
+      nextapi::detail::__next_immutable_thread_invariant_parameter_struct(
+          functor);
+    }
 
     // Invokes the functor itself. Expected to inline (if compiler visible) the
     // functor body while passing the extra this pointer.
