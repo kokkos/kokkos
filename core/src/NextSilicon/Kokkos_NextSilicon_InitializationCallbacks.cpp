@@ -3,6 +3,8 @@
 
 #include <NextSilicon/Kokkos_NextSilicon_InitializationCallbacks.hpp>
 
+#include <Kokkos_Abort.hpp>
+
 #include <mutex>
 #include <utility>
 #include <vector>
@@ -10,33 +12,27 @@
 namespace Kokkos::Impl {
 
 namespace {
-
-struct NextSiliconInitializationCallbacks {
-  std::mutex mutex;
-  std::vector<std::function<void()>> pending;
-};
-
-NextSiliconInitializationCallbacks& nextsilicon_initialization_callbacks() {
-  static NextSiliconInitializationCallbacks callbacks;
-  return callbacks;
-}
-
+std::optional<std::vector<std::function<void()>>> pending{std::in_place};
 }  // namespace
 
 void register_nextsilicon_initialization_callback(
     std::function<void()> callback) {
-  auto& callbacks = nextsilicon_initialization_callbacks();
-  std::lock_guard<std::mutex> lock(callbacks.mutex);
-  callbacks.pending.push_back(std::move(callback));
+  if (!pending)
+    Kokkos::abort(
+        "nextsilicon: initialization callbacks improperly initialized (1). "
+        "Please report this.");
+  pending->push_back(std::move(callback));
 }
 
 void run_nextsilicon_initialization_callbacks() {
-  auto& callbacks = nextsilicon_initialization_callbacks();
-  std::lock_guard<std::mutex> lock(callbacks.mutex);
-  for (auto& callback : callbacks.pending) {
+  if (!pending)
+    Kokkos::abort(
+        "nextsilicon: initialization callbacks improperly initialized (2). "
+        "Please report this.");
+  for (auto& callback : *pending) {
     callback();
   }
-  callbacks.pending.clear();
+  pending->clear();
 }
 
 }  // namespace Kokkos::Impl
