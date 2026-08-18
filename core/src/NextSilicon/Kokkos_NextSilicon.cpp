@@ -30,10 +30,6 @@ void Kokkos::Experimental::NextSilicon::impl_initialize(
 
   Impl::NextSiliconInternal::default_instance =
       Kokkos::Impl::HostSharedPtr(new Impl::NextSiliconInternal);
-
-  // Kokkos::is_initialized is false still
-  // Run any callbacks registered while creating the default instance.
-  Kokkos::Impl::run_nextsilicon_initialization_callbacks();
 }
 
 void Kokkos::Experimental::NextSilicon::impl_finalize() {
