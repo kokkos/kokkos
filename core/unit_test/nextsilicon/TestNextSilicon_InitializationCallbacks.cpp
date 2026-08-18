@@ -14,6 +14,8 @@ TEST(nextsilicon, InitializationCallbacksRun) { EXPECT_EQ(callback_ran, 1); }
 
 }  // namespace
 
+// FIXME_NEXTSILICON: integrate with existing InitializeFinalize tests once
+// DeathTests are supported by NextSilicon toolchain.
 int main(int argc, char* argv[]) {
   Kokkos::Impl::register_nextsilicon_initialization_callback(
       [] { ++callback_ran; });
