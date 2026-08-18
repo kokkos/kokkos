@@ -126,6 +126,10 @@ TEST(hpx, independent_instances) {
 
   const int expected_sum = n * (2 * c + d) + (n * (n - 1) / 2);
   ASSERT_EQ(expected_sum, sum_v());
+
+  hpx3.fence();
+  hpx2.fence();
+  hpx1.fence();
 }
 
 }  // namespace
