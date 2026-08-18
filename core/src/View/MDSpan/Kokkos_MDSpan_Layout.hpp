@@ -18,11 +18,11 @@ static_assert(false,
 
 // backport padded layouts to experimental
 namespace Kokkos::Experimental {
-template <size_t Pad>
+template <size_t Pad = dynamic_extent>
 using layout_left_padded KOKKOS_DEPRECATED_WITH_COMMENT(
     "Use Kokkos::layout_left_padded instead.") =
     Kokkos::layout_left_padded<Pad>;
-template <size_t Pad>
+template <size_t Pad = dynamic_extent>
 using layout_right_padded KOKKOS_DEPRECATED_WITH_COMMENT(
     "Use Kokkos::layout_right_padded instead.") =
     Kokkos::layout_right_padded<Pad>;

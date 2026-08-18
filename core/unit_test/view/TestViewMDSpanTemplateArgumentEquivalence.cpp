@@ -38,7 +38,7 @@ constexpr bool test_equivalence() {
                          Kokkos::Experimental::Accessor<
                              T, typename Space::memory_space, MemTraits>>>);
 
-  // These are constitutent types of mdspan_type
+  // These are constituent types of mdspan_type
   CHECK_SAME(element_type);
   CHECK_SAME(extents_type);
   CHECK_SAME(layout_type);
