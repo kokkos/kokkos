@@ -332,6 +332,44 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
+  CLANG_19_MODULES:
+    name: SNL_SERIAL_CLANG_19_MODULES
+    runs-on: [clang-19_gcc-15.1_x86-64-latest]
+    continue-on-error: true
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+           -GNinja \
+           -DCMAKE_CXX_COMPILER=clang++-19 \
+           -DCMAKE_CXX_FLAGS="-Werror" \
+           -DCMAKE_CXX_STANDARD=20 \
+           -DCMAKE_BUILD_TYPE=Debug \
+           -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+           -DKokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES=ON \
+           -DKokkos_ENABLE_SERIAL=ON \
+           -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
+           -DKokkos_ENABLE_TESTS=ON \
+           -DKokkos_ENABLE_EXAMPLES=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
 # FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
   HPX_GCC_15_1_1:
     name: SNL_HPX_GCC_15_1_1
