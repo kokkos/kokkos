@@ -5,8 +5,8 @@
 
 #include <Kokkos_Abort.hpp>
 
-#include <mutex>
-#include <utility>
+#include <optional>
+#include <utility>  // std::in_place
 #include <vector>
 
 namespace Kokkos::Impl {
