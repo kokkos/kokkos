@@ -82,22 +82,28 @@ class Kokkos::Impl::ParallelReduce<
 #else
         (void)memcpy_event;
 #endif
-        cgh.single_task([=]() {
-          const CombinedFunctorReducerType& functor_reducer =
-              functor_reducer_wrapper.get_functor();
-          const FunctorType& functor = functor_reducer.get_functor();
-          const ReducerType& reducer = functor_reducer.get_reducer();
-          reference_type update      = reducer.init(results_ptr);
-          if (size == 1) {
-            if constexpr (std::is_void_v<WorkTag>)
-              functor(begin, update);
-            else
-              functor(WorkTag(), begin, update);
-          }
-          reducer.final(results_ptr);
-          if (device_accessible_result_ptr != nullptr)
-            reducer.copy(device_accessible_result_ptr.get(), results_ptr.get());
-        });
+        cgh.single_task(
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
+            [=]() {
+              const CombinedFunctorReducerType& functor_reducer =
+                  functor_reducer_wrapper.get_functor();
+              const FunctorType& functor = functor_reducer.get_functor();
+              const ReducerType& reducer = functor_reducer.get_reducer();
+              reference_type update      = reducer.init(results_ptr);
+              if (size == 1) {
+                if constexpr (std::is_void_v<WorkTag>)
+                  functor(begin, update);
+                else
+                  functor(WorkTag(), begin, update);
+              }
+              reducer.final(results_ptr);
+              if (device_accessible_result_ptr != nullptr)
+                reducer.copy(device_accessible_result_ptr.get(),
+                             results_ptr.get());
+            });
       };
 
 #ifdef KOKKOS_IMPL_SYCL_GRAPH_SUPPORT
@@ -302,6 +308,10 @@ class Kokkos::Impl::ParallelReduce<
 
         cgh.parallel_for(
             sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
+#ifdef KOKKOS_ENABLE_SYCL_VIRTUAL_FUNCTIONS
+            sycl::ext::oneapi::experimental::properties{
+                sycl::ext::oneapi::experimental::assume_indirect_calls},
+#endif
             reduction_lambda);
       };
 

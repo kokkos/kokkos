@@ -945,6 +945,18 @@ if(KOKKOS_ENABLE_SYCL)
   else()
     compiler_specific_options(DEFAULT -fno-sycl-rdc)
   endif()
+
+  if(Kokkos_ENABLE_SYCL_VIRTUAL_FUNCTIONS)
+    if(NOT (KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM AND KOKKOS_CXX_COMPILER_VERSION GREATER_EQUAL 2025.1.0))
+      message(FATAL_ERROR "Kokkos_ENABLE_SYCL_VIRTUAL_FUNCTIONS=ON requires oneAPI 2025.1.0 or later")
+    endif()
+    if(NOT Kokkos_ARCH_INTEL_GEN)
+      message(
+        FATAL_ERROR
+          "Kokkos_ENABLE_SYCL_VIRTUAL_FUNCTIONS=ON requires JIT compilation enabled via Kokkos_ARCH_INTEL_GEN=ON"
+      )
+    endif()
+  endif()
 endif()
 
 # Check support for device_global variables
