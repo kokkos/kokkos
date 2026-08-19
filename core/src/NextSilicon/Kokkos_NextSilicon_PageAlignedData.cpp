@@ -2,7 +2,6 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <NextSilicon/Kokkos_NextSilicon_PageAlignedData.hpp>
-
 #include <NextSilicon/Kokkos_NextSilicon_InitializationCallbacks.hpp>
 
 #include <Kokkos_InitializeFinalize.hpp>
