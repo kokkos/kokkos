@@ -10,7 +10,7 @@
 
 namespace {
 void impl_migrate_after_initialize(void *obj, size_t size, auto loc) {
-  auto pin = [=] { nextapi_mem_migrate(obj, size, loc, true /*pin*/); };
+  auto pin = [=] { nextapi_mem_migrate(obj, size, loc, /*pin=*/true); };
   if (Kokkos::is_initialized()) {
     pin();
   } else {
