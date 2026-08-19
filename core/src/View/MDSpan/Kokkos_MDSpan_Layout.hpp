@@ -16,6 +16,18 @@ static_assert(false,
 #include <iostream>
 #endif
 
+// backport padded layouts to experimental
+namespace Kokkos::Experimental {
+template <size_t Pad = dynamic_extent>
+using layout_left_padded KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::layout_left_padded instead.") =
+    Kokkos::layout_left_padded<Pad>;
+template <size_t Pad = dynamic_extent>
+using layout_right_padded KOKKOS_DEPRECATED_WITH_COMMENT(
+    "Use Kokkos::layout_right_padded instead.") =
+    Kokkos::layout_right_padded<Pad>;
+}  // namespace Kokkos::Experimental
+
 // The difference between a legacy Kokkos array layout and an
 // mdspan layout is that the array layouts can have state, but don't have the
 // nested mapping. This file provides interoperability helpers.
@@ -133,26 +145,14 @@ KOKKOS_INLINE_FUNCTION auto array_layout_from_mapping(
     }
     if constexpr (std::is_same_v<typename mapping_type::layout_type,
                                  Kokkos::layout_right_padded<dynamic_extent>>) {
-// Legacy LayoutRight actually padded the left most dimension, not like
-// layout_right_padded the right most dimension. Thus if the stride wasn't
-// matching the appropriate extent this conversion doesn't work.
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-      if constexpr (rank == 2) {
-        layout.stride = mapping.stride(0);
-      }
-      if constexpr (rank > 2) {
-        if (mapping.stride(rank - 2) != mapping.extents().extent(rank - 1))
-          Kokkos::abort(
-              "Invalid conversion from layout_right_padded to LayoutRight");
-      }
-#else
+      // layout_right_padded has a custom stride associated with the right most
+      // extent
       if constexpr (rank > 1) {
         layout.stride = mapping.stride(rank - 2);
       } else {
         // Just setting the stride to 1 for rank 0/1
         layout.stride = 1;
       }
-#endif
     }
     return layout;
   }

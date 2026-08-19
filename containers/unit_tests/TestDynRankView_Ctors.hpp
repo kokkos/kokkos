@@ -85,7 +85,6 @@ TEST(TEST_CATEGORY_DEATH, dyn_rank_view_required_allocation_size_death) {
                                       Kokkos::LayoutRight>();
 }
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
 void test_dyn_rank_view_ctor_from_layout_stride() {
   using drview_t =
       Kokkos::DynRankView<double, Kokkos::LayoutStride, TEST_EXECSPACE>;
@@ -132,6 +131,5 @@ void test_dyn_rank_view_ctor_from_layout_stride() {
 TEST(TEST_CATEGORY, dyn_rank_view_ctor_from_layout_stride) {
   test_dyn_rank_view_ctor_from_layout_stride();
 }
-#endif
 
 }  // namespace

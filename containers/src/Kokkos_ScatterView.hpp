@@ -491,7 +491,6 @@ struct Slice<Kokkos::LayoutLeft, 1, V, Args...> {
   }
 };
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 template <typename V, typename... Args>
 struct Slice<Kokkos::layout_right, 1, V, Args...> {
   static auto get(V const& src, const size_t i, Args... args) {
@@ -519,7 +518,6 @@ struct Slice<Kokkos::layout_left_padded<Pad>, 1, V, Args...> {
     return Kokkos::subview(src, args..., i);
   }
 };
-#endif
 
 template <typename ExecSpace, typename ValueType, typename Op>
 struct ReduceDuplicates;

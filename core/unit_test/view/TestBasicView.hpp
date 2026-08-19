@@ -183,7 +183,6 @@ TEST(TEST_CATEGORY, basic_view_access) {
               Kokkos::layout_right_padded<Kokkos::dynamic_extent>>();
 }
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
 template <class T, template <std::size_t> class LayoutType, class SrcViewType,
           class ExtentsType>
 void test_construct_from_view() {
@@ -208,7 +207,6 @@ TEST(TEST_CATEGORY, basic_view_view_ctor) {
       Kokkos::View<int *, Kokkos::LayoutLeft, ExecutionSpace>,
       Kokkos::extents<std::size_t, Kokkos::dynamic_extent>>();
 }
-#endif
 
 template <class T>
 void test_atomic_accessor() {

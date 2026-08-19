@@ -1161,14 +1161,10 @@ inline void deep_copy(
                     typename ViewTraits<DT, DP...>::value_type,
                     typename ViewTraits<ST, SP...>::non_const_value_type>) {
     if (dst.data() != src.data()) {
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
       using dst_ptr_type  = decltype(dst.data());
       const size_t nbytes = allocation_size_from_mapping_and_accessor(
                                 src.mapping(), src.accessor()) *
                             sizeof(std::remove_pointer_t<dst_ptr_type>);
-#else
-      const size_t nbytes = sizeof(typename dst_type::value_type);
-#endif
       Kokkos::Impl::DeepCopy<dst_memory_space, src_memory_space>(
           dst.data(), src.data(), nbytes);
       Kokkos::fence(
@@ -1264,15 +1260,10 @@ inline void deep_copy(
   // Checking for Overlapping Views.
   dst_ptr_type dst_start = dst.data();
   src_ptr_type src_start = src.data();
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   dst_ptr_type dst_end = dst.data() + allocation_size_from_mapping_and_accessor(
                                           dst.mapping(), dst.accessor());
   src_ptr_type src_end = src.data() + allocation_size_from_mapping_and_accessor(
                                           src.mapping(), src.accessor());
-#else
-  dst_ptr_type dst_end = dst.data() + dst.span();
-  src_ptr_type src_end = src.data() + src.span();
-#endif
   if (((std::ptrdiff_t)dst_start == (std::ptrdiff_t)src_start) &&
       ((std::ptrdiff_t)dst_end == (std::ptrdiff_t)src_end) &&
       (dst.span_is_contiguous() && src.span_is_contiguous())) {
@@ -1334,13 +1325,9 @@ inline void deep_copy(
       dst.span_is_contiguous() && src.span_is_contiguous() &&
       Kokkos::Impl::view_equal_strides(
           dst, src, std::make_index_sequence<dst_type::rank()>{})) {
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     const size_t nbytes = allocation_size_from_mapping_and_accessor(
                               src.mapping(), src.accessor()) *
                           sizeof(std::remove_pointer_t<dst_ptr_type>);
-#else
-    const size_t nbytes = sizeof(typename dst_type::value_type) * dst.span();
-#endif
     Kokkos::fence(
         "Kokkos::deep_copy: copy between contiguous views, pre view equality "
         "check");
@@ -2634,13 +2621,7 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
   const bool sizeMismatch = Impl::size_mismatch(v, v.rank_dynamic, new_extents);
 
   if (sizeMismatch) {
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-    auto prop_copy = Impl::with_properties_if_unset(
-        arg_prop, typename view_type::execution_space{}, v.label());
-
-    view_type v_resized(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
-#else
-    auto prop_copy      = [&]() {
+    auto prop_copy = [&]() {
       if constexpr (view_type::traits::impl_is_customized) {
         // FIXME SACADO: this is specializing for sacado, might need a better
         // thing
@@ -2674,7 +2655,6 @@ impl_resize(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     } else {
       v_resized = view_type(prop_copy, n0, n1, n2, n3, n4, n5, n6, n7);
     }
-#endif
 
     if constexpr (alloc_prop_input::has_execution_space)
       Kokkos::Impl::ViewRemap<view_type, view_type>(
@@ -3083,7 +3063,6 @@ struct MirrorViewType {
       std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 // Specialization for Views with mdspan style template arguments
 template <class Space, class T, class IndexType, size_t... Extents, class... P>
 struct MirrorViewType<Space, T, Kokkos::extents<IndexType, Extents...>, P...> {
@@ -3111,7 +3090,6 @@ struct MirrorViewType<Space, T, Kokkos::extents<IndexType, Extents...>, P...> {
   using view_type =
       std::conditional_t<is_same_memspace, src_view_type, dest_view_type>;
 };
-#endif
 
 // collection of static asserts for create_mirror and create_mirror_view
 template <class... ViewCtorArgs>
@@ -3147,7 +3125,6 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
     using memory_space = typename decltype(prop_copy)::memory_space;
     using dst_type =
         typename Impl::MirrorViewType<memory_space, T, P...>::dest_view_type;
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     // This is necessary because constructing non-const element type from
     // const element type accessors is not generally supported
     // We don't construct from the src accessor generally because our accessors
@@ -3165,12 +3142,8 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
           static_cast<typename dst_type::accessor_type>(src.accessor()));
     else
       return dst_type(prop_copy, src.layout());
-#else
-    return dst_type(prop_copy, src.layout());
-#endif
   } else {
     using dst_type = typename View<T, P...>::host_mirror_type;
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     // This is necessary because constructing non-const element type from
     // const element type accessors is not generally supported
     if constexpr (std::is_constructible_v<
@@ -3182,9 +3155,6 @@ inline auto create_mirror(const Kokkos::View<T, P...>& src,
           static_cast<typename dst_type::accessor_type>(src.accessor()));
     else
       return dst_type(prop_copy, src.layout());
-#else
-    return dst_type(prop_copy, src.layout());
-#endif
   }
 }
 }  // namespace Impl

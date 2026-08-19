@@ -132,7 +132,6 @@ TEST(TEST_CATEGORY, view_is_assignable) {
   static_assert(is_always_assignable_v<SomeViewType&, SomeViewType const>);
   static_assert(is_always_assignable_v<SomeViewType&, SomeViewType const&>);
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   // Check assignment to const qualified Views is false
   static_assert(!is_always_assignable_v<SomeViewType const, SomeViewType>);
   static_assert(!is_always_assignable_v<SomeViewType const&, SomeViewType>);
@@ -141,7 +140,6 @@ TEST(TEST_CATEGORY, view_is_assignable) {
     const SomeViewType const_view;
     ASSERT_FALSE(Kokkos::is_assignable(const_view, non_const_view));
   }
-#endif
 
   // Rank mismatch: is_always_assignable_v must be false (consteval false case)
   using RankMismatchView1D = View<int*, left, d_exec>;

@@ -12,8 +12,6 @@ import kokkos.core;
 #endif
 #include <gtest/gtest.h>
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-
 namespace {
 void test_mdspan_minimal_functional() {
   int N = 100;
@@ -51,13 +49,7 @@ void test_mdspan_minimal_functional() {
 namespace {
 
 TEST(TEST_CATEGORY, mdspan_minimal_functional) {
-#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
-  GTEST_SKIP() << "mdspan not enabled";
-#else
   test_mdspan_minimal_functional();
-#endif
 }
 
 }  // namespace
-
-#endif

@@ -103,7 +103,6 @@ struct DynRankDimTraits {
         layout.dimension[6] != unspecified ? layout.dimension[6] : 1,
         layout.dimension[7] != unspecified ? layout.dimension[7] : unspecified);
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
     // In order to have a valid LayoutRight stride we need to set it to the
     // dimension[6] for the rank-7 view coming out of here. Only if the original
     // layout was already rank-7 we can preserve the stride.
@@ -114,7 +113,6 @@ struct DynRankDimTraits {
         new_layout.stride = layout.stride;
       }
     } else
-#endif
       new_layout.stride = layout.stride;
     if constexpr (std::is_same_v<Layout, Kokkos::LayoutRight>) {
       if (new_rank != unspecified && new_rank > 0 &&
@@ -158,14 +156,12 @@ struct DynRankDimTraits {
       typename Traits::array_layout>
   createLayout([[maybe_unused]] const Kokkos::Impl::ViewCtorProp<P...>& prop,
                typename Traits::array_layout layout) {
-// FIXME_SACADO this is only needed for special extra int treatment
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+    // FIXME_SACADO this is only needed for special extra int treatment
     if constexpr (Traits::impl_is_customized &&
                   !Kokkos::Impl::ViewCtorProp<P...>::has_accessor_arg) {
       auto rank              = computeRank(prop, layout) - 1;
       layout.dimension[rank] = unspecified;
     }
-#endif
     return createLayout(layout);
   }
 
@@ -347,12 +343,9 @@ class DynRankView : private View<DataType*******, Properties...> {
   using view_type = View<DataType*******, Properties...>;
 
  private:
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  using drdtraits = Impl::DynRankDimTraits<typename view_type::specialize>;
-#else
   using drdtraits = Impl::DynRankDimTraits<
       std::conditional_t<view_type::traits::impl_is_customized, bool, void>>;
-#endif
+
  public:
   // typedefs from ViewTraits, overriden
   using data_type           = typename drvtraits::data_type;
@@ -385,9 +378,6 @@ class DynRankView : private View<DataType*******, Properties...> {
   using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use non_const_data_type instead.") = non_const_data_type;
 #endif
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  using specialize = typename view_type::specialize;
-#endif
 
   // typedefs in View for mdspan compatibility
   // cause issues with MSVC+CUDA
@@ -398,10 +388,8 @@ class DynRankView : private View<DataType*******, Properties...> {
   using reference        = reference_type;
   using data_handle_type = pointer_type;
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using accessor_type = typename view_type::accessor_type;
   using mapping_type  = typename view_type::mapping_type;
-#endif
 
   KOKKOS_FUNCTION
   view_type& DownCast() const { return (view_type&)(*this); }
@@ -501,18 +489,14 @@ class DynRankView : private View<DataType*******, Properties...> {
   KOKKOS_FUNCTION
   constexpr unsigned rank() const { return m_rank; }
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using view_type::accessor;  // FIXME: not tested
-  using view_type::mapping;   // FIXME: not tested
-#endif
   using view_type::data;
   using view_type::extent;
   using view_type::extent_int;  // FIXME: not tested
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using view_type::extents;
-#endif
   using view_type::is_allocated;
   using view_type::label;
+  using view_type::mapping;  // FIXME: not tested
   using view_type::size;
   using view_type::span;
   using view_type::span_is_contiguous;  // FIXME: not tested
@@ -747,7 +731,6 @@ class DynRankView : private View<DataType*******, Properties...> {
   // We need two variants to avoid calling host function from host device
   // function warnings
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
  private:
   // Need a host only and a host/device function to deal with labels.
   template <class... P>
@@ -789,34 +772,24 @@ class DynRankView : private View<DataType*******, Properties...> {
   }
 
  public:
-#endif
-
   template <class... P>
   explicit KOKKOS_FUNCTION DynRankView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
       std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
                        typename traits::array_layout const&>
           arg_layout)
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
       : view_type(attach_accessor_arg_if_needed(arg_prop, arg_layout),
                   drdtraits::template createLayout<traits, P...>(arg_prop,
                                                                  arg_layout)),
         m_rank(drdtraits::computeRank(arg_prop, arg_layout) -
-               (traits::impl_is_customized ? 1 : 0)){}
-#else
-      : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
-                                arg_prop, arg_layout)),
-        m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {
-  }
-#endif
+               (traits::impl_is_customized ? 1 : 0)) {}
 
-        template <class... P>
-        explicit DynRankView(
-            const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-            std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                             typename traits::array_layout const&>
-                arg_layout)
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
+  template <class... P>
+  explicit DynRankView(
+      const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+      std::enable_if_t<!Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       typename traits::array_layout const&>
+          arg_layout)
       : view_type(attach_accessor_arg_if_needed(arg_prop, arg_layout),
                   drdtraits::template createLayout<traits, P...>(arg_prop,
                                                                  arg_layout)),
@@ -824,37 +797,30 @@ class DynRankView : private View<DataType*******, Properties...> {
                (traits::impl_is_customized &&
                         !Kokkos::Impl::ViewCtorProp<P...>::has_accessor_arg
                     ? 1
-                    : 0)){}
-#else
-      : view_type(arg_prop, drdtraits::template createLayout<traits, P...>(
-                                arg_prop, arg_layout)),
-        m_rank(drdtraits::computeRank(arg_prop, arg_layout)) {
-  }
-#endif
+                    : 0)) {}
 
-        //----------------------------------------
-        // Constructor(s)
+  //----------------------------------------
+  // Constructor(s)
 
-        // Simple dimension-only layout
-        // We need two variants to avoid calling host function from host device
-        // function warnings
-        template <class... P>
-        explicit KOKKOS_FUNCTION DynRankView(
-            const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
-            std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
-                             const size_t>
-                arg_N0          = KOKKOS_INVALID_INDEX,
-            const size_t arg_N1 = KOKKOS_INVALID_INDEX,
-            const size_t arg_N2 = KOKKOS_INVALID_INDEX,
-            const size_t arg_N3 = KOKKOS_INVALID_INDEX,
-            const size_t arg_N4 = KOKKOS_INVALID_INDEX,
-            const size_t arg_N5 = KOKKOS_INVALID_INDEX,
-            const size_t arg_N6 = KOKKOS_INVALID_INDEX,
-            const size_t arg_N7 = KOKKOS_INVALID_INDEX)
+  // Simple dimension-only layout
+  // We need two variants to avoid calling host function from host device
+  // function warnings
+  template <class... P>
+  explicit KOKKOS_FUNCTION DynRankView(
+      const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+      std::enable_if_t<Kokkos::Impl::ViewCtorProp<P...>::has_pointer,
+                       const size_t>
+          arg_N0          = KOKKOS_INVALID_INDEX,
+      const size_t arg_N1 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N2 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N3 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N4 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N5 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N6 = KOKKOS_INVALID_INDEX,
+      const size_t arg_N7 = KOKKOS_INVALID_INDEX)
       : DynRankView(arg_prop, typename traits::array_layout(
                                   arg_N0, arg_N1, arg_N2, arg_N3, arg_N4,
-                                  arg_N5, arg_N6, arg_N7)) {
-  }
+                                  arg_N5, arg_N6, arg_N7)) {}
 
   template <class... P>
   explicit DynRankView(
@@ -1083,16 +1049,7 @@ KOKKOS_INLINE_FUNCTION bool operator==(const DynRankView<LT, LP...>& lhs,
          std::is_same_v<typename lhs_traits::memory_space,
                         typename rhs_traits::memory_space> &&
          lhs.rank() == rhs.rank() && lhs.data() == rhs.data() &&
-         lhs.span() == rhs.span() &&
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-         lhs.extents() == rhs.extents()
-#else
-         lhs.span() == rhs.span() && lhs.extent(0) == rhs.extent(0) &&
-         lhs.extent(1) == rhs.extent(1) && lhs.extent(2) == rhs.extent(2) &&
-         lhs.extent(3) == rhs.extent(3) && lhs.extent(4) == rhs.extent(4) &&
-         lhs.extent(5) == rhs.extent(5) && lhs.extent(6) == rhs.extent(6)
-#endif
-      ;
+         lhs.span() == rhs.span() && lhs.extents() == rhs.extents();
 }
 
 template <class LT, class... LP, class RT, class... RP>
@@ -1195,14 +1152,12 @@ as_view_of_rank_n(
       layout.dimension[i] = KOKKOS_IMPL_CTOR_DEFAULT_ARG;
   }
 
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   if constexpr (ViewTraits<T, Args...>::impl_is_customized) {
     return View<typename RankDataType<T, N>::type, Args...>(
         Kokkos::view_wrap(
             v.data(), Kokkos::Impl::AccessorArg_t{v.accessor().fad_size() + 1}),
         layout);
   } else
-#endif
     return View<typename RankDataType<T, N>::type, Args...>(v.data(), layout);
 }
 
