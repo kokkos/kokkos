@@ -403,6 +403,7 @@ jobs:
             -DKokkos_ARCH_NATIVE=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_OPENACC=ON \
             -DKokkos_ARCH_VOLTA70=ON \
             ./
