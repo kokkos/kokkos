@@ -10,8 +10,6 @@ import kokkos.core_impl;
 #else
 #include <Kokkos_Core.hpp>
 #endif
-#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
-      (KOKKOS_COMPILER_NVHPC < 260500))
 #include <TestDefaultDeviceType_Category.hpp>
 #include <TestHalfConversion.hpp>
 #include <TestHalfOperators.hpp>
@@ -38,5 +36,4 @@ TEST(TEST_CATEGORY, host_space_access) {
 
 }  // namespace Test
 
-#endif
 #endif
