@@ -270,7 +270,7 @@ template <class ViewType, class Layout = typename ViewType::array_layout,
 struct ViewFill;
 
 template <class ViewTypeA, class ViewTypeB, class Layout, class ExecSpace,
-          int Rank, typename iType>
+          int Rank, typename iType, bool SequentialHostInit = false>
 struct ViewCopy;
 
 template <class Functor, class Policy>

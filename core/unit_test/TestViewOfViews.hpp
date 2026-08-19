@@ -25,6 +25,19 @@ class S {
   KOKKOS_DEFAULTED_FUNCTION S() = default;
 };
 
+// User-defined types with a View data member that allocates in the default
+// constructor
+template <class V>
+class DA {
+  V v_ = V("v");
+
+ public:
+  template <class... Extents>
+  DA(std::string label, Extents... extents)
+      : v_(std::move(label), extents...) {}
+  DA() = default;
+};
+
 template <class V>
 class N {  // not default constructible
   V v_;
@@ -45,6 +58,57 @@ class H {  // constructible and destructible only from on the host side
   H() {}
   ~H() {}
 };
+
+template <class T, int N>
+struct AddPointer {
+  using type = typename AddPointer<T, N - 1>::type*;
+};
+
+template <class T>
+struct AddPointer<T, 0> {
+  using type = T;
+};
+
+template <class V, int Rank>
+using ViewOfViews =
+    Kokkos::View<typename AddPointer<V, Rank>::type, Kokkos::HostSpace>;
+
+template <class V, int Rank, std::size_t... Is>
+void test_view_of_views_resize_sequential_host_init_rank_impl(
+    std::index_sequence<Is...>) {
+  using VoV = ViewOfViews<V, Rank>;
+
+  // Size change reconstructs the view and remaps overlapping data.
+  {
+    VoV vov(Kokkos::view_alloc("vov", Kokkos::SequentialHostInit),
+            (static_cast<void>(Is), 2u)...);
+    {
+      V a("a");
+      vov((static_cast<void>(Is), 0u)...) = a;
+    }
+    Kokkos::resize(Kokkos::view_alloc(Kokkos::SequentialHostInit), vov,
+                   (static_cast<void>(Is), 1u)...);
+    ASSERT_EQ(vov.size(), 1u);
+  }
+}
+
+template <class V, int Rank>
+void test_view_of_views_resize_sequential_host_init_rank() {
+  test_view_of_views_resize_sequential_host_init_rank_impl<V, Rank>(
+      std::make_index_sequence<static_cast<std::size_t>(Rank)>{});
+}
+
+template <class V>
+void test_view_of_views_resize_sequential_host_init() {
+  test_view_of_views_resize_sequential_host_init_rank<V, 1>();
+  test_view_of_views_resize_sequential_host_init_rank<V, 2>();
+  test_view_of_views_resize_sequential_host_init_rank<V, 3>();
+  test_view_of_views_resize_sequential_host_init_rank<V, 4>();
+  test_view_of_views_resize_sequential_host_init_rank<V, 5>();
+  test_view_of_views_resize_sequential_host_init_rank<V, 6>();
+  test_view_of_views_resize_sequential_host_init_rank<V, 7>();
+  test_view_of_views_resize_sequential_host_init_rank<V, 8>();
+}
 
 template <class V>
 void test_view_of_views_default() {
@@ -118,6 +182,19 @@ TEST(TEST_CATEGORY, test_view_of_views_sequential_host_init) {
   test_view_of_views_sequential_host_init<
       S<Kokkos::View<float, TEST_EXECSPACE>>>();
   test_view_of_views_sequential_host_init<
+      DA<Kokkos::View<double, TEST_EXECSPACE>>>();
+  test_view_of_views_sequential_host_init<
+      H<Kokkos::View<int, TEST_EXECSPACE>>>();
+}
+
+TEST(TEST_CATEGORY, test_view_of_views_resize_sequential_host_init) {
+  test_view_of_views_resize_sequential_host_init<
+      Kokkos::View<int, TEST_EXECSPACE>>();
+  test_view_of_views_resize_sequential_host_init<
+      S<Kokkos::View<float, TEST_EXECSPACE>>>();
+  test_view_of_views_resize_sequential_host_init<
+      DA<Kokkos::View<double, TEST_EXECSPACE>>>();
+  test_view_of_views_resize_sequential_host_init<
       H<Kokkos::View<int, TEST_EXECSPACE>>>();
 }
 
