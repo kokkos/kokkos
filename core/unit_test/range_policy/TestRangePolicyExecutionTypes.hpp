@@ -129,22 +129,14 @@ void test_self_similar_range_policy_computation() {
       result);
   size_t M_total      = num_teams * N;
   size_t expected_M_x = M_total * (M_total + 1);
-#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500))
   ASSERT_EQ(result, expected_M_x);
-#else
-  ASSERT_EQ(result, expected_M_x / 2);
-#endif
 
   // Check individual elements of M_x
   Kokkos::parallel_reduce(
       "Check2_elements", M_x.extent(0),
       KOKKOS_LAMBDA(int i, size_t& errors) {
         for (int j = 0; j < M_x.extent_int(1); j++) {
-#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500))
           float expected = static_cast<float>(2 * (i * N + j + 1));
-#else
-          float expected = static_cast<float>(i * N + j + 1);
-#endif
           if (M_x(i, j) != expected) ++errors;
         }
       },
@@ -157,7 +149,13 @@ TEST(TEST_CATEGORY, self_similar_range_policy_runtime) {
 }
 
 TEST(TEST_CATEGORY, self_similar_range_policy_computation) {
+#if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500)
+  // FIXME_OPENACC: compiling below fails if NVHPC version > 24.5.
+  GTEST_SKIP() << "skipping since the OpenACC backend fails when compiled with "
+                  "NVHPC version higher than 24.5";
+#else
   test_self_similar_range_policy_computation();
+#endif
 }
 
 }  // namespace Test
