@@ -2029,7 +2029,7 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
                                          _mm256_sllv_epi64(lhs, rhs))
 
   // fallback basic_simd shift right arithmetic using generator constructor
-  // Shift right arithmetic for 64bit packed ints is not availalbe in AVX2
+  // Shift right arithmetic for 64bit packed ints is not available in AVX2
   KOKKOS_SIMD_IMPL_DEFINE_BINARY_OP_HOST(vector_type, sra,
                                          gen([&](simd_size_t i) {
                                            return extract(lhs, i) >>
@@ -2039,7 +2039,7 @@ struct simd_native_ops<std::int64_t, simd_abi::avx2_fixed_size<4>,
                                             _mm256_slli_epi64(lhs, rhs))
 
   // fallback basic_simd shift right arithmetic using generator constructor
-  // Shift right arithmetic for 64bit packed ints is not availalbe in AVX2
+  // Shift right arithmetic for 64bit packed ints is not available in AVX2
   KOKKOS_SIMD_IMPL_DEFINE_SHIFT_SCALAR_HOST(vector_type, sra,
                                             gen([&](simd_size_t i) {
                                               return extract(lhs, i) >> rhs;
