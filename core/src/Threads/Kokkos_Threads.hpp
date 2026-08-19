@@ -110,7 +110,13 @@ class Threads {
     return *this = static_cast<const Threads&>(other);
   }
 
-  ~Threads() { Impl::check_execution_space_destructor_precondition(name()); }
+  // Must be __host__ __device__ for the implicitly defined
+  // ~RangePolicy<ExecSpace>(); see the comment on ~Cuda() in
+  // Cuda/Kokkos_Cuda.hpp.
+  KOKKOS_FUNCTION ~Threads() {
+    KOKKOS_IF_ON_HOST(
+        (Impl::check_execution_space_destructor_precondition(name());))
+  }
 
   Threads() { Impl::check_execution_space_constructor_precondition(name()); }
 
