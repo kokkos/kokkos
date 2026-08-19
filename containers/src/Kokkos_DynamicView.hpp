@@ -875,47 +875,6 @@ struct CommonSubview<DstType, Kokkos::Experimental::DynamicView<SP...>, Arg0> {
       : dst_sub(dst, arg0), src_sub(src) {}
 };
 
-template <class... DP, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType>
-struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>, ViewTypeB, Layout,
-                ExecSpace, 1, iType> {
-  Kokkos::Experimental::DynamicView<DP...> a;
-  ViewTypeB b;
-
-  using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
-
-  ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_,
-           const ViewTypeB& b_)
-      : a(a_), b(b_) {
-    Kokkos::parallel_for("Kokkos::ViewCopy-1D", policy_type(0, b.extent(0)),
-                         *this);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); }
-};
-
-template <class... DP, class... SP, class Layout, class ExecSpace,
-          typename iType>
-struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
-                Kokkos::Experimental::DynamicView<SP...>, Layout, ExecSpace, 1,
-                iType> {
-  Kokkos::Experimental::DynamicView<DP...> a;
-  Kokkos::Experimental::DynamicView<SP...> b;
-
-  using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
-
-  ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_,
-           const Kokkos::Experimental::DynamicView<SP...>& b_)
-      : a(a_), b(b_) {
-    const iType n = std::min(a.extent(0), b.extent(0));
-    Kokkos::parallel_for("Kokkos::ViewCopy-1D", policy_type(0, n), *this);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); }
-};
-
 }  // namespace Impl
 
 // create a mirror view and deep copy it
