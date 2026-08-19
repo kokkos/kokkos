@@ -63,7 +63,6 @@ export {
   using ::Kokkos::Impl::transform_kokkos_slice_to_mdspan_slice;
   using ::Kokkos::Impl::ViewArguments;
   using ::Kokkos::Impl::ViewArrayAnalysis;
-  using ::Kokkos::Impl::ViewCopy;
   using ::Kokkos::Impl::ViewCtorProp;
   using ::Kokkos::Impl::ViewCustomArguments;
   using ::Kokkos::Impl::ViewDataAnalysis;
