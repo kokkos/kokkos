@@ -5,7 +5,6 @@
 #define KOKKOS_NEXTSILICON_INITIALIZATION_CALLBACKS_HPP
 
 #include <functional>
-#include <string>
 
 namespace Kokkos::Impl {
 
