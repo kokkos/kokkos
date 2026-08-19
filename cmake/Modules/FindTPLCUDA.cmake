@@ -16,7 +16,9 @@ endif()
 
 find_package(CUDAToolkit REQUIRED)
 kokkos_export_cmake_tpl(CUDAToolkit REQUIRED)
-if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_VERSION VERSION_LESS 3.31.9 AND CUDAToolkit_VERSION VERSION_GREATER_EQUAL 13.0)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_VERSION VERSION_LESS 3.31.9 AND CUDAToolkit_VERSION
+                                                                                    VERSION_GREATER_EQUAL 13.0
+)
   find_package(CCCL REQUIRED PATHS "${CUDAToolkit_LIBRARY_DIR}/cmake/cccl" NO_DEFAULT_PATH)
   list(APPEND TPL_CUDA_LIBRARIES CCCL::CCCL)
   kokkos_export_cmake_tpl(CCCL REQUIRED)
