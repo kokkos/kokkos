@@ -24,8 +24,6 @@ Kokkos::Experimental::NextSilicon::~NextSilicon() {
 
 void Kokkos::Experimental::NextSilicon::impl_initialize(
     InitializationSettings const& /*settings*/) {
-  // Kokkos::is_initialized is false still
-  // Run callbacks registered before Kokkos::initialize().
   Kokkos::Impl::run_nextsilicon_initialization_callbacks();
 
   Impl::NextSiliconInternal::default_instance =
