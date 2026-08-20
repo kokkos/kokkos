@@ -664,6 +664,27 @@ void test_view_mapping() {
 }
 
 TEST(TEST_CATEGORY, view_mapping) { test_view_mapping<TEST_EXECSPACE>(); }
+
+template <class Layout>
+void test_create_mirror_view_preserves_padding() {
+  constexpr size_t N = 11;
+  constexpr size_t R = 7;
+
+  auto view = Kokkos::View<double**, Layout, TEST_EXECSPACE>(
+      Kokkos::view_alloc("view", Kokkos::AllowPadding), N, R);
+  auto mirror = Kokkos::create_mirror_view(view);
+
+  ASSERT_EQ(view.extent(0), mirror.extent(0));
+  ASSERT_EQ(view.extent(1), mirror.extent(1));
+  ASSERT_EQ(view.stride(0), mirror.stride(0));
+  ASSERT_EQ(view.stride(1), mirror.stride(1));
+}
+
+TEST(TEST_CATEGORY, create_mirror_view_preserves_padding) {
+  test_create_mirror_view_preserves_padding<Kokkos::LayoutLeft>();
+  test_create_mirror_view_preserves_padding<Kokkos::LayoutRight>();
+}
+
 /*--------------------------------------------------------------------------*/
 
 template <class ViewType>
