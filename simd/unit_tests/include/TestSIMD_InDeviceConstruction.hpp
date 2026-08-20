@@ -146,17 +146,12 @@ struct test_host_simd_construction_in_device_functor {
 
 // FIXME This test should eventually be integrated into other simd unit tests
 TEST(simd, host_simd_construction_in_device) {
-  using scalar_simd_abi = Kokkos::Experimental::simd_abi::scalar;
-  using host_simd_abi =
-      Kokkos::Experimental::simd_abi::Impl::host_fixed_native<double>;
-
-  if constexpr (std::same_as<host_simd_abi, scalar_simd_abi>) {
-    GTEST_SKIP();
-  }
-
 #ifndef KOKKOS_IMPL_SIMD_DEVICE_COMPAT_TRANSITION
   test_host_simd_construction_in_device_functor{}(0);
   Kokkos::parallel_for(1, test_host_simd_construction_in_device_functor{});
+#else
+  GTEST_SKIP() << "Skip for Kokkos SIMD backends pending device-compatibility "
+                  "refactoring";
 #endif
 }
 
