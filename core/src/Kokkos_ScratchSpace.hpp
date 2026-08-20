@@ -159,9 +159,10 @@ class ScratchMemorySpace {
       const IntType& size, const ptrdiff_t alignment) const {
     static_assert(Level == 0 || Level == 1,
                   "ScratchMemorySpace level must be 0 or 1");
-    return Impl::ScratchPointerAnnotation<ScratchMemorySpace<ExecSpace>,
-                                          Level>::annotate(
-        get_shmem_common<alignment_requested>(size, alignment, Level));
+    return Impl::ScratchPointerAnnotation<
+        ScratchMemorySpace<ExecSpace>,
+        Level>::annotate(get_shmem_common<alignment_requested>(size, alignment,
+                                                               Level));
   }
 
  public:
