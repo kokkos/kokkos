@@ -15,14 +15,13 @@ template <class ViewT, std::integral... Sizes>
 void test_required_span_size_single_rank(size_t expected_size,
                                          std::string label, Sizes... sizes) {
   ViewT view(label, sizes...);
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   // Lets get the required size two ways: based on mapping + accessor and using
   // the required_allocation_size
   size_t span_size = view.mapping().required_span_size();
   size_t span_size_based_bytes =
       span_size * sizeof(typename ViewT::element_type);
   ASSERT_EQ(span_size_based_bytes, expected_size);
-#endif
+
   size_t req_allocation_size = ViewT::required_allocation_size(sizes...);
   ASSERT_EQ(req_allocation_size, expected_size);
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5

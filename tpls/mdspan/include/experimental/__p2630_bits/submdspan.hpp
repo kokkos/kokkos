@@ -17,6 +17,7 @@
 #pragma once
 
 #include "submdspan_extents.hpp"
+#include "submdspan_canonicalize_slices.hpp"
 #include "submdspan_mapping.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {

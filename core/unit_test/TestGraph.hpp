@@ -42,7 +42,7 @@ struct CountTestFunctor {
   int expected_count_max;
 
   template <class... Ts>
-  KOKKOS_FUNCTION void operator()(Ts&&...) const noexcept {
+  KOKKOS_FUNCTION void operator()(Ts&&...) const {
     bugs() += int(count() > expected_count_max || count() < expected_count_min);
     count()++;
   }
@@ -57,7 +57,7 @@ struct SetViewToValueFunctor {
   T value;
 
   template <class... Ts>
-  KOKKOS_FUNCTION void operator()(Ts&&...) const noexcept {
+  KOKKOS_FUNCTION void operator()(Ts&&...) const {
     v() = value;
   }
 };
@@ -70,7 +70,7 @@ struct SetResultToViewFunctor {
   view_type v;
 
   template <class U>
-  KOKKOS_FUNCTION void operator()(U&&, value_type& val) const noexcept {
+  KOKKOS_FUNCTION void operator()(U&&, value_type& val) const {
     val += v();
   }
 };

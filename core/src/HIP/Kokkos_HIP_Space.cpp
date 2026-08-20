@@ -261,8 +261,8 @@ void HIPSpace::impl_deallocate(
   }
 #ifdef KOKKOS_ENABLE_IMPL_HIP_MALLOC_ASYNC
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipFreeAsync(arg_alloc_ptr, m_stream));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipDeviceSynchronize());
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipFreeAsync(arg_alloc_ptr, m_stream));
 #else
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(m_device));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipFree(arg_alloc_ptr));

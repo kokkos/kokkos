@@ -12,8 +12,6 @@ import kokkos.core;
 #endif
 #include <gtest/gtest.h>
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-
 namespace {
 void test_mdspan_minimal_functional() {
   int N = 100;
@@ -51,9 +49,6 @@ void test_mdspan_minimal_functional() {
 namespace {
 
 TEST(TEST_CATEGORY, mdspan_minimal_functional) {
-#ifndef KOKKOS_ENABLE_IMPL_MDSPAN
-  GTEST_SKIP() << "mdspan not enabled";
-#else
 #if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500)
   // FIXME_OPENACC: Test fails if compiled with NVHPC version > 24.5.
   GTEST_SKIP()
@@ -62,9 +57,6 @@ TEST(TEST_CATEGORY, mdspan_minimal_functional) {
 #else
   test_mdspan_minimal_functional();
 #endif
-#endif
 }
 
 }  // namespace
-
-#endif

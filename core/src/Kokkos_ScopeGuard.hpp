@@ -58,6 +58,7 @@ class [[nodiscard]] ScopeGuard {
     initialize(static_cast<Args&&>(args)...);
   }
 
+  // NOLINTNEXTLINE(bugprone-exception-escape)
   ~ScopeGuard() {
     if (is_finalized()) {
       Kokkos::abort(Impl::scopeguard_destruct_after_finalize_warning().c_str());

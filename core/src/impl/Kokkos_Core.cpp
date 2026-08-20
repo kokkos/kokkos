@@ -179,6 +179,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   return -1;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 [[nodiscard]] int Kokkos::num_devices() noexcept {
   if constexpr (std::is_same_v<DefaultExecutionSpace,
                                DefaultHostExecutionSpace>) {
@@ -520,11 +521,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 
   declare_configuration_metadata("atomics", "desul atomics version", KOKKOS_IMPL_DESUL_VERSION);
 
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  declare_configuration_metadata("view", "mdspan", "disabled");
-#else
-  declare_configuration_metadata("view", "mdspan", "enabled");
-#endif
   declare_configuration_metadata("view", "mdspan version", KOKKOS_IMPL_MDSPAN_VERSION);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP

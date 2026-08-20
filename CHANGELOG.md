@@ -1,4 +1,11 @@
 # CHANGELOG
+## 5.2.1
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.0...5.2.1)
+
+### Bug Fixes
+* Fix inverted `NDEBUG `logic in mdspan precondition checking [\#9405](https://github.com/kokkos/kokkos/pull/9405)
+* HIP: Synchronize before freeing device memory when using async allocations [\#9433](https://github.com/kokkos/kokkos/pull/9433)
 
 ## 5.2.0
 

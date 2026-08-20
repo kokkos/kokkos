@@ -3,7 +3,6 @@ Checks: >
   bugprone-*,
   -bugprone-argument-comment,
   -bugprone-easily-swappable-parameters,
-  -bugprone-exception-escape,
   -bugprone-macro-parentheses,
   -bugprone-narrowing-conversions,
   -bugprone-random-generator-seed,

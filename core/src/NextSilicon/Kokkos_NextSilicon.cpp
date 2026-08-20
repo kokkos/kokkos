@@ -4,6 +4,7 @@
 #define KOKKOS_IMPL_PUBLIC_INCLUDE
 
 #include <NextSilicon/Kokkos_NextSilicon.hpp>
+#include <NextSilicon/Kokkos_NextSilicon_InitializationCallbacks.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_Instance.hpp>
 #include <impl/Kokkos_Profiling.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
@@ -23,6 +24,8 @@ Kokkos::Experimental::NextSilicon::~NextSilicon() {
 
 void Kokkos::Experimental::NextSilicon::impl_initialize(
     InitializationSettings const& /*settings*/) {
+  Kokkos::Impl::run_nextsilicon_initialization_callbacks();
+
   Impl::NextSiliconInternal::default_instance =
       Kokkos::Impl::HostSharedPtr(new Impl::NextSiliconInternal);
 }

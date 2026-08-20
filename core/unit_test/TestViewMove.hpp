@@ -16,41 +16,18 @@ void test_moving_view_use_count_and_label(ViewType v) {
   // NOLINTBEGIN(bugprone-use-after-move)
 
   ViewType w(std::move(v));  // move construction
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  if (w.use_count() != 0)
-    EXPECT_EQ(w.use_count(), cnt + 1);
-  else
-    EXPECT_EQ(w.use_count(), 0);
-#else
   EXPECT_EQ(w.use_count(), cnt);
-#endif
   EXPECT_EQ(w.data(), ptr);
   EXPECT_EQ(w.label(), lbl);
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  EXPECT_EQ(v.use_count(), w.use_count());
-  EXPECT_EQ(v.label(), lbl);
-#else
   EXPECT_EQ(v.use_count(), 0);
   EXPECT_EQ(v.label(), std::string(""));
-#endif
   EXPECT_EQ(v.data(), ptr);
 
   v = std::move(w);  // move assignment
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  if (v.use_count() != 0)
-    EXPECT_EQ(v.use_count(), cnt + 1);
-  else
-    EXPECT_EQ(w.use_count(), 0);
-#else
   EXPECT_EQ(v.use_count(), cnt);
-#endif
   EXPECT_EQ(v.data(), ptr);
   EXPECT_EQ(v.label(), lbl);
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  EXPECT_EQ(w.use_count(), v.use_count());
-#else
   EXPECT_EQ(w.use_count(), 0);
-#endif
   EXPECT_EQ(w.data(), v.data());
   EXPECT_EQ(v.label(), lbl);
 

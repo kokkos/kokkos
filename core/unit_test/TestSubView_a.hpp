@@ -58,7 +58,6 @@ TEST(TEST_CATEGORY, view_static_tests) {
                                           Kokkos::LayoutLeft>()();
   TestViewSubview::TestSubviewStaticSizes<TEST_EXECSPACE,
                                           Kokkos::LayoutRight>()();
-  TestViewSubview::TestExtentsStaticTests<TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY_DEATH, view_subview_wrong_extents) {

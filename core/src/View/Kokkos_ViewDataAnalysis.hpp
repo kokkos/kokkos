@@ -386,10 +386,6 @@ struct ViewDataAnalysis {
 #endif
 };
 
-template <class Dimension, class Layout, class Enable = void>
-struct ViewOffset {
-  using is_mapping_plugin = std::false_type;
-};
 }  // namespace Kokkos::Impl
 
 #endif  // KOKKOS_VIEW_DATA_ANALYSIS_HPP
