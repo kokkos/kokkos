@@ -151,8 +151,10 @@ TEST(TEST_CATEGORY, self_similar_range_policy_runtime) {
 TEST(TEST_CATEGORY, self_similar_range_policy_computation) {
 #if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500)
   // FIXME_OPENACC: compiling below fails if NVHPC version > 24.5.
-  GTEST_SKIP() << "skipping since the OpenACC backend fails when compiled with "
-                  "NVHPC version higher than 24.5";
+  // Error behavior: a device kernel accesses a undefined global symbol.
+  // Error message: parse use of undefined value '@_T1236_79002'
+  GTEST_SKIP() << "skipping since the OpenACC backend fails to comple this "
+                  "test if NVHPC version is higher than 24.5";
 #else
   test_self_similar_range_policy_computation();
 #endif
