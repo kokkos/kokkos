@@ -690,6 +690,7 @@ if(Kokkos_ENABLE_CUDA)
     CoreUnitTest_Cuda3
     SOURCES
     UnitTestMainInit.cpp
+    cuda/TestCuda_ScratchPointerAnnotation.cpp
     cuda/TestCuda_TeamScratchStreams.cpp
     ${Cuda_SOURCES3}
     cuda/TestCuda_Spaces.cpp

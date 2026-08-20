@@ -210,16 +210,14 @@ struct MemorySpaceAccess<Kokkos::CudaSpace,
 template <>
 struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 0> {
   KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
-    return cuda::associate_access_property(p,
-                                           cuda::access_property::shared{});
+    return cuda::associate_access_property(p, cuda::access_property::shared{});
   }
 };
 
 template <>
 struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 1> {
   KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
-    return cuda::associate_access_property(p,
-                                           cuda::access_property::global{});
+    return cuda::associate_access_property(p, cuda::access_property::global{});
   }
 };
 
