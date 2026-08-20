@@ -12,6 +12,8 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_CUDA)
 
+#include <cuda/annotated_ptr>
+
 #include <Kokkos_Core_fwd.hpp>
 
 #include <iosfwd>
@@ -208,16 +210,16 @@ struct MemorySpaceAccess<Kokkos::CudaSpace,
 template <>
 struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 0> {
   KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
-    KOKKOS_IF_ON_DEVICE((__builtin_assume(__isShared(p));))
-    return p;
+    return cuda::associate_access_property(p,
+                                           cuda::access_property::shared{});
   }
 };
 
 template <>
 struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 1> {
   KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
-    KOKKOS_IF_ON_DEVICE((__builtin_assume(__isGlobal(p));))
-    return p;
+    return cuda::associate_access_property(p,
+                                           cuda::access_property::global{});
   }
 };
 
