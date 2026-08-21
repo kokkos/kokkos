@@ -49,6 +49,11 @@
 #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_H_
 #define GOOGLETEST_INCLUDE_GTEST_GTEST_H_
 
+#ifdef __NVCOMPILER
+#pragma nv_diagnostic push
+#pragma nv_diag_suppress 177
+#endif
+
 #include <cstddef>
 #include <cstdint>
 #include <iomanip>
@@ -2317,5 +2322,9 @@ int RUN_ALL_TESTS() GTEST_MUST_USE_RESULT_;
 inline int RUN_ALL_TESTS() { return ::testing::UnitTest::GetInstance()->Run(); }
 
 GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
+
+#ifdef __NVCOMPILER
+#pragma nv_diagnostic pop
+#endif
 
 #endif  // GOOGLETEST_INCLUDE_GTEST_GTEST_H_
