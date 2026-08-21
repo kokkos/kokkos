@@ -709,14 +709,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX908");
 #elif defined(KOKKOS_ARCH_AMD_GFX90A)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX90A");
-#elif defined(KOKKOS_ARCH_AMD_GFX926)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX926");
-#elif defined(KOKKOS_ARCH_AMD_GFX928)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX928");
-#elif defined(KOKKOS_ARCH_AMD_GFX936)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX936");
-#elif defined(KOKKOS_ARCH_AMD_GFX938)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX938");
+#elif defined(KOKKOS_ARCH_HYGON_GFX936)
+  declare_configuration_metadata("architecture", "GPU architecture", "HYGON_GFX936");
 #elif defined(KOKKOS_ARCH_AMD_GFX940)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX940");
 #elif defined(KOKKOS_ARCH_AMD_GFX942_APU)
