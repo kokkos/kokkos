@@ -394,11 +394,10 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
 
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
     endif()
-    # Fails for the OpenACC backend
+    # Fails for the OpenACC backend if 24.5 < NVHPC version < 26.5
     if(Tag STREQUAL "Serial" AND (Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5
                                   AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5)
     )
-
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
     endif()
     # WorkGraph is not supported for SYCL in unit tests (historically excluded from CoreUnitTest_SYCL2A).
