@@ -20,6 +20,5 @@ CMakeUserPresets.json
 # IDE-specific files/folders
 ## VSCode
 /.vscode
-/.cache
 ## QtCreator
 /CMakeLists.txt.user*
