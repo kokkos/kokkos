@@ -112,7 +112,7 @@ void test_accessor_arg() {
   // Test unmanaged ctors on GPU too (if GPU is enabled)
   int num_error = 0;
   Kokkos::parallel_reduce(
-      "test_accessor_arg", 1,
+      "test_accessor_arg", Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
       KOKKOS_LAMBDA(int, int& errors) {
         view_t e(a.data(), 10);
         if (e.accessor().value != 0lu) errors++;

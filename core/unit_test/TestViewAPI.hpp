@@ -1317,7 +1317,7 @@ class TestViewAPI {
   }
 
   struct test_refcount_poison_copy_functor {
-    using view_type = Kokkos::View<double *>;
+    using view_type = Kokkos::View<double *, DeviceType>;
     explicit test_refcount_poison_copy_functor(view_type v) : view(v) {}
 
     test_refcount_poison_copy_functor(
@@ -1363,7 +1363,7 @@ class TestViewAPI {
   static void run_test_deep_copy_empty() {
     // Check Deep Copy of LayoutLeft to LayoutRight
     {
-      Kokkos::View<double *, Kokkos::LayoutLeft> dll("dll", 10);
+      Kokkos::View<double *, Kokkos::LayoutLeft, DeviceType> dll("dll", 10);
       Kokkos::View<double *, Kokkos::LayoutRight, Kokkos::HostSpace> hlr("hlr",
                                                                          10);
       Kokkos::deep_copy(dll, hlr);
