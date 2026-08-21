@@ -436,7 +436,7 @@ pipeline {
                                 -DCMAKE_BUILD_TYPE=Release \
                                 -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
                                 -DCMAKE_CXX_COMPILER=icpx \
-                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -fp-model=precise -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target -Wno-unknown-warning-option" \
+                                -DCMAKE_CXX_FLAGS="-fsycl-device-code-split=per_kernel -fp-model=precise -Wno-deprecated-declarations -Werror -Wno-gnu-zero-variadic-macro-arguments -Wno-unknown-cuda-version -Wno-sycl-target" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \

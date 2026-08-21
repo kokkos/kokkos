@@ -15,6 +15,8 @@ if(Kokkos_ENABLE_TESTS OR Kokkos_INSTALL_TESTING)
     include(FetchContent)
     list(APPEND CMAKE_MESSAGE_INDENT "[googletest] ")
     set(INSTALL_GTEST OFF)
+    # Kokkos only ever links against GTest::gtest
+    set(BUILD_GMOCK OFF)
     FetchContent_Declare(googletest SOURCE_DIR ${Kokkos_SOURCE_DIR}/tpls/googletest-1.14.0)
     # For Windows: Prevent overriding the parent project's compiler/linker settings
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -26,8 +28,20 @@ if(Kokkos_ENABLE_TESTS OR Kokkos_INSTALL_TESTING)
       set_target_properties(gtest PROPERTIES CXX_CLANG_TIDY "")
     endif()
 
-    # Suppress compiler warnings. TODO use SYSTEM within the FetchContent_Declare call when CMake 3.25 is required
-    set_target_properties(gtest PROPERTIES COMPILE_OPTIONS -w)
+    # Suppress compiler warnings. gtest's own CMake build sets its warning
+    # flags via the legacy COMPILE_FLAGS target property, which is a single
+    # non-transitive string. Clear it so a stale or compiler-unrecognized
+    # flag name (rather than just an enabled diagnostic) cannot turn into a
+    # hard configure/build error, then re-enable warnings suppression via
+    # COMPILE_OPTIONS.
+    # TODO use SYSTEM within the FetchContent_Declare call when CMake 3.25 is required
+    set_target_properties(gtest PROPERTIES COMPILE_FLAGS "" COMPILE_OPTIONS -w)
+
+    # Kokkos only links GTest::gtest: keep gtest_main out of the default
+    # build so its (unmodified) strict warning flags never get compiled.
+    if(TARGET gtest_main)
+      set_target_properties(gtest_main PROPERTIES EXCLUDE_FROM_ALL ON)
+    endif()
   endif()
 endif()
 
