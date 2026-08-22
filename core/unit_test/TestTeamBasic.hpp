@@ -236,7 +236,6 @@ void test_exceed_max_team_scratch_size_0() {
 }
 
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_0) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   test_exceed_max_team_scratch_size_0();
 }
 
@@ -269,7 +268,6 @@ void test_exceed_max_team_scratch_size_1() {
 }
 
 TEST(TEST_CATEGORY_DEATH, exceed_max_team_scratch_size_1) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   test_exceed_max_team_scratch_size_1();
 }
 #endif
@@ -301,10 +299,7 @@ void test_exceed_max_team_size() {
       std::runtime_error);
 }
 
-TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-  test_exceed_max_team_size();
-}
+TEST(TEST_CATEGORY_DEATH, exceed_max_team_size) { test_exceed_max_team_size(); }
 
 #if !defined(KOKKOS_ENABLE_OPENACC)
 TEST(TEST_CATEGORY, team_broadcast_long) {

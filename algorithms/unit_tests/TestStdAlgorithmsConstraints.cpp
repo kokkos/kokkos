@@ -98,7 +98,6 @@ TEST(std_algorithms_DeathTest, expect_no_overlap) {
 
 // Overlapping because iterators are identical
 #if defined(KOKKOS_ENABLE_DEBUG)
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
 
   auto first_s = KE::begin(static_view_1d);
   auto last_s  = first_s + extent0;

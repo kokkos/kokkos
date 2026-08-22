@@ -67,8 +67,18 @@ struct DimensionsFromExtent;
 
 template <class Extents, std::size_t... Indices>
 struct DimensionsFromExtent<Extents, std::index_sequence<Indices...>> {
-  using type = ::Kokkos::Impl::ViewDimension<
-      DimensionFromExtent<Extents::static_extent(Indices)>::value...>;
+  // Only the last static extents can be preserved, so we need to find the
+  // last dynamic extent
+  static constexpr size_t last_dynamic = []() {
+    size_t last = 0;
+    for (size_t r = 0; r < Extents::rank(); r++) {
+      if (Extents::static_extent(r) == Kokkos::dynamic_extent) last = r;
+    }
+    return last;
+  }();
+  using type = ::Kokkos::Impl::ViewDimension<DimensionFromExtent<
+      (Indices >= last_dynamic) ? Extents::static_extent(Indices)
+                                : Kokkos::dynamic_extent>::value...>;
 };
 
 template <class IndexType, class DataType>
@@ -87,7 +97,6 @@ struct DataTypeFromExtents {
   using dimension_type = typename DimensionsFromExtent<
       Extents, std::make_index_sequence<extents_type::rank()>>::type;
 
-  // Will cause a compile error if it is malformed (i.e. dynamic after static)
   using type = typename ::Kokkos::Impl::ViewDataType<T, dimension_type>::type;
 };
 

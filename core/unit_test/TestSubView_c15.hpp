@@ -12,8 +12,6 @@ import kokkos.core;
 namespace {
 
 TEST(TEST_CATEGORY_DEATH, view_subview_constructor_layout_compatibility) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   int N    = 10;
   using LR = Kokkos::LayoutRight;
   using LL = Kokkos::LayoutLeft;

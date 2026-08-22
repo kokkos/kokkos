@@ -57,6 +57,7 @@ void SerialInternal::fence(const std::string& name) {
 #endif
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 SerialInternal::~SerialInternal() {
   fence("Kokkos::SerialInternal: fence on destruction");
 

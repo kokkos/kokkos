@@ -20,7 +20,6 @@ using ScopeGuard_DeathTest = KokkosExecutionEnvironmentNeverInitialized;
  * Test to create a scope guard normally.
  */
 TEST_F(ScopeGuard_DeathTest, create) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   // run it in a different process so side effects are not kept
   EXPECT_EXIT(
       {
@@ -43,7 +42,6 @@ TEST_F(ScopeGuard_DeathTest, create) {
  * Test to create a scope guard with an argument.
  */
 TEST_F(ScopeGuard_DeathTest, create_argument) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   // run it in a different process so side effects are not kept
   EXPECT_EXIT(
       {
@@ -61,7 +59,6 @@ TEST_F(ScopeGuard_DeathTest, create_argument) {
  * Test to create another scope guard when one has been created.
  */
 TEST_F(ScopeGuard_DeathTest, create_while_initialize) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   EXPECT_DEATH(
       {
         Kokkos::ScopeGuard guard1{};
@@ -76,7 +73,6 @@ TEST_F(ScopeGuard_DeathTest, create_while_initialize) {
  * Test to create a scope guard when initialization has been done manually.
  */
 TEST_F(ScopeGuard_DeathTest, create_after_initialize) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   EXPECT_DEATH(
       {
         Kokkos::initialize();
@@ -91,7 +87,6 @@ TEST_F(ScopeGuard_DeathTest, create_after_initialize) {
  * Test to create another scope guard when one has been destroyed.
  */
 TEST_F(ScopeGuard_DeathTest, create_after_finalize) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   EXPECT_DEATH(
       {
         { Kokkos::ScopeGuard guard1{}; }
@@ -107,7 +102,6 @@ TEST_F(ScopeGuard_DeathTest, create_after_finalize) {
  * Test to destroy a scope guard when finalization has been done manually.
  */
 TEST_F(ScopeGuard_DeathTest, destroy_after_finalize) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   EXPECT_DEATH(
       {
         // create a scope guard and finalize it manually

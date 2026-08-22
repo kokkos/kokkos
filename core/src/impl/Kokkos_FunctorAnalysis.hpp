@@ -572,23 +572,21 @@ struct FunctorAnalysis {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void copy(ValueType* const dst, ValueType const* const src) const noexcept {
+    void copy(ValueType* const dst, ValueType const* const src) const {
       for (int i = 0; i < length(); ++i) dst[i] = src[i];
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(ValueType* dst, ValueType const* src) const noexcept {
+    void join(ValueType* dst, ValueType const* src) const {
       DeduceJoin<>::join(&m_functor, dst, src);
     }
 
-    KOKKOS_INLINE_FUNCTION reference_type
-    init(ValueType* const dst) const noexcept {
+    KOKKOS_INLINE_FUNCTION reference_type init(ValueType* const dst) const {
       DeduceInit<>::init(&m_functor, dst);
       return reference(dst);
     }
 
-    KOKKOS_INLINE_FUNCTION
-    void final(ValueType* dst) const noexcept {
+    KOKKOS_INLINE_FUNCTION void final(ValueType* dst) const {
       DeduceFinal<>::final(&m_functor, dst);
     }
 
@@ -602,7 +600,7 @@ struct FunctorAnalysis {
     ~Reducer()                         = default;
 
     KOKKOS_INLINE_FUNCTION explicit constexpr Reducer(
-        Functor const& arg_functor) noexcept
+        Functor const& arg_functor)
         : m_functor(arg_functor) {}
   };
 };

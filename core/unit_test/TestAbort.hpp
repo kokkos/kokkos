@@ -12,8 +12,6 @@ import kokkos.core;
 #endif
 
 TEST(TEST_CATEGORY_DEATH, abort_from_host) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   char msg[] = "Goodbye cruel world";
   EXPECT_DEATH({ Kokkos::abort(msg); }, msg);
 }

@@ -271,6 +271,9 @@ struct pair<T1&, T2> {
   }
 };
 
+template <class T1, class T2>
+pair(const std::pair<T1, T2>&) -> pair<T1, T2>;
+
 //! Equality operator for Kokkos::pair.
 template <class T1, class T2>
 KOKKOS_FORCEINLINE_FUNCTION constexpr bool operator==(const pair<T1, T2>& lhs,

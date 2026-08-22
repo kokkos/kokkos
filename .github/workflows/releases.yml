@@ -5,19 +5,23 @@ on:
 
 permissions: read-all
 
+env:
+  RELEASE_NAME: "${{ github.event.repository.name }}-${{ github.ref_name }}"
+
 jobs:
   # This step builds our artifacts, uploads them to the workflow run, and
   # outputs their digest.
   build:
     outputs:
       hashes: ${{ steps.hash.outputs.hashes }}
+      release-name: ${{ steps.export-name.outputs.release-name }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build artifacts
         run: |
-          git archive --prefix=kokkos-${{ github.ref_name }}/ -o kokkos-${{ github.ref_name }}.zip HEAD
-          git archive --prefix=kokkos-${{ github.ref_name }}/ -o kokkos-${{ github.ref_name }}.tar.gz HEAD
+          git archive --prefix=$RELEASE_NAME/ -o $RELEASE_NAME.zip HEAD
+          git archive --prefix=$RELEASE_NAME/ -o $RELEASE_NAME.tar.gz HEAD
 
       - name: Generate hashes
         shell: bash
@@ -25,14 +29,20 @@ jobs:
         run: |
           # sha256sum generates sha256 hash for all artifacts.
           # base64 -w0 encodes to base64 and outputs on a single line.
-          sha256sum kokkos-${{ github.ref_name }}.zip kokkos-${{ github.ref_name }}.tar.gz > kokkos-${{ github.ref_name }}-SHA-256.txt
-          echo "hashes=$(base64 -w0 kokkos-${{ github.ref_name }}-SHA-256.txt)" >> "$GITHUB_OUTPUT"
+          sha256sum $RELEASE_NAME.zip $RELEASE_NAME.tar.gz > $RELEASE_NAME-SHA-256.txt
+          echo "hashes=$(base64 -w0 $RELEASE_NAME-SHA-256.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Export release name
+        shell: bash
+        id: export-name
+        run: |
+          echo "release-name=$RELEASE_NAME" >> "$GITHUB_OUTPUT"
 
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-artifacts
-          path: kokkos-${{ github.ref_name }}*
+          path: ${{ env.RELEASE_NAME }}*
           if-no-files-found: error
           retention-days: 5
 
@@ -48,7 +58,7 @@ jobs:
       base64-subjects: "${{ needs.build.outputs.hashes }}"
       # Upload provenance to a new release
       upload-assets: true
-      provenance-name: "kokkos-${{ github.ref_name }}.intoto.jsonl"
+      provenance-name: "${{ needs.build.outputs.release-name }}.intoto.jsonl"
 
   # This step uploads our artifacts to the tagged GitHub release.
   release:
@@ -57,6 +67,9 @@ jobs:
       contents: write
     runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/')
+    env:
+      DOWNLOAD_URL: "${{ github.server_url }}/${{ github.repository }}/releases/download/${{ github.ref_name }}"
+      RELEASE_NAME: "${{ needs.build.outputs.release-name }}"
     steps:
       - name: Download artifacts
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
@@ -65,7 +78,23 @@ jobs:
       - name: Upload assets
         uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3.0.2
         with:
+          body: |
+            tag: ${{ github.ref_name }}
+            date: YYYY-MM-DD
+
+            ## Source distributions:
+            Platform | Files
+            --- | ---
+            Unix/Linux | [${{ env.RELEASE_NAME }}.tar.gz](${{ env.DOWNLOAD_URL }}/${{ env.RELEASE_NAME }}.tar.gz)
+            Windows | [${{ env.RELEASE_NAME }}.zip](${{ env.DOWNLOAD_URL }}/${{ env.RELEASE_NAME }}.zip)
+
+            ## Summary files:
+            Role | Files
+            --- | ---
+            Cryptographic hashes | [${{ env.RELEASE_NAME }}-SHA-256.txt](${{ env.DOWNLOAD_URL }}/${{ env.RELEASE_NAME }}-SHA-256.txt)
+            Digitally signed with \[INSERT SHORT KEY ID\] | [${{ env.RELEASE_NAME }}-SHA-256.txt.asc](${{ env.DOWNLOAD_URL }}/${{ env.RELEASE_NAME }}-SHA-256.txt.asc)
+            SLSA provenance | [${{ env.RELEASE_NAME }}.intoto.jsonl](${{ env.DOWNLOAD_URL }}/${{ env.RELEASE_NAME }}.intoto.jsonl)
           files: |
-            kokkos-${{ github.ref_name }}.zip
-            kokkos-${{ github.ref_name }}.tar.gz
-            kokkos-${{ github.ref_name }}-SHA-256.txt
+            ${{ env.RELEASE_NAME }}.zip
+            ${{ env.RELEASE_NAME }}.tar.gz
+            ${{ env.RELEASE_NAME }}-SHA-256.txt

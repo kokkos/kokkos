@@ -295,9 +295,10 @@ TEST(TEST_CATEGORY, view_minimal_mdspan_args_access) {
                                          Kokkos::dynamic_extent, 7>>::access(3,
                                                                              5,
                                                                              7);
-  ViewTestHarness<int, Kokkos::dextents<size_t, 6>,
-                  Kokkos::Experimental::layout_right_padded<
-                      Kokkos::dynamic_extent>>::access(3, 5lu, 7, 9, 2, 1);
+  ViewTestHarness<
+      int, Kokkos::dextents<size_t, 6>,
+      Kokkos::layout_right_padded<Kokkos::dynamic_extent>>::access(3, 5lu, 7, 9,
+                                                                   2, 1);
 }
 
 TEST(TEST_CATEGORY, view_minimal_mdspan_args_deep_copy) {
@@ -306,9 +307,10 @@ TEST(TEST_CATEGORY, view_minimal_mdspan_args_deep_copy) {
                   Kokkos::extents<unsigned, Kokkos::dynamic_extent,
                                   Kokkos::dynamic_extent, 7>>::deep_copy(3, 5,
                                                                          7);
-  ViewTestHarness<int, Kokkos::dextents<size_t, 6>,
-                  Kokkos::Experimental::layout_right_padded<
-                      Kokkos::dynamic_extent>>::deep_copy(3, 5lu, 7, 9, 2, 1);
+  ViewTestHarness<
+      int, Kokkos::dextents<size_t, 6>,
+      Kokkos::layout_right_padded<Kokkos::dynamic_extent>>::deep_copy(3, 5lu, 7,
+                                                                      9, 2, 1);
 }
 
 TEST(TEST_CATEGORY, view_minimal_mdspan_args_create_mirror) {
@@ -318,8 +320,10 @@ TEST(TEST_CATEGORY, view_minimal_mdspan_args_create_mirror) {
                                   Kokkos::dynamic_extent, 7>>::create_mirror(3,
                                                                              5,
                                                                              7);
-  ViewTestHarness<int, Kokkos::dextents<size_t, 6>,
-                  Kokkos::Experimental::layout_right_padded<
-                      Kokkos::dynamic_extent>>::create_mirror(3, 5lu, 7, 9, 2,
-                                                              1);
+  ViewTestHarness<
+      int, Kokkos::dextents<size_t, 6>,
+      Kokkos::layout_right_padded<Kokkos::dynamic_extent>>::create_mirror(3,
+                                                                          5lu,
+                                                                          7, 9,
+                                                                          2, 1);
 }

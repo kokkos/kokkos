@@ -21,8 +21,6 @@ using KokkosHelpCausesNormalProgramTermination_DeathTest =
 
 TEST_F(KokkosHelpCausesNormalProgramTermination_DeathTest,
        print_help_and_exit_early) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   int argc = 1;
 
   char const *argv[] = {

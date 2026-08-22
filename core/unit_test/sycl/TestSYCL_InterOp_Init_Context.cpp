@@ -86,7 +86,6 @@ TEST(sycl_DeathTest, explicit_out_of_order_queue) {
   sycl::context default_context = default_space.sycl_queue().get_context();
   sycl::queue queue(default_context, sycl::default_selector_v);
 #ifdef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   ASSERT_DEATH(Kokkos::SYCL{queue},
                "User provided sycl::queues must be in-order!");
 #else

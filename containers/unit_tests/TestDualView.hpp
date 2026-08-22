@@ -560,8 +560,6 @@ TEST(TEST_CATEGORY, dualview_resize) {
 
 template <typename ExecutionSpace>
 void check_dualview_external_view_construction() {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   Kokkos::View<int*, ExecutionSpace> view1("view1", 10);
   Kokkos::View<int*, ExecutionSpace> view2("view2", 10);
 

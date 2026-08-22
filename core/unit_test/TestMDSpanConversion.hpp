@@ -20,11 +20,10 @@ struct TestViewMDSpanConversion {
   using value_type = T;
 
   template <std::size_t Padding>
-  using layout_left_padded = Kokkos::Experimental::layout_left_padded<Padding>;
+  using layout_left_padded = Kokkos::layout_left_padded<Padding>;
 
   template <std::size_t Padding>
-  using layout_right_padded =
-      Kokkos::Experimental::layout_right_padded<Padding>;
+  using layout_right_padded = Kokkos::layout_right_padded<Padding>;
 
   struct TestAccessor {
     using offset_policy    = TestAccessor;

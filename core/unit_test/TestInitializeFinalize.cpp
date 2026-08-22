@@ -19,8 +19,6 @@ namespace {
 using InitializeFinalize_DeathTest = KokkosExecutionEnvironmentNeverInitialized;
 
 TEST_F(InitializeFinalize_DeathTest, initialize) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_EXIT(
       {
         Kokkos::initialize();
@@ -48,8 +46,6 @@ TEST_F(InitializeFinalize_DeathTest, initialize) {
 }
 
 TEST_F(InitializeFinalize_DeathTest, finalize) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(
       { Kokkos::finalize(); },
       "Error: Kokkos::finalize\\(\\) may only be called after Kokkos has "
@@ -73,8 +69,6 @@ TEST_F(InitializeFinalize_DeathTest, finalize) {
 }
 
 TEST_F(InitializeFinalize_DeathTest, is_initialized) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_EXIT(
       {
         bool success = true;
@@ -89,8 +83,6 @@ TEST_F(InitializeFinalize_DeathTest, is_initialized) {
 }
 
 TEST_F(InitializeFinalize_DeathTest, is_finalized) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_EXIT(
       {
         bool success = true;

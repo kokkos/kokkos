@@ -1,9 +1,9 @@
 variables:
   FF_ENABLE_JOB_CLEANUP: 1
+  FF_GIT_URLS_WITHOUT_TOKENS: 1
 
 stages:
   - test
-  - clean_up
 
 hipcc:
   stage: test
@@ -66,3 +66,19 @@ include:
   ref: main
   file:
     - /runners.yml
+
+root-clenaup:
+  stage: .pre
+  tags: [frontier, shell]
+  variables:
+    GIT_STRATEGY: none
+    OLCF_SERVICE_ACCOUNT: ums018_auser
+  id_tokens:
+    OLCF_ID_TOKEN:
+      aud: https://code.olcf.ornl.gov
+  script:
+  - rm -rf $HOME/.jacamar-ci/builds
+  - ls -la $HOME/.jacamar-ci
+  rules:
+  - when: manual
+    allow_failure: true

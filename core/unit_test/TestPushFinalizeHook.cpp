@@ -49,8 +49,6 @@ struct Hook4 {
 };
 
 TEST_F(PushFinalizeHook_DeathTest, called_in_reverse_order) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   std::string const expectedOutput([] {
     std::ostringstream os;
     os << hook4str << '\n'
@@ -85,8 +83,6 @@ char const my_terminate_handler_msg[] = "my terminate handler was called\n";
 }
 
 TEST_F(PushFinalizeHook_DeathTest, terminate_on_throw) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   auto terminate_handler = std::get_terminate();
 
   std::set_terminate(my_terminate_handler);

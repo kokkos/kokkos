@@ -58,12 +58,9 @@ TEST(TEST_CATEGORY, view_static_tests) {
                                           Kokkos::LayoutLeft>()();
   TestViewSubview::TestSubviewStaticSizes<TEST_EXECSPACE,
                                           Kokkos::LayoutRight>()();
-  TestViewSubview::TestExtentsStaticTests<TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY_DEATH, view_subview_wrong_extents) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   KOKKOS_IMPL_UNREACHABLE();

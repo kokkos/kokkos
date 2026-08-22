@@ -47,6 +47,137 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   int m_team_size;
   const size_type m_vector_size;
 
+ public:
+  static auto create_team_reduction_lambda(
+      const sycl::local_accessor<value_type, 1> local_mem,
+      const sycl::global_ptr<value_type> results_ptr,
+      const sycl::global_ptr<value_type> device_accessible_result_ptr,
+      const auto& functor_reducer_wrapper, const int value_count,
+      const size_type league_size,
+      const sycl::local_accessor<char, 1>& team_scratch_memory_L0,
+      const size_t (&scratch_size)[2], const int shmem_begin,
+      const sycl::global_ptr<char> global_scratch_ptr,
+      const sycl::local_accessor<unsigned int> num_teams_done,
+      const sycl::global_ptr<unsigned int> scratch_flags) {
+    auto lambda = [=](sycl::nd_item<2> item) {
+      auto n_wgroups  = item.get_group_range()[1];
+      int wgroup_size = item.get_local_range()[0] * item.get_local_range()[1];
+      auto group_id   = item.get_group_linear_id();
+      auto size       = n_wgroups * wgroup_size;
+
+      const auto local_id = item.get_local_linear_id();
+      const CombinedFunctorReducerType& functor_reducer =
+          functor_reducer_wrapper.get_functor();
+      const FunctorType& functor = functor_reducer.get_functor();
+      const ReducerType& reducer = functor_reducer.get_reducer();
+
+      if constexpr (!SYCLReduction::use_shuffle_based_algorithm<ReducerType>) {
+        reference_type update =
+            reducer.init(&local_mem[local_id * value_count]);
+        for (size_type league_rank = group_id; league_rank < league_size;
+             league_rank += n_wgroups) {
+          const member_type team_member(
+              team_scratch_memory_L0
+                  .get_multi_ptr<sycl::access::decorated::yes>(),
+              shmem_begin, scratch_size[0],
+              global_scratch_ptr + item.get_group(1) * scratch_size[1],
+              scratch_size[1], item, league_rank, league_size);
+          if constexpr (std::is_void_v<WorkTag>)
+            functor(team_member, update);
+          else
+            functor(WorkTag(), team_member, update);
+        }
+        sycl::group_barrier(item.get_group());
+
+        SYCLReduction::workgroup_reduction<>(
+            item, local_mem, results_ptr, device_accessible_result_ptr,
+            value_count, reducer, false,
+            std::min<std::size_t>(
+                size, item.get_local_range()[0] * item.get_local_range()[1]));
+
+        if (local_id == 0) {
+          sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
+                           sycl::memory_scope::device,
+                           sycl::access::address_space::global_space>
+              scratch_flags_ref(*scratch_flags);
+          num_teams_done[0] = ++scratch_flags_ref;
+        }
+        sycl::group_barrier(item.get_group());
+        if (num_teams_done[0] == n_wgroups) {
+          if (local_id == 0) *scratch_flags = 0;
+          if (local_id >= n_wgroups)
+            reducer.init(&local_mem[local_id * value_count]);
+          else {
+            reducer.copy(&local_mem[local_id * value_count],
+                         &results_ptr[local_id * value_count]);
+            for (unsigned int id = local_id + wgroup_size; id < n_wgroups;
+                 id += wgroup_size) {
+              reducer.join(&local_mem[local_id * value_count],
+                           &results_ptr[id * value_count]);
+            }
+          }
+
+          SYCLReduction::workgroup_reduction<>(
+              item, local_mem, results_ptr, device_accessible_result_ptr,
+              value_count, reducer, true,
+              std::min(n_wgroups,
+                       item.get_local_range()[0] * item.get_local_range()[1]));
+        }
+      } else {
+        value_type local_value;
+        reference_type update = reducer.init(&local_value);
+        for (int league_rank = group_id; league_rank < league_size;
+             league_rank += n_wgroups) {
+          const member_type team_member(
+              team_scratch_memory_L0
+                  .get_multi_ptr<sycl::access::decorated::yes>(),
+              shmem_begin, scratch_size[0],
+              global_scratch_ptr + item.get_group(1) * scratch_size[1],
+              scratch_size[1], item, league_rank, league_size);
+          if constexpr (std::is_void_v<WorkTag>)
+            functor(team_member, update);
+          else
+            functor(WorkTag(), team_member, update);
+        }
+
+        SYCLReduction::workgroup_reduction<>(
+            item, local_mem, local_value, results_ptr,
+            device_accessible_result_ptr, reducer, false,
+            std::min<std::size_t>(
+                size, item.get_local_range()[0] * item.get_local_range()[1]));
+
+        if (local_id == 0) {
+          sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
+                           sycl::memory_scope::device,
+                           sycl::access::address_space::global_space>
+              scratch_flags_ref(*scratch_flags);
+          num_teams_done[0] = ++scratch_flags_ref;
+        }
+        sycl::group_barrier(item.get_group());
+        if (num_teams_done[0] == n_wgroups) {
+          if (local_id == 0) *scratch_flags = 0;
+          if (local_id >= n_wgroups)
+            reducer.init(&local_value);
+          else {
+            local_value = results_ptr[local_id];
+            for (unsigned int id = local_id + wgroup_size; id < n_wgroups;
+                 id += wgroup_size) {
+              reducer.join(&local_value, &results_ptr[id]);
+            }
+          }
+
+          SYCLReduction::workgroup_reduction<>(
+              item, local_mem, local_value, results_ptr,
+              device_accessible_result_ptr, reducer, true,
+              std::min(n_wgroups,
+                       item.get_local_range()[0] * item.get_local_range()[1]));
+        }
+      }
+    };
+    return lambda;
+  }
+
+ private:
   template <typename CombinedFunctorReducerWrapper>
   sycl::event sycl_direct_launch(
       const sycl::global_ptr<char> global_scratch_ptr,
@@ -67,6 +198,10 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
             ? static_cast<sycl::global_ptr<value_type>>(
                   instance.scratch_host(sizeof(value_type) * value_count))
             : nullptr;
+    auto device_accessible_result_ptr =
+        m_result_ptr_device_accessible
+            ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
+            : static_cast<sycl::global_ptr<value_type>>(host_result_ptr);
 
     sycl::event last_reduction_event;
 
@@ -79,10 +214,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       results_ptr =
           static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
               sizeof(value_type) * std::max(value_count, 1u)));
-      auto device_accessible_result_ptr =
-          m_result_ptr_device_accessible
-              ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
-              : static_cast<sycl::global_ptr<value_type>>(host_result_ptr);
 
       auto cgh_lambda = [&](sycl::handler& cgh) {
         // FIXME_SYCL accessors seem to need a size greater than zero at least
@@ -160,140 +291,12 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         const size_t scratch_size[2] = {m_scratch_size[0], m_scratch_size[1]};
         sycl::local_accessor<unsigned int> num_teams_done(1, cgh);
 
-        auto team_reduction_factory =
-            [&](sycl::local_accessor<value_type, 1> local_mem,
-                sycl::global_ptr<value_type> results_ptr) {
-              auto device_accessible_result_ptr =
-                  m_result_ptr_device_accessible
-                      ? static_cast<sycl::global_ptr<value_type>>(m_result_ptr)
-                      : static_cast<sycl::global_ptr<value_type>>(
-                            host_result_ptr);
-              auto lambda = [=](sycl::nd_item<2> item) {
-                auto n_wgroups = item.get_group_range()[1];
-                int wgroup_size =
-                    item.get_local_range()[0] * item.get_local_range()[1];
-                auto group_id = item.get_group_linear_id();
-                auto size     = n_wgroups * wgroup_size;
-
-                const auto local_id = item.get_local_linear_id();
-                const CombinedFunctorReducerType& functor_reducer =
-                    functor_reducer_wrapper.get_functor();
-                const FunctorType& functor = functor_reducer.get_functor();
-                const ReducerType& reducer = functor_reducer.get_reducer();
-
-                if constexpr (!SYCLReduction::use_shuffle_based_algorithm<
-                                  ReducerType>) {
-                  reference_type update =
-                      reducer.init(&local_mem[local_id * value_count]);
-                  for (size_type league_rank = group_id;
-                       league_rank < league_size; league_rank += n_wgroups) {
-                    const member_type team_member(
-                        team_scratch_memory_L0
-                            .get_multi_ptr<sycl::access::decorated::yes>(),
-                        shmem_begin, scratch_size[0],
-                        global_scratch_ptr +
-                            item.get_group(1) * scratch_size[1],
-                        scratch_size[1], item, league_rank, league_size);
-                    if constexpr (std::is_void_v<WorkTag>)
-                      functor(team_member, update);
-                    else
-                      functor(WorkTag(), team_member, update);
-                  }
-                  sycl::group_barrier(item.get_group());
-
-                  SYCLReduction::workgroup_reduction<>(
-                      item, local_mem, results_ptr,
-                      device_accessible_result_ptr, value_count, reducer, false,
-                      std::min<std::size_t>(size,
-                                            item.get_local_range()[0] *
-                                                item.get_local_range()[1]));
-
-                  if (local_id == 0) {
-                    sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
-                                     sycl::memory_scope::device,
-                                     sycl::access::address_space::global_space>
-                        scratch_flags_ref(*scratch_flags);
-                    num_teams_done[0] = ++scratch_flags_ref;
-                  }
-                  sycl::group_barrier(item.get_group());
-                  if (num_teams_done[0] == n_wgroups) {
-                    if (local_id == 0) *scratch_flags = 0;
-                    if (local_id >= n_wgroups)
-                      reducer.init(&local_mem[local_id * value_count]);
-                    else {
-                      reducer.copy(&local_mem[local_id * value_count],
-                                   &results_ptr[local_id * value_count]);
-                      for (unsigned int id = local_id + wgroup_size;
-                           id < n_wgroups; id += wgroup_size) {
-                        reducer.join(&local_mem[local_id * value_count],
-                                     &results_ptr[id * value_count]);
-                      }
-                    }
-
-                    SYCLReduction::workgroup_reduction<>(
-                        item, local_mem, results_ptr,
-                        device_accessible_result_ptr, value_count, reducer,
-                        true,
-                        std::min(n_wgroups, item.get_local_range()[0] *
-                                                item.get_local_range()[1]));
-                  }
-                } else {
-                  value_type local_value;
-                  reference_type update = reducer.init(&local_value);
-                  for (int league_rank = group_id; league_rank < league_size;
-                       league_rank += n_wgroups) {
-                    const member_type team_member(
-                        team_scratch_memory_L0
-                            .get_multi_ptr<sycl::access::decorated::yes>(),
-                        shmem_begin, scratch_size[0],
-                        global_scratch_ptr +
-                            item.get_group(1) * scratch_size[1],
-                        scratch_size[1], item, league_rank, league_size);
-                    if constexpr (std::is_void_v<WorkTag>)
-                      functor(team_member, update);
-                    else
-                      functor(WorkTag(), team_member, update);
-                  }
-
-                  SYCLReduction::workgroup_reduction<>(
-                      item, local_mem, local_value, results_ptr,
-                      device_accessible_result_ptr, reducer, false,
-                      std::min<std::size_t>(size,
-                                            item.get_local_range()[0] *
-                                                item.get_local_range()[1]));
-
-                  if (local_id == 0) {
-                    sycl::atomic_ref<unsigned, sycl::memory_order::acq_rel,
-                                     sycl::memory_scope::device,
-                                     sycl::access::address_space::global_space>
-                        scratch_flags_ref(*scratch_flags);
-                    num_teams_done[0] = ++scratch_flags_ref;
-                  }
-                  sycl::group_barrier(item.get_group());
-                  if (num_teams_done[0] == n_wgroups) {
-                    if (local_id == 0) *scratch_flags = 0;
-                    if (local_id >= n_wgroups)
-                      reducer.init(&local_value);
-                    else {
-                      local_value = results_ptr[local_id];
-                      for (unsigned int id = local_id + wgroup_size;
-                           id < n_wgroups; id += wgroup_size) {
-                        reducer.join(&local_value, &results_ptr[id]);
-                      }
-                    }
-
-                    SYCLReduction::workgroup_reduction<>(
-                        item, local_mem, local_value, results_ptr,
-                        device_accessible_result_ptr, reducer, true,
-                        std::min(n_wgroups, item.get_local_range()[0] *
-                                                item.get_local_range()[1]));
-                  }
-                }
-              };
-              return lambda;
-            };
-
-        auto dummy_reduction_lambda = team_reduction_factory({1, cgh}, nullptr);
+        auto dummy_reduction_lambda = create_team_reduction_lambda(
+            /* local_mem */ {1, cgh},
+            /* results_ptr */ nullptr,
+            /* device_accessible_result_ptr */ nullptr, functor_reducer_wrapper,
+            value_count, league_size, team_scratch_memory_L0, scratch_size,
+            shmem_begin, global_scratch_ptr, num_teams_done, scratch_flags);
 
         static sycl::kernel kernel = [&] {
           sycl::kernel_id functor_kernel_id =
@@ -337,7 +340,11 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
               wgroup_size;
         }
 
-        auto reduction_lambda = team_reduction_factory(local_mem, results_ptr);
+        auto reduction_lambda = create_team_reduction_lambda(
+            local_mem, results_ptr, device_accessible_result_ptr,
+            functor_reducer_wrapper, value_count, league_size,
+            team_scratch_memory_L0, scratch_size, shmem_begin,
+            global_scratch_ptr, num_teams_done, scratch_flags);
 
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
         cgh.depends_on(memcpy_event);
@@ -430,7 +437,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         m_team_size(arg_policy.team_size()),
         m_vector_size(arg_policy.impl_vector_length()) {
     if (m_team_size < 0) {
-      m_team_size = m_policy.team_size_recommended(
+      m_team_size = m_policy.team_size_recommended_internal(
           m_functor_reducer.get_functor(), m_functor_reducer.get_reducer(),
           ParallelReduceTag{});
       if (m_team_size <= 0)
@@ -475,7 +482,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
       Kokkos::Impl::throw_runtime_exception(out.str());
     }
 
-    const auto max_team_size = m_policy.team_size_max(
+    const auto max_team_size = m_policy.team_size_max_internal(
         m_functor_reducer.get_functor(), m_functor_reducer.get_reducer(),
         ParallelReduceTag{});
     if (m_team_size > max_team_size) {

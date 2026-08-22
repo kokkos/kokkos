@@ -19,12 +19,10 @@ namespace {
       std::is_same_v<typename new_view_t::type, typename old_view_t::type>)
 
 template <class T, class Extents, class DataType, class ArrayLayout,
-          class Space, class MemTraits>
+          class LayoutType, class Space, class MemTraits>
 constexpr bool test_equivalence() {
-  using layout_type =
-      typename Kokkos::Impl::LayoutFromArrayLayout<ArrayLayout>::type;
   using new_view_t =
-      Kokkos::View<T, Extents, layout_type,
+      Kokkos::View<T, Extents, LayoutType,
                    Kokkos::Experimental::Accessor<
                        T, typename Space::memory_space, MemTraits>>;
   using old_view_t = Kokkos::View<DataType, ArrayLayout, Space, MemTraits>;
@@ -33,6 +31,18 @@ constexpr bool test_equivalence() {
   // BasicView implementation, since mdspan_type comes from BasicView and uses
   // directly the template args of BasicView
   CHECK_SAME(mdspan_type);
+  static_assert(
+      std::is_same_v<
+          typename new_view_t::mdspan_type,
+          Kokkos::mdspan<T, Extents, LayoutType,
+                         Kokkos::Experimental::Accessor<
+                             T, typename Space::memory_space, MemTraits>>>);
+
+  // These are constituent types of mdspan_type
+  CHECK_SAME(element_type);
+  CHECK_SAME(extents_type);
+  CHECK_SAME(layout_type);
+  CHECK_SAME(accessor_type);
 
   // Checking typedefs which come from ViewTraits and not from BasicView
   // Not currently the same
@@ -59,6 +69,9 @@ constexpr bool test_equivalence() {
 using LL           = Kokkos::LayoutLeft;
 using LR           = Kokkos::LayoutRight;
 using LS           = Kokkos::LayoutStride;
+using MDLL         = Kokkos::layout_left_padded<Kokkos::dynamic_extent>;
+using MDLR         = Kokkos::layout_right_padded<Kokkos::dynamic_extent>;
+using MDLS         = Kokkos::layout_stride;
 using ED           = Kokkos::DefaultExecutionSpace;
 using EH           = Kokkos::DefaultHostExecutionSpace;
 using SH           = Kokkos::HostSpace;
@@ -70,14 +83,26 @@ constexpr size_t d = Kokkos::dynamic_extent;
 
 // clang-format off
 
-static_assert(test_equivalence<f,  Kokkos::dextents<size_t, 0>,         f,          LL, ED, Kokkos::MemoryTraits<>>());
-static_assert(test_equivalence<cf, Kokkos::dextents<size_t, 2>,         cf**,       LS, EH, Kokkos::MemoryTraits<Kokkos::Unmanaged>>());
-static_assert(test_equivalence<f,  Kokkos::extents<size_t, 2, 3>,       f[2][3],    LR, SH, Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::Atomic>>());
-static_assert(test_equivalence<cf, Kokkos::dextents<size_t, 8>,         cf********, LS, SD, Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>());
-static_assert(test_equivalence<f,  Kokkos::extents<size_t, d, d, 2, 3>, f**[2][3],  LR, DD, Kokkos::MemoryTraits<Kokkos::RandomAccess>>());
+static_assert(test_equivalence<f,  Kokkos::dextents<size_t, 0>,         f,          LL, MDLL, ED, Kokkos::MemoryTraits<>>());
+static_assert(test_equivalence<cf, Kokkos::dextents<size_t, 2>,         cf**,       LS, MDLS, EH, Kokkos::MemoryTraits<Kokkos::Unmanaged>>());
+static_assert(test_equivalence<f,  Kokkos::extents<size_t, 2, 3>,       f[2][3],    LR, MDLR, SH, Kokkos::MemoryTraits<Kokkos::Unmanaged | Kokkos::Atomic>>());
+static_assert(test_equivalence<cf, Kokkos::dextents<size_t, 8>,         cf********, LS, MDLS, SD, Kokkos::MemoryTraits<Kokkos::Atomic | Kokkos::RandomAccess>>());
+static_assert(test_equivalence<f,  Kokkos::extents<size_t, d, d, 2, 3>, f**[2][3],  LR, MDLR, DD, Kokkos::MemoryTraits<Kokkos::RandomAccess>>());
 // This can't give the same
 //static_assert(test_equivalence<f,  Kokkos::extents<size_t, 3, d, 2, 3>, f**[2][3],     LR, HS, Kokkos::MemoryTraits<Kokkos::RandomAccess>>());
 
 // clang-format on
 
 }  // namespace
+
+// We are not actually exporting the Experimental namespace symbols
+// in a modules build
+#ifndef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
+// Temporarly check we import the padded layouts into Experimental Namespace
+static_assert(std::is_same_v<Kokkos::layout_left_padded<4>,
+                             Kokkos::Experimental::layout_left_padded<4>>);
+static_assert(std::is_same_v<Kokkos::layout_right_padded<4>,
+                             Kokkos::Experimental::layout_right_padded<4>>);
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+#endif

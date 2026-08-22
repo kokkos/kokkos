@@ -28,8 +28,6 @@ static_assert(!std::is_trivially_default_constructible_v<NonTrivial>);
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
        default_constructed_views) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   auto make_views = [] {
     Kokkos::View<int> v0;
     Kokkos::View<float*> v1;
@@ -66,8 +64,6 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
 }
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_EXIT(
       {
         {
@@ -114,8 +110,6 @@ TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, views) {
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
        c_style_memory_management) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(
       { [[maybe_unused]] void* ptr = Kokkos::kokkos_malloc(1); },
       "Kokkos ERROR: attempting to perform C-style memory management via "
@@ -187,8 +181,6 @@ struct ForFunctor {
 };
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, parallel_for) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(
       {
         Kokkos::initialize();
@@ -222,8 +214,6 @@ struct ReduceFunctor {
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
        parallel_reduce) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(
       {
         using functor_type = EmptyReduceFunctor<float>;
@@ -317,8 +307,6 @@ struct ScanFunctor {
 };
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest, parallel_scan) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(
       {
         Kokkos::initialize();
@@ -402,8 +390,6 @@ void test_execution_space() {
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
        execution_space) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   test_execution_space<Kokkos::DefaultExecutionSpace>();
   if (!std::is_same_v<Kokkos::DefaultExecutionSpace,
                       Kokkos::DefaultHostExecutionSpace>) {
@@ -436,8 +422,6 @@ void compute_stuff(Kokkos::DefaultExecutionSpace exec) {
 
 TEST_F(ExecutionEnvironmentNonInitializedOrFinalized_DeathTest,
        static_execution_space) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_EXIT(
       {
         Kokkos::initialize();
