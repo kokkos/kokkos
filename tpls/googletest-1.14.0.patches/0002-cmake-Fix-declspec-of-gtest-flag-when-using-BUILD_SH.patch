@@ -1,0 +1,117 @@
+From 4025dd843c1ff930d7d77e7fd44af8f9506455b2 Mon Sep 17 00:00:00 2001
+From: Corentin Le Molgat <corentinl@google.com>
+Date: Fri, 9 Jan 2026 07:33:40 -0800
+Subject: [PATCH 2/3] cmake: Fix declspec of gtest flag when using
+ BUILD_SHARED_LIBS=ON and absl
+
+On windows flags declaration must be prepend by `GTEST_API_`
+to have the correct declspec (dllexport or dllimport)
+
+This patch also fix super build integration of googletest by adding the necessary `INSTALL_RPATH` and `$<BUILD_INTERFACE:` needed to be able to `FetchContent` or `add_subdirectory()` googletest in a user CMake project.
+
+Fix #4718
+related to abseil/abseil-cpp#1817
+
+PiperOrigin-RevId: 854187933
+Change-Id: I4341fdb7e88a51c5f9a1c72c58bcc8c4d6bfd1c5
+---
+ .../include/gmock/internal/gmock-port.h       |  6 +++---
+ googletest/cmake/internal_utils.cmake         | 21 ++++++++++++-------
+ .../include/gtest/internal/gtest-port.h       | 12 +++++------
+ 3 files changed, 23 insertions(+), 16 deletions(-)
+
+diff --git a/googlemock/include/gmock/internal/gmock-port.h b/googlemock/include/gmock/internal/gmock-port.h
+index 55ddfb6c..5522ec64 100644
+--- a/googlemock/include/gmock/internal/gmock-port.h
++++ b/googlemock/include/gmock/internal/gmock-port.h
+@@ -85,11 +85,11 @@
+ 
+ // Macros for declaring flags.
+ #define GMOCK_DECLARE_bool_(name) \
+-  ABSL_DECLARE_FLAG(bool, GMOCK_FLAG_NAME_(name))
++  GTEST_API_ ABSL_DECLARE_FLAG(bool, GMOCK_FLAG_NAME_(name))
+ #define GMOCK_DECLARE_int32_(name) \
+-  ABSL_DECLARE_FLAG(int32_t, GMOCK_FLAG_NAME_(name))
++  GTEST_API_ ABSL_DECLARE_FLAG(int32_t, GMOCK_FLAG_NAME_(name))
+ #define GMOCK_DECLARE_string_(name) \
+-  ABSL_DECLARE_FLAG(std::string, GMOCK_FLAG_NAME_(name))
++  GTEST_API_ ABSL_DECLARE_FLAG(std::string, GMOCK_FLAG_NAME_(name))
+ 
+ #define GMOCK_FLAG_GET(name) ::absl::GetFlag(GMOCK_FLAG(name))
+ #define GMOCK_FLAG_SET(name, value) \
+diff --git a/googletest/cmake/internal_utils.cmake b/googletest/cmake/internal_utils.cmake
+index 64fa340f..b1f52f73 100644
+--- a/googletest/cmake/internal_utils.cmake
++++ b/googletest/cmake/internal_utils.cmake
+@@ -185,11 +185,19 @@ function(cxx_library_with_type name type cxx_flags)
+     COMPILE_PDB_NAME_DEBUG "${name}${pdb_debug_postfix}")
+ 
+   if (BUILD_SHARED_LIBS OR type STREQUAL "SHARED")
+-    set_target_properties(${name}
+-      PROPERTIES
+-      COMPILE_DEFINITIONS "GTEST_CREATE_SHARED_LIBRARY=1")
++    target_compile_definitions(${name} PRIVATE
++      "GTEST_CREATE_SHARED_LIBRARY=1")
+     target_compile_definitions(${name} INTERFACE
+-      $<INSTALL_INTERFACE:GTEST_LINKED_AS_SHARED_LIBRARY=1>)
++      $<BUILD_INTERFACE:GTEST_LINKED_AS_SHARED_LIBRARY=1>
++      $<INSTALL_INTERFACE:GTEST_LINKED_AS_SHARED_LIBRARY=1>
++    )
++    if(APPLE)
++      set_target_properties(${name} PROPERTIES
++        INSTALL_RPATH "@loader_path")
++    elseif(UNIX)
++      set_target_properties(${name} PROPERTIES
++        INSTALL_RPATH "$ORIGIN")
++    endif()
+   endif()
+   if (DEFINED GTEST_HAS_PTHREAD)
+     target_link_libraries(${name} PUBLIC Threads::Threads)
+@@ -226,9 +234,8 @@ function(cxx_executable_with_flags name cxx_flags libs)
+       COMPILE_FLAGS "${cxx_flags}")
+   endif()
+   if (BUILD_SHARED_LIBS)
+-    set_target_properties(${name}
+-      PROPERTIES
+-      COMPILE_DEFINITIONS "GTEST_LINKED_AS_SHARED_LIBRARY=1")
++    target_compile_definitions(${name} PRIVATE
++      "GTEST_LINKED_AS_SHARED_LIBRARY=1")
+   endif()
+   # To support mixing linking in static and dynamic libraries, link each
+   # library in with an extra call to target_link_libraries.
+diff --git a/googletest/include/gtest/internal/gtest-port.h b/googletest/include/gtest/internal/gtest-port.h
+index b887e24e..dc9479fc 100644
+--- a/googletest/include/gtest/internal/gtest-port.h
++++ b/googletest/include/gtest/internal/gtest-port.h
+@@ -827,10 +827,10 @@ typedef struct _RTL_CRITICAL_SECTION GTEST_CRITICAL_SECTION;
+ #ifndef GTEST_API_
+ 
+ #ifdef _MSC_VER
+-#if GTEST_LINKED_AS_SHARED_LIBRARY
+-#define GTEST_API_ __declspec(dllimport)
+-#elif GTEST_CREATE_SHARED_LIBRARY
++#if GTEST_CREATE_SHARED_LIBRARY
+ #define GTEST_API_ __declspec(dllexport)
++#elif GTEST_LINKED_AS_SHARED_LIBRARY
++#define GTEST_API_ __declspec(dllimport)
+ #endif
+ #elif GTEST_HAVE_ATTRIBUTE_(visibility)
+ #define GTEST_API_ __attribute__((visibility("default")))
+@@ -2239,11 +2239,11 @@ using TimeInMillis = int64_t;  // Represents time in milliseconds.
+ 
+ // Macros for declaring flags.
+ #define GTEST_DECLARE_bool_(name) \
+-  ABSL_DECLARE_FLAG(bool, GTEST_FLAG_NAME_(name))
++  GTEST_API_ ABSL_DECLARE_FLAG(bool, GTEST_FLAG_NAME_(name))
+ #define GTEST_DECLARE_int32_(name) \
+-  ABSL_DECLARE_FLAG(int32_t, GTEST_FLAG_NAME_(name))
++  GTEST_API_ ABSL_DECLARE_FLAG(int32_t, GTEST_FLAG_NAME_(name))
+ #define GTEST_DECLARE_string_(name) \
+-  ABSL_DECLARE_FLAG(std::string, GTEST_FLAG_NAME_(name))
++  GTEST_API_ ABSL_DECLARE_FLAG(std::string, GTEST_FLAG_NAME_(name))
+ 
+ #define GTEST_FLAG_SAVER_ ::absl::FlagSaver
+ 
+-- 
+2.53.0
+

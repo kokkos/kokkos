@@ -1,0 +1,39 @@
+From 765f4445f73ee829b91c0ae35f4985ad7ed25e93 Mon Sep 17 00:00:00 2001
+From: Daniel Arndt <arndtd@ornl.gov>
+Date: Fri, 14 Aug 2026 11:29:13 -0400
+Subject: [PATCH 3/3] Use pragma nv_diag_suppress 177 to disable spurious nvc++
+ warning
+
+Kokkos-specific workaround; no corresponding fix exists upstream.
+---
+ googletest/include/gtest/gtest.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/googletest/include/gtest/gtest.h b/googletest/include/gtest/gtest.h
+index de7d528f..e6bc35cf 100644
+--- a/googletest/include/gtest/gtest.h
++++ b/googletest/include/gtest/gtest.h
+@@ -49,6 +49,11 @@
+ #ifndef GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+ #define GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+ 
++#ifdef __NVCOMPILER
++#pragma nv_diagnostic push
++#pragma nv_diag_suppress 177
++#endif
++
+ #include <cstddef>
+ #include <cstdint>
+ #include <iomanip>
+@@ -2318,4 +2323,8 @@ inline int RUN_ALL_TESTS() { return ::testing::UnitTest::GetInstance()->Run(); }
+ 
+ GTEST_DISABLE_MSC_WARNINGS_POP_()  //  4251
+ 
++#ifdef __NVCOMPILER
++#pragma nv_diagnostic pop
++#endif
++
+ #endif  // GOOGLETEST_INCLUDE_GTEST_GTEST_H_
+-- 
+2.53.0
+
