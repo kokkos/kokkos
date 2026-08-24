@@ -20,8 +20,7 @@ jobs:
         ref: v1.14.0
         path: googletest-upstream
     - run: |
-        git -C googletest-upstream -c user.email=ci@kokkos.org -c user.name=CI \
-          am "$GITHUB_WORKSPACE"/tpls/googletest-1.14.0.patches/*.patch
+        git -C googletest-upstream apply "$GITHUB_WORKSPACE"/tpls/googletest-1.14.0.patches/*.patch
     - run: |
         rm googletest-upstream/.clang-format
         rm -r googletest-upstream/.github
