@@ -8,19 +8,51 @@
 #include <impl/Kokkos_Command_Line_Parsing.hpp>
 #include <impl/Kokkos_Error.hpp>
 
+#include <cctype>
 #include <cstring>
 #include <iostream>
 #include <regex>
 #include <string>
 #include <sstream>
+#include <vector>
 
 namespace {
 
-auto const regex_true = std::regex(
-    "(yes|true|1)", std::regex_constants::icase | std::regex_constants::egrep);
+bool string_equal_case_insensitive(char const* lhs, char const* rhs) {
+  while (*lhs != '\0' && *rhs != '\0') {
+    auto const lhs_char = static_cast<unsigned char>(*lhs);
+    auto const rhs_char = static_cast<unsigned char>(*rhs);
+    if (std::tolower(lhs_char) != std::tolower(rhs_char)) {
+      return false;
+    }
+    ++lhs;
+    ++rhs;
+  }
+  return *lhs == '\0' && *rhs == '\0';
+}
 
-auto const regex_false = std::regex(
-    "(no|false|0)", std::regex_constants::icase | std::regex_constants::egrep);
+bool parse_bool(char const* str, bool& val) {
+  if (string_equal_case_insensitive(str, "yes") ||
+      string_equal_case_insensitive(str, "true") ||
+      string_equal_case_insensitive(str, "1")) {
+    val = true;
+    return true;
+  }
+
+  if (string_equal_case_insensitive(str, "no") ||
+      string_equal_case_insensitive(str, "false") ||
+      string_equal_case_insensitive(str, "0")) {
+    val = false;
+    return true;
+  }
+
+  return false;
+}
+
+std::vector<std::regex>& do_not_warn_regular_expressions() {
+  static std::vector<std::regex> expressions;
+  return expressions;
+}
 
 }  // namespace
 
@@ -48,6 +80,21 @@ bool Kokkos::Impl::check_arg(char const* arg, char const* expected) {
   return true;
 }
 
+bool Kokkos::Impl::check_arg_starts_with(char const* arg,
+                                         char const* expected) {
+  std::size_t arg_len = std::strlen(arg);
+  std::size_t exp_len = std::strlen(expected);
+  if (arg_len < exp_len) return false;
+  return std::strncmp(arg, expected, exp_len) == 0;
+}
+
+bool Kokkos::Impl::check_arg_starts_with_optional_leading_dash(
+    char const* arg, char const* expected) {
+  if (check_arg_starts_with(arg, expected)) return true;
+  if (expected[0] != '-' || arg[0] != '-') return false;
+  return check_arg_starts_with(arg + 1, expected);
+}
+
 bool Kokkos::Impl::check_env_bool(char const* name, bool& val) {
   char const* var = std::getenv(name);
 
@@ -55,21 +102,15 @@ bool Kokkos::Impl::check_env_bool(char const* name, bool& val) {
     return false;
   }
 
-  if (std::regex_match(var, regex_true)) {
-    val = true;
+  if (parse_bool(var, val)) {
     return true;
   }
 
-  if (!std::regex_match(var, regex_false)) {
-    std::stringstream ss;
-    ss << "Error: cannot convert environment variable '" << name << "=" << var
-       << "' to a boolean."
-       << " Raised by Kokkos::initialize().\n";
-    Kokkos::abort(ss.str().c_str());
-  }
-
-  val = false;
-  return true;
+  std::stringstream ss;
+  ss << "Error: cannot convert environment variable '" << name << "=" << var
+     << "' to a boolean."
+     << " Raised by Kokkos::initialize().\n";
+  Kokkos::abort(ss.str().c_str());
 }
 
 bool Kokkos::Impl::check_env_int(char const* name, int& val) {
@@ -122,19 +163,15 @@ bool Kokkos::Impl::check_arg_bool(char const* arg, char const* name,
   }
 
   std::advance(arg, len + 1);
-  if (std::regex_match(arg, regex_true)) {
-    val = true;
+  if (parse_bool(arg, val)) {
     return true;
   }
-  if (!std::regex_match(arg, regex_false)) {
-    std::stringstream ss;
-    ss << "Error: cannot convert command line argument '" << name << "=" << arg
-       << "' to a boolean."
-       << " Raised by Kokkos::initialize().\n";
-    Kokkos::abort(ss.str().c_str());
-  }
-  val = false;
-  return true;
+
+  std::stringstream ss;
+  ss << "Error: cannot convert command line argument '" << name << "=" << arg
+     << "' to a boolean."
+     << " Raised by Kokkos::initialize().\n";
+  Kokkos::abort(ss.str().c_str());
 }
 
 bool Kokkos::Impl::check_arg_int(char const* arg, char const* name, int& val) {
@@ -227,20 +264,18 @@ void Kokkos::Impl::warn_deprecated_command_line_argument(
             << " Raised by Kokkos::initialize()." << std::endl;
 }
 
-namespace {
-std::vector<std::regex> do_not_warn_regular_expressions{
-    std::regex{"--kokkos-tool.*", std::regex::egrep},
-};
-}
-
 void Kokkos::Impl::do_not_warn_not_recognized_command_line_argument(
     std::regex ignore) {
-  do_not_warn_regular_expressions.push_back(std::move(ignore));
+  do_not_warn_regular_expressions().push_back(std::move(ignore));
 }
 
 void Kokkos::Impl::warn_not_recognized_command_line_argument(
     std::string not_recognized) {
-  for (auto const& ignore : do_not_warn_regular_expressions) {
+  if (check_arg_starts_with(not_recognized.c_str(), "--kokkos-tool")) {
+    return;
+  }
+
+  for (auto const& ignore : do_not_warn_regular_expressions()) {
     if (std::regex_match(not_recognized, ignore)) {
       return;
     }
