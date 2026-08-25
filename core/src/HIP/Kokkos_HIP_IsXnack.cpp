@@ -99,6 +99,9 @@ bool gpu_arch_can_access_system_allocations() {
     return false;
 
   // Conservative fallback: unsupported/unknown architecture.
+  if (show_warnings()) {
+    std::cerr << "Kokkos Warning: AMG GPU architecture (\""<< arch_name <<"\") not recognized\n;
+  }
   return false;
 }
 
