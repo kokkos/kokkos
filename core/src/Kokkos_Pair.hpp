@@ -385,7 +385,7 @@ template <typename T1, typename T2>
 struct is_std_pair<std::pair<T1, T2>> : std::true_type {};
 
 template <typename T>
-auto convert_to_kokkos_pair_if_std_pair(T t) {
+constexpr auto convert_to_kokkos_pair_if_std_pair(T t) {
   if constexpr (is_std_pair<T>::value)
     return Kokkos::pair<typename T::first_type, typename T::second_type>{t};
   else
