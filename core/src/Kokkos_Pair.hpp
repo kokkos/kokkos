@@ -84,7 +84,7 @@ struct pair {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Return the std::pair version of this object.
   ///
@@ -129,7 +129,7 @@ struct pair<T1&, T2&> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -186,7 +186,7 @@ struct pair<T1, T2&> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -243,7 +243,7 @@ struct pair<T1&, T2> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
