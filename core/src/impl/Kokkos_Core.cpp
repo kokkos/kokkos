@@ -383,7 +383,7 @@ std::optional<int> Kokkos::Impl::get_gpu(
     if (id >= num_devices) {
       std::stringstream ss;
       ss << "Error: Requested GPU with id '" << id << "' but only "
-         << num_devices << "GPU(s) available!"
+         << num_devices << " GPU(s) available!"
          << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
@@ -662,6 +662,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "INTEL_XEHP");
 #elif defined(KOKKOS_ARCH_INTEL_PVC)
   declare_configuration_metadata("architecture", "GPU architecture", "INTEL_PVC");
+#elif defined(KOKKOS_ARCH_INTEL_BMG)
+  declare_configuration_metadata("architecture", "GPU architecture", "INTEL_BMG");
 
 #elif defined(KOKKOS_ARCH_MAXWELL50)
   declare_configuration_metadata("architecture", "GPU architecture", "MAXWELL50");

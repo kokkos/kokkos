@@ -55,18 +55,21 @@ RUN apt-get update && apt-get install -y \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN cd /tmp && git clone https://github.com/intel/llvm.git -b v6.2.0 --depth=1 && cd llvm && \
+ARG UNIFIED_RUNTIME_VERSION=6.2.0
+RUN cd /tmp && git clone https://github.com/intel/llvm.git -b v${UNIFIED_RUNTIME_VERSION} --depth=1 && cd llvm && \
     cmake -S unified-runtime -B build_ur \
       -DCMAKE_C_COMPILER=gcc -DCMAKE_CXX_COMPILER=g++ \
       -DUR_BUILD_TESTS=OFF \
       -DUR_ENABLE_TRACING=ON \
       -DUR_BUILD_ADAPTER_CUDA=ON \
-      -DCMAKE_BUILD_TYPE=Release && \
-    cmake --build build_ur -j 8 && \
-    cp -r build_ur/lib/* /opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib/ && \
+      -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_INSTALL_PREFIX=/opt/ur-${UNIFIED_RUNTIME_VERSION} && \
+    cmake --build build_ur -j 8 --target=install && \
     rm -r /tmp/llvm
 
 # sycl-ls, icpx
-ENV PATH=/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/bin/:$PATH
-# libsycl, libsvml
-ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/${ONEAPI_VERSION}/lib:$LD_LIBRARY_PATH
+ENV PATH=/opt/intel/oneapi/compiler/latest/bin/:$PATH
+# libsycl, libsvml, libumf
+ENV LD_LIBRARY_PATH=/opt/intel/oneapi/compiler/latest/lib:/opt/intel/oneapi/umf/latest/lib:$LD_LIBRARY_PATH
+# libur_adapter_cuda
+ENV UR_ADAPTERS_SEARCH_PATH=/opt/ur-${UNIFIED_RUNTIME_VERSION}/lib

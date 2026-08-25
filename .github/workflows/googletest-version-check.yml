@@ -1,0 +1,51 @@
+name: googletest version check
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/googletest-version-check.yml'
+      - 'tpls/googletest-1.14.0/**'
+      - 'tpls/googletest-1.14.0.patches/**'
+
+permissions: read-all
+
+jobs:
+  googletest-version-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      with:
+        repository: google/googletest
+        ref: v1.14.0
+        path: googletest-upstream
+    - run: |
+        git -C googletest-upstream apply "$GITHUB_WORKSPACE"/tpls/googletest-1.14.0.patches/*.patch
+    - run: |
+        rm googletest-upstream/.clang-format
+        rm -r googletest-upstream/.github
+        rm googletest-upstream/.gitignore
+        rm googletest-upstream/BUILD.bazel
+        rm googletest-upstream/CONTRIBUTING.md
+        rm googletest-upstream/CONTRIBUTORS
+        rm googletest-upstream/README.md
+        rm googletest-upstream/WORKSPACE
+        rm -r googletest-upstream/ci
+        rm -r googletest-upstream/docs
+        rm googletest-upstream/googletest_deps.bzl
+        rm -r googletest-upstream/googlemock/cmake
+        rm -r googletest-upstream/googlemock/docs
+        rm googletest-upstream/googlemock/README.md
+        rm -r googletest-upstream/googlemock/test
+        rm googletest-upstream/googlemock/include/gmock/internal/custom/README.md
+        rm googletest-upstream/googletest/cmake/Config.cmake.in
+        rm googletest-upstream/googletest/cmake/gtest.pc.in
+        rm googletest-upstream/googletest/cmake/gtest_main.pc.in
+        rm googletest-upstream/googletest/cmake/libgtest.la.in
+        rm -r googletest-upstream/googletest/docs
+        rm googletest-upstream/googletest/README.md
+        rm -r googletest-upstream/googletest/samples
+        rm -r googletest-upstream/googletest/test
+        rm googletest-upstream/googletest/include/gtest/internal/custom/README.md
+        rm -r googletest-upstream/.git
+        diff --unified=3 --recursive googletest-upstream tpls/googletest-1.14.0

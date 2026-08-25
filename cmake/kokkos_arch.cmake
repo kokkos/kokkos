@@ -145,6 +145,7 @@ kokkos_arch_option(INTEL_GEN11 GPU "Intel GPU Gen11" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_GEN12LP GPU "Intel GPU Gen12LP" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_XEHP GPU "Intel GPU Xe-HP" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_PVC GPU "Intel GPU Ponte Vecchio" "KOKKOS_SHOW_SYCL_ARCHS")
+kokkos_arch_option(INTEL_BMG GPU "Intel Battlemage" "KOKKOS_SHOW_SYCL_ARCHS")
 
 if(KOKKOS_ENABLE_COMPILER_WARNINGS)
   set(COMMON_WARNINGS
@@ -960,7 +961,9 @@ endif()
 if(KOKKOS_ENABLE_SYCL)
   string(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
   include(CheckCXXSymbolExists)
-  if(Kokkos_ARCH_INTEL_PVC OR Kokkos_ARCH_INTEL_GEN
+  if(Kokkos_ARCH_INTEL_BMG
+     OR Kokkos_ARCH_INTEL_PVC
+     OR Kokkos_ARCH_INTEL_GEN
      OR (KOKKOS_ENABLE_UNSUPPORTED_ARCHS AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
          AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2025.1.1)
   )
@@ -1147,6 +1150,9 @@ endif()
 if(KOKKOS_ARCH_INTEL_PVC)
   check_multiple_intel_arch()
 endif()
+if(KOKKOS_ARCH_INTEL_BMG)
+  check_multiple_intel_arch()
+endif()
 
 if(KOKKOS_ENABLE_OPENMP)
   compiler_specific_link_options(CrayClang -fopenmp)
@@ -1246,6 +1252,8 @@ if(KOKKOS_ENABLE_SYCL)
       set(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.50.4")
     elseif(KOKKOS_ARCH_INTEL_PVC)
       set(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.60.7")
+    elseif(KOKKOS_ARCH_INTEL_BMG)
+      set(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device bmg")
     endif()
 
     if(Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
