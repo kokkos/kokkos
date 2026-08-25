@@ -1630,9 +1630,9 @@ struct TestSubviewStdPairInKernel {
   Kokkos::View<int*, Space> a;
 
   KOKKOS_FUNCTION void operator()(int) const {
-    auto sa = Kokkos::View<int*, Space>(a, std::pair{0, 1});
+    auto sa = Kokkos::View<int*, Space>(a, std::pair<int, int>{0, 1});
     sa(0)   = 3;
-    sa      = Kokkos::subview(a, std::pair{1, 3});
+    sa      = Kokkos::subview(a, std::pair<int, int>{1, 3});
     sa(0)   = 2;
     sa(1)   = 1;
   }
