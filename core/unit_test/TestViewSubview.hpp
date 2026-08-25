@@ -1630,7 +1630,9 @@ struct TestSubviewStdPairInKernel {
   Kokkos::View<int*, Space> a;
 
   KOKKOS_FUNCTION void operator()(int) const {
-    auto sa = Kokkos::subview(a, std::pair{1, 3});
+    auto sa = Kokkos::View<int*, Space>(a, std::pair{0, 1});
+    sa(0)   = 3;
+    sa      = Kokkos::subview(a, std::pair{1, 3});
     sa(0)   = 2;
     sa(1)   = 1;
   }
@@ -1639,10 +1641,11 @@ struct TestSubviewStdPairInKernel {
       : a(Kokkos::view_alloc(exec, "a"), 3) {
     run(exec);
   }
+
   void run(Space const& exec) {
     Kokkos::parallel_for(Kokkos::RangePolicy(exec, 0, 1), *this);
-    auto ha = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), a);
-    EXPECT_EQ(ha[0], 0);
+    auto ha = Kokkos::create_mirror_view_and_copy(a);
+    EXPECT_EQ(ha[0], 3);
     EXPECT_EQ(ha[1], 2);
     EXPECT_EQ(ha[2], 1);
   }
