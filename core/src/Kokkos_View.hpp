@@ -946,7 +946,7 @@ class View
   // may assign unmanaged from managed.
 
   template <class RT, class... RP, class Arg0, class... Args>
-  View(const View<RT, RP...>& src_view, const Arg0 arg0, Args... args)
+  constexpr View(const View<RT, RP...>& src_view, const Arg0 arg0, Args... args)
       : base_t(Impl::subview_ctor_tag, src_view,
                Impl::convert_to_kokkos_pair_if_std_pair(arg0),
                Impl::convert_to_kokkos_pair_if_std_pair(args)...) {}
@@ -1661,7 +1661,7 @@ struct SubviewReturnType<
 }  // namespace Impl
 
 template <class D, class... P, class... Slices>
-auto subview(const View<D, P...>& src, Slices... slices) {
+constexpr auto subview(const View<D, P...>& src, Slices... slices) {
   return subview(src, Impl::convert_to_kokkos_pair_if_std_pair(slices)...);
 }
 
