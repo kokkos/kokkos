@@ -188,7 +188,7 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/kokkos_configure_trilinos.cmake)
 
 if(Kokkos_ENABLE_TESTS)
-  find_package(GTest QUIET)
+  find_package(GTest QUIET 1.14.0)
 endif()
 
 if(Kokkos_ENABLE_BENCHMARKS)
