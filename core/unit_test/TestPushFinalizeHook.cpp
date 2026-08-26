@@ -14,6 +14,7 @@ import kokkos.core;
 #include <exception>
 #include <iostream>
 #include <string>
+#include <thread>
 
 #include "KokkosExecutionEnvironmentNeverInitializedFixture.hpp"
 
@@ -110,6 +111,33 @@ TEST_F(PushFinalizeHook_DeathTest, ignore_late_registration) {
         std::exit(EXIT_SUCCESS);
       },
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
+TEST_F(PushFinalizeHook_DeathTest, tread_safe) {
+  GTEST_FLAG_SET(death_test_style, "fast");
+  EXPECT_EXIT(
+      ({
+        int count = 0;
+        // generates a nullary callable that push n times a callback to
+        // increment the counter by one
+        auto push_increment_n = [&count](int n) {
+          return [&count, n] {
+            for (int i = 0; i < n; ++i)
+              Kokkos::push_finalize_hook([&count] { ++count; });
+          };
+        };
+        Kokkos::initialize(
+            Kokkos::InitializationSettings().set_disable_warnings(true));
+        std::thread t1(push_increment_n(8));
+        std::thread t2(push_increment_n(4));
+        std::thread t3(push_increment_n(2));
+        t1.join();
+        t2.join();
+        t3.join();
+        Kokkos::finalize();
+        std::exit(14 - count);
+      }),
+      ::testing::ExitedWithCode(0), "");
 }
 
 }  // namespace
