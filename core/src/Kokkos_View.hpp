@@ -945,8 +945,15 @@ class View
   // Compatible subview constructor
   // may assign unmanaged from managed.
 
+#if defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA_CONSTEXPR)
+#define KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER KOKKOS_FUNCTION
+#else
+#define KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER constexpr
+#endif
+
   template <class RT, class... RP, class Arg0, class... Args>
-  constexpr View(const View<RT, RP...>& src_view, const Arg0 arg0, Args... args)
+  KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER View(const View<RT, RP...>& src_view,
+                                              const Arg0 arg0, Args... args)
       : base_t(Impl::subview_ctor_tag, src_view,
                Impl::convert_to_kokkos_pair_if_std_pair(arg0),
                Impl::convert_to_kokkos_pair_if_std_pair(args)...) {}
@@ -1661,9 +1668,12 @@ struct SubviewReturnType<
 }  // namespace Impl
 
 template <class D, class... P, class... Slices>
-constexpr auto subview(const View<D, P...>& src, Slices... slices) {
+KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER auto subview(const View<D, P...>& src,
+                                                    Slices... slices) {
   return subview(src, Impl::convert_to_kokkos_pair_if_std_pair(slices)...);
 }
+
+#undef KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER
 
 // std::pair isn't device-compatible
 template <class D, class... P, class... Slices>
