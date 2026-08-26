@@ -36,7 +36,10 @@ struct HIPTraits {
   }
 
   static int host_warp_size() { return m_host_warp_size; }
-  static void set_host_warp_size(int size) { m_host_warp_size = size; }
+  static void set_host_warp_size(int size) {
+    KOKKOS_EXPECTS(size == 32 || size == 64);
+    m_host_warp_size = size;
+  }
 
   static int m_host_warp_size;
   static constexpr int ConservativeThreadsPerBlock =
