@@ -16,6 +16,7 @@
 #endif
 
 #include <impl/Kokkos_RuntimeInfo.hpp>
+#include <HIP/Kokkos_HIP_Error.hpp>
 
 namespace {
 
@@ -82,10 +83,9 @@ bool xnack_boot_config_has_hmm_mirror() {
 
 bool gpu_arch_can_access_system_allocations() {
   int current_device = -1;
-  if (hipGetDevice(&current_device) != hipSuccess) return false;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&current_device));
   hipDeviceProp_t props;
-  if (hipGetDeviceProperties(&props, current_device) != hipSuccess)
-    return false;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&props, current_device));
 
   std::string_view const arch_name = props.gcnArchName;
   auto has_prefix                  = [&](std::string_view const prefix) {
