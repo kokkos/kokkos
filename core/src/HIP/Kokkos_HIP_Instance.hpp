@@ -32,7 +32,8 @@ struct HIPTraits {
   KOKKOS_INLINE_FUNCTION static int WarpIndexMask() { return WarpSize() - 1; }
 
   KOKKOS_INLINE_FUNCTION static int WarpIndexShift() {
-    return Kokkos::bit_floor(WarpSize());
+    return static_cast<int>(
+        Kokkos::countr_zero(static_cast<unsigned int>(WarpSize())));
   }
 
   static int host_warp_size() { return m_host_warp_size; }

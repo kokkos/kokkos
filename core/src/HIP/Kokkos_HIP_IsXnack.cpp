@@ -5,6 +5,7 @@
 
 #include <string>
 #include <optional>
+#include <iostream>
 #include <fstream>
 #include <string_view>
 #include <hip/hip_runtime_api.h>
@@ -13,6 +14,8 @@
 #include <stdio.h>
 #include <sys/utsname.h>
 #endif
+
+#include <impl/Kokkos_RuntimeInfo.hpp>
 
 namespace {
 
@@ -99,8 +102,9 @@ bool gpu_arch_can_access_system_allocations() {
     return false;
 
   // Conservative fallback: unsupported/unknown architecture.
-  if (show_warnings()) {
-    std::cerr << "Kokkos Warning: AMG GPU architecture (\""<< arch_name <<"\") not recognized\n;
+  if (Kokkos::show_warnings()) {
+    std::cerr << "Warning: AMG GPU architecture '" << arch_name
+              << "' not recognized;" << std::endl;
   }
   return false;
 }

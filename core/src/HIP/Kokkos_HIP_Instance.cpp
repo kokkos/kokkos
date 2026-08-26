@@ -361,8 +361,9 @@ HIPInternal::~HIPInternal() {
 
 int HIPInternal::m_maxThreadsPerSM = 0;
 
-// default value
-int HIPTraits::m_host_warp_size = 64;
+// default value is 64, but
+// leave uninitialized so read before write is caught by CI
+int HIPTraits::m_host_warp_size;
 
 hipDeviceProp_t HIPInternal::m_deviceProp;
 
