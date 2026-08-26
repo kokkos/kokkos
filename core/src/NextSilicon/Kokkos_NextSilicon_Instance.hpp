@@ -20,6 +20,7 @@ namespace Kokkos::Experimental::Impl {
 
 class NextSiliconInternal {
   Impl::NextSiliconHeapBuffer m_functor_buffer;
+  Impl::NextSiliconHeapBuffer m_league_scratch_buffer;
   Impl::NextSiliconHeapBuffer m_reduce_partial_buffer;
   ::Kokkos::Impl::PageAlignedData<std::recursive_mutex,
                                   ::Kokkos::Impl::PageLocation::Host>
@@ -49,6 +50,7 @@ class NextSiliconInternal {
         new (buffer) Driver(driver), deleter);
   }
 
+  std::byte* resize_league_scratch_buffer(size_t requested);
   std::byte* resize_reduce_partial_buffer(size_t requested);
 
   void print_configuration(std::ostream& os) const;
