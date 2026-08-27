@@ -947,7 +947,7 @@ class View
 
   template <class RT, class... RP, class Arg0, class... Args>
   View(const View<RT, RP...>& src_view, const Arg0 arg0, Args... args)
-      : base_t(Impl::subview_ctor_tag, src_view,
+      : base_t(Impl::SubViewCtorTag(), src_view,
                Impl::convert_to_kokkos_pair_if_std_pair(arg0),
                Impl::convert_to_kokkos_pair_if_std_pair(args)...) {}
 
@@ -956,7 +956,7 @@ class View
     requires(!Impl::ContainsStdPair<Arg0, Args...>)
   KOKKOS_INLINE_FUNCTION View(const View<RT, RP...>& src_view, const Arg0 arg0,
                               Args... args)
-      : base_t(Impl::subview_ctor_tag, src_view, arg0, args...) {}
+      : base_t(Impl::SubViewCtorTag(), src_view, arg0, args...) {}
 
   //----------------------------------------
   // Allocation according to allocation properties and array layout
