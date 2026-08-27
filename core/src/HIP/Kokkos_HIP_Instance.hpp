@@ -21,7 +21,7 @@ namespace Kokkos {
 namespace Impl {
 
 struct HIPTraits {
-  KOKKOS_INLINE_FUNCTION static int WarpSize() {
+  KOKKOS_FUNCTION static int WarpSize() {
 #ifdef __HIP_DEVICE_COMPILE__
     return warpSize;
 #else
