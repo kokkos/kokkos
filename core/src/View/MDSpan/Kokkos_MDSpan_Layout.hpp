@@ -253,7 +253,7 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_view_mapping(const VM &view_mapping) {
   view_mapping.stride_fill(&strides[0]);
   if constexpr (std::is_same_v<typename mapping_type::layout_type,
                                Kokkos::layout_stride>) {
-    return mapping_type(Kokkos::mdspan_non_standard,
+    return mapping_type(mdspan_non_standard_tag(),
                         extents_from_view_mapping<extents_type>(view_mapping),
                         strides);
   } else if constexpr (VM::Rank > 1 &&
