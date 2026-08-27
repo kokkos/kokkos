@@ -46,7 +46,7 @@ struct HIPReductionsFunctor<FunctorType, true> {
       FunctorType const& functor, Scalar value, bool const skip,
       Scalar* my_global_team_buffer_element, unsigned int const shared_elements,
       Scalar* shared_team_buffer_element) {
-    const unsigned int warp_size   = HIPTraits::WarpSize();
+    unsigned int const warp_size   = HIPTraits::WarpSize();
     unsigned int const warp_id     = (threadIdx.y * blockDim.x) / warp_size;
     unsigned int const num_threads = blockDim.x * blockDim.y;
     Scalar* const my_shared_team_buffer_element =
