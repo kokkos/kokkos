@@ -112,6 +112,18 @@ class SharedAllocationRecord<void, void> {
   // FIXME_NEXTSILICON: NextSilicon backend has problems with page migration of
   // thread-local variables, so we need to page align them as a workaround.
   static inline thread_local PageAlignedData<int> t_tracking_enabled = 1;
+
+  // FIXME_NEXTSILICON: containment for the TLS read, same rationale as
+  // NextSiliconThreadSpaceGuard::host_thread_is_on_device()
+  // (Kokkos_NextSilicon_ThreadSpaceGuard.hpp): if `t_tracking_enabled` were
+  // read directly inline in tracking_enabled()'s KOKKOS_IF_ON_HOST branch,
+  // the underlying TLS-address intrinsic is speculatable and can be hoisted
+  // past the host/device split during lowering, executing unconditionally.
+  // Keeping the read behind a non-inlined `weak` wrapper makes the call
+  // opaque at the use site, so it can't be hoisted out of the branch.
+  static __attribute__((weak)) int host_tracking_enabled() {
+    return t_tracking_enabled;
+  }
 #else
   static inline thread_local int t_tracking_enabled = 1;
 #endif
@@ -124,7 +136,11 @@ class SharedAllocationRecord<void, void> {
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
   static KOKKOS_FUNCTION int tracking_enabled() {
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+    KOKKOS_IF_ON_HOST(return host_tracking_enabled();)
+#else
     KOKKOS_IF_ON_HOST(return t_tracking_enabled;)
+#endif
     KOKKOS_IF_ON_DEVICE(return 0;)
     KOKKOS_IMPL_UNREACHABLE();
   }

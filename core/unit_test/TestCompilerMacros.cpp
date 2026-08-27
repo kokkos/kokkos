@@ -13,6 +13,7 @@ import kokkos.core;
           (defined(KOKKOS_COMPILER_CRAYC) ? 1 : 0) +      \
           (defined(KOKKOS_COMPILER_CRAY_LLVM) ? 1 : 0) +  \
           (defined(KOKKOS_COMPILER_APPLECC) ? 1 : 0) +    \
+          (defined(KOKKOS_COMPILER_NEXT_LLVM) ? 1 : 0) +  \
           (defined(KOKKOS_COMPILER_CLANG) ? 1 : 0) +      \
           (defined(KOKKOS_COMPILER_GNU) ? 1 : 0) +        \
           (defined(KOKKOS_COMPILER_NVHPC) ? 1 : 0) +      \

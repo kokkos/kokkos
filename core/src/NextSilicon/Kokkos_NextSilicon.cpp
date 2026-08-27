@@ -24,8 +24,9 @@ Kokkos::Experimental::NextSilicon::~NextSilicon() {
 
 void Kokkos::Experimental::NextSilicon::impl_initialize(
     InitializationSettings const& /*settings*/) {
-  Kokkos::Impl::run_nextsilicon_initialization_callbacks();
+  // FIXME_NEXTSILICON: handle finalization if default instance already exists
 
+  Kokkos::Impl::run_nextsilicon_initialization_callbacks();
   Impl::NextSiliconInternal::default_instance =
       Kokkos::Impl::HostSharedPtr(new Impl::NextSiliconInternal);
 }
@@ -55,6 +56,10 @@ void Kokkos::Experimental::NextSilicon::impl_static_fence(
       Kokkos::Tools::Experimental::SpecialSynchronizationCases::
           GlobalDeviceSynchronization,
       [&]() { /*FIXME_NEXTSILICON*/ });
+}
+
+int Kokkos::Experimental::NextSilicon::impl_hardware_thread_id() noexcept {
+  return nextapi::get_thread_index();
 }
 
 uint32_t Kokkos::Experimental::NextSilicon::impl_instance_id() const noexcept {

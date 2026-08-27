@@ -622,10 +622,48 @@ KOKKOS_IMPL_MATH_TERNARY_FUNCTION(hypot)
 // Trigonometric functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sin)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(cos)
+#if defined(KOKKOS_ENABLE_NEXTSILICON)
+// FIXME_NEXTSILICON: The NextSilicon math library currently provides
+// double-precision `tan`.
+KOKKOS_INLINE_FUNCTION double tan(double x) { return std::tan(x); }
+KOKKOS_INLINE_FUNCTION float tan(float x) {
+  return std::tan(static_cast<double>(x));
+}
+KOKKOS_INLINE_FUNCTION float tanf(float x) {
+  return std::tan(static_cast<double>(x));
+}
+inline long double tan(long double x) { return std::tan(x); }
+inline long double tanl(long double x) { return std::tan(x); }
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> tan(
+    T x) {
+  return std::tan(static_cast<double>(x));
+}
+#else
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(tan)
+#endif
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(asin)
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(acos)
+#if defined(KOKKOS_ENABLE_NEXTSILICON)
+// FIXME_NEXTSILICON: The NextSilicon math library currently provides
+// double-precision `atan`.
+KOKKOS_INLINE_FUNCTION double atan(double x) { return std::atan(x); }
+KOKKOS_INLINE_FUNCTION float atan(float x) {
+  return std::atan(static_cast<double>(x));
+}
+KOKKOS_INLINE_FUNCTION float atanf(float x) {
+  return std::atan(static_cast<double>(x));
+}
+inline long double atan(long double x) { return std::atan(x); }
+inline long double atanl(long double x) { return std::atan(x); }
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_integral_v<T>, double> atan(
+    T x) {
+  return std::atan(static_cast<double>(x));
+}
+#else
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(atan)
+#endif
 KOKKOS_IMPL_MATH_BINARY_FUNCTION(atan2)
 // Hyperbolic functions
 KOKKOS_IMPL_MATH_UNARY_FUNCTION(sinh)

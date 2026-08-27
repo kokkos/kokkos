@@ -186,8 +186,12 @@ class HPX {
 
 #pragma GCC diagnostic pop
 
-  ~HPX() {
-    Kokkos::Impl::check_execution_space_destructor_precondition(name());
+  // Must be __host__ __device__ for the implicitly defined
+  // ~RangePolicy<ExecSpace>(); see the comment on ~Cuda() in
+  // Cuda/Kokkos_Cuda.hpp.
+  KOKKOS_FUNCTION ~HPX() {
+    KOKKOS_IF_ON_HOST(
+        (Kokkos::Impl::check_execution_space_destructor_precondition(name());))
   }
   explicit HPX(instance_mode mode)
       : m_instance_data(

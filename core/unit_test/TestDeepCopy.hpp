@@ -41,22 +41,67 @@ void test_deep_copy_assignable_types(Extents... exts) {
 
   ASSERT_TRUE(h_b((exts - 1)...) == 2.5);
 
-#ifdef KOKKOS_HAS_SHARED_SPACE
-  Kokkos::View<D1, Kokkos::SharedSpace> s("S", exts...);
-  Kokkos::deep_copy(s, 1.5);
+  // Read b back through its host mirror and check the value.
+  auto check_b = [&](double expected) {
+    Kokkos::deep_copy(h_b, b);
+    ASSERT_TRUE(h_b((exts - 1)...) == expected);
+  };
 
-  Kokkos::deep_copy(b, s);
-  Kokkos::deep_copy(h_b, b);
-  ASSERT_TRUE(h_b((exts - 1)...) == 1.5);
+#ifdef KOKKOS_HAS_SHARED_SPACE
+  // Gate on accessibility so every kernel below runs on TEST_EXECSPACE;
+  // otherwise deep_copy substitutes the view's own execution space.
+  if constexpr (Kokkos::SpaceAccessibility<TEST_EXECSPACE,
+                                           Kokkos::SharedSpace>::accessible) {
+    Kokkos::View<D1, Kokkos::SharedSpace> s("S", exts...);
+
+    // The explicit instance is required; without it this dispatches on
+    // SharedSpace::execution_space.
+    Kokkos::deep_copy(TEST_EXECSPACE{}, s, 1.5);
+
+    // No exec instance: destination-preferred dispatch resolves to
+    // TEST_EXECSPACE because b is the destination.
+    Kokkos::deep_copy(b, s);
+    check_b(1.5);
+
+    Kokkos::deep_copy(TEST_EXECSPACE{}, a, 3.5);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, s, a);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, b, s);
+    check_b(3.5);
+
+    Kokkos::View<D1, Kokkos::SharedSpace> s2("S2", exts...);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, s2, s);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, b, s2);
+    check_b(3.5);
+  }
 #endif
 
 #ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
-  Kokkos::View<D1, Kokkos::SharedHostPinnedSpace> sp("S", exts...);
-  Kokkos::deep_copy(sp, 2.5);
+  // Gate on accessibility so every kernel below runs on TEST_EXECSPACE;
+  // otherwise deep_copy substitutes the view's own execution space.
+  if constexpr (Kokkos::SpaceAccessibility<
+                    TEST_EXECSPACE,
+                    Kokkos::SharedHostPinnedSpace>::accessible) {
+    Kokkos::View<D1, Kokkos::SharedHostPinnedSpace> sp("SP", exts...);
 
-  Kokkos::deep_copy(b, sp);
-  Kokkos::deep_copy(h_b, b);
-  ASSERT_TRUE(h_b((exts - 1)...) == 2.5);
+    // The explicit instance is required; without it this dispatches on
+    // SharedHostPinnedSpace::execution_space.
+    Kokkos::deep_copy(TEST_EXECSPACE{}, sp, 2.5);
+
+    // No exec instance: destination-preferred dispatch resolves to
+    // TEST_EXECSPACE because b is the destination.
+    Kokkos::deep_copy(b, sp);
+    check_b(2.5);
+
+    Kokkos::deep_copy(TEST_EXECSPACE{}, a, 4.5);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, sp, a);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, b, sp);
+    check_b(4.5);
+
+    Kokkos::View<D1, Kokkos::SharedHostPinnedSpace> sp2("SP2", exts...);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, sp2, sp);
+    Kokkos::deep_copy(TEST_EXECSPACE{}, b, sp2);
+    check_b(4.5);
+  }
 #endif
 }
 }  // namespace

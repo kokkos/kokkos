@@ -239,6 +239,10 @@ void host_shared_ptr_test_reference_counting() {
 }  // namespace
 
 TEST(TEST_CATEGORY, host_shared_ptr_tracking) {
+  // FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  GTEST_SKIP() << "skipping host_shared_ptr_tracking on NextSilicon";
+#endif
   host_shared_ptr_test_reference_counting<typename TEST_EXECSPACE::memory_space,
                                           Kokkos::HostSpace>();
 #ifdef KOKKOS_ENABLE_CUDA

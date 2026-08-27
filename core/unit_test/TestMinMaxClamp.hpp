@@ -62,6 +62,7 @@ TEST(TEST_CATEGORY, max) {
 
 template <class ViewType>
 struct StdAlgoMinMaxOpsTestMax {
+  using execution_space = TEST_EXECSPACE;
   ViewType m_view;
 
   KOKKOS_INLINE_FUNCTION
@@ -79,7 +80,7 @@ struct StdAlgoMinMaxOpsTestMax {
 TEST(TEST_CATEGORY, max_within_parfor) {
   namespace KE = Kokkos::Experimental;
 
-  using view_t = Kokkos::View<double*>;
+  using view_t = Kokkos::View<double*, TEST_EXECSPACE>;
   view_t a("a", 10);
 
   StdAlgoMinMaxOpsTestMax<view_t> fnc(a);
@@ -123,6 +124,7 @@ TEST(TEST_CATEGORY, min) {
 
 template <class ViewType>
 struct StdAlgoMinMaxOpsTestMin {
+  using execution_space = TEST_EXECSPACE;
   ViewType m_view;
 
   KOKKOS_INLINE_FUNCTION
@@ -139,7 +141,7 @@ struct StdAlgoMinMaxOpsTestMin {
 
 TEST(TEST_CATEGORY, min_within_parfor) {
   namespace KE = Kokkos::Experimental;
-  using view_t = Kokkos::View<double*>;
+  using view_t = Kokkos::View<double*, TEST_EXECSPACE>;
   view_t a("a", 10);
 
   StdAlgoMinMaxOpsTestMin<view_t> fnc(a);
@@ -200,6 +202,7 @@ TEST(TEST_CATEGORY, minmax) {
 
 template <class ViewType>
 struct StdAlgoMinMaxOpsTestMinMax {
+  using execution_space = TEST_EXECSPACE;
   ViewType m_view;
 
   KOKKOS_INLINE_FUNCTION
@@ -214,7 +217,7 @@ struct StdAlgoMinMaxOpsTestMinMax {
 };
 
 TEST(TEST_CATEGORY, minmax_within_parfor) {
-  using view_t = Kokkos::View<double*>;
+  using view_t = Kokkos::View<double*, TEST_EXECSPACE>;
   view_t a("a", 10);
 
   StdAlgoMinMaxOpsTestMinMax<view_t> fnc(a);
@@ -253,6 +256,7 @@ TEST(TEST_CATEGORY, clamp) {
 
 template <class ViewType>
 struct StdAlgoMinMaxOpsTestClamp {
+  using execution_space = TEST_EXECSPACE;
   ViewType m_view;
 
   KOKKOS_INLINE_FUNCTION
@@ -269,7 +273,7 @@ struct StdAlgoMinMaxOpsTestClamp {
 };
 
 TEST(TEST_CATEGORY, clamp_within_parfor) {
-  using view_t = Kokkos::View<double*>;
+  using view_t = Kokkos::View<double*, TEST_EXECSPACE>;
   view_t a("a", 10);
 
   StdAlgoMinMaxOpsTestClamp<view_t> fnc(a);

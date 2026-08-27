@@ -1,22 +1,15 @@
-# Nextapi shared object and header both reside under NEXT_HOME directory
-# Library under ${NEXT_HOME}/lib
-# Headers under ${NEXT_HOME}/include
+find_package(NextAPI REQUIRED COMPONENTS Core)
+set_target_properties(NextAPI::Core PROPERTIES SYSTEM TRUE)
 
-# FIXME_NEXTSILICON: See NextSilicon ticket CS-682
+kokkos_create_imported_tpl(NEXTAPI INTERFACE LINK_LIBRARIES NextAPI::Core)
+kokkos_export_cmake_tpl(NEXTAPI REQUIRED)
 
-if(DEFINED ENV{NEXT_HOME})
-  set(NEXT_HOME_PATH $ENV{NEXT_HOME})
-else()
-  # Give a default path in case env is not define.
-  set(NEXT_HOME_PATH /opt/nextsilicon)
+# $ORIGIN-relative RUNPATHs matching the NEXT_HOME layout so packages
+# stay relocatable.  Mirrors the convention in nextutils/CMakeLists.txt.
+if(TPLNEXTAPI_FOUND)
+  set(_NS_INSTALL_RPATH "lib" "sysroot/usr/lib" "sysroot/usr/ompi/lib64")
+  list(TRANSFORM _NS_INSTALL_RPATH PREPEND "$ORIGIN/../")
+
+  list(APPEND CMAKE_INSTALL_RPATH ${_NS_INSTALL_RPATH})
+  list(APPEND CMAKE_BUILD_RPATH ${_NS_INSTALL_RPATH})
 endif()
-
-kokkos_find_imported(
-  NEXTAPI
-  LIBRARY
-  nextapi
-  LIBRARY_PATHS
-  ${NEXT_HOME_PATH}
-  HEADER_PATHS
-  ${NEXT_HOME_PATH}
-)

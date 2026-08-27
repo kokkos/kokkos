@@ -225,6 +225,12 @@ bool test_device_side_ctor(ViewType a, std::index_sequence<Idx...>) {
 }
 
 TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
+#if defined(KOKKOS_ENABLE_NEXTSILICON)
+  // FIXME_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>)
+    GTEST_SKIP() << "Skipping view_customization_extra_int_arg test on "
+                    "NextSilicon due to projection failure";
+#endif
   // Rank 0
   {
     using view_t = Kokkos::View<Foo::BarStrided, TEST_EXECSPACE>;

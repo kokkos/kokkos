@@ -10,7 +10,8 @@
 #define TEST_CATEGORY nextsilicon
 #define TEST_CATEGORY_NUMBER 9
 #define TEST_CATEGORY_DEATH nextsilicon_DeathTest
-#define TEST_EXECSPACE Kokkos::Experimental::NextSilicon
+#define TEST_EXECSPACE \
+  Kokkos::Experimental::NextSilicon  // NextSiliconSharedSpace
 #define TEST_CATEGORY_FIXTURE(name) nextsilicon_##name
 
 #endif

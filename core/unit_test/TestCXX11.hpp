@@ -10,10 +10,9 @@ import kokkos.core;
 
 namespace TestCXX11 {
 
-template <class DeviceType>
 struct FunctorAddTest {
-  using view_type       = Kokkos::View<double**, DeviceType>;
-  using execution_space = DeviceType;
+  using execution_space = TEST_EXECSPACE;
+  using view_type       = Kokkos::View<double**, execution_space>;
   using team_member = typename Kokkos::TeamPolicy<execution_space>::member_type;
 
   view_type a_, b_;
@@ -43,15 +42,14 @@ struct FunctorAddTest {
   }
 };
 
-template <class DeviceType, bool PWRTest>
+template <bool PWRTest>
 double AddTestFunctor() {
-  using policy_type = Kokkos::TeamPolicy<DeviceType>;
-
-  Kokkos::View<double**, DeviceType> a("A", 100, 5);
-  Kokkos::View<double**, DeviceType> b("B", 100, 5);
-  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_a =
+  using execution_space = TEST_EXECSPACE;
+  Kokkos::View<double**, execution_space> a("A", 100, 5);
+  Kokkos::View<double**, execution_space> b("B", 100, 5);
+  typename Kokkos::View<double**, execution_space>::host_mirror_type h_a =
       Kokkos::create_mirror_view(a);
-  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_b =
+  typename Kokkos::View<double**, execution_space>::host_mirror_type h_b =
       Kokkos::create_mirror_view(b);
 
   for (int i = 0; i < 100; i++) {
@@ -62,10 +60,10 @@ double AddTestFunctor() {
   Kokkos::deep_copy(a, h_a);
 
   if (PWRTest == false) {
-    Kokkos::parallel_for(100, FunctorAddTest<DeviceType>(a, b));
+    Kokkos::parallel_for(100, FunctorAddTest(a, b));
   } else {
-    Kokkos::parallel_for(policy_type(25, Kokkos::AUTO),
-                         FunctorAddTest<DeviceType>(a, b));
+    using policy_type = Kokkos::TeamPolicy<execution_space>;
+    Kokkos::parallel_for(policy_type(25, Kokkos::AUTO), FunctorAddTest(a, b));
   }
   Kokkos::deep_copy(h_b, b);
 
@@ -79,13 +77,14 @@ double AddTestFunctor() {
   return result;
 }
 
-template <class DeviceType, bool PWRTest>
+template <bool PWRTest>
 double AddTestLambda() {
-  Kokkos::View<double**, DeviceType> a("A", 100, 5);
-  Kokkos::View<double**, DeviceType> b("B", 100, 5);
-  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_a =
+  using execution_space = TEST_EXECSPACE;
+  Kokkos::View<double**, execution_space> a("A", 100, 5);
+  Kokkos::View<double**, execution_space> b("B", 100, 5);
+  typename Kokkos::View<double**, execution_space>::host_mirror_type h_a =
       Kokkos::create_mirror_view(a);
-  typename Kokkos::View<double**, DeviceType>::host_mirror_type h_b =
+  typename Kokkos::View<double**, execution_space>::host_mirror_type h_b =
       Kokkos::create_mirror_view(b);
 
   for (int i = 0; i < 100; i++) {
@@ -96,8 +95,9 @@ double AddTestLambda() {
   Kokkos::deep_copy(a, h_a);
 
   if (PWRTest == false) {
+    using policy_type = Kokkos::RangePolicy<execution_space>;
     Kokkos::parallel_for(
-        100, KOKKOS_LAMBDA(const int& i) {
+        policy_type(0, 100), KOKKOS_LAMBDA(const int& i) {
           b(i, 0) = a(i, 1) + a(i, 2);
           b(i, 1) = a(i, 0) - a(i, 3);
           b(i, 2) = a(i, 4) + a(i, 0);
@@ -105,7 +105,7 @@ double AddTestLambda() {
           b(i, 4) = a(i, 3) + a(i, 4);
         });
   } else {
-    using policy_type = Kokkos::TeamPolicy<DeviceType>;
+    using policy_type = Kokkos::TeamPolicy<execution_space>;
     using team_member = typename policy_type::member_type;
 
     policy_type policy(25, Kokkos::AUTO);
@@ -136,10 +136,9 @@ double AddTestLambda() {
   return result;
 }
 
-template <class DeviceType>
 struct FunctorReduceTest {
-  using view_type       = Kokkos::View<double**, DeviceType>;
-  using execution_space = DeviceType;
+  using execution_space = TEST_EXECSPACE;
+  using view_type       = Kokkos::View<double**, TEST_EXECSPACE>;
   using value_type      = double;
   using team_member = typename Kokkos::TeamPolicy<execution_space>::member_type;
 
@@ -178,10 +177,10 @@ struct FunctorReduceTest {
   }
 };
 
-template <class DeviceType, bool PWRTest>
+template <bool PWRTest>
 double ReduceTestFunctor() {
-  using policy_type = Kokkos::TeamPolicy<DeviceType>;
-  using view_type   = Kokkos::View<double**, DeviceType>;
+  using execution_space = TEST_EXECSPACE;
+  using view_type       = Kokkos::View<double**, execution_space>;
   using unmanaged_result =
       Kokkos::View<double, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
@@ -197,11 +196,11 @@ double ReduceTestFunctor() {
 
   double result = 0.0;
   if (PWRTest == false) {
-    Kokkos::parallel_reduce(100, FunctorReduceTest<DeviceType>(a),
+    Kokkos::parallel_reduce(100, FunctorReduceTest(a),
                             unmanaged_result(&result));
   } else {
-    Kokkos::parallel_reduce(policy_type(25, Kokkos::AUTO),
-                            FunctorReduceTest<DeviceType>(a),
+    using policy_type = Kokkos::TeamPolicy<execution_space>;
+    Kokkos::parallel_reduce(policy_type(25, Kokkos::AUTO), FunctorReduceTest(a),
                             unmanaged_result(&result));
   }
   Kokkos::fence();
@@ -209,10 +208,10 @@ double ReduceTestFunctor() {
   return result;
 }
 
-template <class DeviceType, bool PWRTest>
+template <bool PWRTest>
 double ReduceTestLambda() {
-  using policy_type = Kokkos::TeamPolicy<DeviceType>;
-  using view_type   = Kokkos::View<double**, DeviceType>;
+  using execution_space = TEST_EXECSPACE;
+  using view_type       = Kokkos::View<double**, execution_space>;
   using unmanaged_result =
       Kokkos::View<double, Kokkos::HostSpace, Kokkos::MemoryUnmanaged>;
 
@@ -229,8 +228,9 @@ double ReduceTestLambda() {
   double result = 0.0;
 
   if (PWRTest == false) {
+    using policy_type = Kokkos::RangePolicy<execution_space>;
     Kokkos::parallel_reduce(
-        100,
+        policy_type(0, 100),
         KOKKOS_LAMBDA(const int& i, double& sum) {
           sum += a(i, 1) + a(i, 2);
           sum += a(i, 0) - a(i, 3);
@@ -240,6 +240,7 @@ double ReduceTestLambda() {
         },
         unmanaged_result(&result));
   } else {
+    using policy_type = Kokkos::TeamPolicy<execution_space>;
     using team_member = typename policy_type::member_type;
     Kokkos::parallel_reduce(
         policy_type(25, Kokkos::AUTO),
@@ -262,36 +263,33 @@ double ReduceTestLambda() {
   return result;
 }
 
-template <class DeviceType>
 double TestVariantLambda(int test) {
   switch (test) {
-    case 1: return AddTestLambda<DeviceType, false>();
-    case 2: return AddTestLambda<DeviceType, true>();
-    case 3: return ReduceTestLambda<DeviceType, false>();
-    case 4: return ReduceTestLambda<DeviceType, true>();
+    case 1: return AddTestLambda<false>();
+    case 2: return AddTestLambda<true>();
+    case 3: return ReduceTestLambda<false>();
+    case 4: return ReduceTestLambda<true>();
     default: Kokkos::abort("unreachable");
   }
 
   return 0;
 }
 
-template <class DeviceType>
 double TestVariantFunctor(int test) {
   switch (test) {
-    case 1: return AddTestFunctor<DeviceType, false>();
-    case 2: return AddTestFunctor<DeviceType, true>();
-    case 3: return ReduceTestFunctor<DeviceType, false>();
-    case 4: return ReduceTestFunctor<DeviceType, true>();
+    case 1: return AddTestFunctor<false>();
+    case 2: return AddTestFunctor<true>();
+    case 3: return ReduceTestFunctor<false>();
+    case 4: return ReduceTestFunctor<true>();
     default: Kokkos::abort("unreachable");
   }
 
   return 0;
 }
 
-template <class DeviceType>
 bool Test(int test) {
-  double res_functor = TestVariantFunctor<DeviceType>(test);
-  double res_lambda  = TestVariantLambda<DeviceType>(test);
+  double res_functor = TestVariantFunctor(test);
+  double res_lambda  = TestVariantLambda(test);
 
   char testnames[5][256] = {" ", "AddTest", "AddTest TeamPolicy", "ReduceTest",
                             "ReduceTest TeamPolicy"};
@@ -318,12 +316,10 @@ bool Test(int test) {
 
 namespace Test {
 TEST(TEST_CATEGORY, cxx11) {
-  if (std::is_same_v<Kokkos::DefaultExecutionSpace, TEST_EXECSPACE>) {
-    ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(1)));
-    ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(2)));
-    ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(3)));
-    ASSERT_TRUE((TestCXX11::Test<TEST_EXECSPACE>(4)));
-  }
+  ASSERT_TRUE((TestCXX11::Test(1)));
+  ASSERT_TRUE((TestCXX11::Test(2)));
+  ASSERT_TRUE((TestCXX11::Test(3)));
+  ASSERT_TRUE((TestCXX11::Test(4)));
 }
 
 }  // namespace Test

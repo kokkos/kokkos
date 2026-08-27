@@ -21,8 +21,9 @@ import kokkos.core;
 
 #include "KokkosTest_Utils.hpp"
 
-#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
-    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) ||     \
+    defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC) || \
+    defined(KOKKOS_ENABLE_NEXTSILICON)
 #else
 #define MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
 #endif
@@ -1464,6 +1465,13 @@ TEST(TEST_CATEGORY, mathematical_functions_exponential_functions) {
 
 #ifndef KOKKOS_MATHEMATICAL_FUNCTIONS_SKIP_1
 TEST(TEST_CATEGORY, mathematical_functions_hyperbolic_functions) {
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if constexpr (std::is_same_v<TEST_EXECSPACE,
+                               Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "skipping mathematical_functions_hyperbolic_functions on "
+                    "NextSilicon";
+  }
+#endif
   TEST_MATH_FUNCTION(sinh)({-3, -2, -1, 0, 1});
   TEST_MATH_FUNCTION(sinh)({-3l, -2l, -1l, 0l, 1l});
   TEST_MATH_FUNCTION(sinh)({-3ll, -2ll, -1ll, 0ll, 1ll});

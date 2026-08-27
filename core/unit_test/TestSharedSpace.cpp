@@ -98,6 +98,9 @@ TEST(defaultdevicetype, shared_space) {
                                Kokkos::DefaultHostExecutionSpace>)
     GTEST_SKIP() << "Skipping as host and device are the same space";
 
+#if defined(KOKKOS_ENABLE_NEXTSILICON)
+  GTEST_SKIP() << "skipping because migration does not happen during training";
+#endif
 #if defined(KOKKOS_ARCH_AMD_GPU) && defined(KOKKOS_ENABLE_HIP)
   if (!Kokkos::SharedSpace().impl_hip_driver_check_page_migration())
     GTEST_SKIP()

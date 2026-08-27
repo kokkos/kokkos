@@ -61,14 +61,25 @@ struct TestTeamScan {
 
     // Set team size explicitly to check whether non-power-of-two team sizes can
     // be used.
+    int team_size = 1;
+
     if (ExecutionSpace().concurrency() > 10000)
-      Kokkos::parallel_for(policy_type(M, 127), *this);
+      team_size = 127;
     else if (ExecutionSpace().concurrency() > 2) {
       auto max_team_size =
           policy_type(M, 1).team_size_max(*this, Kokkos::ParallelForTag{});
-      Kokkos::parallel_for(policy_type(M, std::min(3, max_team_size)), *this);
+      team_size = std::min(3, max_team_size);
     } else
-      Kokkos::parallel_for(policy_type(M, 1), *this);
+      team_size = 1;
+
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+    // Nextsilicon supports only team size = 1
+    // FIXME_NEXTSILICON: Allow larger team sizes
+    if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::NextSilicon>)
+      team_size = 1;
+#endif
+
+    Kokkos::parallel_for(policy_type(M, team_size), *this);
 
     auto a_i = Kokkos::create_mirror_view(a_d);
     auto a_o = Kokkos::create_mirror_view(a_r);
@@ -182,14 +193,25 @@ struct TestTeamScanRetVal {
 
     // Set team size explicitly to check whether non-power-of-two team sizes can
     // be used.
+    int team_size = 1;
+
     if (ExecutionSpace().concurrency() > 10000)
-      Kokkos::parallel_for(policy_type(M, 127), *this);
+      team_size = 127;
     else if (ExecutionSpace().concurrency() > 2) {
       auto max_team_size =
           policy_type(M, 1).team_size_max(*this, Kokkos::ParallelForTag{});
-      Kokkos::parallel_for(policy_type(M, std::min(3, max_team_size)), *this);
+      team_size = std::min(3, max_team_size);
     } else
-      Kokkos::parallel_for(policy_type(M, 1), *this);
+      team_size = 1;
+
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+    // Nextsilicon supports only team size = 1
+    // FIXME_NEXTSILICON: Allow larger team sizes
+    if (std::is_same_v<ExecutionSpace, Kokkos::Experimental::NextSilicon>)
+      team_size = 1;
+#endif
+
+    Kokkos::parallel_for(policy_type(M, team_size), *this);
 
     Kokkos::fence();
     auto a_i  = Kokkos::create_mirror_view(a_d);
