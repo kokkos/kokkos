@@ -732,6 +732,7 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
       bool first = true;
 
       while (std::getline(input_stream, token, ',')) {
+          // Trim leading/trailing whitespace around each architecture token.
           token.erase(token.begin(), std::find_if(token.begin(), token.end(),
                                                   [](unsigned char c) {
                                                       return !std::isspace(c);

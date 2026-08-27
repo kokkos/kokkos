@@ -115,10 +115,10 @@ void HIPInternal::print_configuration(std::ostream &s) const {
       << "  Is Large Bar: " << hipProp.isLargeBar << '\n'
       << "  Supports Managed Memory: " << hipProp.managedMemory << '\n'
       << "  Architecture capable of accessing system allocated memory: "
-      << gpu_arch_can_access_system_allocations() << '\n'
+      << gpu_arch_can_access_system_allocations(i) << '\n'
       << "  System allows accessing system allocated memory on GPU: "
       << (xnack_boot_config_has_hmm_mirror() && xnack_environment_enabled() &&
-          gpu_arch_can_access_system_allocations())
+          gpu_arch_can_access_system_allocations(i))
       << '\n'
       << "  Wavefront Size: " << hipProp.warpSize << '\n';
   }

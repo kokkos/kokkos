@@ -81,11 +81,9 @@ bool xnack_boot_config_has_hmm_mirror() {
   return cache;
 }
 
-bool gpu_arch_can_access_system_allocations() {
-  int current_device = -1;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDevice(&current_device));
+bool gpu_arch_can_access_system_allocations(int device_id) {
   hipDeviceProp_t props;
-  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&props, current_device));
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&props, device_id));
 
   std::string_view const arch_name = props.gcnArchName;
   auto has_prefix                  = [&](std::string_view const prefix) {
