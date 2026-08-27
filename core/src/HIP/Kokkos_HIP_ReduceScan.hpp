@@ -341,8 +341,8 @@ __device__ void hip_intra_block_reduce_scan(
   if (DoScan) {
     // Update all the values for the respective warps (except for the last one)
     // by adding from the last value of the previous warp.
-    const auto warp_size = static_cast<unsigned>(HIPTraits::WarpSize());
-    const unsigned int WarpMask  = warp_size - 1;
+    const auto warp_size        = static_cast<unsigned>(HIPTraits::WarpSize());
+    const unsigned int WarpMask = warp_size - 1;
     const bool is_last_thread_in_warp =
         is_full_warp ? ((threadIdx.y & WarpMask) == (warp_size - 1))
                      : (threadIdx.y == blockDim.y - 1);
