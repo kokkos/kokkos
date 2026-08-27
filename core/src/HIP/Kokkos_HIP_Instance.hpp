@@ -31,7 +31,7 @@ struct HIPTraits {
 
   KOKKOS_FUNCTION static int WarpIndexMask() { return WarpSize() - 1; }
 
-  KOKKOS_INLINE_FUNCTION static int WarpIndexShift() {
+  KOKKOS_FUNCTION static int WarpIndexShift() {
     return static_cast<int>(
         Kokkos::countr_zero(static_cast<unsigned int>(WarpSize())));
   }
