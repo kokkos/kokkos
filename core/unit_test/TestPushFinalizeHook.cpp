@@ -113,12 +113,14 @@ TEST_F(PushFinalizeHook_DeathTest, ignore_late_registration) {
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
-TEST_F(PushFinalizeHook_DeathTest, tread_safe) {
-  GTEST_FLAG_SET(death_test_style, "fast");
+TEST_F(PushFinalizeHook_DeathTest, thread_safe) {
   EXPECT_EXIT(
       ({
-        int count = 0;
-        // generates a nullary callable that push n times a callback to
+        constexpr int num_pushes_1 = 8;
+        constexpr int num_pushes_2 = 4;
+        constexpr int num_pushes_3 = 2;
+        int count                  = 0;
+        // generates a nullary callable that pushes n times a callback to
         // increment the counter by one
         auto push_increment_n = [&count](int n) {
           return [&count, n] {
@@ -128,16 +130,18 @@ TEST_F(PushFinalizeHook_DeathTest, tread_safe) {
         };
         Kokkos::initialize(
             Kokkos::InitializationSettings().set_disable_warnings(true));
-        std::thread t1(push_increment_n(8));
-        std::thread t2(push_increment_n(4));
-        std::thread t3(push_increment_n(2));
+        std::thread t1(push_increment_n(num_pushes_1));
+        std::thread t2(push_increment_n(num_pushes_2));
+        std::thread t3(push_increment_n(num_pushes_3));
         t1.join();
         t2.join();
         t3.join();
         Kokkos::finalize();
-        std::exit(14 - count);
+        std::exit(count == num_pushes_1 + num_pushes_2 + num_pushes_3
+                      ? EXIT_SUCCESS
+                      : EXIT_FAILURE);
       }),
-      ::testing::ExitedWithCode(0), "");
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
 }  // namespace
