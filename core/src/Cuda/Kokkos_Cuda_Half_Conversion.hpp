@@ -26,6 +26,8 @@ half_t cast_to_half(short val) { return __short2half_rn(val); }
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned short val) { return __ushort2half_rn(val); }
 KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(bool val) { return cast_to_half(static_cast<float>(val)); }
+KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(int val) { return __int2half_rn(val); }
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(unsigned int val) { return __uint2half_rn(val); }
@@ -51,6 +53,11 @@ template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, double>, T>
 cast_from_half(half_t val) {
   return static_cast<double>(__half2float(__half(val)));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, bool>, T>
+cast_from_half(half_t val) {
+  return static_cast<T>(cast_from_half<float>(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, short>, T>
@@ -233,6 +240,10 @@ bhalf_t cast_to_bhalf(float val) { return __float2bfloat16(val); }
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(double val) { return __double2bfloat16(val); }
 KOKKOS_INLINE_FUNCTION
+bhalf_t cast_to_bhalf(bool val) {
+  return cast_to_bhalf(static_cast<float>(val));
+}
+KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(short val) { return __short2bfloat16_rn(val); }
 KOKKOS_INLINE_FUNCTION
 bhalf_t cast_to_bhalf(unsigned short val) { return __ushort2bfloat16_rn(val); }
@@ -262,6 +273,11 @@ template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, double>, T>
 cast_from_bhalf(bhalf_t val) {
   return static_cast<double>(__bfloat162float(__nv_bfloat16(val)));
+}
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, bool>, T>
+cast_from_bhalf(bhalf_t val) {
+  return static_cast<T>(cast_from_bhalf<float>(val));
 }
 template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, short>, T>

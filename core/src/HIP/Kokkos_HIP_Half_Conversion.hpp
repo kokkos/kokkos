@@ -16,12 +16,12 @@ KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(float val) { return half_t(__float2half(val)); }
 
 KOKKOS_INLINE_FUNCTION
-half_t cast_to_half(bool val) { return cast_to_half(static_cast<float>(val)); }
-
-KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(double val) {
   return half_t(__float2half(static_cast<float>(val)));
 }
+
+KOKKOS_INLINE_FUNCTION
+half_t cast_to_half(bool val) { return cast_to_half(static_cast<float>(val)); }
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(short val) {
@@ -94,15 +94,15 @@ cast_from_half(half_t val) {
 }
 
 template <class T>
-KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, bool>, T>
-cast_from_half(half_t val) {
-  return static_cast<T>(cast_from_half<float>(val));
-}
-
-template <class T>
 KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, double>, T>
 cast_from_half(half_t val) {
   return static_cast<T>(__half2float(half_t::impl_type(val)));
+}
+
+template <class T>
+KOKKOS_INLINE_FUNCTION std::enable_if_t<std::is_same_v<T, bool>, T>
+cast_from_half(half_t val) {
+  return static_cast<T>(cast_from_half<float>(val));
 }
 
 template <class T>

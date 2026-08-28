@@ -20,6 +20,7 @@ inline half_t cast_to_half(short val) { return half_t::impl_type(val); }
 inline half_t cast_to_half(unsigned short val) {
   return half_t::impl_type(val);
 }
+inline half_t cast_to_half(bool val) { return half_t::impl_type(val); }
 inline half_t cast_to_half(int val) { return half_t::impl_type(val); }
 inline half_t cast_to_half(unsigned int val) { return half_t::impl_type(val); }
 inline half_t cast_to_half(long long val) { return half_t::impl_type(val); }
@@ -35,6 +36,10 @@ std::enable_if_t<std::is_same_v<T, float>, T> cast_from_half(half_t val) {
 }
 template <class T>
 std::enable_if_t<std::is_same_v<T, double>, T> cast_from_half(half_t val) {
+  return static_cast<T>(half_t::impl_type(val));
+}
+template <class T>
+std::enable_if_t<std::is_same_v<T, bool>, T> cast_from_half(half_t val) {
   return static_cast<T>(half_t::impl_type(val));
 }
 template <class T>
@@ -86,6 +91,7 @@ inline bhalf_t cast_to_bhalf(bhalf_t val) { return val; }
 
 inline bhalf_t cast_to_bhalf(float val) { return bhalf_t::impl_type(val); }
 inline bhalf_t cast_to_bhalf(double val) { return bhalf_t::impl_type(val); }
+inline bhalf_t cast_to_bhalf(bool val) { return bhalf_t::impl_type(val); }
 inline bhalf_t cast_to_bhalf(short val) { return bhalf_t::impl_type(val); }
 inline bhalf_t cast_to_bhalf(unsigned short val) {
   return bhalf_t::impl_type(val);
@@ -109,6 +115,10 @@ std::enable_if_t<std::is_same_v<T, float>, T> cast_from_bhalf(bhalf_t val) {
 }
 template <class T>
 std::enable_if_t<std::is_same_v<T, double>, T> cast_from_bhalf(bhalf_t val) {
+  return static_cast<T>(bhalf_t::impl_type(val));
+}
+template <class T>
+std::enable_if_t<std::is_same_v<T, bool>, T> cast_from_bhalf(bhalf_t val) {
   return static_cast<T>(bhalf_t::impl_type(val));
 }
 template <class T>
