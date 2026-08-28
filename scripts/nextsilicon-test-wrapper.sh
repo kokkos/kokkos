@@ -52,6 +52,9 @@ EOF
     nextsystemd --ui-collector-address none --cfg-file ${patch_dir}/kokkos.patch &
     NEXTSYSTEMD_PID=$!
 
+    # the following nextcli command seems to time out too aggressively on 1.3.0-66
+    sleep 20
+
     # verify that nextsystemd is running
     nextcli system status | grep -q 'Service: UP' || exit 127
 
@@ -81,6 +84,9 @@ EOF
     # via the telem: block above)
     nextsystemd --ui-collector-address none --cfg-file ${patch_dir}/kokkos.patch &
     NEXTSYSTEMD_PID=$!
+
+    # the following nextcli command seems to time out too aggressively on 1.3.0-66
+    sleep 20
 
     # verify that nextsystemd is running
     nextcli system status | grep -q 'Service: UP' || exit 127
