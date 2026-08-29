@@ -91,7 +91,12 @@ KOKKOS_IMPL_ABORT_NORETURN KOKKOS_INLINE_FUNCTION void abort(
     const char *const message) {
   KOKKOS_IF_ON_HOST(::Kokkos::Impl::host_abort(message);)
   KOKKOS_IF_ON_DEVICE(::Kokkos::Impl::device_abort(message);)
+// OpenACC and SYCL device abort can return.
+// NVHPC treats __builtin_unreachable as a routine call that is unavailable on
+// OpenACC device.
+#if !defined(KOKKOS_ENABLE_OPENACC) && !defined(KOKKOS_ENABLE_SYCL)
   KOKKOS_IMPL_UNREACHABLE();
+#endif
 }
 
 #undef KOKKOS_IMPL_ABORT_NORETURN
