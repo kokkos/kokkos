@@ -7,8 +7,7 @@
 
 namespace Kokkos::Impl {
 
-thread_local PageAlignedData<bool, PageLocation::Host>
-    NextSiliconThreadSpaceGuard::thread_is_on_device = false;
+thread_local bool NextSiliconThreadSpaceGuard::thread_is_on_device = false;
 
 NextSiliconThreadSpaceGuard::NextSiliconThreadSpaceGuard() noexcept {
   // Touching thread_local variables cannot be done on device.

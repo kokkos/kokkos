@@ -8,10 +8,6 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Error.hpp>  // Impl::throw_runtime_exception
 
-#ifdef KOKKOS_ENABLE_NEXTSILICON
-#include <NextSilicon/Kokkos_NextSilicon_PageAlignedData.hpp>
-#endif
-
 #include <cstdint>
 #include <string>
 
@@ -108,11 +104,9 @@ class SharedAllocationRecord<void, void> {
       SharedAllocationHeader* arg_alloc_ptr, size_t arg_alloc_size,
       function_type arg_dealloc, const std::string& label);
  private:
-#ifdef KOKKOS_ENABLE_NEXTSILICON
-  // FIXME_NEXTSILICON: NextSilicon backend has problems with page migration of
-  // thread-local variables, so we need to page align them as a workaround.
-  static inline thread_local PageAlignedData<int> t_tracking_enabled = 1;
+  static inline thread_local int t_tracking_enabled = 1;
 
+#ifdef KOKKOS_ENABLE_NEXTSILICON
   // FIXME_NEXTSILICON: containment for the TLS read, same rationale as
   // NextSiliconThreadSpaceGuard::host_thread_is_on_device()
   // (Kokkos_NextSilicon_ThreadSpaceGuard.hpp): if `t_tracking_enabled` were
@@ -124,8 +118,6 @@ class SharedAllocationRecord<void, void> {
   static __attribute__((weak)) int host_tracking_enabled() {
     return t_tracking_enabled;
   }
-#else
-  static inline thread_local int t_tracking_enabled = 1;
 #endif
 
  public:
