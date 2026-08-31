@@ -115,7 +115,7 @@ TEST_F(PushFinalizeHook_DeathTest, ignore_late_registration) {
 
 TEST_F(PushFinalizeHook_DeathTest, thread_safe) {
   EXPECT_EXIT(
-      ({
+      ([] {
         constexpr int num_pushes_1 = 8;
         constexpr int num_pushes_2 = 4;
         constexpr int num_pushes_3 = 2;
@@ -140,7 +140,7 @@ TEST_F(PushFinalizeHook_DeathTest, thread_safe) {
         std::exit(count == num_pushes_1 + num_pushes_2 + num_pushes_3
                       ? EXIT_SUCCESS
                       : EXIT_FAILURE);
-      }),
+      }()),
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
