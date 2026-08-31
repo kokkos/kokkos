@@ -367,7 +367,7 @@ struct layout_stride {
 #else
       : base_t(base_t{member_pair_t(
 #endif
-          e, strides_storage_t(deduction_workaround_impl::fill_strides(mdspan_non_standard, s))
+          e, strides_storage_t(deduction_workaround_impl::fill_strides(mdspan_non_standard_tag(), s))
 #if defined(MDSPAN_IMPL_USE_ATTRIBUTE_NO_UNIQUE_ADDRESS)
         }
 #else
