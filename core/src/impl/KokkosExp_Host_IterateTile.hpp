@@ -1530,7 +1530,7 @@ struct HostIterateTile {
       : m_lower(rp.lower()),
         m_upper(rp.upper()),
         m_tile(rp.tile()),
-        m_tile_end(rp.tile_end()),
+        m_tile_end(rp.impl_tile_end()),
         m_func(func) {}
 
   // ParallelFor
