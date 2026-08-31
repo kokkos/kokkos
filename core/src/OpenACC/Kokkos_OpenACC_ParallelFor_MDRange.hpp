@@ -886,7 +886,6 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
 
     const auto lower_bound = m_policy.lower();
     const auto upper_bound = m_policy.upper();
-    const auto tile_size   = m_policy.tile();
 
     for (int i = 0; i < rank; ++i) {
       if (lower_bound[i] >= upper_bound[i]) {
@@ -895,6 +894,7 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
     }
     int const async_arg = m_policy.space().acc_async_queue();
 #if 0  // FIXME_OPENACC: OpenACC requires tile size to be constant.
+    const auto tile_size = m_policy.tile();
     for (int i = 0; i < rank; ++i) {
       if (tile_size[i] < 1) {
         Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(
@@ -907,7 +907,6 @@ class Kokkos::Impl::ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
     Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(
         Kokkos::Experimental::Impl::OpenACCTile(),
         std::integral_constant<Iterate, Policy::inner_direction>(), m_functor,
-        m_functor,
         lower_bound, upper_bound, tile_size, async_arg);
 #else
     Kokkos::Experimental::Impl::OpenACCParallelForMDRangePolicy(

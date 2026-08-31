@@ -224,7 +224,22 @@ TEST(TEST_CATEGORY, md_range_policy_get_tile_size) {
   test_get_tile_size_for_ranks(ranks);
 }
 
-template <int Rank, int MaxTperB, Kokkos::Iterate InnerDirection>
+template <int Rank, int MaxTperB, Kokkos::Iterate InnerD
+// Test public accessors
+TEST(TEST_CATEGORY, mdrangepolicy_accessor) {
+  using policy_2d      = Kokkos::MDRangePolicy<Kokkos::Rank<2>>;
+  using point_type_2d  = typename policy_2d::point_type;
+  using tile_type_2d   = typename policy_2d::tile_type;
+  const point_type_2d lower_2d = {-1, +1};
+  const point_type_2d upper_2d = {24, 25};
+  const tile_type_2d tile_2d   = {10, 5};
+
+  policy_2d policy_2d_test{lower_2d, upper_2d, tile_2d};
+
+  // Resizing tiles
+  const tile_type_2d new_tile_2d = {4, 8};
+  policy_2d_test.impl_change_tile_size(new_tile_2d);
+irection>
 void test_default_tiles_respect_launch_bounds() {
   using policy_t =
       Kokkos::MDRangePolicy<TEST_EXECSPACE,
@@ -290,6 +305,45 @@ TEST(TEST_CATEGORY, md_range_policy_default_space) {
   policy_t defaulted({42, 47}, {666, 999});
 
   ASSERT_EQ(defaulted.space(), TEST_EXECSPACE{});
+}
+
+// Test public accessors
+TEST(TEST_CATEGORY, md_range_policy_accessors) {
+  using policy_2d     = Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>>;
+  using point_type_2d = typename policy_2d::point_type;
+  using tile_type_2d  = typename policy_2d::tile_type;
+  const point_type_2d lower_2d = {-1, +1};
+  const point_type_2d upper_2d = {24, 25};
+  const tile_type_2d tile_2d   = {10, 5};
+
+  policy_2d policy_2d_test{lower_2d, upper_2d, tile_2d};
+
+  // Resizing tiles
+  const tile_type_2d new_tile_2d = {4, 8};
+  policy_2d_test.impl_change_tile_size(new_tile_2d);
+  ASSERT_EQ(policy_2d_test.lower(), lower_2d);
+  ASSERT_EQ(policy_2d_test.upper(), upper_2d);
+  ASSERT_EQ(policy_2d_test.tile(), new_tile_2d);
+
+  // Converting constructor
+  struct dummy_worktag {};
+  using policy_2d_with_worktag =
+      Kokkos::MDRangePolicy<TEST_EXECSPACE, Kokkos::Rank<2>, dummy_worktag>;
+  policy_2d_with_worktag converted_policy(policy_2d_test);
+
+  ASSERT_EQ(converted_policy.lower(), lower_2d);
+  ASSERT_EQ(converted_policy.upper(), upper_2d);
+  ASSERT_EQ(converted_policy.tile(), new_tile_2d);
+  ASSERT_EQ(converted_policy.impl_tile_end(), policy_2d_test.impl_tile_end());
+  ASSERT_EQ(converted_policy.impl_num_tiles(), policy_2d_test.impl_num_tiles());
+  ASSERT_EQ(converted_policy.impl_prod_tile_dims(),
+            policy_2d_test.impl_prod_tile_dims());
+  ASSERT_EQ(converted_policy.impl_tune_tile_size(),
+            policy_2d_test.impl_tune_tile_size());
+  ASSERT_EQ(converted_policy.max_total_tile_size(),
+            policy_2d_test.max_total_tile_size());
+  ASSERT_EQ(converted_policy.impl_max_threads_dimensions(),
+            policy_2d_test.impl_max_threads_dimensions());
 }
 
 // The execution space instance can be updated.

@@ -130,7 +130,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, HIP> {
     const auto lower    = m_policy.lower();
     const auto upper    = m_policy.upper();
     const auto tile     = m_policy.tile();
-    const auto tile_end = m_policy.tile_end();
+    const auto tile_end = m_policy.impl_tile_end();
 
     // Initialize begins and ends based on layout
     // Swap the fastest indexes to x dimension

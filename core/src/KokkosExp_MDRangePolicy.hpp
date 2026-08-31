@@ -157,7 +157,7 @@ auto TileSizeRecommended<ExecutionSpace>::get(Policy const& policy) {
   int outer_bound = (InnerDirection == Iterate::Right) ? -1 : Rank;
   int iter_step   = (InnerDirection == Iterate::Right) ? -1 : 1;
   auto inner_work_range =
-      policy.m_upper[inner_rank] - policy.m_lower[inner_rank];
+      policy.upper()[inner_rank] - policy.lower()[inner_rank];
 
   int prod_tile_size = 1;
   for (int i = inner_rank; i != outer_bound; i += iter_step) {
@@ -207,9 +207,6 @@ class MDRangePolicy<P, Properties...>
 
   template <class... OtherProperties>
   friend class MDRangePolicy;
-
-  template <typename ExecSpace>
-  friend struct Impl::TileSizeRecommended;
 
   static_assert(!std::is_void_v<typename traits::iteration_pattern>,
                 "Kokkos Error: MD iteration pattern not defined");
@@ -275,7 +272,6 @@ class MDRangePolicy<P, Properties...>
   KOKKOS_INLINE_FUNCTION point_type lower() const { return m_lower; }
   KOKKOS_INLINE_FUNCTION point_type upper() const { return m_upper; }
   KOKKOS_INLINE_FUNCTION tile_type tile() const { return m_tile; }
-  KOKKOS_INLINE_FUNCTION point_type tile_end() const { return m_tile_end; }
 
   MDRangePolicy() = default;
 
@@ -385,6 +381,8 @@ class MDRangePolicy<P, Properties...>
     this->m_tile = tile;
     this->update_tiling_properties();
   }
+
+  KOKKOS_INLINE_FUNCTION point_type impl_tile_end() const { return m_tile_end; }
 
   KOKKOS_INLINE_FUNCTION index_type impl_num_tiles() const {
     return m_num_tiles;

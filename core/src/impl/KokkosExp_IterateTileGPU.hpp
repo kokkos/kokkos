@@ -77,7 +77,7 @@ auto compute_device_launch_params(
   array_index_type grid_2 = 1;
 
   auto tile     = policy.tile();
-  auto tile_end = policy.tile_end();
+  auto tile_end = policy.impl_tile_end();
 
   if constexpr (Policy::rank == 1) {
     block.x = tile[0];
@@ -627,7 +627,7 @@ struct DeviceIterateTile {
                                                 value_type_storage v_)
       : m_lower(policy_.lower()),
         m_upper(policy_.upper()),
-        m_tile_end(policy_.tile_end()),
+        m_tile_end(policy_.impl_tile_end()),
         m_tile(policy_.tile()),
         m_num_tiles(policy_.impl_num_tiles()),
         m_prod_tile_dims(policy_.impl_prod_tile_dims()),
