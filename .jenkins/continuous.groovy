@@ -404,7 +404,6 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
                               .. && \
                               set +x && \
@@ -583,7 +582,6 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
@@ -627,7 +625,6 @@ pipeline {
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
                                 -DKokkos_ENABLE_TUNING=ON \
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
@@ -675,7 +672,6 @@ pipeline {
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
-                                -DKokkos_ENABLE_CUDA_CONSTEXPR=ON \
                                 -DKokkos_ENABLE_LIBDL=OFF \
                                 -DKokkos_ENABLE_THREADS=ON \
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
