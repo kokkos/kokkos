@@ -74,6 +74,7 @@ void init_lock_arrays_cuda() {
 #endif
   init_lock_arrays_cuda_kernel<<<(CUDA_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256>>>(
       CUDA_SPACE_ATOMIC_LOCKS_DEVICE_h, CUDA_SPACE_ATOMIC_LOCKS_NODE_h);
+
   auto error_sync = cudaDeviceSynchronize();
   check_error_and_throw_cuda(error_sync, "init_lock_arrays_cuda: post init kernel");
 }
