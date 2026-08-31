@@ -210,18 +210,23 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
             m_policy.space().cuda_device_prop().maxGridSize[1],
             m_policy.space().cuda_device_prop().maxGridSize[2],
         }) {
+    const auto lower    = m_policy.lower();
+    const auto upper    = m_policy.upper();
+    const auto tile     = m_policy.tile();
+    const auto tile_end = m_policy.tile_end();
+
     // Initialize begins and ends based on layout
     // Swap the fastest indexes to x dimension
     for (array_index_type i = 0; i < Policy::rank; ++i) {
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        m_lower[i]  = m_policy.lower()[i];
-        m_upper[i]  = m_policy.upper()[i];
-        m_extent[i] = m_policy.tile()[i] * m_policy.tile_end()[i];
+        m_lower[i]  = lower[i];
+        m_upper[i]  = upper[i];
+        m_extent[i] = tile[i] * tile_end[i];
       } else {
-        m_lower[i]  = m_policy.lower()[Policy::rank - 1 - i];
-        m_upper[i]  = m_policy.upper()[Policy::rank - 1 - i];
-        m_extent[i] = m_policy.tile()[Policy::rank - 1 - i] *
-                      m_policy.tile_end()[Policy::rank - 1 - i];
+        m_lower[i] = lower[Policy::rank - 1 - i];
+        m_upper[i] = upper[Policy::rank - 1 - i];
+        m_extent[i] =
+            tile[Policy::rank - 1 - i] * tile_end[Policy::rank - 1 - i];
       }
     }
   }
