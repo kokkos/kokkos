@@ -242,9 +242,9 @@ class MDRangePolicy<P, Properties...>
   tile_type m_tile                            = {};
   point_type m_tile_end                       = {};
   index_type m_num_tiles                      = 1;
-  index_type m_prod_tile_dims                 = 1;
+  int m_prod_tile_dims                        = 1;
   bool m_tune_tile_size                       = false;
-  index_type m_max_total_tile_size            = 1;
+  int m_max_total_tile_size                   = 1;
   std::array<int, 3> m_max_threads_dimensions = {1, 1, 1};
 
  public:
@@ -388,7 +388,7 @@ class MDRangePolicy<P, Properties...>
     return m_num_tiles;
   }
 
-  KOKKOS_INLINE_FUNCTION index_type impl_prod_tile_dims() const {
+  KOKKOS_INLINE_FUNCTION int impl_prod_tile_dims() const {
     return m_prod_tile_dims;
   }
 
@@ -402,19 +402,19 @@ class MDRangePolicy<P, Properties...>
     return Kokkos::Impl::TileSizeRecommended<execution_space>::get(*this);
   }
 
-  index_type max_total_tile_size() const { return m_max_total_tile_size; }
+  int max_total_tile_size() const { return m_max_total_tile_size; }
 
  private:
   void update_tiling_properties() {
-    auto properties        = Impl::get_tile_size_properties(m_space);
-    this->m_num_tiles      = 1;
-    this->m_prod_tile_dims = 1;
-    this->m_max_total_tile_size =
-        static_cast<index_type>(properties.max_total_tile_size);
+    auto properties                = Impl::get_tile_size_properties(m_space);
+    this->m_num_tiles              = 1;
+    this->m_prod_tile_dims         = 1;
+    this->m_max_total_tile_size    = properties.max_total_tile_size;
     this->m_max_threads_dimensions = properties.max_threads_dimensions;
 
-    index_type effective_max_tile_size = this->m_max_total_tile_size;
-
+    // Effective cap on the product of tile sizes: starts at the device limit,
+    // then tightened below by LaunchBounds when applicable
+    int effective_max_tile_size = this->m_max_total_tile_size;
     constexpr bool enforce_launch_bounds =
 #if defined(KOKKOS_ENABLE_CUDA)
         std::is_same_v<execution_space, Kokkos::Cuda>;
@@ -425,9 +425,8 @@ class MDRangePolicy<P, Properties...>
 #endif
 
     if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
-      effective_max_tile_size =
-          std::min(effective_max_tile_size,
-                   static_cast<index_type>(launch_bounds::maxTperB));
+      effective_max_tile_size = std::min(
+          effective_max_tile_size, static_cast<int>(launch_bounds::maxTperB));
     }
 
     int inner_rank  = (inner_direction == Iterate::Right) ? rank - 1 : 0;
@@ -477,12 +476,11 @@ class MDRangePolicy<P, Properties...>
     }
 
     if constexpr (enforce_launch_bounds && launch_bounds::maxTperB != 0) {
-      if (static_cast<index_type>(launch_bounds::maxTperB) <
-          this->m_prod_tile_dims) {
+      if (static_cast<int>(launch_bounds::maxTperB) < this->m_prod_tile_dims) {
         std::string msg =
             "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
             "dimensions (" +
-            std::to_string(static_cast<int>(this->m_prod_tile_dims)) +
+            std::to_string(this->m_prod_tile_dims) +
             ") is greater than the maximum specified via LaunchBounds (" +
             std::to_string(launch_bounds::maxTperB) +
             ") - choose smaller tile dims\n";
@@ -490,14 +488,13 @@ class MDRangePolicy<P, Properties...>
       }
     }
 
-    if (this->m_prod_tile_dims >
-        static_cast<index_type>(this->m_max_total_tile_size)) {
+    if (this->m_prod_tile_dims > this->m_max_total_tile_size) {
       std::string msg =
           "Kokkos::MDRangePolicy tile dimensions error: Product of tile "
           "dimensions (" +
-          std::to_string(static_cast<int>(this->m_prod_tile_dims)) +
+          std::to_string(this->m_prod_tile_dims) +
           ") is greater than the maximum total tile size (" +
-          std::to_string(static_cast<int>(this->m_max_total_tile_size)) +
+          std::to_string(this->m_max_total_tile_size) +
           ") - choose smaller tile dims\n";
       Kokkos::abort(msg.c_str());
     }
