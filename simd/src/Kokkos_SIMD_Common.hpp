@@ -19,8 +19,9 @@ import kokkos.core_impl;
 #include <utility>
 #include <type_traits>
 
-#if (defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU >= 1300) || \
-    (defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG >= 1600)
+#if ((defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU >= 1300) ||      \
+     (defined(KOKKOS_COMPILER_CLANG) && KOKKOS_COMPILER_CLANG >= 1600)) && \
+    (!defined(KOKKOS_COMPILER_NVCC))
 #define KOKKOS_IMPL_BASE_FRIEND_FN_DERIVED_ACCESS_RESTRICTION_FIXED
 #endif
 
