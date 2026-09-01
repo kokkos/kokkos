@@ -224,22 +224,7 @@ TEST(TEST_CATEGORY, md_range_policy_get_tile_size) {
   test_get_tile_size_for_ranks(ranks);
 }
 
-template <int Rank, int MaxTperB, Kokkos::Iterate InnerD
-// Test public accessors
-TEST(TEST_CATEGORY, mdrangepolicy_accessor) {
-  using policy_2d      = Kokkos::MDRangePolicy<Kokkos::Rank<2>>;
-  using point_type_2d  = typename policy_2d::point_type;
-  using tile_type_2d   = typename policy_2d::tile_type;
-  const point_type_2d lower_2d = {-1, +1};
-  const point_type_2d upper_2d = {24, 25};
-  const tile_type_2d tile_2d   = {10, 5};
-
-  policy_2d policy_2d_test{lower_2d, upper_2d, tile_2d};
-
-  // Resizing tiles
-  const tile_type_2d new_tile_2d = {4, 8};
-  policy_2d_test.impl_change_tile_size(new_tile_2d);
-irection>
+template <int Rank, int MaxTperB, Kokkos::Iterate InnerDirection>
 void test_default_tiles_respect_launch_bounds() {
   using policy_t =
       Kokkos::MDRangePolicy<TEST_EXECSPACE,
