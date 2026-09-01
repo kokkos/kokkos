@@ -779,11 +779,14 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
 // function throws
 // NOLINTNEXTLINE(bugprone-exception-escape)
 void call_registered_finalize_hook_functions() noexcept {
-  std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+  std::function<void()> func;
   while (!finalize_hooks().empty()) {
-    auto const& func = finalize_hooks().top();
+    {
+      std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+      func = std::move(finalize_hooks().top());
+      finalize_hooks().pop();
+    }
     func();
-    finalize_hooks().pop();
   }
 }
 

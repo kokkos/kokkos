@@ -144,4 +144,22 @@ TEST_F(PushFinalizeHook_DeathTest, thread_safe) {
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
+// Registering a hook from within a running finalize hook must not deadlock,
+// since finalize_hooks_mutex is not held while a hook is being called.
+TEST_F(PushFinalizeHook_DeathTest, recursive) {
+  EXPECT_EXIT(
+      {
+        bool hook_from_hook_ran = false;
+        Kokkos::push_finalize_hook([&hook_from_hook_ran] {
+          Kokkos::push_finalize_hook(
+              [&hook_from_hook_ran] { hook_from_hook_ran = true; });
+        });
+        Kokkos::initialize(
+            Kokkos::InitializationSettings().set_disable_warnings(true));
+        Kokkos::finalize();
+        std::exit(hook_from_hook_ran ? EXIT_SUCCESS : EXIT_FAILURE);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
 }  // namespace
