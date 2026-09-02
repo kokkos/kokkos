@@ -58,7 +58,8 @@ bool equal_exespace_impl(const std::string& label, const ExecutionSpace& ex,
   const auto num_elements = Kokkos::Experimental::distance(first1, last1);
   std::size_t different   = 0;
   ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
       StdEqualFunctor(first1, first2, predicate), different);
   ex.fence("Kokkos::equal: fence after operation");
 

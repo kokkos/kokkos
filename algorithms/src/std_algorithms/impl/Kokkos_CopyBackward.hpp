@@ -49,10 +49,11 @@ IteratorType2 copy_backward_exespace_impl(const std::string& label,
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         // use CTAD
-                         StdCopyBackwardFunctor(last, d_last));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      // use CTAD
+      StdCopyBackwardFunctor(last, d_last));
   ex.fence("Kokkos::copy_backward: fence after operation");
 
   // return

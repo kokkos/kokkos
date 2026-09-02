@@ -45,9 +45,10 @@ void generate_exespace_impl(const std::string& label, const ExecutionSpace& ex,
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         StdGenerateFunctor(first, g));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      StdGenerateFunctor(first, g));
   ex.fence("Kokkos::generate: fence after operation");
 }
 

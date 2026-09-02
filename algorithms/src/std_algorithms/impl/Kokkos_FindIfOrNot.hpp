@@ -81,9 +81,10 @@ IteratorType find_if_or_not_exespace_impl(const std::string& label,
   reduction_value_type red_result;
   reducer_type reducer(red_result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_reduce(label,
-                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            func_t(first, reducer, pred), reducer);
+  ::Kokkos::parallel_reduce(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      func_t(first, reducer, pred), reducer);
 
   // fence not needed because reducing into scalar
 

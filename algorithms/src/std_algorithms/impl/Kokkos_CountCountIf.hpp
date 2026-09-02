@@ -47,10 +47,11 @@ typename IteratorType::difference_type count_if_exespace_impl(
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   typename IteratorType::difference_type count = 0;
-  ::Kokkos::parallel_reduce(label,
-                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            // use CTAD
-                            StdCountIfFunctor(first, predicate), count);
+  ::Kokkos::parallel_reduce(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      // use CTAD
+      StdCountIfFunctor(first, predicate), count);
   ex.fence("Kokkos::count_if: fence after operation");
 
   return count;

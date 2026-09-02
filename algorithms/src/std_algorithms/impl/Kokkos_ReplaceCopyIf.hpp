@@ -66,11 +66,12 @@ OutputIteratorType replace_copy_if_exespace_impl(const std::string& label,
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         // use CTAD
-                         StdReplaceIfCopyFunctor(first_from, first_dest,
-                                                 std::move(pred), new_value));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      // use CTAD
+      StdReplaceIfCopyFunctor(first_from, first_dest, std::move(pred),
+                              new_value));
   ex.fence("Kokkos::replace_copy_if: fence after operation");
 
   // return

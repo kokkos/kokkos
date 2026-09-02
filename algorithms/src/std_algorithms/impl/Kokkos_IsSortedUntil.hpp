@@ -76,7 +76,7 @@ IteratorType is_sorted_until_exespace_impl(const std::string& label,
   ::Kokkos::parallel_reduce(
       label,
       // use num_elements-1 because each index handles i and i+1
-      RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements - 1),
       StdIsSortedUntilFunctor(first, comp, reducer), reducer);
 
   /* If the reduction result is equal to the initial value,

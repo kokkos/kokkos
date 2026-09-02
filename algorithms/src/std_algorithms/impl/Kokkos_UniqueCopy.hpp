@@ -79,7 +79,8 @@ OutputIterator unique_copy_exespace_impl(
     const auto scan_size = num_elements - 1;
     std::size_t count    = 0;
     ::Kokkos::parallel_scan(
-        label, RangePolicy<ExecutionSpace>(ex, 0, scan_size),
+        label,
+        RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, scan_size),
         // use CTAD
         StdUniqueCopyFunctor(first, last, d_first, pred), count);
 

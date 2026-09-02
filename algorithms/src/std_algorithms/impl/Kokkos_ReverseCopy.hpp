@@ -48,9 +48,10 @@ OutputIterator reverse_copy_exespace_impl(const std::string& label,
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         StdReverseCopyFunctor(last, d_first));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      StdReverseCopyFunctor(last, d_first));
   ex.fence("Kokkos::reverse_copy: fence after operation");
 
   // return

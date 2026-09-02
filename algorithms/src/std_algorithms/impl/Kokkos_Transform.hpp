@@ -80,9 +80,10 @@ OutputIterator transform_exespace_impl(
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first1, last1);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         StdTransformFunctor(first1, d_first, unary_op));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      StdTransformFunctor(first1, d_first, unary_op));
   ex.fence("Kokkos::transform: fence after operation");
 
   // return
@@ -104,7 +105,8 @@ OutputIterator transform_exespace_impl(
   // run
   const auto num_elements = Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
       StdTransformBinaryFunctor(first1, first2, d_first, binary_op));
   ex.fence("Kokkos::transform: fence after operation");
   return d_first + num_elements;

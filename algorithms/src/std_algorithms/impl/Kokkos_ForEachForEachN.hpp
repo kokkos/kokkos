@@ -43,7 +43,8 @@ void for_each_exespace_impl(const std::string& label, const HandleType& handle,
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(
-      label, RangePolicy<HandleType>(handle, 0, num_elements),
+      label,
+      RangePolicy<HandleType, IndexType<int64_t>>(handle, 0, num_elements),
       StdForEachFunctor<IteratorType, UnaryFunctorType>(first, functor));
   handle.fence("Kokkos::for_each: fence after operation");
 }

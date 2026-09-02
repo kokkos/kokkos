@@ -37,7 +37,7 @@ struct BinOp1D {
 
   // Determine bin index from key value
   template <class ViewType>
-  KOKKOS_INLINE_FUNCTION int bin(ViewType& keys, const int& i) const {
+  KOKKOS_INLINE_FUNCTION int bin(ViewType& keys, const int64_t& i) const {
     return static_cast<int>(mul_ * (static_cast<double>(keys(i)) - min_));
   }
 
@@ -78,7 +78,7 @@ struct BinOp3D {
   }
 
   template <class ViewType>
-  KOKKOS_INLINE_FUNCTION int bin(ViewType& keys, const int& i) const {
+  KOKKOS_INLINE_FUNCTION int bin(ViewType& keys, const int64_t& i) const {
     return int((((int(mul_[0] * (keys(i, 0) - min_[0])) * max_bins_[1]) +
                  int(mul_[1] * (keys(i, 1) - min_[1]))) *
                 max_bins_[2]) +

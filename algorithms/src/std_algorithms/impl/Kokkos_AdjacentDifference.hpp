@@ -82,7 +82,8 @@ OutputIteratorType adjacent_difference_exespace_impl(
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
       StdAdjacentDiffFunctor(first_from, first_dest, bin_op));
   ex.fence("Kokkos::adjacent_difference: fence after operation");
 

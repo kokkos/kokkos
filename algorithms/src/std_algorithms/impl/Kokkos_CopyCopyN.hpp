@@ -47,10 +47,11 @@ OutputIterator copy_exespace_impl(const std::string& label,
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         // use CTAD
-                         StdCopyFunctor(first, d_first));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      // use CTAD
+      StdCopyFunctor(first, d_first));
   ex.fence("Kokkos::copy: fence after operation");
 
   // return

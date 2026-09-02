@@ -78,15 +78,17 @@ IteratorType shift_right_exespace_impl(
   // step 1
   using step1_func_type =
       StdMoveFunctor<index_type, IteratorType, tmp_readwrite_iterator_type>;
-  ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements_to_move),
-      step1_func_type(first, begin(tmp_view)));
+  ::Kokkos::parallel_for(label,
+                         RangePolicy<ExecutionSpace, IndexType<int64_t>>(
+                             ex, 0, num_elements_to_move),
+                         step1_func_type(first, begin(tmp_view)));
 
   // step 2
   using step2_func_type =
       StdMoveFunctor<index_type, tmp_readwrite_iterator_type, IteratorType>;
   ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
+                         RangePolicy<ExecutionSpace, IndexType<int64_t>>(
+                             ex, 0, tmp_view.extent(0)),
                          step2_func_type(begin(tmp_view), first + n));
 
   ex.fence("Kokkos::shift_right: fence after operation");

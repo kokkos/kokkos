@@ -51,9 +51,10 @@ void replace_exespace_impl(const std::string& label, const ExecutionSpace& ex,
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         StdReplaceFunctor(first, old_value, new_value));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      StdReplaceFunctor(first, old_value, new_value));
   ex.fence("Kokkos::replace: fence after operation");
 }
 
