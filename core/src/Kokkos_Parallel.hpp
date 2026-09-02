@@ -4,6 +4,7 @@
 /// \file Kokkos_Parallel.hpp
 /// \brief Declaration of parallel operators
 
+#include "Kokkos_BitManipulation.hpp"
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
 static_assert(false,
@@ -25,8 +26,6 @@ static_assert(false,
 #include <impl/Kokkos_Traits.hpp>
 
 #include <cstddef>
-#include <type_traits>
-#include <typeinfo>
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -34,11 +33,16 @@ static_assert(false,
 namespace Kokkos {
 namespace Impl {
 
-template <class T>
-using execution_space_t = typename T::execution_space;
+template <typename T>
+concept HasExecutionSpace = requires { typename T::execution_space; };
 
-template <class T>
-using device_type_t = typename T::device_type;
+template <typename T, typename U>
+concept HasMatchingExecutionSpace =
+    !HasExecutionSpace<T> || !HasExecutionSpace<U> ||
+    std::same_as<typename T::execution_space, typename U::execution_space>;
+
+template <typename T>
+concept HasDeviceType = requires { typename T::device_type; };
 
 //----------------------------------------------------------------------------
 /** \brief  Given a Functor and Execution Policy query an execution space.
@@ -49,41 +53,54 @@ using device_type_t = typename T::device_type;
  *  else     use the default
  */
 
-template <class Functor, class Policy>
-struct FunctorPolicyExecutionSpace {
-  using policy_execution_space  = detected_t<execution_space_t, Policy>;
-  using functor_execution_space = detected_t<execution_space_t, Functor>;
-  using functor_device_type     = detected_t<device_type_t, Functor>;
-  using functor_device_type_execution_space =
-      detected_t<execution_space_t, functor_device_type>;
+// TODO
+#if 0
+    static_assert(!is_detected<execution_space_t, Policy>::value ||
+                      !is_detected<device_type_t, Functor>::value ||
+                      std::is_same_v<policy_execution_space,
+                                     functor_device_type_execution_space>,
+                  "A policy with an execution space and a functor with a device "
+                  "type are given but the execution space types do not match!");
+    static_assert(!is_detected<device_type_t, Functor>::value ||
+                      !is_detected<execution_space_t, Functor>::value ||
+                      std::is_same_v<functor_device_type_execution_space,
+                                     functor_execution_space>,
+                  "A functor with both an execution space and device type is "
+                  "given but their execution space types do not match!");
+#endif
 
+template <class Functor, class Policy>
+struct FunctorPolicyExecutionSpace;
+
+template <class Functor, class Policy>
+  requires(HasExecutionSpace<Policy>)
+struct FunctorPolicyExecutionSpace<Functor, Policy> {
   static_assert(
-      !is_detected<execution_space_t, Policy>::value ||
-          !is_detected<execution_space_t, Functor>::value ||
-          std::is_same_v<policy_execution_space, functor_execution_space>,
+      HasMatchingExecutionSpace<Policy, Functor>,
       "A policy with an execution space and a functor with an execution space "
       "are given but the execution space types do not match!");
-  static_assert(!is_detected<execution_space_t, Policy>::value ||
-                    !is_detected<device_type_t, Functor>::value ||
-                    std::is_same_v<policy_execution_space,
-                                   functor_device_type_execution_space>,
-                "A policy with an execution space and a functor with a device "
-                "type are given but the execution space types do not match!");
-  static_assert(!is_detected<device_type_t, Functor>::value ||
-                    !is_detected<execution_space_t, Functor>::value ||
-                    std::is_same_v<functor_device_type_execution_space,
-                                   functor_execution_space>,
-                "A functor with both an execution space and device type is "
-                "given but their execution space types do not match!");
 
-  using execution_space = detected_or_t<
-      detected_or_t<
-          std::conditional_t<
-              is_detected<device_type_t, Functor>::value,
-              detected_t<execution_space_t, detected_t<device_type_t, Functor>>,
-              Kokkos::DefaultExecutionSpace>,
-          execution_space_t, Functor>,
-      execution_space_t, Policy>;
+  using execution_space = typename Policy::execution_space;
+};
+
+template <class Functor, class Policy>
+  requires(!HasExecutionSpace<Policy> && HasExecutionSpace<Functor>)
+struct FunctorPolicyExecutionSpace<Functor, Policy> {
+  using execution_space = typename Functor::execution_space;
+};
+
+template <class Functor, class Policy>
+  requires(!HasExecutionSpace<Policy> && !HasExecutionSpace<Functor> &&
+           HasDeviceType<Functor>)
+struct FunctorPolicyExecutionSpace<Functor, Policy> {
+  using execution_space = typename Functor::device_type::execution_space;
+};
+
+template <class Functor, class Policy>
+  requires(!HasExecutionSpace<Policy> && !HasExecutionSpace<Functor> &&
+           !HasDeviceType<Functor>)
+struct FunctorPolicyExecutionSpace<Functor, Policy> {
+  using execution_space = Kokkos::DefaultExecutionSpace;
 };
 
 }  // namespace Impl

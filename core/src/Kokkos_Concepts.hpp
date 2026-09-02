@@ -114,6 +114,27 @@ struct LaunchBounds {
 
 namespace Kokkos {
 
+#if 1
+// The non-exposed concepts are in namespace ImplConcepts and not Impl, because
+// this macro is sometimes used within namespace Impl
+#define KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(TYPEDEF)                    \
+  namespace ImplConcepts {                                                \
+  template <typename T>                                                   \
+  concept Has##TYPEDEF = requires { typename T::TYPEDEF; };               \
+                                                                          \
+  template <typename T>                                                   \
+  concept Has##TYPEDEF##_type = requires { typename T::TYPEDEF##_type; }; \
+  }                                                                       \
+  template <typename T>                                                   \
+  concept is_##TYPEDEF##_v =                                              \
+      (ImplConcepts::Has##TYPEDEF<T> &&                                   \
+       std::derived_from<T, typename T::TYPEDEF>) ||                      \
+      (ImplConcepts::Has##TYPEDEF##_type<T> &&                            \
+       std::derived_from<T, typename T::TYPEDEF##_type>);                 \
+                                                                          \
+  template <typename T>                                                   \
+  using is_##TYPEDEF = std::bool_constant<is_##TYPEDEF##_v<T>>;
+#else
 #define KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(TYPEDEF)         \
   template <typename T>                                        \
   struct is_##TYPEDEF {                                        \
@@ -131,7 +152,7 @@ namespace Kokkos {
   };                                                           \
   template <typename T>                                        \
   inline constexpr bool is_##TYPEDEF##_v = is_##TYPEDEF<T>::value;
-
+#endif
 #define KOKKOS_IMPL_DEFINE_CONCEPT_AND_TRAIT_FROM_TYPEDEF(TYPEDEF,       \
                                                           CXX20_CONCEPT) \
   KOKKOS_IMPL_DEFINE_TRAIT_FROM_TYPEDEF(TYPEDEF)                         \
