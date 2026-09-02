@@ -68,7 +68,7 @@ class [[nodiscard]] NextSiliconThreadSpaceGuard {
   // FIXME_NEXTSILICON: __attribute__((noinline)) prevents scheduling to grid;
   // when ticket https://nextsilicon.atlassian.net/browse/SW-25677 is resolved,
   // __attribute__((weak)) can be switched to __attribute__((noinline)).
-  static __attribute__((weak)) bool host_thread_is_on_device() {
+  static __attribute__((weak)) bool& host_thread_is_on_device() {
     return thread_is_on_device;
   }
 

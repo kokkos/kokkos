@@ -14,8 +14,8 @@ NextSiliconThreadSpaceGuard::NextSiliconThreadSpaceGuard() noexcept {
   // We can always determine if we are actually handed off by calling
   // __next_is_in_handed_off_code.
   if (!__next_is_in_handed_off_code()) {
-    KOKKOS_ASSERT(!thread_is_on_device);
-    thread_is_on_device = true;
+    KOKKOS_ASSERT(!host_thread_is_on_device());
+    host_thread_is_on_device() = true;
   }
 }
 
@@ -24,8 +24,8 @@ NextSiliconThreadSpaceGuard::~NextSiliconThreadSpaceGuard() noexcept {
   // cannot change mid-scope, otherwise it will break the counter.
   if (!__next_is_in_handed_off_code()) {
     // Catch if the invariant doesn't hold
-    KOKKOS_ASSERT(thread_is_on_device);
-    thread_is_on_device = false;
+    KOKKOS_ASSERT(host_thread_is_on_device());
+    host_thread_is_on_device() = false;
   }
 }
 
