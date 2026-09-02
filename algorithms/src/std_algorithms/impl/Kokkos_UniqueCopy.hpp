@@ -80,7 +80,9 @@ OutputIterator unique_copy_exespace_impl(
     std::size_t count    = 0;
     ::Kokkos::parallel_scan(
         label,
-        RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, scan_size),
+        RangePolicy<ExecutionSpace,
+                    IndexType<typename InputIterator::difference_type>>(
+            ex, 0, scan_size),
         // use CTAD
         StdUniqueCopyFunctor(first, last, d_first, pred), count);
 

@@ -52,7 +52,9 @@ IteratorType2 move_backward_exespace_impl(const std::string& label,
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_for(
       label,
-      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType1::difference_type>>(
+          ex, 0, num_elements),
       StdMoveBackwardFunctor(last, d_last));
   ex.fence("Kokkos::move_backward: fence after operation");
 

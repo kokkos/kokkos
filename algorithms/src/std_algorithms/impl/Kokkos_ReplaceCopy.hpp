@@ -67,7 +67,9 @@ OutputIteratorType replace_copy_exespace_impl(const std::string& label,
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
       label,
-      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename InputIteratorType::difference_type>>(
+          ex, 0, num_elements),
       StdReplaceCopyFunctor(first_from, first_dest, old_value, new_value));
   ex.fence("Kokkos::replace_copy: fence after operation");
 

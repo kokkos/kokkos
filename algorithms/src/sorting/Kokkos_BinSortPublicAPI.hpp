@@ -112,14 +112,14 @@ class BinSort {
       Kokkos::View<typename KeyViewType::const_data_type,
                    typename KeyViewType::array_layout,
                    typename KeyViewType::device_type,
-                   Kokkos::MemoryTraits<Kokkos::RandomAccess> >,
+                   Kokkos::MemoryTraits<Kokkos::RandomAccess>>,
       const_key_view_type>;
 
   using non_const_key_scalar = typename KeyViewType::non_const_value_type;
   using const_key_scalar     = typename KeyViewType::const_value_type;
 
   using bin_count_atomic_type =
-      Kokkos::View<int*, Space, Kokkos::MemoryTraits<Kokkos::Atomic> >;
+      Kokkos::View<int*, Space, Kokkos::MemoryTraits<Kokkos::Atomic>>;
 
  private:
   const_key_view_type keys;

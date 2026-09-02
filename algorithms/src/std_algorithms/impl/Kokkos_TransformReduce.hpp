@@ -134,7 +134,9 @@ ValueType transform_reduce_custom_functors_exespace_impl(
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(
       label,
-      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType::difference_type>>(
+          ex, 0, num_elements),
       functor_type(first, reducer, transformer), reducer);
 
   // fence not needed since reducing into scalar
@@ -177,7 +179,9 @@ ValueType transform_reduce_custom_functors_exespace_impl(
   const auto num_elements = Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_reduce(
       label,
-      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType1::difference_type>>(
+          ex, 0, num_elements),
       functor_type(first1, first2, reducer, transformer), reducer);
 
   // fence not needed since reducing into scalar

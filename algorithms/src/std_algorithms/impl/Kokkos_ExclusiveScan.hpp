@@ -54,7 +54,9 @@ OutputIteratorType exclusive_scan_exespace_impl(
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(
       label,
-      RangePolicy<ExecutionSpace, IndexType<int64_t>>(ex, 0, num_elements),
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename InputIteratorType::difference_type>>(
+          ex, 0, num_elements),
       func_type(std::move(init_value), first_from, first_dest, bop,
                 unary_op_type()));
   ex.fence("Kokkos::exclusive_scan: fence after operation");
