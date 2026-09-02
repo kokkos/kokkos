@@ -5,6 +5,7 @@
 #define KOKKOS_BIN_OPS_PUBLIC_API_HPP_
 
 #include <Kokkos_Macros.hpp>
+#include <cstdint>
 #include <type_traits>
 
 namespace Kokkos {

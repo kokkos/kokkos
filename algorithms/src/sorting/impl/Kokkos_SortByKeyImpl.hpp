@@ -11,6 +11,7 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <cstdint>
 #include <tuple>
 
 #if defined(KOKKOS_ENABLE_CUDA)

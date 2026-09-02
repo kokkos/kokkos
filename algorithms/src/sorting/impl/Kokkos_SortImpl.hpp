@@ -17,6 +17,7 @@ import kokkos.core;
 #include <Kokkos_Assert.hpp>
 
 #include <cmath>
+#include <cstdint>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
