@@ -518,7 +518,9 @@ jobs:
           XDG_CACHE_HOME: $HOME/optimizer-cache
           __TINYALLOC_HEAP_SIZE: 1073741824
           __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
+        # FIXME_NEXTSILICON: disable core dumps for now
         run: |
+          ulimit -c 0
           ctest -V --timeout 1800
 
       - name: test_kokkos
@@ -529,6 +531,7 @@ jobs:
           XDG_CACHE_HOME: $HOME/optimizer-cache
           __TINYALLOC_HEAP_SIZE: 1073741824
           __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
-        # FIXME_NEXTSILICON: exclusions are CS-737, OOM in main() teardown, observed in 1.3.0-395
+        # FIXME_NEXTSILICON: disable core dumps for now
         run: |
-          ctest -V --timeout 1800 -E "ToolIndependence|ProfilingTestErrorNoCallbacks|CTestDevice"
+          ulimit -c 0
+          ctest -V --timeout 1800
