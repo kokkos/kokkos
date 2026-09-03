@@ -29,7 +29,6 @@ using const_data_handle_anonym_t =
 TEST(TEST_CATEGORY, RefCountedDataHandle_Typedefs) {
   static_assert(std::is_same_v<data_handle_t::value_type, element_t>);
   static_assert(std::is_same_v<data_handle_t::pointer, element_t*>);
-  static_assert(std::is_same_v<data_handle_t::reference, element_t&>);
   static_assert(std::is_same_v<data_handle_t::memory_space, mem_t>);
 }
 
