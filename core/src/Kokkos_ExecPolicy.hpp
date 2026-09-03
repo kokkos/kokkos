@@ -328,6 +328,24 @@ class ImplRangePolicy<ExecSpace, Properties...>
 };
 
 }  // namespace Impl
+
+/** \brief  Execution policy to execute work over a single thread
+ */
+template <class... Properties>
+class SinglePolicy
+    : public RangePolicy<Kokkos::LaunchBounds<1>, Properties...> {
+ public:
+  using base_class = RangePolicy<Kokkos::LaunchBounds<1>, Properties...>;
+
+  template <class... OtherProperties>
+  SinglePolicy(const SinglePolicy<OtherProperties...>& p) : base_class(p) {}
+
+  SinglePolicy() : base_class(0, 1) {}
+
+  SinglePolicy(const typename base_class::traits::execution_space exec_space)
+      : base_class(exec_space, 0, 1) {}
+};
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

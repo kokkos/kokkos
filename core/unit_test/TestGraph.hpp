@@ -11,6 +11,7 @@ import kokkos.core;
 
 #include <gtest/gtest.h>
 
+#include <KokkosTest_Utils.hpp>
 #include <tools/include/ToolTestingUtilities.hpp>
 
 namespace Test {
@@ -97,22 +98,6 @@ struct TEST_CATEGORY_FIXTURE(graph) : public ::testing::Test {
   }
 };
 
-// Check if a rank-0 view contains a given value.
-template <typename Exec, typename ViewType>
-::testing::AssertionResult contains(
-    const Exec& exec, const ViewType& view,
-    const typename ViewType::value_type& expected) {
-  static_assert(ViewType::rank() == 0);
-  typename ViewType::non_const_value_type value;
-  Kokkos::deep_copy(exec, value, view);
-  exec.fence();
-  if (value != expected)
-    return ::testing::AssertionFailure()
-           << expected << " is not in " << view.label() << ", got " << value;
-  else
-    return ::testing::AssertionSuccess();
-}
-
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once) {
   auto graph =
       Kokkos::Experimental::create_graph<TEST_EXECSPACE>([&](auto root) {
@@ -120,8 +105,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once) {
       });
   graph.submit(TEST_EXECSPACE{});
 
-  ASSERT_TRUE(contains(TEST_EXECSPACE{}, count, 1));
-  ASSERT_TRUE(contains(TEST_EXECSPACE{}, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(TEST_EXECSPACE{}, count, 1));
+  ASSERT_TRUE(KokkosTest::contains(TEST_EXECSPACE{}, bugs, 0));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once_rvalue) {
@@ -132,8 +117,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_once_rvalue) {
       })
       .submit(ex);
 
-  ASSERT_TRUE(contains(ex, count, 1));
-  ASSERT_TRUE(contains(ex, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(ex, count, 1));
+  ASSERT_TRUE(KokkosTest::contains(ex, bugs, 0));
 }
 
 // Ensure that Kokkos::Graph::instantiate works.
@@ -147,8 +132,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), instantiate_and_submit_once) {
   graph.instantiate();
   graph.submit(ex);
 
-  ASSERT_TRUE(contains(ex, count, 1));
-  ASSERT_TRUE(contains(ex, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(ex, count, 1));
+  ASSERT_TRUE(KokkosTest::contains(ex, bugs, 0));
 }
 
 // FIXME death tests and fixtures
@@ -212,8 +197,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph),
 
   graph.submit(exec_B);
 
-  ASSERT_TRUE(contains(exec_B, count, 1));
-  ASSERT_TRUE(contains(exec_B, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec_B, count, 1));
+  ASSERT_TRUE(KokkosTest::contains(exec_B, bugs, 0));
 }
 
 // This test ensures that it's possible to build a Kokkos::Graph using
@@ -228,8 +213,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph),
 
   graph.submit(ex);
 
-  ASSERT_TRUE(contains(ex, count, 1));
-  ASSERT_TRUE(contains(ex, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(ex, count, 1));
+  ASSERT_TRUE(KokkosTest::contains(ex, bugs, 0));
 }
 
 // This test ensures that it's possible to build a Kokkos::Graph using
@@ -254,8 +239,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), create_graph_no_arg) {
 
   graph.submit(exec);
 
-  ASSERT_TRUE(contains(exec, count, 1));
-  ASSERT_TRUE(contains(exec, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec, count, 1));
+  ASSERT_TRUE(KokkosTest::contains(exec, bugs, 0));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
@@ -294,8 +279,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), submit_six) {
       });
   graph.submit(ex);
 
-  ASSERT_TRUE(contains(ex, count, 6));
-  ASSERT_TRUE(contains(ex, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(ex, count, 6));
+  ASSERT_TRUE(KokkosTest::contains(ex, bugs, 0));
 }
 
 TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
@@ -317,9 +302,9 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), when_all_cycle) {
       })
       .submit(ex);
 
-  ASSERT_TRUE(contains(ex, bugs, 0));
-  ASSERT_TRUE(contains(ex, count, 7));
-  ASSERT_TRUE(contains(ex, reduction_out, 42));
+  ASSERT_TRUE(KokkosTest::contains(ex, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(ex, count, 7));
+  ASSERT_TRUE(KokkosTest::contains(ex, reduction_out, 42));
   //----------------------------------------
 }
 
@@ -391,7 +376,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), zero_work_reduce) {
   Kokkos::deep_copy(ex, count, 1);
   graph.submit(ex);
 
-  ASSERT_TRUE(contains(ex, count, 0));
+  ASSERT_TRUE(KokkosTest::contains(ex, count, 0));
 }
 
 // Ensure that an empty graph can be submitted.
@@ -489,7 +474,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), force_global_launch) {
   graph->instantiate();  // NOLINT(bugprone-unchecked-optional-access)
 
   graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
-  ASSERT_TRUE(contains(ex, data, functor_t::count));
+  ASSERT_TRUE(KokkosTest::contains(ex, data, functor_t::count));
 
   ASSERT_TRUE(validate_event_set(
       [&]() { graph.reset(); },
@@ -528,7 +513,7 @@ void test_sized_functor_launch(const ExecSpace& exec) {
       });
 
   graph.submit(exec);
-  ASSERT_TRUE(contains(exec, data, range_end));
+  ASSERT_TRUE(KokkosTest::contains(exec, data, range_end));
 }
 
 // Test that launching kernels of certain sizes works. The sizes are chosen so
@@ -591,7 +576,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), node_lifetime) {
   EXPECT_TRUE(static_cast<bool>(graph));
   graph->submit(ex);  // NOLINT(bugprone-unchecked-optional-access)
 
-  ASSERT_TRUE(contains(ex, Kokkos::subview(data, size - 1), 2));
+  ASSERT_TRUE(KokkosTest::contains(ex, Kokkos::subview(data, size - 1), 2));
 
   graph.reset();
 
@@ -1105,11 +1090,11 @@ void test_graph_capture() {
   //       CAPTURE
   //
   // At this stage, no kernel was launched yet.
-  ASSERT_TRUE(contains(exec_left, data_0, 0));
-  ASSERT_TRUE(contains(exec_right, data_1, 0));
-  ASSERT_TRUE(contains(exec_graph, data_2, 0));
-  ASSERT_TRUE(contains(exec_left, data_3, 0));
-  ASSERT_TRUE(contains(exec_right, data_4, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec_left, data_0, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec_right, data_1, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec_graph, data_2, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec_left, data_3, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec_right, data_4, 0));
 
   // The view is shared by:
   //  - this scope (1 + 5)
@@ -1123,15 +1108,15 @@ void test_graph_capture() {
   static_assert(
       static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture) != 0);
 
-  ASSERT_TRUE(contains(
+  ASSERT_TRUE(KokkosTest::contains(
       exec_graph, data_1,
       offset_left +
           static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture)));
-  ASSERT_TRUE(contains(
+  ASSERT_TRUE(KokkosTest::contains(
       exec_graph, data_3,
       offset_right +
           static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture)));
-  ASSERT_TRUE(contains(
+  ASSERT_TRUE(KokkosTest::contains(
       exec_graph, data_2,
       offset_left + offset_right +
           3 * static_cast<int>(Kokkos::Experimental::GraphNodeKind::Capture)));
@@ -1193,7 +1178,7 @@ TEST(TEST_CATEGORY, graph_then) {
       });
 
   // At this stage, no kernel was launched yet.
-  ASSERT_TRUE(contains(exec, data, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec, data, 0));
 
   // The 'data' view is shared by:
   //  - this scope
@@ -1203,7 +1188,7 @@ TEST(TEST_CATEGORY, graph_then) {
 
   graph.submit(exec);
 
-  ASSERT_TRUE(contains(exec, data, value_memset + value_then));
+  ASSERT_TRUE(KokkosTest::contains(exec, data, value_memset + value_then));
 }
 
 template <typename DataViewType, typename BufferViewType>
@@ -1464,11 +1449,11 @@ TEST(TEST_CATEGORY, graph_then_tag) {
             functor_t{data, value_then});
       });
 
-  ASSERT_TRUE(contains(exec, data, 0));
+  ASSERT_TRUE(KokkosTest::contains(exec, data, 0));
 
   graph.submit(exec);
 
-  ASSERT_TRUE(contains(exec, data, 5 * value_then));
+  ASSERT_TRUE(KokkosTest::contains(exec, data, 5 * value_then));
 }
 
 // Functors for graph scratch/replay tests, at namespace scope for CUDA
@@ -1584,8 +1569,8 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), lvalue_policies) {
 
   graph.submit(ex);
 
-  ASSERT_TRUE(contains(ex, count, 3));
-  ASSERT_TRUE(contains(ex, bugs, 0));
+  ASSERT_TRUE(KokkosTest::contains(ex, count, 3));
+  ASSERT_TRUE(KokkosTest::contains(ex, bugs, 0));
 }
 
 // Test lvalue policies with then_parallel_reduce.
@@ -1603,7 +1588,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), lvalue_policies_reduce) {
         n1.then_parallel_reduce(1, set_result_functor{count}, reduction_out);
       });
   graph.submit(ex);
-  ASSERT_TRUE(contains(ex, reduction_out, 42));
+  ASSERT_TRUE(KokkosTest::contains(ex, reduction_out, 42));
 
   // Test 2: explicit lvalue RangePolicy with label
   auto graph2 = Kokkos::Experimental::create_graph(
@@ -1614,7 +1599,7 @@ TEST_F(TEST_CATEGORY_FIXTURE(graph), lvalue_policies_reduce) {
                                 set_result_functor{count}, reduction_out2);
       });
   graph2.submit(ex);
-  ASSERT_TRUE(contains(ex, reduction_out2, 99));
+  ASSERT_TRUE(KokkosTest::contains(ex, reduction_out2, 99));
 }
 
 // Test TeamPolicy with LaunchBounds in graph nodes.

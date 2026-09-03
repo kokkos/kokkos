@@ -197,10 +197,6 @@ struct ParallelReduceAdaptor {
         functor, typename Analysis::Reducer(
                      forwarding_switch<passed_reducer_type_is_invalid>(
                          functor, return_value)));
-    const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
-        typename return_value_adapter::reducer_type>(policy, functor_reducer,
-                                                     label, kpID);
-    const auto& inner_policy = response.policy;
 
     if constexpr (Kokkos::is_view_v<ReturnType>) {
       if constexpr (is_array_reduction)
@@ -217,16 +213,41 @@ struct ParallelReduceAdaptor {
             "contiguous memory!");
     }
 
-    auto closure = construct_with_shared_allocation_tracking_disabled<
-        Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
-                             typename Impl::FunctorPolicyExecutionSpace<
-                                 FunctorType, PolicyType>::execution_space>>(
-        functor_reducer, inner_policy,
-        return_value_adapter::return_value(return_value, functor));
-    closure.execute();
+    if constexpr (Kokkos::Impl::is_specialization_of_v<
+                      PolicyType, ::Kokkos::SinglePolicy>) {
+      // Executing a single() directive through the reduce mechanisms
+      Kokkos::Tools::Impl::begin_single<PolicyType, FunctorType>(policy, label,
+                                                                 kpID);
 
-    Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
-        inner_policy, functor, label, kpID);
+      auto closure = construct_with_shared_allocation_tracking_disabled<
+          Impl::ParallelReduce<
+              CombinedFunctorReducerType, typename PolicyType::base_class,
+              typename Impl::FunctorPolicyExecutionSpace<
+                  FunctorType,
+                  typename PolicyType::base_class>::execution_space>>(
+          functor_reducer, policy,
+          return_value_adapter::return_value(return_value, functor));
+      closure.execute();
+
+      Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
+    } else {
+      const auto& response = Kokkos::Tools::Impl::begin_parallel_reduce<
+          typename return_value_adapter::reducer_type>(policy, functor_reducer,
+                                                       label, kpID);
+
+      const auto& inner_policy = response.policy;
+
+      auto closure = construct_with_shared_allocation_tracking_disabled<
+          Impl::ParallelReduce<CombinedFunctorReducerType, PolicyType,
+                               typename Impl::FunctorPolicyExecutionSpace<
+                                   FunctorType, PolicyType>::execution_space>>(
+          functor_reducer, inner_policy,
+          return_value_adapter::return_value(return_value, functor));
+      closure.execute();
+
+      Kokkos::Tools::Impl::end_parallel_reduce<PassedReducerType>(
+          inner_policy, functor, label, kpID);
+    }
   }
 };
 }  // namespace Impl
