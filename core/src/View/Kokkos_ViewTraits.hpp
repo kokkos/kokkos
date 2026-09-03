@@ -177,33 +177,15 @@ struct UnsupportedKokkosArrayLayout;
 
 template <class Traits, class Enabled = void>
 struct AccessorFromViewTraits {
+ private:
+  struct Space {
+    using memory_space = typename Traits::memory_space;
+  };
+
+ public:
   using type =
-      SpaceAwareAccessor<typename Traits::memory_space,
-                         default_accessor<typename Traits::value_type>>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
-                             !Traits::memory_traits::is_atomic>> {
-  using type = CheckedReferenceCountedAccessor<typename Traits::value_type,
-                                               typename Traits::memory_space>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
-                             Traits::memory_traits::is_atomic>> {
-  using type = CheckedReferenceCountedRelaxedAtomicAccessor<
-      typename Traits::value_type, typename Traits::memory_space>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits, std::enable_if_t<Traits::memory_traits::is_unmanaged &&
-                             Traits::memory_traits::is_atomic>> {
-  using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
-                                            typename Traits::memory_space>;
+      typename ViewArgsToAccessor<typename Traits::value_type, Space,
+                                  typename Traits::memory_traits>::type;
 };
 
 template <class Traits>
