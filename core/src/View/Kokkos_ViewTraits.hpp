@@ -175,7 +175,7 @@ constexpr void customize_view_arguments(
 namespace Impl {
 struct UnsupportedKokkosArrayLayout;
 
-template <class Traits, class Enabled = void>
+template <class Traits>
 struct AccessorFromViewTraits {
  private:
   struct Space {
