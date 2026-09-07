@@ -41,10 +41,9 @@ KOKKOS_INLINE_FUNCTION uint32_t get_hardware_thread_id() {
       (blockIdx.x + gridDim.x * (blockIdx.y + gridDim.y * blockIdx.z)) *
           (blockDim.x * blockDim.y * blockDim.z));
 #else
-  // On host: combine the calling thread's stack address with the clock.
-  int dummy = 0;
-  return static_cast<uint32_t>(reinterpret_cast<uintptr_t>(&dummy) ^
-                               Kokkos::Impl::clock_tic());
+  // On host: use the calling thread's stack address.
+  thread_local int dummy = 0;
+  return static_cast<uint32_t>(reinterpret_cast<uintptr_t>(&dummy));
 #endif
 }
 
