@@ -162,4 +162,20 @@ TEST_F(PushFinalizeHook_DeathTest,
       ::testing::ExitedWithCode(EXIT_SUCCESS), "");
 }
 
+TEST_F(PushFinalizeHook_DeathTest, finalizes_at_exit) {
+  EXPECT_EXIT(
+      {
+        static bool finalize_hook_called = false;
+        std::atexit([] {
+          if (!finalize_hook_called) std::_Exit(EXIT_FAILURE);
+        });
+        Kokkos::initialize(
+            Kokkos::InitializationSettings().set_disable_warnings(true));
+        std::atexit([] { Kokkos::finalize(); });
+        Kokkos::push_finalize_hook([] { finalize_hook_called = true; });
+        std::exit(EXIT_SUCCESS);
+      },
+      ::testing::ExitedWithCode(EXIT_SUCCESS), "");
+}
+
 }  // namespace
