@@ -24,6 +24,7 @@
 #include <stack>
 #include <functional>
 #include <cerrno>
+#include <mutex>
 #include <random>
 #include <regex>
 #ifndef _WIN32
@@ -41,7 +42,16 @@ bool g_show_warnings       = true;
 bool g_tune_internals      = false;
 
 using hook_function_type = std::function<void()>;
-std::stack<hook_function_type> finalize_hooks;
+
+std::mutex& finalize_hooks_mutex() {
+  static std::mutex mutex;
+  return mutex;
+}
+
+std::stack<hook_function_type>& finalize_hooks() {
+  static std::stack<hook_function_type> hooks;
+  return hooks;
+}
 
 /**
  * The category is only used in printing, tools
@@ -769,10 +779,14 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
 // function throws
 // NOLINTNEXTLINE(bugprone-exception-escape)
 void call_registered_finalize_hook_functions() noexcept {
-  while (!finalize_hooks.empty()) {
-    auto const& func = finalize_hooks.top();
+  std::function<void()> func;
+  while (!finalize_hooks().empty()) {
+    {
+      std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+      func = std::move(finalize_hooks().top());
+      finalize_hooks().pop();
+    }
     func();
-    finalize_hooks.pop();
   }
 }
 
@@ -1066,7 +1080,8 @@ void Kokkos::Impl::pre_finalize() { pre_finalize_internal(); }
 void Kokkos::Impl::post_finalize() { post_finalize_internal(); }
 
 void Kokkos::push_finalize_hook(std::function<void()> f) {
-  finalize_hooks.push(f);
+  std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+  finalize_hooks().push(std::move(f));
 }
 
 void Kokkos::finalize() {
