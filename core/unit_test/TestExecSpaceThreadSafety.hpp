@@ -47,7 +47,12 @@ namespace {
   KOKKOS_TEST_SKIP_IF_ATOMICS_BYPASS()           \
   static_assert(true, "no-op to require trailing semicolon")
 
-#ifdef KOKKOS_ENABLE_OPENMP
+// FIXME_NEXTSILICON: NextSilicon can offload OpenMP code. When OpenMP +
+// NextSilicon backends are enabled, we will require -fopenmp-host-default flag,
+// which will cause all OpenMP regions to run on the host CPU instead of the
+// NextSilicon accelerator. This means we can't use OpenMP threads to test
+// NextSilicon offload regions, as they won't get offloaded.
+#if defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_NEXTSILICON)
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) {
