@@ -27,6 +27,7 @@
 #include <regex>
 #include <sstream>
 #include <stack>
+#include <utility>
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -494,6 +495,10 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
     g_show_warnings = false;
   if (settings.has_tune_internals() && settings.get_tune_internals())
     g_tune_internals = true;
+
+  // force initialization of function-local statics
+  std::ignore = finalize_hooks_mutex();
+  std::ignore = finalize_hooks();
 
   // clang-format off
   declare_configuration_metadata("version_info", "Kokkos Version", version_string_from_int(KOKKOS_VERSION));
