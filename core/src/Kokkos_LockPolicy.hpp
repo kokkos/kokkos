@@ -285,11 +285,11 @@ class LockGuard {
 
 // ExecutionSpace traits used for backend dispatch in atomic_locked_action
 template <typename ExecutionSpace>
-inline constexpr bool is_serial_execution_space_v = false;
+inline constexpr bool bypass_atomic_lock_v = false;
 
-#if defined(KOKKOS_ENABLE_SERIAL)
+#if defined(KOKKOS_ENABLE_SERIAL) && defined(KOKKOS_ENABLE_ATOMICS_BYPASS)
 template <>
-inline constexpr bool is_serial_execution_space_v<Kokkos::Serial> = true;
+inline constexpr bool bypass_atomic_lock_v<Kokkos::Serial> = true;
 #endif
 
 template <typename ExecutionSpace>
@@ -575,8 +575,8 @@ using ClockRandomBackoffTTAS =
 // to wait for the lock.
 //
 // Dispatch:
-//   - ExecutionSpace = Kokkos::Serial: no-op lock -- a single thread can
-//     never contend with itself, so `action` just runs directly.
+//   - ExecutionSpace = Kokkos::Serial && KOKKOS_ENABLE_ATOMICS_BYPASS: no-op
+//     lock, so `action` just runs directly.
 //   - ExecutionSpace = Kokkos::HIP: lane-serialized dispatch (see
 //     Impl::lane_serialized_locked_action) to avoid the lockstep/forward-
 //     progress hazard.
@@ -624,9 +624,7 @@ KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
                 "LockType must be an integral type supported by Kokkos "
                 "atomics.");
 
-  if constexpr (Impl::is_serial_execution_space_v<ExecutionSpace>) {
-    // Serial: only one thread ever exists, so nothing else can be
-    // contending for this lock. Skip the atomic dance entirely.
+  if constexpr (Impl::bypass_atomic_lock_v<ExecutionSpace>) {
     return action();
   }
 #if defined(KOKKOS_ENABLE_HIP)
