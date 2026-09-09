@@ -284,6 +284,24 @@ TEST(std_algorithms_non_mod_seq_ops, search) {
   run_all_scenarios<StridedThreeTag, int>();
 }
 
+TEST(std_algorithms_non_mod_seq_ops, test_extended_range) {
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+  GTEST_SKIP();
+#endif
+  std::size_t n = (std::size_t(1) << 31) + 1;
+  Kokkos::View<bool*> view("large_view", n);
+  Kokkos::View<bool*> search("search_for", 2);
+  Kokkos::deep_copy(search, true);
+
+  std::size_t idx = n - 2;
+  Kokkos::deep_copy(Kokkos::subview(view, std::make_pair(idx, idx + 2)), true);
+
+  auto result = KE::search(exespace{}, KE::begin(view), KE::end(view),
+                           KE::begin(search), KE::end(search));
+  ASSERT_NE(result, KE::end(view));
+  EXPECT_EQ(result - KE::begin(view), idx);
+}
+
 }  // namespace Search
 }  // namespace stdalgos
 }  // namespace Test

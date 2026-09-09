@@ -106,10 +106,7 @@ bool lexicographical_compare_exespace_impl(
                                        reducer_type, ComparatorType>;
 
   ::Kokkos::parallel_reduce(
-      label,
-      RangePolicy<ExecutionSpace,
-                  IndexType<typename IteratorType1::difference_type>>(ex, 0,
-                                                                      range),
+      label, RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, range),
       func1_t(first1, first2, reducer, comp), reducer);
 
   // fence not needed because reducing into scalar
@@ -129,9 +126,7 @@ bool lexicographical_compare_exespace_impl(
   using func2_t = StdCompareFunctor<index_type, IteratorType1, IteratorType2,
                                     ComparatorType>;
   ::Kokkos::parallel_reduce(
-      label,
-      RangePolicy<ExecutionSpace,
-                  IndexType<typename IteratorType1::difference_type>>(ex, 0, 1),
+      label, RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, 1),
       func2_t(it1, it2, comp), less);
 
   // fence not needed because reducing into scalar

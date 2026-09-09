@@ -71,7 +71,6 @@ OutputIteratorType replace_copy_if_exespace_impl(const std::string& label,
       RangePolicy<ExecutionSpace,
                   IndexType<typename InputIteratorType::difference_type>>(
           ex, 0, num_elements),
-      // use CTAD
       StdReplaceIfCopyFunctor(first_from, first_dest, std::move(pred),
                               new_value));
   ex.fence("Kokkos::replace_copy_if: fence after operation");

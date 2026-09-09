@@ -127,9 +127,7 @@ IteratorType1 search_exespace_impl(const std::string& label,
     // run par reduce
     ::Kokkos::parallel_reduce(
         label,
-        RangePolicy<ExecutionSpace,
-                    IndexType<typename IteratorType1::difference_type>>(
-            ex, 0, range_size),
+        RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
 
     // fence not needed because reducing into scalar

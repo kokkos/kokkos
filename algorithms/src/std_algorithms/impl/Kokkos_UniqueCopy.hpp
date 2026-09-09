@@ -83,7 +83,6 @@ OutputIterator unique_copy_exespace_impl(
         RangePolicy<ExecutionSpace,
                     IndexType<typename InputIterator::difference_type>>(
             ex, 0, scan_size),
-        // use CTAD
         StdUniqueCopyFunctor(first, last, d_first, pred), count);
 
     return Impl::copy_exespace_impl("Kokkos::copy_from_unique_copy", ex,

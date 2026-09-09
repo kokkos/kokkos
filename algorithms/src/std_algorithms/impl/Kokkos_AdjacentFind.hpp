@@ -82,7 +82,6 @@ IteratorType adjacent_find_exespace_impl(const std::string& label,
       RangePolicy<ExecutionSpace,
                   IndexType<typename IteratorType::difference_type>>(
           ex, 0, num_elements - 1),
-      // use CTAD
       StdAdjacentFindFunctor(first, reducer, pred), reducer);
 
   // fence not needed because reducing into scalar

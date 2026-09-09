@@ -85,9 +85,7 @@ IteratorType min_or_max_element_exespace_impl(const std::string& label,
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(
       label,
-      RangePolicy<ExecutionSpace,
-                  IndexType<typename IteratorType::difference_type>>(
-          ex, 0, num_elements),
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       func_t(first, reducer), reducer);
 
   // fence not needed because reducing into scalar
@@ -122,9 +120,7 @@ template <template <class... Args> class ReducerType, class ExecutionSpace,
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(
       label,
-      RangePolicy<ExecutionSpace,
-                  IndexType<typename IteratorType::difference_type>>(
-          ex, 0, num_elements),
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       func_t(first, reducer), reducer);
 
   // fence not needed because reducing into scalar

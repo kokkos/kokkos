@@ -157,9 +157,7 @@ OutputIteratorType transform_inclusive_scan_exespace_impl(
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(
       label,
-      RangePolicy<ExecutionSpace,
-                  IndexType<typename InputIteratorType::difference_type>>(
-          ex, 0, num_elements),
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op));
   ex.fence("Kokkos::transform_inclusive_scan: fence after operation");
 
@@ -195,9 +193,7 @@ OutputIteratorType transform_inclusive_scan_exespace_impl(
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(
       label,
-      RangePolicy<ExecutionSpace,
-                  IndexType<typename InputIteratorType::difference_type>>(
-          ex, 0, num_elements),
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op,
                 std::move(init_value)));
   ex.fence("Kokkos::transform_inclusive_scan: fence after operation");

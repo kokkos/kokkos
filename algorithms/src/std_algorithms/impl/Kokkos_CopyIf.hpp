@@ -95,7 +95,6 @@ OutputIterator copy_if_exespace_impl(const std::string& label,
         RangePolicy<ExecutionSpace,
                     IndexType<typename InputIterator::difference_type>>(
             ex, 0, num_elements),
-        // use CTAD
         StdCopyIfFunctor(first, d_first, pred), count);
 
     // fence not needed because of the scan accumulating into count

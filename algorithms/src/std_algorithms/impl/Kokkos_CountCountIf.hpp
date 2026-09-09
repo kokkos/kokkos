@@ -52,7 +52,6 @@ typename IteratorType::difference_type count_if_exespace_impl(
       RangePolicy<ExecutionSpace,
                   IndexType<typename IteratorType::difference_type>>(
           ex, 0, num_elements),
-      // use CTAD
       StdCountIfFunctor(first, predicate), count);
   ex.fence("Kokkos::count_if: fence after operation");
 

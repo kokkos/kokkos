@@ -88,10 +88,8 @@ template <class ExecutionSpace, class IteratorType1, class IteratorType2,
   reducer_type reducer(red_result);
   ::Kokkos::parallel_reduce(
       label,
-      RangePolicy<ExecutionSpace,
-                  IndexType<typename IteratorType1::difference_type>>(
-          ex, 0, num_elemen_par_reduce),
-      // use CTAD
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0,
+                                                         num_elemen_par_reduce),
       StdMismatchRedFunctor(first1, first2, reducer, std::move(predicate)),
       reducer);
 
