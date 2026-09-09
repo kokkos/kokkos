@@ -117,7 +117,7 @@ struct min_max_functor {
   min_max_functor(const ViewType& view_) : view(view_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t& i, minmax_scalar& minmax) const {
+  void operator()(const int64_t& i, minmax_scalar& minmax) const {
     if (view(i) < minmax.min_val) minmax.min_val = view(i);
     if (view(i) > minmax.max_val) minmax.max_val = view(i);
   }
