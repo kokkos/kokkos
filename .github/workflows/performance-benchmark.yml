@@ -58,6 +58,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.DALG24_PUSH_BENCHMARK_RESULTS }}
         run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
           gh api repos/kokkos/kokkos-benchmark-results \
             --jq '{full_name: .full_name, permissions: .permissions}'
       - name: Push benchmark results
