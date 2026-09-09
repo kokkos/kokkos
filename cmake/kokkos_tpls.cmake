@@ -79,6 +79,30 @@ endif()
 if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
   find_package(mdspan REQUIRED)
   kokkos_export_cmake_tpl(mdspan REQUIRED)
+else()
+  include(FetchContent)
+
+  FetchContent_Declare(mdspan SOURCE_DIR ${KOKKOS_SOURCE_DIR}/tpls/mdspan)
+  set(MDSPAN_CXX_STANDARD ${KOKKOS_CXX_STANDARD})
+  # FIXME CPMP016 was introduced in CMake version 3.21
+  if(DEFINED CMAKE_POLICY_DEFAULT_CMP0126)
+    set(KOKKOS_MDSPAN_CMP0126_DEFAULT "${CMAKE_POLICY_DEFAULT_CMP0126}")
+  endif()
+  set(CMAKE_POLICY_DEFAULT_CMP0126 NEW)
+  FetchContent_MakeAvailable(mdspan)
+  if(DEFINED KOKKOS_MDSPAN_CMP0126_DEFAULT)
+    set(CMAKE_POLICY_DEFAULT_CMP0126 "${KOKKOS_MDSPAN_CMP0126_DEFAULT}")
+    unset(KOKKOS_MDSPAN_CMP0126_DEFAULT)
+  else()
+    unset(CMAKE_POLICY_DEFAULT_CMP0126)
+  endif()
+
+  # Treat the bundled mdspan headers as system headers for Kokkos consumers.
+  get_target_property(KOKKOS_MDSPAN_INCLUDE_DIRECTORIES mdspan INTERFACE_INCLUDE_DIRECTORIES)
+  set_property(
+    TARGET mdspan APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${KOKKOS_MDSPAN_INCLUDE_DIRECTORIES}"
+  )
+  kokkos_export_imported_tpl(mdspan)
 endif()
 
 if(Kokkos_ENABLE_OPENMP)
