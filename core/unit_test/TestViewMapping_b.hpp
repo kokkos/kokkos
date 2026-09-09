@@ -91,6 +91,14 @@ struct TestViewMappingAtomic {
 };
 
 TEST(TEST_CATEGORY, view_mapping_atomic) {
+// FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if constexpr (std::is_same_v<TEST_EXECSPACE,
+                               Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "Very slow or hangs on 1.3.0-84";
+  }
+#endif
+
   TestViewMappingAtomic<TEST_EXECSPACE> f;
   f.run();
 }
