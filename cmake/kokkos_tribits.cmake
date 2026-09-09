@@ -419,6 +419,11 @@ function(KOKKOS_ADD_LIBRARY LIBRARY_NAME)
       target_sources(
         ${LIBRARY_NAME} PUBLIC FILE_SET ${LIBRARY_NAME}_file_set TYPE CXX_MODULES FILES ${PARSE_MODULE_INTERFACE}
       )
+      # Clang-22 and later only export a reduced Binary Module Interface (BMI) by default
+      # which is problematic for the visibility of template specializations across modules
+      if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 22)
+        target_compile_options(${LIBRARY_NAME} PRIVATE -fno-modules-reduced-bmi)
+      endif()
     endif()
   endif()
 
