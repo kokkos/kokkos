@@ -102,7 +102,8 @@ else()
   set_property(
     TARGET mdspan APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${KOKKOS_MDSPAN_INCLUDE_DIRECTORIES}"
   )
-  kokkos_export_imported_tpl(mdspan)
+  kokkos_create_imported_tpl(MDSPAN INTERFACE LINK_LIBRARIES mdspan::mdpsan)
+  kokkos_export_cmake_tpl(mdspan REQUIRED)
 endif()
 
 if(Kokkos_ENABLE_OPENMP)
