@@ -16,6 +16,7 @@ import kokkos.core_impl;
 #include <cstdio>
 #include <climits>
 #include <iomanip>
+#include <iostream>
 
 namespace Kokkos {
 namespace Impl {

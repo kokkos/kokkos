@@ -10,6 +10,12 @@ TEST(TEST_CATEGORY, atomic_operations_int16) {
 #if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVHPC)
   GTEST_SKIP() << "unsupported atomic data type for OpenACC+NVHPC";
 #endif
+#if defined(KOKKOS_ENABLE_SYCL) && \
+    !defined(KOKKOS_IMPL_SYCL_DEVICE_GLOBAL_SUPPORTED)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
+    GTEST_SKIP() << "unsupported atomic data type for SYCL without global "
+                    "device support";
+#endif
   const int16_t start = -5;
   const int16_t end   = 11;
   for (int16_t i = start; i < end; ++i) {

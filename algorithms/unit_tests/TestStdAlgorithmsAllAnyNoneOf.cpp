@@ -2,9 +2,11 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <TestStdAlgorithmsCommon.hpp>
+#ifndef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 #include <std_algorithms/Kokkos_AllOf.hpp>
 #include <std_algorithms/Kokkos_AnyOf.hpp>
 #include <std_algorithms/Kokkos_NoneOf.hpp>
+#endif
 #include <algorithm>
 
 namespace Test {
