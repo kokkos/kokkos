@@ -346,22 +346,38 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         BasicView
         CreateMirrorViewAndCopy
         LegacyLayoutFunction
+        MinimalViewMDSpanTemplateArgumentViability
         ReferenceCountedAccessor
         ReferenceCountedDataHandle
         ViewEqualityOperator
         ViewCtorConvertibleToPtr
         ViewCtorDataHandle
+        ViewCustomizationAccessorArg
+        ViewCustomizationAllocationType
+        ViewCustomizationAccessorFromMapping
+        ViewMDSpanTemplateArgumentSubview
     )
     # FIXME_OPENACC
-    if(NOT Kokkos_ENABLE_OPENACC)
+    if(Kokkos_ENABLE_OPENACC)
       list(
-        APPEND
+        REMOVE_ITEM
         BV_TestNames
         ViewCustomizationAccessorArg
         ViewCustomizationAllocationType
         ViewCustomizationAccessorFromMapping
         MinimalViewMDSpanTemplateArgumentViability
         ViewMDSpanTemplateArgumentSubview
+      )
+    endif()
+    # FIXME_NEXTSILICON
+    if(KOKKOS_ENABLE_NEXTSILICON)
+      list(
+        REMOVE_ITEM
+        BV_TestNames
+        BasicView # MDRange parallel_for
+        MinimalViewMDSpanTemplateArgumentViability # MDRange parallel_for
+        ViewCustomizationAllocationType # MDRange parallel_reduce
+        ViewCustomizationAccessorFromMapping #MDRange parallel_reduce
       )
     endif()
     set(${Tag}_VIEWSUPPORT)
@@ -374,10 +390,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(APPEND ${Tag}_VIEWSUPPORT ${file})
     endforeach()
 
-    # FIXME_NEXTSILICON: requires parallel_for
-    if(NOT KOKKOS_ENABLE_NEXTSILICON)
-      kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
-    endif()
+    kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     # Smoke test: minimal subset for quick iteration (generate sources not built with main targets).
     foreach(Name IN LISTS SMOKE_TEST_NAMES)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
