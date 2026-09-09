@@ -46,11 +46,13 @@ class OpenMP {
   using memory_space = HostSpace;
 
   //! This execution space preferred device_type
-  using device_type          = Kokkos::Device<execution_space, memory_space>;
-  using array_layout         = LayoutRight;
-  using size_type            = memory_space::size_type;
-  using index_type           = memory_space::index_type;
-  using scratch_memory_space = ScratchMemorySpace<OpenMP>;
+  using device_type             = Kokkos::Device<execution_space, memory_space>;
+  using array_layout            = LayoutRight;
+  using size_type               = memory_space::size_type;
+  using index_type              = memory_space::index_type;
+  using scratch_memory_space    = ScratchMemorySpace<OpenMP>;
+  using scratch_memory_space_l0 = ScratchMemorySpace<OpenMP>;
+  using scratch_memory_space_l1 = ScratchMemorySpace<OpenMP>;
 
   KOKKOS_DEFAULTED_FUNCTION OpenMP(const OpenMP&) = default;
   KOKKOS_FUNCTION OpenMP(OpenMP&& other) noexcept
