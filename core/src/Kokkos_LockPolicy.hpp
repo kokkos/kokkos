@@ -18,6 +18,20 @@ import kokkos.core_impl;
 #include <type_traits>
 #include <utility>
 
+#if defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVCC)
+#include <openacc.h>
+
+extern "C" {
+int __pgi_gangidx(void);
+int __pgi_workeridx(void);
+int __pgi_vectoridx(void);
+
+int __pgi_vectorlen(void);
+int __pgi_workerlen(void);
+}
+
+#endif  // KOKKOS_ENABLE_OPENACC && KOKKOS_COMPILER_NVCC
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -30,21 +44,50 @@ namespace Impl {
 // cost) used by backoff policies.
 inline constexpr uint32_t default_backoff_max_delay = 512;
 
-// A hardware thread identifier (device / host).
-// This is only used to seed per-thread pseudo-random backoff jitter, never
-// as a lock key or as a stable/unique thread identity.
-KOKKOS_INLINE_FUNCTION uint32_t get_hardware_thread_id() {
-#if defined(__CUDA_ARCH__) || defined(__HIP_DEVICE_COMPILE__)
-  // Unique global lane/thread id on GPU.
+// On device: Unique global lane/thread id per backend.
+KOKKOS_IMPL_DEVICE_FUNCTION inline uint32_t get_device_thread_id() noexcept {
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
+
   return static_cast<uint32_t>(
       threadIdx.x + blockDim.x * (threadIdx.y + blockDim.y * threadIdx.z) +
       (blockIdx.x + gridDim.x * (blockIdx.y + gridDim.y * blockIdx.z)) *
           (blockDim.x * blockDim.y * blockDim.z));
+
+#elif defined(KOKKOS_ENABLE_SYCL) && \
+    defined(SYCL_EXT_ONEAPI_FREE_FUNCTION_QUERIES)
+
+  auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
+  return static_cast<uint32_t>(item.get_global_linear_id());
+
+#elif defined(KOKKOS_ENABLE_OPENACC) && defined(KOKKOS_COMPILER_NVCC)
+
+  int g = __pgi_gangidx();
+  int w = __pgi_workeridx();
+  int v = __pgi_vectoridx();
+
+  int w_len = __pgi_workerlen();
+  int v_len = __pgi_vectorlen();
+
+  return static_cast<uint32_t>((g * w_len + w) * v_len + v);
+
 #else
-  // On host: use the calling thread's stack address.
+  return 1;  // Unsupported Backend/arch combination
+#endif
+}
+
+// On host: use the calling thread's stack address.
+KOKKOS_IMPL_HOST_FUNCTION inline uint32_t get_host_thread_id() noexcept {
   thread_local int dummy = 0;
   return static_cast<uint32_t>(reinterpret_cast<uintptr_t>(&dummy));
-#endif
+}
+
+// A hardware thread identifier (device / host).
+// This is only used to seed per-thread pseudo-random backoff jitter, never
+// as a lock key or as a stable/unique thread identity.
+KOKKOS_FORCEINLINE_FUNCTION uint32_t get_hardware_thread_id() noexcept {
+  KOKKOS_IF_ON_DEVICE((return get_device_thread_id();))
+  KOKKOS_IF_ON_HOST((return get_host_thread_id();))
+  KOKKOS_IMPL_UNREACHABLE();
 }
 
 // Generates a pseudo-random seed from the hardware thread id and clock_tic().
