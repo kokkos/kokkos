@@ -1131,6 +1131,10 @@ kokkos_add_test(NAME CoreUnitTest_CMakeTriBITSCompatibilityEnvironment EXE CoreU
 set_source_files_properties(UnitTest_DeviceAndThreads.cpp PROPERTIES LANGUAGE ${KOKKOS_COMPILE_LANGUAGE})
 add_executable(Kokkos_CoreUnitTest_DeviceAndThreads UnitTest_DeviceAndThreads.cpp)
 target_link_libraries(Kokkos_CoreUnitTest_DeviceAndThreads Kokkos::kokkoscore)
+
+add_executable(Kokkos_CoreUnitTest_DeathTestStyle UnitTest_DeathTestStyle.cpp)
+target_link_libraries(Kokkos_CoreUnitTest_DeathTestStyle Kokkos::kokkoscore GTest::gtest)
+
 find_package(Python3 COMPONENTS Interpreter)
 if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
   file(
@@ -1142,6 +1146,15 @@ if(Python3_Interpreter_FOUND AND Python3_VERSION VERSION_GREATER_EQUAL 3.7)
   add_test(NAME Kokkos_CoreUnitTest_DeviceAndThreads
            COMMAND ${Python3_EXECUTABLE}
                    $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeviceAndThreads>/TestDeviceAndThreads.py -v
+  )
+  file(
+    GENERATE
+    OUTPUT $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeathTestStyle>/TestDeathTestStyle.py
+    INPUT TestDeathTestStyle.py
+    USE_SOURCE_PERMISSIONS
+  )
+  add_test(NAME Kokkos_CoreUnitTest_DeathTestStyle
+           COMMAND ${Python3_EXECUTABLE} $<TARGET_FILE_DIR:Kokkos_CoreUnitTest_DeathTestStyle>/TestDeathTestStyle.py -v
   )
 endif()
 
