@@ -4,6 +4,11 @@
 #ifndef KOKKOS_FUNCTORANALYSIS_HPP
 #define KOKKOS_FUNCTORANALYSIS_HPP
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTOR_ANALYSIS
+#endif
+
 #include <cstddef>
 #include <new>
 #include <Kokkos_Core_fwd.hpp>
@@ -697,4 +702,8 @@ struct FunctorAnalysis {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTOR_ANALYSIS
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTOR_ANALYSIS
+#endif
 #endif /* KOKKOS_FUNCTORANALYSIS_HPP */
