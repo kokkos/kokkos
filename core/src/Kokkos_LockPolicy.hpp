@@ -614,8 +614,12 @@ using ClockRandomBackoffTTAS =
 
 // ==============================================================================
 // atomic_locked_action: runs a user action atomically while holding a lock,
-// dispatching on ExecutionSpace and using the given LockPolicy to decide how
-// to wait for the lock.
+// dispatching on ExecutionSpace and using the given LockPolicy to decide how to
+// wait for the lock.
+//
+// For the execution space, only the type is used for dispatch below. The
+// instance itself carries no runtime state we need yet, but this keeps it
+// consistent with other Kokkos APIs and leaves room for change later.
 //
 // Dispatch:
 //   - ExecutionSpace = Kokkos::Serial && KOKKOS_ENABLE_ATOMICS_BYPASS: no-op
@@ -633,36 +637,28 @@ using ClockRandomBackoffTTAS =
 //     LockPolicy-based spin loop via Impl::LockGuard.
 //
 // Four overloads are provided, differing in how much you want to specify
-// explicitly (LockType and Function are always deduced from `lock` and
-// `action`):
+// explicitly (ExecutionSpace, LockType, and Function are always deduced
+// from `exec_space`, `lock`, and `action` when provided):
 //
-//   atomic_locked_action<ES>(lock, my_policy_instance, action);       // (1)
-//   atomic_locked_action<ES, LockPolicy::SpinlockTTAS>(lock, action); // (2)
-//   atomic_locked_action<ES>(lock, action);                           // (3)
-//   atomic_locked_action(lock, action);                               // (4)
+//   atomic_locked_action(exec_space, my_policy_instance, lock, action); // (1)
+//   atomic_locked_action<LockPolicy>(exec_space, lock, action);         // (2)
+//   atomic_locked_action(my_policy_instance, lock, action);             // (3)
+//   atomic_locked_action(lock, action);                                 // (4)
 //
-// (3) uses LockPolicy::ExponentialBackoff by default;
-// (4) additionally defaults ExecutionSpace to Kokkos::DefaultExecutionSpace.
+// (3) and (4) don't take an execution space instance at all and default to
+// Kokkos::DefaultExecutionSpace; (4) additionally defaults LockPolicy to
+// LockPolicy::ExponentialBackoff.
 // ==============================================================================
 
-/**
- * @brief Acquires `lock` using `policy`, runs `action` atomically, then
- * releases `lock`. Dispatches on `ExecutionSpace`.
- *
- * @tparam ExecutionSpace The Kokkos execution space this call runs under.
- * @tparam LockType   Underlying type of the lock word (e.g. int32_t,
- *                     uint32_t). Must be an integral type supported by
- *                     Kokkos atomics.
- * @tparam LockPolicy Policy instance type (e.g. LockPolicy::PureSpinlock).
- * @tparam Function   User function/lambda type (e.g. KOKKOS_LAMBDA). May
- *                     return void or a value; a returned value is forwarded
- *                     back to the caller.
- */
-template <typename ExecutionSpace, typename LockType, typename LockPolicy,
-          typename Function>
-KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
-                                                           LockPolicy policy,
-                                                           Function&& action) {
+namespace Impl {
+
+// Dispatch on the ExecutionSpace type.
+template <typename ExecutionSpace, typename LockPolicy, typename LockType,
+          typename Function,
+          typename = std::enable_if_t<
+              Kokkos::is_execution_space<ExecutionSpace>::value>>
+KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action_dispatch(
+    LockPolicy policy, LockType* lock, Function&& action) {
   static_assert(std::is_integral_v<LockType>,
                 "LockType must be an integral type supported by Kokkos "
                 "atomics.");
@@ -694,38 +690,71 @@ KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
   }
 }
 
-// Overload (2): explicit ExecutionSpace and explicit LockPolicy type,
-// default-constructed instead of passed as an instance. Delegates to the
-// overload above so the dispatch logic is defined in exactly one place.
+}  // namespace Impl
+
+/**
+ * @brief Acquires `lock` using `policy`, runs `action` atomically, then
+ * releases `lock`. Dispatches on the type of `exec_space`.
+ *
+ * @param exec_space An instance of the Kokkos execution space this call runs
+ *                    under (only its type is used, see above).
+ * @tparam LockPolicy Policy instance type (e.g. LockPolicy::PureSpinlock).
+ * @tparam LockType   Underlying type of the lock word (e.g. int32_t,
+ *                     uint32_t). Must be an integral type supported by
+ *                     Kokkos atomics.
+ * @tparam Function   User function/lambda type (e.g. KOKKOS_LAMBDA). May
+ *                     return void or a value; a returned value is forwarded
+ *                     back to the caller.
+ */
 template <typename ExecutionSpace, typename LockPolicy, typename LockType,
-          typename Function>
-KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
-                                                           Function&& action) {
-  return atomic_locked_action<ExecutionSpace>(lock, LockPolicy{},
-                                              std::forward<Function>(action));
+          typename Function,
+          typename = std::enable_if_t<
+              Kokkos::is_execution_space<ExecutionSpace>::value>>
+KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(
+    const ExecutionSpace&, LockPolicy policy, LockType* lock,
+    Function&& action) {
+  return Impl::atomic_locked_action_dispatch<ExecutionSpace>(
+      policy, lock, std::forward<Function>(action));
 }
 
-// Overload (3): explicit ExecutionSpace, default LockPolicy
-// (ExponentialBackoff).
-template <
-    typename ExecutionSpace, typename LockType, typename Function,
-    typename LockPolicy = Kokkos::Experimental::LockPolicy::ExponentialBackoff>
-KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
-                                                           Function&& action) {
-  return atomic_locked_action<ExecutionSpace>(lock, LockPolicy{},
-                                              std::forward<Function>(action));
+// Overload (2): explicit LockPolicy type, default-constructed instead of
+// passed as an instance. ExecutionSpace, LockType, and Function are all
+// deduced from the arguments.
+template <typename ExecutionSpace, typename LockPolicy, typename LockType,
+          typename Function,
+          typename = std::enable_if_t<
+              Kokkos::is_execution_space<ExecutionSpace>::value>>
+KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(
+    const ExecutionSpace&, LockType* lock, Function&& action) {
+  return Impl::atomic_locked_action_dispatch<ExecutionSpace>(
+      LockPolicy{}, lock, std::forward<Function>(action));
 }
 
-// Overload (4): fully implicit, ExecutionSpace defaults to
-// Kokkos::DefaultExecutionSpace, LockPolicy defaults to ExponentialBackoff.
+// Overload (3): no execution space instance, defaults to
+// Kokkos::DefaultExecutionSpace with an explicit LockPolicy instance.
+template <typename ExecutionSpace = Kokkos::DefaultExecutionSpace,
+          typename LockPolicy, typename LockType, typename Function,
+          typename = std::enable_if_t<
+              Kokkos::is_execution_space<ExecutionSpace>::value>>
+KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockPolicy policy,
+                                                           LockType* lock,
+                                                           Function&& action) {
+  return Impl::atomic_locked_action_dispatch<ExecutionSpace>(
+      policy, lock, std::forward<Function>(action));
+}
+
+// Overload (4): fully implicit, defaults to Kokkos::DefaultExecutionSpace and
+// to LockPolicy::ExponentialBackoff.
 template <
-    typename LockType, typename Function,
     typename ExecutionSpace = Kokkos::DefaultExecutionSpace,
-    typename LockPolicy = Kokkos::Experimental::LockPolicy::ExponentialBackoff>
+    typename LockPolicy = Kokkos::Experimental::LockPolicy::ExponentialBackoff,
+    typename LockType, typename Function,
+    typename =
+        std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>>
 KOKKOS_INLINE_FUNCTION decltype(auto) atomic_locked_action(LockType* lock,
                                                            Function&& action) {
-  return atomic_locked_action<ExecutionSpace>(lock, LockPolicy{},
-                                              std::forward<Function>(action));
+  return Impl::atomic_locked_action_dispatch<ExecutionSpace>(
+      LockPolicy{}, lock, std::forward<Function>(action));
 }
 
 }  // namespace Experimental

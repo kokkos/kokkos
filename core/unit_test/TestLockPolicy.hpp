@@ -34,7 +34,7 @@ void run_lock_contention_test(const int num_increments) {
         // Pass the lock address and execute the atomic increment within the
         // critical section.
         Kokkos::Experimental::atomic_locked_action<ExecutionSpace>(
-            &lock(), policy, [=]() { counter()++; });
+            policy, &lock(), [=]() { counter()++; });
       });
 
   Kokkos::fence("Fence after lock contention test");
