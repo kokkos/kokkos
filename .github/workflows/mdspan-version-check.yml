@@ -21,6 +21,19 @@ jobs:
         ref: ${{ env.ref }}
         path: kokkos-mdspan
     - run: |
-        rm kokkos-mdspan/include/experimental/mdarray
-        rm kokkos-mdspan/include/experimental/mdspan
-        diff --unified=3 --recursive tpls/mdspan/include kokkos-mdspan/include
+        diff --unified=3 --recursive \
+          --exclude=.clang-tidy \
+          --exclude=.git \
+          --exclude=.github \
+          --exclude=.gitignore \
+          --exclude=benchmarks \
+          --exclude=comp_bench \
+          --exclude=compilation_tests \
+          --exclude=examples \
+          --exclude=LICENSE_FILE_HEADER \
+          --exclude=make_single_header.py \
+          --exclude=metabench.cmake \
+          --exclude=README.md \
+          --exclude=scripts \
+          --exclude=tests \
+          tpls/mdspan kokkos-mdspan
