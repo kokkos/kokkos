@@ -826,6 +826,7 @@ if(Kokkos_ENABLE_NEXTSILICON)
       # FIXME_NEXTSILICON: AtomicViews needs MDRange parallel_for
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicViews.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BadAlloc.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BitManipulationBuiltins.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MinMaxClamp.cpp
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp # MDRange parallel for
   )
