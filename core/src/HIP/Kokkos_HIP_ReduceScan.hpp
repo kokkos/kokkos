@@ -146,10 +146,10 @@ struct HIPReductionsFunctor<FunctorType, false> {
 // HIP added support for __syncwarp() in version 7.0
 #if HIP_VERSION_MAJOR >= 7
     size_t mask =
-       width == HIPTraits::WarpSize
-           ? 0xffffffffffffffff
-           : ((1 << width) - 1)
-                 << ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
+        width == HIPTraits::WarpSize
+            ? 0xffffffffffffffff
+            : ((1 << width) - 1)
+                  << ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
     __syncwarp(mask);
 #else
     __syncthreads();
