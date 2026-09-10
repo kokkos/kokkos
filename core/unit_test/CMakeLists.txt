@@ -419,14 +419,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamVectorRange.cpp)
     endif()
     if((Tag STREQUAL "Serial") AND KOKKOS_ENABLE_NEXTSILICON)
-      #FIXME_NEXTSILICON: requires parallel_for tagged dispatch
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
       #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_DeepCopy_Assignment.cpp)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
       #FIXME_NEXTSILICON: requires TeamPolicy parallel_reduce on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_CommonPolicyInterface.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
     endif()
     if(Tag STREQUAL "NextSilicon")
       #FIXME_NEXTSILICON: requires TeamPolicy parallel_for
