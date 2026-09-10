@@ -54,13 +54,28 @@ jobs:
         with:
           name: ${{ matrix.cxx }}-${{ matrix.backend }}
           path: ${{ env.BUILD_ID }}
+
       - name: Push benchmark results
-        uses: dmnemec/copy_file_to_another_repo_action@bbebd3da22e4a37d04dca5f782edd5201cb97083 # main
+        if: ${{ github.ref == 'refs/heads/develop' }}
         env:
-          API_TOKEN_GITHUB: ${{ secrets.MASTERLEINAD_PUSH_BENCHMARK_RESULTS }}
-        with:
-          source_file: ${{ env.BUILD_ID }}
-          destination_repo: 'masterleinad/kokkos-benchmark-results'
-          destination_branch: 'main'
-          user_email: 'kokkos@users.noreply.github.com'
-          user_name: 'Kokkos Developers'
+          GH_TOKEN: ${{ secrets.MASTERLEINAD_PUSH_BENCHMARK_RESULTS }}
+        run: |
+          set -euo pipefail
+          echo "Cloning benchmark-results repository"
+          git clone \
+            "https://x-access-token:${GH_TOKEN}@github.com/kokkos/kokkos-benchmark-results.git" \
+              benchmark-results
+          cd benchmark-results
+
+          git config user.email "kokkos@users.noreply.github.com"
+          git config user.name "Kokkos Developers"
+
+          echo "Copying benchmark results"
+
+          cp -a "../${BUILD_ID}" "${BUILD_ID}"
+          git add "${BUILD_ID}"
+
+          git commit -m "Update benchmark results for ${BUILD_ID}"
+
+          echo "Pushing benchmark results"
+          git push origin HEAD:main
