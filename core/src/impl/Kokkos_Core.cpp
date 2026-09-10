@@ -496,7 +496,10 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   if (settings.has_tune_internals() && settings.get_tune_internals())
     g_tune_internals = true;
 
-  // force initialization of function-local statics
+  // Initialize these function-local statics during Kokkos::initialize(). If a
+  // user registers Kokkos::finalize with std::atexit afterwards, that callback
+  // is registered after the statics' destructors. std::exit therefore invokes
+  // Kokkos::finalize before destroying the mutex and hook stack it accesses.
   std::ignore = finalize_hooks_mutex();
   std::ignore = finalize_hooks();
 
