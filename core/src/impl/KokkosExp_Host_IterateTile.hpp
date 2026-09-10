@@ -944,8 +944,7 @@ namespace Impl {
 // end tagged macros
 
 // Structs for calling loops
-template <int Rank, bool IsLeft, typename IType, typename Tagged,
-          typename Enable = void>
+template <int Rank, bool IsLeft, typename IType, typename Tagged>
 struct Tile_Loop_Type;
 
 template <bool IsLeft, typename IType, typename Tagged>
