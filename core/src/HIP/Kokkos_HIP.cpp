@@ -18,6 +18,7 @@
 #include <hip/hip_runtime_api.h>
 
 #include <iostream>
+#include <sstream>
 
 namespace {
 
@@ -43,48 +44,45 @@ void HIP::impl_initialize(InitializationSettings const& settings) {
   KOKKOS_IMPL_HIP_SAFE_CALL(
       hipGetDeviceProperties(&Impl::HIPInternal::m_deviceProp, hip_device_id));
   KOKKOS_IMPL_HIP_SAFE_CALL(hipSetDevice(hip_device_id));
+  Impl::HIPTraits::set_host_warp_size(Impl::HIPInternal::m_deviceProp.warpSize);
 
   // Check that we are running on the expected architecture. We print a warning
   // instead of erroring out because AMD does not guarantee that gcnArchName
   // will always contain the gfx flag.
   if (Kokkos::show_warnings()) {
-    if (std::string_view arch_name =
-            Impl::HIPInternal::m_deviceProp.gcnArchName;
-        arch_name.find(KOKKOS_ARCH_AMD_GPU) != 0) {
+    bool found_matching_arch         = false;
+    std::string const enabled_arches = KOKKOS_ARCH_AMD_GPU;
+    std::stringstream enabled_arch_stream(enabled_arches);
+    std::string enabled_arch;
+    std::string_view const arch_name =
+        Impl::HIPInternal::m_deviceProp.gcnArchName;
+    while (std::getline(enabled_arch_stream, enabled_arch, ',')) {
+      if (!enabled_arch.empty() && (arch_name.starts_with(enabled_arch) ||
+                                    enabled_arch == "amdgcnspirv")) {
+        found_matching_arch = true;
+        break;
+      }
+    }
+    if (!found_matching_arch) {
       std::cerr
           << "Kokkos::HIP::initialize WARNING: running kernels compiled for "
           << KOKKOS_ARCH_AMD_GPU << " on " << arch_name << " device.\n";
     }
-  }
 
-  // Print a warning if the user did not select the right GFX942 architecture
-#ifdef KOKKOS_ARCH_AMD_GFX942
-  if ((Kokkos::show_warnings()) &&
-      (Impl::HIPInternal::m_deviceProp.integrated == 1)) {
-    std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300X "
-                 "(discrete GPU) on a MI300A (APU).\n";
-  }
-#endif
-#ifdef KOKKOS_ARCH_AMD_GFX942_APU
-  if (!Kokkos::Impl::xnack_environment_enabled()) {
-    std::cerr << R"warning(
+    if ((Impl::HIPInternal::m_deviceProp.integrated == 1) &&
+        !Kokkos::Impl::xnack_environment_enabled()) {
+      std::cerr << R"warning(
 Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
-                                 Kokkos requires xnack to be enabled for
-                                 ARCH_AMD_GFX942_APU (MI300A) to access host
-                                 allocations from the device. Set HSA_XNACK=1
-                                 in your environment. For further information
-                                 on HMM support call `Kokkos::print_configuration`,
-                                 or run with KOKKOS_PRINT_CONFIGURATION=1 in your
+                                 Integrated AMD GPUs may require HSA_XNACK=1
+                                 to access host allocations from the device.
+                                 Set HSA_XNACK=1 in your environment. For
+                                 further information on HMM support call
+                                 `Kokkos::print_configuration`, or run with
+                                 KOKKOS_PRINT_CONFIGURATION=1 in your
                                  environment.
 )warning";
+    }
   }
-
-  if ((Kokkos::show_warnings()) &&
-      (Impl::HIPInternal::m_deviceProp.integrated == 0)) {
-    std::cerr << "Kokkos::HIP::initialize WARNING: running kernels for MI300A "
-                 "(APU) on a MI300X (discrete GPU).\n";
-  }
-#endif
 
   // theoretically on GFX 9XX GPUs, we can get 40 WF's / CU, but only can
   // sustain 32 see
@@ -92,7 +90,7 @@ Kokkos::HIP::initialize WARNING: Could not determine that xnack is enabled.
   const int maxWavesPerCU =
       Impl::HIPInternal::m_deviceProp.major <= 9 ? 32 : 64;
   Impl::HIPInternal::m_maxThreadsPerSM =
-      maxWavesPerCU * Impl::HIPTraits::WarpSize;
+      maxWavesPerCU * Impl::HIPTraits::WarpSize();
 
   // Init the array for used for arbitrarily sized atomics
   desul::Impl::init_lock_arrays();  // FIXME

@@ -20,6 +20,8 @@
 #include <cerrno>
 #include <cstdlib>
 #include <cstring>
+#include <string>
+#include <cctype>
 #include <iostream>
 #include <functional>
 #include <mutex>
@@ -718,36 +720,46 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "BLACKWELL120");
 #elif defined(KOKKOS_ARCH_BLACKWELL121)
   declare_configuration_metadata("architecture", "GPU architecture", "BLACKWELL121");
-#elif defined(KOKKOS_ARCH_RUBIN107)
-  declare_configuration_metadata("architecture", "GPU architecture", "RUBIN107");
-#elif defined(KOKKOS_ARCH_AMD_GFX906)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX906");
-#elif defined(KOKKOS_ARCH_AMD_GFX908)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX908");
-#elif defined(KOKKOS_ARCH_AMD_GFX90A)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX90A");
-#elif defined(KOKKOS_ARCH_AMD_GFX940)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX940");
-#elif defined(KOKKOS_ARCH_AMD_GFX942_APU)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX942_APU");
-#elif defined(KOKKOS_ARCH_AMD_GFX942)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX942");
-#elif defined(KOKKOS_ARCH_AMD_GFX950)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX950");
-#elif defined(KOKKOS_ARCH_AMD_GFX1030)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1030");
-#elif defined(KOKKOS_ARCH_AMD_GFX1100)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1100");
-#elif defined(KOKKOS_ARCH_AMD_GFX1101)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1101");
-#elif defined(KOKKOS_ARCH_AMD_GFX1103)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1103");
-#elif defined(KOKKOS_ARCH_AMD_GFX1151)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1151");
-#elif defined(KOKKOS_ARCH_AMD_GFX1152)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1152");
-#elif defined(KOKKOS_ARCH_AMD_GFX1201)
-  declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX1201");
+#elif defined(KOKKOS_ARCH_AMD_GPU)
+  // Keep the architecture consistent with past kokkos versions, i.e. AMD_GFX942
+  auto make_upper_prefixed = [](const std::string& input) {
+      const std::string prefix = "AMD_";
+      std::stringstream input_stream(input);
+      std::string token;
+      std::string output;
+      bool first = true;
+
+      while (std::getline(input_stream, token, ',')) {
+          // Trim leading/trailing whitespace around each architecture token.
+          token.erase(token.begin(), std::find_if(token.begin(), token.end(),
+                                                  [](unsigned char c) {
+                                                      return !std::isspace(c);
+                                                  }));
+          token.erase(std::find_if(token.rbegin(), token.rend(),
+                                   [](unsigned char c) {
+                                       return !std::isspace(c);
+                                   }).base(),
+                      token.end());
+
+          std::string result = token;
+          if (token.compare("amdgcnspirv") == 0) {
+              result = "AMD_GCNSPIRV";
+          } else {
+              result = prefix + token;
+          }
+          for (char& c : result) {
+              c = std::toupper(static_cast<unsigned char>(c));
+          }
+
+          if (!first) output += ",";
+          output += result;
+          first = false;
+      }
+
+      return output;
+  };
+  declare_configuration_metadata("architecture", "GPU architecture",
+                                 make_upper_prefixed(KOKKOS_ARCH_AMD_GPU));
 #else
   declare_configuration_metadata("architecture", "GPU architecture", "none");
 #endif
