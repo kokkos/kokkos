@@ -3,6 +3,7 @@
 
 #ifndef KOKKOS_TEST_TEAM_SCRATCH_HPP
 #define KOKKOS_TEST_TEAM_SCRATCH_HPP
+
 #include <TestTeam.hpp>
 
 namespace Test {
@@ -32,6 +33,10 @@ TEST(TEST_CATEGORY, multi_level_scratch) {
                             Kokkos::Schedule<Kokkos::Static> >();
   TestMultiLevelScratchTeam<TEST_EXECSPACE,
                             Kokkos::Schedule<Kokkos::Dynamic> >();
+}
+
+TEST(TEST_CATEGORY, scratch_compile_time_level_overloads) {
+  TestCompileTimeScratchLevelOverloads<TEST_EXECSPACE>();
 }
 
 struct DummyTeamParallelForFunctor {
