@@ -148,7 +148,8 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
     return;
   }
 
-  using range_policy = Kokkos::RangePolicy<typename ViewType::execution_space>;
+  using range_policy = Kokkos::RangePolicy<typename ViewType::execution_space,
+                                           Kokkos::IndexType<int64_t>>;
   using CompType     = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;

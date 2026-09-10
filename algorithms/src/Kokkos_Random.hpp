@@ -1623,7 +1623,8 @@ class Random_SFC64_Pool {
     bool all_states_are_equals;  // Uninitialized, set by parallel_reduce
     Kokkos::parallel_reduce(
         "Random_SFC64_Pool::Comparison",
-        Kokkos::RangePolicy<execution_space>(0, num_states_),
+        Kokkos::RangePolicy<execution_space, Kokkos::IndexType<uint64_t>>(
+            0, num_states_),
         KOKKOS_CLASS_LAMBDA(const uint64_t i, bool& local_comp) {
           local_comp &= (state_(i, 0) == other.state_(i, 0));
           local_comp &= (state_(i, 1) == other.state_(i, 1));
@@ -1988,7 +1989,8 @@ void fill_random(const ExecutionSpace& exec, ViewType a, RandomPool g,
   if (LDA > 0)
     parallel_for(
         "Kokkos::fill_random",
-        Kokkos::RangePolicy<ExecutionSpace>(exec, 0, (LDA + 127) / 128),
+        Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(
+            exec, 0, (LDA + 127) / 128),
         Impl::fill_random_functor_begin_end<ViewType, RandomPool, 128,
                                             ViewType::rank, IndexType>(
             a, g, begin, end));

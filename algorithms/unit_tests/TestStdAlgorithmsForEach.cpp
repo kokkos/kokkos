@@ -117,6 +117,24 @@ TEST(std_algorithms_for_each_test, test) {
   run_all_scenarios<StridedThreeTag, unsigned>();
 }
 
+struct SetTrueFunctor {
+  KOKKOS_FUNCTION void operator()(bool& val) const { val = true; }
+};
+
+TEST(std_algorithms_for_each_test, test_extended_range) {
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+  GTEST_SKIP();
+#endif
+  std::size_t n = (std::size_t(1) << 31) + 1;
+  Kokkos::View<bool*> view("large_view", n);
+
+  KE::for_each(exespace{}, KE::begin(view), KE::end(view), SetTrueFunctor{});
+
+  bool found = false;
+  Kokkos::deep_copy(found, Kokkos::subview(view, n - 1));
+  EXPECT_EQ(found, true);
+}
+
 }  // namespace ForEach
 }  // namespace stdalgos
 }  // namespace Test

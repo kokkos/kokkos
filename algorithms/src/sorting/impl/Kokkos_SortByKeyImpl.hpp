@@ -11,6 +11,7 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 
+#include <cstdint>
 #include <tuple>
 
 #if defined(KOKKOS_ENABLE_CUDA)
@@ -244,8 +245,9 @@ void applyPermutation(const ExecutionSpace& space,
   Kokkos::deep_copy(space, view_copy, view);
   Kokkos::parallel_for(
       "Kokkos::sort_by_key_via_sort::permute_" + view.label(),
-      Kokkos::RangePolicy<ExecutionSpace>(space, 0, view.extent(0)),
-      KOKKOS_LAMBDA(int i) { view(i) = view_copy(permutation(i)); });
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<int64_t>>(
+          space, 0, view.extent(0)),
+      KOKKOS_LAMBDA(int64_t i) { view(i) = view_copy(permutation(i)); });
 }
 
 // FIXME_NVCC: nvcc has trouble compiling lambdas inside a function with
@@ -253,12 +255,12 @@ void applyPermutation(const ExecutionSpace& space,
 template <typename Permute>
 struct IotaFunctor {
   Permute _permute;
-  KOKKOS_FUNCTION void operator()(int i) const { _permute(i) = i; }
+  KOKKOS_FUNCTION void operator()(int64_t i) const { _permute(i) = i; }
 };
 template <typename Keys>
 struct LessFunctor {
   Keys _keys;
-  KOKKOS_FUNCTION bool operator()(int i, int j) const {
+  KOKKOS_FUNCTION bool operator()(int64_t i, int64_t j) const {
     return _keys(i) < _keys(j);
   }
 };
@@ -270,7 +272,7 @@ template <typename Keys, typename Comparator>
 struct KeyComparisonFunctor {
   Keys m_keys;
   Comparator m_comparator;
-  KOKKOS_FUNCTION bool operator()(int i, int j) const {
+  KOKKOS_FUNCTION bool operator()(int64_t i, int64_t j) const {
     return m_comparator(m_keys(i), m_keys(j));
   }
 };
@@ -287,18 +289,19 @@ void sort_by_key_via_sort(
 
   auto const n = keys.size();
 
-  Kokkos::View<unsigned int*, ExecutionSpace> permute(
+  Kokkos::View<int64_t*, ExecutionSpace> permute(
       Kokkos::view_alloc(exec, Kokkos::WithoutInitializing,
                          "Kokkos::sort_by_key_via_sort::permute"),
       n);
 
   // iota
-  Kokkos::parallel_for("Kokkos::sort_by_key_via_sort::iota",
-                       Kokkos::RangePolicy<ExecutionSpace>(exec, 0, n),
-                       IotaFunctor<decltype(permute)>{permute});
+  Kokkos::parallel_for(
+      "Kokkos::sort_by_key_via_sort::iota",
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<int64_t>>(exec, 0,
+                                                                      n),
+      IotaFunctor<decltype(permute)>{permute});
 
-  using Layout =
-      typename Kokkos::View<unsigned int*, ExecutionSpace>::array_layout;
+  using Layout = typename Kokkos::View<int64_t*, ExecutionSpace>::array_layout;
   if constexpr (!sort_on_device_v<ExecutionSpace, Layout>) {
     auto host_keys = Kokkos::create_mirror_view(
         Kokkos::view_alloc(Kokkos::HostSpace{}, Kokkos::WithoutInitializing),
@@ -332,7 +335,7 @@ void sort_by_key_via_sort(
     auto stride                  = keys.stride(0);
     if constexpr (sizeof...(MaybeComparator) == 0) {
       Kokkos::sort(
-          exec, permute, KOKKOS_LAMBDA(int i, int j) {
+          exec, permute, KOKKOS_LAMBDA(int64_t i, int64_t j) {
             return raw_keys_in_comparator[i * stride] <
                    raw_keys_in_comparator[j * stride];
           });
@@ -340,7 +343,7 @@ void sort_by_key_via_sort(
       auto keys_comparator =
           std::get<0>(std::tuple<MaybeComparator...>(maybeComparator...));
       Kokkos::sort(
-          exec, permute, KOKKOS_LAMBDA(int i, int j) {
+          exec, permute, KOKKOS_LAMBDA(int64_t i, int64_t j) {
             return keys_comparator(raw_keys_in_comparator[i * stride],
                                    raw_keys_in_comparator[j * stride]);
           });

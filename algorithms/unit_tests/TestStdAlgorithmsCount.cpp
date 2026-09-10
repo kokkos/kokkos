@@ -94,6 +94,19 @@ TEST(std_algorithms_count_test, test) {
   run_all_scenarios<StridedThreeTag, unsigned>();
 }
 
+TEST(std_algorithms_count_test, test_extended_range) {
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+  GTEST_SKIP();
+#endif
+  std::size_t n = (std::size_t(1) << 31) + 1;
+  Kokkos::View<bool*> view("large_view", n);
+  Kokkos::deep_copy(Kokkos::subview(view, 0), true);
+  Kokkos::deep_copy(Kokkos::subview(view, n - 1), true);
+
+  auto result = KE::count(exespace{}, KE::begin(view), KE::end(view), true);
+  EXPECT_EQ(result, 2);
+}
+
 }  // namespace Count
 }  // namespace stdalgos
 }  // namespace Test
