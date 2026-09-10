@@ -56,7 +56,6 @@ jobs:
           path: ${{ env.BUILD_ID }}
 
       - name: Push benchmark results
-        if: ${{ github.ref == 'refs/heads/develop' }}
         env:
           GH_TOKEN: ${{ secrets.MASTERLEINAD_PUSH_BENCHMARK_RESULTS }}
         run: |
