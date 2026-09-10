@@ -122,7 +122,7 @@ struct TestParallelScanRangePolicy {
       // Input: label, work_count, functor
       // Input/Output: return_value
       {
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan("TestWithStrArg2", work_size, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -133,7 +133,7 @@ struct TestParallelScanRangePolicy {
       // Input: work_count, functor
       // Input/Output: return_value
       {
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan(work_size, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -167,7 +167,7 @@ struct TestParallelScanRangePolicy {
       {
         // Input: label, work_count, functor
         // Input/Output: return_value
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan("TestWithStrArg4", policy, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -178,7 +178,7 @@ struct TestParallelScanRangePolicy {
       // Input: work_count, functor
       // Input/Output: return_value
       {
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan(policy, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -210,7 +210,7 @@ struct TestParallelScanRangePolicy {
 
         // Input: work_count, functor
         // Input/Output: return_value
-        ValueType return_val = 0;
+        ValueType return_val = static_cast<ValueType>(-1);
         Kokkos::parallel_scan(policy_with_require, *this, return_val);
         check_scan_results();
         ASSERT_EQ(static_cast<ValueType>(static_cast<ValueType>(work_size) *
@@ -234,7 +234,7 @@ struct TestParallelScanRangePolicy {
         {
           // Input: label, work_count, functor
           // Input/Output: return_value
-          ValueType return_val = 0;
+          ValueType return_val = static_cast<ValueType>(-1);
           Kokkos::parallel_scan("TestWithStrArg6", policy2, *this, return_val);
           check_scan_results_start2();
           ASSERT_EQ(
@@ -246,7 +246,7 @@ struct TestParallelScanRangePolicy {
         // Input: work_count, functor
         // Input/Output: return_value
         {
-          ValueType return_val = 0;
+          ValueType return_val = static_cast<ValueType>(-1);
           Kokkos::parallel_scan(policy2, *this, return_val);
           check_scan_results_start2();
           ASSERT_EQ(
@@ -280,7 +280,7 @@ struct TestParallelScanRangePolicy {
 
           // Input: work_count, functor
           // Input/Output: return_value
-          ValueType return_val = 0;
+          ValueType return_val = static_cast<ValueType>(-1);
           Kokkos::parallel_scan(policy_with_require2, *this, return_val);
           check_scan_results_start2();
           ASSERT_EQ(
@@ -305,7 +305,7 @@ TEST(TEST_CATEGORY, parallel_scan_range_policy) {
   {
     TestParallelScanRangePolicy<char> f;
 
-    std::vector<size_t> work_sizes{5, 10};
+    std::vector<size_t> work_sizes{0, 5, 10};
     f.test_scan<>(work_sizes);
     f.test_scan<Kokkos::Schedule<Kokkos::Static>>(work_sizes);
     f.test_scan<Kokkos::Schedule<Kokkos::Dynamic>>(work_sizes);

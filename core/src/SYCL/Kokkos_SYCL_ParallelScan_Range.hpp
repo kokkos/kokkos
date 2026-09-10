@@ -153,7 +153,27 @@ class ParallelScanSYCLBase {
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
+    if (!m_result_ptr_device_accessible)
+      m_scratch_host = static_cast<sycl::global_ptr<value_type>>(
+          instance.scratch_host(sizeof(value_type)));
+    pointer_type result_ptr = m_result_ptr_device_accessible
+                                  ? m_result_ptr
+                                  : static_cast<pointer_type>(m_scratch_host);
+
     const auto size = m_policy.end() - m_policy.begin();
+
+    if (size == 0) {
+      auto single_event = q.submit([&](sycl::handler& cgh) {
+        cgh.single_task([=]() {
+          const CombinedFunctorReducer<FunctorType, typename Analysis::Reducer>&
+              functor_reducer = functor_wrapper.get_functor();
+          const typename Analysis::Reducer& reducer =
+              functor_reducer.get_reducer();
+          reducer.init(result_ptr);
+        });
+      });
+      return single_event;
+    }
 
     auto scratch_flags = static_cast<sycl::global_ptr<unsigned int>>(
         instance.scratch_flags(sizeof(unsigned int)));
@@ -280,8 +300,6 @@ class ParallelScanSYCLBase {
       global_mem =
           static_cast<sycl::global_ptr<value_type>>(instance.scratch_space(
               n_wgroups * (wgroup_size + 1) * sizeof(value_type)));
-      m_scratch_host = static_cast<sycl::global_ptr<value_type>>(
-          instance.scratch_host(sizeof(value_type)));
 
       group_results = global_mem + n_wgroups * wgroup_size;
 
@@ -309,12 +327,6 @@ class ParallelScanSYCLBase {
 
     // Write results to global memory
     auto update_global_results = q.submit([&](sycl::handler& cgh) {
-      // The compiler failed with CL_INVALID_ARG_VALUE if using m_result_ptr
-      // directly.
-      pointer_type result_ptr = m_result_ptr_device_accessible
-                                    ? m_result_ptr
-                                    : static_cast<pointer_type>(m_scratch_host);
-
 #ifndef KOKKOS_IMPL_SYCL_USE_IN_ORDER_QUEUES
       cgh.depends_on(perform_work_group_scans);
 #endif
@@ -354,8 +366,6 @@ class ParallelScanSYCLBase {
  public:
   template <typename PostFunctor>
   void impl_execute(const PostFunctor& post_functor) {
-    if (m_policy.begin() == m_policy.end()) return;
-
     auto& instance = *m_policy.space().impl_internal_space_instance();
 
     Kokkos::Impl::SYCLInternal::IndirectKernelMem& indirectKernelMem =
@@ -424,8 +434,7 @@ class Kokkos::Impl::ParallelScanWithTotal<
             ->m_mutexScratchSpace);
 
     Base::impl_execute([&]() {
-      const long long nwork = Base::m_policy.end() - Base::m_policy.begin();
-      if (nwork > 0 && !Base::m_result_ptr_device_accessible) {
+      if (!Base::m_result_ptr_device_accessible) {
         // Using DeepCopy instead of fence+memcpy turned out to be up to 2x
         // slower.
         m_exec.fence(
