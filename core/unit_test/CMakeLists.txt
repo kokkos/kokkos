@@ -429,9 +429,8 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
     endif()
     if(Tag STREQUAL "NextSilicon")
-      #FIXME_NEXTSILICON: requires parallel_for tagged dispatch
+      #FIXME_NEXTSILICON: requires TeamPolicy parallel_for
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_BlockSizeDeduction.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Complex.cpp)
       #FIXME_NEXTSILICON: requires MDRange parallel_for on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_ViewAPI_a.cpp)
       #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
