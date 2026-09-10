@@ -10,6 +10,7 @@
 
 #include <Kokkos_Macros.hpp>
 
+#include <cstdint>
 #include <type_traits>
 #include <limits>
 
@@ -59,10 +60,71 @@ KOKKOS_IMPL_DEFINE_TRAIT(max_exponent10, max_exponent10,  floating_point)
 
 #undef KOKKOS_IMPL_DEFINE_TRAIT
 
-}  // namespace Kokkos
-
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NUMERIC_TRAITS
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_NUMERIC_TRAITS
 #endif
+
+#define KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT(TRAIT) \
+  namespace Impl {                                   \
+  template <class T, class Enable = void>            \
+  struct TRAIT##_helper {};                          \
+  }                                                  \
+  template <class T>                                 \
+  struct TRAIT : Impl::TRAIT##_helper<T> {};         \
+  template <class T>                                 \
+  inline constexpr auto TRAIT##_v = TRAIT<T>::value; \
+  namespace Experimental {                           \
+  using Kokkos::TRAIT;                               \
+  using Kokkos::TRAIT##_v;                           \
+  }
+
+#define KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT_TYPE(TRAIT) \
+  namespace Impl {                                        \
+  template <class T, class Enable = void>                 \
+  struct TRAIT##_helper {};                               \
+  }                                                       \
+  template <class T>                                      \
+  struct TRAIT : Impl::TRAIT##_helper<T> {};              \
+  template <class T>                                      \
+  using TRAIT##_t = typename TRAIT<T>::type;              \
+  namespace Experimental {                                \
+  using Kokkos::TRAIT;                                    \
+  using Kokkos::TRAIT##_t;                                \
+  }
+
+KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT_TYPE(equivalent_int)
+KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT(mantissa_bits)
+KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT(exponent_bits)
+
+#undef KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT
+#undef KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT_TYPE
+
+}  // namespace Kokkos
+
+template <>
+struct Kokkos::Impl::equivalent_int_helper<float> {
+  using type = uint32_t;
+};
+template <>
+struct Kokkos::Impl::mantissa_bits_helper<float> {
+  static constexpr unsigned int value = 23;
+};
+template <>
+struct Kokkos::Impl::exponent_bits_helper<float> {
+  static constexpr unsigned int value = 8;
+};
+
+template <>
+struct Kokkos::Impl::equivalent_int_helper<double> {
+  using type = uint64_t;
+};
+template <>
+struct Kokkos::Impl::mantissa_bits_helper<double> {
+  static constexpr unsigned int value = 52;
+};
+template <>
+struct Kokkos::Impl::exponent_bits_helper<double> {
+  static constexpr unsigned int value = 11;
+};
 #endif
