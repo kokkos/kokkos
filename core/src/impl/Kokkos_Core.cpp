@@ -17,15 +17,18 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include <stack>
 #include <functional>
-#include <cerrno>
+#include <mutex>
 #include <random>
 #include <regex>
+#include <sstream>
+#include <stack>
+#include <utility>
+
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -41,7 +44,16 @@ bool g_show_warnings       = true;
 bool g_tune_internals      = false;
 
 using hook_function_type = std::function<void()>;
-std::stack<hook_function_type> finalize_hooks;
+
+std::mutex& finalize_hooks_mutex() {
+  static std::mutex mutex;
+  return mutex;
+}
+
+std::stack<hook_function_type>& finalize_hooks() {
+  static std::stack<hook_function_type> hooks;
+  return hooks;
+}
 
 /**
  * The category is only used in printing, tools
@@ -484,6 +496,13 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   if (settings.has_tune_internals() && settings.get_tune_internals())
     g_tune_internals = true;
 
+  // Initialize these function-local statics during Kokkos::initialize(). If a
+  // user registers Kokkos::finalize with std::atexit afterwards, that callback
+  // is registered after the statics' destructors. std::exit therefore invokes
+  // Kokkos::finalize before destroying the mutex and hook stack it accesses.
+  std::ignore = finalize_hooks_mutex();
+  std::ignore = finalize_hooks();
+
   // clang-format off
   declare_configuration_metadata("version_info", "Kokkos Version", version_string_from_int(KOKKOS_VERSION));
 #ifdef KOKKOS_COMPILER_APPLECC
@@ -769,10 +788,14 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
 // function throws
 // NOLINTNEXTLINE(bugprone-exception-escape)
 void call_registered_finalize_hook_functions() noexcept {
-  while (!finalize_hooks.empty()) {
-    auto const& func = finalize_hooks.top();
+  std::function<void()> func;
+  while (!finalize_hooks().empty()) {
+    {
+      std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+      func = std::move(finalize_hooks().top());
+      finalize_hooks().pop();
+    }
     func();
-    finalize_hooks.pop();
   }
 }
 
@@ -1066,7 +1089,8 @@ void Kokkos::Impl::pre_finalize() { pre_finalize_internal(); }
 void Kokkos::Impl::post_finalize() { post_finalize_internal(); }
 
 void Kokkos::push_finalize_hook(std::function<void()> f) {
-  finalize_hooks.push(f);
+  std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+  finalize_hooks().push(std::move(f));
 }
 
 void Kokkos::finalize() {
