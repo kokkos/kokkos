@@ -2383,16 +2383,13 @@ TEST(TEST_CATEGORY, mathematical_functions_isinf) {
 // so the real runtime FP environment governs the result -- and checking whether
 // they read back as zero.
 KOKKOS_INLINE_FUNCTION bool runtime_fp_env_flushes_to_zero() {
-  static bool ret = [] {
-    volatile float fdenorm  = Kokkos::denorm_min_v<float>;
-    volatile double ddenorm = Kokkos::denorm_min_v<double>;
-    volatile float fmin     = Kokkos::norm_min_v<float>;
-    volatile double dmin    = Kokkos::norm_min_v<double>;
-    bool flushed            = (fdenorm == 0.0f) || (ddenorm == 0.0) ||
-                   ((fmin / 2.0f) == 0.0f) || ((dmin / 2.0) == 0.0);
-    return flushed;
-  }();
-  return ret;
+  volatile float fdenorm  = Kokkos::denorm_min_v<float>;
+  volatile double ddenorm = Kokkos::denorm_min_v<double>;
+  volatile float fmin     = Kokkos::norm_min_v<float>;
+  volatile double dmin    = Kokkos::norm_min_v<double>;
+  bool flushed            = (fdenorm == 0.0f) || (ddenorm == 0.0) ||
+                 ((fmin / 2.0f) == 0.0f) || ((dmin / 2.0) == 0.0);
+  return flushed;
 }
 
 template <class Space>
