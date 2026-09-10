@@ -54,22 +54,13 @@ jobs:
         with:
           name: ${{ matrix.cxx }}-${{ matrix.backend }}
           path: ${{ env.BUILD_ID }}
-      - name: Check benchmark-results access
-        env:
-          GH_TOKEN: ${{ secrets.DALG24_PUSH_BENCHMARK_RESULTS }}
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gh
-          gh api repos/kokkos/kokkos-benchmark-results \
-            --jq '{full_name: .full_name, permissions: .permissions}'
       - name: Push benchmark results
-        if: ${{ github.ref == 'refs/heads/develop' }}
         uses: dmnemec/copy_file_to_another_repo_action@bbebd3da22e4a37d04dca5f782edd5201cb97083 # main
         env:
-          API_TOKEN_GITHUB: ${{ secrets.DALG24_PUSH_BENCHMARK_RESULTS }}
+          API_TOKEN_GITHUB: ${{ secrets.MASTERLEINAD_PUSH_BENCHMARK_RESULTS }}
         with:
           source_file: ${{ env.BUILD_ID }}
-          destination_repo: 'kokkos/kokkos-benchmark-results'
+          destination_repo: 'masterleinad/kokkos-benchmark-results'
           destination_branch: 'main'
           user_email: 'kokkos@users.noreply.github.com'
           user_name: 'Kokkos Developers'
