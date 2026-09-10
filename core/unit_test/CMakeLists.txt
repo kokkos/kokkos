@@ -643,16 +643,8 @@ if(Kokkos_ENABLE_NEXTSILICON)
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions2.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions3.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_NumericTraits.cpp
-    #FIXME_NEXTSILICON requires parallel_for
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MinMaxClamp.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Other.cpp
-    #FIXME_NEXTSILICON requires parallel_reduce
+    #FIXME_NEXTSILICON requires TeamPolicy parallel_for
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_RangePolicyExecutionTypes.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_CommonPolicyInterface.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_a.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_b.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_c.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reductions.cpp
   )
 endif()
 
