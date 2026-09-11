@@ -44,9 +44,9 @@ jobs:
           - backend: "SERIAL"
             cmake_build_type: "RelWithDebInfo"
             cxx_standard: "23"
-            compiler: "$(brew --prefix llvm@18)/bin/clang++"
+            compiler: "$(brew --prefix llvm@23)/bin/clang++"
             runner: "macos-26"
-            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm@18)/bin/clang-tidy;-warnings-as-errors=*"'
+            cmake_extra_opts: '-DCMAKE_CXX_CLANG_TIDY="$(brew --prefix llvm@23)/bin/clang-tidy;-warnings-as-errors=*"'
 
     runs-on: ${{ matrix.runner }}
 
