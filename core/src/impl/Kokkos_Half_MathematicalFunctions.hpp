@@ -25,6 +25,8 @@
 #include <SYCL/Kokkos_SYCL_Half_MathematicalFunctions.hpp>
 #endif
 
+#include <impl/Kokkos_STD_Half_MathematicalFunctions.hpp>
+
 // clang-format off
 namespace Kokkos {
 // BEGIN macro definitions
