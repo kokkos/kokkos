@@ -27,7 +27,7 @@ TEST(TEST_CATEGORY, atomic_operations_complexdouble) {
 
     if (sizeof(void*) == 4) {
       // 32-bit x86 may do reference division in 80-bit x87, so allow up to
-      // two ULPs.
+      // one ULP.
       ASSERT_TRUE((update != 0
                        ? atomic_op_test<DivAtomicTest, T, TEST_EXECSPACE, true>(
                              old_val, update)

@@ -11,7 +11,7 @@ TEST(TEST_CATEGORY, atomic_operations_double) {
     for (int t = 0; t < 7; t++) {
       if (t == 5 && sizeof(void*) == 4) {
         // 32-bit x86 may do reference division in 80-bit x87, so allow up to
-        // two ULPs.
+        // one ULP.
         ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                      double, TEST_EXECSPACE, true>(i, end - i + start, t)));
       } else {
