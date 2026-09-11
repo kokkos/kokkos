@@ -198,4 +198,63 @@ TEST(TEST_CATEGORY, team_policy_minmax_scalar_without_plus_equal_k) {
   ASSERT_EQ(val.max_val, num_teams - 1);
 }
 
+void test_team_policy_launch_with_maximum_scratch_size(int level) {
+  // Ensure that we can launch a kernel where 1 thread consumes all scratch
+  // memory
+  policy_type policy(1, 1);
+  policy.set_scratch_size(
+      level, Kokkos::PerThread(policy_type::scratch_size_max(level)));
+
+  bool check_team_size = level == 0;
+#ifdef KOKKOS_ENABLE_OPENMP
+  // OpenMP's team size isn't limited by the max scratch size
+  check_team_size &= !std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>;
+#elif defined KOKKOS_ENABLE_THREADS
+  // OpenMP's team size isn't limited by the max scratch size
+  check_team_size &= !std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>;
+#endif
+
+  {
+    auto dummy_functor = KOKKOS_LAMBDA(const policy_type::member_type&){};
+
+    int team_size_max =
+        policy.team_size_max(dummy_functor, Kokkos::ParallelForTag());
+    if (check_team_size) {
+      EXPECT_EQ(team_size_max, 1);
+    }
+
+    int team_size_recommended =
+        policy.team_size_max(dummy_functor, Kokkos::ParallelForTag());
+    if (check_team_size) {
+      EXPECT_EQ(team_size_recommended, 1);
+    }
+
+    Kokkos::parallel_for(policy, dummy_functor);
+  }
+  {
+    auto dummy_functor = KOKKOS_LAMBDA(const policy_type::member_type&, int&){};
+
+    int team_size_max =
+        policy.team_size_max(dummy_functor, Kokkos::ParallelReduceTag());
+    if (check_team_size) {
+      EXPECT_EQ(team_size_max, 1);
+    }
+
+    int team_size_recommended =
+        policy.team_size_max(dummy_functor, Kokkos::ParallelReduceTag());
+    if (check_team_size) {
+      EXPECT_EQ(team_size_recommended, 1);
+    }
+
+    int dummy;
+    Kokkos::parallel_reduce(policy, dummy_functor, dummy);
+    EXPECT_EQ(dummy, 0) << " level: " << level;
+  }
+}
+
+TEST(TEST_CATEGORY, team_policy_launch_with_maximum_scratch_size) {
+  test_team_policy_launch_with_maximum_scratch_size(0);
+  test_team_policy_launch_with_maximum_scratch_size(1);
+}
+
 }  // namespace Test

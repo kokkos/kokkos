@@ -618,20 +618,32 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    // blockDim.y must be power of two = 128 (4 warps) or 256 (8 warps) or 512
-    // (16 warps) gridDim.x <= blockDim.y * blockDim.y
-    //
     // 4 warps was 10% faster than 8 warps and 20% faster than 16 warps in unit
     // testing
 
+    unsigned n = CudaTraits::WarpSize * 4;
     const int maxShmemPerBlock =
         m_policy.space().cuda_device_prop().sharedMemPerBlock;
-    unsigned n = CudaTraits::WarpSize * 4;
-    while (n &&
-           unsigned(maxShmemPerBlock) <
-               cuda_single_inter_block_reduce_scan_shmem<true, WorkTag,
-                                                         value_type>(f, n)) {
+    int shmem_size =
+        cuda_single_inter_block_reduce_scan_shmem<true, WorkTag, value_type>(f,
+                                                                             n);
+    using closure_type =
+        Impl::ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
+                           Kokkos::Cuda>;
+    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
+        get_cuda_func_attributes(
+            m_policy.space().impl_internal_space_instance());
+    while (
+        (n && (maxShmemPerBlock < shmem_size)) ||
+        (n >
+         static_cast<unsigned>(
+             Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
+                 m_policy.space().impl_internal_space_instance(), attr, f, 1,
+                 shmem_size, 0)))) {
       n >>= 1;
+      shmem_size =
+          cuda_single_inter_block_reduce_scan_shmem<true, WorkTag, value_type>(
+              f, n);
     }
     return n;
   }
@@ -947,20 +959,32 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
   // Determine block size constrained by shared memory:
   inline unsigned local_block_size(const FunctorType& f) {
-    // blockDim.y must be power of two = 128 (4 warps) or 256 (8 warps) or 512
-    // (16 warps) gridDim.x <= blockDim.y * blockDim.y
-    //
     // 4 warps was 10% faster than 8 warps and 20% faster than 16 warps in unit
     // testing
 
+    unsigned n = CudaTraits::WarpSize * 4;
     const int maxShmemPerBlock =
         m_policy.space().cuda_device_prop().sharedMemPerBlock;
-    unsigned n = CudaTraits::WarpSize * 4;
-    while (n &&
-           unsigned(maxShmemPerBlock) <
-               cuda_single_inter_block_reduce_scan_shmem<true, WorkTag,
-                                                         value_type>(f, n)) {
+    int shmem_size =
+        cuda_single_inter_block_reduce_scan_shmem<true, WorkTag, value_type>(f,
+                                                                             n);
+    using closure_type =
+        Impl::ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
+                                    ReturnType, Kokkos::Cuda>;
+    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
+        get_cuda_func_attributes(
+            m_policy.space().impl_internal_space_instance());
+    while (
+        (n && (maxShmemPerBlock < shmem_size)) ||
+        (n >
+         static_cast<unsigned>(
+             Kokkos::Impl::cuda_get_max_block_size<FunctorType, LaunchBounds>(
+                 m_policy.space().impl_internal_space_instance(), attr, f, 1,
+                 shmem_size, 0)))) {
       n >>= 1;
+      shmem_size =
+          cuda_single_inter_block_reduce_scan_shmem<true, WorkTag, value_type>(
+              f, n);
     }
     return n;
   }

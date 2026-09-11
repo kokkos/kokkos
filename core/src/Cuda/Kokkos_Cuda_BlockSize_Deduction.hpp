@@ -126,7 +126,7 @@ inline int cuda_deduce_block_size(bool early_termination,
   int opt_threads_per_sm = 0;
 
   for (int block_size = max_threads_per_block; block_size > 0;
-       block_size -= 32) {
+       block_size <= 32 ? block_size /= 2 : (block_size -= 32)) {
     size_t const dynamic_shmem = block_size_to_dynamic_shmem(block_size);
 
     int blocks_per_sm = cuda_max_active_blocks_per_sm(
