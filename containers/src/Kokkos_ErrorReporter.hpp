@@ -22,91 +22,95 @@ import kokkos.core;
 
 namespace Kokkos {
 namespace Experimental {
-template <typename ReportType,
+template <typename LogType,
           typename DeviceType = typename DefaultExecutionSpace::device_type>
-class ErrorReporter {
+class Logger {
  public:
-  using report_type     = ReportType;
+  using log_type        = LogType;
   using device_type     = DeviceType;
   using execution_space = typename device_type::execution_space;
 
-  ErrorReporter(const std::string &label, int max_results)
-      : m_numReportsAttempted(label + "::m_numReportsAttempted"),
-        m_reports(label + "::m_reports", max_results),
-        m_reporters(label + "::m_reporters", max_results) {
+  Logger(const std::string& label, int max_results)
+      : m_insertionAttempted(label + "::m_insertionAttempted"),
+        m_logs(label + "::m_logs", max_results) {
     clear();
   }
 
-  ErrorReporter(int max_results)
-      : ErrorReporter("ErrorReporter", max_results) {}
+  Logger(int max_results) : Logger("Logger", max_results) {}
 
-  int capacity() const { return m_reports.extent(0); }
+  int capacity() const { return m_logs.extent(0); }
 
-  int num_reports() const {
-    return std::clamp(num_report_attempts(), 0, capacity());
-  }
+  int size() const { return std::clamp(insertion_attempts(), 0, capacity()); }
 
-  int num_report_attempts() const {
+  int insertion_attempts() const {
     int value;
-    Kokkos::deep_copy(value, m_numReportsAttempted);
+    Kokkos::deep_copy(value, m_insertionAttempted);
     return value;
   }
 
-  auto get_reports() const {
-    int num_reps = num_reports();
-    std::vector<int> reporters_out(num_reps);
-    std::vector<report_type> reports_out(num_reps);
+  std::vector<log_type> get() const {
+    int num_elements = size();
+    std::vector<log_type> res(num_elements);
 
-    if (num_reps > 0) {
-      Kokkos::View<int *, Kokkos::HostSpace> h_reporters(reporters_out.data(),
-                                                         num_reps);
-      Kokkos::View<report_type *, Kokkos::HostSpace> h_reports(
-          reports_out.data(), num_reps);
+    if (num_elements > 0) {
+      Kokkos::View<log_type*, Kokkos::HostSpace> h_logs(res.data(),
+                                                        num_elements);
 
-      Kokkos::deep_copy(
-          h_reporters, Kokkos::subview(m_reporters, Kokkos::pair{0, num_reps}));
-      Kokkos::deep_copy(h_reports,
-                        Kokkos::subview(m_reports, Kokkos::pair{0, num_reps}));
+      Kokkos::deep_copy(h_logs,
+                        Kokkos::subview(m_logs, Kokkos::pair{0, num_elements}));
     }
-    return std::pair{std::move(reporters_out), std::move(reports_out)};
+    return res;
   }
 
-  bool full() const { return (num_report_attempts() >= capacity()); }
+  bool full() const { return (insertion_attempts() >= capacity()); }
 
-  void clear() const { Kokkos::deep_copy(m_numReportsAttempted, 0); }
+  void clear() const { Kokkos::deep_copy(m_insertionAttempted, 0); }
 
-  // This function keeps reports up to new_size alive
-  // It may lose the information on attempted reports
+  // This function keeps logs up to new_size alive
+  // It may lose the information on attempted logs
   void resize(const size_t new_size) {
-    // We have to reset the attempts so we don't accidently
-    // report more stored reports than there actually are
+    // We have to reset the attempts so we don't accidentally
+    // report more stored logs than there actually are
     // after growing capacity.
-    int num_reps = num_report_attempts();
-    if (new_size > static_cast<size_t>(capacity()) && num_reps > capacity())
-      Kokkos::deep_copy(m_numReportsAttempted, num_reports());
+    int attempts = insertion_attempts();
+    if (new_size > static_cast<size_t>(capacity()) && attempts > capacity())
+      Kokkos::deep_copy(m_insertionAttempted, size());
 
-    Kokkos::resize(m_reports, new_size);
-    Kokkos::resize(m_reporters, new_size);
+    Kokkos::resize(m_logs, new_size);
   }
 
-  KOKKOS_INLINE_FUNCTION
-  bool add_report(int reporter_id, report_type report) const {
-    int idx = Kokkos::atomic_fetch_inc(&m_numReportsAttempted());
+  KOKKOS_INLINE_FUNCTION bool try_push(const LogType&& log) const {
+    return try_emplace(log) != nullptr;
+  }
 
-    if (idx >= 0 && (idx < m_reports.extent_int(0))) {
-      m_reporters(idx) = reporter_id;
-      m_reports(idx)   = report;
-      return true;
+  template <class... Args>
+  KOKKOS_INLINE_FUNCTION log_type* try_emplace(Args&&... args) const {
+    int idx = Kokkos::atomic_fetch_inc(&m_insertionAttempted());
+
+    if (idx >= 0 && (idx < m_logs.extent_int(0))) {
+      log_type* mem = &m_logs(idx);
+      mem->~LogType();
+      return new (mem) LogType{args...};
     } else {
-      return false;
+      return nullptr;
     }
   }
 
  private:
-  Kokkos::View<int, device_type> m_numReportsAttempted;
-  Kokkos::View<report_type *, device_type> m_reports;
-  Kokkos::View<int *, device_type> m_reporters;
+  Kokkos::View<int, device_type> m_insertionAttempted;
+  Kokkos::View<log_type*, device_type> m_logs;
 };
+
+template <typename ErrorType,
+          typename DeviceType = typename DefaultExecutionSpace::device_type>
+struct ErrorReport {
+  int reporter_id;
+  ErrorType error;
+};
+
+template <typename ErrorType,
+          typename DeviceType = typename DefaultExecutionSpace::device_type>
+using ErrorReporter = Logger<ErrorReport<ErrorType>, DeviceType>;
 
 }  // namespace Experimental
 }  // namespace Kokkos
