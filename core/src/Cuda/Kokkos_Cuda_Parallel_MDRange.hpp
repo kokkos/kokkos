@@ -421,8 +421,9 @@ class ParallelReduce<CombinedFunctorReducerType,
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
       const auto cc = m_policy.space().concurrency() / block_size;
-      const dim3 grid(std::min(index_type(cc), index_type(nwork)), 1, 1);
-
+      const dim3 grid(
+          static_cast<uint32_t>(std::min(index_type(cc), index_type(nwork))), 1,
+          1);
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(),
