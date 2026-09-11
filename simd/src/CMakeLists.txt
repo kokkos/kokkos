@@ -4,7 +4,7 @@ kokkos_include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #-----------------------------------------------------------------------------
 
-file(GLOB SIMD_HEADERS *.hpp)
+file(GLOB SIMD_HEADERS *.hpp impl/*.hpp)
 file(GLOB SIMD_SOURCES *.cpp)
 
 install(
@@ -45,6 +45,11 @@ kokkos_lib_include_directories(
 )
 
 kokkos_link_internal_library(kokkossimd kokkoscore)
+
+if(Kokkos_ENABLE_EXPERIMENTAL_SIMD_AMX AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang|IntelLLVM")
+  target_compile_options(kokkossimd PUBLIC -mamx-tile -mamx-bf16 -mamx-int8)
+  target_compile_definitions(kokkossimd PUBLIC KOKKOS_ENABLE_EXPERIMENTAL_SIMD_AMX)
+endif()
 
 # If ARM-SVE, check and warn for available arm_neon_sve_bridge.h
 if(KOKKOS_ARCH_ARM_SVE)
