@@ -392,7 +392,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-    const auto nwork = m_policy.m_num_tiles;
+    const index_type nwork = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
@@ -420,10 +420,9 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
-      const auto cc = m_policy.space().concurrency() / block_size;
-      const dim3 grid(
-          static_cast<uint32_t>(std::min(index_type(cc), index_type(nwork))), 1,
-          1);
+      const int cc = m_policy.space().concurrency() / block_size;
+      const dim3 grid(static_cast<uint32_t>(std::min(index_type(cc), nwork)), 1,
+                      1);
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(),
