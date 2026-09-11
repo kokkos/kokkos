@@ -326,9 +326,9 @@ struct DecModAtomicTest {
 
 template <class T>
 KOKKOS_FUNCTION bool atomic_values_equal_1ulp(T actual, T expected) {
-  T next_up = Kokkos::nextafter(expected, std::numeric_limits<T>::infinity());
+  T next_up = Kokkos::nextafter(expected, Kokkos::infinity_v<T>);
   T next_down =
-      Kokkos::nextafter(expected, -std::numeric_limits<T>::infinity());
+      Kokkos::nextafter(expected, -Kokkos::infinity_v<T>);
   return actual == expected || actual == next_up || actual == next_down;
 }
 
