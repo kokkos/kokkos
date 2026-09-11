@@ -21,7 +21,16 @@ hipcc:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DKokkos_ENABLE_BENCHMARKS=ON"
     - ctest -VV -E Kokkos_CoreUnitTest_DeviceAndThreads -D CDASH_MODEL="Nightly" -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}" -S scripts/CTestRun.cmake -D CTEST_SITE="frontier" -D CTEST_BUILD_NAME="hipcc-rocm/6.3.1"
+    - git clone https://github.com/kokkos/kokkos-benchmark-results.git
+    - mkdir -p kokkos-benchmark-results/Frontier
+    - find build/core/perf_test/ build/algorithms/perf_test/ build/simd/perf_tests/ -name "*.json" -exec mv {} kokkos-benchmark-results/Frontier/ \;
+    - cd kokkos-benchmark-results
+    - git add Frontier/*
+    - git commit -m "Frontier performance run"
+    - git status
+    - git push https://"$GH_BENCHMARK_PAT"@github.com/kokkos/kokkos-benchmark-results.git
 
 amdclang:
   stage: test
