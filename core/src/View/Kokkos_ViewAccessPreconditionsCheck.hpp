@@ -31,26 +31,28 @@ struct RuntimeCheckBasicViewMemoryAccessViolation<MemorySpace, AccessSpace,
                                                   false> {
   KOKKOS_FUNCTION RuntimeCheckBasicViewMemoryAccessViolation(
       Kokkos::Impl::SharedAllocationTracker const &tracker) {
-    char err[256] =
-        "Kokkos::View ERROR: attempt to access inaccessible memory space "
-        "(label=\"";
-
+    // split out host and device code to avoid unnecessarily constructing a
+    // static string at runtime
     KOKKOS_IF_ON_HOST(({
+      char err[256] =
+          "Kokkos::View ERROR: attempt to access inaccessible memory space "
+          "(label=\"";
       if (tracker.has_record()) {
         strncat(err, tracker.template get_label<void>().c_str(), 128);
       } else {
         strcat(err, "**UNMANAGED**");
       }
+      strcat(err, "\")");
+      Kokkos::abort(err);
     }))
 
     KOKKOS_IF_ON_DEVICE(({
-      strcat(err, "**UNAVAILABLE**");
+      const char err[] =
+          "Kokkos::View ERROR: attempt to access inaccessible memory space "
+          "(label=\"**UNAVAILABLE**\")";
       (void)tracker;
+      Kokkos::abort(err);
     }))
-
-    strcat(err, "\")");
-
-    Kokkos::abort(err);
   }
 };
 

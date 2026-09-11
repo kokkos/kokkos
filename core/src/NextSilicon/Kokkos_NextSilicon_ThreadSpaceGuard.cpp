@@ -7,16 +7,15 @@
 
 namespace Kokkos::Impl {
 
-thread_local PageAlignedData<bool, PageLocation::Host>
-    NextSiliconThreadSpaceGuard::thread_is_on_device = false;
+thread_local bool NextSiliconThreadSpaceGuard::thread_is_on_device = false;
 
 NextSiliconThreadSpaceGuard::NextSiliconThreadSpaceGuard() noexcept {
   // Touching thread_local variables cannot be done on device.
   // We can always determine if we are actually handed off by calling
   // __next_is_in_handed_off_code.
   if (!__next_is_in_handed_off_code()) {
-    KOKKOS_ASSERT(!thread_is_on_device);
-    thread_is_on_device = true;
+    KOKKOS_ASSERT(!host_thread_is_on_device());
+    host_thread_is_on_device() = true;
   }
 }
 
@@ -25,8 +24,8 @@ NextSiliconThreadSpaceGuard::~NextSiliconThreadSpaceGuard() noexcept {
   // cannot change mid-scope, otherwise it will break the counter.
   if (!__next_is_in_handed_off_code()) {
     // Catch if the invariant doesn't hold
-    KOKKOS_ASSERT(thread_is_on_device);
-    thread_is_on_device = false;
+    KOKKOS_ASSERT(host_thread_is_on_device());
+    host_thread_is_on_device() = false;
   }
 }
 
