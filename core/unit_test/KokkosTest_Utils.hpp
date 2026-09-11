@@ -13,6 +13,8 @@ import kokkos.core;
 
 #include <type_traits>
 
+#include <../../containers/src/Kokkos_ErrorReporter.hpp>
+
 namespace KokkosTest {
 
 struct FloatingPointComparison {
@@ -104,12 +106,252 @@ struct FloatingPointComparison {
 
 struct IntegerComparison {
   template <class Lhs, class Rhs>
-  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs) const {
+  KOKKOS_FUNCTION static bool compare(Lhs const& lhs, Rhs const& rhs) {
     static_assert(std::is_integral_v<Lhs>);
     static_assert(std::is_integral_v<Rhs>);
     return lhs == rhs;
   }
 };
 
+template <size_t string_capacity>
+struct TestLog {
+  Kokkos::Impl::StaticString<string_capacity> error_message;
+};
+
+template <class Space, size_t string_capacity>
+struct TestReporter {
+  using Log      = KokkosTest::TestLog<string_capacity>;
+  using Reporter = Kokkos::Experimental::ErrorReporter<Log, Space>;
+
+  TestReporter() : m_reporter(10) {}
+
+  TestReporter(int size) : m_reporter(size) {}
+
+ private:
+  Reporter m_reporter;
+
+ public:
+  KOKKOS_FUNCTION Log* emplace_report() const {
+    return m_reporter.emplace_report();
+  }
+
+  int print_errors(std::ostream& os = std::cerr) {
+    std::vector<int> reporters;
+    std::vector<Log> reports;
+    std::tie(reporters, reports) = m_reporter.get_reports();
+    for (int i = 0; i < m_reporter.num_reports(); ++i) {
+      os << reports[i].error_message << std::endl;
+    }
+    int ret = m_reporter.num_report_attempts();
+    m_reporter.clear();
+
+    return ret;
+  }
+};
+
+namespace Impl {
+template <size_t capacity>
+struct OptionalString {
+  using String = Kokkos::Impl::StaticString<capacity>;
+  String* m_ss;
+
+  KOKKOS_FUNCTION OptionalString(String* ss = nullptr) : m_ss(ss) {}
+
+  template <typename Arg>
+  KOKKOS_FUNCTION OptionalString<capacity>& operator<<(const Arg& arg) {
+    if (m_ss != nullptr) {
+      *m_ss << arg;
+    }
+    return *this;
+  }
+};
+
+template <class Space, size_t string_capacity, class T1, class T2>
+KOKKOS_FUNCTION OptionalString<string_capacity> expect_eq(
+    const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
+    const char* file, int line, const char* arg1, const T1 arg1_val,
+    const char* arg2, const T2 arg2_val) {
+  if (!((arg1_val) == (arg2_val))) {
+    auto* log = test_reporter.emplace_report();
+    if (log != nullptr) {
+      log->error_message << file << ":" << line
+                         << ": Failure\nExpected equality of these values:\n  "
+                         << arg1 << "\n    Which is: " << arg1_val << "\n  "
+                         << arg2 << "\n    Which is: " << arg2_val << "\n";
+
+      return OptionalString<string_capacity>(&log->error_message);
+    }
+  }
+  return OptionalString<string_capacity>();
+}
+
+template <class Space, size_t string_capacity, class T1, class T2>
+KOKKOS_FUNCTION OptionalString<string_capacity> expect_ne(
+    const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
+    const char* file, int line, const char* arg1, const T1 arg1_val,
+    const char* arg2, const T2 arg2_val) {
+  if (!((arg1_val) != (arg2_val))) {
+    auto* log = test_reporter.emplace_report();
+    if (log != nullptr) {
+      log->error_message << file << ":" << line << ": Failure\nExpected: ("
+                         << arg1 << ") != (" << arg2
+                         << "), actual: " << arg1_val << " vs " << arg2_val
+                         << "\n";
+
+      return OptionalString<string_capacity>(&log->error_message);
+    }
+  }
+  return OptionalString<string_capacity>();
+}
+
+template <class Space, size_t string_capacity, class T>
+KOKKOS_FUNCTION OptionalString<string_capacity> expect_true(
+    const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
+    const char* file, int line, const char* arg, const T arg_val) {
+  if (!(arg_val)) {
+    auto* log = test_reporter.emplace_report();
+    if (log != nullptr) {
+      log->error_message << file << ":" << line
+                         << ": Failure\nValue of: " << arg
+                         << "\n  Actual: false\n  Expected: true\n";
+
+      return OptionalString<string_capacity>(&log->error_message);
+    }
+  }
+  return OptionalString<string_capacity>();
+}
+
+template <class Space, size_t string_capacity, class T>
+KOKKOS_FUNCTION OptionalString<string_capacity> expect_false(
+    const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
+    const char* file, int line, const char* arg, const T arg_val) {
+  if (!!(arg_val)) {
+    auto* log = test_reporter.emplace_report();
+    if (log != nullptr) {
+      log->error_message << file << ":" << line
+                         << ": Failure\nValue of: " << arg
+                         << "\n  Actual: true\n  Expected: false\n";
+
+      return OptionalString<string_capacity>(&log->error_message);
+    }
+  }
+  return OptionalString<string_capacity>();
+}
+
+template <class Space, size_t string_capacity, class Float1, class Float2>
+KOKKOS_FUNCTION OptionalString<string_capacity> expect_near_ulps(
+    const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
+    const char* file, int line, const char* float1, const Float1 float1_val,
+    const char* float2, const Float2 float2_val, int ulps) {
+  if (!KokkosTest::FloatingPointComparison::compare(float1_val, float2_val,
+                                                    ulps)) {
+    auto* log = test_reporter.emplace_report();
+    if (log != nullptr) {
+      log->error_message << file << ":" << line
+                         << ": Failure\nExpected: " << float1 << " within "
+                         << ulps << " ulps of " << float2
+                         << ", \n  Actual: " << float1_val << " vs "
+                         << float2_val << "\n";
+
+      return OptionalString<string_capacity>(&log->error_message);
+    }
+  }
+  return OptionalString<string_capacity>();
+}
+
+template <class Space, size_t string_capacity, class T>
+KOKKOS_FUNCTION OptionalString<string_capacity> expect_nan(
+    const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
+    const char* file, int line, const char* arg, const T arg_val) {
+  if (!Kokkos::isnan(arg_val)) {
+    auto* log = test_reporter.emplace_report();
+    if (log != nullptr) {
+      log->error_message << file << ":" << line
+                         << ": Failure\nValue of: " << arg
+                         << "\n  Actual: " << arg_val << "\nExpected: NaN\n";
+
+      return OptionalString<string_capacity>(&log->error_message);
+    }
+  }
+  return OptionalString<string_capacity>();
+}
+
+template <class Space, size_t string_capacity, class T>
+KOKKOS_FUNCTION OptionalString<string_capacity> expect_inf(
+    const KokkosTest::TestReporter<Space, string_capacity>& test_reporter,
+    const char* file, int line, const char* arg, const T arg_val) {
+  if (!Kokkos::isinf(arg_val)) {
+    auto* log = test_reporter.emplace_report();
+    if (log != nullptr) {
+      log->error_message << file << ":" << line
+                         << ": Failure\nValue of: " << arg
+                         << "\n  Actual: " << arg_val << "\nExpected: Inf\n";
+
+      return OptionalString<string_capacity>(&log->error_message);
+    }
+  }
+  return OptionalString<string_capacity>();
+}
+}  // namespace Impl
+
+#define KOKKOS_EXPECT_EQ(test_reporter, arg1, arg2)              \
+  KokkosTest::Impl::expect_eq(test_reporter, __FILE__, __LINE__, \
+                              KOKKOS_IMPL_STRINGIFY(arg1), arg1, \
+                              KOKKOS_IMPL_STRINGIFY(arg2), arg2)
+
+#define KOKKOS_EXPECT_NE(test_reporter, arg1, arg2)              \
+  KokkosTest::Impl::expect_ne(test_reporter, __FILE__, __LINE__, \
+                              KOKKOS_IMPL_STRINGIFY(arg1), arg1, \
+                              KOKKOS_IMPL_STRINGIFY(arg2), arg2)
+
+#define KOKKOS_EXPECT_TRUE(test_reporter, arg)                     \
+  KokkosTest::Impl::expect_true(test_reporter, __FILE__, __LINE__, \
+                                KOKKOS_IMPL_STRINGIFY(arg), arg)
+
+#define KOKKOS_EXPECT_FALSE(test_reporter, arg)                     \
+  KokkosTest::Impl::expect_false(test_reporter, __FILE__, __LINE__, \
+                                 KOKKOS_IMPL_STRINGIFY(arg), arg)
+
+#define KOKKOS_EXPECT_NEAR_ULPS(test_reporter, float1, float2, ulps)    \
+  KokkosTest::Impl::expect_near_ulps(                                   \
+      test_reporter, __FILE__, __LINE__, KOKKOS_IMPL_STRINGIFY(float1), \
+      float1, KOKKOS_IMPL_STRINGIFY(float2), float2, ulps)
+
+#if __FINITE_MATH_ONLY__
+// Nothing to test if NaN and infinite are disabled at compilation
+#define KOKKOS_EXPECT_NAN(test_reporter, arg)
+#define KOKKOS_EXPECT_INF(test_reporter, arg)
+#else
+#define KOKKOS_EXPECT_NAN(test_reporter, arg)                     \
+  KokkosTest::Impl::expect_nan(test_reporter, __FILE__, __LINE__, \
+                               KOKKOS_IMPL_STRINGIFY(arg), arg)
+
+#define KOKKOS_EXPECT_INF(test_reporter, arg)                     \
+  KokkosTest::Impl::expect_inf(test_reporter, __FILE__, __LINE__, \
+                               KOKKOS_IMPL_STRINGIFY(arg), arg)
+#endif
+
+/**
+ * Create a test that will run on the device, first template argument is the
+ * execution space where the test need to run, can take up to one extra
+ * template argument.
+ */
+#define KOKKOS_DEVICE_TEST(TestName, ...)                                \
+  template <class TestSpace __VA_OPT__(, class) __VA_ARGS__>             \
+  struct [[nodiscard]] TestName {                                        \
+    KokkosTest::TestReporter<TestSpace, 2048> m_test_reporter;           \
+                                                                         \
+    [[nodiscard]] int run() {                                            \
+      Kokkos::parallel_for(Kokkos::RangePolicy<TestSpace>(0, 1), *this); \
+      return m_test_reporter.print_errors();                             \
+    }                                                                    \
+    KOKKOS_FUNCTION void operator()(int) const;                          \
+  };                                                                     \
+                                                                         \
+  template <class TestSpace __VA_OPT__(, class) __VA_ARGS__>             \
+  KOKKOS_FUNCTION void                                                   \
+  TestName<TestSpace __VA_OPT__(, ) __VA_ARGS__>::operator()(int) const
+
 }  // namespace KokkosTest
+
 #endif
