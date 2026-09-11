@@ -116,6 +116,16 @@ KOKKOS_INLINE_FUNCTION uint32_t next_random_delay(uint32_t& seed,
   return delay;
 }
 
+// Used to produce a warning at runtime
+KOKKOS_INLINE_FUNCTION void warn_clock_tic_fallback_once() noexcept {
+  static int warned = 0;
+  if (Kokkos::atomic_compare_exchange(&warned, 0, 1) == 0) {
+    Kokkos::printf(
+        "Kokkos::Impl::clock_tic() is not supported on this device/backend "
+        "combination; falling back to tick-based backoff.\n");
+  }
+}
+
 template <typename LockType>
 struct LockState {
   static_assert(std::is_integral_v<LockType>,
@@ -203,20 +213,30 @@ class ClockExponentialBackoff {
   // is a separate, fixed safety cap on the shift amount itself, only there to
   // avoid undefined behavior / overflow if `m_attempt` grows very large.
   KOKKOS_INLINE_FUNCTION void on_failed_attempt() {
-    auto start = Kokkos::Impl::clock_tic();
+    if constexpr (Kokkos::Impl::has_clock_tic()) {
+      auto start = Kokkos::Impl::clock_tic();
 
-    constexpr int max_shift = 17;
-    int shift               = (m_attempt < max_shift) ? m_attempt : max_shift;
-    uint32_t raw_delay      = (static_cast<uint32_t>(1) << shift);
-    auto delay              = static_cast<decltype(start)>(
-        raw_delay < m_max_delay ? raw_delay : m_max_delay);
+      constexpr int max_shift = 17;
+      int shift               = (m_attempt < max_shift) ? m_attempt : max_shift;
+      uint32_t raw_delay      = (static_cast<uint32_t>(1) << shift);
+      auto delay              = static_cast<decltype(start)>(
+          raw_delay < m_max_delay ? raw_delay : m_max_delay);
 
-    while (static_cast<decltype(delay)>(Kokkos::Impl::clock_tic() - start) <
-           delay) {
-      // Active, non-blocking wait on the cycle counter.
-      Kokkos::load_fence();
+      while (static_cast<decltype(delay)>(Kokkos::Impl::clock_tic() - start) <
+             delay) {
+        // Active, non-blocking wait on the cycle counter.
+        Kokkos::load_fence();
+      }
+      ++m_attempt;
+    } else {  // Fallback on a tick behavior since the clock is unavailable.
+      warn_clock_tic_fallback_once();
+
+      uint32_t delay = 1;
+      for (uint32_t tick = 0; tick < delay; ++tick) {
+        Kokkos::load_fence();
+      }
+      if (delay < m_max_delay) delay *= 2;
     }
-    ++m_attempt;
   }
 
  private:
@@ -251,11 +271,19 @@ class ClockRandomBackoff {
       : m_max_delay(max_delay), m_seed(generate_thread_seed()) {}
 
   KOKKOS_INLINE_FUNCTION void on_failed_attempt() {
-    uint32_t delay = next_random_delay(m_seed, m_max_delay);
-    auto start     = Kokkos::Impl::clock_tic();
-    while (static_cast<decltype(delay)>(Kokkos::Impl::clock_tic() - start) <
-           delay) {
-      Kokkos::load_fence();
+    if constexpr (Kokkos::Impl::has_clock_tic()) {
+      uint32_t delay = next_random_delay(m_seed, m_max_delay);
+      auto start     = Kokkos::Impl::clock_tic();
+      while (static_cast<decltype(delay)>(Kokkos::Impl::clock_tic() - start) <
+             delay) {
+        Kokkos::load_fence();
+      }
+    } else {  // Fallback on a tick behavior since the clock is unavailable.
+      warn_clock_tic_fallback_once();
+      uint32_t delay = next_random_delay(m_seed, m_max_delay);
+      for (uint32_t tick = 0; tick < delay; ++tick) {
+        Kokkos::load_fence();
+      }
     }
   }
 
