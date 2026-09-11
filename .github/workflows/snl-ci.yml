@@ -23,6 +23,7 @@ jobs:
     strategy:
       matrix:
         dep_code_5: [ON, OFF]
+        build_type: [Release, Debug]
 
     steps:
       - name: checkout_kokkos
@@ -42,14 +43,15 @@ jobs:
             -DKokkos_ARCH_NATIVE=ON \
             -DCMAKE_CXX_EXTENSIONS=OFF \
             -DCMAKE_CXX_FLAGS="-Werror" \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
-            -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
+            -DKokkos_ENABLE_BENCHMARKS=${{ matrix.build_type == 'Debug' && 'OFF' || 'ON' }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.build_type == 'Debug' && 'OFF' || 'ON' }} \
             ./
 
       - name: build_and_install_kokkos
@@ -194,6 +196,7 @@ jobs:
     strategy:
       matrix:
         dep_code_5: [ON, OFF]
+        build_type: [Release, Debug]
 
     steps:
       - name: checkout_kokkos
@@ -209,6 +212,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=icpx \
             -DCMAKE_CXX_STANDARD=20 \
             -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -Wno-pass-failed' \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DKokkos_ENABLE_OPENMP=ON \
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ARCH_SPR=ON \
@@ -249,6 +253,10 @@ jobs:
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
     continue-on-error: true
 
+    strategy:
+      matrix:
+        build_type: [Release, Debug]
+
     steps:
       - name: checkout_kokkos
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -262,8 +270,9 @@ jobs:
           cmake -S . -B build \
             -DCMAKE_CXX_COMPILER=icpx \
             -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DCMAKE_CXX_FLAGS='-Werror -fp-model=precise -fsycl-device-code-split=per_kernel -Wno-zero-length-array -Wno-pass-failed' \
+            -DCMAKE_EXE_LINKER_FLAGS='-fsycl -flink-huge-device-code' \
             -DKokkos_ENABLE_SYCL=ON \
             -DKokkos_ARCH_INTEL_PVC=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
