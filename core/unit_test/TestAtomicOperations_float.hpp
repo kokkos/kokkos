@@ -13,7 +13,7 @@ TEST(TEST_CATEGORY, atomic_operations_float) {
       // issues with division atomics still compile it though
       if (t != 5 || sizeof(void*) == 8) {
         ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
-                     double, TEST_EXECSPACE>(i, end - i + start, t)));
+                     float, TEST_EXECSPACE>(i, end - i + start, t)));
       }
   }
 }
