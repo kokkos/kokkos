@@ -355,6 +355,9 @@ std::vector<HIP> impl_partition_space(const HIP &base_instance,
   return instances;
 }
 }  // namespace Experimental::Impl
+
+std::vector<Kokkos::HIP> create_device_space();
+
 }  // namespace Kokkos
 
 #endif

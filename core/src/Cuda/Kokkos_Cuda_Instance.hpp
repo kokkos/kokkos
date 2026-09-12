@@ -352,5 +352,7 @@ std::vector<Cuda> impl_partition_space(const Cuda& base_instance,
 }
 }  // namespace Experimental::Impl
 
+std::vector<Kokkos::Cuda> create_device_space();
+
 }  // Namespace Kokkos
 #endif
