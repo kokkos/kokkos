@@ -65,11 +65,15 @@ void finalize_lock_arrays_hip();
  */
 #ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_DEVICE;
 
 #ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* HIP_SPACE_ATOMIC_LOCKS_NODE;
 
