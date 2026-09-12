@@ -8,13 +8,17 @@ TEST(TEST_CATEGORY, atomic_operations_float) {
   const int start = -5;
   const int end   = 11;
   for (int i = start; i < end; ++i) {
-    for (int t = 0; t < 7; t++)
-      // FIXME_32BIT disable division test for 32bit where we have accuracy
-      // issues with division atomics still compile it though
-      if (t != 5 || sizeof(void*) == 8) {
+    for (int t = 0; t < 7; t++) {
+      if (t == 5 && sizeof(void*) == 4) {
+        // 32-bit x86 may do reference division in 80-bit x87, so allow up to
+        // one ULP.
+        ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
+                     double, TEST_EXECSPACE, true>(i, end - i + start, t)));
+      } else {
         ASSERT_TRUE((TestAtomicOperations::AtomicOperationsTestNonIntegralType<
                      float, TEST_EXECSPACE>(i, end - i + start, t)));
       }
+    }
   }
 }
 }  // namespace Test
