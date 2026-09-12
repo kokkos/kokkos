@@ -399,6 +399,13 @@ TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan_different_sizes) {
   if (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>)
     GTEST_SKIP() << "Test can't use the Threads backend" << std::endl;
 #endif
+// FIXME_SYCL: observed in 2026.1.1 and 2025.2.2
+#if defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU) && \
+    defined(KOKKOS_COMPILER_INTEL_LLVM)
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::SYCL>)
+    GTEST_SKIP() << "SYCL CUDA concurrent queue waits can return early with "
+                    "IntelLLVM; see issue 9533";
+#endif
   run_exec_space_thread_safety_range_scan_different_sizes();
 }
 
