@@ -55,7 +55,8 @@ class GraphNodeRef {
   static_assert(std::is_same_v<Predecessor, TypeErasedTag> ||
                     Kokkos::Impl::is_graph_kernel<Kernel>::value ||
                     Kokkos::Impl::is_graph_capture_v<Kernel> ||
-                    Kokkos::Impl::is_graph_then_host_v<Kernel>,
+                    Kokkos::Impl::is_graph_then_host_v<Kernel> ||
+                    Kokkos::Impl::is_graph_then_native_v<Kernel>,
                 "Invalid kernel template parameter given to GraphNodeRef");
 
   static_assert(!Kokkos::Impl::is_more_type_erased<Kernel, Predecessor>::value,
@@ -347,6 +348,58 @@ class GraphNodeRef {
         std::static_pointer_cast<node_details_t>(m_node_impl)->node;
     KOKKOS_EXPECTS(impl.has_value());
     return *impl;  // NOLINT(bugprone-unchecked-optional-access)
+  }
+#endif
+
+#if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
+    (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
+  template <typename Props, typename Functor>
+    requires Kokkos::Impl::NodeProperties<std::remove_cvref_t<Props>>
+#if defined(KOKKOS_ENABLE_CUDA)
+  auto then_cuda_node(Props&& props, Functor&& functor) const {
+    if constexpr (std::same_as<ExecutionSpace, Kokkos::Cuda>) {
+      static_assert(std::is_invocable_r_v<cudaGraphNodeParams,
+                                          const std::remove_cvref_t<Functor>>);
+#elif defined(KOKKOS_ENABLE_HIP)
+  auto then_hip_node(Props&& props, Functor&& functor) const {
+    if constexpr (std::same_as<ExecutionSpace, Kokkos::HIP>) {
+      static_assert(std::is_invocable_r_v<hipGraphNodeParams,
+                                          const std::remove_cvref_t<Functor>>);
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)
+  auto then_sycl_node(Props&& props, Functor&& functor) const {
+    if constexpr (std::same_as<ExecutionSpace, Kokkos::SYCL>) {
+      static_assert(requires(const std::remove_cvref_t<Functor>& func) {
+        { func() } -> std::invocable<sycl::handler&>;
+      });
+#endif
+      using then_native_t =
+          Kokkos::Impl::GraphNodeThenNativeImpl<ExecutionSpace,
+                                                std::remove_cvref_t<Functor>>;
+      using return_t =
+          GraphNodeRef<ExecutionSpace, then_native_t, GraphNodeRef>;
+      auto graph_ptr = m_graph_impl.lock();
+      KOKKOS_EXPECTS(bool(graph_ptr))
+
+      auto rv = Kokkos::Impl::GraphAccess::make_graph_node_ref(
+          m_graph_impl,
+          Kokkos::Impl::GraphAccess::make_node_shared_ptr<
+              typename return_t::node_impl_t>(
+              m_node_impl->get_device_handle(),
+              Kokkos::Impl::_graph_node_native_ctor_tag{},
+              std::forward<Functor>(functor),
+              Kokkos::Impl::_graph_node_predecessor_ctor_tag{}, *this));
+
+      // Add the node itself to the backend's graph data structure, now that
+      // everything is set up.
+      graph_ptr->add_node(Kokkos::Impl::extract_property_or<device_handle_t>(
+                              props, graph_ptr->get_device_handle()),
+                          rv.m_node_impl);
+      // Add the predecessor we stored in the constructor above in the
+      // backend's data structure, now that everything is set up.
+      graph_ptr->add_predecessor(rv.m_node_impl, *this);
+      KOKKOS_ENSURES(bool(rv.m_node_impl))
+      return rv;
+    }
   }
 #endif
 
