@@ -18,6 +18,7 @@ import kokkos.core;
 #include <type_traits>
 #include <cstdint>
 #include <cfloat>
+#include <limits>
 
 #include "KokkosTest_Utils.hpp"
 
@@ -2366,6 +2367,31 @@ TEST(TEST_CATEGORY, mathematical_functions_isinf) {
   TestIsInf<TEST_EXECSPACE>();
 }
 
+// Determine, at runtime, whether the floating-point environment flushes
+// subnormal (denormal) values to zero (FTZ/DAZ).
+//
+// This cannot be answered by the preprocessor: some compilers (notably
+// NVHPC/nvc++) enable FTZ/DAZ by default -- at every optimization level --
+// WITHOUT defining __FINITE_MATH_ONLY__ (and while __STDC_IEC_559__,
+// std::numeric_limits<T>::is_iec559, has_denorm, etc. all still report that
+// subnormals exist). Flushing is a property of the runtime FP environment, so
+// it must be detected by actually exercising it. The same reasoning applies to
+// device execution, so the probe runs wherever the test does.
+//
+// We probe once (thread-safe Meyers-singleton initialization) by forcing
+// subnormal values through 'volatile' storage -- which defeats constant folding
+// so the real runtime FP environment governs the result -- and checking whether
+// they read back as zero.
+KOKKOS_INLINE_FUNCTION bool runtime_fp_env_flushes_to_zero() {
+  volatile float fdenorm  = Kokkos::denorm_min_v<float>;
+  volatile double ddenorm = Kokkos::denorm_min_v<double>;
+  volatile float fmin     = Kokkos::norm_min_v<float>;
+  volatile double dmin    = Kokkos::norm_min_v<double>;
+  bool flushed            = (fdenorm == 0.0f) || (ddenorm == 0.0) ||
+                 ((fmin / 2.0f) == 0.0f) || ((dmin / 2.0) == 0.0);
+  return flushed;
+}
+
 template <class Space>
 struct TestFpClassify {
   TestFpClassify() { run(); }
@@ -2391,10 +2417,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<float>::value) != FP_NAN ||
         fpclassify(quiet_NaN<float>::value) != FP_NAN ||
-        fpclassify(infinity<float>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<float>::value) != FP_SUBNORMAL
+        fpclassify(infinity<float>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<float>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(float)\n");
     }
@@ -2404,10 +2430,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<double>::value) != FP_NAN ||
         fpclassify(quiet_NaN<double>::value) != FP_NAN ||
-        fpclassify(infinity<double>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<double>::value) != FP_SUBNORMAL
+        fpclassify(infinity<double>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<double>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(double)\n");
     }
@@ -2418,10 +2444,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<long double>::value) != FP_NAN ||
         fpclassify(quiet_NaN<long double>::value) != FP_NAN ||
-        fpclassify(infinity<long double>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<long double>::value) != FP_SUBNORMAL
+        fpclassify(infinity<long double>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<long double>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(long double)\n");
     }
@@ -2437,9 +2463,15 @@ struct TestFpClassify {
         // FIXME internal compiler error for Clang+Cuda and RDC
         || fpclassify(signaling_NaN<KE::half_t>::value) != FP_NAN ||
         fpclassify(quiet_NaN<KE::half_t>::value) != FP_NAN ||
-        fpclassify(infinity<KE::half_t>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<KE::half_t>::value) != FP_SUBNORMAL
+        fpclassify(infinity<KE::half_t>::value) != FP_INFINITE
 #endif
+#endif
+#if !(defined(KOKKOS_ENABLE_CUDA) &&                         \
+      defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE) && \
+      defined(KOKKOS_COMPILER_CLANG))
+        // FIXME_CUDA internal compiler error for Clang+Cuda and RDC
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<KE::half_t>::value) != FP_SUBNORMAL)
 #endif
     ) {
       ++e;
@@ -2452,10 +2484,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<KE::bhalf_t>::value) != FP_NAN ||
         fpclassify(quiet_NaN<KE::bhalf_t>::value) != FP_NAN ||
-        fpclassify(infinity<KE::bhalf_t>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<KE::bhalf_t>::value) != FP_SUBNORMAL
+        fpclassify(infinity<KE::bhalf_t>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<KE::bhalf_t>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(Kokkos::Experimental::bhalf_t)\n");
     }
