@@ -24,7 +24,7 @@ else()
   set(KOKKOS_OPENACC_FEATURE_LEVEL 17)
 endif()
 
-set(KOKKOS_NEXTSILICON_FEATURE_LEVEL 4)
+set(KOKKOS_NEXTSILICON_FEATURE_LEVEL 5)
 set(KOKKOS_NEXTSILICON_NAME Experimental::NextSilicon)
 
 set(KOKKOS_OPENACC_NAME Experimental::OpenACC)
@@ -346,22 +346,38 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         BasicView
         CreateMirrorViewAndCopy
         LegacyLayoutFunction
+        MinimalViewMDSpanTemplateArgumentViability
         ReferenceCountedAccessor
         ReferenceCountedDataHandle
         ViewEqualityOperator
         ViewCtorConvertibleToPtr
         ViewCtorDataHandle
+        ViewCustomizationAccessorArg
+        ViewCustomizationAllocationType
+        ViewCustomizationAccessorFromMapping
+        ViewMDSpanTemplateArgumentSubview
     )
     # FIXME_OPENACC
-    if(NOT Kokkos_ENABLE_OPENACC)
+    if(Kokkos_ENABLE_OPENACC)
       list(
-        APPEND
+        REMOVE_ITEM
         BV_TestNames
         ViewCustomizationAccessorArg
         ViewCustomizationAllocationType
         ViewCustomizationAccessorFromMapping
         MinimalViewMDSpanTemplateArgumentViability
         ViewMDSpanTemplateArgumentSubview
+      )
+    endif()
+    # FIXME_NEXTSILICON
+    if(KOKKOS_ENABLE_NEXTSILICON)
+      list(
+        REMOVE_ITEM
+        BV_TestNames
+        BasicView # MDRange parallel_for
+        MinimalViewMDSpanTemplateArgumentViability # MDRange parallel_for
+        ViewCustomizationAllocationType # MDRange parallel_reduce
+        ViewCustomizationAccessorFromMapping #MDRange parallel_reduce
       )
     endif()
     set(${Tag}_VIEWSUPPORT)
@@ -374,10 +390,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(APPEND ${Tag}_VIEWSUPPORT ${file})
     endforeach()
 
-    # FIXME_NEXTSILICON: requires parallel_for
-    if(NOT KOKKOS_ENABLE_NEXTSILICON)
-      kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
-    endif()
+    kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     # Smoke test: minimal subset for quick iteration (generate sources not built with main targets).
     foreach(Name IN LISTS SMOKE_TEST_NAMES)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
@@ -406,20 +419,15 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamVectorRange.cpp)
     endif()
     if((Tag STREQUAL "Serial") AND KOKKOS_ENABLE_NEXTSILICON)
-      #FIXME_NEXTSILICON: requires parallel_for tagged dispatch
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
       #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_DeepCopy_Assignment.cpp)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
       #FIXME_NEXTSILICON: requires TeamPolicy parallel_reduce on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_CommonPolicyInterface.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
     endif()
     if(Tag STREQUAL "NextSilicon")
-      #FIXME_NEXTSILICON: requires parallel_for tagged dispatch
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
+      #FIXME_NEXTSILICON: requires TeamPolicy parallel_for
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_BlockSizeDeduction.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Complex.cpp)
       #FIXME_NEXTSILICON: requires MDRange parallel_for on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_ViewAPI_a.cpp)
       #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
@@ -429,12 +437,11 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamVectorRange.cpp)
       #FIXME_NEXTSILICON: requires WorkGraphPolicy parallel_for on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_WorkGraph.cpp)
-      #FIXME_NEXTSILICON: requires parallel_reduce on NextSilicon
+      #FIXME_NEXTSILICON: requires TeamPolicy on NextSilicon
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_CommonPolicyInterface.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_ExecutionSpace.cpp)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_MDRange_a.cpp)
-      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_RangePolicy.cpp)
+      #FIXME_NEXTSILICON: requires MDRange parallel_for
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
     endif()
     kokkos_add_executable_and_test(CoreUnitTest_${Tag}_SmokeTest SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
@@ -633,16 +640,8 @@ if(Kokkos_ENABLE_NEXTSILICON)
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions2.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions3.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_NumericTraits.cpp
-    #FIXME_NEXTSILICON requires parallel_for
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MinMaxClamp.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Other.cpp
-    #FIXME_NEXTSILICON requires parallel_reduce
+    #FIXME_NEXTSILICON requires TeamPolicy parallel_for
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_RangePolicyExecutionTypes.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_CommonPolicyInterface.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_a.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_b.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_c.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reductions.cpp
   )
 endif()
 
@@ -812,8 +811,22 @@ endif()
 # FIXME_NEXTSILICON: whitelist tests
 if(Kokkos_ENABLE_NEXTSILICON)
   set(NEXTSILICON_SOURCES
-      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Abort.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_complexdouble.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_complexfloat.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_double.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_float.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_int8.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_int16.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_int.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_longint.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_longlongint.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_shared.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_unsignedint.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_unsignedlongint.cpp
+      # FIXME_NEXTSILICON: AtomicViews needs MDRange parallel_for
+      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicViews.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BadAlloc.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BitManipulationBuiltins.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MinMaxClamp.cpp
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp # MDRange parallel for
   )

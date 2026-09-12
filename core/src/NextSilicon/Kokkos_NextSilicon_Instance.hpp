@@ -16,10 +16,16 @@
 #include <NextSilicon/Kokkos_NextSilicon_HeapBuffer.hpp>
 #include <NextSilicon/Kokkos_NextSilicon_PageAlignedData.hpp>
 
+namespace Kokkos::Experimental {
+// Forward declaration prevents cyclic dependency imports
+class NextSilicon;
+}  // namespace Kokkos::Experimental
+
 namespace Kokkos::Experimental::Impl {
 
 class NextSiliconInternal {
   Impl::NextSiliconHeapBuffer functorBuffer_;
+  Impl::NextSiliconHeapBuffer reducePartialBuffer_;
   ::Kokkos::Impl::PageAlignedData<std::mutex,
                                   ::Kokkos::Impl::PageLocation::Host>
       device_mutex_;
@@ -47,6 +53,8 @@ class NextSiliconInternal {
     return std::unique_ptr<Driver, decltype(deleter)>(
         new (buffer) Driver(driver), deleter);
   }
+
+  std::byte* resize_reduce_partial_buffer(size_t requested);
 
   void print_configuration(std::ostream& os) const;
 
