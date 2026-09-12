@@ -5,34 +5,59 @@
 
 #include <Kokkos_Abort.hpp>
 
+#include <cstddef>
+#include <limits>
 #include <optional>
-#include <utility>  // std::in_place
+#include <utility>  // std::move
 #include <vector>
 
 namespace Kokkos::Impl {
 
 namespace {
-std::optional<std::vector<std::function<void()>>> pending{std::in_place};
+using CallbackEntry = std::optional<std::function<void()>>;
+
+std::vector<CallbackEntry>& pending_callbacks() {
+  static std::vector<CallbackEntry> pending;
+  return pending;
+}
 }  // namespace
 
-void register_nextsilicon_initialization_callback(
-    std::function<void()> callback) {
-  if (!pending)
+NextSiliconInitializationCallbackHandle
+register_nextsilicon_initialization_callback(std::function<void()> callback) {
+  auto& pending = pending_callbacks();
+  if (pending.size() >
+      static_cast<std::size_t>(
+          std::numeric_limits<NextSiliconInitializationCallbackHandle>::max()))
     Kokkos::abort(
-        "nextsilicon: initialization callbacks improperly initialized (1). "
-        "Please report this.");
-  pending->push_back(std::move(callback));
+        "nextsilicon: initialization callback handle overflow. Please report "
+        "this.");
+  NextSiliconInitializationCallbackHandle handle =
+      static_cast<NextSiliconInitializationCallbackHandle>(pending.size());
+  pending.push_back(std::move(callback));
+  return handle;
+}
+
+std::optional<std::function<void()>>
+retrieve_nextsilicon_initialization_callback(
+    NextSiliconInitializationCallbackHandle handle) {
+  auto& pending = pending_callbacks();
+  if (handle < 0 || static_cast<std::size_t>(handle) >= pending.size()) {
+    return std::nullopt;
+  }
+  auto callback = std::move(pending[static_cast<std::size_t>(handle)]);
+  pending[static_cast<std::size_t>(handle)] = std::nullopt;
+  return callback;
 }
 
 void run_nextsilicon_initialization_callbacks() {
-  if (!pending)
-    Kokkos::abort(
-        "nextsilicon: initialization callbacks improperly initialized (2). "
-        "Please report this.");
-  for (auto& callback : *pending) {
-    callback();
+  auto& pending = pending_callbacks();
+  for (auto& callback : pending) {
+    if (callback) {
+      auto callback_to_run = std::move(callback);
+      callback             = std::nullopt;
+      (*callback_to_run)();
+    }
   }
-  pending->clear();
 }
 
 }  // namespace Kokkos::Impl
