@@ -354,8 +354,6 @@ struct ViewDataAnalysis {
       std::is_same_v<ValueType, typename array_analysis::non_const_value_type>);
 
  public:
-  using specialize = void;  // No specialization
-
   using dimension            = typename array_analysis::dimension;
   using value_type           = typename array_analysis::value_type;
   using const_value_type     = typename array_analysis::const_value_type;

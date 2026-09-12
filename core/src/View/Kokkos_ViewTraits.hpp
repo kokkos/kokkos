@@ -283,7 +283,6 @@ struct ViewTraits<void> {
   using host_mirror_space = void;
   using array_layout      = void;
   using memory_traits     = void;
-  using specialize        = void;
   using hooks_policy      = void;
 };
 
@@ -296,7 +295,6 @@ struct ViewTraits<void, void, Prop...> {
       typename ViewTraits<void, Prop...>::host_mirror_space;
   using array_layout  = typename ViewTraits<void, Prop...>::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
-  using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
@@ -311,13 +309,12 @@ struct ViewTraits<
       typename ViewTraits<void, Prop...>::host_mirror_space;
   using array_layout  = typename ViewTraits<void, Prop...>::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
-  using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = HooksPolicy;
 };
 
 template <class ArrayLayout, class... Prop>
-struct ViewTraits<std::enable_if_t<Kokkos::is_array_layout<ArrayLayout>::value>,
-                  ArrayLayout, Prop...> {
+  requires Kokkos::is_array_layout_v<ArrayLayout>
+struct ViewTraits<void, ArrayLayout, Prop...> {
   // Specify layout, keep subsequent space and memory traits arguments
 
   using execution_space = typename ViewTraits<void, Prop...>::execution_space;
@@ -326,13 +323,11 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_array_layout<ArrayLayout>::value>,
       typename ViewTraits<void, Prop...>::host_mirror_space;
   using array_layout  = ArrayLayout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
-  using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
-template <class Space, class... Prop>
-struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
-                  Prop...> {
+template <Kokkos::Space Space, class... Prop>
+struct ViewTraits<void, Space, Prop...> {
   // Specify Space, memory traits should be the only subsequent argument.
 
   static_assert(
@@ -352,7 +347,6 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
       typename Kokkos::Impl::HostMirror<memory_space>::Space;
   using array_layout  = typename execution_space::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
-  using specialize    = typename ViewTraits<void, Prop...>::specialize;
   using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
@@ -380,7 +374,6 @@ struct ViewTraits<
   using host_mirror_space = void;
   using array_layout      = void;
   using memory_traits     = MemoryTraits;
-  using specialize        = void;
   using hooks_policy      = void;
 };
 
@@ -450,11 +443,6 @@ struct ViewTraits {
 
   using array_layout = ArrayLayout;
   using dimension    = typename data_analysis::dimension;
-
-  using specialize = std::conditional_t<
-      std::is_void_v<typename data_analysis::specialize>,
-      typename prop::specialize,
-      typename data_analysis::specialize>; /* mapping specialization tag */
 
   static constexpr unsigned rank         = dimension::rank;
   static constexpr unsigned rank_dynamic = dimension::rank_dynamic;

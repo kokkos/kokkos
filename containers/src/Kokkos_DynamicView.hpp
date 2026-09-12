@@ -238,11 +238,6 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   static_assert(traits::rank == 1 && traits::rank_dynamic == 1,
                 "DynamicView must be rank-one");
 
-  // It is assumed that the value_type is trivially copyable;
-  // when this is not the case, potential problems can occur.
-  static_assert(std::is_void_v<typename traits::specialize>,
-                "DynamicView only implemented for non-specialized View type");
-
  private:
   device_accessor m_chunks;
   host_accessor m_chunks_host;
@@ -607,18 +602,14 @@ inline auto create_mirror(const Kokkos::Experimental::DynamicView<T, P...>& src,
 }  // namespace Impl
 
 // public interface
-template <class T, class... P,
-          typename Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P>
 inline auto create_mirror(
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
   return Impl::create_mirror(src, Impl::ViewCtorProp<>{});
 }
 
 // public interface that accepts a without initializing flag
-template <class T, class... P,
-          typename Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P>
 inline auto create_mirror(
     Kokkos::Impl::WithoutInitializing_t wi,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
@@ -626,10 +617,7 @@ inline auto create_mirror(
 }
 
 // public interface that accepts a space
-template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value &&
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror(
     const Space&, const Kokkos::Experimental::DynamicView<T, P...>& src) {
   return Impl::create_mirror(
@@ -637,10 +625,7 @@ inline auto create_mirror(
 }
 
 // public interface that accepts a space and a without initializing flag
-template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value &&
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror(
     Kokkos::Impl::WithoutInitializing_t wi, const Space&,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
@@ -650,9 +635,7 @@ inline auto create_mirror(
 
 // public interface that accepts arbitrary view constructor args passed by a
 // view_alloc
-template <class T, class... P, class... ViewCtorArgs,
-          typename Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(
     const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
@@ -682,7 +665,7 @@ inline auto create_mirror_view(
           typename Kokkos::Experimental::DynamicView<T, P...>::host_mirror_type(
               src);
     } else {
-      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
+      return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorDynamicViewType<
@@ -693,7 +676,7 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
+      return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   }
 }
@@ -716,8 +699,7 @@ inline auto create_mirror_view(
 }
 
 // public interface that accepts a space
-template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror_view(
     const Space&, const Kokkos::Experimental::DynamicView<T, P...>& src) {
   return Impl::create_mirror_view(src,
@@ -725,8 +707,7 @@ inline auto create_mirror_view(
 }
 
 // public interface that accepts a space and a without initializing flag
-template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror_view(
     Kokkos::Impl::WithoutInitializing_t wi, const Space&,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
@@ -880,9 +861,7 @@ struct CommonSubview<DstType, Kokkos::Experimental::DynamicView<SP...>, Arg0> {
 // create a mirror view and deep copy it
 // public interface that accepts arbitrary view constructor args passed by a
 // view_alloc
-template <class... ViewCtorArgs, class T, class... P,
-          class Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class... ViewCtorArgs, class T, class... P>
 auto create_mirror_view_and_copy(
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::Experimental::DynamicView<T, P...>& src) {
@@ -922,8 +901,7 @@ auto create_mirror_view_and_copy(
   }
 }
 
-template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+template <Kokkos::Space Space, class T, class... P>
 auto create_mirror_view_and_copy(
     const Space&, const Kokkos::Experimental::DynamicView<T, P...>& src,
     std::string const& name = "") {

@@ -44,10 +44,7 @@ struct ViewDataTypeFromRank<T, 0> {
 
 template <unsigned N, typename T, typename... Args>
 KOKKOS_FUNCTION View<typename ViewDataTypeFromRank<T, N>::type, Args...>
-as_view_of_rank_n(
-    DynRankView<T, Args...> v,
-    std::enable_if_t<std::is_same_v<typename ViewTraits<T, Args...>::specialize,
-                                    void>>* = nullptr);
+as_view_of_rank_n(DynRankView<T, Args...> v);
 
 // TODO: Replace this specialized with a bool
 template <typename Specialize>
@@ -455,8 +452,7 @@ class DynRankView : private View<DataType*******, Properties...> {
     is_layout_stride =
         std::is_same_v<typename traits::array_layout, Kokkos::LayoutStride>,
 
-    is_default_map = std::is_void_v<typename traits::specialize> &&
-                     (is_layout_left || is_layout_right || is_layout_stride),
+    is_default_map = (is_layout_left || is_layout_right || is_layout_stride),
 
     is_default_access =
         is_default_map && std::is_same_v<reference_type, element_type&>
@@ -1129,10 +1125,7 @@ namespace Impl {
    other routines that are defined on View */
 template <unsigned N, typename T, typename... Args>
 KOKKOS_FUNCTION View<typename ViewDataTypeFromRank<T, N>::type, Args...>
-as_view_of_rank_n(
-    DynRankView<T, Args...> v,
-    std::enable_if_t<
-        std::is_same_v<typename ViewTraits<T, Args...>::specialize, void>>*) {
+as_view_of_rank_n(DynRankView<T, Args...> v) {
   if (v.rank() != N) {
     KOKKOS_IF_ON_HOST(
         const std::string message =
@@ -1192,11 +1185,8 @@ struct ApplyToViewOfStaticRank<DynRankView<Args...>> {
 
 /** \brief  Deep copy a value from Host memory into a view.  */
 template <class ExecSpace, class DT, class... DP>
-inline void deep_copy(
-    const ExecSpace& e, const DynRankView<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<std::is_same_v<typename ViewTraits<DT, DP...>::specialize,
-                                    void>>* = nullptr) {
+inline void deep_copy(const ExecSpace& e, const DynRankView<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type& value) {
   static_assert(
       std::is_same_v<typename ViewTraits<DT, DP...>::non_const_value_type,
                      typename ViewTraits<DT, DP...>::value_type>,
@@ -1207,48 +1197,30 @@ inline void deep_copy(
 }
 
 template <class DT, class... DP>
-inline void deep_copy(
-    const DynRankView<DT, DP...>& dst,
-    typename ViewTraits<DT, DP...>::const_value_type& value,
-    std::enable_if_t<std::is_same_v<typename ViewTraits<DT, DP...>::specialize,
-                                    void>>* = nullptr) {
+inline void deep_copy(const DynRankView<DT, DP...>& dst,
+                      typename ViewTraits<DT, DP...>::const_value_type& value) {
   Impl::ApplyToViewOfStaticRank<DynRankView<DT, DP...>>::apply(
       [=](auto view) { deep_copy(view, value); }, dst);
 }
 
 /** \brief  Deep copy into a value in Host memory from a view.  */
 template <class ExecSpace, class ST, class... SP>
-inline void deep_copy(
-    const ExecSpace& e,
-    typename ViewTraits<ST, SP...>::non_const_value_type& dst,
-    const DynRankView<ST, SP...>& src,
-    std::enable_if_t<std::is_same_v<typename ViewTraits<ST, SP...>::specialize,
-                                    void>>* = 0) {
+inline void deep_copy(const ExecSpace& e,
+                      typename ViewTraits<ST, SP...>::non_const_value_type& dst,
+                      const DynRankView<ST, SP...>& src) {
   deep_copy(e, dst, Impl::as_view_of_rank_n<0>(src));
 }
 
 template <class ST, class... SP>
-inline void deep_copy(
-    typename ViewTraits<ST, SP...>::non_const_value_type& dst,
-    const DynRankView<ST, SP...>& src,
-    std::enable_if_t<std::is_same_v<typename ViewTraits<ST, SP...>::specialize,
-                                    void>>* = 0) {
+inline void deep_copy(typename ViewTraits<ST, SP...>::non_const_value_type& dst,
+                      const DynRankView<ST, SP...>& src) {
   deep_copy(dst, Impl::as_view_of_rank_n<0>(src));
 }
 
-//----------------------------------------------------------------------------
-/** \brief  A deep copy between views of the default specialization, compatible
- * type, same rank, same contiguous layout.
- *
- * A rank mismatch will error out in the attempt to convert to a View
- */
+namespace Impl {
 template <class ExecSpace, class DstType, class SrcType>
-inline void deep_copy(
-    const ExecSpace& exec_space, const DstType& dst, const SrcType& src,
-    std::enable_if_t<(std::is_void_v<typename DstType::traits::specialize> &&
-                      std::is_void_v<typename SrcType::traits::specialize> &&
-                      (Kokkos::is_dyn_rank_view<DstType>::value ||
-                       Kokkos::is_dyn_rank_view<SrcType>::value))>* = nullptr) {
+void deep_copy_dynrankview(const ExecSpace& exec_space, const DstType& dst,
+                           const SrcType& src) {
   static_assert(std::is_same_v<typename DstType::traits::value_type,
                                typename DstType::traits::non_const_value_type>,
                 "deep_copy requires non-const destination type");
@@ -1294,12 +1266,7 @@ inline void deep_copy(
 }
 
 template <class DstType, class SrcType>
-inline void deep_copy(
-    const DstType& dst, const SrcType& src,
-    std::enable_if_t<(std::is_void_v<typename DstType::traits::specialize> &&
-                      std::is_void_v<typename SrcType::traits::specialize> &&
-                      (Kokkos::is_dyn_rank_view<DstType>::value ||
-                       Kokkos::is_dyn_rank_view<SrcType>::value))>* = nullptr) {
+void deep_copy_dynrankview(const DstType& dst, const SrcType& src) {
   static_assert(std::is_same_v<typename DstType::traits::value_type,
                                typename DstType::traits::non_const_value_type>,
                 "deep_copy requires non-const destination type");
@@ -1342,6 +1309,64 @@ inline void deep_copy(
           "Calling DynRankView deep_copy with a view of unexpected rank " +
           std::to_string(rank(dst)));
   }
+}
+}  // namespace Impl
+
+//----------------------------------------------------------------------------
+/** \brief  A deep copy between views of the default specialization, compatible
+ * type, same rank, same contiguous layout.
+ *
+ * A rank mismatch will error out in the attempt to convert to a View
+ */
+template <class ExecSpace, typename DstDataType, class... DstProperties,
+          typename SrcDataType, class... SrcProperties>
+inline void deep_copy(
+    const ExecSpace& exec_space,
+    const Kokkos::DynRankView<DstDataType, DstProperties...>& dst,
+    const Kokkos::DynRankView<SrcDataType, SrcProperties...>& src) {
+  Impl::deep_copy_dynrankview(exec_space, dst, src);
+}
+
+template <class ExecSpace, typename DstDataType, class... DstProperties,
+          typename SrcDataType, class... SrcProperties>
+inline void deep_copy(
+    const ExecSpace& exec_space,
+    const Kokkos::DynRankView<DstDataType, DstProperties...>& dst,
+    const Kokkos::View<SrcDataType, SrcProperties...>& src) {
+  Impl::deep_copy_dynrankview(exec_space, dst, src);
+}
+
+template <class ExecSpace, typename DstDataType, class... DstProperties,
+          typename SrcDataType, class... SrcProperties>
+inline void deep_copy(
+    const ExecSpace& exec_space,
+    const Kokkos::View<DstDataType, DstProperties...>& dst,
+    const Kokkos::DynRankView<SrcDataType, SrcProperties...>& src) {
+  Impl::deep_copy_dynrankview(exec_space, dst, src);
+}
+
+template <typename DstDataType, class... DstProperties, typename SrcDataType,
+          class... SrcProperties>
+inline void deep_copy(
+    const Kokkos::DynRankView<DstDataType, DstProperties...>& dst,
+    const Kokkos::DynRankView<SrcDataType, SrcProperties...>& src) {
+  Impl::deep_copy_dynrankview(dst, src);
+}
+
+template <typename DstDataType, class... DstProperties, typename SrcDataType,
+          class... SrcProperties>
+inline void deep_copy(
+    const Kokkos::DynRankView<DstDataType, DstProperties...>& dst,
+    const Kokkos::View<SrcDataType, SrcProperties...>& src) {
+  Impl::deep_copy_dynrankview(dst, src);
+}
+
+template <typename DstDataType, class... DstProperties, typename SrcDataType,
+          class... SrcProperties>
+inline void deep_copy(
+    const Kokkos::View<DstDataType, DstProperties...>& dst,
+    const Kokkos::DynRankView<SrcDataType, SrcProperties...>& src) {
+  Impl::deep_copy_dynrankview(dst, src);
 }
 
 }  // namespace Kokkos
@@ -1403,27 +1428,20 @@ inline auto create_mirror(const DynRankView<T, P...>& src,
 }  // namespace Impl
 
 // public interface
-template <class T, class... P,
-          class Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P>
 inline auto create_mirror(const DynRankView<T, P...>& src) {
   return Impl::create_mirror(src, Kokkos::view_alloc());
 }
 
 // public interface that accepts a without initializing flag
-template <class T, class... P,
-          class Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P>
 inline auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi,
                           const DynRankView<T, P...>& src) {
   return Impl::create_mirror(src, Kokkos::view_alloc(wi));
 }
 
 // public interface that accepts a space
-template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value &&
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror(const Space&,
                           const Kokkos::DynRankView<T, P...>& src) {
   return Impl::create_mirror(
@@ -1431,10 +1449,7 @@ inline auto create_mirror(const Space&,
 }
 
 // public interface that accepts a space and a without initializing flag
-template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<
-              Kokkos::is_space<Space>::value &&
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
                           const Kokkos::DynRankView<T, P...>& src) {
   return Impl::create_mirror(
@@ -1443,9 +1458,7 @@ inline auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, const Space&,
 
 // public interface that accepts arbitrary view constructor args passed by a
 // view_alloc
-template <class T, class... P, class... ViewCtorArgs,
-          typename Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class T, class... P, class... ViewCtorArgs>
 inline auto create_mirror(const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
                           const DynRankView<T, P...>& src) {
   return Impl::create_mirror(src, arg_prop);
@@ -1470,7 +1483,7 @@ inline auto create_mirror_view(
                                      T, P...>::host_mirror_type::data_type>) {
       return typename DynRankView<T, P...>::host_mirror_type(src);
     } else {
-      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
+      return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   } else {
     if constexpr (Impl::MirrorDRViewType<typename Impl::ViewCtorProp<
@@ -1480,7 +1493,7 @@ inline auto create_mirror_view(
           typename Impl::ViewCtorProp<ViewCtorArgs...>::memory_space, T,
           P...>::view_type(src);
     } else {
-      return Kokkos::Impl::choose_create_mirror(src, arg_prop);
+      return Kokkos::Impl::create_mirror(src, arg_prop);
     }
   }
 }
@@ -1501,8 +1514,7 @@ inline auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
 }
 
 // public interface that accepts a space
-template <class Space, class T, class... P,
-          class Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror_view(const Space&,
                                const Kokkos::DynRankView<T, P...>& src) {
   return Impl::create_mirror_view(
@@ -1510,8 +1522,7 @@ inline auto create_mirror_view(const Space&,
 }
 
 // public interface that accepts a space and a without initializing flag
-template <class Space, class T, class... P,
-          typename Enable = std::enable_if_t<Kokkos::is_space<Space>::value>>
+template <Kokkos::Space Space, class T, class... P>
 inline auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
                                const Space&,
                                const Kokkos::DynRankView<T, P...>& src) {
@@ -1531,9 +1542,7 @@ inline auto create_mirror_view(
 // create a mirror view and deep copy it
 // public interface that accepts arbitrary view constructor args passed by a
 // view_alloc
-template <class... ViewCtorArgs, class T, class... P,
-          class Enable = std::enable_if_t<
-              std::is_void_v<typename ViewTraits<T, P...>::specialize>>>
+template <class... ViewCtorArgs, class T, class... P>
 auto create_mirror_view_and_copy(
     [[maybe_unused]] const Impl::ViewCtorProp<ViewCtorArgs...>& arg_prop,
     const Kokkos::DynRankView<T, P...>& src) {
@@ -1571,7 +1580,7 @@ auto create_mirror_view_and_copy(
   }
 }
 
-template <class Space, class T, class... P>
+template <Kokkos::Space Space, class T, class... P>
 auto create_mirror_view_and_copy(const Space&,
                                  const Kokkos::DynRankView<T, P...>& src,
                                  std::string const& name = "") {
