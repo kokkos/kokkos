@@ -195,18 +195,33 @@ struct MDStreamTest {
     long N3 = N2 * N1;
     long N6 = N3 * N3;
     std::string view_name(name);
+    // FIXME: First-touch allocation of Views via the execution of
+    // `hostspace_parallel_zeromemset` in
+    // `core/src/impl/Kokkos_HostSpace_deepcopy.cpp` needs to be investigated
+    // such that MDRangePolicy can be optimally run on zero-initialized
+    // Views, instead of first defining uninitialized Views.
     if constexpr (Rank == 1) {
-      return view_type(view_name, N6);
+      return view_type(
+          Kokkos::view_alloc(view_name, Kokkos::WithoutInitializing), N6);
     } else if constexpr (Rank == 2) {
-      return view_type(view_name, N3, N3);
+      return view_type(
+          Kokkos::view_alloc(view_name, Kokkos::WithoutInitializing), N3, N3);
     } else if constexpr (Rank == 3) {
-      return view_type(view_name, N2, N2, N2);
+      return view_type(
+          Kokkos::view_alloc(view_name, Kokkos::WithoutInitializing), N2, N2,
+          N2);
     } else if constexpr (Rank == 4) {
-      return view_type(view_name, N2, N1, N1, N2);
+      return view_type(
+          Kokkos::view_alloc(view_name, Kokkos::WithoutInitializing), N2, N1,
+          N1, N2);
     } else if constexpr (Rank == 5) {
-      return view_type(view_name, N1, N1, N2, N1, N1);
+      return view_type(
+          Kokkos::view_alloc(view_name, Kokkos::WithoutInitializing), N1, N1,
+          N2, N1, N1);
     } else if constexpr (Rank == 6) {
-      return view_type(view_name, N1, N1, N1, N1, N1, N1);
+      return view_type(
+          Kokkos::view_alloc(view_name, Kokkos::WithoutInitializing), N1, N1,
+          N1, N1, N1, N1);
     }
   }
 
