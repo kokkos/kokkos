@@ -89,7 +89,10 @@ void test_self_similar_range_policy_computation() {
   // Call sum_views(ExecSpace):
   sum_views(Kokkos::DefaultExecutionSpace(), v_x, v_y);
 
-  // Call sum_views(TeamHandle)
+#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
+      (KOKKOS_COMPILER_NVHPC <= 260500))
+  // FIXME_OPENACC: compiling below is known to fail for 24.5 < NVHPC version
+  // <= 26.5 Call sum_views(TeamHandle)
   using team_t = typename Kokkos::TeamPolicy<>::member_type;
   Kokkos::parallel_for(
       "apxyFromTeam", Kokkos::TeamPolicy(num_teams, Kokkos::AUTO()),
@@ -97,6 +100,7 @@ void test_self_similar_range_policy_computation() {
         sum_views(team, Kokkos::subview(M_x, team.league_rank(), Kokkos::ALL()),
                   Kokkos::subview(M_y, team.league_rank(), Kokkos::ALL()));
       });
+#endif
 
   // Check v_x
   size_t result = 0;
@@ -146,7 +150,16 @@ TEST(TEST_CATEGORY, self_similar_range_policy_runtime) {
 }
 
 TEST(TEST_CATEGORY, self_similar_range_policy_computation) {
+#if defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
+    (KOKKOS_COMPILER_NVHPC <= 260500)
+  // FIXME_OPENACC: compiling below is known to fail for 24.5 < NVHPC version
+  // <= 26.5. Error behavior: a device kernel accesses a undefined global
+  // symbol. Error message: parse use of undefined value '@_T1236_79002'
+  GTEST_SKIP() << "skipping since the OpenACC backend fails to compile this "
+                  "test if 24.5 < NVHPC version <= 26.5";
+#else
   test_self_similar_range_policy_computation();
+#endif
 }
 
 }  // namespace Test

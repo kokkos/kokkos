@@ -394,6 +394,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
 
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
     endif()
+    # Fails for the OpenACC backend if 24.5 < NVHPC version < 26.5
+    if(Tag STREQUAL "Serial" AND (Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5
+                                  AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5)
+    )
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
+    endif()
     # WorkGraph is not supported for SYCL in unit tests (historically excluded from CoreUnitTest_SYCL2A).
     if(Tag STREQUAL "SYCL")
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_WorkGraph.cpp)
@@ -508,8 +514,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   list(
     REMOVE_ITEM
     OpenACC_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_a1.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_b1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_shared.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_BlockSizeDeduction.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_DeepCopyAlignment.cpp
@@ -537,8 +541,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   list(
     REMOVE_ITEM
     OpenACC_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_a1.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_b1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_double.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_float.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_int.cpp
@@ -644,6 +646,13 @@ if(Kokkos_ENABLE_NEXTSILICON)
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_c.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reductions.cpp
   )
+endif()
+
+if(Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5 AND KOKKOS_CXX_COMPILER_VERSION
+                                                                                  VERSION_LESS 26.5
+)
+  #FIXME_OPENACC: some Serial tests fail if NVHPC version > 24.5
+  list(REMOVE_ITEM Serial_SOURCES1 ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Other.cpp)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
@@ -872,6 +881,16 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
   )
+endif()
+
+# FIXME_OPENACC - Non-passing tests with the NVIDIA HPC compiler nvc++ versions
+# greater than 24.5 and less than 26.5
+if(Kokkos_ENABLE_OPENACC
+   AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC
+   AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5
+   AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5
+)
+  list(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType.cpp)
 endif()
 
 # FIXME_OPENACC - Comment non-passing tests with the Clang compiler
