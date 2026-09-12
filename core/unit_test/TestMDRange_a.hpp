@@ -8,6 +8,7 @@ namespace Test {
 TEST(TEST_CATEGORY, mdrange_5d) {
   TestMDRange_5D<TEST_EXECSPACE>::test_reduce5(100, 10, 10, 10, 5);
   TestMDRange_5D<TEST_EXECSPACE>::test_for5(100, 10, 10, 10, 5);
+  TestMDRange_5D<TEST_EXECSPACE>::test_wo_tiles_for5(100, 10, 10, 10, 5);
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL)
   const int size_x = 2 << 19;  // 2^20
