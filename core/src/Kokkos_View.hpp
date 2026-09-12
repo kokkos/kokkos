@@ -18,6 +18,7 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 
 #include <Kokkos_MinMax.hpp>
+#include <Kokkos_NumericTraits.hpp>
 
 namespace Kokkos {
 template <class DataType, class... Properties>
@@ -548,9 +549,15 @@ class View
   KOKKOS_FUNCTION constexpr auto compute_offset(
       std::index_sequence<0>, IndexOffset index_offset) const {
     if constexpr (std::is_same_v<typename base_t::layout_type,
-                                 Kokkos::layout_stride>)
+                                 Kokkos::layout_stride>) {
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+      if (Kokkos::finite_max_v<IndexOffset> < m_map.required_span_size())
+        Kokkos::abort(
+            "Kokkos::View ERROR: index type cannot represent the full index "
+            "range of the view");
+#endif
       return index_offset * static_cast<IndexOffset>(m_map.stride(0));
-    else
+    } else
       return index_offset;
   }
 
@@ -561,6 +568,13 @@ class View
   KOKKOS_FUNCTION constexpr auto compute_offset(
       std::index_sequence<I...>, IndexOffsets... index_offsets) const {
     using idx_type = std::common_type_t<IndexOffsets...>;
+
+#ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
+    if (Kokkos::finite_max_v<idx_type> < m_map.required_span_size())
+      Kokkos::abort(
+          "Kokkos::View ERROR: index type cannot represent the full index "
+          "range of the view");
+#endif
 
     if constexpr (Kokkos::Impl::IsLayoutLeftPadded<
                       typename base_t::layout_type>::value) {
