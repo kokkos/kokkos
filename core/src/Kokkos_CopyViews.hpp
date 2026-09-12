@@ -968,6 +968,62 @@ void contiguous_fill_or_memset(
 
   contiguous_fill_or_memset(exec_space_type(), dst, value);
 }
+
+template <class ViewType, class ValueType, int Dim = 0>
+struct ViewSequentialHostFill {
+  const ViewType& dst;
+  const ValueType& value;
+
+  template <class... Indices>
+  void apply(Indices... idx) const {
+    if constexpr (ViewType::rank == 0)
+      dst() = value;
+    else
+      for (size_t i = 0; i < dst.extent(Dim); ++i) {
+        if constexpr (Dim + 1 == int(ViewType::rank))
+          dst(idx..., i) = value;
+        else
+          ViewSequentialHostFill<ViewType, ValueType, Dim + 1>{dst, value}
+              .apply(idx..., i);
+      }
+  }
+};
+
+template <class ViewType>
+void sequential_host_fill(const ViewType& dst,
+                          const typename ViewType::const_value_type& value) {
+  static_assert(
+      Kokkos::SpaceAccessibility<Kokkos::HostSpace,
+                                 typename ViewType::memory_space>::accessible,
+      "sequential_host_fill requires host-accessible memory");
+  static_assert(std::is_same_v<typename ViewType::non_const_value_type,
+                               typename ViewType::value_type>,
+                "deep_copy requires non-const destination type");
+
+  if (dst.data() == nullptr || dst.span() == 0) {
+    return;
+  }
+
+  if (dst.span_is_contiguous() && !ViewType::traits::impl_is_customized) {
+    using value_type      = typename ViewType::value_type;
+    value_type* const ptr = dst.data();
+    const size_t n        = dst.span();
+    if constexpr (std::is_trivially_copyable_v<value_type>) {
+      if (has_all_zero_bits(value)) {
+        std::memset(static_cast<void*>(ptr), 0, n * sizeof(value_type));
+        return;
+      }
+    }
+    for (size_t i = 0; i < n; ++i) {
+      ptr[i] = value;
+    }
+    return;
+  }
+
+  ViewSequentialHostFill<ViewType, typename ViewType::const_value_type>{dst,
+                                                                        value}
+      .apply();
+}
 }  // namespace Impl
 
 /** \brief  Deep copy a value from Host memory into a view.  */
@@ -2876,12 +2932,16 @@ impl_realloc(Kokkos::View<T, P...>& v, const size_t n0, const size_t n1,
   }
 
   if constexpr (alloc_prop_input::initialize) {
-    if constexpr (alloc_prop_input::has_execution_space) {
+    const typename view_type::value_type fill_value{};
+    if constexpr (alloc_prop_input::sequential_host_init) {
+      Impl::sequential_host_fill(v, fill_value);
+    } else if constexpr (alloc_prop_input::has_execution_space) {
       const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
-      Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
-    } else
-      Kokkos::deep_copy(v, typename view_type::value_type{});
+      Kokkos::deep_copy(exec_space, v, fill_value);
+    } else {
+      Kokkos::deep_copy(v, fill_value);
+    }
   }
 }
 
@@ -2974,12 +3034,16 @@ impl_realloc(Kokkos::View<T, P...>& v,
   }
 
   if constexpr (alloc_prop_input::initialize) {
-    if constexpr (alloc_prop_input::has_execution_space) {
+    const typename view_type::value_type fill_value{};
+    if constexpr (alloc_prop_input::sequential_host_init) {
+      Impl::sequential_host_fill(v, fill_value);
+    } else if constexpr (alloc_prop_input::has_execution_space) {
       const auto& exec_space =
           Impl::get_property<Impl::ExecutionSpaceTag>(arg_prop);
-      Kokkos::deep_copy(exec_space, v, typename view_type::value_type{});
-    } else
-      Kokkos::deep_copy(v, typename view_type::value_type{});
+      Kokkos::deep_copy(exec_space, v, fill_value);
+    } else {
+      Kokkos::deep_copy(v, fill_value);
+    }
   }
 }
 
