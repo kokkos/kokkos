@@ -23,7 +23,7 @@
 #endif
 // clang-format on
 
-#define KOKKOS_IMPL_HALF_TYPE_DEFINED
+#define KOKKOS_HALF_TYPE_DEFINED
 #define KOKKOS_IMPL_SYCL_HALF_TYPE_DEFINED
 
 // FIXME_SYCL bfloat16 is only supported for compute capability 8.0 or higher
@@ -31,7 +31,7 @@
 // capability.
 #if __has_include( \
     <sycl/ext/oneapi/bfloat16.hpp>) || (defined(SYCL_EXT_ONEAPI_BFLOAT16) && defined(KOKKOS_ARCH_INTEL_GPU))
-#define KOKKOS_IMPL_BHALF_TYPE_DEFINED
+#define KOKKOS_BHALF_TYPE_DEFINED
 #define KOKKOS_IMPL_SYCL_BHALF_TYPE_DEFINED
 #endif
 

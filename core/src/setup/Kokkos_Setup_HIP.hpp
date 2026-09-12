@@ -49,8 +49,8 @@ static_assert(false,
 #define KOKKOS_IMPL_HIP_UNIFIED_MEMORY
 #endif
 
-#define KOKKOS_IMPL_HALF_TYPE_DEFINED
-#define KOKKOS_IMPL_BHALF_TYPE_DEFINED
+#define KOKKOS_HALF_TYPE_DEFINED
+#define KOKKOS_BHALF_TYPE_DEFINED
 
 #if (HIP_VERSION_MAJOR > 6 ||                               \
      (HIP_VERSION_MAJOR == 6 && HIP_VERSION_MINOR >= 4)) || \
