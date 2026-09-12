@@ -89,12 +89,17 @@ static_assert(test_execspace_nothrow_copy_and_move());
 // backend mights not need a fence to ensure that all enqueued work has finished
 // before an execution space instance is destroyed. Therefore we might want to
 // revisit this test.
-TEST(TEST_CATEGORY, execution_space_fence_on_destruction) {
+
+void run_execution_space_fence_on_destruction() {
   auto [dummy_instance] =
       Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1);
   bool created_new_instance = TEST_EXECSPACE() != dummy_instance;
   if (!created_new_instance)
     GTEST_SKIP() << "partition_space doesn't create a new instance";
+
+#ifdef KOKKOS_HAS_SHARED_SPACE
+  Kokkos::View<int, Kokkos::SharedSpace> flag("flag");
+#endif
 
   Kokkos::Test::Tools::listen_tool_events(
       Kokkos::Test::Tools::Config::DisableAll(),
@@ -102,8 +107,14 @@ TEST(TEST_CATEGORY, execution_space_fence_on_destruction) {
 
   auto success = Kokkos::Test::Tools::validate_existence(
       [&]() {
-        [[maybe_unused]] auto [new_instance] =
+        auto [new_instance] =
             Kokkos::Experimental::partition_space(TEST_EXECSPACE(), 1);
+        Kokkos::parallel_for(
+            Kokkos::RangePolicy(new_instance, 0, 1), KOKKOS_LAMBDA(int) {
+#ifdef KOKKOS_HAS_SHARED_SPACE
+              flag() = 1;
+#endif
+            });
       },
       [&](Kokkos::Test::Tools::BeginFenceEvent event) {
         return Kokkos::Test::Tools::MatchDiagnostic{
@@ -111,8 +122,15 @@ TEST(TEST_CATEGORY, execution_space_fence_on_destruction) {
             std::string::npos};
       });
   ASSERT_TRUE(success);
+#ifdef KOKKOS_HAS_SHARED_SPACE
+  ASSERT_EQ(flag(), 1);
+#endif
   Kokkos::Test::Tools::listen_tool_events(
       Kokkos::Test::Tools::Config::DisableAll());
+}
+
+TEST(TEST_CATEGORY, execution_space_fence_on_destruction) {
+  run_execution_space_fence_on_destruction();
 }
 
 }  // namespace
