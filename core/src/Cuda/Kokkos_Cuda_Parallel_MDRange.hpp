@@ -133,7 +133,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
   }
 
   inline void execute() const {
-    if (m_policy.m_num_tiles == 0) return;
+    if (m_policy.impl_num_tiles() == 0) return;
 
     // maximum number of threads in each dimension of the block as fetched by
     // the API
@@ -210,18 +210,23 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>, Kokkos::Cuda> {
             m_policy.space().cuda_device_prop().maxGridSize[1],
             m_policy.space().cuda_device_prop().maxGridSize[2],
         }) {
+    const auto lower    = m_policy.lower();
+    const auto upper    = m_policy.upper();
+    const auto tile     = m_policy.tile();
+    const auto tile_end = m_policy.impl_tile_end();
+
     // Initialize begins and ends based on layout
     // Swap the fastest indexes to x dimension
     for (array_index_type i = 0; i < Policy::rank; ++i) {
       if constexpr (Policy::inner_direction == Iterate::Left) {
-        m_lower[i]  = m_policy.m_lower[i];
-        m_upper[i]  = m_policy.m_upper[i];
-        m_extent[i] = m_policy.m_tile[i] * m_policy.m_tile_end[i];
+        m_lower[i]  = lower[i];
+        m_upper[i]  = upper[i];
+        m_extent[i] = tile[i] * tile_end[i];
       } else {
-        m_lower[i]  = m_policy.m_lower[Policy::rank - 1 - i];
-        m_upper[i]  = m_policy.m_upper[Policy::rank - 1 - i];
-        m_extent[i] = m_policy.m_tile[Policy::rank - 1 - i] *
-                      m_policy.m_tile_end[Policy::rank - 1 - i];
+        m_lower[i] = lower[Policy::rank - 1 - i];
+        m_upper[i] = upper[Policy::rank - 1 - i];
+        m_extent[i] =
+            tile[Policy::rank - 1 - i] * tile_end[Policy::rank - 1 - i];
       }
     }
   }
@@ -392,9 +397,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-    const auto nwork = m_policy.m_num_tiles;
+    const auto nwork = m_policy.impl_num_tiles();
     if (nwork) {
-      int block_size = m_policy.m_prod_tile_dims;
+      int block_size = m_policy.impl_prod_tile_dims();
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
       int exponent_pow_two = std::ceil(std::log2(block_size));

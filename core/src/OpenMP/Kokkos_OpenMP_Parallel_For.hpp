@@ -154,6 +154,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 
   OpenMPInternal* m_instance;
   const iterate_type m_iter;
+  const MDRangePolicy m_policy;
 
   inline void exec_range(const Member ibeg, const Member iend) const {
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
@@ -169,7 +170,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp parallel for schedule(dynamic, 1) \
     num_threads(m_instance->thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (index_type iwork = 0; iwork < m_iter.m_rp.m_num_tiles; ++iwork) {
+    for (index_type iwork = 0; iwork < m_policy.impl_num_tiles(); ++iwork) {
       m_iter(iwork);
     }
   }
@@ -181,7 +182,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #pragma omp parallel for schedule(static, 1) \
     num_threads(m_instance->thread_pool_size())
     KOKKOS_PRAGMA_IVDEP_IF_ENABLED
-    for (index_type iwork = 0; iwork < m_iter.m_rp.m_num_tiles; ++iwork) {
+    for (index_type iwork = 0; iwork < m_policy.impl_num_tiles(); ++iwork) {
       m_iter(iwork);
     }
   }
@@ -191,8 +192,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     // Serialize kernels on the same execution space instance
     std::lock_guard<std::mutex> lock(m_instance->m_instance_mutex);
 
-    if (execute_in_serial(m_iter.m_rp.space())) {
-      exec_range(0, m_iter.m_rp.m_num_tiles);
+    if (execute_in_serial(m_policy.space())) {
+      exec_range(0, m_policy.impl_num_tiles());
       return;
     }
 
@@ -207,7 +208,7 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     {
       HostThreadTeamData& data = *(m_instance->get_thread_data());
 
-      data.set_work_partition(m_iter.m_rp.m_num_tiles, 1);
+      data.set_work_partition(m_policy.impl_num_tiles(), 1);
 
       if (is_dynamic) {
         // Make sure work partition is set before stealing
@@ -228,8 +229,11 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 #endif
   }
 
-  inline ParallelFor(const FunctorType& arg_functor, MDRangePolicy arg_policy)
-      : m_instance(nullptr), m_iter(arg_policy, arg_functor) {
+  inline ParallelFor(const FunctorType& arg_functor,
+                     const MDRangePolicy& arg_policy)
+      : m_instance(nullptr),
+        m_iter(arg_policy, arg_functor),
+        m_policy(arg_policy) {
     m_instance = arg_policy.space().impl_internal_space_instance();
   }
 
