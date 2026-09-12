@@ -37,7 +37,10 @@ namespace Impl {
    DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP_ORDER_SCOPE(_OP, CONSTRAINT, MemoryOrderSeqCst , MemoryScopeCore  )
 // clang-format on
 
-#if defined(__clang__) && (__clang_major__ >= 13)
+#if defined(__NEXTSILICON__)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_add, std::is_arithmetic)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_sub, std::is_arithmetic)
+#elif defined(__clang__) && (__clang_major__ >= 13)
 template <class T>
 struct arithmetic_not_long_double
     : std::integral_constant<bool,
@@ -57,7 +60,10 @@ DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_xor, std::is_integral)
 DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_or, std::is_integral)
 DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_nand, std::is_integral)
 
-#if defined(__clang__)
+#if defined(__NEXTSILICON__)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_min, std::is_arithmetic)
+DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_max, std::is_arithmetic)
+#elif defined(__clang__)
 #if (__clang_major__ * 100 + __clang_minor__) >= 2201
 DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_min, arithmetic_not_long_double)
 DESUL_IMPL_GCC_HOST_ATOMIC_FETCH_OP(_max, arithmetic_not_long_double)
