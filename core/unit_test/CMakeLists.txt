@@ -957,6 +957,11 @@ if(KOKKOS_ENABLE_LIBDL)
 
   kokkos_add_test_executable(EmptyProfilingLibraryDeathTest UnitTestMain.cpp tools/TestEmptyProfilingLibrary.cpp)
 
+  if((NOT KOKKOS_ENABLE_LARGE_MEM_TESTS) AND (NOT KOKKOS_ENABLE_THREADS))
+    kokkos_add_test_library(kokkoshwmtracker-tool SHARED SOURCES tools/memory-hwm-tool.cpp)
+    kokkos_add_executable_and_test(ExcessMemoryAllocationErrorsInTesting SOURCES tools/TestExcessMemoryAllocation.cpp)
+  endif()
+
   set(ADDRESS_REGEX "0x[0-9a-f]*")
   set(MEMSPACE_REGEX "[HC][ou][sd][ta][a-zA-Z]*")
   set(SIZE_REGEX "[0-9]*")

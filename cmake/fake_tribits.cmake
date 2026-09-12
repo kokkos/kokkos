@@ -90,6 +90,23 @@ function(KOKKOS_ADD_TEST)
     add_dependencies(${EXE} ${TEST_TOOL}) #make sure the exe has to build the tool
     set_property(TEST ${TEST_NAME} APPEND_STRING PROPERTY ENVIRONMENT "KOKKOS_TOOLS_LIBS=$<TARGET_FILE:${TEST_TOOL}>")
   endif()
+
+  # This tool will get applied by default unless DefaultInstance is specified in the test name
+  # It uses the rusage struct, so it will only work on Linux or Mac.
+  if(NOT WIN32)
+    string(FIND "${TEST_NAME}" "DefaultInstance" index)
+    if((NOT TEST_TOOL)
+       AND (${index} LESS 0)
+       AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
+       AND (NOT KOKKOS_ENABLE_THREADS)
+    )
+      set_property(
+        TEST ${TEST_NAME} APPEND PROPERTY ENVIRONMENT_MODIFICATION
+                                          KOKKOS_TOOLS_LIBS=set:$<TARGET_FILE:kokkoshwmtracker-tool>
+      )
+    endif()
+  endif()
+
   verify_empty(KOKKOS_ADD_TEST ${TEST_UNPARSED_ARGUMENTS})
 endfunction()
 

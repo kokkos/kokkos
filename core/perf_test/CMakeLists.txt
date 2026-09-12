@@ -55,7 +55,22 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
   string(TIMESTAMP BENCHMARK_TIME "%Y-%m-%d_T%H-%M-%S" UTC)
   set(BENCHMARK_ARGS --benchmark_counters_tabular=true --benchmark_out=${BENCHMARK_NAME}_${BENCHMARK_TIME}.json)
 
-  add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
+  # If we are on linux/mac, we automatically load a tool to track memory usage.
+  if((CMAKE_SYSTEM_NAME STREQUAL "Linux" OR CMAKE_SYSTEM_NAME STREQUAL "Darwin") AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
+     AND (NOT KOKKOS_ENABLE_THREADS)
+  )
+    if(NOT TARGET kokkoshwmtracker-tool)
+      kokkos_add_test_library(
+        kokkoshwmtracker-tool SHARED SOURCES ${KOKKOS_SOURCE_DIR}/core/unit_test/tools/memory-hwm-tool.cpp
+      )
+    endif()
+    set(BENCHMARK_ENV "KOKKOS_TOOLS_LIBS=$<TARGET_FILE:kokkoshwmtracker-tool>")
+    add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
+    set_tests_properties(${BENCHMARK_NAME} PROPERTIES ENVIRONMENT "${BENCHMARK_ENV}")
+  else()
+    add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
+  endif()
+
 endmacro()
 
 # FIXME_OPENACC - temporarily disabled due to unimplemented features
