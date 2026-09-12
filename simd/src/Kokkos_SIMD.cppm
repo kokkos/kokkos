@@ -71,19 +71,9 @@ export {
   using ::Kokkos::Experimental::unchecked_gather_from;
   using ::Kokkos::Experimental::unchecked_scatter_to;
 
-  using ::Kokkos::Experimental::operator+=;
-  using ::Kokkos::Experimental::operator*=;
-  using ::Kokkos::Experimental::operator-=;
-  using ::Kokkos::Experimental::operator/=;
-  using ::Kokkos::Experimental::operator+;
-  using ::Kokkos::Experimental::operator*;
-  using ::Kokkos::Experimental::operator-;
-  using ::Kokkos::Experimental::operator/;
   using ::Kokkos::Experimental::operator&=;
   using ::Kokkos::Experimental::operator|=;
   using ::Kokkos::Experimental::operator^=;
-  using ::Kokkos::Experimental::operator>>=;
-  using ::Kokkos::Experimental::operator<<=;
 
   namespace simd_abi {
 #if defined(KOKKOS_ARCH_AVX2)

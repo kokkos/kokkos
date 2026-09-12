@@ -92,4 +92,58 @@
   KOKKOS_SIMD_IMPL_MEMORY_PERMUTE_SCATTER_TO_WITH_MASK(partial, DATA_TYPE, \
                                                        ABI_TYPE, EXPR)
 
+// These operators could be defined once as template functions over the simd
+// type. However, defining them as non-template functions inside each of the
+// simd classes allows passing a scalar of type T as second argument and relying
+// on implicit conversions from T to simd<T> to get operator@=(simd<T>, T)
+// (which is convenient, but not part of the C++ standard's API) for "free".
+#define KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION             \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator+=( \
+      basic_simd& lhs, basic_simd const& rhs) {                        \
+    lhs = lhs + rhs;                                                   \
+    return lhs;                                                        \
+  }                                                                    \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator-=( \
+      basic_simd& lhs, basic_simd const& rhs) {                        \
+    lhs = lhs - rhs;                                                   \
+    return lhs;                                                        \
+  }                                                                    \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator*=( \
+      basic_simd& lhs, basic_simd const& rhs) {                        \
+    lhs = lhs * rhs;                                                   \
+    return lhs;                                                        \
+  }                                                                    \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator/=( \
+      basic_simd& lhs, basic_simd const& rhs) {                        \
+    lhs = lhs / rhs;                                                   \
+    return lhs;                                                        \
+  }
+
+#define KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION     \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator&=(  \
+      basic_simd& lhs, basic_simd const& rhs) {                         \
+    lhs = lhs & rhs;                                                    \
+    return lhs;                                                         \
+  }                                                                     \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator|=(  \
+      basic_simd& lhs, basic_simd const& rhs) {                         \
+    lhs = lhs | rhs;                                                    \
+    return lhs;                                                         \
+  }                                                                     \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator^=(  \
+      basic_simd& lhs, basic_simd const& rhs) {                         \
+    lhs = lhs ^ rhs;                                                    \
+    return lhs;                                                         \
+  }                                                                     \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator>>=( \
+      basic_simd& lhs, basic_simd const& rhs) {                         \
+    lhs = lhs >> rhs;                                                   \
+    return lhs;                                                         \
+  }                                                                     \
+  KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend basic_simd& operator<<=( \
+      basic_simd& lhs, basic_simd const& rhs) {                         \
+    lhs = lhs << rhs;                                                   \
+    return lhs;                                                         \
+  }
+
 #endif

@@ -540,6 +540,8 @@ class basic_simd<double, simd_abi::sve_fixed_size<SVE_DOUBLES_IN_VECTOR>> {
                 static_cast<vls_float64_t>(rhs))));
   }
 
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(static_cast<vls_bool_t>(
@@ -980,6 +982,8 @@ class basic_simd<float, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
         svsub_m(svptrue_b32(), static_cast<vls_float32_t>(lhs),
                 static_cast<vls_float32_t>(rhs))));
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -1437,6 +1441,9 @@ class basic_simd<std::int32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
         sveor_m(svptrue_b32(), static_cast<vls_int32_t>(lhs),
                 static_cast<vls_int32_t>(rhs))));
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -1935,6 +1942,9 @@ class basic_simd<std::uint32_t, simd_abi::sve_fixed_size<SVE_WORDS_IN_VECTOR>> {
                 static_cast<vls_uint32_t>(rhs))));
   }
 
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
+
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
     return mask_type(static_cast<vls_bool_t>(
@@ -2395,6 +2405,9 @@ class basic_simd<std::int64_t,
         sveor_m(svptrue_b64(), static_cast<vls_int64_t>(lhs),
                 static_cast<vls_int64_t>(rhs))));
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
@@ -2877,6 +2890,9 @@ class basic_simd<std::uint64_t,
         sveor_m(svptrue_b64(), static_cast<vls_uint64_t>(lhs),
                 static_cast<vls_uint64_t>(rhs))));
   }
+
+  KOKKOS_SIMD_IMPL_COMPOUND_OPERATORS_IMPLEMENTATION
+  KOKKOS_SIMD_IMPL_INTEGRAL_COMPOUND_OPERATORS_IMPLEMENTATION
 
   KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION friend mask_type operator<(
       basic_simd const& lhs, basic_simd const& rhs) noexcept {
