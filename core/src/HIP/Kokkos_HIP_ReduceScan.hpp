@@ -5,6 +5,7 @@
 #define KOKKOS_HIP_REDUCESCAN_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <cstdint>
 
 #if defined(__HIPCC__)
 
@@ -144,12 +145,12 @@ struct HIPReductionsFunctor<FunctorType, false> {
     int const lane_id =
         (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize;
 // HIP added support for __syncwarp() in version 7.0
+// Using an unconditional 64bit mask here
+// In HIP the upper bits are unused when the warp size is 32
 #if HIP_VERSION_MAJOR >= 7
-    unsigned long long mask =
-        width == HIPTraits::WarpSize
-            ? 0xffffffffffffffffULL
-            : ((1ULL << width) - 1ULL)
-                  << ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
+    unsigned long long mask = std::uint64_t(-1) >> (64 - width);
+    if (width != HIPTraits::WarpSize)
+      mask <<= ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
     __syncwarp(mask);
 #else
 #if __has_builtin(__builtin_amdgcn_wave_barrier)
