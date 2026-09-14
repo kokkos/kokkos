@@ -152,8 +152,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
                   << ((threadIdx.y * blockDim.x + threadIdx.x) / width) * width;
     __syncwarp(mask);
 #else
-#if defined(__HIP_DEVICE_COMPILE__) && \
-    __has_builtin(__builtin_amdgcn_wave_barrier)
+#if __has_builtin(__builtin_amdgcn_wave_barrier)
     __builtin_amdgcn_wave_barrier();
 #endif
 #endif
