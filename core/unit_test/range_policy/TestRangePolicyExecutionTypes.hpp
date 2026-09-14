@@ -89,9 +89,10 @@ void test_self_similar_range_policy_computation() {
   // Call sum_views(ExecSpace):
   sum_views(TEST_EXECSPACE(), v_x, v_y);
 
-#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && (KOKKOS_COMPILER_NVHPC <= 260500))
-  // FIXME_OPENACC: compiling below is known to fail for 24.5 < NVHPC version <= 26.5
-  // Call sum_views(TeamHandle)
+#if !(defined(KOKKOS_ENABLE_OPENACC) && (KOKKOS_COMPILER_NVHPC > 240500) && \
+      (KOKKOS_COMPILER_NVHPC <= 260500))
+  // FIXME_OPENACC: compiling below is known to fail for 24.5 < NVHPC version
+  // <= 26.5 Call sum_views(TeamHandle)
   using team_t = typename Kokkos::TeamPolicy<TEST_EXECSPACE>::member_type;
   Kokkos::parallel_for(
       "apxyFromTeam",
