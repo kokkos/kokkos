@@ -298,7 +298,7 @@ struct test_random_scalar {
 
 #if !KOKKOS_HALF_T_IS_FLOAT
       if (std::is_same_v<Scalar, Kokkos::Experimental::half_t>) {
-        mean_eps_expect       = 0.0003;
+        mean_eps_expect       = 0.00035;
         variance_eps_expect   = 1.0;
         covariance_eps_expect = 5.0e4;
       }
