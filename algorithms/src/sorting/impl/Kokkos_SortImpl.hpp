@@ -9,6 +9,7 @@
 #include <Kokkos_Iterator.hpp>
 #include <std_algorithms/Kokkos_Copy.hpp>
 #include <Kokkos_Macros.hpp>
+#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 #else
@@ -367,7 +368,18 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
 sort_device_view_without_comparator(
     const ExecutionSpace& exec,
     const Kokkos::View<DataType, Properties...>& view) {
-  sort_via_binsort(exec, view);
+  using value_type =
+      typename Kokkos::View<DataType, Properties...>::non_const_value_type;
+  if constexpr (std::is_arithmetic_v<value_type>) {
+    sort_via_binsort(exec, view);
+  } else {
+    // BinSort requires the value type to be arithmetic. For other types,
+    // delegate to the comparator-based path using operator<, which uses
+    // an efficient TPL if possible and otherwise falls back to std::sort.
+    sort_device_view_with_comparator(
+        exec, view,
+        Experimental::Impl::StdAlgoLessThanBinaryPredicate<value_type>());
+  }
 }
 
 // --------------------------------------------------
