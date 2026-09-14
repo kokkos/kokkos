@@ -11,15 +11,15 @@ import kokkos.core;
 
 struct DummyFunctor {
   using value_type = int;
-  void operator()(const int, value_type &, bool) const {}
+  void operator()(const int, value_type&, bool) const {}
 };
 
 struct DummyScalarReductionFunctor {
   using value_type   = int;
-  using pointer_type = int *;
+  using pointer_type = int*;
 
   KOKKOS_INLINE_FUNCTION
-  void join(value_type *dst, value_type const *src) const { *dst += *src; }
+  void join(value_type* dst, value_type const* src) const { *dst += *src; }
 };
 
 template <int N>
@@ -53,7 +53,7 @@ void test_intra_block_scan() {
 }
 
 template <int N>
-__global__ void start_scalar_intra_block_reduction_test(int *out)
+__global__ void start_scalar_intra_block_reduction_test(int* out)
     __attribute__((amdgpu_flat_work_group_size(1, 1024))) {
   constexpr int warp_size = Kokkos::Impl::HIPTraits::WarpSize;
   static_assert((N % warp_size) == 0);
@@ -67,9 +67,9 @@ __global__ void start_scalar_intra_block_reduction_test(int *out)
 
   DummyScalarReductionFunctor f;
   int result = 0;
-  Kokkos::Impl::HIPReductionsFunctor<DummyScalarReductionFunctor,
-                                     false>::scalar_intra_block_reduction(
-      f, values[i], false, &result, N / warp_size, values);
+  Kokkos::Impl::HIPReductionsFunctor<DummyScalarReductionFunctor, false>::
+      scalar_intra_block_reduction(f, values[i], false, &result, N / warp_size,
+                                   values);
   __syncthreads();
 
   if (i == 0) out[0] = result;
@@ -80,8 +80,8 @@ void test_scalar_intra_block_reduction_partial_mask() {
   Kokkos::View<int, TEST_EXECSPACE> out("out");
   dim3 grid(1, 1, 1);
   dim3 block(1, N, 1);
-  start_scalar_intra_block_reduction_test<N><<<grid, block, 0, nullptr>>>(
-      out.data());
+  start_scalar_intra_block_reduction_test<N>
+      <<<grid, block, 0, nullptr>>>(out.data());
   Kokkos::fence();
   auto out_h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace{}, out);
   ASSERT_EQ(out_h(), N);
