@@ -275,12 +275,6 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
   /** \brief  Must be accessible everywhere */
   using host_mirror_type = DynamicView;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible HostMirror view */
-  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_type instead.") = host_mirror_type;
-#endif
-
   /** \brief Unified types */
   using uniform_device =
       Kokkos::Device<typename traits::device_type::execution_space,
@@ -464,9 +458,9 @@ class DynamicView : public Kokkos::ViewTraits<DataType, P...> {
         m_chunk_mask(rhs.m_chunk_mask),
         m_chunk_max(rhs.m_chunk_max),
         m_chunk_size(rhs.m_chunk_size) {
-    using SrcTraits = typename DynamicView<RT, RP...>::traits;
-    using Mapping   = Kokkos::Impl::ViewMapping<traits, SrcTraits, void>;
-    static_assert(Mapping::is_assignable,
+    using src_view_t = View<RT, RP...>;
+    using dst_view_t = View<DataType, P...>;
+    static_assert(std::is_constructible_v<dst_view_t, src_view_t>,
                   "Incompatible DynamicView copy construction");
   }
 
@@ -881,47 +875,6 @@ struct CommonSubview<DstType, Kokkos::Experimental::DynamicView<SP...>, Arg0> {
       : dst_sub(dst, arg0), src_sub(src) {}
 };
 
-template <class... DP, class ViewTypeB, class Layout, class ExecSpace,
-          typename iType>
-struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>, ViewTypeB, Layout,
-                ExecSpace, 1, iType> {
-  Kokkos::Experimental::DynamicView<DP...> a;
-  ViewTypeB b;
-
-  using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
-
-  ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_,
-           const ViewTypeB& b_)
-      : a(a_), b(b_) {
-    Kokkos::parallel_for("Kokkos::ViewCopy-1D", policy_type(0, b.extent(0)),
-                         *this);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); }
-};
-
-template <class... DP, class... SP, class Layout, class ExecSpace,
-          typename iType>
-struct ViewCopy<Kokkos::Experimental::DynamicView<DP...>,
-                Kokkos::Experimental::DynamicView<SP...>, Layout, ExecSpace, 1,
-                iType> {
-  Kokkos::Experimental::DynamicView<DP...> a;
-  Kokkos::Experimental::DynamicView<SP...> b;
-
-  using policy_type = Kokkos::RangePolicy<ExecSpace, Kokkos::IndexType<iType>>;
-
-  ViewCopy(const Kokkos::Experimental::DynamicView<DP...>& a_,
-           const Kokkos::Experimental::DynamicView<SP...>& b_)
-      : a(a_), b(b_) {
-    const iType n = std::min(a.extent(0), b.extent(0));
-    Kokkos::parallel_for("Kokkos::ViewCopy-1D", policy_type(0, n), *this);
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const iType& i0) const { a(i0) = b(i0); }
-};
-
 }  // namespace Impl
 
 // create a mirror view and deep copy it
@@ -976,6 +929,15 @@ auto create_mirror_view_and_copy(
     std::string const& name = "") {
   return create_mirror_view_and_copy(
       Kokkos::view_alloc(typename Space::memory_space{}, name), src);
+}
+
+template <class T, class... P>
+auto create_mirror_view_and_copy(
+    const Kokkos::Experimental::DynamicView<T, P...>& src) {
+  return create_mirror_view_and_copy(
+      typename Kokkos::Experimental::DynamicView<
+          T, P...>::host_mirror_type::memory_space{},
+      src);
 }
 
 }  // namespace Kokkos

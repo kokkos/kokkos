@@ -104,6 +104,8 @@ class GraphNodeRef {
   //              it.
   using node_impl_t =
       Kokkos::Impl::GraphNodeImpl<ExecutionSpace, Kernel, Predecessor>;
+  using node_details_t =
+      Kokkos::Impl::GraphNodeBackendSpecificDetails<ExecutionSpace>;
   std::shared_ptr<node_impl_t> m_node_impl;
 
   // </editor-fold> end Private Data Members }}}2
@@ -316,6 +318,38 @@ class GraphNodeRef {
     return rv;
   }
 
+#if defined(KOKKOS_ENABLE_CUDA)
+  cudaGraphNode_t cuda_node() const
+    requires std::same_as<ExecutionSpace, Kokkos::Cuda>
+  {
+    KOKKOS_EXPECTS(bool(m_node_impl));
+    cudaGraphNode_t impl =
+        std::static_pointer_cast<node_details_t>(m_node_impl)->node;
+    KOKKOS_EXPECTS(impl != nullptr);
+    return impl;
+  }
+#elif defined(KOKKOS_ENABLE_HIP)
+  hipGraphNode_t hip_node() const
+    requires std::same_as<ExecutionSpace, Kokkos::HIP>
+  {
+    KOKKOS_EXPECTS(bool(m_node_impl));
+    hipGraphNode_t impl =
+        std::static_pointer_cast<node_details_t>(m_node_impl)->node;
+    KOKKOS_EXPECTS(impl != nullptr);
+    return impl;
+  }
+#elif defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT)
+  const auto& sycl_node() const
+    requires std::same_as<ExecutionSpace, Kokkos::SYCL>
+  {
+    KOKKOS_EXPECTS(bool(m_node_impl));
+    const auto& impl =
+        std::static_pointer_cast<node_details_t>(m_node_impl)->node;
+    KOKKOS_EXPECTS(impl.has_value());
+    return *impl;  // NOLINT(bugprone-unchecked-optional-access)
+  }
+#endif
+
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     (defined(KOKKOS_ENABLE_SYCL) && defined(KOKKOS_IMPL_SYCL_GRAPH_SUPPORT))
   template <
@@ -474,9 +508,7 @@ class GraphNodeRef {
     // We can't static_assert this because of the way that Reducers store
     // whether or not they point to a View as a runtime boolean rather than part
     // of the type.
-    if (Kokkos::Impl::parallel_reduce_needs_fence(
-            Kokkos::Impl::get_property<device_handle_t>(full_props).m_exec,
-            return_value)) {
+    if (Kokkos::Impl::parallel_reduce_needs_fence(return_value)) {
       Kokkos::Impl::throw_runtime_exception(
           "Parallel reductions in graphs can't operate on Reducers that "
           "reference a scalar because they can't complete synchronously. Use a "
@@ -487,8 +519,7 @@ class GraphNodeRef {
 
     //----------------------------------------
     // This is a disaster, but I guess it's not a my disaster to fix right now
-    using return_type_remove_cvref =
-        std::remove_cv_t<std::remove_reference_t<ReturnType>>;
+    using return_type_remove_cvref = std::remove_cvref_t<ReturnType>;
     static_assert(Kokkos::is_view<return_type_remove_cvref>::value ||
                       Kokkos::is_reducer<return_type_remove_cvref>::value,
                   "Output argument to parallel reduce in a graph must be a "
@@ -606,6 +637,19 @@ class GraphNodeRef {
   //----------------------------------------------------------------------------
 
   // TODO @graph parallel scan, deep copy, etc.
+
+  static constexpr GraphNodeKind node_kind = []() {
+    if constexpr (requires { node_impl_t::node_kind; }) {
+      return node_impl_t::node_kind;
+    } else {
+      return GraphNodeKind::TypeErased;
+    }
+  }();
+
+  GraphNodeKind get_node_kind() const noexcept {
+    KOKKOS_EXPECTS(bool(m_node_impl));
+    return m_node_impl->get_node_kind();
+  }
 };
 
 }  // end namespace Experimental

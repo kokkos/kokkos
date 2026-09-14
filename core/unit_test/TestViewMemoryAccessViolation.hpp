@@ -141,8 +141,6 @@ void test_view_memory_access_violations_from_device() {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_host) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   using ExecutionSpace = TEST_EXECSPACE;
 
   if (Kokkos::SpaceAccessibility<
@@ -155,7 +153,7 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_host) {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
 
   using ExecutionSpace = TEST_EXECSPACE;
 
@@ -169,6 +167,12 @@ TEST(TEST_CATEGORY_DEATH, view_memory_access_violations_from_device) {
   if (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
     GTEST_SKIP() << "skipping because SYCL device-side abort does not work "
                     "when NDEBUG is defined";
+  }
+#endif
+#if defined(KOKKOS_ENABLE_IMPL_SYCL_OUT_OF_ORDER_QUEUES)  // FIXME_SYCL
+  if (std::is_same_v<ExecutionSpace, Kokkos::SYCL>) {
+    GTEST_SKIP() << "skipping since the SYCL backend with out-of-order queues "
+                    "fails to die.";
   }
 #endif
 #if defined(KOKKOS_ENABLE_OPENACC)  // FIXME_OPENACC

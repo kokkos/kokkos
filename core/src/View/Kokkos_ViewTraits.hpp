@@ -14,10 +14,8 @@ static_assert(false,
 #include <Kokkos_MemoryTraits.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <View/Hooks/Kokkos_ViewHooks.hpp>
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/MDSpan/Kokkos_MDSpan_Layout.hpp>
 #include <View/MDSpan/Kokkos_MDSpan_Accessor.hpp>
-#endif
 
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
@@ -43,13 +41,6 @@ template <class DataType, class ArrayLayout,
           typename ValueType =
               typename ViewArrayAnalysis<DataType>::non_const_value_type>
 struct ViewDataAnalysis;
-
-template <class, class...>
-class ViewMapping {
- public:
-  enum : bool { is_assignable_data_type = false };
-  enum : bool { is_assignable = false };
-};
 
 template <typename IntType>
 constexpr KOKKOS_INLINE_FUNCTION std::size_t count_valid_integers(
@@ -181,7 +172,6 @@ constexpr void customize_view_arguments(
 
 }  // namespace Impl
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 namespace Impl {
 struct UnsupportedKokkosArrayLayout;
 
@@ -192,24 +182,6 @@ struct AccessorFromViewTraits {
                          default_accessor<typename Traits::value_type>>;
 };
 
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
-                             !Traits::memory_traits::is_atomic>> {
-  using type =
-      SpaceAwareAccessor<typename Traits::memory_space,
-                         default_accessor<typename Traits::value_type>>;
-};
-
-template <class Traits>
-struct AccessorFromViewTraits<
-    Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
-                             Traits::memory_traits::is_atomic>> {
-  using type = CheckedRelaxedAtomicAccessor<typename Traits::value_type,
-                                            typename Traits::memory_space>;
-};
-#else
 template <class Traits>
 struct AccessorFromViewTraits<
     Traits, std::enable_if_t<!Traits::memory_traits::is_unmanaged &&
@@ -225,7 +197,6 @@ struct AccessorFromViewTraits<
   using type = CheckedReferenceCountedRelaxedAtomicAccessor<
       typename Traits::value_type, typename Traits::memory_space>;
 };
-#endif
 
 template <class Traits>
 struct AccessorFromViewTraits<
@@ -284,7 +255,6 @@ struct MDSpanViewTraits<Traits, ViewCustomArguments<IndexType, AccessorType>,
 };
 
 }  // namespace Impl
-#endif  // KOKKOS_ENABLE_IMPL_MDSPAN
 
 /** \class ViewTraits
  *  \brief Traits class for accessing attributes of a View.
@@ -311,14 +281,10 @@ struct ViewTraits<void> {
   using execution_space   = void;
   using memory_space      = void;
   using host_mirror_space = void;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using HostMirrorSpace KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_space instead.") = host_mirror_space;
-#endif
-  using array_layout  = void;
-  using memory_traits = void;
-  using specialize    = void;
-  using hooks_policy  = void;
+  using array_layout      = void;
+  using memory_traits     = void;
+  using specialize        = void;
+  using hooks_policy      = void;
 };
 
 template <class... Prop>
@@ -328,10 +294,6 @@ struct ViewTraits<void, void, Prop...> {
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
   using host_mirror_space =
       typename ViewTraits<void, Prop...>::host_mirror_space;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using HostMirrorSpace KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_space instead.") = host_mirror_space;
-#endif
   using array_layout  = typename ViewTraits<void, Prop...>::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
@@ -347,10 +309,6 @@ struct ViewTraits<
 
   using host_mirror_space =
       typename ViewTraits<void, Prop...>::host_mirror_space;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using HostMirrorSpace KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_space instead.") = host_mirror_space;
-#endif
   using array_layout  = typename ViewTraits<void, Prop...>::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
@@ -366,10 +324,6 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_array_layout<ArrayLayout>::value>,
   using memory_space    = typename ViewTraits<void, Prop...>::memory_space;
   using host_mirror_space =
       typename ViewTraits<void, Prop...>::host_mirror_space;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using HostMirrorSpace KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_space instead.") = host_mirror_space;
-#endif
   using array_layout  = ArrayLayout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
@@ -395,11 +349,7 @@ struct ViewTraits<std::enable_if_t<Kokkos::is_space<Space>::value>, Space,
   using execution_space = typename Space::execution_space;
   using memory_space    = typename Space::memory_space;
   using host_mirror_space =
-      typename Kokkos::Impl::HostMirror<Space>::Space::memory_space;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using HostMirrorSpace KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_space instead.") = host_mirror_space;
-#endif
+      typename Kokkos::Impl::HostMirror<memory_space>::Space;
   using array_layout  = typename execution_space::array_layout;
   using memory_traits = typename ViewTraits<void, Prop...>::memory_traits;
   using specialize    = typename ViewTraits<void, Prop...>::specialize;
@@ -428,14 +378,10 @@ struct ViewTraits<
   using execution_space   = void;
   using memory_space      = void;
   using host_mirror_space = void;
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using HostMirrorSpace KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_space instead.") = host_mirror_space;
-#endif
-  using array_layout  = void;
-  using memory_traits = MemoryTraits;
-  using specialize    = void;
-  using hooks_policy  = void;
+  using array_layout      = void;
+  using memory_traits     = MemoryTraits;
+  using specialize        = void;
+  using hooks_policy      = void;
 };
 
 template <class DataType, class... Properties>
@@ -459,10 +405,10 @@ struct ViewTraits {
                          typename prop::array_layout,
                          typename ExecutionSpace::array_layout>;
 
-  using HostMirrorSpace = std::conditional_t<
-      !std::is_void_v<typename prop::host_mirror_space>,
-      typename prop::host_mirror_space,
-      typename Kokkos::Impl::HostMirror<ExecutionSpace>::Space>;
+  using HostMirrorSpace =
+      std::conditional_t<!std::is_void_v<typename prop::host_mirror_space>,
+                         typename prop::host_mirror_space,
+                         typename Kokkos::Impl::HostMirror<MemorySpace>::Space>;
 
   using MemoryTraits =
       std::conditional_t<!std::is_void_v<typename prop::memory_traits>,
@@ -478,38 +424,19 @@ struct ViewTraits {
  public:
   //------------------------------------
   // Data type traits:
-#if defined(KOKKOS_ENABLE_IMPL_VIEW_LEGACY) && \
-    defined(KOKKOS_ENABLE_DEPRECATED_CODE_5)
-  using data_type           = typename data_analysis::type;
-  using const_data_type     = typename data_analysis::const_type;
-  using non_const_data_type = typename data_analysis::non_const_type;
-#else
   using data_type           = typename data_analysis::data_type;
   using const_data_type     = typename data_analysis::const_data_type;
   using non_const_data_type = typename data_analysis::non_const_data_type;
-#endif
 
 #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   //------------------------------------
   // Compatible array of trivial type traits:
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Only supported with KOKKOS_ENABLE_IMPL_VIEW_LEGACY, to be removed after "
-      "5.0 release") = typename data_analysis::scalar_array_type;
-  using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Only supported with KOKKOS_ENABLE_IMPL_VIEW_LEGACY, to be removed after "
-      "5.0 release.") = typename data_analysis::const_scalar_array_type;
-  using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Only supported with KOKKOS_ENABLE_IMPL_VIEW_LEGACY, to be removed after "
-      "5.0 release.") = typename data_analysis::non_const_scalar_array_type;
-#else
   using scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use data_type instead.") = data_type;
   using const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use const_data_type instead.") = const_data_type;
   using non_const_scalar_array_type KOKKOS_DEPRECATED_WITH_COMMENT(
       "Use non_const_data_type instead.") = non_const_data_type;
-#endif
 #endif
   //------------------------------------
   // Value type traits:

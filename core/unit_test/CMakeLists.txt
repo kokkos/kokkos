@@ -24,7 +24,7 @@ else()
   set(KOKKOS_OPENACC_FEATURE_LEVEL 17)
 endif()
 
-set(KOKKOS_NEXTSILICON_FEATURE_LEVEL 3)
+set(KOKKOS_NEXTSILICON_FEATURE_LEVEL 4)
 set(KOKKOS_NEXTSILICON_NAME Experimental::NextSilicon)
 
 set(KOKKOS_OPENACC_NAME Experimental::OpenACC)
@@ -54,21 +54,26 @@ set(COMPILE_ONLY_SOURCES
     TestTypeList.cpp
     TestMDRangePolicyCTAD.cpp
     TestTeamPolicyCTAD.cpp
+    TestTeamPolicyCompileOnly.cpp
     TestTeamMDRangePolicyCTAD.cpp
     TestNestedReducerCTAD.cpp
+    view/TestAccessorFromMemoryTraits.cpp
     view/TestBasicViewMDSpanConversion.cpp
     view/TestViewCustomization.cpp
     view/TestExtentsDatatypeConversion.cpp
     view/TestConversionFromPointer.cpp
     view/TestMemoryTraitTypes.cpp
+    view/TestViewMDSpanTemplateArgumentEquivalence.cpp
+    view/TestViewMDSpanTemplateArgumentTypeDefs.cpp
 )
 
-if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
-  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
+# FIXME_NEXTSILICON: whitelisted tests
+if(Kokkos_ENABLE_NEXTSILICON)
+  set(COMPILE_ONLY_SOURCES TestCreateMirror.cpp)
 endif()
 
-if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewCustomization.cpp)
+if(KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
+  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
 endif()
 
 #testing if windows.h and Kokkos_Core.hpp can be included
@@ -109,7 +114,7 @@ set(SMOKE_TEST_NAMES
     WorkGraph
 )
 
-foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
+foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
   string(TOUPPER ${Tag} DEVICE)
   string(TOLOWER ${Tag} dir)
 
@@ -136,6 +141,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       AtomicOperations_unsignedint
       AtomicOperations_unsignedlongint
       AtomicViews
+      BadAlloc
       BitManipulationBuiltins
       CheckedIntegerOps
       CommonPolicyConstructors
@@ -146,6 +152,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       DeepCopyAlignment
       ExecSpacePartitioning
       ExecSpaceThreadSafety
+      FunctionAnnotationMacros
       FunctorAnalysis
       GraphNodeCtorProps
       HostSharedPtr
@@ -200,11 +207,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
         SpaceAwareAccessor
         Swap
     )
-    if(NOT Kokkos_ENABLE_IMPL_MDSPAN)
-      list(REMOVE_ITEM ${Tag}_TESTNAMES1B MDSpanAtomicAccessor MDSpanConversion SpaceAwareAccessorAccessViolation
-           SpaceAwareAccessor
-      )
-    endif()
     # This test case causes MSVC to fail with "number of sections exceeded object file format limit"
     if(MSVC)
       list(REMOVE_ITEM ${Tag}_TESTNAMES1B Reducers_d)
@@ -339,27 +341,41 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
 
     # ViewSupport should eventually contain the new implementation
     # detail tests for the mdspan based View
-    if(Kokkos_ENABLE_IMPL_MDSPAN)
-      set(BV_TestNames BasicView ReferenceCountedAccessor ReferenceCountedDataHandle AllocationAndSpanSize
-                       ViewEqualityOperator LegacyLayoutFunction
+    set(BV_TestNames
+        AllocationAndSpanSize
+        BasicView
+        CreateMirrorViewAndCopy
+        LegacyLayoutFunction
+        ReferenceCountedAccessor
+        ReferenceCountedDataHandle
+        ViewEqualityOperator
+        ViewCtorConvertibleToPtr
+        ViewCtorDataHandle
+    )
+    # FIXME_OPENACC
+    if(NOT Kokkos_ENABLE_OPENACC)
+      list(
+        APPEND
+        BV_TestNames
+        ViewCustomizationAccessorArg
+        ViewCustomizationAllocationType
+        ViewCustomizationAccessorFromMapping
+        MinimalViewMDSpanTemplateArgumentViability
+        ViewMDSpanTemplateArgumentSubview
       )
-      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
-        list(APPEND BV_TestNames ViewCustomizationAccessorArg ViewCustomizationAllocationType
-             ViewCustomizationAccessorFromMapping
-        )
-      endif()
-      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-        list(APPEND BV_TestNames ViewCtorDataHandle)
-      endif()
-      set(${Tag}_VIEWSUPPORT)
-      foreach(Name IN LISTS BV_TestNames)
-        set(file ${dir}/Test${Tag}_View_${Name}.cpp)
-        # Write to a temporary intermediate file and call configure_file to avoid
-        # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
-        file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n" "#include <view/Test${Name}.hpp>\n")
-        configure_file(${dir}/dummy.cpp ${file})
-        list(APPEND ${Tag}_VIEWSUPPORT ${file})
-      endforeach()
+    endif()
+    set(${Tag}_VIEWSUPPORT)
+    foreach(Name IN LISTS BV_TestNames)
+      set(file ${dir}/Test${Tag}_View_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n" "#include <view/Test${Name}.hpp>\n")
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_VIEWSUPPORT ${file})
+    endforeach()
+
+    # FIXME_NEXTSILICON: requires parallel_for
+    if(NOT KOKKOS_ENABLE_NEXTSILICON)
       kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
     # Smoke test: minimal subset for quick iteration (generate sources not built with main targets).
@@ -388,6 +404,38 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamBasic.cpp)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamMDRange.cpp)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamVectorRange.cpp)
+    endif()
+    if((Tag STREQUAL "Serial") AND KOKKOS_ENABLE_NEXTSILICON)
+      #FIXME_NEXTSILICON: requires parallel_for tagged dispatch
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
+      #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_DeepCopy_Assignment.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
+      #FIXME_NEXTSILICON: requires TeamPolicy parallel_reduce on NextSilicon
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_CommonPolicyInterface.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
+    endif()
+    if(Tag STREQUAL "NextSilicon")
+      #FIXME_NEXTSILICON: requires parallel_for tagged dispatch
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_BlockSizeDeduction.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Complex.cpp)
+      #FIXME_NEXTSILICON: requires MDRange parallel_for on NextSilicon
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_ViewAPI_a.cpp)
+      #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_DeepCopy_Assignment.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamBasic.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamMDRange.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_TeamVectorRange.cpp)
+      #FIXME_NEXTSILICON: requires WorkGraphPolicy parallel_for on NextSilicon
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_WorkGraph.cpp)
+      #FIXME_NEXTSILICON: requires parallel_reduce on NextSilicon
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_CommonPolicyInterface.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_ExecutionSpace.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_MDRange_a.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_RangePolicy.cpp)
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
     endif()
     kokkos_add_executable_and_test(CoreUnitTest_${Tag}_SmokeTest SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
   endif()
@@ -429,6 +477,11 @@ foreach(PairDeviceSpace HIP-HostPinned;HIP-Managed;Cuda-HostPinned;Cuda-UVM;SYCL
   endif()
 endforeach()
 
+kokkos_add_executable_and_test(
+  CoreUnitTest_DefaultInstanceFencesOnFinalize SOURCES UnitTestMain.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultInstanceFencesOnFinalize.cpp
+)
+
 if(Kokkos_ENABLE_OPENACC)
   list(
     REMOVE_ITEM
@@ -465,7 +518,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions2.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions3.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MDRange_c.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MDRange_f.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_NumericTraits.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_RangePolicy.cpp
@@ -504,7 +556,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_HostSharedPtrAccessOnDevice.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MathematicalFunctions2.cpp
-    ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MDRange_c.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_MDRange_f.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_NumericTraits.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_RangePolicy.cpp
@@ -565,6 +616,36 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   endif()
 endif()
 
+if(Kokkos_ENABLE_NEXTSILICON)
+  #FIXME_NEXTSILICON: some Serial tests require operations on the default device
+  list(
+    REMOVE_ITEM
+    Serial_SOURCES1
+    #FIXME_NEXTSILICON: requires TeamPolicy<NextSilicon>
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_CommonPolicyConstructors.cpp
+    #FIXME_NEXTSILICON: requires TeamPolicy parallel_for on NextSilicon
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_DeepCopy_Assignment.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_DeepCopy_Narrowing.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Graph.cpp
+    #FIXME_NEXTSILICON: requires long double support
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalConstants.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions1.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions2.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions3.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_NumericTraits.cpp
+    #FIXME_NEXTSILICON requires parallel_for
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MinMaxClamp.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Other.cpp
+    #FIXME_NEXTSILICON requires parallel_reduce
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_RangePolicyExecutionTypes.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_CommonPolicyInterface.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_a.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_b.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_c.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reductions.cpp
+  )
+endif()
+
 if(Kokkos_ENABLE_SERIAL)
   kokkos_add_executable_and_test(CoreUnitTest_Serial1 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES1})
   kokkos_add_executable_and_test(CoreUnitTest_Serial2 SOURCES UnitTestMainInit.cpp ${Serial_SOURCES2})
@@ -581,10 +662,6 @@ endif()
 
 if(Kokkos_ENABLE_HPX)
   kokkos_add_executable_and_test(CoreUnitTest_HPX SOURCES UnitTestMainInit.cpp ${HPX_SOURCES})
-  kokkos_add_executable_and_test(
-    CoreUnitTest_HPXDefaultInstanceFencesOnFinalize SOURCES UnitTestMain.cpp
-    hpx/TestHPX_DefaultInstanceFencesOnFinalize.cpp
-  )
   kokkos_add_executable_and_test(CoreUnitTest_HPXInterOp SOURCES UnitTestMain.cpp hpx/TestHPX_InterOp.cpp)
   kokkos_add_executable_and_test(
     CoreUnitTest_HPX_IndependentInstances
@@ -628,6 +705,14 @@ if(Kokkos_ENABLE_CUDA)
   )
   configure_file(${CMAKE_CURRENT_BINARY_DIR}/cuda/dummy.cpp ${file})
   kokkos_add_executable_and_test(CoreUnitTest_CudaGraphAtomicLocks SOURCES UnitTestMainInit.cpp ${file})
+
+  kokkos_add_executable_and_test(
+    CoreUnitTest_CudaGraphScratch SOURCES UnitTestMainInit.cpp cuda/TestCuda_GraphScratch.cpp
+  )
+
+  kokkos_add_executable_and_test(
+    CoreUnitTest_CudaLargeScratch SOURCES UnitTestMainInit.cpp cuda/TestCuda_LargeScratch.cpp
+  )
 
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaTimingBased SOURCES UnitTestMainInit.cpp cuda/TestCuda_DebugSerialExecution.cpp
@@ -683,6 +768,9 @@ if(Kokkos_ENABLE_HIP)
   kokkos_add_executable_and_test(
     CoreUnitTest_HIPInterOpStreamsMultiGPU SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_StreamsMultiGPU.cpp
   )
+  kokkos_add_executable_and_test(
+    CoreUnitTest_HIPInterOpGraphMultiGPU SOURCES UnitTestMainInit.cpp hip/TestHIP_InterOp_GraphMultiGPU.cpp
+  )
 endif()
 
 if(Kokkos_ENABLE_SYCL)
@@ -721,8 +809,23 @@ if(Kokkos_ENABLE_SYCL)
   endif()
 endif()
 
+# FIXME_NEXTSILICON: whitelist tests
+if(Kokkos_ENABLE_NEXTSILICON)
+  set(NEXTSILICON_SOURCES
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Abort.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BadAlloc.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MinMaxClamp.cpp
+      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp # MDRange parallel for
+  )
+  kokkos_add_executable_and_test(CoreUnitTest_NextSilicon SOURCES UnitTestMainInit.cpp ${NEXTSILICON_SOURCES})
+  kokkos_add_executable_and_test(
+    CoreUnitTest_NextSiliconInitializationCallbacks SOURCES nextsilicon/TestNextSilicon_InitializationCallbacks.cpp
+  )
+endif()
+
 set(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestPair.cpp
     TestCStyleMemoryManagement.cpp
     TestSharedSpace.cpp
     TestSharedHostPinnedSpace.cpp
@@ -742,11 +845,13 @@ set(DEFAULT_DEVICE_SOURCES
 )
 # FIXME_OPENACC do not provide a MemorySpace that can be accessed from all ExecSpaces
 # FIXME_SYCL clock_tic does not give the correct timings for cloc_tic
+# FIXME_NEXTSILICON requires parallel_reduce
 if(KOKKOS_ENABLE_OPENACC OR KOKKOS_ENABLE_SYCL)
   list(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedSpace.cpp)
 endif()
 # FIXME_OPENACC do not provide a HostPinnedMemorySpace that can be accessed from all ExecSpaces
-if(KOKKOS_ENABLE_OPENACC)
+# FIXME_NEXTSILICON: does not provide a HostPinnedMemorySpace
+if(KOKKOS_ENABLE_OPENACC OR KOKKOS_ENABLE_NEXTSILICON)
   list(REMOVE_ITEM DEFAULT_DEVICE_SOURCES TestSharedHostPinnedSpace.cpp)
 endif()
 
@@ -788,21 +893,27 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   )
 endif()
 
-kokkos_add_executable_and_test(CoreUnitTest_Default SOURCES ${DEFAULT_DEVICE_SOURCES})
+#FIXME_NEXTSILICON: requires parallel_for
+if(NOT KOKKOS_ENABLE_NEXTSILICON)
+  kokkos_add_executable_and_test(CoreUnitTest_Default SOURCES ${DEFAULT_DEVICE_SOURCES})
+endif()
 
-kokkos_add_executable_and_test(
-  CoreUnitTest_InitializeFinalize
-  SOURCES
-  UnitTestMain.cpp
-  TestExecutionEnvironmentNonInitializedOrFinalized.cpp
-  TestInitializationSettings.cpp
-  TestInitializeFinalize.cpp
-  TestKokkosHelpCausesNormalProgramTermination.cpp
-  TestLegionInitialization.cpp
-  TestParseCmdLineArgsAndEnvVars.cpp
-  TestPushFinalizeHook.cpp
-  TestScopeGuard.cpp
-)
+# FIXME_NEXTSILICON: requires parallel_reduce
+if(NOT Kokkos_ENABLE_NEXTSILICON)
+  kokkos_add_executable_and_test(
+    CoreUnitTest_InitializeFinalize
+    SOURCES
+    UnitTestMain.cpp
+    TestExecutionEnvironmentNonInitializedOrFinalized.cpp
+    TestInitializationSettings.cpp
+    TestInitializeFinalize.cpp
+    TestKokkosHelpCausesNormalProgramTermination.cpp
+    TestLegionInitialization.cpp
+    TestParseCmdLineArgsAndEnvVars.cpp
+    TestPushFinalizeHook.cpp
+    TestScopeGuard.cpp
+  )
+endif()
 
 # This test is intended for development and debugging by putting code
 # into TestDefaultDeviceDevelop.cpp. By default its empty.
@@ -818,7 +929,14 @@ set(KOKKOSP_SOURCES UnitTestMainInit.cpp tools/TestEventCorrectness.cpp tools/Te
                     tools/TestProfilingSection.cpp tools/TestScopedRegion.cpp tools/TestWithoutInitializing.cpp
 )
 
+# FIXME_NEXTSILICON: others require parallel_reduce and parallel_scan
+if(KOKKOS_ENABLE_NEXTSILICON)
+  set(KOKKOSP_SOURCES UnitTestMainInit.cpp tools/TestWithoutInitializing.cpp)
+endif()
+
+# if (NOT KOKKOS_ENABLE_NEXTSILICON)
 kokkos_add_executable_and_test(CoreUnitTest_KokkosP SOURCES ${KOKKOSP_SOURCES})
+# endif()
 if(KOKKOS_ENABLE_LIBDL)
   kokkos_add_executable_and_test(CoreUnitTest_ToolIndependence SOURCES tools/TestIndependence.cpp)
   target_compile_definitions(Kokkos_CoreUnitTest_ToolIndependence PUBLIC KOKKOS_TOOLS_INDEPENDENT_BUILD)
@@ -832,7 +950,10 @@ if(KOKKOS_ENABLE_LIBDL)
 
   kokkos_add_test_executable(ProfilingAllCalls tools/TestAllCalls.cpp)
 
-  kokkos_add_test_executable(ToolsInitialization UnitTestMain.cpp tools/TestToolsInitialization.cpp)
+  # FIXME_NEXTSILICON: requires parallel_reduce
+  if(NOT KOKKOS_ENABLE_NEXTSILICON)
+    kokkos_add_test_executable(ToolsInitialization UnitTestMain.cpp tools/TestToolsInitialization.cpp)
+  endif()
 
   kokkos_add_test_executable(EmptyProfilingLibraryDeathTest UnitTestMain.cpp tools/TestEmptyProfilingLibrary.cpp)
 

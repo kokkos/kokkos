@@ -6,11 +6,7 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-import kokkos.core;
-#else
 #include <Kokkos_Core.hpp>
-#endif
 
 #include <OpenMP/Kokkos_OpenMP_Instance.hpp>
 #include <impl/Kokkos_Error.hpp>
@@ -179,6 +175,7 @@ void OpenMPInternal::fence(const std::string &name) {
       [this]() { std::lock_guard<std::mutex> lock(m_instance_mutex); });
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 OpenMPInternal::~OpenMPInternal() {
   if (omp_in_parallel()) {
     std::string msg("Kokkos::OpenMP::finalize ERROR : in parallel");

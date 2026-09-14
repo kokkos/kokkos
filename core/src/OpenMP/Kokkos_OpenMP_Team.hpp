@@ -158,6 +158,12 @@ class TeamPolicyInternal<Kokkos::OpenMP, Properties...>
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
+  inline size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+  inline size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
+  }
 
   /** \brief  Specify league size, request team size */
   TeamPolicyInternal(const typename traits::execution_space& space,

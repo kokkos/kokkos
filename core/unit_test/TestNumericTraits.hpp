@@ -45,12 +45,12 @@ struct extrema {
   DEFINE_EXTREMA(unsigned long, 0UL, ULONG_MAX)
   DEFINE_EXTREMA(long long, LLONG_MIN, LLONG_MAX)
   DEFINE_EXTREMA(unsigned long long, 0ULL, ULLONG_MAX)
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
   DEFINE_EXTREMA(Kokkos::Experimental::half_t,
                  Kokkos::Experimental::half_t(-65504.0f),
                  Kokkos::Experimental::half_t(65504.0f))
 #endif
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
   DEFINE_EXTREMA(Kokkos::Experimental::bhalf_t,
                  Kokkos::Experimental::bhalf_t(-3.38953139e38f),
                  Kokkos::Experimental::bhalf_t(3.38953139e38f))

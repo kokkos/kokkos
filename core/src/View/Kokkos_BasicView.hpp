@@ -9,7 +9,7 @@ static_assert(false,
 #ifndef KOKKOS_BASIC_VIEW_HPP
 #define KOKKOS_BASIC_VIEW_HPP
 #include <Kokkos_Macros.hpp>
-#include <impl/Kokkos_InitializeFinalize.hpp>
+#include <Kokkos_InitializeFinalize.hpp>
 #include <impl/Kokkos_Utilities.hpp>
 #include <impl/Kokkos_SharedAlloc.hpp>
 #include <View/Kokkos_ViewAlloc.hpp>
@@ -134,15 +134,13 @@ class BasicView {
  public:
   using mdspan_type =
       mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy>;
-  using extents_type  = typename mdspan_type::extents_type;
-  using layout_type   = typename mdspan_type::layout_type;
-  using accessor_type = typename mdspan_type::accessor_type;
-  using mapping_type  = typename mdspan_type::mapping_type;
-  using element_type  = typename mdspan_type::element_type;
-  using value_type    = typename mdspan_type::value_type;
-  // FIXME: backwards compatibility, should be changed to the same as mdspan
-  // index_type
-  using index_type       = typename mdspan_type::size_type;
+  using extents_type     = typename mdspan_type::extents_type;
+  using layout_type      = typename mdspan_type::layout_type;
+  using accessor_type    = typename mdspan_type::accessor_type;
+  using mapping_type     = typename mdspan_type::mapping_type;
+  using element_type     = typename mdspan_type::element_type;
+  using value_type       = typename mdspan_type::value_type;
+  using index_type       = typename mdspan_type::index_type;
   using size_type        = typename mdspan_type::size_type;
   using rank_type        = typename mdspan_type::rank_type;
   using data_handle_type = typename mdspan_type::data_handle_type;
@@ -157,9 +155,19 @@ class BasicView {
     return extents_type::rank_dynamic();
   }
   KOKKOS_FUNCTION static constexpr size_t static_extent(rank_type r) noexcept {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    // Need to cast in order to avoid warning for rank zero about pointless
+    // comparison to zero
+    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+#endif
     return extents_type::static_extent(r);
   }
   KOKKOS_FUNCTION constexpr index_type extent(rank_type r) const noexcept {
+#ifndef KOKKOS_ENABLE_DEPRECATED_CODE_5
+    // Need to cast in order to avoid warning for rank zero about pointless
+    // comparison to zero
+    KOKKOS_ASSERT(static_cast<int>(r) < static_cast<int>(rank()));
+#endif
     return m_map.extents().extent(r);
   }
 

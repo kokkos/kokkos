@@ -6,11 +6,7 @@
 #endif
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
-import kokkos.core;
-#else
 #include <Kokkos_Core.hpp>
-#endif
 
 #include <Serial/Kokkos_Serial.hpp>
 #include <impl/Kokkos_CheckUsage.hpp>
@@ -61,6 +57,7 @@ void SerialInternal::fence(const std::string& name) {
 #endif
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 SerialInternal::~SerialInternal() {
   fence("Kokkos::SerialInternal: fence on destruction");
 

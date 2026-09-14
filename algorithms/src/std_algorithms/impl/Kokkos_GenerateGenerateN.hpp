@@ -12,7 +12,6 @@ import kokkos.core;
 #endif
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -46,9 +45,12 @@ void generate_exespace_impl(const std::string& label, const ExecutionSpace& ex,
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         StdGenerateFunctor(first, g));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType::difference_type>>(
+          ex, 0, num_elements),
+      StdGenerateFunctor(first, g));
   ex.fence("Kokkos::generate: fence after operation");
 }
 

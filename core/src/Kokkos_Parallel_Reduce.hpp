@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
+/// \file Kokkos_Parallel_Reduce.hpp
+/// \brief Declaration of parallel_reduce interface
+
 #ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
 #include <Kokkos_Macros.hpp>
 static_assert(false,
@@ -9,14 +12,17 @@ static_assert(false,
 #ifndef KOKKOS_PARALLEL_REDUCE_HPP
 #define KOKKOS_PARALLEL_REDUCE_HPP
 
-#include <impl/Kokkos_BuiltinReducers.hpp>
-#include <impl/Kokkos_CheckUsage.hpp>
+#include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <Kokkos_View.hpp>
+
+#include <impl/Kokkos_BuiltinReducers.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
 
 #include <type_traits>
+#include <string>
 
 namespace Kokkos {
 namespace Impl {
@@ -248,49 +254,18 @@ struct ParallelReduceAdaptor {
 
 namespace Impl {
 template <typename T>
-struct ReducerHasTestReferenceFunction {
-  template <typename E>
-  static std::true_type test_func(decltype(&E::references_scalar));
-  template <typename E>
-  static std::false_type test_func(...);
-
-  enum {
-    value = std::is_same_v<std::true_type, decltype(test_func<T>(nullptr))>
-  };
+concept ReducerHasTestReferenceFunction = Kokkos::Reducer<T> && requires(T t) {
+  { t.references_scalar() } -> std::convertible_to<bool>;
 };
 
-template <Kokkos::ExecutionSpace ExecutionSpace, class Arg>
-constexpr std::enable_if_t<
-    // constraints only necessary because SFINAE lacks subsumption
-    !ReducerHasTestReferenceFunction<Arg>::value &&
-        !Kokkos::is_view<Arg>::value,
-    // return type:
-    bool>
-parallel_reduce_needs_fence(ExecutionSpace const&, Arg const&) {
-  return true;
-}
-
-template <Kokkos::ExecutionSpace ExecutionSpace, Kokkos::Reducer Reducer>
-constexpr std::enable_if_t<
-    // equivalent to:
-    // (requires (Reducer const& r) {
-    //   { reducer.references_scalar() } -> std::convertible_to<bool>;
-    // })
-    ReducerHasTestReferenceFunction<Reducer>::value,
-    // return type:
-    bool>
-parallel_reduce_needs_fence(ExecutionSpace const&, Reducer const& reducer) {
-  return reducer.references_scalar();
-}
-
-template <Kokkos::ExecutionSpace ExecutionSpace, class ViewLike>
-constexpr std::enable_if_t<
-    // requires Kokkos::ViewLike<ViewLike>
-    Kokkos::is_view<ViewLike>::value,
-    // return type:
-    bool>
-parallel_reduce_needs_fence(ExecutionSpace const&, ViewLike const&) {
-  return false;
+template <class ResultType>
+constexpr bool parallel_reduce_needs_fence(ResultType const& result) {
+  if constexpr (ReducerHasTestReferenceFunction<ResultType>)
+    return result.references_scalar();
+  else if constexpr (Kokkos::is_view_v<ResultType>)
+    return false;
+  else
+    return true;
 }
 
 template <Kokkos::ExecutionSpace ExecutionSpace, class... Args>
@@ -298,7 +273,7 @@ struct ParallelReduceFence {
   template <class... ArgsDeduced>
   static void fence(const ExecutionSpace& ex, const std::string& name,
                     ArgsDeduced&&... args) {
-    if (Impl::parallel_reduce_needs_fence(ex, (ArgsDeduced&&)args...)) {
+    if (Impl::parallel_reduce_needs_fence((ArgsDeduced&&)args...)) {
       ex.fence(name);
     }
   }

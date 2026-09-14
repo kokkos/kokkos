@@ -13,7 +13,6 @@ import kokkos.core;
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include "Kokkos_ReducerWithArbitraryJoinerNoNeutralElement.hpp"
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -98,9 +97,12 @@ ValueType reduce_custom_functors_exespace_impl(
   reduction_value_type result;
   reducer_type reducer(result, joiner);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_reduce(label,
-                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            StdReduceFunctor(first, reducer), reducer);
+  ::Kokkos::parallel_reduce(
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType::difference_type>>(
+          ex, 0, num_elements),
+      StdReduceFunctor(first, reducer), reducer);
 
   // fence not needed since reducing into scalar
   return joiner(result.val, init_reduction_value);
@@ -128,9 +130,12 @@ ValueType reduce_default_functors_exespace_impl(
     // run
     value_type tmp;
     const auto num_elements = Kokkos::Experimental::distance(first, last);
-    ::Kokkos::parallel_reduce(label,
-                              RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                              functor_type{first}, tmp);
+    ::Kokkos::parallel_reduce(
+        label,
+        RangePolicy<ExecutionSpace,
+                    IndexType<typename IteratorType::difference_type>>(
+            ex, 0, num_elements),
+        functor_type{first}, tmp);
     // fence not needed since reducing into scalar
     tmp += init_reduction_value;
     return tmp;

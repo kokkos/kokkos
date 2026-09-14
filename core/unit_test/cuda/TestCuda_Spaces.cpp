@@ -163,43 +163,50 @@ TEST(cuda, space_access) {
   static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
                      Kokkos::HostSpace>);
+  static_assert(
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::device_type,
+                     Kokkos::Device<Kokkos::DefaultHostExecutionSpace,
+                                    Kokkos::HostSpace>>);
 #else
+  // Memory space stays the same as host can access CudaSpace
   static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
-                     Kokkos::Device<Kokkos::HostSpace::execution_space,
+                     Kokkos::CudaSpace>);
+  static_assert(
+      std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::device_type,
+                     Kokkos::Device<Kokkos::DefaultHostExecutionSpace,
                                     Kokkos::CudaSpace>>);
 #endif
 
   static_assert(
       std::is_same_v<Kokkos::Impl::HostMirror<Kokkos::CudaUVMSpace>::Space,
-                     Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                    Kokkos::CudaUVMSpace>>);
+                     Kokkos::CudaUVMSpace>);
+  static_assert(std::is_same_v<
+                Kokkos::Impl::HostMirror<Kokkos::CudaUVMSpace>::device_type,
+                Kokkos::Device<Kokkos::DefaultHostExecutionSpace,
+                               Kokkos::CudaUVMSpace>>);
 
   static_assert(std::is_same_v<
                 Kokkos::Impl::HostMirror<Kokkos::CudaHostPinnedSpace>::Space,
                 Kokkos::CudaHostPinnedSpace>);
+  static_assert(
+      std::is_same_v<
+          Kokkos::Impl::HostMirror<Kokkos::CudaHostPinnedSpace>::device_type,
+          Kokkos::Device<Kokkos::DefaultHostExecutionSpace,
+                         Kokkos::CudaHostPinnedSpace>>);
+
+  static_assert(Kokkos::SpaceAccessibility<
+                Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::device_type,
+                Kokkos::HostSpace>::accessible);
+
+  static_assert(Kokkos::SpaceAccessibility<
+                Kokkos::Impl::HostMirror<Kokkos::CudaUVMSpace>::device_type,
+                Kokkos::HostSpace>::accessible);
 
   static_assert(
-      std::is_same_v<Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                    Kokkos::CudaUVMSpace>,
-                     Kokkos::Device<Kokkos::HostSpace::execution_space,
-                                    Kokkos::CudaUVMSpace>>);
-
-  static_assert(
-      Kokkos::SpaceAccessibility<Kokkos::Impl::HostMirror<Kokkos::Cuda>::Space,
-                                 Kokkos::HostSpace>::accessible);
-
-  static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::CudaSpace>::Space,
-                Kokkos::HostSpace>::accessible);
-
-  static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::CudaUVMSpace>::Space,
-                Kokkos::HostSpace>::accessible);
-
-  static_assert(Kokkos::SpaceAccessibility<
-                Kokkos::Impl::HostMirror<Kokkos::CudaHostPinnedSpace>::Space,
-                Kokkos::HostSpace>::accessible);
+      Kokkos::SpaceAccessibility<
+          Kokkos::Impl::HostMirror<Kokkos::CudaHostPinnedSpace>::device_type,
+          Kokkos::HostSpace>::accessible);
 }
 
 TEST(cuda, uvm) {
@@ -290,20 +297,10 @@ struct TestViewCudaTexture {
 
   static void run() {
     EXPECT_TRUE((std::is_same_v<typename V::reference_type, double &>));
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-    EXPECT_TRUE((std::is_same_v<typename T::reference_type, const double>));
-#else
     EXPECT_TRUE((std::is_same_v<typename T::reference_type, const double &>));
-#endif
 
     EXPECT_TRUE(V::reference_type_is_lvalue_reference);  // An ordinary view.
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-    EXPECT_FALSE(T::reference_type_is_lvalue_reference);  // Texture fetch
-                                                          // returns by value.
-#else
     EXPECT_TRUE(T::reference_type_is_lvalue_reference);  // FIXME: Returns by
-                                                         // value for now.
-#endif
 
     TestViewCudaTexture self;
     Kokkos::parallel_for(Kokkos::RangePolicy<Kokkos::Cuda, TagInit>(0, N),

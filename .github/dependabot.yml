@@ -4,8 +4,12 @@ updates:
     directory: /
     schedule:
       interval: "weekly"
+    groups:
+      codeql-action:
+        patterns:
+          - "github/codeql-action/*"
 
- - package-ecosystem: "pre-commit"
+  - package-ecosystem: "pre-commit"
     directory: "/"
     schedule:
       interval: "weekly"

@@ -9,6 +9,7 @@
 #include <impl/Kokkos_GraphImpl_fwd.hpp>  // IsGraphKernelTag
 #include <traits/Kokkos_Traits_fwd.hpp>
 #include <impl/Kokkos_Utilities.hpp>
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 
 namespace Kokkos {
 namespace Impl {

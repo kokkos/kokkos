@@ -662,6 +662,12 @@ class TeamPolicyInternal<Kokkos::Threads, Properties...>
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
   }
+  inline size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+  inline size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
+  }
 
   inline int team_iter() const { return m_team_iter; }
 

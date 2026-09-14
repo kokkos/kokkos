@@ -38,6 +38,7 @@ class NextSilicon {
 
   using array_layout = LayoutLeft;
   using size_type    = memory_space::size_type;
+  using index_type   = memory_space::index_type;
 
   using scratch_memory_space = ScratchMemorySpace<NextSilicon>;
 
@@ -64,6 +65,7 @@ class NextSilicon {
   static int concurrency() {
     return 64 * 1024; /* FIXME_NEXTSILICON - move to nextapi call */
   }
+  static int impl_hardware_thread_id() noexcept;
   uint32_t impl_instance_id() const noexcept;
   Impl::NextSiliconInternal* impl_internal_space_instance() const {
     return m_space_instance.get();

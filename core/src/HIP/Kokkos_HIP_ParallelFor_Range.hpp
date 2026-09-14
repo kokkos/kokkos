@@ -45,6 +45,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
 
   ParallelFor() = delete;
 
+  Policy const& get_policy() const { return m_policy; }
+
   inline __device__ void operator()() const {
     constexpr auto batch_size = Member(StaticBatchSize::batch_size);
     const auto work_stride    = Member(blockDim.y) * gridDim.x;
@@ -94,8 +96,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::HIP> {
     const dim3 block(1, block_size, 1);
     const int maxGridSizeX = m_policy.space().hip_device_prop().maxGridSize[0];
     const dim3 grid(
-        std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
-                 typename Policy::index_type(maxGridSizeX)),
+        std::min(static_cast<uint32_t>((nwork + block.y - 1) / block.y),
+                 static_cast<uint32_t>(maxGridSizeX)),
         1, 1);
 
     Kokkos::Impl::hip_parallel_launch<DriverType, LaunchBounds>(

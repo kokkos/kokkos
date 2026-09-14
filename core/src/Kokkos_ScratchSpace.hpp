@@ -50,6 +50,7 @@ class ScratchMemorySpace {
 
   using array_layout = typename ExecSpace::array_layout;
   using size_type    = typename ExecSpace::size_type;
+  using index_type   = typename ExecSpace::index_type;
 
   static constexpr const char* name() { return "ScratchMemorySpace"; }
 

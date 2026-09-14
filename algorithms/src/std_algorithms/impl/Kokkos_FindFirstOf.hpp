@@ -12,7 +12,6 @@ import kokkos.core;
 #endif
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -93,7 +92,8 @@ IteratorType1 find_first_of_exespace_impl(
   reducer_type reducer(red_result);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
   ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       func_t(first, s_first, s_last, reducer, pred), reducer);
 
   // fence not needed because reducing into scalar

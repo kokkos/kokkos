@@ -240,37 +240,44 @@ class ImplRangePolicy<ExecSpace, Properties...>
     }
   }
 
-  // To be replaced with std::in_range (c++20)
+  // Arithmetic member_type and IndexType: signedness / numeric_limits checks.
+  // Always run the round-trip check below as well; for non-arithmetic IndexType
+  // only that line applies inside the is_convertible gate.
   template <typename IndexType>
   static void check_conversion_safety([[maybe_unused]] const IndexType bound) {
-    // Checking that the round-trip conversion preserves input index value
     if constexpr (std::is_convertible_v<member_type, IndexType>) {
       bool error = false;
 
       if constexpr (std::is_arithmetic_v<member_type> &&
-                    (std::is_signed_v<IndexType> !=
-                     std::is_signed_v<member_type>)) {
-        // check signed to unsigned
-        if constexpr (std::is_signed_v<IndexType>)
-          error |= (bound < static_cast<IndexType>(
-                                std::numeric_limits<member_type>::min()));
-
-        // check unsigned to signed
-        if constexpr (std::is_signed_v<member_type>)
-          error |= (bound > static_cast<IndexType>(
-                                std::numeric_limits<member_type>::max()));
+                    std::is_arithmetic_v<IndexType>) {
+        if constexpr (std::is_signed_v<IndexType> !=
+                      std::is_signed_v<member_type>) {
+          if constexpr (std::is_signed_v<IndexType>) error |= (bound < 0);
+          if constexpr (std::is_signed_v<member_type>) {
+            if constexpr (sizeof(member_type) <= sizeof(IndexType))
+              error |= (bound > static_cast<IndexType>(
+                                    std::numeric_limits<member_type>::max()));
+            else {
+              error |= (bound > std::numeric_limits<IndexType>::max());
+            }
+          }
+        }
       }
 
-      // check narrowing
       error |=
           (static_cast<IndexType>(static_cast<member_type>(bound)) != bound);
 
       if (error) {
+        std::string bound_to_text = []<typename T>(const T& b) {
+          if constexpr (std::is_arithmetic_v<T>)
+            return std::to_string(b);
+          else
+            return std::to_string(static_cast<member_type>(b));
+        }(bound);
         std::string msg =
             "Kokkos::RangePolicy bound type error: an unsafe implicit "
             "conversion is performed on a bound (" +
-            std::to_string(bound) +
-            "), which may not preserve its original value.\n";
+            bound_to_text + "), which may not preserve its original value.\n";
 
         Kokkos::abort(msg.c_str());
       }
@@ -684,7 +691,7 @@ class TeamPolicy
                         validate_team_size_argument(team_size), Kokkos::AUTO) {}
 
   template <class... OtherProperties>
-  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {
+  TeamPolicy(const TeamPolicy<OtherProperties...>& p) : internal_policy(p) {
     // Cannot call converting constructor in the member initializer list because
     // it is not a direct base.
     internal_policy::traits::operator=(p);
@@ -998,6 +1005,8 @@ struct TeamThreadMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct TeamThreadMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
+  static_assert(N >= 2u, "Kokkos Error: TeamThreadMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
@@ -1034,6 +1043,9 @@ struct ThreadVectorMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct ThreadVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
+  static_assert(N >= 2u,
+                "Kokkos Error: ThreadVectorMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;
@@ -1071,6 +1083,8 @@ struct TeamVectorMDRange;
 
 template <unsigned N, Iterate OuterDir, Iterate InnerDir, typename TeamHandle>
 struct TeamVectorMDRange<Rank<N, OuterDir, InnerDir>, TeamHandle> {
+  static_assert(N >= 2u, "Kokkos Error: TeamVectorMDRange requires rank >= 2");
+
   using NestLevelType  = int;
   using BoundaryType   = int;
   using TeamHandleType = TeamHandle;

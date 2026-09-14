@@ -14,7 +14,7 @@ namespace {
 struct TestRangePolicyCTAD {
   struct SomeExecutionSpace {
     using execution_space = SomeExecutionSpace;
-    using size_type       = size_t;
+    using index_type      = int;
 
     [[maybe_unused]] static int concurrency() { return 0; }
   };

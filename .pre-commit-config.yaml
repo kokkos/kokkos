@@ -22,7 +22,7 @@ repos:
     - id: cmake-format
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: a30f0d816e5062a67d87c8de753cfe499672b959 # v1.5.5
+    rev: ad1b27d73581aa16cca06fc4a0761fc563ffe8e8 # v1.5.6
     hooks:
     - id: insert-license
       name: License and copyright headers in C++ files

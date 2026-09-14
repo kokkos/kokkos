@@ -4,7 +4,6 @@
 #ifndef KOKKOS_CUDA_HALF_HPP_
 #define KOKKOS_CUDA_HALF_HPP_
 
-#include <Kokkos_Half.hpp>
 #include <impl/Kokkos_NvidiaGpuArchitectures.hpp>
 
 #include <cuda_bf16.h>
@@ -13,7 +12,7 @@ namespace Kokkos::Experimental {
 
 /************************** half conversions **********************************/
 
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
 
 KOKKOS_INLINE_FUNCTION
 half_t cast_to_half(half_t val) { return val; }
@@ -99,7 +98,7 @@ cast_from_half(half_t val) {
 
 /************************** bhalf conversions *********************************/
 
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
 
 // if architecture is older than Ampere
 #if KOKKOS_IMPL_ARCH_NVIDIA_GPU < 80

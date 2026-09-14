@@ -13,7 +13,6 @@ import kokkos.core;
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
 #include <std_algorithms/Kokkos_Equal.hpp>
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -127,7 +126,8 @@ IteratorType1 search_exespace_impl(const std::string& label,
 
     // run par reduce
     ::Kokkos::parallel_reduce(
-        label, RangePolicy<ExecutionSpace>(ex, 0, range_size),
+        label,
+        RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, range_size),
         func_t(first, last, s_first, s_last, reducer, pred), reducer);
 
     // fence not needed because reducing into scalar

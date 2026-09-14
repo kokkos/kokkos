@@ -12,7 +12,6 @@ import kokkos.core;
 #endif
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -133,9 +132,12 @@ ValueType transform_reduce_custom_functors_exespace_impl(
   reduction_value_type result;
   reducer_type reducer(result, joiner);
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_reduce(label,
-                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            functor_type(first, reducer, transformer), reducer);
+  ::Kokkos::parallel_reduce(
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType::difference_type>>(
+          ex, 0, num_elements),
+      functor_type(first, reducer, transformer), reducer);
 
   // fence not needed since reducing into scalar
 
@@ -176,7 +178,8 @@ ValueType transform_reduce_custom_functors_exespace_impl(
 
   const auto num_elements = Kokkos::Experimental::distance(first1, last1);
   ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       functor_type(first1, first2, reducer, transformer), reducer);
 
   // fence not needed since reducing into scalar

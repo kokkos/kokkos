@@ -84,7 +84,7 @@ struct pair {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Return the std::pair version of this object.
   ///
@@ -129,7 +129,7 @@ struct pair<T1&, T2&> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -186,7 +186,7 @@ struct pair<T1, T2&> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -243,7 +243,7 @@ struct pair<T1&, T2> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -270,6 +270,9 @@ struct pair<T1&, T2> {
     return std::make_pair(first, second);
   }
 };
+
+template <class T1, class T2>
+pair(const std::pair<T1, T2>&) -> pair<T1, T2>;
 
 //! Equality operator for Kokkos::pair.
 template <class T1, class T2>
@@ -374,6 +377,24 @@ template <class T, class U>
 struct is_pair_like<Kokkos::pair<T, U>> : std::true_type {};
 template <class T, class U>
 struct is_pair_like<std::pair<T, U>> : std::true_type {};
+
+template <typename T>
+struct is_std_pair : std::false_type {};
+
+template <typename T1, typename T2>
+struct is_std_pair<std::pair<T1, T2>> : std::true_type {};
+
+template <typename T>
+constexpr auto convert_to_kokkos_pair_if_std_pair(T t) {
+  if constexpr (is_std_pair<T>::value)
+    return Kokkos::pair<typename T::first_type, typename T::second_type>{t};
+  else
+    return t;
+}
+
+// Concept that checks if ANY type in a pack is a std::pair
+template <typename... Args>
+concept ContainsStdPair = (is_std_pair<Args>::value || ...);
 
 }  // end namespace Impl
 

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
-#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
-
 #ifndef TESTHALFOPERATOR_HPP_
 #define TESTHALFOPERATOR_HPP_
+
+#include <cstring>  // std::memcpy
+
 namespace Test {
 using namespace Kokkos::Experimental;
 using ExecutionSpace = TEST_EXECSPACE;
@@ -408,11 +409,11 @@ struct Functor_TestHalfOperators {
   }
   // END: Binary Arithmetic test helpers
 
-#if !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
   using half_impl_type = typename half_type::impl_type;
 #else
   using half_impl_type = half_type;
-#endif  // !defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#endif  // !KOKKOS_HALF_T_IS_FLOAT
 
   KOKKOS_FUNCTION
   void operator()(Batch0, int) const {

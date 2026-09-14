@@ -190,13 +190,13 @@ class basic_simd<T, simd_abi::scalar> {
   // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(G&& gen) noexcept
       : m_value(gen(0)) {}
-  template <typename FlagType>
-  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(T const* ptr,
-                                                            FlagType) noexcept
-      : m_value(*ptr) {}
-  template <typename FlagType>
+  template <typename... Flags>
   KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
-      T const* ptr, mask_type const& mask, FlagType) noexcept {
+      T const* ptr, simd_flags<Flags...> = {}) noexcept
+      : m_value(*ptr) {}
+  template <typename... Flags>
+  KOKKOS_FORCEINLINE_FUNCTION constexpr explicit basic_simd(
+      T const* ptr, mask_type const& mask, simd_flags<Flags...> = {}) noexcept {
     m_value = (mask) ? *ptr : T();
   }
 

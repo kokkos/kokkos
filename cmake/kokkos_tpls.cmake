@@ -76,7 +76,7 @@ if(Kokkos_ENABLE_DESUL_ATOMICS_EXTERNAL)
   kokkos_export_cmake_tpl(desul REQUIRED COMPONENTS atomics)
 endif()
 
-if(Kokkos_ENABLE_IMPL_MDSPAN AND Kokkos_ENABLE_MDSPAN_EXTERNAL)
+if(Kokkos_ENABLE_MDSPAN_EXTERNAL)
   find_package(mdspan REQUIRED)
   kokkos_export_cmake_tpl(mdspan REQUIRED)
 endif()

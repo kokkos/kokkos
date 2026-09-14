@@ -12,7 +12,6 @@ import kokkos.core;
 #endif
 #include "Kokkos_Constraints.hpp"
 #include "Kokkos_HelperPredicates.hpp"
-#include <std_algorithms/Kokkos_Distance.hpp>
 #include <string>
 
 namespace Kokkos {
@@ -67,7 +66,10 @@ OutputIteratorType replace_copy_exespace_impl(const std::string& label,
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_for(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename InputIteratorType::difference_type>>(
+          ex, 0, num_elements),
       StdReplaceCopyFunctor(first_from, first_dest, old_value, new_value));
   ex.fence("Kokkos::replace_copy: fence after operation");
 

@@ -19,7 +19,7 @@ namespace Impl {
 template <typename Functor>
 struct GraphNodeThenHostImpl<Kokkos::SYCL, Functor> {
  private:
-  using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
+  using sycl_graph_t = sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::modifiable>;
 
   std::optional<Functor> m_functor = std::nullopt;
@@ -31,7 +31,7 @@ struct GraphNodeThenHostImpl<Kokkos::SYCL, Functor> {
   explicit GraphNodeThenHostImpl(Functor functor)
       : m_functor{std::move(functor)} {}
 
-  void add_to_graph(native_graph_t& graph) {
+  void add_to_graph(sycl_graph_t& graph) {
     KOKKOS_ENSURES(!m_node);
     KOKKOS_ENSURES(m_functor.has_value());
     m_node = graph.add([&](sycl::handler& cgh) {
@@ -45,17 +45,17 @@ struct GraphNodeThenHostImpl<Kokkos::SYCL, Functor> {
 
 template <typename Functor>
 struct GraphNodeCaptureImpl<Kokkos::SYCL, Functor> {
-  using native_graph_t = sycl::ext::oneapi::experimental::command_graph<
+  using sycl_graph_t = sycl::ext::oneapi::experimental::command_graph<
       sycl::ext::oneapi::experimental::graph_state::modifiable>;
 
   Functor m_functor;
   std::optional<sycl::ext::oneapi::experimental::node> m_node = std::nullopt;
 
-  void capture(const Kokkos::SYCL& exec, native_graph_t& graph) {
+  void capture(const Kokkos::SYCL& exec, sycl_graph_t& graph) {
     auto& sycl_queue = exec.sycl_queue();
 
-    native_graph_t recorded_graph(sycl_queue.get_context(),
-                                  sycl_queue.get_device());
+    sycl_graph_t recorded_graph(sycl_queue.get_context(),
+                                sycl_queue.get_device());
 
     recorded_graph.begin_recording(sycl_queue);
     m_functor(exec);

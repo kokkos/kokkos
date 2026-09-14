@@ -106,6 +106,20 @@ class SharedAllocationRecord<void, void> {
  private:
   static inline thread_local int t_tracking_enabled = 1;
 
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  // FIXME_NEXTSILICON: containment for the TLS read, same rationale as
+  // NextSiliconThreadSpaceGuard::host_thread_is_on_device()
+  // (Kokkos_NextSilicon_ThreadSpaceGuard.hpp): if `t_tracking_enabled` were
+  // read directly inline in tracking_enabled()'s KOKKOS_IF_ON_HOST branch,
+  // the underlying TLS-address intrinsic is speculatable and can be hoisted
+  // past the host/device split during lowering, executing unconditionally.
+  // Keeping the read behind a non-inlined `weak` wrapper makes the call
+  // opaque at the use site, so it can't be hoisted out of the branch.
+  static __attribute__((weak)) int host_tracking_enabled() {
+    return t_tracking_enabled;
+  }
+#endif
+
  public:
   virtual std::string get_label() const { return std::string("Unmanaged"); }
 
@@ -114,7 +128,11 @@ class SharedAllocationRecord<void, void> {
 #pragma diag_suppress implicit_return_from_non_void_function
 #endif
   static KOKKOS_FUNCTION int tracking_enabled() {
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+    KOKKOS_IF_ON_HOST(return host_tracking_enabled();)
+#else
     KOKKOS_IF_ON_HOST(return t_tracking_enabled;)
+#endif
     KOKKOS_IF_ON_DEVICE(return 0;)
     KOKKOS_IMPL_UNREACHABLE();
   }
@@ -618,12 +636,12 @@ union SharedAllocationTracker {
 
   KOKKOS_FORCEINLINE_FUNCTION
 #if defined(KOKKOS_COMPILER_NVCC) || !defined(KOKKOS_COMPILER_GNU) || \
-    (KOKKOS_COMPILER_GNU < 1220) || (KOKKOS_COMPILER_GNU > 1240)
-      // FIXME_GCC: The ViewSupport test fails with gcc 12.2, 12.3 and 12.4
+    (KOKKOS_COMPILER_GNU < 1220) || (KOKKOS_COMPILER_GNU > 1250)
+      // FIXME_GCC: The ViewSupport test fails with gcc 12.2-12.5
       // because this constructor is optimized out, which leads to a nullptr
       // dereference. Removing the constexpr fixes the issue but nvcc complains,
       // so we keep the constexpr but only when using anything other than those
-      // three faulty gcc versions.
+      // four faulty gcc versions.
       constexpr
 #endif
       SharedAllocationTracker()

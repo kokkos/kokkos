@@ -91,7 +91,7 @@ template <typename T>
 constexpr hpx_range<T> get_chunk_range(const T i_chunk, const T offset,
                                        const T chunk_size, const T max) {
   const T begin = offset + i_chunk * chunk_size;
-  const T end   = (std::min)(begin + chunk_size, max);
+  const T end   = std::min(static_cast<T>(begin + chunk_size), max);
   return {begin, end};
 }
 
@@ -147,6 +147,7 @@ class HPX {
           name,
           Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{m_instance_id},
           [&]() {
+            if (hpx::get_runtime_ptr() == nullptr) return;
             auto &s = m_sender;
             hpx::this_thread::experimental::sync_wait(std::move(s));
             s = hpx::execution::experimental::unique_any_sender<>(
@@ -170,6 +171,7 @@ class HPX {
   using device_type          = Kokkos::Device<execution_space, memory_space>;
   using array_layout         = LayoutRight;
   using size_type            = memory_space::size_type;
+  using index_type           = memory_space::index_type;
   using scratch_memory_space = ScratchMemorySpace<HPX>;
 
 // FIXME_HPX spurious warnings like
@@ -789,6 +791,14 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
     }
     return m_team_scratch_size[level] +
            team_size_ * m_thread_scratch_size[level];
+  }
+
+  size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+
+  size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
   }
 
   inline static int scratch_size_max(int level) {
@@ -1962,7 +1972,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
       Kokkos::Impl::FunctorPatternInterface::SCAN, void, FunctorType,
       void>::value_type;
 
-  value_type scan_val;
+  value_type scan_val{};
   parallel_scan(loop_bounds, lambda, scan_val);
 }
 
@@ -1987,7 +1997,7 @@ KOKKOS_INLINE_FUNCTION void parallel_scan(
                                      TeamPolicy<Experimental::HPX>, FunctorType,
                                      void>::value_type;
 
-  value_type scan_val = value_type();
+  value_type scan_val{};
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
 #pragma ivdep

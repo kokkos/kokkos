@@ -5,7 +5,7 @@
 #define KOKKOS_SORT_PUBLIC_API_HPP_
 
 #include "./impl/Kokkos_SortImpl.hpp"
-#include <std_algorithms/Kokkos_BeginEnd.hpp>
+#include <Kokkos_Iterator.hpp>
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
@@ -148,7 +148,8 @@ std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value> sort(
     return;
   }
 
-  using range_policy = Kokkos::RangePolicy<typename ViewType::execution_space>;
+  using range_policy = Kokkos::RangePolicy<typename ViewType::execution_space,
+                                           Kokkos::IndexType<int64_t>>;
   using CompType     = BinOp1D<ViewType>;
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;

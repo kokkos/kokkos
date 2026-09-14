@@ -7,7 +7,7 @@
 #include <impl/Kokkos_Error.hpp>  // KOKKOS_EXPECTS macro
 
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
-
+#include <traits/Kokkos_PolicyTraitMatcher.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 
 namespace Kokkos {

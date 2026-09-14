@@ -18,6 +18,9 @@ import kokkos.core;
 #include <type_traits>
 #include <cstdint>
 #include <cfloat>
+#include <limits>
+
+#include "KokkosTest_Utils.hpp"
 
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
     defined(KOKKOS_ENABLE_SYCL) || defined(KOKKOS_ENABLE_OPENACC)
@@ -31,12 +34,12 @@ namespace KE = Kokkos::Experimental;
 template <class>
 struct math_unary_function_return_type;
 // Floating-point types
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
 template <> struct math_unary_function_return_type<KE::half_t> { using type = KE::half_t; };
-#endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#endif // !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_unary_function_return_type<KE::bhalf_t> { using type = KE::bhalf_t; };
-#endif // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#endif // !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_unary_function_return_type<      float> { using type =       float; };
 template <> struct math_unary_function_return_type<     double> { using type =      double; };
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
@@ -56,7 +59,7 @@ template <class T>
 using math_unary_function_return_type_t = typename math_unary_function_return_type<T>::type;
 template <class, class>
 struct math_binary_function_return_type;
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<KE::half_t, KE::half_t> { using type = KE::half_t; };
 template <> struct math_binary_function_return_type<short, KE::half_t> { using type = double; };
 template <> struct math_binary_function_return_type<unsigned short, KE::half_t> { using type = double; };
@@ -66,8 +69,8 @@ template <> struct math_binary_function_return_type<long, KE::half_t> { using ty
 template <> struct math_binary_function_return_type<unsigned long, KE::half_t> { using type = double; };
 template <> struct math_binary_function_return_type<long long, KE::half_t> { using type = double; };
 template <> struct math_binary_function_return_type<unsigned long long, KE::half_t> { using type = double; };
-#endif // defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#endif // !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<KE::bhalf_t, KE::bhalf_t> { using type = KE::bhalf_t; };
 template <> struct math_binary_function_return_type<KE::half_t, KE::bhalf_t> { using type = KE::half_t; };
 template <> struct math_binary_function_return_type<short, KE::bhalf_t> { using type = double; };
@@ -78,7 +81,7 @@ template <> struct math_binary_function_return_type<long, KE::bhalf_t> { using t
 template <> struct math_binary_function_return_type<unsigned long, KE::bhalf_t> { using type = double; };
 template <> struct math_binary_function_return_type<long long, KE::bhalf_t> { using type = double; };
 template <> struct math_binary_function_return_type<unsigned long long, KE::bhalf_t> { using type = double; };
-#endif // defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#endif // !KOKKOS_BHALF_T_IS_FLOAT
 template <> struct math_binary_function_return_type<             float,              float> { using type =       float; };
 template <> struct math_binary_function_return_type<             float,             double> { using type =      double; };
 template <> struct math_binary_function_return_type<             float,               bool> { using type =      double; };
@@ -220,113 +223,29 @@ template <class T, class U, class V>
 using math_ternary_function_return_type_t = math_binary_function_return_type_t<
     T, math_binary_function_return_type_t<U, V>>;
 
-struct FloatingPointComparison {
- private:
-  template <class T>
-  KOKKOS_FUNCTION double eps(T) const {
-    return DBL_EPSILON;
-  }
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
-  KOKKOS_FUNCTION
-  KE::half_t eps(KE::half_t) const {
-// FIXME_NVHPC compile-time error
-#ifdef KOKKOS_COMPILER_NVHPC
-    return 0.0009765625F;
-#else
-    return KE::epsilon<KE::half_t>::value;
-#endif
-  }
-#endif
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
-  KOKKOS_FUNCTION
-  KE::bhalf_t eps(KE::bhalf_t) const {
-// FIXME_NVHPC compile-time error
-#ifdef KOKKOS_COMPILER_NVHPC
-    return 0.0078125;
-#else
-    return KE::epsilon<KE::bhalf_t>::value;
-#endif
-  }
-#endif
-  KOKKOS_FUNCTION
-  double eps(float) const { return FLT_EPSILON; }
-// POWER9 gives unexpected values with LDBL_EPSILON issues
-// https://stackoverflow.com/questions/68960416/ppc64-long-doubles-machine-epsilon-calculation
-#if defined(KOKKOS_ARCH_POWER9) || defined(KOKKOS_ARCH_POWER8)
-  KOKKOS_FUNCTION
-  double eps(long double) const { return DBL_EPSILON; }
-#else
-  KOKKOS_FUNCTION
-  double eps(long double) const { return LDBL_EPSILON; }
-#endif
-  // Using absolute here instead of abs, since we actually test abs ...
-  template <class T>
-  KOKKOS_FUNCTION std::enable_if_t<std::is_signed_v<T>, T> absolute(
-      T val) const {
-    return val < T(0) ? -val : val;
-  }
-
-  template <class T>
-  KOKKOS_FUNCTION std::enable_if_t<!std::is_signed_v<T>, T> absolute(
-      T val) const {
-    return val;
-  }
-
- public:
-  template <class FPT>
-  KOKKOS_FUNCTION bool compare_near_zero(FPT const& fpv, int ulp) const {
-    auto abs_tol = eps(fpv) * ulp;
-
-    bool ar = absolute(fpv) <= abs_tol;
-    if (!ar) {
-      Kokkos::printf("absolute value exceeds tolerance [|%e| > %e]\n",
-                     (double)fpv, (double)abs_tol);
-    }
-
-    return ar;
-  }
-
-  template <class Lhs, class Rhs>
-  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs, int ulp) const {
-    if (lhs == 0) {
-      return compare_near_zero(rhs, ulp);
-    } else if (rhs == 0) {
-      return compare_near_zero(lhs, ulp);
-    } else {
-      auto rel_tol     = (eps(lhs) < eps(rhs) ? eps(lhs) : eps(rhs)) * ulp;
-      double abs_diff  = static_cast<double>(rhs > lhs ? rhs - lhs : lhs - rhs);
-      double min_denom = static_cast<double>(
-          absolute(rhs) < absolute(lhs) ? absolute(rhs) : absolute(lhs));
-      double rel_diff = abs_diff / min_denom;
-      bool ar         = rel_diff <= rel_tol;
-      if (!ar) {
-        Kokkos::printf("relative difference exceeds tolerance [%e > %e]\n",
-                       (double)rel_diff, (double)rel_tol);
-      }
-
-      return ar;
-    }
-  }
-};
-
-struct IntegerComparison {
-  template <class Lhs, class Rhs>
-  KOKKOS_FUNCTION bool compare(Lhs const& lhs, Rhs const& rhs) const {
-    static_assert(std::is_integral_v<Lhs>);
-    static_assert(std::is_integral_v<Rhs>);
-    return lhs == rhs;
-  }
-};
-
 template <class Floating>
 struct ConvertibleTo {
   operator Floating() const;
 };
 
+// FIXME_CUDA nvcc 13.3.0 returns fixed-width floating point types.
+#if defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && \
+    !defined(KOKKOS_ENABLE_CXX20)
+#define KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(FUNC, FP_TYPE, RET_TYPE) \
+  using test_return_type =                                                 \
+      decltype(FUNC(std::declval<ConvertibleTo<FP_TYPE>>()));              \
+  static_assert(std::is_floating_point_v<RET_TYPE> &&                      \
+                    (std::is_floating_point_v<test_return_type> &&         \
+                     std::is_convertible_v<test_return_type, RET_TYPE> &&  \
+                     sizeof(test_return_type) == sizeof(RET_TYPE)) ||      \
+                !std::is_floating_point_v<RET_TYPE> &&                     \
+                    std::is_same_v<test_return_type, RET_TYPE>);
+#else
 #define KOKKOS_TEST_STATIC_ASSERT_UNARY_PREDICATE(FUNC, FP_TYPE, RET_TYPE)   \
   static_assert(                                                             \
       std::is_same_v<decltype(FUNC(std::declval<ConvertibleTo<FP_TYPE>>())), \
                      RET_TYPE>)
+#endif
 
 template <class>
 struct math_function_name;
@@ -767,10 +686,10 @@ DEFINE_TYPE_NAME(long long)
 DEFINE_TYPE_NAME(unsigned int)
 DEFINE_TYPE_NAME(unsigned long)
 DEFINE_TYPE_NAME(unsigned long long)
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
 DEFINE_TYPE_NAME(KE::half_t)
 #endif
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
 DEFINE_TYPE_NAME(KE::bhalf_t)
 #endif
 DEFINE_TYPE_NAME(float)
@@ -781,7 +700,7 @@ DEFINE_TYPE_NAME(long double)
 
 template <class Space, class Func, class Arg, std::size_t N,
           class Ret = math_unary_function_return_type_t<Arg>>
-struct TestMathUnaryFunction : FloatingPointComparison {
+struct TestMathUnaryFunction : KokkosTest::FloatingPointComparison {
   Arg val_[N];
   Ret res_[N];
   TestMathUnaryFunction(const Arg (&val)[N]) {
@@ -843,7 +762,7 @@ void do_test_half_math_unary_function(const Arg (&x)[N]) {
   do_test_half_math_unary_function<T, TEST_EXECSPACE, MathUnaryFunction_##FUNC>
 
 template <class Space, class Func, class Arg, std::size_t N>
-struct TestIntMathUnaryFunction : IntegerComparison {
+struct TestIntMathUnaryFunction : KokkosTest::IntegerComparison {
   Arg val_[N];
   int res_[N];
   TestIntMathUnaryFunction(const Arg (&val)[N]) {
@@ -907,7 +826,7 @@ void do_test_int_half_math_unary_function(const Arg (&x)[N]) {
 
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
-struct TestMathBinaryFunction : FloatingPointComparison {
+struct TestMathBinaryFunction : KokkosTest::FloatingPointComparison {
   Arg1 val1_;
   Arg2 val2_;
   Ret res_;
@@ -942,7 +861,7 @@ void do_test_math_binary_function(Arg1 arg1, Arg2 arg2) {
 
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_unary_function_return_type_t<Arg1>>
-struct TestMathBinaryIntFunction : FloatingPointComparison {
+struct TestMathBinaryIntFunction : KokkosTest::FloatingPointComparison {
   Arg1 val1_;
   Arg2 val2_;
   Ret res_;
@@ -977,7 +896,7 @@ void do_test_math_binary_int_function(Arg1 arg1, Arg2 arg2) {
 
 template <class Space, class Func, class Arg,
           class Ret = math_unary_function_return_type_t<Arg>>
-struct TestMathBinaryPtrFunction : FloatingPointComparison {
+struct TestMathBinaryPtrFunction : KokkosTest::FloatingPointComparison {
   Arg val_;
   Ret res_frac_;
   Ret res_int_;
@@ -1056,7 +975,7 @@ void do_test_math_binary_predicate(Arg1 arg1, Arg2 arg2) {
 
 template <class Space, class Func, class Arg,
           class Ret = math_unary_function_return_type_t<Arg>>
-struct TestMathBinaryIntPtrFunction : FloatingPointComparison {
+struct TestMathBinaryIntPtrFunction : KokkosTest::FloatingPointComparison {
   Arg val_;
   int res1_;
   Ret res2_;
@@ -1100,7 +1019,7 @@ void do_test_math_binary_int_ptr_function(Arg x) {
 
 template <class Space, class Func, class Arg1, class Arg2,
           class Ret = math_binary_function_return_type_t<Arg1, Arg2>>
-struct TestMathTernaryIntPtrFunction : FloatingPointComparison {
+struct TestMathTernaryIntPtrFunction : KokkosTest::FloatingPointComparison {
   Arg1 val1_;
   Arg2 val2_;
   int val_;
@@ -1140,7 +1059,7 @@ void do_test_math_ternary_int_ptr_function(Arg1 arg1, Arg2 arg2) {
 
 template <class Space, class Func, class Arg1, class Arg2, class Arg3,
           class Ret = math_ternary_function_return_type_t<Arg1, Arg2, Arg3>>
-struct TestMathTernaryFunction : FloatingPointComparison {
+struct TestMathTernaryFunction : KokkosTest::FloatingPointComparison {
   Arg1 val1_;
   Arg2 val2_;
   Arg3 val3_;
@@ -1925,13 +1844,13 @@ TEST(TEST_CATEGORY,
   TEST_MATH_FUNCTION(logb)({123.45l, 6789.0l});
 #endif
 
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && KOKKOS_HALF_T_IS_FLOAT
+#if KOKKOS_HALF_T_IS_FLOAT
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
       0, static_cast<KE::half_t>(1.f));
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
       1, static_cast<KE::half_t>(2.f));
 #endif
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && KOKKOS_BHALF_T_IS_FLOAT
+#if KOKKOS_BHALF_T_IS_FLOAT
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
       0, static_cast<KE::bhalf_t>(1.f));
   do_test_math_binary_function<TEST_EXECSPACE, kk_nextafter>(
@@ -2104,7 +2023,8 @@ TEST(TEST_CATEGORY, mathematical_functions_floating_point_absolute_value) {
 }
 
 template <class Space>
-struct TestFloatingPointRemainderFunction : FloatingPointComparison {
+struct TestFloatingPointRemainderFunction
+    : KokkosTest::FloatingPointComparison {
   TestFloatingPointRemainderFunction() { run(); }
   void run() const {
     int errors = 0;
@@ -2181,7 +2101,8 @@ TEST(TEST_CATEGORY, mathematical_functions_remainder_function) {
 }
 
 template <class Space>
-struct TestIEEEFloatingPointRemainderFunction : FloatingPointComparison {
+struct TestIEEEFloatingPointRemainderFunction
+    : KokkosTest::FloatingPointComparison {
   TestIEEEFloatingPointRemainderFunction() { run(); }
   void run() const {
     int errors = 0;
@@ -2446,6 +2367,31 @@ TEST(TEST_CATEGORY, mathematical_functions_isinf) {
   TestIsInf<TEST_EXECSPACE>();
 }
 
+// Determine, at runtime, whether the floating-point environment flushes
+// subnormal (denormal) values to zero (FTZ/DAZ).
+//
+// This cannot be answered by the preprocessor: some compilers (notably
+// NVHPC/nvc++) enable FTZ/DAZ by default -- at every optimization level --
+// WITHOUT defining __FINITE_MATH_ONLY__ (and while __STDC_IEC_559__,
+// std::numeric_limits<T>::is_iec559, has_denorm, etc. all still report that
+// subnormals exist). Flushing is a property of the runtime FP environment, so
+// it must be detected by actually exercising it. The same reasoning applies to
+// device execution, so the probe runs wherever the test does.
+//
+// We probe once (thread-safe Meyers-singleton initialization) by forcing
+// subnormal values through 'volatile' storage -- which defeats constant folding
+// so the real runtime FP environment governs the result -- and checking whether
+// they read back as zero.
+KOKKOS_INLINE_FUNCTION bool runtime_fp_env_flushes_to_zero() {
+  volatile float fdenorm  = Kokkos::denorm_min_v<float>;
+  volatile double ddenorm = Kokkos::denorm_min_v<double>;
+  volatile float fmin     = Kokkos::norm_min_v<float>;
+  volatile double dmin    = Kokkos::norm_min_v<double>;
+  bool flushed            = (fdenorm == 0.0f) || (ddenorm == 0.0) ||
+                 ((fmin / 2.0f) == 0.0f) || ((dmin / 2.0) == 0.0);
+  return flushed;
+}
+
 template <class Space>
 struct TestFpClassify {
   TestFpClassify() { run(); }
@@ -2471,10 +2417,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<float>::value) != FP_NAN ||
         fpclassify(quiet_NaN<float>::value) != FP_NAN ||
-        fpclassify(infinity<float>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<float>::value) != FP_SUBNORMAL
+        fpclassify(infinity<float>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<float>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(float)\n");
     }
@@ -2484,10 +2430,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<double>::value) != FP_NAN ||
         fpclassify(quiet_NaN<double>::value) != FP_NAN ||
-        fpclassify(infinity<double>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<double>::value) != FP_SUBNORMAL
+        fpclassify(infinity<double>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<double>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(double)\n");
     }
@@ -2498,10 +2444,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<long double>::value) != FP_NAN ||
         fpclassify(quiet_NaN<long double>::value) != FP_NAN ||
-        fpclassify(infinity<long double>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<long double>::value) != FP_SUBNORMAL
+        fpclassify(infinity<long double>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<long double>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(long double)\n");
     }
@@ -2517,9 +2463,15 @@ struct TestFpClassify {
         // FIXME internal compiler error for Clang+Cuda and RDC
         || fpclassify(signaling_NaN<KE::half_t>::value) != FP_NAN ||
         fpclassify(quiet_NaN<KE::half_t>::value) != FP_NAN ||
-        fpclassify(infinity<KE::half_t>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<KE::half_t>::value) != FP_SUBNORMAL
+        fpclassify(infinity<KE::half_t>::value) != FP_INFINITE
 #endif
+#endif
+#if !(defined(KOKKOS_ENABLE_CUDA) &&                         \
+      defined(KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE) && \
+      defined(KOKKOS_COMPILER_CLANG))
+        // FIXME_CUDA internal compiler error for Clang+Cuda and RDC
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<KE::half_t>::value) != FP_SUBNORMAL)
 #endif
     ) {
       ++e;
@@ -2532,10 +2484,10 @@ struct TestFpClassify {
 #if !__FINITE_MATH_ONLY__
         || fpclassify(signaling_NaN<KE::bhalf_t>::value) != FP_NAN ||
         fpclassify(quiet_NaN<KE::bhalf_t>::value) != FP_NAN ||
-        fpclassify(infinity<KE::bhalf_t>::value) != FP_INFINITE ||
-        fpclassify(denorm_min<KE::bhalf_t>::value) != FP_SUBNORMAL
+        fpclassify(infinity<KE::bhalf_t>::value) != FP_INFINITE
 #endif
-    ) {
+        || (!runtime_fp_env_flushes_to_zero() &&
+            fpclassify(denorm_min<KE::bhalf_t>::value) != FP_SUBNORMAL)) {
       ++e;
       Kokkos::printf("failed fpclassify(Kokkos::Experimental::bhalf_t)\n");
     }
@@ -2910,7 +2862,7 @@ KE::half_t ref_test_fallback_half(KE::half_t) {
   // When SYCL is enabled, half_t is available on both the GPU and the CPU.
   return KE::half_t(0.f);
 #elif defined(KOKKOS_ENABLE_CUDA)
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && KOKKOS_HALF_T_IS_FLOAT
+#if KOKKOS_HALF_T_IS_FLOAT
   return KE::half_t(1.f);
 #else
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda>) {
@@ -3090,11 +3042,11 @@ TEST(TEST_CATEGORY, mathematical_functions_nextafter_fp16) {
                   "not implemented yet";
 #else
   bool skipped = true;
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
   skipped      = false;
   TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::half_t>();
 #endif
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
   skipped = false;
   TestNextAfterHalf<TEST_EXECSPACE, Kokkos::Experimental::bhalf_t>();
 #endif

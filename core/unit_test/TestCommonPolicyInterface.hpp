@@ -55,8 +55,8 @@ constexpr bool test_compile_time_parameters() {
 
   using TestExecSpace    = TEST_EXECSPACE;
   using DefaultExecSpace = Kokkos::DefaultExecutionSpace;
-  using TestIndex        = TestExecSpace::size_type;
-  using DefaultIndex     = DefaultExecSpace::size_type;
+  using TestIndex        = TestExecSpace::index_type;
+  using DefaultIndex     = DefaultExecSpace::index_type;
   using LongIndex        = Kokkos::IndexType<long>;
   using StaticSchedule   = Kokkos::Schedule<Kokkos::Static>;
   using DynamicSchedule  = Kokkos::Schedule<Kokkos::Dynamic>;

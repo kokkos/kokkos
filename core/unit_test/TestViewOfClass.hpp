@@ -35,12 +35,28 @@ struct NestedView {
   KOKKOS_DEFAULTED_FUNCTION NestedView &operator=(NestedView &&)      = default;
 
   KOKKOS_INLINE_FUNCTION
-  ~NestedView() {
+  ~NestedView() /* NOLINT(bugprone-exception-escape) */ {
     if (member.extent(0)) {
       Kokkos::atomic_add(&member(0), -1);
     }
   }
 };
+
+// Workaround for clang 19/20/21/22 MachineLICM ICE: NestedView::operator=(View)
+// crashes MachineLICM when inlined into cuda_parallel_launch_local_memory. A
+// noinline wrapper breaks the chain.
+template <class Space>
+#if defined(KOKKOS_COMPILER_CLANG) && defined(KOKKOS_ENABLE_CUDA)
+KOKKOS_FUNCTION
+    __attribute__((noinline))
+#else
+KOKKOS_FUNCTION
+#endif
+    void
+    assign_nested_view(NestedView<Space> &dst,
+                       const Kokkos::View<int *, Space> &src) {
+  dst = src;
+}
 
 template <class Space>
 struct NestedViewFunctor {
@@ -52,7 +68,7 @@ struct NestedViewFunctor {
       : nested(arg_nested), array(arg_array) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(int i) const { nested[i] = array; }
+  void operator()(int i) const { assign_nested_view(nested[i], array); }
 };
 
 template <class Space>

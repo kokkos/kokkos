@@ -8,6 +8,7 @@ import kokkos.core;
 #include <Kokkos_Core.hpp>
 #endif
 #include <thread>
+#include <utility>  // std::min
 
 #ifdef KOKKOS_ENABLE_OPENMP
 #include <omp.h>
@@ -46,7 +47,12 @@ namespace {
   KOKKOS_TEST_SKIP_IF_ATOMICS_BYPASS()           \
   static_assert(true, "no-op to require trailing semicolon")
 
-#ifdef KOKKOS_ENABLE_OPENMP
+// FIXME_NEXTSILICON: NextSilicon can offload OpenMP code. When OpenMP +
+// NextSilicon backends are enabled, we will require -fopenmp-host-default flag,
+// which will cause all OpenMP regions to run on the host CPU instead of the
+// NextSilicon accelerator. This means we can't use OpenMP threads to test
+// NextSilicon offload regions, as they won't get offloaded.
+#if defined(KOKKOS_ENABLE_OPENMP) && !defined(KOKKOS_ENABLE_NEXTSILICON)
 template <class Lambda1, class Lambda2>
 void run_threaded_test(const Lambda1 l1, const Lambda2 l2) {
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>) {
@@ -337,6 +343,63 @@ void run_exec_space_thread_safety_range_scan() {
 TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan) {
   KOKKOS_TEST_SKIP_IF_NEEDED();
   run_exec_space_thread_safety_range_scan();
+}
+
+void run_exec_space_thread_safety_range_scan_different_sizes() {
+  const int n_threads = 8;
+
+  bool failed      = false;
+  auto test_lambda = [&](int begin, int end) {
+    for (int size = begin; size < end; size += 100) {
+      Kokkos::View<int *, TEST_EXECSPACE::memory_space> src("src", size);
+      Kokkos::View<int *, TEST_EXECSPACE::memory_space> dst("dst", size);
+
+      TEST_EXECSPACE exec;
+      Kokkos::deep_copy(exec, src, 1);
+
+      int result;
+      Kokkos::parallel_scan(
+          Kokkos::RangePolicy(exec, 0, size),
+          KOKKOS_LAMBDA(size_t i, int &update, bool final_pass) {
+            update += src[i];
+            if (final_pass) {
+              dst[i] = update;
+            }
+          },
+          result);
+      exec.fence();
+      if (result != size && size != 0) {
+        Kokkos::printf("size %d, wrong result %d\n", size, result);
+        Kokkos::atomic_store(&failed, true);
+      }
+    }
+  };
+
+  std::vector<std::thread> runners;
+  for (int i = 0; i < n_threads; ++i)
+    runners.emplace_back(test_lambda, i * (10000 / n_threads),
+                         (i + 1) * (10000 / n_threads));
+
+  for (auto &t : runners) t.join();
+
+  ASSERT_FALSE(failed);
+}
+
+TEST(TEST_CATEGORY, exec_space_thread_safety_range_scan_different_sizes) {
+  KOKKOS_TEST_SKIP_IF_NEEDED();
+#ifdef KOKKOS_ENABLE_OPENMP
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>)
+    GTEST_SKIP() << "Test can't use the OpenMP backend" << std::endl;
+#endif
+#ifdef KOKKOS_ENABLE_HPX
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::HPX>)
+    GTEST_SKIP() << "Test can't use the HPX backend" << std::endl;
+#endif
+#ifdef KOKKOS_ENABLE_THREADS
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>)
+    GTEST_SKIP() << "Test can't use the Threads backend" << std::endl;
+#endif
+  run_exec_space_thread_safety_range_scan_different_sizes();
 }
 
 #undef KOKKOS_TEST_SKIP_IF_NEEDED

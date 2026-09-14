@@ -8,7 +8,6 @@
 #if defined(KOKKOS_ENABLE_CUDA)
 
 #include <algorithm>
-#include <cstdint>
 #include <string>
 
 #include <Kokkos_Parallel.hpp>
@@ -68,32 +67,28 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
              iwork < static_cast<Member>(work_end - work_stride * batch_size)
                  ? iwork + work_stride * batch_size
                  : work_end) {
-      if constexpr (batch_size == 1) {
-        this->template exec_range<WorkTag>(iwork);
-      } else {
+// FIXME: batch_size == 1 can be treated without nested loops but faced issue
+// with cuda-12.6.2 on Hopper90 GPU (compiler hangs) when implementing that
 #if defined(KOKKOS_COMPILER_NVCC)
 #pragma unroll
 #endif
-        for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
-                           i < work_end - iwork;
-             i = (i < static_cast<Member>(work_end - work_stride - iwork))
-                     ? i + work_stride
-                     : work_end - iwork) {
-          this->template exec_range<WorkTag>(iwork + i);
-        }
+      for (Member i = 0; i < static_cast<Member>(work_stride * batch_size) &&
+                         i < work_end - iwork;
+           i = (i < static_cast<Member>(work_end - work_stride - iwork))
+                   ? i + work_stride
+                   : work_end - iwork) {
+        this->template exec_range<WorkTag>(iwork + i);
       }
     }
   }
 
   inline void execute() const {
-    const typename Policy::index_type range = m_policy.end() - m_policy.begin();
-    typename Policy::index_type nwork       = range;
+    constexpr typename Policy::index_type batch_size =
+        StaticBatchSize::batch_size;
+    const typename Policy::index_type nwork =
+        (m_policy.end() - m_policy.begin()) / batch_size +
+        ((m_policy.end() - m_policy.begin()) % batch_size == 0 ? 0 : 1);
 
-    if constexpr (StaticBatchSize::batch_size != 1) {
-      constexpr typename Policy::index_type batch_size =
-          StaticBatchSize::batch_size;
-      nwork = (uint64_t(range) + batch_size - 1) / batch_size;
-    }
     cudaFuncAttributes attr =
         CudaParallelLaunch<ParallelFor, LaunchBounds>::get_cuda_func_attributes(
             m_policy.space().impl_internal_space_instance());
@@ -104,10 +99,9 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     KOKKOS_ASSERT(block_size > 0);
     dim3 block(1, block_size, 1);
     const int maxGridSizeX = m_policy.space().cuda_device_prop().maxGridSize[0];
-    dim3 grid(
-        std::min(typename Policy::index_type((nwork + block.y - 1) / block.y),
-                 typename Policy::index_type(maxGridSizeX)),
-        1, 1);
+    dim3 grid(std::min(static_cast<uint32_t>((nwork + block.y - 1) / block.y),
+                       static_cast<uint32_t>(maxGridSizeX)),
+              1, 1);
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
     if (Kokkos::Impl::CudaInternal::cuda_use_serial_execution()) {
       block = dim3(1, 1, 1);
@@ -306,6 +300,11 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       const int block_size = local_block_size(m_functor_reducer.get_functor());
 
       KOKKOS_ASSERT(block_size > 0);
+
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
 
       // Intentionally do not downcast to word_size_type since we use Cuda
       // atomics in Kokkos_Cuda_ReduceScan.hpp
@@ -660,6 +659,11 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
       // How many block are really needed for this much work:
       const int grid_x = (nwork + work_per_block - 1) / work_per_block;
 
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(),
@@ -986,6 +990,12 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
 
       const typename Analysis::Reducer& final_reducer =
           m_functor_reducer.get_reducer();
+
+      // Only let one instance at a time resize the instance's scratch memory
+      // allocations.
+      std::scoped_lock<std::mutex> scratch_buffers_lock(
+          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+
       m_scratch_space =
           reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
               m_policy.space(), final_reducer.value_size() * grid_x));

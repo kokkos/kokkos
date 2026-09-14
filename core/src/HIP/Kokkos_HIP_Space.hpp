@@ -39,8 +39,8 @@ class HIPSpace {
   using memory_space    = HIPSpace;
   using execution_space = HIP;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
-
-  using size_type = unsigned int;
+  using size_type       = unsigned int;
+  using index_type      = std::make_signed_t<size_type>;
 
   /*--------------------------------*/
 
@@ -62,34 +62,44 @@ class HIPSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
 #endif
 
   void* allocate(const HIP& exec_space, const size_t arg_alloc_size) const;
   void* allocate(const HIP& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size) const;
+  void* allocate(const HIP& exec_space, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   /**\brief  Deallocate untracked memory in the hip space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
  private:
   void* impl_allocate(const int device_id, const hipStream_t stream,
                       const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size,
+                      const size_t arg_reported_size,
                       bool stream_sync_only) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 
@@ -122,6 +132,7 @@ class HIPHostPinnedSpace {
   using memory_space    = HIPHostPinnedSpace;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = unsigned int;
+  using index_type      = std::make_signed_t<size_type>;
 
   /*--------------------------------*/
 
@@ -142,28 +153,36 @@ class HIPHostPinnedSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   /**\brief  Deallocate untracked memory in the space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
  private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 
@@ -202,6 +221,7 @@ class HIPManagedSpace {
   using execution_space = HIP;
   using device_type     = Kokkos::Device<execution_space, memory_space>;
   using size_type       = unsigned int;
+  using index_type      = std::make_signed_t<size_type>;
 
   /*--------------------------------*/
 
@@ -222,31 +242,39 @@ class HIPManagedSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
   void* allocate(const size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   /**\brief  Deallocate untracked memory in the space */
   void deallocate(void* const arg_alloc_ptr, const size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
   //  internal only method to determine whether page migration is supported
   bool impl_hip_driver_check_page_migration() const;
 
  private:
   void* impl_allocate(const char* arg_label, const size_t arg_alloc_size,
-                      const size_t arg_logical_size = 0,
+                      const size_t arg_reported_size,
                       const Kokkos::Tools::SpaceHandle =
                           Kokkos::Tools::make_space_handle(name())) const;
   void impl_deallocate(const char* arg_label, void* const arg_alloc_ptr,
                        const size_t arg_alloc_size,
-                       const size_t arg_logical_size = 0,
+                       const size_t arg_reported_size,
                        const Kokkos::Tools::SpaceHandle =
                            Kokkos::Tools::make_space_handle(name())) const;
 

@@ -143,6 +143,24 @@ TEST(std_algorithms_find_test, test) {
   run_all_scenarios<StridedThreeTag, unsigned>();
 }
 
+TEST(std_algorithms_find_test, test_extended_range) {
+#ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
+  GTEST_SKIP();
+#endif
+  std::size_t n = (std::size_t(1) << 31) + 1;
+  Kokkos::View<bool*> view("large_view", n);
+
+  const std::size_t idx = n - 1;
+  Kokkos::deep_copy(Kokkos::subview(view, idx), true);
+
+  auto result = KE::find(exespace{}, view, true);
+  ASSERT_NE(result, KE::end(view));
+
+  bool found = false;
+  Kokkos::deep_copy(found, Kokkos::subview(view, result - KE::begin(view)));
+  EXPECT_EQ(found, true);
+}
+
 }  // namespace Find
 }  // namespace stdalgos
 }  // namespace Test
