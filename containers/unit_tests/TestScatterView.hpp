@@ -762,13 +762,11 @@ void test_scatter_view(int64_t n) {
 }
 
 TEST(TEST_CATEGORY, scatterview) {
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum, double>(
-      10);
-
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum, int>(10);
+  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum>(10);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterProd>(10);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMin>(10);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMax>(10);
+  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMax, int>(10);
   // tests were timing out in DEBUG mode, reduce the amount of work
 #ifdef KOKKOS_ENABLE_DEBUG
   int big_n = 100 * 1000;
@@ -792,25 +790,15 @@ TEST(TEST_CATEGORY, scatterview) {
 
 #endif
 
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum, double>(
-      big_n);
-  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum, int>(
-      big_n);
+  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterSum>(big_n);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterProd>(big_n);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMin>(big_n);
   test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMax>(big_n);
+  test_scatter_view<TEST_EXECSPACE, Kokkos::Experimental::ScatterMax, int>(
+      big_n);
 }
 
 TEST(TEST_CATEGORY, scatterview_devicetype) {
-  using device_type =
-      Kokkos::Device<TEST_EXECSPACE, typename TEST_EXECSPACE::memory_space>;
-
-  test_scatter_view<device_type, Kokkos::Experimental::ScatterSum, double>(10);
-  test_scatter_view<device_type, Kokkos::Experimental::ScatterSum, int>(10);
-  test_scatter_view<device_type, Kokkos::Experimental::ScatterProd>(10);
-  test_scatter_view<device_type, Kokkos::Experimental::ScatterMin>(10);
-  test_scatter_view<device_type, Kokkos::Experimental::ScatterMax>(10);
-
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
 #ifdef KOKKOS_ENABLE_CUDA
   using device_execution_space = Kokkos::Cuda;
@@ -824,23 +812,22 @@ TEST(TEST_CATEGORY, scatterview_devicetype) {
   if (std::is_same_v<TEST_EXECSPACE, device_execution_space>) {
     using device_device_type =
         Kokkos::Device<device_execution_space, device_memory_space>;
-    test_scatter_view<device_device_type, Kokkos::Experimental::ScatterSum,
-                      double>(10);
-    test_scatter_view<device_device_type, Kokkos::Experimental::ScatterSum,
-                      int>(10);
+    test_scatter_view<device_device_type, Kokkos::Experimental::ScatterSum>(10);
     test_scatter_view<device_device_type, Kokkos::Experimental::ScatterProd>(
         10);
     test_scatter_view<device_device_type, Kokkos::Experimental::ScatterMin>(10);
     test_scatter_view<device_device_type, Kokkos::Experimental::ScatterMax>(10);
+    test_scatter_view<device_device_type, Kokkos::Experimental::ScatterMax,
+                      int>(10);
+
     using host_device_type =
         Kokkos::Device<device_execution_space, host_accessible_space>;
-    test_scatter_view<host_device_type, Kokkos::Experimental::ScatterSum,
-                      double>(10);
-    test_scatter_view<host_device_type, Kokkos::Experimental::ScatterSum, int>(
-        10);
+    test_scatter_view<host_device_type, Kokkos::Experimental::ScatterSum>(10);
     test_scatter_view<host_device_type, Kokkos::Experimental::ScatterProd>(10);
     test_scatter_view<host_device_type, Kokkos::Experimental::ScatterMin>(10);
     test_scatter_view<host_device_type, Kokkos::Experimental::ScatterMax>(10);
+    test_scatter_view<host_device_type, Kokkos::Experimental::ScatterMax, int>(
+        10);
   }
 #endif
 }
