@@ -151,8 +151,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline void execute() {
     ReducerType reducer = m_functor_reducer.get_reducer();
 
-    const index_type nwork = m_policy.m_num_tiles;
-    if (nwork) {
+    if (m_policy.m_num_tiles) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
@@ -167,10 +166,41 @@ class ParallelReduce<CombinedFunctorReducerType,
                                                // than or equal to 512
 
       // REQUIRED ( 1 , N , 1 )
-      const dim3 block(1, block_size, 1);
-      const int cc = m_policy.space().concurrency() / block_size;
-      const dim3 grid(static_cast<uint32_t>(std::min(index_type(cc), nwork)), 1,
-                      1);
+      dim3 block(1, block_size, 1);
+      // use a slightly less constrained, but still well bounded limit for
+      // scratch
+      const index_type nwork = m_policy.m_num_tiles * m_policy.m_prod_tile_dims;
+      index_type nblocks     = (nwork + block.y - 1) / block.y;
+      // Heuristic deciding the value of nblocks.
+      // The general idea here is we want to:
+      //    1. Not undersubscribe the device (i.e., we want at least
+      //    preferred_block_min blocks)
+      //    2. Have each thread reduce > 1 value to minimize overheads
+      //    3. Limit the total # of blocks, to avoid unbounded scratch space
+      constexpr int block_max           = 4096;
+      constexpr int preferred_block_min = 1024;
+
+      if (nblocks < preferred_block_min) {
+        // keep blocks as is, already have low parallelism
+      } else if (nblocks > block_max) {
+        // "large dispatch" -> already have lots of parallelism
+        nblocks = block_max;
+      } else {
+        // in the intermediate range, try to have each thread process multiple
+        // items to offset the cost of the reduction (with not enough
+        // parallelism to hide it)
+        int items_per_thread =
+            (nwork + nblocks * block_size - 1) / (nblocks * block_size);
+        if (items_per_thread < 4) {
+          int ratio = std::min(
+              (nblocks + preferred_block_min - 1) / preferred_block_min,
+              static_cast<index_type>(4 + items_per_thread - 1) /
+                  items_per_thread);
+          nblocks /= ratio;
+        }
+      }
+
+      dim3 grid(static_cast<uint32_t>(nblocks), 1, 1);
 
       // Only let one instance at a time resize the instance's scratch memory
       // allocations.
