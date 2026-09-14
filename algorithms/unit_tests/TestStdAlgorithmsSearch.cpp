@@ -287,6 +287,7 @@ TEST(std_algorithms_non_mod_seq_ops, search) {
 TEST(std_algorithms_non_mod_seq_ops, test_extended_range) {
 #ifndef KOKKOS_ENABLE_LARGE_MEM_TESTS
   GTEST_SKIP();
+  KOKKOS_IMPL_UNREACHABLE();
 #endif
   std::size_t n = (std::size_t(1) << 31) + 1;
   Kokkos::View<bool*> view("large_view", n);
