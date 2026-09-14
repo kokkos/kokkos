@@ -54,8 +54,6 @@ TEST(TEST_CATEGORY, mdspan_minimal_functional) {
   // FIXME_OPENACC: Test is known to fail for 24.5 < NVHPC version <= 26.5.
   GTEST_SKIP() << "skipping since the OpenACC backend fails to compile this "
                   "test if 24.5 < NVHPC version <= 26.5";
-  GTEST_SKIP() << "skipping since the OpenACC backend test fails if 24.5 < "
-                  "NVHPC version <= 26.5";
 #else
   test_mdspan_minimal_functional();
 #endif
