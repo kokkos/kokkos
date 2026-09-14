@@ -6,6 +6,16 @@
 
 set -e
 
+# Skip nextsystemd entirely if no tests would run (respects --gtest_filter and similar args).
+# For GTest binaries, count test cases listed by --gtest_list_tests (indented two spaces).
+if ./"$1" --help 2>&1 | grep -q 'This program contains tests written using Google Test'; then
+    _test_count=$(./"$1" "${@:2}" --gtest_list_tests 2>/dev/null | grep -c '^  ' || true)
+    if [ "${_test_count}" -eq 0 ]; then
+        echo "nextsilicon-test-wrapper.sh: no tests selected, skipping"
+        exit 0
+    fi
+fi
+
 # make sure nextsystemd shuts down no matter what
 cleanup() {
         # code from last thing that ran
