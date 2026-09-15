@@ -326,7 +326,8 @@ struct ViewTraits<void, ArrayLayout, Prop...> {
   using hooks_policy  = typename ViewTraits<void, Prop...>::hooks_policy;
 };
 
-template <Kokkos::Space Space, class... Prop>
+template <class Space, class... Prop>
+  requires Kokkos::is_space<Space>::value
 struct ViewTraits<void, Space, Prop...> {
   // Specify Space, memory traits should be the only subsequent argument.
 

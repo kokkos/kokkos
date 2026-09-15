@@ -3150,7 +3150,8 @@ auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi,
 }
 
 // public interface that accepts a space
-template <Kokkos::Space Space, class T, class... P>
+template <class Space, class T, class... P>
+  requires Kokkos::is_space<Space>::value
 auto create_mirror(Space const&, Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror(src, view_alloc(typename Space::memory_space{}));
 }
@@ -3164,7 +3165,8 @@ auto create_mirror(Impl::ViewCtorProp<ViewCtorArgs...> const& arg_prop,
 }
 
 // public interface that accepts a space and a without initializing flag
-template <Kokkos::Space Space, class T, class... P>
+template <class Space, class T, class... P>
+  requires Kokkos::is_space<Space>::value
 auto create_mirror(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
                    Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror(src,
@@ -3221,14 +3223,16 @@ auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi,
 }
 
 // public interface that accepts a space
-template <Kokkos::Space Space, class T, class... P>
+template <class Space, class T, class... P>
+  requires Kokkos::is_space<Space>::value
 auto create_mirror_view(const Space&, const Kokkos::View<T, P...>& src) {
   return Impl::create_mirror_view(src,
                                   view_alloc(typename Space::memory_space()));
 }
 
 // public interface that accepts a space and a without initializing flag
-template <Kokkos::Space Space, class T, class... P>
+template <class Space, class T, class... P>
+  requires Kokkos::is_space<Space>::value
 auto create_mirror_view(Kokkos::Impl::WithoutInitializing_t wi, Space const&,
                         Kokkos::View<T, P...> const& src) {
   return Impl::create_mirror_view(
@@ -3308,7 +3312,8 @@ auto create_mirror_view_and_copy(
 // Previously when using auto here, the intel compiler 19.3 would
 // sometimes not create a symbol, guessing that it somehow is a combination
 // of auto and just forwarding arguments (see issue #5196)
-template <Kokkos::Space Space, class T, class... P>
+template <class Space, class T, class... P>
+  requires Kokkos::is_space<Space>::value
 typename Impl::MirrorViewType<Space, T, P...>::view_type
 create_mirror_view_and_copy(const Space&, const Kokkos::View<T, P...>& src,
                             std::string const& name = "") {

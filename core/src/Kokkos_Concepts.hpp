@@ -289,9 +289,6 @@ struct is_space {
   using memory_space    = typename is_mem::space;
 };
 
-template <typename T>
-concept Space = is_space<T>::value;
-
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

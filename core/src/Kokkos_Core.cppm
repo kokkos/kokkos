@@ -81,7 +81,6 @@ export {
   using ::Kokkos::kokkos_malloc;
   using ::Kokkos::kokkos_realloc;
   using ::Kokkos::MemoryPool;  // FIXME
-  using ::Kokkos::Space;
   using ::Kokkos::SpaceAccessibility;
 #ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
   using ::Kokkos::SharedHostPinnedSpace;
