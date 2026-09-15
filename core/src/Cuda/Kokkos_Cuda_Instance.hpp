@@ -47,7 +47,7 @@ struct CudaTraits {
 #ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
   static constexpr bool GridConstantLaunchEnabled = true;
 #else
-  static constexpr bool GridConstantLaunchEnabled = false;
+  static constexpr bool GridConstantLaunchEnabled   = false;
 #endif
   static constexpr CudaSpace::size_type KernelArgumentLimit =
       GridConstantLaunchEnabled ? 0x008000  /* 32k bytes */

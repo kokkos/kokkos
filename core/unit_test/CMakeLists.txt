@@ -757,28 +757,17 @@ if(Kokkos_ENABLE_CUDA)
   if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
     set(KOKKOS_CUPTI_FOUND ON)
   else()
-    find_path(KOKKOS_CUPTI_INCLUDE_DIR
+    find_path(
+      KOKKOS_CUPTI_INCLUDE_DIR
       NAMES cupti.h
-      HINTS
-        "${CUDAToolkit_ROOT}"
-        "${CUDAToolkit_LIBRARY_ROOT}"
-        ENV CUDA_HOME
-        ENV CUDA_PATH
-      PATH_SUFFIXES
-        extras/CUPTI/include
-        include
+      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
+      PATH_SUFFIXES extras/CUPTI/include include
     )
-    find_library(KOKKOS_CUPTI_LIBRARY
+    find_library(
+      KOKKOS_CUPTI_LIBRARY
       NAMES cupti
-      HINTS
-        "${CUDAToolkit_ROOT}"
-        "${CUDAToolkit_LIBRARY_ROOT}"
-        ENV CUDA_HOME
-        ENV CUDA_PATH
-      PATH_SUFFIXES
-        extras/CUPTI/lib64
-        lib64
-        lib
+      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
+      PATH_SUFFIXES extras/CUPTI/lib64 lib64 lib
     )
 
     if(KOKKOS_CUPTI_INCLUDE_DIR AND KOKKOS_CUPTI_LIBRARY)
@@ -788,21 +777,14 @@ if(Kokkos_ENABLE_CUDA)
 
   if(KOKKOS_CUPTI_FOUND)
     kokkos_add_executable_and_test(
-      CoreUnitTest_CudaCUPTILaunchRoute
-      SOURCES
-      UnitTestMainInit.cpp
-      cuda/TestCuda_CUPTI_LaunchRoute.cpp
+      CoreUnitTest_CudaCUPTILaunchRoute SOURCES UnitTestMainInit.cpp cuda/TestCuda_CUPTI_LaunchRoute.cpp
     )
 
     if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
       target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE CUDA::cupti)
     else()
-      target_include_directories(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE
-        "${KOKKOS_CUPTI_INCLUDE_DIR}"
-      )
-      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE
-        "${KOKKOS_CUPTI_LIBRARY}"
-      )
+      target_include_directories(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_INCLUDE_DIR}")
+      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_LIBRARY}")
     endif()
   else()
     message(STATUS "CUPTI not found; skipping CUDA launch-route test")
