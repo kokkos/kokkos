@@ -555,10 +555,6 @@ struct test_non_duplicated_scatter_view {
                                           Contribution, Op,
                                           NumberType>::orig_view_type;
 
-  void compile_constructor() {
-    auto sv = scatter_view_def(Kokkos::view_alloc(DeviceType{}, "label"), 10);
-  }
-
   void run_test(int n) {
     // test allocation
     {
@@ -683,10 +679,6 @@ struct test_duplicated_scatter_view {
       typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
                                           Contribution, Op,
                                           NumberType>::orig_view_type;
-
-  void compile_constructor() {
-    auto sv = scatter_view_def(Kokkos::view_alloc(DeviceType{}, "label"), 10);
-  }
 
   void run_test(int n) {
     // test allocation
