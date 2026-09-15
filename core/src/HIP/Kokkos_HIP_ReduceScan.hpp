@@ -161,14 +161,14 @@ struct HIPReductionsFunctor<FunctorType, false> {
       if (lane_id + delta < width && (lane_id % (delta * 2) == 0)) {
         functor.join(value, value + delta);
       }
-    }
-#if HIP_VERSION_MAJOR >= 7
-    __syncwarp(mask);
+ #if HIP_VERSION_MAJOR >= 7
+      __syncwarp(mask);
 #else
 #if __has_builtin(__builtin_amdgcn_wave_barrier)
-    __builtin_amdgcn_wave_barrier();
+      __builtin_amdgcn_wave_barrier();
 #endif
 #endif
+    }
     *value = *(value - lane_id);
   }
 
