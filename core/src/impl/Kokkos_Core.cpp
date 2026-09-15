@@ -608,8 +608,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "ICL");
 #elif defined(KOKKOS_ARCH_ICX)
   declare_configuration_metadata("architecture", "CPU architecture", "ICX");
-#elif defined(KOKKOS_ARCH_KNC)
-  declare_configuration_metadata("architecture", "CPU architecture", "KNC");
 #elif defined(KOKKOS_ARCH_KNL)
   declare_configuration_metadata("architecture", "CPU architecture", "KNL");
 #elif defined(KOKKOS_ARCH_NATIVE)
