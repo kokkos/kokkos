@@ -44,12 +44,14 @@ struct CudaTraits {
       0x008000; /* 32k bytes */
   static constexpr CudaSpace::size_type ConstantMemoryCache =
       0x002000; /*  8k bytes */
-  static constexpr CudaSpace::size_type KernelArgumentLimit =
 #ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-      0x008000; /* 32k bytes */
+  static constexpr bool GridConstantLaunchEnabled = true;
 #else
-      0x001000; /*  4k bytes */
+  static constexpr bool GridConstantLaunchEnabled = false;
 #endif
+  static constexpr CudaSpace::size_type KernelArgumentLimit =
+      GridConstantLaunchEnabled ? 0x008000  /* 32k bytes */
+                                : 0x001000; /*  4k bytes */
   static constexpr CudaSpace::size_type MaxHierarchicalParallelism =
       1024; /* team_size * vector_length */
   using ConstantGlobalBufferType =

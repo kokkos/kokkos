@@ -298,28 +298,20 @@ struct DeduceCudaLaunchMechanism {
       CudaLaunchMechanism::GlobalMemory;
 
   static constexpr CudaLaunchMechanism requested_launch_mechanism =
-#ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
       (CudaTraits::ConstantMemoryLaunchEnabled
-           ? (((property & heavy_weight) == heavy_weight)
-                  ? CudaLaunchMechanism::ConstantMemory
-                  : CudaLaunchMechanism::LocalMemory)
+           ? (CudaTraits::GridConstantLaunchEnabled
+                  ? ((property & heavy_weight) == heavy_weight
+                         ? CudaLaunchMechanism::ConstantMemory
+                         : CudaLaunchMechanism::LocalMemory)
+                  : ((property & light_weight) == light_weight
+                         ? CudaLaunchMechanism::LocalMemory
+                         : CudaLaunchMechanism::ConstantMemory))
            : CudaLaunchMechanism::LocalMemory) |
-#else
-      (CudaTraits::ConstantMemoryLaunchEnabled
-           ? (((property & light_weight) == light_weight)
-                  ? CudaLaunchMechanism::LocalMemory
-                  : CudaLaunchMechanism::ConstantMemory)
-           : CudaLaunchMechanism::LocalMemory) |
-#endif  // KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
       CudaLaunchMechanism::GlobalMemory;
 
   static constexpr CudaLaunchMechanism default_launch_mechanism =
-#ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-      (sizeof(DriverType) < CudaTraits::KernelArgumentLimit)
-          ? CudaLaunchMechanism::LocalMemory
-          : CudaLaunchMechanism::GlobalMemory;
-#else
-      CudaTraits::ConstantMemoryLaunchEnabled
+      (!CudaTraits::GridConstantLaunchEnabled &&
+       CudaTraits::ConstantMemoryLaunchEnabled)
           ? (sizeof(DriverType) < CudaTraits::ConstantMemoryUseThreshold
                  ? CudaLaunchMechanism::LocalMemory
                  : (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage
@@ -328,38 +320,36 @@ struct DeduceCudaLaunchMechanism {
           : (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
                  ? CudaLaunchMechanism::LocalMemory
                  : CudaLaunchMechanism::GlobalMemory);
-#endif  // KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 
+  // Logic mask for choosing the non-grid-constant launch mechanism by functor
+  // size (F) and Kernel Property. First column is restriction by size (local L,
+  // constant C, global G), second is restriction by property, third is default
+  // based on size, and last is actual mode.
+  //
+  //              None                LightWeight    HeavyWeight
+  // F<UseT       LCG LCG L  L        LCG  LG L  L    LCG  CG L  C
+  // UseT<F<KAL   LCG LCG C  C        LCG  LG C  L    LCG  CG C  C
+  // Kal<F<CMU     CG LCG C  C         CG  LG C  G     CG  CG C  C
+  // CMU<F          G LCG G  G          G  LG G  G      G  CG G  G
   static constexpr CudaLaunchMechanism launch_mechanism =
-#ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-      (CudaTraits::ConstantMemoryLaunchEnabled &&
-       ((property & heavy_weight) == heavy_weight) and
-       (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage))
-          ? CudaLaunchMechanism::ConstantMemory
-          : default_launch_mechanism;
-#else
-      // Logic mask for choosing launch mechanism by functor size (F) and
-      // Kernel Property. First column is restriction by size (local L,
-      // constant C, global G), second is restriction by property, third is
-      // default based on size, and last is actual mode.
-      //
-      //              None                LightWeight    HeavyWeight
-      // F<UseT       LCG LCG L  L        LCG  LG L  L    LCG  CG L  C
-      // UseT<F<KAL   LCG LCG C  C        LCG  LG C  L    LCG  CG C  C
-      // Kal<F<CMU     CG LCG C  C         CG  LG C  G     CG  CG C  C
-      // CMU<F          G LCG G  G          G  LG G  G      G  CG G  G
-      CudaTraits::ConstantMemoryLaunchEnabled
-          ? ((property & light_weight) == light_weight
-                 ? (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
-                        ? CudaLaunchMechanism::LocalMemory
-                        : CudaLaunchMechanism::GlobalMemory)
-                 : ((property & heavy_weight) == heavy_weight
-                        ? (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage
-                               ? CudaLaunchMechanism::ConstantMemory
+      CudaTraits::GridConstantLaunchEnabled
+          ? ((CudaTraits::ConstantMemoryLaunchEnabled &&
+              ((property & heavy_weight) == heavy_weight) and
+              (sizeof(DriverType) < CudaTraits::ConstantMemoryUsage))
+                 ? CudaLaunchMechanism::ConstantMemory
+                 : default_launch_mechanism)
+          : (CudaTraits::ConstantMemoryLaunchEnabled
+                 ? ((property & light_weight) == light_weight
+                        ? (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
+                               ? CudaLaunchMechanism::LocalMemory
                                : CudaLaunchMechanism::GlobalMemory)
-                        : default_launch_mechanism))
-          : default_launch_mechanism;
-#endif  // KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
+                        : ((property & heavy_weight) == heavy_weight
+                               ? (sizeof(DriverType) <
+                                          CudaTraits::ConstantMemoryUsage
+                                      ? CudaLaunchMechanism::ConstantMemory
+                                      : CudaLaunchMechanism::GlobalMemory)
+                               : default_launch_mechanism))
+                 : default_launch_mechanism);
 };
 
 // </editor-fold> end DeduceCudaLaunchMechanism }}}2
