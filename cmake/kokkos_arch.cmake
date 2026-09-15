@@ -775,20 +775,6 @@ if(KOKKOS_ARCH_SPR)
   )
 endif()
 
-if(KOKKOS_ARCH_POWER7)
-  compiler_specific_flags(
-    COMPILER_ID
-    KOKKOS_CXX_HOST_COMPILER_ID
-    MSVC
-    NO-VALUE-SPECIFIED
-    NVHPC
-    NO-VALUE-SPECIFIED
-    DEFAULT
-    -mcpu=power7
-    -mtune=power7
-  )
-endif()
-
 if(KOKKOS_ARCH_POWER8)
   compiler_specific_flags(
     COMPILER_ID
