@@ -88,12 +88,3 @@ extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
   printf("De-allocated %" PRIu64 " kB at %s\n ", max_mem_usage(), handle.name);
 #endif
 }
-
-extern "C" void kokkosp_finalize_library() {
-#ifdef KOKKOS_ENABLE_DEBUG
-  printf("\nKokkosP: Finalization of profiling library.\n");
-
-  printf("KokkosP: High water mark memory consumption: %" PRIu64 " kB\n\n",
-         max_mem_usage());
-#endif
-}
