@@ -55,6 +55,11 @@ struct CudaTraits {
   using ConstantGlobalBufferType =
       unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
+#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+  static constexpr bool ConstantMemoryLaunchEnabled = true;
+#else
+  static constexpr bool ConstantMemoryLaunchEnabled = false;
+#endif
   static constexpr int ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */;
 };
 
