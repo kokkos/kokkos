@@ -272,11 +272,6 @@ inline void configure_max_dynamic_shmem(const CudaInternal* cuda_instance,
 //==============================================================================
 // <editor-fold desc="DeduceCudaLaunchMechanism"> {{{2
 
-// With constant memory launch enabled, use local memory up to
-// ConstantMemoryUseThreshold, constant memory up to ConstantMemoryUsage, and
-// global memory above that. Otherwise, use local memory up to the kernel
-// argument limit and global memory above it.
-
 template <class DriverType>
 struct DeduceCudaLaunchMechanism {
   constexpr static auto light_weight =
@@ -286,6 +281,11 @@ struct DeduceCudaLaunchMechanism {
   constexpr static typename DriverType::Policy::work_item_property property =
       typename DriverType::Policy::work_item_property();
 
+  // Mechanisms permitted by the build configuration and DriverType size, where
+  // F = sizeof(DriverType). GlobalMemory is always valid. LocalMemory is valid
+  // below KernelArgumentLimit, whose value accounts for grid-constant support.
+  // ConstantMemory is valid only when explicitly enabled and below
+  // ConstantMemoryUsage.
   static constexpr CudaLaunchMechanism valid_launch_mechanism =
       // BuildValidMask
       (sizeof(DriverType) < CudaTraits::KernelArgumentLimit
@@ -297,6 +297,18 @@ struct DeduceCudaLaunchMechanism {
            : CudaLaunchMechanism::Default) |
       CudaLaunchMechanism::GlobalMemory;
 
+  // Property-derived mechanism mask, with GlobalMemory always included as a
+  // fallback. This is descriptive metadata; launch_mechanism is not computed
+  // directly from this mask.
+  //
+  // Constant memory disabled:   all properties       -> L|G
+  // Constant + grid constant:   contains HeavyWeight -> C|G
+  //                             otherwise            -> L|G
+  // Constant, no grid constant: contains LightWeight -> L|G
+  //                             otherwise            -> C|G
+  //
+  // Thus HeavyWeight takes precedence when grid constant is enabled, while
+  // LightWeight takes precedence when it is disabled.
   static constexpr CudaLaunchMechanism requested_launch_mechanism =
       (CudaTraits::ConstantMemoryLaunchEnabled
            ? (CudaTraits::GridConstantLaunchEnabled
@@ -309,6 +321,17 @@ struct DeduceCudaLaunchMechanism {
            : CudaLaunchMechanism::LocalMemory) |
       CudaLaunchMechanism::GlobalMemory;
 
+  // Size-based choice when no work-item hint overrides it, where
+  // F = sizeof(DriverType).
+  //
+  // Constant memory enabled without grid constant:
+  //   F < ConstantMemoryUseThreshold -> L
+  //   F < ConstantMemoryUsage        -> C
+  //   otherwise                      -> G
+  //
+  // Otherwise:
+  //   F < KernelArgumentLimit -> L
+  //   otherwise               -> G
   static constexpr CudaLaunchMechanism default_launch_mechanism =
       (!CudaTraits::GridConstantLaunchEnabled &&
        CudaTraits::ConstantMemoryLaunchEnabled)
@@ -321,16 +344,38 @@ struct DeduceCudaLaunchMechanism {
                  ? CudaLaunchMechanism::LocalMemory
                  : CudaLaunchMechanism::GlobalMemory);
 
-  // Logic mask for choosing the non-grid-constant launch mechanism by functor
-  // size (F) and Kernel Property. First column is restriction by size (local L,
-  // constant C, global G), second is restriction by property, third is default
-  // based on size, and last is actual mode.
+  // Select how DriverType is passed to the CUDA kernel, where
+  // F = sizeof(DriverType).
   //
-  //              None                LightWeight    HeavyWeight
-  // F<UseT       LCG LCG L  L        LCG  LG L  L    LCG  CG L  C
-  // UseT<F<KAL   LCG LCG C  C        LCG  LG C  L    LCG  CG C  C
-  // Kal<F<CMU     CG LCG C  C         CG  LG C  G     CG  CG C  C
-  // CMU<F          G LCG G  G          G  LG G  G      G  CG G  G
+  // Constant-memory launch disabled:
+  //   All properties:
+  //     F < KernelArgumentLimit -> LocalMemory
+  //     otherwise               -> GlobalMemory
+  //
+  // Constant-memory launch enabled, grid-constant enabled:
+  //   HintHeavyWeight and F < ConstantMemoryUsage -> ConstantMemory
+  //   otherwise:
+  //     F < KernelArgumentLimit -> LocalMemory
+  //     otherwise               -> GlobalMemory
+  //
+  // HintHeavyWeight takes precedence if both weight hints are present.
+  //
+  // Constant-memory launch enabled, grid-constant disabled:
+  //   HintLightWeight:
+  //     F < KernelArgumentLimit -> LocalMemory
+  //     otherwise               -> GlobalMemory
+  //   HintHeavyWeight:
+  //     F < ConstantMemoryUsage -> ConstantMemory
+  //     otherwise               -> GlobalMemory
+  //   No LightWeight or HeavyWeight hint:
+  //     F < ConstantMemoryUseThreshold -> LocalMemory
+  //     F < ConstantMemoryUsage        -> ConstantMemory
+  //     otherwise                      -> GlobalMemory
+  //
+  // HintLightWeight takes precedence if both weight hints are present.
+  //
+  // LocalMemory means DriverType is a kernel parameter; with grid constant
+  // enabled, that parameter carries the __grid_constant__ attribute.
   static constexpr CudaLaunchMechanism launch_mechanism =
       CudaTraits::GridConstantLaunchEnabled
           ? ((CudaTraits::ConstantMemoryLaunchEnabled &&
