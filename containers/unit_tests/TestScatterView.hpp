@@ -487,6 +487,7 @@ struct test_default_scatter_sub_view {
   }
 };
 
+// Test ScatterView with default types
 template <typename DeviceType, typename Layout, typename Op,
           typename NumberType>
 struct test_default_scatter_view {
@@ -538,10 +539,13 @@ struct test_default_scatter_view {
   }
 };
 
-template <typename DeviceType, typename Layout, typename Duplication,
-          typename Contribution, typename Op, typename NumberType>
-struct test_scatter_view_config {
+// Test non-duplicated ScatterView
+template <typename DeviceType, typename Layout, typename Contribution,
+          typename Op, typename NumberType>
+struct test_non_duplicated_scatter_view {
  public:
+  using Duplication = Kokkos::Experimental::ScatterNonDuplicated;
+
   using scatter_view_def =
       typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
                                           Contribution, Op,
@@ -663,19 +667,88 @@ struct test_scatter_view_config {
   }
 };
 
+// Test duplicated ScatterView
+template <typename DeviceType, typename Layout, typename Op,
+          typename NumberType>
+struct test_duplicated_scatter_view {
+ public:
+  using Duplication  = Kokkos::Experimental::ScatterDuplicated;
+  using Contribution = Kokkos::Experimental::ScatterNonAtomic;
+
+  using scatter_view_def =
+      typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
+                                          Contribution, Op,
+                                          NumberType>::scatter_view_type;
+  using orig_view_def =
+      typename test_scatter_view_impl_cls<DeviceType, Layout, Duplication,
+                                          Contribution, Op,
+                                          NumberType>::orig_view_type;
+
+  void compile_constructor() {
+    auto sv = scatter_view_def(Kokkos::view_alloc(DeviceType{}, "label"), 10);
+  }
+
+  void run_test(int n) {
+    // test allocation
+    {
+      orig_view_def ov1("ov1", n);
+      scatter_view_def sv1;
+
+      ASSERT_FALSE(sv1.is_allocated());
+
+      sv1 = Kokkos::Experimental::create_scatter_view<Op, Duplication,
+                                                      Contribution>(ov1);
+
+      scatter_view_def sv2(sv1);
+      scatter_view_def sv3("sv3", n);
+
+      ASSERT_TRUE(sv1.is_allocated());
+      ASSERT_TRUE(sv2.is_allocated());
+      ASSERT_TRUE(sv3.is_allocated());
+    }
+
+    // Test creation via create_scatter_view
+    {
+      orig_view_def original_view("original_view", n);
+      scatter_view_def scatter_view = Kokkos::Experimental::create_scatter_view<
+          Op, Duplication, Contribution>(original_view);
+
+      test_scatter_view_impl_cls<DeviceType, Layout, Duplication, Contribution,
+                                 Op, NumberType>
+          scatter_view_test_impl(scatter_view);
+      scatter_view_test_impl.initialize(original_view);
+      scatter_view_test_impl.run_parallel(n);
+
+      Kokkos::Experimental::contribute(original_view, scatter_view);
+      scatter_view.reset_except(original_view);
+
+      scatter_view_test_impl.run_parallel(n);
+
+      Kokkos::Experimental::contribute(original_view, scatter_view);
+      Kokkos::fence();
+
+      scatter_view_test_impl.validateResults(original_view);
+
+      {
+        scatter_view_def persistent_view("persistent", n);
+        auto result_view = persistent_view.subview();
+        contribute(result_view, persistent_view);
+        Kokkos::fence();
+      }
+    }
+  }
+};
+
 template <typename DeviceType, typename ScatterType, typename NumberType>
 struct TestDuplicatedScatterView {
   TestDuplicatedScatterView(int n) {
-    // ScatterSum test
-    test_scatter_view_config<DeviceType, Kokkos::LayoutRight,
-                             Kokkos::Experimental::ScatterDuplicated,
-                             Kokkos::Experimental::ScatterNonAtomic,
-                             ScatterType, NumberType>
+    // ScatterView has different impl with layout left vs. right, we test both
+    test_duplicated_scatter_view<DeviceType, Kokkos::LayoutRight, ScatterType,
+                                 NumberType>
         test_sv_right_config;
     test_sv_right_config.run_test(n);
-    test_scatter_view_config<
-        DeviceType, Kokkos::LayoutLeft, Kokkos::Experimental::ScatterDuplicated,
-        Kokkos::Experimental::ScatterNonAtomic, ScatterType, NumberType>
+    test_duplicated_scatter_view<DeviceType, Kokkos::LayoutLeft, ScatterType,
+                                 NumberType>
         test_sv_left_config;
     test_sv_left_config.run_test(n);
   }
@@ -710,25 +783,24 @@ void test_scatter_view(int64_t n) {
   // is running essentially in serial (doesn't have to be Serial though,
   // we also test OpenMP with one thread: LAMMPS cares about that)
   if (execution_space().concurrency() == 1) {
-    test_scatter_view_config<DeviceType, Kokkos::LayoutRight,
-                             Kokkos::Experimental::ScatterNonDuplicated,
-                             Kokkos::Experimental::ScatterNonAtomic,
-                             ScatterType, NumberType>
+    test_non_duplicated_scatter_view<DeviceType, Kokkos::LayoutRight,
+                                     Kokkos::Experimental::ScatterNonAtomic,
+                                     ScatterType, NumberType>
         test_sv_config;
     test_sv_config.run_test(n);
   }
 #ifdef KOKKOS_ENABLE_SERIAL
   if (!std::is_same_v<DeviceType, Kokkos::Serial>) {
 #endif
-    test_scatter_view_config<DeviceType, Kokkos::LayoutRight,
-                             Kokkos::Experimental::ScatterNonDuplicated,
-                             Kokkos::Experimental::ScatterAtomic, ScatterType,
-                             NumberType>
+    test_non_duplicated_scatter_view<DeviceType, Kokkos::LayoutRight,
+                                     Kokkos::Experimental::ScatterAtomic,
+                                     ScatterType, NumberType>
         test_sv_config;
     test_sv_config.run_test(n);
 #ifdef KOKKOS_ENABLE_SERIAL
   }
 #endif
+
   // with hundreds of threads we were running out of memory.
   // limit (n) so that duplication doesn't exceed 1GB
   constexpr std::size_t maximum_allowed_total_bytes =
@@ -758,6 +830,7 @@ void test_scatter_view(int64_t n) {
     test_default_scatter_view_subview.run_test(n);
   }
 
+  // Test duplicated ScatterViews
   TestDuplicatedScatterView<DeviceType, ScatterType, NumberType> duptest(n);
 }
 
