@@ -62,7 +62,6 @@ declare_and_check_host_arch(ICL "Intel Ice Lake Client CPUs (AVX512)")
 declare_and_check_host_arch(ICX "Intel Ice Lake Xeon Server CPUs (AVX512)")
 declare_and_check_host_arch(SKL "Intel Skylake Client CPUs")
 declare_and_check_host_arch(SKX "Intel Skylake Xeon Server CPUs (AVX512)")
-declare_and_check_host_arch(KNC "Intel Knights Corner Xeon Phi")
 declare_and_check_host_arch(KNL "Intel Knights Landing Xeon Phi")
 declare_and_check_host_arch(SPR "Intel Sapphire Rapids Xeon Server CPUs (AVX512)")
 declare_and_check_host_arch(POWER8 "IBM POWER8 CPUs")
@@ -699,10 +698,6 @@ if(KOKKOS_ARCH_KNL)
   )
 endif()
 
-if(KOKKOS_ARCH_KNC)
-  compiler_specific_flags(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID MSVC NO-VALUE-SPECIFIED DEFAULT -mmic)
-endif()
-
 if(KOKKOS_ARCH_SKL)
   compiler_specific_flags(
     COMPILER_ID
@@ -772,20 +767,6 @@ if(KOKKOS_ARCH_SPR)
     DEFAULT
     -march=sapphirerapids
     -mtune=sapphirerapids
-  )
-endif()
-
-if(KOKKOS_ARCH_POWER7)
-  compiler_specific_flags(
-    COMPILER_ID
-    KOKKOS_CXX_HOST_COMPILER_ID
-    MSVC
-    NO-VALUE-SPECIFIED
-    NVHPC
-    NO-VALUE-SPECIFIED
-    DEFAULT
-    -mcpu=power7
-    -mtune=power7
   )
 endif()
 
