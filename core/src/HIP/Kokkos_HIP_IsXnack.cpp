@@ -4,14 +4,19 @@
 /*--------------------------------------------------------------------------*/
 
 #include <string>
-#include <string_view>
 #include <optional>
+#include <iostream>
 #include <fstream>
+#include <string_view>
+#include <hip/hip_runtime_api.h>
 
 #ifdef __linux__
 #include <stdio.h>
 #include <sys/utsname.h>
 #endif
+
+#include <impl/Kokkos_RuntimeInfo.hpp>
+#include <HIP/Kokkos_HIP_Error.hpp>
 
 namespace {
 
@@ -74,6 +79,32 @@ bool xnack_environment_enabled() {
 bool xnack_boot_config_has_hmm_mirror() {
   static bool cache = [] { return config_hmm_mirror_in_boot_config(); }();
   return cache;
+}
+
+bool gpu_arch_can_access_system_allocations(int device_id) {
+  hipDeviceProp_t props;
+  KOKKOS_IMPL_HIP_SAFE_CALL(hipGetDeviceProperties(&props, device_id));
+
+  std::string_view const arch_name = props.gcnArchName;
+  auto has_prefix                  = [&](std::string_view const prefix) {
+    return arch_name.starts_with(prefix);
+  };
+
+  // Supported per ROCm/HIP documentation.
+  if (has_prefix("gfx908") || has_prefix("gfx90a") || has_prefix("gfx942") ||
+      has_prefix("gfx950"))
+    return true;
+  if (has_prefix("gfx906") || has_prefix("gfx1030") || has_prefix("gfx1100") ||
+      has_prefix("gfx1101") || has_prefix("gfx1103") || has_prefix("gfx1151") ||
+      has_prefix("gfx1152") || has_prefix("gfx1201"))
+    return false;
+
+  // Conservative fallback: unsupported/unknown architecture.
+  if (Kokkos::show_warnings()) {
+    std::cerr << "Warning: AMD GPU architecture '" << arch_name
+              << "' not recognized.\n";
+  }
+  return false;
 }
 
 }  // namespace Kokkos::Impl
