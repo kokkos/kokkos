@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: Copyright 2026 Antmicro
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+module(name = "kokkos")
+
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.18")
+bazel_dep(name = "openmp", version = "21.1.5.bcr.2")
