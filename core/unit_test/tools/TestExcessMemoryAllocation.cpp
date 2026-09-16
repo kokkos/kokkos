@@ -8,7 +8,7 @@
 void allocate_large_view() {
   Kokkos::initialize();
   {
-    uint64_t very_large_size = (5 << 30);
+    uint64_t very_large_size = (5ULL << 30ULL);
     Kokkos::View<double *, Kokkos::DefaultHostExecutionSpace> a(
         "A", very_large_size);
   }
@@ -21,8 +21,8 @@ TEST(ExcessMemoryAllocationErrorsInTesting,
   GTEST_SKIP()
       << "Allocations > 4GB are not supported on 32-bit builds.";  // FIXME_32BIT
 #endif
-  ASSERT_DEATH(allocate_large_view(),
-               ".*WARNING!.*Total allocation.*GB.*exceeds.*GB limit!");
+  ASSERT_EXIT(allocate_large_view(), ::testing::ExitedWithCode(1),
+              ".*WARNING!.*Total allocation.*GB.*exceeds.*GB limit!");
 }
 
 int main(int argc, char **argv) {
