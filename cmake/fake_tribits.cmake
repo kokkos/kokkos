@@ -92,11 +92,12 @@ function(KOKKOS_ADD_TEST)
   endif()
 
   # This tool will get applied by default unless DefaultInstance is specified in the test name
-  # It uses the rusage struct, so it will only work on Linux or Mac.
+  # It uses the rusage struct, so it will only work on Linux or Mac. Requires libdl.
   if(NOT WIN32)
     string(FIND "${TEST_NAME}" "DefaultInstance" index)
     if((NOT TEST_TOOL)
        AND (${index} LESS 0)
+       AND (NOT KOKKOS_ENABLE_LIBDL)
        AND (NOT KOKKOS_ENABLE_LARGE_MEM_TESTS)
        AND (NOT KOKKOS_ENABLE_THREADS)
     )
