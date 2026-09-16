@@ -28,7 +28,13 @@ struct functor_team_for {
   functor_team_for(Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
+  // FIXE_CUDA For some reason, the for-loop in the single construct is
+  // optimized away if we use l0 here.
+#ifdef KOKKOS_ENABLE_CUDA
   using shmem_space = typename ExecutionSpace::scratch_memory_space;
+#else
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
+#endif
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -95,7 +101,7 @@ struct functor_team_reduce {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_scalar_t =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -105,7 +111,7 @@ struct functor_team_reduce {
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
     Scalar value = Scalar();
-    shared_scalar_t shared_value(team.team_scratch(0), 1);
+    shared_scalar_t shared_value(team.template team_scratch<0>(), 1);
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(team, 131),
@@ -167,7 +173,7 @@ struct functor_team_reduce_reducer {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_scalar_t =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -177,7 +183,7 @@ struct functor_team_reduce_reducer {
   KOKKOS_INLINE_FUNCTION
   void operator()(typename policy_type::member_type team) const {
     Scalar value = 0;
-    shared_scalar_t shared_value(team.team_scratch(0), 1);
+    shared_scalar_t shared_value(team.template team_scratch<0>(), 1);
 
     Kokkos::parallel_reduce(
         Kokkos::TeamThreadRange(team, 131),
@@ -234,7 +240,7 @@ struct functor_team_vector_for {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -301,7 +307,7 @@ struct functor_team_vector_reduce {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -354,7 +360,7 @@ struct functor_team_vector_reduce_reducer {
       Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -448,7 +454,7 @@ struct functor_vec_for {
   functor_vec_for(Kokkos::View<int, Kokkos::LayoutLeft, ExecutionSpace> flag_)
       : flag(flag_) {}
 
-  using shmem_space = typename ExecutionSpace::scratch_memory_space;
+  using shmem_space = typename ExecutionSpace::scratch_memory_space_l0;
   using shared_int =
       Kokkos::View<Scalar *, shmem_space, Kokkos::MemoryUnmanaged>;
   unsigned team_shmem_size(int team_size) const {
@@ -752,7 +758,7 @@ bool Test(int test) {
 #ifdef KOKKOS_ENABLE_SYCL
   int team_size = 31;
 #else
-  int team_size = 33;
+  int team_size     = 33;
 #endif
   // Can't use concurrency here since some backends have a maximum team size
   // that is smaller (and smaller than 33).

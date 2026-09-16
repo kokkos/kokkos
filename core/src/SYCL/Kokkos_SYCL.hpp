@@ -42,7 +42,9 @@ class SYCL {
   using size_type    = memory_space::size_type;
   using index_type   = memory_space::index_type;
 
-  using scratch_memory_space = ScratchMemorySpace<SYCL>;
+  using scratch_memory_space    = ScratchMemorySpace<SYCL>;
+  using scratch_memory_space_l0 = ScratchMemorySpaceBase<SYCL, L0Tag>;
+  using scratch_memory_space_l1 = ScratchMemorySpaceBase<SYCL, L1Tag>;
 
   SYCL(const SYCL&) = default;
   SYCL(SYCL&& other) noexcept : SYCL(static_cast<const SYCL&>(other)) {}

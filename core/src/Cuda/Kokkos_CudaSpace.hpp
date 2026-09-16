@@ -34,6 +34,10 @@ extern "C" void kokkos_impl_cuda_set_pin_uvm_to_host(bool);
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
+
+template <typename ExecSpace>
+class ScratchMemorySpace;
+
 namespace Impl {
 
 template <typename T>
@@ -435,6 +439,23 @@ template <>
 struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::CudaUVMSpace> {
   enum : bool { assignable = false };  // different execution_space
   enum : bool { accessible = true };   // same accessibility
+};
+
+template <typename PointerType>
+struct MemorySpaceAccess<Kokkos::CudaSpace, Kokkos::ScratchMemorySpaceBase<
+                                                Kokkos::Cuda, PointerType>> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+  enum : bool { deepcopy = false };
+};
+
+template <typename PointerType>
+struct MemorySpaceAccess<
+    Kokkos::ScratchMemorySpace<Kokkos::Cuda>,
+    Kokkos::ScratchMemorySpaceBase<Kokkos::Cuda, PointerType>> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = false };
+  enum : bool { deepcopy = false };
 };
 
 //----------------------------------------

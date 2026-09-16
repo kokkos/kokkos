@@ -304,8 +304,9 @@ TEST(TEST_CATEGORY, view_customization_extra_int_arg) {
 }
 
 void test_scratch_memory_allocation() {
-  using view_t = Kokkos::View<Foo::BarStrided*, TEST_EXECSPACE>;
-  size_t size  = 5;
+  using view_t =
+      Kokkos::View<Foo::BarStrided*, TEST_EXECSPACE::scratch_memory_space>;
+  size_t size = 5;
 
   using policy_t = Kokkos::TeamPolicy<TEST_EXECSPACE>;
   policy_t p(1, Kokkos::AUTO());

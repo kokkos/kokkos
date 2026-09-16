@@ -20,6 +20,10 @@ static_assert(false,
 #include <Kokkos_MinMax.hpp>
 
 namespace Kokkos {
+
+template <class ExecutionSpace, class PointerType>
+class ScratchMemorySpaceBase;
+
 template <class DataType, class... Properties>
 struct ViewTraits;
 
@@ -30,10 +34,10 @@ template <class>
 struct is_view : public std::false_type {};
 
 template <class D, class... P>
-struct is_view<View<D, P...> > : public std::true_type {};
+struct is_view<View<D, P...>> : public std::true_type {};
 
 template <class D, class... P>
-struct is_view<const View<D, P...> > : public std::true_type {};
+struct is_view<const View<D, P...>> : public std::true_type {};
 
 template <class T>
 inline constexpr bool is_view_v = is_view<T>::value;
@@ -125,8 +129,8 @@ struct is_assignable_view<View<ViewTDst...>, View<ViewTSrc...>, true> {
 // to a 'const View<...>'
 template <class DstView, class SrcView>
 using is_always_assignable = Impl::is_assignable_view<
-    std::remove_volatile_t<std::remove_reference_t<DstView> >,
-    std::remove_cvref_t<SrcView> >;
+    std::remove_volatile_t<std::remove_reference_t<DstView>>,
+    std::remove_cvref_t<SrcView>>;
 
 template <class T1, class T2>
 inline constexpr bool is_always_assignable_v =
@@ -183,7 +187,7 @@ struct BasicViewFromTraits<ElementType, extents<IndexType, Extents...>,
   using view_traits =
       ViewTraits<data_type, typename ArrayLayoutFromLayout<layout_type>::type,
                  typename accessor_type::memory_space,
-                 MemoryTraitsFromAccessor<accessor_type> >;
+                 MemoryTraitsFromAccessor<accessor_type>>;
   using mdspan_view_traits                = MDSpanViewTraits<view_traits>;
   static constexpr bool mdspan_style_args = true;
 };
@@ -269,7 +273,7 @@ struct ViewTypeDefs<ViewType, false, false> {
   using host_mirror_type =
       View<typename traits::non_const_data_type, array_layout,
            Device<DefaultHostExecutionSpace,
-                  typename traits::host_mirror_space::memory_space> >;
+                  typename traits::host_mirror_space::memory_space>>;
 };
 
 // MDspan Style Arguments - hooks policy would be encoded in accessor
@@ -291,21 +295,21 @@ struct ViewTypeDefs<ViewType, HasHooksPolicy, true> {
       View<const element_type, extents_type, layout_type,
            Kokkos::Experimental::Accessor<const element_type,
                                           typename ViewType::memory_space,
-                                          typename ViewType::memory_traits> >;
+                                          typename ViewType::memory_traits>>;
 
   // Compatible view of non-const data type
   using non_const_type =
       View<non_const_element_type, extents_type, layout_type,
            Kokkos::Experimental::Accessor<non_const_element_type,
                                           typename ViewType::memory_space,
-                                          typename ViewType::memory_traits> >;
+                                          typename ViewType::memory_traits>>;
 
   // Compatible host mirror view
   using host_mirror_type =
       View<non_const_element_type, extents_type, layout_type,
            Kokkos::Experimental::Accessor<
                non_const_element_type,
-               typename ViewType::host_mirror_space::memory_space> >;
+               typename ViewType::host_mirror_space::memory_space>>;
 };
 
 }  // namespace Impl
@@ -1015,8 +1019,7 @@ class View
   KOKKOS_FUNCTION
   explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutLeft& arg_layout)
-    requires(
-        std::is_same_v<typename base_t::layout_type, layout_left_padded<> >)
+    requires(std::is_same_v<typename base_t::layout_type, layout_left_padded<>>)
       : base_t(
             handle,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
@@ -1026,7 +1029,7 @@ class View
   explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutRight& arg_layout)
     requires(
-        std::is_same_v<typename base_t::layout_type, layout_right_padded<> >)
+        std::is_same_v<typename base_t::layout_type, layout_right_padded<>>)
       : base_t(
             handle,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
@@ -1440,6 +1443,26 @@ class View
                      scratch_value_alignment))),
              arg_layout) {}
 
+  template <typename PointerType>
+  explicit KOKKOS_INLINE_FUNCTION View(
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
+      const typename traits::array_layout& arg_layout)
+      : View(Impl::ViewCtorProp<pointer_type>(
+                 static_cast<pointer_type>(arg_space.get_shmem_aligned(
+                     Impl::mapping_from_array_layout<
+                         typename base_t::mapping_type>(arg_layout)
+                             .required_span_size() *
+                         sizeof(raw_allocation_value_type),
+                     scratch_value_alignment))),
+             arg_layout) {
+    static_assert(
+        Impl::MemorySpaceAccess<
+            typename traits::memory_space,
+            Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>>::assignable);
+  }
+
  private:
   // Function to support use case of Trilinos Sacado where an extra dimension
   // is handed in to pass to the accessor (i.e. ensemble dimension)
@@ -1447,6 +1470,32 @@ class View
   KOKKOS_FUNCTION auto construct_scratch_view_from_extra_dim(
       std::index_sequence<Idx...>,
       const typename traits::execution_space::scratch_memory_space& arg_space,
+      Sizes... sizes_in) const {
+    size_t sizes[rank() + 1] = {static_cast<size_t>(sizes_in)...};
+    const auto map =
+        Impl::mapping_from_ctor_and_sizes<typename mdspan_type::mapping_type,
+                                          sizeof(value_type)>(
+            Kokkos::view_wrap(static_cast<pointer_type>(nullptr)),
+            sizes[Idx]...);
+
+    size_t extra_dim = sizes[rank()];
+    const auto acc   = accessor_from_mapping_and_accessor_arg(
+        Kokkos::Impl::AccessorTypeTag<typename base_t::accessor_type>(), map,
+        Kokkos::Impl::AccessorArg_t{extra_dim});
+
+    const size_t allocation_size =
+        allocation_size_from_mapping_and_accessor(map, acc) *
+        sizeof(raw_allocation_value_type);
+    return base_t(static_cast<pointer_type>(arg_space.get_shmem_aligned(
+                      allocation_size, scratch_value_alignment)),
+                  std::move(map), std::move(acc));
+  }
+
+  template <typename PointerType, size_t... Idx, class... Sizes>
+  KOKKOS_FUNCTION auto construct_scratch_view_from_extra_dim(
+      std::index_sequence<Idx...>,
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
       Sizes... sizes_in) const {
     size_t sizes[rank() + 1] = {static_cast<size_t>(sizes_in)...};
     const auto map =
@@ -1480,6 +1529,21 @@ class View
       : base_t(construct_scratch_view_from_extra_dim(
             std::make_index_sequence<rank()>(), arg_space, sizes...)) {}
 
+  template <typename PointerType, class... Sizes>
+    requires((sizeof...(Sizes) == rank() + 1) && traits::impl_is_customized)
+  explicit KOKKOS_INLINE_FUNCTION View(
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
+      Sizes... sizes)
+      : base_t(construct_scratch_view_from_extra_dim(
+            std::make_index_sequence<rank()>(), arg_space, sizes...)) {
+    static_assert(
+        Impl::MemorySpaceAccess<
+            typename traits::memory_space,
+            Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>>::assignable);
+  }
+
   // Constructor to support cases where View is customized but no extra argument
   // is passed in. In this case the accessor is default constructed, but the
   // customization point for allocation size still needs to be used.
@@ -1503,11 +1567,64 @@ class View
                         std::move(map), std::move(acc));
         }()) {}
 
+  template <typename PointerType, std::integral... Sizes>
+    requires((sizeof...(Sizes) == rank()) && traits::impl_is_customized)
+  explicit KOKKOS_INLINE_FUNCTION View(
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
+      Sizes... sizes)
+      : base_t([&] {
+          const auto map = Impl::mapping_from_ctor_and_sizes<
+              typename mdspan_type::mapping_type, sizeof(value_type)>(
+              Kokkos::view_wrap(static_cast<pointer_type>(nullptr)), sizes...);
+
+          const auto acc = typename base_t::accessor_type();
+
+          const size_t allocation_size =
+              allocation_size_from_mapping_and_accessor(map, acc) *
+              sizeof(raw_allocation_value_type);
+          return base_t(static_cast<pointer_type>(arg_space.get_shmem_aligned(
+                            allocation_size, scratch_value_alignment)),
+                        std::move(map), std::move(acc));
+        }()) {
+    static_assert(
+        Impl::MemorySpaceAccess<
+            typename traits::memory_space,
+            Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>>::assignable);
+  }
+
   // Constructor supporting scratch view construction without customization.
   // don't need to use customization point for allocation size, and use
   // default constructor for accessor.
   explicit KOKKOS_INLINE_FUNCTION View(
       const typename traits::execution_space::scratch_memory_space& arg_space,
+      const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N3 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N4 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N5 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N6 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+      const size_t arg_N7 = KOKKOS_IMPL_CTOR_DEFAULT_ARG)
+    requires(!traits::impl_is_customized)
+      : base_t([&] {
+          const auto map = Impl::mapping_from_ctor_and_8sizes<
+              typename mdspan_type::mapping_type, sizeof(value_type)>(
+              Kokkos::view_wrap(static_cast<pointer_type>(nullptr)), arg_N0,
+              arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6, arg_N7);
+
+          size_t allocation_size =
+              map.required_span_size() * sizeof(value_type);
+          return base_t(static_cast<pointer_type>(arg_space.get_shmem_aligned(
+                            allocation_size, scratch_value_alignment)),
+                        std::move(map), typename base_t::accessor_type());
+        }()) {}
+
+  template <typename PointerType>
+  explicit KOKKOS_INLINE_FUNCTION View(
+      const Kokkos::ScratchMemorySpaceBase<typename traits::execution_space,
+                                           PointerType>& arg_space,
       const size_t arg_N0 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N1 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
       const size_t arg_N2 = KOKKOS_IMPL_CTOR_DEFAULT_ARG,
@@ -1598,7 +1715,7 @@ template <unsigned N, typename... Args>
 KOKKOS_FUNCTION std::enable_if_t<
     N == View<Args...>::rank() &&
         std::is_same_v<typename ViewTraits<Args...>::specialize, void>,
-    View<Args...> >
+    View<Args...>>
 as_view_of_rank_n(View<Args...> v) {
   return v;
 }
@@ -1610,7 +1727,7 @@ KOKKOS_FUNCTION std::enable_if_t<
     N != View<T, Args...>::rank() &&
         std::is_same_v<typename ViewTraits<T, Args...>::specialize, void>,
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
-         Args...> >
+         Args...>>
 as_view_of_rank_n(View<T, Args...>) {
   Kokkos::abort("Trying to get at a View of the wrong rank");
   return {};
