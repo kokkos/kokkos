@@ -47,6 +47,7 @@ template void check_common_types<std::bfloat16_t>();
 
 template<class float16, class bfloat16>
 inline void check_common_types_both() {
+// These are not defined according to the C++ standard
 //static_assert(std::is_same_v<std::common_type_t<bfloat16, float16>, float>);
 //static_assert(std::is_same_v<std::common_type_t<float16, bfloat16>, float>);
 //static_assert(std::is_same_v<std::common_type_t<bfloat16, float16, float>, float>);
