@@ -153,12 +153,14 @@ class ParallelScanSYCLBase {
         *space.impl_internal_space_instance();
     sycl::queue& q = space.sycl_queue();
 
-    if (!m_result_ptr_device_accessible)
+    pointer_type result_ptr;
+    if (!m_result_ptr_device_accessible) {
       m_scratch_host = static_cast<sycl::global_ptr<value_type>>(
           instance.scratch_host(sizeof(value_type)));
-    pointer_type result_ptr = m_result_ptr_device_accessible
-                                  ? m_result_ptr
-                                  : static_cast<pointer_type>(m_scratch_host);
+      result_ptr = static_cast<pointer_type>(m_scratch_host);
+    } else {
+      result_ptr = m_result_ptr;
+    }
 
     const auto size = m_policy.end() - m_policy.begin();
 
