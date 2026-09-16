@@ -441,8 +441,7 @@ void sort_device_view_without_comparator(
 // fallback case
 template <Kokkos::ExecutionSpace Exec, class DataType, class... Properties>
 void sort_device_view_without_comparator(
-    const Exec& exec,
-    const Kokkos::View<DataType, Properties...>& view) {
+    const Exec& exec, const Kokkos::View<DataType, Properties...>& view) {
   using value_type =
       typename Kokkos::View<DataType, Properties...>::non_const_value_type;
   if constexpr (std::is_arithmetic_v<value_type>) {
