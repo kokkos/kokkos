@@ -9,9 +9,11 @@
 void allocate_large_view() {
   Kokkos::initialize();
   {
-    constexpr uint64_t CHUNK = 512ULL * 1024 * 1024 / sizeof(double) ; // 512 MiB per chunk
-    constexpr int NUM_CHUNKS = 9;                    // ~4.5 GiB total
-    std::vector<Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace>> views;
+    constexpr uint64_t CHUNK =
+        512ULL * 1024 * 1024 / sizeof(double);  // 512 MiB per chunk
+    constexpr int NUM_CHUNKS = 9;               // ~4.5 GiB total
+    std::vector<Kokkos::View<double *, Kokkos::DefaultHostExecutionSpace>>
+        views;
     for (int i = 0; i < NUM_CHUNKS; ++i) {
       views.emplace_back("A", CHUNK);
     }
