@@ -112,9 +112,11 @@ IteratorType remove_if_exespace_impl(const std::string& label,
 
     const auto scan_num_elements = Kokkos::Experimental::distance(first, last);
     index_type scan_count        = 0;
-    ::Kokkos::parallel_scan(
-        label, RangePolicy<ExecutionSpace>(ex, 0, scan_num_elements),
-        func1_type(first, begin(tmp_view), pred), scan_count);
+    ::Kokkos::parallel_scan(label,
+                            RangePolicy<ExecutionSpace, IndexType<index_type>>(
+                                ex, 0, scan_num_elements),
+                            func1_type(first, begin(tmp_view), pred),
+                            scan_count);
 
     // scan_count should be equal to keep_count
     KOKKOS_ASSERT(scan_count == keep_count);
@@ -124,10 +126,10 @@ IteratorType remove_if_exespace_impl(const std::string& label,
     using func2_type =
         StdRemoveIfStage2Functor<index_type, tmp_readwrite_iterator_type,
                                  IteratorType>;
-    ::Kokkos::parallel_for(
-        "remove_if_stage2_parfor",
-        RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
-        func2_type(begin(tmp_view), first));
+    ::Kokkos::parallel_for("remove_if_stage2_parfor",
+                           RangePolicy<ExecutionSpace, IndexType<index_type>>(
+                               ex, 0, tmp_view.extent(0)),
+                           func2_type(begin(tmp_view), first));
     ex.fence("Kokkos::remove_if: fence after stage2");
 
     // return

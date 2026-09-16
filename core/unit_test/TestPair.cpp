@@ -156,4 +156,18 @@ TEST(defaultdevicetype, pair_on_device) {
   auto h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
   for (int i = 0; i < 6; ++i) EXPECT_EQ(h(i), 1);
 }
+
+constexpr bool test_pair_converting_constructor_from_std_pair() {
+  constexpr std::pair<int, float> sp{1, 2.f};
+  constexpr Kokkos::pair<int, float> p(sp);
+  if (p.first != 1 || p.second != 2.f) return false;
+
+  // constructor is also a template, allowing conversion between element types
+  constexpr std::pair<int, int> sp2{3, 4};
+  constexpr Kokkos::pair<long, long> p2(sp2);
+  return p2.first == 3 && p2.second == 4;
+}
+
+static_assert(test_pair_converting_constructor_from_std_pair());
+
 }  // namespace

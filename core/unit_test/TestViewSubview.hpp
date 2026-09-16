@@ -1621,6 +1621,40 @@ void test_unmanaged_subview_reset() {
 
 //----------------------------------------------------------------------------
 
+// std::pair slice arguments to Kokkos::subview are only usable from device
+// code when relying on relaxed constexpr support (see
+// https://github.com/kokkos/kokkos/issues/9460).
+#if !defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_CUDA_CONSTEXPR)
+template <class Space>
+struct TestSubviewStdPairInKernel {
+  Kokkos::View<int*, Space> a;
+
+  KOKKOS_FUNCTION void operator()(int) const {
+    auto sa = Kokkos::View<int*, Space>(a, std::pair<int, int>{0, 1});
+    sa(0)   = 3;
+    sa      = Kokkos::subview(a, std::pair<int, int>{1, 3});
+    sa(0)   = 2;
+    sa(1)   = 1;
+  }
+
+  TestSubviewStdPairInKernel(Space const& exec)
+      : a(Kokkos::view_alloc(exec, "a"), 3) {
+    run(exec);
+  }
+
+  void run(Space const& exec) {
+    Kokkos::parallel_for(Kokkos::RangePolicy(exec, 0, 1), *this);
+    auto ha = Kokkos::create_mirror_view_and_copy(a);
+    EXPECT_EQ(ha[0], 3);
+    EXPECT_EQ(ha[1], 2);
+    EXPECT_EQ(ha[2], 1);
+  }
+};
+
+#endif
+
+//----------------------------------------------------------------------------
+
 template <std::underlying_type_t<Kokkos::MemoryTraitsFlags> MTF>
 struct TestSubviewMemoryTraitsConstruction {
   void operator()() const {

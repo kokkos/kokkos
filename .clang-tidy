@@ -6,6 +6,7 @@ Checks: >
   -bugprone-macro-parentheses,
   -bugprone-narrowing-conversions,
   -bugprone-random-generator-seed,
+  -bugprone-signed-bitwise,
   -bugprone-suspicious-include,
   -bugprone-throwing-static-initialization,
   cppcoreguidelines-pro-type-cstyle-cast,

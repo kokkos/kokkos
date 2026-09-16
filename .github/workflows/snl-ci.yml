@@ -494,11 +494,9 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
-            -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
-            -DCMAKE_CXX_COMPILER=nextcxx \
+            -DCMAKE_TOOLCHAIN_FILE=/opt/nextsilicon/share/cmake/Modules/next-toolchain.cmake \
             -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_CXX_FLAGS="-Werror -Wno-return-type -Wno-invalid-noreturn"
+            -DCMAKE_CXX_FLAGS="-Werror -Wno-ns-unsupported-type"
 
       - name: build_kokkos
         working-directory: kokkos
@@ -518,8 +516,12 @@ jobs:
           GTEST_FILTER: -*DeathTest*
           KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS: 1
           XDG_CACHE_HOME: $HOME/optimizer-cache
+          __TINYALLOC_HEAP_SIZE: 1073741824
+          __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
+        # FIXME_NEXTSILICON: disable core dumps for now
         run: |
-          ctest -V --timeout 3600
+          ulimit -c 0
+          ctest -V --timeout 1800
 
       - name: test_kokkos
         working-directory: kokkos/build
@@ -527,6 +529,9 @@ jobs:
           # FIXME_NEXTSILICON: death tests require fork, not supported by runtime
           GTEST_FILTER: -*DeathTest*
           XDG_CACHE_HOME: $HOME/optimizer-cache
-        # FIXME_NEXTSILICON: exclusions are CS-737, OOM in main() teardown, observed in 1.3.0-395
+          __TINYALLOC_HEAP_SIZE: 1073741824
+          __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
+        # FIXME_NEXTSILICON: disable core dumps for now
         run: |
-          ctest -V --timeout 3600 -E "ToolIndependence|ProfilingTestErrorNoCallbacks|CTestDevice"
+          ulimit -c 0
+          ctest -V --timeout 1800

@@ -90,10 +90,12 @@ OutputIterator copy_if_exespace_impl(const std::string& label,
     const auto num_elements = Kokkos::Experimental::distance(first, last);
 
     typename InputIterator::difference_type count = 0;
-    ::Kokkos::parallel_scan(label,
-                            RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                            // use CTAD
-                            StdCopyIfFunctor(first, d_first, pred), count);
+    ::Kokkos::parallel_scan(
+        label,
+        RangePolicy<ExecutionSpace,
+                    IndexType<typename InputIterator::difference_type>>(
+            ex, 0, num_elements),
+        StdCopyIfFunctor(first, d_first, pred), count);
 
     // fence not needed because of the scan accumulating into count
     return d_first + count;

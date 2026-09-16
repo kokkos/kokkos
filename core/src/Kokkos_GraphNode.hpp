@@ -519,8 +519,7 @@ class GraphNodeRef {
 
     //----------------------------------------
     // This is a disaster, but I guess it's not a my disaster to fix right now
-    using return_type_remove_cvref =
-        std::remove_cv_t<std::remove_reference_t<ReturnType>>;
+    using return_type_remove_cvref = std::remove_cvref_t<ReturnType>;
     static_assert(Kokkos::is_view<return_type_remove_cvref>::value ||
                       Kokkos::is_reducer<return_type_remove_cvref>::value,
                   "Output argument to parallel reduce in a graph must be a "

@@ -84,7 +84,7 @@ struct pair {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Return the std::pair version of this object.
   ///
@@ -129,7 +129,7 @@ struct pair<T1&, T2&> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -186,7 +186,7 @@ struct pair<T1, T2&> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -243,7 +243,7 @@ struct pair<T1&, T2> {
 
   // from std::pair<U,V>
   template <class U, class V>
-  pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
+  constexpr pair(const std::pair<U, V>& p) : first(p.first), second(p.second) {}
 
   /// \brief Assignment operator.
   ///
@@ -385,7 +385,7 @@ template <typename T1, typename T2>
 struct is_std_pair<std::pair<T1, T2>> : std::true_type {};
 
 template <typename T>
-auto convert_to_kokkos_pair_if_std_pair(T t) {
+constexpr auto convert_to_kokkos_pair_if_std_pair(T t) {
   if constexpr (is_std_pair<T>::value)
     return Kokkos::pair<typename T::first_type, typename T::second_type>{t};
   else
