@@ -4,13 +4,17 @@
 #include <gtest/gtest.h>
 #include <Kokkos_Core.hpp>
 #include <cstdint>
+#include <vector>
 
 void allocate_large_view() {
   Kokkos::initialize();
   {
-    uint64_t very_large_size = (5ULL << 30ULL);
-    Kokkos::View<double *, Kokkos::DefaultHostExecutionSpace> a(
-        "A", very_large_size);
+    constexpr uint64_t CHUNK = 512ULL * 1024 * 1024 / sizeof(double) ; // 512 MiB per chunk
+    constexpr int NUM_CHUNKS = 9;                    // ~4.5 GiB total
+    std::vector<Kokkos::View<double*, Kokkos::DefaultHostExecutionSpace>> views;
+    for (int i = 0; i < NUM_CHUNKS; ++i) {
+      views.emplace_back("A", CHUNK);
+    }
   }
   Kokkos::finalize();
 }
