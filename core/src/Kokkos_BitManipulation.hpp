@@ -167,7 +167,8 @@ struct CountlZero</*constant_evaluated=*/false, /*device=*/true> {
       return __clz(reinterpret_cast<int&>(x));
     using ::Kokkos::digits_v;
     constexpr int shift = digits_v<unsigned int> - digits_v<T>;
-    return __clz(x) - shift;
+    // ARM CUDA + GCC >= 11.4 defines __clz to return unsigned int
+    return static_cast<int>(__clz(x)) - shift;
 #elif defined(KOKKOS_ENABLE_SYCL)
     return sycl::clz(x);
 #else
