@@ -63,20 +63,6 @@ struct common_type<T, Kokkos::Experimental::bhalf_t>
     : std::common_type<Kokkos::Experimental::bhalf_t, T> {};
 #endif
 
-#if !KOKKOS_BHALF_T_IS_FLOAT && !KOKKOS_HALF_T_IS_FLOAT
-template <>
-struct common_type<Kokkos::Experimental::bhalf_t,
-                   Kokkos::Experimental::half_t> {
-  using type = float;
-};
-
-template <>
-struct common_type<Kokkos::Experimental::half_t,
-                   Kokkos::Experimental::bhalf_t> {
-  using type = float;
-};
-#endif
-
 }  // namespace std
 
 #endif
