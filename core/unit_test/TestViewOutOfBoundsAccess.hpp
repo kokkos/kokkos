@@ -133,7 +133,7 @@ void test_view_out_of_bounds_access() {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_out_of_bounds_access) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
 
   using ExecutionSpace = TEST_EXECSPACE;
 

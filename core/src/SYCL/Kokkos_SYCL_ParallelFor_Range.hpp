@@ -101,7 +101,8 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       (void)memcpy_event;
 #endif
 
-      const auto actual_range = policy.end() - policy.begin();
+      const auto actual_range = static_cast<typename Policy::index_type>(
+          policy.end() - policy.begin());
       if (policy.chunk_size() <= 1) {
 #ifdef SYCL_EXT_ONEAPI_AUTO_LOCAL_RANGE
         FunctorWrapperRangePolicyParallelForCustom<Functor, Policy> f{

@@ -40,17 +40,22 @@ class SYCLDeviceUSMSpace {
   void* allocate(const SYCL& exec_space,
                  const std::size_t arg_alloc_size) const;
   void* allocate(const SYCL& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size) const;
+  void* allocate(const SYCL& exec_space, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
   void* allocate(const std::size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   void deallocate(void* const arg_alloc_ptr,
                   const std::size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
   static constexpr const char* name() { return "SYCLDeviceUSM"; }
 
@@ -75,24 +80,34 @@ class SYCLSharedUSMSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
   void* allocate(const SYCL& exec_space,
                  const std::size_t arg_alloc_size) const;
   void* allocate(const SYCL& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size) const;
+  void* allocate(const SYCL& exec_space, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
   void* allocate(const std::size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   void deallocate(void* const arg_alloc_ptr,
                   const std::size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
   static constexpr const char* name() { return "SYCLSharedUSM"; }
 
@@ -117,24 +132,34 @@ class SYCLHostUSMSpace {
   }
   template <typename ExecutionSpace>
   void* allocate(const ExecutionSpace&, const char* arg_label,
+                 const size_t arg_alloc_size) const {
+    return allocate(arg_label, arg_alloc_size);
+  }
+  template <typename ExecutionSpace>
+  void* allocate(const ExecutionSpace&, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const {
+                 const size_t arg_logical_size) const {
     return allocate(arg_label, arg_alloc_size, arg_logical_size);
   }
   void* allocate(const SYCL& exec_space,
                  const std::size_t arg_alloc_size) const;
   void* allocate(const SYCL& exec_space, const char* arg_label,
+                 const size_t arg_alloc_size) const;
+  void* allocate(const SYCL& exec_space, const char* arg_label,
                  const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
   void* allocate(const std::size_t arg_alloc_size) const;
+  void* allocate(const char* arg_label, const size_t arg_alloc_size) const;
   void* allocate(const char* arg_label, const size_t arg_alloc_size,
-                 const size_t arg_logical_size = 0) const;
+                 const size_t arg_logical_size) const;
 
   void deallocate(void* const arg_alloc_ptr,
                   const std::size_t arg_alloc_size) const;
   void deallocate(const char* arg_label, void* const arg_alloc_ptr,
+                  const size_t arg_alloc_size) const;
+  void deallocate(const char* arg_label, void* const arg_alloc_ptr,
                   const size_t arg_alloc_size,
-                  const size_t arg_logical_size = 0) const;
+                  const size_t arg_logical_size) const;
 
   static constexpr const char* name() { return "SYCLHostUSM"; }
 

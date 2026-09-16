@@ -262,7 +262,7 @@ struct ViewCtorProp : public ViewCtorProp<void, P>... {
 
   /* Copy from a matching property subset */
   KOKKOS_FUNCTION ViewCtorProp(pointer_type arg0)
-      : ViewCtorProp<void, pointer_type>(arg0) {}
+      : view_ctor_prop_base<pointer_type>(arg0) {}
 
   // If we use `ViewCtorProp<Args...>` and `ViewCtorProp<void, Args>...` here
   // directly, MSVC 16.5.5+CUDA 10.2 appears to think that `ViewCtorProp` refers

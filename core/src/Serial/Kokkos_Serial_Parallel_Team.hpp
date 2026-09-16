@@ -92,6 +92,12 @@ class TeamPolicyInternal<Kokkos::Serial, Properties...>
   inline size_t scratch_size(const int& level, int = 0) const {
     return m_team_scratch_size[level] + m_thread_scratch_size[level];
   }
+  inline size_t team_scratch_size(int level) const {
+    return m_team_scratch_size[level];
+  }
+  inline size_t thread_scratch_size(int level) const {
+    return m_thread_scratch_size[level];
+  }
 
   inline int impl_vector_length() const { return 1; }
   inline static int vector_length_max() {

@@ -18,7 +18,7 @@ template <class ExecSpace, class ScheduleType>
 struct TestRange {
   using value_type = int;  ///< alias required for the parallel_reduce
 
-  using view_type = Kokkos::View<value_type *, ExecSpace>;
+  using view_type = Kokkos::View<value_type*, ExecSpace>;
 
   view_type m_flags;
   view_type result_view;
@@ -115,36 +115,36 @@ struct TestRange {
   void operator()(const int i) const { m_flags(i) = i; }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const VerifyInitTag &, const int i) const {
+  void operator()(const VerifyInitTag&, const int i) const {
     if (i != m_flags(i)) {
       Kokkos::printf("TestRange::test_for_error at %d != %d\n", i, m_flags(i));
     }
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const ResetTag &, const int i) const {
+  void operator()(const ResetTag&, const int i) const {
     m_flags(i) = 2 * m_flags(i);
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const VerifyResetTag &, const int i) const {
+  void operator()(const VerifyResetTag&, const int i) const {
     if (2 * i != m_flags(i)) {
       Kokkos::printf("TestRange::test_for_error at %d != %d\n", i, m_flags(i));
     }
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const PosOffsetTag &, const int i) const {
+  void operator()(const PosOffsetTag&, const int i) const {
     m_flags(i - offset) = i;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const NegOffsetTag &, const int i) const {
+  void operator()(const NegOffsetTag&, const int i) const {
     m_flags(i + offset) = i;
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const VerifyPosOffsetTag &, const int i) const {
+  void operator()(const VerifyPosOffsetTag&, const int i) const {
     if (i + offset != m_flags(i)) {
       Kokkos::printf("TestRange::test_for_error at %d != %d\n", i + offset,
                      m_flags(i));
@@ -152,7 +152,7 @@ struct TestRange {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const VerifyNegOffsetTag &, const int i) const {
+  void operator()(const VerifyNegOffsetTag&, const int i) const {
     if (i - offset != m_flags(i)) {
       Kokkos::printf("TestRange::test_for_error at %d != %d\n", i - offset,
                      m_flags(i));
@@ -195,17 +195,17 @@ struct TestRange {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const int i, value_type &update) const {
+  void operator()(const int i, value_type& update) const {
     update += m_flags(i);
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const PosOffsetTag &, const int i, value_type &update) const {
+  void operator()(const PosOffsetTag&, const int i, value_type& update) const {
     update += 1 + m_flags(i - offset);
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const NegOffsetTag &, const int i, value_type &update) const {
+  void operator()(const NegOffsetTag&, const int i, value_type& update) const {
     update += 1 + m_flags(i + offset);
   }
 
@@ -216,12 +216,12 @@ struct TestRange {
     int const concurrency = ExecSpace().concurrency();
 
     {
-      Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
+      Kokkos::View<size_t*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
           count("Count", concurrency);
-      Kokkos::View<int *, ExecSpace> a("A", N);
+      Kokkos::View<int*, ExecSpace> a("A", N);
 
       Kokkos::parallel_for(
-          policy_t(0, N), KOKKOS_LAMBDA(const int &i) {
+          policy_t(0, N), KOKKOS_LAMBDA(const int& i) {
             for (int k = 0; k < (i < N_no_implicit_capture / 2 ? 1 : 10000);
                  k++) {
               a(i)++;
@@ -232,7 +232,7 @@ struct TestRange {
       int error = 0;
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
-          KOKKOS_LAMBDA(const int &i, value_type &lsum) {
+          KOKKOS_LAMBDA(const int& i, value_type& lsum) {
             lsum += (a(i) != (i < N_no_implicit_capture / 2 ? 1 : 10000));
           },
           error);
@@ -254,14 +254,14 @@ struct TestRange {
     }
 
     {
-      Kokkos::View<size_t *, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
+      Kokkos::View<size_t*, ExecSpace, Kokkos::MemoryTraits<Kokkos::Atomic>>
           count("Count", concurrency);
-      Kokkos::View<int *, ExecSpace> a("A", N);
+      Kokkos::View<int*, ExecSpace> a("A", N);
 
       value_type sum = 0;
       Kokkos::parallel_reduce(
           policy_t(0, N),
-          KOKKOS_LAMBDA(const int &i, value_type &lsum) {
+          KOKKOS_LAMBDA(const int& i, value_type& lsum) {
             for (int k = 0; k < (i < N_no_implicit_capture / 2 ? 1 : 10000);
                  k++) {
               a(i)++;
@@ -275,7 +275,7 @@ struct TestRange {
       int error = 0;
       Kokkos::parallel_reduce(
           Kokkos::RangePolicy<ExecSpace>(0, N),
-          KOKKOS_LAMBDA(const int &i, value_type &lsum) {
+          KOKKOS_LAMBDA(const int& i, value_type& lsum) {
             lsum += (a(i) != (i < N_no_implicit_capture / 2 ? 1 : 10000));
           },
           error);
@@ -360,7 +360,7 @@ TEST(TEST_CATEGORY, range_reduce) {
 
 template <typename ExecSpace, typename StaticBatchSize>
 struct TestStaticBatchSize {
-  using view_type = Kokkos::View<int *, ExecSpace>;
+  using view_type = Kokkos::View<int*, ExecSpace>;
 
   view_type m_flags;
   view_type result_view;
@@ -397,7 +397,7 @@ struct TestStaticBatchSize {
   }
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const VerifyAtomicAddTag, const int i, bool &success) const {
+  void operator()(const VerifyAtomicAddTag, const int i, bool& success) const {
     if (m_flags(i) != 1) {
       Kokkos::printf(
           "TestStaticBatchSize {::test_batch_size_error at %d != %d\n", i,
@@ -430,7 +430,7 @@ TEST(TEST_CATEGORY, range_dynamic_policy) {
 void test_large_parallel_for_reduce() {
   using ExecutionSpace              = typename TEST_EXECSPACE::execution_space;
   constexpr long long unsigned size = 1llu << 32;
-  Kokkos::View<char *, TEST_EXECSPACE::memory_space> v(
+  Kokkos::View<char*, TEST_EXECSPACE::memory_space> v(
       Kokkos::view_alloc(Kokkos::WithoutInitializing, "v"), size);
 
   // We want to explicitly test that using a parallel_for for filling the View
@@ -444,7 +444,7 @@ void test_large_parallel_for_reduce() {
   Kokkos::parallel_reduce(
       Kokkos::RangePolicy<ExecutionSpace,
                           Kokkos::IndexType<long long unsigned>>(0, size),
-      KOKKOS_LAMBDA(long long unsigned, long long unsigned &partial_sum) {
+      KOKKOS_LAMBDA(long long unsigned, long long unsigned& partial_sum) {
         partial_sum += 1;
       },
       sum);
@@ -465,6 +465,40 @@ TEST(TEST_CATEGORY, large_parallel_for_reduce) {
 #endif
 }
 #endif
+
+template <class IndexType>
+void test_small_index_type() {
+  using ExecutionSpace = typename TEST_EXECSPACE::execution_space;
+  constexpr int size   = 1024;
+  Kokkos::View<int*, TEST_EXECSPACE::memory_space> v("v", size);
+
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(0,
+                                                                        size),
+      KOKKOS_LAMBDA(IndexType i) { v(i) += i; });
+
+  int sum;
+  Kokkos::parallel_reduce(
+      Kokkos::RangePolicy<ExecutionSpace, Kokkos::IndexType<IndexType>>(0,
+                                                                        size),
+      KOKKOS_LAMBDA(IndexType i, int& partial_sum) { partial_sum += v(i); },
+      sum);
+  ASSERT_EQ(sum, ((size - 1) * size) / 2);
+}
+
+TEST(TEST_CATEGORY, small_index_type) {
+  // FIXME_OPENACC: device parallel loops using a type smaller than int for
+  // their loop variable are not executed
+#if defined(KOKKOS_ENABLE_OPENACC)
+  if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::OpenACC>) {
+    GTEST_SKIP() << "OpenACC doesn't support index types smaller than int";
+  } else
+#endif
+  {
+    test_small_index_type<short>();
+    test_small_index_type<unsigned short>();
+  }
+}
 
 TEST(TEST_CATEGORY, check_batch_size) {
   ASSERT_TRUE(Kokkos::Experimental::StaticBatchSize<1>::batch_size == 1);

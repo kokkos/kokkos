@@ -938,17 +938,6 @@ class TestViewAPI {
     using view_type   = Kokkos::View<int, host>;
     using mirror_type = typename view_type::host_mirror_type;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
-#endif
-    static_assert(std::is_same_v<typename view_type::HostMirror,
-                                 typename view_type::host_mirror_type>);
-#ifdef KOKKOS_ENABLE_DEPRECATION_WARNINGS
-    KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
-#endif
-#endif
-
     static_assert(std::is_same_v<typename view_type::memory_space,
                                  typename mirror_type::memory_space>);
 
@@ -1328,7 +1317,7 @@ class TestViewAPI {
   }
 
   struct test_refcount_poison_copy_functor {
-    using view_type = Kokkos::View<double *>;
+    using view_type = Kokkos::View<double *, DeviceType>;
     explicit test_refcount_poison_copy_functor(view_type v) : view(v) {}
 
     test_refcount_poison_copy_functor(
@@ -1374,7 +1363,7 @@ class TestViewAPI {
   static void run_test_deep_copy_empty() {
     // Check Deep Copy of LayoutLeft to LayoutRight
     {
-      Kokkos::View<double *, Kokkos::LayoutLeft> dll("dll", 10);
+      Kokkos::View<double *, Kokkos::LayoutLeft, DeviceType> dll("dll", 10);
       Kokkos::View<double *, Kokkos::LayoutRight, Kokkos::HostSpace> hlr("hlr",
                                                                          10);
       Kokkos::deep_copy(dll, hlr);

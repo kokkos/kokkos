@@ -13,6 +13,7 @@ import kokkos.core;
 #include <desul/atomics.hpp>
 
 #include <iostream>
+#include <limits>
 
 namespace TestAtomicOperations {
 
@@ -323,7 +324,30 @@ struct DecModAtomicTest {
   static const char* name() { return "dec_mod"; }
 };
 
-template <class Op, class T, class ExecSpace>
+template <class T>
+KOKKOS_FUNCTION bool atomic_values_equal_1ulp(T actual, T expected) {
+  T next_up   = Kokkos::nextafter(expected, Kokkos::infinity_v<T>);
+  T next_down = Kokkos::nextafter(expected, -Kokkos::infinity_v<T>);
+  return actual == expected || actual == next_up || actual == next_down;
+}
+
+template <class T>
+KOKKOS_FUNCTION bool atomic_values_equal_1ulp(Kokkos::complex<T> actual,
+                                              Kokkos::complex<T> expected) {
+  return atomic_values_equal_1ulp(actual.real(), expected.real()) &&
+         atomic_values_equal_1ulp(actual.imag(), expected.imag());
+}
+
+template <bool AllowOneUlp, class T>
+KOKKOS_FUNCTION bool atomic_values_equal(T actual, T expected) {
+  if constexpr (AllowOneUlp) {
+    return atomic_values_equal_1ulp(actual, expected);
+  } else {
+    return actual == expected;
+  }
+}
+
+template <class Op, class T, class ExecSpace, bool AllowOneUlp = false>
 bool atomic_op_test(T old_val, T update) {
   Kokkos::View<T[3], ExecSpace> op_data("op_data");
   Kokkos::deep_copy(op_data, old_val);
@@ -335,11 +359,16 @@ bool atomic_op_test(T old_val, T update) {
             Op::atomic_op(&op_data(0), &op_data(1), &op_data(2), update);
         T expected_val = Op::op(old_val, update);
         Kokkos::memory_fence();
-        if (op_data(0) != expected_val) local_result += 1;
-        if (op_data(1) != expected_val) local_result += 2;
-        if (op_data(2) != expected_val) local_result += 4;
+        if (!atomic_values_equal<AllowOneUlp>(op_data(0), expected_val))
+          local_result += 1;
+        if (!atomic_values_equal<AllowOneUlp>(op_data(1), expected_val))
+          local_result += 2;
+        if (!atomic_values_equal<AllowOneUlp>(op_data(2), expected_val))
+          local_result += 4;
         if (fetch_result.first != old_val) local_result += 8;
-        if (fetch_result.second != expected_val) local_result += 16;
+        if (!atomic_values_equal<AllowOneUlp>(fetch_result.second,
+                                              expected_val))
+          local_result += 16;
       },
       result);
   if ((result & 1) != 0)
@@ -495,7 +524,7 @@ bool AtomicOperationsTestUnsignedIntegralType(int old_val_in, int update_in,
   return true;
 }
 
-template <class T, class ExecSpace>
+template <class T, class ExecSpace, bool AllowOneUlp = false>
 bool AtomicOperationsTestNonIntegralType(int old_val_in, int update_in,
                                          int test) {
   T old_val = static_cast<T>(old_val_in);
@@ -517,7 +546,8 @@ bool AtomicOperationsTestNonIntegralType(int old_val_in, int update_in,
 #else
     case 5:
       return update != 0
-                 ? atomic_op_test<DivAtomicTest, T, ExecSpace>(old_val, update)
+                 ? atomic_op_test<DivAtomicTest, T, ExecSpace, AllowOneUlp>(
+                       old_val, update)
                  : true;
 #endif
     case 6:

@@ -1,4 +1,20 @@
-[![Kokkos](https://avatars2.githubusercontent.com/u/10199860?s=200&v=4)](https://kokkos.org)
+
+<div align="center">
+
+[<img src="https://kokkos.org/download/logos/kokkos.png" width="20%">](https://kokkos.org)
+
+</div>
+
+<div align="center">
+
+[<img src="https://github.com/hpsfoundation/hpsf-logos/blob/main/Logos/PNG/Horizontal/HPSF_horizontal-tagline-color.png"
+  width="23%" style="vertical-align: middle;">](https://hpsf.io)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+[<img src="https://github.com/hpsfoundation/hpsf-logos/blob/main/Badges/HPSF_Project_Badge_Established.png?raw=true"
+  width="8%" style="vertical-align: middle;">](https://hpsf.io/projects/#tab-established)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;
+[<img src="https://www.linuxfoundation.org/hubfs/lf-stacked-color.svg"
+  width="23%" style="vertical-align: middle;">](https://linuxfoundation.org)
+
+</div>
 
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9344/badge)](https://www.bestpractices.dev/projects/9344)
 
@@ -26,7 +42,7 @@ To start learning about Kokkos:
 
 - [API reference](https://kokkos.org/kokkos-core-wiki/): organized by category, i.e., [core](https://kokkos.org/kokkos-core-wiki/API/core-index.html), [algorithms](https://kokkos.org/kokkos-core-wiki/API/algorithms-index.html), [containers](https://kokkos.org/kokkos-core-wiki/API/containers-index.html), and [simd](https://kokkos.org/kokkos-core-wiki/API/simd-index.html).
 
-- [Use cases and Examples](https://kokkos.org/kokkos-core-wiki/tutorials-and-examples/use-cases-and-examples.html): a serie of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
+- [Use cases and Examples](https://kokkos.org/kokkos-core-wiki/tutorials-and-examples/use-cases-and-examples.html): a series of examples ranging from how to use Kokkos with MPI to Fortran interoperability.
 
 ## Obtaining Kokkos
 

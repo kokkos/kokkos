@@ -22,7 +22,7 @@ struct FloatingPointComparison {
     return DBL_EPSILON;
   }
 
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
   KOKKOS_FUNCTION static Kokkos::Experimental::half_t eps(
       Kokkos::Experimental::half_t) {
 // FIXME_NVHPC compile-time error
@@ -34,7 +34,7 @@ struct FloatingPointComparison {
   }
 #endif
 
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
   KOKKOS_FUNCTION
   Kokkos::Experimental::bhalf_t static eps(Kokkos::Experimental::bhalf_t) {
 // FIXME_NVHPC compile-time error

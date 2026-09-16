@@ -10,8 +10,6 @@ import kokkos.core_impl;
 #endif
 #include <type_traits>
 
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
-
 namespace {
 
 // Helper to make static tests more succinct
@@ -70,5 +68,3 @@ static_assert(
                                             Kokkos::dynamic_extent,
                                             Kokkos::dynamic_extent, 20, 45>>);
 }  // namespace
-
-#endif  // KOKKOS_ENABLE_IMPL_MDSPAN

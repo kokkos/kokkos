@@ -78,8 +78,10 @@ IteratorType adjacent_find_exespace_impl(const std::string& label,
   // note that we use below num_elements-1 because
   // each index i in the reduction checks i and (i+1).
   ::Kokkos::parallel_reduce(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements - 1),
-      // use CTAD
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename IteratorType::difference_type>>(
+          ex, 0, num_elements - 1),
       StdAdjacentFindFunctor(first, reducer, pred), reducer);
 
   // fence not needed because reducing into scalar

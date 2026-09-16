@@ -4,8 +4,6 @@
 #ifndef TESTHALFCONVERSION_HPP_
 #define TESTHALFCONVERSION_HPP_
 
-#include <impl/Kokkos_Half_FloatingPointWrapper.hpp>
-
 namespace Test {
 
 template <class T>
@@ -18,9 +16,11 @@ void test_half_conversion_type() {
   T b                            = Kokkos::Experimental::cast_from_half<T>(a);
   ASSERT_NEAR(b, base, epsilon);
 
-  Kokkos::View<T> b_v("b_v");
+  using MemorySpace = typename TEST_EXECSPACE::memory_space;
+  Kokkos::View<T, MemorySpace> b_v("b_v");
   Kokkos::parallel_for(
-      "TestHalfConversion", 1, KOKKOS_LAMBDA(int) {
+      "TestHalfConversion", Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+      KOKKOS_LAMBDA(int) {
         Kokkos::Experimental::half_t d_a =
             Kokkos::Experimental::cast_to_half(base);
         b_v() = Kokkos::Experimental::cast_from_half<T>(d_a);
@@ -40,9 +40,11 @@ void test_bhalf_conversion_type() {
   T b                             = Kokkos::Experimental::cast_from_bhalf<T>(a);
   ASSERT_NEAR(b, base, epsilon);
 
-  Kokkos::View<T> b_v("b_v");
+  using MemorySpace = typename TEST_EXECSPACE::memory_space;
+  Kokkos::View<T, MemorySpace> b_v("b_v");
   Kokkos::parallel_for(
-      "TestHalfConversion", 1, KOKKOS_LAMBDA(int) {
+      "TestHalfConversion", Kokkos::RangePolicy<TEST_EXECSPACE>(0, 1),
+      KOKKOS_LAMBDA(int) {
         Kokkos::Experimental::bhalf_t d_a =
             Kokkos::Experimental::cast_to_bhalf(base);
         b_v() = Kokkos::Experimental::cast_from_bhalf<T>(d_a);

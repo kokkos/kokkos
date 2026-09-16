@@ -2,7 +2,10 @@
 // SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #include <TestStdAlgorithmsCommon.hpp>
+#include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core_impl;
+#else
 #include <Kokkos_Iterator.hpp>
 #endif
 

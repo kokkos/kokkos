@@ -113,8 +113,10 @@ int main(int argc, char* argv[]) {
   // That is only a hint; resource usage and correctness should be verified on
   // your target GPU and Kokkos build.
   const int min_blocks =
-#if defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_ADA89) || \
-    defined(KOKKOS_ARCH_AMPERE86)
+#if defined(KOKKOS_ARCH_TURING75) || defined(KOKKOS_ARCH_AMPERE86) ||         \
+    defined(KOKKOS_ARCH_AMPERE87) || defined(KOKKOS_ARCH_ADA89) ||            \
+    defined(KOKKOS_ARCH_BLACKWELL120) || defined(KOKKOS_ARCH_BLACKWELL121) || \
+    defined(KOKKOS_ARCH_RUBIN107)
       // We only use 2 blocks to stay below 1024 threads per SM.
       2;
 #else

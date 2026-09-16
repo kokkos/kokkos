@@ -85,7 +85,7 @@ TEST(TEST_CATEGORY, graph_instantiate_and_debug_dot_print) {
   // Therefore, we just look for the functor and policy. Note that the
   // signature is mangled in the 'dot' output before icpx 2026.
 #if defined(KOKKOS_COMPILER_INTEL_LLVM) && \
-    KOKKOS_COMPILER_INTEL_LLVM >= 20260100
+    KOKKOS_COMPILER_INTEL_LLVM >= 20260200
   const std::string expected("Increment<Kokkos::View<int, Kokkos::SYCL> >");
 #else
   const std::string expected("[A-Za-z0-9_]+Increment[A-Za-z0-9_]+RangePolicy");
@@ -182,6 +182,7 @@ TEST(TEST_CATEGORY, interact_with_sycl_node) {
   try {
     auto sycl_graph_exec = graph.sycl_graph_exec();
     ASSERT_TRUE(sycl_graph_exec.has_value());
+    // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
     sycl_graph_exec->update(sycl_node);
     FAIL();
   } catch (const std::exception& err) {

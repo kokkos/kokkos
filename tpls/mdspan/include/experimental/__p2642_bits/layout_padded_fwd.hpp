@@ -20,7 +20,6 @@
 #include "../__p0009_bits/utility.hpp"
 
 namespace MDSPAN_IMPL_STANDARD_NAMESPACE {
-namespace MDSPAN_IMPL_PROPOSED_NAMESPACE {
 
 template <size_t padding_value = dynamic_extent>
 struct layout_left_padded {
@@ -132,6 +131,5 @@ constexpr void check_padded_layout_converting_constructor_preconditions(MDSPAN_I
 }
 
 
-}
 }
 }

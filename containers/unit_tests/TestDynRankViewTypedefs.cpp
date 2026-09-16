@@ -64,9 +64,6 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::const_scalar_array_type, typename data_analysis<DataType>::const_data_type>);
   static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename data_analysis<DataType>::non_const_data_type>);
   #endif
-  #ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  static_assert(std::is_same_v<typename ViewType::specialize, void>);
-  #endif
   KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 
   // FIXME: value_type definition conflicts with mdspan value_type
@@ -175,22 +172,18 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   // FIXME: we need to evaluate how we want to proceed with this, as with
   // extents index_type also determines the stride, while LegacyView uses size_t strides
   // So we are doing this now to avoid breakage but it means we may use 64 bit indices on the GPU
-  #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(std::is_same_v<typename ViewType::index_type, size_t>);
-  #endif
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
 
   // FIXME: should come from accessor_type
   static_assert(std::is_same_v<typename ViewType::data_handle_type, typename ViewType::pointer_type>);
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
 
-  #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   using base_view_type = typename ViewType::view_type;
   static_assert(
       std::is_same_v<typename ViewType::accessor_type, typename base_view_type::accessor_type>);
   static_assert(
       std::is_same_v<typename ViewType::mapping_type, typename base_view_type::mapping_type>);
-  #endif
   return true;
 }
 
@@ -277,11 +270,7 @@ namespace TestIntAtomic {
                                std::conditional_t<has_unified_mem_space,Kokkos::DefaultExecutionSpace,
   // else use host execution space
                                 Kokkos::DefaultHostExecutionSpace>>;
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  using expected_ref_type = Kokkos::Impl::AtomicDataElement<Kokkos::ViewTraits<int*******, Kokkos::MemoryTraits<Kokkos::Atomic>>>;
-#else
   using expected_ref_type = desul::AtomicRef<int, desul::MemoryOrderRelaxed, desul::MemoryScopeDevice>;
-#endif
 // clang-format on
 static_assert(test_view_typedefs<layout_type, space, memory_traits,
                                  host_mirror_space, int, expected_ref_type>(

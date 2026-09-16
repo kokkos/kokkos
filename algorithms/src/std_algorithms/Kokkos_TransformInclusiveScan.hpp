@@ -5,7 +5,12 @@
 #define KOKKOS_STD_ALGORITHMS_TRANSFORM_INCLUSIVE_SCAN_HPP
 
 #include "impl/Kokkos_TransformInclusiveScan.hpp"
+#include <Kokkos_Macros.hpp>
+#ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
+import kokkos.core_impl;
+#else
 #include <Kokkos_Iterator.hpp>
+#endif
 
 namespace Kokkos {
 namespace Experimental {

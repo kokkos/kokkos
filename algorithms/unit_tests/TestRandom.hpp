@@ -265,13 +265,13 @@ struct test_random_scalar {
           variance_expect / (result.variance / num_draws / 3) - 1.0;
       double covariance_eps =
           result.covariance / num_draws / 2 / variance_expect;
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
       if (!std::is_same_v<Scalar, Kokkos::Experimental::bhalf_t>) {
 #endif
         EXPECT_LT(std::abs(mean_eps), tolerance);
         EXPECT_LT(std::abs(variance_eps), 1.5 * tolerance);
         EXPECT_LT(std::abs(covariance_eps), 2.0 * tolerance);
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
       }
 #endif
     }
@@ -296,7 +296,7 @@ struct test_random_scalar {
       double covariance_eps =
           (result.covariance / HIST_DIM1D - covariance_expect) / mean_expect;
 
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
       if (std::is_same_v<Scalar, Kokkos::Experimental::half_t>) {
         mean_eps_expect       = 0.0003;
         variance_eps_expect   = 1.0;
@@ -304,13 +304,13 @@ struct test_random_scalar {
       }
 #endif
 
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
       if (!std::is_same_v<Scalar, Kokkos::Experimental::bhalf_t>) {
 #endif
         EXPECT_LT(std::abs(mean_eps), mean_eps_expect);
         EXPECT_LT(std::abs(variance_eps), variance_eps_expect);
         EXPECT_LT(std::abs(covariance_eps), covariance_eps_expect);
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
       }
 #endif
 
@@ -342,19 +342,19 @@ struct test_random_scalar {
       double covariance_eps =
           (result.covariance / HIST_DIM1D - covariance_expect) / mean_expect;
 
-#if defined(KOKKOS_HALF_T_IS_FLOAT) && !KOKKOS_HALF_T_IS_FLOAT
+#if !KOKKOS_HALF_T_IS_FLOAT
       if (std::is_same_v<Scalar, Kokkos::Experimental::half_t>) {
         variance_factor = 7;
       }
 #endif
 
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
       if (!std::is_same_v<Scalar, Kokkos::Experimental::bhalf_t>) {
 #endif
         EXPECT_LT(std::abs(mean_eps), tolerance);
         EXPECT_LT(std::abs(variance_eps), variance_factor);
         EXPECT_LT(std::abs(covariance_eps), variance_factor);
-#if defined(KOKKOS_BHALF_T_IS_FLOAT) && !KOKKOS_BHALF_T_IS_FLOAT
+#if !KOKKOS_BHALF_T_IS_FLOAT
       }
 #endif
 
@@ -652,6 +652,45 @@ void test_offset_stream() {
       << "Second half of reference streams doesn't match streams of pool B";
 }
 
+// Test rand/rand64 with ranges that previously caused signed-overflow UB.
+template <class GeneratorPool>
+void test_rand_range_overflow() {
+  using exec_space = typename GeneratorPool::device_type::execution_space;
+  using gen_type   = typename GeneratorPool::generator_type;
+
+  constexpr int32_t start32 = -gen_type::MAX_RAND - 1;
+  constexpr int32_t end32   = gen_type::MAX_RAND;
+  constexpr int64_t start64 = -gen_type::MAX_RAND64 - 1;
+  constexpr int64_t end64   = gen_type::MAX_RAND64;
+
+  GeneratorPool pool(42);
+
+  int64_t n_nonmin32 = 0;
+  Kokkos::parallel_reduce(
+      "test_rand_range_overflow_32", Kokkos::RangePolicy<exec_space>(0, 1000),
+      KOKKOS_LAMBDA(int /*i*/, int64_t& n) {
+        auto gen = pool.get_state();
+        for (int k = 0; k < 64; ++k)
+          if (gen.rand(start32, end32) != start32) ++n;
+        pool.free_state(gen);
+      },
+      n_nonmin32);
+  EXPECT_GT(n_nonmin32, 0) << "rand(INT_MIN,INT_MAX) always returned INT_MIN";
+
+  int64_t n_nonmin64 = 0;
+  Kokkos::parallel_reduce(
+      "test_rand_range_overflow_64", Kokkos::RangePolicy<exec_space>(0, 1000),
+      KOKKOS_LAMBDA(int /*i*/, int64_t& n) {
+        auto gen = pool.get_state();
+        for (int k = 0; k < 64; ++k)
+          if (gen.rand64(start64, end64) != start64) ++n;
+        pool.free_state(gen);
+      },
+      n_nonmin64);
+  EXPECT_GT(n_nonmin64, 0)
+      << "rand64(INT64_MIN,INT64_MAX) always returned INT64_MIN";
+}
+
 }  // namespace AlgoRandomImpl
 
 TEST(TEST_CATEGORY, Random_XorShift64) {
@@ -712,6 +751,24 @@ TEST(TEST_CATEGORY, Random_SFC64) {
                                   Kokkos::Random_SFC64_Pool<ExecutionSpace>>(
       10000)
       .run();
+}
+
+TEST(TEST_CATEGORY, Random_XorShift64_rand_range_overflow) {
+  AlgoRandomImpl::test_rand_range_overflow<
+      Kokkos::Random_XorShift64_Pool<TEST_EXECSPACE>>();
+}
+
+TEST(TEST_CATEGORY, Random_XorShift1024_rand_range_overflow) {
+  AlgoRandomImpl::test_rand_range_overflow<
+      Kokkos::Random_XorShift1024_Pool<TEST_EXECSPACE>>();
+}
+
+TEST(TEST_CATEGORY, Random_SFC64_rand_range_overflow) {
+#if defined(KOKKOS_ENABLE_SYCL)
+  GTEST_SKIP() << "Failing on Intel GPUs";  // FIXME_SYCL
+#endif
+  AlgoRandomImpl::test_rand_range_overflow<
+      Kokkos::Random_SFC64_Pool<TEST_EXECSPACE>>();
 }
 
 TEST(TEST_CATEGORY, Multi_streams) {

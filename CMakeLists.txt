@@ -140,7 +140,7 @@ elseif(NOT CMAKE_SIZEOF_VOID_P EQUAL 8)
 endif()
 
 set(Kokkos_VERSION_MAJOR 5)
-set(Kokkos_VERSION_MINOR 1)
+set(Kokkos_VERSION_MINOR 2)
 set(Kokkos_VERSION_PATCH 99)
 set(Kokkos_VERSION "${Kokkos_VERSION_MAJOR}.${Kokkos_VERSION_MINOR}.${Kokkos_VERSION_PATCH}")
 message(STATUS "Kokkos version: ${Kokkos_VERSION}")
@@ -186,10 +186,6 @@ if(NOT MSVC)
 endif()
 
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/kokkos_configure_trilinos.cmake)
-
-if(Kokkos_ENABLE_TESTS)
-  find_package(GTest QUIET)
-endif()
 
 if(Kokkos_ENABLE_BENCHMARKS)
   find_package(benchmark QUIET 1.8.3)

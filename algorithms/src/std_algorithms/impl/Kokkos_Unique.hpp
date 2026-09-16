@@ -105,7 +105,8 @@ IteratorType unique_exespace_impl(const std::string& label,
       using index_type = typename IteratorType::difference_type;
       index_type count = 0;
       ::Kokkos::parallel_scan(
-          label, RangePolicy<ExecutionSpace>(ex, 0, scan_size),
+          label,
+          RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, scan_size),
           StdUniqueFunctor(it_found, last, tmp_first, pred), count);
 
       // move last element too, for the same reason as the unique_copy
@@ -124,7 +125,8 @@ IteratorType unique_exespace_impl(const std::string& label,
 
       ::Kokkos::parallel_for(
           "unique_step3_parfor",
-          RangePolicy<ExecutionSpace>(ex, 0, tmp_view.extent(0)),
+          RangePolicy<ExecutionSpace, IndexType<index_type>>(
+              ex, 0, tmp_view.extent(0)),
           step3_func_t(begin(tmp_view),
                        (first + num_unique_found_in_step_one)));
 

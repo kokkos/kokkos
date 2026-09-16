@@ -62,7 +62,6 @@ declare_and_check_host_arch(ICL "Intel Ice Lake Client CPUs (AVX512)")
 declare_and_check_host_arch(ICX "Intel Ice Lake Xeon Server CPUs (AVX512)")
 declare_and_check_host_arch(SKL "Intel Skylake Client CPUs")
 declare_and_check_host_arch(SKX "Intel Skylake Xeon Server CPUs (AVX512)")
-declare_and_check_host_arch(KNC "Intel Knights Corner Xeon Phi")
 declare_and_check_host_arch(KNL "Intel Knights Landing Xeon Phi")
 declare_and_check_host_arch(SPR "Intel Sapphire Rapids Xeon Server CPUs (AVX512)")
 declare_and_check_host_arch(POWER8 "IBM POWER8 CPUs")
@@ -95,6 +94,7 @@ kokkos_arch_option(ADA89 GPU "NVIDIA Ada generation CC 8.9" "KOKKOS_SHOW_CUDA_AR
 kokkos_arch_option(HOPPER90 GPU "NVIDIA Hopper generation CC 9.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL100 GPU "NVIDIA Blackwell generation CC 10.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL103 GPU "NVIDIA Blackwell generation CC 10.3" "KOKKOS_SHOW_CUDA_ARCHS")
+kokkos_arch_option(RUBIN107 GPU "NVIDIA Rubin generation CC 10.7" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL120 GPU "NVIDIA Blackwell generation CC 12.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL121 GPU "NVIDIA Blackwell generation CC 12.1" "KOKKOS_SHOW_CUDA_ARCHS")
 
@@ -112,22 +112,24 @@ list(APPEND CORRESPONDING_AMD_FLAGS gfx90a gfx90a gfx908 gfx908)
 list(APPEND SUPPORTED_AMD_GPUS MI50/60 MI50/60)
 list(APPEND SUPPORTED_AMD_ARCHS VEGA906 AMD_GFX906)
 list(APPEND CORRESPONDING_AMD_FLAGS gfx906 gfx906)
-list(APPEND SUPPORTED_AMD_GPUS RX9070XT RX7900XTX V620/W6800 V620/W6800)
-list(APPEND SUPPORTED_AMD_ARCHS AMD_GFX1201 AMD_GFX1100 NAVI1030 AMD_GFX1030)
-list(APPEND CORRESPONDING_AMD_FLAGS gfx1201 gfx1100 gfx1030 gfx1030)
+list(APPEND SUPPORTED_AMD_GPUS RX9070XT RX7900XTX RX7800XT)
+list(APPEND SUPPORTED_AMD_ARCHS AMD_GFX1201 AMD_GFX1100 AMD_GFX1101)
+list(APPEND CORRESPONDING_AMD_FLAGS gfx1201 gfx1100 gfx1101)
+list(APPEND SUPPORTED_AMD_GPUS V620/W6800 V620/W6800)
+list(APPEND SUPPORTED_AMD_ARCHS NAVI1030 AMD_GFX1030)
+list(APPEND CORRESPONDING_AMD_FLAGS gfx1030 gfx1030)
 list(APPEND SUPPORTED_AMD_GPUS PHOENIX)
 list(APPEND SUPPORTED_AMD_ARCHS AMD_GFX1103)
 list(APPEND CORRESPONDING_AMD_FLAGS gfx1103)
 list(APPEND SUPPORTED_AMD_GPUS STRIX_HALO)
 list(APPEND SUPPORTED_AMD_ARCHS AMD_GFX1151)
 list(APPEND CORRESPONDING_AMD_FLAGS gfx1151)
+list(APPEND SUPPORTED_AMD_GPUS RADEON860M)
+list(APPEND SUPPORTED_AMD_ARCHS AMD_GFX1152)
+list(APPEND CORRESPONDING_AMD_FLAGS gfx1152)
 
-#FIXME CAN BE REPLACED WITH LIST_ZIP IN CMAKE 3.17
-foreach(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
-  list(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
-  list(GET SUPPORTED_AMD_GPUS ${LIST_INDEX} GPU)
-  list(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
-  kokkos_arch_option(${ARCH} GPU "AMD GPU ${GPU} ${FLAG}" "KOKKOS_SHOW_HIP_ARCHS")
+foreach(PAIR IN ZIP_LISTS SUPPORTED_AMD_ARCHS SUPPORTED_AMD_GPUS CORRESPONDING_AMD_FLAGS)
+  kokkos_arch_option(${PAIR_0} GPU "AMD GPU ${PAIR_1} ${PAIR_2}" "KOKKOS_SHOW_HIP_ARCHS")
 endforeach()
 
 if(Kokkos_ENABLE_SYCL)
@@ -142,6 +144,7 @@ kokkos_arch_option(INTEL_GEN11 GPU "Intel GPU Gen11" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_GEN12LP GPU "Intel GPU Gen12LP" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_XEHP GPU "Intel GPU Xe-HP" "KOKKOS_SHOW_SYCL_ARCHS")
 kokkos_arch_option(INTEL_PVC GPU "Intel GPU Ponte Vecchio" "KOKKOS_SHOW_SYCL_ARCHS")
+kokkos_arch_option(INTEL_BMG GPU "Intel Battlemage" "KOKKOS_SHOW_SYCL_ARCHS")
 
 if(KOKKOS_ENABLE_COMPILER_WARNINGS)
   set(COMMON_WARNINGS
@@ -695,10 +698,6 @@ if(KOKKOS_ARCH_KNL)
   )
 endif()
 
-if(KOKKOS_ARCH_KNC)
-  compiler_specific_flags(COMPILER_ID KOKKOS_CXX_HOST_COMPILER_ID MSVC NO-VALUE-SPECIFIED DEFAULT -mmic)
-endif()
-
 if(KOKKOS_ARCH_SKL)
   compiler_specific_flags(
     COMPILER_ID
@@ -768,20 +767,6 @@ if(KOKKOS_ARCH_SPR)
     DEFAULT
     -march=sapphirerapids
     -mtune=sapphirerapids
-  )
-endif()
-
-if(KOKKOS_ARCH_POWER7)
-  compiler_specific_flags(
-    COMPILER_ID
-    KOKKOS_CXX_HOST_COMPILER_ID
-    MSVC
-    NO-VALUE-SPECIFIED
-    NVHPC
-    NO-VALUE-SPECIFIED
-    DEFAULT
-    -mcpu=power7
-    -mtune=power7
   )
 endif()
 
@@ -957,7 +942,9 @@ endif()
 if(KOKKOS_ENABLE_SYCL)
   string(REPLACE ";" " " CMAKE_REQUIRED_FLAGS "${KOKKOS_COMPILE_OPTIONS}")
   include(CheckCXXSymbolExists)
-  if(Kokkos_ARCH_INTEL_PVC OR Kokkos_ARCH_INTEL_GEN
+  if(Kokkos_ARCH_INTEL_BMG
+     OR Kokkos_ARCH_INTEL_PVC
+     OR Kokkos_ARCH_INTEL_GEN
      OR (KOKKOS_ENABLE_UNSUPPORTED_ARCHS AND KOKKOS_CXX_COMPILER_ID STREQUAL IntelLLVM
          AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 2025.1.1)
   )
@@ -1056,6 +1043,7 @@ check_cuda_arch(ADA89 sm_89)
 check_cuda_arch(HOPPER90 sm_90)
 check_cuda_arch(BLACKWELL100 sm_100)
 check_cuda_arch(BLACKWELL103 sm_103)
+check_cuda_arch(RUBIN107 sm_107)
 check_cuda_arch(BLACKWELL120 sm_120)
 check_cuda_arch(BLACKWELL121 sm_121)
 
@@ -1092,10 +1080,8 @@ endfunction()
 
 #These will define KOKKOS_AMDGPU_ARCH_FLAG
 #to the corresponding flag name if ON
-foreach(ARCH IN LISTS SUPPORTED_AMD_ARCHS)
-  list(FIND SUPPORTED_AMD_ARCHS ${ARCH} LIST_INDEX)
-  list(GET CORRESPONDING_AMD_FLAGS ${LIST_INDEX} FLAG)
-  check_amdgpu_arch(${ARCH} ${FLAG})
+foreach(PAIR IN ZIP_LISTS SUPPORTED_AMD_ARCHS CORRESPONDING_AMD_FLAGS)
+  check_amdgpu_arch(${PAIR_0} ${PAIR_1})
 endforeach()
 
 if(KOKKOS_IMPL_AMDGPU_FLAGS)
@@ -1143,6 +1129,9 @@ if(KOKKOS_ARCH_INTEL_XEHP)
   check_multiple_intel_arch()
 endif()
 if(KOKKOS_ARCH_INTEL_PVC)
+  check_multiple_intel_arch()
+endif()
+if(KOKKOS_ARCH_INTEL_BMG)
   check_multiple_intel_arch()
 endif()
 
@@ -1244,6 +1233,8 @@ if(KOKKOS_ENABLE_SYCL)
       set(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.50.4")
     elseif(KOKKOS_ARCH_INTEL_PVC)
       set(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device 12.60.7")
+    elseif(KOKKOS_ARCH_INTEL_BMG)
+      set(SYCL_TARGET_BACKEND_FLAG -Xsycl-target-backend "-device bmg")
     endif()
 
     if(Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE)
@@ -1348,6 +1339,10 @@ if(KOKKOS_ARCH_BLACKWELL100
    OR KOKKOS_ARCH_BLACKWELL121
 )
   set(KOKKOS_ARCH_BLACKWELL ON)
+endif()
+
+if(KOKKOS_ARCH_RUBIN107)
+  set(KOKKOS_ARCH_RUBIN ON)
 endif()
 
 function(CHECK_AMD_APU ARCH)

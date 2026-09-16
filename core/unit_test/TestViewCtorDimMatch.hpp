@@ -83,8 +83,6 @@ struct DynamicRank<0> {
 };
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_dyn) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   KOKKOS_IMPL_UNREACHABLE();
@@ -112,8 +110,6 @@ struct StaticRank<0> {
 };
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_stat) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   KOKKOS_IMPL_UNREACHABLE();
@@ -141,8 +137,6 @@ struct MixedRank<0> {
 };
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   KOKKOS_IMPL_UNREACHABLE();
@@ -173,8 +167,6 @@ TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_params_mix) {
       "extent is 2 but should be 1.")
 
 TEST(TEST_CATEGORY_DEATH, view_construction_with_wrong_static_extents) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
 #ifndef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   GTEST_SKIP() << "only enforced when debug bound checks is enabled";
   KOKKOS_IMPL_UNREACHABLE();

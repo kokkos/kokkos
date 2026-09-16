@@ -16,23 +16,23 @@ namespace {
 template <class DeviceType>
 struct TestViewCtorDataHandle {
   static void test_view_data_handle_ctor_ref_counts() {
-#ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-    Kokkos::View<int *> a("A", 5);
+    Kokkos::View<int *, DeviceType> a("A", 5);
     ASSERT_EQ(a.use_count(), 1);
     {
-      Kokkos::View<int *> b(a.data_handle(), a.extents());
+      Kokkos::View<int *, DeviceType> b(a.data_handle(), a.extents());
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
     }
     ASSERT_EQ(a.use_count(), 1);
     {
-      Kokkos::View<int *> b(a.data_handle(), a.mapping());
+      Kokkos::View<int *, DeviceType> b(a.data_handle(), a.mapping());
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
     }
     ASSERT_EQ(a.use_count(), 1);
     {
-      Kokkos::View<int *> b(a.data_handle(), a.mapping(), a.accessor());
+      Kokkos::View<int *, DeviceType> b(a.data_handle(), a.mapping(),
+                                        a.accessor());
       ASSERT_EQ(a.use_count(), 2);
       ASSERT_EQ(b.use_count(), 2);
     }
@@ -46,7 +46,6 @@ struct TestViewCtorDataHandle {
     //}
     static_assert(!std::constructible_from<Kokkos::View<int *>,
                                            decltype(a.data_handle()), int>);
-#endif
   }
 };
 

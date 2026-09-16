@@ -65,9 +65,6 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::non_const_scalar_array_type, typename data_analysis<DataType>::non_const_data_type>);
   KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
 #endif
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  static_assert(std::is_same_v<typename ViewType::specialize, void>);
-#endif
 
   // FIXME: value_type definition conflicts with mdspan value_type
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
@@ -78,9 +75,6 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::array_layout, Layout>);
 
   // FIXME: should be deprecated and is some complicated impl type
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  static_assert(!std::is_void_v<typename ViewType::dimension>);
-#endif
 
   using device_type = Kokkos::Device<typename ViewType::execution_space, typename ViewType::memory_space>;
   using host_mirror_device_type = Kokkos::Device<typename HostMirrorSpace::execution_space, typename HostMirrorSpace::memory_space>;
@@ -162,31 +156,22 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   // mdspan compatibility
   // ==================================
 
-  // FIXME: This typedef caused some weird issue with MSVC+NVCC
-  // static_assert(std::is_same_v<typename ViewType::layout_type, Layout>);
-  // FIXME: Not supported yet
-  // static_assert(std::is_same_v<typename ViewType::extents_type, >);
-  // static_assert(std::is_same_v<typename ViewType::mapping_type, >);
-  // static_assert(std::is_same_v<typename ViewType::accessor_type, >);
+  static_assert(std::is_same_v<typename ViewType::layout_type, typename Kokkos::Impl::LayoutFromArrayLayout<Layout>::type>);
+  static_assert(std::is_same_v<typename ViewType::extents_type, typename Kokkos::Impl::ExtentsFromDataType<size_t, DataType>::type>);
+  static_assert(std::is_same_v<typename ViewType::mapping_type, typename ViewType::layout_type::template mapping<typename ViewType::extents_type>>);
+  static_assert(std::is_same_v<typename ViewType::accessor_type, Kokkos::Experimental::Accessor<ValueType, typename Space::memory_space, MemoryTraitsType>>);
+  static_assert(std::is_same_v<typename ViewType::mdspan_type,
+                               Kokkos::mdspan<typename ViewType::element_type, typename ViewType::extents_type, typename ViewType::layout_type, typename ViewType::accessor_type>>);
 
   static_assert(std::is_same_v<typename ViewType::element_type, ValueType>);
   // FIXME: should be remove_const_t<element_type>
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
   static_assert(std::is_same_v<typename ViewType::size_type, typename Space::memory_space::size_type>);
-  // FIXME: we need to evaluate how we want to proceed with this, as with
-  // extents index_type also determines the stride, while LegacyView uses size_t strides
-  // So we are doing this now to avoid breakage but it means we may use 64 bit indices on the GPU
-  #ifndef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
   static_assert(std::is_same_v<typename ViewType::index_type, size_t>);
-  #endif
   // FIXME: this isn't given in View since for example SYCL has "int" as its size_type
   // static_assert(std::is_same_v<typename ViewType::size_type, std::make_unsigned_t<typename ViewType::index_type>>);
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
 
-  // FIXME: should come from accessor_type
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  static_assert(std::is_same_v<typename ViewType::data_handle_type, typename ViewType::pointer_type>);
-#endif
   static_assert(std::is_same_v<typename ViewType::reference, typename ViewType::reference_type>);
   return true;
 }
@@ -292,14 +277,9 @@ namespace TestIntAtomic {
 // clang-format on
 static_assert(test_view_typedefs<
               layout_type, space, memory_traits, host_mirror_space, int,
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-              Kokkos::Impl::AtomicDataElement<
-                  Kokkos::ViewTraits<int, Kokkos::MemoryTraits<Kokkos::Atomic>>>
-#else
               desul::AtomicRef<int, desul::MemoryOrderRelaxed,
-                               desul::MemoryScopeDevice>
-#endif
-              >(ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
+                               desul::MemoryScopeDevice>>(
+    ViewParams<int, Kokkos::MemoryTraits<Kokkos::Atomic>>{}));
 // clang-format off
 }
 // clang-format on

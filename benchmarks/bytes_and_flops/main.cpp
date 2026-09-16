@@ -62,12 +62,12 @@ int main(int argc, char* argv[]) {
 
   int B = 2;
   if (argc >= 11) {
-    B = std::atoi(argv[10]);
+    B = std::stoi(argv[10]);
   }
 
   int I = 10;
   if (argc >= 12) {
-    I = std::atoi(argv[11]);
+    I = std::stoi(argv[11]);
   }
 
   if (U > 8) {

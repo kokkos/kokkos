@@ -14,6 +14,9 @@ set(CTEST_CMAKE_GENERATOR "Unix Makefiles")
 
 file(REMOVE_RECURSE "${CTEST_BINARY_DIRECTORY}")
 
+set(CTEST_USE_LAUNCHERS 1)
+set(ENV{CTEST_USE_LAUNCHERS_DEFAULT} 1)
+
 ctest_start(${CDASH_MODEL})
 ctest_update()
 ctest_configure(OPTIONS "${CMAKE_OPTIONS}" RETURN_VALUE config_ret)

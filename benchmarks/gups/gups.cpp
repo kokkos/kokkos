@@ -160,13 +160,13 @@ int main(int argc, char* argv[]) {
 
   for (int i = 1; i < argc; ++i) {
     if (strcmp(argv[i], "--indices") == 0) {
-      indices = std::atoll(argv[i + 1]);
+      indices = std::stoll(argv[i + 1]);
       ++i;
     } else if (strcmp(argv[i], "--data") == 0) {
-      data = std::atoll(argv[i + 1]);
+      data = std::stoll(argv[i + 1]);
       ++i;
     } else if (strcmp(argv[i], "--repeats") == 0) {
-      repeats = std::atoll(argv[i + 1]);
+      repeats = std::stoll(argv[i + 1]);
       ++i;
     } else if (strcmp(argv[i], "--atomics") == 0) {
       useAtomics = true;

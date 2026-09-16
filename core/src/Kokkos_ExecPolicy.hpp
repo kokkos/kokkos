@@ -691,7 +691,7 @@ class TeamPolicy
                         validate_team_size_argument(team_size), Kokkos::AUTO) {}
 
   template <class... OtherProperties>
-  TeamPolicy(const TeamPolicy<OtherProperties...> p) : internal_policy(p) {
+  TeamPolicy(const TeamPolicy<OtherProperties...>& p) : internal_policy(p) {
     // Cannot call converting constructor in the member initializer list because
     // it is not a direct base.
     internal_policy::traits::operator=(p);

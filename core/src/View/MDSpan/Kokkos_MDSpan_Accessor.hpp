@@ -35,6 +35,19 @@ struct SpaceAwareAccessor {
 
   static_assert(is_memory_space_v<memory_space>);
 
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto impl_memory_traits()
+    requires(!requires { nested_accessor_type::impl_memory_traits(); })
+  {
+    return MemoryTraits<Unmanaged>();
+  }
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto impl_memory_traits()
+    requires(requires { nested_accessor_type::impl_memory_traits(); })
+  {
+    return nested_accessor_type::impl_memory_traits();
+  }
+
   KOKKOS_DEFAULTED_FUNCTION
   constexpr SpaceAwareAccessor() = default;
 
@@ -118,6 +131,19 @@ struct SpaceAwareAccessor<AnonymousSpace, NestedAccessor> {
   using memory_space         = AnonymousSpace;
   using nested_accessor_type = NestedAccessor;
 
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto impl_memory_traits()
+    requires(!requires { nested_accessor_type::impl_memory_traits(); })
+  {
+    return MemoryTraits<Unmanaged>();
+  }
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto impl_memory_traits()
+    requires(requires { nested_accessor_type::impl_memory_traits(); })
+  {
+    return nested_accessor_type::impl_memory_traits();
+  }
+
   KOKKOS_DEFAULTED_FUNCTION
   constexpr SpaceAwareAccessor() = default;
 
@@ -190,6 +216,11 @@ struct AtomicAccessorRelaxed {
       desul::AtomicRef<ElementType, desul::MemoryOrderRelaxed, MemoryScope>;
   using data_handle_type = ElementType*;
   using offset_policy    = AtomicAccessorRelaxed;
+
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto impl_memory_traits() {
+    return MemoryTraits<Unmanaged | Atomic>();
+  }
 
   KOKKOS_DEFAULTED_FUNCTION
   AtomicAccessorRelaxed() = default;
@@ -327,7 +358,7 @@ class ReferenceCountedDataHandle {
   template <class OtherElementType, class OtherSpace>
   friend class ReferenceCountedDataHandle;
 
-  template <class OtherElementType, class OtherSpace, class NestedAccessor>
+  template <class OtherSpace, class NestedAccessor>
   friend class ReferenceCountedAccessor;
 
   SharedAllocationTracker m_tracker;
@@ -352,54 +383,72 @@ template <class T>
 constexpr bool IsReferenceCountedDataHandleV =
     IsReferenceCountedDataHandle<T>::value;
 
-template <class ElementType, class MemorySpace, class NestedAccessor>
+template <class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor;
 
 template <class Accessor>
 struct IsReferenceCountedAccessor : std::false_type {};
 
-template <class ElementType, class MemorySpace, class NestedAccessor>
+template <class MemorySpace, class NestedAccessor>
 struct IsReferenceCountedAccessor<
-    ReferenceCountedAccessor<ElementType, MemorySpace, NestedAccessor>>
-    : std::true_type {};
+    ReferenceCountedAccessor<MemorySpace, NestedAccessor>> : std::true_type {};
 
 template <class T>
 constexpr bool IsReferenceCountedAccessorV =
     IsReferenceCountedAccessor<T>::value;
 
-template <class ElementType, class MemorySpace, class NestedAccessor>
+template <class MemorySpace, class NestedAccessor>
 class ReferenceCountedAccessor {
  public:
-  using element_type     = ElementType;
-  using data_handle_type = ReferenceCountedDataHandle<ElementType, MemorySpace>;
-  using reference        = typename NestedAccessor::reference;
+  using element_type = typename NestedAccessor::element_type;
+  using data_handle_type =
+      ReferenceCountedDataHandle<element_type, MemorySpace>;
+  using reference = typename NestedAccessor::reference;
   using offset_policy =
-      ReferenceCountedAccessor<ElementType, MemorySpace,
+      ReferenceCountedAccessor<MemorySpace,
                                typename NestedAccessor::offset_policy>;
-  using memory_space = MemorySpace;
+  using memory_space         = MemorySpace;
+  using nested_accessor_type = NestedAccessor;
+
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto impl_memory_traits()
+    requires(!requires { nested_accessor_type::impl_memory_traits(); })
+  {
+    return MemoryTraits<>();
+  }
+  KOKKOS_INLINE_FUNCTION
+  static constexpr auto impl_memory_traits()
+    requires(requires { nested_accessor_type::impl_memory_traits(); })
+  {
+    using mt = decltype(nested_accessor_type::impl_memory_traits());
+    // we need to add Managed, which means we need to remove Unmanaged but
+    // maintain all others
+    return MemoryTraits<mt::impl_value & ~Kokkos::Unmanaged>{};
+  }
 
   KOKKOS_DEFAULTED_FUNCTION
   constexpr ReferenceCountedAccessor() noexcept = default;
 
-  template <
-      class OtherElementType, class OtherNestedAccessor,
-      class = std::enable_if_t<
-          std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
-          std::is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
+  template <class OtherNestedAccessor,
+            class = std::enable_if_t<
+                std::is_convertible_v<
+                    typename OtherNestedAccessor::element_type (*)[],
+                    element_type (*)[]> &&
+                std::is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
   KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
-      const ReferenceCountedAccessor<OtherElementType, MemorySpace,
-                                     OtherNestedAccessor>&) {}
+      const ReferenceCountedAccessor<MemorySpace, OtherNestedAccessor>&) {}
 
   template <
-      class OtherElementType, class OtherSpace, class OtherNestedAccessor,
+      class OtherSpace, class OtherNestedAccessor,
       class = std::enable_if_t<
-          std::is_convertible_v<OtherElementType (*)[], element_type (*)[]> &&
+          std::is_convertible_v<
+              typename OtherNestedAccessor::element_type (*)[],
+              element_type (*)[]> &&
           SpaceAccessibility<memory_space,
                              typename OtherSpace::memory_space>::assignable &&
           std::is_constructible_v<NestedAccessor, OtherNestedAccessor>>>
   KOKKOS_FUNCTION constexpr ReferenceCountedAccessor(
-      const ReferenceCountedAccessor<OtherElementType, OtherSpace,
-                                     OtherNestedAccessor>&) {}
+      const ReferenceCountedAccessor<OtherSpace, OtherNestedAccessor>&) {}
 
   template <class OtherElementType,
             class = std::enable_if_t<std::is_convertible_v<
@@ -452,23 +501,94 @@ class ReferenceCountedAccessor {
 };
 
 template <class ElementType, class MemorySpace>
-using CheckedReferenceCountedAccessor =
-    SpaceAwareAccessor<MemorySpace,
-                       ReferenceCountedAccessor<ElementType, MemorySpace,
-                                                default_accessor<ElementType>>>;
+using CheckedReferenceCountedAccessor = SpaceAwareAccessor<
+    MemorySpace,
+    ReferenceCountedAccessor<MemorySpace, default_accessor<ElementType>>>;
 
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
 using CheckedRelaxedAtomicAccessor =
-    SpaceAwareAccessor<MemorySpace, AtomicAccessorRelaxed<ElementType>>;
+    SpaceAwareAccessor<MemorySpace,
+                       AtomicAccessorRelaxed<ElementType, MemoryScope>>;
 
 template <class ElementType, class MemorySpace,
           class MemoryScope = desul::MemoryScopeDevice>
 using CheckedReferenceCountedRelaxedAtomicAccessor = SpaceAwareAccessor<
-    MemorySpace, ReferenceCountedAccessor<ElementType, MemorySpace,
-                                          AtomicAccessorRelaxed<ElementType>>>;
+    MemorySpace,
+    ReferenceCountedAccessor<MemorySpace,
+                             AtomicAccessorRelaxed<ElementType, MemoryScope>>>;
+
+// Implements the deduction of accessors from ElementType, Space, and MemTraits
+template <class ElementType, class Space, class MemTraits>
+struct ViewArgsToAccessor {
+ private:
+  using memory_space = typename Space::memory_space;
+
+  KOKKOS_FUNCTION
+  constexpr static auto impl_type()
+    requires(!MemTraits::is_unmanaged && !MemTraits::is_atomic)
+  {
+    return std::type_identity<
+        CheckedReferenceCountedAccessor<ElementType, memory_space>>();
+  }
+
+  KOKKOS_FUNCTION
+  constexpr static auto impl_type()
+    requires(!MemTraits::is_unmanaged && MemTraits::is_atomic)
+  {
+    return std::type_identity<CheckedReferenceCountedRelaxedAtomicAccessor<
+        ElementType, memory_space>>();
+  }
+
+  KOKKOS_FUNCTION
+  constexpr static auto impl_type()
+    requires(MemTraits::is_unmanaged && !MemTraits::is_atomic)
+  {
+    return std::type_identity<
+        SpaceAwareAccessor<memory_space, default_accessor<ElementType>>>();
+  }
+
+  KOKKOS_FUNCTION
+  constexpr static auto impl_type()
+    requires(MemTraits::is_unmanaged && MemTraits::is_atomic)
+  {
+    return std::type_identity<
+        CheckedRelaxedAtomicAccessor<ElementType, memory_space>>();
+  }
+
+ public:
+  using type = typename decltype(impl_type())::type;
+};
+}  // namespace Impl
+
+// Public Accessor alias for our internal ones, deduced from classic template
+// arguments
+namespace Experimental {
+template <class ElementType, class Space = DefaultExecutionSpace,
+          class MemTraits = MemoryTraits<>>
+using Accessor = typename Kokkos::Impl::ViewArgsToAccessor<ElementType, Space,
+                                                           MemTraits>::type;
+}  // namespace Experimental
+
+namespace Impl {
+template <class Accessor>
+  requires(!requires { Accessor::impl_memory_traits(); })
+KOKKOS_FUNCTION constexpr auto memory_traits_from_accessor() {
+  return MemoryTraits<Unmanaged>();
+}
+
+template <class Accessor>
+  requires(requires { Accessor::impl_memory_traits(); })
+KOKKOS_FUNCTION constexpr auto memory_traits_from_accessor() {
+  return Accessor::impl_memory_traits();
+}
+
+template <class Accessor>
+using MemoryTraitsFromAccessor =
+    decltype(memory_traits_from_accessor<Accessor>());
 
 }  // namespace Impl
+
 }  // namespace Kokkos
 
 #endif

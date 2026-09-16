@@ -24,8 +24,11 @@ struct CheckResult {
   CheckResult(ViewType v_, value_type value_) : v(v_), value(value_) {}
   KOKKOS_FUNCTION
   void operator()(const int i, int& lsum) const {
-    for (int j = 0; j < static_cast<int>(v.extent(1)); j++) {
-      if (v.access(i, j) != value) lsum++;
+    if constexpr (ViewType::rank == 2) {
+      for (int j = 0; j < v.extent_int(1); j++)
+        if (v(i, j) != value) lsum++;
+    } else {
+      if (v(i) != value) lsum++;
     }
   }
 };

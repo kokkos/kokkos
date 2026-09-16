@@ -640,11 +640,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<double, simd_abi::avx512_fixed_size<8>>(ptr, mask, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<double, simd_abi::avx512_fixed_size<8>> const& simd, double* ptr,
-    [[maybe_unused]] FlagType flag = simd_flag_default) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_store_pd(ptr, static_cast<__m512d>(simd));
   } else {
@@ -652,12 +652,12 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<double, simd_abi::avx512_fixed_size<8>> const& simd, double* ptr,
     basic_simd_mask<double, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_pd(ptr, static_cast<__mmask8>(mask),
                          static_cast<__m512d>(simd));
@@ -667,12 +667,12 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<double, simd_abi::avx512_fixed_size<8>> const& simd, double* ptr,
     basic_simd_mask<double, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_pd(ptr, static_cast<__mmask8>(mask),
                          static_cast<__m512d>(simd));
@@ -1020,11 +1020,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<float, simd_abi::avx512_fixed_size<8>>(ptr, mask, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::avx512_fixed_size<8>> const& simd, float* ptr,
-    [[maybe_unused]] FlagType flag = simd_flag_default) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_store_ps(ptr, static_cast<__m256>(simd));
   } else {
@@ -1032,12 +1032,12 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::avx512_fixed_size<8>> const& simd, float* ptr,
     basic_simd_mask<float, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_ps(ptr, static_cast<__mmask8>(mask),
                          static_cast<__m256>(simd));
@@ -1047,12 +1047,12 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<float, simd_abi::avx512_fixed_size<8>> const& simd, float* ptr,
     basic_simd_mask<float, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_ps(ptr, static_cast<__mmask8>(mask),
                          static_cast<__m256>(simd));
@@ -1402,11 +1402,11 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION
   return basic_simd<float, simd_abi::avx512_fixed_size<16>>(ptr, mask, flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::avx512_fixed_size<16>> const& simd, float* ptr,
-    [[maybe_unused]] FlagType flag = simd_flag_default) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_store_ps(ptr, static_cast<__m512>(simd));
   } else {
@@ -1414,12 +1414,12 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<float, simd_abi::avx512_fixed_size<16>> const& simd, float* ptr,
     basic_simd_mask<float, simd_abi::avx512_fixed_size<16>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_ps(ptr, static_cast<__mmask16>(mask),
                          static_cast<__m512>(simd));
@@ -1429,12 +1429,12 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<float, simd_abi::avx512_fixed_size<16>> const& simd, float* ptr,
     basic_simd_mask<float, simd_abi::avx512_fixed_size<16>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_ps(ptr, static_cast<__mmask16>(mask),
                          static_cast<__m512>(simd));
@@ -1772,13 +1772,13 @@ simd_partial_load(
                                                                   flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& simd,
-    std::int32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::int32_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   using mask_type =
       basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>>;
-  if constexpr (std::is_same_v<FlagType,
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask_type(true)),
                             static_cast<__m256i>(simd));
@@ -1788,13 +1788,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::int32_t* ptr,
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m256i>(simd));
@@ -1804,13 +1804,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::int32_t* ptr,
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m256i>(simd));
@@ -2149,11 +2149,11 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& simd,
-    std::int32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
-  if constexpr (std::is_same_v<FlagType,
+    std::int32_t* ptr, simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_store_epi32(ptr, static_cast<__m512i>(simd));
   } else {
@@ -2164,13 +2164,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& simd,
     std::int32_t* ptr,
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
                             static_cast<__m512i>(simd));
@@ -2180,13 +2180,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::int32_t, simd_abi::avx512_fixed_size<16>> const& simd,
     std::int32_t* ptr,
     basic_simd_mask<std::int32_t, simd_abi::avx512_fixed_size<16>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
                             static_cast<__m512i>(simd));
@@ -2519,13 +2519,13 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& simd,
-    std::uint32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::uint32_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   using mask_type =
       basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>>;
-  if constexpr (std::is_same_v<FlagType,
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask_type(true)),
                             static_cast<__m256i>(simd));
@@ -2535,13 +2535,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m256i>(simd));
@@ -2551,13 +2551,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm256_mask_store_epi32(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m256i>(simd));
@@ -2892,11 +2892,11 @@ simd_partial_load(
                                                                     flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& simd,
-    std::uint32_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
-  if constexpr (std::is_same_v<FlagType,
+    std::uint32_t* ptr, simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_store_epi32(ptr, static_cast<__m512i>(simd));
   } else {
@@ -2907,13 +2907,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& simd,
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
                             static_cast<__m512i>(simd));
@@ -2923,13 +2923,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& simd,
     std::uint32_t* ptr,
     basic_simd_mask<std::uint32_t, simd_abi::avx512_fixed_size<16>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi32(ptr, static_cast<__mmask16>(mask),
                             static_cast<__m512i>(simd));
@@ -3262,13 +3262,13 @@ simd_partial_load(
                                                                   flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& simd,
-    std::int64_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::int64_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   using mask_type =
       basic_simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>>;
-  if constexpr (std::is_same_v<FlagType,
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi64(ptr, static_cast<__mmask8>(mask_type(true)),
                             static_cast<__m512i>(simd));
@@ -3278,13 +3278,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::int64_t* ptr,
     basic_simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi64(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m512i>(simd));
@@ -3294,13 +3294,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::int64_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::int64_t* ptr,
     basic_simd_mask<std::int64_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi64(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m512i>(simd));
@@ -3625,13 +3625,13 @@ simd_partial_load(
                                                                    flag);
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& simd,
-    std::uint64_t* ptr, [[maybe_unused]] FlagType flag = simd_flag_default) {
+    std::uint64_t* ptr, simd_flags<Flags...> = simd_flag_default) {
   using mask_type =
       basic_simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>>;
-  if constexpr (std::is_same_v<FlagType,
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi64(ptr, static_cast<__mmask8>(mask_type(true)),
                             static_cast<__m512i>(simd));
@@ -3641,13 +3641,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
     basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::uint64_t* ptr,
     basic_simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi64(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m512i>(simd));
@@ -3657,13 +3657,13 @@ KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_unchecked_store(
   }
 }
 
-template <typename FlagType>
+template <typename... Flags>
 KOKKOS_IMPL_HOST_FORCEINLINE_FUNCTION void simd_partial_store(
     basic_simd<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& simd,
     std::uint64_t* ptr,
     basic_simd_mask<std::uint64_t, simd_abi::avx512_fixed_size<8>> const& mask,
-    FlagType) {
-  if constexpr (std::is_same_v<FlagType,
+    simd_flags<Flags...> = simd_flag_default) {
+  if constexpr (std::is_same_v<simd_flags<Flags...>,
                                simd_flags<simd_alignment_vector_aligned>>) {
     _mm512_mask_store_epi64(ptr, static_cast<__mmask8>(mask),
                             static_cast<__m512i>(simd));

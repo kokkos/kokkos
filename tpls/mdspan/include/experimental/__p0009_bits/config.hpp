@@ -99,6 +99,12 @@ static_assert(MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14
 #  endif
 #endif
 
+#ifndef MDSPAN_IMPL_HAS_OPENACC
+#  if defined(_OPENACC)
+#    define MDSPAN_IMPL_HAS_OPENACC _OPENACC
+#  endif
+#endif
+
 #ifndef MDSPAN_IMPL_HAS_CPP_ATTRIBUTE
 #  ifndef __has_cpp_attribute
 #    define MDSPAN_IMPL_HAS_CPP_ATTRIBUTE(x) 0
@@ -302,4 +308,8 @@ static_assert(MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14
 #  define MDSPAN_IMPL_OP4(mds, a, b, c, d) mds(a,b,c,d)
 #  define MDSPAN_IMPL_OP5(mds, a, b, c, d, e) mds(a,b,c,d,e)
 #  define MDSPAN_IMPL_OP6(mds, a, b, c, d, e, f) mds(a,b,c,d,e,f)
+#endif
+
+#if ! defined(MDSPAN_IMPL_ENABLE_P3663)
+#  define MDSPAN_IMPL_ENABLE_P3663 1
 #endif

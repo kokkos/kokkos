@@ -22,12 +22,11 @@ jobs:
 
     strategy:
       matrix:
-        view_legacy: [ON, OFF]
         dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -45,14 +44,12 @@ jobs:
             -DCMAKE_CXX_FLAGS="-Werror" \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
             ./
 
       - name: build_and_install_kokkos
@@ -83,13 +80,9 @@ jobs:
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
     continue-on-error: true
 
-    strategy:
-      matrix:
-        view_legacy: [ON, OFF]
-
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -107,9 +100,7 @@ jobs:
             -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
@@ -146,7 +137,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -165,7 +156,6 @@ jobs:
             -DCMAKE_CXX_FLAGS="-Werror -Wno-unused-command-line-argument" \
             -DBUILD_SHARED_LIBS=OFF \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -203,12 +193,11 @@ jobs:
 
     strategy:
       matrix:
-        view_legacy: [ON, OFF]
         dep_code_5: [ON, OFF]
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -224,14 +213,12 @@ jobs:
             -DKokkos_ENABLE_SERIAL=ON \
             -DKokkos_ARCH_SPR=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=${{ matrix.dep_code_5 }}  \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }}
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
 
       - name: build_and_install_kokkos
         working-directory: kokkos
@@ -262,13 +249,9 @@ jobs:
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
     continue-on-error: true
 
-    strategy:
-      matrix:
-        view_legacy: [ON, OFF]
-
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -284,8 +267,6 @@ jobs:
             -DKokkos_ENABLE_SYCL=ON \
             -DKokkos_ARCH_INTEL_PVC=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
-            -DKokkos_ENABLE_IMPL_VIEW_LEGACY=${{ matrix.view_legacy }} \
             -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
@@ -316,6 +297,79 @@ jobs:
         working-directory: kokkos/build_examples
         run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure
 
+  LLVM_14_0_6:
+    name: SNL_SERIAL_LLVM_14_0_6
+    runs-on: [llvm-14.0.6_x86-64-latest-latest]
+    continue-on-error: true
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER=clang++-14 \
+            -DCMAKE_CXX_FLAGS="-stdlib=libc++ -Werror" \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
+  CLANG_19_MODULES:
+    name: SNL_SERIAL_CLANG_19_MODULES
+    runs-on: [clang-19_gcc-15.1_x86-64-latest]
+    continue-on-error: true
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          cd kokkos
+          cmake -S . -B build \
+           -GNinja \
+           -DCMAKE_CXX_COMPILER=clang++-19 \
+           -DCMAKE_CXX_FLAGS="-Werror" \
+           -DCMAKE_CXX_STANDARD=20 \
+           -DCMAKE_BUILD_TYPE=Debug \
+           -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+           -DKokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES=ON \
+           -DKokkos_ENABLE_SERIAL=ON \
+           -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
+           -DKokkos_ENABLE_TESTS=ON \
+           -DKokkos_ENABLE_EXAMPLES=ON
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build --parallel $(nproc)
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
 # FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
   HPX_GCC_15_1_1:
     name: SNL_HPX_GCC_15_1_1
@@ -324,7 +378,7 @@ jobs:
 
     steps:
       - name: checkout_kokkos
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -342,9 +396,8 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
             -DKokkos_ENABLE_BENCHMARKS=ON \
-            -DKokkos_ENABLE_BENCHMARKS_HEAVY=${{ matrix.view_legacy == 'ON' && 'OFF' || 'ON' }} \
+            -DKokkos_ENABLE_BENCHMARKS_HEAVY=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
-            -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_CXX_FLAGS="-Werror" \
             -DCMAKE_CXX_STANDARD=23 \
@@ -365,9 +418,49 @@ jobs:
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
 
-  NextSilicon_1_2_0:
-    name: SNL_NextSilicon_1_2_0
-    runs-on: [ns-1.2.0]
+  OPENACC_CUDA_12_2_NVHPC_23_7_CPP20:
+    name: SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20
+    runs-on: [cuda-12.2_nvhpc-23.7_x86-64-latest]
+    continue-on-error: true
+
+    steps:
+      - name: checkout_kokkos
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: kokkos/kokkos
+          path: kokkos
+
+      - name: configure_kokkos
+        run: |
+          nvidia-smi
+          cd kokkos
+          cmake -B build \
+            -DCMAKE_CXX_COMPILER=nvc++ \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_STANDARD=20 \
+            -DCMAKE_CXX_FLAGS="-Werror" \
+            -DKokkos_ARCH_NATIVE=ON \
+            -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
+            -DKokkos_ENABLE_TESTS=ON \
+            -DKokkos_ENABLE_EXAMPLES=ON \
+            -DKokkos_ENABLE_OPENACC=ON \
+            -DKokkos_ARCH_VOLTA70=ON \
+            -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
+            ./
+
+      - name: build_and_install_kokkos
+        working-directory: kokkos
+        run: |
+          cmake --build build -j36
+          cmake --install build --prefix install
+
+      - name: test_kokkos
+        working-directory: kokkos/build
+        run: ctest --output-on-failure --timeout 3600
+
+  NextSilicon_Latest:
+    name: SNL_NextSilicon_Latest
+    runs-on: [next-latest]
     continue-on-error: true
 
     steps:
@@ -388,7 +481,7 @@ jobs:
           nextcli system terminate
 
       - name: checkout_kokkos
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: kokkos/kokkos
           path: kokkos
@@ -401,11 +494,9 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
             -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-            -DCMAKE_AR=$NEXT_HOME/llvm/bin/ar \
-            -DCMAKE_RANLIB=$NEXT_HOME/llvm/bin/ranlib \
-            -DCMAKE_CXX_COMPILER=nextcxx \
+            -DCMAKE_TOOLCHAIN_FILE=/opt/nextsilicon/share/cmake/Modules/next-toolchain.cmake \
             -DCMAKE_CXX_STANDARD=20 \
-            -DCMAKE_CXX_FLAGS="-Werror -Wno-return-type -Wno-invalid-noreturn"
+            -DCMAKE_CXX_FLAGS="-Werror -Wno-ns-unsupported-type"
 
       - name: build_kokkos
         working-directory: kokkos
@@ -425,8 +516,12 @@ jobs:
           GTEST_FILTER: -*DeathTest*
           KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS: 1
           XDG_CACHE_HOME: $HOME/optimizer-cache
+          __TINYALLOC_HEAP_SIZE: 1073741824
+          __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
+        # FIXME_NEXTSILICON: disable core dumps for now
         run: |
-          ctest -V --timeout 3600
+          ulimit -c 0
+          ctest -V --timeout 1800
 
       - name: test_kokkos
         working-directory: kokkos/build
@@ -434,5 +529,9 @@ jobs:
           # FIXME_NEXTSILICON: death tests require fork, not supported by runtime
           GTEST_FILTER: -*DeathTest*
           XDG_CACHE_HOME: $HOME/optimizer-cache
+          __TINYALLOC_HEAP_SIZE: 1073741824
+          __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
+        # FIXME_NEXTSILICON: disable core dumps for now
         run: |
-          ctest -V --timeout 3600
+          ulimit -c 0
+          ctest -V --timeout 1800
