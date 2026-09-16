@@ -53,6 +53,8 @@ inline void check_common_types_both() {
 //static_assert(std::is_same_v<std::common_type_t<bfloat16, float16, float>, float>);
 //static_assert(std::is_same_v<std::common_type_t<float16, bfloat16, float>, float>);
 static_assert(!std::is_convertible_v<float16, bfloat16>);
+
+// These should work, since float and double is a common type with both
 static_assert(std::is_same_v<std::common_type_t<float, bfloat16, float16>, float>);
 static_assert(std::is_same_v<std::common_type_t<float16, float, bfloat16>, float>);
 static_assert(std::is_same_v<std::common_type_t<double, bfloat16, float16>, double>);
