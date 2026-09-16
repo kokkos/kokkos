@@ -169,8 +169,8 @@ unsigned get_preferred_blocksize_for_range(HIPInternal const* hip_instance,
       const unsigned requestedPerEU = (requested_parallelism + eus - 1) / eus;
       // round up to power of 2
       unsigned threadsPerEU = Kokkos::bit_ceil(requestedPerEU);
-      threadsPerEU = std::max(threadsPerEU,
-                              unsigned(HIPTraits::ConservativeThreadsPerBlock));
+      threadsPerEU          = std::max(threadsPerEU,
+                                       unsigned(HIPTraits::ConservativeThreadsPerBlock));
 // Issue #9402, affects ROCm versions 6.4 through 7.1:
 // On the HIP backend, ParallelFor over a RangePolicy with no explicit
 // LaunchBounds picks its block size from nwork. The kernel's register
