@@ -68,9 +68,26 @@ std::enable_if_t<sizeof(T) == 8, T> host_atomic_exchange(T* const dest,
 }
 
 template <class T, class MemoryOrder, class MemoryScope>
-std::enable_if_t<(sizeof(T) != 1 && sizeof(T) != 2 && sizeof(T) != 4 && sizeof(T) != 8),
-                 T>
-host_atomic_exchange(T* const dest, T val, MemoryOrder, MemoryScope scope) {
+std::enable_if_t<sizeof(T) == 16, T> host_atomic_exchange(T* const dest,
+                                                          T val,
+                                                          MemoryOrder,
+                                                          MemoryScope scope) {
+  // MSVC does not provide a 128-bit _InterlockedExchange intrinsic.
+  Dummy16ByteValue* val16 = reinterpret_cast<Dummy16ByteValue*>(&val);
+  Dummy16ByteValue compare = *val16;
+  while (true) {
+    if (_InterlockedCompareExchange128(reinterpret_cast<__int64*>(dest),
+                                       val16->value2,
+                                       val16->value1,
+                                       reinterpret_cast<__int64*>(&compare))) {
+      return *reinterpret_cast<T*>(&compare);
+    }
+  }
+}
+
+template <class T, class MemoryOrder, class MemoryScope>
+std::enable_if_t<!host_atomic_always_lock_free<T>, T> host_atomic_exchange(
+    T* const dest, T val, MemoryOrder, MemoryScope scope) {
   while (!lock_address((void*)dest, scope)) {
   }
   if (std::is_same<MemoryOrder, MemoryOrderSeqCst>::value)
