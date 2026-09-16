@@ -7,6 +7,7 @@
 #include <mutex>
 #include <vector>
 #include <tuple>
+#include <atomic>
 #include <cstring>
 #include <inttypes.h>
 
@@ -23,23 +24,13 @@
 
 struct Kokkos_Profiling_KokkosPDeviceInfo;
 
-extern "C" void kokkosp_init_library(
-    const int loadSeq, const uint64_t interfaceVer,
-    const uint32_t /*devInfoCount*/,
-    Kokkos_Profiling_KokkosPDeviceInfo* /*deviceInfo*/) {
-  (void)interfaceVer;
-  (void)loadSeq;
-#ifdef KOKKOS_ENABLE_DEBUG
-  printf("Memory tracker initialized. \n");
-#endif
-}
-
 struct SpaceHandle {
   char name[64];
 };
 
-constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024;
+constexpr uint64_t WARNING_THRESHOLD         = 4ULL * 1024 * 1024 * 1024;
 static std::atomic<uint64_t> total_allocated = 0;
+static std::mutex m;
 
 uint64_t max_mem_usage() {
   struct rusage app_info;
@@ -55,23 +46,28 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
 
   if (strcmp(handle.name, "Host") == 0) {
     if (strcmp(handle.name, "Host") != 0) return;
-    if (total_allocated.add_fetch(size) > threshold) {
+    if (total_allocated.fetch_add(size) > WARNING_THRESHOLD) {
       // terminate program
+      fprintf(
+          stderr,
+          "\n [ WARNING! ] Total allocation (%.4f GB) exceeds %.2f GB limit!\n",
+          total_allocated / (1024.0 * 1024.0 * 1024.0),
+          WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
+      exit(1);
     }
   }
 
   (void)ptr;
   (void)name;
 
-  if (total_allocated > WARNING_THRESHOLD) {
-    fprintf(
-        stderr,
-        "\n [ WARNING! ] Total allocation (%.4f GB) exceeds %.2f GB limit!\n",
-        total_allocated / (1024.0 * 1024.0 * 1024.0),
-        WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
-    exit(1);
-  }
-#endif
+  // if (total_allocated > WARNING_THRESHOLD) {
+  //   fprintf(
+  //       stderr,
+  //       "\n [ WARNING! ] Total allocation (%.4f GB) exceeds %.2f GB
+  //       limit!\n", total_allocated / (1024.0 * 1024.0 * 1024.0),
+  //       WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
+  //   exit(1);
+  // }
 }
 
 extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
@@ -84,7 +80,4 @@ extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
   if (strcmp(handle.name, "Host") == 0) {
     total_allocated -= size;
   }
-#ifdef KOKKOS_ENABLE_DEBUG
-  printf("De-allocated %" PRIu64 " kB at %s\n ", max_mem_usage(), handle.name);
-#endif
 }
