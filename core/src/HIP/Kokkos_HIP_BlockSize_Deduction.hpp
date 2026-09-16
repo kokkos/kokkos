@@ -94,8 +94,8 @@ hipFuncAttributes get_hip_func_attributes_impl(const int hip_device) {
 // determine the block size to select based on LDS limitation
 template <BlockType BlockSize, class DriverType, class LaunchBounds,
           typename ShmemFunctor>
-unsigned hip_internal_get_block_size(const HIPInternal *hip_instance,
-                                     const ShmemFunctor &f,
+unsigned hip_internal_get_block_size(const HIPInternal* hip_instance,
+                                     const ShmemFunctor& f,
                                      const unsigned tperb_reg) {
   // translate LB from CUDA to HIP
   const unsigned min_waves_per_eu =
@@ -151,7 +151,7 @@ unsigned hip_get_preferred_blocksize(const int hip_device) {
 template <typename DriverType, typename LaunchBounds = Kokkos::LaunchBounds<>,
           HIPLaunchMechanism LaunchMechanism =
               DeduceHIPLaunchMechanism<DriverType>::launch_mechanism>
-unsigned get_preferred_blocksize_for_range(HIPInternal const *hip_instance,
+unsigned get_preferred_blocksize_for_range(HIPInternal const* hip_instance,
                                            size_t requested_parallelism) {
   /* General approach, if the user did not make a launch bounds request
   - If the requested parallelism is less than the available concurrency, get the
@@ -169,10 +169,23 @@ unsigned get_preferred_blocksize_for_range(HIPInternal const *hip_instance,
       const unsigned requestedPerEU = (requested_parallelism + eus - 1) / eus;
       // round up to power of 2
       unsigned threadsPerEU = Kokkos::bit_ceil(requestedPerEU);
-      threadsPerEU          = std::max(threadsPerEU,
-                                       unsigned(HIPTraits::ConservativeThreadsPerBlock));
+      threadsPerEU = std::max(threadsPerEU,
+                              unsigned(HIPTraits::ConservativeThreadsPerBlock));
+// Issue #9402, affects ROCm versions 6.4 through 7.1:
+// On the HIP backend, ParallelFor over a RangePolicy with no explicit
+// LaunchBounds picks its block size from nwork. The kernel's register
+// usage is not consulted. For a register-hungry kernel there is a work size
+// above which Kokkos requests more threads per block than the kernel can be
+// launched with, and the dispatch fails.
+#if ((HIP_VERSION_MAJOR == 6 && HIP_VERSION_MINOR >= 4) || \
+     (HIP_VERSION_MAJOR == 7 && HIP_VERSION_MINOR < 2))
+      threadsPerEU = std::min(
+          threadsPerEU, get_preferred_blocksize_impl<DriverType, LaunchBounds>(
+                            hip_instance->m_hipDev));
+#else
       threadsPerEU =
           std::min(threadsPerEU, unsigned(HIPTraits::MaxThreadsPerBlock));
+#endif
       return threadsPerEU;
     }
   }
@@ -203,8 +216,8 @@ unsigned hip_get_max_blocksize() {
 // Note: a returned block_size of zero indicates that the algorithm could not
 //       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds, typename ShmemFunctor>
-unsigned hip_get_preferred_blocksize(HIPInternal const *hip_instance,
-                                     ShmemFunctor const &f) {
+unsigned hip_get_preferred_blocksize(HIPInternal const* hip_instance,
+                                     ShmemFunctor const& f) {
   // get preferred blocksize limited by register usage
   const unsigned tperb_reg =
       hip_get_preferred_blocksize<DriverType, LaunchBounds>(
@@ -224,8 +237,8 @@ unsigned hip_get_preferred_blocksize(HIPInternal const *hip_instance,
 //       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds,
           typename ShmemTeamsFunctor>
-unsigned hip_get_preferred_team_blocksize(HIPInternal const *hip_instance,
-                                          ShmemTeamsFunctor const &f) {
+unsigned hip_get_preferred_team_blocksize(HIPInternal const* hip_instance,
+                                          ShmemTeamsFunctor const& f) {
   hipFuncAttributes attr = get_hip_func_attributes_impl<
       DriverType, LaunchBounds, BlockType::Preferred>(hip_instance->m_hipDev);
   // get preferred blocksize limited by register usage
@@ -247,8 +260,8 @@ unsigned hip_get_preferred_team_blocksize(HIPInternal const *hip_instance,
 // Note: a returned block_size of zero indicates that the algorithm could not
 //       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds, typename ShmemFunctor>
-unsigned hip_get_max_blocksize(HIPInternal const *hip_instance,
-                               ShmemFunctor const &f) {
+unsigned hip_get_max_blocksize(HIPInternal const* hip_instance,
+                               ShmemFunctor const& f) {
   // get max blocksize limited by register usage
   const unsigned tperb_reg = hip_get_max_blocksize<DriverType, LaunchBounds>();
   return hip_internal_get_block_size<BlockType::Max, DriverType, LaunchBounds>(
@@ -266,8 +279,8 @@ unsigned hip_get_max_blocksize(HIPInternal const *hip_instance,
 //       find a valid block size.  The caller is responsible for error handling.
 template <typename DriverType, typename LaunchBounds,
           typename ShmemTeamsFunctor>
-unsigned hip_get_max_team_blocksize(HIPInternal const *hip_instance,
-                                    ShmemTeamsFunctor const &f) {
+unsigned hip_get_max_team_blocksize(HIPInternal const* hip_instance,
+                                    ShmemTeamsFunctor const& f) {
   hipFuncAttributes attr =
       get_hip_func_attributes_impl<DriverType, LaunchBounds, BlockType::Max>(
           hip_instance->m_hipDev);
