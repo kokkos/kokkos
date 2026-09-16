@@ -439,10 +439,9 @@ void sort_device_view_without_comparator(
 #endif
 
 // fallback case
-template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_device_view_without_comparator(
-    const ExecutionSpace& exec,
+template <Kokkos::ExecutionSpace Exec, class DataType, class... Properties>
+void sort_device_view_without_comparator(
+    const Exec& exec,
     const Kokkos::View<DataType, Properties...>& view) {
   using value_type =
       typename Kokkos::View<DataType, Properties...>::non_const_value_type;
