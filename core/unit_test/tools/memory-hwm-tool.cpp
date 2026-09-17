@@ -56,7 +56,7 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
   std::lock_guard<std::mutex> lock(m);
 
   if (strcmp(handle.name, "Host") == 0) {
-    if (total_allocated.fetch_add(size) >= WARNING_THRESHOLD) {
+    if (total_allocated.fetch_add(size) > WARNING_THRESHOLD) {
       // terminate program
       fprintf(
           stderr,
