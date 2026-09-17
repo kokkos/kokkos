@@ -120,14 +120,12 @@ TEST(hip, blocksize_range_regression) {
     HeavyKernel f_for_lb{out_for_lb};
     HeavyKernel f_reduce{out_for};
 
-    Kokkos::parallel_for("for", Kokkos::RangePolicy<exec, TagFor>(0, n),
-                         f_for);
+    Kokkos::parallel_for("for", Kokkos::RangePolicy<exec, TagFor>(0, n), f_for);
     Kokkos::fence();
 
     Kokkos::parallel_for(
         "for_lb",
-        Kokkos::RangePolicy<exec, TagForLB, Kokkos::LaunchBounds<256, 1>>(0,
-                                                                           n),
+        Kokkos::RangePolicy<exec, TagForLB, Kokkos::LaunchBounds<256, 1>>(0, n),
         f_for_lb);
     Kokkos::fence();
 
