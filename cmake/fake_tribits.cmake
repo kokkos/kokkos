@@ -102,8 +102,7 @@ function(KOKKOS_ADD_TEST)
        AND (NOT KOKKOS_ENABLE_THREADS)
     )
       set_property(
-        TEST ${TEST_NAME} APPEND PROPERTY ENVIRONMENT_MODIFICATION
-                                          KOKKOS_TOOLS_LIBS=set:$<TARGET_FILE:kokkoshwmtracker-tool>
+        TEST ${TEST_NAME} APPEND PROPERTY ENVIRONMENT "KOKKOS_TOOLS_LIBS=set:$<TARGET_FILE:kokkoshwmtracker-tool>"
       )
     endif()
   endif()
