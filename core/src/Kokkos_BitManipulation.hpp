@@ -136,7 +136,7 @@ struct ByteSwap<constant_evaluated, /*device=*/false> {
 template <bool constant_evaluated, bool device>
 struct CountlZero {
   template <class T>
-  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+  static KOKKOS_FUNCTION constexpr int do_compute(T x) noexcept {
     // From Hacker's Delight (2nd edition) section 5-3
     unsigned int y = 0;
     using ::Kokkos::digits_v;
@@ -159,7 +159,7 @@ struct CountlZero {
 template <>
 struct CountlZero</*constant_evaluated=*/false, /*device=*/true> {
   template <class T>
-  static KOKKOS_IMPL_DEVICE_FUNCTION T do_compute(T x) noexcept {
+  static KOKKOS_IMPL_DEVICE_FUNCTION int do_compute(T x) noexcept {
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP)
     if constexpr (sizeof(T) == sizeof(long long int))
       return __clzll(reinterpret_cast<long long int&>(x));
@@ -181,7 +181,7 @@ struct CountlZero</*constant_evaluated=*/false, /*device=*/true> {
 template <bool constant_evaluated>
 struct CountlZero<constant_evaluated, /*device=*/false> {
   template <class T>
-  static KOKKOS_FUNCTION constexpr T do_compute(T x) noexcept {
+  static KOKKOS_FUNCTION constexpr int do_compute(T x) noexcept {
     using ::Kokkos::digits_v;
     if (x == 0) return digits_v<T>;
     if constexpr (std::is_same_v<T, unsigned long long>) {
