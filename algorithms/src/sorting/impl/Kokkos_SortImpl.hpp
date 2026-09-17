@@ -9,6 +9,7 @@
 #include <Kokkos_Iterator.hpp>
 #include <std_algorithms/Kokkos_Copy.hpp>
 #include <Kokkos_Macros.hpp>
+#include <std_algorithms/impl/Kokkos_HelperPredicates.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
 import kokkos.core;
 #else
@@ -315,63 +316,6 @@ void copy_to_host_run_stdsort_copy_back(
 
 // --------------------------------------------------
 //
-// specialize cases for sorting without comparator
-//
-// --------------------------------------------------
-
-#if defined(KOKKOS_ENABLE_CUDA)
-template <class DataType, class... Properties>
-void sort_device_view_without_comparator(
-    const Cuda& exec, const Kokkos::View<DataType, Properties...>& view) {
-  sort_cudathrust(exec, view);
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_ROCTHRUST)
-template <class DataType, class... Properties>
-void sort_device_view_without_comparator(
-    const HIP& exec, const Kokkos::View<DataType, Properties...>& view) {
-  sort_rocthrust(exec, view);
-}
-#endif
-
-#if defined(KOKKOS_ENABLE_ONEDPL)
-template <class DataType, class... Properties>
-void sort_device_view_without_comparator(
-    const Kokkos::SYCL& exec,
-    const Kokkos::View<DataType, Properties...>& view) {
-  using ViewType = Kokkos::View<DataType, Properties...>;
-  static_assert(
-      (ViewType::rank == 1) &&
-          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
-           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
-      "sort_device_view_without_comparator: supports rank-1 Views "
-      "with LayoutLeft, LayoutRight or LayoutStride");
-
-#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
-  sort_onedpl(exec, view);
-#else
-  if (view.stride(0) == 1) {
-    sort_onedpl(exec, view);
-  } else {
-    copy_to_host_run_stdsort_copy_back(exec, view);
-  }
-#endif
-}
-#endif
-
-// fallback case
-template <class ExecutionSpace, class DataType, class... Properties>
-std::enable_if_t<Kokkos::is_execution_space<ExecutionSpace>::value>
-sort_device_view_without_comparator(
-    const ExecutionSpace& exec,
-    const Kokkos::View<DataType, Properties...>& view) {
-  sort_via_binsort(exec, view);
-}
-
-// --------------------------------------------------
-//
 // specialize cases for sorting with comparator
 //
 // --------------------------------------------------
@@ -444,6 +388,72 @@ sort_device_view_with_comparator(
 #endif
 
   copy_to_host_run_stdsort_copy_back(exec, view, comparator);
+}
+
+// --------------------------------------------------
+//
+// specialize cases for sorting without comparator
+//
+// --------------------------------------------------
+
+#if defined(KOKKOS_ENABLE_CUDA)
+template <class DataType, class... Properties>
+void sort_device_view_without_comparator(
+    const Cuda& exec, const Kokkos::View<DataType, Properties...>& view) {
+  sort_cudathrust(exec, view);
+}
+#endif
+
+#if defined(KOKKOS_ENABLE_ROCTHRUST)
+template <class DataType, class... Properties>
+void sort_device_view_without_comparator(
+    const HIP& exec, const Kokkos::View<DataType, Properties...>& view) {
+  sort_rocthrust(exec, view);
+}
+#endif
+
+#if defined(KOKKOS_ENABLE_ONEDPL)
+template <class DataType, class... Properties>
+void sort_device_view_without_comparator(
+    const Kokkos::SYCL& exec,
+    const Kokkos::View<DataType, Properties...>& view) {
+  using ViewType = Kokkos::View<DataType, Properties...>;
+  static_assert(
+      (ViewType::rank == 1) &&
+          (std::is_same_v<typename ViewType::array_layout, LayoutRight> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutLeft> ||
+           std::is_same_v<typename ViewType::array_layout, LayoutStride>),
+      "sort_device_view_without_comparator: supports rank-1 Views "
+      "with LayoutLeft, LayoutRight or LayoutStride");
+
+#if KOKKOS_IMPL_ONEDPL_VERSION_GREATER_EQUAL(2022, 8, 0)
+  sort_onedpl(exec, view);
+#else
+  if (view.stride(0) == 1) {
+    sort_onedpl(exec, view);
+  } else {
+    copy_to_host_run_stdsort_copy_back(exec, view);
+  }
+#endif
+}
+#endif
+
+// fallback case
+template <Kokkos::ExecutionSpace Exec, class DataType, class... Properties>
+void sort_device_view_without_comparator(
+    const Exec& exec, const Kokkos::View<DataType, Properties...>& view) {
+  using value_type =
+      typename Kokkos::View<DataType, Properties...>::non_const_value_type;
+  if constexpr (std::is_arithmetic_v<value_type>) {
+    sort_via_binsort(exec, view);
+  } else {
+    // BinSort requires the value type to be arithmetic. For other types,
+    // delegate to the comparator-based path using operator<, which uses
+    // an efficient TPL if possible and otherwise falls back to std::sort.
+    sort_device_view_with_comparator(
+        exec, view,
+        Experimental::Impl::StdAlgoLessThanBinaryPredicate<value_type>());
+  }
 }
 
 }  // namespace Impl
