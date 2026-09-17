@@ -223,7 +223,7 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
     }
 
     int team_size_recommended =
-        policy.team_size_max(dummy_functor, Kokkos::ParallelForTag());
+        policy.team_size_recommended(dummy_functor, Kokkos::ParallelForTag());
     if (check_team_size) {
       EXPECT_EQ(team_size_recommended, 1);
     }
@@ -239,8 +239,8 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
       EXPECT_EQ(team_size_max, 1);
     }
 
-    int team_size_recommended =
-        policy.team_size_max(dummy_functor, Kokkos::ParallelReduceTag());
+    int team_size_recommended = policy.team_size_recommended(
+        dummy_functor, Kokkos::ParallelReduceTag());
     if (check_team_size) {
       EXPECT_EQ(team_size_recommended, 1);
     }
