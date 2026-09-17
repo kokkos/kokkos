@@ -184,7 +184,6 @@ void test_view_stride_precondition_violation(V v) {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_stride_precondition_violation) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   {
     bool checked_assertions = false;
     // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
@@ -193,10 +192,6 @@ TEST(TEST_CATEGORY_DEATH, view_stride_precondition_violation) {
       GTEST_SKIP() << "Preconditions are not checked.";
     }
   }
-
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  GTEST_SKIP() << "Using the legacy view implementation.";
-#endif
 
   test_view_stride_precondition_violation(
       Kokkos::View<double, TEST_EXECSPACE>("v0"));
@@ -234,7 +229,6 @@ void test_view_extent_precondition_violation(V v) {
 }
 
 TEST(TEST_CATEGORY_DEATH, view_extent_precondition_violation) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
   {
     bool checked_assertions = false;
     // NOLINTNEXTLINE(bugprone-assignment-in-if-condition)
@@ -243,10 +237,6 @@ TEST(TEST_CATEGORY_DEATH, view_extent_precondition_violation) {
       GTEST_SKIP() << "Preconditions are not checked.";
     }
   }
-
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  GTEST_SKIP() << "Using the legacy view implementation.";
-#endif
 
   test_view_extent_precondition_violation(
       Kokkos::View<double, TEST_EXECSPACE>("v0"));

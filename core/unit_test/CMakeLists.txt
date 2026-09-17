@@ -54,6 +54,7 @@ set(COMPILE_ONLY_SOURCES
     TestTypeList.cpp
     TestMDRangePolicyCTAD.cpp
     TestTeamPolicyCTAD.cpp
+    TestTeamPolicyCompileOnly.cpp
     TestTeamMDRangePolicyCTAD.cpp
     TestNestedReducerCTAD.cpp
     view/TestAccessorFromMemoryTraits.cpp
@@ -71,15 +72,8 @@ if(Kokkos_ENABLE_NEXTSILICON)
   set(COMPILE_ONLY_SOURCES TestCreateMirror.cpp)
 endif()
 
-if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
+if(KOKKOS_CXX_COMPILER_ID STREQUAL "Intel")
   list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestBasicViewMDSpanConversion.cpp)
-endif()
-
-if(NOT Kokkos_ENABLE_IMPL_MDSPAN OR Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestAccessorFromMemoryTraits.cpp)
-  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewCustomization.cpp)
-  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewMDSpanTemplateArgumentEquivalence.cpp)
-  list(REMOVE_ITEM COMPILE_ONLY_SOURCES view/TestViewMDSpanTemplateArgumentTypeDefs.cpp)
 endif()
 
 #testing if windows.h and Kokkos_Core.hpp can be included
@@ -147,6 +141,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       AtomicOperations_unsignedint
       AtomicOperations_unsignedlongint
       AtomicViews
+      BadAlloc
       BitManipulationBuiltins
       CheckedIntegerOps
       CommonPolicyConstructors
@@ -212,11 +207,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         SpaceAwareAccessor
         Swap
     )
-    if(NOT Kokkos_ENABLE_IMPL_MDSPAN)
-      list(REMOVE_ITEM ${Tag}_TESTNAMES1B MDSpanAtomicAccessor MDSpanConversion SpaceAwareAccessorAccessViolation
-           SpaceAwareAccessor
-      )
-    endif()
     # This test case causes MSVC to fail with "number of sections exceeded object file format limit"
     if(MSVC)
       list(REMOVE_ITEM ${Tag}_TESTNAMES1B Reducers_d)
@@ -351,47 +341,42 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
 
     # ViewSupport should eventually contain the new implementation
     # detail tests for the mdspan based View
-    if(Kokkos_ENABLE_IMPL_MDSPAN)
-      set(BV_TestNames
-          AllocationAndSpanSize
-          BasicView
-          CreateMirrorViewAndCopy
-          LegacyLayoutFunction
-          ReferenceCountedAccessor
-          ReferenceCountedDataHandle
-          ViewEqualityOperator
-          ViewCtorConvertibleToPtr
+    set(BV_TestNames
+        AllocationAndSpanSize
+        BasicView
+        CreateMirrorViewAndCopy
+        LegacyLayoutFunction
+        ReferenceCountedAccessor
+        ReferenceCountedDataHandle
+        ViewEqualityOperator
+        ViewCtorConvertibleToPtr
+        ViewCtorDataHandle
+    )
+    # FIXME_OPENACC
+    if(NOT Kokkos_ENABLE_OPENACC)
+      list(
+        APPEND
+        BV_TestNames
+        ViewCustomizationAccessorArg
+        ViewCustomizationAllocationType
+        ViewCustomizationAccessorFromMapping
+        MinimalViewMDSpanTemplateArgumentViability
+        ViewMDSpanTemplateArgumentSubview
       )
-      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY AND NOT Kokkos_ENABLE_OPENACC)
-        list(
-          APPEND
-          BV_TestNames
-          ViewCustomizationAccessorArg
-          ViewCustomizationAllocationType
-          ViewCustomizationAccessorFromMapping
-          MinimalViewMDSpanTemplateArgumentViability
-          ViewMDSpanTemplateArgumentSubview
-        )
-      endif()
-      if(NOT Kokkos_ENABLE_IMPL_VIEW_LEGACY)
-        list(APPEND BV_TestNames ViewCtorDataHandle)
-      endif()
-      set(${Tag}_VIEWSUPPORT)
-      foreach(Name IN LISTS BV_TestNames)
-        set(file ${dir}/Test${Tag}_View_${Name}.cpp)
-        # Write to a temporary intermediate file and call configure_file to avoid
-        # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
-        file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n" "#include <view/Test${Name}.hpp>\n")
-        configure_file(${dir}/dummy.cpp ${file})
-        list(APPEND ${Tag}_VIEWSUPPORT ${file})
-      endforeach()
+    endif()
+    set(${Tag}_VIEWSUPPORT)
+    foreach(Name IN LISTS BV_TestNames)
+      set(file ${dir}/Test${Tag}_View_${Name}.cpp)
+      # Write to a temporary intermediate file and call configure_file to avoid
+      # updating timestamps triggering unnecessary rebuilds on subsequent cmake runs.
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n" "#include <view/Test${Name}.hpp>\n")
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_VIEWSUPPORT ${file})
+    endforeach()
 
-      # FIXME_NEXTSILICON: requires parallel_for
-      if(NOT KOKKOS_ENABLE_NEXTSILICON)
-        kokkos_add_executable_and_test(
-          CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT}
-        )
-      endif()
+    # FIXME_NEXTSILICON: requires parallel_for
+    if(NOT KOKKOS_ENABLE_NEXTSILICON)
+      kokkos_add_executable_and_test(CoreUnitTest_${Tag}_ViewSupport SOURCES UnitTestMainInit.cpp ${${Tag}_VIEWSUPPORT})
     endif()
     # Smoke test: minimal subset for quick iteration (generate sources not built with main targets).
     foreach(Name IN LISTS SMOKE_TEST_NAMES)
@@ -408,6 +393,12 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
     if(Tag STREQUAL "Serial" AND KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
 
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Atomics.cpp)
+    endif()
+    # Fails for the OpenACC backend if 24.5 < NVHPC version < 26.5
+    if(Tag STREQUAL "Serial" AND (Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5
+                                  AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5)
+    )
+      list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Graph.cpp)
     endif()
     # WorkGraph is not supported for SYCL in unit tests (historically excluded from CoreUnitTest_SYCL2A).
     if(Tag STREQUAL "SYCL")
@@ -523,8 +514,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   list(
     REMOVE_ITEM
     OpenACC_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_a1.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_b1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_shared.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_BlockSizeDeduction.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_DeepCopyAlignment.cpp
@@ -552,8 +541,6 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
   list(
     REMOVE_ITEM
     OpenACC_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_a1.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/default/TestDefaultDeviceType_b1.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_double.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_float.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/openacc/TestOpenACC_AtomicOperations_int.cpp
@@ -659,6 +646,13 @@ if(Kokkos_ENABLE_NEXTSILICON)
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reducers_c.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Reductions.cpp
   )
+endif()
+
+if(Kokkos_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5 AND KOKKOS_CXX_COMPILER_VERSION
+                                                                                  VERSION_LESS 26.5
+)
+  #FIXME_OPENACC: some Serial tests fail if NVHPC version > 24.5
+  list(REMOVE_ITEM Serial_SOURCES1 ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_Other.cpp)
 endif()
 
 if(Kokkos_ENABLE_SERIAL)
@@ -828,14 +822,19 @@ endif()
 if(Kokkos_ENABLE_NEXTSILICON)
   set(NEXTSILICON_SOURCES
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Abort.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BadAlloc.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MinMaxClamp.cpp
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp # MDRange parallel for
   )
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon SOURCES UnitTestMainInit.cpp ${NEXTSILICON_SOURCES})
+  kokkos_add_executable_and_test(
+    CoreUnitTest_NextSiliconInitializationCallbacks SOURCES nextsilicon/TestNextSilicon_InitializationCallbacks.cpp
+  )
 endif()
 
 set(DEFAULT_DEVICE_SOURCES
     UnitTestMainInit.cpp
+    TestPair.cpp
     TestCStyleMemoryManagement.cpp
     TestSharedSpace.cpp
     TestSharedHostPinnedSpace.cpp
@@ -882,6 +881,16 @@ if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
     default/TestDefaultDeviceTypeResize.cpp
     default/TestDefaultDeviceTypeViewAPI.cpp
   )
+endif()
+
+# FIXME_OPENACC - Non-passing tests with the NVIDIA HPC compiler nvc++ versions
+# greater than 24.5 and less than 26.5
+if(Kokkos_ENABLE_OPENACC
+   AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC
+   AND KOKKOS_CXX_COMPILER_VERSION VERSION_GREATER 24.5
+   AND KOKKOS_CXX_COMPILER_VERSION VERSION_LESS 26.5
+)
+  list(REMOVE_ITEM DEFAULT_DEVICE_SOURCES default/TestDefaultDeviceType.cpp)
 endif()
 
 # FIXME_OPENACC - Comment non-passing tests with the Clang compiler

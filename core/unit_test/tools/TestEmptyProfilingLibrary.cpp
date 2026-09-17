@@ -6,8 +6,6 @@
 #include <Kokkos_Core.hpp>
 
 TEST(ProfilingDeathTest, EmptyProfilingLibraryErrors) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   ASSERT_DEATH(
       {
         Kokkos::initialize();

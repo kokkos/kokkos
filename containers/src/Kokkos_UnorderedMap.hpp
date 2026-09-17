@@ -317,11 +317,6 @@ class UnorderedMap {
   using host_mirror_type =
       UnorderedMap<Key, Value, host_mirror_space, Hasher, EqualTo>;
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_type instead.") = host_mirror_type;
-#endif
-
   using histogram_type = Impl::UnorderedMapHistogram<const_map_type>;
   //@}
 

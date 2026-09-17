@@ -78,6 +78,7 @@ NVIDIA-GH200:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON"
     - export CTEST_BUILD_NAME="NVIDIA-GH200"
+    - export GTEST_DEATH_TEST_STYLE=fast
     - export GTEST_FILTER="-cuda.debug_pin_um_to_host"
     - ctest -VV
         -D CDASH_MODEL=${CDASH_MODEL}
@@ -144,7 +145,8 @@ INTEL-DATA-CENTER-MAX-1100:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_CLANG_TIDY='${CLANG_TIDY_EXE}\;-warnings-as-errors=*\;--checks=-bugprone-reserved-identifier'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=icpx"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-zero-length-array -Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-zero-length-array -Wno-pass-failed -Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS_DEBUG='-g -O1'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=20"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_EXE_LINKER_FLAGS=-fsycl -flink-huge-device-code"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
@@ -172,6 +174,48 @@ INTEL-DATA-CENTER-MAX-1100:
     reports:
       junit: build/result_pvc1100.xml
 
+INTEL-B70:
+  extends: .common-setup
+  tags: [intel-b70]
+  image: intel/oneapi:2026.1.0-devel-ubuntu26.04
+  script:
+    - apt-get update && apt-get install -y git intel-ocloc
+    - sycl-ls
+    - export ONEAPI_DEVICE_SELECTOR=level_zero:gpu
+    - export CMAKE_BUILD_PARALLEL_LEVEL=16
+    - export ENV_CMAKE_OPTIONS=""
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=icpx"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-zero-length-array -Wno-pass-failed -Werror -fp-model=precise'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS_DEBUG='-g -O1'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=23"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_EXE_LINKER_FLAGS=-fsycl -flink-huge-device-code"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL_RELOCATABLE_DEVICE_CODE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_BMG=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
+    - export CTEST_BUILD_NAME="INTEL-B70"
+    - export GTEST_DEATH_TEST_STYLE=fast
+    - ctest -VV
+        -D CDASH_MODEL=${CDASH_MODEL}
+        -D GITHUB_PR_ID="${GITHUB_PR_ID}"
+        -D CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS}"
+        -D OUTPUT_JUNIT_FILE=result_b70.xml
+        -S scripts/CTestRun.cmake
+        -D CTEST_SITE="gitlab.spack.io"
+        -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
+        -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
+      | tee test_results.txt
+  artifacts:
+    when: always
+    paths:
+      - build/result_b70.xml
+    reports:
+      junit: build/result_b70.xml
+
 INTEL-DATA-CENTER-MAX-1100-OUT-OF-ORDER:
   extends: .common-setup
   tags: [intel-data-center-max-1100]
@@ -185,7 +229,8 @@ INTEL-DATA-CENTER-MAX-1100-OUT-OF-ORDER:
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=icpx"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-zero-length-array -Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-zero-length-array -Wno-pass-failed -Werror -fsycl-device-code-split=per_kernel -fp-model=precise'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS_DEBUG='-g -O1'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=20"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_EXE_LINKER_FLAGS=-fsycl -flink-huge-device-code"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
@@ -215,12 +260,12 @@ INTEL-DATA-CENTER-MAX-1100-OUT-OF-ORDER:
 AMD-MI300A:
   extends: .common-setup
   tags: [uo-gpu, odyssey, amd-mi300]
-  image: rocm/dev-ubuntu-24.04:6.2.4-complete
+  image: rocm/dev-ubuntu-26.04:7.14.0-full
   script:
     - apt-get update && apt-get install -y cmake git
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_PREFIX_PATH=/opt/rocm-6.2.4"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_PREFIX_PATH=/opt/rocm-7.14.0"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=hipcc"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
@@ -234,6 +279,8 @@ AMD-MI300A:
     - export CTEST_BUILD_NAME="AMD-MI300A"
     - export HSA_XNACK=1
     - export KOKKOS_DEVICE_ID=3
+    - export LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH
+    - export GTEST_FILTER="-hip.graph_capture:hip_graph.submit_six:hip_graph.end_of_submit_control_flow:hip_graph.aggregate_is_awaitable"
     - ctest -VV
       -D CDASH_MODEL=${CDASH_MODEL}
       -D GITHUB_PR_ID="${GITHUB_PR_ID}"

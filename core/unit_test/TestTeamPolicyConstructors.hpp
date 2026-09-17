@@ -180,8 +180,6 @@ TEST(TEST_CATEGORY, team_policy_impl_set_space) {
 }
 
 TEST(TEST_CATEGORY_DEATH, team_policy_invalid_league_size) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(Kokkos::TeamPolicy<TEST_EXECSPACE>(-1, 1),
                "Kokkos::TeamPolicy error: league_size \\(-1\\) must be greater "
                "than or equal to 0");
@@ -209,8 +207,6 @@ TEST(TEST_CATEGORY_DEATH, team_policy_invalid_league_size) {
 }
 
 TEST(TEST_CATEGORY_DEATH, team_policy_invalid_team_size) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, 0),
                "Kokkos::TeamPolicy error: team_size \\(0\\) must be greater "
                "than or equal to 1");
@@ -225,8 +221,6 @@ TEST(TEST_CATEGORY_DEATH, team_policy_invalid_team_size) {
 }
 
 TEST(TEST_CATEGORY_DEATH, team_policy_invalid_vector_length) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   EXPECT_DEATH(Kokkos::TeamPolicy<TEST_EXECSPACE>(1, 1, -1),
                "Kokkos::TeamPolicy error: vector_length \\(-1\\) must be "
                "greater than or equal to 1");

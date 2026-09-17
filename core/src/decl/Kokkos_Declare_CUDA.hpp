@@ -11,7 +11,6 @@
 #include <Cuda/Kokkos_Cuda_Parallel_Team.hpp>
 #include <Cuda/Kokkos_Cuda_KernelLaunch.hpp>
 #include <Cuda/Kokkos_Cuda_Instance.hpp>
-#include <Cuda/Kokkos_Cuda_View.hpp>
 #include <Cuda/Kokkos_Cuda_Team.hpp>
 #include <Cuda/Kokkos_Cuda_MDRangePolicy.hpp>
 #include <Cuda/Kokkos_Cuda_UniqueToken.hpp>

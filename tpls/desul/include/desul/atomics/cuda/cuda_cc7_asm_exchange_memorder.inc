@@ -24,4 +24,3 @@
 #include "desul/atomics/cuda/cuda_cc7_asm_exchange_op.inc"
 #undef __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER
 #undef __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM
-

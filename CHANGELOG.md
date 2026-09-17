@@ -1,4 +1,11 @@
 # CHANGELOG
+## 5.2.1
+
+[Full Changelog](https://github.com/kokkos/kokkos/compare/5.2.0...5.2.1)
+
+### Bug Fixes
+* Fix inverted `NDEBUG `logic in mdspan precondition checking [\#9405](https://github.com/kokkos/kokkos/pull/9405)
+* HIP: Synchronize before freeing device memory when using async allocations [\#9433](https://github.com/kokkos/kokkos/pull/9433)
 
 ## 5.2.0
 
@@ -42,7 +49,6 @@
 * Increase max level 1 team scratch size from 20MB to 80MB per team [\#9084](https://github.com/kokkos/kokkos/pull/9084)
 * core(graph): rename interoperability graph access with `<backend>_` prefix [\#9159](https://github.com/kokkos/kokkos/pull/9159)
 * core(graph): add enum to identify node kind [\#9170](https://github.com/kokkos/kokkos/pull/9170)
-* Add `create_mirror_view_and_copy(a_view)` overload [\#9185](https://github.com/kokkos/kokkos/pull/9185)
 * Separated out (limited) iterator support from algorithms and moved to core [\#6684](https://github.com/kokkos/kokkos/pull/6684)
 * Check extent preconditions on Views in std::algorithms [\#6811](https://github.com/kokkos/kokkos/pull/6811)
 * Make the flag argument in simd constructors and load/store functions optional aligning with C++26 [\#9211](https://github.com/kokkos/kokkos/pull/9211) [\#9275](https://github.com/kokkos/kokkos/pull/9275)

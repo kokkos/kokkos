@@ -11,23 +11,12 @@ static_assert(false,
 #define KOKKOS_VIEW_HPP
 
 #include <Kokkos_Macros.hpp>
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 #include <View/Kokkos_BasicView.hpp>
-#endif
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-#include <View/Kokkos_ViewLegacy.hpp>
-#else
 
 #include <View/Kokkos_ViewTraits.hpp>
 #include <Kokkos_Pair.hpp>
 #include <Kokkos_MemoryTraits.hpp>
 
-// FIXME: This will eventually be removed
-namespace Kokkos::Impl {
-template <class, class...>
-class ViewMapping;
-}
-#include <View/Kokkos_ViewMapping.hpp>
 #include <Kokkos_MinMax.hpp>
 
 namespace Kokkos {
@@ -420,12 +409,6 @@ class View
   using array_type KOKKOS_DEPRECATED_WITH_COMMENT("Use type instead.") = type;
 #endif
 
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_4
-  /** \brief  Compatible HostMirror view */
-  using HostMirror KOKKOS_DEPRECATED_WITH_COMMENT(
-      "Use host_mirror_type instead.") = host_mirror_type;
-#endif
-
   // Unified types
   using uniform_type = typename Impl::ViewUniformType<View, 0>::type;
   using uniform_const_type =
@@ -499,13 +482,6 @@ class View
   // Allow specializations to query their specialized map
 
   KOKKOS_INLINE_FUNCTION
-  auto impl_map() const {
-    using map_type =
-        Kokkos::Impl::ViewMapping<traits, typename traits::specialize>;
-    return map_type(Kokkos::view_wrap(data()), layout());
-  }
-
-  KOKKOS_INLINE_FUNCTION
   const Kokkos::Impl::SharedAllocationTracker& impl_track() const {
     if constexpr (traits::memory_traits::is_unmanaged) {
       static const Kokkos::Impl::SharedAllocationTracker empty_tracker = {};
@@ -524,7 +500,6 @@ class View
   }
 
  private:
-
 #ifdef KOKKOS_ENABLE_DEBUG_BOUNDS_CHECK
   template <typename... Is>
   static KOKKOS_FUNCTION void check_access_member_function_valid_args(
@@ -970,8 +945,22 @@ class View
   // Compatible subview constructor
   // may assign unmanaged from managed.
 
+// This annotation lets std::pair slice arguments be used from device code
+// when relaxed constexpr support is enabled, while avoiding warnings about
+// calling a host function from a host device function: constexpr alone is
+// enough to silence that warning, including when using Clang (and its
+// derivatives, e.g. hipcc, amdclang++) as the device compiler.  NVCC is the
+// exception: there, constexpr alone instead triggers the warning, so we use
+// KOKKOS_FUNCTION in that specific configuration.
+#if defined(KOKKOS_COMPILER_NVCC) && defined(KOKKOS_ENABLE_CUDA_CONSTEXPR)
+#define KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER KOKKOS_FUNCTION
+#else
+#define KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER constexpr
+#endif
+
   template <class RT, class... RP, class Arg0, class... Args>
-  View(const View<RT, RP...>& src_view, const Arg0 arg0, Args... args)
+  KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER View(const View<RT, RP...>& src_view,
+                                              const Arg0 arg0, Args... args)
       : base_t(Impl::subview_ctor_tag, src_view,
                Impl::convert_to_kokkos_pair_if_std_pair(arg0),
                Impl::convert_to_kokkos_pair_if_std_pair(args)...) {}
@@ -1026,8 +1015,8 @@ class View
   KOKKOS_FUNCTION
   explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutLeft& arg_layout)
-    requires(std::is_same_v<typename base_t::layout_type,
-                            Experimental::layout_left_padded<> >)
+    requires(
+        std::is_same_v<typename base_t::layout_type, layout_left_padded<> >)
       : base_t(
             handle,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
@@ -1036,8 +1025,8 @@ class View
   KOKKOS_FUNCTION
   explicit View(const typename base_t::data_handle_type& handle,
                 const LayoutRight& arg_layout)
-    requires(std::is_same_v<typename base_t::layout_type,
-                            Experimental::layout_right_padded<> >)
+    requires(
+        std::is_same_v<typename base_t::layout_type, layout_right_padded<> >)
       : base_t(
             handle,
             Impl::mapping_from_array_layout<typename mdspan_type::mapping_type>(
@@ -1444,9 +1433,10 @@ class View
       const typename traits::array_layout& arg_layout)
       : View(Impl::ViewCtorProp<pointer_type>(
                  static_cast<pointer_type>(arg_space.get_shmem_aligned(
-                     Kokkos::Impl::ViewMapping<
-                         traits,
-                         typename traits::specialize>::memory_span(arg_layout),
+                     Impl::mapping_from_array_layout<
+                         typename base_t::mapping_type>(arg_layout)
+                             .required_span_size() *
+                         sizeof(raw_allocation_value_type),
                      scratch_value_alignment))),
              arg_layout) {}
 
@@ -1638,26 +1628,6 @@ struct ApplyToViewOfStaticRank {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
-template <class D, class... P, class... Args>
-auto subview(const View<D, P...>& src, Args... args) {
-  return subview(src, Impl::convert_to_kokkos_pair_if_std_pair(args)...);
-}
-
-// std::pair isn't device-compatible
-template <class D, class... P, class... Args>
-  requires(!Impl::ContainsStdPair<Args...>)
-KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src, Args... args) {
-  static_assert(View<D, P...>::rank == sizeof...(Args),
-                "subview requires one argument for each source View rank");
-
-  return typename Kokkos::Impl::ViewMapping<
-      void /* deduce subview type from source view traits */
-      ,
-      typename Impl::RemoveAlignedMemoryTrait<D, P...>::type,
-      Args...>::type(src, args...);
-}
-
-#ifdef KOKKOS_ENABLE_IMPL_MDSPAN
 // Constructing the return type inline in the subview function body
 // led to compiler errors with CUDA 12.2 - related to the weird issue
 // where it tries to inject C++ Ranges function somewhere
@@ -1674,10 +1644,56 @@ struct SubviewReturnType {
   using sub_extents_t  = typename sub_mapping_t::extents_type;
   using sub_layout_t   = typename sub_mapping_t::layout_type;
   using sub_accessor_t = typename V::accessor_type::offset_policy;
-  using sub_view_t = View<typename V::element_type, sub_extents_t, sub_layout_t,
-                          sub_accessor_t>;
+
+  using data_type =
+      typename DataTypeFromExtents<typename sub_accessor_t::element_type,
+                                   sub_extents_t>::type;
+  using array_layout  = typename ArrayLayoutFromLayout<sub_layout_t>::type;
+  using device_type   = typename V::device_type;
+  using memory_traits = MemoryTraitsFromAccessor<sub_accessor_t>;
+  using sub_view_t = View<data_type, array_layout, device_type, memory_traits>;
+};
+
+template <class ElementType, class IndexType, size_t... Extents, class L,
+          class A, class... Slices>
+struct SubviewReturnType<
+    Kokkos::View<ElementType, Kokkos::extents<IndexType, Extents...>, L, A>,
+    Slices...> {
+  using view_t =
+      Kokkos::View<ElementType, Kokkos::extents<IndexType, Extents...>, L, A>;
+  using sub_mapping_t =
+      decltype(submdspan_mapping(std::declval<typename view_t::mapping_type>(),
+                                 transform_kokkos_slice_to_mdspan_slice(
+                                     std::declval<Slices>())...)
+                   .mapping);
+  using sub_extents_t  = typename sub_mapping_t::extents_type;
+  using sub_layout_t   = typename sub_mapping_t::layout_type;
+  using sub_accessor_t = typename view_t::accessor_type::offset_policy;
+  using sub_view_t     = View<typename view_t::element_type, sub_extents_t,
+                          sub_layout_t, sub_accessor_t>;
 };
 }  // namespace Impl
+
+template <class D, class... P, class... Slices>
+KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER auto subview(const View<D, P...>& src,
+                                                    Slices... slices) {
+  return subview(src, Impl::convert_to_kokkos_pair_if_std_pair(slices)...);
+}
+
+#undef KOKKOS_IMPL_SUBVIEW_STD_PAIR_SPECIFIER
+
+// std::pair isn't device-compatible
+template <class D, class... P, class... Slices>
+  requires(!Impl::ContainsStdPair<Slices...>)
+KOKKOS_INLINE_FUNCTION auto subview(const View<D, P...>& src,
+                                    Slices... slices) {
+  static_assert(View<D, P...>::rank == sizeof...(Slices),
+                "subview requires one argument for each source View rank");
+
+  using sub_view_t =
+      typename Impl::SubviewReturnType<View<D, P...>, Slices...>::sub_view_t;
+  return sub_view_t(src, slices...);
+}
 
 // std::pair isn't device-compatible
 template <class E, class I, size_t... Exts, class L, class A, class... Slices>
@@ -1688,10 +1704,9 @@ KOKKOS_INLINE_FUNCTION auto subview(
       View<E, Kokkos::extents<I, Exts...>, L, A>, Slices...>::sub_view_t;
   return sub_view_t(src, slices...);
 }
-#endif
 
-template <class V, class... Args>
-using Subview = decltype(subview(std::declval<V>(), std::declval<Args>()...));
+template <class V, class... Slices>
+using Subview = decltype(subview(std::declval<V>(), std::declval<Slices>()...));
 
 } /* namespace Kokkos */
 
@@ -1749,10 +1764,5 @@ struct ViewTraits<ElementType, extents<IndexType, Extents...>, Prop...>
 // out
 #include <View/Kokkos_ViewCommonType.hpp>
 #include <View/Kokkos_ViewUniformType.hpp>
-#include <View/Kokkos_ViewAtomic.hpp>
 
-//----------------------------------------------------------------------------
-//----------------------------------------------------------------------------
-
-#endif /* !KOKKOS_ENABLE_IMPL_VIEW_LEGACY */
 #endif /* #ifndef KOKKOS_VIEW_HPP */

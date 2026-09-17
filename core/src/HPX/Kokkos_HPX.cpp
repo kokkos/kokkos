@@ -190,8 +190,6 @@ void HPX::impl_finalize() {
       "Kokkos::Experimental::HPX: fence "
       "to drain internal sender on finalize");
 
-  m_default_instance_data = nullptr;
-
   if (m_hpx_initialized) {
     hpx::runtime *rt = hpx::get_runtime_ptr();
     if (rt != nullptr) {
@@ -204,6 +202,8 @@ void HPX::impl_finalize() {
     }
     m_hpx_initialized = false;
   }
+
+  m_default_instance_data = nullptr;
 }
 
 int HPX::impl_thread_pool_size() noexcept {

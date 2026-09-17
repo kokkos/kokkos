@@ -4,9 +4,15 @@
 #ifndef KOKKOS_FUNCTORANALYSIS_HPP
 #define KOKKOS_FUNCTORANALYSIS_HPP
 
+#ifndef KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE
+#define KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTOR_ANALYSIS
+#endif
+
 #include <cstddef>
 #include <new>
 #include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_Concepts.hpp>
 #include <impl/Kokkos_Traits.hpp>
 
 //----------------------------------------------------------------------------
@@ -82,6 +88,91 @@ template <class FunctorType, class ExecPolicy, class ReturnType,
 struct DeduceFunctorPatternInterface<ParallelScanWithTotal<
     FunctorType, ExecPolicy, ReturnType, ExecutionSpace>> {
   using type = FunctorPatternInterface::SCAN;
+};
+
+template <class T>
+using execution_space_t = typename T::execution_space;
+
+template <class T>
+using device_type_t = typename T::device_type;
+
+//----------------------------------------------------------------------------
+/** \brief  Given a Functor and Execution Policy query an execution space.
+ *
+ *  if       the Policy has an execution space use that
+ *  else if  the Functor has an execution_space use that
+ *  else if  the Functor has a device_type use that for backward compatibility
+ *  else     use the default
+ */
+
+template <class Functor, class Policy>
+struct FunctorPolicyExecutionSpace {
+  using policy_execution_space  = detected_t<execution_space_t, Policy>;
+  using functor_execution_space = detected_t<execution_space_t, Functor>;
+  using functor_device_type     = detected_t<device_type_t, Functor>;
+  using functor_device_type_execution_space =
+      detected_t<execution_space_t, functor_device_type>;
+
+  static_assert(
+      !is_detected<execution_space_t, Policy>::value ||
+          !is_detected<execution_space_t, Functor>::value ||
+          std::is_same_v<policy_execution_space, functor_execution_space>,
+      "A policy with an execution space and a functor with an execution space "
+      "are given but the execution space types do not match!");
+  static_assert(!is_detected<execution_space_t, Policy>::value ||
+                    !is_detected<device_type_t, Functor>::value ||
+                    std::is_same_v<policy_execution_space,
+                                   functor_device_type_execution_space>,
+                "A policy with an execution space and a functor with a device "
+                "type are given but the execution space types do not match!");
+  static_assert(!is_detected<device_type_t, Functor>::value ||
+                    !is_detected<execution_space_t, Functor>::value ||
+                    std::is_same_v<functor_device_type_execution_space,
+                                   functor_execution_space>,
+                "A functor with both an execution space and device type is "
+                "given but their execution space types do not match!");
+
+  using execution_space = detected_or_t<
+      detected_or_t<
+          std::conditional_t<
+              is_detected<device_type_t, Functor>::value,
+              detected_t<execution_space_t, detected_t<device_type_t, Functor>>,
+              Kokkos::DefaultExecutionSpace>,
+          execution_space_t, Functor>,
+      execution_space_t, Policy>;
+};
+
+template <class FunctorType,
+          bool HasTeamShmemSize =
+              has_member_team_shmem_size<FunctorType>::value,
+          bool HasShmemSize = has_member_shmem_size<FunctorType>::value>
+struct FunctorTeamShmemSize {
+  KOKKOS_INLINE_FUNCTION static size_t value(const FunctorType&, int) {
+    return 0;
+  }
+};
+
+template <class FunctorType>
+struct FunctorTeamShmemSize<FunctorType, true, false> {
+  static inline size_t value(const FunctorType& f, int team_size) {
+    return f.team_shmem_size(team_size);
+  }
+};
+
+template <class FunctorType>
+struct FunctorTeamShmemSize<FunctorType, false, true> {
+  static inline size_t value(const FunctorType& f, int team_size) {
+    return f.shmem_size(team_size);
+  }
+};
+template <class FunctorType>
+struct FunctorTeamShmemSize<FunctorType, true, true> {
+  static inline size_t value(const FunctorType& /*f*/, int /*team_size*/) {
+    Kokkos::abort(
+        "Functor with both team_shmem_size and shmem_size defined is "
+        "not allowed");
+    return 0;
+  }
 };
 
 /** \brief  Query Functor and execution policy argument tag for value type.
@@ -572,23 +663,21 @@ struct FunctorAnalysis {
     }
 
     KOKKOS_INLINE_FUNCTION
-    void copy(ValueType* const dst, ValueType const* const src) const noexcept {
+    void copy(ValueType* const dst, ValueType const* const src) const {
       for (int i = 0; i < length(); ++i) dst[i] = src[i];
     }
 
     KOKKOS_INLINE_FUNCTION
-    void join(ValueType* dst, ValueType const* src) const noexcept {
+    void join(ValueType* dst, ValueType const* src) const {
       DeduceJoin<>::join(&m_functor, dst, src);
     }
 
-    KOKKOS_INLINE_FUNCTION reference_type
-    init(ValueType* const dst) const noexcept {
+    KOKKOS_INLINE_FUNCTION reference_type init(ValueType* const dst) const {
       DeduceInit<>::init(&m_functor, dst);
       return reference(dst);
     }
 
-    KOKKOS_INLINE_FUNCTION
-    void final(ValueType* dst) const noexcept {
+    KOKKOS_INLINE_FUNCTION void final(ValueType* dst) const {
       DeduceFinal<>::final(&m_functor, dst);
     }
 
@@ -602,7 +691,7 @@ struct FunctorAnalysis {
     ~Reducer()                         = default;
 
     KOKKOS_INLINE_FUNCTION explicit constexpr Reducer(
-        Functor const& arg_functor) noexcept
+        Functor const& arg_functor)
         : m_functor(arg_functor) {}
   };
 };
@@ -613,4 +702,8 @@ struct FunctorAnalysis {
 //----------------------------------------------------------------------------
 //----------------------------------------------------------------------------
 
+#ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTOR_ANALYSIS
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE
+#undef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_FUNCTOR_ANALYSIS
+#endif
 #endif /* KOKKOS_FUNCTORANALYSIS_HPP */

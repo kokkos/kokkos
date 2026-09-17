@@ -392,7 +392,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-    const auto nwork = m_policy.m_num_tiles;
+    const index_type nwork = m_policy.m_num_tiles;
     if (nwork) {
       int block_size = m_policy.m_prod_tile_dims;
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
@@ -412,11 +412,6 @@ class ParallelReduce<CombinedFunctorReducerType,
       std::scoped_lock<std::mutex> scratch_buffers_lock(
           m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
 
-      m_scratch_space =
-          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
-              m_policy.space(),
-              m_functor_reducer.get_reducer().value_size() *
-                  block_size /* block_size == max block_count */));
       m_scratch_flags =
           cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type));
       m_unified_space =
@@ -425,8 +420,13 @@ class ParallelReduce<CombinedFunctorReducerType,
 
       // REQUIRED ( 1 , N , 1 )
       const dim3 block(1, block_size, 1);
-      // Required grid.x <= block.y
-      const dim3 grid(std::min(int(block.y), int(nwork)), 1, 1);
+      const int cc = m_policy.space().concurrency() / block_size;
+      const dim3 grid(static_cast<uint32_t>(std::min(index_type(cc), nwork)), 1,
+                      1);
+      m_scratch_space =
+          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
+              m_policy.space(),
+              m_functor_reducer.get_reducer().value_size() * grid.x));
 
       // TODO @graph We need to effectively insert this in to the graph
       const int shmem =

@@ -91,7 +91,7 @@ template <typename T>
 constexpr hpx_range<T> get_chunk_range(const T i_chunk, const T offset,
                                        const T chunk_size, const T max) {
   const T begin = offset + i_chunk * chunk_size;
-  const T end   = (std::min)(begin + chunk_size, max);
+  const T end   = std::min(static_cast<T>(begin + chunk_size), max);
   return {begin, end};
 }
 
@@ -147,6 +147,7 @@ class HPX {
           name,
           Kokkos::Tools::Experimental::Impl::DirectFenceIDHandle{m_instance_id},
           [&]() {
+            if (hpx::get_runtime_ptr() == nullptr) return;
             auto &s = m_sender;
             hpx::this_thread::experimental::sync_wait(std::move(s));
             s = hpx::execution::experimental::unique_any_sender<>(
@@ -186,8 +187,12 @@ class HPX {
 
 #pragma GCC diagnostic pop
 
-  ~HPX() {
-    Kokkos::Impl::check_execution_space_destructor_precondition(name());
+  // Must be __host__ __device__ for the implicitly defined
+  // ~RangePolicy<ExecSpace>(); see the comment on ~Cuda() in
+  // Cuda/Kokkos_Cuda.hpp.
+  KOKKOS_FUNCTION ~HPX() {
+    KOKKOS_IF_ON_HOST(
+        (Kokkos::Impl::check_execution_space_destructor_precondition(name());))
   }
   explicit HPX(instance_mode mode)
       : m_instance_data(

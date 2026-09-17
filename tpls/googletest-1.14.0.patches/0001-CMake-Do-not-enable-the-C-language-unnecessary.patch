@@ -1,0 +1,67 @@
+From 54af6b0c691529574d29046e08ebd0c0ef034fb7 Mon Sep 17 00:00:00 2001
+From: Damien L-G <dalg24@gmail.com>
+Date: Fri, 24 Oct 2025 07:54:17 -0400
+Subject: [PATCH 1/3] CMake: Do not enable the C language (unnecessary)
+
+The project() command in the top-level CMakeLists.txt was not specifying
+languages which default to enabling C and CXX.
+The googlemock and googletest project() commands were explicitly enabing
+both the C and CXX languages in their respective subdirectories,
+although all their source file are correctly identified as CXX and the C
+language is effectively never used.
+
+Enabling the C language forces CXX-only projects downstream that embed
+this repo (via FetchContent or add subdirectory) to detect a C compiler
+at configuration-time.
+
+This PR proposes to properly only enable the CXX language.
+
+Signed-off-by: Damien L-G <dalg24@gmail.com>
+---
+ CMakeLists.txt            | 2 +-
+ googlemock/CMakeLists.txt | 2 +-
+ googletest/CMakeLists.txt | 2 +-
+ 3 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 089ac987..42bd1cb2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -3,7 +3,7 @@
+ 
+ cmake_minimum_required(VERSION 3.13)
+ 
+-project(googletest-distribution)
++project(googletest-distribution CXX)
+ set(GOOGLETEST_VERSION 1.14.0)
+ 
+ if(NOT CYGWIN AND NOT MSYS AND NOT ${CMAKE_SYSTEM_NAME} STREQUAL QNX)
+diff --git a/googlemock/CMakeLists.txt b/googlemock/CMakeLists.txt
+index a9aa0723..58cc83fb 100644
+--- a/googlemock/CMakeLists.txt
++++ b/googlemock/CMakeLists.txt
+@@ -37,7 +37,7 @@ endif()
+ # ${gmock_BINARY_DIR}.
+ # Language "C" is required for find_package(Threads).
+ cmake_minimum_required(VERSION 3.13)
+-project(gmock VERSION ${GOOGLETEST_VERSION} LANGUAGES CXX C)
++project(gmock VERSION ${GOOGLETEST_VERSION} LANGUAGES CXX)
+ 
+ if (COMMAND set_up_hermetic_build)
+   set_up_hermetic_build()
+diff --git a/googletest/CMakeLists.txt b/googletest/CMakeLists.txt
+index caafa8c7..27ba4136 100644
+--- a/googletest/CMakeLists.txt
++++ b/googletest/CMakeLists.txt
+@@ -47,7 +47,7 @@ endif()
+ # Project version:
+ 
+ cmake_minimum_required(VERSION 3.13)
+-project(gtest VERSION ${GOOGLETEST_VERSION} LANGUAGES CXX C)
++project(gtest VERSION ${GOOGLETEST_VERSION} LANGUAGES CXX)
+ 
+ if (COMMAND set_up_hermetic_build)
+   set_up_hermetic_build()
+-- 
+2.53.0
+

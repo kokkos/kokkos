@@ -12,7 +12,7 @@ Polaris:
     - module load PrgEnv-gnu
     - module load spack-pe-base
     - module load cmake
-    - module load cudatoolkit-standalone/12.8.1
+    - module load cudatoolkit-standalone/13.0.1
     - module list
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
@@ -20,8 +20,9 @@ Polaris:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_VERBOSE_MAKEFILE=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror=all-warnings -Werror'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_AMPERE80=ON"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON;"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON;"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_BENCHMARKS=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_CUDA=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_COMPILER_WARNINGS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - ctest -VV
         -D CDASH_MODEL=Nightly
@@ -30,6 +31,14 @@ Polaris:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="Polaris-A100"
+    - git clone https://github.com/kokkos/kokkos-benchmark-results.git
+    - mkdir -p kokkos-benchmark-results/Polaris
+    - find build/core/perf_test/ build/algorithms/perf_test/ build/simd/perf_tests/ -name "*.json" -exec mv {} kokkos-benchmark-results/Polaris/ \;
+    - cd kokkos-benchmark-results
+    - git add Polaris/*
+    - git commit -m "Polaris performance run"
+    - git status
+    - git push https://"$GH_BENCHMARK_PAT"@github.com/kokkos/kokkos-benchmark-results.git
   artifacts:
     when: always
     paths:
@@ -55,6 +64,7 @@ Aurora:
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_SYCL=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_INTEL_PVC=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_NATIVE=ON"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_BENCHMARKS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_TESTS=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Wno-zero-length-array -Wno-pass-failed -fp-model=precise'"
     - ctest -VV
@@ -64,6 +74,14 @@ Aurora:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1550"
+    - git clone https://github.com/kokkos/kokkos-benchmark-results.git
+    - mkdir -p kokkos-benchmark-results/Aurora
+    - find build/core/perf_test/ build/algorithms/perf_test/ build/simd/perf_tests/ -name "*.json" -exec mv {} kokkos-benchmark-results/Aurora/ \;
+    - cd kokkos-benchmark-results
+    - git add Aurora/*
+    - git commit -m "Aurora performance run"
+    - git status
+    - git push https://"$GH_BENCHMARK_PAT"@github.com/kokkos/kokkos-benchmark-results.git
   artifacts:
     when: always
     paths:

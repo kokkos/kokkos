@@ -92,9 +92,12 @@ OutputIterator rotate_copy_exespace_impl(
 
   // run
   const auto num_elements = Kokkos::Experimental::distance(first, last);
-  ::Kokkos::parallel_for(label,
-                         RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                         StdRotateCopyFunctor(first, last, n_first, d_first));
+  ::Kokkos::parallel_for(
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename InputIterator::difference_type>>(
+          ex, 0, num_elements),
+      StdRotateCopyFunctor(first, last, n_first, d_first));
 
   ex.fence("Kokkos::rotate_copy: fence after operation");
 

@@ -198,9 +198,12 @@ OutputIteratorType inclusive_scan_default_op_exespace_impl(
 
   Kokkos::Profiling::pushRegion(label + " via Kokkos::parallel_scan");
 
-  ::Kokkos::parallel_scan(label,
-                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                          func_type(first_from, first_dest));
+  ::Kokkos::parallel_scan(
+      label,
+      RangePolicy<ExecutionSpace,
+                  IndexType<typename InputIteratorType::difference_type>>(
+          ex, 0, num_elements),
+      func_type(first_from, first_dest));
   ex.fence("Kokkos::inclusive_scan_default_op: fence after operation");
 
   Kokkos::Profiling::popRegion();
@@ -287,7 +290,8 @@ OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
   Kokkos::Profiling::pushRegion(label + " via Kokkos::parallel_scan");
 
   ::Kokkos::parallel_scan(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       func_type(first_from, first_dest, binary_op, unary_op_type()));
   ex.fence("Kokkos::inclusive_scan_custom_binary_op: fence after operation");
 
@@ -326,10 +330,11 @@ OutputIteratorType inclusive_scan_custom_binary_op_exespace_impl(
 
   Kokkos::Profiling::pushRegion(label + " via Kokkos::parallel_scan");
 
-  ::Kokkos::parallel_scan(label,
-                          RangePolicy<ExecutionSpace>(ex, 0, num_elements),
-                          func_type(first_from, first_dest, binary_op,
-                                    unary_op_type(), std::move(init_value)));
+  ::Kokkos::parallel_scan(
+      label,
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
+      func_type(first_from, first_dest, binary_op, unary_op_type(),
+                std::move(init_value)));
   ex.fence("Kokkos::inclusive_scan_custom_binary_op: fence after operation");
 
   Kokkos::Profiling::popRegion();

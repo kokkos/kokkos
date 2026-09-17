@@ -205,20 +205,29 @@ class SYCLInternal {
   }
 };
 
-// FIXME_SYCL the limit is 2048 bytes for all arguments handed to a kernel,
-// assume for now that the rest doesn't need more than 248 bytes.
-#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
+// FIXME_SYCL the limit is 2048 bytes for Intel GPUs and 4000 bytes for NVIDIA
+// GPUS for all arguments handed to a kernel, assume for now that the rest
+// doesn't need more than roughly 256 bytes.
+#ifdef KOKKOS_IMPL_ARCH_NVIDIA_GPU
+#define KOKKOS_IMPL_SYCL_KERNEL_SIZE_LIMIT 3750
+#else  // assume the stricter Intel GPU limit
+#define KOKKOS_IMPL_SYCL_KERNEL_SIZE_LIMIT 1800
+#endif
+#if defined(SYCL_DEVICE_COPYABLE)
 template <typename Functor, typename Storage,
-          bool ManualCopy = (sizeof(Functor) >= 1800)>
+          bool ManualCopy =
+              (sizeof(Functor) >= KOKKOS_IMPL_SYCL_KERNEL_SIZE_LIMIT)>
 class SYCLFunctionWrapper;
 #else
 template <typename Functor, typename Storage,
-          bool ManualCopy = (sizeof(Functor) >= 1800 ||
-                             !std::is_trivially_copyable_v<Functor>)>
+          bool ManualCopy =
+              (sizeof(Functor) >= KOKKOS_IMPL_SYCL_KERNEL_SIZE_LIMIT ||
+               !std::is_trivially_copyable_v<Functor>)>
 class SYCLFunctionWrapper;
 #endif
+#undef KOKKOS_IMPL_SYCL_KERNEL_SIZE_LIMIT
 
-#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
+#if defined(SYCL_DEVICE_COPYABLE)
 template <typename Functor, typename Storage>
 class SYCLFunctionWrapper<Functor, Storage, false> {
   // We need a union here so that we can avoid calling a constructor for m_f
@@ -308,7 +317,7 @@ auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
 }  // namespace Impl
 }  // namespace Kokkos
 
-#if defined(SYCL_DEVICE_COPYABLE) && defined(KOKKOS_ARCH_INTEL_GPU)
+#if defined(SYCL_DEVICE_COPYABLE)
 template <typename Functor, typename Storage>
 struct sycl::is_device_copyable<
     Kokkos::Impl::SYCLFunctionWrapper<Functor, Storage, false>>

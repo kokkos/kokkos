@@ -57,6 +57,7 @@ void SerialInternal::fence(const std::string& name) {
 #endif
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 SerialInternal::~SerialInternal() {
   fence("Kokkos::SerialInternal: fence on destruction");
 
@@ -150,10 +151,6 @@ void SerialInternal::resize_thread_team_data(size_t pool_reduce_bytes,
   }
 }
 }  // namespace Impl
-
-Serial::~Serial() {
-  Impl::check_execution_space_destructor_precondition(name());
-}
 
 Serial::Serial()
     : m_space_instance(

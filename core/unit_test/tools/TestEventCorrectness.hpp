@@ -530,6 +530,45 @@ TEST(kokkosp, view) {
   ASSERT_TRUE(success);
 }
 
+template <typename MemorySpace>
+void test_empty_view_allocation_events() {
+  using namespace Kokkos::Test::Tools;
+  listen_tool_events(Config::DisableAll(), Config::EnableAllocs());
+  auto success = validate_event_set(
+      [=]() { Kokkos::View<float*, MemorySpace> dogs("dogs", 0); },
+      [=](AllocateDataEvent alloc, DeallocateDataEvent free) {
+        if (alloc.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on alloc name"}};
+        }
+        if (alloc.size != 0) {
+          return MatchDiagnostic{false, {"No match on alloc size"}};
+        }
+        if (alloc.ptr != free.ptr) {
+          return MatchDiagnostic{false, {"No match on pointers"}};
+        }
+        if (free.name != "dogs") {
+          return MatchDiagnostic{false, {"No match on free name"}};
+        }
+        if (free.size != 0) {
+          return MatchDiagnostic{false, {"No match on free size"}};
+        }
+        return MatchDiagnostic{true};
+      });
+  ASSERT_TRUE(success);
+}
+
+TEST(kokkosp, empty_view) {
+  test_empty_view_allocation_events<Kokkos::HostSpace>();
+  test_empty_view_allocation_events<
+      Kokkos::DefaultExecutionSpace::memory_space>();
+#ifdef KOKKOS_HAS_SHARED_SPACE
+  test_empty_view_allocation_events<Kokkos::SharedSpace>();
+#endif
+#ifdef KOKKOS_HAS_SHARED_HOST_PINNED_SPACE
+  test_empty_view_allocation_events<Kokkos::SharedHostPinnedSpace>();
+#endif
+}
+
 TEST(kokkosp, sections) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableSections());

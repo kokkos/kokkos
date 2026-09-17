@@ -48,13 +48,14 @@ OutputIteratorType transform_exclusive_scan_exespace_impl(
           OutputIteratorType, BinaryOpType, UnaryOpType>,
       TransformExclusiveScanFunctorWithValueWrapper<
           ExecutionSpace, index_type, ValueType, InputIteratorType,
-          OutputIteratorType, BinaryOpType, UnaryOpType> >;
+          OutputIteratorType, BinaryOpType, UnaryOpType>>;
 
   // run
   const auto num_elements =
       Kokkos::Experimental::distance(first_from, last_from);
   ::Kokkos::parallel_scan(
-      label, RangePolicy<ExecutionSpace>(ex, 0, num_elements),
+      label,
+      RangePolicy<ExecutionSpace, IndexType<index_type>>(ex, 0, num_elements),
       func_type(std::move(init_value), first_from, first_dest, bop, uop));
   ex.fence("Kokkos::transform_exclusive_scan: fence after operation");
 

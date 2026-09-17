@@ -74,14 +74,11 @@ struct [[nodiscard]] Graph {
     defined(KOKKOS_ENABLE_SYCL)
   // Construct a graph from a native graph, add a root node.
   template <typename T>
-#if defined(KOKKOS_ENABLE_CXX20)
     requires std::same_as<ExecutionSpace, Kokkos::DefaultExecutionSpace>
-#endif
   Graph(const device_handle_t& device_handle, T&& native_graph)
       : m_impl_ptr{std::make_shared<impl_t>(device_handle,
                                             std::forward<T>(native_graph))},
-        m_root{m_impl_ptr->create_root_node_ptr()} {
-  }
+        m_root{m_impl_ptr->create_root_node_ptr()} {}
 #endif
 
   const auto& get_device_handle() const {

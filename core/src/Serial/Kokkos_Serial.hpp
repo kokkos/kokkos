@@ -25,6 +25,7 @@ static_assert(false,
 #include <Kokkos_HostSpace.hpp>
 #include <Kokkos_ScratchSpace.hpp>
 #include <Kokkos_MemoryTraits.hpp>
+#include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_HostThreadTeam.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools.hpp>
@@ -107,7 +108,14 @@ class Serial {
   KOKKOS_FUNCTION Serial& operator=(Serial&& other) noexcept {
     return *this = static_cast<const Serial&>(other);
   }
-  ~Serial();
+  // Must be __host__ __device__ for the implicitly defined
+  // ~RangePolicy<ExecSpace>(); see the comment on ~Cuda() in
+  // Cuda/Kokkos_Cuda.hpp.
+  KOKKOS_FUNCTION ~Serial() {
+    KOKKOS_IF_ON_HOST(
+        (Impl::check_execution_space_destructor_precondition(name());))
+  }
+
   Serial();
 
   explicit Serial(NewInstance);

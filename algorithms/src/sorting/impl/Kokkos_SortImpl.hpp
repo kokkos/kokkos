@@ -17,6 +17,7 @@ import kokkos.core;
 #include <Kokkos_Assert.hpp>
 
 #include <cmath>
+#include <cstdint>
 
 #if defined(KOKKOS_ENABLE_CUDA)
 
@@ -116,7 +117,7 @@ struct min_max_functor {
   min_max_functor(const ViewType& view_) : view(view_) {}
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const size_t& i, minmax_scalar& minmax) const {
+  void operator()(const int64_t& i, minmax_scalar& minmax) const {
     if (view(i) < minmax.min_val) minmax.min_val = view(i);
     if (view(i) > minmax.max_val) minmax.max_val = view(i);
   }
@@ -138,10 +139,11 @@ void sort_via_binsort(const ExecutionSpace& exec,
 
   Kokkos::MinMaxScalar<typename ViewType::non_const_value_type> result;
   Kokkos::MinMax<typename ViewType::non_const_value_type> reducer(result);
-  parallel_reduce("Kokkos::Sort::FindExtent",
-                  Kokkos::RangePolicy<typename ViewType::execution_space>(
-                      exec, 0, view.extent(0)),
-                  min_max_functor<ViewType>(view), reducer);
+  parallel_reduce(
+      "Kokkos::Sort::FindExtent",
+      Kokkos::RangePolicy<typename ViewType::execution_space,
+                          Kokkos::IndexType<int64_t>>(exec, 0, view.extent(0)),
+      min_max_functor<ViewType>(view), reducer);
   if (result.min_val == result.max_val) return;
   // For integral types the number of bins may be larger than the range
   // in which case we can exactly have one unique value per bin

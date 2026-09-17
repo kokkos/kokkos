@@ -17,15 +17,18 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <iostream>
-#include <sstream>
-#include <cstdlib>
-#include <stack>
 #include <functional>
-#include <cerrno>
+#include <mutex>
 #include <random>
 #include <regex>
+#include <sstream>
+#include <stack>
+#include <utility>
+
 #ifndef _WIN32
 #include <unistd.h>
 #else
@@ -41,7 +44,16 @@ bool g_show_warnings       = true;
 bool g_tune_internals      = false;
 
 using hook_function_type = std::function<void()>;
-std::stack<hook_function_type> finalize_hooks;
+
+std::mutex& finalize_hooks_mutex() {
+  static std::mutex mutex;
+  return mutex;
+}
+
+std::stack<hook_function_type>& finalize_hooks() {
+  static std::stack<hook_function_type> hooks;
+  return hooks;
+}
 
 /**
  * The category is only used in printing, tools
@@ -179,6 +191,7 @@ std::vector<int> const& Kokkos::Impl::get_visible_devices() {
   return -1;
 }
 
+// NOLINTNEXTLINE(bugprone-exception-escape)
 [[nodiscard]] int Kokkos::num_devices() noexcept {
   if constexpr (std::is_same_v<DefaultExecutionSpace,
                                DefaultHostExecutionSpace>) {
@@ -382,7 +395,7 @@ std::optional<int> Kokkos::Impl::get_gpu(
     if (id >= num_devices) {
       std::stringstream ss;
       ss << "Error: Requested GPU with id '" << id << "' but only "
-         << num_devices << "GPU(s) available!"
+         << num_devices << " GPU(s) available!"
          << " Raised by Kokkos::initialize().\n";
       Kokkos::abort(ss.str().c_str());
     }
@@ -483,6 +496,13 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   if (settings.has_tune_internals() && settings.get_tune_internals())
     g_tune_internals = true;
 
+  // Initialize these function-local statics during Kokkos::initialize(). If a
+  // user registers Kokkos::finalize with std::atexit afterwards, that callback
+  // is registered after the statics' destructors. std::exit therefore invokes
+  // Kokkos::finalize before destroying the mutex and hook stack it accesses.
+  std::ignore = finalize_hooks_mutex();
+  std::ignore = finalize_hooks();
+
   // clang-format off
   declare_configuration_metadata("version_info", "Kokkos Version", version_string_from_int(KOKKOS_VERSION));
 #ifdef KOKKOS_COMPILER_APPLECC
@@ -520,11 +540,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
 
   declare_configuration_metadata("atomics", "desul atomics version", KOKKOS_IMPL_DESUL_VERSION);
 
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_LEGACY
-  declare_configuration_metadata("view", "mdspan", "disabled");
-#else
-  declare_configuration_metadata("view", "mdspan", "enabled");
-#endif
   declare_configuration_metadata("view", "mdspan version", KOKKOS_IMPL_MDSPAN_VERSION);
 
 #ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
@@ -612,8 +627,6 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "CPU architecture", "ICL");
 #elif defined(KOKKOS_ARCH_ICX)
   declare_configuration_metadata("architecture", "CPU architecture", "ICX");
-#elif defined(KOKKOS_ARCH_KNC)
-  declare_configuration_metadata("architecture", "CPU architecture", "KNC");
 #elif defined(KOKKOS_ARCH_KNL)
   declare_configuration_metadata("architecture", "CPU architecture", "KNL");
 #elif defined(KOKKOS_ARCH_NATIVE)
@@ -666,6 +679,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "INTEL_XEHP");
 #elif defined(KOKKOS_ARCH_INTEL_PVC)
   declare_configuration_metadata("architecture", "GPU architecture", "INTEL_PVC");
+#elif defined(KOKKOS_ARCH_INTEL_BMG)
+  declare_configuration_metadata("architecture", "GPU architecture", "INTEL_BMG");
 
 #elif defined(KOKKOS_ARCH_MAXWELL50)
   declare_configuration_metadata("architecture", "GPU architecture", "MAXWELL50");
@@ -701,6 +716,8 @@ void pre_initialize_internal(const Kokkos::InitializationSettings& settings) {
   declare_configuration_metadata("architecture", "GPU architecture", "BLACKWELL120");
 #elif defined(KOKKOS_ARCH_BLACKWELL121)
   declare_configuration_metadata("architecture", "GPU architecture", "BLACKWELL121");
+#elif defined(KOKKOS_ARCH_RUBIN107)
+  declare_configuration_metadata("architecture", "GPU architecture", "RUBIN107");
 #elif defined(KOKKOS_ARCH_AMD_GFX906)
   declare_configuration_metadata("architecture", "GPU architecture", "AMD_GFX906");
 #elif defined(KOKKOS_ARCH_AMD_GFX908)
@@ -769,10 +786,14 @@ void initialize_internal(const Kokkos::InitializationSettings& settings) {
 // function throws
 // NOLINTNEXTLINE(bugprone-exception-escape)
 void call_registered_finalize_hook_functions() noexcept {
-  while (!finalize_hooks.empty()) {
-    auto const& func = finalize_hooks.top();
+  std::function<void()> func;
+  while (!finalize_hooks().empty()) {
+    {
+      std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+      func = std::move(finalize_hooks().top());
+      finalize_hooks().pop();
+    }
     func();
-    finalize_hooks.pop();
   }
 }
 
@@ -1066,7 +1087,8 @@ void Kokkos::Impl::pre_finalize() { pre_finalize_internal(); }
 void Kokkos::Impl::post_finalize() { post_finalize_internal(); }
 
 void Kokkos::push_finalize_hook(std::function<void()> f) {
-  finalize_hooks.push(f);
+  std::lock_guard<std::mutex> lock(finalize_hooks_mutex());
+  finalize_hooks().push(std::move(f));
 }
 
 void Kokkos::finalize() {

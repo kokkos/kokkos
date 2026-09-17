@@ -76,8 +76,6 @@ void test_memory_access_violations_from_device() {
 
 TEST(TEST_CATEGORY_DEATH,
      mdspan_space_aware_accessor_invalid_access_from_host) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
-
   using ExecutionSpace = TEST_EXECSPACE;
 
   if (Kokkos::SpaceAccessibility<
@@ -91,7 +89,7 @@ TEST(TEST_CATEGORY_DEATH,
 
 TEST(TEST_CATEGORY_DEATH,
      mdspan_space_aware_accessor_invalid_access_from_device) {
-  ::testing::FLAGS_gtest_death_test_style = "threadsafe";
+  GTEST_FLAG_SET(death_test_style, "threadsafe");
 
   using ExecutionSpace = TEST_EXECSPACE;
 

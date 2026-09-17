@@ -33,8 +33,7 @@ constexpr bool check_expected_static_extent_match() {
 
 template <class Layout, class... Slices>
 constexpr bool new_subview_retains_padded_layout_old_uses_strided() {
-  if constexpr (std::is_same_v<Layout,
-                               Kokkos::Experimental::layout_right_padded<>>) {
+  if constexpr (std::is_same_v<Layout, Kokkos::layout_right_padded<>>) {
     if constexpr (sizeof...(Slices) == 4 &&
                   std::is_same_v<
                       std::tuple<Slices...>,
@@ -87,12 +86,11 @@ void compare_subview(V v, Slices... slices) {
   // old View maintains padded layouts.
   if constexpr (new_sub_t::rank() < 2) {
     if constexpr (std::is_same_v<typename old_sub_t::layout_type,
-                                 Kokkos::Experimental::layout_right_padded<>>) {
+                                 Kokkos::layout_right_padded<>>) {
       static_assert(std::is_same_v<Kokkos::layout_right,
                                    typename new_sub_t::layout_type>);
-    } else if constexpr (std::is_same_v<
-                             typename old_sub_t::layout_type,
-                             Kokkos::Experimental::layout_left_padded<>>) {
+    } else if constexpr (std::is_same_v<typename old_sub_t::layout_type,
+                                        Kokkos::layout_left_padded<>>) {
       static_assert(
           std::is_same_v<Kokkos::layout_left, typename new_sub_t::layout_type>);
     } else {
@@ -100,18 +98,8 @@ void compare_subview(V v, Slices... slices) {
                                    typename new_sub_t::layout_type>);
     }
   } else {  // new_sub_t::rank() >= 2
-    // Deal with the case where submdspan and thus subview with new style args
-    // optimizes return type better and does not fall back to layout_stride.
-    if constexpr (new_subview_retains_padded_layout_old_uses_strided<
-                      typename V::layout_type, Slices...>()) {
-      static_assert(!std::is_same_v<typename old_sub_t::layout_type,
-                                    typename new_sub_t::layout_type>);
-      static_assert(std::is_same_v<typename old_sub_t::layout_type,
-                                   Kokkos::layout_stride>);
-    } else {
-      static_assert(std::is_same_v<typename old_sub_t::layout_type,
-                                   typename new_sub_t::layout_type>);
-    }
+    static_assert(std::is_same_v<typename old_sub_t::layout_type,
+                                 typename new_sub_t::layout_type>);
   }
 }
 
@@ -212,12 +200,12 @@ void test_subview_expand(const E& exts, const A& acc) {
   using T    = typename A::element_type;
   auto alloc = Kokkos::view_alloc("TestView");
   {
-    using layout_t = Kokkos::Experimental::layout_left_padded<dyn>;
+    using layout_t = Kokkos::layout_left_padded<dyn>;
     using map_t    = typename layout_t::mapping<E>;
     test_subview_args(Kokkos::View<T, E, layout_t, A>(alloc, map_t(exts), acc));
   }
   {
-    using layout_t = Kokkos::Experimental::layout_right_padded<dyn>;
+    using layout_t = Kokkos::layout_right_padded<dyn>;
     using map_t    = typename layout_t::mapping<E>;
     test_subview_args(Kokkos::View<T, E, layout_t, A>(alloc, map_t(exts), acc));
   }

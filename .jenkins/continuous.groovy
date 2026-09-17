@@ -113,7 +113,6 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS=-Werror \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_OPENMP=ON \
@@ -156,7 +155,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
@@ -225,7 +223,6 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=OFF \
                                 -DKokkos_ENABLE_CUDA=ON \
                                 -DKokkos_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_MULTIPLE_CMAKE_LANGUAGES=ON \
                                 \
@@ -309,7 +306,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
@@ -405,7 +401,6 @@ pipeline {
                                 -DCMAKE_CXX_FLAGS="-Werror -Werror=all-warnings --diag_suppress=implicit_return_from_non_void_function" \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -445,7 +440,6 @@ pipeline {
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ARCH_AMPERE80=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
@@ -497,7 +491,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
@@ -546,7 +539,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_HIP=ON \
@@ -587,7 +579,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -630,7 +621,6 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                                 -DKokkos_ARCH_NATIVE=ON \
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=ON \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=ON \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \
@@ -679,7 +669,6 @@ pipeline {
                                 -DKokkos_ENABLE_COMPILER_WARNINGS=ON \
                                 -DKokkos_ENABLE_DEBUG=ON \
                                 -DKokkos_ENABLE_DEBUG_BOUNDS_CHECK=ON \
-                                -DKokkos_ENABLE_DEPRECATED_CODE_4=OFF \
                                 -DKokkos_ENABLE_DEPRECATED_CODE_5=OFF \
                                 -DKokkos_ENABLE_TESTS=ON \
                                 -DKokkos_ENABLE_CUDA=ON \

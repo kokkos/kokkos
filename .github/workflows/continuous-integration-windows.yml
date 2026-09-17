@@ -16,7 +16,7 @@ jobs:
     runs-on: windows-2022
 
     steps:
-    - uses: Jimver/cuda-toolkit@3d45d157f327c09c04b50ee6ccdea2d9d017ec76 # v0.2.35
+    - uses: Jimver/cuda-toolkit@b8bf9c6c28f8a92fbb04dcfcaee872e60c57462d # v0.2.36
       id: cuda-toolkit
       with:
         cuda: '12.4.1'
@@ -37,10 +37,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+    - name: install gtest
+      shell: bash
+      run: |
+        vcpkg install gtest
     - name: configure
       shell: bash
       run: |
-        cmake -B build -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON
+        cmake -B build -DBUILD_SHARED_LIBS=ON -DKokkos_ENABLE_SERIAL=ON -DKokkos_ENABLE_TESTS=ON -DCMAKE_TOOLCHAIN_FILE=$VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake -DCMAKE_REQUIRE_FIND_PACKAGE_GTest=ON
     - name: build library
       shell: bash
       run: |

@@ -24,7 +24,7 @@
 #if defined(MDSPAN_IMPL_HAS_SYCL)
 #include <sycl/sycl.hpp> // sycl::ext::oneapi::experimental::printf
 #endif
-#if defined(MDSPAN_IMPL_HAS_CUDA) || defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_SYCL)
+#if defined(MDSPAN_IMPL_HAS_CUDA) || defined(MDSPAN_IMPL_HAS_HIP) || defined(MDSPAN_IMPL_HAS_SYCL) || defined(MDSPAN_IMPL_HAS_OPENACC)
 #include "assert.h"
 #endif
 
@@ -130,6 +130,11 @@ MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* c
 #endif
   assert(0);
 }
+#elif defined(MDSPAN_IMPL_HAS_OPENACC)
+MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* /* cond */, const char* /* file */, unsigned /* line */)
+{
+  assert(false);
+}
 #else
 MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* cond, const char* file, unsigned line)
 {
@@ -147,7 +152,7 @@ MDSPAN_FUNCTION inline void default_precondition_violation_handler(const char* c
 #endif
 
 #ifndef MDSPAN_IMPL_CHECK_PRECONDITION
-  #ifndef NDEBUG
+  #ifdef NDEBUG
     #define MDSPAN_IMPL_CHECK_PRECONDITION 0
   #else
     #define MDSPAN_IMPL_CHECK_PRECONDITION 1
