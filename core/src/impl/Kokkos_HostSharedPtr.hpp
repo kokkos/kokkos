@@ -45,10 +45,12 @@ class HostSharedPtr {
     other.m_control     = nullptr;
   }
 
-  // GCC 12 can spuriously warn that reference-counted copies as use-after-free.
-  // See kokkos/kokkos#9547.
+  // GCC 12 on ARM can spuriously report a use-after-free for the
+  // reference-counted copy below. It only happens on the host side of nvcc, not
+  // in a serial build. See kokkos/kokkos#9547.
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 1200) && \
-    (KOKKOS_COMPILER_GNU < 1300)
+    (KOKKOS_COMPILER_GNU < 1300) && defined(KOKKOS_ENABLE_CUDA) &&   \
+    (defined(__aarch64__) || defined(__arm__))
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wuse-after-free"
 #endif
@@ -59,7 +61,8 @@ class HostSharedPtr {
     KOKKOS_IF_ON_DEVICE(m_control = nullptr;)
   }
 #if defined(KOKKOS_COMPILER_GNU) && (KOKKOS_COMPILER_GNU >= 1200) && \
-    (KOKKOS_COMPILER_GNU < 1300)
+    (KOKKOS_COMPILER_GNU < 1300) && defined(KOKKOS_ENABLE_CUDA) &&   \
+    (defined(__aarch64__) || defined(__arm__))
 #pragma GCC diagnostic pop
 #endif
 
