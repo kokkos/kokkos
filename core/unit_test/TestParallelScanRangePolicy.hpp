@@ -323,6 +323,7 @@ TEST(TEST_CATEGORY, parallel_scan_range_policy) {
 
     std::vector<size_t> work_sizes{0, 1, 2, 1000, 1001};
     f.test_scan<>(work_sizes);
+    f.test_scan<Kokkos::IndexType<Kokkos::Serial::index_type>>(work_sizes);
     f.test_scan<Kokkos::Schedule<Kokkos::Static>>(work_sizes);
     f.test_scan<Kokkos::Schedule<Kokkos::Dynamic>>(work_sizes);
   }
