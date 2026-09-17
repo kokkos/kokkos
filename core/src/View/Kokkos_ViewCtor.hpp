@@ -77,7 +77,7 @@ template <typename... P>
 struct ViewCtorProp;
 
 // Forward declare
-template <typename Specialize, typename T>
+template <typename T>
 struct CommonViewAllocProp;
 
 /* Dummy to allow for empty ViewCtorProp object
@@ -87,11 +87,11 @@ struct ViewCtorProp<void> {};
 
 /* Common value_type stored as ViewCtorProp
  */
-template <typename Specialize, typename T>
-struct ViewCtorProp<void, CommonViewAllocProp<Specialize, T>> {
+template <typename T>
+struct ViewCtorProp<void, CommonViewAllocProp<T>> {
   ViewCtorProp() = default;
 
-  using type = CommonViewAllocProp<Specialize, T>;
+  using type = CommonViewAllocProp<T>;
 
   KOKKOS_FUNCTION
   ViewCtorProp(const type &arg) : value(arg) {}
