@@ -31,6 +31,7 @@ Polaris:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="Polaris-A100"
+  after_script:
     - git clone https://github.com/kokkos/kokkos-benchmark-results.git
     - mkdir -p kokkos-benchmark-results/Polaris
     - find build/core/perf_test/ build/algorithms/perf_test/ build/simd/perf_tests/ -name "*.json" -exec mv {} kokkos-benchmark-results/Polaris/ \;
@@ -74,6 +75,7 @@ Aurora:
         -S scripts/CTestRun.cmake
         -D CTEST_SITE="gitlab-ci.alcf.anl.gov"
         -D CTEST_BUILD_NAME="INTEL-DATA-CENTER-MAX-1550"
+  after_script:
     - git clone https://github.com/kokkos/kokkos-benchmark-results.git
     - mkdir -p kokkos-benchmark-results/Aurora
     - find build/core/perf_test/ build/algorithms/perf_test/ build/simd/perf_tests/ -name "*.json" -exec mv {} kokkos-benchmark-results/Aurora/ \;
