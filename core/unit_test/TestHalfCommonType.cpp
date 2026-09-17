@@ -9,6 +9,8 @@
 
 // clang-format off
 
+namespace {
+
 template <class T>
 void check_common_types() {
 static_assert(std::is_same_v<std::common_type_t<T, T>, T>);
@@ -68,5 +70,7 @@ template void check_common_types_both<Kokkos::Experimental::half_t, Kokkos::Expe
 #if defined(__STDCPP_FLOAT16_T__) && defined(__STDCPP_BFLOAT16_T__)
 template void check_common_types_both<std::float16_t, std::bfloat16_t>();
 #endif
+
+}
 
 // clang-format on
