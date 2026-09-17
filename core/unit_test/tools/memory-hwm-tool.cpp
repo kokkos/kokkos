@@ -28,8 +28,8 @@ struct SpaceHandle {
   char name[64];
 };
 
-constexpr uint64_t WARNING_THRESHOLD         = 4ULL * 1024 * 1024 * 1024;
-static std::atomic<uint64_t> total_allocated = 0;
+constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024;
+static std::atomic<uint64_t> total_allocated(0);
 static std::mutex m;
 
 uint64_t max_mem_usage() {
@@ -37,6 +37,17 @@ uint64_t max_mem_usage() {
   getrusage(RUSAGE_SELF, &app_info);
   const long max_rssKB = app_info.ru_maxrss;
   return max_rssKB * RU_MAXRSS_UNITS;
+}
+
+struct Kokkos_Profiling_KokkosPDeviceInfo;
+
+extern "C" void kokkosp_init_library(
+    const int loadSeq, const uint64_t interfaceVer,
+    const uint32_t /*devInfoCount*/,
+    Kokkos_Profiling_KokkosPDeviceInfo* /*deviceInfo*/) {
+  (void)interfaceVer;
+  (void)loadSeq;
+  total_allocated.store(0);
 }
 
 extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
