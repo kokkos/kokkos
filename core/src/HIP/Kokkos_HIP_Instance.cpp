@@ -381,6 +381,23 @@ Kokkos::HIP::size_type *hip_internal_scratch_flags(const HIP &instance,
 }
 
 }  // namespace Impl
+
+std::vector<Kokkos::HIP> create_device_space() {
+  std::vector<Kokkos::HIP> spaces;
+  auto devices = ::Kokkos::Impl::get_visible_devices();
+  spaces.reserve(devices.size());
+
+  for (auto device : devices) {
+    ::hipStream_t stream;
+    KOKKOS_IMPL_HIP_SAFE_CALL(::hipSetDevice(device));
+    KOKKOS_IMPL_HIP_SAFE_CALL(::hipStreamCreate(&stream));
+
+    spaces.emplace_back(stream);
+  }
+
+  return spaces;
+}
+
 }  // namespace Kokkos
 
 //----------------------------------------------------------------------------

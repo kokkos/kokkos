@@ -10,6 +10,7 @@
 #include <Kokkos_CopyViews.hpp>  // ZeroMemset
 #include <impl/Kokkos_CheckedIntegerOps.hpp>
 #include <impl/Kokkos_Error.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 namespace Kokkos {
 namespace Impl {
@@ -334,4 +335,21 @@ template class SYCLInternal::USMObjectMem<sycl::usm::alloc::device>;
 template class SYCLInternal::USMObjectMem<sycl::usm::alloc::host>;
 
 }  // namespace Impl
+
+std::vector<Kokkos::SYCL> create_device_space() {
+  std::vector<Kokkos::SYCL> spaces;
+  std::vector<int> devices = ::Kokkos::Impl::get_visible_devices();
+  spaces.reserve(devices.size());
+
+  auto sycl_devices = Impl::get_sycl_devices();
+
+  for (const int& device : devices) {
+    sycl::queue queue(sycl_devices.at(device),
+                      sycl::property::queue::in_order());
+    spaces.emplace_back(Kokkos::SYCL(queue));
+  }
+
+  return spaces;
+}
+
 }  // namespace Kokkos

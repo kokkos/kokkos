@@ -315,6 +315,9 @@ auto make_sycl_function_wrapper(const Functor& functor, Storage& storage) {
   return SYCLFunctionWrapper<Functor, Storage>(functor, storage);
 }
 }  // namespace Impl
+
+std::vector<Kokkos::SYCL> create_device_space();
+
 }  // namespace Kokkos
 
 #if defined(SYCL_DEVICE_COPYABLE)
