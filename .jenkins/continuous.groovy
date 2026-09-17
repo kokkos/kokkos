@@ -121,6 +121,7 @@ pipeline {
                                 -DKokkos_ENABLE_SERIAL=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && gcc -I$PWD/../core/src/ ../core/unit_test/tools/TestCInterface.c'''
                     }
                     post {
@@ -163,6 +164,7 @@ pipeline {
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j16 install && ctest --no-compress-output -T Test --verbose && \
                               cd .. && \
                               export CMAKE_PREFIX_PATH=${PWD}/install && \
@@ -311,6 +313,7 @@ pipeline {
                                 -DKokkos_ENABLE_EXAMPLES=ON \
                                 -DKokkos_ENABLE_SERIAL=ON && \
                               set +x && \
+                              ulimit -c 0 && \
                               cmake --build build --target install -j 8 && \
                               ctest --test-dir build --no-compress-output -T Test --verbose && \
                               cd example/build_cmake_installed_modules && \
@@ -361,6 +364,7 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -407,6 +411,7 @@ pipeline {
                                 -DKokkos_ENABLE_OPENMP=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -450,6 +455,7 @@ pipeline {
                                 -DCMAKE_CXX_STANDARD=20 \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -498,6 +504,7 @@ pipeline {
                                 -DKokkos_ENABLE_HIP_MULTIPLE_KERNEL_INSTANTIATIONS=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -544,6 +551,7 @@ pipeline {
                                 -DKokkos_ENABLE_HIP=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j16 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -586,6 +594,7 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -629,6 +638,7 @@ pipeline {
                                 -DKokkos_ARCH_VOLTA70=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose'''
                     }
                     post {
@@ -677,6 +687,7 @@ pipeline {
                                 -DKokkos_ENABLE_IMPL_CUDA_MALLOC_ASYNC=ON \
                               .. && \
                               set +x && \
+                              ulimit -c 0 && \
                               make -j8 && ctest --no-compress-output -T Test --verbose && \
                               cd ../example/build_cmake_in_tree && \
                               rm -rf build && mkdir -p build && cd build && \
