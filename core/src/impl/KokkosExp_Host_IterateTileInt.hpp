@@ -39,13 +39,15 @@ namespace Impl {
 
 // parallel_for, non-tagged
 
+#define KOKKOS_IMPL_PRECOMP_APPLY(func, ...) func(__VA_ARGS__);
+
 // LayoutRight
 // d = 0 to start
 #define KOKKOS_IMPL_PRECOMP_LOOP_R_1(func, type, extent_st, extent_en, d, ...) \
   KOKKOS_ENABLE_IVDEP_INNERMOST_LOOP                                           \
   for (type i0 = static_cast<type>(extent_st[d]);                              \
        i0 < static_cast<type>(extent_en[d]); ++i0) {                           \
-    KOKKOS_IMPL_APPLY(func, __VA_ARGS__, i0)                                   \
+    KOKKOS_IMPL_PRECOMP_APPLY(func, __VA_ARGS__, i0)                           \
   }
 
 #define KOKKOS_IMPL_PRECOMP_LOOP_R_2(func, type, extent_st, extent_en, d, ...) \
@@ -103,7 +105,7 @@ namespace Impl {
   KOKKOS_ENABLE_IVDEP_INNERMOST_LOOP                                           \
   for (type i0 = static_cast<type>(extent_st[d]);                              \
        i0 < static_cast<type>(extent_en[d]); ++i0) {                           \
-    KOKKOS_IMPL_APPLY(func, i0, __VA_ARGS__)                                   \
+    KOKKOS_IMPL_PRECOMP_APPLY(func, i0, __VA_ARGS__)                           \
   }
 
 #define KOKKOS_IMPL_PRECOMP_LOOP_L_2(func, type, extent_st, extent_en, d, ...) \
@@ -162,7 +164,7 @@ namespace Impl {
   KOKKOS_ENABLE_IVDEP_INNERMOST_LOOP                                      \
   for (type i0 = static_cast<type>(extent_st[0]);                         \
        i0 < static_cast<type>(extent_en[0]); ++i0) {                      \
-    KOKKOS_IMPL_APPLY(func, i0)                                           \
+    KOKKOS_IMPL_PRECOMP_APPLY(func, i0)                                   \
   }
 
 #define KOKKOS_IMPL_PRECOMP_LOOP_LAYOUT_2(func, type, is_left, extent_st,      \
@@ -272,6 +274,8 @@ namespace Impl {
 
 // tagged macros
 
+#define KOKKOS_IMPL_TAGGED_PRECOMP_APPLY(tag, func, ...) func(tag, __VA_ARGS__);
+
 // LayoutRight
 // d = 0 to start
 #define KOKKOS_IMPL_TAGGED_PRECOMP_LOOP_R_1(tag, func, type, extent_st, \
@@ -279,7 +283,7 @@ namespace Impl {
   KOKKOS_ENABLE_IVDEP_INNERMOST_LOOP                                    \
   for (type i0 = static_cast<type>(extent_st[d]);                       \
        i0 < static_cast<type>(extent_en[d]); ++i0) {                    \
-    KOKKOS_IMPL_TAGGED_APPLY(tag, func, __VA_ARGS__, i0)                \
+    KOKKOS_IMPL_TAGGED_PRECOMP_APPLY(tag, func, __VA_ARGS__, i0)        \
   }
 
 #define KOKKOS_IMPL_TAGGED_PRECOMP_LOOP_R_2(tag, func, type, extent_st,        \
@@ -345,7 +349,7 @@ namespace Impl {
   KOKKOS_ENABLE_IVDEP_INNERMOST_LOOP                                    \
   for (type i0 = static_cast<type>(extent_st[d]);                       \
        i0 < static_cast<type>(extent_en[d]); ++i0) {                    \
-    KOKKOS_IMPL_TAGGED_APPLY(tag, func, i0, __VA_ARGS__)                \
+    KOKKOS_IMPL_TAGGED_PRECOMP_APPLY(tag, func, i0, __VA_ARGS__)        \
   }
 
 #define KOKKOS_IMPL_TAGGED_PRECOMP_LOOP_L_2(tag, func, type, extent_st,        \
@@ -411,7 +415,7 @@ namespace Impl {
   KOKKOS_ENABLE_IVDEP_INNERMOST_LOOP                                         \
   for (type i0 = static_cast<type>(extent_st[0]);                            \
        i0 < static_cast<type>(extent_en[0]); ++i0) {                         \
-    KOKKOS_IMPL_TAGGED_APPLY(tag, func, i0)                                  \
+    KOKKOS_IMPL_TAGGED_PRECOMP_APPLY(tag, func, i0)                          \
   }
 
 #define KOKKOS_IMPL_TAGGED_PRECOMP_LOOP_LAYOUT_2(tag, func, type, is_left,   \
@@ -704,15 +708,12 @@ struct Tile_Loop_Type_PreComp<8, IsLeft, IType, Tagged,
 };
 // end Structs for calling loops
 
-// For ParallelFor
-template <typename RP, typename Functor, typename Tag, typename ValueType>
+// Partial specialization when IndexType is int
+template <typename RP, typename Functor, typename Tag, typename ReferenceType>
   requires std::is_same_v<typename RP::index_type, int>
-struct HostIterateTile<RP, Functor, Tag, ValueType,
-                       std::enable_if_t<std::is_void_v<ValueType>>> {
+struct HostIterateTile<RP, Functor, Tag, ReferenceType> {
   using index_type = typename RP::index_type;
   using point_type = Kokkos::Array<index_type, RP::rank>;
-
-  using value_type = ValueType;
 
   inline HostIterateTile(RP const& rp, Functor const& func)
       : m_rp(rp), m_func(func) {
@@ -728,6 +729,15 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
         break;
       }
     }
+  }
+
+  template <typename... Args>
+  void apply(Args&&... args) const {
+    static_assert(sizeof...(Args) == RP::rank);
+    if constexpr (std::is_void_v<Tag>)
+      m_func(args...);
+    else
+      m_func(Tag{}, args...);
   }
 
   inline bool check_iteration_bounds(point_type& partial_tile,
@@ -746,12 +756,6 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
 
     return is_full_tile;
   }  // end check bounds
-
-  template <int Rank>
-  struct RankTag {
-    using type = RankTag<Rank>;
-    enum { value = (int)Rank };
-  };
 
   template <typename IType>
   inline void compute_extents(IType tile_idx, point_type& extents_st,
@@ -783,6 +787,7 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
     }
   }
 
+  // ParallelFor
   template <typename IType>
   inline void operator()(IType tile_idx) const {
     if (m_int_enough) {
@@ -819,21 +824,46 @@ struct HostIterateTile<RP, Functor, Tag, ValueType,
     }
   }
 
-  template <typename... Args>
-  std::enable_if_t<(sizeof...(Args) == RP::rank && std::is_void_v<Tag>), void>
-  apply(Args&&... args) const {
-    m_func(args...);
-  }
+  // ParallelReduce
 
-  template <typename... Args>
-  std::enable_if_t<(sizeof...(Args) == RP::rank && !std::is_void_v<Tag>), void>
-  apply(Args&&... args) const {
-    m_func(m_tag, args...);
+  // Even when using a requires class for prohibiting the ReferenceType to be
+  // void in the call operator below, we still get a compiler error saying:
+  //   error: argument may not have 'void' type
+  // Hence, just use a different type in that case to make the compiler happy.
+  using valid_reference_type =
+      std::conditional_t<std::is_void_v<ReferenceType>, int, ReferenceType>;
+
+  template <typename IType>
+    requires(!std::is_void_v<ReferenceType>)
+  inline void operator()(IType tile_idx, valid_reference_type val) const {
+    point_type m_offset;
+    point_type m_tiledims;
+
+    if constexpr (RP::outer_direction == Iterate::Left) {
+      for (int i = 0; i < RP::rank; ++i) {
+        m_offset[i] =
+            (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i];
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    } else {
+      for (int i = RP::rank - 1; i >= 0; --i) {
+        m_offset[i] =
+            (tile_idx % m_rp.m_tile_end[i]) * m_rp.m_tile[i] + m_rp.m_lower[i];
+        tile_idx /= m_rp.m_tile_end[i];
+      }
+    }
+
+    // Check if offset+tiledim in bounds - if not, replace tile dims with the
+    // partial tile dims
+    const bool full_tile = check_iteration_bounds(m_tiledims, m_offset);
+
+    Tile_Loop_Type<RP::rank, (RP::inner_direction == Iterate::Left), index_type,
+                   Tag>::apply(val, m_func.get_functor(), full_tile, m_offset,
+                               m_rp.m_tile, m_tiledims);
   }
 
   RP const m_rp;
   Functor const m_func;
-  std::conditional_t<std::is_void_v<Tag>, int, Tag> m_tag{};
   bool m_int_enough;
 };
 

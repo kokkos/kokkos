@@ -1166,8 +1166,14 @@ struct Tile_Loop_Type<8, IsLeft, IType, Tagged> {
 
 // end Structs for calling loops
 
+// Primary template
 template <typename RP, typename Functor, typename Tag, typename ReferenceType>
-struct HostIterateTile {
+struct HostIterateTile;
+
+// Partial specialization when IndexType is not of int type
+template <typename RP, typename Functor, typename Tag, typename ReferenceType>
+  requires(!std::is_same_v<typename RP::index_type, int>)
+struct HostIterateTile<RP, Functor, Tag, ReferenceType> {
   using index_type = typename RP::index_type;
   using point_type = typename RP::point_type;
 
@@ -1271,8 +1277,14 @@ struct HostIterateTile {
   Functor const m_func;
 };
 
+}  // namespace Impl
+}  // namespace Kokkos
+
 // HostIterateTile specialization for std::is_same_v<RP::index_type, int>
 #include <impl/KokkosExp_Host_IterateTileInt.hpp>
+
+namespace Kokkos {
+namespace Impl {
 
 // ------------------------------------------------------------------ //
 
