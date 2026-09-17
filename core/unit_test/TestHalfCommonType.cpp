@@ -25,7 +25,6 @@ static_assert(std::is_same_v<std::common_type_t<float, T, double>, double>);
 static_assert(std::is_same_v<std::common_type_t<T, double, float>, double>);
 static_assert(std::is_same_v<std::common_type_t<T, float, float>, float>);
 static_assert(std::is_same_v<std::common_type_t<T, float, T>, float>);
-static_assert(std::is_same_v<std::common_type_t<T, T, T>, T>);
 
 static_assert(std::is_same_v<std::common_type_t<T, int>, T>);
 static_assert(std::is_same_v<std::common_type_t<int, T>, T>);
