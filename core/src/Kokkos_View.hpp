@@ -1589,11 +1589,11 @@ KOKKOS_FUNCTION View<Args...> as_view_of_rank_n(View<Args...> v) {
 // Placeholder implementation to compile generic code for DynRankView; should
 // never be called
 template <unsigned N, typename T, typename... Args>
-KOKKOS_FUNCTION std::enable_if_t<
-    N != View<T, Args...>::rank(),
+  requires(N != View<T, Args...>::rank())
+KOKKOS_FUNCTION
     View<typename RankDataType<typename View<T, Args...>::value_type, N>::type,
-         Args...> >
-as_view_of_rank_n(View<T, Args...>) {
+         Args...>
+    as_view_of_rank_n(View<T, Args...>) {
   Kokkos::abort("Trying to get at a View of the wrong rank");
   return {};
 }
