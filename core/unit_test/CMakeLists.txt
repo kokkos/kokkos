@@ -757,6 +757,7 @@ if(Kokkos_ENABLE_HIP)
     hip/TestHIP_TeamScratchStreams.cpp
     hip/TestHIP_AsyncLauncher.cpp
     hip/TestHIP_BlocksizeDeduction.cpp
+    hip/TestHIP_BlocksizeRangeRegression.cpp
     hip/TestHIP_UnifiedMemory_ZeroMemset.cpp
   )
 
