@@ -8,6 +8,9 @@
 #define CONTAINERS_UNIT_TESTS_TESTOFFSETVIEW_HPP_
 
 #include <gtest/gtest.h>
+#include <array>
+#include <type_traits>
+#include <utility>
 #include <iostream>
 #include <cstdlib>
 #include <cstdio>
@@ -23,28 +26,65 @@ import kokkos.offset_view;
 
 namespace Test {
 
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_PUSH()
 template <typename Scalar, typename Device>
-void test_offsetview_construction() {
-  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
-  using view_type        = Kokkos::View<Scalar**, Device>;
+void test_offsetview_construction_deprecated() {
+  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar***, Device>;
 
-  std::pair<int64_t, int64_t> range0 = {-1, 3};
-  std::pair<int64_t, int64_t> range1 = {-2, 2};
-
+  // begins and ends (exclusive) for the 2D test view
+  std::array<int64_t, 3> begins3D = {{-1, -2, -4}};
+  std::array<int64_t, 3> ends3D   = {{4, 3, 5}};
   {
     offset_view_type o1;
     ASSERT_FALSE(o1.is_allocated());
 
-    o1 = offset_view_type("o1", {-1, 3}, {-2, 2});
+    o1 = offset_view_type("o1", {-1, 4}, {-2, 3}, {-4, 5});
     offset_view_type o2(o1);
-    offset_view_type o3("o3", range0, range1);
+    offset_view_type o3("o3", {-1, 4}, {-2, 3}, {-4, 5});
 
     ASSERT_TRUE(o1.is_allocated());
     ASSERT_TRUE(o2.is_allocated());
     ASSERT_TRUE(o3.is_allocated());
   }
 
-  offset_view_type ov("firstOV", range0, range1);
+  offset_view_type ov("firstOV", begins3D, ends3D);
+  offset_view_type deprecated("deprecated", {begins3D[0], ends3D[0] - 1},
+                              {begins3D[1], ends3D[1] - 1},
+                              {begins3D[2], ends3D[2] - 1});
+
+  ASSERT_EQ("deprecated", deprecated.label());
+
+  for (unsigned int i = 0; i < ov.rank(); i++) {
+    ASSERT_EQ(ov.begin(i), deprecated.begin(i));
+    ASSERT_EQ(ov.end(i), deprecated.end(i));
+    ASSERT_EQ(ov.extent(i), deprecated.extent(i));
+  }
+}
+KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
+
+template <typename Scalar, typename Device>
+void test_offsetview_construction() {
+  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
+  using view_type        = Kokkos::View<Scalar**, Device>;
+
+  // begins and ends (exclusive) for the 2D test view
+  Kokkos::Array<int64_t, 2> begins2D = {{-1, -2}};
+  Kokkos::Array<int64_t, 2> ends2D   = {{4, 3}};
+
+  {
+    offset_view_type o1;
+    ASSERT_FALSE(o1.is_allocated());
+
+    o1 = offset_view_type("o1", begins2D, ends2D);
+    offset_view_type o2(o1);
+    offset_view_type o3("o3", begins2D, ends2D);
+
+    ASSERT_TRUE(o1.is_allocated());
+    ASSERT_TRUE(o2.is_allocated());
+    ASSERT_TRUE(o3.is_allocated());
+  }
+
+  offset_view_type ov("firstOV", begins2D, ends2D);
 
   ASSERT_EQ("firstOV", ov.label());
 
@@ -61,7 +101,7 @@ void test_offsetview_construction() {
 
   {
     Kokkos::Experimental::OffsetView<Scalar*, Device> offsetV1("OneDOffsetView",
-                                                               range0);
+                                                               {-1}, {4});
 
     Kokkos::RangePolicy<Device, int> rangePolicy1(offsetV1.begin(0),
                                                   offsetV1.end(0));
@@ -302,13 +342,16 @@ void test_offsetview_unmanaged_construction() {
   {
     // Test all four public constructor overloads (begins_type x
     // index_list_type)
-    Kokkos::Array<int64_t, 1> begins{{-3}};
-    Kokkos::Array<int64_t, 1> ends{{2}};
-
-    Kokkos::Experimental::OffsetView<Scalar*, Device> bb(ptr, begins, ends);
-    Kokkos::Experimental::OffsetView<Scalar*, Device> bi(ptr, begins, {2});
-    Kokkos::Experimental::OffsetView<Scalar*, Device> ib(ptr, {-3}, ends);
-    Kokkos::Experimental::OffsetView<Scalar*, Device> ii(ptr, {-3}, {2});
+    std::vector<int64_t> std_begins{-3, 5};
+    std::vector<int> std_ends{2, 10};
+    Kokkos::Experimental::OffsetView<Scalar**, Device> bb(ptr, std_begins,
+                                                          std_ends);
+    Kokkos::Experimental::OffsetView<Scalar**, Device> bi(ptr, std_begins,
+                                                          {2, 10});
+    Kokkos::Experimental::OffsetView<Scalar**, Device> ib(ptr, {-3, 5},
+                                                          std_ends);
+    Kokkos::Experimental::OffsetView<Scalar**, Device> ii(ptr, {-3, 5},
+                                                          {2, 10});
 
     ASSERT_EQ(bb, bi);
     ASSERT_EQ(bb, ib);
@@ -447,7 +490,7 @@ template <typename Scalar, typename Device>
 void test_offsetview_subview() {
   {  // test subview 1
     Kokkos::Experimental::OffsetView<Scalar*, Device> sliceMe("offsetToSlice",
-                                                              {-10, 20});
+                                                              {-10}, {21});
     {
       auto offsetSubview = Kokkos::subview(sliceMe, 0);
       ASSERT_EQ(offsetSubview.rank(), 0u) << "subview of offset is broken.";
@@ -455,7 +498,7 @@ void test_offsetview_subview() {
   }
   {  // test subview 2
     Kokkos::Experimental::OffsetView<Scalar**, Device> sliceMe(
-        "offsetToSlice", {-10, 20}, {-20, 30});
+        "offsetToSlice", {-10, -20}, {21, 31});
     {
       auto offsetSubview = Kokkos::subview(sliceMe, Kokkos::ALL(), -2);
       ASSERT_EQ(offsetSubview.rank(), 1u) << "subview of offset is broken.";
@@ -470,7 +513,7 @@ void test_offsetview_subview() {
   {  // test subview rank 3
 
     Kokkos::Experimental::OffsetView<Scalar***, Device> sliceMe(
-        "offsetToSlice", {-10, 20}, {-20, 30}, {-30, 40});
+        "offsetToSlice", {-10, -20, -30}, {21, 31, 41});
 
     // slice 1
     {
@@ -545,7 +588,7 @@ void test_offsetview_subview() {
   {  // test subview rank 4
 
     Kokkos::Experimental::OffsetView<Scalar****, Device> sliceMe(
-        "offsetToSlice", {-10, 20}, {-20, 30}, {-30, 40}, {-40, 50});
+        "offsetToSlice", {-10, -20, -30, -40}, {21, 31, 41, 51});
 
     // slice 1
     {
@@ -715,6 +758,10 @@ void test_offsetview_offsets_rank3() {
       errors);
 
   ASSERT_EQ(0, errors);
+}
+
+TEST(TEST_CATEGORY, offsetview_construction_deprecated) {
+  test_offsetview_construction_deprecated<int, TEST_EXECSPACE>();
 }
 
 TEST(TEST_CATEGORY, offsetview_construction) {

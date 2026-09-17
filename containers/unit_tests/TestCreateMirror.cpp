@@ -119,9 +119,9 @@ void test_create_mirror_dynrankview() {
 
 void test_reate_mirror_offsetview() {
   Kokkos::Experimental::OffsetView<int*, Kokkos::DefaultExecutionSpace>
-      device_view("device view", {0, 10});
+      device_view("device view", {0}, {10});
   Kokkos::Experimental::OffsetView<int*, Kokkos::HostSpace> host_view(
-      "host view", {0, 10});
+      "host view", {0}, {10});
 
   test_create_mirror_properties(device_view);
   test_create_mirror_properties(host_view);
