@@ -209,7 +209,7 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
   // OpenMP's team size isn't limited by the max scratch size
   check_team_size &= !std::is_same_v<TEST_EXECSPACE, Kokkos::OpenMP>;
 #elif defined KOKKOS_ENABLE_THREADS
-  // OpenMP's team size isn't limited by the max scratch size
+  // Thread's team size isn't limited by the max scratch size
   check_team_size &= !std::is_same_v<TEST_EXECSPACE, Kokkos::Threads>;
 #endif
 
