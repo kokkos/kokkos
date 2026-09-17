@@ -269,10 +269,7 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<false, WorkTag, value_type>(
             f, n);
-    using closure_type =
-        Impl::ParallelReduce<CombinedFunctorReducer<FunctorType, ReducerType>,
-                             Policy, Kokkos::Cuda>;
-    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
+    cudaFuncAttributes attr = CudaParallelLaunch<ParallelReduce, LaunchBounds>::
         get_cuda_func_attributes(
             m_policy.space().impl_internal_space_instance());
     while (
@@ -628,10 +625,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>, Kokkos::Cuda> {
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<true, WorkTag, value_type>(f,
                                                                              n);
-    using closure_type =
-        Impl::ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
-                           Kokkos::Cuda>;
-    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
+    cudaFuncAttributes attr = CudaParallelLaunch<ParallelScan, LaunchBounds>::
         get_cuda_func_attributes(
             m_policy.space().impl_internal_space_instance());
     while (
@@ -969,12 +963,10 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     int shmem_size =
         cuda_single_inter_block_reduce_scan_shmem<true, WorkTag, value_type>(f,
                                                                              n);
-    using closure_type =
-        Impl::ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
-                                    ReturnType, Kokkos::Cuda>;
-    cudaFuncAttributes attr = CudaParallelLaunch<closure_type, LaunchBounds>::
-        get_cuda_func_attributes(
-            m_policy.space().impl_internal_space_instance());
+    cudaFuncAttributes attr =
+        CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>::
+            get_cuda_func_attributes(
+                m_policy.space().impl_internal_space_instance());
     while (
         (n && (maxShmemPerBlock < shmem_size)) ||
         (n >
