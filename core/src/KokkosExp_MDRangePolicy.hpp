@@ -377,6 +377,10 @@ struct MDRangePolicy<P, Properties...>
     return Kokkos::Impl::TileSizeRecommended<execution_space>::get(*this);
   }
 
+  index_type impl_num_tiles() const { return m_num_tiles; }
+
+  index_type impl_prod_tile_dims() const { return m_prod_tile_dims; }
+
   index_type max_total_tile_size() const { return m_max_total_tile_size; }
 
  private:

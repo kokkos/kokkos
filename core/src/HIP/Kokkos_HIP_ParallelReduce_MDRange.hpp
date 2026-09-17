@@ -151,8 +151,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   inline void execute() {
     ReducerType reducer = m_functor_reducer.get_reducer();
 
-    if (m_policy.m_num_tiles) {
-      int block_size = m_policy.m_prod_tile_dims;
+    if (m_policy.impl_num_tiles()) {
+      int block_size = m_policy.impl_prod_tile_dims();
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions
       // Nearest power of two
       int exponent_pow_two = std::ceil(std::log2(block_size));
@@ -169,8 +169,9 @@ class ParallelReduce<CombinedFunctorReducerType,
       dim3 block(1, block_size, 1);
       // use a slightly less constrained, but still well bounded limit for
       // scratch
-      const index_type nwork = m_policy.m_num_tiles * m_policy.m_prod_tile_dims;
-      index_type nblocks     = (nwork + block.y - 1) / block.y;
+      const index_type nwork =
+          m_policy.impl_num_tiles() * m_policy.impl_prod_tile_dims();
+      index_type nblocks = (nwork + block.y - 1) / block.y;
       // Heuristic deciding the value of nblocks.
       // The general idea here is we want to:
       //    1. Not undersubscribe the device (i.e., we want at least
