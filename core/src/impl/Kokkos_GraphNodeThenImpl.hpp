@@ -49,8 +49,7 @@ struct GraphNodeThenImpl
   template <typename Label, typename T>
   GraphNodeThenImpl(Label&& label_, const ExecutionSpace& exec, ThenPolicyType,
                     T&& functor)
-      : base_t(std::forward<Label>(label_), exec,
-               wrapper_t{std::forward<T>(functor)},
+      : base_t(std::forward<Label>(label_), wrapper_t{std::forward<T>(functor)},
                inner_policy_t(exec, 0, 1)) {}
 };
 

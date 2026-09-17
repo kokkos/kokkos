@@ -80,17 +80,16 @@ class GraphNodeKernelImpl<Kokkos::SYCL, PolicyType, Functor, PatternTag,
       typename PatternImplSpecializationFromTag<PatternTag, Functor, Policy,
                                                 Args..., Kokkos::SYCL>::type;
 
-  // TODO use the name and executionspace
+  // TODO use the name
   template <typename PolicyDeduced, typename... ArgsDeduced>
-  GraphNodeKernelImpl(std::string, Kokkos::SYCL const&, Functor arg_functor,
+  GraphNodeKernelImpl(std::string, Functor arg_functor,
                       PolicyDeduced&& arg_policy, ArgsDeduced&&... args)
       : base_t(std::move(arg_functor), (PolicyDeduced&&)arg_policy,
                (ArgsDeduced&&)args...) {}
 
   template <typename PolicyDeduced>
-  GraphNodeKernelImpl(Kokkos::SYCL const& exec_space, Functor arg_functor,
-                      PolicyDeduced&& arg_policy)
-      : GraphNodeKernelImpl("", exec_space, std::move(arg_functor),
+  GraphNodeKernelImpl(Functor arg_functor, PolicyDeduced&& arg_policy)
+      : GraphNodeKernelImpl("[unlabeled]", std::move(arg_functor),
                             (PolicyDeduced&&)arg_policy) {}
 
   void set_sycl_graph_ptr(
