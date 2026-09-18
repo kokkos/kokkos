@@ -10,6 +10,7 @@
 #include <atomic>
 #include <cstring>
 #include <inttypes.h>
+#include <unordered_map>
 
 #include <unistd.h>
 
@@ -30,6 +31,7 @@ struct SpaceHandle {
 
 constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024;
 static std::atomic<uint64_t> total_allocated(0);
+static std::unordered_map<const void*, uint64_t> host_allocations;
 static std::mutex m;
 
 uint64_t max_mem_usage() {
@@ -48,46 +50,60 @@ extern "C" void kokkosp_init_library(
   (void)interfaceVer;
   (void)loadSeq;
   total_allocated.store(0);
+  host_allocations.clear();
 }
 
 extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
                                       const char* name, const void* const ptr,
                                       uint64_t size) {
-  std::lock_guard<std::mutex> lock(m);
+  bool exceeded           = false;
+  uint64_t reported_total = 0;
 
-  if (strcmp(handle.name, "Host") == 0) {
-    if (total_allocated.fetch_add(size) > WARNING_THRESHOLD) {
-      // terminate program
-      fprintf(
-          stderr,
-          "\n [ WARNING! ] Total allocation (%.4f GB) exceeds %.2f GB limit!\n",
-          total_allocated / (1024.0 * 1024.0 * 1024.0),
-          WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
-      exit(1);
+  {
+    std::lock_guard<std::mutex> lock(m);
+
+    if (strcmp(handle.name, "Host") == 0) {
+      auto it = host_allocations.find(ptr);
+      if (it != host_allocations.end()) {
+        total_allocated.fetch_sub(it->second);
+        it->second = size;
+      } else {
+        host_allocations.emplace(ptr, size);
+      }
+
+      total_allocated.fetch_add(size);
     }
+
+    reported_total = total_allocated.load();
+    exceeded       = reported_total > WARNING_THRESHOLD;
   }
 
-  (void)ptr;
-  (void)name;
+  if (exceeded) {
+    fprintf(
+        stderr,
+        "\n [ WARNING! ] Total allocation (%.4f GB) exceeds %.2f GB limit!\n",
+        reported_total / (1024.0 * 1024.0 * 1024.0),
+        WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
+    // using static destructor causes crash, so we use _exit
+    fflush(stderr);
+    _exit(1);
+  }
 
-  // if (total_allocated > WARNING_THRESHOLD) {
-  //   fprintf(
-  //       stderr,
-  //       "\n [ WARNING! ] Total allocation (%.4f GB) exceeds %.2f GB
-  //       limit!\n", total_allocated / (1024.0 * 1024.0 * 1024.0),
-  //       WARNING_THRESHOLD / (1024.0 * 1024.0 * 1024.0));
-  //   exit(1);
-  // }
+  (void)name;
 }
 
 extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
                                         const void* ptr, uint64_t size) {
+  (void)name;
+  (void)size;
+
   std::lock_guard<std::mutex> lock(m);
 
-  (void)ptr;
-  (void)name;
-
   if (strcmp(handle.name, "Host") == 0) {
-    total_allocated -= size;
+    auto it = host_allocations.find(ptr);
+    if (it != host_allocations.end()) {
+      total_allocated.fetch_sub(it->second);
+      host_allocations.erase(it);
+    }
   }
 }
