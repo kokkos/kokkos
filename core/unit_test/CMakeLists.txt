@@ -438,6 +438,17 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(REMOVE_ITEM ${Tag}_SOURCES_SMOKE ${dir}/Test${Tag}_Reductions.cpp)
     endif()
     kokkos_add_executable_and_test(CoreUnitTest_${Tag}_SmokeTest SOURCES UnitTestMainInit.cpp ${${Tag}_SOURCES_SMOKE})
+
+    if(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_CUDA)
+      kokkos_add_executable_and_test(CoreUnitTest_AtomicsRDC SOURCES UnitTestMain.cpp ${dir}/Test${Tag}_Atomics.cpp)
+
+      if(Kokkos_ENABLE_CUDA)
+        set_property(TARGET Kokkos_CoreUnitTest_AtomicsRDC PROPERTY CUDA_SEPARABLE_COMPILATION ON)
+      elseif(Kokkos_ENABLE_HIP)
+        target_compile_options(Kokkos_CoreUnitTest_AtomicsRDC PRIVATE -fgpu-rdc)
+        target_link_options(Kokkos_CoreUnitTest_AtomicsRDC PRIVATE --hip-link)
+      endif()
+    endif()
   endif()
 endforeach()
 
