@@ -11,8 +11,8 @@ else()
   FetchContent_Declare(
     googlebenchmark
     DOWNLOAD_EXTRACT_TIMESTAMP FALSE
-    URL https://github.com/google/benchmark/archive/refs/tags/v1.8.3.tar.gz
-    URL_HASH MD5=7b93dd03670665684f1b2e9b70ad17fe
+    URL https://github.com/google/benchmark/archive/refs/tags/v1.9.5.tar.gz
+    URL_HASH MD5=12c6c0c228fc07106c62634222bd2541
   )
   FetchContent_MakeAvailable(googlebenchmark)
   list(POP_BACK CMAKE_MESSAGE_INDENT)
@@ -20,6 +20,7 @@ else()
   # Suppress clang-tidy diagnostics on code that we do not have control over
   if(CMAKE_CXX_CLANG_TIDY)
     set_target_properties(benchmark PROPERTIES CXX_CLANG_TIDY "")
+    set_target_properties(benchmark_main PROPERTIES CXX_CLANG_TIDY "")
   endif()
 
   target_compile_options(benchmark PRIVATE -w)

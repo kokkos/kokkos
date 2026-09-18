@@ -188,7 +188,7 @@ endif()
 include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/kokkos_configure_trilinos.cmake)
 
 if(Kokkos_ENABLE_BENCHMARKS)
-  find_package(benchmark QUIET 1.8.3)
+  find_package(benchmark QUIET 1.9.5)
 endif()
 
 # Include a set of Kokkos-specific wrapper functions that
