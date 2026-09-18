@@ -571,7 +571,7 @@ class View
       ((res = indices[rank() - 1 - I] +
               static_cast<idx_type>((rank() - 1 - I) == 0u /* extent_to_pad */
                                         ? m_map.stride(1)
-                                        : extent(rank() - 1 - I)) *
+                                        : base_t::extent(rank() - 1 - I)) *
                   res),
        ...);
       return res;
@@ -582,7 +582,7 @@ class View
       idx_type res = 0;
       ((res = static_cast<idx_type>(index_offsets) +
               static_cast<idx_type>(I == rank() - 1 ? m_map.stride(rank() - 2)
-                                                    : extent(I)) *
+                                                    : base_t::extent(I)) *
                   res),
        ...);
       return res;
@@ -1549,28 +1549,26 @@ class View
     }
   }
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
   KOKKOS_FUNCTION
   constexpr typename base_t::index_type extent(size_t r) const noexcept {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // casting to int to avoid warning for pointless comparison of unsigned
     // with 0
     if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
       return 1;
-#endif
     return base_t::extent(r);
   }
 
   KOKKOS_FUNCTION
   static constexpr size_t static_extent(size_t r) noexcept {
-#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
     // casting to int to avoid warning for pointless comparison of unsigned
     // with 0
     if (static_cast<int>(r) >= static_cast<int>(base_t::extents_type::rank()))
       return 1;
-#endif
     size_t value = base_t::extents_type::static_extent(r);
     return value == Kokkos::dynamic_extent ? 0 : value;
   }
+#endif
 };
 
 #if defined(KOKKOS_COMPILER_GNU) && KOKKOS_COMPILER_GNU >= 1500
