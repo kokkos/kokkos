@@ -15,6 +15,7 @@ static_assert(false,
 #include <Kokkos_Rank.hpp>
 #include <Kokkos_Array.hpp>
 #include <impl/KokkosExp_Host_IterateTile.hpp>
+#include <impl/KokkosExp_Host_IterateNestLoopWoTile.hpp>
 #include <Kokkos_ExecPolicy.hpp>
 #include <type_traits>
 #include <array>
