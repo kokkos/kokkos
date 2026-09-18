@@ -32,6 +32,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       MDRangePolicy, CombinedFunctorReducerType, WorkTag, reference_type>;
 
   const iterate_type m_iter;
+  const MDRangePolicy m_policy;
   const pointer_type m_result_ptr;
 
   inline void exec_range(const Member &ibeg, const Member &iend,
@@ -50,7 +51,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
-    const auto num_tiles = self.m_iter.m_rp.m_num_tiles;
+    const auto num_tiles = self.m_policy.impl_num_tiles();
     const WorkRange range(Policy(0, num_tiles).set_chunk_size(1),
                           instance.pool_rank(), instance.pool_size());
 
@@ -67,7 +68,7 @@ class ParallelReduce<CombinedFunctorReducerType,
   exec_schedule(ThreadsInternal &instance, const void *arg) {
     const ParallelReduce &self = *((const ParallelReduce *)arg);
 
-    const auto num_tiles = self.m_iter.m_rp.m_num_tiles;
+    const auto num_tiles = self.m_policy.impl_num_tiles();
     const WorkRange range(Policy(0, num_tiles).set_chunk_size(1),
                           instance.pool_rank(), instance.pool_size());
 
@@ -115,6 +116,7 @@ class ParallelReduce<CombinedFunctorReducerType,
                  const MDRangePolicy &arg_policy,
                  const ViewType &arg_result_view)
       : m_iter(arg_policy, arg_functor_reducer),
+        m_policy(arg_policy),
         m_result_ptr(arg_result_view.data()) {
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Threads reduce result must be a View");
