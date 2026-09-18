@@ -24,6 +24,52 @@ import kokkos.offset_view;
 namespace Test {
 
 template <typename Scalar, typename Device>
+void test_offsetview_construction_proposal() {
+  using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
+  using view_type        = Kokkos::View<Scalar**, Device>;
+
+  Kokkos::pair<int64_t, int64_t> range0 = {-1, 3};
+  Kokkos::pair<int64_t, int64_t> range1 = {-2, 2};
+
+  {
+    offset_view_type ov1;
+    ASSERT_FALSE(ov1.is_allocated());
+
+    ov1 = offset_view_type("ov1", range0, range1);
+    offset_view_type ov2(ov1);
+
+    ASSERT_TRUE(ov1.is_allocated());
+    ASSERT_TRUE(ov2.is_allocated());
+  }
+
+  offset_view_type ov("firstOV", range0, range1);
+
+  ASSERT_EQ("firstOV", ov.label());
+
+  ASSERT_EQ(2u, ov.rank());
+
+  ASSERT_EQ(ov.begin(0), -1);
+  ASSERT_EQ(ov.end(0), 3);
+
+  ASSERT_EQ(ov.begin(1), -2);
+  ASSERT_EQ(ov.end(1), 2);
+
+  ASSERT_EQ(ov.extent(0), 4u);
+  ASSERT_EQ(ov.extent(1), 4u);
+
+  // NOTE: for a rank-2 unmanaged view, bare braces {-1,3}, {-2,2} are now a
+  // compile-time error (they overlap between the begins/ends index-list and the
+  // per-dimension (begin, end) range). Spell the per-dimension ranges with
+  // Kokkos::pair to disambiguate.
+  //Kokkos::Experimental::OffsetView<Scalar**, Device> uov1(ov.data(), {-1, 3}, {-2, 2});
+  Kokkos::Experimental::OffsetView<Scalar**, Device> uov2(ov.data(), range0, range1);
+
+  //ASSERT_EQ(ov, uov1);
+  ASSERT_EQ(ov, uov2);
+
+}
+
+template <typename Scalar, typename Device>
 void test_offsetview_construction() {
   using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
   using view_type        = Kokkos::View<Scalar**, Device>;
@@ -377,69 +423,12 @@ void test_offsetview_unmanaged_construction_death() {
             "overflows"));
   }
 
-  {
-    using offset_view_type = Kokkos::Experimental::OffsetView<Scalar**, Device>;
-
-    // Should throw when the rank of begins and/or ends doesn't match that
-    // of OffsetView
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0}, {1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
-            ".*"
-            "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0}, {1, 1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0}, {1, 1, 1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "begins\\.size\\(\\) \\(1\\) != Rank \\(2\\)"
-            ".*"
-            "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0, 0}, {1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
-    (void)offset_view_type(ptr, {0, 0}, {1, 1});
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0, 0}, {1, 1, 1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0, 0, 0}, {1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
-            ".*"
-            "ends\\.size\\(\\) \\(1\\) != Rank \\(2\\)"));
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0, 0, 0}, {1, 1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
-    ASSERT_DEATH(
-        offset_view_type(ptr, {0, 0, 0}, {1, 1, 1}),
-        SKIP_REGEX_ON_WINDOWS(
-            "Kokkos::Experimental::OffsetView ERROR: for unmanaged OffsetView"
-            ".*"
-            "begins\\.size\\(\\) \\(3\\) != Rank \\(2\\)"
-            ".*"
-            "ends\\.size\\(\\) \\(3\\) != Rank \\(2\\)"));
-  }
+  // NOTE: the rank-2 runtime size-mismatch death tests were removed. For a
+  // rank-2 (2D) OffsetView, brace-enclosed index lists overlap between the
+  // begins/ends index-list constructor and a per-dimension (begin, end) range,
+  // so those constructors are now rejected at compile time (see
+  // KOKKOS_IMPL_OFFSETVIEW_RANK2_LIST_MSG). The runtime "begins.size() != Rank"
+  // mismatches they exercised can no longer be formed for rank 2.
 #undef SKIP_REGEX_ON_WINDOWS
 }
 
@@ -744,6 +733,11 @@ TEST(TEST_CATEGORY, offsetview_offsets_rank2) {
 TEST(TEST_CATEGORY, offsetview_offsets_rank3) {
   test_offsetview_offsets_rank3<TEST_EXECSPACE>();
 }
+
+TEST(TEST_CATEGORY, offsetview_construction_proposal) {
+  test_offsetview_construction_proposal<int, TEST_EXECSPACE>();
+}
+
 
 }  // namespace Test
 

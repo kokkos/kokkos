@@ -18,6 +18,9 @@ import kokkos.core_impl;
 
 #include <Kokkos_View.hpp>
 
+#include <type_traits>
+#include <utility>
+
 namespace Kokkos {
 
 namespace Experimental {
@@ -43,6 +46,19 @@ inline constexpr bool is_offset_view_v = is_offset_view<T>::value;
 #define KOKKOS_INVALID_INDEX_RANGE \
   { KOKKOS_INVALID_OFFSET, KOKKOS_INVALID_OFFSET }
 
+// For a rank-2 (2D) OffsetView a brace-enclosed index list {b, e} is ambiguous:
+// it matches both a begins/ends index list (index_list_type) and a
+// per-dimension (begin, end) range (begins_type / a pair), so the unmanaged
+// index-list constructors overlap for rank 2. We reject that case at compile
+// time and steer users to an unambiguous spelling.
+#define KOKKOS_IMPL_OFFSETVIEW_RANK2_LIST_MSG                                  \
+  "OffsetView: for a rank-2 (2D) OffsetView a brace-enclosed index list "      \
+  "{b, e} is ambiguous -- it overlaps between the begins/ends index-list "     \
+  "constructor and a per-dimension (begin, end) range. Disambiguate with the " \
+  "Kokkos::pair constructor for per-dimension ranges, e.g. OffsetView(ptr, "    \
+  "Kokkos::pair{b0, e0}, Kokkos::pair{b1, e1}), or pass explicit "             \
+  "Kokkos::Array begins/ends."
+
 template <typename iType,
           std::enable_if_t<std::is_integral_v<iType> && std::is_signed_v<iType>,
                            iType> = 0>
@@ -57,13 +73,23 @@ using index_list_type = std::initializer_list<int64_t>;
 
 namespace Impl {
 
-template <class ViewType>
-struct GetOffsetViewTypeFromViewType {
-  using type =
-      OffsetView<typename ViewType::data_type, typename ViewType::array_layout,
-                 typename ViewType::device_type,
-                 typename ViewType::memory_traits>;
-};
+// Trait: true only for a Kokkos::pair whose two members share the same
+// integral index type.
+template <typename P>
+struct is_integral_kokkos_pair : std::false_type {};
+template <typename T>
+struct is_integral_kokkos_pair<Kokkos::pair<T, T>> : std::is_integral<T> {};
+
+// A per-dimension index range expressed as a Kokkos::pair whose begin and end
+// share the same integral index type.
+// The end index is interpreted with EXCLUSIVE semantics by the constructors
+// that consume it: the valid indices for a dimension are begin, ..., end-1
+// (extent = end - begin). Only Kokkos::pair is accepted (not std::pair) so
+// that these exclusive-range constructors can never collide with the
+// deprecated std::pair inclusive-range constructors.
+template <typename P>
+concept is_integral_index_pair =
+    is_integral_kokkos_pair<std::remove_cvref_t<P>>::value;
 
 template <unsigned, class MapType, class BeginsType>
 KOKKOS_INLINE_FUNCTION bool offsetview_verify_operator_bounds(
@@ -353,6 +379,41 @@ class OffsetView : public View<DataType, Properties...> {
     return *(a.begin() + pos);
   }
 
+  // Build the base View layout from begins and (exclusive) ends. The extent of
+  // each dimension is ends[i] - begins[i], i.e. the end index is EXCLUSIVE.
+  // B, E can be begins_type and/or index_list_type.
+  template <typename B, typename E>
+  KOKKOS_FUNCTION static typename traits::array_layout
+  compute_layout_from_begins_ends(const B& begins_, const E& ends_) {
+    return typename traits::array_layout(
+        base_t::rank() > 0 ? at(ends_, 0) - at(begins_, 0)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        base_t::rank() > 1 ? at(ends_, 1) - at(begins_, 1)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        base_t::rank() > 2 ? at(ends_, 2) - at(begins_, 2)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        base_t::rank() > 3 ? at(ends_, 3) - at(begins_, 3)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        base_t::rank() > 4 ? at(ends_, 4) - at(begins_, 4)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        base_t::rank() > 5 ? at(ends_, 5) - at(begins_, 5)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        base_t::rank() > 6 ? at(ends_, 6) - at(begins_, 6)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
+        base_t::rank() > 7 ? at(ends_, 7) - at(begins_, 7)
+                           : KOKKOS_IMPL_CTOR_DEFAULT_ARG);
+  }
+
+  // Build the base View layout from a pack of (begin, end) index pairs, with
+  // EXCLUSIVE end semantics (extent[i] = ends[i] - begins[i]).
+  template <typename... Ranges>
+  KOKKOS_FUNCTION static typename traits::array_layout layout_from_pairs(
+      const Ranges&... ranges) {
+    return compute_layout_from_begins_ends(
+        begins_type{static_cast<int64_t>(ranges.first)...},
+        begins_type{static_cast<int64_t>(ranges.second)...});
+  }
+
   // Check that begins < ends for all elements
   // B, E can be begins_type and/or index_list_type
   template <typename B, typename E>
@@ -476,55 +537,100 @@ class OffsetView : public View<DataType, Properties...> {
   KOKKOS_FUNCTION OffsetView(const pointer_type& p, const B& begins_,
                              const E& ends_, subtraction_failure)
       : base_t(Kokkos::view_wrap(p),
-               typename traits::array_layout(
-                   base_t::rank() > 0 ? at(ends_, 0) - at(begins_, 0)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                   base_t::rank() > 1 ? at(ends_, 1) - at(begins_, 1)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                   base_t::rank() > 2 ? at(ends_, 2) - at(begins_, 2)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                   base_t::rank() > 3 ? at(ends_, 3) - at(begins_, 3)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                   base_t::rank() > 4 ? at(ends_, 4) - at(begins_, 4)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                   base_t::rank() > 5 ? at(ends_, 5) - at(begins_, 5)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                   base_t::rank() > 6 ? at(ends_, 6) - at(begins_, 6)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG,
-                   base_t::rank() > 7 ? at(ends_, 7) - at(begins_, 7)
-                                      : KOKKOS_IMPL_CTOR_DEFAULT_ARG)) {
+               compute_layout_from_begins_ends(begins_, ends_)) {
     for (size_t i = 0; i != m_begins.size(); ++i) {
       m_begins[i] = at(begins_, i);
     };
   }
 
  public:
-  // Constructor around unmanaged data
+  // Constructor around unmanaged data using per-dimension (begin, end) index
+  // pairs. The end index is EXCLUSIVE, i.e. the valid indices for a dimension
+  // are begin, begin+1, ..., end-1 (extent = end - begin). Any pair-like type
+  // whose members are integral (Kokkos::pair, std::pair) is accepted:
+  //   OffsetView u(ptr, Kokkos::pair{-3, 2});                     // rank 1
+  //   OffsetView u(ptr, Kokkos::pair{-3, 2}, Kokkos::pair{0, 5}); // rank 2
+  template <Impl::is_integral_index_pair... Ranges>
+    requires(sizeof...(Ranges) >= 1)
+  KOKKOS_FUNCTION OffsetView(const pointer_type& p, const Ranges&... ranges)
+      : OffsetView(p, begins_type{static_cast<int64_t>(ranges.first)...},
+                   begins_type{static_cast<int64_t>(ranges.second)...},
+                   runtime_check_begins_ends(
+                       begins_type{static_cast<int64_t>(ranges.first)...},
+                       begins_type{static_cast<int64_t>(ranges.second)...})) {
+    static_assert(sizeof...(Ranges) == base_t::rank(),
+                  "OffsetView: number of index pairs must equal the rank");
+  }
+
+  // Deprecated: begins/ends range constructors. Use the (begin, end) index-pair
+  // constructor above instead. Note that, like these constructors, the
+  // replacement uses an EXCLUSIVE end index (extent = end - begin).
   // Four overloads, as both begins and ends can be either
   // begins_type or index_list_type
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use the (begin, end) index-pair constructor instead: "
+      "OffsetView(ptr, Kokkos::pair{b0, e0}, ...). The end index is exclusive.")
   KOKKOS_FUNCTION
   OffsetView(const pointer_type& p, const begins_type& begins_,
              const begins_type& ends_)
       : OffsetView(p, begins_, ends_,
                    runtime_check_begins_ends(begins_, ends_)) {}
 
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use the (begin, end) index-pair constructor instead: "
+      "OffsetView(ptr, Kokkos::pair{b0, e0}, ...). The end index is exclusive.")
   KOKKOS_FUNCTION
   OffsetView(const pointer_type& p, const begins_type& begins_,
              index_list_type ends_)
       : OffsetView(p, begins_, ends_,
-                   runtime_check_begins_ends(begins_, ends_)) {}
+                   runtime_check_begins_ends(begins_, ends_)) {
+    static_assert(base_t::rank() != 2, KOKKOS_IMPL_OFFSETVIEW_RANK2_LIST_MSG);
+  }
 
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use the (begin, end) index-pair constructor instead: "
+      "OffsetView(ptr, Kokkos::pair{b0, e0}, ...). The end index is exclusive.")
   KOKKOS_FUNCTION
   OffsetView(const pointer_type& p, index_list_type begins_,
              const begins_type& ends_)
       : OffsetView(p, begins_, ends_,
-                   runtime_check_begins_ends(begins_, ends_)) {}
+                   runtime_check_begins_ends(begins_, ends_)) {
+    static_assert(base_t::rank() != 2, KOKKOS_IMPL_OFFSETVIEW_RANK2_LIST_MSG);
+  }
 
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use the (begin, end) index-pair constructor instead: "
+      "OffsetView(ptr, Kokkos::pair{b0, e0}, ...). The end index is exclusive.")
   KOKKOS_FUNCTION
   OffsetView(const pointer_type& p, index_list_type begins_,
              index_list_type ends_)
       : OffsetView(p, begins_, ends_,
-                   runtime_check_begins_ends(begins_, ends_)) {}
+                   runtime_check_begins_ends(begins_, ends_)) {
+    static_assert(base_t::rank() != 2, KOKKOS_IMPL_OFFSETVIEW_RANK2_LIST_MSG);
+  }
+
+  // Allocating constructors using per-dimension (begin, end) index pairs with
+  // EXCLUSIVE end semantics (extent = end - begin). Only Kokkos::pair is
+  // accepted, so these never collide with the deprecated std::pair
+  // (inclusive-range) constructors below:
+  //   OffsetView v("v", Kokkos::pair{-1, 5}, Kokkos::pair{-2, 4});
+  template <typename Label, Impl::is_integral_index_pair... Ranges>
+    requires(Kokkos::Impl::is_view_label<Label>::value &&
+             sizeof...(Ranges) >= 1)
+  explicit OffsetView(const Label& arg_label, const Ranges&... ranges)
+      : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label),
+                   ranges...) {}
+
+  template <class... P, Impl::is_integral_index_pair... Ranges>
+    requires(!Kokkos::Impl::ViewCtorProp<P...>::has_pointer &&
+             sizeof...(Ranges) >= 1)
+  explicit OffsetView(const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
+                      const Ranges&... ranges)
+      : base_t(arg_prop, layout_from_pairs(ranges...)) {
+    static_assert(sizeof...(Ranges) == base_t::rank(),
+                  "OffsetView: number of index pairs must equal the rank");
+    m_begins = begins_type{static_cast<int64_t>(ranges.first)...};
+  }
 
   // Choosing std::pair as type for the arguments allows constructing an
   // OffsetView using list initialization syntax, e.g.,
@@ -533,6 +639,10 @@ class OffsetView : public View<DataType, Properties...> {
   // std::get<{0,1}>(RangeType const&) with std::tuple_size<RangeType>::value==2
   // but this wouldn't allow using the syntax in the example above.
   template <typename Label>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use the Kokkos::pair (begin, end) constructor instead: "
+      "OffsetView(label, Kokkos::pair{b0, e0}, ...). The end index is "
+      "exclusive (extent = end - begin), unlike this inclusive-range overload.")
   explicit OffsetView(
       const Label& arg_label,
       std::enable_if_t<Kokkos::Impl::is_view_label<Label>::value,
@@ -577,6 +687,10 @@ class OffsetView : public View<DataType, Properties...> {
                     range4.first, range5.first, range6.first, range7.first}) {}
 
   template <class... P>
+  KOKKOS_DEPRECATED_WITH_COMMENT(
+      "Use the Kokkos::pair (begin, end) constructor instead: "
+      "OffsetView(label, Kokkos::pair{b0, e0}, ...). The end index is "
+      "exclusive (extent = end - begin), unlike this inclusive-range overload.")
   explicit OffsetView(
       const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
       const std::pair<int64_t, int64_t> range0 = KOKKOS_INVALID_INDEX_RANGE,
