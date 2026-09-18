@@ -1,0 +1,5 @@
+# SPDX-FileCopyrightText: Copyright 2026 Antmicro
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+build --cxxopt=-std=c++20
+build --host_cxxopt=-std=c++20
