@@ -263,12 +263,15 @@ AMD-MI300A:
   image: rocm/dev-ubuntu-26.04:7.14.0-full
   script:
     - apt-get update && apt-get install -y cmake git
+    - git clone https://github.com/aras-p/ClangBuildAnalyzer --depth=1 &&
+      cd ClangBuildAnalyzer && cmake -DCMAKE_CXX_COMPILER=hipcc -B build &&
+      cmake --build build && cd ..
     - export CMAKE_BUILD_PARALLEL_LEVEL=48
     - export ENV_CMAKE_OPTIONS=""
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_PREFIX_PATH=/opt/rocm-7.14.0"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_BUILD_TYPE=${BUILD_TYPE}"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_COMPILER=hipcc"
-    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror'"
+    - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_FLAGS='-Werror -ftime-trace'"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D CMAKE_CXX_STANDARD=20"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ENABLE_HIP=ON"
     - export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-D Kokkos_ARCH_AMD_GFX942_APU=ON"
@@ -291,6 +294,8 @@ AMD-MI300A:
       -D CTEST_BUILD_NAME="${CTEST_BUILD_NAME}"
       -D CTEST_NOTES_FILES=/builds/kokkos/kokkos/build/CMakeCache.txt
       | tee test_results.txt
+    - ./ClangBuildAnalyzer/build/ClangBuildAnalyzer --all build analyze_results.bin
+    - ./ClangBuildAnalyzer/build/ClangBuildAnalyzer --analyze analyze_results.bin
   artifacts:
     when: always
     paths:
