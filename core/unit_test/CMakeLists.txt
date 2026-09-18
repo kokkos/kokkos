@@ -736,6 +736,54 @@ if(Kokkos_ENABLE_CUDA)
   kokkos_add_executable_and_test(
     CoreUnitTest_CudaInterOpGraphMultiGPU SOURCES UnitTestMainInit.cpp cuda/TestCuda_InterOp_GraphMultiGPU.cpp
   )
+
+  # This CUDA interop test is the only thing in the tree that needs CUPTI.
+  #
+  # FindCUDAToolkit already ran in cmake/Modules/FindTPLCUDA.cmake, and it has
+  # provided CUDA::cupti since CMake 3.17. The catch is the include path:
+  # cupti.h lives in extras/CUPTI/include, which is not on the normal CUDA
+  # include path, and CMake only started locating it (as
+  # CUDAToolkit_CUPTI_INCLUDE_DIR) and attaching it to the target in 3.24. We
+  # support CMake back to 3.22, so 3.22 and 3.23 need the manual search below,
+  # as does any toolkit layout CMake does not fully describe.
+  # https://cmake.org/cmake/help/latest/module/FindCUDAToolkit.html#cupti
+  set(KOKKOS_CUPTI_FOUND OFF)
+  if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
+    set(KOKKOS_CUPTI_FOUND ON)
+  else()
+    find_path(
+      KOKKOS_CUPTI_INCLUDE_DIR
+      NAMES cupti.h
+      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
+      PATH_SUFFIXES extras/CUPTI/include include
+    )
+    find_library(
+      KOKKOS_CUPTI_LIBRARY
+      NAMES cupti
+      HINTS "${CUDAToolkit_ROOT}" "${CUDAToolkit_LIBRARY_ROOT}" ENV CUDA_HOME ENV CUDA_PATH
+      PATH_SUFFIXES extras/CUPTI/lib64 lib64 lib
+    )
+
+    if(KOKKOS_CUPTI_INCLUDE_DIR AND KOKKOS_CUPTI_LIBRARY)
+      set(KOKKOS_CUPTI_FOUND ON)
+    endif()
+  endif()
+
+  if(KOKKOS_CUPTI_FOUND)
+    kokkos_add_executable_and_test(
+      CoreUnitTest_CudaCUPTILaunchRoute SOURCES UnitTestMainInit.cpp cuda/TestCuda_CUPTI_LaunchRoute.cpp
+    )
+
+    if(TARGET CUDA::cupti AND CUDAToolkit_CUPTI_INCLUDE_DIR)
+      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE CUDA::cupti)
+    else()
+      target_include_directories(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_INCLUDE_DIR}")
+      target_link_libraries(Kokkos_CoreUnitTest_CudaCUPTILaunchRoute PRIVATE "${KOKKOS_CUPTI_LIBRARY}")
+    endif()
+  else()
+    message(STATUS "CUPTI not found; skipping CUDA launch-route test")
+  endif()
+  unset(KOKKOS_CUPTI_FOUND)
 endif()
 
 if(Kokkos_ENABLE_HIP)

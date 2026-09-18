@@ -23,6 +23,15 @@ kokkos_cfg_depends(OPTIONS COMPILER_ID)
 kokkos_deprecated_list(OPTIONS ENABLE)
 
 kokkos_enable_option(CUDA_RELOCATABLE_DEVICE_CODE OFF "Whether to enable relocatable device code (RDC) for CUDA")
+if(KOKKOS_ENABLE_CUDA)
+  set(CUDA_CONSTANT_MEMORY_DEFAULT ON)
+else()
+  set(CUDA_CONSTANT_MEMORY_DEFAULT OFF)
+endif()
+kokkos_enable_option(
+  IMPL_CUDA_CONSTANT_MEMORY ${CUDA_CONSTANT_MEMORY_DEFAULT} "Whether to enable CUDA constant memory kernel launch"
+)
+unset(CUDA_CONSTANT_MEMORY_DEFAULT)
 
 # As of 09/2024, cudaMallocAsync causes issues with ICP and older version of UCX
 # as MPI communication layer.
@@ -187,6 +196,7 @@ check_device_specific_options(
   OPTIONS
   CUDA_RELOCATABLE_DEVICE_CODE
   CUDA_CONSTEXPR
+  IMPL_CUDA_CONSTANT_MEMORY
   IMPL_CUDA_MALLOC_ASYNC
   IMPL_CUDA_UNIFIED_MEMORY
 )
