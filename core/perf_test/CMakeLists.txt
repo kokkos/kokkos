@@ -119,6 +119,7 @@ set(BENCHMARK_SOURCES
     PerfTest_ViewResize_7.cpp
     PerfTest_ViewResize_8.cpp
     PerfTest_ViewResize_Raw.cpp
+    MicroBench_ParallelForOverheads.cpp
 )
 
 kokkos_add_benchmark(PerformanceTest_Benchmark SOURCES ${BENCHMARK_SOURCES})
