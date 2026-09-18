@@ -966,80 +966,79 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   }
 
   inline void execute() {
-    const auto nwork = m_policy.end() - m_policy.begin();
-    if (nwork) {
-      enum { GridMaxComputeCapability_2x = 0x0ffff };
+    // Use at least one work item for calculating launch parameters to handle
+    // empty ranges correctly.
+    const auto nwork = std::max(1, m_policy.end() - m_policy.begin());
+    enum { GridMaxComputeCapability_2x = 0x0ffff };
 
-      const int block_size = local_block_size(m_functor_reducer.get_functor());
-      KOKKOS_ASSERT(block_size > 0);
+    const int block_size = local_block_size(m_functor_reducer.get_functor());
+    KOKKOS_ASSERT(block_size > 0);
 
-      const int grid_max =
-          (block_size * block_size) < GridMaxComputeCapability_2x
-              ? (block_size * block_size)
-              : GridMaxComputeCapability_2x;
+    const int grid_max = (block_size * block_size) < GridMaxComputeCapability_2x
+                             ? (block_size * block_size)
+                             : GridMaxComputeCapability_2x;
 
-      // At most 'max_grid' blocks:
-      const int max_grid =
-          std::min(int(grid_max), int((nwork + block_size - 1) / block_size));
+    // At most 'max_grid' blocks:
+    const int max_grid =
+        std::min(int(grid_max), int((nwork + block_size - 1) / block_size));
 
-      // How much work per block:
-      const int work_per_block = (nwork + max_grid - 1) / max_grid;
+    // How much work per block:
+    const int work_per_block = (nwork + max_grid - 1) / max_grid;
 
-      // How many block are really needed for this much work:
-      const int grid_x = (nwork + work_per_block - 1) / work_per_block;
+    // How many block are really needed for this much work:
+    const int grid_x = (nwork + work_per_block - 1) / work_per_block;
 
-      const typename Analysis::Reducer& final_reducer =
-          m_functor_reducer.get_reducer();
+    const typename Analysis::Reducer& final_reducer =
+        m_functor_reducer.get_reducer();
 
-      // Only let one instance at a time resize the instance's scratch memory
-      // allocations.
-      std::scoped_lock<std::mutex> scratch_buffers_lock(
-          m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
+    // Only let one instance at a time resize the instance's scratch memory
+    // allocations.
+    std::scoped_lock<std::mutex> scratch_buffers_lock(
+        m_policy.space().impl_internal_space_instance()->m_mutexScratchSpace);
 
-      m_scratch_space =
-          reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
-              m_policy.space(), final_reducer.value_size() * grid_x));
-      m_scratch_flags =
-          cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
+    m_scratch_space =
+        reinterpret_cast<word_size_type*>(cuda_internal_scratch_space(
+            m_policy.space(), final_reducer.value_size() * grid_x));
+    m_scratch_flags =
+        cuda_internal_scratch_flags(m_policy.space(), sizeof(size_type) * 1);
 
-      dim3 grid(grid_x, 1, 1);
-      dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
-      const int shmem = final_reducer.value_size() * (block_size + 2);
+    dim3 grid(grid_x, 1, 1);
+    dim3 block(1, block_size, 1);  // REQUIRED DIMENSIONS ( 1 , N , 1 )
+    const int shmem = final_reducer.value_size() * (block_size + 2);
 
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-      if (m_run_serial) {
-        block = dim3(1, 1, 1);
-        grid  = dim3(1, 1, 1);
-      } else
+    if (m_run_serial) {
+      block = dim3(1, 1, 1);
+      grid  = dim3(1, 1, 1);
+    } else
 #endif
-      {
-        m_final = false;
-        CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
-            *this, grid, block, shmem,
-            m_policy.space()
-                .impl_internal_space_instance());  // copy to device and execute
-      }
-      m_final = true;
+    {
+      m_final = false;
       CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
           *this, grid, block, shmem,
           m_policy.space()
               .impl_internal_space_instance());  // copy to device and execute
+    }
+    m_final = true;
+    CudaParallelLaunch<ParallelScanWithTotal, LaunchBounds>(
+        *this, grid, block, shmem,
+        m_policy.space()
+            .impl_internal_space_instance());  // copy to device and execute
 
-      const int size = final_reducer.value_size();
+    const int size = final_reducer.value_size();
 #ifdef KOKKOS_IMPL_DEBUG_CUDA_SERIAL_EXECUTION
-      if (m_run_serial)
-        DeepCopy<HostSpace, CudaSpace, Cuda>(m_policy.space(), &m_returnvalue,
-                                             m_scratch_space, size);
-      else
+    if (m_run_serial)
+      DeepCopy<HostSpace, CudaSpace, Cuda>(m_policy.space(), &m_returnvalue,
+                                           m_scratch_space, size);
+    else
 #endif
-      {
-        if (!m_result_ptr_device_accessible)
-          DeepCopy<HostSpace, CudaSpace, Cuda>(
-              m_policy.space(), m_result_ptr,
-              m_scratch_space + (static_cast<ptrdiff_t>(grid_x) - 1) * size /
-                                    sizeof(word_size_type),
-              size);
-      }
+    {
+      if (!m_result_ptr_device_accessible)
+        DeepCopy<HostSpace, CudaSpace, Cuda>(
+            m_policy.space(), m_result_ptr,
+            m_scratch_space + (static_cast<ptrdiff_t>(grid_x) - 1) * size /
+                                  sizeof(word_size_type),
+            size);
     }
   }
 
