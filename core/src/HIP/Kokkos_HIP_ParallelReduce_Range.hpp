@@ -291,7 +291,6 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
       // atomics in Kokkos_HIP_ReduceScan.hpp
       m_scratch_flags = ::Kokkos::Impl::hip_internal_scratch_flags(
           m_policy.space(), sizeof(size_type));
-      // Required grid.x <= block.y
       dim3 grid(nblocks, 1, 1);
 
       if (nwork == 0) {

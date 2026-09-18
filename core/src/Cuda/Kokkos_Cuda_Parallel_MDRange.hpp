@@ -397,7 +397,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   }
 
   inline void execute() {
-    const auto nwork = m_policy.impl_num_tiles();
+    const index_type nwork = m_policy.impl_num_tiles();
+
     if (nwork) {
       int block_size = m_policy.impl_prod_tile_dims();
       // CONSTRAINT: Algorithm requires block_size >= product of tile dimensions

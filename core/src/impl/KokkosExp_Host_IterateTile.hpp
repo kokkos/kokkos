@@ -1266,10 +1266,10 @@ struct HostIterateTile {
                                m_tile, m_tiledims);
   }
 
-  const point_type m_lower;
-  const point_type m_upper;
-  const tile_type m_tile;
-  const point_type m_tile_end;
+  point_type const m_lower;
+  point_type const m_upper;
+  tile_type const m_tile;
+  point_type const m_tile_end;
   Functor const m_func;
 };
 
