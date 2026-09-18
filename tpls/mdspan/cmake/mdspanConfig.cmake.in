@@ -1,0 +1,7 @@
+@PACKAGE_INIT@
+
+include("${CMAKE_CURRENT_LIST_DIR}/mdspanTargets.cmake")
+
+if (@MDSPAN_GENERATE_STD_NAMESPACE_TARGETS@)
+  include("${CMAKE_CURRENT_LIST_DIR}/mdspanStdTargets.cmake")
+endif()
