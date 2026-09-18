@@ -20,7 +20,7 @@ jobs:
         cxx_extra_flags: ['']
         cmake_build_type: ['Release', 'Debug']
         backend: ['OPENMP']
-        cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*"']
+        cmake_extra_opts: ['-DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*;-extra-arg=-std=c++20"']
         stdcxx: [20]
         include:
           - arch: 'x64'
