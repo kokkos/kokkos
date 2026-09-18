@@ -230,6 +230,7 @@ pipeline {
                                 \
                                 -DCMAKE_INSTALL_PREFIX=${PWD}/../install \
                               .. && \
+                              set +x && \
                               ulimit -c 0 && \
                               make -j8 install && \
                               cd .. && \
