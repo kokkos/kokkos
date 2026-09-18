@@ -69,6 +69,36 @@ TEST(TEST_CATEGORY, team_reduce_large) {
   }
 }
 
+template <typename ExecutionSpace>
+struct TestTeamReduceTemplatedOperator {
+  using team_policy_t = Kokkos::TeamPolicy<ExecutionSpace>;
+
+  int m_range;
+
+  TestTeamReduceTemplatedOperator(const int range) : m_range(range) {}
+
+  template <typename MemberType>
+  KOKKOS_INLINE_FUNCTION void operator()(const MemberType& t,
+                                         int& update) const {
+    Kokkos::single(Kokkos::PerTeam(t), [&]() { update++; });
+  }
+
+  void run() {
+    int result = 0;
+    Kokkos::parallel_reduce(team_policy_t(m_range, Kokkos::AUTO), *this,
+                            result);
+    EXPECT_EQ(m_range, result);
+  }
+};
+
+TEST(TEST_CATEGORY, team_reduce_templated_operator) {
+  std::vector<int> ranges{1, 10, 100};
+  for (const auto range : ranges) {
+    TestTeamReduceTemplatedOperator<TEST_EXECSPACE> test(range);
+    test.run();
+  }
+}
+
 #if !defined(KOKKOS_ENABLE_OPENACC)
 // FIXME_OPENACC: Kokkos::single(..., value&) uses team_broadcast; scratch query
 // APIs and team_broadcast are not implemented for OpenACC.
