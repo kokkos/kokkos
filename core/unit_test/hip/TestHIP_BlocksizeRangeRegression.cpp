@@ -88,8 +88,7 @@ double view_sum(const Kokkos::View<double*, TEST_EXECSPACE>& view,
 }  // namespace
 
 TEST(hip, blocksize_range_regression) {
-  using exec   = TEST_EXECSPACE;
-  using policy = Kokkos::RangePolicy<exec>;
+  using exec = TEST_EXECSPACE;
 
   const size_t concurrency = exec().concurrency();
   ASSERT_GT(concurrency, size_t(0));
