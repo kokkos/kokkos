@@ -555,9 +555,11 @@ jobs:
           __TINYALLOC_HEAP_SIZE: 1073741824
           __TINYALLOC_HEAP_MAX_CHUNKS: 4194304
         # FIXME_NEXTSILICON: disable core dumps for now
+        # FIXME_NEXTSILICON: NextSilicon1A takes 36 minutes to project on 64-core node (1.3.0-84)
+        # so on the SNL CI runner, we'd expect around 2.5 hours.
         run: |
           ulimit -c 0
-          ctest -V --timeout 1800
+          ctest -V -E 'NextSilicon1A' --timeout 1800
 
   SNL_Required_Checks:
     if: always()
