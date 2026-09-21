@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #pragma once
 
@@ -102,14 +89,19 @@ MDSPAN_INLINE_FUNCTION constexpr auto construct_sub_strides(
 }
 
 template<class SliceSpecifier, class IndexType>
-struct is_range_slice {
-  constexpr static bool value =
-    std::is_same_v<SliceSpecifier, full_extent_t> ||
-    index_pair_like<SliceSpecifier, IndexType>::value;
-};
+constexpr bool is_range_slice_v = false;
 
-template<class SliceSpecifier, class IndexType>
-constexpr bool is_range_slice_v = is_range_slice<SliceSpecifier, IndexType>::value;
+template<class IndexType>
+constexpr bool is_range_slice_v<full_extent_t, IndexType> = true;
+
+template<class OffsetType, class ExtentType, auto Stride, class IndexType>
+constexpr bool is_range_slice_v<
+    strided_slice<
+      OffsetType,
+      ExtentType,
+      constant_wrapper<Stride>>,
+    IndexType
+  > = (constant_wrapper<Stride>::value == IndexType(1));
 
 template<class SliceSpecifier, class IndexType>
 struct is_index_slice {
@@ -209,6 +201,9 @@ MDSPAN_INLINE_FUNCTION constexpr auto
 layout_left::mapping<Extents>::submdspan_mapping_impl(
     SliceSpecifiers... slices) const {
 
+  // Implements mandate check
+  detail::check_submdspan_slice_mandates<Extents>(std::make_index_sequence<Extents::rank()>(), slices...);
+
   // compute sub extents
   using src_ext_t = Extents;
   auto dst_ext = submdspan_extents(extents(), slices...);
@@ -271,6 +266,9 @@ template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 layout_left_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
     SliceSpecifiers... slices) const {
+
+  // Implements mandate check
+  detail::check_submdspan_slice_mandates<Extents>(std::make_index_sequence<Extents::rank()>(), slices...);
 
   // compute sub extents
   using src_ext_t = Extents;
@@ -437,6 +435,9 @@ MDSPAN_INLINE_FUNCTION constexpr auto
 layout_right::mapping<Extents>::submdspan_mapping_impl(
     SliceSpecifiers... slices) const {
 
+  // Implements mandate check
+  detail::check_submdspan_slice_mandates<Extents>(std::make_index_sequence<Extents::rank()>(), slices...);
+
   // compute sub extents
   using src_ext_t = Extents;
   auto dst_ext = submdspan_extents(extents(), slices...);
@@ -501,6 +502,9 @@ template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 layout_right_padded<PaddingValue>::mapping<Extents>::submdspan_mapping_impl(
     SliceSpecifiers... slices) const {
+
+  // Implements mandate check
+  detail::check_submdspan_slice_mandates<Extents>(std::make_index_sequence<Extents::rank()>(), slices...);
 
   // compute sub extents
   using src_ext_t = Extents;
@@ -577,6 +581,10 @@ template <class... SliceSpecifiers>
 MDSPAN_INLINE_FUNCTION constexpr auto
 layout_stride::mapping<Extents>::submdspan_mapping_impl(
     SliceSpecifiers... slices) const {
+
+  // Implements mandate check
+  detail::check_submdspan_slice_mandates<Extents>(std::make_index_sequence<Extents::rank()>(), slices...);
+
   auto dst_ext = submdspan_extents(extents(), slices...);
   using dst_ext_t = decltype(dst_ext);
   auto inv_map = detail::inv_map_rank(std::integral_constant<size_t, 0>(),

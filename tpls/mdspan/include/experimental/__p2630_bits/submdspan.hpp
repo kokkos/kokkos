@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #pragma once
 
@@ -27,7 +14,10 @@ MDSPAN_INLINE_FUNCTION
 constexpr auto
 submdspan(const mdspan<ElementType, Extents, LayoutPolicy, AccessorPolicy> &src,
           SliceSpecifiers... slices) {
-  const auto sub_submdspan_mapping_result = submdspan_mapping(src.mapping(), slices...);
+  detail::check_submdspan_slice_mandates<Extents>(std::make_index_sequence<Extents::rank()>(), slices...);
+
+  const auto sub_submdspan_mapping_result = submdspan_mapping(src.mapping(),
+        detail::canonical_slice<typename Extents::index_type>(slices)...);
   // NVCC has a problem with the deduction so lets figure out the type
   using sub_mapping_t = std::remove_cv_t<decltype(sub_submdspan_mapping_result.mapping)>;
   using sub_extents_t = typename sub_mapping_t::extents_type;

@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #pragma once
 
@@ -272,6 +259,15 @@ constexpr bool check_submdspan_slice_mandate(
 {
   static_assert(check_static_bounds<IndexType, Extent, Slice>());
   return true;
+}
+
+template<class Extents, size_t ... Idx, class ... Slices>
+MDSPAN_INLINE_FUNCTION
+constexpr bool check_submdspan_slice_mandates(
+  const std::index_sequence<Idx...>& ,
+  [[maybe_unused]] const Slices& ... slices)
+{
+  return (check_submdspan_slice_mandate<typename Extents::index_type, Extents::static_extent(Idx), Slices>(slices) && ... && true);
 }
 
 // ============================================================

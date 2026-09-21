@@ -1,18 +1,5 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
 
 #pragma once
 
@@ -55,37 +42,6 @@ template <class OffsetType, class ExtentType, class StrideType>
 struct is_strided_slice<
     strided_slice<OffsetType, ExtentType, StrideType>> : std::true_type {};
 
-// Helper for identifying valid pair like things
-template <class T, class IndexType> struct index_pair_like : std::false_type {};
-
-template <class IdxT1, class IdxT2, class IndexType>
-struct index_pair_like<std::pair<IdxT1, IdxT2>, IndexType> {
-  static constexpr bool value = std::is_convertible_v<IdxT1, IndexType> &&
-                                std::is_convertible_v<IdxT2, IndexType>;
-};
-
-template <class IdxT1, class IdxT2, class IndexType>
-struct index_pair_like<std::tuple<IdxT1, IdxT2>, IndexType> {
-  static constexpr bool value = std::is_convertible_v<IdxT1, IndexType> &&
-                                std::is_convertible_v<IdxT2, IndexType>;
-};
-
-template <class IdxT1, class IdxT2, class IndexType>
-struct index_pair_like<tuple<IdxT1, IdxT2>, IndexType> {
-  static constexpr bool value = std::is_convertible_v<IdxT1, IndexType> &&
-                                std::is_convertible_v<IdxT2, IndexType>;
-};
-
-template <class IdxT, class IndexType>
-struct index_pair_like<std::complex<IdxT>, IndexType> {
-  static constexpr bool value = std::is_convertible_v<IdxT, IndexType>;
-};
-
-template <class IdxT, class IndexType>
-struct index_pair_like<std::array<IdxT, 2>, IndexType> {
-  static constexpr bool value = std::is_convertible_v<IdxT, IndexType>;
-};
-
 // first_of(slice): getting begin of slice specifier range
 MDSPAN_TEMPLATE_REQUIRES(
   class Integral,
@@ -98,46 +54,14 @@ constexpr Integral first_of(const Integral &i) {
 
 template<class Integral, Integral v>
 MDSPAN_INLINE_FUNCTION
-constexpr Integral first_of(const std::integral_constant<Integral, v>&) {
-  return integral_constant<Integral, v>();
+constexpr auto first_of(const constant_wrapper<v, Integral>&) {
+  return constant_wrapper<v, Integral>();
 }
 
 MDSPAN_INLINE_FUNCTION
 constexpr integral_constant<size_t, 0>
 first_of(const ::MDSPAN_IMPL_STANDARD_NAMESPACE::full_extent_t &) {
   return integral_constant<size_t, 0>();
-}
-
-MDSPAN_TEMPLATE_REQUIRES(
-  class Slice,
-  /* requires */(index_pair_like<Slice, size_t>::value)
-)
-MDSPAN_INLINE_FUNCTION
-constexpr auto first_of(const Slice &i) {
-  return get<0>(i);
-}
-
-MDSPAN_TEMPLATE_REQUIRES(
-  class IdxT1, class IdxT2,
-  /* requires */ (index_pair_like<std::tuple<IdxT1, IdxT2>, size_t>::value)
-  )
-constexpr auto first_of(const std::tuple<IdxT1, IdxT2>& i) {
-  return get<0>(i);
-}
-
-MDSPAN_TEMPLATE_REQUIRES(
-  class IdxT1, class IdxT2,
-  /* requires */ (index_pair_like<std::pair<IdxT1, IdxT2>, size_t>::value)
-  )
-MDSPAN_INLINE_FUNCTION
-constexpr auto first_of(const std::pair<IdxT1, IdxT2>& i) {
-  return i.first;
-}
-
-template<class T>
-MDSPAN_INLINE_FUNCTION
-constexpr auto first_of(const std::complex<T> &i) {
-  return i.real();
 }
 
 template <class OffsetType, class ExtentType, class StrideType>
@@ -159,39 +83,6 @@ MDSPAN_INLINE_FUNCTION
 constexpr Integral
     last_of(std::integral_constant<size_t, k>, const Extents &, const Integral &i) {
   return i;
-}
-
-MDSPAN_TEMPLATE_REQUIRES(
-  size_t k, class Extents, class Slice,
-  /* requires */(index_pair_like<Slice, size_t>::value)
-)
-MDSPAN_INLINE_FUNCTION
-constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &,
-                       const Slice &i) {
-  return get<1>(i);
-}
-
-MDSPAN_TEMPLATE_REQUIRES(
-  size_t k, class Extents, class IdxT1, class IdxT2,
-  /* requires */ (index_pair_like<std::tuple<IdxT1, IdxT2>, size_t>::value)
-  )
-constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &, const std::tuple<IdxT1, IdxT2>& i) {
-  return get<1>(i);
-}
-
-MDSPAN_TEMPLATE_REQUIRES(
-  size_t k, class Extents, class IdxT1, class IdxT2,
-  /* requires */ (index_pair_like<std::pair<IdxT1, IdxT2>, size_t>::value)
-  )
-MDSPAN_INLINE_FUNCTION
-constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &, const std::pair<IdxT1, IdxT2>& i) {
-  return i.second;
-}
-
-template<size_t k, class Extents, class T>
-MDSPAN_INLINE_FUNCTION
-constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &, const std::complex<T> &i) {
-  return i.imag();
 }
 
 // Suppress spurious warning with NVCC about no return statement.
@@ -220,7 +111,7 @@ constexpr auto last_of(std::integral_constant<size_t, k>, const Extents &ext,
   if constexpr (Extents::static_extent(k) == dynamic_extent) {
     return ext.extent(k);
   } else {
-    return integral_constant<size_t, Extents::static_extent(k)>();
+    return constant_wrapper<Extents::static_extent(k), size_t>();
   }
 #if defined(__NVCC__) && !defined(__CUDA_ARCH__) && defined(__GNUC__)
   // Even with CUDA_ARCH protection this thing warns about calling host function
