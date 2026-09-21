@@ -15,12 +15,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  CUDA_12_2_CPP20:
+  SNL_CUDA_NVCC_12_2_CPP20:
     name: SNL_CUDA_NVCC_12_2_CPP20
     runs-on: [snl-kk-env-cuda-12.2.0-gcc-11.3.0-latest]
-    continue-on-error: true
 
     strategy:
+      fail-fast: false
       matrix:
         dep_code_5: [ON, OFF]
 
@@ -75,10 +75,9 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  HIP_6_2_1_CPP23:
+  SNL_HIP_ROCM_6_2_1_CPP23:
     name: SNL_HIP_ROCM_6_2_1_CPP23
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
@@ -130,10 +129,9 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  HIP_6_2_1:
+  SNL_HIP_ROCM_6_2_1:
     name: SNL_HIP_ROCM_6_2_1
     runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
@@ -186,12 +184,12 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  INTEL_2024_2_1_SPR:
+  SNL_OPENMP_SERIAL_INTEL_2024_2_1:
     name: SNL_OPENMP_SERIAL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-spr]
-    continue-on-error: true
 
     strategy:
+      fail-fast: false
       matrix:
         dep_code_5: [ON, OFF]
 
@@ -244,10 +242,9 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  INTEL_2024_2_1_PVC:
+  SNL_SYCL_INTEL_2024_2_1:
     name: SNL_SYCL_INTEL_2024_2_1
     runs-on: [inteloneapi-basekit-2024.2.1-0-devel-ubuntu22.04-latest-pv]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
@@ -297,10 +294,9 @@ jobs:
         working-directory: kokkos/build_examples
         run: ONEAPI_DEVICE_SELECTOR=level_zero:gpu ctest --output-on-failure
 
-  LLVM_14_0_6:
+  SNL_SERIAL_LLVM_14_0_6:
     name: SNL_SERIAL_LLVM_14_0_6
     runs-on: [llvm-14.0.6_x86-64-latest-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
@@ -332,10 +328,9 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
-  CLANG_19_MODULES:
+  SNL_SERIAL_CLANG_19_MODULES:
     name: SNL_SERIAL_CLANG_19_MODULES
     runs-on: [clang-19_gcc-15.1_x86-64-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
@@ -371,10 +366,9 @@ jobs:
         run: ctest --output-on-failure --timeout 3600
 
 # FIXME_HPX: workaround for standard library calling OOM handler for failing nothrow new, remove once fixed
-  HPX_GCC_15_1_1:
+  SNL_HPX_GCC_15_1_1:
     name: SNL_HPX_GCC_15_1_1
     runs-on: [ci-containersfedora-latest-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
@@ -418,10 +412,9 @@ jobs:
         working-directory: kokkos/build
         run: KOKKOS_NUM_THREADS=64 ctest --output-on-failure --timeout 3600
 
-  OPENACC_CUDA_12_2_NVHPC_23_7_CPP20:
+  SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20:
     name: SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20
     runs-on: [cuda-12.2_nvhpc-23.7_x86-64-latest]
-    continue-on-error: true
 
     steps:
       - name: checkout_kokkos
@@ -458,10 +451,9 @@ jobs:
         working-directory: kokkos/build
         run: ctest --output-on-failure --timeout 3600
 
-  NextSilicon_Latest:
+  SNL_NextSilicon_Latest:
     name: SNL_NextSilicon_Latest
     runs-on: [next-latest]
-    continue-on-error: true
 
     steps:
       - name: Environment Information
@@ -535,3 +527,32 @@ jobs:
         run: |
           ulimit -c 0
           ctest -V --timeout 1800
+  SNL_Required_Checks:
+    if: always()
+    name: SNL_Required_Checks
+    # bash command to collect this: [grep "name: SNL_" snl-ci.yml | awk '{print "      - "$3}']
+    needs:
+      - SNL_CUDA_NVCC_12_2_CPP20
+      - SNL_HIP_ROCM_6_2_1_CPP23
+      - SNL_HIP_ROCM_6_2_1
+      - SNL_OPENMP_SERIAL_INTEL_2024_2_1
+      - SNL_SYCL_INTEL_2024_2_1
+      - SNL_SERIAL_LLVM_14_0_6
+      - SNL_SERIAL_CLANG_19_MODULES
+      - SNL_HPX_GCC_15_1_1
+      - SNL_OPENACC_CUDA_12_2_NVHPC_23_7_CPP20
+      - SNL_NextSilicon_Latest
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require all checks to pass
+        run: |
+          if [[ \
+            "${{ contains(needs.*.result, 'failure') }}" == "true" || \
+            "${{ contains(needs.*.result, 'cancelled') }}" == "true" || \
+            "${{ contains(needs.*.result, 'skipped') }}" == "true" \
+          ]]; then
+            echo "At least one required SNL job did not succeed."
+            exit 1
+          fi
+
+          echo "All required SNL jobs succeeded."
