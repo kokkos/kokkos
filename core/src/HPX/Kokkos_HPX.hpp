@@ -290,18 +290,13 @@ class HPX {
     std::lock_guard<hpx::spinlock> l(mut);
     hpx::util::ignore_lock(&mut);
 
-    // Drop dispatch closure in done to break m_sender / instance_data cycle.
-    auto f_ptr = std::make_shared<std::function<void(I)>>(std::move(f));
-    auto done  = [f_ptr] { *f_ptr = {}; };
-    f          = [f_ptr](I i) { (*f_ptr)(i); };
-
     {
       if (n == 1 && is_light_weight_policy &&
           (hpx::threads::get_self_ptr() != nullptr)) {
         sen = std::move(sen) | ex::then(hpx::bind_front(std::move(f), 0)) |
               ex::then(Kokkos::Experimental::HPX::
                            impl_decrement_active_parallel_region_count) |
-              ex::then(std::move(done)) | ex::ensure_started();
+              ex::ensure_started();
       } else {
         sen = std::move(sen) |
               ex::transfer(
@@ -309,7 +304,7 @@ class HPX {
               ex::bulk(n, std::move(f)) |
               ex::then(Kokkos::Experimental::HPX::
                            impl_decrement_active_parallel_region_count) |
-              ex::then(std::move(done)) | ex::ensure_started();
+              ex::ensure_started();
       }
     }
 
@@ -351,19 +346,6 @@ class HPX {
     std::lock_guard<hpx::spinlock> l(mut);
     hpx::util::ignore_lock(&mut);
 
-    // Same shared ownership as impl_bulk_plain_erased (see comment there).
-    auto f_ptr = std::make_shared<std::function<void(Index)>>(std::move(f));
-    auto s_ptr = std::make_shared<std::function<void()>>(std::move(f_setup));
-    auto z_ptr = std::make_shared<std::function<void()>>(std::move(f_finalize));
-    auto done  = [f_ptr, s_ptr, z_ptr] {
-      *f_ptr = {};
-      *s_ptr = {};
-      *z_ptr = {};
-    };
-    f          = [f_ptr](Index i) { (*f_ptr)(i); };
-    f_setup    = [s_ptr] { (*s_ptr)(); };
-    f_finalize = [z_ptr] { (*z_ptr)(); };
-
     {
       if (n == 1 && is_light_weight_policy &&
           (hpx::threads::get_self_ptr() != nullptr)) {
@@ -372,7 +354,7 @@ class HPX {
               ex::then(std::move(f_finalize)) |
               ex::then(Kokkos::Experimental::HPX::
                            impl_decrement_active_parallel_region_count) |
-              ex::then(std::move(done)) | ex::ensure_started();
+              ex::ensure_started();
       } else {
         sen = std::move(sen) |
               ex::transfer(
@@ -381,7 +363,7 @@ class HPX {
               ex::then(std::move(f_finalize)) |
               ex::then(Kokkos::Experimental::HPX::
                            impl_decrement_active_parallel_region_count) |
-              ex::then(std::move(done)) | ex::ensure_started();
+              ex::ensure_started();
       }
     }
 
