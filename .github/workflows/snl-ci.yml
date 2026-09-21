@@ -175,7 +175,7 @@ jobs:
             -DKokkos_ENABLE_TESTS=ON \
             -DKokkos_ENABLE_EXAMPLES=ON \
             -DKokkos_ENABLE_LARGE_MEM_TESTS=ON \
-            -DKokkos_ENABLE_BENCHMARKS=ON
+            -DKokkos_ENABLE_BENCHMARKS=OFF
 
       - name: build_and_install_kokkos
         working-directory: kokkos
