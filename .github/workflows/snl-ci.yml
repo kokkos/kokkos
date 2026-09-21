@@ -144,11 +144,11 @@ jobs:
         working-directory: kokkos/build_examples
         run: ctest --output-on-failure
 
-  SNL_HIP_ROCM_6_2_1:
-    name: SNL_HIP_ROCM_6_2_1
+  SNL_HIP_ROCM_10_0:
+    name: SNL_HIP_ROCM_10_0
     needs: SNL_NeedChecks
     if: needs.SNL_NeedChecks.outputs.code == 'true'
-    runs-on: [rocm-6.2.1_openblas-0.3.28_zen3_gfx90a-latest-latest]
+    runs-on: [rocm-10.0_openblas-0.3.28_zen3_gfx90a]
 
     steps:
       - name: checkout_kokkos
@@ -567,7 +567,7 @@ jobs:
       - SNL_NeedChecks
       - SNL_CUDA_NVCC_12_2_CPP20
       - SNL_HIP_ROCM_6_2_1_CPP23
-      - SNL_HIP_ROCM_6_2_1
+      - SNL_HIP_ROCM_10_0
       - SNL_OPENMP_SERIAL_INTEL_2024_2_1
       - SNL_SYCL_INTEL_2024_2_1
       - SNL_SERIAL_LLVM_14_0_6
