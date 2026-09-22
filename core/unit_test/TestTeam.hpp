@@ -1548,11 +1548,11 @@ struct TestScratchAlignment {
           // first get some unaligned allocations, should give back
           // exactly the requested number of bytes
           auto scratch_ptr1 =
-              reinterpret_cast<intptr_t>(team.team_shmem().get_shmem(24));
+              reinterpret_cast<uintptr_t>(team.team_shmem().get_shmem(24));
           auto scratch_ptr2 =
-              reinterpret_cast<intptr_t>(team.team_shmem().get_shmem(32));
+              reinterpret_cast<uintptr_t>(team.team_shmem().get_shmem(32));
           auto scratch_ptr3 =
-              reinterpret_cast<intptr_t>(team.team_shmem().get_shmem(12));
+              reinterpret_cast<uintptr_t>(team.team_shmem().get_shmem(12));
 
           if (((scratch_ptr2 - scratch_ptr1) != 24) ||
               ((scratch_ptr3 - scratch_ptr2) != 32))
@@ -1563,15 +1563,15 @@ struct TestScratchAlignment {
           // Depending on scratch_ptr3 being 4 or 8 byte aligned
           // we need to request a different amount of memory.
           if ((scratch_ptr3 + 12) % 8 == 4)
-            scratch_ptr1 = reinterpret_cast<intptr_t>(
+            scratch_ptr1 = reinterpret_cast<uintptr_t>(
                 team.team_shmem().get_shmem_aligned(24, 4));
           else {
-            scratch_ptr1 = reinterpret_cast<intptr_t>(
+            scratch_ptr1 = reinterpret_cast<uintptr_t>(
                 team.team_shmem().get_shmem_aligned(12, 4));
           }
-          scratch_ptr2 = reinterpret_cast<intptr_t>(
+          scratch_ptr2 = reinterpret_cast<uintptr_t>(
               team.team_shmem().get_shmem_aligned(32, 8));
-          scratch_ptr3 = reinterpret_cast<intptr_t>(
+          scratch_ptr3 = reinterpret_cast<uintptr_t>(
               team.team_shmem().get_shmem_aligned(8, 4));
 
           // The difference between scratch_ptr2 and scratch_ptr1 should be 4
