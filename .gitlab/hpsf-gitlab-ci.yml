@@ -1,3 +1,13 @@
+workflow:
+  auto_cancel:
+    on_new_commit: interruptible
+  rules:
+    # Do not auto-cancel pipelines on develop
+    - if: $CI_COMMIT_BRANCH == "develop"
+      auto_cancel:
+        on_new_commit: none
+    - when: always
+
 .common-setup:
   stage: test
   variables:
