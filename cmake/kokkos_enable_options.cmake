@@ -196,11 +196,6 @@ check_device_specific_options(
 check_device_specific_options(DEVICE HPX OPTIONS IMPL_HPX_ASYNC_DISPATCH)
 check_device_specific_options(DEVICE OPENACC OPTIONS OPENACC_FORCE_HOST_AS_DEVICE)
 
-# Needed due to change from deprecated name to new header define name
-if(KOKKOS_ENABLE_AGGRESSIVE_VECTORIZATION)
-  set(KOKKOS_OPT_RANGE_AGGRESSIVE_VECTORIZATION ON)
-endif()
-
 # Force consistency of KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 # and CMAKE_CUDA_SEPARABLE_COMPILATION when we are compiling
 # using the CMake CUDA language support.
