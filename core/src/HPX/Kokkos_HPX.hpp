@@ -95,6 +95,21 @@ constexpr hpx_range<T> get_chunk_range(const T i_chunk, const T offset,
   return {begin, end};
 }
 
+// One WorkRange per partition, computed while the policy is still available.
+// The closure stores these bounds and does not recompute the split.
+template <class Policy>
+std::shared_ptr<const std::vector<hpx_range<typename Policy::member_type>>>
+hpx_work_ranges(Policy const &policy, int parts) {
+  using member_type = typename Policy::member_type;
+  auto ranges = std::make_shared<std::vector<hpx_range<member_type>>>();
+  ranges->reserve(static_cast<std::size_t>(parts));
+  for (int t = 0; t < parts; ++t) {
+    const typename Policy::WorkRange wr(policy, t, parts);
+    ranges->push_back(hpx_range<member_type>{wr.begin(), wr.end()});
+  }
+  return ranges;
+}
+
 template <typename Policy>
 constexpr bool is_light_weight_policy() {
   constexpr Kokkos::Experimental::WorkItemProperty::HintLightWeight_t
@@ -617,17 +632,23 @@ struct HPXTeamMember {
   KOKKOS_INLINE_FUNCTION int team_rank() const noexcept { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const noexcept { return m_team_size; }
 
+  constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
+      const int league_size, const int team_size, const int team_rank,
+      const int league_rank, void *scratch, size_t scratch_size) noexcept
+      : m_team_shared(scratch, scratch_size, scratch, scratch_size),
+        m_league_size(league_size),
+        m_league_rank(league_rank),
+        m_team_size(team_size),
+        m_team_rank(team_rank) {}
+
   template <class... Properties>
   constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
       const TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
           &policy,
       const int team_rank, const int league_rank, void *scratch,
       size_t scratch_size) noexcept
-      : m_team_shared(scratch, scratch_size, scratch, scratch_size),
-        m_league_size(policy.league_size()),
-        m_league_rank(league_rank),
-        m_team_size(policy.team_size()),
-        m_team_rank(team_rank) {}
+      : HPXTeamMember(policy.league_size(), policy.team_size(), team_rank,
+                      league_rank, scratch, scratch_size) {}
 
   KOKKOS_INLINE_FUNCTION
   void team_barrier() const {}
@@ -940,21 +961,29 @@ class TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
 namespace Kokkos {
 namespace Impl {
 
-// Policy copy whose space is a distinct independent HPX, so dispatch
-// closures do not hold HostSharedPtr to the instance being enqueued.
-template <class Policy>
-Policy hpx_dispatch_policy(Policy const &policy) {
-  return Policy(PolicyUpdate{}, policy,
-                Kokkos::Experimental::HPX(
-                    Kokkos::Experimental::HPX::instance_mode::independent));
-}
-
+// Tile bounds copied out of an MDRangePolicy so a dispatch closure does not
+// retain that policy's execution space.
 template <class MDRangePolicy>
-MDRangePolicy hpx_dispatch_mdrange_policy(MDRangePolicy policy) {
-  policy.m_space = Kokkos::Experimental::HPX(
-      Kokkos::Experimental::HPX::instance_mode::independent);
-  return policy;
-}
+struct hpx_mdrange_bounds {
+  using index_type = typename MDRangePolicy::index_type;
+  using point_type = typename MDRangePolicy::point_type;
+  using tile_type  = typename MDRangePolicy::tile_type;
+
+  static constexpr int rank             = MDRangePolicy::rank;
+  static constexpr auto outer_direction = MDRangePolicy::outer_direction;
+  static constexpr auto inner_direction = MDRangePolicy::inner_direction;
+
+  point_type m_lower{};
+  point_type m_upper{};
+  tile_type m_tile{};
+  point_type m_tile_end{};
+
+  explicit hpx_mdrange_bounds(MDRangePolicy const &policy)
+      : m_lower(policy.m_lower),
+        m_upper(policy.m_upper),
+        m_tile(policy.m_tile),
+        m_tile_end(policy.m_tile_end) {}
+};
 
 template <class Functor, class IndexOrPolicy, class ResultPtr = void *,
           class Enable = void>
@@ -981,26 +1010,6 @@ struct hpx_dispatch<Functor, Index, ResultPtr,
         buffer(buf),
         concurrency(conc),
         result_ptr(rp) {}
-};
-
-template <class Functor, class Policy, class ResultPtr>
-struct hpx_dispatch<Functor, Policy, ResultPtr,
-                    std::enable_if_t<!std::is_integral_v<Policy>>> {
-  Functor functor;
-  Policy policy;
-  hpx_thread_buffer *buffer = nullptr;
-  int concurrency           = 0;
-  ResultPtr result_ptr{};
-  std::size_t shared = 0;
-
-  hpx_dispatch(Functor f, Policy p, hpx_thread_buffer *buf, int conc,
-               ResultPtr rp = {}, std::size_t sh = 0)
-      : functor(std::move(f)),
-        policy(std::move(p)),
-        buffer(buf),
-        concurrency(conc),
-        result_ptr(rp),
-        shared(sh) {}
 };
 
 template <class FunctorType, class... Traits>
@@ -1053,9 +1062,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using Policy        = typename MDRangePolicy::impl_range_policy;
   using WorkTag       = typename MDRangePolicy::work_tag;
   using Member        = typename Policy::member_type;
-  using iterate_type =
-      typename Kokkos::Impl::HostIterateTile<MDRangePolicy, FunctorType,
-                                             WorkTag, void>;
+  using bounds_type  = hpx_mdrange_bounds<MDRangePolicy>;
+  using iterate_type = typename Kokkos::Impl::HostIterateTile<
+      bounds_type, FunctorType, WorkTag, void>;
 
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
@@ -1079,9 +1088,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
     m_mdr_policy.space().impl_bulk_plain(
         false, is_light_weight_policy<MDRangePolicy>(),
-        Dispatch{
-            iterate_type(hpx_dispatch_mdrange_policy(m_mdr_policy), m_functor),
-            m_policy.begin(), m_policy.chunk_size(), m_policy.end()},
+        Dispatch{iterate_type(bounds_type(m_mdr_policy), m_functor),
+                 m_policy.begin(), m_policy.chunk_size(), m_policy.end()},
         num_chunks, hpx::threads::thread_stacksize::nostack);
   }
 
@@ -1228,8 +1236,9 @@ class ParallelReduce<CombinedFunctorReducerType,
   using pointer_type   = typename ReducerType::pointer_type;
   using value_type     = typename ReducerType::value_type;
   using reference_type = typename ReducerType::reference_type;
-  using iterate_type   = typename Kokkos::Impl::HostIterateTile<
-      MDRangePolicy, CombinedFunctorReducerType, WorkTag, reference_type>;
+  using bounds_type  = hpx_mdrange_bounds<MDRangePolicy>;
+  using iterate_type = typename Kokkos::Impl::HostIterateTile<
+      bounds_type, CombinedFunctorReducerType, WorkTag, reference_type>;
 
   const CombinedFunctorReducerType m_functor_reducer;
   const MDRangePolicy m_mdr_policy;
@@ -1290,8 +1299,7 @@ class ParallelReduce<CombinedFunctorReducerType,
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
     m_mdr_policy.space().impl_bulk_setup_finalize(
         m_force_synchronous, is_light_weight_policy<MDRangePolicy>(),
-        Dispatch{iterate_type(hpx_dispatch_mdrange_policy(m_mdr_policy),
-                              m_functor_reducer),
+        Dispatch{iterate_type(bounds_type(m_mdr_policy), m_functor_reducer),
                  m_policy.begin(), m_policy.chunk_size(), m_policy.end(),
                  &m_mdr_policy.space().impl_get_buffer(),
                  m_mdr_policy.space().concurrency(), m_result_ptr},
@@ -1332,10 +1340,9 @@ template <class FunctorType, class... Traits>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::HPX> {
  private:
-  using Policy    = Kokkos::RangePolicy<Traits...>;
-  using WorkTag   = typename Policy::work_tag;
-  using WorkRange = typename Policy::WorkRange;
-  using Member    = typename Policy::member_type;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
   using Analysis =
       FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType, void>;
   using pointer_type   = typename Analysis::pointer_type;
@@ -1346,8 +1353,14 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const FunctorType m_functor;
   const Policy m_policy;
 
-  struct Dispatch : hpx_dispatch<FunctorType, Policy> {
-    using hpx_dispatch<FunctorType, Policy>::hpx_dispatch;
+  struct Dispatch : hpx_dispatch<FunctorType, Member> {
+    std::shared_ptr<const std::vector<hpx_range<Member>>> ranges;
+
+    Dispatch(FunctorType f, hpx_thread_buffer *buf, int conc,
+             std::shared_ptr<const std::vector<hpx_range<Member>>> rs)
+        : hpx_dispatch<FunctorType, Member>(std::move(f), Member{}, Member{},
+                                            Member{}, buf, conc),
+          ranges(std::move(rs)) {}
 
     void setup() const {
       const std::size_t value_size = Analysis::value_size(this->functor);
@@ -1379,8 +1392,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
       reference_type update_sum = final_reducer.init(
           reinterpret_cast<pointer_type>(this->buffer->get(t)));
 
-      const WorkRange range(this->policy, t, this->concurrency);
-      execute_chunk(range.begin(), range.end(), update_sum, false);
+      const auto range = (*this->ranges)[static_cast<std::size_t>(t)];
+      execute_chunk(range.begin, range.end, update_sum, false);
 
       barrier.arrive_and_wait();
 
@@ -1410,7 +1423,7 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
           Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
               static_cast<char *>(this->buffer->get(t)) + value_size));
 
-      execute_chunk(range.begin(), range.end(), update_base, true);
+      execute_chunk(range.begin, range.end, update_base, true);
     }
 
     void finalize() const {
@@ -1424,8 +1437,8 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
     const int num_worker_threads = m_policy.space().concurrency();
     m_policy.space().impl_bulk_setup_finalize(
         false, is_light_weight_policy<Policy>(),
-        Dispatch{m_functor, hpx_dispatch_policy(m_policy),
-                 &m_policy.space().impl_get_buffer(), num_worker_threads},
+        Dispatch{m_functor, &m_policy.space().impl_get_buffer(),
+                 num_worker_threads, hpx_work_ranges(m_policy, num_worker_threads)},
         num_worker_threads, hpx::threads::thread_stacksize::small_);
   }
 
@@ -1437,12 +1450,12 @@ template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::HPX> {
  private:
-  using Policy         = Kokkos::RangePolicy<Traits...>;
-  using WorkTag        = typename Policy::work_tag;
-  using WorkRange      = typename Policy::WorkRange;
-  using Member         = typename Policy::member_type;
-  using Analysis       = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
-                                   FunctorType, ReturnType>;
+  using Policy  = Kokkos::RangePolicy<Traits...>;
+  using WorkTag = typename Policy::work_tag;
+  using Member  = typename Policy::member_type;
+  using Analysis =
+      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType,
+                      ReturnType>;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
@@ -1452,8 +1465,15 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
   pointer_type m_result_ptr;
 
-  struct Dispatch : hpx_dispatch<FunctorType, Policy, pointer_type> {
-    using hpx_dispatch<FunctorType, Policy, pointer_type>::hpx_dispatch;
+  struct Dispatch : hpx_dispatch<FunctorType, Member, pointer_type> {
+    std::shared_ptr<const std::vector<hpx_range<Member>>> ranges;
+
+    Dispatch(FunctorType f, hpx_thread_buffer *buf, int conc,
+             std::shared_ptr<const std::vector<hpx_range<Member>>> rs,
+             pointer_type rp)
+        : hpx_dispatch<FunctorType, Member, pointer_type>(
+              std::move(f), Member{}, Member{}, Member{}, buf, conc, rp),
+          ranges(std::move(rs)) {}
 
     void setup() const {
       const std::size_t value_size = Analysis::value_size(this->functor);
@@ -1485,8 +1505,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
       reference_type update_sum = final_reducer.init(
           reinterpret_cast<pointer_type>(this->buffer->get(t)));
 
-      const WorkRange range(this->policy, t, this->concurrency);
-      execute_chunk(range.begin(), range.end(), update_sum, false);
+      const auto range = (*this->ranges)[static_cast<std::size_t>(t)];
+      execute_chunk(range.begin, range.end, update_sum, false);
 
       barrier.arrive_and_wait();
 
@@ -1516,7 +1536,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
           Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
               static_cast<char *>(this->buffer->get(t)) + value_size));
 
-      execute_chunk(range.begin(), range.end(), update_base, true);
+      execute_chunk(range.begin, range.end, update_base, true);
 
       if (t == this->concurrency - 1) {
         *this->result_ptr = update_base;
@@ -1534,9 +1554,9 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
     const int num_worker_threads = m_policy.space().concurrency();
     m_policy.space().impl_bulk_setup_finalize(
         false, is_light_weight_policy<Policy>(),
-        Dispatch{m_functor, hpx_dispatch_policy(m_policy),
-                 &m_policy.space().impl_get_buffer(), num_worker_threads,
-                 m_result_ptr},
+        Dispatch{m_functor, &m_policy.space().impl_get_buffer(),
+                 num_worker_threads,
+                 hpx_work_ranges(m_policy, num_worker_threads), m_result_ptr},
         num_worker_threads, hpx::threads::thread_stacksize::small_);
   }
 
@@ -1572,31 +1592,37 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
   const int m_league;
   const std::size_t m_shared;
 
-  struct Dispatch : hpx_dispatch<FunctorType, Policy> {
-    using hpx_dispatch<FunctorType, Policy>::hpx_dispatch;
+  struct Dispatch {
+    FunctorType functor;
+    int chunk                 = 0;
+    int league_size           = 0;
+    int team_size             = 0;
+    hpx_thread_buffer *buffer = nullptr;
+    int concurrency           = 0;
+    std::size_t shared        = 0;
 
     void setup() const {
-      auto nchunks           = get_num_chunks(0, this->policy.chunk_size(),
-                                              this->policy.league_size());
+      auto nchunks           = get_num_chunks(0, this->chunk,
+                                              this->league_size);
       const auto buffer_size = std::min(nchunks, this->concurrency);
       this->buffer->resize(buffer_size, this->shared);
     }
 
     void execute_range(const int i) const {
       const int t  = Kokkos::Experimental::HPX::impl_hardware_thread_id();
-      const auto r = get_chunk_range(i, 0, this->policy.chunk_size(),
-                                     this->policy.league_size());
-      const int num_chunks = get_num_chunks(0, this->policy.chunk_size(),
-                                            this->policy.league_size());
+      const auto r = get_chunk_range(i, 0, this->chunk,
+                                     this->league_size);
+      const int num_chunks = get_num_chunks(0, this->chunk,
+                                            this->league_size);
       // if num_chunks > num hw threads, use hw threadid t; else use chunkid i
       const int buffer_t = num_chunks > this->concurrency ? t : i;
       for (int league_rank = r.begin; league_rank < r.end; ++league_rank) {
         if constexpr (std::is_same_v<WorkTag, void>) {
-          this->functor(Member(this->policy, 0, league_rank,
+          this->functor(Member(this->league_size, this->team_size, 0, league_rank,
                                this->buffer->get(buffer_t), this->shared));
         } else {
           this->functor(WorkTag{},
-                        Member(this->policy, 0, league_rank,
+                        Member(this->league_size, this->team_size, 0, league_rank,
                                this->buffer->get(buffer_t), this->shared));
         }
       }
@@ -1611,9 +1637,9 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
     m_policy.space().impl_bulk_setup_finalize(
         false, is_light_weight_policy<Policy>(),
-        Dispatch{m_functor, hpx_dispatch_policy(m_policy),
-                 &m_policy.space().impl_get_buffer(),
-                 m_policy.space().concurrency(), nullptr, m_shared},
+        Dispatch{m_functor, m_policy.chunk_size(), m_policy.league_size(),
+                 m_policy.team_size(), &m_policy.space().impl_get_buffer(),
+                 m_policy.space().concurrency(), m_shared},
         num_chunks, hpx::threads::thread_stacksize::nostack);
   }
 
@@ -1674,17 +1700,22 @@ class ParallelReduce<CombinedFunctorReducerType,
   const std::size_t m_shared;
   const bool m_force_synchronous;
 
-  struct Dispatch
-      : hpx_dispatch<CombinedFunctorReducerType, Policy, pointer_type> {
-    using hpx_dispatch<CombinedFunctorReducerType, Policy,
-                       pointer_type>::hpx_dispatch;
+  struct Dispatch {
+    CombinedFunctorReducerType functor;
+    int chunk                 = 0;
+    int league_size           = 0;
+    int team_size             = 0;
+    hpx_thread_buffer *buffer = nullptr;
+    int concurrency           = 0;
+    pointer_type result_ptr{};
+    std::size_t shared = 0;
 
     void setup() const {
       const ReducerType &reducer   = this->functor.get_reducer();
       const std::size_t value_size = reducer.value_size();
 
-      auto nchunks           = get_num_chunks(0, this->policy.chunk_size(),
-                                              this->policy.league_size());
+      auto nchunks           = get_num_chunks(0, this->chunk,
+                                              this->league_size);
       const auto buffer_size = std::min(nchunks, this->concurrency);
       this->buffer->resize(buffer_size, value_size + this->shared);
 
@@ -1698,27 +1729,27 @@ class ParallelReduce<CombinedFunctorReducerType,
       const std::size_t value_size = reducer.value_size();
       std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
 
-      const int num_chunks = get_num_chunks(0, this->policy.chunk_size(),
-                                            this->policy.league_size());
+      const int num_chunks = get_num_chunks(0, this->chunk,
+                                            this->league_size);
       // if num_chunks > num hw threads, use hw threadid t; else use chunkid i
       const std::size_t buffer_t = num_chunks > this->concurrency ? t : i;
 
       reference_type update = ReducerType::reference(
           reinterpret_cast<pointer_type>(this->buffer->get(buffer_t)));
-      const auto r = get_chunk_range(i, 0, this->policy.chunk_size(),
-                                     this->policy.league_size());
+      const auto r = get_chunk_range(i, 0, this->chunk,
+                                     this->league_size);
 
       char *local_buffer =
           static_cast<char *>(this->buffer->get(buffer_t)) + value_size;
       for (int league_rank = r.begin; league_rank < r.end; ++league_rank) {
         if constexpr (std::is_same_v<WorkTag, void>) {
           this->functor.get_functor()(
-              Member(this->policy, 0, league_rank, local_buffer, this->shared),
+              Member(this->league_size, this->team_size, 0, league_rank, local_buffer, this->shared),
               update);
         } else {
           this->functor.get_functor()(
               WorkTag{},
-              Member(this->policy, 0, league_rank, local_buffer, this->shared),
+              Member(this->league_size, this->team_size, 0, league_rank, local_buffer, this->shared),
               update);
         }
       }
@@ -1726,8 +1757,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     void finalize() const {
       const ReducerType &reducer = this->functor.get_reducer();
-      const auto nchunks         = get_num_chunks(0, this->policy.chunk_size(),
-                                                  this->policy.league_size());
+      const auto nchunks         = get_num_chunks(0, this->chunk,
+                                                  this->league_size);
       const auto buffer_size     = std::min(nchunks, this->concurrency);
       const pointer_type ptr =
           reinterpret_cast<pointer_type>(this->buffer->get(0));
@@ -1762,7 +1793,8 @@ class ParallelReduce<CombinedFunctorReducerType,
         get_num_chunks(0, m_policy.chunk_size(), m_policy.league_size());
     m_policy.space().impl_bulk_setup_finalize(
         m_force_synchronous, is_light_weight_policy<Policy>(),
-        Dispatch{m_functor_reducer, hpx_dispatch_policy(m_policy),
+        Dispatch{m_functor_reducer, m_policy.chunk_size(),
+                 m_policy.league_size(), m_policy.team_size(),
                  &m_policy.space().impl_get_buffer(),
                  m_policy.space().concurrency(), m_result_ptr, m_shared},
         num_chunks, hpx::threads::thread_stacksize::nostack);
