@@ -968,7 +968,7 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   inline void execute() {
     // Use at least one work item for calculating launch parameters to handle
     // empty ranges correctly.
-    const auto nwork = std::max(1, m_policy.end() - m_policy.begin());
+    const auto nwork = std::max<Member>(1, m_policy.end() - m_policy.begin());
     enum { GridMaxComputeCapability_2x = 0x0ffff };
 
     const int block_size = local_block_size(m_functor_reducer.get_functor());
