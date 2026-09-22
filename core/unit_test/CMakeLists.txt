@@ -263,12 +263,6 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         ViewResize
         WithoutInitializing
     )
-    # Workaround to internal compiler error with intel classic compilers
-    # when using -no-ip flag in ViewCopy_c
-    # See issue: https://github.com/kokkos/kokkos/issues/7084
-    if(KOKKOS_CXX_COMPILER_ID STREQUAL Intel)
-      list(REMOVE_ITEM ${Tag}_TESTNAMES2A ViewCopy_c)
-    endif()
     foreach(Name IN LISTS ${Tag}_TESTNAMES2A)
       set(file ${dir}/Test${Tag}_${Name}.cpp)
       # Write to a temporary intermediate file and call configure_file to avoid

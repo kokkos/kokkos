@@ -92,6 +92,8 @@ pipeline {
                           wget https://github.com/Kitware/CMake/releases/download/v3.30.0/cmake-3.30.0-linux-x86_64.sh && \
                           chmod +x cmake-3.30.0-linux-x86_64.sh && ./cmake-3.30.0-linux-x86_64.sh --skip-license --prefix=/usr
 
+                          ulimit -c 0
+
                           export CMAKE_BUILD_PARALLEL_LEVEL=8 && \
                           export ENV_CMAKE_OPTIONS="" && \
                           export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=Release" && \
@@ -126,7 +128,9 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
+                        sh '''ulimit -c 0
+
+                              export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \
@@ -164,7 +168,9 @@ pipeline {
                     }
                     steps {
                         sh 'ccache --zero-stats'
-                        sh '''export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
+                        sh '''ulimit -c 0
+
+                              export CMAKE_BUILD_PARALLEL_LEVEL=16 && \
                               export ENV_CMAKE_OPTIONS="" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_BUILD_TYPE=RelWithDebInfo" && \
                               export ENV_CMAKE_OPTIONS="${ENV_CMAKE_OPTIONS};-DCMAKE_CXX_COMPILER=hipcc" && \

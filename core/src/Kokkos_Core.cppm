@@ -57,6 +57,8 @@ export {
   using ::Kokkos::AnonymousSpace;
   using ::Kokkos::DefaultExecutionSpace;
   using ::Kokkos::DefaultHostExecutionSpace;
+  using ::Kokkos::DefaultHostMemorySpace;
+  using ::Kokkos::DefaultMemorySpace;
   using ::Kokkos::Device;
   using ::Kokkos::device_id;
   using ::Kokkos::ExecutionSpace;

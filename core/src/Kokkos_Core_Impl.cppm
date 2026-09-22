@@ -34,7 +34,6 @@ export {
   using ::Kokkos::Impl::CheckedReferenceCountedAccessor;
   using ::Kokkos::Impl::CheckedReferenceCountedRelaxedAtomicAccessor;
   using ::Kokkos::Impl::CheckedRelaxedAtomicAccessor;
-  using ::Kokkos::Impl::choose_create_mirror;
   using ::Kokkos::Impl::CommonSubview;
   using ::Kokkos::Impl::convert_to_kokkos_pair_if_std_pair;
   using ::Kokkos::Impl::DataTypeFromExtents;
