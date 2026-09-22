@@ -21,8 +21,7 @@ void allocate_large_view() {
   Kokkos::finalize();
 }
 
-TEST(ExcessMemoryAllocation_DeathTest,
-     ExcessMemoryAllocation_DeathTest) {
+TEST(ExcessMemoryAllocation_DeathTest, ExcessMemoryAllocation_DeathTest) {
 #ifdef KOKKOS_IMPL_32BIT
   GTEST_SKIP()
       << "Allocations > 4GB are not supported on 32-bit builds.";  // FIXME_32BIT
