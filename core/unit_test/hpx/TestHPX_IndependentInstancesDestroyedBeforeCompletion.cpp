@@ -11,7 +11,7 @@ import kokkos.core;
 
 namespace {
 
-// Check correct scope handling of independent HPX instances. 
+// Check correct scope handling of independent HPX instances.
 TEST(hpx, independent_instance_destroyed_before_completion) {
   Kokkos::View<int, Kokkos::Experimental::HPX> out("out");
   out() = 0;

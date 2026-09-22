@@ -1018,7 +1018,8 @@ class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
     using hpx_dispatch<FunctorType, Member>::hpx_dispatch;
 
     void execute_range(const Member i_chunk) const {
-      const auto r = get_chunk_range(i_chunk, this->begin, this->chunk, this->end);
+      const auto r =
+          get_chunk_range(i_chunk, this->begin, this->chunk, this->end);
       for (Member i = r.begin; i < r.end; ++i) {
         if constexpr (std::is_same_v<WorkTag, void>) {
           this->functor(i);
@@ -1064,7 +1065,8 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
     using hpx_dispatch<iterate_type, Member>::hpx_dispatch;
 
     void execute_range(const Member i_chunk) const {
-      const auto r = get_chunk_range(i_chunk, this->begin, this->chunk, this->end);
+      const auto r =
+          get_chunk_range(i_chunk, this->begin, this->chunk, this->end);
       for (Member i = r.begin; i < r.end; ++i) {
         this->functor(i);
       }
@@ -1077,9 +1079,9 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         get_num_chunks(m_policy.begin(), m_policy.chunk_size(), m_policy.end());
     m_mdr_policy.space().impl_bulk_plain(
         false, is_light_weight_policy<MDRangePolicy>(),
-        Dispatch{iterate_type(hpx_dispatch_mdrange_policy(m_mdr_policy),
-                              m_functor),
-                 m_policy.begin(), m_policy.chunk_size(), m_policy.end()},
+        Dispatch{
+            iterate_type(hpx_dispatch_mdrange_policy(m_mdr_policy), m_functor),
+            m_policy.begin(), m_policy.chunk_size(), m_policy.end()},
         num_chunks, hpx::threads::thread_stacksize::nostack);
   }
 
@@ -1139,8 +1141,8 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     }
 
     void execute_range(const Member i_chunk) const {
-      reference_type update =
-          ReducerType::reference(reinterpret_cast<pointer_type>(this->buffer->get(
+      reference_type update = ReducerType::reference(
+          reinterpret_cast<pointer_type>(this->buffer->get(
               Kokkos::Experimental::HPX::impl_hardware_thread_id())));
       const auto r =
           get_chunk_range(i_chunk, this->begin, this->chunk, this->end);
@@ -1250,8 +1252,8 @@ class ParallelReduce<CombinedFunctorReducerType,
     }
 
     void execute_range(const Member i_chunk) const {
-      reference_type update =
-          ReducerType::reference(reinterpret_cast<pointer_type>(this->buffer->get(
+      reference_type update = ReducerType::reference(
+          reinterpret_cast<pointer_type>(this->buffer->get(
               Kokkos::Experimental::HPX::impl_hardware_thread_id())));
       const auto r =
           get_chunk_range(i_chunk, this->begin, this->chunk, this->end);
@@ -1574,14 +1576,14 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
     using hpx_dispatch<FunctorType, Policy>::hpx_dispatch;
 
     void setup() const {
-      auto nchunks =
-          get_num_chunks(0, this->policy.chunk_size(), this->policy.league_size());
+      auto nchunks           = get_num_chunks(0, this->policy.chunk_size(),
+                                              this->policy.league_size());
       const auto buffer_size = std::min(nchunks, this->concurrency);
       this->buffer->resize(buffer_size, this->shared);
     }
 
     void execute_range(const int i) const {
-      const int t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
+      const int t  = Kokkos::Experimental::HPX::impl_hardware_thread_id();
       const auto r = get_chunk_range(i, 0, this->policy.chunk_size(),
                                      this->policy.league_size());
       const int num_chunks = get_num_chunks(0, this->policy.chunk_size(),
@@ -1681,8 +1683,8 @@ class ParallelReduce<CombinedFunctorReducerType,
       const ReducerType &reducer   = this->functor.get_reducer();
       const std::size_t value_size = reducer.value_size();
 
-      auto nchunks =
-          get_num_chunks(0, this->policy.chunk_size(), this->policy.league_size());
+      auto nchunks           = get_num_chunks(0, this->policy.chunk_size(),
+                                              this->policy.league_size());
       const auto buffer_size = std::min(nchunks, this->concurrency);
       this->buffer->resize(buffer_size, value_size + this->shared);
 
@@ -1724,9 +1726,9 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     void finalize() const {
       const ReducerType &reducer = this->functor.get_reducer();
-      const auto nchunks =
-          get_num_chunks(0, this->policy.chunk_size(), this->policy.league_size());
-      const auto buffer_size = std::min(nchunks, this->concurrency);
+      const auto nchunks         = get_num_chunks(0, this->policy.chunk_size(),
+                                                  this->policy.league_size());
+      const auto buffer_size     = std::min(nchunks, this->concurrency);
       const pointer_type ptr =
           reinterpret_cast<pointer_type>(this->buffer->get(0));
       for (int t = 1; t < buffer_size; ++t) {
