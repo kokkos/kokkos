@@ -1633,9 +1633,10 @@ namespace Impl {
 template <class V, class... Slices>
 struct SubviewReturnType {
   using sub_mapping_t =
-      decltype(submdspan_mapping(std::declval<typename V::mapping_type>(),
-                                 transform_kokkos_slice_to_mdspan_slice(
-                                     std::declval<Slices>())...)
+      decltype(submdspan_mapping(
+                   std::declval<typename V::mapping_type>(),
+                   transform_kokkos_slice_to_mdspan_canonical_slice<
+                       typename V::index_type>(std::declval<Slices>())...)
                    .mapping);
   using sub_extents_t  = typename sub_mapping_t::extents_type;
   using sub_layout_t   = typename sub_mapping_t::layout_type;
@@ -1658,9 +1659,10 @@ struct SubviewReturnType<
   using view_t =
       Kokkos::View<ElementType, Kokkos::extents<IndexType, Extents...>, L, A>;
   using sub_mapping_t =
-      decltype(submdspan_mapping(std::declval<typename view_t::mapping_type>(),
-                                 transform_kokkos_slice_to_mdspan_slice(
-                                     std::declval<Slices>())...)
+      decltype(submdspan_mapping(
+                   std::declval<typename view_t::mapping_type>(),
+                   transform_kokkos_slice_to_mdspan_canonical_slice<IndexType>(
+                       std::declval<Slices>())...)
                    .mapping);
   using sub_extents_t  = typename sub_mapping_t::extents_type;
   using sub_layout_t   = typename sub_mapping_t::layout_type;

@@ -1,18 +1,6 @@
-//@HEADER
-// ************************************************************************
-//
-//                        Kokkos v. 4.0
-//       Copyright (2022) National Technology & Engineering
-//               Solutions of Sandia, LLC (NTESS).
-//
-// Under the terms of Contract DE-NA0003525 with NTESS,
-// the U.S. Government retains certain rights in this software.
-//
-// Part of Kokkos, under the Apache License v2.0 with LLVM Exceptions.
-// See https://kokkos.org/LICENSE for license information.
 // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-//
-//@HEADER
+// SPDX-FileCopyrightText: Copyright Contributors to the Kokkos project
+
 #pragma once
 
 #ifndef MDSPAN_IMPL_HAS_INCLUDE
@@ -45,11 +33,13 @@
 #else
 #define MDSPAN_CXX_STD_23 202100L
 #endif
+#define MDSPAN_CXX_STD_26 202603L
 
 #define MDSPAN_HAS_CXX_14 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14)
 #define MDSPAN_HAS_CXX_17 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_17)
 #define MDSPAN_HAS_CXX_20 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_20)
 #define MDSPAN_HAS_CXX_23 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_23)
+#define MDSPAN_HAS_CXX_26 (MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_26)
 
 static_assert(MDSPAN_IMPL_CPLUSPLUS >= MDSPAN_CXX_STD_14, "mdspan requires C++14 or later.");
 
