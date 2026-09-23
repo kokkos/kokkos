@@ -43,6 +43,7 @@ set(COMPILE_ONLY_SOURCES
     TestCreateMirror.cpp
     TestDetectionIdiom.cpp
     TestBitManipulation.cpp
+    TestHalfCommonType.cpp
     TestInterOp.cpp
     TestRangePolicyCTAD.cpp
     TestStringManipulation.cpp
