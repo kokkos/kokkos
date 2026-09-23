@@ -69,5 +69,4 @@ static_assert(check_common_types_both<std::float16_t, std::bfloat16_t>());
 #endif
 
 // clang-format on
-}
-
+}  // namespace
