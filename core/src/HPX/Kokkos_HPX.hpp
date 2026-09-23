@@ -95,20 +95,110 @@ constexpr hpx_range<T> get_chunk_range(const T i_chunk, const T offset,
   return {begin, end};
 }
 
-// One WorkRange per partition, computed while the policy is still available.
-// The closure stores these bounds and does not recompute the split.
-template <class Policy>
-std::shared_ptr<const std::vector<hpx_range<typename Policy::member_type>>>
-hpx_work_ranges(Policy const &policy, int parts) {
-  using member_type = typename Policy::member_type;
-  auto ranges = std::make_shared<std::vector<hpx_range<member_type>>>();
-  ranges->reserve(static_cast<std::size_t>(parts));
-  for (int t = 0; t < parts; ++t) {
-    const typename Policy::WorkRange wr(policy, t, parts);
-    ranges->push_back(hpx_range<member_type>{wr.begin(), wr.end()});
-  }
-  return ranges;
+// Same split as RangePolicy::WorkRange, without storing the policy.
+template <typename T>
+constexpr hpx_range<T> get_work_range(const T begin, const T end,
+                                      const T granularity, const int part_rank,
+                                      const int part_size) {
+  if (!part_size) return {T{}, T{}};
+  const T mask = granularity - T{1};
+  const T work_part =
+      ((((end - begin) + (part_size - 1)) / part_size) + mask) & ~mask;
+  T range_begin = begin + work_part * part_rank;
+  T range_end   = range_begin + work_part;
+  if (end < range_begin) range_begin = end;
+  if (end < range_end) range_end = end;
+  return {range_begin, range_end};
 }
+
+template <class WorkTag, class Analysis, class Member, class Functor,
+          class barrier_type, class pointer_type, class reference_type>
+struct hpx_range_scan_dispatch {
+  Functor functor;
+  Member begin{};
+  Member chunk{};
+  Member end{};
+  // Non-owning; owned by the enqueuing HPX instance and must outlive async
+  // work.
+  hpx_thread_buffer *buffer = nullptr;
+  int concurrency           = 0;
+  pointer_type result_ptr{};
+
+  void setup() const {
+    const std::size_t value_size = Analysis::value_size(this->functor);
+
+    this->buffer->resize(this->concurrency, 2 * value_size,
+                         sizeof(barrier_type));
+
+    new (this->buffer->get_extra_space()) barrier_type(this->concurrency);
+  }
+
+  void execute_range(int t) const {
+    const int value_count        = Analysis::value_count(this->functor);
+    const std::size_t value_size = Analysis::value_size(this->functor);
+
+    typename Analysis::Reducer final_reducer(this->functor);
+    barrier_type &barrier =
+        *static_cast<barrier_type *>(this->buffer->get_extra_space());
+    reference_type update_sum = final_reducer.init(
+        reinterpret_cast<pointer_type>(this->buffer->get(t)));
+
+    const auto range = get_work_range(this->begin, this->end, this->chunk, t,
+                                      this->concurrency);
+    for (Member i = range.begin; i < range.end; ++i) {
+      if constexpr (std::is_same_v<WorkTag, void>) {
+        this->functor(i, update_sum, false);
+      } else {
+        this->functor(WorkTag{}, i, update_sum, false);
+      }
+    }
+
+    barrier.arrive_and_wait();
+
+    if (t == 0) {
+      final_reducer.init(reinterpret_cast<pointer_type>(
+          static_cast<char *>(this->buffer->get(0)) + value_size));
+
+      for (int i = 1; i < this->concurrency; ++i) {
+        pointer_type ptr_1_prev =
+            reinterpret_cast<pointer_type>(this->buffer->get(i - 1));
+        pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
+            static_cast<char *>(this->buffer->get(i - 1)) + value_size);
+        pointer_type ptr_2 = reinterpret_cast<pointer_type>(
+            static_cast<char *>(this->buffer->get(i)) + value_size);
+
+        for (int j = 0; j < value_count; ++j) {
+          ptr_2[j] = ptr_2_prev[j];
+        }
+
+        final_reducer.join(ptr_2, ptr_1_prev);
+      }
+    }
+
+    barrier.arrive_and_wait();
+
+    reference_type update_base =
+        Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
+            static_cast<char *>(this->buffer->get(t)) + value_size));
+
+    for (Member i = range.begin; i < range.end; ++i) {
+      if constexpr (std::is_same_v<WorkTag, void>) {
+        this->functor(i, update_base, true);
+      } else {
+        this->functor(WorkTag{}, i, update_base, true);
+      }
+    }
+
+    if (this->result_ptr != nullptr && t == this->concurrency - 1) {
+      *this->result_ptr = update_base;
+    }
+  }
+
+  void finalize() const {
+    static_cast<barrier_type *>(this->buffer->get_extra_space())
+        ->~barrier_type();
+  }
+};
 
 template <typename Policy>
 constexpr bool is_light_weight_policy() {
@@ -996,6 +1086,8 @@ struct hpx_dispatch<Functor, Index, ResultPtr,
   Index begin{};
   Index chunk{};
   Index end{};
+  // Non-owning; owned by the enqueuing HPX instance and must outlive async
+  // work.
   hpx_thread_buffer *buffer = nullptr;
   int concurrency           = 0;
   ResultPtr result_ptr{};
@@ -1062,9 +1154,10 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
   using Policy        = typename MDRangePolicy::impl_range_policy;
   using WorkTag       = typename MDRangePolicy::work_tag;
   using Member        = typename Policy::member_type;
-  using bounds_type  = hpx_mdrange_bounds<MDRangePolicy>;
-  using iterate_type = typename Kokkos::Impl::HostIterateTile<
-      bounds_type, FunctorType, WorkTag, void>;
+  using bounds_type   = hpx_mdrange_bounds<MDRangePolicy>;
+  using iterate_type =
+      typename Kokkos::Impl::HostIterateTile<bounds_type, FunctorType, WorkTag,
+                                             void>;
 
   const FunctorType m_functor;
   const MDRangePolicy m_mdr_policy;
@@ -1236,8 +1329,8 @@ class ParallelReduce<CombinedFunctorReducerType,
   using pointer_type   = typename ReducerType::pointer_type;
   using value_type     = typename ReducerType::value_type;
   using reference_type = typename ReducerType::reference_type;
-  using bounds_type  = hpx_mdrange_bounds<MDRangePolicy>;
-  using iterate_type = typename Kokkos::Impl::HostIterateTile<
+  using bounds_type    = hpx_mdrange_bounds<MDRangePolicy>;
+  using iterate_type   = typename Kokkos::Impl::HostIterateTile<
       bounds_type, CombinedFunctorReducerType, WorkTag, reference_type>;
 
   const CombinedFunctorReducerType m_functor_reducer;
@@ -1353,92 +1446,21 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
   const FunctorType m_functor;
   const Policy m_policy;
 
-  struct Dispatch : hpx_dispatch<FunctorType, Member> {
-    std::shared_ptr<const std::vector<hpx_range<Member>>> ranges;
-
-    Dispatch(FunctorType f, hpx_thread_buffer *buf, int conc,
-             std::shared_ptr<const std::vector<hpx_range<Member>>> rs)
-        : hpx_dispatch<FunctorType, Member>(std::move(f), Member{}, Member{},
-                                            Member{}, buf, conc),
-          ranges(std::move(rs)) {}
-
-    void setup() const {
-      const std::size_t value_size = Analysis::value_size(this->functor);
-
-      this->buffer->resize(this->concurrency, 2 * value_size,
-                           sizeof(barrier_type));
-
-      new (this->buffer->get_extra_space()) barrier_type(this->concurrency);
-    }
-
-    void execute_chunk(const Member i_begin, const Member i_end,
-                       reference_type update, const bool final) const {
-      for (Member i = i_begin; i < i_end; ++i) {
-        if constexpr (std::is_same_v<WorkTag, void>) {
-          this->functor(i, update, final);
-        } else {
-          this->functor(WorkTag{}, i, update, final);
-        }
-      }
-    }
-
-    void execute_range(int t) const {
-      const int value_count        = Analysis::value_count(this->functor);
-      const std::size_t value_size = Analysis::value_size(this->functor);
-
-      typename Analysis::Reducer final_reducer(this->functor);
-      barrier_type &barrier =
-          *static_cast<barrier_type *>(this->buffer->get_extra_space());
-      reference_type update_sum = final_reducer.init(
-          reinterpret_cast<pointer_type>(this->buffer->get(t)));
-
-      const auto range = (*this->ranges)[static_cast<std::size_t>(t)];
-      execute_chunk(range.begin, range.end, update_sum, false);
-
-      barrier.arrive_and_wait();
-
-      if (t == 0) {
-        final_reducer.init(reinterpret_cast<pointer_type>(
-            static_cast<char *>(this->buffer->get(0)) + value_size));
-
-        for (int i = 1; i < this->concurrency; ++i) {
-          pointer_type ptr_1_prev =
-              reinterpret_cast<pointer_type>(this->buffer->get(i - 1));
-          pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-              static_cast<char *>(this->buffer->get(i - 1)) + value_size);
-          pointer_type ptr_2 = reinterpret_cast<pointer_type>(
-              static_cast<char *>(this->buffer->get(i)) + value_size);
-
-          for (int j = 0; j < value_count; ++j) {
-            ptr_2[j] = ptr_2_prev[j];
-          }
-
-          final_reducer.join(ptr_2, ptr_1_prev);
-        }
-      }
-
-      barrier.arrive_and_wait();
-
-      reference_type update_base =
-          Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
-              static_cast<char *>(this->buffer->get(t)) + value_size));
-
-      execute_chunk(range.begin, range.end, update_base, true);
-    }
-
-    void finalize() const {
-      static_cast<barrier_type *>(this->buffer->get_extra_space())
-          ->~barrier_type();
-    }
-  };
+  using Dispatch =
+      hpx_range_scan_dispatch<WorkTag, Analysis, Member, FunctorType,
+                              barrier_type, pointer_type, reference_type>;
 
  public:
   void execute() const {
     const int num_worker_threads = m_policy.space().concurrency();
+    if (num_worker_threads <= 0) {
+      return;
+    }
     m_policy.space().impl_bulk_setup_finalize(
         false, is_light_weight_policy<Policy>(),
-        Dispatch{m_functor, &m_policy.space().impl_get_buffer(),
-                 num_worker_threads, hpx_work_ranges(m_policy, num_worker_threads)},
+        Dispatch{m_functor, m_policy.begin(), m_policy.chunk_size(),
+                 m_policy.end(), &m_policy.space().impl_get_buffer(),
+                 num_worker_threads},
         num_worker_threads, hpx::threads::thread_stacksize::small_);
   }
 
@@ -1450,12 +1472,11 @@ template <class FunctorType, class ReturnType, class... Traits>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::HPX> {
  private:
-  using Policy  = Kokkos::RangePolicy<Traits...>;
-  using WorkTag = typename Policy::work_tag;
-  using Member  = typename Policy::member_type;
-  using Analysis =
-      FunctorAnalysis<FunctorPatternInterface::SCAN, Policy, FunctorType,
-                      ReturnType>;
+  using Policy         = Kokkos::RangePolicy<Traits...>;
+  using WorkTag        = typename Policy::work_tag;
+  using Member         = typename Policy::member_type;
+  using Analysis       = FunctorAnalysis<FunctorPatternInterface::SCAN, Policy,
+                                   FunctorType, ReturnType>;
   using pointer_type   = typename Analysis::pointer_type;
   using reference_type = typename Analysis::reference_type;
   using value_type     = typename Analysis::value_type;
@@ -1465,98 +1486,21 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
   const Policy m_policy;
   pointer_type m_result_ptr;
 
-  struct Dispatch : hpx_dispatch<FunctorType, Member, pointer_type> {
-    std::shared_ptr<const std::vector<hpx_range<Member>>> ranges;
-
-    Dispatch(FunctorType f, hpx_thread_buffer *buf, int conc,
-             std::shared_ptr<const std::vector<hpx_range<Member>>> rs,
-             pointer_type rp)
-        : hpx_dispatch<FunctorType, Member, pointer_type>(
-              std::move(f), Member{}, Member{}, Member{}, buf, conc, rp),
-          ranges(std::move(rs)) {}
-
-    void setup() const {
-      const std::size_t value_size = Analysis::value_size(this->functor);
-
-      this->buffer->resize(this->concurrency, 2 * value_size,
-                           sizeof(barrier_type));
-
-      new (this->buffer->get_extra_space()) barrier_type(this->concurrency);
-    }
-
-    void execute_chunk(const Member i_begin, const Member i_end,
-                       reference_type update, const bool final) const {
-      for (Member i = i_begin; i < i_end; ++i) {
-        if constexpr (std::is_same_v<WorkTag, void>) {
-          this->functor(i, update, final);
-        } else {
-          this->functor(WorkTag{}, i, update, final);
-        }
-      }
-    }
-
-    void execute_range(int t) const {
-      const int value_count        = Analysis::value_count(this->functor);
-      const std::size_t value_size = Analysis::value_size(this->functor);
-
-      typename Analysis::Reducer final_reducer(this->functor);
-      barrier_type &barrier =
-          *static_cast<barrier_type *>(this->buffer->get_extra_space());
-      reference_type update_sum = final_reducer.init(
-          reinterpret_cast<pointer_type>(this->buffer->get(t)));
-
-      const auto range = (*this->ranges)[static_cast<std::size_t>(t)];
-      execute_chunk(range.begin, range.end, update_sum, false);
-
-      barrier.arrive_and_wait();
-
-      if (t == 0) {
-        final_reducer.init(reinterpret_cast<pointer_type>(
-            static_cast<char *>(this->buffer->get(0)) + value_size));
-
-        for (int i = 1; i < this->concurrency; ++i) {
-          pointer_type ptr_1_prev =
-              reinterpret_cast<pointer_type>(this->buffer->get(i - 1));
-          pointer_type ptr_2_prev = reinterpret_cast<pointer_type>(
-              static_cast<char *>(this->buffer->get(i - 1)) + value_size);
-          pointer_type ptr_2 = reinterpret_cast<pointer_type>(
-              static_cast<char *>(this->buffer->get(i)) + value_size);
-
-          for (int j = 0; j < value_count; ++j) {
-            ptr_2[j] = ptr_2_prev[j];
-          }
-
-          final_reducer.join(ptr_2, ptr_1_prev);
-        }
-      }
-
-      barrier.arrive_and_wait();
-
-      reference_type update_base =
-          Analysis::Reducer::reference(reinterpret_cast<pointer_type>(
-              static_cast<char *>(this->buffer->get(t)) + value_size));
-
-      execute_chunk(range.begin, range.end, update_base, true);
-
-      if (t == this->concurrency - 1) {
-        *this->result_ptr = update_base;
-      }
-    }
-
-    void finalize() const {
-      static_cast<barrier_type *>(this->buffer->get_extra_space())
-          ->~barrier_type();
-    }
-  };
+  using Dispatch =
+      hpx_range_scan_dispatch<WorkTag, Analysis, Member, FunctorType,
+                              barrier_type, pointer_type, reference_type>;
 
  public:
   void execute() const {
     const int num_worker_threads = m_policy.space().concurrency();
+    if (num_worker_threads <= 0) {
+      return;
+    }
     m_policy.space().impl_bulk_setup_finalize(
         false, is_light_weight_policy<Policy>(),
-        Dispatch{m_functor, &m_policy.space().impl_get_buffer(),
-                 num_worker_threads,
-                 hpx_work_ranges(m_policy, num_worker_threads), m_result_ptr},
+        Dispatch{m_functor, m_policy.begin(), m_policy.chunk_size(),
+                 m_policy.end(), &m_policy.space().impl_get_buffer(),
+                 num_worker_threads, m_result_ptr},
         num_worker_threads, hpx::threads::thread_stacksize::small_);
   }
 
@@ -1594,36 +1538,37 @@ class ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
 
   struct Dispatch {
     FunctorType functor;
-    int chunk                 = 0;
-    int league_size           = 0;
-    int team_size             = 0;
+    int chunk       = 0;
+    int league_size = 0;
+    int team_size   = 0;
+    // Non-owning; owned by the enqueuing HPX instance and must outlive async
+    // work.
     hpx_thread_buffer *buffer = nullptr;
     int concurrency           = 0;
     std::size_t shared        = 0;
 
     void setup() const {
-      auto nchunks           = get_num_chunks(0, this->chunk,
-                                              this->league_size);
+      auto nchunks = get_num_chunks(0, this->chunk, this->league_size);
       const auto buffer_size = std::min(nchunks, this->concurrency);
       this->buffer->resize(buffer_size, this->shared);
     }
 
     void execute_range(const int i) const {
       const int t  = Kokkos::Experimental::HPX::impl_hardware_thread_id();
-      const auto r = get_chunk_range(i, 0, this->chunk,
-                                     this->league_size);
-      const int num_chunks = get_num_chunks(0, this->chunk,
-                                            this->league_size);
+      const auto r = get_chunk_range(i, 0, this->chunk, this->league_size);
+      const int num_chunks = get_num_chunks(0, this->chunk, this->league_size);
       // if num_chunks > num hw threads, use hw threadid t; else use chunkid i
       const int buffer_t = num_chunks > this->concurrency ? t : i;
       for (int league_rank = r.begin; league_rank < r.end; ++league_rank) {
         if constexpr (std::is_same_v<WorkTag, void>) {
-          this->functor(Member(this->league_size, this->team_size, 0, league_rank,
-                               this->buffer->get(buffer_t), this->shared));
+          this->functor(Member(this->league_size, this->team_size, 0,
+                               league_rank, this->buffer->get(buffer_t),
+                               this->shared));
         } else {
-          this->functor(WorkTag{},
-                        Member(this->league_size, this->team_size, 0, league_rank,
-                               this->buffer->get(buffer_t), this->shared));
+          this->functor(
+              WorkTag{},
+              Member(this->league_size, this->team_size, 0, league_rank,
+                     this->buffer->get(buffer_t), this->shared));
         }
       }
     }
@@ -1702,9 +1647,11 @@ class ParallelReduce<CombinedFunctorReducerType,
 
   struct Dispatch {
     CombinedFunctorReducerType functor;
-    int chunk                 = 0;
-    int league_size           = 0;
-    int team_size             = 0;
+    int chunk       = 0;
+    int league_size = 0;
+    int team_size   = 0;
+    // Non-owning; owned by the enqueuing HPX instance and must outlive async
+    // work.
     hpx_thread_buffer *buffer = nullptr;
     int concurrency           = 0;
     pointer_type result_ptr{};
@@ -1714,8 +1661,7 @@ class ParallelReduce<CombinedFunctorReducerType,
       const ReducerType &reducer   = this->functor.get_reducer();
       const std::size_t value_size = reducer.value_size();
 
-      auto nchunks           = get_num_chunks(0, this->chunk,
-                                              this->league_size);
+      auto nchunks = get_num_chunks(0, this->chunk, this->league_size);
       const auto buffer_size = std::min(nchunks, this->concurrency);
       this->buffer->resize(buffer_size, value_size + this->shared);
 
@@ -1729,27 +1675,27 @@ class ParallelReduce<CombinedFunctorReducerType,
       const std::size_t value_size = reducer.value_size();
       std::size_t t = Kokkos::Experimental::HPX::impl_hardware_thread_id();
 
-      const int num_chunks = get_num_chunks(0, this->chunk,
-                                            this->league_size);
+      const int num_chunks = get_num_chunks(0, this->chunk, this->league_size);
       // if num_chunks > num hw threads, use hw threadid t; else use chunkid i
       const std::size_t buffer_t = num_chunks > this->concurrency ? t : i;
 
       reference_type update = ReducerType::reference(
           reinterpret_cast<pointer_type>(this->buffer->get(buffer_t)));
-      const auto r = get_chunk_range(i, 0, this->chunk,
-                                     this->league_size);
+      const auto r = get_chunk_range(i, 0, this->chunk, this->league_size);
 
       char *local_buffer =
           static_cast<char *>(this->buffer->get(buffer_t)) + value_size;
       for (int league_rank = r.begin; league_rank < r.end; ++league_rank) {
         if constexpr (std::is_same_v<WorkTag, void>) {
           this->functor.get_functor()(
-              Member(this->league_size, this->team_size, 0, league_rank, local_buffer, this->shared),
+              Member(this->league_size, this->team_size, 0, league_rank,
+                     local_buffer, this->shared),
               update);
         } else {
           this->functor.get_functor()(
               WorkTag{},
-              Member(this->league_size, this->team_size, 0, league_rank, local_buffer, this->shared),
+              Member(this->league_size, this->team_size, 0, league_rank,
+                     local_buffer, this->shared),
               update);
         }
       }
@@ -1757,9 +1703,8 @@ class ParallelReduce<CombinedFunctorReducerType,
 
     void finalize() const {
       const ReducerType &reducer = this->functor.get_reducer();
-      const auto nchunks         = get_num_chunks(0, this->chunk,
-                                                  this->league_size);
-      const auto buffer_size     = std::min(nchunks, this->concurrency);
+      const auto nchunks = get_num_chunks(0, this->chunk, this->league_size);
+      const auto buffer_size = std::min(nchunks, this->concurrency);
       const pointer_type ptr =
           reinterpret_cast<pointer_type>(this->buffer->get(0));
       for (int t = 1; t < buffer_size; ++t) {
