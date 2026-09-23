@@ -193,4 +193,60 @@ TEST(TEST_CATEGORY, interact_with_sycl_node) {
 #endif
 }
 
+template <typename ViewType>
+struct CheckValue {
+  typename ViewType::const_type data;
+  typename ViewType::non_const_value_type value;
+
+  KOKKOS_FUNCTION
+  void operator()() const {
+    if (data() != value) Kokkos::abort("Wrong value.");
+  }
+};
+
+template <typename ViewType>
+struct CustomSYCLNode {
+  typename ViewType::non_const_type data;
+
+  auto operator()() const noexcept {
+    return [ptr = data.data()](sycl::handler& cgh) {
+      cgh.parallel_for(sycl::range<1>(1), [=](int) { *ptr = 42; });
+    };
+  }
+};
+
+// Add a SYCL node using the SYCL graph node interoperability feature.
+TEST(TEST_CATEGORY, then_sycl_node) {
+  using view_t = Kokkos::View<int, Kokkos::SYCLSharedUSMSpace>;
+
+  const Kokkos::SYCL exec{};
+
+  const view_t data(Kokkos::view_alloc(exec, "witness"));
+
+  Kokkos::Experimental::Graph graph_with_sycl_node{
+      Kokkos::Experimental::get_device_handle(exec)};
+
+  const auto node_check_zero = graph_with_sycl_node.root_node().then(
+      Kokkos::Experimental::node_props("check it is zero"),
+      CheckValue<view_t>{.data = data, .value = 0});
+
+  ASSERT_EQ(data.use_count(), 2);
+  const auto node_memset = node_check_zero.then_sycl_node(
+      Kokkos::Experimental::node_props("nice interop"),
+      CustomSYCLNode<view_t>{.data = data});
+  ASSERT_EQ(data.use_count(), 3);
+
+  ASSERT_EQ(node_memset.get_node_kind(),
+            Kokkos::Experimental::GraphNodeKind::Native);
+
+  const auto node_incr = node_memset.then_parallel_for(
+      Kokkos::RangePolicy(exec, 0, 1), Increment{.data = data});
+
+  graph_with_sycl_node.submit(exec);
+
+  exec.fence();
+
+  ASSERT_EQ(data(), 43);
+}
+
 }  // namespace

@@ -90,6 +90,20 @@ has<Prop> [[nodiscard]] constexpr decltype(auto) extract_property(
   return std::move(static_cast<NodeCtorProp<Prop>&>(props).m_value);
 }
 
+template <typename Prop, NodeProperties Props>
+  requires Props::template
+has<Prop> [[nodiscard]] constexpr decltype(auto) extract_property_or(
+    Props& props, const Prop&) {
+  return extract_property<Prop>(props);
+}
+
+template <typename Prop, NodeProperties Props, typename T>
+  requires(!Props::template has<std::remove_cvref_t<Prop>> &&
+           std::convertible_to<T, Prop>)
+[[nodiscard]] constexpr decltype(auto) extract_property_or(Props&, T&& prop) {
+  return std::forward<T>(prop);
+}
+
 struct WithProperty {
   template <typename... Props, typename Property>
     requires(sizeof...(Props) > 0)

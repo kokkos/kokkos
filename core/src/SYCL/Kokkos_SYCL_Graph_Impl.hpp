@@ -57,6 +57,12 @@ class GraphImpl<Kokkos::SYCL> {
 
   template <class NodeImpl>
   std::enable_if_t<
+      Kokkos::Impl::is_graph_then_native_v<typename NodeImpl::kernel_type>>
+  add_node(const device_handle_t& device_handle,
+           std::shared_ptr<NodeImpl> arg_node_ptr);
+
+  template <class NodeImpl>
+  std::enable_if_t<
       Kokkos::Impl::is_graph_then_host_v<typename NodeImpl::kernel_type>>
   add_node(std::shared_ptr<NodeImpl> arg_node_ptr);
 
@@ -128,6 +134,21 @@ GraphImpl<Kokkos::SYCL>::add_node(std::shared_ptr<NodeImpl> arg_node_ptr) {
   kernel.set_sycl_graph_node_ptr(&node);
   kernel.execute();
   KOKKOS_ENSURES(node);
+  m_nodes.push_back(std::move(arg_node_ptr));
+}
+
+template <class NodeImpl>
+inline std::enable_if_t<
+    Kokkos::Impl::is_graph_then_native_v<typename NodeImpl::kernel_type>>
+GraphImpl<Kokkos::SYCL>::add_node(const device_handle_t& device_handle,
+                                  std::shared_ptr<NodeImpl> arg_node_ptr) {
+  static_assert(Kokkos::Impl::is_specialization_of_v<NodeImpl, GraphNodeImpl>);
+  KOKKOS_EXPECTS(bool(arg_node_ptr));
+
+  auto& kernel = arg_node_ptr->get_kernel();
+  kernel.add_to_graph(device_handle, m_graph);
+  static_cast<node_details_t*>(arg_node_ptr.get())->node = kernel.m_node;
+
   m_nodes.push_back(std::move(arg_node_ptr));
 }
 
