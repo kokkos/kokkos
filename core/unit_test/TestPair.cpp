@@ -170,24 +170,27 @@ constexpr bool test_pair_converting_constructor_from_std_pair() {
 
 static_assert(test_pair_converting_constructor_from_std_pair());
 
-
 TEST(defaultdevicetype, structured_bindings_and_tuple_interface) {
   // assign from a value pair -> should assign through references
   const auto pair = Kokkos::make_pair(9, 10.0);
 
   auto [f, s] = pair;
-  static_assert(std::same_as<decltype(f), int> && std::same_as<decltype(s), double>);
+  static_assert(std::same_as<decltype(f), int> &&
+                std::same_as<decltype(s), double>);
   EXPECT_EQ(f, 9);
   EXPECT_EQ(s, 10);
 
-  auto f2 = get< 0 >( pair );
-  auto s2 = get< 1 >( pair );
-  static_assert(std::same_as<decltype(f2), int> && std::same_as<decltype(s2), double>);
+  auto f2 = get<0>(pair);
+  auto s2 = get<1>(pair);
+  static_assert(std::same_as<decltype(f2), int> &&
+                std::same_as<decltype(s2), double>);
   EXPECT_EQ(f2, 9);
   EXPECT_EQ(s2, 10);
 
   static_assert(std::tuple_size_v<decltype(pair)> == 2);
-  static_assert(std::same_as<std::tuple_element_t<0, decltype(pair)>, const int>);
-  static_assert(std::same_as<std::tuple_element_t<1, decltype(pair)>, const double>);
+  static_assert(
+      std::same_as<std::tuple_element_t<0, decltype(pair)>, const int>);
+  static_assert(
+      std::same_as<std::tuple_element_t<1, decltype(pair)>, const double>);
 }
 }  // namespace
