@@ -722,9 +722,10 @@ struct HPXTeamMember {
   KOKKOS_INLINE_FUNCTION int team_rank() const noexcept { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const noexcept { return m_team_size; }
 
-  constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
-      const int league_size, const int team_size, const int team_rank,
-      const int league_rank, void *scratch, size_t scratch_size) noexcept
+  KOKKOS_INLINE_FUNCTION HPXTeamMember(const int league_size,
+                                       const int team_size, const int team_rank,
+                                       const int league_rank, void *scratch,
+                                       size_t scratch_size) noexcept
       : m_team_shared(scratch, scratch_size, scratch, scratch_size),
         m_league_size(league_size),
         m_league_rank(league_rank),
@@ -737,8 +738,11 @@ struct HPXTeamMember {
           &policy,
       const int team_rank, const int league_rank, void *scratch,
       size_t scratch_size) noexcept
-      : HPXTeamMember(policy.league_size(), policy.team_size(), team_rank,
-                      league_rank, scratch, scratch_size) {}
+      : m_team_shared(scratch, scratch_size, scratch, scratch_size),
+        m_league_size(policy.league_size()),
+        m_league_rank(league_rank),
+        m_team_size(policy.team_size()),
+        m_team_rank(team_rank) {}
 
   KOKKOS_INLINE_FUNCTION
   void team_barrier() const {}
