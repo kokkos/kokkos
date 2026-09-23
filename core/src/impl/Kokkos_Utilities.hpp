@@ -237,6 +237,35 @@ template <typename T>
 constexpr bool dependent_false_v = !sizeof(T*);
 //==============================================================================
 
+// Apply and Invoke that are GPU-friendly
+// Honestly mostly cribbed from
+// https://en.cppreference.com/w/cpp/utility/functional/invoke.html
+// and https://en.cppreference.com/w/cpp/utility/apply.html
+template <class F, class... Args>
+constexpr KOKKOS_INLINE_FUNCTION std::invoke_result_t<F, Args...> invoke(
+    F&& f, Args&&... args) noexcept(std::is_nothrow_invocable_v<F, Args...>) {
+  // Don't support memfun pointers right now
+  static_assert(!std::is_member_pointer_v<std::remove_cvref_t<F>>);
+  return std::forward<F>(f)(std::forward<Args>(args)...);
+}
+
+template <class F, class TupleLike, std::size_t... Indices>
+constexpr KOKKOS_INLINE_FUNCTION decltype(auto)
+apply_impl(F &&fun, TupleLike &&tup, std::index_sequence<Indices...>)
+{
+  using namespace std;
+  return invoke(std::forward<F>(fun), get<Indices>(std::forward<TupleLike>(tup))...);
+}
+
+template <class F, class TupleLike>
+constexpr KOKKOS_INLINE_FUNCTION decltype(auto)
+apply(F &&fun, TupleLike &&tup)
+{
+  return apply_impl(std::forward<F>(fun), std::forward<TupleLike>(tup), std::make_index_sequence<std::tuple_size_v<std::remove_cvref_t<TupleLike>>>{});
+}
+
+
+
 }  // namespace Impl
 }  // namespace Kokkos
 
