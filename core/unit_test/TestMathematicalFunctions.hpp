@@ -1628,6 +1628,8 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(tgamma)({.7l, .8l, .9l});
 #endif
 
+// FIXME_NEXTSILICON: projection failure on 1.3.0-84
+#if !defined(KOKKOS_ENABLE_NEXTSILICON)
   TEST_MATH_FUNCTION(lgamma)({1, 2, 3, 4, 56, 78});
   TEST_MATH_FUNCTION(lgamma)({1l, 2l, 3l, 4l, 56l, 78l});
   TEST_MATH_FUNCTION(lgamma)({1ll, 2ll, 3ll, 4ll, 56ll, 78ll});
@@ -1640,6 +1642,7 @@ TEST(TEST_CATEGORY, mathematical_functions_error_and_gamma_functions) {
   TEST_MATH_FUNCTION(lgamma)({-4.4, .5, -.6});
 #ifdef MATHEMATICAL_FUNCTIONS_HAVE_LONG_DOUBLE_OVERLOADS
   TEST_MATH_FUNCTION(lgamma)({.7l, .8l, .9l});
+#endif
 #endif
 }
 

@@ -163,6 +163,13 @@ struct TestViewMappingSubview {
 };
 
 TEST(TEST_CATEGORY, view_mapping_subview) {
+  // FIXME_NEXTSILICON
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if constexpr (std::is_same_v<TEST_EXECSPACE,
+                               Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "Very slow or hangs on NextSilicon 1.3.0-84";
+  }
+#endif
   TestViewMappingSubview<TEST_EXECSPACE> f;
   f.run();
 }
