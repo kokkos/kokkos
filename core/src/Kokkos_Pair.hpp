@@ -398,7 +398,124 @@ concept ContainsStdPair = (is_std_pair<Args>::value || ...);
 
 }  // end namespace Impl
 
+template<std::size_t I, class T1, class T2>
+constexpr auto &get(Kokkos::pair<T1, T2> &p) noexcept
+{
+  if constexpr (I == 0) {
+    return p.first;
+  } else if constexpr (I == 1) {
+    return p.second;
+  } else {
+    static_assert(false, "Kokkos::pair only has 2 elements");
+  }
+}
+
+template<std::size_t I, class T1, class T2>
+constexpr const auto &get(const Kokkos::pair<T1, T2> &p) noexcept
+{
+  if constexpr (I == 0) {
+    return p.first;
+  } else if constexpr (I == 1) {
+    return p.second;
+  } else {
+    static_assert(false, "Kokkos::pair only has 2 elements");
+  }
+}
+
+template<std::size_t I, class T1, class T2>
+constexpr auto &&get(Kokkos::pair<T1, T2> &&p) noexcept
+{
+  if constexpr (I == 0) {
+    return std::forward<T1>(p.first);
+  } else if constexpr (I == 1) {
+    return std::forward<T2>(p.second);
+  } else {
+    static_assert(false, "Kokkos::pair only has 2 elements");
+  }
+}
+
+template<std::size_t I, class T1, class T2>
+constexpr const auto &&get(const Kokkos::pair<T1, T2> &&p) noexcept
+{
+  if constexpr (I == 0) {
+    return std::forward<const T1>(p.first);
+  } else if constexpr (I == 1) {
+    return std::forward<const T2>(p.second);
+  } else {
+    static_assert(false, "Kokkos::pair only has 2 elements");
+  }
+}
+
+template<class T, class U>
+constexpr T &get(Kokkos::pair<T, U> &p) noexcept
+{
+  return p.first;
+}
+
+template<class T, class U>
+constexpr const T &get(const Kokkos::pair<T, U> &p) noexcept
+{
+  return p.first;
+}
+
+template<class T, class U>
+constexpr T &&get(Kokkos::pair<T, U> &&p) noexcept
+{
+  return std::forward< T >(p.first);
+}
+
+template<class T, class U>
+constexpr const T &&get(const Kokkos::pair<T, U> &&p) noexcept
+{
+  return std::forward<const T >(p.first);
+}
+
+template<class T, class U>
+constexpr T &get(Kokkos::pair<U, T> &p) noexcept
+{
+  return p.second;
+}
+
+template<class T, class U>
+constexpr const T &get(const Kokkos::pair<U, T> &p) noexcept
+{
+  return p.second;
+}
+
+template<class T, class U>
+constexpr T &&get(Kokkos::pair<U, T> &&p) noexcept
+{
+  return std::forward< T >(p.second);
+}
+
+template<class T, class U>
+constexpr const T &&get(const Kokkos::pair<U, T> &&p) noexcept
+{
+  return std::forward<const T >(p.second);
+}
+
 }  // namespace Kokkos
+
+template<class T1, class T2>
+struct std::tuple_size<Kokkos::pair<T1, T2>> : std::integral_constant<std::size_t, 2> {};
+
+template<std::size_t I, class T1, class T2>
+struct std::tuple_element<I, Kokkos::pair<T1, T2>>
+{
+  static_assert(false, "Kokkos::pair only has 2 elements");
+};
+
+template<class T1, class T2>
+struct std::tuple_element<0, Kokkos::pair<T1, T2>>
+{
+  using type = T1;
+};
+
+template<class T1, class T2>
+struct std::tuple_element<1, Kokkos::pair<T1, T2>>
+{
+  using type = T2;
+};
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PAIR
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
