@@ -24,6 +24,7 @@
 #include <impl/Kokkos_CheckUsage.hpp>
 #include <impl/Kokkos_DeviceManagement.hpp>
 #include <impl/Kokkos_ExecSpaceManager.hpp>
+#include <impl/Kokkos_DeviceManagement.hpp>
 
 /*--------------------------------------------------------------------------*/
 /* Standard 'C' libraries */
@@ -657,6 +658,22 @@ KOKKOS_IMPL_EXPORT std::map<int, std::mutex>
     CudaInternal::constantMemMutexPerDevice = {};
 
 }  // namespace Impl
+
+std::vector<Kokkos::Cuda> create_device_space() {
+  std::vector<Kokkos::Cuda> spaces;
+  auto devices = ::Kokkos::Impl::get_visible_devices();
+  spaces.reserve(devices.size());
+
+  for (auto device : devices) {
+    ::cudaStream_t stream;
+    KOKKOS_IMPL_CUDA_SAFE_CALL(::cudaSetDevice(device));
+    KOKKOS_IMPL_CUDA_SAFE_CALL(::cudaStreamCreate(&stream));
+
+    spaces.emplace_back(stream);
+  }
+
+  return spaces;
+}
 
 }  // namespace Kokkos
 
