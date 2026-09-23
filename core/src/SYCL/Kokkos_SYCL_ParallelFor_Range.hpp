@@ -20,7 +20,7 @@ struct FunctorWrapperRangePolicyParallelFor {
   // We never launch with more than INT_MAX work items which means work items
   // might execute the functor for multiple indices.
   // Choosing INT_MAX aligns well with -fsycl-id-queries-fit-in-int.
-  void operator()(sycl::item<1> item) const {
+  void operator()(sycl::item<2> item) const {
     typename Policy::index_type id        = item.get_linear_id() + m_begin;
     const typename Policy::index_type end = m_work_size + m_begin;
     while (true) {
@@ -49,7 +49,7 @@ struct FunctorWrapperRangePolicyParallelForCustom {
   // We never launch with more than INT_MAX work items which means work items
   // might execute the functor for multiple indices.
   // Choosing INT_MAX aligns well with -fsycl-id-queries-fit-in-int.
-  void operator()(sycl::nd_item<1> item) const {
+  void operator()(sycl::nd_item<2> item) const {
     typename Policy::index_type id = item.get_global_linear_id() + m_begin;
     const typename Policy::index_type end = m_work_size + m_begin;
     if (id < end) {
@@ -117,16 +117,16 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
         const std::size_t launch_range =
             (actual_range + wgroup_size_multiple - 1) / wgroup_size_multiple *
             wgroup_size_multiple;
-        sycl::nd_range<1> range(
-            std::min<std::size_t>(launch_range, INT_MAX),
-            sycl::ext::oneapi::experimental::auto_range<1>());
+        sycl::nd_range<2> range(
+            sycl::range<2>(std::min<std::size_t>(launch_range, INT_MAX), 1),
+            sycl::ext::oneapi::experimental::auto_range<2>());
         cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
                                                                          f);
 #else
         FunctorWrapperRangePolicyParallelFor<Functor, Policy> f{
             policy.begin(), functor, actual_range};
-        sycl::range<1> range(std::min<std::size_t>(actual_range, INT_MAX));
+        sycl::range<2> range(std::min<std::size_t>(actual_range, INT_MAX), 1);
         cgh.parallel_for<FunctorWrapperRangePolicyParallelFor<Functor, Policy>>(
             range, f);
 #endif
@@ -140,8 +140,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
             (actual_range + wgroup_size - 1) / wgroup_size * wgroup_size;
         FunctorWrapperRangePolicyParallelForCustom<Functor, Policy> f{
             policy.begin(), functor, actual_range};
-        sycl::nd_range<1> range(std::min<std::size_t>(launch_range, INT_MAX),
-                                wgroup_size);
+        sycl::nd_range<2> range(
+            sycl::range<2>(std::min<std::size_t>(launch_range, INT_MAX), 1),
+            sycl::range<2>(wgroup_size, 1));
         cgh.parallel_for<
             FunctorWrapperRangePolicyParallelForCustom<Functor, Policy>>(range,
                                                                          f);

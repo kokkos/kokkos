@@ -188,7 +188,7 @@ class ParallelScanSYCLBase {
             sycl::local_accessor<unsigned int> num_teams_done,
             sycl::global_ptr<value_type> global_mem_,
             sycl::global_ptr<value_type> group_results_) {
-          auto lambda = [=](sycl::nd_item<1> item) {
+          auto lambda = [=](sycl::nd_item<2> item) {
             auto global_mem    = global_mem_;
             auto group_results = group_results_;
 
@@ -323,8 +323,10 @@ class ParallelScanSYCLBase {
 
       auto scan_lambda = scan_lambda_factory(local_mem, num_teams_done,
                                              global_mem, group_results);
-      cgh.parallel_for(sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-                       scan_lambda);
+      cgh.parallel_for(
+          sycl::nd_range<2>(sycl::range<2>(n_wgroups * wgroup_size, 1),
+                            sycl::range<2>(wgroup_size, 1)),
+          scan_lambda);
     });
 
     // Write results to global memory
@@ -334,8 +336,9 @@ class ParallelScanSYCLBase {
 #endif
 
       cgh.parallel_for(
-          sycl::nd_range<1>(n_wgroups * wgroup_size, wgroup_size),
-          [=](sycl::nd_item<1> item) {
+          sycl::nd_range<2>(sycl::range<2>(n_wgroups * wgroup_size, 1),
+                            sycl::range<2>(wgroup_size, 1)),
+          [=](sycl::nd_item<2> item) {
             const index_type global_id = item.get_global_linear_id();
             const CombinedFunctorReducer<
                 FunctorType, typename Analysis::Reducer>& functor_reducer =
