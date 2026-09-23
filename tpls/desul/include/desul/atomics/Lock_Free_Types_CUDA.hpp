@@ -16,6 +16,9 @@ namespace Impl {
 
 template <class T>
 inline constexpr bool device_atomic_always_lock_free<T, void> = (sizeof(T) == 4) ||
+#ifdef DESUL_HAVE_16BYTE_LOCK_FREE_ATOMICS_DEVICE
+                                                                (sizeof(T) == 16) ||
+#endif
                                                                 (sizeof(T) == 8);
 
 }  // namespace Impl

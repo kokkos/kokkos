@@ -18,6 +18,22 @@ inline __device__ typename ::std::enable_if<sizeof(ctype)==8>::type device_atomi
   } \
 }
 
+#define __DESUL_IMPL_CUDA_ASM_ATOMIC_STORE_16() \
+template<class ctype> \
+inline __device__ typename ::std::enable_if<sizeof(ctype)==16, void>::type device_atomic_store(ctype* dest, ctype value, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
+  __int128 asm_value = *reinterpret_cast<__int128*>(&value); \
+  if(__isGlobal(dest)) { \
+    asm volatile("st.global" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM ".b128" " [%0],%1;" :: "l"(dest),"r"(asm_value) : "memory"); \
+  } else { \
+    asm volatile("st" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM ".b128" " [%0],%1;" :: "l"(dest),"r"(asm_value) : "memory"); \
+  } \
+}
+
 __DESUL_IMPL_CUDA_ASM_ATOMIC_STORE()
 
+#ifdef DESUL_HAVE_16BYTE_LOCK_FREE_ATOMICS_DEVICE
+__DESUL_IMPL_CUDA_ASM_ATOMIC_STORE_16()
+#endif
+
 #undef __DESUL_IMPL_CUDA_ASM_ATOMIC_STORE
+#undef __DESUL_IMPL_CUDA_ASM_ATOMIC_STORE_16()
