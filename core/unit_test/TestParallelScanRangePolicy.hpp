@@ -362,4 +362,79 @@ TEST(TEST_CATEGORY, parallel_scan_range_policy) {
     f.test_scan<Kokkos::LaunchBounds<32>>(work_sizes);
   }
 }
+
+// Test for allowing parallel_scan with a dynamic length array as value_type
+// This mirrors officially supported functionality in parallel_reduce,
+// But we have not decided yet whether we officially will support this for
+// parallel_scan.
+// For now this test status quo existing functionality, not a promise of
+// supported API
+
+#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC) && \
+    !defined(KOKKOS_ENABLE_NEXTSILICON)
+struct DynamicArrayScanFunctor {
+  using execution_space = TEST_EXECSPACE;
+
+  Kokkos::View<int**, TEST_EXECSPACE> data;
+  int value_count;
+  using value_type = int[];
+
+  KOKKOS_FUNCTION
+  void join(value_type& a, value_type b) const {
+    for (int k = 0; k < value_count; k++) {
+      a[k] += b[k];
+    }
+  }
+
+  KOKKOS_FUNCTION
+  void init(value_type& a) const {
+    for (int k = 0; k < value_count; k++) {
+      a[k] = 0;
+    }
+  }
+
+  KOKKOS_FUNCTION
+  void operator()(int i, value_type upd, bool final) const {
+    for (int k = 0; k < value_count; k++) {
+      upd[k] += k + 1;
+    }
+    if (final) {
+      for (int k = 0; k < value_count; k++) {
+        data(i, k) = upd[k];
+      }
+    }
+  }
+};
+
+void test_parallel_scan_dynamic_array() {
+  int N = 15000;
+  int M = 5;
+  Kokkos::View<int**, TEST_EXECSPACE> data("data", N, M);
+
+  Kokkos::parallel_scan("parallel_scan dynamic_length_array",
+                        Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+                        DynamicArrayScanFunctor{data, M});
+
+  int num_errors = 0;
+  Kokkos::parallel_reduce(
+      "check_result", Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
+      KOKKOS_LAMBDA(int i, int& error) {
+        for (int j = 0; j < M; j++)
+          // we are doing pre-fix scan
+          if (data(i, j) != (i + 1) * (j + 1)) error++;
+      },
+      num_errors);
+
+  ASSERT_EQ(num_errors, 0);
+}
+#endif
+
+TEST(TEST_CATEGORY, parallel_scan_dynamic_array) {
+#if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC) && \
+    !defined(KOKKOS_ENABLE_NEXTSILICON)
+  test_parallel_scan_dynamic_array();
+#else
+  GTEST_SKIP() << "Not supported for SYCL, OpenACC, and NextSilicon";
+#endif
+}
 }  // namespace
