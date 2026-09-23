@@ -400,45 +400,41 @@ concept ContainsStdPair = (is_std_pair<Args>::value || ...);
 
 template <std::size_t I, class T1, class T2>
 constexpr auto& get(Kokkos::pair<T1, T2>& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return p.first;
   } else if constexpr (I == 1) {
     return p.second;
-  } else {
-    static_assert(false, "Kokkos::pair only has 2 elements");
   }
 }
 
 template <std::size_t I, class T1, class T2>
 constexpr const auto& get(const Kokkos::pair<T1, T2>& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return p.first;
   } else if constexpr (I == 1) {
     return p.second;
-  } else {
-    static_assert(false, "Kokkos::pair only has 2 elements");
   }
 }
 
 template <std::size_t I, class T1, class T2>
 constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return std::forward<T1>(p.first);
   } else if constexpr (I == 1) {
     return std::forward<T2>(p.second);
-  } else {
-    static_assert(false, "Kokkos::pair only has 2 elements");
   }
 }
 
 template <std::size_t I, class T1, class T2>
 constexpr const auto&& get(const Kokkos::pair<T1, T2>&& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return std::forward<const T1>(p.first);
   } else if constexpr (I == 1) {
     return std::forward<const T2>(p.second);
-  } else {
-    static_assert(false, "Kokkos::pair only has 2 elements");
   }
 }
 
@@ -490,7 +486,8 @@ struct std::tuple_size<Kokkos::pair<T1, T2>>
 
 template <std::size_t I, class T1, class T2>
 struct std::tuple_element<I, Kokkos::pair<T1, T2>> {
-  static_assert(false, "Kokkos::pair only has 2 elements");
+  // FIXME_NVCC: This is trivially true, but nvcc doesn't like static_assert(false)
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
 };
 
 template <class T1, class T2>
