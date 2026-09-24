@@ -5,9 +5,13 @@
 
 #include <OpenACC/Kokkos_OpenACC.hpp>
 #include <OpenACC/Kokkos_OpenACC_DeepCopy.hpp>
-#include <OpenACC/Kokkos_OpenACC_SharedAllocationRecord.hpp>
 
 #include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
+#if defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
+KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
+    Kokkos::Experimental::OpenACCSpace);
+#else
 KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
     Kokkos::Experimental::OpenACCSpace);
+#endif
