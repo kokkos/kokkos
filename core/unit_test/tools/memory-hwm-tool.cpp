@@ -28,8 +28,8 @@ extern "C" void kokkosp_init_library(
   (void)interfaceVer;
   (void)loadSeq;
 
-    total_allocated = 0;
-    host_allocations.clear();
+  total_allocated = 0;
+  host_allocations.clear();
 }
 
 extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
