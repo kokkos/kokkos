@@ -187,6 +187,7 @@ struct CudaReductionsFunctor<FunctorType, false, true> {
                                // part of the reduction
       const int width,         // How much of the warp participates
       Scalar& result) {
+    if (width == 0) return;
     unsigned mask =
         width == 32
             ? 0xffffffff
@@ -303,6 +304,7 @@ struct CudaReductionsFunctor<FunctorType, false, false> {
                                // part of the reduction
       const int width)         // How much of the warp participates
   {
+    if (width == 0) return;
     unsigned mask =
         width == 32
             ? 0xffffffff

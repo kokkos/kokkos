@@ -142,6 +142,7 @@ struct HIPReductionsFunctor<FunctorType, false> {
                                // part of the reduction
       int const width)         // How much of the warp participates
   {
+    if (width == 0) return;
     int const lane_id =
         (threadIdx.y * blockDim.x + threadIdx.x) % HIPTraits::WarpSize;
 // HIP added support for __syncwarp() in version 7.0
