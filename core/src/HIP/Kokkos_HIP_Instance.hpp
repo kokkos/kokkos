@@ -24,6 +24,8 @@ struct HIPTraits {
 #if defined(KOKKOS_ARCH_AMD_GFX906) || defined(KOKKOS_ARCH_AMD_GFX908) ||     \
     defined(KOKKOS_ARCH_AMD_GFX90A) || defined(KOKKOS_ARCH_AMD_GFX940) ||     \
     defined(KOKKOS_ARCH_AMD_GFX942) || defined(KOKKOS_ARCH_AMD_GFX942_APU) || \
+    defined(KOKKOS_ARCH_AMD_GFX926) || defined(KOKKOS_ARCH_AMD_GFX928) || \
+    defined(KOKKOS_ARCH_AMD_GFX936) || defined(KOKKOS_ARCH_AMD_GFX938) || \
     defined(KOKKOS_ARCH_AMD_GFX950)
   static constexpr int WarpSize       = 64;
   static constexpr int WarpIndexMask  = 0x003f; /* hexadecimal for 63 */
