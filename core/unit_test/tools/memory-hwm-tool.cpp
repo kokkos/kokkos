@@ -3,34 +3,19 @@
 
 #include <cstdint>
 #include <cstdio>
-#include <cstdlib>
 #include <mutex>
-#include <vector>
-#include <tuple>
-#include <atomic>
+
 #include <cstring>
-#include <inttypes.h>
 #include <unordered_map>
 
 #include <unistd.h>
-
-#include <sys/resource.h>
-
-// darwin reports rusage.ru_maxrss in bytes
-#if defined(__APPLE__) || defined(__MACH__)
-#define RU_MAXRSS_UNITS 1024
-#else
-#define RU_MAXRSS_UNITS 1
-#endif
-
-struct Kokkos_Profiling_KokkosPDeviceInfo;
 
 struct SpaceHandle {
   char name[64];
 };
 
 constexpr uint64_t WARNING_THRESHOLD = 4ULL * 1024 * 1024 * 1024;
-static std::atomic<uint64_t> total_allocated(0);
+static uint64_t total_allocated      = 0;
 static std::unordered_map<const void*, uint64_t> host_allocations;
 static std::mutex m;
 
@@ -42,8 +27,9 @@ extern "C" void kokkosp_init_library(
     Kokkos_Profiling_KokkosPDeviceInfo* /*deviceInfo*/) {
   (void)interfaceVer;
   (void)loadSeq;
-  total_allocated.store(0);
-  host_allocations.clear();
+
+    total_allocated = 0;
+    host_allocations.clear();
 }
 
 extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
@@ -58,17 +44,17 @@ extern "C" void kokkosp_allocate_data(const SpaceHandle handle,
     if (strcmp(handle.name, "Host") == 0) {
       auto it = host_allocations.find(ptr);
       if (it != host_allocations.end()) {
-        total_allocated.fetch_sub(it->second);
+        total_allocated -= it->second;
         it->second = size;
       } else {
         host_allocations.emplace(ptr, size);
       }
 
-      total_allocated.fetch_add(size);
+      total_allocated += size;
+      reported_total = total_allocated;
     }
 
-    reported_total = total_allocated.load();
-    exceeded       = reported_total > WARNING_THRESHOLD;
+    exceeded = reported_total > WARNING_THRESHOLD;
   }
 
   if (exceeded) {
@@ -95,7 +81,7 @@ extern "C" void kokkosp_deallocate_data(SpaceHandle handle, const char* name,
   if (strcmp(handle.name, "Host") == 0) {
     auto it = host_allocations.find(ptr);
     if (it != host_allocations.end()) {
-      total_allocated.fetch_sub(it->second);
+      total_allocated -= it->second;
       host_allocations.erase(it);
     }
   }
