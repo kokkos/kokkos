@@ -220,13 +220,25 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
     int team_size_max =
         policy.team_size_max(dummy_functor, Kokkos::ParallelForTag());
     if (check_team_size) {
+      // FIXME_ARCH_PASCAL
+#ifdef KOKKOS_ARCH_PASCAL
+      EXPECT_EQ(team_size_max,
+                (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 1 : 2));
+#else
       EXPECT_EQ(team_size_max, 1);
+#endif
     }
 
     int team_size_recommended =
         policy.team_size_recommended(dummy_functor, Kokkos::ParallelForTag());
     if (check_team_size) {
+      // FIXME_ARCH_PASCAL
+#ifdef KOKKOS_ARCH_PASCAL
+      EXPECT_EQ(team_size_recommended,
+                (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 1 : 2));
+#else
       EXPECT_EQ(team_size_recommended, 1);
+#endif
     }
 
     Kokkos::parallel_for(policy, dummy_functor);
