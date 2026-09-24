@@ -12,7 +12,8 @@
 #endif
 
 namespace Kokkos::Impl {
-#ifndef SYCL_EXT_ONEAPI_AUTO_LOCAL_RANGE
+#if !(defined(SYCL_EXT_ONEAPI_AUTO_LOCAL_RANGE) && \
+      defined(KOKKOS_ARCH_INTEL_GPU))
 template <typename FunctorWrapper, typename Policy>
 struct FunctorWrapperRangePolicyParallelFor {
   using WorkTag = typename Policy::work_tag;
@@ -104,7 +105,9 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
       const auto actual_range = static_cast<typename Policy::index_type>(
           policy.end() - policy.begin());
       if (policy.chunk_size() <= 1) {
-#ifdef SYCL_EXT_ONEAPI_AUTO_LOCAL_RANGE
+// FIXME_CUDA We are getting CUDA_ERROR_INVALID_VALUE in some tests with
+// auto_range<2> while auto_range<1> worked
+#if defined(SYCL_EXT_ONEAPI_AUTO_LOCAL_RANGE) && defined(KOKKOS_ARCH_INTEL_GPU)
         FunctorWrapperRangePolicyParallelForCustom<Functor, Policy> f{
             policy.begin(), functor, actual_range};
         // Round the actual range up to the closest power of two not exceeding
