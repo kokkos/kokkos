@@ -34,13 +34,6 @@ static std::atomic<uint64_t> total_allocated(0);
 static std::unordered_map<const void*, uint64_t> host_allocations;
 static std::mutex m;
 
-uint64_t max_mem_usage() {
-  struct rusage app_info;
-  getrusage(RUSAGE_SELF, &app_info);
-  const long max_rssKB = app_info.ru_maxrss;
-  return max_rssKB * RU_MAXRSS_UNITS;
-}
-
 struct Kokkos_Profiling_KokkosPDeviceInfo;
 
 extern "C" void kokkosp_init_library(
