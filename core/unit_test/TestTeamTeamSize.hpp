@@ -225,7 +225,7 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
       // see discussion in https://github.com/kokkos/kokkos/pull/9590
 #if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_MAXWELL)
       EXPECT_EQ(team_size_max,
-                (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 1 : 2));
+                (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 2 : 1));
 #else
       EXPECT_EQ(team_size_max, 1);
 #endif
@@ -239,7 +239,7 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
       // see discussion in https://github.com/kokkos/kokkos/pull/9590
 #if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_MAXWELL)
       EXPECT_EQ(team_size_recommended,
-                (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 1 : 2));
+                (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 2 : 1));
 #else
       EXPECT_EQ(team_size_recommended, 1);
 #endif
