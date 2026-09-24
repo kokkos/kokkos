@@ -399,7 +399,7 @@ concept ContainsStdPair = (is_std_pair<Args>::value || ...);
 }  // end namespace Impl
 
 template <std::size_t I, class T1, class T2>
-constexpr auto& get(Kokkos::pair<T1, T2>& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr auto& get(Kokkos::pair<T1, T2>& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return p.first;
@@ -409,7 +409,8 @@ constexpr auto& get(Kokkos::pair<T1, T2>& p) noexcept {
 }
 
 template <std::size_t I, class T1, class T2>
-constexpr const auto& get(const Kokkos::pair<T1, T2>& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr const auto& get(
+    const Kokkos::pair<T1, T2>& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return p.first;
@@ -419,7 +420,7 @@ constexpr const auto& get(const Kokkos::pair<T1, T2>& p) noexcept {
 }
 
 template <std::size_t I, class T1, class T2>
-constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return std::forward<T1>(p.first);
@@ -429,7 +430,8 @@ constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
 }
 
 template <std::size_t I, class T1, class T2>
-constexpr const auto&& get(const Kokkos::pair<T1, T2>&& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr const auto&& get(
+    const Kokkos::pair<T1, T2>&& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return std::forward<const T1>(p.first);
@@ -439,45 +441,48 @@ constexpr const auto&& get(const Kokkos::pair<T1, T2>&& p) noexcept {
 }
 
 template <class T, class U>
-constexpr T& get(Kokkos::pair<T, U>& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr T& get(Kokkos::pair<T, U>& p) noexcept {
   return p.first;
 }
 
 template <class T, class U>
-constexpr const T& get(const Kokkos::pair<T, U>& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr const T& get(
+    const Kokkos::pair<T, U>& p) noexcept {
   return p.first;
 }
 
 template <class T, class U>
-constexpr T&& get(Kokkos::pair<T, U>&& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr T&& get(Kokkos::pair<T, U>&& p) noexcept {
   return std::forward<T>(p.first);
 }
 
 template <class T, class U>
-constexpr const T&& get(const Kokkos::pair<T, U>&& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr const T&& get(
+    const Kokkos::pair<T, U>&& p) noexcept {
   return std::forward<const T>(p.first);
 }
 
 template <class T, class U>
-constexpr T& get(Kokkos::pair<U, T>& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr T& get(Kokkos::pair<U, T>& p) noexcept {
   return p.second;
 }
 
 template <class T, class U>
-constexpr const T& get(const Kokkos::pair<U, T>& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr const T& get(
+    const Kokkos::pair<U, T>& p) noexcept {
   return p.second;
 }
 
 template <class T, class U>
-constexpr T&& get(Kokkos::pair<U, T>&& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr T&& get(Kokkos::pair<U, T>&& p) noexcept {
   return std::forward<T>(p.second);
 }
 
 template <class T, class U>
-constexpr const T&& get(const Kokkos::pair<U, T>&& p) noexcept {
+KOKKOS_INLINE_FUNCTION constexpr const T&& get(
+    const Kokkos::pair<U, T>&& p) noexcept {
   return std::forward<const T>(p.second);
 }
-
 }  // namespace Kokkos
 
 template <class T1, class T2>
@@ -486,7 +491,8 @@ struct std::tuple_size<Kokkos::pair<T1, T2>>
 
 template <std::size_t I, class T1, class T2>
 struct std::tuple_element<I, Kokkos::pair<T1, T2>> {
-  // FIXME_NVCC: This is trivially true, but nvcc doesn't like static_assert(false)
+  // FIXME_NVCC: This is trivially true, but nvcc doesn't like
+  // static_assert(false)
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
 };
 
