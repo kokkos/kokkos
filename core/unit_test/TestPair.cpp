@@ -314,8 +314,10 @@ TEST(defaultdevicetype, structured_bindings_and_tuple_interface) {
   using view_t     = Kokkos::View<int*, exec_space>;
   view_t results("pair_device_results", 24);
 
-  Kokkos::parallel_for(Kokkos::RangePolicy<exec_space>(0, 1),
-                       TupleInterfaceDeviceTest{results});
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<exec_space>(0, 1),
+      TupleInterfaceDeviceTest<view_t>{
+          results});  // could CTAD here but some compilers have bugs around it
 
   Kokkos::fence();
 
