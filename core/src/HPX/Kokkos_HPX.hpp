@@ -325,6 +325,9 @@ class HPX {
   uint32_t impl_instance_id() const noexcept {
     return impl_get_instance_data().m_instance_id;
   }
+  int impl_instance_data_use_count() const noexcept {
+    return m_instance_data.use_count();
+  }
 
   static void impl_decrement_active_parallel_region_count();
   static void impl_increment_active_parallel_region_count();
