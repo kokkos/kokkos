@@ -419,6 +419,9 @@ KOKKOS_INLINE_FUNCTION constexpr const auto& get(
   }
 }
 
+// Suppress clang-tidy warnings for this function since moving would do the
+// incorrect thing here
+// NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
 template <std::size_t I, class T1, class T2>
 KOKKOS_INLINE_FUNCTION constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
@@ -428,6 +431,7 @@ KOKKOS_INLINE_FUNCTION constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
     return std::forward<T2>(p.second);
   }
 }
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
 template <std::size_t I, class T1, class T2>
 KOKKOS_INLINE_FUNCTION constexpr const auto&& get(
@@ -451,10 +455,14 @@ KOKKOS_INLINE_FUNCTION constexpr const T& get(
   return p.first;
 }
 
+// Suppress clang-tidy warnings for this function since moving would do the
+// incorrect thing here
+// NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
 template <class T, class U>
 KOKKOS_INLINE_FUNCTION constexpr T&& get(Kokkos::pair<T, U>&& p) noexcept {
   return std::forward<T>(p.first);
 }
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
 template <class T, class U>
 KOKKOS_INLINE_FUNCTION constexpr const T&& get(
@@ -473,10 +481,14 @@ KOKKOS_INLINE_FUNCTION constexpr const T& get(
   return p.second;
 }
 
+// Suppress clang-tidy warnings for this function since moving would do the
+// incorrect thing here
+// NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
 template <class T, class U>
 KOKKOS_INLINE_FUNCTION constexpr T&& get(Kokkos::pair<U, T>&& p) noexcept {
   return std::forward<T>(p.second);
 }
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
 template <class T, class U>
 KOKKOS_INLINE_FUNCTION constexpr const T&& get(
@@ -485,6 +497,10 @@ KOKKOS_INLINE_FUNCTION constexpr const T&& get(
 }
 }  // namespace Kokkos
 
+// Suppress clang-tidy warnings complaining about modifying std namespace
+// objects Specializing tuple_element and tuple_size are perfectly okay and
+// necessary, so these linter warnings are spurious
+// NOLINTBEGIN(bugprone-std-namespace-modification)
 template <class T1, class T2>
 struct std::tuple_size<Kokkos::pair<T1, T2>>
     : std::integral_constant<std::size_t, 2> {};
@@ -505,6 +521,7 @@ template <class T1, class T2>
 struct std::tuple_element<1, Kokkos::pair<T1, T2>> {
   using type = T2;
 };
+// NOLINTEND(bugprone-std-namespace-modification)
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PAIR
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE
