@@ -220,8 +220,10 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
     int team_size_max =
         policy.team_size_max(dummy_functor, Kokkos::ParallelForTag());
     if (check_team_size) {
-      // FIXME_ARCH_PASCAL
-#ifdef KOKKOS_ARCH_PASCAL
+      // Due to conservative estimates of scratch_size_max in the face of
+      // incomplete information, on Pascal and Maxwell we can fit 2 threads
+      // see discussion in https://github.com/kokkos/kokkos/pull/9590
+#if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_MAXWELL)
       EXPECT_EQ(team_size_max,
                 (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 1 : 2));
 #else
@@ -232,8 +234,10 @@ void test_team_policy_launch_with_maximum_scratch_size(int level) {
     int team_size_recommended =
         policy.team_size_recommended(dummy_functor, Kokkos::ParallelForTag());
     if (check_team_size) {
-      // FIXME_ARCH_PASCAL
-#ifdef KOKKOS_ARCH_PASCAL
+      // Due to conservative estimates of scratch_size_max in the face of
+      // incomplete information, on Pascal and Maxwell we can fit 2 threads
+      // see discussion in https://github.com/kokkos/kokkos/pull/9590
+#if defined(KOKKOS_ARCH_PASCAL) || defined(KOKKOS_ARCH_MAXWELL)
       EXPECT_EQ(team_size_recommended,
                 (std::is_same_v<TEST_EXECSPACE, Kokkos::Cuda> ? 1 : 2));
 #else
