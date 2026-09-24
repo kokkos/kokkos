@@ -92,7 +92,7 @@ function(KOKKOS_ADD_TEST)
   endif()
 
   # This tool will get applied by default unless DefaultInstance is specified in the test name
-  # It uses the rusage struct, so it will only work on Linux or Mac. Requires libdl.
+  # Requires libdl.
   if(NOT WIN32)
     string(FIND "${TEST_NAME}" "DefaultInstance" index)
     if((NOT TEST_TOOL)
@@ -102,7 +102,7 @@ function(KOKKOS_ADD_TEST)
     )
       set_property(
         TEST ${TEST_NAME} APPEND PROPERTY ENVIRONMENT_MODIFICATION
-                                          KOKKOS_TOOLS_LIBS=set:$<TARGET_FILE:kokkoshwmtracker-tool>
+                                          KOKKOS_TOOLS_LIBS=cmake_list_append:$<TARGET_FILE:kokkoshwmtracker-tool>
       )
     endif()
   endif()
