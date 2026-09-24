@@ -403,7 +403,7 @@ KOKKOS_INLINE_FUNCTION constexpr auto& get(Kokkos::pair<T1, T2>& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return p.first;
-  } else if constexpr (I == 1) {
+  } else {
     return p.second;
   }
 }
@@ -414,7 +414,7 @@ KOKKOS_INLINE_FUNCTION constexpr const auto& get(
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return p.first;
-  } else if constexpr (I == 1) {
+  } else {
     return p.second;
   }
 }
@@ -424,7 +424,7 @@ KOKKOS_INLINE_FUNCTION constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return std::forward<T1>(p.first);
-  } else if constexpr (I == 1) {
+  } else {
     return std::forward<T2>(p.second);
   }
 }
@@ -435,7 +435,7 @@ KOKKOS_INLINE_FUNCTION constexpr const auto&& get(
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
   if constexpr (I == 0) {
     return std::forward<const T1>(p.first);
-  } else if constexpr (I == 1) {
+  } else {
     return std::forward<const T2>(p.second);
   }
 }
