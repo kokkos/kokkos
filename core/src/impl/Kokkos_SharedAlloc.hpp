@@ -8,9 +8,11 @@
 #include <Kokkos_Core_fwd.hpp>
 #include <impl/Kokkos_Error.hpp>  // Impl::throw_runtime_exception
 
+#include <cstddef>
 #include <cstdint>
+#include <iosfwd>
 #include <string>
-#include <type_traits>
+#include <utility>
 
 namespace Kokkos {
 namespace Impl {
@@ -22,7 +24,27 @@ template <class MemorySpace = void, class DestroyFunctor = void>
 class SharedAllocationRecord;
 
 template <class MemorySpace>
-class SharedAllocationRecordCommon;
+void deallocate_shared_allocation_record(SharedAllocationRecord<void, void>*);
+
+template <class MemorySpace>
+SharedAllocationRecord<MemorySpace, void>* allocate_shared_allocation_record(
+    MemorySpace const&, std::string const&, size_t);
+
+template <class MemorySpace>
+void* allocate_tracked_shared_allocation(MemorySpace const&, std::string const&,
+                                         size_t);
+
+template <class MemorySpace>
+void deallocate_tracked_shared_allocation(void*);
+
+template <class MemorySpace, class ExecutionSpace>
+void* reallocate_tracked_shared_allocation(void*, size_t);
+
+template <class MemorySpace>
+SharedAllocationRecord<MemorySpace, void>* get_shared_allocation_record(void*);
+
+template <class MemorySpace, class ExecutionSpace>
+void print_shared_allocation_records(std::ostream&, MemorySpace const&, bool);
 
 class SharedAllocationHeader {
  private:
@@ -38,10 +60,12 @@ class SharedAllocationHeader {
 
   template <class, class>
   friend class SharedAllocationRecord;
-  template <class>
-  friend class SharedAllocationRecordCommon;
-  template <class>
-  friend class HostInaccessibleSharedAllocationRecordCommon;
+  template <class MemorySpace>
+  friend SharedAllocationRecord<MemorySpace, void>*
+  get_shared_allocation_record(void*);
+  template <class MemorySpace, class ExecutionSpace>
+  friend void print_shared_allocation_records(std::ostream&, MemorySpace const&,
+                                              bool);
   friend void fill_host_accessible_header_info(
       SharedAllocationRecord<void, void>*, SharedAllocationHeader&,
       std::string const&);
@@ -74,10 +98,9 @@ class SharedAllocationRecord<void, void> {
 
   template <class, class>
   friend class SharedAllocationRecord;
-  template <class>
-  friend class SharedAllocationRecordCommon;
-  template <class>
-  friend class HostInaccessibleSharedAllocationRecordCommon;
+  template <class MemorySpace, class ExecutionSpace>
+  friend void print_shared_allocation_records(std::ostream&, MemorySpace const&,
+                                              bool);
 
   using function_type = void (*)(SharedAllocationRecord<void, void>*);
 
@@ -222,231 +245,9 @@ SharedAllocationHeader* checked_allocation_with_header(
                      alloc_size + sizeof(SharedAllocationHeader), alloc_size));
 }
 
-void fill_host_accessible_header_info(SharedAllocationHeader& arg_header,
-                                      std::string const& arg_label);
-
-template <class MemorySpace>
-class SharedAllocationRecordCommon : public SharedAllocationRecord<void, void> {
- private:
-  using derived_t     = SharedAllocationRecord<MemorySpace, void>;
-  using record_base_t = SharedAllocationRecord<void, void>;
-
- protected:
-  using record_base_t::record_base_t;
-
-  MemorySpace m_space;
-
-#ifdef KOKKOS_ENABLE_DEBUG
-  static record_base_t s_root_record;
-#endif
-
-  static void deallocate(record_base_t* arg_rec);
-
- public:
-  SharedAllocationRecordCommon(const SharedAllocationRecordCommon&) = delete;
-  SharedAllocationRecordCommon(SharedAllocationRecordCommon&&)      = delete;
-  SharedAllocationRecordCommon& operator=(const SharedAllocationRecordCommon&) =
-      delete;
-  SharedAllocationRecordCommon& operator=(SharedAllocationRecordCommon&&) =
-      delete;
-
-  ~SharedAllocationRecordCommon();
-
-  template <class ExecutionSpace>
-  SharedAllocationRecordCommon(
-      ExecutionSpace const& exec, MemorySpace const& space,
-      std::string const& label, std::size_t alloc_size,
-      record_base_t::function_type dealloc = &deallocate)
-      : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_ENABLE_DEBUG
-            &s_root_record,
-#endif
-            checked_allocation_with_header(exec, space, label, alloc_size),
-            sizeof(SharedAllocationHeader) + alloc_size, dealloc, label),
-        m_space(space) {
-    auto& header = *SharedAllocationRecord<void, void>::m_alloc_ptr;
-    fill_host_accessible_header_info(this, header, label);
-  }
-  SharedAllocationRecordCommon(
-      MemorySpace const& space, std::string const& label, std::size_t size,
-      record_base_t::function_type dealloc = &deallocate);
-
-  static auto allocate(MemorySpace const& arg_space,
-                       std::string const& arg_label, size_t arg_alloc_size)
-      -> derived_t*;
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(MemorySpace const& arg_space,
-                                std::string const& arg_alloc_label,
-                                size_t arg_alloc_size);
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* arg_alloc_ptr);
-  /**\brief  Reallocate tracked memory in the space
-   * \note The ExecutionSpace template parameter is used to force
-   * templatization of the method to delay its definition. Otherwise, the
-   * method would use an execution space which is not complete yet.
-   */
-  template <class ExecutionSpace = typename MemorySpace::execution_space>
-  static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
-  static auto get_record(void* alloc_ptr) -> derived_t*;
-  std::string get_label() const override;
-  static void print_records(std::ostream& s, MemorySpace const&,
-                            bool detail = false);
-};
-
-/**
- * \note This method is implemented here to prevent circular dependencies.
- */
-template <class MemorySpace>
-template <class ExecutionSpace>
-void* SharedAllocationRecordCommon<MemorySpace>::reallocate_tracked(
-    void* arg_alloc_ptr, size_t arg_alloc_size) {
-  derived_t* const r_old = derived_t::get_record(arg_alloc_ptr);
-  derived_t* const r_new =
-      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
-
-  Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
-      ExecutionSpace{}, r_new->data(), r_old->data(),
-      std::min(r_old->size(), r_new->size()));
-  Kokkos::fence(std::string("SharedAllocationRecord<") + MemorySpace::name() +
-                ", void>::reallocate_tracked(): fence after copying data");
-
-  record_base_t::increment(r_new);
-  record_base_t::decrement(r_old);
-
-  return r_new->data();
-}
-
-template <class MemorySpace>
-class HostInaccessibleSharedAllocationRecordCommon
-    : public SharedAllocationRecord<void, void> {
- private:
-  using derived_t     = SharedAllocationRecord<MemorySpace, void>;
-  using record_base_t = SharedAllocationRecord<void, void>;
-
- protected:
-  using record_base_t::record_base_t;
-
-  MemorySpace m_space;
-
-#ifdef KOKKOS_ENABLE_DEBUG
-  static record_base_t s_root_record;
-#endif
-
-  static void deallocate(record_base_t* arg_rec);
-
- public:
-  HostInaccessibleSharedAllocationRecordCommon(
-      const HostInaccessibleSharedAllocationRecordCommon&) = delete;
-  HostInaccessibleSharedAllocationRecordCommon(
-      HostInaccessibleSharedAllocationRecordCommon&&) = delete;
-  HostInaccessibleSharedAllocationRecordCommon& operator=(
-      const HostInaccessibleSharedAllocationRecordCommon&) = delete;
-  HostInaccessibleSharedAllocationRecordCommon& operator=(
-      HostInaccessibleSharedAllocationRecordCommon&&) = delete;
-
-  ~HostInaccessibleSharedAllocationRecordCommon();
-
-  template <class ExecutionSpace>
-  HostInaccessibleSharedAllocationRecordCommon(
-      ExecutionSpace const& exec, MemorySpace const& space,
-      std::string const& label, std::size_t alloc_size,
-      record_base_t::function_type dealloc = &deallocate)
-      : SharedAllocationRecord<void, void>(
-#ifdef KOKKOS_ENABLE_DEBUG
-            &s_root_record,
-#endif
-            checked_allocation_with_header(exec, space, label, alloc_size),
-            sizeof(SharedAllocationHeader) + alloc_size, dealloc, label),
-        m_space(space) {
-    SharedAllocationHeader header;
-
-    fill_host_accessible_header_info(this, header, label);
-
-    Kokkos::Impl::DeepCopy<MemorySpace, HostSpace>(
-        exec, SharedAllocationRecord<void, void>::m_alloc_ptr, &header,
-        sizeof(SharedAllocationHeader));
-  }
-  HostInaccessibleSharedAllocationRecordCommon(
-      MemorySpace const& space, std::string const& label, std::size_t size,
-      record_base_t::function_type dealloc = &deallocate);
-
-  static auto allocate(MemorySpace const& arg_space,
-                       std::string const& arg_label, size_t arg_alloc_size)
-      -> derived_t*;
-  /**\brief  Allocate tracked memory in the space */
-  static void* allocate_tracked(MemorySpace const& arg_space,
-                                std::string const& arg_alloc_label,
-                                size_t arg_alloc_size);
-  /**\brief  Deallocate tracked memory in the space */
-  static void deallocate_tracked(void* arg_alloc_ptr);
-  /**\brief  Reallocate tracked memory in the space
-   * \note The ExecutionSpace template parameter is used to force
-   * templatization of the method to delay its definition. Otherwise, the
-   * method would use an execution space which is not complete yet.
-   */
-  template <class ExecutionSpace = typename MemorySpace::execution_space>
-  static void* reallocate_tracked(void* arg_alloc_ptr, size_t arg_alloc_size);
-
-  /**
-   * \note The ExecutionSpace template parameter is used to force
-   * templatization of the method to delay its definition. Otherwise, the
-   * method would use an execution space which is not complete yet.
-   */
-  template <class ExecutionSpace = Kokkos::DefaultHostExecutionSpace>
-  static void print_records(std::ostream& s, MemorySpace const&,
-                            bool detail = false);
-  static auto get_record(void* alloc_ptr) -> derived_t*;
-  std::string get_label() const override;
-};
-
-/**
- * \note This method is implemented here to prevent circular dependencies.
- */
-template <class MemorySpace>
-template <class ExecutionSpace>
-void* HostInaccessibleSharedAllocationRecordCommon<
-    MemorySpace>::reallocate_tracked(void* arg_alloc_ptr,
-                                     size_t arg_alloc_size) {
-  derived_t* const r_old = derived_t::get_record(arg_alloc_ptr);
-  derived_t* const r_new =
-      allocate(r_old->m_space, r_old->get_label(), arg_alloc_size);
-
-  Kokkos::Impl::DeepCopy<MemorySpace, MemorySpace>(
-      ExecutionSpace{}, r_new->data(), r_old->data(),
-      std::min(r_old->size(), r_new->size()));
-  Kokkos::fence(std::string("SharedAllocationRecord<") + MemorySpace::name() +
-                ", void>::reallocate_tracked(): fence after copying data");
-
-  record_base_t::increment(r_new);
-  record_base_t::decrement(r_old);
-
-  return r_new->data();
-}
-
-#ifdef KOKKOS_ENABLE_DEBUG
-template <class MemorySpace>
-SharedAllocationRecord<void, void>
-    SharedAllocationRecordCommon<MemorySpace>::s_root_record;
-
-template <class MemorySpace>
-SharedAllocationRecord<void, void>
-    HostInaccessibleSharedAllocationRecordCommon<MemorySpace>::s_root_record;
-#endif
-
-template <class MemorySpace>
-using SharedAllocationRecordBase = std::conditional_t<
-    Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace, MemorySpace>::accessible,
-    SharedAllocationRecordCommon<MemorySpace>,
-    HostInaccessibleSharedAllocationRecordCommon<MemorySpace>>;
-
-#define KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION( \
-    MEMORY_SPACE)                                                    \
-  template class Kokkos::Impl::SharedAllocationRecordCommon<MEMORY_SPACE>
-
-#define KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION( \
-    MEMORY_SPACE)                                                                      \
-  template class Kokkos::Impl::HostInaccessibleSharedAllocationRecordCommon<           \
-      MEMORY_SPACE>
+void fill_host_accessible_header_info(SharedAllocationRecord<void, void>*,
+                                      SharedAllocationHeader&,
+                                      std::string const&);
 
 /* Taking the address of this function so make sure it is unique */
 template <class MemorySpace, class DestroyFunctor>
@@ -463,17 +264,81 @@ inline void deallocate(SharedAllocationRecord<void, void>* record_ptr) {
 }
 
 /*
- *  Memory space specialization of SharedAllocationRecord< Space , void >
- * requires :
+ *  Memory space specialization of SharedAllocationRecord<Space, void>.
  *
- *  SharedAllocationRecord< Space , void > : public SharedAllocationRecord< void
- * , void >
- *  {
- *    // delete allocated user memory via static_cast to this type.
- *    static void deallocate( const SharedAllocationRecord<void,void> * );
- *    Space m_space ;
- *  }
+ *  This is the only memory-space-specific allocation-record type.  The
+ *  operations which allocate, inspect, and release records are free function
+ *  templates below so that a user-defined memory space can instantiate them
+ *  without a backend-specific specialization or explicit instantiation.
  */
+template <class MemorySpace>
+class SharedAllocationRecord<MemorySpace, void>
+    : public SharedAllocationRecord<void, void> {
+ private:
+  using record_base_t = SharedAllocationRecord<void, void>;
+
+  template <class, class>
+  friend void* reallocate_tracked_shared_allocation(void*, size_t);
+  template <class MemorySpaceT, class ExecutionSpace>
+  friend void print_shared_allocation_records(std::ostream&,
+                                              MemorySpaceT const&, bool);
+
+ protected:
+  MemorySpace m_space;
+
+#ifdef KOKKOS_ENABLE_DEBUG
+  inline static record_base_t s_root_record;
+#endif
+
+ public:
+  using derived_t = SharedAllocationRecord<MemorySpace, void>;
+
+  SharedAllocationRecord(const SharedAllocationRecord&)            = delete;
+  SharedAllocationRecord(SharedAllocationRecord&&)                 = delete;
+  SharedAllocationRecord& operator=(const SharedAllocationRecord&) = delete;
+  SharedAllocationRecord& operator=(SharedAllocationRecord&&)      = delete;
+
+  template <class ExecutionSpace>
+  SharedAllocationRecord(ExecutionSpace const&, MemorySpace const&,
+                         std::string const&, std::size_t,
+                         record_base_t::function_type =
+                             &deallocate_shared_allocation_record<MemorySpace>);
+
+  SharedAllocationRecord(MemorySpace const&, std::string const&, std::size_t,
+                         record_base_t::function_type =
+                             &deallocate_shared_allocation_record<MemorySpace>);
+
+  ~SharedAllocationRecord() override;
+
+  static derived_t* allocate(MemorySpace const&, std::string const&, size_t);
+
+  /**\brief Allocate tracked memory in the space. */
+  static void* allocate_tracked(MemorySpace const&, std::string const&, size_t);
+
+  /**\brief Deallocate tracked memory in the space. */
+  static void deallocate_tracked(void*);
+
+  /**\brief Reallocate tracked memory in the space.
+   * \note The ExecutionSpace template parameter delays the use of the
+   * execution-space type until this function is instantiated.
+   */
+  template <class ExecutionSpace = typename MemorySpace::execution_space>
+  static void* reallocate_tracked(void*, size_t);
+
+  static derived_t* get_record(void*);
+
+  std::string get_label() const override;
+
+  /**\brief Print tracked records for this memory space. */
+  template <class ExecutionSpace = Kokkos::DefaultHostExecutionSpace>
+  static void print_records(std::ostream&, MemorySpace const&, bool = false);
+};
+
+template <class MemorySpace>
+inline void deallocate_shared_allocation_record(
+    SharedAllocationRecord<void, void>* record_ptr) {
+  delete static_cast<SharedAllocationRecord<MemorySpace, void>*>(record_ptr);
+}
 template <class MemorySpace, class DestroyFunctor>
 class SharedAllocationRecord
     : public SharedAllocationRecord<MemorySpace, void> {
@@ -528,15 +393,6 @@ class SharedAllocationRecord
                          (void)arg_alloc; return nullptr;))
     KOKKOS_IMPL_UNREACHABLE();
   }
-};
-
-template <class MemorySpace>
-class SharedAllocationRecord<MemorySpace, void>
-    : public SharedAllocationRecordBase<MemorySpace> {
-  using base_type = SharedAllocationRecordBase<MemorySpace>;
-
- public:
-  using base_type::base_type;
 };
 
 union SharedAllocationTracker {
@@ -767,4 +623,11 @@ inline FunctorType construct_with_shared_allocation_tracking_disabled(
 }
 } /* namespace Impl */
 } /* namespace Kokkos */
+
+// Keep the memory-space-dependent definitions visible to users that include
+// this internal header directly.  The required HostSpace and DeepCopy types
+// are forward declared by Kokkos_Core_fwd.hpp and completed by normal backend
+// headers before these templates are instantiated.
+#include <impl/Kokkos_SharedAlloc_timpl.hpp>
+
 #endif
