@@ -230,20 +230,12 @@ template <class MemorySpace, class ExecutionSpace>
 void print_shared_allocation_records([[maybe_unused]] std::ostream& stream,
                                      MemorySpace const&,
                                      [[maybe_unused]] bool detail) {
-  if constexpr (MemorySpaceAccess<HostSpace, MemorySpace>::accessible) {
 #ifdef KOKKOS_ENABLE_DEBUG
+  if constexpr (MemorySpaceAccess<HostSpace, MemorySpace>::accessible) {
     SharedAllocationRecord<void, void>::print_host_accessible_records(
         stream, MemorySpace::name(),
         &SharedAllocationRecord<MemorySpace, void>::s_root_record, detail);
-#else
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("SharedAllocationHeader<") +
-        std::string(MemorySpace::name()) +
-        std::string(
-            ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"));
-#endif
   } else {
-#ifdef KOKKOS_ENABLE_DEBUG
     SharedAllocationRecord<void, void>* record =
         &SharedAllocationRecord<MemorySpace, void>::s_root_record;
 
@@ -320,14 +312,14 @@ void print_shared_allocation_records([[maybe_unused]] std::ostream& stream,
       } while (record !=
                &SharedAllocationRecord<MemorySpace, void>::s_root_record);
     }
-#else
-    Kokkos::Impl::throw_runtime_exception(
-        std::string("SharedAllocationHeader<") +
-        std::string(MemorySpace::name()) +
-        std::string(
-            ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"));
-#endif
   }
+#else
+  Kokkos::Impl::throw_runtime_exception(
+      std::string("SharedAllocationHeader<") +
+      std::string(MemorySpace::name()) +
+      std::string(
+          ">::print_records only works with KOKKOS_ENABLE_DEBUG enabled"));
+#endif
 }
 
 template <class MemorySpace>
