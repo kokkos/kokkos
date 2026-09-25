@@ -18,10 +18,8 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #define DESUL_IMPL_CUDA_RDC
 #endif
 
-#if (defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) &&  \
-     !defined(DESUL_IMPL_CUDA_RDC)) ||                            \
-    (!defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) && \
-     defined(DESUL_IMPL_CUDA_RDC))
+#if (defined(DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION) && \
+     !defined(DESUL_IMPL_CUDA_RDC))
 #error Relocatable device code mode incompatible with desul atomics configuration
 #endif
 
@@ -31,10 +29,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 #endif
 
 #ifdef DESUL_ATOMICS_ENABLE_HIP
-#if (defined(DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION) &&  \
-     !defined(__CLANG_RDC__)) ||                                 \
-    (!defined(DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION) && \
-     defined(__CLANG_RDC__))
+#if (defined(DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION) && !defined(__CLANG_RDC__))
 #error Relocatable device code mode incompatible with desul atomics configuration
 #endif
 #endif
