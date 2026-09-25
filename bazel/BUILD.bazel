@@ -1,0 +1,63 @@
+# SPDX-FileCopyrightText: Copyright 2026 Antmicro
+# SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+
+load("@rules_cc//cc:cc_test.bzl", "cc_test")
+load(":options.bzl", "CXX_COPTS", "SUPPORTED_PLATFORMS")
+
+package(default_visibility = ["//visibility:public"])
+
+config_setting(
+    name = "linux",
+    constraint_values = ["@platforms//os:linux"],
+)
+
+config_setting(
+    name = "macos",
+    constraint_values = ["@platforms//os:macos"],
+)
+
+config_setting(
+    name = "openmp_gcc",
+    flag_values = {
+        "//:backend": "openmp",
+        "@rules_cc//cc/compiler:compiler": "gcc",
+    },
+)
+
+config_setting(
+    name = "openmp_clang",
+    constraint_values = ["@platforms//os:linux"],
+    flag_values = {
+        "//:backend": "openmp",
+        "@rules_cc//cc/compiler:compiler": "clang",
+    },
+)
+
+config_setting(
+    name = "openmp_apple_clang",
+    constraint_values = ["@platforms//os:macos"],
+    flag_values = {
+        "//:backend": "openmp",
+        "@rules_cc//cc/compiler:compiler": "clang",
+    },
+)
+
+config_setting(
+    name = "gcc",
+    flag_values = {"@rules_cc//cc/compiler:compiler": "gcc"},
+)
+
+config_setting(
+    name = "clang",
+    flag_values = {"@rules_cc//cc/compiler:compiler": "clang"},
+)
+
+exports_files(["generate_config.cmake"])
+
+cc_test(
+    name = "smoke_test",
+    srcs = ["smoke_test.cpp"],
+    copts = CXX_COPTS,
+    target_compatible_with = SUPPORTED_PLATFORMS,
+    deps = ["//:kokkos"],
+)

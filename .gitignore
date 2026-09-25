@@ -22,3 +22,6 @@ CMakeUserPresets.json
 /.vscode
 ## QtCreator
 /CMakeLists.txt.user*
+
+# Bazel build outputs
+/bazel-*
