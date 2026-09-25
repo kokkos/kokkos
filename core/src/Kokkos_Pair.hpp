@@ -398,7 +398,130 @@ concept ContainsStdPair = (is_std_pair<Args>::value || ...);
 
 }  // end namespace Impl
 
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr auto& get(Kokkos::pair<T1, T2>& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
+  if constexpr (I == 0) {
+    return p.first;
+  } else {
+    return p.second;
+  }
+}
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr const auto& get(
+    const Kokkos::pair<T1, T2>& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
+  if constexpr (I == 0) {
+    return p.first;
+  } else {
+    return p.second;
+  }
+}
+
+// Suppress clang-tidy warnings for this function since moving would do the
+// incorrect thing here
+// NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr auto&& get(Kokkos::pair<T1, T2>&& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
+  if constexpr (I == 0) {
+    return std::forward<T1>(p.first);
+  } else {
+    return std::forward<T2>(p.second);
+  }
+}
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
+
+template <std::size_t I, class T1, class T2>
+KOKKOS_INLINE_FUNCTION constexpr const auto&& get(
+    const Kokkos::pair<T1, T2>&& p) noexcept {
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
+  if constexpr (I == 0) {
+    return std::forward<const T1>(p.first);
+  } else {
+    return std::forward<const T2>(p.second);
+  }
+}
+
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr T& get(Kokkos::pair<T, U>& p) noexcept {
+  return p.first;
+}
+
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr const T& get(
+    const Kokkos::pair<T, U>& p) noexcept {
+  return p.first;
+}
+
+// Suppress clang-tidy warnings for this function since moving would do the
+// incorrect thing here
+// NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr T&& get(Kokkos::pair<T, U>&& p) noexcept {
+  return std::forward<T>(p.first);
+}
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
+
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr const T&& get(
+    const Kokkos::pair<T, U>&& p) noexcept {
+  return std::forward<const T>(p.first);
+}
+
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr T& get(Kokkos::pair<U, T>& p) noexcept {
+  return p.second;
+}
+
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr const T& get(
+    const Kokkos::pair<U, T>& p) noexcept {
+  return p.second;
+}
+
+// Suppress clang-tidy warnings for this function since moving would do the
+// incorrect thing here
+// NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr T&& get(Kokkos::pair<U, T>&& p) noexcept {
+  return std::forward<T>(p.second);
+}
+// NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
+
+template <class T, class U>
+KOKKOS_INLINE_FUNCTION constexpr const T&& get(
+    const Kokkos::pair<U, T>&& p) noexcept {
+  return std::forward<const T>(p.second);
+}
 }  // namespace Kokkos
+
+// Suppress clang-tidy warnings complaining about modifying std namespace
+// objects Specializing tuple_element and tuple_size are perfectly okay and
+// necessary, so these linter warnings are spurious
+// NOLINTBEGIN(bugprone-std-namespace-modification)
+template <class T1, class T2>
+struct std::tuple_size<Kokkos::pair<T1, T2>>
+    : std::integral_constant<std::size_t, 2> {};
+
+template <std::size_t I, class T1, class T2>
+struct std::tuple_element<I, Kokkos::pair<T1, T2>> {
+  // FIXME_NVCC: This is trivially true, but nvcc doesn't like
+  // static_assert(false)
+  static_assert(I < 2, "Kokkos::pair only has 2 elements");
+};
+
+template <class T1, class T2>
+struct std::tuple_element<0, Kokkos::pair<T1, T2>> {
+  using type = T1;
+};
+
+template <class T1, class T2>
+struct std::tuple_element<1, Kokkos::pair<T1, T2>> {
+  using type = T2;
+};
+// NOLINTEND(bugprone-std-namespace-modification)
 
 #ifdef KOKKOS_IMPL_PUBLIC_INCLUDE_NOTDEFINED_PAIR
 #undef KOKKOS_IMPL_PUBLIC_INCLUDE

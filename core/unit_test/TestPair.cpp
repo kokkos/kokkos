@@ -170,4 +170,158 @@ constexpr bool test_pair_converting_constructor_from_std_pair() {
 
 static_assert(test_pair_converting_constructor_from_std_pair());
 
+KOKKOS_INLINE_FUNCTION auto generate_pair() {
+  const auto pair = Kokkos::make_pair(11, 12.0);
+
+  auto [f, s] = pair;
+  static_assert(std::same_as<decltype(f), int> &&
+                std::same_as<decltype(s), double>);
+  return pair;
+}
+
+template <typename ViewType>
+struct TupleInterfaceDeviceTest {
+  ViewType results;
+
+  KOKKOS_FUNCTION void operator()(int) const {
+    // Const lvalue
+    {
+      // On GCC 13 and below there is an issue with the way structure bindings
+      // work from templates so this is pulled outside of the template
+      const auto pair = generate_pair();
+
+      static_assert(std::tuple_size_v<decltype(pair)> == 2);
+      static_assert(
+          std::same_as<std::tuple_element_t<0, decltype(pair)>, const int>);
+      static_assert(
+          std::same_as<std::tuple_element_t<1, decltype(pair)>, const double>);
+
+      // Test structured binding
+      auto [f, s] = pair;
+      results(0)  = (f == 11);
+      results(1)  = (s == 12.0);
+
+      // test get
+      // FIXME_NVCC: NVCC does not correctly ADL-find this overload so we have
+      // to qualify the calls structured binding decomposition is not affected
+      // even though it's defined to use unqualified calls to get
+      auto f2 = Kokkos::get<0>(pair);
+      auto s2 = Kokkos::get<1>(pair);
+      static_assert(std::same_as<decltype(f2), int> &&
+                    std::same_as<decltype(s2), double>);
+      results(2) = (f2 == 11);
+      results(3) = (s2 == 12.0);
+
+      auto f3 = Kokkos::get<int>(pair);
+      auto s3 = Kokkos::get<double>(pair);
+      static_assert(std::same_as<decltype(f3), int> &&
+                    std::same_as<decltype(s3), double>);
+      results(4) = (f3 == 11);
+      results(5) = (s3 == 12.0);
+    }
+
+    // Non-const lvalue
+    {
+      auto pair = generate_pair();
+
+      static_assert(std::tuple_size_v<decltype(pair)> == 2);
+      static_assert(std::same_as<std::tuple_element_t<0, decltype(pair)>, int>);
+      static_assert(
+          std::same_as<std::tuple_element_t<1, decltype(pair)>, double>);
+
+      // Test structured binding
+      auto [f, s] = pair;
+      results(6)  = (f == 11);
+      results(7)  = (s == 12.0);
+
+      // test get
+      // FIXME_NVCC: NVCC does not correctly ADL-find this overload so we have
+      // to qualify the calls structured binding decomposition is not affected
+      // even though it's defined to use unqualified calls to get
+      auto f2 = Kokkos::get<0>(pair);
+      auto s2 = Kokkos::get<1>(pair);
+      static_assert(std::same_as<decltype(f2), int> &&
+                    std::same_as<decltype(s2), double>);
+      results(8) = (f2 == 11);
+      results(9) = (s2 == 12.0);
+
+      auto f3 = Kokkos::get<int>(pair);
+      auto s3 = Kokkos::get<double>(pair);
+      static_assert(std::same_as<decltype(f3), int> &&
+                    std::same_as<decltype(s3), double>);
+      results(10) = (f3 == 11);
+      results(11) = (s3 == 12.0);
+    }
+
+    // Const rvalue
+    {
+      const auto pair = generate_pair();
+
+      // Test structured binding
+      auto [f, s] = std::move(pair);
+      results(12) = (f == 11);
+      results(13) = (s == 12.0);
+
+      // test get
+
+      // this is a somewhat convoluted way of getting a const pair &&
+      const auto pair2 = generate_pair();
+      auto f2          = Kokkos::get<0>(std::move(pair2));
+      const auto pair3 = generate_pair();
+      auto s2          = Kokkos::get<1>(std::move(pair3));
+      static_assert(std::same_as<decltype(f2), int> &&
+                    std::same_as<decltype(s2), double>);
+      results(14) = (f2 == 11);
+      results(15) = (s2 == 12.0);
+
+      const auto pair4 = generate_pair();
+      auto f3          = Kokkos::get<int>(pair4);
+      const auto pair5 = generate_pair();
+      auto s3          = Kokkos::get<double>(pair5);
+      static_assert(std::same_as<decltype(f3), int> &&
+                    std::same_as<decltype(s3), double>);
+      results(16) = (f3 == 11);
+      results(17) = (s3 == 12.0);
+    }
+
+    // Non-const rvalue
+    {
+      // Test structured binding
+      auto [f, s] = generate_pair();
+      results(18) = (f == 11);
+      results(19) = (s == 12.0);
+
+      // test get
+      auto f2 = Kokkos::get<0>(generate_pair());
+      auto s2 = Kokkos::get<1>(generate_pair());
+      static_assert(std::same_as<decltype(f2), int> &&
+                    std::same_as<decltype(s2), double>);
+      results(20) = (f2 == 11);
+      results(21) = (s2 == 12.0);
+
+      auto f3 = Kokkos::get<int>(generate_pair());
+      auto s3 = Kokkos::get<double>(generate_pair());
+      static_assert(std::same_as<decltype(f3), int> &&
+                    std::same_as<decltype(s3), double>);
+      results(22) = (f3 == 11);
+      results(23) = (s3 == 12.0);
+    }
+  }
+};
+
+TEST(defaultdevicetype, structured_bindings_and_tuple_interface) {
+  using exec_space = Kokkos::DefaultExecutionSpace;
+  using view_t     = Kokkos::View<int*, exec_space>;
+  view_t results("pair_device_results", 24);
+
+  Kokkos::parallel_for(
+      Kokkos::RangePolicy<exec_space>(0, 1),
+      TupleInterfaceDeviceTest<view_t>{
+          results});  // could CTAD here but some compilers have bugs around it
+
+  Kokkos::fence();
+
+  auto h = Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), results);
+  for (int i = 0; i < 24; ++i) EXPECT_EQ(h(i), 1);
+}
 }  // namespace
