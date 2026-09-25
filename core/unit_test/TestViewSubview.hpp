@@ -1599,7 +1599,8 @@ struct TestUnmanagedSubviewReset {
   Kokkos::View<int****, Space> a;
 
   KOKKOS_FUNCTION void operator()(int) const {
-    auto sub_a = Kokkos::subview(a, 0, Kokkos::ALL, Kokkos::ALL, Kokkos::ALL);
+    auto sub_a = Kokkos::subview(a, 0, Kokkos::ALL_t(), Kokkos::ALL_t(),
+                                 Kokkos::ALL_t());
 
     for (int i = 0; i < int(a.extent(0)); ++i) {
       sub_a.assign_data(&a(i, 0, 0, 0));
