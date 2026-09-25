@@ -27,9 +27,8 @@ template <class MemorySpace>
 void deallocate_shared_allocation_record(SharedAllocationRecord<void, void>*);
 
 template <class MemorySpace>
-auto allocate_shared_allocation_record(MemorySpace const&, std::string const&,
-                                       size_t)
-    -> SharedAllocationRecord<MemorySpace, void>*;
+SharedAllocationRecord<MemorySpace, void>* allocate_shared_allocation_record(
+    MemorySpace const&, std::string const&, size_t);
 
 template <class MemorySpace>
 void* allocate_tracked_shared_allocation(MemorySpace const&, std::string const&,
@@ -42,8 +41,7 @@ template <class MemorySpace, class ExecutionSpace>
 void* reallocate_tracked_shared_allocation(void*, size_t);
 
 template <class MemorySpace>
-auto get_shared_allocation_record(void*)
-    -> SharedAllocationRecord<MemorySpace, void>*;
+SharedAllocationRecord<MemorySpace, void>* get_shared_allocation_record(void*);
 
 template <class MemorySpace, class ExecutionSpace>
 void print_shared_allocation_records(std::ostream&, MemorySpace const&, bool);
@@ -63,8 +61,8 @@ class SharedAllocationHeader {
   template <class, class>
   friend class SharedAllocationRecord;
   template <class MemorySpace>
-  friend auto get_shared_allocation_record(void*)
-      -> SharedAllocationRecord<MemorySpace, void>*;
+  friend SharedAllocationRecord<MemorySpace, void>*
+  get_shared_allocation_record(void*);
   template <class MemorySpace, class ExecutionSpace>
   friend void print_shared_allocation_records(std::ostream&, MemorySpace const&,
                                               bool);
@@ -312,8 +310,7 @@ class SharedAllocationRecord<MemorySpace, void>
 
   ~SharedAllocationRecord() override;
 
-  static auto allocate(MemorySpace const&, std::string const&, size_t)
-      -> derived_t*;
+  static derived_t* allocate(MemorySpace const&, std::string const&, size_t);
 
   /**\brief Allocate tracked memory in the space. */
   static void* allocate_tracked(MemorySpace const&, std::string const&, size_t);
@@ -328,7 +325,7 @@ class SharedAllocationRecord<MemorySpace, void>
   template <class ExecutionSpace = typename MemorySpace::execution_space>
   static void* reallocate_tracked(void*, size_t);
 
-  static auto get_record(void*) -> derived_t*;
+  static derived_t* get_record(void*);
 
   std::string get_label() const override;
 

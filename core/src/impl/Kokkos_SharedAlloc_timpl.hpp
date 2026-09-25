@@ -96,18 +96,17 @@ SharedAllocationRecord<MemorySpace, void>::~SharedAllocationRecord() {
 // NOLINTEND(bugprone-exception-escape)
 
 template <class MemorySpace>
-auto allocate_shared_allocation_record(MemorySpace const& space,
-                                       std::string const& label,
-                                       size_t alloc_size)
-    -> SharedAllocationRecord<MemorySpace, void>* {
+SharedAllocationRecord<MemorySpace, void>* allocate_shared_allocation_record(
+    MemorySpace const& space, std::string const& label, size_t alloc_size) {
   return new SharedAllocationRecord<MemorySpace, void>(space, label,
                                                        alloc_size);
 }
 
 template <class MemorySpace>
-auto SharedAllocationRecord<MemorySpace, void>::allocate(
-    MemorySpace const& space, std::string const& label, size_t alloc_size)
-    -> derived_t* {
+SharedAllocationRecord<MemorySpace, void>::derived_t*
+SharedAllocationRecord<MemorySpace, void>::allocate(MemorySpace const& space,
+                                                    std::string const& label,
+                                                    size_t alloc_size) {
   return allocate_shared_allocation_record<MemorySpace>(space, label,
                                                         alloc_size);
 }
@@ -146,8 +145,8 @@ void SharedAllocationRecord<MemorySpace, void>::deallocate_tracked(
 }
 
 template <class MemorySpace>
-auto get_shared_allocation_record(void* alloc_ptr)
-    -> SharedAllocationRecord<MemorySpace, void>* {
+SharedAllocationRecord<MemorySpace, void>* get_shared_allocation_record(
+    void* alloc_ptr) {
   using record_type = SharedAllocationRecord<MemorySpace, void>;
   using header_type = SharedAllocationHeader;
 
@@ -191,8 +190,8 @@ auto get_shared_allocation_record(void* alloc_ptr)
 }
 
 template <class MemorySpace>
-auto SharedAllocationRecord<MemorySpace, void>::get_record(void* alloc_ptr)
-    -> derived_t* {
+SharedAllocationRecord<MemorySpace, void>::derived_t*
+SharedAllocationRecord<MemorySpace, void>::get_record(void* alloc_ptr) {
   return get_shared_allocation_record<MemorySpace>(alloc_ptr);
 }
 
