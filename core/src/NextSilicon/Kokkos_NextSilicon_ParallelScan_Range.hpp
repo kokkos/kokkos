@@ -37,6 +37,7 @@ class ParallelScanNextSilicon {
 
   // Let threads reduce the problem by at least a factor of
   // MIN_ITER_PER_PARTIAL_PROD in case of smaller inputs.
+  // FIXME_NEXTSILICON: make this user-controllable
   constexpr static uint32_t MIN_ITER_PER_PARTIAL_PROD = 100;
 
   Functor m_functor;
