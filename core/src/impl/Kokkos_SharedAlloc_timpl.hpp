@@ -103,7 +103,7 @@ SharedAllocationRecord<MemorySpace, void>* allocate_shared_allocation_record(
 }
 
 template <class MemorySpace>
-SharedAllocationRecord<MemorySpace, void>::derived_t*
+typename SharedAllocationRecord<MemorySpace, void>::derived_t*
 SharedAllocationRecord<MemorySpace, void>::allocate(MemorySpace const& space,
                                                     std::string const& label,
                                                     size_t alloc_size) {
@@ -190,7 +190,7 @@ SharedAllocationRecord<MemorySpace, void>* get_shared_allocation_record(
 }
 
 template <class MemorySpace>
-SharedAllocationRecord<MemorySpace, void>::derived_t*
+typename SharedAllocationRecord<MemorySpace, void>::derived_t*
 SharedAllocationRecord<MemorySpace, void>::get_record(void* alloc_ptr) {
   return get_shared_allocation_record<MemorySpace>(alloc_ptr);
 }
