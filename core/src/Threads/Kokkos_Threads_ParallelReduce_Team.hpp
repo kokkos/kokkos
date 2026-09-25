@@ -115,8 +115,8 @@ class ParallelReduce<CombinedFunctorReducerType,
                  FunctorTeamShmemSize<FunctorType>::value(
                      arg_functor_reducer.get_functor(), m_policy.team_size())) {
     static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
+        Kokkos::MemorySpaceAccess<typename ViewType::memory_space,
+                                  Kokkos::HostSpace>::accessible,
         "Kokkos::Threads reduce result must be a View accessible from "
         "HostSpace");
 

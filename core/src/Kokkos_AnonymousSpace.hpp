@@ -41,8 +41,6 @@ class AnonymousSpace {
 
 namespace Kokkos {
 
-namespace Impl {
-
 template <typename OtherSpace>
 struct MemorySpaceAccess<Kokkos::AnonymousSpace, OtherSpace> {
   enum : bool { assignable = true };
@@ -60,8 +58,6 @@ struct MemorySpaceAccess<Kokkos::AnonymousSpace, Kokkos::AnonymousSpace> {
   enum : bool { assignable = true };
   enum : bool { accessible = true };
 };
-
-}  // namespace Impl
 
 }  // namespace Kokkos
 

@@ -142,7 +142,6 @@ struct DeviceTypeTraits<Threads> {
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
 
 template <>
 struct MemorySpaceAccess<Kokkos::Threads::memory_space,
@@ -151,7 +150,6 @@ struct MemorySpaceAccess<Kokkos::Threads::memory_space,
   enum : bool { accessible = true };
 };
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 #endif /* #if defined( KOKKOS_ENABLE_THREADS ) */

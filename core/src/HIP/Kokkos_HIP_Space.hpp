@@ -297,9 +297,8 @@ struct Impl::is_hip_type_space<HIPManagedSpace> : public std::true_type {};
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
 
-static_assert(Kokkos::Impl::MemorySpaceAccess<HIPSpace, HIPSpace>::assignable);
+static_assert(Kokkos::MemorySpaceAccess<HIPSpace, HIPSpace>::assignable);
 
 //----------------------------------------
 
@@ -393,7 +392,6 @@ struct MemorySpaceAccess<HIPManagedSpace, HIPHostPinnedSpace> {
   enum : bool { accessible = true };
 };
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 #endif /* #define KOKKOS_HIPSPACE_HPP */

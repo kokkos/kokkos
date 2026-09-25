@@ -14,6 +14,43 @@ using ExecutionSpace = TEST_EXECSPACE;
 using MemorySpace    = typename ExecutionSpace::memory_space;
 using DeviceType     = typename ExecutionSpace::device_type;
 
+struct CustomMemorySpace {
+  using execution_space = ExecutionSpace;
+  using memory_space    = CustomMemorySpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+};
+
+}  // namespace TestConcept
+
+namespace Kokkos {
+
+template <>
+struct MemorySpaceAccess<TestConcept::CustomMemorySpace,
+                         TestConcept::MemorySpace> {
+  enum : bool { assignable = true };
+  enum : bool { accessible = true };
+};
+
+template <>
+struct MemorySpaceAccess<TestConcept::MemorySpace,
+                         TestConcept::CustomMemorySpace> {
+  enum : bool { assignable = false };
+  enum : bool { accessible = true };
+};
+
+}  // namespace Kokkos
+
+namespace TestConcept {
+
+static_assert(
+    Kokkos::MemorySpaceAccess<CustomMemorySpace, MemorySpace>::assignable);
+static_assert(
+    Kokkos::MemorySpaceAccess<CustomMemorySpace, MemorySpace>::accessible);
+static_assert(
+    Kokkos::SpaceAccessibility<CustomMemorySpace, MemorySpace>::assignable);
+static_assert(
+    Kokkos::SpaceAccessibility<CustomMemorySpace, MemorySpace>::accessible);
+
 static_assert(Kokkos::is_execution_space<ExecutionSpace>{});
 static_assert(Kokkos::is_execution_space<ExecutionSpace const>{});
 static_assert(!Kokkos::is_execution_space<ExecutionSpace &>{});

@@ -159,11 +159,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
         m_policy(arg_policy),
         m_result_ptr(arg_view.data()) {
     m_instance = arg_policy.space().impl_internal_space_instance();
-    static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
-        "Kokkos::OpenMP reduce result must be a View accessible from "
-        "HostSpace");
+    static_assert(Kokkos::MemorySpaceAccess<typename ViewType::memory_space,
+                                            Kokkos::HostSpace>::accessible,
+                  "Kokkos::OpenMP reduce result must be a View accessible from "
+                  "HostSpace");
   }
 };
 
@@ -295,11 +294,10 @@ class ParallelReduce<CombinedFunctorReducerType,
         m_iter(arg_policy, arg_functor_reducer),
         m_result_ptr(arg_view.data()) {
     m_instance = arg_policy.space().impl_internal_space_instance();
-    static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
-        "Kokkos::OpenMP reduce result must be a View accessible from "
-        "HostSpace");
+    static_assert(Kokkos::MemorySpaceAccess<typename ViewType::memory_space,
+                                            Kokkos::HostSpace>::accessible,
+                  "Kokkos::OpenMP reduce result must be a View accessible from "
+                  "HostSpace");
   }
 
   template <typename Policy, typename Functor>
@@ -509,11 +507,10 @@ class ParallelReduce<CombinedFunctorReducerType,
                 arg_functor_reducer.get_functor(), arg_policy.team_size())) {
     m_instance = arg_policy.space().impl_internal_space_instance();
 
-    static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
-        "Kokkos::OpenMP reduce result must be a View accessible from "
-        "HostSpace");
+    static_assert(Kokkos::MemorySpaceAccess<typename ViewType::memory_space,
+                                            Kokkos::HostSpace>::accessible,
+                  "Kokkos::OpenMP reduce result must be a View accessible from "
+                  "HostSpace");
 
     if ((arg_policy.scratch_size(0) +
          FunctorTeamShmemSize<FunctorType>::value(

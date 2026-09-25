@@ -194,7 +194,6 @@ struct DeviceTypeTraits<Cuda> {
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
 
 template <>
 struct MemorySpaceAccess<Kokkos::CudaSpace,
@@ -203,7 +202,6 @@ struct MemorySpaceAccess<Kokkos::CudaSpace,
   enum : bool { accessible = true };
 };
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 #endif /* #if defined( KOKKOS_ENABLE_CUDA ) */

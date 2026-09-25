@@ -294,12 +294,11 @@ struct is_space {
 //----------------------------------------------------------------------------
 
 namespace Kokkos {
-namespace Impl {
 
 /**\brief  Access relationship between DstMemorySpace and SrcMemorySpace
  *
  *  The default case can assume accessibility for the same space.
- *  Specializations must be defined for different memory spaces.
+ *  Users may specialize this customization point for different memory spaces.
  */
 template <typename DstMemorySpace, typename SrcMemorySpace>
 struct MemorySpaceAccess {
@@ -322,7 +321,6 @@ struct MemorySpaceAccess {
   enum { accessible = assignable };
 };
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 namespace Kokkos {
@@ -357,17 +355,17 @@ struct SpaceAccessibility {
 
   // The input AccessSpace may be a Device<ExecSpace,MemSpace>
   // verify that it is a valid combination of spaces.
-  static_assert(Kokkos::Impl::MemorySpaceAccess<
+  static_assert(Kokkos::MemorySpaceAccess<
                     typename AccessSpace::execution_space::memory_space,
                     typename AccessSpace::memory_space>::accessible,
                 "template argument #1 is an invalid space");
 
-  using exe_access = Kokkos::Impl::MemorySpaceAccess<
+  using exe_access = Kokkos::MemorySpaceAccess<
       typename AccessSpace::execution_space::memory_space, MemorySpace>;
 
   using mem_access =
-      Kokkos::Impl::MemorySpaceAccess<typename AccessSpace::memory_space,
-                                      MemorySpace>;
+      Kokkos::MemorySpaceAccess<typename AccessSpace::memory_space,
+                                MemorySpace>;
 
  public:
   /**\brief  Can AccessSpace::execution_space access MemorySpace ?

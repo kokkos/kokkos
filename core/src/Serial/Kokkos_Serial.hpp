@@ -218,7 +218,6 @@ struct DeviceTypeTraits<Serial> {
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
 
 template <>
 struct MemorySpaceAccess<Kokkos::Serial::memory_space,
@@ -227,7 +226,6 @@ struct MemorySpaceAccess<Kokkos::Serial::memory_space,
   enum : bool { accessible = true };
 };
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 namespace Kokkos::Experimental::Impl {

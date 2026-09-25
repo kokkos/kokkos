@@ -102,13 +102,11 @@ class HIP {
   Kokkos::Impl::HostSharedPtr<Impl::HIPInternal> m_space_instance;
 };
 
-namespace Impl {
 template <>
 struct MemorySpaceAccess<HIPSpace, HIP::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
 };
-}  // namespace Impl
 
 namespace Tools {
 namespace Experimental {

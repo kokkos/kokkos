@@ -332,13 +332,15 @@ namespace Impl {
 
 cudaStream_t cuda_get_deep_copy_stream();
 
-static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaSpace,
-                                              Kokkos::CudaSpace>::assignable);
-static_assert(Kokkos::Impl::MemorySpaceAccess<
-              Kokkos::CudaUVMSpace, Kokkos::CudaUVMSpace>::assignable);
+}  // namespace Impl
+
+static_assert(Kokkos::MemorySpaceAccess<Kokkos::CudaSpace,
+                                        Kokkos::CudaSpace>::assignable);
+static_assert(Kokkos::MemorySpaceAccess<Kokkos::CudaUVMSpace,
+                                        Kokkos::CudaUVMSpace>::assignable);
 static_assert(
-    Kokkos::Impl::MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
-                                    Kokkos::CudaHostPinnedSpace>::assignable);
+    Kokkos::MemorySpaceAccess<Kokkos::CudaHostPinnedSpace,
+                              Kokkos::CudaHostPinnedSpace>::assignable);
 
 //----------------------------------------
 
@@ -439,7 +441,6 @@ struct MemorySpaceAccess<Kokkos::CudaHostPinnedSpace, Kokkos::CudaUVMSpace> {
 
 //----------------------------------------
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

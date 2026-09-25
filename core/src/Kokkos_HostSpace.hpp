@@ -114,8 +114,8 @@ namespace Kokkos {
 
 namespace Impl {
 
-static_assert(Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace,
-                                              Kokkos::HostSpace>::assignable);
+static_assert(Kokkos::MemorySpaceAccess<Kokkos::HostSpace,
+                                        Kokkos::HostSpace>::assignable);
 
 template <typename MemSpace>
 struct HostMirror {
@@ -132,7 +132,7 @@ struct HostMirror {
   // Example: Cannot access Kokkos::CudaSpace, can access Kokkos::CudaUVMSpace
   enum {
     keep_mem =
-        Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace, MemSpace>::accessible
+        Kokkos::MemorySpaceAccess<Kokkos::HostSpace, MemSpace>::accessible
   };
 
  public:

@@ -74,14 +74,12 @@ class NextSilicon {
 
 }  // namespace Experimental
 
-namespace Impl {
 template <>
 struct MemorySpaceAccess<Experimental::NextSiliconSharedSpace,
                          Experimental::NextSilicon::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
 };
-}  // namespace Impl
 }  // namespace Kokkos
 
 template <>

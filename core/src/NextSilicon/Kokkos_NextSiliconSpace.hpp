@@ -92,9 +92,8 @@ class NextSiliconSharedSpace {
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
 
-static_assert(Kokkos::Impl::MemorySpaceAccess<
+static_assert(Kokkos::MemorySpaceAccess<
               Experimental::NextSiliconSharedSpace,
               Experimental::NextSiliconSharedSpace>::assignable);
 
@@ -119,7 +118,6 @@ struct MemorySpaceAccess<Kokkos::HostSpace,
       // HostMirror uses NextSiliconSharedSpace as the memory space
 };
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

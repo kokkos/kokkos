@@ -158,7 +158,6 @@ struct DeviceTypeTraits<OpenMP> {
 /*--------------------------------------------------------------------------*/
 
 namespace Kokkos {
-namespace Impl {
 
 template <>
 struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
@@ -167,7 +166,6 @@ struct MemorySpaceAccess<Kokkos::OpenMP::memory_space,
   enum : bool { accessible = true };
 };
 
-}  // namespace Impl
 }  // namespace Kokkos
 
 /*--------------------------------------------------------------------------*/

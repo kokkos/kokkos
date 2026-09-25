@@ -181,16 +181,18 @@ template <>
 struct is_sycl_type_space<Kokkos::SYCLHostUSMSpace> : public std::true_type {};
 
 static_assert(
-    Kokkos::Impl::MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
-                                    Kokkos::SYCLDeviceUSMSpace>::assignable);
+    Kokkos::MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
+                              Kokkos::SYCLDeviceUSMSpace>::assignable);
 
 static_assert(
-    Kokkos::Impl::MemorySpaceAccess<Kokkos::SYCLSharedUSMSpace,
-                                    Kokkos::SYCLSharedUSMSpace>::assignable);
+    Kokkos::MemorySpaceAccess<Kokkos::SYCLSharedUSMSpace,
+                              Kokkos::SYCLSharedUSMSpace>::assignable);
 
 static_assert(
-    Kokkos::Impl::MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
-                                    Kokkos::SYCLDeviceUSMSpace>::assignable);
+    Kokkos::MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
+                              Kokkos::SYCLDeviceUSMSpace>::assignable);
+
+}  // namespace Impl
 
 template <>
 struct MemorySpaceAccess<Kokkos::HostSpace, Kokkos::SYCLDeviceUSMSpace> {
@@ -289,8 +291,6 @@ struct MemorySpaceAccess<Kokkos::SYCLDeviceUSMSpace,
   enum : bool { assignable = false };
   enum : bool { accessible = true };
 };
-
-}  // namespace Impl
 
 }  // namespace Kokkos
 

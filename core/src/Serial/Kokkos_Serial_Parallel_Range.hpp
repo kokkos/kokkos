@@ -135,11 +135,10 @@ class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
     static_assert(Kokkos::is_view<ViewType>::value,
                   "Kokkos::Serial reduce result must be a View");
 
-    static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
-        "Kokkos::Serial reduce result must be a View accessible from "
-        "HostSpace");
+    static_assert(Kokkos::MemorySpaceAccess<typename ViewType::memory_space,
+                                            Kokkos::HostSpace>::accessible,
+                  "Kokkos::Serial reduce result must be a View accessible from "
+                  "HostSpace");
   }
 };
 
@@ -300,8 +299,8 @@ class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
         m_policy(arg_policy),
         m_result_ptr(arg_result_view.data()) {
     static_assert(
-        Kokkos::Impl::MemorySpaceAccess<typename ViewType::memory_space,
-                                        Kokkos::HostSpace>::accessible,
+        Kokkos::MemorySpaceAccess<typename ViewType::memory_space,
+                                  Kokkos::HostSpace>::accessible,
         "Kokkos::Serial parallel_scan result must be host-accessible!");
   }
 };

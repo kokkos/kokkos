@@ -13,10 +13,11 @@
 #include <type_traits>
 
 namespace Kokkos {
-namespace Impl {
 
 template <class DstMemorySpace, class SrcMemorySpace>
 struct MemorySpaceAccess;
+
+namespace Impl {
 
 template <class MemorySpace = void, class DestroyFunctor = void>
 class SharedAllocationRecord;
@@ -435,7 +436,7 @@ SharedAllocationRecord<void, void>
 
 template <class MemorySpace>
 using SharedAllocationRecordBase = std::conditional_t<
-    Kokkos::Impl::MemorySpaceAccess<Kokkos::HostSpace, MemorySpace>::accessible,
+    Kokkos::MemorySpaceAccess<Kokkos::HostSpace, MemorySpace>::accessible,
     SharedAllocationRecordCommon<MemorySpace>,
     HostInaccessibleSharedAllocationRecordCommon<MemorySpace>>;
 
