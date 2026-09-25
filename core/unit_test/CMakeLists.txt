@@ -160,6 +160,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       HostSharedPtrAccessOnDevice
       JoinBackwardCompatibility
       LocalDeepCopy
+      LockPolicy
       MathematicalConstants
       MathematicalFunctions1
       MathematicalFunctions2
