@@ -23,9 +23,9 @@ template<class ctype> \
 inline __device__ typename ::std::enable_if<sizeof(ctype)==16, void>::type device_atomic_store(ctype* dest, ctype value, __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER, __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE) { \
   ulong2 asm_value = *reinterpret_cast<ulong2*>(&value); \
   if(__isGlobal(dest)) { \
-    asm volatile("st.global" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM ".b128" " [%0],{%1,%2};" :: "l"(dest),"l"(asm_result.x), "l"(asm_result.y) : "memory"); \
+    asm volatile("st.global" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM ".b128" " [%0],{%1,%2};" :: "l"(dest),"l"(asm_value.x), "l"(asm_value.y) : "memory"); \
   } else { \
-    asm volatile("st" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM ".b128" " [%0],{%1,%2};" :: "l"(dest),"l"(asm_result.x), "l"(asm_result.y) : "memory"); \
+    asm volatile("st" __DESUL_IMPL_CUDA_ASM_MEMORY_ORDER_ASM __DESUL_IMPL_CUDA_ASM_MEMORY_SCOPE_ASM ".b128" " [%0],{%1,%2};" :: "l"(dest),"l"(asm_value.x), "l"(asm_value.y) : "memory"); \
   } \
 }
 
