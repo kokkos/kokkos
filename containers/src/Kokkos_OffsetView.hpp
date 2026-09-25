@@ -18,7 +18,8 @@ import kokkos.core_impl;
 
 #include <Kokkos_View.hpp>
 
-#include <iterator>
+#include <array>
+#include <span>
 #include <type_traits>
 
 namespace Kokkos {
@@ -60,15 +61,37 @@ using index_list_type = std::initializer_list<int64_t>;
 
 namespace Impl {
 
-// A type usable as OffsetView begins/ends: it exposes iterators (begin/end via
-// std::iterator_traits) and its elements are integral index values.
-template <typename Range>
-concept IsIntegralIndexRange = requires(const Range& r) {
-  r.begin();
-  r.end();
-  r.size();
-  requires std::is_integral_v<
-      typename std::iterator_traits<decltype(r.begin())>::value_type>;
+// Fixed-size integral index containers usable as OffsetView begins/ends.
+// Only std::array, Kokkos::Array, and static-extent std::span are accepted;
+// their length is known at compile time (no runtime-sized ranges, no
+// dynamic-extent std::span). The primary template rejects everything else.
+template <typename>
+struct FixedSizeIndexRange : std::false_type {};
+
+template <typename T, std::size_t N>
+struct FixedSizeIndexRange<Kokkos::Array<T, N>> {
+  using value_type                  = Kokkos::Array<T, N>::value_type;
+  static constexpr std::size_t size = N;
+};
+
+template <typename T, std::size_t N>
+struct FixedSizeIndexRange<std::array<T, N>> {
+  using value_type                  = std::array<T, N>::value_type;
+  static constexpr std::size_t size = N;
+};
+
+template <typename T, std::size_t N>
+struct FixedSizeIndexRange<std::span<T, N>>
+    : std::bool_constant<N != std::dynamic_extent> {
+  using value_type                  = std::span<T, N>::value_type;
+  static constexpr std::size_t size = N;
+};
+
+// A fixed-size integral index range whose compile-time length equals Rank.
+template <typename Range, std::size_t Rank>
+concept IsFixedIntegralIndexRange = requires {
+  requires std::is_integral_v<typename FixedSizeIndexRange<Range>::value_type>;
+  requires FixedSizeIndexRange<Range>::size == Rank;
 };
 
 // FIXME Verification of bounds of OffsetView is not applied
@@ -508,23 +531,28 @@ class OffsetView : public View<DataType, Properties...> {
 
  public:
   // Constructors around unmanaged data. ends_ holds the exclusive end index for
-  // each dimension. Named begin/end arguments may be any integral index range
-  // (e.g. Kokkos::Array, std::array) satisfying IsIntegralIndexRange. The
+  // each dimension. Named begin/end arguments must be a fixed-size integral
+  // index range (std::array, Kokkos::Array, or static-extent std::span) whose
+  // compile-time length equals the rank; see IsFixedIntegralIndexRange. The
   // index_list_type overloads accept brace-init lists ({a, b}); their runtime
   // size may differ from the rank, which the range checks validate.
-  template <Impl::IsIntegralIndexRange Begins, Impl::IsIntegralIndexRange Ends>
+  template <class Begins, class Ends>
+    requires(Impl::IsFixedIntegralIndexRange<Begins, base_t::rank()> &&
+             Impl::IsFixedIntegralIndexRange<Ends, base_t::rank()>)
   KOKKOS_FUNCTION OffsetView(const pointer_type& p, const Begins& begins_,
                              const Ends& ends_)
       : OffsetView(p, begins_, ends_,
                    runtime_check_begins_ends(begins_, ends_)) {}
 
-  template <Impl::IsIntegralIndexRange Begins>
+  template <class Begins>
+    requires(Impl::IsFixedIntegralIndexRange<Begins, base_t::rank()>)
   KOKKOS_FUNCTION OffsetView(const pointer_type& p, const Begins& begins_,
                              index_list_type ends_)
       : OffsetView(p, begins_, ends_,
                    runtime_check_begins_ends(begins_, ends_)) {}
 
-  template <Impl::IsIntegralIndexRange Ends>
+  template <class Ends>
+    requires(Impl::IsFixedIntegralIndexRange<Ends, base_t::rank()>)
   KOKKOS_FUNCTION OffsetView(const pointer_type& p, index_list_type begins_,
                              const Ends& ends_)
       : OffsetView(p, begins_, ends_,
@@ -556,17 +584,19 @@ class OffsetView : public View<DataType, Properties...> {
       : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label), begins_,
                    ends_) {}
 
-  template <class... P, Impl::IsIntegralIndexRange Begins,
-            Impl::IsIntegralIndexRange Ends>
-    requires(!Kokkos::Impl::ViewCtorProp<P...>::has_pointer)
+  template <class... P, class Begins, class Ends>
+    requires(!Kokkos::Impl::ViewCtorProp<P...>::has_pointer &&
+             Impl::IsFixedIntegralIndexRange<Begins, base_t::rank()> &&
+             Impl::IsFixedIntegralIndexRange<Ends, base_t::rank()>)
   explicit OffsetView(const Kokkos::Impl::ViewCtorProp<P...>& arg_prop,
                       const Begins& begins_, const Ends& ends_)
       : base_t(arg_prop, compute_layout_from_begins_ends(begins_, ends_)) {
     for (size_t i = 0; i < base_t::rank(); ++i) m_begins[i] = begins_[i];
   }
 
-  template <Kokkos::Impl::ViewLabel Label, Impl::IsIntegralIndexRange Begins,
-            Impl::IsIntegralIndexRange Ends>
+  template <Kokkos::Impl::ViewLabel Label, class Begins, class Ends>
+    requires(Impl::IsFixedIntegralIndexRange<Begins, base_t::rank()> &&
+             Impl::IsFixedIntegralIndexRange<Ends, base_t::rank()>)
   explicit OffsetView(const Label& arg_label, const Begins& begins_,
                       const Ends& ends_)
       : OffsetView(Kokkos::Impl::ViewCtorProp<std::string>(arg_label), begins_,

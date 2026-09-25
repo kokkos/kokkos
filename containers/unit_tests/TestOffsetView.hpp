@@ -9,6 +9,7 @@
 
 #include <gtest/gtest.h>
 #include <array>
+#include <span>
 #include <type_traits>
 #include <utility>
 #include <iostream>
@@ -340,16 +341,17 @@ void test_offsetview_unmanaged_construction() {
   }
 
   {
-    // Test all four public constructor overloads (begins_type x
-    // index_list_type)
-    std::vector<int64_t> std_begins{-3, 5};
-    std::vector<int> std_ends{2, 10};
-    Kokkos::Experimental::OffsetView<Scalar**, Device> bb(ptr, std_begins,
-                                                          std_ends);
-    Kokkos::Experimental::OffsetView<Scalar**, Device> bi(ptr, std_begins,
+    // Test all four public constructor overloads (fixed-size range x
+    // index_list_type), exercising both std::array and std::span ranges.
+    std::array<int64_t, 2> arr_begins{{-3, 5}};
+    std::array<int, 2> arr_ends{{2, 10}};
+    std::span<int, 2> span_ends{arr_ends};
+    Kokkos::Experimental::OffsetView<Scalar**, Device> bb(ptr, arr_begins,
+                                                          span_ends);
+    Kokkos::Experimental::OffsetView<Scalar**, Device> bi(ptr, arr_begins,
                                                           {2, 10});
     Kokkos::Experimental::OffsetView<Scalar**, Device> ib(ptr, {-3, 5},
-                                                          std_ends);
+                                                          span_ends);
     Kokkos::Experimental::OffsetView<Scalar**, Device> ii(ptr, {-3, 5},
                                                           {2, 10});
 
