@@ -227,8 +227,9 @@ void* SharedAllocationRecord<MemorySpace, void>::reallocate_tracked(
 }
 
 template <class MemorySpace, class ExecutionSpace>
-void print_shared_allocation_records(std::ostream& stream, MemorySpace const&,
-                                     bool detail) {
+void print_shared_allocation_records([[maybe_unused]] std::ostream& stream,
+                                     MemorySpace const&,
+                                     [[maybe_unused]] bool detail) {
   using record_type = SharedAllocationRecord<MemorySpace, void>;
 
   if constexpr (MemorySpaceAccess<HostSpace, MemorySpace>::accessible) {
