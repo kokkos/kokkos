@@ -61,6 +61,7 @@ void test() {
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>) {
     // These tests use the default execution space, thus they should not be run
     // when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+
     // Minimal
     Kokkos::single(f);
     expected *= 3;
@@ -138,6 +139,7 @@ void test_one_ouput() {
   if constexpr (std::is_same_v<TEST_EXECSPACE, Kokkos::DefaultExecutionSpace>) {
     // These tests use the default execution space, thus they should not be run
     // when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+
     // Minimal
     val = 0;
     Kokkos::single(f, val);
@@ -200,7 +202,9 @@ void test_multiple_outputs() {
     if constexpr (std::is_same_v<TEST_EXECSPACE,
                                  Kokkos::DefaultExecutionSpace>) {
       // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace Minimal
+      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+
+      // Minimal
       val1 = val2 = 0;
       Kokkos::single(l, val1, val2);
       EXPECT_EQ(val1, 1);
@@ -238,7 +242,9 @@ void test_multiple_outputs() {
     if constexpr (std::is_same_v<TEST_EXECSPACE,
                                  Kokkos::DefaultExecutionSpace>) {
       // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace Minimal
+      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+
+      // Minimal
       val1 = val2 = 0;
       Kokkos::single(f, val1, val2);
       EXPECT_EQ(val1, 5);
@@ -308,7 +314,9 @@ void test_multiple_outputs() {
     if constexpr (std::is_same_v<TEST_EXECSPACE,
                                  Kokkos::DefaultExecutionSpace>) {
       // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace Minimal
+      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+
+      // Minimal
       val1 = val2 = val3 = 0;
       Kokkos::single(l, val1, val2, val3);
       EXPECT_EQ(val1, 1);
@@ -351,7 +359,9 @@ void test_multiple_outputs() {
     if constexpr (std::is_same_v<TEST_EXECSPACE,
                                  Kokkos::DefaultExecutionSpace>) {
       // These tests use the default execution space, thus they should not be
-      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace Minimal
+      // run when TEST_EXECSPACE != Kokkos::DefaultExecutionSpace
+
+      // Minimal
       val1 = val2 = val3 = 0;
       Kokkos::single(f, val1, val2, val3);
       EXPECT_EQ(val1, 5);

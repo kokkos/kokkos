@@ -15,6 +15,7 @@ static_assert(false,
 #include <Kokkos_View.hpp>
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Tools_Generic.hpp>
+#include <impl/Kokkos_Single.hpp>
 
 #include <type_traits>
 
@@ -219,15 +220,14 @@ struct ParallelReduceAdaptor {
       Kokkos::Tools::Impl::begin_single<PolicyType, FunctorType>(policy, label,
                                                                  kpID);
 
-      auto closure = construct_with_shared_allocation_tracking_disabled<
-          Impl::ParallelReduce<
-              CombinedFunctorReducerType, typename PolicyType::base_class,
-              typename Impl::FunctorPolicyExecutionSpace<
-                  FunctorType,
-                  typename PolicyType::base_class>::execution_space>>(
-          functor_reducer, policy,
-          return_value_adapter::return_value(return_value, functor));
-      closure.execute();
+      using execution_space = typename Impl::FunctorPolicyExecutionSpace<
+          FunctorType, typename PolicyType::base_class>::execution_space;
+
+      // Dispatch execution to either the default implementation or an
+      // execution_space specific implementation if one is available
+      Kokkos::Impl::Single<execution_space>::template execute<
+          CombinedFunctorReducerType, return_value_adapter>(
+          functor, functor_reducer, policy, return_value);
 
       Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
     } else {

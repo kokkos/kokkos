@@ -24,6 +24,7 @@ static_assert(false,
 #include <impl/Kokkos_FunctorAnalysis.hpp>
 #include <impl/Kokkos_Traits.hpp>
 #include <impl/Kokkos_FunctorWrapperUtil.hpp>
+#include <impl/Kokkos_Single.hpp>
 
 #include <cstddef>
 #include <type_traits>
@@ -507,22 +508,17 @@ inline void single(const std::string& str,
                    const FunctorType& functor) {
   uint64_t kpID = 0;
 
-  // We will use the standard function for parallel_for, so we need to modify
-  // the functor in order to make it callable by the standard function by
-  // giving it an index parameter
-  ::Kokkos::Impl::IndexlessFunctorWrapper<FunctorType> functor_wrapper{functor};
-
-  using WrapperType = decltype(functor_wrapper);
-
   Kokkos::Tools::Impl::begin_single<SinglePolicy<PolicyProperties...>,
                                     FunctorType>(single_policy, str, kpID);
 
-  using RangePolicy = RangePolicy<PolicyProperties...>;
-  auto closure =
-      Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
-          Impl::ParallelFor<WrapperType, RangePolicy>>(functor_wrapper,
-                                                       single_policy);
-  closure.execute();
+  using execution_space = typename Impl::FunctorPolicyExecutionSpace<
+      FunctorType, typename std::remove_cvref_t<
+                       decltype(single_policy)>::base_class>::execution_space;
+
+  // Dispatch execution to either the default implementation or an
+  // execution_space specific implementation if one is available
+  Kokkos::Impl::Single<execution_space>::template execute(functor,
+                                                          single_policy);
 
   Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
 }
