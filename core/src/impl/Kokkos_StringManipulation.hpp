@@ -126,9 +126,11 @@ KOKKOS_FUNCTION unsigned int to_chars_len(FloatType f) {
   static_assert(std::is_same_v<FloatType, double> ||
                 std::is_same_v<FloatType, float>);
 
-  using uint_t                         = Kokkos::equivalent_int_t<FloatType>;
-  constexpr unsigned int mantissa_bits = Kokkos::mantissa_bits_v<FloatType>;
-  constexpr unsigned int exponent_bits = Kokkos::exponent_bits_v<FloatType>;
+  using uint_t = Kokkos::Impl::equivalent_int_t<FloatType>;
+  constexpr unsigned int mantissa_bits =
+      Kokkos::Impl::mantissa_bits_v<FloatType>;
+  constexpr unsigned int exponent_bits =
+      Kokkos::Impl::exponent_bits_v<FloatType>;
 
   constexpr uint_t exp_mask = (uint_t(1) << exponent_bits) - uint_t(1);
 
@@ -232,7 +234,7 @@ KOKKOS_FUNCTION constexpr to_chars_result to_chars_i(char *first, char *last,
 template <typename FloatType, std::size_t precision>
 class DecimalRepresentation {
  public:
-  using uint_t = Kokkos::equivalent_int_t<FloatType>;
+  using uint_t = Kokkos::Impl::equivalent_int_t<FloatType>;
 
   // Buffer that contains the decimal representation of a number in scientific
   // notation (without decimal separator)
@@ -435,7 +437,7 @@ class DecimalRepresentation {
 template <class FloatType, std::size_t precision>
 class BaseTwoExponent : public DecimalRepresentation<FloatType, precision> {
  protected:
-  using uint_t  = Kokkos::equivalent_int_t<FloatType>;
+  using uint_t  = Kokkos::Impl::equivalent_int_t<FloatType>;
   using decimal = DecimalRepresentation<FloatType, precision>;
   using decimal::buffer;
   using decimal::exp10;
@@ -445,8 +447,8 @@ class BaseTwoExponent : public DecimalRepresentation<FloatType, precision> {
   // Exponent bias (different from the IEEE754 one, to take subnormals into
   // account)
   static constexpr uint_t bias =
-      (uint_t(1) << (Kokkos::exponent_bits_v<FloatType> - 1)) +
-      Kokkos::mantissa_bits_v<FloatType> - 2;
+      (uint_t(1) << (Kokkos::Impl::exponent_bits_v<FloatType> - 1)) +
+      Kokkos::Impl::mantissa_bits_v<FloatType> - 2;
 
   // Exponent of the power stored in `buffer`
   // Stored with the total bias added
@@ -503,9 +505,11 @@ KOKKOS_FUNCTION to_chars_result to_chars_f(char *first, char *last,
   static_assert(std::is_same_v<FloatType, double> ||
                 std::is_same_v<FloatType, float>);
 
-  using uint_t                         = Kokkos::equivalent_int_t<FloatType>;
-  constexpr unsigned int mantissa_bits = Kokkos::mantissa_bits_v<FloatType>;
-  constexpr unsigned int exponent_bits = Kokkos::exponent_bits_v<FloatType>;
+  using uint_t = Kokkos::Impl::equivalent_int_t<FloatType>;
+  constexpr unsigned int mantissa_bits =
+      Kokkos::Impl::mantissa_bits_v<FloatType>;
+  constexpr unsigned int exponent_bits =
+      Kokkos::Impl::exponent_bits_v<FloatType>;
 
   constexpr uint_t exp_mask      = (uint_t(1) << exponent_bits) - 1;
   constexpr uint_t mantissa_mask = (uint_t(1) << mantissa_bits) - 1;

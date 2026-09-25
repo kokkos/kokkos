@@ -17,10 +17,8 @@ struct TestFloatPrinting {
 
 #define CHECK(val, ref) to_chars_helper_f(val, ref, __FILE__, __LINE__)
 
-  KOKKOS_FUNCTION constexpr int to_chars_helper_f(FloatType val,
-                                                  char const* ref,
-                                                  char const* file,
-                                                  int line) const {
+  KOKKOS_FUNCTION int to_chars_helper_f(FloatType val, char const* ref,
+                                        char const* file, int line) const {
     using Kokkos::Impl::strcmp;
     using Kokkos::Impl::strlen;
     using Kokkos::Impl::to_chars_f;
@@ -35,7 +33,7 @@ struct TestFloatPrinting {
       Kokkos::printf("Error %s:%i:\n", file, line);
       Kokkos::printf(
           "  String size of reference (%s) is %i while size of result (%s) is "
-          "%lu\n",
+          "%td\n",
           ref, ref_length, buffer, ptr - buffer);
       if constexpr (std::is_same_v<FloatType, float>) {
         Kokkos::printf("For float %s (0x%x)\n", ref,

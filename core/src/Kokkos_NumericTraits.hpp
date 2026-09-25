@@ -69,28 +69,20 @@ KOKKOS_IMPL_DEFINE_TRAIT(max_exponent10, max_exponent10,  floating_point)
   namespace Impl {                                   \
   template <class T, class Enable = void>            \
   struct TRAIT##_helper {};                          \
-  }                                                  \
   template <class T>                                 \
   struct TRAIT : Impl::TRAIT##_helper<T> {};         \
   template <class T>                                 \
   inline constexpr auto TRAIT##_v = TRAIT<T>::value; \
-  namespace Experimental {                           \
-  using Kokkos::TRAIT;                               \
-  using Kokkos::TRAIT##_v;                           \
   }
 
 #define KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT_TYPE(TRAIT) \
   namespace Impl {                                        \
   template <class T, class Enable = void>                 \
   struct TRAIT##_helper {};                               \
-  }                                                       \
   template <class T>                                      \
   struct TRAIT : Impl::TRAIT##_helper<T> {};              \
   template <class T>                                      \
   using TRAIT##_t = typename TRAIT<T>::type;              \
-  namespace Experimental {                                \
-  using Kokkos::TRAIT;                                    \
-  using Kokkos::TRAIT##_t;                                \
   }
 
 KOKKOS_IMPL_DEFINE_NON_STANDARD_TRAIT_TYPE(equivalent_int)
