@@ -291,18 +291,3 @@ void SYCLHostUSMSpace::deallocate(const char* arg_label,
 }
 
 }  // namespace Kokkos
-
-//==============================================================================
-// <editor-fold desc="Explicit instantiations of CRTP Base classes"> {{{1
-
-#include <impl/Kokkos_SharedAlloc_timpl.hpp>
-
-KOKKOS_IMPL_HOST_INACCESSIBLE_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
-    Kokkos::SYCLDeviceUSMSpace);
-KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
-    Kokkos::SYCLSharedUSMSpace);
-KOKKOS_IMPL_SHARED_ALLOCATION_RECORD_EXPLICIT_INSTANTIATION(
-    Kokkos::SYCLHostUSMSpace);
-
-// </editor-fold> end Explicit instantiations of CRTP Base classes }}}1
-//==============================================================================

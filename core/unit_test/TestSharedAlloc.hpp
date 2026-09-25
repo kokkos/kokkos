@@ -5,6 +5,9 @@
 
 #include <sstream>
 #include <iostream>
+#include <cstddef>
+#include <cstring>
+#include <type_traits>
 
 #include <Kokkos_Macros.hpp>
 #ifdef KOKKOS_ENABLE_EXPERIMENTAL_CXX20_MODULES
@@ -15,6 +18,108 @@ import kokkos.core_impl;
 #endif
 
 /*--------------------------------------------------------------------------*/
+
+namespace Test {
+
+// This memory space is deliberately defined in the test, outside Kokkos's
+// backend implementation.  It exercises the ordinary template-instantiation
+// path used by external memory-space implementations.
+struct CustomHostMemorySpace {
+  using memory_space    = CustomHostMemorySpace;
+  using execution_space = Kokkos::DefaultHostExecutionSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+  using size_type       = std::size_t;
+  using index_type      = std::make_signed_t<size_type>;
+
+  static constexpr const char* name() { return "TestCustomHost"; }
+
+  void* allocate(const size_t size) const {
+    return Kokkos::HostSpace{}.allocate(size);
+  }
+  void* allocate(const char* label, const size_t size) const {
+    return Kokkos::HostSpace{}.allocate(label, size);
+  }
+  void* allocate(const char* label, const size_t size,
+                 const size_t logical_size) const {
+    return Kokkos::HostSpace{}.allocate(label, size, logical_size);
+  }
+
+  template <class ExecutionSpace>
+  void* allocate(ExecutionSpace const& exec, const size_t size) const {
+    return Kokkos::HostSpace{}.allocate(exec, size);
+  }
+  template <class ExecutionSpace>
+  void* allocate(ExecutionSpace const& exec, const char* label,
+                 const size_t size) const {
+    return Kokkos::HostSpace{}.allocate(exec, label, size);
+  }
+  template <class ExecutionSpace>
+  void* allocate(ExecutionSpace const& exec, const char* label,
+                 const size_t size, const size_t logical_size) const {
+    return Kokkos::HostSpace{}.allocate(exec, label, size, logical_size);
+  }
+
+  void deallocate(void* ptr, const size_t size) const {
+    Kokkos::HostSpace{}.deallocate(ptr, size);
+  }
+  void deallocate(const char* label, void* ptr, const size_t size) const {
+    Kokkos::HostSpace{}.deallocate(label, ptr, size);
+  }
+  void deallocate(const char* label, void* ptr, const size_t size,
+                  const size_t logical_size) const {
+    Kokkos::HostSpace{}.deallocate(label, ptr, size, logical_size);
+  }
+};
+
+// This variant deliberately reports that HostSpace cannot access it.  Its
+// storage still delegates to HostSpace so the test can exercise the header
+// copy path without requiring a device backend.
+struct CustomHostInaccessibleMemorySpace : CustomHostMemorySpace {
+  using memory_space    = CustomHostInaccessibleMemorySpace;
+  using execution_space = Kokkos::DefaultHostExecutionSpace;
+  using device_type     = Kokkos::Device<execution_space, memory_space>;
+
+  static constexpr const char* name() { return "TestCustomInaccessible"; }
+};
+
+}  // namespace Test
+
+namespace Kokkos::Impl {
+
+template <>
+struct MemorySpaceAccess<Kokkos::HostSpace, Test::CustomHostMemorySpace> {
+  enum { assignable = false, accessible = true };
+};
+
+template <>
+struct MemorySpaceAccess<Kokkos::HostSpace,
+                         Test::CustomHostInaccessibleMemorySpace> {
+  enum { assignable = false, accessible = false };
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Test::CustomHostInaccessibleMemorySpace, Kokkos::HostSpace,
+                ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t size) {
+    std::memcpy(dst, src, size);
+  }
+  DeepCopy(const ExecutionSpace&, void* dst, const void* src, size_t size) {
+    std::memcpy(dst, src, size);
+  }
+};
+
+template <class ExecutionSpace>
+struct DeepCopy<Kokkos::HostSpace, Test::CustomHostInaccessibleMemorySpace,
+                ExecutionSpace> {
+  DeepCopy(void* dst, const void* src, size_t size) {
+    std::memcpy(dst, src, size);
+  }
+  DeepCopy(const ExecutionSpace&, void* dst, const void* src, size_t size) {
+    std::memcpy(dst, src, size);
+  }
+};
+
+}  // namespace Kokkos::Impl
 
 namespace Test {
 
@@ -214,6 +319,72 @@ TEST(TEST_CATEGORY, impl_shared_alloc) {
 #else
   test_shared_alloc<TEST_EXECSPACE, Kokkos::DefaultHostExecutionSpace>();
 #endif
+}
+
+TEST(TEST_CATEGORY, impl_shared_alloc_custom_memory_space) {
+  using RecordBase = Kokkos::Impl::SharedAllocationRecord<void, void>;
+  using Record =
+      Kokkos::Impl::SharedAllocationRecord<CustomHostMemorySpace, void>;
+
+  CustomHostMemorySpace space;
+  constexpr size_t allocation_size = 64;
+
+  auto* record = Record::allocate(space, "custom allocation", allocation_size);
+  ASSERT_NE(record, nullptr);
+  EXPECT_EQ(record, Record::get_record(record->data()));
+  EXPECT_EQ(record->size(), allocation_size);
+  EXPECT_EQ(record->get_label(), "custom allocation");
+  EXPECT_STREQ(
+      Kokkos::Impl::SharedAllocationHeader::get_header(record->data())->label(),
+      "custom allocation");
+
+  RecordBase::increment(record);
+  EXPECT_EQ(record->use_count(), 1);
+  EXPECT_EQ(RecordBase::decrement(record), nullptr);
+
+  void* tracked = Record::allocate_tracked(space, "custom tracked", 32);
+  ASSERT_NE(tracked, nullptr);
+  auto* tracked_record = Record::get_record(tracked);
+  EXPECT_EQ(tracked_record->get_label(), "custom tracked");
+  EXPECT_EQ(tracked_record, Record::get_record(tracked));
+#ifdef KOKKOS_ENABLE_DEBUG
+  std::ostringstream records;
+  Record::print_records(records, space);
+  EXPECT_NE(records.str().find("custom tracked"), std::string::npos);
+#endif
+  Record::deallocate_tracked(tracked);
+}
+
+TEST(TEST_CATEGORY, impl_shared_alloc_custom_inaccessible_memory_space) {
+  using RecordBase = Kokkos::Impl::SharedAllocationRecord<void, void>;
+  using Record =
+      Kokkos::Impl::SharedAllocationRecord<CustomHostInaccessibleMemorySpace,
+                                           void>;
+
+  CustomHostInaccessibleMemorySpace space;
+  auto* record = Record::allocate(space, "custom inaccessible", 64);
+  ASSERT_NE(record, nullptr);
+  EXPECT_EQ(record, Record::get_record(record->data()));
+  EXPECT_EQ(record->get_label(), "custom inaccessible");
+  EXPECT_STREQ(
+      Kokkos::Impl::SharedAllocationHeader::get_header(record->data())->label(),
+      "custom inaccessible");
+
+  RecordBase::increment(record);
+  EXPECT_EQ(RecordBase::decrement(record), nullptr);
+
+  void* tracked =
+      Record::allocate_tracked(space, "custom inaccessible tracked", 32);
+  ASSERT_NE(tracked, nullptr);
+  EXPECT_EQ(Record::get_record(tracked)->get_label(),
+            "custom inaccessible tracked");
+#ifdef KOKKOS_ENABLE_DEBUG
+  std::ostringstream records;
+  Record::print_records(records, space);
+  EXPECT_NE(records.str().find("custom inaccessible tracked"),
+            std::string::npos);
+#endif
+  Record::deallocate_tracked(tracked);
 }
 
 }  // namespace Test
