@@ -17,7 +17,6 @@
 #include <HIP/Kokkos_HIP_ParallelReduce_MDRange.hpp>
 #include <HIP/Kokkos_HIP_ParallelReduce_Team.hpp>
 #include <HIP/Kokkos_HIP_ParallelScan_Range.hpp>
-#include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
 #include <HIP/Kokkos_HIP_UniqueToken.hpp>
 #include <HIP/Kokkos_HIP_ZeroMemset.hpp>
 

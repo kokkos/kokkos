@@ -7,7 +7,6 @@
 
 #include <HIP/Kokkos_HIP.hpp>
 #include <HIP/Kokkos_HIP_DeepCopy.hpp>
-#include <HIP/Kokkos_HIP_SharedAllocationRecord.hpp>
 #include <impl/Kokkos_SharedAlloc_timpl.hpp>
 
 #ifndef KOKKOS_IMPL_HIP_UNIFIED_MEMORY
