@@ -59,11 +59,11 @@ std::byte *NextSiliconInternal::resize_reduce_partial_buffer(size_t requested) {
   return m_reduce_partial_buffer.ensure("reduce partial buffer", requested);
 }
 
-std::lock_guard<std::mutex>
+std::lock_guard<std::recursive_mutex>
 Kokkos::Experimental::Impl::NextSiliconInternal::lock_device() {
   KOKKOS_IF_ON_DEVICE(
       (KOKKOS_ASSERT(false && "lock_device should never be called on device");))
-  return std::lock_guard<std::mutex>(this->device_mutex_);
+  return std::lock_guard<std::recursive_mutex>(this->device_mutex_);
 }
 
 }  // namespace Kokkos::Experimental::Impl
