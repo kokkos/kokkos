@@ -230,12 +230,11 @@ template <class MemorySpace, class ExecutionSpace>
 void print_shared_allocation_records([[maybe_unused]] std::ostream& stream,
                                      MemorySpace const&,
                                      [[maybe_unused]] bool detail) {
-  using record_type = SharedAllocationRecord<MemorySpace, void>;
-
   if constexpr (MemorySpaceAccess<HostSpace, MemorySpace>::accessible) {
 #ifdef KOKKOS_ENABLE_DEBUG
     SharedAllocationRecord<void, void>::print_host_accessible_records(
-        stream, MemorySpace::name(), &record_type::s_root_record, detail);
+        stream, MemorySpace::name(),
+        &SharedAllocationRecord<MemorySpace, void>::s_root_record, detail);
 #else
     Kokkos::Impl::throw_runtime_exception(
         std::string("SharedAllocationHeader<") +
@@ -245,7 +244,8 @@ void print_shared_allocation_records([[maybe_unused]] std::ostream& stream,
 #endif
   } else {
 #ifdef KOKKOS_ENABLE_DEBUG
-    SharedAllocationRecord<void, void>* record = &record_type::s_root_record;
+    SharedAllocationRecord<void, void>* record =
+        &SharedAllocationRecord<MemorySpace, void>::s_root_record;
 
     char buffer[256];
     SharedAllocationHeader header;
@@ -286,7 +286,8 @@ void print_shared_allocation_records([[maybe_unused]] std::ostream& stream,
             reinterpret_cast<uintptr_t>(record->m_dealloc), header.m_label);
         stream << buffer;
         record = record->m_next;
-      } while (record != &record_type::s_root_record);
+      } while (record !=
+               &SharedAllocationRecord<MemorySpace, void>::s_root_record);
     } else {
       do {
         if (record->m_alloc_ptr) {
@@ -316,7 +317,8 @@ void print_shared_allocation_records([[maybe_unused]] std::ostream& stream,
         }
         stream << buffer;
         record = record->m_next;
-      } while (record != &record_type::s_root_record);
+      } while (record !=
+               &SharedAllocationRecord<MemorySpace, void>::s_root_record);
     }
 #else
     Kokkos::Impl::throw_runtime_exception(
