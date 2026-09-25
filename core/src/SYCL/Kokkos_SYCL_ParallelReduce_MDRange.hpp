@@ -34,21 +34,23 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
   // really need in DeviceIterateTile in a trivially copyable struct.
   struct BarePolicy {
     using index_type = typename Policy::index_type;
+    using point_type = typename Policy::point_type;
+    using tile_type  = typename Policy::tile_type;
 
     BarePolicy(const Policy& policy)
-        : m_lower(policy.m_lower),
-          m_upper(policy.m_upper),
-          m_tile(policy.m_tile),
-          m_tile_end(policy.m_tile_end),
-          m_num_tiles(policy.m_num_tiles),
-          m_prod_tile_dims(policy.m_prod_tile_dims) {}
+        : m_lower(policy.lower()),
+          m_upper(policy.upper()),
+          m_tile(policy.tile()),
+          m_tile_end(policy.impl_tile_end()),
+          m_num_tiles(policy.impl_num_tiles()),
+          m_prod_tile_dims(policy.impl_prod_tile_dims()) {}
 
-    const typename Policy::point_type m_lower;
-    const typename Policy::point_type m_upper;
-    const typename Policy::tile_type m_tile;
-    const typename Policy::point_type m_tile_end;
-    const typename Policy::index_type m_num_tiles;
-    const typename Policy::index_type m_prod_tile_dims;
+    const point_type m_lower;
+    const point_type m_upper;
+    const tile_type m_tile;
+    const point_type m_tile_end;
+    const index_type m_num_tiles;
+    const index_type m_prod_tile_dims;
     static constexpr Iterate inner_direction = Policy::inner_direction;
     static constexpr int rank                = Policy::rank;
   };
