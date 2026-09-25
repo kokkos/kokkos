@@ -409,12 +409,28 @@ void run_test() {
 
 TEST(TEST_CATEGORY, view_fill_tests_layout_right) {
   using Space  = TEST_EXECSPACE;
+
+  // FIXME_NEXTSILICON
+// #ifdef KOKKOS_ENABLE_NEXTSILICON
+//   if constexpr (std::is_same_v<Space, Kokkos::Experimental::NextSilicon>) {
+//       GTEST_SKIP() << "slow on NextSilicon 1.3.0-120";
+//   }
+// #endif
+
   using Layout = Kokkos::LayoutRight;
   run_test<Layout, Space>();
 }
 
 TEST(TEST_CATEGORY, view_fill_tests_layout_left) {
   using Space  = TEST_EXECSPACE;
+
+  // FIXME_NEXTSILICON
+// #ifdef KOKKOS_ENABLE_NEXTSILICON
+//   if constexpr (std::is_same_v<Space, Kokkos::Experimental::NextSilicon>) {
+//       GTEST_SKIP() << "slow on NextSilicon 1.3.0-120";
+//   }
+// #endif
+
   using Layout = Kokkos::LayoutLeft;
   run_test<Layout, Space>();
 }

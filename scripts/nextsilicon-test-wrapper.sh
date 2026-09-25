@@ -44,6 +44,8 @@ if [[ -n "${KOKKOS_NEXTSILICON_TEST_TELEMETRYLESS:-}" ]]; then
     # configure nextsystemd
     tee ${patch_dir}/kokkos.patch <<EOF
 optimizer-pi:
+  ebbm-enabled: true
+  max-automatic-migration-move-count: 18446744073709551615 # MAX_UINT64
   # switch to telemetry-less mode
   enable-telemetry-less: true
 projection:
@@ -76,6 +78,8 @@ else
     # configure nextsystemd
     tee ${patch_dir}/kokkos.patch <<EOF
 optimizer-pi:
+  ebbm-enabled: true
+  max-automatic-migration-move-count: 18446744073709551615 # MAX_UINT64
   mlc:
     # try to offload every parallel region
     acceleration-threshold: 1

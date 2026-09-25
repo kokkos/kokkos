@@ -828,8 +828,7 @@ if(Kokkos_ENABLE_NEXTSILICON)
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_shared.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_unsignedint.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicOperations_unsignedlongint.cpp
-      # FIXME_NEXTSILICON: MDRange parallel_for
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicViews.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_AtomicViews.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BadAlloc.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_BitManipulationBuiltins.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_CheckedIntegerOps.cpp
@@ -837,10 +836,9 @@ if(Kokkos_ENABLE_NEXTSILICON)
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Concepts.cpp
       # FIXME_NEXTSILICON: needs TeamPolicy
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Crs.cpp
-      # FIXME_NEXTSILICON: needs MDRange parallel_for
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopy_Narrowing.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopy_Narrowing.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopy_SameArgument.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp # MDRange parallel for
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_DeepCopyAlignment.cpp
       # FIXME_NEXTSILICON: needs TeamPolicy
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ExecSpacePartitioning.cpp
       # FIXME_NEXTSILICON: needs single/PerTeam
@@ -861,20 +859,25 @@ if(Kokkos_ENABLE_NEXTSILICON)
   )
 
   set(NextSilicon_SOURCES1B
-      # FIXME_NEXTSILICON: needs MDRange
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_b.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_c.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_d.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_e.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_f.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_g.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRangePolicyConstructors.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_b.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_c.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_d.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_e.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_f.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRange_g.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRangePolicyConstructors.cpp
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDRangeReduce.cpp
+  )
+  set(NextSilicon_SOURCES1C
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDSpan.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDSpanAtomicAccessor.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MDSpanConversion.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_MinMaxClamp.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_NumericTraits.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ParallelScanRangePolicy.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_CustomScalarParallelScan.cpp
+  )
+  set(NextSilicon_SOURCES1D
       # FIXME_NEXTSILICON: Needs TeamPolicy
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_OccupancyControlTrait.cpp
       # FIXME_NEXTSILICON: Needs TeamPolicy
@@ -887,8 +890,7 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ReducerCTADs.cpp
       # FIXME_NEXTSILICON parallel_reduce MDRange
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_a.cpp
-      # FIXME_NEXTSILICON parallel_for MDRange
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_b.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_b.cpp
       # FIXME_NEXTSILICON parallel_reduce MDRange
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_c.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Reducers_d.cpp
@@ -898,12 +900,6 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_SpaceAwareAccessorAccessViolation.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_SpaceAwareAccessor.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Swap.cpp
-  )
-
-  # FIXME_NEXTSILICON: these two caused an error "unable to allocate memory" during device
-  # configuration when combined into SOURCES1B above
-  set(NextSilicon_SOURCES1C ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ParallelScanRangePolicy.cpp
-                            ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_CustomScalarParallelScan.cpp
   )
 
   set(NextSilicon_SOURCES2A
@@ -921,21 +917,17 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewAPI_b.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewAPI_c.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewAPI_d.cpp
-      # FIXME_NEXTSILICON: parallel_for MDRange
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewAPI_e.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewAPI_e.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewBadAlloc.cpp
-      # FIXME_NEXTSILICON: parallel_for MDRange
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewCopy_a.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewCopy_a.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewCopy_b.cpp
-      # FIXME_NEXTSILICON: parallel_for MDRange
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewCopy_c.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewCopy_c.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewCtorDimMatch.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewCtorProp.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewEmptyRuntimeUnmanaged.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewHooks.cpp
-      # FIXME_NEXTSILICON: parallel_for MDRange
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewLayoutStrideAssignment.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewMapping_a.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewLayoutStrideAssignment.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewMapping_a.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewMapping_b.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewMapping_subview.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewMemoryAccessViolation.cpp
@@ -943,14 +935,14 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewOfClass.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewOfViews.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewOutOfBoundsAccess.cpp
-      # FIXME_NEXTSILICON: parallel_for MDRange
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewResize.cpp
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_WithoutInitializing.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ViewResize.cpp
+      ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_WithoutInitializing.cpp
   )
 
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1A})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1B SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1B})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1C SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1C})
+  kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1D SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1D})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon2A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES2A})
   kokkos_add_executable_and_test(
     CoreUnitTest_NextSiliconInitializationCallbacks SOURCES nextsilicon/TestNextSilicon_InitializationCallbacks.cpp
