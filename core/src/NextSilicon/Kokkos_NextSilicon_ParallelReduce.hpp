@@ -33,7 +33,13 @@ struct NextSiliconParallelReduceImpl {
   using ValueType     = typename ReducerType::value_type;
   using ReferenceType = typename ReducerType::reference_type;
 
-  constexpr static uint32_t MAX_PARTIAL_PROD          = 16 * 1024;  // 16K
+  // Each thread does part of the input array
+  // FIXME_NEXTSILICON: make this user-controllable
+  constexpr static uint32_t MAX_PARTIAL_PROD = 16 * 1024;  // 16K
+
+  // Let threads reduce the problem by at least a factor of
+  // MIN_ITER_PER_PARTIAL_PROD in case of smaller inputs.
+  // FIXME_NEXTSILICON: make this user-controllable
   constexpr static uint32_t MIN_ITER_PER_PARTIAL_PROD = 100;
 
   constexpr static uint32_t SCRATCH_ALLOC_ALIGNMENT = 64;
@@ -51,7 +57,7 @@ struct NextSiliconParallelReduceImpl {
 
   void execute() const {
     // Acquire the device for potential handoff before kernel execution begins
-    const std::lock_guard<std::mutex> device_lock =
+    const std::lock_guard<std::recursive_mutex> device_lock =
         this->m_policy.space().impl_internal_space_instance()->lock_device();
 
     IndexType begin = m_policy.begin();

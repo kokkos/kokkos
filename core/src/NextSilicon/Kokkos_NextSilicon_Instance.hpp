@@ -20,8 +20,9 @@ namespace Kokkos::Experimental::Impl {
 
 class NextSiliconInternal {
   Impl::NextSiliconHeapBuffer m_functor_buffer;
+  Impl::NextSiliconHeapBuffer m_league_scratch_buffer;
   Impl::NextSiliconHeapBuffer m_reduce_partial_buffer;
-  ::Kokkos::Impl::PageAlignedData<std::mutex,
+  ::Kokkos::Impl::PageAlignedData<std::recursive_mutex,
                                   ::Kokkos::Impl::PageLocation::Host>
       device_mutex_;
 
@@ -49,6 +50,7 @@ class NextSiliconInternal {
         new (buffer) Driver(driver), deleter);
   }
 
+  std::byte* resize_league_scratch_buffer(size_t requested);
   std::byte* resize_reduce_partial_buffer(size_t requested);
 
   void print_configuration(std::ostream& os) const;
@@ -57,7 +59,7 @@ class NextSiliconInternal {
 
   uint32_t instance_id() const noexcept;
 
-  [[nodiscard]] std::lock_guard<std::mutex> lock_device();
+  [[nodiscard]] std::lock_guard<std::recursive_mutex> lock_device();
 };
 
 }  // namespace Kokkos::Experimental::Impl
