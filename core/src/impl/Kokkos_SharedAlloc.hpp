@@ -312,8 +312,8 @@ class SharedAllocationRecord<MemorySpace, void>
 
   ~SharedAllocationRecord() override;
 
-  static auto allocate(MemorySpace const&, std::string const&,
-                       size_t) -> derived_t*;
+  static auto allocate(MemorySpace const&, std::string const&, size_t)
+      -> derived_t*;
 
   /**\brief Allocate tracked memory in the space. */
   static void* allocate_tracked(MemorySpace const&, std::string const&, size_t);

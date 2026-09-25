@@ -96,17 +96,18 @@ SharedAllocationRecord<MemorySpace, void>::~SharedAllocationRecord() {
 // NOLINTEND(bugprone-exception-escape)
 
 template <class MemorySpace>
-auto allocate_shared_allocation_record(
-    MemorySpace const& space, std::string const& label,
-    size_t alloc_size) -> SharedAllocationRecord<MemorySpace, void>* {
+auto allocate_shared_allocation_record(MemorySpace const& space,
+                                       std::string const& label,
+                                       size_t alloc_size)
+    -> SharedAllocationRecord<MemorySpace, void>* {
   return new SharedAllocationRecord<MemorySpace, void>(space, label,
                                                        alloc_size);
 }
 
 template <class MemorySpace>
 auto SharedAllocationRecord<MemorySpace, void>::allocate(
-    MemorySpace const& space, std::string const& label,
-    size_t alloc_size) -> derived_t* {
+    MemorySpace const& space, std::string const& label, size_t alloc_size)
+    -> derived_t* {
   return allocate_shared_allocation_record<MemorySpace>(space, label,
                                                         alloc_size);
 }
