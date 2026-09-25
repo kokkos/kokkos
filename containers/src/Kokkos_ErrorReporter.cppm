@@ -10,7 +10,9 @@ export module kokkos.error_reporter;
 export {
   namespace Kokkos {
   namespace Experimental {
+  using ::Kokkos::Experimental::ErrorReport;
   using ::Kokkos::Experimental::ErrorReporter;
-  }
+  using ::Kokkos::Experimental::Logger;
+  }  // namespace Experimental
   }  // namespace Kokkos
 }

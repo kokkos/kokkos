@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
             // add_report takes an id and a payload
             // Note that we don't have to check how many reports were already
             // submitted
-            errors.add_report(i, pos);
+            errors.try_emplace(i, pos);
           } else if (pos < 50.)
             count_lower++;
           else
@@ -59,12 +59,12 @@ int main(int argc, char* argv[]) {
     printf(
         "There were %i particles outside of the valid domain (0 - 100). Here "
         "are the first %i:\n",
-        errors.num_report_attempts(), errors.num_reports());
+        errors.insertion_attempts(), errors.size());
 
     // Using structured bindings to get the reporter ids and reports
-    auto [reporter_ids, reports] = errors.get_reports();
-    for (int e = 0; e < errors.num_reports(); e++)
-      printf("%i %lf\n", reporter_ids[e], reports[e]);
+    auto reports = errors.get();
+    for (int e = 0; e < errors.size(); e++)
+      printf("%i %lf\n", reports[e].reporter_id, reports[e].error);
   }
   Kokkos::finalize();
 }
