@@ -201,6 +201,16 @@ install(FILES ${CMAKE_CURRENT_BINARY_DIR}/mdspanConfig.cmake ${CMAKE_CURRENT_BIN
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mdspan
 )
 
+# Required to be a TriBITS-compliant external package
+file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/cmake_packages/mdspan)
+file(COPY ${mdspan_BINARY_DIR}/mdspanConfig.cmake
+          ${mdspan_BINARY_DIR}/mdspanConfigVersion.cmake
+          DESTINATION ${CMAKE_BINARY_DIR}/cmake_packages/mdspan
+)
+file(WRITE ${CMAKE_BINARY_DIR}/cmake_packages/mdspan/mdspanTargets.cmake
+        "include(${mdspan_BINARY_DIR}/mdspanTargets.cmake)"
+)
+
 ################################################################################
 
 if(MDSPAN_ENABLE_TESTS)
