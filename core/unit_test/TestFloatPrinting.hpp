@@ -39,7 +39,7 @@ struct TestFloatPrinting {
         Kokkos::printf("For float %s (0x%x)\n", ref,
                        Kokkos::bit_cast<uint32_t>(val));
       } else {
-        Kokkos::printf("For double %s (0x%lx)\n", ref,
+        Kokkos::printf("For double %s (0x%" PRIu64 ")\n", ref,
                        Kokkos::bit_cast<uint64_t>(val));
       }
       ++errors;
@@ -52,7 +52,7 @@ struct TestFloatPrinting {
         Kokkos::printf("For float %s (0x%x)\n", ref,
                        Kokkos::bit_cast<uint32_t>(val));
       } else {
-        Kokkos::printf("For double %s (0x%lx)\n", ref,
+        Kokkos::printf("For double %s (0x%" PRIu64 ")\n", ref,
                        Kokkos::bit_cast<uint64_t>(val));
       }
       ++errors;
@@ -173,7 +173,8 @@ bool check(T d) {
       if constexpr (std::is_same_v<T, float>) {
         err_buf += sprintf(err_buf, "0x%x\n", Kokkos::bit_cast<uint32_t>(d));
       } else {
-        err_buf += sprintf(err_buf, "0x%lx\n", Kokkos::bit_cast<uint64_t>(d));
+        err_buf +=
+            sprintf(err_buf, "0x%" PRIu64 "\n", Kokkos::bit_cast<uint64_t>(d));
       }
       err_buf += sprintf(err_buf, "%s !=\n", ref);
       err_buf += sprintf(err_buf, "%s\n", buffer);
