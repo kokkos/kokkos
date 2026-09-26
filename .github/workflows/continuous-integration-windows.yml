@@ -76,7 +76,7 @@ jobs:
       shell: bash
       run: |
         cd example/build_cmake_installed_modules
-        cmake -G Ninja -B build -DKokkos_ROOT=../../build .
+        cmake -G Ninja -B build -DKokkos_ROOT=../../build/cmake_packages .
         cmake --build build --parallel 4
         ctest --test-dir build --verbose
 

@@ -78,7 +78,7 @@ pipeline {
                                 -GNinja \
                                 -DCMAKE_CXX_COMPILER=g++-16 \
                                 -DCMAKE_CXX_FLAGS="-Werror" \
-                                -DKokkos_ROOT=../../build && \
+                                -DKokkos_ROOT=../../build/cmake_packages && \
                               set +x && \
                               cmake --build build && \
                               ctest --test-dir build --verbose'''
