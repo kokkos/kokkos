@@ -672,9 +672,11 @@ if(Kokkos_ENABLE_HPX)
     UnitTestMainInit.cpp
     hpx/TestHPX_IndependentInstances.cpp
     hpx/TestHPX_IndependentInstancesDelayedExecution.cpp
+    hpx/TestHPX_IndependentInstancesDestroyedBeforeCompletion.cpp
     hpx/TestHPX_IndependentInstancesInstanceIds.cpp
     hpx/TestHPX_IndependentInstancesRefCounting.cpp
     hpx/TestHPX_IndependentInstancesSynchronization.cpp
+    hpx/TestHPX_IndependentInstancesViewAlloc.cpp
   )
 endif()
 
