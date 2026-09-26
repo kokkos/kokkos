@@ -879,10 +879,6 @@ if(Kokkos_ENABLE_NEXTSILICON)
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_OccupancyControlTrait.cpp
       # FIXME_NEXTSILICON: Needs TeamPolicy
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Other.cpp
-      # FIXME_NEXTSILICON: needs range policy parallel_scan
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ParallelScanRangePolicy.cpp
-      # FIXME_NEXTSILICON: parallel_scan
-      # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_CustomScalarParallelScan.cpp
       # FIXME_NEXTSILICON: needs device printf
       # ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Printf.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_QuadPrecisionMath.cpp
@@ -902,6 +898,12 @@ if(Kokkos_ENABLE_NEXTSILICON)
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_SpaceAwareAccessorAccessViolation.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_SpaceAwareAccessor.cpp
       ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_Swap.cpp
+  )
+
+  # FIXME_NEXTSILICON: these two caused an error "unable to allocate memory" during device
+  # configuration when combined into SOURCES1B above
+  set(NextSilicon_SOURCES1C ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_ParallelScanRangePolicy.cpp
+                            ${CMAKE_CURRENT_BINARY_DIR}/nextsilicon/TestNextSilicon_CustomScalarParallelScan.cpp
   )
 
   set(NextSilicon_SOURCES2A
@@ -948,6 +950,7 @@ if(Kokkos_ENABLE_NEXTSILICON)
 
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1A})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1B SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1B})
+  kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1C SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1C})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon2A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES2A})
   kokkos_add_executable_and_test(
     CoreUnitTest_NextSiliconInitializationCallbacks SOURCES nextsilicon/TestNextSilicon_InitializationCallbacks.cpp
