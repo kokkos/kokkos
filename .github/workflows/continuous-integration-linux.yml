@@ -161,7 +161,7 @@ jobs:
         if: ${{ !contains(matrix.cxx_extra_flags, '-fsanitize=address') && matrix.arch != 'x86' }}
         working-directory: example/build_cmake_installed
         run: |
-          cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DCMAKE_CXX_STANDARD=${{ matrix.stdcxx }} -DKokkos_ROOT=../../builddir
+          cmake -B builddir_buildtree -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DCMAKE_CXX_STANDARD=${{ matrix.stdcxx }} -DKokkos_ROOT=../../builddir/cmake_packages
           cmake --build builddir_buildtree
           export CTEST_OUTPUT_ON_FAILURE=1
           cmake --build builddir_buildtree --target test
