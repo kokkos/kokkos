@@ -502,15 +502,15 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::OffsetView<int*, TEST_EXECSPACE> device_view(
-      "device view", {0, 10});
+      "device view", {0}, {11});
   Kokkos::Experimental::OffsetView<int*, Kokkos::HostSpace> host_view(
-      "host view", {0, 10});
+      "host view", {0}, {11});
 
   auto success = validate_absence(
       [&]() {
         device_view = Kokkos::Experimental::OffsetView<int*, TEST_EXECSPACE>(
-            Kokkos::view_alloc(Kokkos::WithoutInitializing, "device view"),
-            {0, 10});
+            Kokkos::view_alloc(Kokkos::WithoutInitializing, "device view"), {0},
+            {11});
 
         auto mirror_device =
             Kokkos::create_mirror(Kokkos::WithoutInitializing, device_view);
@@ -540,9 +540,9 @@ TEST(TEST_CATEGORY, create_mirror_no_init_offsetview_view_ctor) {
   using namespace Kokkos::Test::Tools;
   listen_tool_events(Config::DisableAll(), Config::EnableKernels());
   Kokkos::Experimental::OffsetView<int*, Kokkos::DefaultExecutionSpace>
-      device_view("device view", {0, 10});
+      device_view("device view", {0}, {11});
   Kokkos::Experimental::OffsetView<int*, Kokkos::HostSpace> host_view(
-      "host view", {0, 10});
+      "host view", {0}, {11});
 
   auto success = validate_absence(
       [&]() {
@@ -578,7 +578,7 @@ TEST(TEST_CATEGORY, create_mirror_view_and_copy_offsetview) {
                      Config::EnableFences());
 
   Kokkos::Experimental::OffsetView<int*, Kokkos::HostSpace> host_view(
-      "host view", {0, 10});
+      "host view", {0}, {11});
   decltype(Kokkos::create_mirror_view_and_copy(TEST_EXECSPACE{},
                                                host_view)) device_view;
 
