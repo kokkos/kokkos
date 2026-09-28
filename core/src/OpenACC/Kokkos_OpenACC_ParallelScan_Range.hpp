@@ -22,8 +22,6 @@
 namespace Kokkos::Impl {
 
 template <class Functor, class GivenValueType, class... Traits>
-  requires Kokkos::ExecutionSpace<
-      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanOpenACCBase {
  protected:
   using Policy = Kokkos::RangePolicy<Traits...>;
@@ -264,8 +262,6 @@ class Kokkos::Impl::ParallelScan<Functor, Kokkos::RangePolicy<Traits...>,
 };
 
 template <class FunctorType, class ReturnType, class... Traits>
-  requires Kokkos::ExecutionSpace<
-      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class Kokkos::Impl::ParallelScanWithTotal<
     FunctorType, Kokkos::RangePolicy<Traits...>, ReturnType,
     Kokkos::Experimental::OpenACC>

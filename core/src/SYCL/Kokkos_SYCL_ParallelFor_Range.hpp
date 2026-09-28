@@ -74,8 +74,6 @@ struct FunctorWrapperRangePolicyParallelForCustom {
 }  // namespace Kokkos::Impl
 
 template <class FunctorType, class... Traits>
-  requires Kokkos::ExecutionSpace<
-      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                                 Kokkos::SYCL> {
  public:
