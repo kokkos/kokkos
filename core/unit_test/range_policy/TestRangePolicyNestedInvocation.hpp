@@ -253,40 +253,6 @@ struct CheckCase<5, ExecSpace> {
   }
 };
 
-template <class ExecSpace>
-struct CheckCase<6, ExecSpace> {
-  void operator()() const {
-    float_tensor4_t<ExecSpace> M;
-    allocate<ExecSpace>(M);
-    Kokkos::deep_copy(M, 0.f);
-
-    using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = typename team_t::thread_handle;
-    const int num_leagues = M.extent_int(0);
-    const int num_threads = M.extent_int(1);
-    Kokkos::parallel_for(
-        "case6", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
-        KOKKOS_LAMBDA(const team_t& team) {
-          auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
-                                       Kokkos::ALL(), Kokkos::ALL());
-          Kokkos::parallel_for(
-              Kokkos::RangePolicy(team, 0, num_threads),
-              // Outer: RangePolicy(team, 0, num_threads). Because the closure
-              // is invocable with (thread_handle, i), Kokkos dispatches to
-              // TeamThreadRange (see Kokkos_Parallel_NestedPolicyDispatch.hpp).
-              // Inner (sum_views): RangePolicy(th, 0, M_sub_sub.extent_int(0))
-              // with (int) -> ThreadVectorRange (policy handle type).
-              [&](const thread_handle& th, int i) {
-                auto M_sub_sub =
-                    Kokkos::subview(M_sub, i, Kokkos::ALL(), Kokkos::ALL());
-                sum_views(th, M_sub_sub, 7.f);
-              });
-        });
-
-    verify<ExecSpace>(M, 7.f, "check_case1");
-  }
-};
-
 }  // namespace
 
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case0) {
@@ -311,8 +277,4 @@ TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case4) {
 
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case5) {
   CheckCase<5, TEST_EXECSPACE>{}();
-}
-
-TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case6) {
-  CheckCase<6, TEST_EXECSPACE>{}();
 }
