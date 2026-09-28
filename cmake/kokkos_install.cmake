@@ -8,25 +8,25 @@ if(NOT Kokkos_INSTALL_TESTING)
 
   include(CMakePackageConfigHelpers)
   configure_package_config_file(
-    cmake/KokkosConfig.cmake.in "${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfig.cmake"
+    cmake/KokkosConfig.cmake.in "${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfig.cmake"
     INSTALL_DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake
   )
 
   configure_package_config_file(
-    cmake/KokkosConfigCommon.cmake.in "${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigCommon.cmake"
+    cmake/KokkosConfigCommon.cmake.in "${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigCommon.cmake"
     INSTALL_DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake
   )
 
   write_basic_package_version_file(
-    "${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigVersion.cmake" VERSION "${Kokkos_VERSION}"
+    "${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigVersion.cmake" VERSION "${Kokkos_VERSION}"
     COMPATIBILITY AnyNewerVersion
   )
 
   # Install the KokkosConfig*.cmake files
   install(
-    FILES "${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfig.cmake"
-          "${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigCommon.cmake"
-          "${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigVersion.cmake"
+    FILES "${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfig.cmake"
+          "${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigCommon.cmake"
+          "${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Kokkos
   )
   if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)
@@ -39,18 +39,18 @@ if(NOT Kokkos_INSTALL_TESTING)
   else()
     install(EXPORT KokkosTargets NAMESPACE Kokkos:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Kokkos)
   endif()
-  export(EXPORT KokkosTargets NAMESPACE Kokkos:: FILE ${Kokkos_BINARY_DIR}/cmake_packages/KokkosTargets.cmake)
+  export(EXPORT KokkosTargets NAMESPACE Kokkos:: FILE ${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosTargets.cmake)
 
   # Required to be a TriBITS-compliant external package
   if(NOT Kokkos_BINARY_DIR STREQUAL CMAKE_BINARY_DIR) # TODO use PATH_EQUAL with CMake 3.24+
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos)
     file(
-      COPY ${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfig.cmake
-           ${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigCommon.cmake
-           ${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigVersion.cmake
-           ${Kokkos_BINARY_DIR}/cmake_packages/KokkosTargets.cmake
+      COPY ${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfig.cmake
+           ${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigCommon.cmake
+           ${Kokkos_BINARY_DIR}/cmake_packages/Kokkos/KokkosConfigVersion.cmake
       DESTINATION ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos
     )
+    export(EXPORT KokkosTargets NAMESPACE Kokkos:: FILE ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos/KokkosTargets.cmake)
   endif()
 
 else()
