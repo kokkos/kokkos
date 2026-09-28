@@ -157,11 +157,6 @@ install(EXPORT mdspanTargets
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mdspan
 )
 
-export(TARGETS mdspan
-    NAMESPACE mdspan::
-    FILE cmake_packages/mdspan/mdspanTargets.cmake
-)
-
 if (MDSPAN_GENERATE_STD_NAMESPACE_TARGETS)
   install(TARGETS mdspan EXPORT mdspanStdTargets
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
@@ -206,9 +201,11 @@ if(NOT mdspan_BINARY_DIR STREQUAL CMAKE_BINARY_DIR) # TODO use PATH_EQUAL with C
     DESTINATION ${CMAKE_BINARY_DIR}/cmake_packages/mdspan
   )
   export(EXPORT mdspanTargets NAMESPACE mdspan:: FILE ${CMAKE_BINARY_DIR}/cmake_packages/mdspan/mdspanTargets.cmake)
+else()
+  export(EXPORT mdspanTargets NAMESPACE mdspan:: FILE ${mdspan_BINARY_DIR}/cmake_packages/mdspan/mdspanTargets.cmake)
 endif()
 
-install(FILES ${mdspan_BINARY_DIR}/cmake_packages/mdspanConfig.cmake ${mdspan_BINARY_DIR}/cmake_packages/mdspanConfigVersion.cmake
+install(FILES ${mdspan_BINARY_DIR}/cmake_packages/mdspan/mdspanConfig.cmake ${mdspan_BINARY_DIR}/cmake_packages/mdspan/mdspanConfigVersion.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mdspan
 )
 
