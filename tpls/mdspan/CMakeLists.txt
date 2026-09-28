@@ -159,7 +159,7 @@ install(EXPORT mdspanTargets
 
 export(TARGETS mdspan
     NAMESPACE mdspan::
-    FILE cmake_packages/mdspanTargets.cmake
+    FILE cmake_packages/mdpsan/mdspanTargets.cmake
 )
 
 if (MDSPAN_GENERATE_STD_NAMESPACE_TARGETS)
@@ -189,13 +189,24 @@ endif()
 
 include(CMakePackageConfigHelpers)
 configure_package_config_file(cmake/mdspanConfig.cmake.in
-  ${mdspan_BINARY_DIR}/cmake_packages/mdspanConfig.cmake
+  ${mdspan_BINARY_DIR}/cmake_packages/mdpsan/mdspanConfig.cmake
   INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mdspan
 )
-write_basic_package_version_file(${mdspan_BINARY_DIR}/cmake_packages/mdspanConfigVersion.cmake
+write_basic_package_version_file(${mdspan_BINARY_DIR}/cmake_packages/mdpsan/mdspanConfigVersion.cmake
   COMPATIBILITY SameMajorVersion
   ARCH_INDEPENDENT
 )
+
+# Required to be a TriBITS-compliant external package
+if(NOT mdspan_BINARY_DIR STREQUAL CMAKE_BINARY_DIR) # TODO use PATH_EQUAL with CMake 3.24+
+  file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/cmake_packages/mdspan)
+  file(
+    COPY ${mdspan_BINARY_DIR}/cmake_packages/mdspan/mdspanConfig.cmake
+         ${mdspan_BINARY_DIR}/cmake_packages/mdspan/mdspanConfigVersion.cmake
+    DESTINATION ${CMAKE_BINARY_DIR}/cmake_packages/mdspan
+  )
+  export(EXPORT mdspanTargets NAMESPACE mdspan:: FILE ${CMAKE_BINARY_DIR}/cmake_packages/mdspan/mdspanTargets.cmake)
+endif()
 
 install(FILES ${mdspan_BINARY_DIR}/cmake_packages/mdspanConfig.cmake ${mdspan_BINARY_DIR}/cmake_packages/mdspanConfigVersion.cmake
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/mdspan
