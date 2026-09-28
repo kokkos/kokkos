@@ -56,7 +56,6 @@
 #include <Kokkos_InitializeFinalize.hpp>
 #include <Kokkos_ScopeGuard.hpp>
 #include <impl/Kokkos_TeamMDPolicy.hpp>
-#include <impl/Kokkos_Parallel_NestedPolicyDispatch.hpp>
 #include <impl/Kokkos_PartitionSpace.hpp>
 #include <impl/Kokkos_CStyleMemoryManagement.hpp>
 #include <impl/Kokkos_RuntimeInfo.hpp>
