@@ -164,8 +164,13 @@ struct TeamThreadMDRangeStencilBase {
                                const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
-  static auto get_policy(int league_size) {
-    return team_policy(league_size, 32);
+  auto get_policy(int league_size) {
+    int team_size_max =
+        team_policy(1, 1).team_size_max(*this, Kokkos::ParallelForTag{});
+    int team_size = std::min(32, team_size_max);
+
+    return team_policy(league_size, team_size,
+                       team_policy::vector_length_max());
   }
 };
 
@@ -289,8 +294,13 @@ struct TeamVectorMDRangeStencilBase {
                                const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
-  static auto get_policy(int league_size) {
-    return team_policy(league_size, 32);
+  auto get_policy(int league_size) {
+    int team_size_max =
+        team_policy(1, 1).team_size_max(*this, Kokkos::ParallelForTag{});
+    int team_size = std::min(32, team_size_max);
+
+    return team_policy(league_size, team_size,
+                       team_policy::vector_length_max());
   }
 };
 
@@ -415,9 +425,15 @@ struct ThreadVectorMDRangeStencilBase {
                                  const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
-  static auto get_policy(int league_size) {
+  auto get_policy(int league_size) {
     assert(league_size % 32 == 0);
-    return team_policy(league_size / 32, 32);
+
+    int team_size_max =
+        team_policy(1, 1).team_size_max(*this, Kokkos::ParallelForTag{});
+    int team_size = std::min(32, team_size_max);
+
+    return team_policy(league_size / 32, team_size,
+                       team_policy::vector_length_max());
   }
 };
 
@@ -557,11 +573,13 @@ void bench_team_mdrange(benchmark::State& state, std::index_sequence<Idx...>) {
   Kokkos::deep_copy(Btest, 1.0);
   execution_space().fence();
 
-  const auto policy = FunctorType::get_policy(league_size);
+  auto func = FunctorType(Atest, Btest, dims);
+
+  const auto policy = func.get_policy(league_size);
 
   for (auto _ : state) {
     Kokkos::Timer timer;
-    Kokkos::parallel_for(policy, FunctorType(Atest, Btest, dims));
+    Kokkos::parallel_for(policy, func);
     execution_space().fence();
     const double dt = timer.seconds();
     state.SetIterationTime(dt);
