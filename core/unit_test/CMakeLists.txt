@@ -221,20 +221,30 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       list(APPEND ${Tag}_SOURCES1B ${file})
     endforeach()
 
-    # Add additional test(s) from subdirectory range_policy
-    set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
-    file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
-    )
-    configure_file(${dir}/dummy.cpp ${file})
-    list(APPEND ${Tag}_SOURCES1B ${file})
+    # Add additional test(s) from subdirectory range_policy.
+    # ThreadHandle nested RangePolicy is implemented for Cuda in this PR.
+    if(Tag STREQUAL "Cuda")
+      set(file ${dir}/Test${Tag}_RangePolicyNestedInvocation.cpp)
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                  "#include <range_policy/TestRangePolicyNestedInvocation.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES1B ${file})
 
-    set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
-    file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
-    )
-    configure_file(${dir}/dummy.cpp ${file})
-    list(APPEND ${Tag}_SOURCES1B ${file})
+      set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                  "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES1B ${file})
+    else()
+      set(file ${dir}/Test${Tag}_RangePolicyExecutionTypes.cpp)
+      file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
+                                  "#include <range_policy/TestRangePolicyExecutionTypes.hpp>\n"
+      )
+      configure_file(${dir}/dummy.cpp ${file})
+      list(APPEND ${Tag}_SOURCES1B ${file})
+    endif()
 
     set(${Tag}_SOURCES2A)
     set(${Tag}_TESTNAMES2A

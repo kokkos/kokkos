@@ -585,8 +585,7 @@ struct HPXTeamMember {
   using execution_space = Kokkos::Experimental::HPX;
   using scratch_memory_space =
       Kokkos::ScratchMemorySpace<Kokkos::Experimental::HPX>;
-  using team_handle   = HPXTeamMember;
-  using thread_handle = Kokkos::ThreadHandle<team_handle>;
+  using team_handle = HPXTeamMember;
 
  private:
   scratch_memory_space m_team_shared;
@@ -622,16 +621,6 @@ struct HPXTeamMember {
 
   KOKKOS_INLINE_FUNCTION int team_rank() const noexcept { return m_team_rank; }
   KOKKOS_INLINE_FUNCTION int team_size() const noexcept { return m_team_size; }
-
-  /** \brief Number of vector lanes per thread (1 for HPX). */
-  KOKKOS_INLINE_FUNCTION static constexpr int vector_length() noexcept {
-    return 1;
-  }
-
-  /** \brief Maximum concurrency at team level (1 for HPX). */
-  KOKKOS_INLINE_FUNCTION int concurrency() const noexcept {
-    return team_size() * vector_length();
-  }
 
   template <class... Properties>
   constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
@@ -957,8 +946,6 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
-  requires Kokkos::ExecutionSpace<
-      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelFor<FunctorType, Kokkos::RangePolicy<Traits...>,
                   Kokkos::Experimental::HPX> {
  private:
@@ -1045,8 +1032,6 @@ class ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
 namespace Kokkos {
 namespace Impl {
 template <class CombinedFunctorReducerType, class... Traits>
-  requires Kokkos::ExecutionSpace<
-      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelReduce<CombinedFunctorReducerType, Kokkos::RangePolicy<Traits...>,
                      Kokkos::Experimental::HPX> {
  private:
@@ -1261,8 +1246,6 @@ namespace Kokkos {
 namespace Impl {
 
 template <class FunctorType, class... Traits>
-  requires Kokkos::ExecutionSpace<
-      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
                    Kokkos::Experimental::HPX> {
  private:
@@ -1365,8 +1348,6 @@ class ParallelScan<FunctorType, Kokkos::RangePolicy<Traits...>,
 };
 
 template <class FunctorType, class ReturnType, class... Traits>
-  requires Kokkos::ExecutionSpace<
-      typename Kokkos::RangePolicy<Traits...>::execution_type>
 class ParallelScanWithTotal<FunctorType, Kokkos::RangePolicy<Traits...>,
                             ReturnType, Kokkos::Experimental::HPX> {
  private:
@@ -1754,19 +1735,19 @@ TeamThreadRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
 
 template <typename iType>
 KOKKOS_INLINE_FUNCTION
-    Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
+    Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
     TeamVectorRange(const Impl::HPXTeamMember &thread, const iType &count) {
-  return Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
       thread, count);
 }
 
 template <typename iType1, typename iType2>
-KOKKOS_INLINE_FUNCTION Impl::TeamVectorRangeBoundariesStruct<
+KOKKOS_INLINE_FUNCTION Impl::TeamThreadRangeBoundariesStruct<
     std::common_type_t<iType1, iType2>, Impl::HPXTeamMember>
 TeamVectorRange(const Impl::HPXTeamMember &thread, const iType1 &i_begin,
                 const iType2 &i_end) {
   using iType = std::common_type_t<iType1, iType2>;
-  return Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
+  return Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>(
       thread, iType(i_begin), iType(i_end));
 }
 
@@ -1804,61 +1785,15 @@ Impl::VectorSingleStruct<Impl::HPXTeamMember> PerThread(
  * i=0..N-1.
  *
  * The range i=0..N-1 is mapped to all threads of the the calling thread team.
- * If the closure accepts (thread_handle, iType) or (thread_handle), the handle
- * is constructed only in those branches.
  */
 template <typename iType, class Lambda>
 KOKKOS_INLINE_FUNCTION void parallel_for(
     const Impl::TeamThreadRangeBoundariesStruct<iType, Impl::HPXTeamMember>
         &loop_boundaries,
     const Lambda &lambda) {
-  using thread_handle_t = Kokkos::ThreadHandle<Impl::HPXTeamMember>;
-  if constexpr (std::is_invocable_v<Lambda, iType> ||
-                std::is_invocable_v<Lambda, iType const &>) {
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(i);
-    }
-  } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &,
-                                           iType>) {
-    auto const thread_handle = thread_handle_t(loop_boundaries.member);
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      lambda(thread_handle, i);
-    }
-  } else if constexpr (std::is_invocable_v<Lambda, thread_handle_t const &>) {
-    auto const thread_handle = thread_handle_t(loop_boundaries.member);
-    for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-         i += loop_boundaries.increment) {
-      (void)i;
-      lambda(thread_handle);
-    }
-  } else {
-    static_assert(Kokkos::Impl::always_false<Lambda>::value,
-                  "Kokkos::parallel_for(TeamThreadRange): closure must be "
-                  "invocable with (iType), (ThreadHandle, iType), or "
-                  "(ThreadHandle)");
-  }
-}
-
-/** \brief  Team-vector parallel_for (same iteration space as TeamVectorRange).
- *
- * RangePolicy(team, ...) maps to TeamVectorRangeBoundariesStruct; it must not
- * dispatch the TeamThreadRange (thread_handle, i) path. This overload ensures
- * only lambda(i) is invoked.
- */
-template <typename iType, class Lambda>
-KOKKOS_INLINE_FUNCTION void parallel_for(
-    const Impl::TeamVectorRangeBoundariesStruct<iType, Impl::HPXTeamMember>
-        &loop_boundaries,
-    const Lambda &lambda) {
-#ifdef KOKKOS_ENABLE_PRAGMA_IVDEP
-#pragma ivdep
-#endif
   for (iType i = loop_boundaries.start; i < loop_boundaries.end;
-       i += loop_boundaries.increment) {
+       i += loop_boundaries.increment)
     lambda(i);
-  }
 }
 
 /** \brief  Inter-thread vector parallel_reduce. Executes lambda(iType i,
