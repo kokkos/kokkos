@@ -141,7 +141,7 @@ using add_pointer_n_t = typename add_pointer_n<T, Rank>::type;
 
 template <int Dimension, class DeviceType,
           typename Layout = Kokkos::LayoutRight, typename ScalarType = double>
-struct TeamThreadMDRangeStencilBase {
+struct TeamThreadMDRangeStencil {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using team_policy     = Kokkos::TeamPolicy<execution_space>;
@@ -160,8 +160,8 @@ struct TeamThreadMDRangeStencilBase {
   view_type B;
   const Kokkos::Array<int, dimension> ranges;
 
-  TeamThreadMDRangeStencilBase(const view_type& A_, const view_type& B_,
-                               const Kokkos::Array<int, dimension>& dims)
+  TeamThreadMDRangeStencil(const view_type& A_, const view_type& B_,
+                           const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
   auto get_policy(int league_size) {
@@ -172,106 +172,78 @@ struct TeamThreadMDRangeStencilBase {
     return team_policy(league_size, team_size,
                        team_policy::vector_length_max());
   }
-};
-
-template <int Dimension, class DeviceType,
-          typename Layout = Kokkos::LayoutRight, typename ScalarType = double>
-struct TeamThreadMDRangeStencil;
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct TeamThreadMDRangeStencil<2, DeviceType, Layout, ScalarType>
-    : TeamThreadMDRangeStencilBase<2, DeviceType, Layout, ScalarType> {
-  using Base = TeamThreadMDRangeStencilBase<2, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::team_thread_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 2)
+  {
     const int league_rank = team.league_rank();
 
-    auto team_range =
-        team_thread_mdrange(team, this->ranges[0], this->ranges[1]);
+    auto team_range = team_thread_mdrange(team, ranges[0], ranges[1]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1) {
       i0++;
       i1++;
-      this->A(league_rank, i0, i1) =
-          0.25 * (ScalarType)(this->B(league_rank, i0 + 1, i1) +
-                              this->B(league_rank, i0 - 1, i1) +
-                              this->B(league_rank, i0, i1 + 1) +
-                              this->B(league_rank, i0, i1 - 1) +
-                              this->B(league_rank, i0, i1));
+      A(league_rank, i0, i1) =
+          0.25 *
+          (ScalarType)(B(league_rank, i0 + 1, i1) + B(league_rank, i0 - 1, i1) +
+                       B(league_rank, i0, i1 + 1) + B(league_rank, i0, i1 - 1) +
+                       B(league_rank, i0, i1));
     });
   }
-};
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct TeamThreadMDRangeStencil<3, DeviceType, Layout, ScalarType>
-    : TeamThreadMDRangeStencilBase<3, DeviceType, Layout, ScalarType> {
-  using Base = TeamThreadMDRangeStencilBase<3, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::team_thread_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 3)
+  {
     const int league_rank = team.league_rank();
 
-    auto team_range = team_thread_mdrange(team, this->ranges[0],
-                                          this->ranges[1], this->ranges[2]);
+    auto team_range =
+        team_thread_mdrange(team, ranges[0], ranges[1], ranges[2]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1, int i2) {
       i0++;
       i1++;
       i2++;
-      this->A(league_rank, i0, i1, i2) =
-          0.25 * (ScalarType)(this->B(league_rank, i0 + 1, i1, i2) +
-                              this->B(league_rank, i0 - 1, i1, i2) +
-                              this->B(league_rank, i0, i1 + 1, i2) +
-                              this->B(league_rank, i0, i1 - 1, i2) +
-                              this->B(league_rank, i0, i1, i2 + 1) +
-                              this->B(league_rank, i0, i1, i2 - 1) +
-                              this->B(league_rank, i0, i1, i2));
+      A(league_rank, i0, i1, i2) =
+          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2) +
+                              B(league_rank, i0 - 1, i1, i2) +
+                              B(league_rank, i0, i1 + 1, i2) +
+                              B(league_rank, i0, i1 - 1, i2) +
+                              B(league_rank, i0, i1, i2 + 1) +
+                              B(league_rank, i0, i1, i2 - 1) +
+                              B(league_rank, i0, i1, i2));
     });
   }
-};
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct TeamThreadMDRangeStencil<4, DeviceType, Layout, ScalarType>
-    : TeamThreadMDRangeStencilBase<4, DeviceType, Layout, ScalarType> {
-  using Base = TeamThreadMDRangeStencilBase<4, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::team_thread_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 4)
+  {
     const int league_rank = team.league_rank();
 
     auto team_range =
-        team_thread_mdrange(team, this->ranges[0], this->ranges[1],
-                            this->ranges[2], this->ranges[3]);
+        team_thread_mdrange(team, ranges[0], ranges[1], ranges[2], ranges[3]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1, int i2, int i3) {
       i0++;
       i1++;
       i2++;
       i3++;
-      this->A(league_rank, i0, i1, i2, i3) =
-          0.25 * (ScalarType)(this->B(league_rank, i0 + 1, i1, i2, i3) +
-                              this->B(league_rank, i0 - 1, i1, i2, i3) +
-                              this->B(league_rank, i0, i1 + 1, i2, i3) +
-                              this->B(league_rank, i0, i1 - 1, i2, i3) +
-                              this->B(league_rank, i0, i1, i2 + 1, i3) +
-                              this->B(league_rank, i0, i1, i2 - 1, i3) +
-                              this->B(league_rank, i0, i1, i2, i3 + 1) +
-                              this->B(league_rank, i0, i1, i2, i3 - 1) +
-                              this->B(league_rank, i0, i1, i2, i3));
+      A(league_rank, i0, i1, i2, i3) =
+          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2, i3) +
+                              B(league_rank, i0 - 1, i1, i2, i3) +
+                              B(league_rank, i0, i1 + 1, i2, i3) +
+                              B(league_rank, i0, i1 - 1, i2, i3) +
+                              B(league_rank, i0, i1, i2 + 1, i3) +
+                              B(league_rank, i0, i1, i2 - 1, i3) +
+                              B(league_rank, i0, i1, i2, i3 + 1) +
+                              B(league_rank, i0, i1, i2, i3 - 1) +
+                              B(league_rank, i0, i1, i2, i3));
     });
   }
 };
 
 template <int Dimension, class DeviceType,
           typename Layout = Kokkos::LayoutRight, typename ScalarType = double>
-struct TeamVectorMDRangeStencilBase {
+struct TeamVectorMDRangeStencil {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using team_policy     = Kokkos::TeamPolicy<execution_space>;
@@ -290,8 +262,8 @@ struct TeamVectorMDRangeStencilBase {
   view_type B;
   const Kokkos::Array<int, dimension> ranges;
 
-  TeamVectorMDRangeStencilBase(const view_type& A_, const view_type& B_,
-                               const Kokkos::Array<int, dimension>& dims)
+  TeamVectorMDRangeStencil(const view_type& A_, const view_type& B_,
+                           const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
   auto get_policy(int league_size) {
@@ -302,106 +274,78 @@ struct TeamVectorMDRangeStencilBase {
     return team_policy(league_size, team_size,
                        team_policy::vector_length_max());
   }
-};
-
-template <int Dimension, class DeviceType,
-          typename Layout = Kokkos::LayoutRight, typename ScalarType = double>
-struct TeamVectorMDRangeStencil;
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct TeamVectorMDRangeStencil<2, DeviceType, Layout, ScalarType>
-    : TeamVectorMDRangeStencilBase<2, DeviceType, Layout, ScalarType> {
-  using Base = TeamVectorMDRangeStencilBase<2, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::team_vector_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 2)
+  {
     const int league_rank = team.league_rank();
 
-    auto team_range =
-        team_vector_mdrange(team, this->ranges[0], this->ranges[1]);
+    auto team_range = team_vector_mdrange(team, ranges[0], ranges[1]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1) {
       i0++;
       i1++;
-      this->A(league_rank, i0, i1) =
-          0.25 * (ScalarType)(this->B(league_rank, i0 + 1, i1) +
-                              this->B(league_rank, i0 - 1, i1) +
-                              this->B(league_rank, i0, i1 + 1) +
-                              this->B(league_rank, i0, i1 - 1) +
-                              this->B(league_rank, i0, i1));
+      A(league_rank, i0, i1) =
+          0.25 *
+          (ScalarType)(B(league_rank, i0 + 1, i1) + B(league_rank, i0 - 1, i1) +
+                       B(league_rank, i0, i1 + 1) + B(league_rank, i0, i1 - 1) +
+                       B(league_rank, i0, i1));
     });
   }
-};
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct TeamVectorMDRangeStencil<3, DeviceType, Layout, ScalarType>
-    : TeamVectorMDRangeStencilBase<3, DeviceType, Layout, ScalarType> {
-  using Base = TeamVectorMDRangeStencilBase<3, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::team_vector_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 3)
+  {
     const int league_rank = team.league_rank();
 
-    auto team_range = team_vector_mdrange(team, this->ranges[0],
-                                          this->ranges[1], this->ranges[2]);
+    auto team_range =
+        team_vector_mdrange(team, ranges[0], ranges[1], ranges[2]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1, int i2) {
       i0++;
       i1++;
       i2++;
-      this->A(league_rank, i0, i1, i2) =
-          0.25 * (ScalarType)(this->B(league_rank, i0 + 1, i1, i2) +
-                              this->B(league_rank, i0 - 1, i1, i2) +
-                              this->B(league_rank, i0, i1 + 1, i2) +
-                              this->B(league_rank, i0, i1 - 1, i2) +
-                              this->B(league_rank, i0, i1, i2 + 1) +
-                              this->B(league_rank, i0, i1, i2 - 1) +
-                              this->B(league_rank, i0, i1, i2));
+      A(league_rank, i0, i1, i2) =
+          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2) +
+                              B(league_rank, i0 - 1, i1, i2) +
+                              B(league_rank, i0, i1 + 1, i2) +
+                              B(league_rank, i0, i1 - 1, i2) +
+                              B(league_rank, i0, i1, i2 + 1) +
+                              B(league_rank, i0, i1, i2 - 1) +
+                              B(league_rank, i0, i1, i2));
     });
   }
-};
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct TeamVectorMDRangeStencil<4, DeviceType, Layout, ScalarType>
-    : TeamVectorMDRangeStencilBase<4, DeviceType, Layout, ScalarType> {
-  using Base = TeamVectorMDRangeStencilBase<4, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::team_vector_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 4)
+  {
     const int league_rank = team.league_rank();
 
     auto team_range =
-        team_vector_mdrange(team, this->ranges[0], this->ranges[1],
-                            this->ranges[2], this->ranges[3]);
+        team_vector_mdrange(team, ranges[0], ranges[1], ranges[2], ranges[3]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1, int i2, int i3) {
       i0++;
       i1++;
       i2++;
       i3++;
-      this->A(league_rank, i0, i1, i2, i3) =
-          0.25 * (ScalarType)(this->B(league_rank, i0 + 1, i1, i2, i3) +
-                              this->B(league_rank, i0 - 1, i1, i2, i3) +
-                              this->B(league_rank, i0, i1 + 1, i2, i3) +
-                              this->B(league_rank, i0, i1 - 1, i2, i3) +
-                              this->B(league_rank, i0, i1, i2 + 1, i3) +
-                              this->B(league_rank, i0, i1, i2 - 1, i3) +
-                              this->B(league_rank, i0, i1, i2, i3 + 1) +
-                              this->B(league_rank, i0, i1, i2, i3 - 1) +
-                              this->B(league_rank, i0, i1, i2, i3));
+      A(league_rank, i0, i1, i2, i3) =
+          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2, i3) +
+                              B(league_rank, i0 - 1, i1, i2, i3) +
+                              B(league_rank, i0, i1 + 1, i2, i3) +
+                              B(league_rank, i0, i1 - 1, i2, i3) +
+                              B(league_rank, i0, i1, i2 + 1, i3) +
+                              B(league_rank, i0, i1, i2 - 1, i3) +
+                              B(league_rank, i0, i1, i2, i3 + 1) +
+                              B(league_rank, i0, i1, i2, i3 - 1) +
+                              B(league_rank, i0, i1, i2, i3));
     });
   }
 };
 
 template <int Dimension, class DeviceType,
           typename Layout = Kokkos::LayoutRight, typename ScalarType = double>
-struct ThreadVectorMDRangeStencilBase {
+struct ThreadVectorMDRangeStencil {
   using execution_space = DeviceType;
   using scalar_type     = ScalarType;
   using team_policy     = Kokkos::TeamPolicy<execution_space>;
@@ -421,8 +365,8 @@ struct ThreadVectorMDRangeStencilBase {
   view_type B;
   const Kokkos::Array<int, dimension> ranges;
 
-  ThreadVectorMDRangeStencilBase(const view_type& A_, const view_type& B_,
-                                 const Kokkos::Array<int, dimension>& dims)
+  ThreadVectorMDRangeStencil(const view_type& A_, const view_type& B_,
+                             const Kokkos::Array<int, dimension>& dims)
       : A(A_), B(B_), ranges(dims) {}
 
   auto get_policy(int league_size) {
@@ -435,23 +379,32 @@ struct ThreadVectorMDRangeStencilBase {
     return team_policy(league_size / 32, team_size,
                        team_policy::vector_length_max());
   }
-};
-
-template <int Dimension, class DeviceType,
-          typename Layout = Kokkos::LayoutRight, typename ScalarType = double>
-struct ThreadVectorMDRangeStencil;
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct ThreadVectorMDRangeStencil<2, DeviceType, Layout, ScalarType>
-    : ThreadVectorMDRangeStencilBase<2, DeviceType, Layout, ScalarType> {
-  using Base =
-      ThreadVectorMDRangeStencilBase<2, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::thread_vector_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 2)
+  {
+    const int league_rank = team.league_rank();
+
+    auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
+    Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
+      const auto i = league_rank * 32 + i0;
+
+      auto vector_range = thread_vector_mdrange(team, ranges[0], ranges[1]);
+      Kokkos::parallel_for(vector_range, [=, this](int i1, int i2) {
+        i1++;
+        i2++;
+        A(i, i1, i2) = 0.25 * (ScalarType)(B(i, i1 + 1, i2) + B(i, i1 - 1, i2) +
+                                           B(i, i1, i2 + 1) + B(i, i1, i2 - 1) +
+                                           B(i, i1, i2));
+      });
+    });
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const team_member& team) const
+    requires(dimension == 3)
+  {
     const int league_rank = team.league_rank();
 
     auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
@@ -459,93 +412,46 @@ struct ThreadVectorMDRangeStencil<2, DeviceType, Layout, ScalarType>
       const auto i = league_rank * 32 + i0;
 
       auto vector_range =
-          thread_vector_mdrange(team, this->ranges[0], this->ranges[1]);
-      Kokkos::parallel_for(vector_range, [=, this](int i1, int i2) {
-        i1++;
-        i2++;
-        this->A(i, i1, i2) =
-            0.25 *
-            (ScalarType)(this->B(i, i1 + 1, i2) + this->B(i, i1 - 1, i2) +
-                         this->B(i, i1, i2 + 1) + this->B(i, i1, i2 - 1) +
-                         this->B(i, i1, i2));
-      });
-    });
-  }
-};
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct ThreadVectorMDRangeStencil<3, DeviceType, Layout, ScalarType>
-    : ThreadVectorMDRangeStencilBase<3, DeviceType, Layout, ScalarType> {
-  using Base =
-      ThreadVectorMDRangeStencilBase<3, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::thread_vector_mdrange;
-
-  KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
-    const int league_rank = team.league_rank();
-
-    auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
-    Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
-      const auto i = league_rank * 32 + i0;
-
-      auto vector_range = thread_vector_mdrange(
-          team, this->ranges[0], this->ranges[1], this->ranges[2]);
+          thread_vector_mdrange(team, ranges[0], ranges[1], ranges[2]);
       Kokkos::parallel_for(vector_range, [=, this](int i1, int i2, int i3) {
         i1++;
         i2++;
         i3++;
-        this->A(i, i1, i2, i3) =
-            0.25 *
-            (ScalarType)(this->B(i, i1 + 1, i2, i3) +
-                         this->B(i, i1 - 1, i2, i3) +
-                         this->B(i, i1, i2 + 1, i3) +
-                         this->B(i, i1, i2 - 1, i3) +
-                         this->B(i, i1, i2, i3 + 1) +
-                         this->B(i, i1, i2, i3 - 1) + this->B(i, i1, i2, i3));
+        A(i, i1, i2, i3) =
+            0.25 * (ScalarType)(B(i, i1 + 1, i2, i3) + B(i, i1 - 1, i2, i3) +
+                                B(i, i1, i2 + 1, i3) + B(i, i1, i2 - 1, i3) +
+                                B(i, i1, i2, i3 + 1) + B(i, i1, i2, i3 - 1) +
+                                B(i, i1, i2, i3));
       });
     });
   }
-};
-
-template <class DeviceType, typename Layout, typename ScalarType>
-struct ThreadVectorMDRangeStencil<4, DeviceType, Layout, ScalarType>
-    : ThreadVectorMDRangeStencilBase<4, DeviceType, Layout, ScalarType> {
-  using Base =
-      ThreadVectorMDRangeStencilBase<4, DeviceType, Layout, ScalarType>;
-  using Base::Base;
-  using typename Base::team_member;
-  using typename Base::thread_vector_mdrange;
 
   KOKKOS_INLINE_FUNCTION
-  void operator()(const team_member& team) const {
+  void operator()(const team_member& team) const
+    requires(dimension == 4)
+  {
     const int league_rank = team.league_rank();
 
     auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
     Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
       const auto i = league_rank * 32 + i0;
 
-      auto vector_range =
-          thread_vector_mdrange(team, this->ranges[0], this->ranges[1],
-                                this->ranges[2], this->ranges[3]);
-      Kokkos::parallel_for(
-          vector_range, [=, this](int i1, int i2, int i3, int i4) {
-            i1++;
-            i2++;
-            i3++;
-            i4++;
-            this->A(i, i1, i2, i3, i4) =
-                0.25 * (ScalarType)(this->B(i, i1 + 1, i2, i3, i4) +
-                                    this->B(i, i1 - 1, i2, i3, i4) +
-                                    this->B(i, i1, i2 + 1, i3, i4) +
-                                    this->B(i, i1, i2 - 1, i3, i4) +
-                                    this->B(i, i1, i2, i3 + 1, i4) +
-                                    this->B(i, i1, i2, i3 - 1, i4) +
-                                    this->B(i, i1, i2, i3, i4 + 1) +
-                                    this->B(i, i1, i2, i3, i4 - 1) +
-                                    this->B(i, i1, i2, i3, i4));
-          });
+      auto vector_range = thread_vector_mdrange(team, ranges[0], ranges[1],
+                                                ranges[2], ranges[3]);
+      Kokkos::parallel_for(vector_range, [=, this](int i1, int i2, int i3,
+                                                   int i4) {
+        i1++;
+        i2++;
+        i3++;
+        i4++;
+        A(i, i1, i2, i3, i4) =
+            0.25 *
+            (ScalarType)(B(i, i1 + 1, i2, i3, i4) + B(i, i1 - 1, i2, i3, i4) +
+                         B(i, i1, i2 + 1, i3, i4) + B(i, i1, i2 - 1, i3, i4) +
+                         B(i, i1, i2, i3 + 1, i4) + B(i, i1, i2, i3 - 1, i4) +
+                         B(i, i1, i2, i3, i4 + 1) + B(i, i1, i2, i3, i4 - 1) +
+                         B(i, i1, i2, i3, i4));
+      });
     });
   }
 };
