@@ -41,6 +41,18 @@ if(NOT Kokkos_INSTALL_TESTING)
   endif()
   export(EXPORT KokkosTargets NAMESPACE Kokkos:: FILE ${Kokkos_BINARY_DIR}/cmake_packages/KokkosTargets.cmake)
 
+  # Required to be a TriBITS-compliant external package
+  if(NOT Kokkos_BINARY_DIR STREQUAL CMAKE_BINARY_DIR) # TODO use PATH_EQUAL with CMake 3.24+
+    file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos)
+    file(
+      COPY ${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfig.cmake
+           ${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigCommon.cmake
+           ${Kokkos_BINARY_DIR}/cmake_packages/KokkosConfigVersion.cmake
+           ${Kokkos_BINARY_DIR}/cmake_packages/KokkosTargets.cmake
+      DESTINATION ${CMAKE_BINARY_DIR}/cmake_packages/Kokkos
+    )
+  endif()
+
 else()
   configure_file(cmake/KokkosConfigCommon.cmake.in ${Kokkos_BINARY_DIR}/KokkosConfigCommon.cmake @ONLY)
 
