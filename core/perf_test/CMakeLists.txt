@@ -65,9 +65,11 @@ macro(KOKKOS_ADD_BENCHMARK NAME)
         kokkoshwmtracker-tool SHARED SOURCES ${KOKKOS_SOURCE_DIR}/core/unit_test/tools/memory-hwm-tool.cpp
       )
     endif()
-    set(BENCHMARK_ENV "KOKKOS_TOOLS_LIBS=$<TARGET_FILE:kokkoshwmtracker-tool>")
     add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
-    set_tests_properties(${BENCHMARK_NAME} PROPERTIES ENVIRONMENT "${BENCHMARK_ENV}")
+    set_tests_properties(
+      ${BENCHMARK_NAME} PROPERTIES ENVIRONMENT_MODIFICATION
+                                   KOKKOS_TOOLS_LIBS=cmake_list_append:$<TARGET_FILE:kokkoshwmtracker-tool>
+    )
   else()
     add_test(NAME ${BENCHMARK_NAME} COMMAND ${BENCHMARK_NAME} ${BENCHMARK_ARGS})
   endif()
