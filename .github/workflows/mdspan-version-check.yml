@@ -30,7 +30,6 @@ jobs:
           --exclude=comp_bench \
           --exclude=compilation_tests \
           --exclude=examples \
-          --exclude=LICENSE_FILE_HEADER \
           --exclude=make_single_header.py \
           --exclude=metabench.cmake \
           --exclude=README.md \
