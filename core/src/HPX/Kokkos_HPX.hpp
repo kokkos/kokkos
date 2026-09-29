@@ -190,7 +190,14 @@ struct hpx_range_scan_dispatch {
     }
 
     if (this->result_ptr != nullptr && t == this->concurrency - 1) {
-      *this->result_ptr = update_base;
+      // Dynamic-length array scans use pointer reference_type; scalars use T&.
+      if constexpr (std::is_same_v<reference_type, pointer_type>) {
+        for (int j = 0; j < value_count; ++j) {
+          this->result_ptr[j] = update_base[j];
+        }
+      } else {
+        *this->result_ptr = update_base;
+      }
     }
   }
 
