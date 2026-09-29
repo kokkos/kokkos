@@ -398,6 +398,7 @@ concept ContainsStdPair = (is_std_pair<Args>::value || ...);
 
 }  // end namespace Impl
 
+// index-based overloads
 template <std::size_t I, class T1, class T2>
 KOKKOS_INLINE_FUNCTION constexpr auto& get(Kokkos::pair<T1, T2>& p) noexcept {
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
@@ -444,6 +445,7 @@ KOKKOS_INLINE_FUNCTION constexpr const auto&& get(
   }
 }
 
+// type-based overloads
 template <class T, class U>
 KOKKOS_INLINE_FUNCTION constexpr T& get(Kokkos::pair<T, U>& p) noexcept {
   return p.first;
@@ -507,8 +509,6 @@ struct std::tuple_size<Kokkos::pair<T1, T2>>
 
 template <std::size_t I, class T1, class T2>
 struct std::tuple_element<I, Kokkos::pair<T1, T2>> {
-  // FIXME_NVCC: This is trivially true, but nvcc doesn't like
-  // static_assert(false)
   static_assert(I < 2, "Kokkos::pair only has 2 elements");
 };
 

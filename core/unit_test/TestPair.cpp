@@ -205,19 +205,15 @@ struct TupleInterfaceDeviceTest {
       // FIXME_NVCC: NVCC does not correctly ADL-find this overload so we have
       // to qualify the calls structured binding decomposition is not affected
       // even though it's defined to use unqualified calls to get
-      auto f2 = Kokkos::get<0>(pair);
-      auto s2 = Kokkos::get<1>(pair);
-      static_assert(std::same_as<decltype(f2), int> &&
-                    std::same_as<decltype(s2), double>);
-      results(2) = (f2 == 11);
-      results(3) = (s2 == 12.0);
+      std::same_as<const int&> decltype(auto) f2    = Kokkos::get<0>(pair);
+      std::same_as<const double&> decltype(auto) s2 = Kokkos::get<1>(pair);
+      results(2)                                    = (f2 == 11);
+      results(3)                                    = (s2 == 12.0);
 
-      auto f3 = Kokkos::get<int>(pair);
-      auto s3 = Kokkos::get<double>(pair);
-      static_assert(std::same_as<decltype(f3), int> &&
-                    std::same_as<decltype(s3), double>);
-      results(4) = (f3 == 11);
-      results(5) = (s3 == 12.0);
+      std::same_as<const int&> decltype(auto) f3    = Kokkos::get<int>(pair);
+      std::same_as<const double&> decltype(auto) s3 = Kokkos::get<double>(pair);
+      results(4)                                    = (f3 == 11);
+      results(5)                                    = (s3 == 12.0);
     }
 
     // Non-const lvalue
@@ -238,19 +234,15 @@ struct TupleInterfaceDeviceTest {
       // FIXME_NVCC: NVCC does not correctly ADL-find this overload so we have
       // to qualify the calls structured binding decomposition is not affected
       // even though it's defined to use unqualified calls to get
-      auto f2 = Kokkos::get<0>(pair);
-      auto s2 = Kokkos::get<1>(pair);
-      static_assert(std::same_as<decltype(f2), int> &&
-                    std::same_as<decltype(s2), double>);
-      results(8) = (f2 == 11);
-      results(9) = (s2 == 12.0);
+      std::same_as<int&> decltype(auto) f2    = Kokkos::get<0>(pair);
+      std::same_as<double&> decltype(auto) s2 = Kokkos::get<1>(pair);
+      results(8)                              = (f2 == 11);
+      results(9)                              = (s2 == 12.0);
 
-      auto f3 = Kokkos::get<int>(pair);
-      auto s3 = Kokkos::get<double>(pair);
-      static_assert(std::same_as<decltype(f3), int> &&
-                    std::same_as<decltype(s3), double>);
-      results(10) = (f3 == 11);
-      results(11) = (s3 == 12.0);
+      std::same_as<int&> decltype(auto) f3    = Kokkos::get<int>(pair);
+      std::same_as<double&> decltype(auto) s3 = Kokkos::get<double>(pair);
+      results(10)                             = (f3 == 11);
+      results(11)                             = (s3 == 12.0);
     }
 
     // Const rvalue
@@ -266,20 +258,20 @@ struct TupleInterfaceDeviceTest {
 
       // this is a somewhat convoluted way of getting a const pair &&
       const auto pair2 = generate_pair();
-      auto f2          = Kokkos::get<0>(std::move(pair2));
+      std::same_as<const int&&> decltype(auto) f2 =
+          Kokkos::get<0>(std::move(pair2));
       const auto pair3 = generate_pair();
-      auto s2          = Kokkos::get<1>(std::move(pair3));
-      static_assert(std::same_as<decltype(f2), int> &&
-                    std::same_as<decltype(s2), double>);
+      std::same_as<const double&&> decltype(auto) s2 =
+          Kokkos::get<1>(std::move(pair3));
       results(14) = (f2 == 11);
       results(15) = (s2 == 12.0);
 
       const auto pair4 = generate_pair();
-      auto f3          = Kokkos::get<int>(pair4);
+      std::same_as<const int&&> decltype(auto) f3 =
+          Kokkos::get<int>(std::move(pair4));
       const auto pair5 = generate_pair();
-      auto s3          = Kokkos::get<double>(pair5);
-      static_assert(std::same_as<decltype(f3), int> &&
-                    std::same_as<decltype(s3), double>);
+      std::same_as<const double&&> decltype(auto) s3 =
+          Kokkos::get<double>(std::move(pair5));
       results(16) = (f3 == 11);
       results(17) = (s3 == 12.0);
     }
@@ -292,17 +284,15 @@ struct TupleInterfaceDeviceTest {
       results(19) = (s == 12.0);
 
       // test get
-      auto f2 = Kokkos::get<0>(generate_pair());
-      auto s2 = Kokkos::get<1>(generate_pair());
-      static_assert(std::same_as<decltype(f2), int> &&
-                    std::same_as<decltype(s2), double>);
+      std::same_as<int&&> decltype(auto) f2 = Kokkos::get<0>(generate_pair());
+      std::same_as<double&&> decltype(auto) s2 =
+          Kokkos::get<1>(generate_pair());
       results(20) = (f2 == 11);
       results(21) = (s2 == 12.0);
 
-      auto f3 = Kokkos::get<int>(generate_pair());
-      auto s3 = Kokkos::get<double>(generate_pair());
-      static_assert(std::same_as<decltype(f3), int> &&
-                    std::same_as<decltype(s3), double>);
+      std::same_as<int&&> decltype(auto) f3 = Kokkos::get<int>(generate_pair());
+      std::same_as<double&&> decltype(auto) s3 =
+          Kokkos::get<double>(generate_pair());
       results(22) = (f3 == 11);
       results(23) = (s3 == 12.0);
     }
