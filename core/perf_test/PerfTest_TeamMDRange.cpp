@@ -513,12 +513,24 @@ void bench_team_mdrange(benchmark::State& state) {
 
 #define LEAGUE_SIZES \
   { 256 }
+
+#ifdef KOKKOS_ENABLE_BENCHMARKS_HEAVY
+// Enable the full dim sizes in the case of heavy benchmarks enables
 #define SIZES_2D \
   { 128, 256, 512 }
 #define SIZES_3D \
   { 16, 32, 64 }
 #define SIZES_4D \
   { 4, 8, 16 }
+#else
+// Restrict to smallest dim size for non-heavy benchmarks
+#define SIZES_2D \
+  { 128 }
+#define SIZES_3D \
+  { 16 }
+#define SIZES_4D \
+  { 4 }
+#endif  // #ifdef KOKKOS_ENABLE_BENCHMARKS_HEAVY
 
 TEAM_MDRANGE_STENCIL_BENCHMARK(TeamThreadMDRangeStencil, 2, bench_team_mdrange,
                                LEAGUE_SIZES, SIZES_2D)
