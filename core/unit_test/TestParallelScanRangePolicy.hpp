@@ -372,9 +372,9 @@ TEST(TEST_CATEGORY, parallel_scan_range_policy) {
 
 #if !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC) && \
     !defined(KOKKOS_ENABLE_NEXTSILICON)
-struct DynamicArrayScanFunctor {
+struct DynamicArrayScanMaxFunctor {
   using execution_space = TEST_EXECSPACE;
-  using reducer         = DynamicArrayScanFunctor;
+  using reducer         = DynamicArrayScanMaxFunctor;
 
   Kokkos::View<int**, TEST_EXECSPACE> data;
   int value_count;
@@ -383,21 +383,24 @@ struct DynamicArrayScanFunctor {
   KOKKOS_FUNCTION
   void join(int* a, const int* b) const {
     for (int k = 0; k < value_count; k++) {
-      a[k] += b[k];
+      if (b[k] > a[k]) a[k] = b[k];
     }
   }
 
   KOKKOS_FUNCTION
   void init(value_type a) const {
     for (int k = 0; k < value_count; k++) {
-      a[k] = 0;
+      a[k] = Kokkos::reduction_identity<int>::max();
     }
   }
 
   KOKKOS_FUNCTION
   void operator()(int i, value_type upd, bool final) const {
     for (int k = 0; k < value_count; k++) {
-      upd[k] += k + 1;
+      if (k % 2)
+        upd[k] = Kokkos::max(-i - 1, upd[k]);
+      else
+        upd[k] = Kokkos::max(i + 1, upd[k]);
     }
     if (final) {
       for (int k = 0; k < value_count; k++) {
@@ -414,7 +417,7 @@ void test_parallel_scan_dynamic_array() {
 
   Kokkos::parallel_scan("parallel_scan dynamic_length_array",
                         Kokkos::RangePolicy<TEST_EXECSPACE>(0, N),
-                        DynamicArrayScanFunctor{data, M});
+                        DynamicArrayScanMaxFunctor{data, M});
 
   int num_errors = 0;
   Kokkos::parallel_reduce(
@@ -422,7 +425,7 @@ void test_parallel_scan_dynamic_array() {
       KOKKOS_LAMBDA(int i, int& error) {
         for (int j = 0; j < M; j++)
           // we are doing pre-fix scan
-          if (data(i, j) != (i + 1) * (j + 1)) error++;
+          if (data(i, j) != (j % 2 ? -1 : i + 1)) error++;
       },
       num_errors);
 
