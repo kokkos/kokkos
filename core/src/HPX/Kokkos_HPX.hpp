@@ -736,16 +736,13 @@ struct HPXTeamMember {
         m_team_rank(team_rank) {}
 
   template <class... Properties>
-  constexpr KOKKOS_INLINE_FUNCTION HPXTeamMember(
+  KOKKOS_INLINE_FUNCTION HPXTeamMember(
       const TeamPolicyInternal<Kokkos::Experimental::HPX, Properties...>
           &policy,
       const int team_rank, const int league_rank, void *scratch,
       size_t scratch_size) noexcept
-      : m_team_shared(scratch, scratch_size, scratch, scratch_size),
-        m_league_size(policy.league_size()),
-        m_league_rank(league_rank),
-        m_team_size(policy.team_size()),
-        m_team_rank(team_rank) {}
+      : HPXTeamMember(policy.league_size(), policy.team_size(), team_rank,
+                      league_rank, scratch, scratch_size) {}
 
   KOKKOS_INLINE_FUNCTION
   void team_barrier() const {}
