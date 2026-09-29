@@ -26,6 +26,7 @@ jobs:
           --exclude=.git \
           --exclude=.github \
           --exclude=.gitignore \
+          --exclude=.pre-commit-config.yaml \
           --exclude=benchmarks \
           --exclude=comp_bench \
           --exclude=compilation_tests \
