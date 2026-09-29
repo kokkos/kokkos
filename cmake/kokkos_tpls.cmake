@@ -91,6 +91,8 @@ else()
   set_property(
     TARGET mdspan APPEND PROPERTY INTERFACE_SYSTEM_INCLUDE_DIRECTORIES "${KOKKOS_MDSPAN_INCLUDE_DIRECTORIES}"
   )
+
+  install(TARGETS mdspan EXPORT KokkosTargets)
 endif()
 
 if(Kokkos_ENABLE_OPENMP)
