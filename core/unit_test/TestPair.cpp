@@ -284,15 +284,20 @@ struct TupleInterfaceDeviceTest {
       results(19) = (s == 12.0);
 
       // test get
-      std::same_as<int&&> decltype(auto) f2 = Kokkos::get<0>(generate_pair());
+      auto pair2                            = generate_pair();
+      std::same_as<int&&> decltype(auto) f2 = Kokkos::get<0>(std::move(pair2));
+      auto pair3                            = generate_pair();
       std::same_as<double&&> decltype(auto) s2 =
-          Kokkos::get<1>(generate_pair());
+          Kokkos::get<1>(std::move(pair3));
       results(20) = (f2 == 11);
       results(21) = (s2 == 12.0);
 
-      std::same_as<int&&> decltype(auto) f3 = Kokkos::get<int>(generate_pair());
+      auto pair4 = generate_pair();
+      std::same_as<int&&> decltype(auto) f3 =
+          Kokkos::get<int>(std::move(pair4));
+      auto pair5 = generate_pair();
       std::same_as<double&&> decltype(auto) s3 =
-          Kokkos::get<double>(generate_pair());
+          Kokkos::get<double>(std::move(pair5));
       results(22) = (f3 == 11);
       results(23) = (s3 == 12.0);
     }
