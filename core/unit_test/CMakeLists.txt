@@ -238,9 +238,9 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES1B ${file})
     else()
-      set(file ${dir}/Test${Tag}_RangePolicyExecutionTypes.cpp)
+      set(file ${dir}/Test${Tag}_RangePolicyExecutionProperties.cpp)
       file(WRITE ${dir}/dummy.cpp "#include <Test${Tag}_Category.hpp>\n"
-                                  "#include <range_policy/TestRangePolicyExecutionTypes.hpp>\n"
+                                  "#include <range_policy/TestRangePolicyExecutionProperties.hpp>\n"
       )
       configure_file(${dir}/dummy.cpp ${file})
       list(APPEND ${Tag}_SOURCES1B ${file})
@@ -655,7 +655,7 @@ if(Kokkos_ENABLE_NEXTSILICON)
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_MathematicalFunctions3.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_NumericTraits.cpp
     #FIXME_NEXTSILICON requires TeamPolicy parallel_for
-    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_RangePolicyExecutionTypes.cpp
+    ${CMAKE_CURRENT_BINARY_DIR}/serial/TestSerial_RangePolicyExecutionProperties.cpp
   )
 endif()
 
