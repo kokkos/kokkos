@@ -374,20 +374,21 @@ TEST(TEST_CATEGORY, parallel_scan_range_policy) {
     !defined(KOKKOS_ENABLE_NEXTSILICON)
 struct DynamicArrayScanFunctor {
   using execution_space = TEST_EXECSPACE;
+  using reducer         = DynamicArrayScanFunctor;
 
   Kokkos::View<int**, TEST_EXECSPACE> data;
   int value_count;
   using value_type = int[];
 
   KOKKOS_FUNCTION
-  void join(value_type& a, value_type b) const {
+  void join(int* a, const int* b) const {
     for (int k = 0; k < value_count; k++) {
       a[k] += b[k];
     }
   }
 
   KOKKOS_FUNCTION
-  void init(value_type& a) const {
+  void init(value_type a) const {
     for (int k = 0; k < value_count; k++) {
       a[k] = 0;
     }
