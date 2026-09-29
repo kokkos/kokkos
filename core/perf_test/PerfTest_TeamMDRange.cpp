@@ -166,7 +166,8 @@ struct TeamThreadMDRangeStencil {
 
   auto get_policy(int league_size) {
     int team_size_max =
-        team_policy(1, 1).team_size_max(*this, Kokkos::ParallelForTag{});
+        team_policy(league_size, 1, team_policy::vector_length_max())
+            .team_size_max(*this, Kokkos::ParallelForTag{});
     int team_size = std::min(32, team_size_max);
 
     return team_policy(league_size, team_size,
@@ -268,7 +269,8 @@ struct TeamVectorMDRangeStencil {
 
   auto get_policy(int league_size) {
     int team_size_max =
-        team_policy(1, 1).team_size_max(*this, Kokkos::ParallelForTag{});
+        team_policy(league_size, 1, team_policy::vector_length_max())
+            .team_size_max(*this, Kokkos::ParallelForTag{});
     int team_size = std::min(32, team_size_max);
 
     return team_policy(league_size, team_size,
@@ -373,7 +375,8 @@ struct ThreadVectorMDRangeStencil {
     assert(league_size % 32 == 0);
 
     int team_size_max =
-        team_policy(1, 1).team_size_max(*this, Kokkos::ParallelForTag{});
+        team_policy(league_size / 32, 1, team_policy::vector_length_max())
+            .team_size_max(*this, Kokkos::ParallelForTag{});
     int team_size = std::min(32, team_size_max);
 
     return team_policy(league_size / 32, team_size,
