@@ -167,7 +167,7 @@ struct DefaultExecutionSpaceSelector<T> {
   using type = typename T::execution_space;
 };
 
-template <Kokkos::ThreadHandleType T>
+template <Kokkos::Experimental::ThreadHandle T>
 struct DefaultExecutionSpaceSelector<T> {
   using type = typename T::execution_space;
 };

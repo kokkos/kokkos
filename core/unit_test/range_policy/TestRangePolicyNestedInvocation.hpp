@@ -236,6 +236,7 @@ struct CheckCase<5, ExecSpace> {
     Kokkos::deep_copy(M, 0.f);
 
     using team_t          = team_member_t<ExecSpace>;
+    using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
         "case5", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
@@ -245,7 +246,7 @@ struct CheckCase<5, ExecSpace> {
           Kokkos::single(Kokkos::PerTeam(team), [&]() {
             // Inner (sum_views): RangePolicy(thread_handle, 0,
             // M_sub.extent_int(0)) with (int) -> ThreadVectorRange.
-            sum_views(Kokkos::ThreadHandle<team_t>(team), M_sub, 6.f);
+            sum_views(thread_handle(team), M_sub, 6.f);
           });
         });
 

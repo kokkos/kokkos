@@ -65,8 +65,7 @@ struct CheckRuntimeValues {
           int expected_team = team.team_size() * team.vector_length();
           if (team_conc != expected_team) ++errs;
 
-          auto thread_handle =
-              Kokkos::ThreadHandle<team_member_t<ExecSpace>>(team);
+          typename team_member_t<ExecSpace>::thread_handle thread_handle(team);
           if (thread_handle.concurrency() != team.vector_length()) ++errs;
         },
         nerrs_concurrency);
