@@ -13,11 +13,6 @@
 
 #if defined(KOKKOS_IMPL_ARCH_NVIDIA_GPU)
 #include <cuda_runtime.h>
-#elif defined(KOKKOS_ARCH_AMD_GPU)
-// FIXME_OPENACC - hip_runtime_api.h contains two implementations: one for AMD
-// GPUs and the other for NVIDIA GPUs; below macro is needed to choose AMD GPUs.
-#define __HIP_PLATFORM_AMD__
-#include <hip/hip_runtime_api.h>
 #elif defined(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
 #include <thread>
 #endif
@@ -70,18 +65,6 @@ void Kokkos::Experimental::OpenACC::impl_initialize(
       msg << "Error: During OpenACC backend initialization, failed to retrieve "
           << "CUDA device properties: (" << cudaGetErrorName(error)
           << "): " << cudaGetErrorString(error);
-      Kokkos::Impl::host_abort(msg.str().c_str());
-    }
-    Impl::OpenACCInternal::m_concurrency =
-        deviceProp.maxThreadsPerMultiProcessor * deviceProp.multiProcessorCount;
-#elif defined(KOKKOS_ARCH_AMD_GPU)
-    hipDeviceProp_t deviceProp;
-    hipError_t error = hipGetDeviceProperties(&deviceProp, dev_num);
-    if (error != hipSuccess) {
-      std::ostringstream msg;
-      msg << "Error: During OpenACC backend initialization, failed to retrieve "
-          << "HIP device properties: (" << hipGetErrorName(error)
-          << "): " << hipGetErrorString(error);
       Kokkos::Impl::host_abort(msg.str().c_str());
     }
     Impl::OpenACCInternal::m_concurrency =

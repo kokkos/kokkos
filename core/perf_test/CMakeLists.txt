@@ -63,9 +63,6 @@ endmacro()
 if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL NVHPC)
   return()
 endif()
-if(KOKKOS_ENABLE_OPENACC AND KOKKOS_CXX_COMPILER_ID STREQUAL Clang)
-  return()
-endif()
 
 # all PerformanceTest_* executables are part of regular tests
 # TODO: finish converting these into benchmarks (in progress)
