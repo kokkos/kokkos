@@ -3,6 +3,12 @@
 
 #include <Kokkos_Core.hpp>
 
+// ThreadHandle team members are provided for the Cuda category only.
+// TEST_CATEGORY_NUMBER 5 is Cuda.
+#if TEST_CATEGORY_NUMBER == 5
+#define KOKKOS_IMPL_THREAD_HANDLE_TESTS 1
+#endif
+
 namespace {
 
 template <class ExecSpace>
@@ -142,6 +148,8 @@ struct CheckCase<1, ExecSpace> {
   }
 };
 
+#if KOKKOS_IMPL_THREAD_HANDLE_TESTS
+
 template <class ExecSpace>
 struct CheckCase<2, ExecSpace> {
   void operator()() const {
@@ -251,6 +259,8 @@ struct CheckCase<5, ExecSpace> {
   }
 };
 
+#endif  // KOKKOS_IMPL_THREAD_HANDLE_TESTS
+
 }  // namespace
 
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case0) {
@@ -260,6 +270,8 @@ TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case0) {
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case1) {
   CheckCase<1, TEST_EXECSPACE>{}();
 }
+
+#if KOKKOS_IMPL_THREAD_HANDLE_TESTS
 
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case2) {
   CheckCase<2, TEST_EXECSPACE>{}();
@@ -276,3 +288,7 @@ TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case4) {
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case5) {
   CheckCase<5, TEST_EXECSPACE>{}();
 }
+
+#endif  // KOKKOS_IMPL_THREAD_HANDLE_TESTS
+
+#undef KOKKOS_IMPL_THREAD_HANDLE_TESTS
