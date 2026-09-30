@@ -491,8 +491,8 @@ Impl::VectorSingleStruct<Impl::CudaTeamMember> PerThread(
  *  Executes closure(iType i) for each i=[0..N).
  *
  * The range [0..N) is mapped to all threads of the the calling thread team.
- * If the closure accepts (thread_handle, iType) or (thread_handle),
- * the thread handle is passed to enable further vector-level parallelism.
+ * If the closure accepts (thread_handle, iType), the thread handle is passed
+ * so the body can use the vector lanes.
  */
 template <typename iType, class Closure>
 KOKKOS_INLINE_FUNCTION void parallel_for(
@@ -503,8 +503,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   (void)closure;
   KOKKOS_IF_ON_DEVICE((
       using thread_handle_t = Impl::ThreadHandle<Impl::CudaTeamMember>;
-      if constexpr (std::is_invocable_v<Closure, iType> ||
-                    std::is_invocable_v<Closure, iType const&>) {
+      if constexpr (std::is_invocable_v<Closure, iType>) {
         for (iType i = loop_boundaries.start + threadIdx.y;
              i < loop_boundaries.end; i += blockDim.y)
           closure(i);
@@ -515,19 +514,10 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
              i < loop_boundaries.end; i += blockDim.y) {
           closure(thread_handle, i);
         }
-      } else if constexpr (std::is_invocable_v<Closure,
-                                               thread_handle_t const&>) {
-        auto const thread_handle = thread_handle_t(loop_boundaries.member);
-        for (iType i = loop_boundaries.start + threadIdx.y;
-             i < loop_boundaries.end; i += blockDim.y) {
-          (void)i;
-          closure(thread_handle);
-        }
       } else {
         static_assert(Kokkos::Impl::always_false<Closure>::value,
                       "Kokkos::parallel_for(TeamThreadRange): closure must be "
-                      "invocable with (iType), (ThreadHandle, iType), or "
-                      "(ThreadHandle)");
+                      "invocable with (iType) or (ThreadHandle, iType)");
       }))
 }
 

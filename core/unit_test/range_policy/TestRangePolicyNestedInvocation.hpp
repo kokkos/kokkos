@@ -96,7 +96,7 @@ template <class ExecSpace>
 void allocate(float_tensor4_t<ExecSpace>& M) {
   using D = Tensor4<ExecSpace>;
   M       = float_tensor4_t<ExecSpace>("M", D::leagues, D::threads, D::vectors,
-                                 D::elements);
+                                       D::elements);
 }
 
 template <int, class>
@@ -170,7 +170,7 @@ struct CheckCase<2, ExecSpace> {
                                });
         });
 
-    verify<ExecSpace>(M, 3.f, "check_case1");
+    verify<ExecSpace>(M, 3.f, "check_case2");
   }
 };
 
@@ -189,16 +189,14 @@ struct CheckCase<3, ExecSpace> {
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1),
-                               [&](const thread_handle& th) {
-                                 // Inner (sum_views): RangePolicy(th, 0,
-                                 // M_sub.extent_int(0)) with (int) ->
-                                 // ThreadVectorRange.
-                                 sum_views(th, M_sub, 4.f);
-                               });
+          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](int) {
+            // Inner (sum_views): RangePolicy(thread_handle, 0,
+            // M_sub.extent_int(0)) with (int) -> ThreadVectorRange.
+            sum_views(thread_handle(team), M_sub, 4.f);
+          });
         });
 
-    verify<ExecSpace>(M, 4.f, "check_case1");
+    verify<ExecSpace>(M, 4.f, "check_case3");
   }
 };
 
@@ -217,40 +215,14 @@ struct CheckCase<4, ExecSpace> {
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
-          Kokkos::parallel_for(Kokkos::TeamThreadRange(team, 1), [&](int) {
+          Kokkos::single(Kokkos::PerTeam(team), [&]() {
             // Inner (sum_views): RangePolicy(thread_handle, 0,
             // M_sub.extent_int(0)) with (int) -> ThreadVectorRange.
             sum_views(thread_handle(team), M_sub, 5.f);
           });
         });
 
-    verify<ExecSpace>(M, 5.f, "check_case1");
-  }
-};
-
-template <class ExecSpace>
-struct CheckCase<5, ExecSpace> {
-  void operator()() const {
-    float_tensor4_t<ExecSpace> M;
-    allocate<ExecSpace>(M);
-    Kokkos::deep_copy(M, 0.f);
-
-    using team_t          = team_member_t<ExecSpace>;
-    using thread_handle   = typename team_t::thread_handle;
-    const int num_leagues = M.extent_int(0);
-    Kokkos::parallel_for(
-        "case5", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
-        KOKKOS_LAMBDA(const team_t& team) {
-          auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
-                                       Kokkos::ALL(), Kokkos::ALL());
-          Kokkos::single(Kokkos::PerTeam(team), [&]() {
-            // Inner (sum_views): RangePolicy(thread_handle, 0,
-            // M_sub.extent_int(0)) with (int) -> ThreadVectorRange.
-            sum_views(thread_handle(team), M_sub, 6.f);
-          });
-        });
-
-    verify<ExecSpace>(M, 6.f, "check_case1");
+    verify<ExecSpace>(M, 5.f, "check_case4");
   }
 };
 
@@ -274,8 +246,4 @@ TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case3) {
 
 TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case4) {
   CheckCase<4, TEST_EXECSPACE>{}();
-}
-
-TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case5) {
-  CheckCase<5, TEST_EXECSPACE>{}();
 }
