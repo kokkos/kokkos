@@ -616,6 +616,19 @@ TEST(TEST_CATEGORY, complex_structured_bindings) {
   test.testit();
 }
 
+TEST(TEST_CATEGORY, complex_mixed_precision) {
+  const auto res =
+      Kokkos::complex<double>{1., 1.} / Kokkos::complex<float>{1.f, 1.f};
+  static_assert(std::same_as<decltype(res), const Kokkos::complex<double>>);
+  ASSERT_EQ(res, (Kokkos::complex<double>{1., 0.}));
+}
+
+TEST(TEST_CATEGORY, complex_interoperability) {
+  Kokkos::complex<double> value{1., 1.};
+  value /= std::complex<double>{1., 1.};
+  ASSERT_EQ(value, (Kokkos::complex<double>{1., 0.}));
+}
+
 #define CHECK_COMPLEX(_value_, _real_, _imag_) \
   (void)_value_;                               \
   if (_value_.real() != _real_) return false;  \
