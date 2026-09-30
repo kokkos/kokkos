@@ -108,11 +108,6 @@ kokkos_enable_option(
   IMPL_REF_COUNT_BRANCH_UNLIKELY ON "Whether to use the C++20 `[[unlikely]]` attribute in the view reference counting"
 )
 mark_as_advanced(Kokkos_ENABLE_IMPL_REF_COUNT_BRANCH_UNLIKELY)
-kokkos_enable_option(
-  IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND OFF
-  "Whether to enable a workaround for invalid use of View of Views that causes program hang on destruction."
-)
-mark_as_advanced(Kokkos_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND)
 
 kokkos_enable_option(EXPERIMENTAL_CXX20_MODULES OFF "Whether to export C++20 modules for Kokkos")
 if(Kokkos_ENABLE_EXPERIMENTAL_CXX20_MODULES)

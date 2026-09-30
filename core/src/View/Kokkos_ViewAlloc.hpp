@@ -155,13 +155,7 @@ struct ViewValueFunctor {
     if constexpr (std::is_trivially_destructible_v<ValueType>) {
       // do nothing, don't bother calling the destructor
     } else {
-#ifdef KOKKOS_ENABLE_IMPL_VIEW_OF_VIEWS_DESTRUCTOR_PRECONDITION_VIOLATION_WORKAROUND
-      if constexpr (std::is_same_v<typename ExecSpace::memory_space,
-                                   Kokkos::HostSpace>)
-        for (size_t i = 0; i < n; ++i) (ptr + i)->~ValueType();
-      else
-#endif
-        parallel_for_implementation<DestroyTag>();
+      parallel_for_implementation<DestroyTag>();
     }
   }
 
