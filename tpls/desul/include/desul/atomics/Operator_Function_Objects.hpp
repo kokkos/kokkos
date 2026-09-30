@@ -21,11 +21,11 @@ template <class Scalar1, class Scalar2>
 struct _max_fetch_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
-    return (val1 > val2 ? val1 : val2);
+    return (val1 >= val2 ? val1 : val2);
   }
   DESUL_FORCEINLINE_FUNCTION
   static constexpr bool check_early_exit(Scalar1 const& val1, Scalar2 const& val2) {
-    return val1 > val2;
+    return val1 >= val2;
   }
 };
 
@@ -33,11 +33,11 @@ template <class Scalar1, class Scalar2>
 struct _min_fetch_operator {
   DESUL_FORCEINLINE_FUNCTION
   static Scalar1 apply(const Scalar1& val1, const Scalar2& val2) {
-    return (val1 < val2 ? val1 : val2);
+    return (val1 <= val2 ? val1 : val2);
   }
   DESUL_FORCEINLINE_FUNCTION
   static constexpr bool check_early_exit(Scalar1 const& val1, Scalar2 const& val2) {
-    return val1 < val2;
+    return val1 <= val2;
   }
 };
 
