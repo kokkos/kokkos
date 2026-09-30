@@ -35,9 +35,14 @@ namespace Impl {
       MemoryOrder order,                                                               \
       MemoryScope scope) {                                                             \
     using cas_t = atomic_compare_exchange_t<T>;                                        \
-    cas_t oldval = HOST_OR_DEVICE##_atomic_load(                                       \
-        reinterpret_cast<cas_t*>(dest),                                                \
-        MemoryOrderRelaxed{}, scope);                                                  \
+    cas_t oldval = [dest, scope] {                                                     \
+      if constexpr (std::is_same<MemoryOrder, MemoryOrderRelaxed>::value) {            \
+        return HOST_OR_DEVICE##_atomic_load(                                           \
+            reinterpret_cast<cas_t*>(dest), MemoryOrderRelaxed{}, scope);              \
+      } else {                                                                         \
+        return *reinterpret_cast<cas_t*>(dest);                                        \
+      }                                                                                \
+    }();                                                                               \
     cas_t assume = oldval;                                                             \
                                                                                        \
     do {                                                                               \
