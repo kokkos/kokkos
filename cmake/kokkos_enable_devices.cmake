@@ -58,18 +58,6 @@ kokkos_device_option(HPX OFF HOST "Whether to build HPX backend (experimental)")
 # Device backends have to come after host backends for header include order reasons
 # Without this we can't make e.g. CudaSpace accessible by HostSpace
 kokkos_device_option(OPENACC OFF DEVICE "Whether to build the OpenACC backend")
-if(KOKKOS_ENABLE_OPENACC)
-  compiler_specific_flags(
-    Clang
-    -fopenacc
-    -fopenacc-fake-async-wait
-    -fopenacc-implicit-worker=vector
-    -Wno-openacc-and-cxx
-    -Wno-openmp-mapping
-    -Wno-unknown-cuda-version
-    -Wno-pass-failed
-  )
-endif()
 
 if(Trilinos_ENABLE_Kokkos AND TPL_ENABLE_CUDA)
   set(CUDA_DEFAULT ON)

@@ -789,7 +789,7 @@ struct Random_UniqueIndex<Kokkos::Device<Kokkos::SYCL, MemorySpace>> {
     KOKKOS_COMPILER_INTEL_LLVM >= 20250000
     auto item = sycl::ext::oneapi::this_work_item::get_nd_item<3>();
 #else
-    auto item           = sycl::ext::oneapi::experimental::this_nd_item<3>();
+    auto item = sycl::ext::oneapi::experimental::this_nd_item<3>();
 #endif
     std::size_t threadIdx[3] = {item.get_local_id(2), item.get_local_id(1),
                                 item.get_local_id(0)};
@@ -832,13 +832,10 @@ struct Random_UniqueIndex<
     const int team_size =
         Kokkos::Impl::OpenACCTeamMember::DEFAULT_TEAM_SIZE_REC;
     uint64_t i = __pgi_gangidx() * team_size + __pgi_vectoridx();
-#elif defined(KOKKOS_COMPILER_CLANG)
-    const int team_size = omp_get_num_threads();
-    uint64_t i          = omp_get_team_num() * team_size + omp_get_thread_num();
 #else
     static_assert(false,
                   "The current OpenACC backend implementation supports "
-                  "Random_UniqueIndex only when compiled with NVHPC or CLACC.");
+                  "Random_UniqueIndex only when compiled with NVHPC.");
 #endif
     const uint64_t lock_size = locks.extent_int(0);
     i %= lock_size;

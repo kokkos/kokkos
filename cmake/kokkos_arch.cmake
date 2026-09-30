@@ -98,7 +98,7 @@ kokkos_arch_option(RUBIN107 GPU "NVIDIA Rubin generation CC 10.7" "KOKKOS_SHOW_C
 kokkos_arch_option(BLACKWELL120 GPU "NVIDIA Blackwell generation CC 12.0" "KOKKOS_SHOW_CUDA_ARCHS")
 kokkos_arch_option(BLACKWELL121 GPU "NVIDIA Blackwell generation CC 12.1" "KOKKOS_SHOW_CUDA_ARCHS")
 
-if(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_OPENACC OR Kokkos_ENABLE_SYCL)
+if(Kokkos_ENABLE_HIP OR Kokkos_ENABLE_SYCL)
   set(KOKKOS_SHOW_HIP_ARCHS ON)
 endif()
 
@@ -1065,10 +1065,10 @@ function(CHECK_AMDGPU_ARCH ARCH FLAG)
       )
     endif()
     set(AMDGPU_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-    if(NOT KOKKOS_ENABLE_HIP AND NOT KOKKOS_ENABLE_OPENACC AND NOT KOKKOS_ENABLE_SYCL)
+    if(NOT KOKKOS_ENABLE_HIP AND AND NOT KOKKOS_ENABLE_SYCL)
       message(
         WARNING
-          "Given AMD GPU architecture ${ARCH}, but Kokkos_ENABLE_HIP, Kokkos_ENABLE_SYCL and Kokkos_ENABLE_OPENACC are OFF. Option will be ignored."
+          "Given AMD GPU architecture ${ARCH}, but Kokkos_ENABLE_HIP and Kokkos_ENABLE_SYCL are OFF. Option will be ignored."
       )
       unset(KOKKOS_ARCH_${ARCH} PARENT_SCOPE)
     else()
@@ -1155,36 +1155,9 @@ if(KOKKOS_ENABLE_OPENACC)
           "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option."
       )
     endif()
-    set(CLANG_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
     string(REPLACE "sm_" "cc" NVHPC_CUDA_ARCH ${KOKKOS_CUDA_ARCH_FLAG})
-    compiler_specific_flags(
-      NVHPC
-      -acc
-      -gpu=${NVHPC_CUDA_ARCH}
-      Clang
-      -Xopenmp-target=nvptx64-nvidia-cuda
-      -march=${CLANG_CUDA_ARCH}
-      -fopenmp-targets=nvptx64-nvidia-cuda
-    )
-    if(DEFINED ENV{CUDA_PATH})
-      compiler_specific_link_options(Clang -L$ENV{CUDA_PATH}/lib64)
-    endif()
-    compiler_specific_libs(Clang -lcudart NVHPC -cuda)
-  elseif(KOKKOS_AMDGPU_ARCH_FLAG)
-    if(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
-      message(
-        FATAL_ERROR
-          "If a GPU architecture is specified, Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option cannot be used. Disable the Kokkos_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE option."
-      )
-    endif()
-    compiler_specific_flags(
-      Clang -Xopenmp-target=amdgcn-amd-amdhsa -march=${KOKKOS_AMDGPU_ARCH_FLAG} -fopenmp-targets=amdgcn-amd-amdhsa
-    )
-    if(DEFINED ENV{ROCM_PATH})
-      compiler_specific_flags(Clang -I$ENV{ROCM_PATH}/include)
-      compiler_specific_link_options(Clang -L$ENV{ROCM_PATH}/lib)
-    endif()
-    compiler_specific_libs(Clang -lamdhip64)
+    compiler_specific_flags(NVHPC -acc -gpu=${NVHPC_CUDA_ARCH})
+    compiler_specific_libs(NVHPC -cuda)
   elseif(KOKKOS_ENABLE_OPENACC_FORCE_HOST_AS_DEVICE)
     # Compile for kernel execution on the host. In that case,
     # memory is shared between the OpenACC space and the host space.
