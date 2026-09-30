@@ -41,14 +41,17 @@ static_assert(check_common_types<Kokkos::Experimental::bhalf_t>());
 static_assert(check_common_types<std::bfloat16_t>());
 #endif
 
-template<class float16, class bfloat16>
+template <class float16, class bfloat16>
 constexpr bool check_common_types_both() {
   // These are not defined according to the C++ standard (https://godbolt.org/z/9KvjsTajo)
   // static_assert(std::is_same_v<std::common_type_t<bfloat16, float16>, float>);
   // static_assert(std::is_same_v<std::common_type_t<float16, bfloat16>, float>);
   // static_assert(std::is_same_v<std::common_type_t<bfloat16, float16, float>, float>);
   // static_assert(std::is_same_v<std::common_type_t<float16, bfloat16, float>, float>);
+// FIXME_CUDA The convertibility check doesn't work correctly with Cuda and C++23 at least through Cuda 13.4.2
+#if !(defined(KOKKOS_ENABLE_CUDA) && defined(KOKKOS_COMPILER_NVCC) && !defined(KOKKOS_ENABLE_CXX20))
   static_assert(!std::is_convertible_v<float16, bfloat16>);
+#endif
 
   // These should work, since float and double is a common type with both
   static_assert(std::is_same_v<std::common_type_t<float, bfloat16, float16>, float>);
