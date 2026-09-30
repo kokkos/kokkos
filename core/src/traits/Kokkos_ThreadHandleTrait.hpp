@@ -21,13 +21,13 @@ struct ThreadHandleMixin : AnalyzeNextTrait {
   static_assert(
       std::is_void_v<typename base_t::thread_handle>,
       "Kokkos Error: More than one ThreadHandleTrait specified is given.");
-  static constexpr bool thread_handle_is_defaulted = false;
-  using thread_handle                              = ThreadHandle;
+  static constexpr bool thread_handle_is_not_set = false;
+  using thread_handle                            = ThreadHandle;
 };
 
 struct ThreadHandleTrait : TraitSpecificationBase<ThreadHandleTrait> {
   struct base_traits {
-    static constexpr bool thread_handle_is_defaulted = true;
+    static constexpr bool thread_handle_is_not_set = true;
 
     using thread_handle = void;
     KOKKOS_IMPL_MSVC_NVCC_EBO_WORKAROUND

@@ -176,9 +176,9 @@ struct DefaultExecutionSpaceSelector<T> {
 template <class AnalysisResults>
 struct HandleSelector {
   using type = std::conditional_t<
-      !AnalysisResults::thread_handle_is_defaulted,
+      !AnalysisResults::thread_handle_is_not_set,
       typename AnalysisResults::thread_handle,
-      std::conditional_t<!AnalysisResults::team_handle_is_defaulted,
+      std::conditional_t<!AnalysisResults::team_handle_is_not_set,
                          typename AnalysisResults::team_handle, void>>;
 };
 
@@ -193,18 +193,16 @@ struct ExecPolicyTraitsWithDefaults : AnalysisResults {
 
   // At most one of ExecSpace, TeamHandle, or ThreadHandle may be specified
   static_assert(
-      (base_t::execution_space_is_defaulted ||
-       base_t::team_handle_is_defaulted) &&
-          (base_t::execution_space_is_defaulted ||
-           base_t::thread_handle_is_defaulted) &&
-          (base_t::team_handle_is_defaulted ||
-           base_t::thread_handle_is_defaulted),
+      (base_t::execution_space_is_not_set || base_t::team_handle_is_not_set) &&
+          (base_t::execution_space_is_not_set ||
+           base_t::thread_handle_is_not_set) &&
+          (base_t::team_handle_is_not_set || base_t::thread_handle_is_not_set),
       "Kokkos Error: Cannot give more than one policy trait (ExecSpace, "
       "TeamHandle, or ThreadHandle).");
 
   // Query for the default execution space
   using execution_space = typename std::conditional_t<
-      base_t::execution_space_is_defaulted,
+      base_t::execution_space_is_not_set,
       typename DefaultExecutionSpaceSelector<handle>::type,
       typename base_t::execution_space>;
 
