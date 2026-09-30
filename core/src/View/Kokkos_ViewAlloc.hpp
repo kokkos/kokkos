@@ -155,7 +155,7 @@ struct ViewValueFunctor {
     if constexpr (std::is_trivially_destructible_v<ValueType>) {
       // do nothing, don't bother calling the destructor
     } else {
-        parallel_for_implementation<DestroyTag>();
+      parallel_for_implementation<DestroyTag>();
     }
   }
 
