@@ -44,7 +44,8 @@ namespace Impl {
 /** \brief Handle for thread-level parallelism within a team.
  *
  *  Use with RangePolicy to parallelize within a thread using vector resources
- *  (ThreadVectorRange semantics). The public alias is Kokkos::ThreadHandle.
+ *  (ThreadVectorRange semantics). The public type is Kokkos::ThreadHandle.
+ *  The concept is Kokkos::Experimental::ThreadHandle.
  */
 template <class TeamMemberType>
 struct ThreadHandle {
@@ -1382,7 +1383,7 @@ class ImplRangePolicy<Handle, Properties...>
   }
 };
 
-template <ThreadHandleType Handle, class... Properties>
+template <Kokkos::Experimental::ThreadHandle Handle, class... Properties>
 class ImplRangePolicy<Handle, Properties...>
     : public Impl::ThreadVectorRangeBoundariesStruct<
           typename Impl::PolicyTraits<Properties...>::index_type,
@@ -1491,7 +1492,7 @@ namespace Impl {
 template <class ExecType>
 concept ExecutionTypeConcept =
     ExecutionSpace<ExecType> || TeamHandle<ExecType> ||
-    Kokkos::ThreadHandleType<ExecType>;
+    Kokkos::Experimental::ThreadHandle<ExecType>;
 }  // namespace Impl
 
 // Deduction guide

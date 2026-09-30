@@ -5,6 +5,7 @@
 #define KOKKOS_THREAD_HANDLE_TRAIT_HPP
 
 #include <Kokkos_Macros.hpp>
+#include <Kokkos_Concepts.hpp>
 #include <traits/Kokkos_PolicyTraitAdaptor.hpp>
 #include <traits/Kokkos_Traits_fwd.hpp>
 
@@ -36,7 +37,7 @@ struct ThreadHandleTrait : TraitSpecificationBase<ThreadHandleTrait> {
   using mixin_matching_trait =
       ThreadHandleMixin<ThreadHandle, AnalyzeNextTrait>;
   template <class T>
-  using trait_matches_specification = is_thread_handle<T>;
+  using trait_matches_specification = Kokkos::Experimental::is_thread_handle<T>;
 };
 
 // </editor-fold> end trait specification }}}1
