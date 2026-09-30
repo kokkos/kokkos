@@ -41,8 +41,10 @@ namespace Impl {
     cas_t assume = oldval;                                                             \
                                                                                        \
     do {                                                                               \
-      if (check_early_exit(op, reinterpret_cast<T&>(oldval), val))                     \
-        return reinterpret_cast<T&>(oldval);                                           \
+      if constexpr (std::is_same<MemoryOrder, MemoryOrderRelaxed>::value) {            \
+        if (check_early_exit(op, reinterpret_cast<T&>(oldval), val))                   \
+          return reinterpret_cast<T&>(oldval);                                         \
+      }                                                                                \
       assume = oldval;                                                                 \
       T newval = op.apply(reinterpret_cast<T&>(assume), val);                          \
       oldval =                                                                         \
