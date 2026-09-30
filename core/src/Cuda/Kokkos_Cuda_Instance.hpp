@@ -45,11 +45,9 @@ struct CudaTraits {
   static constexpr CudaSpace::size_type ConstantMemoryCache =
       0x002000; /*  8k bytes */
 #ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-  static constexpr bool GridConstantLaunchEnabled   = true;
-  static constexpr bool ConstantMemoryLaunchEnabled = false;
+  static constexpr bool GridConstantLaunchEnabled = true;
 #else
-  static constexpr bool GridConstantLaunchEnabled   = false;
-  static constexpr bool ConstantMemoryLaunchEnabled = true;
+  static constexpr bool GridConstantLaunchEnabled = false;
 #endif  // defined(KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT)
   static constexpr CudaSpace::size_type KernelArgumentLimit =
       GridConstantLaunchEnabled ? 0x008000  /* 32k bytes */
