@@ -1353,18 +1353,7 @@ class ImplRangePolicy<Handle, Properties...>
   using work_tag         = typename traits::work_tag;
   using member_type      = typename traits::index_type;
   using index_type       = typename traits::index_type;
-
-  template <typename IndexType1, typename IndexType2>
-  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
-                                         IndexType1 work_begin,
-                                         IndexType2 work_end)
-      : base_t(handle, static_cast<index_type>(work_begin),
-               static_cast<index_type>(work_end)) {}
-
-  template <typename IndexType>
-  KOKKOS_INLINE_FUNCTION ImplRangePolicy(Handle const& handle,
-                                         IndexType work_count)
-      : base_t(handle, static_cast<index_type>(work_count)) {}
+  using base_t::base_t;
 
   KOKKOS_INLINE_FUNCTION Handle const& space() const {
     return static_cast<const base_t*>(this)->member;
