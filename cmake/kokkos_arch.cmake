@@ -1065,7 +1065,7 @@ function(CHECK_AMDGPU_ARCH ARCH FLAG)
       )
     endif()
     set(AMDGPU_ARCH_ALREADY_SPECIFIED ${ARCH} PARENT_SCOPE)
-    if(NOT KOKKOS_ENABLE_HIP AND AND NOT KOKKOS_ENABLE_SYCL)
+    if(NOT KOKKOS_ENABLE_HIP AND NOT KOKKOS_ENABLE_SYCL)
       message(
         WARNING
           "Given AMD GPU architecture ${ARCH}, but Kokkos_ENABLE_HIP and Kokkos_ENABLE_SYCL are OFF. Option will be ignored."
