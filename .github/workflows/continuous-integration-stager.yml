@@ -67,3 +67,7 @@ jobs:
   performance-test:
     needs: [smoketest, pre-commit-check]
     uses: ./.github/workflows/performance-benchmark.yml
+
+  docker-build:
+    needs: [linux, osx-x64, performance-test]
+    uses: ./.github/workflows/docker-build.yml
