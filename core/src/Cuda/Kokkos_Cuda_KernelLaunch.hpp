@@ -23,11 +23,12 @@
 //----------------------------------------------------------------------------
 
 // If KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT is used we leverage implicit constant
-// cache use via an argument attribute in the "local launch" mechanism. Global
-// launch is used for functors that exceed the 32kB kernel argument limit. When
-// constant memory launch is enabled, HintHeavyWeight can still opt in to the
-// explicit constant memory launch mechanism.
-#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+// cache use via an argument attribute in the "local launch" mechanism. At that
+// point we only need local and global launch - the latter for functors that
+// exceed the kernel argument limit which is now 32kB. In this case we disable
+// constant memory launch and only use local and global launch. We no longer
+// allocate the constant memory buffer.
+#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 /** \brief  Access to constant memory on the device */
 #ifdef KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
 
@@ -40,7 +41,7 @@ __device__ __constant__ unsigned long kokkos_impl_cuda_constant_memory_buffer
     [Kokkos::Impl::CudaTraits::ConstantMemoryUsage / sizeof(unsigned long)];
 
 #endif  // KOKKOS_ENABLE_CUDA_RELOCATABLE_DEVICE_CODE
-#endif  // KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+#endif  // !defined(KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT)
 
 template <typename T>
 inline __device__ T* kokkos_impl_cuda_shared_memory() {
@@ -58,7 +59,7 @@ namespace Impl {
 // function qualifier which could be used to improve performance.
 //----------------------------------------------------------------------------
 
-#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 template <class DriverType>
 __global__ static void cuda_parallel_launch_constant_memory() {
   const DriverType& driver =
@@ -75,9 +76,7 @@ __global__ __launch_bounds__(
 
   driver();
 }
-#endif  // KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
 
-#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 template <class DriverType>
 __global__ static void cuda_parallel_launch_local_memory(
     const DriverType driver) {
@@ -106,7 +105,7 @@ __global__ __launch_bounds__(
                                                                      driver) {
   driver();
 }
-#endif  // KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
+#endif  // !defined(KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT)
 
 template <class DriverType>
 __global__ static void cuda_parallel_launch_global_memory(
@@ -644,7 +643,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
 
 //------------------------------------------------------------------------------
 // <editor-fold desc="Constant Memory"> {{{2
-#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
 template <class DriverType, unsigned int MaxThreadsPerBlock,
           unsigned int MinBlocksPerSM>
 struct CudaParallelLaunchKernelFunc<
@@ -737,7 +736,7 @@ struct CudaParallelLaunchKernelInvoker<DriverType, LaunchBounds,
         driver, grid, block, shmem, cuda_instance);
   }
 };
-#endif  // KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+#endif  // !defined(KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT)
 
 // </editor-fold> end Constant Memory }}}2
 //------------------------------------------------------------------------------

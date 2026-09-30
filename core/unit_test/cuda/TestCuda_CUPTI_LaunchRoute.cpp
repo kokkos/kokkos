@@ -210,12 +210,11 @@ TEST_F(CudaCuptiLaunchRoute, cuda_parallel_for_uses_expected_route) {
       "device_small", policy, execution_space);
   expect_callbacks(observed, 0, 0, 1);
 
-  // HintHeavyWeight opts into constant memory, which shows up as a copy to the
-  // constant buffer symbol. With constant memory compiled out there is nothing
-  // to copy and this size still fits in kernel arguments.
+  // HintHeavyWeight opts into constant memory when that's available as a
+  // launch mechanism, otherwise it is a no-op -> a local launch.
   observed = measure_parallel_for<constant_memory_padding_bytes>(
       "device_medium", heavy_policy, execution_space);
-#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+#if !defined(KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT)
   expect_callbacks(observed, 1, 0, 1);
 #else
   expect_callbacks(observed, 0, 0, 1);

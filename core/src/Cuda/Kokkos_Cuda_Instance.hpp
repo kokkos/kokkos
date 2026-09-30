@@ -45,10 +45,12 @@ struct CudaTraits {
   static constexpr CudaSpace::size_type ConstantMemoryCache =
       0x002000; /*  8k bytes */
 #ifdef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
-  static constexpr bool GridConstantLaunchEnabled = true;
+  static constexpr bool GridConstantLaunchEnabled   = true;
+  static constexpr bool ConstantMemoryLaunchEnabled = false;
 #else
   static constexpr bool GridConstantLaunchEnabled   = false;
-#endif
+  static constexpr bool ConstantMemoryLaunchEnabled = true;
+#endif  // defined(KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT)
   static constexpr CudaSpace::size_type KernelArgumentLimit =
       GridConstantLaunchEnabled ? 0x008000  /* 32k bytes */
                                 : 0x001000; /*  4k bytes */
@@ -57,11 +59,6 @@ struct CudaTraits {
   using ConstantGlobalBufferType =
       unsigned long[ConstantMemoryUsage / sizeof(unsigned long)];
 
-#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
-  static constexpr bool ConstantMemoryLaunchEnabled = true;
-#else
-  static constexpr bool ConstantMemoryLaunchEnabled = false;
-#endif
   static constexpr int ConstantMemoryUseThreshold = 0x000200 /* 512 bytes */;
 };
 
@@ -127,7 +124,7 @@ class CudaInternal {
   size_t m_num_scratch_locks                      = 0;
 
   static std::set<int> cuda_devices;
-#ifdef KOKKOS_ENABLE_IMPL_CUDA_CONSTANT_MEMORY
+#ifndef KOKKOS_IMPL_CUDA_USE_GRID_CONSTANT
   KOKKOS_IMPL_EXPORT static std::map<int, unsigned long*>
       constantMemHostStagingPerDevice;
   KOKKOS_IMPL_EXPORT static std::map<int, cudaEvent_t>
