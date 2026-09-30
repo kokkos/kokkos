@@ -11,6 +11,7 @@ SPDX-License-Identifier: (BSD-3-Clause)
 
 #include <desul/atomics/Common.hpp>
 #include <desul/atomics/Compare_Exchange.hpp>
+#include <desul/atomics/Load_And_Store.hpp>
 #include <type_traits>
 
 #if defined(__GNUC__) && (!defined(__clang__))
@@ -34,7 +35,9 @@ namespace Impl {
       MemoryOrder order,                                                               \
       MemoryScope scope) {                                                             \
     using cas_t = atomic_compare_exchange_t<T>;                                        \
-    cas_t oldval = *reinterpret_cast<cas_t*>(dest);                                    \
+    cas_t oldval = HOST_OR_DEVICE##_atomic_load(                                       \
+        reinterpret_cast<cas_t*>(dest),                                                \
+        MemoryOrderRelaxed{}, scope);                                                  \
     cas_t assume = oldval;                                                             \
                                                                                        \
     do {                                                                               \
