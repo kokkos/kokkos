@@ -117,69 +117,45 @@ TEST(TEST_CATEGORY, node_props_label_device_handle) {
       Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>{});
 }
 
-TEST(TEST_CATEGORY, node_props_with_properties_if_unset) {
-  {
-    const auto props_label_device_handle_old = Kokkos::Experimental::node_props(
-        "label", Kokkos::Experimental::get_device_handle(TEST_EXECSPACE{}));
-    const auto props_label_device_handle_new =
-        Kokkos::Impl::with_properties_if_unset(props_label_device_handle_old,
-                                               "another label");
+TEST(TEST_CATEGORY, node_props_get_properties_or) {
+  const auto device_handle =
+      Kokkos::Experimental::get_device_handle(TEST_EXECSPACE{});
 
-    static_assert(
-        std::same_as<
-            decltype(props_label_device_handle_old),
-            const Kokkos::Impl::NodeCtorProps<
-                std::string, Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>>>);
-    static_assert(
-        std::same_as<
-            decltype(props_label_device_handle_new),
-            const Kokkos::Impl::NodeCtorProps<
-                std::string, Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>>>);
+  auto empty              = Kokkos::Experimental::node_props();
+  auto prop_label         = Kokkos::Experimental::node_props("label");
+  auto prop_device_handle = Kokkos::Experimental::node_props(device_handle);
+  auto props = Kokkos::Experimental::node_props("label", device_handle);
 
-    ASSERT_EQ(
-        Kokkos::Impl::get_property<std::string>(props_label_device_handle_old),
-        "label");
-    ASSERT_EQ(
-        Kokkos::Impl::get_property<std::string>(props_label_device_handle_new),
-        "label");
-  }
+  using device_handle_t = Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>;
 
   {
-    const auto props_empty = Kokkos::Experimental::node_props();
-    const auto props_label_device_handle =
-        Kokkos::Impl::with_properties_if_unset(
-            props_empty, "label", Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>{});
-
-    static_assert(
-        std::same_as<
-            decltype(props_label_device_handle),
-            const Kokkos::Impl::NodeCtorProps<
-                std::string, Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>>>);
-
-    ASSERT_EQ(
-        Kokkos::Impl::get_property<std::string>(props_label_device_handle),
-        "label");
-    ASSERT_EQ(
-        Kokkos::Impl::get_property<Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>>(
-            props_label_device_handle),
-        Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>{});
+    const auto [d_h, label] =
+        Kokkos::Impl::get_properties_or<device_handle_t, std::string>(
+            std::move(empty), device_handle, "[unlabeled]");
+    ASSERT_EQ(d_h, device_handle);
+    ASSERT_EQ(label, "[unlabeled]");
   }
-}
-
-TEST(TEST_CATEGORY, node_props_get_property) {
-  auto props = Kokkos::Experimental::node_props(
-      "label", Kokkos::Experimental::get_device_handle(TEST_EXECSPACE{}));
-
-  ASSERT_EQ(Kokkos::Impl::get_property<std::string>(props), "label");
-  ASSERT_EQ(
-      Kokkos::Impl::get_property<Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>>(
-          props),
-      Kokkos::Impl::DeviceHandle<TEST_EXECSPACE>{});
-
-  const auto label = Kokkos::Impl::extract_property<std::string>(props);
-
-  ASSERT_EQ(label, "label");
-  ASSERT_TRUE(Kokkos::Impl::get_property<std::string>(props).empty());
+  {
+    const auto [d_h, label] =
+        Kokkos::Impl::get_properties_or<device_handle_t, std::string>(
+            std::move(prop_label), device_handle, "[unlabeled]");
+    ASSERT_EQ(d_h, device_handle);
+    ASSERT_EQ(label, "label");
+  }
+  {
+    const auto [d_h, label] =
+        Kokkos::Impl::get_properties_or<device_handle_t, std::string>(
+            std::move(prop_device_handle), device_handle, "[unlabeled]");
+    ASSERT_EQ(d_h, device_handle);
+    ASSERT_EQ(label, "[unlabeled]");
+  }
+  {
+    const auto [label, d_h] =
+        Kokkos::Impl::get_properties_or<std::string, device_handle_t>(
+            std::move(props), "[unlabeled]", device_handle);
+    ASSERT_EQ(d_h, device_handle);
+    ASSERT_EQ(label, "label");
+  }
 }
 
 }  // end namespace

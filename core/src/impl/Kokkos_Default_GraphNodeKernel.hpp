@@ -71,18 +71,16 @@ class GraphNodeKernelImpl
 
   // TODO @graph kernel name info propagation
   template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(std::string const &, ExecutionSpace const &,
-                      Functor arg_functor, PolicyDeduced &&arg_policy,
-                      ArgsDeduced &&...args)
+  GraphNodeKernelImpl(std::string const &, Functor arg_functor,
+                      PolicyDeduced &&arg_policy, ArgsDeduced &&...args)
       : execute_kernel_vtable_base_t(arg_policy.space()),
         base_t(std::move(arg_functor), (PolicyDeduced &&)arg_policy,
                (ArgsDeduced &&)args...) {}
 
-  // FIXME @graph Forward through the instance once that works in the backends
   template <class PolicyDeduced, class... ArgsDeduced>
-  GraphNodeKernelImpl(ExecutionSpace const &ex, Functor arg_functor,
-                      PolicyDeduced &&arg_policy, ArgsDeduced &&...args)
-      : GraphNodeKernelImpl("", ex, std::move(arg_functor),
+  GraphNodeKernelImpl(Functor arg_functor, PolicyDeduced &&arg_policy,
+                      ArgsDeduced &&...args)
+      : GraphNodeKernelImpl("[unlabeled]", std::move(arg_functor),
                             (PolicyDeduced &&)arg_policy,
                             (ArgsDeduced &&)args...) {
     // FIXME This constructor seem unused.
