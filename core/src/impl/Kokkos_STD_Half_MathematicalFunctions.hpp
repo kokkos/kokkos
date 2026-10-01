@@ -10,34 +10,33 @@ namespace Kokkos {
 namespace Impl {
 #ifdef KOKKOS_IMPL_HALF_TYPE_STANDARD_SUPPORT
 
-#define KOKKOS_STD_HALF_UNARY_FUNCTION(OP)               \
-  KOKKOS_INLINE_FUNCTION Experimental::half_t impl_##OP( \
-      Experimental::half_t x) {                          \
-    return std::OP(Experimental::half_t::impl_type(x));  \
-  }
-
-#define KOKKOS_STD_HALF_BINARY_FUNCTION(OP)              \
-  KOKKOS_INLINE_FUNCTION Experimental::half_t impl_##OP( \
-      Experimental::half_t x, Experimental::half_t y) {  \
-    return static_cast<Experimental::half_t>(            \
-        std::OP(Experimental::half_t::impl_type(x),      \
-                Experimental::half_t::impl_type(y)));    \
-  }
-
-#define KOKKOS_STD_HALF_TERNARY_INT_PTR_FUNCTION(OP)            \
-  KOKKOS_INLINE_FUNCTION Experimental::half_t impl_##OP(        \
-      Experimental::half_t x, Experimental::half_t y, int* z) { \
-    return static_cast<Experimental::half_t>(                   \
-        std::OP(Experimental::half_t::impl_type(x),             \
-                Experimental::half_t::impl_type(y), z));        \
-  }
-
-#define KOKKOS_STD_HALF_UNARY_PREDICATE(OP)                       \
-  KOKKOS_INLINE_FUNCTION bool impl_##OP(Experimental::half_t x) { \
+#define KOKKOS_STD_HALF_UNARY_FUNCTION(OP)                        \
+  inline Experimental::half_t impl_##OP(Experimental::half_t x) { \
     return std::OP(Experimental::half_t::impl_type(x));           \
   }
 
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
+#define KOKKOS_STD_HALF_BINARY_FUNCTION(OP)                       \
+  inline Experimental::half_t impl_##OP(Experimental::half_t x,   \
+                                        Experimental::half_t y) { \
+    return static_cast<Experimental::half_t>(                     \
+        std::OP(Experimental::half_t::impl_type(x),               \
+                Experimental::half_t::impl_type(y)));             \
+  }
+
+#define KOKKOS_STD_HALF_TERNARY_INT_PTR_FUNCTION(OP)                      \
+  inline Experimental::half_t impl_##OP(Experimental::half_t x,           \
+                                        Experimental::half_t y, int* z) { \
+    return static_cast<Experimental::half_t>(                             \
+        std::OP(Experimental::half_t::impl_type(x),                       \
+                Experimental::half_t::impl_type(y), z));                  \
+  }
+
+#define KOKKOS_STD_HALF_UNARY_PREDICATE(OP)             \
+  inline bool impl_##OP(Experimental::half_t x) {       \
+    return std::OP(Experimental::half_t::impl_type(x)); \
+  }
+
+inline Kokkos::Experimental::half_t impl_test_fallback_half(
     Kokkos::Experimental::half_t) {
   return Kokkos::Experimental::half_t(0.f);
 }
@@ -51,34 +50,33 @@ KOKKOS_INLINE_FUNCTION Kokkos::Experimental::half_t impl_test_fallback_half(
 
 #ifdef KOKKOS_IMPL_BHALF_TYPE_STANDARD_SUPPORT
 
-#define KOKKOS_STD_BHALF_UNARY_FUNCTION(OP)               \
-  KOKKOS_INLINE_FUNCTION Experimental::bhalf_t impl_##OP( \
-      Experimental::bhalf_t x) {                          \
-    return std::OP(Experimental::bhalf_t::impl_type(x));  \
+#define KOKKOS_STD_BHALF_UNARY_FUNCTION(OP)                         \
+  inline Experimental::bhalf_t impl_##OP(Experimental::bhalf_t x) { \
+    return std::OP(Experimental::bhalf_t::impl_type(x));            \
   }
 
-#define KOKKOS_STD_BHALF_BINARY_FUNCTION(OP)              \
-  KOKKOS_INLINE_FUNCTION Experimental::bhalf_t impl_##OP( \
-      Experimental::bhalf_t x, Experimental::bhalf_t y) { \
-    return static_cast<Experimental::bhalf_t>(            \
-        std::OP(Experimental::bhalf_t::impl_type(x),      \
-                Experimental::bhalf_t::impl_type(y)));    \
+#define KOKKOS_STD_BHALF_BINARY_FUNCTION(OP)                        \
+  inline Experimental::bhalf_t impl_##OP(Experimental::bhalf_t x,   \
+                                         Experimental::bhalf_t y) { \
+    return static_cast<Experimental::bhalf_t>(                      \
+        std::OP(Experimental::bhalf_t::impl_type(x),                \
+                Experimental::bhalf_t::impl_type(y)));              \
   }
 
-#define KOKKOS_STD_BHALF_TERNARY_INT_PTR_FUNCTION(OP)             \
-  KOKKOS_INLINE_FUNCTION Experimental::bhalf_t impl_##OP(         \
-      Experimental::bhalf_t x, Experimental::bhalf_t y, int* z) { \
-    return static_cast<Experimental::bhalf_t>(                    \
-        std::OP(Experimental::bhalf_t::impl_type(x),              \
-                Experimental::bhalf_t::impl_type(y), z));         \
+#define KOKKOS_STD_BHALF_TERNARY_INT_PTR_FUNCTION(OP)                       \
+  inline Experimental::bhalf_t impl_##OP(Experimental::bhalf_t x,           \
+                                         Experimental::bhalf_t y, int* z) { \
+    return static_cast<Experimental::bhalf_t>(                              \
+        std::OP(Experimental::bhalf_t::impl_type(x),                        \
+                Experimental::bhalf_t::impl_type(y), z));                   \
   }
 
-#define KOKKOS_STD_BHALF_UNARY_PREDICATE(OP)                       \
-  KOKKOS_INLINE_FUNCTION bool impl_##OP(Experimental::bhalf_t x) { \
-    return std::OP(Experimental::bhalf_t::impl_type(x));           \
+#define KOKKOS_STD_BHALF_UNARY_PREDICATE(OP)             \
+  inline bool impl_##OP(Experimental::bhalf_t x) {       \
+    return std::OP(Experimental::bhalf_t::impl_type(x)); \
   }
 
-KOKKOS_INLINE_FUNCTION Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(
+inline Kokkos::Experimental::bhalf_t impl_test_fallback_bhalf(
     Kokkos::Experimental::bhalf_t) {
   return Kokkos::Experimental::bhalf_t(0.f);
 }
