@@ -1037,7 +1037,23 @@ void test_bhalf_operators() {
   }
 }
 
-TEST(TEST_CATEGORY, half_operators) { test_half_operators(); }
-TEST(TEST_CATEGORY, bhalf_operators) { test_bhalf_operators(); }
+TEST(TEST_CATEGORY, half_operators) {
+// FIXME_NEXTSILICON: projection errors in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                     Kokkos::Experimental::NextSilicon>)
+    GTEST_SKIP() << "projection errors in 1.3.0-120";
+#endif
+  test_half_operators();
+}
+TEST(TEST_CATEGORY, bhalf_operators) {
+// FIXME_NEXTSILICON: projection errors in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<Kokkos::DefaultExecutionSpace,
+                     Kokkos::Experimental::NextSilicon>)
+    GTEST_SKIP() << "projection errors in 1.3.0-120";
+#endif
+  test_bhalf_operators();
+}
 }  // namespace Test
 #endif  // TESTHALFOPERATOR_HPP_
