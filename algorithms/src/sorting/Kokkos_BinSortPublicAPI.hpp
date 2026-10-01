@@ -18,7 +18,7 @@ namespace Kokkos {
 
 template <class KeyViewType, class BinSortOp,
           class Space    = typename KeyViewType::device_type,
-          class SizeType = typename KeyViewType::memory_space::size_type>
+          class SizeType = typename KeyViewType::size_type>
 class BinSort {
  public:
   template <class DstViewType, class SrcViewType>
