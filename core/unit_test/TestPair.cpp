@@ -309,6 +309,14 @@ TEST(defaultdevicetype, structured_bindings_and_tuple_interface) {
   using view_t     = Kokkos::View<int*, exec_space>;
   view_t results("pair_device_results", 24);
 
+  // FIXME_CLANG: In two stage-compilation (e.g. SYCL) Clang complains
+  // with Wunneeded-internal-declaration for generate_pair()
+  // THis is likely because the call to generate_pair() is only instantiated on
+  // the host. generate_pair() cannot be a template due to a GCC bug. See
+  // https://stackoverflow.com/questions/77362965/clang-erroneous-unneeded-internal-declaration-warning
+  // Workaround this by explicitly calling generate_pair() on the host
+  generate_pair();
+
   Kokkos::parallel_for(
       Kokkos::RangePolicy<exec_space>(0, 1),
       TupleInterfaceDeviceTest<view_t>{
