@@ -452,7 +452,8 @@ void sort_device_view_without_comparator(
     // an efficient TPL if possible and otherwise falls back to std::sort.
     sort_device_view_with_comparator(
         exec, view,
-        Experimental::Impl::StdAlgoLessThanBinaryPredicate<value_type>());
+        ::Kokkos::Experimental::Impl::StdAlgoLessThanBinaryPredicate<
+            value_type>());
   }
 }
 
