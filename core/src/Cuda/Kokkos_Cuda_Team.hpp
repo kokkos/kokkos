@@ -62,7 +62,7 @@ class CudaTeamMember {
   using execution_space      = Kokkos::Cuda;
   using scratch_memory_space = execution_space::scratch_memory_space;
   using team_handle          = CudaTeamMember;
-  using thread_handle        = ThreadHandle<team_handle>;
+  using thread_handle        = ThreadHandleType<team_handle>;
 
  private:
   mutable void* m_team_reduce;
@@ -502,7 +502,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
   (void)loop_boundaries;
   (void)closure;
   KOKKOS_IF_ON_DEVICE((
-      using thread_handle_t = Impl::ThreadHandle<Impl::CudaTeamMember>;
+      using thread_handle_t = Impl::ThreadHandleType<Impl::CudaTeamMember>;
       if constexpr (std::is_invocable_v<Closure, iType>) {
         for (iType i = loop_boundaries.start + threadIdx.y;
              i < loop_boundaries.end; i += blockDim.y)
@@ -517,7 +517,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
       } else {
         static_assert(Kokkos::Impl::always_false<Closure>::value,
                       "Kokkos::parallel_for(TeamThreadRange): closure must be "
-                      "invocable with (iType) or (ThreadHandle, iType)");
+                      "invocable with (iType) or (ThreadHandleType, iType)");
       }))
 }
 
