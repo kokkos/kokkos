@@ -339,6 +339,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         MinimalViewMDSpanTemplateArgumentViability
         ReferenceCountedAccessor
         ReferenceCountedDataHandle
+        SubviewALLFullExtentEquivalence
         ViewEqualityOperator
         ViewCtorConvertibleToPtr
         ViewCtorDataHandle

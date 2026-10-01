@@ -524,6 +524,11 @@ class BasicView {
     return true;
   }
 
+  KOKKOS_INLINE_FUNCTION static bool is_in_bounds(size_t /*extent*/,
+                                                  const Kokkos::full_extent_t) {
+    return true;
+  }
+
   template <class RT, class... RP, size_t... Idx, class... Args>
   KOKKOS_INLINE_FUNCTION static bool subview_extents_valid(
       const BasicView<RT, RP...> &src_view, std::index_sequence<Idx...>,
@@ -552,6 +557,11 @@ class BasicView {
   static void append_error_message(std::stringstream &ss, size_t /*extent*/,
                                    const Kokkos::ALL_t) {
     ss << "Kokkos::ALL";
+  }
+
+  static void append_error_message(std::stringstream &ss, size_t /*extent*/,
+                                   const Kokkos::full_extent_t) {
+    ss << "Kokkos::full_extent";
   }
 
   template <class RT, class... RP, size_t... Idx, class Arg0, class... Args>
