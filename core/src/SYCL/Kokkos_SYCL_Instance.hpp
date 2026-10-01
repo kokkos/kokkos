@@ -4,6 +4,7 @@
 #ifndef KOKKOS_SYCL_INSTANCE_HPP_
 #define KOKKOS_SYCL_INSTANCE_HPP_
 
+#include <atomic>
 #include <optional>
 #include <sycl/sycl.hpp>
 
@@ -34,10 +35,10 @@ class SYCLInternal {
   sycl::global_ptr<void> scratch_flags(const std::size_t size);
   sycl::global_ptr<void> scratch_host(const std::size_t size);
   int acquire_team_scratch_space();
+  void release_team_scratch_space(int scratch_pool_id);
   sycl::global_ptr<void> resize_team_scratch_space(int scratch_pool_id,
                                                    std::int64_t bytes,
                                                    bool force_shrink = false);
-  void register_team_scratch_event(int scratch_pool_id, sycl::event event);
 
   uint32_t impl_get_instance_id() const;
   static int m_syclDev;
@@ -59,9 +60,7 @@ class SYCLInternal {
   static constexpr int m_n_team_scratch                               = 10;
   mutable int64_t m_team_scratch_current_size[m_n_team_scratch]       = {};
   mutable sycl::global_ptr<void> m_team_scratch_ptr[m_n_team_scratch] = {};
-  mutable int m_current_team_scratch                                  = 0;
-  mutable sycl::event m_team_scratch_event[m_n_team_scratch]          = {};
-  mutable std::mutex m_team_scratch_mutex;
+  mutable std::atomic_int m_team_scratch_pool[10]                     = {};
 
   uint32_t m_instance_id =
       Kokkos::Tools::Experimental::Impl::idForInstance<Kokkos::SYCL>(

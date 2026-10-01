@@ -400,8 +400,6 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // allocations.
     std::scoped_lock<std::mutex> scratch_buffers_lock(
         instance.m_mutexScratchSpace);
-    std::scoped_lock<std::mutex> team_scratch_lock(
-        instance.m_team_scratch_mutex);
 
     // Functor's reduce memory, team scan memory, and team shared memory depend
     // upon team size.
@@ -421,7 +419,7 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
         sycl_direct_launch(global_scratch_ptr, functor_reducer_wrapper,
                            functor_reducer_wrapper.get_copy_event());
     functor_reducer_wrapper.register_event(event);
-    instance.register_team_scratch_event(scratch_pool_id, event);
+    instance.release_team_scratch_space(scratch_pool_id);
   }
 
   template <class ViewType>
