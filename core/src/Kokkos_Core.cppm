@@ -181,7 +181,6 @@ export {
   using ::Kokkos::TeamThreadRange;
   using ::Kokkos::TeamVectorMDRange;
   using ::Kokkos::TeamVectorRange;
-  using ::Kokkos::ThreadHandle;
   using ::Kokkos::ThreadVectorMDRange;
   using ::Kokkos::ThreadVectorRange;
   using ::Kokkos::WorkGraphPolicy;
@@ -194,6 +193,7 @@ export {
   using ::Kokkos::Experimental::prefer;
   using ::Kokkos::Experimental::require;
   using ::Kokkos::Experimental::StaticBatchSize;
+  using ::Kokkos::Experimental::ThreadHandle;
   using ::Kokkos::Experimental::WorkItemProperty;
   }  // namespace Experimental
 
