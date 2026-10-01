@@ -12,6 +12,8 @@ static_assert(false,
 #include <Kokkos_Macros.hpp>
 #if defined(KOKKOS_ENABLE_CUDA)
 
+#include <cuda/annotated_ptr>
+
 #include <Kokkos_Core_fwd.hpp>
 
 #include <iosfwd>
@@ -201,6 +203,22 @@ struct MemorySpaceAccess<Kokkos::CudaSpace,
                          Kokkos::Cuda::scratch_memory_space> {
   enum : bool { assignable = false };
   enum : bool { accessible = true };
+};
+
+// Compile-time-level scratch annotation gives device codegen the pointer's
+// address-space provenance for scratch allocations.
+template <>
+struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 0> {
+  KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
+    return cuda::associate_access_property(p, cuda::access_property::shared{});
+  }
+};
+
+template <>
+struct ScratchPointerAnnotation<ScratchMemorySpace<Cuda>, 1> {
+  KOKKOS_FORCEINLINE_FUNCTION static void* annotate(void* p) {
+    return cuda::associate_access_property(p, cuda::access_property::global{});
+  }
 };
 
 }  // namespace Impl
