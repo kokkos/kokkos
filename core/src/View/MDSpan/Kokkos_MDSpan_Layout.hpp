@@ -322,30 +322,30 @@ KOKKOS_INLINE_FUNCTION auto mapping_from_ctor_and_8sizes(
     [[maybe_unused]] const size_t arg_N3, [[maybe_unused]] const size_t arg_N4,
     [[maybe_unused]] const size_t arg_N5, [[maybe_unused]] const size_t arg_N6,
     [[maybe_unused]] const size_t arg_N7) {
-  if constexpr (MappingType::extents_type::rank() == 0) {
+  if constexpr (MappingType::extents_type::rank_dynamic() == 0) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop);
-  } else if constexpr (MappingType::extents_type::rank() == 1) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 1) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop,
                                                                 arg_N0);
-  } else if constexpr (MappingType::extents_type::rank() == 2) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 2) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(arg_prop,
                                                                 arg_N0, arg_N1);
-  } else if constexpr (MappingType::extents_type::rank() == 3) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 3) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
         arg_prop, arg_N0, arg_N1, arg_N2);
-  } else if constexpr (MappingType::extents_type::rank() == 4) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 4) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
         arg_prop, arg_N0, arg_N1, arg_N2, arg_N3);
-  } else if constexpr (MappingType::extents_type::rank() == 5) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 5) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
         arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4);
-  } else if constexpr (MappingType::extents_type::rank() == 6) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 6) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
         arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5);
-  } else if constexpr (MappingType::extents_type::rank() == 7) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 7) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
         arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6);
-  } else if constexpr (MappingType::extents_type::rank() == 8) {
+  } else if constexpr (MappingType::extents_type::rank_dynamic() == 8) {
     return mapping_from_ctor_and_sizes<MappingType, ScalarSize>(
         arg_prop, arg_N0, arg_N1, arg_N2, arg_N3, arg_N4, arg_N5, arg_N6,
         arg_N7);
