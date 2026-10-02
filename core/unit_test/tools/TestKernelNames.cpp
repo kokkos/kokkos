@@ -180,7 +180,7 @@ void test_kernel_name_single() {
 
   using ExecutionSpace = Kokkos::DefaultExecutionSpace;
   {
-    std::string const my_label = "my_single_single_policy";
+    std::string const my_label = "my_single_policy";
 
     auto const my_lambda = KOKKOS_LAMBDA(){};
     Kokkos::single(my_label, Kokkos::SinglePolicy<ExecutionSpace>(), my_lambda);
