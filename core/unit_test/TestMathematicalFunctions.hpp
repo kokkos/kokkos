@@ -2887,6 +2887,8 @@ KE::half_t ref_test_fallback_half(KE::half_t) {
   } else {
     return KE::half_t(1.f);
   }
+#elif defined(KOKKOS_IMPL_HALF_TYPE_STANDARD_SUPPORT)
+  return KE::half_t(0.f);
 #else
   return KE::half_t(1.f);
 #endif
@@ -2912,6 +2914,8 @@ KE::bhalf_t ref_test_fallback_bhalf(KE::bhalf_t) {
   } else {
     return KE::bhalf_t(1.f);
   }
+#elif defined(KOKKOS_IMPL_BHALF_TYPE_STANDARD_SUPPORT)
+  return KE::bhalf_t(0.f);
 #else
   return KE::bhalf_t(1.f);
 #endif
