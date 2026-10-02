@@ -9,12 +9,16 @@
 static_assert(false,
               "Including non-public Kokkos header files is not allowed.");
 #endif
-
 #ifndef KOKKOS_SINGLE_HPP
 #define KOKKOS_SINGLE_HPP
 
+#include <Kokkos_Core_fwd.hpp>
+#include <Kokkos_ExecPolicy.hpp>
+#include <Kokkos_View.hpp>
+
 #include <impl/Kokkos_FunctorWrapperUtil.hpp>
 #include <impl/Kokkos_Single_Default_Impl.hpp>
+#include <impl/Kokkos_Tools_Generic.hpp>
 
 namespace Kokkos {
 
