@@ -33,6 +33,11 @@ pipeline {
                       echo "Hostname: ${NODE_NAME}" && \
                       pre-commit run --all-files'''
             }
+            post {
+                always {
+                    cleanWs()
+                       }
+                 }
         }
         stage('Build-1') {
             parallel {
@@ -83,6 +88,11 @@ pipeline {
                               cmake --build build && \
                               ctest --test-dir build --verbose'''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
 
                 stage('GCC-10.5.0') {
@@ -127,6 +137,7 @@ pipeline {
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -183,6 +194,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -277,6 +289,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build-tests/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -332,6 +345,7 @@ pipeline {
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -371,6 +385,7 @@ pipeline {
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
 
@@ -418,6 +433,7 @@ pipeline {
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
 
@@ -463,6 +479,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -512,6 +529,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -559,6 +577,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -602,6 +621,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -646,6 +666,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -698,6 +719,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }

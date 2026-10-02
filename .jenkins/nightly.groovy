@@ -43,6 +43,11 @@ pipeline {
                           spack test results -l
                           '''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
                 stage('spack-cuda') {
                     agent {
@@ -78,6 +83,11 @@ pipeline {
                           spack load kokkos
                           '''
                     }
+                    post {
+                        always {
+                            cleanWs()
+                               }
+                         }
                 }
                 stage('GCC-15-CXX26') {
                     agent {
@@ -112,6 +122,7 @@ pipeline {
                     post {
                         always {
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -152,6 +163,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
@@ -191,6 +203,7 @@ pipeline {
                         always {
                             sh 'ccache --show-stats'
                             xunit([CTest(deleteOutputFiles: true, failIfNotNew: true, pattern: 'build/Testing/**/Test.xml', skipNoTestFiles: false, stopProcessingIfError: true)])
+                            cleanWs()
                         }
                     }
                 }
