@@ -14,6 +14,7 @@ TEST(TEST_CATEGORY, mdrange_1d) {
 TEST(TEST_CATEGORY, mdrange_2d) {
   TestMDRange_2D<TEST_EXECSPACE>::test_reduce2(100, 100);
   TestMDRange_2D<TEST_EXECSPACE>::test_for2(100, 100);
+  TestMDRange_2D<TEST_EXECSPACE>::test_wo_tiles_for2(100, 100);
 }
 
 TEST(TEST_CATEGORY, mdrange_array_reduce) {
