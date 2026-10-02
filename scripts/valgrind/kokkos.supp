@@ -1,0 +1,42 @@
+##
+## Kokkos CI suppressions
+##
+
+{
+    Python related leaks
+    Memcheck:Leak
+    ...
+    fun:Py_BytesMain
+}
+
+{
+    Python malloc related leaks
+    Memcheck:Leak
+    ...
+    fun:PyObject_Malloc
+}
+
+{
+    dlopen related leaks
+    Memcheck:Leak
+    ...
+    fun:dl_open_worker_begin
+    fun:_dl_catch_exception
+    fun:dl_open_worker
+    fun:_dl_catch_exception
+    fun:_dl_open
+}
+
+{
+    googlebench cpuinfo related leaks
+    Memcheck:Leak
+    ...
+    fun:*benchmark*CPUInfo*Get*
+}
+
+{
+    googlebench systeminfo related leaks
+    Memcheck:Leak
+    ...
+    fun:*benchmark*SystemInfo*Get*
+}
