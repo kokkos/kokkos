@@ -51,6 +51,13 @@ std::byte *NextSiliconInternal::resize_functor_buffer(size_t requested) {
   return m_functor_buffer.ensure("functor heap buffer", requested);
 }
 
+std::byte *NextSiliconInternal::resize_league_scratch_buffer(size_t requested) {
+  constexpr size_t MIN_LEAGUE_SCRATCH_BUFFER_SIZE = 4 * 1024 * 1024;  // 4 MB
+  requested = std::max(requested, MIN_LEAGUE_SCRATCH_BUFFER_SIZE);
+
+  return m_league_scratch_buffer.ensure("league scratch buffer", requested);
+}
+
 std::byte *NextSiliconInternal::resize_reduce_partial_buffer(size_t requested) {
   constexpr static size_t MIN_REDUCE_PARTIAL_BUFFER_SIZE =
       4 * 1024 * 1024;  // 4 MB

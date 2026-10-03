@@ -80,6 +80,10 @@ else
 optimizer-pi:
   ebbm-enabled: true
   max-automatic-migration-move-count: 18446744073709551615 # MAX_UINT64
+  # Use one tile
+  numa-regions-per-device: 1
+  numa-regions-width: 1
+  numa-regions-height: 1
   mlc:
     # try to offload every parallel region
     acceleration-threshold: 1
@@ -111,9 +115,9 @@ EOF
     # wait for optimization to start
     sleep 15
 
-    # wait for optimization/projection to finish, up to 30 minutes
+    # wait for optimization/projection to finish, up to 2 hours
     SECONDS=0
-    while [ $SECONDS -lt 1800 ]; do
+    while [ $SECONDS -lt 7200 ]; do
         # check current state
         ret=0
         status="$(nextcli application status | grep 'Optimization state:')"
