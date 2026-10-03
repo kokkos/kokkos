@@ -182,9 +182,8 @@ class OffsetView : public View<DataType, Properties...> {
 
  public:
   // typedefs to reduce typing base_t:: further down
-  using traits = typename base_t::traits;
-  // FIXME: should be base_t::index_type after refactor
-  using index_type   = typename base_t::memory_space::size_type;
+  using traits       = typename base_t::traits;
+  using index_type   = typename base_t::index_type;
   using pointer_type = typename base_t::pointer_type;
 
   using begins_type = Kokkos::Array<int64_t, base_t::rank()>;

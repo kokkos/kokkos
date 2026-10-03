@@ -82,7 +82,6 @@ constexpr bool test_view_typedefs_impl() {
   static_assert(std::is_same_v<typename ViewType::device_type, Kokkos::Device<typename ViewType::execution_space, typename ViewType::memory_space>>);
   static_assert(std::is_same_v<typename ViewType::memory_traits, MemoryTraitsType>);
   static_assert(std::is_same_v<typename ViewType::host_mirror_space::memory_space, typename HostMirrorSpace::memory_space>);
-  static_assert(std::is_same_v<typename ViewType::size_type, typename ViewType::memory_space::size_type>);
 
   // FIXME: should be deprecated in favor of reference
   static_assert(std::is_same_v<typename ViewType::reference_type, ReferenceType>);
@@ -168,11 +167,8 @@ KOKKOS_IMPL_DISABLE_DEPRECATED_WARNINGS_POP()
   static_assert(std::is_same_v<typename ViewType::element_type, ValueType>);
   // FIXME: should be remove_const_t<element_type>
   static_assert(std::is_same_v<typename ViewType::value_type, ValueType>);
-  static_assert(std::is_same_v<typename ViewType::size_type, typename Space::memory_space::size_type>);
-  // FIXME: we need to evaluate how we want to proceed with this, as with
-  // extents index_type also determines the stride, while LegacyView uses size_t strides
-  // So we are doing this now to avoid breakage but it means we may use 64 bit indices on the GPU
   static_assert(std::is_same_v<typename ViewType::index_type, size_t>);
+  static_assert(std::is_same_v<typename ViewType::size_type, size_t>);
   static_assert(std::is_same_v<typename ViewType::rank_type, size_t>);
 
   // FIXME: should come from accessor_type
