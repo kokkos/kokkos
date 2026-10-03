@@ -24,11 +24,11 @@ namespace desul {
 
 namespace {
 
-__global__ void init_lock_arrays_hip_kernel() {
+__global__ void init_lock_arrays_hip_kernel(int32_t* device_locks, int32_t node_locks) {
   unsigned i = blockIdx.x * blockDim.x + threadIdx.x;
   if (i < HIP_SPACE_ATOMIC_MASK + 1) {
-    Impl::HIP_SPACE_ATOMIC_LOCKS_DEVICE[i] = 0;
-    Impl::HIP_SPACE_ATOMIC_LOCKS_NODE[i] = 0;
+    device_locks[i] = 0;
+    node_locks[i] = 0;
   }
 }
 
@@ -68,13 +68,14 @@ void init_lock_arrays_hip() {
   check_error_and_throw_hip(error_malloc2,
                             "init_lock_arrays_hip: hipMallocHost host locks");
 
-  auto error_sync1 = hipDeviceSynchronize();
+#ifdef DESUL_ATOMICS_ENABLE_HIP_SEPARABLE_COMPILATION
   copy_hip_lock_arrays_to_device();
-  check_error_and_throw_hip(error_sync1, "init_lock_arrays_hip: post malloc");
+#endif
 
-  init_lock_arrays_hip_kernel<<<(HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256>>>();
+  init_lock_arrays_hip_kernel<<<(HIP_SPACE_ATOMIC_MASK + 1 + 255) / 256, 256>>>(
+      HIP_SPACE_ATOMIC_LOCKS_DEVICE_h, HIP_SPACE_ATOMIC_LOCKS_NODE_h);
 
-  auto error_sync2 = hipDeviceSynchronize();
+  auto error_sync = hipDeviceSynchronize();
   check_error_and_throw_hip(error_sync2, "init_lock_arrays_hip: post init");
 }
 

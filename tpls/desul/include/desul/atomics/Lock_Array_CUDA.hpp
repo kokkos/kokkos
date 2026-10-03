@@ -61,11 +61,15 @@ void finalize_lock_arrays_cuda();
 /// That is the purpose of the ensure_cuda_lock_arrays_on_device function.
 #ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_DEVICE;
 
 #ifdef DESUL_ATOMICS_ENABLE_CUDA_SEPARABLE_COMPILATION
 extern
+#else
+static
 #endif
     __device__ __constant__ int32_t* CUDA_SPACE_ATOMIC_LOCKS_NODE;
 
