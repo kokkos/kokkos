@@ -347,6 +347,7 @@ foreach(Tag Threads;Serial;OpenMP;Cuda;HPX;OpenACC;HIP;SYCL;NextSilicon)
         ViewCustomizationAllocationType
         ViewCustomizationAccessorFromMapping
         ViewMDSpanTemplateArgumentSubview
+        ViewMDSpanTemplateArgumentConstructor
     )
     # FIXME_OPENACC
     if(Kokkos_ENABLE_OPENACC)
