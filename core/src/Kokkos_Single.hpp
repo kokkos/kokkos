@@ -37,7 +37,7 @@ inline void single(const std::string& str,
 
   using execution_space = typename Impl::FunctorPolicyExecutionSpace<
       FunctorType, typename std::remove_cvref_t<
-                       decltype(single_policy)>::base_class>::execution_space;
+                       decltype(single_policy)>::range_policy>::execution_space;
 
   // Dispatch execution to either the default implementation or an
   // execution_space specific implementation if one is available

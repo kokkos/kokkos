@@ -227,7 +227,7 @@ struct ParallelReduceAdaptor {
                                                                  kpID);
 
       using execution_space = typename Impl::FunctorPolicyExecutionSpace<
-          FunctorType, typename PolicyType::base_class>::execution_space;
+          FunctorType, typename PolicyType::range_policy>::execution_space;
 
       // Dispatch execution to either the default implementation or an
       // execution_space specific implementation if one is available
