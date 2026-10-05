@@ -225,7 +225,7 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::MDRangePolicy<Traits...>,
         m_max_grid_size(get_max_grid_size(arg_policy)) {
     const auto lower    = m_policy.lower();
     const auto upper    = m_policy.upper();
-    const auto tile     = m_policy.tile();
+    const auto tile     = m_policy.tile_size();
     const auto tile_end = m_policy.impl_tile_end();
 
     // Initialize begins and ends based on layout

@@ -18,13 +18,13 @@ namespace Kokkos::Experimental::Impl {
 
 template <int N>
 using NextSiliconMDRangeBegin =
-    decltype(MDRangePolicy<NextSilicon, Rank<N>>::m_lower);
+    typename MDRangePolicy<NextSilicon, Rank<N>>::point_type;
 template <int N>
 using NextSiliconMDRangeEnd =
-    decltype(MDRangePolicy<NextSilicon, Rank<N>>::m_upper);
+    typename MDRangePolicy<NextSilicon, Rank<N>>::point_type;
 template <int N>
 using NextSiliconMDRangeTile =
-    decltype(MDRangePolicy<NextSilicon, Rank<N>>::m_tile);
+    typename MDRangePolicy<NextSilicon, Rank<N>>::tile_type;
 
 template <typename WorkTag, typename Direction, typename Functor, int Dim>
 class NextSiliconParallelMDRangePolicyFunctor {

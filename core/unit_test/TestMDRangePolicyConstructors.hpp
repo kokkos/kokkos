@@ -183,7 +183,7 @@ void test_get_tile_size() {
   {
     Policy policy_default(lower, upper);
     auto rec_tile_sizes      = policy_default.tile_size_recommended();
-    auto internal_tile_sizes = policy_default.tile();
+    auto internal_tile_sizes = policy_default.tile_size();
 
     for (std::size_t i = 0; i < Rank; ++i) {
       EXPECT_EQ(rec_tile_sizes[i], internal_tile_sizes[i])
@@ -308,7 +308,7 @@ TEST(TEST_CATEGORY, md_range_policy_accessors) {
   policy_2d_test.impl_change_tile_size(new_tile_2d);
   ASSERT_EQ(policy_2d_test.lower(), lower_2d);
   ASSERT_EQ(policy_2d_test.upper(), upper_2d);
-  ASSERT_EQ(policy_2d_test.tile(), new_tile_2d);
+  ASSERT_EQ(policy_2d_test.tile_size(), new_tile_2d);
 
   // Converting constructor
   struct dummy_worktag {};
@@ -318,7 +318,7 @@ TEST(TEST_CATEGORY, md_range_policy_accessors) {
 
   ASSERT_EQ(converted_policy.lower(), lower_2d);
   ASSERT_EQ(converted_policy.upper(), upper_2d);
-  ASSERT_EQ(converted_policy.tile(), new_tile_2d);
+  ASSERT_EQ(converted_policy.tile_size(), new_tile_2d);
   ASSERT_EQ(converted_policy.impl_tile_end(), policy_2d_test.impl_tile_end());
   ASSERT_EQ(converted_policy.impl_num_tiles(), policy_2d_test.impl_num_tiles());
   ASSERT_EQ(converted_policy.impl_prod_tile_dims(),

@@ -1174,7 +1174,7 @@ struct HostIterateTile {
   inline HostIterateTile(RP const& rp, Functor const& func)
       : m_lower(rp.lower()),
         m_upper(rp.upper()),
-        m_tile(rp.tile()),
+        m_tile(rp.tile_size()),
         m_tile_end(rp.impl_tile_end()),
         m_func(func) {}
 

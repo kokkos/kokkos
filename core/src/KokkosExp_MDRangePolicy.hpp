@@ -276,7 +276,7 @@ class MDRangePolicy<P, Properties...>
 
   KOKKOS_INLINE_FUNCTION point_type lower() const { return m_lower; }
   KOKKOS_INLINE_FUNCTION point_type upper() const { return m_upper; }
-  KOKKOS_INLINE_FUNCTION tile_type tile() const { return m_tile; }
+  KOKKOS_INLINE_FUNCTION tile_type tile_size() const { return m_tile; }
 
   MDRangePolicy() = default;
 
