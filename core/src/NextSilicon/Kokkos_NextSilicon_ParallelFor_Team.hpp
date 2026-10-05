@@ -148,7 +148,7 @@ KOKKOS_INLINE_FUNCTION void parallel_for(
     const Lambda& lambda) {
   iType j_start = loop_boundaries.start;
   iType j_end   = loop_boundaries.end;
-  for (iType j = j_start; j < j_end; ++j /* vector size 1 */) {
+  for (iType j = j_start; j < j_end; ++j) {
     lambda(j);
   }
 }

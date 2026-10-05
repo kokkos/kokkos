@@ -20,7 +20,6 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
       typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN, void,
                                      ReducerType, value_type>;
   using WrappedReducer = typename functor_analysis_type::Reducer;
-  // vector size always 1
   WrappedReducer wrappedReducer(reducer);
   value_type val;
   wrappedReducer.init(&val);
