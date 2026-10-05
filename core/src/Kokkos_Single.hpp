@@ -40,8 +40,8 @@ inline void single(const std::string& str,
 
   // Dispatch execution to either the default implementation or an
   // execution_space specific implementation if one is available
-  Kokkos::Impl::Single<execution_space>::template execute(functor,
-                                                          single_policy);
+  Kokkos::Impl::Single<execution_space>::template execute<>(functor,
+                                                            single_policy);
 
   Kokkos::Tools::Impl::end_single<FunctorType>(kpID);
 }
