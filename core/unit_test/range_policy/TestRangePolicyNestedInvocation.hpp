@@ -105,11 +105,8 @@ void allocate(float_tensor4_t<ExecSpace>& M) {
                                  D::elements);
 }
 
-template <int, class>
-struct CheckCase;
-
 template <class ExecSpace>
-struct CheckCase<0, ExecSpace> {
+struct CheckRangePolicyWithExecSpace {
   void operator()() const {
     float_tensor4_t<ExecSpace> M;
     allocate<ExecSpace>(M);
@@ -120,12 +117,12 @@ struct CheckCase<0, ExecSpace> {
     // execution space.
     sum_views(exec, M, 1.f);
 
-    verify<ExecSpace>(M, 1.f, "check_case0");
+    verify<ExecSpace>(M, 1.f, "check_range_policy_with_exec_space");
   }
 };
 
 template <class ExecSpace>
-struct CheckCase<1, ExecSpace> {
+struct CheckRangePolicyWithTeamHandle {
   void operator()() const {
     float_tensor4_t<ExecSpace> M;
     allocate<ExecSpace>(M);
@@ -134,7 +131,8 @@ struct CheckCase<1, ExecSpace> {
     using team_t          = team_member_t<ExecSpace>;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
-        "case1", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        "check_range_policy_with_team_handle",
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           // sum_views(team, ...): RangePolicy(team, 0, M_sub.extent_int(0)) ->
           // TeamVectorRange.
@@ -144,14 +142,14 @@ struct CheckCase<1, ExecSpace> {
                     2.f);
         });
 
-    verify<ExecSpace>(M, 2.f, "check_case1");
+    verify<ExecSpace>(M, 2.f, "check_range_policy_with_team_handle");
   }
 };
 
 #if KOKKOS_IMPL_THREAD_HANDLE_TESTS
 
 template <class ExecSpace>
-struct CheckCase<2, ExecSpace> {
+struct CheckRangePolicyWithThreadHandle {
   void operator()() const {
     float_tensor4_t<ExecSpace> M;
     allocate<ExecSpace>(M);
@@ -162,7 +160,8 @@ struct CheckCase<2, ExecSpace> {
     const int num_leagues = M.extent_int(0);
     const int num_threads = M.extent_int(1);
     Kokkos::parallel_for(
-        "case2", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        "check_range_policy_with_thread_handle",
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
@@ -178,12 +177,12 @@ struct CheckCase<2, ExecSpace> {
                                });
         });
 
-    verify<ExecSpace>(M, 3.f, "check_case2");
+    verify<ExecSpace>(M, 3.f, "check_range_policy_with_thread_handle");
   }
 };
 
 template <class ExecSpace>
-struct CheckCase<3, ExecSpace> {
+struct CheckRangePolicyWithConstructedThreadHandle {
   void operator()() const {
     float_tensor4_t<ExecSpace> M;
     allocate<ExecSpace>(M);
@@ -193,7 +192,8 @@ struct CheckCase<3, ExecSpace> {
     using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
-        "case3", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        "check_range_policy_with_constructed_thread_handle",
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
@@ -204,12 +204,13 @@ struct CheckCase<3, ExecSpace> {
           });
         });
 
-    verify<ExecSpace>(M, 4.f, "check_case3");
+    verify<ExecSpace>(M, 4.f,
+                      "check_range_policy_with_constructed_thread_handle");
   }
 };
 
 template <class ExecSpace>
-struct CheckCase<4, ExecSpace> {
+struct CheckRangePolicyWithConstructedThreadHandleInSingle {
   void operator()() const {
     float_tensor4_t<ExecSpace> M;
     allocate<ExecSpace>(M);
@@ -219,7 +220,8 @@ struct CheckCase<4, ExecSpace> {
     using thread_handle   = typename team_t::thread_handle;
     const int num_leagues = M.extent_int(0);
     Kokkos::parallel_for(
-        "case4", Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
+        "check_range_policy_with_constructed_thread_handle_in_single",
+        Kokkos::TeamPolicy<ExecSpace>(num_leagues, Kokkos::AUTO()),
         KOKKOS_LAMBDA(const team_t& team) {
           auto M_sub = Kokkos::subview(M, team.league_rank(), Kokkos::ALL(),
                                        Kokkos::ALL(), Kokkos::ALL());
@@ -230,7 +232,8 @@ struct CheckCase<4, ExecSpace> {
           });
         });
 
-    verify<ExecSpace>(M, 5.f, "check_case4");
+    verify<ExecSpace>(
+        M, 5.f, "check_range_policy_with_constructed_thread_handle_in_single");
   }
 };
 
@@ -238,26 +241,27 @@ struct CheckCase<4, ExecSpace> {
 
 }  // namespace
 
-TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case0) {
-  CheckCase<0, TEST_EXECSPACE>{}();
+TEST(TEST_CATEGORY, self_similar_range_policy_with_execution_space) {
+  CheckRangePolicyWithExecSpace<TEST_EXECSPACE>{}();
 }
 
-TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case1) {
-  CheckCase<1, TEST_EXECSPACE>{}();
+TEST(TEST_CATEGORY, self_similar_range_policy_with_team_handle) {
+  CheckRangePolicyWithTeamHandle<TEST_EXECSPACE>{}();
 }
 
 #if KOKKOS_IMPL_THREAD_HANDLE_TESTS
 
-TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case2) {
-  CheckCase<2, TEST_EXECSPACE>{}();
+TEST(TEST_CATEGORY, self_similar_range_policy_with_thread_handle) {
+  CheckRangePolicyWithThreadHandle<TEST_EXECSPACE>{}();
 }
 
-TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case3) {
-  CheckCase<3, TEST_EXECSPACE>{}();
+TEST(TEST_CATEGORY, self_similar_range_policy_with_constructed_thread_handle) {
+  CheckRangePolicyWithConstructedThreadHandle<TEST_EXECSPACE>{}();
 }
 
-TEST(TEST_CATEGORY, self_similar_range_policy_sum_views_case4) {
-  CheckCase<4, TEST_EXECSPACE>{}();
+TEST(TEST_CATEGORY,
+     self_similar_range_policy_with_constructed_thread_handle_in_single) {
+  CheckRangePolicyWithConstructedThreadHandleInSingle<TEST_EXECSPACE>{}();
 }
 
 #endif  // KOKKOS_IMPL_THREAD_HANDLE_TESTS
