@@ -6,6 +6,12 @@
 namespace Test {
 
 TEST(TEST_CATEGORY, mdrange_4d) {
+// FIXME_NEXTSILICON (also add to CUDA/HIP/SYCL list)
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "correctness errors 1.3.0-120";
+  }
+#endif
   TestMDRange_4D<TEST_EXECSPACE>::test_reduce4(100, 10, 10, 10);
   TestMDRange_4D<TEST_EXECSPACE>::test_for4(100, 10, 10, 10);
 #if defined(KOKKOS_ENABLE_CUDA) || defined(KOKKOS_ENABLE_HIP) || \
