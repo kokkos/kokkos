@@ -234,7 +234,12 @@ class MDRangePolicy<P, Properties...>
   // as template parameter to the MDRangePolicy or static_cast the individual
   // values
 
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE_5
+ public:
+#else
  private:
+#endif
+
   execution_space m_space;
 
   point_type m_lower                          = {};
