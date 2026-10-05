@@ -357,8 +357,6 @@ class SinglePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       : m_space(exec_space) {}
 };
 
-SinglePolicy() -> SinglePolicy<Kokkos::DefaultExecutionSpace>;
-
 template <ExecutionSpace ExecSpace>
 SinglePolicy(const ExecSpace&) -> SinglePolicy<ExecSpace>;
 
