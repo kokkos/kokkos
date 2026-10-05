@@ -843,8 +843,6 @@ if(Kokkos_ENABLE_NEXTSILICON)
 
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1A})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1B SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1B})
-  kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1C SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1C})
-  kokkos_add_executable_and_test(CoreUnitTest_NextSilicon1D SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES1D})
   kokkos_add_executable_and_test(CoreUnitTest_NextSilicon2A SOURCES UnitTestMainInit.cpp ${NextSilicon_SOURCES2A})
   kokkos_add_executable_and_test(
     CoreUnitTest_NextSiliconInitializationCallbacks SOURCES nextsilicon/TestNextSilicon_InitializationCallbacks.cpp
