@@ -49,7 +49,7 @@ TEST(TEST_CATEGORY, mdrange_parallel_reduce_primitive_types) {
 
 // FIXME_NEXTSILICON: full sequence very slow in handoff 1.3.0-120
 #ifdef KOKKOS_ENABLE_NEXTSILICON
-  if constexpr (std::is_same_v<Kokkos::DefaultExecutionSpace,
+  if constexpr (std::is_same_v<TEST_EXECSPACE,
                                Kokkos::Experimental::NextSilicon>) {
     for (int bound : {0, 7000}) {
       for (int k : {0, 3500, 6999}) {
