@@ -190,7 +190,9 @@ class ParallelFor<Functor, Kokkos::MDRangePolicy<Traits...>,
             WorkTag, Direction, Functor, rank>(m_functor, m_policy.m_lower,
                                                m_policy.m_upper);
 
-    Kokkos::parallel_for(total_range, wrapped_functor);
+    auto flat_policy = Kokkos::RangePolicy<Experimental::NextSilicon>(
+        m_policy.space(), 0, total_range);
+    Kokkos::parallel_for(flat_policy, wrapped_functor);
   }
 };
 
@@ -241,7 +243,7 @@ class ParallelReduce<CombinedFunctorReducerType, MDRangePolicy<Traits...>,
     auto wrapped_functor =
         WrappedFunctorType(functor, m_policy.m_lower, m_policy.m_upper);
 
-    auto policy = RangePolicyType(0, total_range);
+    auto policy = RangePolicyType(m_policy.space(), 0, total_range);
 
     NextSiliconParallelReduceImpl<CombinedWrappedFunctorReducerType> impl(
         CombinedWrappedFunctorReducerType(wrapped_functor, reducer), policy,
