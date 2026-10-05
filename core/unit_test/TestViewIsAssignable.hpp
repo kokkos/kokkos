@@ -121,6 +121,54 @@ TEST(TEST_CATEGORY, view_is_assignable) {
                           View<int*, left, d_exec>>::test(expected, expected,
                                                           10);
 
+  // not covered by default host and device space pairings
+#ifdef KOKKOS_ENABLE_CUDA
+  Impl::TestAssignability<View<int*, left, HostSpace>,
+                          View<int*, left, CudaHostPinnedSpace>>::test(true,
+                                                                       true,
+                                                                       10);
+  Impl::TestAssignability<View<int*, left, HostSpace, MemoryRandomAccess>,
+                          View<int*, left, CudaHostPinnedSpace>>::test(true,
+                                                                       true,
+                                                                       10);
+  Impl::TestAssignability<View<int*, left, CudaSpace>,
+                          View<int*, left, CudaUVMSpace>>::test(true, true, 10);
+  Impl::TestAssignability<View<int*, left, CudaSpace, MemoryRandomAccess>,
+                          View<int*, left, CudaUVMSpace>>::test(true, true, 10);
+#endif
+
+  // not covered by default host and device space pairings
+#ifdef KOKKOS_ENABLE_HIP
+  Impl::TestAssignability<View<int*, left, HostSpace>,
+                          View<int*, left, HIPHostPinnedSpace>>::test(true,
+                                                                      true, 10);
+  Impl::TestAssignability<View<int*, left, HostSpace, MemoryRandomAccess>,
+                          View<int*, left, HIPHostPinnedSpace>>::test(true,
+                                                                      true, 10);
+  Impl::TestAssignability<View<int*, left, HIPSpace>,
+                          View<int*, left, HIPManagedSpace>>::test(true, true,
+                                                                   10);
+  Impl::TestAssignability<View<int*, left, HIPSpace, MemoryRandomAccess>,
+                          View<int*, left, HIPManagedSpace>>::test(true, true,
+                                                                   10);
+#endif
+
+  // not covered by default host and device space pairings
+#ifdef KOKKOS_ENABLE_SYCL
+  Impl::TestAssignability<View<int*, left, HostSpace>,
+                          View<int*, left, SYCLHostUSMSpace>>::test(true, true,
+                                                                    10);
+  Impl::TestAssignability<View<int*, left, HostSpace, MemoryRandomAccess>,
+                          View<int*, left, SYCLHostUSMSpace>>::test(true, true,
+                                                                    10);
+  Impl::TestAssignability<View<int*, left, SYCLDeviceUSMSpace>,
+                          View<int*, left, SYCLSharedUSMSpace>>::test(true,
+                                                                      true, 10);
+  Impl::TestAssignability<
+      View<int*, left, SYCLDeviceUSMSpace, MemoryRandomAccess>,
+      View<int*, left, SYCLSharedUSMSpace>>::test(true, true, 10);
+#endif
+
   // reference type and const-qualified types
   using SomeViewType = View<int*, left, d_exec>;
   static_assert(is_always_assignable_v<SomeViewType, SomeViewType>);
