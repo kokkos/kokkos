@@ -331,20 +331,36 @@ class ImplRangePolicy<ExecSpace, Properties...>
 
 /** \brief  Execution policy to execute work over a single thread
  */
-template <class... Properties>
-class SinglePolicy
-    : public RangePolicy<Kokkos::LaunchBounds<1>, Properties...> {
+template <typename... Properties>
+class SinglePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
  public:
-  using base_class = RangePolicy<Kokkos::LaunchBounds<1>, Properties...>;
+  using traits           = Kokkos::Impl::PolicyTraits<Properties...>;
+  using execution_policy = Kokkos::SinglePolicy<Properties...>;
+  using range_policy     = RangePolicy<Properties...>;
+  using execution_space  = typename traits::execution_space;
+
+ private:
+  execution_space m_space;
+
+ public:
+  KOKKOS_INLINE_FUNCTION const execution_space& space() const {
+    return m_space;
+  }
 
   template <class... OtherProperties>
-  SinglePolicy(const SinglePolicy<OtherProperties...>& p) : base_class(p) {}
+  SinglePolicy(const SinglePolicy<OtherProperties...>& p)
+      : traits(p), m_space(p.space()) {}
 
-  SinglePolicy() : base_class(0, 1) {}
+  SinglePolicy() : m_space() {}
 
-  SinglePolicy(const typename base_class::traits::execution_space exec_space)
-      : base_class(exec_space, 0, 1) {}
+  SinglePolicy(const typename traits::execution_space exec_space)
+      : m_space(exec_space) {}
 };
+
+SinglePolicy() -> SinglePolicy<Kokkos::DefaultExecutionSpace>;
+
+template <ExecutionSpace ExecSpace>
+SinglePolicy(const ExecSpace&) -> SinglePolicy<ExecSpace>;
 
 }  // namespace Kokkos
 
