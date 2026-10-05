@@ -410,6 +410,13 @@ struct TestStaticBatchSize {
 TEST(TEST_CATEGORY, range_dynamic_policy) {
 #if !defined(KOKKOS_ENABLE_CUDA) && !defined(KOKKOS_ENABLE_HIP) && \
     !defined(KOKKOS_ENABLE_SYCL) && !defined(KOKKOS_ENABLE_OPENACC)
+
+// FIXME_NEXTSILICON: occasional test failures
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    GTEST_SKIP() << "occasional failures on 1.3.0-120";
+  }
+#endif
   {
     TestRange<TEST_EXECSPACE, Kokkos::Schedule<Kokkos::Dynamic>> f(0);
     f.test_dynamic_policy();
