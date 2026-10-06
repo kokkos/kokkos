@@ -33,13 +33,22 @@ namespace Kokkos {
 namespace Impl {
 template <class ExecutionSpace>
 struct EventResource {
-  EventResource(const std::string& label_,
-                const Kokkos::View<int, Kokkos::SharedHostPinnedSpace>& flag_,
-                const ExecutionSpace& exec_)
-      : label(label_), flag(flag_), exec(exec_) {}
+  EventResource(
+      const std::string& label_,
+      const Kokkos::View<uint64_t, Kokkos::SharedHostPinnedSpace>& flag_,
+      const ExecutionSpace& exec_)
+      : label(label_),
+        counter(0),
+        flag(flag_),
+        exec(exec_),
+        lock(std::mutex()) {}
   std::string label;
-  Kokkos::View<int, Kokkos::SharedHostPinnedSpace> flag;
+
+  uint64_t counter;
+  Kokkos::View<uint64_t, Kokkos::SharedHostPinnedSpace> flag;
+
   ExecutionSpace exec;
+  std::mutex lock;
 };
 }  // namespace Impl
 
@@ -76,42 +85,67 @@ struct Event {
  private:
   using resource_t = Kokkos::Impl::EventResource<execution_space>;
   using handle_t   = std::shared_ptr<resource_t>;
-  using flag_t     = Kokkos::View<int, Kokkos::SharedHostPinnedSpace>;
+  using flag_t     = Kokkos::View<uint64_t, Kokkos::SharedHostPinnedSpace>;
 
  public:
   Event(const std::string& label_)
       : m_handle(std::make_shared<resource_t>(
             label_, flag_t(std::string("Kokkos::Event::flag:" + label_)),
             execution_space())) {
-    m_handle->flag() = 1;
-  };
+    desul::atomic_store(&(m_handle->flag()), uint64_t(0),
+                        desul::MemoryOrderSeqCst(), desul::MemoryScopeSystem());
+    desul::atomic_store(&(m_handle->counter), uint64_t(0),
+                        desul::MemoryOrderSeqCst(), desul::MemoryScopeSystem());
+  }
 
   Event(const std::string& label_, const execution_space& exec_space)
       : m_handle(std::make_shared<resource_t>(
-            label_,
-            Kokkos::View<int, Kokkos::SharedHostPinnedSpace>(
-                std::string("Kokkos::Event::flag:") + label_),
+            label_, flag_t(std::string("Kokkos::Event::flag:") + label_),
             execution_space())) {
+    desul::atomic_store(&(m_handle->flag()), uint64_t(0),
+                        desul::MemoryOrderSeqCst(), desul::MemoryScopeSystem());
+    desul::atomic_store(&(m_handle->counter), uint64_t(0),
+                        desul::MemoryOrderSeqCst(), desul::MemoryScopeSystem());
     record(exec_space);
-  };
+  }
 
   // Create an event at the current spot in the execution space queue
   void record(const execution_space& exec_space) {
-    m_handle->flag() = 0;
-    m_handle->exec   = execution_space();
-    auto flag        = m_handle->flag;
+    m_handle->lock.lock();
+    m_handle->exec = exec_space;
+    desul::atomic_inc(&m_handle->counter, desul::MemoryOrderSeqCst(),
+                      desul::MemoryScopeSystem());
+    auto flag = m_handle->flag;
     Kokkos::parallel_for(
-        std::string("Kokkos::Event::record:" + m_handle->label), 1,
-        KOKKOS_LAMBDA(int) { flag() = 1; });
+        std::string("Kokkos::Event::record:" + m_handle->label),
+        Kokkos::RangePolicy(exec_space, 0, 1), KOKKOS_LAMBDA(int) {
+          desul::atomic_inc(&(flag()), desul::MemoryOrderSeqCst(),
+                            desul::MemoryScopeSystem());
+        });
+    m_handle->lock.unlock();
   }
 
-  // Wait untile the even occurs
+  // Wait until the event occurs
   void fence() const {
-    while (m_handle->flag() != 1) std::this_thread::yield();
+    m_handle->lock.lock();
+    // Comparing for != is correct here, because of the lock mechanism
+    // furthermore that actually means it will work with wrap around overflow
+    // however unlikely that is considering the use of a 64bit integer
+    while (desul::atomic_load(&m_handle->flag(), desul::MemoryOrderSeqCst(),
+                              desul::MemoryScopeSystem()) !=
+           desul::atomic_load(&m_handle->counter, desul::MemoryOrderSeqCst(),
+                              desul::MemoryScopeSystem()))
+      std::this_thread::yield();
+    m_handle->lock.unlock();
   }
 
-  // Check whether the even has occured
-  bool is_complete() const { return m_handle->flag() == 1; }
+  // Check whether the event has occured
+  bool is_complete() const {
+    return desul::atomic_load(&m_handle->flag(), desul::MemoryOrderSeqCst(),
+                              desul::MemoryScopeSystem()) ==
+           desul::atomic_load(&m_handle->counter, desul::MemoryOrderSeqCst(),
+                              desul::MemoryScopeSystem());
+  }
 
   const std::string& label() const { return m_handle->label; }
 
@@ -126,7 +160,7 @@ struct Event {
 template <Kokkos::ExecutionSpace Exec>
 void space_depends_on(const Exec& exec_space, const Event<Exec>& event) {
   // Only need to wait if its not the same execution space instance
-  // Otherwise any work issues to
+  // Otherwise any work issues to the same instance will happen after the event
   if (exec_space != event.m_handle->exec) event.fence();
 }
 }  // namespace Experimental
