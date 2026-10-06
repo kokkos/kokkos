@@ -29,11 +29,6 @@
 #include <Kokkos_Core_fwd.hpp>
 
 namespace Kokkos {
-namespace Impl {
-template <class ExecutionSpace>
-struct EventResource;
-}  // namespace Impl
-
 namespace Experimental {
 
 //============================================================================

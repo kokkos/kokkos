@@ -23,28 +23,27 @@ static_assert(false,
 namespace Kokkos {
 namespace Impl {
 
-template <>
-struct EventResource<Kokkos::Cuda> {
+struct CudaEventResource {
   cudaEvent_t m_event = nullptr;
   int m_cudaDev       = -1;
 
-  EventResource() : EventResource(Kokkos::Cuda{}) {}
+  CudaEventResource() : CudaEventResource(Kokkos::Cuda{}) {}
 
-  explicit EventResource(const Kokkos::Cuda& exec_space)
+  explicit CudaEventResource(const Kokkos::Cuda& exec_space)
       : m_cudaDev(exec_space.cuda_device()) {
     KOKKOS_IMPL_CUDA_SAFE_CALL(cudaSetDevice(m_cudaDev));
     KOKKOS_IMPL_CUDA_SAFE_CALL(
         cudaEventCreateWithFlags(&m_event, cudaEventDisableTiming));
   }
 
-  ~EventResource() {
+  ~CudaEventResource() {
     if (m_event != nullptr) {
       KOKKOS_IMPL_CUDA_SAFE_CALL(cudaEventDestroy(m_event));
     }
   }
 
-  EventResource(const EventResource&)            = delete;
-  EventResource& operator=(const EventResource&) = delete;
+  CudaEventResource(const CudaEventResource&)            = delete;
+  CudaEventResource& operator=(const CudaEventResource&) = delete;
 };
 
 }  // namespace Impl
@@ -64,13 +63,11 @@ namespace Experimental {
 template <>
 class Event<Kokkos::Cuda> {
  public:
-  Event()
-      : m_handle(
-            std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>()) {}
+  Event() : m_handle(std::make_shared<Kokkos::Impl::CudaEventResource>()) {}
 
   Event(const Kokkos::Cuda& exec_space)
-      : m_handle(std::make_shared<Kokkos::Impl::EventResource<Kokkos::Cuda>>(
-            exec_space)) {
+      : m_handle(
+            std::make_shared<Kokkos::Impl::CudaEventResource>(exec_space)) {
     record(exec_space);
   }
 
@@ -94,7 +91,7 @@ class Event<Kokkos::Cuda> {
   cudaEvent_t cuda_event() const noexcept { return m_handle->m_event; }
 
  private:
-  std::shared_ptr<Kokkos::Impl::EventResource<Kokkos::Cuda>> m_handle;
+  std::shared_ptr<Kokkos::Impl::CudaEventResource> m_handle;
 };
 
 /// CUDA: insert a stream wait for the recorded event (non-blocking on host).
