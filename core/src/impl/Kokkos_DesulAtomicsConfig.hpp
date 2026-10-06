@@ -19,10 +19,10 @@
 #endif
 
 // the load, store, and CAS instructions require PTX ISA 840 which is in
-// cuda 12.4. and Clang > 19
+// cuda 12.4. and Clang > 19. But the q register is only available >=12.8
 // Furthermore, CAS is only available for >=Hopper and we need all three for the
 // atomics
-#if KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 90 && CUDA_VERSION >= 12040 && \
+#if KOKKOS_IMPL_ARCH_NVIDIA_GPU >= 90 && CUDA_VERSION >= 12080 && \
     (!defined(KOKKOS_COMPILER_CLANG) || KOKKOS_COMPILER_CLANG >= 1900)
 #define DESUL_HAVE_16BYTE_LOCK_FREE_ATOMICS_DEVICE
 #endif
