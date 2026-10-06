@@ -1853,6 +1853,16 @@ TEST(TEST_CATEGORY, TeamThreadMDRangeParallelFor) {
   } else {
     std::cerr << "NextSilicon: skipping 7D & 8D tests (projection failure)\n";
   }
+#else
+  TestTeamThreadMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_7D_TeamThreadMDRange<Left>(smallDims);
+  TestTeamThreadMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_7D_TeamThreadMDRange<Right>(smallDims);
+
+  TestTeamThreadMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_8D_TeamThreadMDRange<Left>(smallDims);
+  TestTeamThreadMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_8D_TeamThreadMDRange<Right>(smallDims);
 #endif
   TestTeamThreadMDRangeParallelFor<
       TEST_EXECSPACE>::test_parallel_single_direction_test<Left>(dims);
@@ -1891,6 +1901,16 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelFor) {
   } else {
     std::cerr << "NextSilicon: skipping 7D & 8D tests (projection failure)\n";
   }
+#else
+  TestThreadVectorMDRangeParallelFor<TEST_EXECSPACE>::
+      test_parallel_for_7D_ThreadVectorMDRange<Left>(smallDims);
+  TestThreadVectorMDRangeParallelFor<TEST_EXECSPACE>::
+      test_parallel_for_7D_ThreadVectorMDRange<Right>(smallDims);
+
+  TestThreadVectorMDRangeParallelFor<TEST_EXECSPACE>::
+      test_parallel_for_8D_ThreadVectorMDRange<Left>(smallDims);
+  TestThreadVectorMDRangeParallelFor<TEST_EXECSPACE>::
+      test_parallel_for_8D_ThreadVectorMDRange<Right>(smallDims);
 #endif
 }
 
@@ -1929,6 +1949,16 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelFor) {
   } else {
     std::cerr << "NextSilicon: skipping 7D & 8D tests (projection failure)\n";
   }
+#else
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_7D_TeamVectorMDRange<Left>(smallDims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_7D_TeamVectorMDRange<Right>(smallDims);
+
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_8D_TeamVectorMDRange<Left>(smallDims);
+  TestTeamVectorMDRangeParallelFor<
+      TEST_EXECSPACE>::test_parallel_for_8D_TeamVectorMDRange<Right>(smallDims);
 #endif
 
   TestTeamVectorMDRangeParallelFor<
@@ -1958,6 +1988,23 @@ TEST(TEST_CATEGORY, TeamThreadMDRangeParallelReduce) {
   TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_6D_TeamThreadMDRange<Right>(dims);
 
+  // FIXME_NEXTSILICON: projection failure in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamThreadMDRange<Left>(smallDims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamThreadMDRange<Right>(smallDims);
+
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamThreadMDRange<Left>(smallDims);
+    TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamThreadMDRange<Right>(smallDims);
+  } else {
+    std::cerr << "NextSilicon: skipping 7D & 8D TeamThread reduce tests "
+                 "(projection failure)\n";
+  }
+#else
   TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_7D_TeamThreadMDRange<Left>(smallDims);
   TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
@@ -1967,6 +2014,7 @@ TEST(TEST_CATEGORY, TeamThreadMDRangeParallelReduce) {
       test_parallel_reduce_for_8D_TeamThreadMDRange<Left>(smallDims);
   TestTeamThreadMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_8D_TeamThreadMDRange<Right>(smallDims);
+#endif
 }
 
 TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
@@ -1991,6 +2039,23 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_6D_ThreadVectorMDRange<Right>(dims);
 
+  // FIXME_NEXTSILICON: projection failure in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_ThreadVectorMDRange<Left>(smallDims);
+    TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_ThreadVectorMDRange<Right>(smallDims);
+
+    TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_ThreadVectorMDRange<Left>(smallDims);
+    TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_ThreadVectorMDRange<Right>(smallDims);
+  } else {
+    std::cerr << "NextSilicon: skipping 7D & 8D ThreadVector reduce tests "
+                 "(projection failure)\n";
+  }
+#else
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_7D_ThreadVectorMDRange<Left>(smallDims);
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
@@ -2000,6 +2065,7 @@ TEST(TEST_CATEGORY, ThreadVectorMDRangeParallelReduce) {
       test_parallel_reduce_for_8D_ThreadVectorMDRange<Left>(smallDims);
   TestThreadVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_8D_ThreadVectorMDRange<Right>(smallDims);
+#endif
 }
 
 TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
@@ -2024,6 +2090,23 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_6D_TeamVectorMDRange<Right>(dims);
 
+  // FIXME_NEXTSILICON: projection failure in 1.3.0-120
+#ifdef KOKKOS_ENABLE_NEXTSILICON
+  if (!std::is_same_v<TEST_EXECSPACE, Kokkos::Experimental::NextSilicon>) {
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamVectorMDRange<Left>(smallDims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_7D_TeamVectorMDRange<Right>(smallDims);
+
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamVectorMDRange<Left>(smallDims);
+    TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
+        test_parallel_reduce_for_8D_TeamVectorMDRange<Right>(smallDims);
+  } else {
+    std::cerr << "NextSilicon: skipping 7D & 8D TeamVector reduce tests "
+                 "(projection failure)\n";
+  }
+#else
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_7D_TeamVectorMDRange<Left>(smallDims);
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
@@ -2033,6 +2116,7 @@ TEST(TEST_CATEGORY, TeamVectorMDRangeParallelReduce) {
       test_parallel_reduce_for_8D_TeamVectorMDRange<Left>(smallDims);
   TestTeamVectorMDRangeParallelReduce<TEST_EXECSPACE>::
       test_parallel_reduce_for_8D_TeamVectorMDRange<Right>(smallDims);
+#endif
 }
 
 }  // namespace TeamMDRange
