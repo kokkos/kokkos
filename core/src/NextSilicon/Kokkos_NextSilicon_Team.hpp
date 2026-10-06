@@ -88,11 +88,8 @@ class NextSiliconTeamMember {
   KOKKOS_INLINE_FUNCTION std::enable_if_t<is_reducer_v<ReducerType>>
   team_reduce(ReducerType const& reducer,
               typename ReducerType::value_type& value) const noexcept {
-    (void)reducer;
-    (void)value;
-
-    // No-op: team size = 1, value is already the thread's contribution; no
-    // cross-thread merge needed.
+    // Team size = 1, value is already the result
+    reducer.reference() = value;
   }
 
   template <typename ArgType>
