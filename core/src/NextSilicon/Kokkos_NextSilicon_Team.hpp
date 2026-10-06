@@ -192,8 +192,8 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
   void init(const int league_size_request, const int team_size_request,
             const int vector_length_request) {
     m_league_size = league_size_request;
-    impl_check_team_size(team_size_request);
-    impl_set_vector_length(vector_length_request);
+    set_team_size(team_size_request);
+    set_vector_length(vector_length_request);
     set_auto_chunk_size();
   }
 
@@ -203,30 +203,18 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
  public:
   bool impl_auto_team_size() const { return false; }
   bool impl_auto_vector_length() const { return false; }
-
-  void impl_check_team_size(const int size) {
-    if (NextSiliconTeamMember::TEAM_SIZE != size) {
-      Kokkos::abort("NextSilicon team size must be 1");
-    }
+  constexpr int impl_vector_length() const { return m_vector_length; }
+  void impl_set_team_size(const int) {
+    // Part of tuner interface. Serial and HPX just ignore the team size.
   }
-
-  // We don't actually exploit vector parallelism through some kind of
-  // hardware resource, so we don't need to store the actual vector
-  // length anywhere. Just check that it's less than some arbitrary
-  // limit
   void impl_set_vector_length(const int length) {
-    if (length > NextSiliconTeamMember::MAX_VECTOR_LENGTH) {
-      std::stringstream ss;
-      ss << "NextSilicon vector length must be <= "
-         << NextSiliconTeamMember::MAX_VECTOR_LENGTH << " (requested " << length
-         << ")";
-      Kokkos::Impl::throw_runtime_exception(ss.str());
-    }
+    // Part of tuner interface
     m_vector_length = length;
   }
   constexpr int team_size() const { return NextSiliconTeamMember::TEAM_SIZE; }
   constexpr int league_size() const { return m_league_size; }
   constexpr int vector_length() const { return m_vector_length; }
+
   size_t scratch_size(const int& level, int team_size_ = -1) const {
     if (team_size_ < 0) team_size_ = team_size();
     return m_team_scratch_size[level] +
@@ -383,6 +371,24 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
   }
 
  private:
+  void set_team_size(const int size) {
+    if (NextSiliconTeamMember::TEAM_SIZE != size) {
+      std::stringstream ss;
+      ss << "NextSilicon team size must be 1 (" << size << " requested)";
+      Kokkos::Impl::throw_runtime_exception(ss.str());
+    }
+  }
+  void set_vector_length(const int length) {
+    if (NextSiliconTeamMember::MAX_VECTOR_LENGTH <= length) {
+      std::stringstream ss;
+      ss << "NextSilicon vector length must be <= "
+         << NextSiliconTeamMember::MAX_VECTOR_LENGTH << " (" << length
+         << " requested)";
+      Kokkos::Impl::throw_runtime_exception(ss.str());
+    }
+    m_vector_length = length;
+  }
+
   /** \brief finalize chunk_size if it was set to AUTO*/
   void set_auto_chunk_size() {
     // FIXME_NEXTSILICON: set_auto_chunk_size logic copied from OpenACC, needs
