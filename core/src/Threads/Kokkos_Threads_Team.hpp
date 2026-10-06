@@ -1167,6 +1167,7 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
        i += loop_boundaries.increment) {
     lambda(i, scan_val, true);
   }
+  reducer.reference() = scan_val;
 }
 
 }  // namespace Kokkos
