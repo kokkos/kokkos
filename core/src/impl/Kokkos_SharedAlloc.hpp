@@ -334,6 +334,12 @@ class SharedAllocationRecord<MemorySpace, void>
   static void print_records(std::ostream&, MemorySpace const&, bool = false);
 };
 
+// AnonymousSpace is used for type-erased reference-counted data handles.  It
+// does not own allocations and consequently has no allocate/deallocate API.
+template <>
+class SharedAllocationRecord<Kokkos::AnonymousSpace, void>
+    : public SharedAllocationRecord<void, void> {};
+
 template <class MemorySpace>
 inline void deallocate_shared_allocation_record(
     SharedAllocationRecord<void, void>* record_ptr) {
