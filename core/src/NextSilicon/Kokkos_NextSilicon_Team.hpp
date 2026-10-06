@@ -21,10 +21,10 @@ namespace Impl {
 class NextSiliconTeamMember {
  public:
   // FIXME_NEXTSILICON: skeleton team size is always 1
-  constexpr static inline int TEAM_SIZE          = 1;
-  constexpr static inline int TEAM_RANK          = 0;
-  constexpr static inline int MAX_VECTOR_LENGTH  = 1024;
-  constexpr static inline int AUTO_VECTOR_LENGTH = 32;
+  constexpr static inline int s_team_size          = 1;
+  constexpr static inline int s_team_rank          = 0;
+  constexpr static inline int s_max_vector_length  = 1024;
+  constexpr static inline int s_auto_vector_length = 32;
 
   using execution_space      = Kokkos::Experimental::NextSilicon;
   using scratch_memory_space = execution_space::scratch_memory_space;
@@ -54,11 +54,11 @@ class NextSiliconTeamMember {
 
   KOKKOS_FUNCTION int league_rank() const { return m_league_rank; }
   KOKKOS_FUNCTION int league_size() const { return m_league_size; }
-  KOKKOS_FUNCTION int constexpr team_rank() const { return TEAM_RANK; }
+  KOKKOS_FUNCTION int constexpr team_rank() const { return s_team_rank; }
   KOKKOS_FUNCTION int constexpr vector_length() const {
     return m_vector_length;
   }
-  KOKKOS_FUNCTION int constexpr team_size() const { return TEAM_SIZE; }
+  KOKKOS_FUNCTION int constexpr team_size() const { return s_team_size; }
 
   KOKKOS_FUNCTION void team_barrier() const {
     // barrier is a no-op with team size = 1
@@ -118,7 +118,7 @@ class NextSiliconTeamMember {
         m_league_size(league_size),
         m_vector_length(vector_length) {}
 
-  static int team_reduce_size() { return TEAM_SIZE; }
+  static int team_reduce_size() { return s_team_size; }
 };
 
 template <class... Properties>
@@ -135,40 +135,40 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
   // FIXME_NEXTSILICON: team_size_max always 1
   template <class FunctorType>
   static int team_size_max(const FunctorType&, const ParallelForTag&) {
-    return NextSiliconTeamMember::TEAM_SIZE;
+    return NextSiliconTeamMember::s_team_size;
   }
 
   // FIXME_NEXTSILICON: team_size_max always 1
   template <class FunctorType>
   static int team_size_max(const FunctorType&, const ParallelReduceTag&) {
-    return NextSiliconTeamMember::TEAM_SIZE;
+    return NextSiliconTeamMember::s_team_size;
   }
 
   // FIXME_NEXTSILICON: team_size_max always 1
   template <class FunctorType, class ReducerType>
   static int team_size_max(const FunctorType&, const ReducerType&,
                            const ParallelReduceTag&) {
-    return NextSiliconTeamMember::TEAM_SIZE;
+    return NextSiliconTeamMember::s_team_size;
   }
 
   // FIXME_NEXTSILICON: team_size_recommended always 1
   template <class FunctorType>
   static int team_size_recommended(const FunctorType&, const ParallelForTag&) {
-    return NextSiliconTeamMember::TEAM_SIZE;
+    return NextSiliconTeamMember::s_team_size;
   }
 
   // FIXME_NEXTSILICON: team_size_recommended always 1
   template <class FunctorType>
   static int team_size_recommended(const FunctorType&,
                                    const ParallelReduceTag&) {
-    return NextSiliconTeamMember::TEAM_SIZE;
+    return NextSiliconTeamMember::s_team_size;
   }
 
   // FIXME_NEXTSILICON: team_size_recommended always 1
   template <class FunctorType, class ReducerType>
   static int team_size_recommended(const FunctorType&, const ReducerType&,
                                    const ParallelReduceTag&) {
-    return NextSiliconTeamMember::TEAM_SIZE;
+    return NextSiliconTeamMember::s_team_size;
   }
 
   // FIXME_NEXTSILICON: L0 limit is arbitrary (both levels currently live in
@@ -211,7 +211,7 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
     // Part of tuner interface
     m_vector_length = length;
   }
-  constexpr int team_size() const { return NextSiliconTeamMember::TEAM_SIZE; }
+  constexpr int team_size() const { return NextSiliconTeamMember::s_team_size; }
   constexpr int league_size() const { return m_league_size; }
   constexpr int vector_length() const { return m_vector_length; }
 
@@ -246,7 +246,7 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
   TeamPolicyInternal(
       const typename traits::execution_space&, int league_size_request,
       int team_size_request,
-      int vector_length_request = NextSiliconTeamMember::AUTO_VECTOR_LENGTH)
+      int vector_length_request = NextSiliconTeamMember::s_auto_vector_length)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
@@ -257,11 +257,11 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
       const typename traits::execution_space&, int league_size_request,
       const Kokkos::AUTO_t& /* team_size_request */
       ,
-      int vector_length_request = NextSiliconTeamMember::AUTO_VECTOR_LENGTH)
+      int vector_length_request = NextSiliconTeamMember::s_auto_vector_length)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
-    init(league_size_request, NextSiliconTeamMember::TEAM_SIZE,
+    init(league_size_request, NextSiliconTeamMember::s_team_size,
          vector_length_request);
   }
 
@@ -273,8 +273,8 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
-    init(league_size_request, NextSiliconTeamMember::TEAM_SIZE,
-         NextSiliconTeamMember::AUTO_VECTOR_LENGTH);
+    init(league_size_request, NextSiliconTeamMember::s_team_size,
+         NextSiliconTeamMember::s_auto_vector_length);
   }
   TeamPolicyInternal(const typename traits::execution_space&,
                      int league_size_request, int team_size_request,
@@ -283,12 +283,12 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request, team_size_request,
-         NextSiliconTeamMember::AUTO_VECTOR_LENGTH);
+         NextSiliconTeamMember::s_auto_vector_length);
   }
 
   TeamPolicyInternal(
       int league_size_request, int team_size_request,
-      int vector_length_request = NextSiliconTeamMember::AUTO_VECTOR_LENGTH)
+      int vector_length_request = NextSiliconTeamMember::s_auto_vector_length)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
@@ -302,8 +302,8 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
-    init(league_size_request, NextSiliconTeamMember::TEAM_SIZE,
-         NextSiliconTeamMember::AUTO_VECTOR_LENGTH);
+    init(league_size_request, NextSiliconTeamMember::s_team_size,
+         NextSiliconTeamMember::s_auto_vector_length);
   }
 
   TeamPolicyInternal(int league_size_request, int team_size_request,
@@ -312,16 +312,16 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
     init(league_size_request, team_size_request,
-         NextSiliconTeamMember::AUTO_VECTOR_LENGTH);
+         NextSiliconTeamMember::s_auto_vector_length);
   }
 
   TeamPolicyInternal(
       int league_size_request, const Kokkos::AUTO_t& /*team_size_request*/,
-      int vector_length_request = NextSiliconTeamMember::AUTO_VECTOR_LENGTH)
+      int vector_length_request = NextSiliconTeamMember::s_auto_vector_length)
       : m_team_scratch_size{0, 0},
         m_thread_scratch_size{0, 0},
         m_chunk_size(0) {
-    init(league_size_request, NextSiliconTeamMember::TEAM_SIZE,
+    init(league_size_request, NextSiliconTeamMember::s_team_size,
          vector_length_request);
   }
 
@@ -331,7 +331,7 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
     // FIXME_NEXTSILICON: implement PolicyUpdate for NextSilicon
   }
   static int vector_length_max() {
-    return NextSiliconTeamMember::MAX_VECTOR_LENGTH;
+    return NextSiliconTeamMember::s_max_vector_length;
   }
   int team_alloc() const { return m_team_alloc; }
   // FIXME_NEXTSILICON: unused?
@@ -372,17 +372,22 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
 
  private:
   void set_team_size(const int size) {
-    if (NextSiliconTeamMember::TEAM_SIZE != size) {
+    // Same message format as Serial; TestTeamBasic's exceed_max_team_size
+    // matches on it. Sizes < 1 are rejected by TeamPolicy before we get here.
+    if (size > NextSiliconTeamMember::s_team_size) {
       std::stringstream ss;
-      ss << "NextSilicon team size must be 1 (" << size << " requested)";
+      ss << "Kokkos::TeamPolicy<NextSilicon>: Requested too large team size. "
+            "Requested: "
+         << size << ", Maximum: " << NextSiliconTeamMember::s_team_size;
       Kokkos::Impl::throw_runtime_exception(ss.str());
     }
   }
   void set_vector_length(const int length) {
-    if (NextSiliconTeamMember::MAX_VECTOR_LENGTH <= length) {
+    // vector_length_max() itself is a valid request
+    if (length > NextSiliconTeamMember::s_max_vector_length) {
       std::stringstream ss;
       ss << "NextSilicon vector length must be <= "
-         << NextSiliconTeamMember::MAX_VECTOR_LENGTH << " (" << length
+         << NextSiliconTeamMember::s_max_vector_length << " (" << length
          << " requested)";
       Kokkos::Impl::throw_runtime_exception(ss.str());
     }
@@ -394,7 +399,7 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
     // FIXME_NEXTSILICON: set_auto_chunk_size logic copied from OpenACC, needs
     // to be redone
 
-    int concurrency = 2048 * NextSiliconTeamMember::TEAM_SIZE;
+    int concurrency = 2048 * NextSiliconTeamMember::s_team_size;
 
     if (m_chunk_size > 0) {
       if (!Kokkos::has_single_bit(static_cast<unsigned>(m_chunk_size)))
@@ -404,10 +409,10 @@ class TeamPolicyInternal<Kokkos::Experimental::NextSilicon, Properties...>
     int new_chunk_size = 1;
     while (new_chunk_size * 100 * concurrency < m_league_size)
       new_chunk_size *= 2;
-    if (new_chunk_size < NextSiliconTeamMember::TEAM_SIZE) {
+    if (new_chunk_size < NextSiliconTeamMember::s_team_size) {
       new_chunk_size = 1;
       while ((new_chunk_size * 40 * concurrency < m_league_size) &&
-             (new_chunk_size < NextSiliconTeamMember::TEAM_SIZE))
+             (new_chunk_size < NextSiliconTeamMember::s_team_size))
         new_chunk_size *= 2;
     }
     m_chunk_size = new_chunk_size;
