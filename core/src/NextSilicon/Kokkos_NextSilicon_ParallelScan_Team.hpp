@@ -16,18 +16,12 @@ parallel_scan(const Impl::ThreadVectorRangeBoundariesStruct<
                   iType, Impl::NextSiliconTeamMember>& loop_boundaries,
               const Lambda& lambda, const ReducerType& reducer) {
   using value_type = typename ReducerType::value_type;
-  using functor_analysis_type =
-      typename Impl::FunctorAnalysis<Impl::FunctorPatternInterface::SCAN, void,
-                                     ReducerType, value_type>;
-  using WrappedReducer = typename functor_analysis_type::Reducer;
-  WrappedReducer wrappedReducer(reducer);
   value_type val;
-  wrappedReducer.init(&val);
+  reducer.init(val);
 
   for (iType i = loop_boundaries.start; i < loop_boundaries.end; i++)
     lambda(i, val, /*final*/ true);
 
-  wrappedReducer.final(&val);
   reducer.reference() = val;
 }
 
