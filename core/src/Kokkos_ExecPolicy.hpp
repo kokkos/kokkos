@@ -359,6 +359,9 @@ class SinglePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
       : m_range_policy(exec_space, 0, 1) {}
 };
 
+// Deduction guide
+SinglePolicy() -> SinglePolicy<>;
+SinglePolicy(const DefaultExecutionSpace&) -> SinglePolicy<DefaultExecutionSpace>;
 template <ExecutionSpace ExecSpace>
 SinglePolicy(const ExecSpace&) -> SinglePolicy<ExecSpace>;
 
