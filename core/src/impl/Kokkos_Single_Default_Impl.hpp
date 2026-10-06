@@ -30,11 +30,12 @@ struct Single {
 
     using WrapperType = decltype(functor_wrapper);
 
-    using base_class = typename std::remove_cvref_t<SinglePolicy>::base_class;
+    using base_class = typename std::remove_cvref_t<SinglePolicy>::range_policy;
+    const base_class& range_policy = single_policy.impl_get_range_policy();
     auto closure =
         Kokkos::Impl::construct_with_shared_allocation_tracking_disabled<
             Impl::ParallelFor<WrapperType, base_class>>(functor_wrapper,
-                                                        single_policy);
+                                                        range_policy);
     closure.execute();
   }
 
@@ -43,14 +44,16 @@ struct Single {
             class ReturnType>
   static void execute(const FunctorType& functor,
                       const FunctorReducerType& functor_reducer,
-                      const SinglePolicy& policy, ReturnType& return_value) {
-    using parallel_reducer =
-        Impl::ParallelReduce<CombinedFunctorReducerType,
-                             typename SinglePolicy::base_class, ExecutionSpace>;
+                      const SinglePolicy& single_policy,
+                      ReturnType& return_value) {
+    using base_class = typename std::remove_cvref_t<SinglePolicy>::range_policy;
+    using parallel_reducer = Impl::ParallelReduce<CombinedFunctorReducerType,
+                                                  base_class, ExecutionSpace>;
 
+    const base_class& range_policy = single_policy.impl_get_range_policy();
     auto closure =
         construct_with_shared_allocation_tracking_disabled<parallel_reducer>(
-            functor_reducer, policy,
+            functor_reducer, range_policy,
             ReturnValueAdapter::return_value(return_value, functor));
     closure.execute();
   }
