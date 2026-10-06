@@ -26,7 +26,7 @@ namespace Impl {
 
 template <>
 struct EventResource<Kokkos::Cuda> {
-  std::string label   = "unknown";
+  std::string m_label = "unknown";
   cudaEvent_t m_event = nullptr;
   int m_cudaDev       = -1;
 
