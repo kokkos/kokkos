@@ -23,45 +23,46 @@ T % N.
 #include <mutex>
 
 namespace Kokkos::Experimental::Impl {
-template <typename Member, typename LeagueIndexType, typename Functor>
+template <typename Member, typename Functor>
 class NextSiliconParallelForTeamPolicyFunctor {
  public:
   NextSiliconParallelForTeamPolicyFunctor(Functor const& functor,
-                                          const LeagueIndexType league_size,
+                                          const int league_size,
+                                          const int vector_length,
                                           std::byte* league_scratch_buffer,
                                           const size_t L0_size,
                                           const size_t L1_size)
-      : functor_(functor),
+      : m_functor(functor),
         m_league_size(league_size),
+        m_vector_length(vector_length),
         m_league_scratch_buffer(league_scratch_buffer),
         m_L0_size(L0_size),
         m_L1_size(L1_size) {}
 
-  KOKKOS_INLINE_FUNCTION void operator()(
-      const LeagueIndexType league_rank) const {
-    functor_(league_rank_to_member(league_rank));
+  KOKKOS_INLINE_FUNCTION void operator()(const int league_rank) const {
+    m_functor(league_rank_to_member(league_rank));
   }
 
   template <typename Tag>
-  KOKKOS_INLINE_FUNCTION void operator()(
-      Tag, const LeagueIndexType league_rank) const {
-    functor_(Tag{}, league_rank_to_member(league_rank));
+  KOKKOS_INLINE_FUNCTION void operator()(Tag, const int league_rank) const {
+    m_functor(Tag{}, league_rank_to_member(league_rank));
   }
 
  private:
   KOKKOS_INLINE_FUNCTION Member
-  league_rank_to_member(const LeagueIndexType league_rank) const {
+  league_rank_to_member(const int league_rank) const {
     std::byte* team_scratch_buffer =
         m_league_scratch_buffer + league_rank * (m_L0_size + m_L1_size);
     using scratch_memory_space = typename Member::scratch_memory_space;
     return Member(
-        league_rank, m_league_size,
+        league_rank, m_league_size, m_vector_length,
         scratch_memory_space(team_scratch_buffer, m_L0_size,
                              team_scratch_buffer + m_L0_size, m_L1_size));
   }
 
-  const Functor functor_;
-  LeagueIndexType m_league_size;
+  const Functor m_functor;
+  int m_league_size;
+  int m_vector_length;
   std::byte* m_league_scratch_buffer;
   size_t m_L0_size;
   size_t m_L1_size;
@@ -114,9 +115,10 @@ class Kokkos::Impl::ParallelFor<FunctorType, Kokkos::TeamPolicy<Properties...>,
         internal_instance->resize_league_scratch_buffer(league_size *
                                                         (L0_size + L1_size));
 
-    Experimental::Impl::NextSiliconParallelForTeamPolicyFunctor<
-        Member, decltype(league_size), FunctorType>
-        op(m_functor, league_size, league_scratch_buffer, L0_size, L1_size);
+    Experimental::Impl::NextSiliconParallelForTeamPolicyFunctor<Member,
+                                                                FunctorType>
+        op(m_functor, league_size, m_policy.vector_length(),
+           league_scratch_buffer, L0_size, L1_size);
     Kokkos::parallel_for(
         RangePolicy<Properties...>(m_policy.space(), 0, league_size), op);
   }

@@ -8,64 +8,67 @@
 #include <NextSilicon/Kokkos_NextSilicon_ParallelReduce.hpp>
 #include <mutex>
 
-template <typename Functor>
+namespace Kokkos::Experimental::Impl {
+template <typename Member, typename Functor>
 class NextSiliconParallelReduceTeamPolicyFunctor {
-  const Functor functor_;
-  int m_league_size;
-  void* globalScratchBuffer_;
-  size_t m_L0_size;
-  size_t m_L1_size;
-
-  Kokkos::Impl::NextSiliconTeamMember worker_id_to_member(
-      int workerId) const noexcept {
-    int league_rank = workerId;  // team size is 1
-
-    char* team_scratch_buffer = static_cast<char*>(globalScratchBuffer_) +
-                                league_rank * (m_L0_size + m_L1_size);
-
-    return Kokkos::Impl::NextSiliconTeamMember(
-        league_rank, m_league_size,
-        Kokkos::Impl::NextSiliconTeamMember::scratch_memory_space(
-            team_scratch_buffer, m_L0_size, team_scratch_buffer + m_L0_size,
-            m_L1_size));
-  }
-
  public:
   NextSiliconParallelReduceTeamPolicyFunctor(Functor const& functor,
-                                             int league_size,
-                                             void* globalScratchBuffer,
+                                             const int league_size,
+                                             const int vector_length,
+                                             std::byte* league_scratch_buffer,
                                              const size_t L0_size,
                                              const size_t L1_size)
-      : functor_(functor),
+      : m_functor(functor),
         m_league_size(league_size),
-        globalScratchBuffer_(globalScratchBuffer),
+        m_vector_length(vector_length),
+        m_league_scratch_buffer(league_scratch_buffer),
         m_L0_size(L0_size),
         m_L1_size(L1_size) {}
 
   template <typename ReducerValueType>
-  KOKKOS_INLINE_FUNCTION void operator()(int workerId,
+  KOKKOS_INLINE_FUNCTION void operator()(const int league_rank,
                                          ReducerValueType& update) const {
-    functor_(worker_id_to_member(workerId), update);
+    m_functor(league_rank_to_member(league_rank), update);
   }
 
   template <typename Tag, typename ReducerValueType>
-  KOKKOS_INLINE_FUNCTION void operator()(Tag, int workerId,
+  KOKKOS_INLINE_FUNCTION void operator()(Tag, const int league_rank,
                                          ReducerValueType& update) const {
-    functor_(Tag{}, worker_id_to_member(workerId), update);
+    m_functor(Tag{}, league_rank_to_member(league_rank), update);
   }
 
   template <typename ReducerValueType>
-  KOKKOS_INLINE_FUNCTION void operator()(int workerId,
+  KOKKOS_INLINE_FUNCTION void operator()(const int league_rank,
                                          ReducerValueType* update_ptr) const {
-    functor_(worker_id_to_member(workerId), update_ptr);
+    m_functor(league_rank_to_member(league_rank), update_ptr);
   }
 
   template <typename Tag, typename ReducerValueType>
-  KOKKOS_INLINE_FUNCTION void operator()(Tag, int workerId,
+  KOKKOS_INLINE_FUNCTION void operator()(Tag, const int league_rank,
                                          ReducerValueType* update_ptr) const {
-    functor_(Tag{}, worker_id_to_member(workerId), update_ptr);
+    m_functor(Tag{}, league_rank_to_member(league_rank), update_ptr);
   }
+
+ private:
+  KOKKOS_INLINE_FUNCTION Member
+  league_rank_to_member(const int league_rank) const {
+    std::byte* team_scratch_buffer =
+        m_league_scratch_buffer + league_rank * (m_L0_size + m_L1_size);
+    using scratch_memory_space = typename Member::scratch_memory_space;
+    return Member(
+        league_rank, m_league_size, m_vector_length,
+        scratch_memory_space(team_scratch_buffer, m_L0_size,
+                             team_scratch_buffer + m_L0_size, m_L1_size));
+  }
+
+  const Functor m_functor;
+  int m_league_size;
+  int m_vector_length;
+  std::byte* m_league_scratch_buffer;
+  size_t m_L0_size;
+  size_t m_L1_size;
 };
+}  // namespace Kokkos::Experimental::Impl
 
 template <class CombinedFunctorReducerType, class... Properties>
 class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
@@ -119,14 +122,17 @@ class Kokkos::Impl::ParallelReduce<CombinedFunctorReducerType,
     // Make sure there's a scratch allocation big enough for all our teams
     // TODO: support alignment of scratch memory?
     auto internal_instance = m_policy.space().impl_internal_space_instance();
-    void* scratchData      = internal_instance->resize_league_scratch_buffer(
-        league_size * (L0_size + L1_size));
+    std::byte* league_scratch_buffer =
+        internal_instance->resize_league_scratch_buffer(league_size *
+                                                        (L0_size + L1_size));
 
-    auto wrapped_functor = NextSiliconParallelReduceTeamPolicyFunctor(
-        functor, league_size, scratchData, L0_size, L1_size);
+    Experimental::Impl::NextSiliconParallelReduceTeamPolicyFunctor<Member,
+                                                                   FunctorType>
+        wrapped_functor(functor, league_size, m_policy.vector_length(),
+                        league_scratch_buffer, L0_size, L1_size);
 
-    CombinedFunctorReducer /*<decltype(wrapped_functor), ReducerType>*/
-        combinedWrappedFunctorReducer(wrapped_functor, reducer);
+    CombinedFunctorReducer combinedWrappedFunctorReducer(wrapped_functor,
+                                                         reducer);
 
     auto policy =
         RangePolicy<Properties...>(m_policy.space(), 0,
