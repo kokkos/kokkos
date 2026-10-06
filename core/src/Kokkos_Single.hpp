@@ -109,8 +109,8 @@ inline void single(const std::string label, const FunctorType& functor,
 template <class FunctorType, class ReturnType>
   requires(!Kokkos::is_view<ReturnType>::value &&
            !Kokkos::is_reducer<ReturnType>::value &&
-           !std::is_invocable_v<FunctorType, ReturnType&> &&
-           std::is_pointer_v<ReturnType>)
+           !std::is_pointer_v<ReturnType> &&
+           std::is_invocable_v<FunctorType, ReturnType&>)
 inline void single(const FunctorType& functor, ReturnType& return_value) {
   ::Kokkos::single("", functor, return_value);
 }
