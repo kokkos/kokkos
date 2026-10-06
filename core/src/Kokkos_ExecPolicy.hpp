@@ -343,9 +343,7 @@ class SinglePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   range_policy m_range_policy;
 
  public:
-  inline const execution_space& space() const {
-    return m_range_policy.space();
-  }
+  inline const execution_space& space() const { return m_range_policy.space(); }
 
   const range_policy& impl_get_range_policy() const { return m_range_policy; }
 
@@ -361,7 +359,8 @@ class SinglePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
 
 // Deduction guide
 SinglePolicy() -> SinglePolicy<>;
-SinglePolicy(const DefaultExecutionSpace&) -> SinglePolicy<DefaultExecutionSpace>;
+SinglePolicy(const DefaultExecutionSpace&)
+    -> SinglePolicy<DefaultExecutionSpace>;
 template <ExecutionSpace ExecSpace>
 SinglePolicy(const ExecSpace&) -> SinglePolicy<ExecSpace>;
 
