@@ -21,12 +21,13 @@ void check_team_level_computation(const ViewType& A, const ViewType& B) {
   if constexpr (ViewType::rank == 3) {
     const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
               n2 = Ahost.extent_int(2) - 2;
-    for (int i0 = 0; i0 < n0; ++i0) {
+    for (int i0 = 1; i0 < n0 + 1; ++i0) {
       for (int i1 = 1; i1 < n1 + 1; ++i1) {
         for (int i2 = 1; i2 < n2 + 1; ++i2) {
           ScalarType check =
               0.25 *
-              (ScalarType)(Bhost(i0, i1 + 1, i2) + Bhost(i0, i1 - 1, i2) +
+              (ScalarType)(Bhost(i0 + 1, i1, i2) + Bhost(i0 - 1, i1, i2) +
+                           Bhost(i0, i1 + 1, i2) + Bhost(i0, i1 - 1, i2) +
                            Bhost(i0, i1, i2 + 1) + Bhost(i0, i1, i2 - 1) +
                            Bhost(i0, i1, i2));
           if (Kokkos::abs(Ahost(i0, i1, i2) - check) > epsilon) {
@@ -41,11 +42,13 @@ void check_team_level_computation(const ViewType& A, const ViewType& B) {
   } else if constexpr (ViewType::rank == 4) {
     const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
               n2 = Ahost.extent_int(2) - 2, n3 = Ahost.extent_int(3) - 2;
-    for (int i0 = 0; i0 < n0; ++i0) {
+    for (int i0 = 1; i0 < n0 + 1; ++i0) {
       for (int i1 = 1; i1 < n1 + 1; ++i1) {
         for (int i2 = 1; i2 < n2 + 1; ++i2) {
           for (int i3 = 1; i3 < n3 + 1; ++i3) {
-            ScalarType check = 0.25 * (ScalarType)(Bhost(i0, i1 + 1, i2, i3) +
+            ScalarType check = 0.25 * (ScalarType)(Bhost(i0 + 1, i1, i2, i3) +
+                                                   Bhost(i0 - 1, i1, i2, i3) +
+                                                   Bhost(i0, i1 + 1, i2, i3) +
                                                    Bhost(i0, i1 - 1, i2, i3) +
                                                    Bhost(i0, i1, i2 + 1, i3) +
                                                    Bhost(i0, i1, i2 - 1, i3) +
@@ -75,13 +78,15 @@ void check_team_level_computation(const ViewType& A, const ViewType& B) {
     const int n0 = Ahost.extent_int(0) - 2, n1 = Ahost.extent_int(1) - 2,
               n2 = Ahost.extent_int(2) - 2, n3 = Ahost.extent_int(3) - 2,
               n4 = Ahost.extent_int(4) - 2;
-    for (int i0 = 0; i0 < n0; ++i0) {
+    for (int i0 = 1; i0 < n0 + 1; ++i0) {
       for (int i1 = 1; i1 < n1 + 1; ++i1) {
         for (int i2 = 1; i2 < n2 + 1; ++i2) {
           for (int i3 = 1; i3 < n3 + 1; ++i3) {
             for (int i4 = 1; i4 < n4 + 1; ++i4) {
               ScalarType check =
-                  0.25 * (ScalarType)(Bhost(i0, i1 + 1, i2, i3, i4) +
+                  0.25 * (ScalarType)(Bhost(i0 + 1, i1, i2, i3, i4) +
+                                      Bhost(i0 - 1, i1, i2, i3, i4) +
+                                      Bhost(i0, i1 + 1, i2, i3, i4) +
                                       Bhost(i0, i1 - 1, i2, i3, i4) +
                                       Bhost(i0, i1, i2 + 1, i3, i4) +
                                       Bhost(i0, i1, i2 - 1, i3, i4) +
@@ -178,17 +183,16 @@ struct TeamThreadMDRangeStencil {
   void operator()(const team_member& team) const
     requires(dimension == 2)
   {
-    const int league_rank = team.league_rank();
+    const int i = team.league_rank() + 1;
 
     auto team_range = team_thread_mdrange(team, ranges[0], ranges[1]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1) {
       i0++;
       i1++;
-      A(league_rank, i0, i1) =
-          0.25 *
-          (ScalarType)(B(league_rank, i0 + 1, i1) + B(league_rank, i0 - 1, i1) +
-                       B(league_rank, i0, i1 + 1) + B(league_rank, i0, i1 - 1) +
-                       B(league_rank, i0, i1));
+      A(i, i0, i1) = 0.25 * (ScalarType)(B(i + 1, i0, i1) + B(i - 1, i0, i1) +
+                                         B(i, i0 + 1, i1) + B(i, i0 - 1, i1) +
+                                         B(i, i0, i1 + 1) + B(i, i0, i1 - 1) +
+                                         B(i, i0, i1));
     });
   }
 
@@ -196,7 +200,7 @@ struct TeamThreadMDRangeStencil {
   void operator()(const team_member& team) const
     requires(dimension == 3)
   {
-    const int league_rank = team.league_rank();
+    const int i = team.league_rank() + 1;
 
     auto team_range =
         team_thread_mdrange(team, ranges[0], ranges[1], ranges[2]);
@@ -204,14 +208,12 @@ struct TeamThreadMDRangeStencil {
       i0++;
       i1++;
       i2++;
-      A(league_rank, i0, i1, i2) =
-          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2) +
-                              B(league_rank, i0 - 1, i1, i2) +
-                              B(league_rank, i0, i1 + 1, i2) +
-                              B(league_rank, i0, i1 - 1, i2) +
-                              B(league_rank, i0, i1, i2 + 1) +
-                              B(league_rank, i0, i1, i2 - 1) +
-                              B(league_rank, i0, i1, i2));
+      A(i, i0, i1, i2) =
+          0.25 * (ScalarType)(B(i + 1, i0, i1, i2) + B(i - 1, i0, i1, i2) +
+                              B(i, i0 + 1, i1, i2) + B(i, i0 - 1, i1, i2) +
+                              B(i, i0, i1 + 1, i2) + B(i, i0, i1 - 1, i2) +
+                              B(i, i0, i1, i2 + 1) + B(i, i0, i1, i2 - 1) +
+                              B(i, i0, i1, i2));
     });
   }
 
@@ -219,7 +221,7 @@ struct TeamThreadMDRangeStencil {
   void operator()(const team_member& team) const
     requires(dimension == 4)
   {
-    const int league_rank = team.league_rank();
+    const int i = team.league_rank() + 1;
 
     auto team_range =
         team_thread_mdrange(team, ranges[0], ranges[1], ranges[2], ranges[3]);
@@ -228,16 +230,14 @@ struct TeamThreadMDRangeStencil {
       i1++;
       i2++;
       i3++;
-      A(league_rank, i0, i1, i2, i3) =
-          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2, i3) +
-                              B(league_rank, i0 - 1, i1, i2, i3) +
-                              B(league_rank, i0, i1 + 1, i2, i3) +
-                              B(league_rank, i0, i1 - 1, i2, i3) +
-                              B(league_rank, i0, i1, i2 + 1, i3) +
-                              B(league_rank, i0, i1, i2 - 1, i3) +
-                              B(league_rank, i0, i1, i2, i3 + 1) +
-                              B(league_rank, i0, i1, i2, i3 - 1) +
-                              B(league_rank, i0, i1, i2, i3));
+      A(i, i0, i1, i2, i3) =
+          0.25 *
+          (ScalarType)(B(i + 1, i0, i1, i2, i3) + B(i - 1, i0, i1, i2, i3) +
+                       B(i, i0 + 1, i1, i2, i3) + B(i, i0 - 1, i1, i2, i3) +
+                       B(i, i0, i1 + 1, i2, i3) + B(i, i0, i1 - 1, i2, i3) +
+                       B(i, i0, i1, i2 + 1, i3) + B(i, i0, i1, i2 - 1, i3) +
+                       B(i, i0, i1, i2, i3 + 1) + B(i, i0, i1, i2, i3 - 1) +
+                       B(i, i0, i1, i2, i3));
     });
   }
 };
@@ -281,17 +281,16 @@ struct TeamVectorMDRangeStencil {
   void operator()(const team_member& team) const
     requires(dimension == 2)
   {
-    const int league_rank = team.league_rank();
+    const int i = team.league_rank() + 1;
 
     auto team_range = team_vector_mdrange(team, ranges[0], ranges[1]);
     Kokkos::parallel_for(team_range, [=, this](int i0, int i1) {
       i0++;
       i1++;
-      A(league_rank, i0, i1) =
-          0.25 *
-          (ScalarType)(B(league_rank, i0 + 1, i1) + B(league_rank, i0 - 1, i1) +
-                       B(league_rank, i0, i1 + 1) + B(league_rank, i0, i1 - 1) +
-                       B(league_rank, i0, i1));
+      A(i, i0, i1) = 0.25 * (ScalarType)(B(i + 1, i0, i1) + B(i - 1, i0, i1) +
+                                         B(i, i0 + 1, i1) + B(i, i0 - 1, i1) +
+                                         B(i, i0, i1 + 1) + B(i, i0, i1 - 1) +
+                                         B(i, i0, i1));
     });
   }
 
@@ -299,7 +298,7 @@ struct TeamVectorMDRangeStencil {
   void operator()(const team_member& team) const
     requires(dimension == 3)
   {
-    const int league_rank = team.league_rank();
+    const int i = team.league_rank() + 1;
 
     auto team_range =
         team_vector_mdrange(team, ranges[0], ranges[1], ranges[2]);
@@ -307,14 +306,12 @@ struct TeamVectorMDRangeStencil {
       i0++;
       i1++;
       i2++;
-      A(league_rank, i0, i1, i2) =
-          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2) +
-                              B(league_rank, i0 - 1, i1, i2) +
-                              B(league_rank, i0, i1 + 1, i2) +
-                              B(league_rank, i0, i1 - 1, i2) +
-                              B(league_rank, i0, i1, i2 + 1) +
-                              B(league_rank, i0, i1, i2 - 1) +
-                              B(league_rank, i0, i1, i2));
+      A(i, i0, i1, i2) =
+          0.25 * (ScalarType)(B(i + 1, i0, i1, i2) + B(i - 1, i0, i1, i2) +
+                              B(i, i0 + 1, i1, i2) + B(i, i0 - 1, i1, i2) +
+                              B(i, i0, i1 + 1, i2) + B(i, i0, i1 - 1, i2) +
+                              B(i, i0, i1, i2 + 1) + B(i, i0, i1, i2 - 1) +
+                              B(i, i0, i1, i2));
     });
   }
 
@@ -322,7 +319,7 @@ struct TeamVectorMDRangeStencil {
   void operator()(const team_member& team) const
     requires(dimension == 4)
   {
-    const int league_rank = team.league_rank();
+    const int i = team.league_rank() + 1;
 
     auto team_range =
         team_vector_mdrange(team, ranges[0], ranges[1], ranges[2], ranges[3]);
@@ -331,16 +328,14 @@ struct TeamVectorMDRangeStencil {
       i1++;
       i2++;
       i3++;
-      A(league_rank, i0, i1, i2, i3) =
-          0.25 * (ScalarType)(B(league_rank, i0 + 1, i1, i2, i3) +
-                              B(league_rank, i0 - 1, i1, i2, i3) +
-                              B(league_rank, i0, i1 + 1, i2, i3) +
-                              B(league_rank, i0, i1 - 1, i2, i3) +
-                              B(league_rank, i0, i1, i2 + 1, i3) +
-                              B(league_rank, i0, i1, i2 - 1, i3) +
-                              B(league_rank, i0, i1, i2, i3 + 1) +
-                              B(league_rank, i0, i1, i2, i3 - 1) +
-                              B(league_rank, i0, i1, i2, i3));
+      A(i, i0, i1, i2, i3) =
+          0.25 *
+          (ScalarType)(B(i + 1, i0, i1, i2, i3) + B(i - 1, i0, i1, i2, i3) +
+                       B(i, i0 + 1, i1, i2, i3) + B(i, i0 - 1, i1, i2, i3) +
+                       B(i, i0, i1 + 1, i2, i3) + B(i, i0, i1 - 1, i2, i3) +
+                       B(i, i0, i1, i2 + 1, i3) + B(i, i0, i1, i2 - 1, i3) +
+                       B(i, i0, i1, i2, i3 + 1) + B(i, i0, i1, i2, i3 - 1) +
+                       B(i, i0, i1, i2, i3));
     });
   }
 };
@@ -391,13 +386,14 @@ struct ThreadVectorMDRangeStencil {
 
     auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
     Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
-      const auto i = league_rank * 32 + i0;
+      const auto i = league_rank * 32 + i0 + 1;
 
       auto vector_range = thread_vector_mdrange(team, ranges[0], ranges[1]);
       Kokkos::parallel_for(vector_range, [=, this](int i1, int i2) {
         i1++;
         i2++;
-        A(i, i1, i2) = 0.25 * (ScalarType)(B(i, i1 + 1, i2) + B(i, i1 - 1, i2) +
+        A(i, i1, i2) = 0.25 * (ScalarType)(B(i + 1, i1, i2) + B(i - 1, i1, i2) +
+                                           B(i, i1 + 1, i2) + B(i, i1 - 1, i2) +
                                            B(i, i1, i2 + 1) + B(i, i1, i2 - 1) +
                                            B(i, i1, i2));
       });
@@ -412,7 +408,7 @@ struct ThreadVectorMDRangeStencil {
 
     auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
     Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
-      const auto i = league_rank * 32 + i0;
+      const auto i = league_rank * 32 + i0 + 1;
 
       auto vector_range =
           thread_vector_mdrange(team, ranges[0], ranges[1], ranges[2]);
@@ -421,7 +417,8 @@ struct ThreadVectorMDRangeStencil {
         i2++;
         i3++;
         A(i, i1, i2, i3) =
-            0.25 * (ScalarType)(B(i, i1 + 1, i2, i3) + B(i, i1 - 1, i2, i3) +
+            0.25 * (ScalarType)(B(i + 1, i1, i2, i3) + B(i - 1, i1, i2, i3) +
+                                B(i, i1 + 1, i2, i3) + B(i, i1 - 1, i2, i3) +
                                 B(i, i1, i2 + 1, i3) + B(i, i1, i2 - 1, i3) +
                                 B(i, i1, i2, i3 + 1) + B(i, i1, i2, i3 - 1) +
                                 B(i, i1, i2, i3));
@@ -437,7 +434,7 @@ struct ThreadVectorMDRangeStencil {
 
     auto team_thread_range = Kokkos::TeamThreadRange(team, 32);
     Kokkos::parallel_for(team_thread_range, [=, this](int i0) {
-      const auto i = league_rank * 32 + i0;
+      const auto i = league_rank * 32 + i0 + 1;
 
       auto vector_range = thread_vector_mdrange(team, ranges[0], ranges[1],
                                                 ranges[2], ranges[3]);
@@ -449,7 +446,8 @@ struct ThreadVectorMDRangeStencil {
         i4++;
         A(i, i1, i2, i3, i4) =
             0.25 *
-            (ScalarType)(B(i, i1 + 1, i2, i3, i4) + B(i, i1 - 1, i2, i3, i4) +
+            (ScalarType)(B(i + 1, i1, i2, i3, i4) + B(i - 1, i1, i2, i3, i4) +
+                         B(i, i1 + 1, i2, i3, i4) + B(i, i1 - 1, i2, i3, i4) +
                          B(i, i1, i2 + 1, i3, i4) + B(i, i1, i2 - 1, i3, i4) +
                          B(i, i1, i2, i3 + 1, i4) + B(i, i1, i2, i3 - 1, i4) +
                          B(i, i1, i2, i3, i4 + 1) + B(i, i1, i2, i3, i4 - 1) +
@@ -474,8 +472,8 @@ void bench_team_mdrange(benchmark::State& state, std::index_sequence<Idx...>) {
   state.counters["league_size"] = league_size;
   state.counters["dim_size"]    = dims[0];
 
-  view_type Atest("Atest", league_size, (dims[Idx] + 2)...);
-  view_type Btest("Btest", league_size, (dims[Idx] + 2)...);
+  view_type Atest("Atest", league_size + 2, (dims[Idx] + 2)...);
+  view_type Btest("Btest", league_size + 2, (dims[Idx] + 2)...);
 
   Kokkos::deep_copy(Atest, 1.0);
   execution_space().fence();
