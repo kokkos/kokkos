@@ -343,7 +343,7 @@ class SinglePolicy : public Kokkos::Impl::PolicyTraits<Properties...> {
   range_policy m_range_policy;
 
  public:
-  KOKKOS_INLINE_FUNCTION const execution_space& space() const {
+  inline const execution_space& space() const {
     return m_range_policy.space();
   }
 
