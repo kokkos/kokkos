@@ -116,7 +116,7 @@ TEST(TEST_CATEGORY, event_space_depends_on) {
       Kokkos::create_mirror_view_and_copy(Kokkos::HostSpace(), result);
 
   int64_t expected = 0;
-  for (int i = 0; i < N; ++i) expected += i * 2;
+  for (int i = 0; i < N; ++i) expected += static_cast<int64_t>(i) * 2;
   ASSERT_EQ(h_result(), expected);
 }
 
