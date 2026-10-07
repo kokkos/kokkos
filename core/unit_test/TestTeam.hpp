@@ -268,6 +268,48 @@ class ArrayReduceTeamFunctor {
   }
 };
 
+template <typename ScalarType, class DeviceType, class ScheduleType>
+class LargeArrayReduceTeamFunctor {
+ public:
+  using execution_space = DeviceType;
+  using policy_type     = Kokkos::TeamPolicy<ScheduleType, execution_space>;
+  using size_type       = typename execution_space::size_type;
+
+  using value_type      = ScalarType[];
+  size_type value_count;
+
+  size_type nwork;
+
+  KOKKOS_INLINE_FUNCTION
+  LargeArrayReduceTeamFunctor(const size_type &nwork_,
+                              const size_type &value_count_)
+      : value_count(value_count_), nwork(nwork_) {}
+
+  KOKKOS_INLINE_FUNCTION
+  void init(value_type dst) const {
+    for (size_type i = 0; i < value_count; ++i) dst[i] = 0;
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void join(value_type dst, const value_type src) const {
+    for (size_type i = 0; i < value_count; ++i) dst[i] += src[i];
+  }
+
+  KOKKOS_INLINE_FUNCTION
+  void operator()(const typename policy_type::member_type &team,
+                  value_type dst) const {
+    const int thread_rank =
+        team.team_rank() + team.team_size() * team.league_rank();
+    const int thread_size = team.team_size() * team.league_size();
+    const int chunk       = (nwork + thread_size - 1) / thread_size;
+
+    size_type iwork           = static_cast<size_type>(chunk) * thread_rank;
+    const size_type iwork_end = iwork + chunk < nwork ? iwork + chunk : nwork;
+
+    for (; iwork < iwork_end; ++iwork) dst[iwork % value_count] += 1;
+  }
+};
+
 }  // namespace Test
 
 namespace {
@@ -353,6 +395,49 @@ class TestReduceTeam {
       for (unsigned i = 0; i < Repeat; ++i) {
         for (unsigned j = 0; j < Count; ++j) {
           ASSERT_EQ(j ? nsum : nw, static_cast<uint64_t>(result[i][j]))
+              << "failing at repeat " << i << " and index " << j;
+        }
+      }
+    }
+  }
+
+  // nwork must be a multiple of value_count so that every entry of the
+  // result receives exactly nwork / value_count contributions.
+  void run_large_array_test(const size_type &nwork,
+                            const unsigned value_count) {
+    enum { Repeat = 10 };
+    enum { MaxCount = 512 };
+
+    const uint64_t nw = nwork;
+
+    policy_type team_exec(nw, 1);
+
+    {
+      using functor_type =
+          Test::LargeArrayReduceTeamFunctor<ScalarType, execution_space,
+                                            ScheduleType>;
+      using result_type = Kokkos::View<ScalarType *, Kokkos::HostSpace,
+                                       Kokkos::MemoryUnmanaged>;
+
+      ScalarType result[Repeat][MaxCount];
+
+      const unsigned team_size = team_exec.team_size_recommended(
+          functor_type(nwork, value_count), Kokkos::ParallelReduceTag());
+      const unsigned league_size = (nwork + team_size - 1) / team_size;
+
+      team_exec = policy_type(league_size, team_size);
+
+      for (unsigned i = 0; i < Repeat; ++i) {
+        result_type tmp(&result[i][0], value_count);
+        Kokkos::parallel_reduce(team_exec,
+                                functor_type(nwork, value_count), tmp);
+      }
+
+      execution_space().fence();
+
+      for (unsigned i = 0; i < Repeat; ++i) {
+        for (unsigned j = 0; j < value_count; ++j) {
+          ASSERT_EQ(nw / value_count, static_cast<uint64_t>(result[i][j]))
               << "failing at repeat " << i << " and index " << j;
         }
       }
