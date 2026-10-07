@@ -19,6 +19,7 @@ void allocate_views(uint64_t chunk, uint64_t num_chunks) {
     }
   }
   Kokkos::finalize();
+  std::exit(0);
 }
 
 TEST(ExcessMemoryAllocation_DeathTest, ExcessMemoryAllocationFailsTest) {
