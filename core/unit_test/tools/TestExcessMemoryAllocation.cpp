@@ -38,7 +38,7 @@ TEST(ExcessMemoryAllocation, AllocationBelowThresholdAllowed) {
       << "Allocations > 4GB are not supported on 32-bit builds.";  // FIXME_32BIT
 #endif
   // allocate 7 chunks ~3.5 GB
-  allocate_views(CHUNK, 7);
+  ASSERT_EXIT(allocate_views(CHUNK, 9), ::testing::ExitedWithCode(0), "");
 }
 
 int main(int argc, char **argv) {
