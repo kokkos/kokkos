@@ -14,7 +14,7 @@ void allocate_views(uint64_t chunk, uint64_t num_chunks) {
   {
     std::vector<Kokkos::View<double *, Kokkos::DefaultHostExecutionSpace>>
         views;
-    for (int i = 0; i < num_chunks; ++i) {
+    for (uint64_t i = 0; i < num_chunks; ++i) {
       views.emplace_back("A", chunk);
     }
   }
